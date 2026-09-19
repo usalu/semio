@@ -15,7 +15,7 @@ use semio_framework_plugin::{scene_surface, world3d_selection_json, BuiltNode, L
 use semio_framework_surface::terrain::projection;
 use serde_json::{json, Value};
 
-#[path = "⚙️config/🦀️.rs"]
+#[path = "🎚️config/🦀️.rs"]
 pub mod config;
 
 //#region 🔖️Constants

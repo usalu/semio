@@ -7,7 +7,7 @@ type WitPageReceipt = { readonly identity: WitIdentity; readonly pageSequence: b
 type WitControl = { readonly tag: "poll" | "cancel" | "retired-ack"; readonly val: WitIdentity } | { readonly tag: "input-ack"; readonly val: WitPageReceipt };
 export type PluginReturnWitDrive = { readonly tag: "execute"; readonly val: WitOrigin } | { readonly tag: "control"; readonly val: WitControl };
 function mappingFault(reason: string): never { throw new Error(`plugin-return.${reason}`); }
-function generation(value: bigint): void { if (typeof value !== "bigint" || value <= 0n || value > 0xffffffffffffffffn) mappingFault("activation"); }
+export function generation(value: bigint): void { if (typeof value !== "bigint" || value <= 0n || value > 0xffffffffffffffffn) mappingFault("activation"); }
 function field(value: unknown, name: string): unknown {
   if (value === null || typeof value !== "object") return mappingFault("field");
   const descriptor = Object.getOwnPropertyDescriptor(value, name);

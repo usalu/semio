@@ -308,3 +308,46 @@ fn projection_snapshot_rejects_invalid_node_graph_viewports() {
         ));
     }
 }
+
+/// 🏷️ The node and port CAPTIONS React prints inside every node body (`Polygon`, `ExtrudeCurve`,
+/// `! wire`, `? x` …). They are OVERLAY glyphs the shell paints itself after the engine's own vector
+/// raster, because the raster is a texture the flow host renders without text.
+///
+/// 🩸️ Two independent ways this lane can be dead, and the live generation3d flow window on 6118 was
+/// the proof that it WAS: the label state can come back empty, or the glyphs can be painted into the
+/// SAME draw layer as the engine raster — which the encoder walks `ui → overlay_ui → vector →
+/// overlay_vector → raster`, so the opaque graph texture is composited ON TOP of every caption.
+/// The window then shows node bodies, ports, wires and the minimap and not one word
+/// (`📓️w13e-other-playgrounds-wgpu.md` §2.3.1).
+#[test]
+fn node_graph_paint_publishes_its_captions_over_the_engine_raster() {
+    let _serialized = engine_surface_law_guard();
+    let surface_id = "node-graph-attach-labels";
+    drop_engine_surface(surface_id);
+    let scene = flow_window_scene(surface_id);
+    let bounds = Rect { x: 3.0, y: 54.0, w: 975.0, h: 814.0 };
+
+    let draw = paint_scene_into_draw_list(&scene, bounds);
+
+    let rows: Value = ENGINE_SURFACES
+        .with(|cell| {
+            let map = cell.borrow();
+            let Some(NodeGraphEngine::Flow(host)) = map.get(surface_id)?.node_graph.as_ref() else { return None };
+            serde_json::from_str(&host.label_overlay_paint_state_json().ok()?).ok()
+        })
+        .expect("the live flow host answers its label overlay state");
+    let labels = rows.get("labels").and_then(Value::as_array).expect("label rows").len();
+    assert!(labels >= 20, "the seven-node fixture publishes a caption per node and per port, got {labels} at lod {:?}", rows.get("lod"));
+
+    let key = engine_raster_key(surface_id).expect("bounded engine raster key");
+    let raster_layer = draw
+        .layers
+        .iter()
+        .position(|layer| layer.raster_instances.iter().any(|(instance_key, _)| instance_key == &key))
+        .expect("the painted graph is composited into the window's draw list");
+    let caption_layer = draw.layers.iter().position(|layer| !layer.overlay_ui_instances.is_empty()).expect("the caption overlay published glyph instances");
+    assert!(caption_layer > raster_layer, "captions paint in a LATER layer than the engine raster ({caption_layer} vs {raster_layer}), or the opaque texture covers them");
+    let glyphs: usize = draw.layers.iter().map(|layer| layer.overlay_ui_instances.len()).sum();
+    assert!(glyphs >= labels, "every published caption reaches the draw list as glyphs, got {glyphs} for {labels} captions");
+    drop_engine_surface(surface_id);
+}

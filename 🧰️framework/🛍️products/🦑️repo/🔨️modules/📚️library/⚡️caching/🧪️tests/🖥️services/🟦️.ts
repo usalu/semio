@@ -15,7 +15,7 @@ async function testContinuousServiceScenario(workspace: string, generated: strin
   const contract = JSON.parse(readFileSync(join(contractRoot, "🔣️.json"), "utf8"));
   assert.ok(new (createRequire(import.meta.url)("ajv").default)().validate(JSON.parse(readFileSync(join(contractRoot, "🛂️schema/🔣️.json"), "utf8")), contract));
   assert.ok(contract.timeouts.gate >= 2 * contract.timeouts.wait && contract.timeouts.service >= contract.timeouts.gate + contract.timeouts.wait, "Service fixture owners must outlive their parent orchestration deadlines");
-  const scenario = contract.cases.find(row => row.name === mode);
+  const scenario = contract.cases.find((row: { name: string }) => row.name === mode);
   assert.ok(scenario, "Unknown continuous service scenario");
   const root = mkdtempSync(join(generated, "continuous-isolation-")), nxRoot = join(root, "node_modules/nx");
   mkdirSync(dirname(nxRoot), { recursive: true });
@@ -84,14 +84,14 @@ else {
 }
 `);
   }
-  const env = { ...process.env, NX_WORKSPACE_ROOT_PATH: root, REPO_ROOT: root, NX_CACHE_DIRECTORY: join(root, ".nx/cache"), NX_WORKSPACE_ROOT: root, NX_WORKSPACE_DATA_DIRECTORY: join(root, ".nx/workspace-data"), NX_DAEMON: "false", NX_TUI: "false", NX_NATIVE_COMMAND_RUNNER: "false", NX_NO_CLOUD: "true", NODE_OPTIONS: "" };
+  const env: NodeJS.ProcessEnv = { ...process.env, NX_WORKSPACE_ROOT_PATH: root, REPO_ROOT: root, NX_CACHE_DIRECTORY: join(root, ".nx/cache"), NX_WORKSPACE_ROOT: root, NX_WORKSPACE_DATA_DIRECTORY: join(root, ".nx/workspace-data"), NX_DAEMON: "false", NX_TUI: "false", NX_NATIVE_COMMAND_RUNNER: "false", NX_NO_CLOUD: "true", NODE_OPTIONS: "" };
   for (const key of Object.keys(env)) if (key.startsWith("NX_TASK_") || ["NX_INVOCATION_ROOT_PID", "NX_SOCKET_DIR", "NX_DAEMON_SOCKET_DIR", "npm_lifecycle_event", "npm_lifecycle_script"].includes(key)) delete env[key];
   const children: ReturnType<typeof Bun.spawn>[] = [], runs: Promise<number>[] = [], outcomes = new Map<string, number>();
   const events = () => existsSync(join(root, "state/events.jsonl")) ? readFileSync(join(root, "state/events.jsonl"), "utf8").trim().split("\n").filter(Boolean).map(line => JSON.parse(line)) : [];
   const run = (id: string) => {
     const child = Bun.spawn(["node", join(nxRoot, "dist/bin/nx.js"), "run", "fixture:test", "--output-style=stream"], { cwd: root, env: { ...env, FIXTURE_RUN_ID: id, FIXTURE_SHARED: scenario.sharing ? "1" : "0" }, stdout: "pipe", stderr: "pipe" });
     children.push(child);
-    const drain = async stream => { for await (const bytes of stream) appendFileSync(join(root, "state/" + id + ".log"), bytes); };
+    const drain = async (stream: BunReadableStream) => { for await (const bytes of stream) appendFileSync(join(root, "state/" + id + ".log"), bytes); };
     const completion = Promise.all([drain(child.stdout), drain(child.stderr), child.exited]).then(results => { outcomes.set(id, results[2]); return results[2]; });
     runs.push(completion); return completion;
   };

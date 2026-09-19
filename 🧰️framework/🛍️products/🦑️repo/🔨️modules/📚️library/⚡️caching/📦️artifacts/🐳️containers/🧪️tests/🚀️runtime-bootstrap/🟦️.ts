@@ -4,18 +4,29 @@ import { createRequire } from "node:module";
 import { join } from "node:path";
 import { spawnSync } from "node:child_process";
 
+/** 🐳️ The devcontainer fields this bootstrap contract reads. */
+interface DevcontainerConfig {
+  readonly postCreateCommand: readonly string[];
+  readonly features: Readonly<Record<string, { readonly version?: string }>>;
+}
+
 /** 🚀️ Verifies the image's pinned runtime acquisition before application dependency synchronization. */
 export function testContainerRuntimeBootstrap(workspace: string): void {
   const require = createRequire(import.meta.url), fixture = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/🚀️runtime-bootstrap/🔣️.json"), "utf8"));
   const dockerfile = readFileSync(join(workspace, ".devcontainer/Dockerfile"), "utf8"), configSource = readFileSync(join(workspace, ".devcontainer/devcontainer.json"), "utf8");
+  const config = Bun.JSONC.parse(configSource) as DevcontainerConfig;
   assert.deepEqual(Bun.JSONC.parse(configSource), require("jsonc-parser").parse(configSource));
-  assert.deepEqual(Bun.JSONC.parse(configSource).postCreateCommand, fixture.postCreateCommand);
+  assert.deepEqual(config.postCreateCommand, fixture.postCreateCommand);
   for (const path of fixture.retiredScripts) assert.equal(existsSync(join(workspace, path)), false, `Retired lifecycle bypass: ${path}`);
-  const target = JSON.parse(readFileSync(join(workspace, "📋️project.json"), "utf8")).targets[fixture.postCreateCommand[3].split(":")[1]];
+  const rootTargets = JSON.parse(readFileSync(join(workspace, "📋️project.json"), "utf8")).targets;
+  const target = rootTargets[fixture.postCreateCommand[3].split(":")[1]];
   assert.equal(target.cache, false); assert.deepEqual(target.outputs, []);
-  assert.deepEqual(target.dependsOn ?? [], []);
-  assert.ok(target.options.command.endsWith('⚡️caching/🚀️bootstrap/📦️dependencies/📜️script.ts" sync'));
-  assert.ok(!Object.keys(Bun.JSONC.parse(configSource).features).some(key => /\/nx:/.test(key)), "Nx must come from the repository's locked bootstrap");
+  assert.ok(target.options.command.endsWith("📜️script.ts setup"));
+  assert.deepEqual(target.dependsOn, fixture.postCreateDependsOn, "Container creation must reach every zero-touch prerequisite: language environments, generated sources, agent instruction aliases and both MCP binaries");
+  for (const dependency of fixture.postCreateDependsOn) if (!dependency.includes(":")) assert.ok(rootTargets[dependency], `Zero-touch prerequisite ${dependency} is not a root target`);
+  assert.ok(rootTargets["deps-wasm"].dependsOn.includes("deps-trunk"), "Both rust-toolchain.toml wasm targets must be installed by one prerequisite chain");
+  assert.equal(config.features["ghcr.io/devcontainers/features/rust:1"]?.version, "none", "rust-toolchain.toml is the only toolchain pin");
+  assert.ok(!Object.keys(config.features).some((key) => /\/nx:/.test(key)), "Nx must come from the repository's locked bootstrap");
   assert.equal(JSON.parse(readFileSync(join(workspace, "package.json"), "utf8")).packageManager, `bun@${fixture.bun}`);
   assert.ok(dockerfile.includes(`ARG BUN_VERSION=${fixture.bun}\n`));
   assert.ok(dockerfile.includes(`ARG NODE_VERSION=${fixture.node}\n`));

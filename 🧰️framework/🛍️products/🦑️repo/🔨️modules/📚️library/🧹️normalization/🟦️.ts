@@ -893,6 +893,13 @@ function stringArray(value: unknown, name: string): readonly string[] {
   return value;
 }
 
+/** 🔒️ Narrows a parsed field to one of the exact literals its contract declares. */
+function requiredLiteral<T extends string>(value: unknown, name: string, allowed: readonly T[]): T {
+  const text = requiredString(value, name);
+  if (!allowed.includes(text as T)) throw new Error(`${name} must be one of ${allowed.join(", ")}`);
+  return text as T;
+}
+
 function requiredString(value: unknown, name: string): string {
   if (typeof value !== "string" || value.length === 0) throw new Error(`Taxonomy v7 field ${name} must be a non-empty string`);
   return value;
@@ -1007,7 +1014,8 @@ function parseTaxonomy(raw: unknown, path: string): LoadedTaxonomy {
     const spec = record(value, `fixedFilenameContracts.${id}`);
     if (spec.configurability !== "unconfigurable") throw new Error(`Taxonomy v7 fixedFilenameContracts.${id}.configurability must be unconfigurable`);
     const inputScopeRow = record(spec.scope, `fixedFilenameContracts.${id}.scope`);
-    const scopeRow = inputScopeRow.kind === "named-fixed-directory-contract-set" ? parseNamedFixedDirectoryContractSetScope(inputScopeRow, root.fixedDirectoryContracts as DiscoveryTaxonomy["fixedDirectoryContracts"], (root.fixedDirectoryContractSets ?? {}) as NonNullable<DiscoveryTaxonomy["fixedDirectoryContractSets"]>) : inputScopeRow;
+    const namedScope = inputScopeRow.kind === "named-fixed-directory-contract-set" ? parseNamedFixedDirectoryContractSetScope(inputScopeRow, root.fixedDirectoryContracts as DiscoveryTaxonomy["fixedDirectoryContracts"], (root.fixedDirectoryContractSets ?? {}) as NonNullable<DiscoveryTaxonomy["fixedDirectoryContractSets"]>) : undefined;
+    const scopeRow: JsonRecord = namedScope ? { kind: namedScope.kind, fixedDirectoryContractIds: [...namedScope.fixedDirectoryContractIds] } : inputScopeRow;
     const scopeKind = requiredString(scopeRow.kind, `fixedFilenameContracts.${id}.scope.kind`) as FixedContractScope["kind"];
     if (!["exact-path", "repository-root", "package-root", "directory-kind", "fixed-directory-contract", "fixed-directory-contract-set", "sibling-fixed-filename-contract", "path-pattern"].includes(scopeKind)) throw new Error(`Taxonomy v7 fixedFilenameContracts.${id}.scope.kind is invalid`);
     const scope: FixedContractScope = scopeKind === "exact-path"
@@ -1622,7 +1630,7 @@ function parseTaxonomy(raw: unknown, path: string): LoadedTaxonomy {
     if (spec.contractKind !== "fixed" && spec.contractKind !== "configurable" || spec.disposition !== "adapter-source" && spec.disposition !== "tool-metadata" || spec.validator !== "package-glue" && spec.validator !== "command-router" && configValidatorOwner === undefined || (configValidatorOwner !== undefined && id !== configValidatorOwner)) throw new Error(`Taxonomy v7 packageSourceDispositions.${id} is invalid`);
     const grammarId = spec.grammarId === undefined ? undefined : requiredString(spec.grammarId, `packageSourceDispositions.${id}.grammarId`);
     if (grammarId !== undefined && !packageGlueGrammar[grammarId]) throw new Error(`Taxonomy v7 packageSourceDispositions.${id} references unknown grammar ${grammarId}`);
-    packageSourceDispositions[id] = { contractKind: spec.contractKind, disposition: spec.disposition, validator: spec.validator, ...(grammarId === undefined ? {} : { grammarId }), authority: requiredString(spec.authority, `packageSourceDispositions.${id}.authority`), verification: requiredString(spec.verification, `packageSourceDispositions.${id}.verification`) };
+    packageSourceDispositions[id] = { contractKind: spec.contractKind, disposition: spec.disposition, validator: requiredLiteral(spec.validator, `packageSourceDispositions.${id}.validator`, ["package-glue", "command-router", "vitest-configuration", "tool-config-vitest", "tool-config-tailwind", "tool-config-postcss", "tool-config-eslint", "tool-config-dependency-cruiser", "pytest-configuration", "eslint-configuration", "vscode-test-configuration"] as const), ...(grammarId === undefined ? {} : { grammarId }), authority: requiredString(spec.authority, `packageSourceDispositions.${id}.authority`), verification: requiredString(spec.verification, `packageSourceDispositions.${id}.verification`) };
   }
   if (Object.keys(packageSourceDispositions).length === 0) throw new Error("Taxonomy v7 packageSourceDispositions must not be empty");
   for (const [id, contract] of Object.entries(fixedFilenameContracts)) if (contract.scope.kind === "package-root" && !packageBoundaryRules[contract.scope.ecosystemId]) throw new Error(`Taxonomy v7 fixedFilenameContracts.${id} references unknown ecosystem ${contract.scope.ecosystemId}`);
@@ -1701,6 +1709,17 @@ function parseTaxonomy(raw: unknown, path: string): LoadedTaxonomy {
     fileKinds: Object.entries(fileKinds).map(([id, spec]) => ({ id, ...spec })).sort((a, b) => a.id.localeCompare(b.id)),
     directoryKinds: Object.entries(semanticDirectoryKinds).map(([id, spec]) => ({ id, ...spec, slugRegex: new RegExp(`^(?:${spec.slugPattern})$`, "u") })).sort((a, b) => a.id.localeCompare(b.id)),
   };
+}
+
+/** 🧭️ What a generator-input walk reads from a loaded taxonomy: the discovery vocabulary it classifies with and
+ * the matcher it excludes with. Narrower than [[LoadedTaxonomy]] so a caller can build one without the walk's
+ * private loading state. */
+export type GeneratorInputTaxonomy = Pick<LoadedTaxonomy, "discoverySchema" | "pathMatcher" | "exclusions">;
+
+/** 🧭️ Loads the taxonomy in the form the normalization walk uses — the only public way to obtain a
+ * [[GeneratorInputTaxonomy]] for the repository's own schema. */
+export function loadNormalizationTaxonomy(options: Pick<TaxonomyInventoryOptions, "repoRoot" | "taxonomyPath">): GeneratorInputTaxonomy {
+  return loadTaxonomy(options);
 }
 
 function loadTaxonomy(options: Pick<TaxonomyInventoryOptions, "repoRoot" | "taxonomyPath">): LoadedTaxonomy {
@@ -1832,8 +1851,8 @@ function parseRemovalAuthority(value: unknown, name: string): TaxonomyRemovalAut
   if (candidate.kind === "nested-cargo-generated-source") {
     const row = planRecord(value, name, ["kind", "catalogPath", "catalogContentHash", "packageId", "generatorContractId", "destinationPath", "sourcePreimage", "authorityDigest"]);
     const sourcePreimage = parseLeafPreimage(row.sourcePreimage, name + ".sourcePreimage");
-    if (row.packageId !== "wgpu-renderer" || sourcePreimage.nodeKind !== "file") throw new Error(name + " requires the exact generated WGPU source file");
-    const result = { kind: "nested-cargo-generated-source" as const, catalogPath: planPath(row.catalogPath, name + ".catalogPath"), catalogContentHash: planString(row.catalogContentHash, name + ".catalogContentHash", PLAN_HASH), packageId: row.packageId, generatorContractId: planString(row.generatorContractId, name + ".generatorContractId"), destinationPath: planPath(row.destinationPath, name + ".destinationPath"), sourcePreimage, authorityDigest: planString(row.authorityDigest, name + ".authorityDigest", PLAN_HASH) };
+    if (sourcePreimage.nodeKind !== "file") throw new Error(name + " requires the exact generated WGPU source file");
+    const result = { kind: "nested-cargo-generated-source" as const, catalogPath: planPath(row.catalogPath, name + ".catalogPath"), catalogContentHash: planString(row.catalogContentHash, name + ".catalogContentHash", PLAN_HASH), packageId: requiredLiteral(row.packageId, name + ".packageId", ["wgpu-renderer"] as const), generatorContractId: planString(row.generatorContractId, name + ".generatorContractId"), destinationPath: planPath(row.destinationPath, name + ".destinationPath"), sourcePreimage, authorityDigest: planString(row.authorityDigest, name + ".authorityDigest", PLAN_HASH) };
     const { authorityDigest: _digest, ...digestible } = result;
     if (result.authorityDigest !== sha256(canonicalJson(digestible))) throw new Error(name + ".authorityDigest does not match nested Cargo generated source authority");
     return result;
@@ -1865,8 +1884,8 @@ function parseRemovalAuthority(value: unknown, name: string): TaxonomyRemovalAut
   if (candidate.kind === "owner-manifest-status") {
     const row = planRecord(value, name, ["kind", "contractId", "ownerPath", "manifestPath", "manifestPreimage", "status", "contentState", "authorityDigest"]);
     const manifestPreimage = parseLeafPreimage(row.manifestPreimage, `${name}.manifestPreimage`);
-    if (manifestPreimage.nodeKind !== "file" || row.contractId !== "ticket-important-markdown-v1" || row.status !== "closed" || row.contentState !== "zero-byte") throw new Error(`${name} does not use the exact closed-empty ticket authority`);
-    const result = { kind: "owner-manifest-status" as const, contractId: row.contractId, ownerPath: planPath(row.ownerPath, `${name}.ownerPath`), manifestPath: planPath(row.manifestPath, `${name}.manifestPath`), manifestPreimage, status: row.status, contentState: row.contentState, authorityDigest: planString(row.authorityDigest, `${name}.authorityDigest`, PLAN_HASH) };
+    if (manifestPreimage.nodeKind !== "file") throw new Error(`${name} does not use the exact closed-empty ticket authority`);
+    const result = { kind: "owner-manifest-status" as const, contractId: requiredLiteral(row.contractId, `${name}.contractId`, ["ticket-important-markdown-v1"] as const), ownerPath: planPath(row.ownerPath, `${name}.ownerPath`), manifestPath: planPath(row.manifestPath, `${name}.manifestPath`), manifestPreimage, status: requiredLiteral(row.status, `${name}.status`, ["closed"] as const), contentState: requiredLiteral(row.contentState, `${name}.contentState`, ["zero-byte"] as const), authorityDigest: planString(row.authorityDigest, `${name}.authorityDigest`, PLAN_HASH) };
     const { authorityDigest: _digest, ...digestible } = result;
     if (result.authorityDigest !== sha256(canonicalJson(digestible))) throw new Error(`${name}.authorityDigest does not match its authority`);
     return result;
@@ -1874,8 +1893,8 @@ function parseRemovalAuthority(value: unknown, name: string): TaxonomyRemovalAut
   if (candidate.kind === "exact-path-mutation") {
     const row = planRecord(value, name, ["kind", "catalogPath", "catalogContentHash", "caseId", "sourcePath", "sourcePreimage", "disposition", "authorityDigest"]);
     const sourcePreimage = parseLeafPreimage(row.sourcePreimage, `${name}.sourcePreimage`);
-    if (sourcePreimage.nodeKind !== "file" || sourcePreimage.size !== 0 || row.disposition !== "remove") throw new Error(`${name} does not use exact empty-file removal evidence`);
-    const result = { kind: "exact-path-mutation" as const, catalogPath: planPath(row.catalogPath, `${name}.catalogPath`), catalogContentHash: planString(row.catalogContentHash, `${name}.catalogContentHash`, PLAN_HASH), caseId: planString(row.caseId, `${name}.caseId`), sourcePath: planPath(row.sourcePath, `${name}.sourcePath`), sourcePreimage, disposition: row.disposition, authorityDigest: planString(row.authorityDigest, `${name}.authorityDigest`, PLAN_HASH) };
+    if (sourcePreimage.nodeKind !== "file" || sourcePreimage.size !== 0) throw new Error(`${name} does not use exact empty-file removal evidence`);
+    const result = { kind: "exact-path-mutation" as const, catalogPath: planPath(row.catalogPath, `${name}.catalogPath`), catalogContentHash: planString(row.catalogContentHash, `${name}.catalogContentHash`, PLAN_HASH), caseId: planString(row.caseId, `${name}.caseId`), sourcePath: planPath(row.sourcePath, `${name}.sourcePath`), sourcePreimage, disposition: requiredLiteral(row.disposition, `${name}.disposition`, ["remove"] as const), authorityDigest: planString(row.authorityDigest, `${name}.authorityDigest`, PLAN_HASH) };
     const { authorityDigest: _digest, ...digestible } = result;
     if (result.authorityDigest !== sha256(canonicalJson(digestible))) throw new Error(`${name}.authorityDigest does not match its authority`);
     return result;
@@ -1957,8 +1976,7 @@ function parseRegeneration(value: unknown, name: string): TaxonomyRegeneration {
   if (preview.schemaVersion !== 1 || preview.contractId !== row.contractId || !Array.isArray(preview.nodes) || !Array.isArray(preview.staleRemovals)) throw new Error(`${name}.preview is invalid`);
   const previewNodes = preview.nodes.map((value, index) => {
     const node = planRecord(value, `${name}.preview.nodes[${index}]`, ["bytesBase64", "mode", "nodeKind", "path"]);
-    if (node.nodeKind !== "directory" && node.nodeKind !== "file") throw new Error(`${name}.preview.nodes[${index}].nodeKind is invalid`);
-    return { bytesBase64: planString(node.bytesBase64, `${name}.preview.nodes[${index}].bytesBase64`), mode: planInteger(node.mode, `${name}.preview.nodes[${index}].mode`, 0o7777), nodeKind: node.nodeKind, path: planPath(node.path, `${name}.preview.nodes[${index}].path`) };
+    return { bytesBase64: planString(node.bytesBase64, `${name}.preview.nodes[${index}].bytesBase64`), mode: planInteger(node.mode, `${name}.preview.nodes[${index}].mode`, 0o7777), nodeKind: requiredLiteral(node.nodeKind, `${name}.preview.nodes[${index}].nodeKind`, ["directory", "file"] as const), path: planPath(node.path, `${name}.preview.nodes[${index}].path`) };
   });
   const result: TaxonomyRegeneration = { id: planString(row.id, `${name}.id`, PLAN_OPERATION_ID), contractId: planString(row.contractId, `${name}.contractId`), cwd: planPath(row.cwd, `${name}.cwd`), command: command as unknown as TaxonomyRegeneration["command"], verifyCommand: verifyCommand as TaxonomyRegeneration["verifyCommand"], outputRoots: (row.outputRoots as unknown[]).map((entry, index) => planPath(entry, `${name}.outputRoots[${index}]`)), inputs: (row.inputs as unknown[]).map((entry, index) => parseGeneratorNodeRecord(entry, `${name}.inputs[${index}]`)), preOutputs: (row.preOutputs as unknown[]).map((entry, index) => parseGeneratorNodeRecord(entry, `${name}.preOutputs[${index}]`)), outputs: (row.outputs as unknown[]).map((entry, index) => parseGeneratorNodeRecord(entry, `${name}.outputs[${index}]`)), preview: { contractId: preview.contractId as string, nodes: previewNodes, schemaVersion: 1, staleRemovals: (preview.staleRemovals as unknown[]).map((entry, index) => planPath(entry, `${name}.preview.staleRemovals[${index}]`)) }, previewManifestDigest: planString(row.previewManifestDigest, `${name}.previewManifestDigest`, PLAN_HASH), staleRemovals: (row.staleRemovals as unknown[]).map((entry, index) => planPath(entry, `${name}.staleRemovals[${index}]`)) };
   const provisional = { contractId: result.contractId, cwd: result.cwd, command: result.command, verifyCommand: result.verifyCommand, outputRoots: result.outputRoots, inputs: result.inputs, preOutputs: result.preOutputs, outputs: result.outputs, preview: result.preview, previewManifestDigest: result.previewManifestDigest, staleRemovals: result.staleRemovals };
@@ -2215,7 +2233,7 @@ function assertLexicalInputOutsideOpaque(repoRoot: string, path: string, label: 
   return target;
 }
 
-function isExcluded(path: string, taxonomy: LoadedTaxonomy): boolean {
+function isExcluded(path: string, taxonomy: Pick<LoadedTaxonomy, "exclusions">): boolean {
   const normalized = normalizeRelative(path);
   return taxonomy.exclusions.some((entry) => normalized === entry.path || normalized.startsWith(`${entry.path}/`));
 }
@@ -3295,6 +3313,8 @@ type ReferenceInventorySourceAdmission =
   | Readonly<{ state: "derived-unproven"; retained: RetainedSourceAdmission }>
   | Readonly<{ state: "uncaptured" }>;
 
+type ReferenceCandidatePathContext = Pick<ReferenceInventoryContext, "ticketDir" | "transactionRoots" | "exactEvidencePaths">;
+
 interface ReferenceInventoryContext {
   readonly ticketDir?: string;
   readonly transactionRoots: readonly string[];
@@ -3360,7 +3380,7 @@ export function historicalDocumentEvidence(path: string, taxonomy: LoadedTaxonom
   return true;
 }
 
-function repositoryReferenceCandidatePaths(repoRoot: string, taxonomy: LoadedTaxonomy, context?: ReferenceInventoryContext, cancelFile?: string): readonly string[] {
+function repositoryReferenceCandidatePaths(repoRoot: string, taxonomy: LoadedTaxonomy, context?: ReferenceCandidatePathContext, cancelFile?: string): readonly string[] {
   checkCancellation(repoRoot, cancelFile);
   const ignored = (path: string): boolean => isExcluded(path, taxonomy) || Boolean(context?.exactEvidencePaths.includes(path) || context?.transactionRoots.some((root) => path === root || path.startsWith(`${root}/`))) || historicalDocumentEvidence(path, taxonomy, repoRoot);
   const paths = new Set<string>();
@@ -4000,7 +4020,7 @@ function typescriptPathCollectionReferenceAuthority(content: string): ReferenceT
     if (["function", "class"].includes(token.text)) bind(index + 1);
     if (token.text === "(") {
       const close = pairs.get(index), previous = tokens[index - 1]?.text, next = close === undefined ? undefined : tokens[close + 1]?.text;
-      if (close !== undefined && (next === "=>" || ["{", ":"].includes(next) && !["for", "if", "while", "switch", "with"].includes(previous))) {
+      if (close !== undefined && (next === "=>" || (next === "{" || next === ":") && (previous === undefined || !["for", "if", "while", "switch", "with"].includes(previous)))) {
         for (const [start, end] of typescriptCollectionSegments(syntax, index + 1, close)) {
           const limit = Math.min(endOf(start, [":", "="]), end);
           for (let cursor = start; cursor < limit; cursor++) bind(cursor);
@@ -5683,7 +5703,7 @@ function projectionBundleProblem(source: MutationProjectionSource, entries: Read
     if (byKey.has(key)) return `bundle normalization duplicates ${relativePath}`;
     byKey.set(key, entry);
   }
-  const matches = (node: SemanticDescendantNode): boolean => {
+  const matches = (node: SemanticDescendantKindNode): boolean => {
     const entry = byKey.get(`${node.nodeType}\u0000${projectionDescendantPath(node, taxonomy)}`);
     if (!entry) return false;
     return node.nodeType === "file" ? entry.fileKind === node.kindId : node.pathSegments.length === 0 && entry.sourcePath === source.scenarioRoot && node.kindId === contract.rootDirectoryKindId || kinds.get(entry.sourcePath) === node.kindId;
@@ -6201,7 +6221,7 @@ function projectExactOwnedFiles(repoRoot: string, entries: Map<string, MutableIn
       const absolute = assertLexicalInputOutsideOpaque(repoRoot, directory.sourcePath, "Exact owner directory", true);
       const names = readdirSync(absolute);
       const leaf = lstatOrNull(absolutePath(repoRoot, owner.destinationPath));
-      const generatedPair = owner.generatorOwnerId !== null && sourcePresent && leaf?.isFile() && canonicalJson(leafPreimage(absolutePath(repoRoot, owner.destinationPath))) === canonicalJson({ nodeKind: "file", contentHash: owner.preimage.sha256, mode: Number.parseInt(owner.preimage.mode, 8), size: owner.preimage.size });
+      const generatedPair = owner.generatorOwnerId !== null && sourcePresent && Boolean(leaf?.isFile()) && canonicalJson(leafPreimage(absolutePath(repoRoot, owner.destinationPath))) === canonicalJson({ nodeKind: "file", contentHash: owner.preimage.sha256, mode: Number.parseInt(owner.preimage.mode, 8), size: owner.preimage.size });
       valid = (!sourcePresent || generatedPair) && names.length === 1 && names[0] === "📝️.md" && Boolean(leaf?.isFile() && !leaf.isSymbolicLink());
     }
     if (valid) applyArtifactProjectionPath(directory, directory.sourcePath, taxonomy);
@@ -6670,7 +6690,7 @@ function collisionGroups(entries: readonly TaxonomyInventoryEntry[], taxonomy: L
   return groups.sort((a, b) => a.comparison.localeCompare(b.comparison) || a.id.localeCompare(b.id));
 }
 
-function generatorNodeRecord(repoRoot: string, path: string, taxonomy: LoadedTaxonomy): TaxonomyGeneratorNodeRecord {
+function generatorNodeRecord(repoRoot: string, path: string, taxonomy: Pick<LoadedTaxonomy, "exclusions">): TaxonomyGeneratorNodeRecord {
   if (isExcluded(path, taxonomy)) throw new Error(`Generator node is opaque: ${path}`);
   const absolute = absolutePath(repoRoot, path);
   const stat = lstatSync(absolute);
@@ -6707,15 +6727,15 @@ function compilerInputManifestRows(value: unknown, authority: NonNullable<Genera
   const seen = new Set<string>();
   const rows = manifest.inputs.map((value, index) => {
     const row = record(value, `${label}.inputs[${index}]`);
-    if (Object.keys(row).sort().join("|") !== "bytes|path|sha256" || typeof row.path !== "string" || row.path !== normalizeRelative(row.path) || !Number.isSafeInteger(row.bytes) || row.bytes < 0 || typeof row.sha256 !== "string" || !/^[a-f0-9]{64}$/u.test(row.sha256) || seen.has(row.path)) throw new Error(`${label} contains an invalid compiler input witness`);
+    if (Object.keys(row).sort().join("|") !== "bytes|path|sha256" || typeof row.path !== "string" || row.path !== normalizeRelative(row.path) || typeof row.bytes !== "number" || !Number.isSafeInteger(row.bytes) || row.bytes < 0 || typeof row.sha256 !== "string" || !/^[a-f0-9]{64}$/u.test(row.sha256) || seen.has(row.path)) throw new Error(`${label} contains an invalid compiler input witness`);
     seen.add(row.path);
-    return { path: row.path, bytes: row.bytes as number, sha256: row.sha256 };
+    return { path: row.path, bytes: row.bytes, sha256: row.sha256 };
   });
   if (rows.some((row, index) => index > 0 && generatorPathCompare(rows[index - 1]!.path, row.path) > 0)) throw new Error(`${label} compiler inputs are not path-sorted`);
   return rows;
 }
 
-function compilerInputRecords(repoRoot: string, contract: GeneratorContractSpec, taxonomy: LoadedTaxonomy, manifest: unknown, label: string): readonly TaxonomyGeneratorNodeRecord[] {
+function compilerInputRecords(repoRoot: string, contract: GeneratorContractSpec, taxonomy: Pick<LoadedTaxonomy, "exclusions">, manifest: unknown, label: string): readonly TaxonomyGeneratorNodeRecord[] {
   const authority = contract.compilerInputManifest;
   if (!authority) return [];
   return compilerInputManifestRows(manifest, authority, label).map(row => {
@@ -6734,7 +6754,7 @@ function compilerPreviewInputRecords(repoRoot: string, contract: GeneratorContra
   return compilerInputRecords(repoRoot, contract, taxonomy, JSON.parse(Buffer.from(node.bytesBase64, "base64").toString("utf8")), "Compiler preview manifest");
 }
 
-export function generatorInputPaths(inventory: Pick<TaxonomyInventory, "repoRoot">, contract: GeneratorContractSpec, taxonomy: LoadedTaxonomy, cancelFile?: string, view?: RegistryCatalogInputView): readonly string[] {
+export function generatorInputPaths(inventory: Pick<TaxonomyInventory, "repoRoot">, contract: GeneratorContractSpec, taxonomy: GeneratorInputTaxonomy, cancelFile?: string, view?: RegistryCatalogInputView): readonly string[] {
   const paths = new Set<string>();
   const inputView = view ?? registryCatalogInputView(inventory.repoRoot, taxonomy.discoverySchema);
   if (contract.inputDiscovery) {
@@ -6794,8 +6814,8 @@ export function generatorInputPaths(inventory: Pick<TaxonomyInventory, "repoRoot
   });
 }
 
-function generatorInputInventory(inventory: TaxonomyInventory, contract: GeneratorContractSpec, taxonomy: LoadedTaxonomy, cancelFile?: string): readonly TaxonomyGeneratorNodeRecord[] {
-  return generatorInputPaths(inventory, contract, taxonomy, cancelFile).map((path) => generatorNodeRecord(inventory.repoRoot, path, taxonomy));
+function generatorInputInventory(inventory: TaxonomyInventory, contract: GeneratorContractSpec, taxonomy: LoadedTaxonomy, cancelFile?: string, view?: RegistryCatalogInputView): readonly TaxonomyGeneratorNodeRecord[] {
+  return generatorInputPaths(inventory, contract, taxonomy, cancelFile, view).map((path) => generatorNodeRecord(inventory.repoRoot, path, taxonomy));
 }
 function previewNodeRecords(manifest: TaxonomyGeneratorPreviewManifest): readonly TaxonomyGeneratorNodeRecord[] {
   return manifest.nodes.map((node) => {
@@ -6913,8 +6933,8 @@ function planSymlinkTargetEdits(inventory: TaxonomyInventory, taxonomy: LoadedTa
       violations.push(violation("symlink-target-directory-authority-unresolved", entry.sourcePath, `Directory target requires a recursive no-follow authority: ${logicalTargetSourcePath}`));
       continue;
     }
-    const logicalTargetPreimage: TaxonomyPathPreimage = !targetEntry ? { state: "absent" } : targetEntry.nodeKind === "directory" ? { state: "directory" } : targetEntry.nodeKind === "symlink" ? { state: "symlink", contentHash: targetEntry.contentHash, mode: targetEntry.mode, size: targetEntry.size, target: targetEntry.symlinkTarget! } : { state: "file", contentHash: targetEntry.contentHash, mode: targetEntry.mode, size: targetEntry.size };
-    const extension = resolveFileKind(logicalTargetSourcePath, taxonomy, [], []).kind;
+    const logicalTargetPreimage: TaxonomyPathPreimage = !targetEntry ? { state: "absent" } : targetEntry.nodeKind === "symlink" ? { state: "symlink", contentHash: targetEntry.contentHash, mode: targetEntry.mode, size: targetEntry.size, target: targetEntry.symlinkTarget! } : { state: "file", contentHash: targetEntry.contentHash, mode: targetEntry.mode, size: targetEntry.size };
+    const extension = resolveFileKind(logicalTargetSourcePath, taxonomy, undefined, []).kind;
     if (!targetEntry && !extension) {
       violations.push(violation("symlink-target-kind-unresolved", entry.sourcePath, `Broken target kind cannot be proven: ${logicalTargetSourcePath}`));
       continue;
@@ -6926,10 +6946,10 @@ function planSymlinkTargetEdits(inventory: TaxonomyInventory, taxonomy: LoadedTa
     }
     if (newTarget === oldTarget) continue;
     const targetDigestible = { sourcePath: entry.sourcePath, finalPath, oldTarget, newTarget, logicalTargetSourcePath, logicalTargetFinalPath, logicalTargetPreimage };
-    const provisional = { sourcePath: entry.sourcePath, finalPath, oldTarget, newTarget, oldTargetHash: sha256(oldTarget), newTargetHash: sha256(newTarget), logicalTargetSourcePath, logicalTargetFinalPath, logicalTargetPreimage, windowsLinkType: (targetEntry?.nodeKind === "directory" ? "dir" : "file") as "file" | "dir", sourceTargetDigest: sha256(canonicalJson(targetDigestible)), rationaleRule: "repository-local-symlink-target-v2" as const, ownerId: entry.ownerId };
+    const provisional = { sourcePath: entry.sourcePath, finalPath, oldTarget, newTarget, oldTargetHash: sha256(oldTarget), newTargetHash: sha256(newTarget), logicalTargetSourcePath, logicalTargetFinalPath, logicalTargetPreimage, windowsLinkType: "file" as const, sourceTargetDigest: sha256(canonicalJson(targetDigestible)), rationaleRule: "repository-local-symlink-target-v2" as const, ownerId: entry.ownerId };
     edits.push({ operationId: dispositionOperationId("symlink-target-edit", provisional), ...provisional });
   }
-  return { edits: edits.sort((left, right) => generatorPathCompare(left.sourcePath, right.sourcePath)), violations: stableViolations(violations) };
+  return { edits: edits.sort((left, right) => generatorPathCompare(left.sourcePath, right.sourcePath)), violations: [...stableViolations(violations)] };
 }
 
 interface EmbeddedDispositionPlanning {
@@ -7428,7 +7448,7 @@ function planTrailingEvidenceRemovals(inventory: TaxonomyInventory): readonly Ta
     const identical = inventory.entries.filter((candidate) => candidate.nodeKind === entry.nodeKind && posix.dirname(candidate.sourcePath) === parent && candidate.contentHash === entry.contentHash && candidate.mode === entry.mode && candidate.size === entry.size && candidate.ownerId === entry.ownerId && candidate.fixedContractId === entry.fixedContractId && candidate.packageRole === entry.packageRole && candidate.sourcePath !== entry.sourcePath && !/^[. ]+$/u.test(basename(candidate.sourcePath))).sort((left, right) => generatorPathCompare(left.sourcePath, right.sourcePath));
     if (identical.length === 0 || entry.referencesIn.length > 0) continue;
     const retainedFinalPath = identical[0].normalizedPath;
-    const members: TaxonomyEvidenceMember[] = [{ sourcePath: entry.sourcePath, finalPath: retainedFinalPath, disposition: "remove", preimage: inventoryLeafPreimage(entry) }, ...identical.map((candidate) => ({ sourcePath: candidate.sourcePath, finalPath: candidate.normalizedPath, disposition: "retain" as const, preimage: inventoryLeafPreimage(candidate) }))].sort((left, right) => generatorPathCompare(left.sourcePath, right.sourcePath));
+    const members: TaxonomyEvidenceMember[] = [{ sourcePath: entry.sourcePath, finalPath: retainedFinalPath, disposition: "remove" as const, preimage: inventoryLeafPreimage(entry) }, ...identical.map((candidate) => ({ sourcePath: candidate.sourcePath, finalPath: candidate.normalizedPath, disposition: "retain" as const, preimage: inventoryLeafPreimage(candidate) }))].sort((left, right) => generatorPathCompare(left.sourcePath, right.sourcePath));
     const evidenceSetDigest = sha256(canonicalJson({ algorithm: "sha256-byte-mode-evidence-set-v1", members, retainedFinalPath }));
     const provisional = { sourcePath: entry.sourcePath, preimage: inventoryLeafPreimage(entry), authority: { kind: "byte-and-mode-identical" as const, evidenceSetDigest, retainedFinalPath, members }, rationaleRule: "redundant-ticket-evidence-v1" as const, ownerId: entry.ownerId };
     rows.push({ operationId: dispositionOperationId("evidence-removal", provisional), ...provisional });
@@ -7645,7 +7665,7 @@ function packageGeneratorActivated(repoRoot: string, moves: readonly TaxonomyMov
   const row = semanticPackageProjectionCatalog(repoRoot, taxonomy.discoverySchema)?.packages.find((row) => row.id === activation.packageId);
   if (!row || activation.sourceManifestPath !== `${row.sourceRoot}/Cargo.toml` || activation.destinationManifestPath !== `${row.destinationRoot}/Cargo.toml`) throw new Error("Generator package activation disagrees with its exact catalog");
   const relevant = moves.filter((move) => row.mappings.some((mapping) => mapping.sourcePath === move.sourcePath));
-  const retired = removals.filter((removal) => removal.authority.kind === "nested-cargo-generated-source" && removal.authority.packageId === row.id);
+  const retired = removals.filter((removal): removal is TaxonomyEvidenceRemoval & { authority: Extract<TaxonomyRemovalAuthority, { kind: "nested-cargo-generated-source" }> } => removal.authority.kind === "nested-cargo-generated-source" && removal.authority.packageId === row.id);
   const projected = relevant.length + retired.length;
   if (projected > 0 && (projected !== row.mappings.length || !row.mappings.every((mapping) => mapping.disposition === "generated" ? retired.some((removal) => removal.sourcePath === mapping.sourcePath && removal.preimage.nodeKind === "file" && removal.preimage.contentHash === mapping.sourceHash && removal.preimage.size === mapping.sourceSize && removal.authority.kind === "nested-cargo-generated-source" && removal.authority.destinationPath === mapping.destinationPath && row.generatedSourceRetirements.some((entry) => entry.sourcePath === mapping.sourcePath && entry.generatorContractId === removal.authority.generatorContractId && entry.sourceMode === removal.preimage.mode)) : relevant.some((move) => move.sourcePath === mapping.sourcePath && move.destinationPath === mapping.destinationPath && move.sourcePreimage.contentHash === mapping.sourceHash && move.sourcePreimage.size === mapping.sourceSize)))) throw new Error("Generator package activation has an incomplete projection");
   if (source && projected === 0) return false;
@@ -7673,6 +7693,7 @@ function generatorPlanning(inventory: TaxonomyInventory, moves: readonly Taxonom
   }
   const rows: TaxonomyViolation[] = [];
   const regenerations: TaxonomyRegeneration[] = [];
+  const catalogView = registryCatalogInputView(inventory.repoRoot, taxonomy.discoverySchema);
   const contracts = Object.entries(taxonomy.schema.generatorContracts).sort(([left], [right]) => left.localeCompare(right));
   for (let index = 0; index < contracts.length; index++) {
     const [id, contract] = contracts[index];
@@ -7680,17 +7701,26 @@ function generatorPlanning(inventory: TaxonomyInventory, moves: readonly Taxonom
     const outputEntries = inventory.entries.filter((entry) => roots.some((root) => entry.sourcePath === root || entry.sourcePath.startsWith(`${root}/`)));
     const outputProblem = outputEntries.some((entry) => !roots.includes(entry.sourcePath) && (entry.sourcePath !== entry.normalizedPath || entry.violations.some((entry) => entry.severity === "error")));
     const outputMutation = [...mutations].some((path) => roots.some((root) => pathsOverlap(path, root)) && !(id === "external-cargo-locks" && preservedLocks.has(path)));
-    const catalogInputs = contract.inputDiscovery && [...mutations].some((path) => registryCatalogPathMayAffect(path, taxonomy.discoverySchema)) ? generatorInputInventory(inventory, contract, taxonomy, options.cancelFile) : undefined;
-    const compilerInputs = contract.compilerInputManifest ? generatorInputInventory(inventory, contract, taxonomy, options.cancelFile) : undefined;
-    const discoveredInputs = catalogInputs ?? compilerInputs;
-    const inputMutation = [...mutations].some((path) => contract.inputPatterns.some((pattern) => taxonomy.pathMatcher.matches(path, pattern))) || Boolean(discoveredInputs && (edits.some((edit) => discoveredInputs.some((input) => input.path === edit.path)) || moves.some((move) => discoveredInputs.some((input) => input.path === move.sourcePath || input.path === move.destinationPath || input.nodeKind === "directory" && (inScope(move.sourcePath, input.path) || inScope(move.destinationPath, input.path))))));
+    const catalogInputs = contract.inputDiscovery && [...mutations].some((path) => registryCatalogPathMayAffect(path, taxonomy.discoverySchema)) ? generatorInputInventory(inventory, contract, taxonomy, options.cancelFile, catalogView) : undefined;
     const packageOwnerPath = contract.packageGeneration?.browserProfile.ownerPath;
     const packageOutputVerification = packageOwnerPath && (!inventory.scope || pathsOverlap(inventory.scope, packageOwnerPath));
     const compilerOutputVerification = contract.compilerInputManifest && (!inventory.scope || pathsOverlap(inventory.scope, contract.ownerPath!));
+    const patternMutation = [...mutations].some((path) => contract.inputPatterns.some((pattern) => taxonomy.pathMatcher.matches(path, pattern)));
+    let compilerInputs: readonly TaxonomyGeneratorNodeRecord[] | undefined;
+    if (contract.compilerInputManifest && (compilerOutputVerification || outputProblem || outputMutation || patternMutation)) {
+      try {
+        compilerInputs = generatorInputInventory(inventory, contract, taxonomy, options.cancelFile, catalogView);
+      } catch (error) {
+        rows.push(violation("generator-compiler-input-manifest-stale", contract.compilerInputManifest.manifestOutputPath, `Generator ${id}: ${error instanceof Error ? error.message : String(error)}`));
+        continue;
+      }
+    }
+    const discoveredInputs = catalogInputs ?? compilerInputs;
+    const inputMutation = patternMutation || Boolean(discoveredInputs && (edits.some((edit) => discoveredInputs.some((input) => input.path === edit.path)) || moves.some((move) => discoveredInputs.some((input) => input.path === move.sourcePath || input.path === move.destinationPath || input.nodeKind === "directory" && (inScope(move.sourcePath, input.path) || inScope(move.destinationPath, input.path))))));
     if (!outputProblem && !outputMutation && !inputMutation && !packageOutputVerification && !compilerOutputVerification) continue;
     try { if (!packageGeneratorActivated(inventory.repoRoot, moves, contract, taxonomy, evidenceRemovals)) continue; }
     catch (error) { rows.push(violation("generator-activation-invalid", roots[0], `Generator ${id}: ${error instanceof Error ? error.message : String(error)}`)); continue; }
-    const inputs = discoveredInputs ?? generatorInputInventory(inventory, contract, taxonomy, options.cancelFile);
+    const inputs = discoveredInputs ?? generatorInputInventory(inventory, contract, taxonomy, options.cancelFile, catalogView);
     const preOutputs = generatorTreeInventory(inventory.repoRoot, roots, taxonomy);
     const inputDigest = sha256(canonicalJson(inputs));
     const preOutputDigest = sha256(canonicalJson(preOutputs));
@@ -8435,7 +8465,7 @@ function readJournal(path: string, journalWriteDirectory: string, jsonWritePrepa
   const value = planRecord(parsed, "taxonomy journal", ["schemaVersion", "revision", "planDigest", "attemptOrdinal", "state", "stagingRoot", "backupRoot", "preparedMoveIds", "stagedMoveIds", "installedMoveIds", "preparedEmbeddedRelocationIds", "stagedEmbeddedRelocationIds", "installedEmbeddedRelocationIds", "preparedEvidenceRemovalIds", "stagedEvidenceRemovalIds", "preparedEmbeddedRootIds", "stagedEmbeddedRootIds", "preparedSymlinkTargetEditIds", "stagedSymlinkTargetEditIds", "installedSymlinkTargetEditIds", "appliedEditPaths", "startedRegenerationIds", "completedRegenerationIds", "sourceParentPrunePaths", "backups"], ["error"]) as Partial<TaxonomyJournalRecord>;
   const arrays = ["preparedMoveIds", "stagedMoveIds", "installedMoveIds", "preparedEmbeddedRelocationIds", "stagedEmbeddedRelocationIds", "installedEmbeddedRelocationIds", "preparedEvidenceRemovalIds", "stagedEvidenceRemovalIds", "preparedEmbeddedRootIds", "stagedEmbeddedRootIds", "preparedSymlinkTargetEditIds", "stagedSymlinkTargetEditIds", "installedSymlinkTargetEditIds", "appliedEditPaths", "startedRegenerationIds", "completedRegenerationIds", "sourceParentPrunePaths"] as const;
   const states: readonly TaxonomyJournalState[] = ["prepared", "staging", "disposing", "installing", "retargeting", "editing", "regenerating", "verifying", "committed", "rolling-back", "rolled-back"];
-  if (value.schemaVersion !== 2 || !Number.isSafeInteger(value.revision) || (value.revision as number) < 0 || typeof value.planDigest !== "string" || !PLAN_HASH.test(value.planDigest) || typeof value.attemptOrdinal !== "string" || !/^[0-9]{6}$/u.test(value.attemptOrdinal) || !states.includes(value.state as TaxonomyJournalState) || typeof value.stagingRoot !== "string" || typeof value.backupRoot !== "string" || !arrays.every((key) => Array.isArray(value[key])) || !value.backups || typeof value.backups !== "object" || (value.error !== undefined && typeof value.error !== "string")) throw new Error(`Invalid taxonomy journal at ${path}`);
+  if (value.schemaVersion !== 2 || typeof value.revision !== "number" || !Number.isSafeInteger(value.revision) || value.revision < 0 || typeof value.planDigest !== "string" || !PLAN_HASH.test(value.planDigest) || typeof value.attemptOrdinal !== "string" || !/^[0-9]{6}$/u.test(value.attemptOrdinal) || !states.includes(value.state as TaxonomyJournalState) || typeof value.stagingRoot !== "string" || typeof value.backupRoot !== "string" || !arrays.every((key) => Array.isArray(value[key])) || !value.backups || typeof value.backups !== "object" || (value.error !== undefined && typeof value.error !== "string")) throw new Error(`Invalid taxonomy journal at ${path}`);
   planPath(value.stagingRoot, "taxonomy journal stagingRoot");
   planPath(value.backupRoot, "taxonomy journal backupRoot");
   for (const key of arrays) {
@@ -9207,7 +9237,8 @@ function reconcileTransactionOwnedTuples(repoRoot: string, plan: TaxonomyPlan, j
       if (!lstatOrNull(retained) || canonicalJson(leafPreimage(retained)) !== canonicalJson(member.preimage)) throw new Error(`resume-state-drift: retained evidence ${member.finalPath}`);
     } else if (entry.authority.kind === "serialized-path-sentinel") {
       const fixture = serializedSentinelCases(repoRoot);
-      const sentinel = fixture?.cases.find((candidate) => candidate.id === entry.authority.caseId);
+      const authority = entry.authority;
+      const sentinel = fixture?.cases.find((candidate) => candidate.id === authority.caseId);
       if (!fixture || fixture.catalogContentHash !== entry.authority.catalogContentHash || !sentinel || sentinel.inputPath !== entry.authority.serializedInputPath || sentinel.physicalSourcePath !== entry.sourcePath || sentinel.expectedViolationCode !== entry.authority.expectedViolationCode || sentinel.sourceContentHash !== entry.preimage.contentHash) throw new Error(`resume-state-drift: serialized sentinel authority ${entry.operationId}`);
     } else if (entry.authority.kind === "exact-path-mutation") assertTicketImportantExactRemovalAuthority(repoRoot, entry);
     else assertTicketImportantRemovalAuthority(repoRoot, entry, taxonomy);
@@ -10932,7 +10963,7 @@ export function applyTaxonomyPlan(plan: TaxonomyPlan, options: TaxonomyApplyOpti
     const expectedTarget = posix.relative(posix.dirname(expectedFinalPath), expectedTargetFinalPath);
     if (!expectedTarget || expectedTarget !== edit.newTarget || expectedTarget.startsWith("/") || posix.normalize(posix.join(posix.dirname(expectedFinalPath), expectedTarget)) !== expectedTargetFinalPath) throw new Error(`Symlink relative target does not resolve to its frozen logical target: ${edit.sourcePath}`);
     if (edit.logicalTargetPreimage.state === "directory" || edit.windowsLinkType !== "file") throw new Error(`Symlink directory target lacks recursive no-follow authority: ${edit.sourcePath}`);
-    if (edit.logicalTargetPreimage.state === "absent" && !resolveFileKind(edit.logicalTargetSourcePath, taxonomy, [], []).kind) throw new Error(`Broken symlink target kind cannot be proven: ${edit.sourcePath}`);
+    if (edit.logicalTargetPreimage.state === "absent" && !resolveFileKind(edit.logicalTargetSourcePath, taxonomy, undefined, []).kind) throw new Error(`Broken symlink target kind cannot be proven: ${edit.sourcePath}`);
     const targetDigestible = { sourcePath: edit.sourcePath, finalPath: edit.finalPath, oldTarget: edit.oldTarget, newTarget: edit.newTarget, logicalTargetSourcePath: edit.logicalTargetSourcePath, logicalTargetFinalPath: edit.logicalTargetFinalPath, logicalTargetPreimage: edit.logicalTargetPreimage };
     if (edit.sourceTargetDigest !== sha256(canonicalJson(targetDigestible))) throw new Error(`Symlink source-target authority digest changed: ${edit.sourcePath}`);
   }
@@ -10962,7 +10993,8 @@ export function applyTaxonomyPlan(plan: TaxonomyPlan, options: TaxonomyApplyOpti
       if (removal.authority.kind === "byte-and-mode-identical") for (const member of removal.authority.members) assertLeafPreimage(repoRoot, member.sourcePath, member.preimage);
       else if (removal.authority.kind === "serialized-path-sentinel") {
         const fixture = serializedSentinelCases(repoRoot);
-        const sentinel = fixture?.cases.find((entry) => entry.id === removal.authority.caseId);
+        const authority = removal.authority;
+        const sentinel = fixture?.cases.find((entry) => entry.id === authority.caseId);
         if (removal.authority.catalogPath !== TRANSACTION_SENTINEL_CASES_CATALOG_PATH || !fixture || fixture.catalogContentHash !== removal.authority.catalogContentHash || !sentinel || sentinel.inputPath !== removal.authority.serializedInputPath || sentinel.physicalSourcePath !== removal.sourcePath || sentinel.expectedViolationCode !== removal.authority.expectedViolationCode || sentinel.sourceContentHash !== removal.preimage.contentHash) throw new Error(`Serialized sentinel authority changed: ${removal.authority.caseId}`);
       } else if (removal.authority.kind === "exact-path-mutation") assertTicketImportantExactRemovalAuthority(repoRoot, removal);
       else assertTicketImportantRemovalAuthority(repoRoot, removal, taxonomy);

@@ -235,3 +235,45 @@ fn empty_block_list_body_dispatches_nothing() {
     assert!(block_list_hit(&node, Rect::new(0.0, 0.0, 600.0, 400.0), 100.0, 200.0, &Theme::default()).is_none());
 }
 //#endregion BlockListPointerTests
+
+//#region BlockListPaletteTransferTests
+/// 🧩️ React `🧩️BlockListHost/🟦️.tsx` `PaletteEntryRow`: a palette row is `draggable` and puts its
+/// `blockKind` on the transfer under `PALETTE_DRAG_MIME`.
+#[test]
+fn a_palette_entry_is_a_drag_source_carrying_its_block_kind() {
+    let palette = json!([{ "blockKind": "text", "label": "Text", "iconId": "type" }]).to_string();
+    let scene = BlockListScene { steps_json: "[]".into(), palette_json: palette, selected_id: None, dragging_id: None, domain_id: None };
+    let node = block_list_scene("bl-drag-src", scene);
+    let bounds = Rect::new(0.0, 0.0, 600.0, 400.0);
+    let theme = Theme::default();
+    let plan = block_list_plan(&node, bounds, &theme);
+    let entry = plan.targets[plan.body_range.end..].first().expect("one palette target");
+    let (mime, payload) = scene_transfer_drag_source(&node, bounds, entry.rect.x + 2.0, entry.rect.y + entry.rect.h * 0.5, &theme).expect("palette drag source");
+    assert_eq!(mime, BLOCK_LIST_PALETTE_DRAG_MIME);
+    assert_eq!(mime, "application/x-semio-block-list-block-kind", "the mime is React's own PALETTE_DRAG_MIME string");
+    assert_eq!(payload, "text");
+}
+
+/// 🧩️ React `🧩️BlockListHost/🟦️.tsx` `StepCard`'s `onDrop`: a palette drop on a STEP CARD adds a block
+/// of the dragged kind to that step. A drop that lands on no step card adds nothing.
+#[test]
+fn a_palette_drop_on_a_step_card_adds_a_block_to_that_step() {
+    let steps = json!([step_json("s-a", &[]), step_json("s-b", &[])]).to_string();
+    let palette = json!([{ "blockKind": "text", "label": "Text", "iconId": "type" }]).to_string();
+    let scene = BlockListScene { steps_json: steps, palette_json: palette, selected_id: None, dragging_id: None, domain_id: None };
+    let node = block_list_scene("bl-drop", scene);
+    let bounds = Rect::new(0.0, 0.0, 600.0, 400.0);
+    let theme = Theme::default();
+    let plan = block_list_plan(&node, bounds, &theme);
+    let card = plan.targets[plan.body_range.clone()].iter().find(|target| target.control_id == "bl-drop.step.s-b").expect("the second step card");
+    let action = scene_transfer_drop_action(&node, bounds, card.rect.x + 4.0, card.rect.y + 2.0, &theme, BLOCK_LIST_PALETTE_DRAG_MIME, "text").expect("addBlock action");
+    assert_eq!(action.action, "addBlock");
+    let args = action.args.as_ref().expect("args");
+    assert_eq!(args.get("stepId").and_then(semio_framework::DslValue::as_str), Some("s-b"));
+    assert_eq!(args.get("kind").and_then(semio_framework::DslValue::as_str), Some("text"));
+    assert!(
+        scene_transfer_drop_action(&node, bounds, plan.palette_rect.x + 4.0, plan.palette_rect.y + plan.palette_rect.h * 0.5, &theme, BLOCK_LIST_PALETTE_DRAG_MIME, "text").is_none(),
+        "the palette rail is not a drop target — React binds onDrop on the step card alone"
+    );
+}
+//#endregion BlockListPaletteTransferTests

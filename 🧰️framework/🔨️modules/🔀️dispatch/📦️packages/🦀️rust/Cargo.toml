@@ -27,6 +27,10 @@ name = "mut_receiver"
 path = "../../🧪️tests/✍️mutable-receiver/🦀️.rs"
 
 [[test]]
+name = "send_future"
+path = "../../🧪️tests/🔮️send-future/🦀️.rs"
+
+[[test]]
 name = "scale"
 path = "../../🧪️tests/📈️scale/🦀️.rs"
 

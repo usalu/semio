@@ -1302,6 +1302,31 @@ impl ArtifactEditor for EquationPlayApp {
         command.command_id()
     }
 
+    /// 🎯️ Maps a host action id + its staged args onto `EquationCommand`. The React/wgpu shells
+    /// still dispatch `{action, args}` while the guest channel is typed-only, and the trait default
+    /// refuses EVERY id (`app.command.unsupported`) — without this bridge every Actions-pane row and
+    /// every graph gesture died before reaching `handle`. The three block-shaped payloads
+    /// (`graph`/`geometry`/`viewport`) are decoded through `dsl::from_dsl_value`, the same codec the
+    /// typed channel uses, so the shell needs no staging shim.
+    fn command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result<EquationCommand, Fault> {
+        let text_arg = |keys: &[&str]| keys.iter().find_map(|key| args.and_then(|value| value.get(key)).and_then(dsl::DslValue::as_str).map(str::to_string));
+        fn decode<T: dsl::FromValue>(action: &str, args: Option<&dsl::DslValue>, key: &str) -> Result<T, Fault> {
+            let value = args.and_then(|value| value.get(key)).cloned().ok_or_else(|| Fault::from(format!("equation {action} requires a '{key}' block")))?;
+            dsl::from_dsl_value(value).map_err(|error| Fault::from(format!("invalid equation {action} '{key}': {error}")))
+        }
+        match action {
+            "setDocument" => Ok(EquationCommand::SetArtifact(set_artifact::SetArtifact { graph: decode(action, args, "graph")?, geometry: decode(action, args, "geometry")? })),
+            "setAlgorithm" => Ok(EquationCommand::SetAlgorithm(set_algorithm::SetAlgorithm { algorithm: text_arg(&["algorithm", "value"]).unwrap_or_default(), seed: text_arg(&["seed"]) })),
+            "setDirected" => Ok(EquationCommand::SetDirected(set_directed::SetDirected {
+                directed: args.and_then(|value| value.get("directed").or_else(|| value.get("value"))).and_then(dsl::DslValue::as_bool).unwrap_or(false),
+            })),
+            "nodeGraphEdit" => Ok(EquationCommand::NodeGraphEdit(node_graph_edit::NodeGraphEdit { operations_json: args.and_then(|value| value.get("operations")).map_or_else(|| "[]".into(), dsl::json::to_json_string) })),
+            "nodeGraphViewport" => Ok(EquationCommand::NodeGraphViewport(node_graph_viewport::NodeGraphViewport { viewport: decode(action, args, "viewport")? })),
+            "setPoints" => Ok(EquationCommand::SetPoints(set_points::SetPoints { geometry: decode(action, args, "geometry")? })),
+            other => Err(Fault::from(format!("equation: unhandled action id {other}"))),
+        }
+    }
+
     fn handle(
         command: &EquationCommand,
         doc: &ArtifactView<'_, EquationSnapshot>,

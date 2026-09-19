@@ -289,7 +289,7 @@ class NormalizedPresenceRowsNativeCheckScript extends BundleScript {
 /** @emoji 🧵️ Runs the browser Worker transport protocol without invoking Cargo. */
 class BrowserWorkerTestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
-    await runVitest(this.root, ["🧪️tests/📨️browser-frame-transport/🟦️.ts", "🧪️tests/🎮️browser-interactive-job-port/🟦️.ts", "🧪️tests/🔢️frame-generation-hold/🟦️.ts", "🧪️tests/⏱️wgpu-ui-turn-budget/🟦️.ts", "🧪️tests/⏱️wgpu-worker-step-budget/🟦️.ts", "🧪️tests/🔬️wgpu-extension-dispatch/🟦️.ts", "🧪️tests/🗄️wgpu-host-storage-door/🟦️.ts", "🧪️tests/🔖️wgpu-readiness-beacon/🟦️.ts", ...segments], "../../🧪️tests/🎚️config/🟦️.ts");
+    await runVitest(this.root, ["🧪️tests/📨️browser-frame-transport/🟦️.ts", "🧪️tests/🎮️browser-interactive-job-port/🟦️.ts", "🧪️tests/🔢️frame-generation-hold/🟦️.ts", "🧪️tests/⏱️wgpu-ui-turn-budget/🟦️.ts", "🧪️tests/⏱️wgpu-worker-step-budget/🟦️.ts", "🧪️tests/🔬️wgpu-extension-dispatch/🟦️.ts", "🧪️tests/🗄️wgpu-host-storage-door/🟦️.ts", "🧪️tests/🔌️wgpu-socket-door/🟦️.ts", "🧪️tests/🔖️wgpu-readiness-beacon/🟦️.ts", ...segments], "../../🧪️tests/🎚️config/🟦️.ts");
   }
 }
 

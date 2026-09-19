@@ -12,7 +12,7 @@ export function extensionPackageEnvironment(environment: NodeJS.ProcessEnv): Nod
 export function extensionBuildConfig(root: string, entry: string, outputDirectory: string, outputFile: string, watch: boolean) {
   const define = { "import.meta.vitest": "undefined" };
   return {
-    configFile: false,
+    configFile: false as const,
     define,
     plugins: [{
       name: "semio-extension-host-tests",

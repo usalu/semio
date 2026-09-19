@@ -1,16 +1,16 @@
 type TestSource = { readonly directory: string; readonly url: string };
 
-export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: any, source: TestSource): Promise<void> {
+export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: Pick<typeof import("../../../📃️UiDocumentStore/🟦️.tsx"), "DEFAULT_UI_DOCUMENT_LIMITS" | "UiDocumentStore"> & Pick<typeof import("../../🟦️.tsx"), "UiNodeView" | "accessibilityAriaProps"> & Pick<typeof import("react"), "Profiler">, source: TestSource): Promise<void> {
   const { DEFAULT_UI_DOCUMENT_LIMITS, Profiler, UiDocumentStore, UiNodeView, accessibilityAriaProps } = dependencies;
-  type AccessibilitySpec = any;
-  type Component = any;
-  type PatchRejection = any;
-  type StyleSpec = any;
-  type UiDocumentLimits = any;
-  type UiInterpreterContext = any;
-  type UiNodeRecord = any;
-  type UiPatch = any;
-  type UiSnapshot = any;
+  type AccessibilitySpec = import("../../../../../../../../../🔨️modules/🛂️manifest/🟦️.ts").AccessibilitySpec;
+  type Component = import("../../../../../../../../../🔨️modules/🛂️manifest/🟦️.ts").Component;
+  type PatchRejection = import("../../../../../../../../../🔨️modules/🛂️manifest/🟦️.ts").PatchRejection;
+  type StyleSpec = import("../../../../../../../../../🔨️modules/🛂️manifest/🟦️.ts").StyleSpec;
+  type UiDocumentLimits = import("../../../../../../../../../🔨️modules/🛂️manifest/🟦️.ts").UiDocumentLimits;
+  type UiInterpreterContext = import("../../🟦️.tsx").UiInterpreterContext;
+  type UiNodeRecord = import("../../../../../../../../../🔨️modules/🛂️manifest/🟦️.ts").UiNodeRecord;
+  type UiPatch = import("../../../../../../../../../🔨️modules/🛂️manifest/🟦️.ts").UiPatch;
+  type UiSnapshot = import("../../../../../../../../../🔨️modules/🛂️manifest/🟦️.ts").UiSnapshot;
 
   const { describe, expect, it, vi } = vitest;
 
@@ -137,7 +137,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       return cases;
     }
 
-    function allActionIds(state: ReturnType<UiDocumentStore["getState"]>): string[] {
+    function allActionIds(state: ReturnType<InstanceType<typeof UiDocumentStore>["getState"]>): string[] {
       const ids = new Set<string>();
       for (const record of state.nodes.values()) {
         for (const binding of record.bindings ?? []) ids.add(`${binding.action.scope}.${binding.action.name}@${binding.action.version}`);

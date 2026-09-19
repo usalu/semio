@@ -218,6 +218,54 @@ async fn app_definition_declares_reorganize_and_history_actions() {
     assert!(action_ids.contains(&"reorganize"));
 }
 
+/// ⚖️ LAW: the navbar example picker's verb reaches EVERY window kind. `setActiveExample` is
+/// app-scoped — no `window_kind_action_refs` owns it — so `build_definition` copies it onto every
+/// window, which is what makes the shell's boot dispatch dispatchable from whichever pane happens to
+/// be focused. It was declared nowhere at all, so the very first dispatch of every boot was dropped
+/// `undeclared-action` from `trinity-rewriting-lhs`
+/// (ticket 26/09/18/OS-HUB-COLLABORATION-AI-END-TO-END, `📓️b3b-trinity-wfc-puzzle.md` §3.1).
+#[semio_framework_async_macros::async_test]
+async fn app_definition_declares_set_active_example_on_every_window_kind() {
+    let definition = create_rewriting_app();
+    let owners = definition.window_kinds.iter().filter(|window| window.actions.iter().any(|action| action.id == "setActiveExample")).count();
+    assert_eq!(owners, definition.window_kinds.len(), "setActiveExample must stay unscoped so every window kind declares it");
+}
+
+/// ⚖️ LAW: `setActiveExample` answers the id the SHELL sends with a whole-document `LoadDocument`
+/// effect. The navbar picker dispatches a REGISTERED example id, and `demo` is the only example this
+/// subset registers, so that id must resolve. The effect is HOST-applied — the guest's own snapshot
+/// is deliberately left alone here (asserting it changed is what a first draft of this test got
+/// wrong), so the guest-side contract is exactly "one `LoadDocument` carrying the example's document".
+#[semio_framework_async_macros::async_test]
+async fn set_active_example_loads_the_registered_demo_document() {
+    let mut app = new_app().await;
+    app.dispatch_typed(TrinityRewritingCommand::SetActiveExample { example_id: crate::examples::demo::ID.into() }, &meta("local")).await.expect("set active example");
+    let receipt = settle(&mut app).await;
+    let loads = receipt.effects.iter().filter(|effect| matches!(effect, semio_framework_plugin::Effect::LoadDocument { .. })).count();
+    assert_eq!(loads, 1, "the registered example id produces exactly one LoadDocument effect");
+    let loaded = crate::editor::rewriting::commands::set_active_example_document(crate::examples::demo::ID).expect("the demo example resolves to a document");
+    assert_eq!(loaded, store::ArtifactDsl::parse_dsl(crate::examples::demo::PRIMARY_TEXT).expect("the demo example's own dsl parses"), "the document the effect carries is the example the subset registers");
+    assert_ne!(loaded, app.snapshot().unwrap(), "the effect is HOST-applied: a mounted app with no host keeps its own snapshot, which is what makes the effect the only guest-side witness");
+}
+
+#[semio_framework_async_macros::async_test]
+async fn set_active_example_ignores_an_unregistered_id() {
+    let mut app = new_app().await;
+    app.dispatch_typed(TrinityRewritingCommand::SetActiveExample { example_id: "not-an-example".into() }, &meta("local")).await.expect("set active example");
+    let receipt = settle(&mut app).await;
+    assert!(receipt.effects.is_empty(), "an unknown example id loads nothing");
+}
+
+/// ⚖️ LAW: the verb crosses the SAME two gates every other rewriting document verb crosses — the
+/// binary tool-job roster (`TOOL_JOB_IDS`, the wire contract) and the retained document-tool roster
+/// (`REWRITING_DOCUMENT_TOOL_IDS`, which the factory keys on). Declaring the action without both
+/// leaves it dispatchable but unroutable.
+#[semio_framework_async_macros::async_test]
+async fn set_active_example_is_registered_on_both_tool_rosters() {
+    assert!(<TrinityRewritingCommand as OpBinary>::TOOL_JOB_IDS.contains(&"setActiveExample"));
+    assert!(REWRITING_DOCUMENT_TOOL_IDS.contains(&"setActiveExample"));
+}
+
 #[semio_framework_async_macros::async_test]
 async fn trinity_rewriting_labels_resolve_native_by_default() {
     let mut app = new_app().await;

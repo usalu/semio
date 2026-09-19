@@ -1,8 +1,10 @@
+/** 🎨️ The styling colour vocabulary this extracted suite measures against. */
+import type { Rgba8 } from "../../🌓️theme/🟦️.ts";
+
 type TestSource = { readonly directory: string; readonly url: string };
 
-export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: any, source: TestSource): Promise<void> {
+export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: Pick<typeof import("../../🌗️mixing/🟦️.ts"), "linearToOklab" | "oklabMix" | "rgba8ToLinear"> & Pick<typeof import("../../📽️projection/🟦️.ts"), "LEVELS_DEFAULT" | "loadTokens" | "resolveAppearances" | "toPascalCase"> & Pick<typeof import("node:path"), "join">, source: TestSource): Promise<void> {
   const { LEVELS_DEFAULT, join, linearToOklab, loadTokens, oklabMix, resolveAppearances, rgba8ToLinear, toPascalCase } = dependencies;
-  type Rgba8 = any;
 
   const { describe, expect, it } = vitest;
 

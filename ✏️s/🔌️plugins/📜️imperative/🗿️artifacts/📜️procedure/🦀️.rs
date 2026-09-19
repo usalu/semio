@@ -783,11 +783,6 @@ pub mod editor {
             pub mod schema;
         }
 
-        #[path = "."]
-        pub mod presence {
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🧬️schema/🦀️.rs"]
-            pub mod schema;
-        }
         #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🗣️terminology/🦀️.rs"]
         pub mod terminology;
         #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌉️wasm/🦀️.rs"]
@@ -854,6 +849,16 @@ pub mod viewer {
         #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs"]
         mod component;
         pub use component::*;
+        #[path = "."]
+        pub mod presence {
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/👥️presence/🧬️schema/🦀️.rs"]
+            pub mod schema;
+        }
+        #[path = "."]
+        pub mod config {
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎚️config/🧬️schema/🦀️.rs"]
+            pub mod schema;
+        }
 
         #[path = "."]
         pub mod modes {

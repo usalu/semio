@@ -22,8 +22,8 @@ checksum-freshness = true
 # materialises `[Option<UiSurfaceSlot>; 64]` on the stack — which traps as a bare `RuntimeError: memory
 # access out of bounds` with no Rust panic, since the overflow writes below the stack rather than aborting.
 # Measured: every `semioWgpuWorkerBootstrap` died there until this flag was set. 16 MiB is double the
-# 8 MiB the plugin components already pass explicitly (`🧑‍💻dev/…/📜️script.ts` `PLUGIN_WASM_STACK_BYTES`),
-# because the renderer's debug frames are far larger than a plugin's.
+# 8 MiB the plugin components carry (`[target.wasm32-wasip2]` below), because the renderer's debug
+# frames are far larger than a plugin's.
 [target.wasm32-unknown-unknown]
 rustflags = ['--cfg', 'getrandom_backend="wasm_js"', '-C', 'link-arg=-zstack-size=16777216']
 
@@ -32,8 +32,18 @@ rustflags = ['--cfg', 'getrandom_backend="wasm_js"', '-C', 'link-arg=-zstack-siz
 # 512MiB is uniform across all plugins on purpose — per-plugin rustflags would churn cargo
 # fingerprints across the shared dep graph on every sequential `cargo build -p` in the fleet.
 # Target-scoped rustflags REPLACE (not merge with) [build].rustflags, so `-Z threads=8` is repeated.
+#
+# 🧊️ `-zstack-size=8388608` is the plugin guest's shadow stack, and it belongs HERE — with the memory
+# maximum it is carved out of — rather than in whichever build command happens to produce a component.
+# It used to be passed per invocation by `🔌️plugin/🏗️build/📋️plan/🟦️.ts`'s `pluginCargoArgs`, so a plain
+# `cargo build -p <plugin> --target wasm32-wasip2 --profile wasm-dev` wrote a component with wasm-ld's
+# DEFAULT 1 MiB stack into the same shared target directory the dev host and the MCP gateway both read
+# from. At `opt-level = 0` that tape runs out inside `Event::InstanceOpen`: `UiPatchApplyArena::default`
+# alone spends ~654 KiB of it zero-initialising a 93.5 KiB static, and the guest traps below address 0
+# (ticket 26/09/18 slice A2, `📓️a2-mcp-plugin-host-instance-open.md` §3). A component's stack size is
+# part of its ABI, not of one builder's argv.
 [target.wasm32-wasip2]
-rustflags = ["-Z", "threads=8", "-C", "link-arg=--max-memory=536870912"]
+rustflags = ["-Z", "threads=8", "-C", "link-arg=--max-memory=536870912", "-C", "link-arg=-zstack-size=8388608"]
 
 [target.x86_64-unknown-linux-gnu]
 rustflags = ["-C", "link-arg=-fuse-ld=mold"]

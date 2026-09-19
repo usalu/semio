@@ -9,8 +9,8 @@ use semio_framework_plugin::{ExecutionMode, Plugin, PluginApp};
 semio_framework_dispatch_macros::dyn_enum_close! {
     /// 🗃️ Closed runtime app fleet for the declaration-owned DAG surfaces.
     pub enum DagApps: PluginApp {
-        DagEditor(VcsArtifactApp<EditorApp<crate::editor::dag::DagPlayApp>>),
-        DagViewer(VcsArtifactApp<ViewerApp<crate::viewer::dag::DagViewer>>),
+        DagEditor(VcsArtifactApp<EditorApp<crate::editor::dag::DagPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>),
+        DagViewer(VcsArtifactApp<ViewerApp<crate::viewer::dag::DagViewer>, semio_s_artifact_stdio_semio::SemioMembers>),
     }
 }
 //#endregion 🗃️Apps

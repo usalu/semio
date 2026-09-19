@@ -30,7 +30,7 @@ pub fn definition() -> WindowKindDefinition {
 fn page_summary(index: usize, page: &PdfPage) -> String {
     let media = page.media_box;
     let crop = page.crop_box.map(|c| format!(", CropBox [{:.1}, {:.1}, {:.1}, {:.1}]", c[0], c[1], c[2], c[3])).unwrap_or_default();
-    let text = if page.text.is_empty() { "(no extracted or authored text)".to_string() } else { page.text.clone() };
+    let text = if page.text().is_empty() { "(no extracted or authored text)".to_string() } else { page.text() };
     format!("Page {} -- MediaBox [{:.1}, {:.1}, {:.1}, {:.1}]{}\n{}", index + 1, media[0], media[1], media[2], media[3], crop, text)
 }
 

@@ -1,6 +1,6 @@
 type TestSource = { readonly directory: string; readonly url: string };
 
-export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: any, source: TestSource): Promise<void> {
+export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: Pick<typeof import("../../🟦️.ts"), "ACTOR_UI_PATCH_RECEIPT_MAXIMUM_BYTES" | "actorUiPatchReceiptEquals" | "decodeActorUiPatchReceipt" | "encodeActorUiPatchReceipt" | "validateActorUiPatchPairing">, source: TestSource): Promise<void> {
   const { ACTOR_UI_PATCH_RECEIPT_MAXIMUM_BYTES, actorUiPatchReceiptEquals, decodeActorUiPatchReceipt, encodeActorUiPatchReceipt, validateActorUiPatchPairing } = dependencies;
 
   const { it, expect } = vitest;

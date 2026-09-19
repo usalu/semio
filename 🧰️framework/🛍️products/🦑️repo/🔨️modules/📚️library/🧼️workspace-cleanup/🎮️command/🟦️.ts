@@ -9,6 +9,7 @@ import { runTaxonomyCliWorkflow } from "../../🧹️normalization/🎮️comman
 import { cleanCollectMarkerOnlyFolderRemovals } from "../🔍️marker-only-folders/🟦️.ts";
 import { cleanProtectedPrefixes, cleanProjectRemovals, CLEAN_PROTECTION_VIEW } from "../🛡️protection/🟦️.ts";
 import { cleanRemovePath, runWorkspaceClean } from "../🗑️removal/🟦️.ts";
+import { cleanKillStrayProcesses } from "../🧟️stray-processes/🟦️.ts";
 
 /**
  * 🧹Workspace cleaner: misplaced emoji mounts, ticket junk, oversized build artifacts — never
@@ -49,6 +50,10 @@ export class CleanScript extends Script {
       runCmd("bun", [join(this.root, domain, "📜️script.ts"), "clean", ...segments.slice(1)], { cwd: join(this.root, domain), ...orchestratorBudgetOpts() });
       return;
     }
+    if (segments[0] === "stray-processes") {
+      this.runKillStrayProcesses(dry);
+      return;
+    }
     if (segments[0] === "coverage") {
       // 📊️ Generated coverage reports only — no source, no fixture, no other cache entry.
       const removed: string[] = [];
@@ -75,6 +80,14 @@ export class CleanScript extends Script {
     ];
     for (const line of lines) console.log(line);
     this.runCachePrune(dry);
+    this.runKillStrayProcesses(dry);
+  }
+
+  /** 🧟️Reaps stray bun/zsh/cargo/node/esbuild/rustc processes left over from crashed or abandoned sessions. */
+  private runKillStrayProcesses(dry: boolean): void {
+    const removals = cleanKillStrayProcesses(dry);
+    console.log(`[clean] stray-processes ${dry ? "dry-run" : "applied"} removals=${removals.length}`);
+    for (const row of removals) console.log(`[clean] ${dry ? "would-kill" : "killed"} ${row.action} pid=${row.pid} ppid=${row.ppid} ${row.name}`);
   }
 
   /** ⚡️Bounds the shared cache root through its own owner instead of size-sweeping it — `clean` never walks or deletes under it directly. */

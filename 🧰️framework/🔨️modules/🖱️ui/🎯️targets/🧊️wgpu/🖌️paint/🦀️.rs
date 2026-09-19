@@ -33,7 +33,7 @@ use crate::wgpu::text::FontAtlas;
 use crate::wgpu::theme::{Level, Rgba, Theme};
 #[cfg(test)]
 use crate::wgpu::tree::EditState;
-use crate::wgpu::tree::{NodeFlags, NodeKey, UiTree};
+use crate::wgpu::tree::{Node, NodeFlags, NodeKey, UiTree, WidgetSpec};
 use crate::wgpu::widgets::draw_text_on;
 #[cfg(test)]
 use crate::wgpu::widgets::wrap_text;
@@ -129,6 +129,17 @@ pub fn paint_retained_glyph_step(value: &str, bounds: Rect, size: f32, color: Rg
     paint_retained_glyph_step_flowed(value, bounds, size, color, RetainedTextFlow::Wrap, atlas, draw, cursor)
 }
 
+/// 🅰️ [`paint_retained_glyph_step_flowed`] at an explicit [`TextWeight`] — the ONE retained entry a
+/// caller reaches for React's `font-semibold`. A [`TextWeight::Semibold`] scalar is struck twice,
+/// the second strike offset by [`crate::wgpu::text::faux_bold_offset`], and the step's own retained
+/// reservation is priced at `weight.strikes()` items so the second strike can never overrun a budget
+/// sized for one (see `TextWeight::strikes`'s own doc comment, and the law
+/// `a_semibold_glyph_strike_prices_and_paints_two_instances`).
+#[allow(clippy::too_many_arguments, reason = "one arg per retained text input; a struct here is a T2 restructure of every glyph call site")]
+pub fn paint_retained_glyph_step_weighted(value: &str, bounds: Rect, size: f32, color: Rgba, flow: RetainedTextFlow, weight: crate::wgpu::text::TextWeight, atlas: &mut FontAtlas, draw: &mut DrawList, cursor: &mut RetainedGlyphCursor) -> RetainedGlyphStep {
+    paint_retained_glyph_step_inner(value, bounds, size, color, flow, weight, atlas, draw, cursor)
+}
+
 /// ✒️ [`paint_retained_glyph_step`] with an explicit [`RetainedTextFlow`] — the entry chrome text
 /// takes so a chip label can never break onto a second line.
 ///
@@ -142,6 +153,11 @@ pub fn paint_retained_glyph_step(value: &str, bounds: Rect, size: f32, color: Rg
 /// (ticket 26/09/17/WGPU-RENDERER-REACT-PARITY packet W9a).
 #[allow(clippy::too_many_arguments, reason = "one arg per retained text input; a struct here is a T2 restructure of every glyph call site")]
 pub fn paint_retained_glyph_step_flowed(value: &str, bounds: Rect, size: f32, color: Rgba, flow: RetainedTextFlow, atlas: &mut FontAtlas, draw: &mut DrawList, cursor: &mut RetainedGlyphCursor) -> RetainedGlyphStep {
+    paint_retained_glyph_step_inner(value, bounds, size, color, flow, crate::wgpu::text::TextWeight::Regular, atlas, draw, cursor)
+}
+
+#[allow(clippy::too_many_arguments, reason = "one arg per retained text input; a struct here is a T2 restructure of every glyph call site")]
+fn paint_retained_glyph_step_inner(value: &str, bounds: Rect, size: f32, color: Rgba, flow: RetainedTextFlow, weight: crate::wgpu::text::TextWeight, atlas: &mut FontAtlas, draw: &mut DrawList, cursor: &mut RetainedGlyphCursor) -> RetainedGlyphStep {
     if value.len() > RETAINED_NODE_TEXT_MAX_BYTES || !value.is_char_boundary(cursor.byte) {
         return RetainedGlyphStep::Fault;
     }
@@ -169,7 +185,8 @@ pub fn paint_retained_glyph_step_flowed(value: &str, bounds: Rect, size: f32, co
             cursor.pen_x = 0.0;
         }
     }
-    if draw.begin_retained_output(1, size_of::<crate::wgpu::draw::UiInstance>()).is_err() {
+    let strikes = weight.strikes();
+    if draw.begin_retained_output(strikes, strikes * size_of::<crate::wgpu::draw::UiInstance>()).is_err() {
         return RetainedGlyphStep::Fault;
     }
     let atlas_w = atlas.width as f32;
@@ -200,6 +217,11 @@ pub fn paint_retained_glyph_step_flowed(value: &str, bounds: Rect, size: f32, co
     let y = baseline - logical_h - bearing_y;
     let uv = [atlas_x as f32 / atlas_w, atlas_y as f32 / atlas_h, (atlas_x + width) as f32 / atlas_w, (atlas_y + height) as f32 / atlas_h];
     draw.push_glyph([x, y, logical_w.max(1.0), logical_h.max(1.0)], color, uv);
+    // 🅰️ The synthetic semibold's second strike — same glyph, same baseline, offset along x only, so
+    // the advance (and with it the line box and every wrap point priced above) is untouched.
+    if strikes > 1 {
+        draw.push_glyph([x + crate::wgpu::text::faux_bold_offset(size), y, logical_w.max(1.0), logical_h.max(1.0)], color, uv);
+    }
     if draw.finish_retained_output().is_err() {
         return RetainedGlyphStep::Fault;
     }
@@ -311,7 +333,16 @@ fn retained_presence_step(draw: &mut DrawList, bounds: Rect, theme: &Theme, pres
 }
 
 fn retained_text_node_step(value: &str, bounds: Rect, size: f32, color: Rgba, atlas: &mut FontAtlas, draw: &mut DrawList, cursor: &mut RetainedNodePaintCursor) -> RetainedNodePaintStep {
-    match paint_retained_glyph_step(value, bounds, size, color, atlas, draw, &mut cursor.glyph) {
+    retained_text_node_step_weighted(value, bounds, size, color, crate::wgpu::text::TextWeight::Regular, atlas, draw, cursor)
+}
+
+/// 🅰️ [`retained_text_node_step`] at an explicit weight — the production seam for React's
+/// `font-semibold`. `TextWeight::of(emphasize)` is the whole mapping, exactly as `TextView`
+/// (`🗣️Interpreter/🟦️.tsx:1168`) spells it; every other retained run stays `Regular`, which is the
+/// byte-identical behaviour this function had before it grew the parameter.
+#[allow(clippy::too_many_arguments, reason = "one arg per retained text input; a struct here is a T2 restructure of every retained node call site")]
+fn retained_text_node_step_weighted(value: &str, bounds: Rect, size: f32, color: Rgba, weight: crate::wgpu::text::TextWeight, atlas: &mut FontAtlas, draw: &mut DrawList, cursor: &mut RetainedNodePaintCursor) -> RetainedNodePaintStep {
+    match paint_retained_glyph_step_weighted(value, bounds, size, color, RetainedTextFlow::Wrap, weight, atlas, draw, &mut cursor.glyph) {
         RetainedGlyphStep::Pending => RetainedNodePaintStep::Pending,
         RetainedGlyphStep::Complete => RetainedNodePaintStep::Complete,
         RetainedGlyphStep::Fault => RetainedNodePaintStep::Fault,
@@ -690,13 +721,18 @@ pub(crate) fn paint_node_step(
         UiNode::Text(text) => {
             if cursor.phase == 0 {
                 let emphasize = text.emphasize.unwrap_or(false);
-                // 🅰️ React's `TextView` is `text-foreground` in BOTH states and only swaps
-                // `text-sm` for `font-semibold` (`🗣️Interpreter/🟦️.tsx:1168`), so plain body text is
-                // never muted here either; the weight swap becomes a size swap until a bold face
-                // ships (no `.ttf` on disk carries one — see `text`'s module doc).
+                // 🅰️ React's `TextView` is `text-foreground` in BOTH states and swaps `text-sm` for
+                // `font-semibold` (`🗣️Interpreter/🟦️.tsx:1168`), so plain body text is never muted
+                // here either, and an emphasized run is BOTH a step up the size ramp (it loses
+                // `text-sm`) and a real weight change. The weight half was a built-but-unwired
+                // primitive until ticket 26/09/17 packet W15a: `draw_text_weighted`/`TextWeight`
+                // existed with zero callers, so every emphasized `Text` painted as a size bump alone.
+                // No bold face ships on disk, so `Semibold` is the synthetic double strike
+                // `text::faux_bold_offset` describes — advances, and so wraps, unchanged.
                 let size = if emphasize { theme.font_size_emphasized } else { theme.font_size_body };
                 let color = theme.text;
-                match retained_text_node_step(text.value.as_str(), bounds, size, color, atlas, draw, cursor) {
+                let weight = crate::wgpu::text::TextWeight::of(emphasize);
+                match retained_text_node_step_weighted(text.value.as_str(), bounds, size, color, weight, atlas, draw, cursor) {
                     RetainedNodePaintStep::Complete => {
                         cursor.advance(1);
                         RetainedNodePaintStep::Pending
@@ -1365,6 +1401,12 @@ enum RetainedInteractiveSyncPhase {
     Bind,
     SelectItem,
     SelectScan,
+    /// 🔽️ The open popup's row for `cursor.item` has no retained child yet — synthesize it. See
+    /// `reconcile::select_item_row` for why production never had one.
+    SelectMint,
+    /// 🔽️ A popup that CLOSED (or shrank) still owns synthesized rows — drop them one per step, so
+    /// a closed `Select` leaves no arena node behind exactly as React unmounts `SelectContent`.
+    SelectRetire,
     SelectWrite,
     StackWrite,
     TreeSection,
@@ -1503,8 +1545,8 @@ fn retained_sync_tree_skip(cursor: &mut RetainedInteractiveSyncCursor) -> Retain
     RetainedInteractiveSyncStep::Pending
 }
 
-/// 🔽️ The same rule for an open `Select`: a popup row the document never mounted is skipped, exactly
-/// as the `sync_select_popup_rows` twin skips it, instead of taking the surface down.
+/// 🔽️ A popup row that could not be synthesized (the composite-row ledger is full) is skipped, never
+/// a fault — the same rule `retained_sync_tree_skip` applies to a declared tree row with no record.
 fn retained_sync_select_skip(cursor: &mut RetainedInteractiveSyncCursor) -> RetainedInteractiveSyncStep {
     cursor.matched = None;
     cursor.child_scan = None;
@@ -1573,6 +1615,11 @@ pub(crate) fn sync_interactive_state_node_step(tree: &mut UiTree, id: NodeId, th
                     cursor.phase = RetainedInteractiveSyncPhase::SelectItem;
                     RetainedInteractiveSyncStep::Pending
                 }
+                // 🔽️ A closed popup that still owns rows unmounts them before anything else runs.
+                UiNode::Select(_) if tree.composite_rows_of(id) > 0 => {
+                    cursor.phase = RetainedInteractiveSyncPhase::SelectRetire;
+                    RetainedInteractiveSyncStep::Pending
+                }
                 UiNode::Stack(_) => {
                     cursor.phase = RetainedInteractiveSyncPhase::StackWrite;
                     RetainedInteractiveSyncStep::Pending
@@ -1595,6 +1642,13 @@ pub(crate) fn sync_interactive_state_node_step(tree: &mut UiTree, id: NodeId, th
                 return retained_sync_fault(cursor, line!());
             };
             if cursor.item >= select.items.len() {
+                // 🔽️ A popup whose item list SHRANK still owns rows for items that are gone. Drop
+                // the excess one per step; `SelectScan` re-mints anything it dropped that is still
+                // declared, so this converges instead of oscillating and never leaks an arena slot.
+                if tree.composite_rows_of(id) > select.items.len() {
+                    let _ = tree.retire_composite_row_of_step(id);
+                    return RetainedInteractiveSyncStep::Pending;
+                }
                 return cursor.finish();
             }
             cursor.child_scan = tree.node(id).and_then(|node| node.first_child);
@@ -1602,8 +1656,34 @@ pub(crate) fn sync_interactive_state_node_step(tree: &mut UiTree, id: NodeId, th
             cursor.phase = RetainedInteractiveSyncPhase::SelectScan;
             RetainedInteractiveSyncStep::Pending
         }
+        RetainedInteractiveSyncPhase::SelectRetire => {
+            if tree.retire_composite_row_of_step(id) {
+                return cursor.finish();
+            }
+            RetainedInteractiveSyncStep::Pending
+        }
+        RetainedInteractiveSyncPhase::SelectMint => {
+            // 🔽️ React mounts `SelectContent`'s children when the popup opens; this is that mount.
+            // One row per step, keyed by the item's own `value` so `SelectScan` above finds it again
+            // next frame instead of minting a second copy, and ledgered on the tree so the document
+            // reconcile can retire it before it relinks the arena (`UiTree::mint_composite_row`).
+            let row = tree.node(id).and_then(|node| match &node.spec.0 {
+                UiNode::Select(select) => select.items.get(cursor.item).map(|item| (crate::wgpu::reconcile::select_item_row(select, item), item.value.clone())),
+                _ => None,
+            });
+            let Some((spec, key)) = row else { return retained_sync_fault(cursor, line!()) };
+            let minted = tree.mint_composite_row(id, Node::new(NodeKey::Explicit(key), WidgetSpec(spec)));
+            let Some(minted) = minted else { return retained_sync_select_skip(cursor) };
+            cursor.matched = Some(minted);
+            cursor.phase = RetainedInteractiveSyncPhase::SelectWrite;
+            RetainedInteractiveSyncStep::Pending
+        }
         RetainedInteractiveSyncPhase::SelectScan => {
-            let Some(child) = cursor.child_scan else { return retained_sync_select_skip(cursor) };
+            let Some(child) = cursor.child_scan else {
+                cursor.matched = None;
+                cursor.phase = RetainedInteractiveSyncPhase::SelectMint;
+                return RetainedInteractiveSyncStep::Pending;
+            };
             let matches = tree
                 .node(id)
                 .and_then(|node| match &node.spec.0 {
@@ -1980,10 +2060,17 @@ pub(crate) const PROGRESS_INDETERMINATE_SHARE: f32 = 1.0 / 3.0;
 ///
 /// 📶️ React's bar is `h-tiny w-full` (`🗣️Interpreter/🟦️.tsx:2114`) — `--size-tiny`, not the
 /// one-spacing-unit sliver this used to draw.
-pub(crate) fn progress_bar_rects(node: &UiProgressNode, bounds: Rect, _theme: &Theme) -> ([f32; 4], [f32; 4]) {
+pub(crate) fn progress_bar_rects(node: &UiProgressNode, bounds: Rect, theme: &Theme) -> ([f32; 4], [f32; 4]) {
+    progress_bar_rects_of(node.completed, node.total, bounds, theme)
+}
+
+/// 📶️ [`progress_bar_rects`] keyed by the two numbers it actually reads, so the `🪀️widgets` kit's
+/// own `Progress` arm (ticket 26/09/17 packet W15a) prices the identical geometry without having to
+/// build a whole `UiProgressNode` — one bar law covers both kits.
+pub(crate) fn progress_bar_rects_of(completed: f64, total: Option<f64>, bounds: Rect, _theme: &Theme) -> ([f32; 4], [f32; 4]) {
     let height = SIZE_TINY.min(bounds.h).max(0.0);
     let track = [bounds.x, bounds.y + (bounds.h - height) * 0.5, bounds.w.max(0.0), height];
-    let fill = match ui_contract::progress_fraction(node.completed, node.total) {
+    let fill = match ui_contract::progress_fraction(completed, total) {
         Some(fraction) => [track[0], track[1], track[2] * fraction as f32, height],
         None => {
             let width = track[2] * PROGRESS_INDETERMINATE_SHARE;
@@ -3003,6 +3090,32 @@ pub fn paint_overlay_surface(draw: &mut DrawList, bounds: Rect, theme: &Theme) {
     draw.push_solid_overlay([bounds.x + 1.0, bounds.y + 2.0, bounds.w, bounds.h], theme.overlay_shadow);
     draw.push_solid_overlay([bounds.x, bounds.y, bounds.w, bounds.h], theme.surface(Level::Menu));
     push_chrome_border(draw, bounds, theme.stroke_hairline, theme.border_normal, true, true, true, true);
+}
+
+/// 🪟️ How many quads one overlay's chrome step may emit: a backdrop, a drop shade, the surface
+/// fill, and the four hairline border edges, with slack.
+pub(crate) const RETAINED_OVERLAY_CHROME_ITEMS: usize = 16;
+
+/// 🪟️ One open overlay's chrome as ONE retained step — the modal backdrop (when its kind has one)
+/// and the floating surface it sits on, both into the overlay bucket so they composite above every
+/// panel this frame painted. `false` means the step overran its own retained grant, which the frame
+/// ladder turns into a fault exactly like any other retained output refusal.
+///
+/// This is the production seam `Ui::frame_step`'s `RetainedPaintPhase::Overlays` drives; before
+/// ticket 26/09/17 packet W15a the two painters below were reachable only from the `🪟️OverlayApi`
+/// façade, which no host ever called, so an open `Dialog`/`Popover` painted its content with no
+/// surface under it (W1n gap 3).
+pub(crate) fn retained_overlay_chrome_step(draw: &mut DrawList, viewport: Rect, bounds: Rect, backdrop: bool, theme: &Theme) -> bool {
+    if draw.begin_retained_output(RETAINED_OVERLAY_CHROME_ITEMS, RETAINED_NODE_FIXED_OUTPUT_BYTES).is_err() {
+        return false;
+    }
+    if backdrop {
+        paint_overlay_backdrop(draw, viewport, theme);
+    }
+    if bounds.w > 0.0 && bounds.h > 0.0 {
+        paint_overlay_surface(draw, bounds, theme);
+    }
+    draw.finish_retained_output().is_ok()
 }
 
 /// 💡️ A hover tooltip's own surface size for `label`, measured the way the popup will draw it —

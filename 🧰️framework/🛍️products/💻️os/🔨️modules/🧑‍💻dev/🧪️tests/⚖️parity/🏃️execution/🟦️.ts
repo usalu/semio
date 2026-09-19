@@ -146,7 +146,7 @@ function ensureParityPlaywrightBrowsersPath(): void {
 async function verifyParityVariant(variant: string, ports: { readonly react: number; readonly wgpu: number }, opts: { readonly skipDev?: boolean } = {}): Promise<ParityPlaygroundReport> {
   const start = Date.now();
   ensureParityPlaywrightBrowsersPath();
-  const { chromium } = await import(PLAYWRIGHT_MODULE_SPECIFIER);
+  const { chromium }: typeof import("playwright") = await import(PLAYWRIGHT_MODULE_SPECIFIER);
   const browser = await chromium.launch({ headless: process.env.HEADED !== "1", args: ["--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--enable-unsafe-webgpu"] });
   let reactServer: ParityServerHandle | undefined;
   let wgpuServer: ParityServerHandle | undefined;
@@ -218,7 +218,7 @@ class ParityTriageScript extends BundleScript {
     const variant = segments[0] || process.env.SEMIO_PLUGIN || DEFAULT_HOST_VARIANT;
     const ports = findFreeParityPortPair();
     ensureParityPlaywrightBrowsersPath();
-    const { chromium } = await import(PLAYWRIGHT_MODULE_SPECIFIER);
+    const { chromium }: typeof import("playwright") = await import(PLAYWRIGHT_MODULE_SPECIFIER);
     const browser = await chromium.launch({ headless: process.env.HEADED !== "1", args: ["--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--enable-unsafe-webgpu"] });
     // 🩹️terra-parity-rebaseline: `reactServer`/`wgpuServer` used to be `const`, ASSIGNED BEFORE this
     // `try`, so a throw from the SECOND `startParityDevServer` call (e.g. wgpu's cold cargo build
@@ -257,7 +257,7 @@ class ParityProbeScript extends BundleScript {
     if (!suite) throw new Error(`unknown probe suite: ${suiteName} (known: ${Object.keys(PARITY_PROBE_CATALOG).join(", ")})`);
     const ports = findFreeParityPortPair();
     ensureParityPlaywrightBrowsersPath();
-    const { chromium } = await import(PLAYWRIGHT_MODULE_SPECIFIER);
+    const { chromium }: typeof import("playwright") = await import(PLAYWRIGHT_MODULE_SPECIFIER);
     const browser = await chromium.launch({ headless: process.env.HEADED !== "1", args: ["--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--enable-unsafe-webgpu"] });
     // 🩹️terra-parity-rebaseline: same leak fix as `ParityTriageScript` above — see its comment.
     let reactServer: ParityServerHandle | undefined;

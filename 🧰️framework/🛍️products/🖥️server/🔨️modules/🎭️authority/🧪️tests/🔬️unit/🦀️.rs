@@ -1,7 +1,7 @@
 
 use super::*;
-use crate::contract::{CommandId, DeviceId, SessionId, TenantId, TraceContext};
-use crate::storage::MemoryAuthorityStore;
+use crate::contract::{CommandId, DeviceId, IdempotencyKey, SessionId, TenantId, TraceContext};
+use crate::test_instance::{read_counter, CounterDecider, EchoSaga, MemoryAuthorityStore, MirrorDecider, SilentSaga, TestDeciders, TestSagas, COUNTER, MIRROR};
 
 fn key(kind: &str) -> ActorKey {
     ActorKey { tenant: TenantId("t1".into()), kind: kind.into(), id: "c1".into() }
@@ -27,13 +27,14 @@ fn command(target: &ActorKey, kind: &str, idempotency: Option<&str>) -> CommandE
     }
 }
 
-async fn bus() -> CommandBus<MemoryAuthorityStore> {
+async fn bus() -> CommandBus<MemoryAuthorityStore, TestDeciders> {
     allowing(Box::new(|_| PolicyDecision::Allow)).await
 }
 
-async fn allowing(hook: PolicyHook) -> CommandBus<MemoryAuthorityStore> {
+async fn allowing(hook: PolicyHook) -> CommandBus<MemoryAuthorityStore, TestDeciders> {
     let mut bus = CommandBus::new(AuthorityDirectory::new(), MemoryAuthorityStore::default(), hook);
-    bus.register(Deciders::Counter(CounterDecider)).await;
+    bus.register(TestDeciders::Counter(CounterDecider)).await;
+    bus.register(TestDeciders::Mirror(MirrorDecider)).await;
     bus
 }
 
@@ -169,6 +170,20 @@ async fn a_decider_deferral_becomes_a_pending_outcome() {
     }
     assert_eq!(bus.store().last_seq(&key(COUNTER)).await.unwrap(), 0);
 }
+#[semio_framework_async_macros::async_test]
+async fn a_second_variant_of_the_instance_closed_decider_set_serves_its_own_actor_kind() {
+    let mut bus = bus().await;
+    match bus.submit(command(&key(MIRROR), "mirror.reflect", Some("k1")), tick(1)).await {
+        CommandOutcome::Accepted { events, .. } => {
+            assert_eq!(events.len(), 1);
+            assert_eq!(events[0].kind, "mirror.reflected");
+        }
+        other => panic!("expected acceptance, got {other:?}"),
+    }
+    assert_eq!(bus.directory().activation(&key(MIRROR)).unwrap().state.bytes, vec![3]);
+    assert!(matches!(bus.submit(command(&key(COUNTER), "counter.increment", Some("k2")), tick(2)).await, CommandOutcome::Accepted { .. }));
+    assert_eq!(read_counter(&bus.directory().activation(&key(COUNTER)).unwrap().state.bytes), 3);
+}
 //#endregion 🔖️Decide
 
 //#region 🔖️Saga
@@ -179,7 +194,8 @@ async fn the_outbox_drains_exactly_once_across_two_calls() {
     bus.submit(command(&key(COUNTER), "counter.increment", Some("k2")), tick(2)).await;
 
     let mut runner = SagaRunner::new();
-    runner.register(Sagas::Echo(EchoSaga));
+    runner.register(TestSagas::Echo(EchoSaga));
+    runner.register(TestSagas::Silent(SilentSaga));
 
     let first = runner.drain_outbox(bus.store_mut(), 64).await;
     assert_eq!(first.len(), 2);

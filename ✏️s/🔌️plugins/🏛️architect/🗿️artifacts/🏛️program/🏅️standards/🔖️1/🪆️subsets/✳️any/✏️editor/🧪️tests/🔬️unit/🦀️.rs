@@ -172,6 +172,38 @@ async fn command_from_action_bridges_declared_actions() {
         Ok(ArchitectCommand::SelectRegister(select_register::SelectRegister { register_id })) if register_id == "risks"
     ));
 }
+
+/// 📚️ The playground navbar dispatches `setActiveExample` on boot; before it was declared the shell
+/// dropped it as an undeclared action and logged this app's only console error. It must bridge, be
+/// admitted by the retained catalogue, and reload the document outside undo history.
+#[semio_framework_async_macros::async_test]
+async fn set_active_example_is_declared_bridged_and_loads_the_document() {
+    assert!(ARCHITECT_RETAINED_TOOL_IDS.contains(&"setActiveExample"), "setActiveExample must carry a retained catalogue row");
+    assert!(ARCHITECT_DOCUMENT_TOOL_IDS.contains(&"setActiveExample"), "setActiveExample takes the document reduce lane");
+    let definition = create_architect_app();
+    for window_kind in definition.window_kinds.iter() {
+        assert!(
+            window_kind.actions.iter().any(|action| action.id == "setActiveExample"),
+            "every window kind must inherit the app-level setActiveExample, else the shell drops the navbar's boot dispatch — missing on {}",
+            window_kind.id
+        );
+    }
+    let command = ArchitectPlayApp::command_from_action("setActiveExample", Some(&dsl::json::to_dsl_value(&dsl::json!({ "exampleId": "demo" })))).expect("setActiveExample bridges");
+    assert!(matches!(&command, ArchitectCommand::SetActiveExample(payload) if payload.example_id == "demo"));
+    assert_eq!(ArchitectPlayApp::command_id(&command), "setActiveExample");
+    let emit = context::drive(&command, &sample_plugin());
+    assert!(emit.artifact_mutations.is_empty(), "whole-document load must not go through the Mutation enum");
+    assert!(matches!(emit.effects.first(), Some(semio_framework_plugin::Effect::LoadDocument { .. })), "setActiveExample must emit a LoadDocument effect");
+}
+
+/// 🙈️ An example id this app does not publish is a no-op, not a fault — the navbar dispatches
+/// whatever its combobox holds, including ids belonging to a sibling plugin.
+#[semio_framework_async_macros::async_test]
+async fn an_unknown_example_id_loads_nothing() {
+    let command = ArchitectPlayApp::command_from_action("setActiveExample", Some(&dsl::json::to_dsl_value(&dsl::json!({ "exampleId": "not-an-architect-example" })))).expect("setActiveExample bridges");
+    let emit = context::drive(&command, &sample_plugin());
+    assert!(emit.effects.is_empty() && emit.artifact_mutations.is_empty());
+}
 //#endregion 🔖️CommandSurface
 
 //#region 🔖️Manifest

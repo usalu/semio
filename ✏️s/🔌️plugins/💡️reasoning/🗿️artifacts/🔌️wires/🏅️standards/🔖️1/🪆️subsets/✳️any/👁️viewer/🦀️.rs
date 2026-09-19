@@ -37,6 +37,8 @@ impl protocol::OpBinary for WiresViewCommand {
 pub struct WiresViewer;
 
 impl ArtifactViewer for WiresViewer {
+    /// 🧩️ The same member roster the editor declares — see `ReasoningWiresPlayApp`'s `Members`.
+    type Members = semio_s_artifact_stdio_semio::SemioMembers;
     type Snapshot = WiresSnapshot;
     type Mutation = crate::WiresMutation;
     type Config = NoConfig;
@@ -49,6 +51,10 @@ impl ArtifactViewer for WiresViewer {
 
     const DIALECT: Dialect = WIRES_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = MINDMAP_WIRES_SCHEMA;
+
+    fn genesis_child_pack(snapshot: &Self::Snapshot, slot: &str, child_id: &str) -> Option<Vec<u8>> {
+        crate::genesis_wires_child_pack(snapshot, slot, child_id)
+    }
 
     fn initial_snapshot() -> WiresSnapshot {
         crate::empty_wires_snapshot()

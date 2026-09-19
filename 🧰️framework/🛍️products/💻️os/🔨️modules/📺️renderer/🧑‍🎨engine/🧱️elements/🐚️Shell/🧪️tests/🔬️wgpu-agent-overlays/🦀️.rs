@@ -218,3 +218,156 @@ fn the_tooltip_delay_matches_the_react_chrome_control_hint() {
     assert!(chrome_tooltip_ready(&hover, 1_400.0));
 }
 //#endregion 💡️Tooltip
+
+//#region 💬️AgentChatTranscript
+// 💬️ WGPU-RENDERER-REACT-PARITY packet W15e, audit item 4/10. CORRECTION to the audit's premise: the
+// transcript itself is NOT missing — W2c built `build_agent_chat_ui` out of the live bridge
+// conversation, so the panel body has been real `UiNode` rows since then, and the "free-content
+// escape hatch" the audit asked to scope turned out not to be needed at all. What WAS missing is
+// proven here: React's feed container identity, its two per-row data attributes, the newest-window
+// paging its auto-scrolled `<ol>` produces, and Enter-to-send on the composer.
+
+fn chat_feed_node(shell: &ShellState) -> UiNode {
+    let body = shell.build_agent_chat_ui();
+    let UiNode::Stack(panel) = body else { panic!("the chat panel body is a stack") };
+    panel.children.into_iter().find(|child| matches!(child, UiNode::Stack(stack) if stack.id.as_deref() == Some("framework.chat.feed"))).expect("the feed is its own node under React's id")
+}
+
+fn chat_feed_rows(shell: &ShellState) -> Vec<UiNode> {
+    let UiNode::Stack(feed) = chat_feed_node(shell) else { panic!("the feed is a stack") };
+    feed.children
+}
+
+fn row_attributes(row: &UiNode) -> std::collections::HashMap<String, String> {
+    let UiNode::Stack(stack) = row else { panic!("a transcript row is a stack") };
+    let UiNode::Text(role) = stack.children.first().expect("a row leads with its role line") else { panic!("the role line is text") };
+    role.data_attributes.clone().unwrap_or_default()
+}
+
+#[test]
+fn an_empty_transcript_paints_reacts_own_empty_line_inside_the_feed() {
+    let shell = ShellState::new(Vec::new(), String::new());
+    let rows = chat_feed_rows(&shell);
+    assert_eq!(rows.len(), 1, "the empty state is one line, in the feed, not loose in the panel");
+    assert!(matches!(&rows[0], UiNode::Text(text) if text.value.as_str().contains("No agent activity yet")));
+}
+
+#[test]
+fn every_row_carries_reacts_two_data_attributes() {
+    let mut shell = ShellState::new(Vec::new(), String::new());
+    shell.apply_agent_bridge_frame(&GatewayToShell::AgentToolCall { invocation_id: "inv_1".into(), tool_name: "artifact.mutate".into(), arguments: "{}".into() }.encode()).expect("frame decodes");
+    shell.apply_agent_bridge_frame(&GatewayToShell::ApprovalRequested { approval_id: "appr_1".into(), summary: "let me".into() }.encode()).expect("frame decodes");
+    let rows = chat_feed_rows(&shell);
+    assert_eq!(rows.len(), 2);
+    assert_eq!(row_attributes(&rows[0]).get("data-semio-agent-chat-entry").map(String::as_str), Some("toolCall"));
+    assert_eq!(row_attributes(&rows[0]).get("data-agent-chat-state").map(String::as_str), Some("running"));
+    assert_eq!(row_attributes(&rows[1]).get("data-semio-agent-chat-entry").map(String::as_str), Some("approval"));
+    assert_eq!(row_attributes(&rows[1]).get("data-agent-chat-state").map(String::as_str), Some("pending"));
+}
+
+#[test]
+fn a_tool_result_settles_its_own_row_in_place_rather_than_opening_a_second_one() {
+    let mut shell = ShellState::new(Vec::new(), String::new());
+    shell.apply_agent_bridge_frame(&GatewayToShell::AgentToolCall { invocation_id: "inv_1".into(), tool_name: "artifact.mutate".into(), arguments: "{\"id\":1}".into() }.encode()).expect("frame decodes");
+    shell.apply_agent_bridge_frame(&GatewayToShell::AgentToolResult { invocation_id: "inv_1".into(), tool_name: "artifact.mutate".into(), ok: false, summary: "refused".into() }.encode()).expect("frame decodes");
+    let rows = chat_feed_rows(&shell);
+    assert_eq!(rows.len(), 1, "one call, one row");
+    assert_eq!(row_attributes(&rows[0]).get("data-agent-chat-state").map(String::as_str), Some("failed"));
+}
+
+#[test]
+fn a_resolved_approval_reports_its_own_decision_state() {
+    let mut shell = ShellState::new(Vec::new(), String::new());
+    shell.apply_agent_bridge_frame(&GatewayToShell::ApprovalRequested { approval_id: "appr_1".into(), summary: "mutate".into() }.encode()).expect("frame decodes");
+    shell.apply_agent_bridge_frame(&GatewayToShell::ApprovalResolved { approval_id: "appr_1".into(), decision: ApprovalDecision::Once }.encode()).expect("frame decodes");
+    assert_eq!(row_attributes(&chat_feed_rows(&shell)[0]).get("data-agent-chat-state").map(String::as_str), Some("resolved"));
+}
+
+#[test]
+fn the_feed_paints_the_newest_window_the_way_reacts_auto_scrolled_list_shows_it() {
+    let mut shell = ShellState::new(Vec::new(), String::new());
+    for index in 0..(AGENT_CHAT_VISIBLE_ENTRIES + 6) {
+        shell.apply_agent_bridge_frame(&GatewayToShell::AgentToolCall { invocation_id: format!("inv_{index}"), tool_name: format!("tool-{index}"), arguments: String::new() }.encode()).expect("frame decodes");
+    }
+    let rows = chat_feed_rows(&shell);
+    assert_eq!(rows.len(), AGENT_CHAT_VISIBLE_ENTRIES, "the window is bounded, not the conversation");
+    assert_eq!(shell.chrome_build.agent.conversation.len(), AGENT_CHAT_VISIBLE_ENTRIES + 6, "nothing is discarded, only unpainted");
+    // 🔚️ The LAST painted row is the newest entry, which is what a bottom-pinned feed shows.
+    let UiNode::Stack(last) = rows.last().expect("a row") else { panic!("a row is a stack") };
+    assert_eq!(last.id.as_deref(), Some(format!("framework.chat.entry.toolCall.inv_{}", AGENT_CHAT_VISIBLE_ENTRIES + 5).as_str()));
+}
+
+#[test]
+fn the_composer_sends_on_enter_the_way_reacts_textarea_does() {
+    let shell = ShellState::new(Vec::new(), String::new());
+    let UiNode::Stack(panel) = shell.build_agent_chat_ui() else { panic!("the chat panel body is a stack") };
+    let draft = panel
+        .children
+        .iter()
+        .find_map(|child| match child {
+            UiNode::Input(input) if input.id == "framework.chat.draft" => Some(input.clone()),
+            _ => None,
+        })
+        .expect("the composer is in the panel");
+    assert_eq!(draft.commit.as_deref(), Some("enter"));
+    let submit = draft.on_submit.as_ref().expect("Enter dispatches a verb");
+    assert_eq!(submit.action, "sendChatDraft", "Enter and the Send button are one code path");
+    assert_eq!(submit.controller_id, "framework");
+}
+//#endregion 💬️AgentChatTranscript
+
+//#region 🛂️SpaceAdministrationSheet
+/// 🪪️ The minimal signed-in identity the administration lane gates on — `open_space_administration`
+/// refuses outright without one, so every sheet law needs exactly this and nothing more.
+fn test_identity() -> Identity {
+    Identity { user_id: "user-1".into(), email: "user-1@example.test".into(), display_name: "User One".into(), hub_base_url: "https://hub.example".into(), issued_at_ms: 0 }
+}
+
+// 🛂️ WGPU-RENDERER-REACT-PARITY packet W15e, audit item 3. The operation and the control set have
+// been live on both targets since W1e; these are the laws of the CHROME nobody had written, and of
+// the one authority rule the chrome must not break.
+
+#[test]
+fn no_operation_means_no_sheet_exactly_as_react_mounts_nothing() {
+    let shell = ShellState::new(Vec::new(), String::new());
+    assert!(shell.space_administration_plan().is_none());
+}
+
+#[test]
+fn opening_without_an_identity_mounts_nothing_rather_than_an_empty_sheet() {
+    let mut shell = ShellState::new(Vec::new(), String::new());
+    shell.open_space_administration("space-1");
+    assert!(shell.space_administration_plan().is_none(), "administration needs a signed-in identity, and says so by showing nothing");
+}
+
+#[test]
+fn the_close_control_retires_the_operation() {
+    let mut shell = ShellState::new(Vec::new(), String::new());
+    shell.identity = Some(test_identity());
+    shell.open_space_administration("space-1");
+    assert!(shell.space_administration_plan().is_some(), "an identity plus a space id mounts the sheet");
+    shell.resolve_space_administration_control(crate::space_administration::SPACE_ADMINISTRATION_CLOSE_CONTROL_ID);
+    assert!(shell.space_administration_plan().is_none());
+}
+
+#[test]
+fn the_sheet_leads_with_reacts_own_title_and_the_operations_live_status() {
+    let mut shell = ShellState::new(Vec::new(), String::new());
+    shell.identity = Some(test_identity());
+    shell.open_space_administration("space-7");
+    let plan = shell.space_administration_plan().expect("a sheet");
+    assert_eq!(plan.space_id, "space-7");
+    assert_eq!(plan.title, "Space administration");
+    assert_eq!(plan.status, shell_space_administration_status(ShellSpaceAdministrationPhaseV1::Loading, false), "the status line is the phase, not a row");
+    assert!(plan.rows.iter().all(|row| row.control_id != "os.space-administration.status"), "the status control is lifted out of the roster");
+}
+
+#[test]
+fn the_invite_copy_control_is_withheld_rather_than_offered_and_silently_losing_the_capability() {
+    let mut shell = ShellState::new(Vec::new(), String::new());
+    shell.identity = Some(test_identity());
+    shell.open_space_administration("space-1");
+    let plan = shell.space_administration_plan().expect("a sheet");
+    assert!(plan.rows.iter().all(|row| row.control_id != "os.space-administration.invite.copy"));
+}
+//#endregion 🛂️SpaceAdministrationSheet

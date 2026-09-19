@@ -354,7 +354,7 @@ function ecmaDispositionOracle(content: string, analyzer: "typescript" | "javasc
         return true;
       }
       if (!ts.isIdentifier(callee)) return false;
-      const binding = scope.resolve(expression.expression.text);
+      const binding = scope.resolve(callee.text);
       if (binding?.kind !== "import-value" || !["runBundleScriptMain", "runWorkspaceScriptMain", "runPolicyOnlyMain", "runArtifactRustPackageMain", "runArtifactTypeScriptPackageMain"].includes(binding.imported ?? "")) return false;
       if (!expression.arguments.every((row) => router(row, scope) || ["data", "finite"].includes(value(row, scope)))) return false;
       terminals++;
@@ -458,7 +458,7 @@ function ecmaDispositionOracle(content: string, analyzer: "typescript" | "javasc
   for (const statement of source.statements) {
     if (ts.isImportDeclaration(statement)) continue;
     if (ts.isClassDeclaration(statement) || ts.isInterfaceDeclaration(statement) || ts.isTypeAliasDeclaration(statement) || ts.isEnumDeclaration(statement) || ts.isModuleDeclaration(statement)) return "unresolved";
-    if (ts.getModifiers(statement)?.some((modifier) => modifier.kind === ts.SyntaxKind.ExportKeyword)) return "unresolved";
+    if (ts.canHaveModifiers(statement) && ts.getModifiers(statement)?.some((modifier) => modifier.kind === ts.SyntaxKind.ExportKeyword)) return "unresolved";
     if (ts.isFunctionDeclaration(statement) && statement.name) { declarations.set(statement.name.text, statement); continue; }
     if (ts.isVariableStatement(statement) && (statement.declarationList.flags & ts.NodeFlags.Const) !== 0 && statement.declarationList.declarations.every((row) => ts.isIdentifier(row.name))) {
       for (const declaration of statement.declarationList.declarations) declarations.set((declaration.name as ts.Identifier).text, statement);

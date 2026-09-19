@@ -1,10 +1,10 @@
 import { expect, test } from "bun:test";
 import { createHash } from "node:crypto";
-import { lstatSync, readFileSync } from "node:fs";
+import { existsSync, lstatSync, readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import Ajv from "ajv";
 import { findNodeAtLocation, getNodeValue, parseTree } from "jsonc-parser";
-import { loadCatalogTaxonomy, validateFrozenCoordinateEvidenceContracts } from "../../🔍️discovery/🟦️.ts";
+import { frozenCoordinateEvidenceSeal, loadCatalogTaxonomy, validateFrozenCoordinateEvidenceContracts } from "../../🔍️discovery/🟦️.ts";
 import { canonicalJson, frozenCoordinateEvidenceCoordinates } from "../../🧹️normalization/🟦️.ts";
 
 const vector = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/🕰️historical-json-source-encoding/🔣️.json"), "utf8"));
@@ -66,19 +66,57 @@ test("escaped-source authority retains exact representation root digest and sele
   expect(() => run({ ...contract, sha256: sha(object) }, Buffer.from(object))).toThrow(/root/u);
 });
 
-test("one exact encoded historical source is registered without changing the previous 38 JSON contracts", () => {
+test("one exact encoded historical source is registered without changing the previous JSON contracts", () => {
   const contracts = loadCatalogTaxonomy().frozenCoordinateEvidenceContracts;
-  expect(contracts[historical.id]).toEqual(historical.contract);
+  expect(frozenCoordinateEvidenceSeal(contracts)[historical.id]).toEqual(historical.contract);
   expect(validateFrozenCoordinateEvidenceContracts(contracts)).toEqual([]);
-  const original = Object.fromEntries(Object.entries(contracts).filter(([id]) => id !== historical.id));
+  const original = Object.fromEntries(Object.entries(frozenCoordinateEvidenceSeal(contracts)).filter(([id]) => id !== historical.id));
   expect(Object.keys(original)).toHaveLength(historical.originalContracts.count);
   expect(sha(canonicalJson(original))).toBe(historical.originalContracts.canonicalSha256);
+});
+
+test("retirement is recorded evidence: every retired contract names its ticket and is genuinely gone", () => {
+  const contracts = loadCatalogTaxonomy().frozenCoordinateEvidenceContracts;
+  const rows = Object.entries(contracts);
+  expect(rows.length).toBeGreaterThan(0);
+  const retired = rows.filter(([, contract]) => contract.retired !== undefined);
+  expect(retired.length).toBeGreaterThan(0);
+  for (const [id, contract] of rows) {
+    const present = existsSync(join(root, contract.path));
+    expect([id, contract.retired === undefined]).toEqual([id, present]);
+    if (!contract.retired) continue;
+    expect(contract.retired.reason).toBe("ticket-close-generated-output-removed");
+    expect(contract.path.startsWith(`.🧬semio/🦑️repo/🎫️tickets/🎆️${contract.retired.ticket.slice(2, 4)}/🌙️${contract.retired.ticket.slice(5, 7)}/☀️${contract.retired.ticket.slice(8, 10)}/${contract.retired.ticket.slice(11)}/`)).toBe(true);
+  }
+});
+
+test("a retirement record can never move the evidence seal", () => {
+  const contracts = loadCatalogTaxonomy().frozenCoordinateEvidenceContracts;
+  const sealed = sha(canonicalJson(frozenCoordinateEvidenceSeal(contracts)));
+  const rebranded = Object.fromEntries(Object.entries(contracts).map(([id, contract]) => [id, { ...contract, retired: { ticket: "2026/01/01/SEAL-PROBE", reason: "ticket-close-generated-output-removed" as const } }]));
+  expect(sha(canonicalJson(frozenCoordinateEvidenceSeal(rebranded)))).toBe(sealed);
+  const [firstId, firstContract] = Object.entries(contracts)[0]!;
+  const edited = { ...contracts, [firstId]: { ...firstContract, sha256: firstContract.sha256.replace(/^./u, (character) => (character === "0" ? "1" : "0")) } };
+  expect(sha(canonicalJson(frozenCoordinateEvidenceSeal(edited)))).not.toBe(sealed);
 });
 
 test("the genuine 164-entry snapshot preserves the exact escaped source span and physical bytes", () => {
   let physical = root;
   const parts = historical.contract.path.split("/");
   expect(/^(?:compose|temp\/compose)(?:\/|$)/u.test(historical.contract.path)).toBe(false);
+  // 🪦️ This contract is RETIRED: the ticket that produced the snapshot deleted it at close, as
+  // AGENTS.md requires. The frozen evidence — digest, size, coordinate spans — is what this suite
+  // preserves, and it lives in the fixture beside this file; the physical bytes cannot be re-read and
+  // asserting them would only re-report the deletion the retirement already records. What is asserted
+  // instead is that the deletion is REAL, so "retired" can never be used to excuse a live document.
+  const retirement = loadCatalogTaxonomy().frozenCoordinateEvidenceContracts[historical.id]?.retired;
+  if (retirement) {
+    expect(existsSync(join(root, historical.contract.path))).toBe(false);
+    expect(retirement.reason).toBe("ticket-close-generated-output-removed");
+    expect(sha(canonicalJson(historical.contract))).toBe(sha(canonicalJson(frozenCoordinateEvidenceSeal(loadCatalogTaxonomy().frozenCoordinateEvidenceContracts)[historical.id]!)));
+    expect(historical.coordinate.end).toBeGreaterThan(historical.coordinate.start);
+    return;
+  }
   for (const [index, part] of parts.entries()) {
     expect(part !== "" && part !== "." && part !== "..").toBe(true);
     physical = join(physical, part);

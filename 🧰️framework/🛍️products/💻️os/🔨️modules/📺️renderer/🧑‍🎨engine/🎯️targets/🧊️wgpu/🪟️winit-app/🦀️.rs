@@ -778,7 +778,11 @@ mod native {
             // `semio_framework_trace::is_ui_thread()`/`assert_ui_thread()` are meaningful anywhere in this
             // process from this point on. Exactly once, first callback, before any event can be normalized.
             semio_framework_trace::register_ui_thread();
-            let mut attributes = WindowAttributes::default().with_title("Semio");
+            // 🏷️ React's `ShellBrand.windowTitle` — the brand ROW the boot descriptor carries
+            // (`WgpuBootBrand`), `"Semio"` when this boot resolved no brand. React sets the same string
+            // as the document title on its own shell (`🧑‍💻dev/🟦️.ts`'s brand mount).
+            let brand_title = crate::boot_brand().window_title;
+            let mut attributes = WindowAttributes::default().with_title(if brand_title.is_empty() { "Semio".to_string() } else { brand_title });
             #[cfg(target_arch = "wasm32")]
             {
                 use winit::platform::web::WindowAttributesExtWebSys;

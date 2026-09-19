@@ -18,7 +18,7 @@ fn pane_fixture() -> Value {
 /// 🎬️ puzzle3d's shape in miniature: one window kind opened as two instances, whose actions span
 /// three categories and include one zero-arg verb, one arg-carrying verb and one framework-reserved
 /// verb — the three rows every law below needs to tell apart.
-fn actions_shell() -> ShellState {
+pub(super) fn actions_shell() -> ShellState {
     let mut shell = super::window_pane_chrome_tests::split_pane_shell();
     let session = shell.session.as_mut().expect("the split-pane fixture carries a session");
     let kind = session.app.window_kinds.first_mut();
@@ -132,8 +132,9 @@ fn an_arg_carrying_row_opens_reacts_staged_form_and_refuses_execute_until_it_res
     let execute = |shell: &ShellState| -> bool {
         let node = shell.build_window_actions_ui("pane-top").expect("a body");
         let UiNode::Stack(stack) = &node else { panic!("stack") };
-        let section = stack.children.iter().find_map(|child| if let UiNode::Section(section) = child { Some(section) } else { None }).expect("the form section");
-        let button = section
+        // ⚡️ React renders Execute/Reset as the form section's own `actions`; a `TreeSection` carries
+        // no action row here, so the pair follows the form as its own band of the pane stack.
+        let button = stack
             .children
             .iter()
             .find_map(|child| if let UiNode::Button(button) = child { button.id.as_deref().is_some_and(|id| id.ends_with("execute")).then_some(button) } else { None })
@@ -282,4 +283,185 @@ fn both_pane_bodies_read_the_one_actions_fold() {
     assert!(shell.window_actions_folded("pane-perspective"), "🎛️ and never the sibling pane's");
     shell.toggle_window_pane_chip("pane-top", WindowPaneChip::Actions);
     assert!(shell.window_actions_folded("pane-top"), "🎛️ the Actions chip closes the same fold");
+}
+
+/// 🎛️ **The engagement-control law (W14c item 2).** React's `<Engagement/>` paints a `control` and a
+/// `controls` row — slider, stepper, ring, toggle group, select — above its status lines and its
+/// quick-action group, each under React's own id and dispatching React's own intent. wgpu painted the
+/// status lines and the options and DROPPED all five kinds
+/// (`📓️w13b-actions-search-pane-bodies.md` §6 gap 3): `WindowEngagementControl` had no reader in the
+/// whole renderer, so a granularity ring or a step slider simply was not there.
+#[test]
+fn the_engagement_body_paints_reacts_control_row_with_reacts_ids_and_intents() {
+    let fixture = pane_fixture();
+    let controls = &fixture["engagementControls"];
+    let mut shell = actions_shell();
+    let select = |action: &str| Some(ActionDescriptor { controller_id: "pane.controller".into(), action: action.into(), args: None });
+    shell.window_engagements.insert(
+        "pane-top".into(),
+        WindowEngagement {
+            session_active: Some(true),
+            options: None,
+            input: None,
+            control: Some(ui_wgpu::wgpu::WindowEngagementControl::Slider { id: None, label: Some("Height".into()), value: 2.0, min: 0.0, max: 10.0, step: Some(0.5), unit: Some("m".into()), disabled: None, on_change: select("setHeight"), on_commit: None }),
+            controls: Some(vec![
+                ui_wgpu::wgpu::WindowEngagementControl::Stepper { id: None, label: None, value: 3.0, min: None, max: None, step: Some(1.0), unit: None, disabled: None, on_change: select("setCount"), on_commit: None },
+                ui_wgpu::wgpu::WindowEngagementControl::Ring { id: None, label: None, value: Some("ring.b".into()), options: vec![ui_wgpu::wgpu::WindowEngagementRingOption { id: "ring.a".into(), label: "A".into(), disabled: None }, ui_wgpu::wgpu::WindowEngagementRingOption { id: "ring.b".into(), label: "B".into(), disabled: None }], disabled: None, on_select: select("pickOrb") },
+                ui_wgpu::wgpu::WindowEngagementControl::ToggleGroup { id: Some("granularity".into()), label: None, value: Some("granularity.face".into()), options: vec![ui_wgpu::wgpu::WindowEngagementToggleGroupOption { id: "granularity.face".into(), label: "Face".into(), disabled: None }, ui_wgpu::wgpu::WindowEngagementToggleGroupOption { id: "granularity.edge".into(), label: "Edge".into(), disabled: None }], disabled: None, on_select: select("setGranularity") },
+                ui_wgpu::wgpu::WindowEngagementControl::Select { id: None, label: None, value: Some("m".into()), placeholder: None, items: vec![ui_wgpu::wgpu::WindowEngagementSelectItem { id: "m".into(), value: "m".into(), label: "Metres".into() }], disabled: None, on_change: select("setUnit") },
+            ]),
+            status: Some(vec![
+                ui_wgpu::wgpu::WindowEngagementStatus { id: "engagement-step".into(), text: "Pick a face".into() },
+                ui_wgpu::wgpu::WindowEngagementStatus { id: "engagement-hint".into(), text: "Shift to snap".into() },
+            ]),
+            possible_engagements: None,
+        },
+    );
+    let keys = published_keys(&shell, "pane-top", false);
+    let fallbacks = &controls["fallbackControlIds"];
+    for expected in [
+        fallbacks["slider"].as_str().expect("slider fallback id").to_string(),
+        fallbacks["stepper"].as_str().expect("stepper fallback id").to_string(),
+        fallbacks["select"].as_str().expect("select fallback id").to_string(),
+        fallbacks["ring"].as_str().expect("ring fallback id").to_string(),
+        "granularity".to_string(),
+        "granularity.face".to_string(),
+        "granularity.edge".to_string(),
+        "ring.a".to_string(),
+        "ring.b".to_string(),
+        controls["optionsGroupId"].as_str().expect("options group id").to_string(),
+    ] {
+        assert!(keys.iter().any(|key| key.ends_with(&format!("/{expected}"))), "🎛️ the engagement body is missing React's '{expected}' — got {keys:?}");
+    }
+
+    let node = shell.build_window_actions_ui("pane-top").expect("a body");
+    let UiNode::Stack(stack) = &node else { panic!("🎬️ the pane body is a stack") };
+    // 🧭️ React's order: the session's step heading, the primary control, the `controls` row, the
+    // remaining status lines, the quick-action group.
+    let text_at = |index: usize| match stack.children.get(index) {
+        Some(UiNode::Text(text)) => text.value.as_str().to_string(),
+        other => panic!("🎛️ child {index} is {other:?}, not a text row"),
+    };
+    assert_eq!(text_at(0), "Pick a face", "🎛️ a LIVE session promotes `engagement-step` into the heading React renders first");
+    assert_eq!(text_at(1), controls["unitLabelFormat"].as_str().expect("unit format").replace("{label}", "Height").replace("{unit}", "m"), "🎛️ a numeric control with a unit reads React's `Label (unit)`");
+    assert!(matches!(stack.children.get(2), Some(UiNode::Slider(_))), "🎛️ the primary `control` precedes the `controls` row");
+    let status_index = stack.children.iter().position(|child| matches!(child, UiNode::Text(text) if text.value.as_str() == "Shift to snap")).expect("the secondary status line");
+    let options_index = stack.children.iter().position(|child| matches!(child, UiNode::Stack(group) if group.id.as_deref() == controls["optionsGroupId"].as_str())).unwrap_or(usize::MAX);
+    let select_index = stack.children.iter().position(|child| matches!(child, UiNode::Select(_))).expect("the select control");
+    assert!(select_index < status_index, "🎛️ every `controls` row precedes the secondary status lines");
+    assert!(status_index < options_index || options_index == usize::MAX, "🎛️ and the status lines precede the quick-action group");
+
+    // 🎯️ Intent parity: a toggle-group option dispatches the control's `onSelect` carrying the
+    // OPTION's own id — React's `onClick={() => control.onSelect?.(option.id)}`.
+    let face = stack
+        .children
+        .iter()
+        .find_map(|child| if let UiNode::Stack(group) = child { group.children.iter().find_map(|row| if let UiNode::Toggle(toggle) = row { (toggle.id == "granularity.face").then_some(toggle) } else { None }) } else { None })
+        .expect("the toggle group's first option");
+    assert_eq!(face.on_change.action, "setGranularity", "🎯️ the option fires the control's own verb");
+    assert!(face.presence.selected, "🎯️ and the selected option reads pressed, as React's `interactiveActiveFillClass` paints it");
+    let Some(DslValue::Object(args)) = face.on_change.args.as_ref() else { panic!("🎯️ the option carries its own id in the intent") };
+    assert_eq!(args.iter().find(|(key, _)| key == "id").map(|(_, value)| value.clone()), Some(DslValue::String("granularity.face".into())), "🎯️ React's `onSelect(option.id)`");
+
+    // 🕳️ React's `if (!control.options.length) return null` — an empty group renders NOTHING, not an
+    // empty container.
+    shell.window_engagements.get_mut("pane-top").expect("the engagement").controls = Some(vec![ui_wgpu::wgpu::WindowEngagementControl::ToggleGroup { id: Some("empty".into()), label: Some("Empty".into()), value: None, options: Vec::new(), disabled: None, on_select: None }]);
+    let keys = published_keys(&shell, "pane-top", false);
+    assert!(!keys.iter().any(|key| key.ends_with("/empty")), "🕳️ an option-less toggle group publishes nothing at all");
+}
+
+/// ✍️ **The search-line moment law (W14c item 3).** React's line binds `onChange` on every keystroke
+/// AND `onSubmit` on Enter AND `onAbort` on Escape AND `onRepeatLast` on Space over an empty idle
+/// line — four moments on one field. This renderer bound ONE: it committed on blur and dispatched
+/// `on_submit` there, so a program that feeds autocomplete from the typing never saw a keystroke
+/// (`📓️w13b-actions-search-pane-bodies.md` §6 gap 4). The retained producers landed with this packet;
+/// this pins the four bindings the published record carries.
+#[test]
+fn the_search_line_binds_reacts_change_submit_abort_and_repeat_moments() {
+    let fixture = pane_fixture();
+    let line = &fixture["searchLine"];
+    let verb = |action: &str| Some(ActionDescriptor { controller_id: "pane.controller".into(), action: action.into(), args: None });
+    let engagement = |session_active: bool| WindowEngagement {
+        session_active: Some(session_active),
+        options: None,
+        input: Some(ui_wgpu::wgpu::WindowEngagementInput {
+            id: Some("pane-engagement".into()),
+            value: Some(String::new()),
+            placeholder: None,
+            disabled: None,
+            on_change: verb("engagementInput"),
+            on_submit: verb("engagementSubmit"),
+            on_repeat_last: verb("engagementRepeatLast"),
+            on_abort: verb("engagementAbort"),
+        }),
+        control: None,
+        controls: None,
+        status: None,
+        possible_engagements: None,
+    };
+    let mut shell = actions_shell();
+    shell.window_engagements.insert("pane-top".into(), engagement(false));
+    let node = shell.build_window_search_ui("pane-top").expect("the search body");
+    let UiNode::Stack(stack) = &node else { panic!("🔎️ the search body is a stack") };
+    let Some(UiNode::Input(input)) = stack.children.first() else { panic!("🔎️ the line is the body's first row") };
+    assert_eq!(input.commit.is_some(), line["commitsOnBlur"].as_bool().expect("fixture commit rule"), "✍️ the line fires `Trigger::Change` on every keystroke, never only on blur");
+    assert_eq!(input.on_change.action, "engagementInput", "✍️ `onChange` is the guest's own verb");
+    assert_eq!(input.on_submit.as_ref().map(|action| action.action.as_str()), Some("engagementSubmit"), "⏎️ Enter carries `onSubmit`");
+    assert_eq!(input.on_abort.as_ref().map(|action| action.action.as_str()), Some("engagementAbort"), "⎋️ Escape carries `onAbort`");
+    assert_eq!(input.on_repeat_last.as_ref().map(|action| action.action.as_str()), Some("engagementRepeatLast"), "🔁️ an IDLE line carries `onRepeatLast`");
+
+    let surface = window_search_surface_id("pane-top");
+    let records = panel_ui_records(&surface, &node).expect("the search body projects");
+    let record = records.iter().find(|record| record.key.as_str().ends_with("pane-engagement")).expect("the line's own record");
+    let bound: Vec<String> = record.bindings.iter().map(|binding| format!("{:?}", binding.trigger).to_lowercase()).collect();
+    for key in ["onChange", "onSubmit", "onAbort", "onRepeatLast"] {
+        let trigger = line["triggers"][key].as_str().expect("fixture trigger name").to_lowercase();
+        assert!(bound.contains(&trigger), "✍️ the published record binds no {key} ({trigger}) — got {bound:?}");
+    }
+
+    // 🔁️ React routes an empty line to `onSubmit` DURING a session and to `onRepeatLast` only while
+    // idle (`applySearchSpaceAction`), so a live session offers no repeat at all.
+    assert!(line["repeatLastOnlyWhenIdle"].as_bool().expect("fixture repeat rule"));
+    shell.window_engagements.insert("pane-top".into(), engagement(true));
+    let node = shell.build_window_search_ui("pane-top").expect("the search body");
+    let UiNode::Stack(stack) = &node else { panic!("stack") };
+    let Some(UiNode::Input(input)) = stack.children.first() else { panic!("line") };
+    assert!(input.on_repeat_last.is_none(), "🔁️ a live engagement session routes an empty line to submit, never to repeat-last");
+    assert_eq!(input.on_submit.as_ref().map(|action| action.action.as_str()), Some("engagementSubmit"), "⏎️ and it keeps its submit");
+}
+
+/// 🌳️ **The form-header law (W14c item 4).** React's staged form is a `TreeDataSection`
+/// (`action.category.<id>.form`) whose header is a collapsible BUTTON and whose rows carry their
+/// editor as the row's own `control`. This renderer projected it as a `UiNode::Section`, and a
+/// `Container(Section)` registers NO hit (`retained_hit_registration`, `📥️input/🦀️.rs:718`), so the
+/// header had no pressable twin at all (`📓️w13b-actions-search-pane-bodies.md` §6 gap 5).
+#[test]
+fn the_staged_forms_category_header_registers_reacts_collapsible_row() {
+    let fixture = pane_fixture();
+    let form = &fixture["actionsPane"]["form"];
+    let mut shell = actions_shell();
+    shell.action_panel_expanded.insert("pane-top".into(), "openAddObjectDialog".into());
+    let surface = window_actions_surface_id("pane-top");
+    let node = shell.build_window_actions_ui("pane-top").expect("a body");
+    let records = panel_ui_records(&surface, &node).expect("the pane body projects");
+    let section_id = form["sectionId"].as_str().expect("form section").replace("{category}", "create");
+    let header = records.iter().find(|record| record.key.as_str().ends_with(&section_id)).unwrap_or_else(|| panic!("🌳️ the form header '{section_id}' is published"));
+    assert!(matches!(header.component, ui_contract::Component::TreeSection(_)), "🌳️ React's form header is a collapsible tree section, not a plain container — only a `TreeSection` registers `section.chevron.<id>`");
+
+    // 🎛️ Every argument row is a `TreeItem` carrying its editor as a CHILD record, which is React's
+    // `TreeDataItem.control`; the row keeps `action.<id>.arg.<argId>` and the editor keeps the bare
+    // `def.id` React's `renderStagedArgControl` gives it.
+    let row_id = form["argRowId"].as_str().expect("arg row").replace("{actionId}", "openAddObjectDialog").replace("{argId}", "kind");
+    let row = records.iter().find(|record| record.key.as_str().ends_with(&row_id)).unwrap_or_else(|| panic!("🌳️ the '{row_id}' row is published"));
+    assert!(matches!(row.component, ui_contract::Component::TreeItem(_)), "🌳️ a staged argument is a tree ROW");
+    assert_eq!(row.children.len(), 1, "🎛️ and it carries exactly its editor");
+    let editor = records.iter().find(|record| Some(record.id) == row.children.iter().next().copied()).expect("the row's editor record");
+    assert!(matches!(editor.component, ui_contract::Component::Input(_)), "🎛️ a text argument edits through an input");
+    assert!(editor.key.as_str().ends_with("/kind"), "🆔️ the editor keeps React's bare `def.id`: {}", editor.key.as_str());
+
+    // ⚡️ React's section `actions` keep their own ids beside the form.
+    let segment = semio_framework::element_id_segment("pane-top");
+    for expected in [form["executeId"].as_str().expect("execute").replace("{windowSegment}", &segment).replace("{actionId}", "openAddObjectDialog"), form["resetId"].as_str().expect("reset").replace("{windowSegment}", &segment).replace("{actionId}", "openAddObjectDialog")] {
+        assert!(records.iter().any(|record| record.key.as_str().ends_with(&expected)), "⚡️ the form keeps React's '{expected}'");
+    }
 }

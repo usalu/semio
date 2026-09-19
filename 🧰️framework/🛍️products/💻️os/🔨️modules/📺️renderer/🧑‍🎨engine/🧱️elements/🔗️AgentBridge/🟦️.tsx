@@ -5,8 +5,9 @@
  * them via the `@semio-tech/framework-os-shell` reducer twin, and tracks agent presence + pending
  * capability approvals for `AgentPresence`/`🤖️AgentApprovals` to render. Ticket
  * `26/08/17/LLM-FIRST-OS-VIA-THE-SEMIO-OS-MCP-GATEWAY` packet P10 — see
- * `.🧬semio/…/📓️terra-P10-report.md` for the port/token discovery compromise (§ DiscoverConfig
- * below) and the exact `ShellHost` lease diff that mounts this hook.
+ * `.🧬semio/…/📓️terra-P10-report.md` for the exact `ShellHost` lease diff that mounts this hook.
+ * Discovery (§ DiscoverConfig below) is a loopback request to the local supervisor, never an
+ * environment or build-time credential carrier: ticket `26/09/18` slice M7.
  */
 // #endregion 🧲️Header
 
@@ -53,10 +54,14 @@ export const agentUiLabel = registerUiTranslationBundles({
             failed: { label: { normal: "Failed", beginner: "Failed" } },
             succeeded: { label: { normal: "Done", beginner: "Done" } },
             approvalPending: { label: { normal: "Waiting for your decision", beginner: "Waiting for your decision" } },
+            approvalActionsLabel: { label: { normal: "Decide this approval", beginner: "Decide this approval" } },
             draftLabel: { label: { normal: "Message to the agent", beginner: "Message to the agent" } },
             placeholder: { label: { normal: "Tell the agent what to do…", beginner: "Tell the agent what to do…" } },
             send: { label: { normal: "Send", beginner: "Send" } },
             disconnected: { label: { normal: "Not connected to an agent — messages cannot be sent.", beginner: "Not connected to an agent — messages cannot be sent." } },
+            cancel: { label: { normal: "Cancel", beginner: "Stop" } },
+            cancelToolCall: { label: { normal: "Cancel {{tool}}", beginner: "Stop {{tool}}" } },
+            cancelling: { label: { normal: "Cancelling…", beginner: "Stopping…" } },
           },
           approvals: {
             trigger: { label: { normal: "Open agent approvals", beginner: "Open agent approvals" } },
@@ -104,10 +109,14 @@ export const agentUiLabel = registerUiTranslationBundles({
             failed: { label: { normal: "Fehlgeschlagen", beginner: "Fehlgeschlagen" } },
             succeeded: { label: { normal: "Fertig", beginner: "Fertig" } },
             approvalPending: { label: { normal: "Wartet auf deine Entscheidung", beginner: "Wartet auf deine Entscheidung" } },
+            approvalActionsLabel: { label: { normal: "Diese Freigabe entscheiden", beginner: "Diese Freigabe entscheiden" } },
             draftLabel: { label: { normal: "Nachricht an den Agent", beginner: "Nachricht an den Agent" } },
             placeholder: { label: { normal: "Sag dem Agent, was zu tun ist…", beginner: "Sag dem Agent, was zu tun ist…" } },
             send: { label: { normal: "Senden", beginner: "Senden" } },
             disconnected: { label: { normal: "Nicht mit einem Agent verbunden — Nachrichten können nicht gesendet werden.", beginner: "Nicht mit einem Agent verbunden — Nachrichten können nicht gesendet werden." } },
+            cancel: { label: { normal: "Abbrechen", beginner: "Stopp" } },
+            cancelToolCall: { label: { normal: "{{tool}} abbrechen", beginner: "{{tool}} stoppen" } },
+            cancelling: { label: { normal: "Wird abgebrochen…", beginner: "Wird gestoppt…" } },
           },
           approvals: {
             trigger: { label: { normal: "Agent-Freigaben öffnen", beginner: "Agent-Freigaben öffnen" } },
@@ -136,11 +145,112 @@ export const agentUiLabel = registerUiTranslationBundles({
 //#region 🔖️DiscoverConfig
 export type AgentBridgeConfig = { readonly url: string; readonly admissionProof: string };
 
-/** 🔎️ Environment discovery is intentionally disabled because bridge admission is a protected
- * in-memory value supplied by the local supervisor, never a Vite/environment credential carrier. */
-export function discoverAgentBridgeConfig(source?: Readonly<Record<string, string | undefined>>): AgentBridgeConfig | null {
-  void source;
-  return null;
+/** 🛰️ The loopback endpoint the local supervisor (the dev server's
+ * `semioAgentBridgeRendezvousVitePlugin`) serves the live gateway's own offer on. Admission never
+ * travels through an environment variable or a build-time define: the supervisor reads the
+ * owner-only `~/.semio/agent/bridge/offers/<pid>.json` the gateway wrote and hands it over loopback,
+ * on request. `404` is the ordinary "no gateway is offering a bridge" answer, never an error. */
+export const AGENT_BRIDGE_OFFER_ENDPOINT = "/__semio/agent-bridge";
+
+/** 🔓️ A bridge URL is admissible only when it is a loopback websocket that carries **no** credential
+ * of its own: the proof travels in the websocket subprotocol ({@link bridgeProtocols}), so a URL with
+ * a query string, a userinfo component or a non-loopback host is a poisoned offer and is refused
+ * rather than dialled. */
+export function isAdmissibleBridgeUrl(url: string): boolean {
+  let parsed: URL;
+  try {
+    parsed = new URL(url);
+  } catch {
+    return false;
+  }
+  if (parsed.protocol !== "ws:" && parsed.protocol !== "wss:") return false;
+  if (parsed.username !== "" || parsed.password !== "") return false;
+  if (parsed.search !== "" || parsed.hash !== "") return false;
+  return parsed.hostname === "127.0.0.1" || parsed.hostname === "localhost" || parsed.hostname === "[::1]" || parsed.hostname === "::1";
+}
+
+/** 📨️ Reads one supervisor offer body into a config, or `null` when it is not one. Every field is
+ * checked: a body that is not an object, a missing/empty proof and an inadmissible URL all answer
+ * `null`, so a malformed or poisoned offer can never become a dialled socket. */
+export function parseAgentBridgeOffer(body: unknown): AgentBridgeConfig | null {
+  if (typeof body !== "object" || body === null) return null;
+  const offer = body as { url?: unknown; admissionProof?: unknown };
+  if (typeof offer.url !== "string" || typeof offer.admissionProof !== "string") return null;
+  if (offer.admissionProof.length === 0) return null;
+  if (!isAdmissibleBridgeUrl(offer.url)) return null;
+  return { url: offer.url, admissionProof: offer.admissionProof };
+}
+
+export type BridgeOfferFetch = (input: string, init?: { readonly cache?: RequestCache; readonly signal?: AbortSignal }) => Promise<{ readonly ok: boolean; readonly status: number; json: () => Promise<unknown> }>;
+
+/** 🔎️ Asks the local supervisor for the live gateway's offer. Never throws and never rejects: a
+ * missing endpoint, a `404`, a non-JSON body and a refused offer are all the same ordinary `null`
+ * ("no agent is offering a bridge right now"), because the shell must render identically whether or
+ * not anybody ever launches an MCP gateway. */
+export async function fetchAgentBridgeConfig(endpoint: string = AGENT_BRIDGE_OFFER_ENDPOINT, fetchImpl?: BridgeOfferFetch, signal?: AbortSignal): Promise<AgentBridgeConfig | null> {
+  const request = fetchImpl ?? (globalThis.fetch as unknown as BridgeOfferFetch | undefined);
+  if (!request) return null;
+  try {
+    const response = await request(endpoint, { cache: "no-store", signal });
+    if (!response.ok) return null;
+    return parseAgentBridgeOffer(await response.json());
+  } catch {
+    return null;
+  }
+}
+
+/** ⏱️ How often the shell re-asks the supervisor. While no offer is standing the interval doubles
+ * from {@link BRIDGE_DISCOVERY_MIN_INTERVAL_MS} up to the max, so a shell that will never see an
+ * agent settles at one cheap loopback GET every 30 s instead of a poll storm. The poll continues at
+ * the max interval once an offer IS standing, because that is the only way a shell learns that the
+ * gateway restarted on a different port with a different proof. */
+export const BRIDGE_DISCOVERY_MIN_INTERVAL_MS = 2000;
+export const BRIDGE_DISCOVERY_MAX_INTERVAL_MS = 30000;
+
+export type UseDiscoveredAgentBridgeConfigOptions = {
+  readonly enabled?: boolean;
+  readonly endpoint?: string;
+  readonly fetchImpl?: BridgeOfferFetch;
+};
+
+/** 🛰️ The live supervisor offer, re-asked on a backoff. The returned object identity changes **only**
+ * when `url` or `admissionProof` actually change, so an unchanged offer polled a hundred times never
+ * re-runs {@link useAgentBridge}'s socket effect — the redial storm U1 already had to fix once. */
+export function useDiscoveredAgentBridgeConfig(options: UseDiscoveredAgentBridgeConfigOptions = {}): AgentBridgeConfig | null {
+  const { enabled = true, endpoint = AGENT_BRIDGE_OFFER_ENDPOINT, fetchImpl } = options;
+  const [config, setConfig] = useState<AgentBridgeConfig | null>(null);
+  const fetchImplRef = useRef(fetchImpl);
+  fetchImplRef.current = fetchImpl;
+
+  useEffect(() => {
+    if (!enabled) {
+      setConfig(null);
+      return;
+    }
+    let disposed = false;
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    let interval = BRIDGE_DISCOVERY_MIN_INTERVAL_MS;
+
+    const poll = async (): Promise<void> => {
+      const discovered = await fetchAgentBridgeConfig(endpoint, fetchImplRef.current);
+      if (disposed) return;
+      setConfig((current) => {
+        if (discovered === null) return current === null ? current : null;
+        if (current !== null && current.url === discovered.url && current.admissionProof === discovered.admissionProof) return current;
+        return discovered;
+      });
+      interval = discovered === null ? Math.min(interval * 2, BRIDGE_DISCOVERY_MAX_INTERVAL_MS) : BRIDGE_DISCOVERY_MAX_INTERVAL_MS;
+      if (!disposed) timer = setTimeout(() => void poll(), interval);
+    };
+
+    void poll();
+    return () => {
+      disposed = true;
+      if (timer !== null) clearTimeout(timer);
+    };
+  }, [enabled, endpoint]);
+
+  return config;
 }
 
 /** 🔗️ Exact ordered websocket subprotocols keep admission out of URLs, logs, and referrers. */
@@ -286,7 +396,10 @@ export type PendingAgentApproval = { readonly approvalId: string; readonly summa
  * guess: a tool call with no result yet simply has `state: "running"`. */
 export type AgentConversationEntry =
   | { readonly kind: "userMessage"; readonly id: string; readonly text: string; readonly atMs: number }
-  | { readonly kind: "toolCall"; readonly id: string; readonly toolName: string; readonly args: string; readonly state: "running" | "ok" | "failed"; readonly summary: string | null; readonly atMs: number }
+  /** 🛑️ `cancelling` is this shell's own optimistic state between `cancelToolCall` leaving and the
+   * gateway's real `agentToolResult` landing: cancellation is cooperative, so the call may still
+   * succeed, fail, or settle as cancelled — the panel says "asked to stop", never "stopped". */
+  | { readonly kind: "toolCall"; readonly id: string; readonly toolName: string; readonly args: string; readonly state: "running" | "cancelling" | "ok" | "failed"; readonly summary: string | null; readonly atMs: number }
   | { readonly kind: "approval"; readonly id: string; readonly summary: string; readonly state: "pending" | "resolved"; readonly decision: ApprovalDecision | null; readonly atMs: number };
 
 /** ✂️ How many conversation entries the panel retains. The bridge is a live view, not an archive:
@@ -313,7 +426,13 @@ function updateConversationEntry(current: readonly AgentConversationEntry[], id:
 }
 
 export type UseAgentBridgeOptions = {
+  /** 🛰️ Omit it (the product case) and the hook discovers the live gateway offer from the local
+   * supervisor on {@link AGENT_BRIDGE_OFFER_ENDPOINT}; pass one (including `null`) and discovery is
+   * off entirely, which is what every test and every embedder with its own supervisor does. */
   readonly config?: AgentBridgeConfig | null;
+  /** 🔎️ Overrides for the discovery seam — the endpoint path and the `fetch` used to ask it. */
+  readonly discoveryEndpoint?: string;
+  readonly discoveryFetch?: BridgeOfferFetch;
   readonly shellKind?: ShellKind;
   readonly shellSessionId?: string;
   readonly principalActor?: string;
@@ -336,21 +455,35 @@ export type UseAgentBridgeResult = {
    * when no socket is open, so the panel can tell the human their message did not go anywhere
    * instead of showing it as if it had. */
   readonly sendAgentMessage: (text: string) => boolean;
+  /** 🛑️ Asks the gateway to cancel the still-running tool call `invocationId`. Returns `false` (and
+   * changes nothing) when no socket is open, so the panel can tell the human their cancel did not
+   * leave rather than showing it as if it had — the exact contract `sendAgentMessage` uses. */
+  readonly cancelToolCall: (invocationId: string) => boolean;
 };
 
 const RECONNECT_BASE_MS = 1000;
 const RECONNECT_MAX_MS = 30000;
 const PING_INTERVAL_MS = 20000;
 
-/** 🌉️ Dials the ShellBridge WebSocket (when `config`/`discoverAgentBridgeConfig()` resolves one),
- * keeps a `ShellState` mirror in sync via `reduce()`, and surfaces connection status, agent
- * presence and pending approvals for `AgentPresence`/`🤖️AgentApprovals` to render. Never blocks the
- * UI thread: every socket call is fire-and-forget or scheduled on a timer, and a missing/invalid
- * config simply keeps `status: "disabled"` forever rather than throwing. */
+/** 🌉️ Dials the ShellBridge WebSocket (the `config` given, or the live gateway offer
+ * {@link useDiscoveredAgentBridgeConfig} keeps asking the local supervisor for), keeps a `ShellState`
+ * mirror in sync via `reduce()`, and surfaces connection status, agent presence, the live
+ * conversation and pending approvals for `AgentPresence`/`💬️AgentChatPanel`/`🤖️AgentApprovals` to
+ * render. Never blocks the UI thread: every socket call is fire-and-forget or scheduled on a timer,
+ * and no standing offer simply keeps `status: "disabled"` rather than throwing. A gateway that
+ * restarts publishes a new offer on a new port with a new proof; discovery swaps the config and this
+ * effect redials it, while an unchanged offer keeps the exact same object identity and redials
+ * nothing. */
 export function useAgentBridge(options: UseAgentBridgeOptions = {}): UseAgentBridgeResult {
-  const config = options.config === undefined ? discoverAgentBridgeConfig() : options.config;
+  const discovered = useDiscoveredAgentBridgeConfig({ enabled: options.config === undefined, endpoint: options.discoveryEndpoint, fetchImpl: options.discoveryFetch });
+  const config = options.config === undefined ? discovered : options.config;
   const shellKind = options.shellKind ?? "react";
-  const shellSessionId = options.shellSessionId ?? `shell-${Math.random().toString(36).slice(2)}`;
+  // 🔒️ Minted ONCE per hook instance. It was `?? \`shell-${Math.random()…}\`` computed in the render
+  // body while also sitting in the socket effect's dep array, so every state change this hook makes —
+  // a tool call arriving, a message echoing, a cancel — tore the bridge socket down and redialled it.
+  // Found by slice U1's `cancelToolCall` test, whose cancel frame was followed by an immediate `bye`.
+  const generatedShellSessionIdRef = useRef(`shell-${Math.random().toString(36).slice(2)}`);
+  const shellSessionId = options.shellSessionId ?? generatedShellSessionIdRef.current;
   const principalActor = options.principalActor ?? "agent:unknown";
   const flags = options.flags ?? NO_BRIDGE_FLAGS;
 
@@ -416,6 +549,17 @@ export function useAgentBridge(options: UseAgentBridgeOptions = {}): UseAgentBri
       return true;
     },
     [send, shellSessionId],
+  );
+
+  const cancelToolCall = useCallback(
+    (invocationId: string): boolean => {
+      const socket = socketRef.current;
+      if (!invocationId || !socket || socket.readyState !== WebSocket.OPEN) return false;
+      send({ variant: "agentCancel", invocationId });
+      setConversation((current) => updateConversationEntry(current, invocationId, (entry) => (entry.kind === "toolCall" && entry.state === "running" ? { ...entry, state: "cancelling" } : entry)));
+      return true;
+    },
+    [send],
   );
 
   useEffect(() => {
@@ -565,6 +709,6 @@ export function useAgentBridge(options: UseAgentBridgeOptions = {}): UseAgentBri
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [config?.url, config?.admissionProof, shellKind, shellSessionId, principalActor, send]);
 
-  return { status, shellState, presence, pendingApprovals, conversation, lastError, dispatch, resolveApproval, sendAgentMessage };
+  return { status, shellState, presence, pendingApprovals, conversation, lastError, dispatch, resolveApproval, sendAgentMessage, cancelToolCall };
 }
 //#endregion 🔖️Hook

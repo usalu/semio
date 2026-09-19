@@ -9,9 +9,9 @@ import { Dialog, DialogContent, DialogPortal, DialogTitle } from "../../../💬�
 // #region ☑️SelectMatrix
 afterEach(() => cleanup());
 
-function BasicSelect(props: React.ComponentProps<typeof Select> = {}): React.ReactElement {
+function BasicSelect(props: Omit<React.ComponentProps<typeof Select>, "id"> = {}): React.ReactElement {
   return (
-    <Select {...props}>
+    <Select id="select-component-test-1" {...props}>
       <SelectTrigger aria-label="Mode">
         <SelectValue placeholder="Choose" />
       </SelectTrigger>
@@ -86,7 +86,7 @@ describe("Select", () => {
   it("supports Home, End, Page, Space, and locale-invariant typeahead", async () => {
     const values = vi.fn();
     render(
-      <Select onValueChange={values}>
+      <Select id="select-component-test-2" onValueChange={values}>
         <SelectTrigger aria-label="City">
           <SelectValue placeholder="Choose" />
         </SelectTrigger>
@@ -142,7 +142,7 @@ describe("Select", () => {
   it("honors preventable Escape and outside dismissal, then preserves outside focus", async () => {
     const escaped = vi.fn((event: { preventDefault(): void }) => event.preventDefault());
     render(
-      <Select defaultOpen onOpenChange={vi.fn()}>
+      <Select id="select-component-test-4" defaultOpen onOpenChange={vi.fn()}>
         <SelectTrigger aria-label="Dismiss">
           <SelectValue />
         </SelectTrigger>
@@ -169,7 +169,7 @@ describe("Select", () => {
     const second = vi.fn();
     render(
       <>
-        <Select open onOpenChange={first}>
+        <Select id="select-component-test-5" open onOpenChange={first}>
           <SelectTrigger aria-label="First">
             <SelectValue />
           </SelectTrigger>
@@ -177,7 +177,7 @@ describe("Select", () => {
             <SelectItem value="one">One</SelectItem>
           </SelectContent>
         </Select>
-        <Select open onOpenChange={second}>
+        <Select id="select-component-test-6" open onOpenChange={second}>
           <SelectTrigger aria-label="Second">
             <SelectValue />
           </SelectTrigger>
@@ -234,14 +234,14 @@ describe("Select", () => {
     const parentChange = vi.fn();
     const childChange = vi.fn();
     const Nested = ({ childOpen }: { childOpen: boolean }) => (
-      <Select open onOpenChange={parentChange} value="parent">
+      <Select id="select-component-test-7" open onOpenChange={parentChange} value="parent">
         <SelectTrigger aria-label="Parent">
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
           <SelectItem value="parent">Parent option</SelectItem>
         </SelectContent>
-        <Select open={childOpen} onOpenChange={childChange} value="child">
+        <Select id="select-component-test-8" open={childOpen} onOpenChange={childChange} value="child">
           <SelectTrigger aria-label="Child">
             <SelectValue />
           </SelectTrigger>
@@ -287,7 +287,7 @@ describe("Select", () => {
     const portal = document.createElement("div");
     document.body.append(portal);
     const view = render(
-      <Select dir="rtl" defaultOpen defaultValue="one">
+      <Select id="select-component-test-9" dir="rtl" defaultOpen defaultValue="one">
         <SelectTrigger aria-label="Scroll">
           <SelectValue />
         </SelectTrigger>

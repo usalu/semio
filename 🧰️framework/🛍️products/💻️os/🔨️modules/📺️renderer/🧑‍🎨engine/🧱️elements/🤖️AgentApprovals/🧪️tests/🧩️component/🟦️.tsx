@@ -11,7 +11,7 @@
 // #region 🔌️Adapters
 import { cleanup, fireEvent, render, screen } from "@semio-tech/ui-react/test";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { AgentApprovals, parseApprovalSummary } from "./🟦️.tsx";
+import { AgentApprovals, parseApprovalSummary } from "../../🟦️.tsx";
 import { type PendingAgentApproval } from "../../../🔗️AgentBridge/🟦️.tsx";
 // #endregion 🔌️Adapters
 

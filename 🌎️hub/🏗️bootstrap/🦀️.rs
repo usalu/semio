@@ -64,11 +64,15 @@ use semio_hub::artifact_authority::{
     ArtifactPair, AuthorityError, AuthorityLimits, AuthorityOperationControl, AuthorityProgress, CanonicalArtifactAuthority, CheckpointPublicationOrchestrator, CheckpointRequest, OperationContext, ValidatingCanonicalArtifactAuthority,
     VerifiedCheckpointPublisher,
 };
+use semio_hub::auth::rate_limit::{HubRateLimiterV1, RateLimitClassV1, RateLimitDecisionV1, RateLimitSubjectV1};
+use semio_hub::auth::password::PasswordCredentialV1;
+use semio_hub::auth::{
+    decide_credential_change, decide_credential_sign_in, AuthErrorCodeV1, AuthErrorV1, CredentialChangeDecisionV1, CredentialChangeRequestV1, CredentialSignInDecisionV1, CredentialSignInPolicyV1, CredentialSignInRequestV1, CredentialSubjectV1,
+    SessionMintResponseV1,
+};
 use semio_hub::directory::error::DirectoryError;
-#[cfg(test)]
-use semio_hub::directory::model::AuthSessionIssue;
 use semio_hub::directory::model::{
-    AdminEffectCommitV1, AdminOperationAuditRecord, AuthSessionKind, CheckpointPublicationClaimV1, CheckpointPublicationCompletionV1, CheckpointPublicationDispositionV1, DocumentScope, NewAdminOperationAuditRecord, NewAdminOperationEffectReceiptV1, NewCheckpointPublicationClaimV1, NewDirectoryCommandReceipt,
+    AdminEffectCommitV1, AdminOperationAuditRecord, AuthSessionIssue, AuthSessionKind, CredentialAuditFactV1, CheckpointPublicationClaimV1, CheckpointPublicationCompletionV1, CheckpointPublicationDispositionV1, DocumentScope, NewAdminOperationAuditRecord, NewAdminOperationEffectReceiptV1, NewCheckpointPublicationClaimV1, NewDirectoryCommandReceipt,
     SocketSessionBindingStatus, SocketShareBindingStatus, SpaceRole, SyncSessionRecord,
 };
 #[cfg(feature = "sqlite")]
@@ -1594,6 +1598,13 @@ struct HubState {
     /// DirectoryService`'s own doc. `/directory/commands` and `/directory/invites/{token}/redeem`
     /// go through this; every other `/directory/*` route reads `directory` directly.
     directory_service: Arc<DirectoryService>,
+    /// @emoji 🔐️ Whether this deployment mints sessions from password credentials at
+    /// `POST /auth/sessions`, and under which lifetime/cost — fail-closed, so a development hub
+    /// keeps issuing only through the local-bootstrap pipe (see `semio_hub::auth`).
+    credential_sign_in: CredentialSignInPolicyV1,
+    /// @emoji 🚦️ Per-principal and per-remote-address token buckets in front of credential
+    /// sign-in, directory commands, invite redemption and socket-grant issuance.
+    rate_limits: Arc<HubRateLimiterV1>,
     admin_subjects: Arc<[AdminSubject]>,
     admin_cursor_key: [u8; 32],
     /// 🏛️ Process-local MAC key authenticating one space-administration keyset cursor.
@@ -2108,6 +2119,15 @@ fn hub_readiness(
         admin_assets: HubComponentReadinessV1 { ready: admin_assets_ready },
         features: HubFeatureReadinessV1 { open_plan: open_plan_ready, open_plan_exchange: open_plan_ready, rebootstrap: true, mcp_workspace: false, inference: inference_ready },
     }
+}
+
+/// @emoji 🔐️ Stamps the ONE truthful answer to "can a browser obtain a session from this hub by
+/// presenting a credential" onto a readiness snapshot. `hub_readiness` itself never claims it: a
+/// hub only issues publicly when `OS_HUB_CREDENTIAL_SIGN_IN` enabled `POST /auth/sessions`, and the
+/// local-bootstrap contract (`🚀️local-bootstrap/🧬️schema/🔣️.json`) requires a development hub
+/// running the pipe to keep reporting `false`.
+fn declare_public_session_issuance(readiness: HubReadinessV1, credential_sign_in_enabled: bool) -> HubReadinessV1 {
+    HubReadinessV1 { authentication: HubAuthenticationReadinessV1 { public_session_issuance: credential_sign_in_enabled, ..readiness.authentication }, ..readiness }
 }
 
 fn configured_admin_subjects() -> Result<Arc<[AdminSubject]>, HubError> {
@@ -4730,7 +4750,7 @@ impl ArtifactCreationHttpTaskOwnerV1 {
                 let intents = match service.recovery_candidates(scan_now, 32).await {
                     Ok(intents) => intents,
                     Err(error) => {
-                        eprintln!("[DEBUG] artifact creation recovery scan unavailable: {error}");
+                        eprintln!("artifact creation recovery scan unavailable: {error}");
                         continue;
                     }
                 };
@@ -4742,7 +4762,7 @@ impl ArtifactCreationHttpTaskOwnerV1 {
                     let deadline = control.now_ms().saturating_add(semio_hub::artifact_authority::creation::ARTIFACT_CREATION_DEADLINE_MS);
                     let context = OperationContext::new(deadline, AuthorityLimits::maximum(), &control);
                     if let Err(error) = service.recover(intent, authority.as_ref(), &context).await {
-                        eprintln!("[DEBUG] artifact creation recovery attempt unavailable: {error}");
+                        eprintln!("artifact creation recovery attempt unavailable: {error}");
                     }
                 }
             }
@@ -4774,18 +4794,20 @@ impl ArtifactCreationHttpTaskOwnerV1 {
         self.changed.notify_waiters();
         let deadline = tokio::time::Instant::now() + shutdown_deadline;
         loop {
-            let mut state = self.state.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-            state.closing = true;
-            for pending in state.reservations.values() {
-                pending.control.cancel();
-            }
-            for task in state.tasks.values() {
-                task.control.cancel();
-            }
-            if state.reservations.is_empty() {
+            let drained = {
+                let mut state = self.state.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+                state.closing = true;
+                for pending in state.reservations.values() {
+                    pending.control.cancel();
+                }
+                for task in state.tasks.values() {
+                    task.control.cancel();
+                }
+                state.reservations.is_empty()
+            };
+            if drained {
                 break;
             }
-            drop(state);
             if tokio::time::timeout_at(deadline, self.changed.notified()).await.is_err() {
                 break;
             }
@@ -4996,7 +5018,7 @@ async fn post_space_artifact_creation(Path(space_id): Path<String>, OriginalUri(
             let deadline = control.now_ms().saturating_add(semio_hub::artifact_authority::creation::ARTIFACT_CREATION_DEADLINE_MS);
             let context = OperationContext::new(deadline, AuthorityLimits::maximum(), control.as_ref());
             if let Err(error) = service.execute(execution, authority.as_ref(), &context).await {
-                eprintln!("[DEBUG] artifact creation retained execution unavailable: {error}");
+                eprintln!("artifact creation retained execution unavailable: {error}");
             }
         });
     } else if let Some(reservation) = reservation {
@@ -6561,8 +6583,215 @@ async fn delete_session_me(headers: HeaderMap, State(state): State<HubState>) ->
     }
 }
 
-/// @emoji 🌐️ Applies the hub's explicit cross-origin response policy. Authentication issuance
-/// is absent from the public router; protected routes still require their typed capability.
+/// @emoji 🎫️ `POST /auth/sessions` — the hub's credential sign-in and session mint. The whole law
+/// lives in `semio_hub::auth`: the body is decoded and bounds-checked
+/// ([`CredentialSignInRequestV1::verify`]), the claimed identity gets its own rate-limit bucket on
+/// top of the remote-address bucket [`rate_limit_middleware`] already charged, and
+/// [`decide_credential_sign_in`] collapses "no such account", "no credential", "unreadable
+/// credential" and "wrong password" into one `invalid-credentials`. Every attempt — admitted or
+/// refused — appends a `credential-sign-in` fact before the response is written, so the
+/// authentication log is the record of what happened. The minted session itself is
+/// `issue_auth_session`'s own `session-issued` fact; nothing here writes a session row.
+async fn post_auth_session(State(state): State<HubState>, body: Bytes) -> Response {
+    let Ok(request) = serde_json::from_slice::<CredentialSignInRequestV1>(&body) else { return auth_error_response(AuthErrorCodeV1::MalformedRequest, None) };
+    let verified = match request.verify() {
+        Ok(verified) => verified,
+        Err(code) => return auth_error_response(code, None),
+    };
+    if let RateLimitDecisionV1::Refused { retry_after_ms } = state.rate_limits.admit(RateLimitClassV1::Auth, &[RateLimitSubjectV1::claimed_identity(verified.email())]) {
+        return auth_error_response(AuthErrorCodeV1::RateLimited, Some(retry_after_ms));
+    }
+    let correlation_id = directory::os_identity::time_ordered_id();
+    let peer_class = verified.client_class().as_str();
+    let subject = match state.directory.get_user_by_email(verified.email()).await {
+        Ok(user) => user.map(|user| CredentialSubjectV1 { user_id: user.id, password_hash: user.password_hash }),
+        Err(_) => return auth_error_response(AuthErrorCodeV1::DirectoryUnavailable, None),
+    };
+    match decide_credential_sign_in(state.credential_sign_in, &verified, subject.as_ref()) {
+        CredentialSignInDecisionV1::Refuse(code) => {
+            journal_credential_sign_in(&state, subject.as_ref().map(|subject| subject.user_id.as_str()), "failure", Some(code.reason_code()), &correlation_id, peer_class).await;
+            auth_error_response(code, None)
+        }
+        CredentialSignInDecisionV1::Mint { user_id, ttl_secs } => {
+            let Ok(identity_subject_digest) = identity_subject_digest(semio_hub::auth::CREDENTIAL_IDENTITY_PROVIDER, verified.email()) else {
+                return auth_error_response(AuthErrorCodeV1::MalformedRequest, None);
+            };
+            let issue = AuthSessionIssue {
+                user_id,
+                identity_provider: semio_hub::auth::CREDENTIAL_IDENTITY_PROVIDER.into(),
+                identity_subject_digest,
+                ttl_secs,
+                device_instance_id: verified.device_instance_id().to_string(),
+                session_kind: AuthSessionKind::External,
+                correlation_id: correlation_id.clone(),
+                peer_class: peer_class.to_string(),
+            };
+            match state.directory.issue_auth_session(&issue).await {
+                Ok(session) => {
+                    journal_credential_sign_in(&state, Some(&session.record.user_id), "success", None, &correlation_id, peer_class).await;
+                    let minted = SessionMintResponseV1 { token: session.capability.expose_once(), user_id: session.record.user_id.clone() };
+                    let mut response = Json(minted).into_response();
+                    response.headers_mut().insert(axum::http::header::CACHE_CONTROL, axum::http::HeaderValue::from_static("no-store"));
+                    response
+                }
+                Err(_) => {
+                    journal_credential_sign_in(&state, subject.as_ref().map(|subject| subject.user_id.as_str()), "failure", Some(AuthErrorCodeV1::DirectoryUnavailable.reason_code()), &correlation_id, peer_class).await;
+                    auth_error_response(AuthErrorCodeV1::DirectoryUnavailable, None)
+                }
+            }
+        }
+    }
+}
+
+/// @emoji 🔁️ `POST /auth/credentials` — the principal's own password change. Two independent
+/// proofs are required: a live bearer (which says *who*) and the current password (which says the
+/// human is present, so a stolen capability alone can never take an account over). On success the
+/// new credential and its `credential-changed` fact are written in one transaction and **every**
+/// session of that principal is revoked — including this one, so the caller must sign in again
+/// with the new password and any session the old password leaked is gone.
+///
+/// A principal that has no credential at all is refused exactly like a wrong password: the first
+/// credential for a principal is issued by the operator verb `os-hub credential set`, which needs
+/// filesystem access to `OS_HUB_DATA` and is therefore not reachable over the network at all.
+async fn post_auth_credential(headers: HeaderMap, State(state): State<HubState>, body: Bytes) -> Response {
+    let Some(token) = bearer(&headers) else { return auth_error_response(AuthErrorCodeV1::InvalidCredentials, None) };
+    let Ok(capability) = SessionCapability::parse(&token) else { return auth_error_response(AuthErrorCodeV1::InvalidCredentials, None) };
+    let Ok(request) = serde_json::from_slice::<CredentialChangeRequestV1>(&body) else { return auth_error_response(AuthErrorCodeV1::MalformedRequest, None) };
+    let verified = match request.verify() {
+        Ok(verified) => verified,
+        Err(code) => return auth_error_response(code, None),
+    };
+    let session = match state.directory.authenticate_session(&capability).await {
+        Ok(Some(session)) => session,
+        Ok(None) => return auth_error_response(AuthErrorCodeV1::InvalidCredentials, None),
+        Err(_) => return auth_error_response(AuthErrorCodeV1::DirectoryUnavailable, None),
+    };
+    let correlation_id = directory::os_identity::time_ordered_id();
+    let subject = match state.directory.get_user(&session.user_id).await {
+        Ok(Some(user)) => CredentialSubjectV1 { user_id: user.id, password_hash: user.password_hash },
+        Ok(None) => return auth_error_response(AuthErrorCodeV1::InvalidCredentials, None),
+        Err(_) => return auth_error_response(AuthErrorCodeV1::DirectoryUnavailable, None),
+    };
+    match decide_credential_change(state.credential_sign_in, &verified, &subject) {
+        CredentialChangeDecisionV1::Refuse(code) => {
+            journal_credential_change_refusal(&state, &subject.user_id, code.reason_code(), &correlation_id).await;
+            auth_error_response(code, None)
+        }
+        CredentialChangeDecisionV1::Apply { user_id, mint_iterations } => {
+            let Ok(credential) = PasswordCredentialV1::mint(verified.new_password(), mint_iterations) else {
+                return auth_error_response(AuthErrorCodeV1::MalformedRequest, None);
+            };
+            if state.directory.set_password_credential(&user_id, &credential.encode(), Some(&user_id), &correlation_id).await.is_err() {
+                return auth_error_response(AuthErrorCodeV1::DirectoryUnavailable, None);
+            }
+            let revoked = match state.directory.revoke_auth_sessions_for_user(&user_id, "credential-changed", Some(&user_id), &correlation_id).await {
+                Ok(revoked) => revoked,
+                Err(_) => return auth_error_response(AuthErrorCodeV1::DirectoryUnavailable, None),
+            };
+            for session in &revoked {
+                let binding = SocketBindingKeyV1::Session(session.id.clone());
+                state.socket_grants.invalidate_binding(binding.clone());
+                state.document_open_plans.invalidate_binding(&binding);
+            }
+            let mut response = StatusCode::NO_CONTENT.into_response();
+            response.headers_mut().insert(axum::http::header::CACHE_CONTROL, axum::http::HeaderValue::from_static("no-store"));
+            response
+        }
+    }
+}
+
+/// @emoji 🧾️ Appends one refused `credential-changed` attempt. A successful change journals its own
+/// fact inside `set_password_credential`'s transaction, so only refusals are recorded here.
+async fn journal_credential_change_refusal(state: &HubState, user_id: &str, reason_code: &str, correlation_id: &str) {
+    let fact = CredentialAuditFactV1 {
+        event_kind: semio_hub::auth::CREDENTIAL_CHANGED_EVENT.into(),
+        target_user_id: Some(user_id.to_string()),
+        actor_user_id: Some(user_id.to_string()),
+        outcome_code: "failure".into(),
+        reason_code: Some(reason_code.to_string()),
+        correlation_id: correlation_id.to_string(),
+        peer_class: "browser".into(),
+    };
+    let _ = state.directory.append_credential_audit(&fact).await;
+}
+
+/// @emoji 🧾️ Appends one `credential-sign-in` fact. A backend that cannot journal never turns a
+/// refusal into an admission — the response was already decided before this is called.
+async fn journal_credential_sign_in(state: &HubState, target_user_id: Option<&str>, outcome_code: &str, reason_code: Option<&str>, correlation_id: &str, peer_class: &str) {
+    let fact = CredentialAuditFactV1 {
+        event_kind: semio_hub::auth::CREDENTIAL_SIGN_IN_EVENT.into(),
+        target_user_id: target_user_id.map(str::to_string),
+        actor_user_id: None,
+        outcome_code: outcome_code.to_string(),
+        reason_code: reason_code.map(str::to_string),
+        correlation_id: correlation_id.to_string(),
+        peer_class: peer_class.to_string(),
+    };
+    let _ = state.directory.append_credential_audit(&fact).await;
+}
+
+/// @emoji 🛑️ The one shape every credential sign-in refusal is served in.
+fn auth_error_response(error: AuthErrorCodeV1, retry_after_ms: Option<u64>) -> Response {
+    let status = StatusCode::from_u16(error.status()).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR);
+    let body = match retry_after_ms {
+        Some(retry_after_ms) => AuthErrorV1::rate_limited(retry_after_ms),
+        None => AuthErrorV1::new(error),
+    };
+    let mut response = (status, Json(body)).into_response();
+    response.headers_mut().insert(axum::http::header::CACHE_CONTROL, axum::http::HeaderValue::from_static("no-store"));
+    if let Some(retry_after_ms) = retry_after_ms {
+        if let Ok(value) = axum::http::HeaderValue::from_str(&RateLimitDecisionV1::Refused { retry_after_ms }.retry_after_secs().to_string()) {
+            response.headers_mut().insert(axum::http::header::RETRY_AFTER, value);
+        }
+    }
+    response
+}
+
+/// @emoji 🚦️ Charges every rate-limited route family before its handler runs: credential sign-in
+/// and sign-out, directory commands, invite redemption and socket-grant issuance. Each request is
+/// charged to its remote address and, when it carries one, to its session capability's public
+/// selector; the handler for `POST /auth/sessions` adds the claimed identity's own bucket, which
+/// only exists after the body is decoded. Every other route passes through untouched.
+async fn rate_limit_middleware(State(state): State<HubState>, request: axum::extract::Request, next: axum::middleware::Next) -> Response {
+    let Some(class) = rate_limit_class(request.method(), request.uri().path()) else { return next.run(request).await };
+    let mut subjects = Vec::with_capacity(2);
+    match request.extensions().get::<axum::extract::ConnectInfo<SocketAddr>>() {
+        Some(axum::extract::ConnectInfo(peer)) => subjects.push(RateLimitSubjectV1::remote_address(&peer.ip())),
+        None => subjects.push(RateLimitSubjectV1::principal("connect-info-absent")),
+    }
+    if let Some(selector) = bearer(request.headers()).and_then(|token| SessionCapability::parse(&token).ok()).map(|capability| capability.selector().to_string()) {
+        subjects.push(RateLimitSubjectV1::principal(&selector));
+    }
+    match state.rate_limits.admit(class, &subjects) {
+        RateLimitDecisionV1::Admitted => next.run(request).await,
+        RateLimitDecisionV1::Refused { retry_after_ms } => match class {
+            RateLimitClassV1::Auth => auth_error_response(AuthErrorCodeV1::RateLimited, Some(retry_after_ms)),
+            _ => {
+                let mut response = StatusCode::TOO_MANY_REQUESTS.into_response();
+                if let Ok(value) = axum::http::HeaderValue::from_str(&RateLimitDecisionV1::Refused { retry_after_ms }.retry_after_secs().to_string()) {
+                    response.headers_mut().insert(axum::http::header::RETRY_AFTER, value);
+                }
+                response
+            }
+        },
+    }
+}
+
+/// @emoji 🏷️ Which rate-limit family a request belongs to, by method and path alone.
+fn rate_limit_class(method: &axum::http::Method, path: &str) -> Option<RateLimitClassV1> {
+    match (method, path) {
+        (&axum::http::Method::POST, semio_hub::auth::SESSION_MINT_ROUTE) | (&axum::http::Method::POST, semio_hub::auth::CREDENTIAL_ROUTE) | (&axum::http::Method::DELETE, semio_hub::auth::SESSION_ME_ROUTE) => Some(RateLimitClassV1::Auth),
+        (&axum::http::Method::POST, "/directory/commands") => Some(RateLimitClassV1::DirectoryCommand),
+        (&axum::http::Method::POST, path) if path.starts_with("/directory/invites/") && path.ends_with("/redeem") => Some(RateLimitClassV1::InviteRedemption),
+        (&axum::http::Method::POST, path) if path.ends_with("/socket-grants") => Some(RateLimitClassV1::SocketGrant),
+        _ => None,
+    }
+}
+
+/// @emoji 🌐️ Applies the hub's explicit cross-origin response policy. The only public issuance
+/// route is `POST /auth/sessions`, which a deployment must enable explicitly and which is rate
+/// limited per remote address and per claimed identity; every protected route still requires its
+/// own typed capability.
 async fn cors_middleware(request: axum::extract::Request, next: axum::middleware::Next) -> Response {
     let origin = request.headers().get(axum::http::header::ORIGIN).cloned();
     if request.method() == axum::http::Method::OPTIONS {
@@ -7878,6 +8107,31 @@ async fn get_admin_asset(Path(rest): Path<String>, State(state): State<HubState>
     admin_page(&state, &rest).await
 }
 
+/// 🫀️ Process liveness, deliberately independent of every subsystem `/readyz` reports: an
+/// orchestrator restarts a process that stops answering here, and must NOT restart one that is
+/// merely still warming up (a not-ready hub is a healthy hub that has not finished booting).
+/// This handler therefore reads nothing but the run identity and the process clock, and answers
+/// `200` for as long as the axum task is scheduled at all.
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+struct HubLivenessV1 {
+    schema: &'static str,
+    status: &'static str,
+    run_id: String,
+    uptime_ms: u64,
+}
+
+static HUB_PROCESS_START: std::sync::LazyLock<std::time::Instant> = std::sync::LazyLock::new(std::time::Instant::now);
+
+async fn get_healthz(State(state): State<HubState>) -> impl IntoResponse {
+    Json(HubLivenessV1 {
+        schema: "semio.hub.liveness/v1",
+        status: "live",
+        run_id: state.readiness.run_id.clone(),
+        uptime_ms: HUB_PROCESS_START.elapsed().as_millis().min(u128::from(u64::MAX)) as u64,
+    })
+}
+
 async fn get_readyz(State(state): State<HubState>) -> impl IntoResponse {
     let mut readiness = (*state.readiness).clone();
     readiness.artifact_cas_sweeper.ready = state.artifact_maintenance.healthy();
@@ -8114,8 +8368,12 @@ fn artifact_creation_routes(router: Router<HubState>) -> Router<HubState> {
 }
 
 fn router(state: HubState) -> Router {
+    std::sync::LazyLock::force(&HUB_PROCESS_START);
     artifact_creation_routes(inference_routes(Router::new()))
+        .route("/healthz", get(get_healthz))
         .route("/readyz", get(get_readyz))
+        .route(semio_hub::auth::SESSION_MINT_ROUTE, post(post_auth_session).layer(DefaultBodyLimit::max(semio_hub::auth::SIGN_IN_REQUEST_MAX_BYTES)))
+        .route(semio_hub::auth::CREDENTIAL_ROUTE, post(post_auth_credential).layer(DefaultBodyLimit::max(semio_hub::auth::CREDENTIAL_CHANGE_REQUEST_MAX_BYTES)))
         .route("/auth/sessions/me", get(get_session_me).delete(delete_session_me))
         .route("/directory/commands", post(post_directory_commands).layer(DefaultBodyLimit::max(DIRECTORY_COMMAND_REQUEST_MAX_BYTES)))
         .route("/directory/spaces", get(get_directory_spaces))
@@ -8159,6 +8417,9 @@ fn router(state: HubState) -> Router {
         .route("/spaces/{space_id}/documents/{id}/socket/v1", get(document_ws_v1))
         // 🐙️ w4-h: router-wide CORS grant — see `cors_middleware`'s doc comment (`🔖️Directory` region)
         // for why this must cover the whole router, not just `/directory/*`.
+        // 🚦️ Inside the CORS layer, so a refused request never reaches a handler and its `429`
+        // still leaves through `cors_middleware` with the headers a browser needs to read it.
+        .layer(axum::middleware::from_fn_with_state(state.clone(), rate_limit_middleware))
         .layer(axum::middleware::from_fn(cors_middleware))
         .with_state(state)
 }
@@ -8291,7 +8552,11 @@ async fn connect_directory(data_dir: &std::path::Path) -> Result<Arc<HubDirector
 
 #[tokio::main]
 async fn main() -> Result<(), HubError> {
-    if trusted_catalog_command::dispatch(&std::env::args_os().skip(1).collect::<Vec<_>>()).await? {
+    let arguments = std::env::args_os().skip(1).collect::<Vec<_>>();
+    if credential_command::dispatch(&arguments).await? {
+        return Ok(());
+    }
+    if trusted_catalog_command::dispatch(&arguments).await? {
         return Ok(());
     }
     let port: u16 = std::env::var("OS_HUB_PORT").ok().and_then(|value| value.parse().ok()).unwrap_or(8787);
@@ -8397,7 +8662,11 @@ async fn main() -> Result<(), HubError> {
     let inference_ready = inference_runtime.is_some();
     #[cfg(not(all(feature = "sqlite", feature = "native-artifact-execution")))]
     let inference_ready = false;
-    let readiness = Arc::new(hub_readiness(mode, bind_scope, run_id, bootstrap_ready, artifact_authority_ready, open_plan_ready, admin_dir.is_dir(), true, artifact_cas_sweep_execute, inference_ready));
+    let credential_sign_in = CredentialSignInPolicyV1::from_env().map_err(|error| HubError::UnsafeAuthConfiguration(error.to_string()))?;
+    let readiness = Arc::new(declare_public_session_issuance(
+        hub_readiness(mode, bind_scope, run_id, bootstrap_ready, artifact_authority_ready, open_plan_ready, admin_dir.is_dir(), true, artifact_cas_sweep_execute, inference_ready),
+        credential_sign_in.is_enabled(),
+    ));
     let admin_cursor_key = SessionCapability::mint()?.secret_digest();
     let space_administration_cursor_key = SessionCapability::mint()?.secret_digest();
     let state = HubState {
@@ -8421,6 +8690,8 @@ async fn main() -> Result<(), HubError> {
         artifact_publication,
         artifact_maintenance: artifact_maintenance.clone(),
         directory_service,
+        credential_sign_in,
+        rate_limits: Arc::new(HubRateLimiterV1::system()),
         admin_subjects,
         admin_cursor_key,
         space_administration_cursor_key,
@@ -8508,6 +8779,9 @@ async fn main() -> Result<(), HubError> {
 
 #[path = "../🗿️artifact-authority/🔏️trusted-catalog/📤️command/🦀️.rs"]
 mod trusted_catalog_command;
+
+#[path = "../🔐️auth/📤️command/🦀️.rs"]
+mod credential_command;
 
 //#region 🔖️Tests
 // 🪶️ Gated on the `sqlite` feature (not just `test`): every test below constructs a `HubState`

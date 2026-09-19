@@ -11,6 +11,7 @@ semio_framework_plugin::app_labels! {
         artifact: native_en "Artifact", native_de "Artefakt", reuse_en "Artifact", reuse_de "Artefakt";
         spreads: native_en "Spreads", native_de "Doppelseiten", reuse_en "Spreads", reuse_de "Doppelseiten";
         frames: native_en "Frames", native_de "Rahmen", reuse_en "Frames", reuse_de "Rahmen";
+        selected: native_en "Selected", native_de "Ausgewählt", reuse_en "Selected", reuse_de "Ausgewählt";
         parent_pages: native_en "Parent Pages", native_de "Übergeordnete Seiten", reuse_en "Parent Pages", reuse_de "Übergeordnete Seiten";
         layers: native_en "Layers", native_de "Ebenen", reuse_en "Layers", reuse_de "Ebenen";
         stories: native_en "Stories", native_de "Textflüsse", reuse_en "Stories", reuse_de "Textflüsse";

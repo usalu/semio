@@ -1,0 +1,70 @@
+{
+  "$comment": "🚚️ The one language-neutral declaration of the tiled-map scene lane carrier — the map twin of 🚚️board2d-scene-lanes. Rust pins TiledMapSceneLane / TILEDMAP_SCENE_LANE_* (🧰️framework/🔨️modules/🖱️ui/🎬️scene/🎬️scenes/🦀️.rs) against it; TypeScript pins TILEDMAP_SCENE_LANES / tiledMapSceneFromLanes (🧰️framework/🔨️modules/🖱️ui/🎬️scene/🟦️.ts) against it. The mapFixture lane always publishes: the gis demo map's 152 positions and 149 routes encode to 59 667 bytes, nearly twice the 32 KiB UiFixedBytes surface doc, which refused the whole surface at scene-surface.encode so the window never published.",
+  "schema": "tiled-map@1",
+  "laneKeyPrefix": "framework.scene.tiledmap.",
+  "spineFields": [
+    "cameraJson",
+    "renderMode",
+    "vectorStyle",
+    "lodMode",
+    "tileUrlTemplate",
+    "vectorTileUrlTemplate",
+    "layerVisibilityJson",
+    "layerStrokeScaleJson",
+    "selectionJson",
+    "hoverJson",
+    "selectionMethod",
+    "selectionMode",
+    "lanes"
+  ],
+  "lanes": [
+    {
+      "lane": "mapFixture",
+      "field": "mapFixtureJson",
+      "bodyKey": "framework.scene.tiledmap.mapFixture",
+      "optional": false
+    }
+  ],
+  "roundTrip": {
+    "assembled": {
+      "mapFixtureJson": "{\"positions\":[{\"id\":\"p1\",\"lon\":5.5818,\"lat\":50.603}],\"routes\":[],\"regions\":[]}",
+      "cameraJson": "{\"lon\":5.58,\"lat\":50.6,\"zoom\":12}",
+      "renderMode": "combined",
+      "vectorStyle": "colored",
+      "lodMode": "automatic",
+      "tileUrlTemplate": "/osm/{z}/{x}/{y}.png",
+      "vectorTileUrlTemplate": "/vt/{z}/{x}/{y}.pbf",
+      "layerVisibilityJson": "{}",
+      "layerStrokeScaleJson": "{}",
+      "selectionJson": "{}",
+      "hoverJson": "null",
+      "selectionMethod": "rectangle",
+      "selectionMode": "default"
+    },
+    "laneTexts": {
+      "framework.scene.tiledmap.mapFixture": "{\"positions\":[{\"id\":\"p1\",\"lon\":5.5818,\"lat\":50.603}],\"routes\":[],\"regions\":[]}"
+    },
+    "spine": {
+      "mapFixtureJson": "",
+      "cameraJson": "{\"lon\":5.58,\"lat\":50.6,\"zoom\":12}",
+      "renderMode": "combined",
+      "vectorStyle": "colored",
+      "lodMode": "automatic",
+      "tileUrlTemplate": "/osm/{z}/{x}/{y}.png",
+      "vectorTileUrlTemplate": "/vt/{z}/{x}/{y}.pbf",
+      "layerVisibilityJson": "{}",
+      "layerStrokeScaleJson": "{}",
+      "selectionJson": "{}",
+      "hoverJson": "null",
+      "selectionMethod": "rectangle",
+      "selectionMode": "default",
+      "lanes": [
+        {
+          "lane": "mapFixture",
+          "bytes": 78,
+          "hash": "89d18b1418fd712b"
+        }
+      ]
+    }
+  }
+}

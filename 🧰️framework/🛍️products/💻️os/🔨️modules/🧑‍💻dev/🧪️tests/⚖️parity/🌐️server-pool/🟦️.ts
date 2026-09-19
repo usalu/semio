@@ -194,4 +194,4 @@ function stopParityDevServer(handle: ParityServerHandle): void {
   }
 }
 
-export { PARITY_DEV_SERVER_BOOT_BUDGET_MS, PARITY_PORT_BASE, PARITY_PORT_POOL_SHARDS, ParityServerHandle, findFreeParityPortPair, parityDevUrl, parityPortsForShard, prebuildParityPlugin, startParityDevServer, stopParityDevServer };
+export { PARITY_DEV_SERVER_BOOT_BUDGET_MS, PARITY_PORT_BASE, PARITY_PORT_POOL_SHARDS, type ParityServerHandle, findFreeParityPortPair, parityDevUrl, parityPortsForShard, prebuildParityPlugin, startParityDevServer, stopParityDevServer };

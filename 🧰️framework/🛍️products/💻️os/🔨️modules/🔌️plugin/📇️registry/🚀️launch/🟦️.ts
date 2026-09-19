@@ -3,8 +3,12 @@
  * the playground registry — the single source of truth for per-plugin dev-server ports. Never
  * hand-edit `.vscode/launch.json` directly: edit the seed file (for keyboard/mouse shortcuts, bespoke
  * tooling launchers, fixture/native variants, build/publish groups, and the `devLaunchers`
- * per-playground-variant templates), or a plugin's `[[package.metadata.semio.playground]]` block (for
- * ports), then regenerate.
+ * per-playground-variant presentation rows), or a plugin's `[[package.metadata.semio.playground]]`
+ * block (for ports), then regenerate.
+ *
+ * 🔒️ Every playground variant gets exactly one `⚛️react` and one `🧊️wgpu🌐️wasm` dev launcher, whether
+ * or not the seed curates it, and their command/port/env come from the registry entry alone — a seed
+ * row can only choose the display name, the presentation order and extra env keys.
  *
  * 🚪️ Module only — `📜️script.ts` owns the CLI: `generate` writes this output alongside the registry
  * catalog and `check` verifies its freshness (CLAUDE.md: one `script.ts` per bundle). The playground
@@ -30,9 +34,9 @@ type ServerReadyTemplate = { readonly pattern: string; readonly uriFormat: strin
 
 /** @emoji 👥️ Multi-user expansion template for one playground variant's `@generated:<variant>:users`
  * placeholder: one launcher per registry `userPorts.react[]`/`userPorts.wgpu[]` slot (1-based `{N}`),
- * reusing the variant's own `command`/`reactServerReadyAction`/`wgpuServerReadyAction` and offsetting
- * its `order`/`wgpuOrder` by `0.01 * N`. `env` values may carry `"{N}"`, `"{PORT}"` and `"{EMAIL}"`
- * tokens; `SEMIO_RENDERER` is set programmatically per renderer, not part of this template. */
+ * reusing the variant's own command/serverReadyAction and offsetting its `order`/`wgpuOrder` by
+ * `0.01 * N`. `env` values may carry `"{N}"`, `"{PORT}"` and `"{EMAIL}"` tokens and are merged OVER
+ * the registry-owned base env; `SEMIO_RENDERER` is set programmatically per renderer. */
 type DevLauncherUsersTemplate = {
   readonly namePrefixPattern: string;
   readonly emailPattern: string;
@@ -40,19 +44,34 @@ type DevLauncherUsersTemplate = {
 };
 
 /** @emoji 🎮️ Hand-curated parts of one playground variant's `3_dev` launch entries that the plugin
- * registry cannot supply (display name, launch command, VS Code presentation order, env/serverReadyAction
- * shape). Registry ports fill any `"{PORT}"` token in `reactEnv`/`wgpuEnv`/`*ServerReadyAction`. */
+ * registry cannot supply: display name and VS Code presentation order, plus any launcher-specific
+ * `env` extras merged over the registry-owned base. Command, port, plugin/app/renderer env and the
+ * `serverReadyAction` are all derived from the registry entry — a seed row can never drift from the
+ * variant it launches. */
 type DevLauncherEntry = {
   readonly namePrefix: string;
   readonly order: number;
-  readonly command: string;
-  readonly reactEnv: Readonly<Record<string, string>>;
-  readonly reactServerReadyAction: ServerReadyTemplate;
   readonly wgpuOrder?: number;
-  readonly wgpuEnv?: Readonly<Record<string, string>>;
-  readonly wgpuServerReadyAction?: ServerReadyTemplate;
+  readonly env?: Readonly<Record<string, string>>;
   readonly users?: DevLauncherUsersTemplate;
 };
+
+/** @emoji 🌐️ The one `serverReadyAction` shape every playground dev server matches — Vite and the
+ * wgpu Trunk server both print `http://<host>:<port>`, with `0.0.0.0` in a devcontainer. */
+const DEV_SERVER_READY: ServerReadyTemplate = { pattern: "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):{PORT})", uriFormat: "%s" };
+
+/** @emoji 🚀️ The `workspace:dev` invocation for one playground variant. `resolveFrameworkOsPlaygroundPlugin`
+ * matches the variant id (or an alias) as the leading segment, so the variant id is always accepted. */
+export function playgroundDevCommand(variant: string): string {
+  return `bun nx run workspace:dev -- ${variant}`;
+}
+
+/** @emoji 🔌️ Registry-owned launch env for one variant+renderer. `SEMIO_PLUGIN` carries the **variant**,
+ * exactly as `🧑‍💻dev/♻️activation/🌐️serve/🟦️.ts` and `🧑‍💻dev/🏗️builder/🌐️vite/🟦️.ts` read it, and
+ * `S_OS_PORT` is the only port variable any dev server binds. */
+export function playgroundDevEnv(playground: PlaygroundEntry, renderer: "react" | "wgpu", port: number): Record<string, string> {
+  return { S_OS_PORT: String(port), SEMIO_PLUGIN: playground.variant, SEMIO_RENDERER: renderer, ...(playground.app ? { SEMIO_APP: playground.app } : {}) };
+}
 //#endregion
 
 //#region 🔖️SeedSplit
@@ -89,20 +108,18 @@ function renderServerReadyAction(template: ServerReadyTemplate, port: number): {
 
 /** @emoji 🧱️ Builds one `3_dev` launch config object for a variant+renderer, matching the field order
  * and shape of every hand-authored playground launcher in `.vscode/launch.json` today. */
-function renderEntry(name: string, launcher: DevLauncherEntry, renderer: "react" | "wgpu", port: number): object {
-  const env = renderer === "react" ? launcher.reactEnv : launcher.wgpuEnv;
-  const sra = renderer === "react" ? launcher.reactServerReadyAction : launcher.wgpuServerReadyAction;
+function renderEntry(name: string, launcher: DevLauncherEntry, playground: PlaygroundEntry, renderer: "react" | "wgpu", port: number): object {
   const order = renderer === "react" ? launcher.order : launcher.wgpuOrder;
-  if (!env || !sra || order === undefined) throw new Error(`🚀️launch/🟦️.ts: devLauncher "${name}" is missing ${renderer} fields`);
+  if (order === undefined) throw new Error(`🚀️launch/🟦️.ts: devLauncher "${name}" is missing its ${renderer} presentation order`);
   return {
     name,
     type: "node-terminal",
     request: "launch",
-    command: launcher.command,
+    command: playgroundDevCommand(playground.variant),
     cwd: "${workspaceFolder}",
-    env: renderEnv(env, port),
+    env: { ...playgroundDevEnv(playground, renderer, port), ...renderEnv(launcher.env ?? {}, port) },
     presentation: { group: "3_dev", order },
-    serverReadyAction: renderServerReadyAction(sra, port),
+    serverReadyAction: renderServerReadyAction(DEV_SERVER_READY, port),
   };
 }
 
@@ -123,18 +140,18 @@ function substituteUserTokens(text: string, n: number, port: number, email: stri
 
 /** @emoji 👥️ Renders one `users` launcher for user slot `n` (1-based) of one renderer, reusing the
  * variant's own `command`/`serverReadyAction` and offsetting its base `order` by `0.01 * n`. */
-function renderUserEntry(users: DevLauncherUsersTemplate, launcher: DevLauncherEntry, renderer: "react" | "wgpu", n: number, port: number, baseOrder: number, sra: ServerReadyTemplate): object {
+function renderUserEntry(users: DevLauncherUsersTemplate, playground: PlaygroundEntry, renderer: "react" | "wgpu", n: number, port: number, baseOrder: number, sra: ServerReadyTemplate): object {
   const email = substituteUserTokens(users.emailPattern, n, port, "");
   const namePrefix = substituteUserTokens(users.namePrefixPattern, n, port, email);
   const name = `🛠️dev${namePrefix}${renderer === "react" ? "⚛️react" : "🧊️wgpu🌐️wasm"}`;
-  const env: Record<string, string> = {};
+  const env: Record<string, string> = playgroundDevEnv(playground, renderer, port);
   for (const [key, value] of Object.entries(users.env)) env[key] = substituteUserTokens(value, n, port, email);
   env.SEMIO_RENDERER = renderer;
   return {
     name,
     type: "node-terminal",
     request: "launch",
-    command: launcher.command,
+    command: playgroundDevCommand(playground.variant),
     cwd: "${workspaceFolder}",
     env,
     // ↕️ Rounded to 2dp: floating-point addition of `0.01 * n` onto a decimal `baseOrder` (e.g.
@@ -152,27 +169,17 @@ function renderUserEntries(launcher: DevLauncherEntry, playground: PlaygroundEnt
   if (!users) return [];
   if (!playground.userPorts) throw new Error(`🚀️launch/🟦️.ts: devLaunchers["${playground.variant}"] declares "users" but the registry entry has no "userPorts"`);
   const entries: object[] = [];
-  playground.userPorts.react.forEach((port, index) => entries.push(renderUserEntry(users, launcher, "react", index + 1, port, launcher.order, launcher.reactServerReadyAction)));
-  if (launcher.wgpuOrder !== undefined && launcher.wgpuServerReadyAction) {
-    playground.userPorts.wgpu.forEach((port, index) => entries.push(renderUserEntry(users, launcher, "wgpu", index + 1, port, launcher.wgpuOrder!, launcher.wgpuServerReadyAction!)));
+  playground.userPorts.react.forEach((port, index) => entries.push(renderUserEntry(users, playground, "react", index + 1, port, launcher.order, DEV_SERVER_READY)));
+  if (launcher.wgpuOrder !== undefined) {
+    playground.userPorts.wgpu.forEach((port, index) => entries.push(renderUserEntry(users, playground, "wgpu", index + 1, port, launcher.wgpuOrder!, DEV_SERVER_READY)));
   }
   return entries;
 }
 
-/** @emoji 🧩️ Supplies registry-owned dev launcher metadata when a variant has no curated seed row. */
+/** @emoji 🧩️ Supplies registry-owned dev launcher metadata when a variant has no curated seed row, or
+ * when a curated row covers only one of the two browser renderers. */
 function defaultDevLauncher(playground: PlaygroundEntry, order: number, repoRoot: string, playgrounds: readonly PlaygroundEntry[]): DevLauncherEntry {
-  const serverReadyAction: ServerReadyTemplate = { pattern: "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):{PORT})", uriFormat: "%s" };
-  const appEnv = playground.app ? { SEMIO_APP: playground.app } : {};
-  return {
-    namePrefix: playgroundLaunchNamePrefix(playground, repoRoot, playgrounds),
-    order,
-    command: `bun nx run workspace:dev -- ${playground.variant}`,
-    reactEnv: { S_OS_PORT: "{PORT}", SEMIO_PLUGIN: playground.pluginId, SEMIO_RENDERER: "react", ...appEnv },
-    reactServerReadyAction: serverReadyAction,
-    wgpuOrder: Math.round((order + 0.001) * 1000) / 1000,
-    wgpuEnv: { S_OS_PORT: "{PORT}", SEMIO_PLUGIN: playground.pluginId, SEMIO_RENDERER: "wgpu", ...appEnv },
-    wgpuServerReadyAction: serverReadyAction,
-  };
+  return { namePrefix: playgroundLaunchNamePrefix(playground, repoRoot, playgrounds), order, wgpuOrder: Math.round((order + 0.001) * 1000) / 1000 };
 }
 //#endregion
 
@@ -190,12 +197,12 @@ export function generateLaunchJson(repoRoot: string, playgrounds: readonly Playg
     const reactPlaceholder = JSON.stringify(`@generated:${variant}:react`);
     if (!out.includes(reactPlaceholder)) throw new Error(`🚀️launch/🟦️.ts: seed is missing placeholder ${reactPlaceholder}`);
     const reactName = `🛠️dev${namePrefix}⚛️react`;
-    out = out.replace(reactPlaceholder, reindent(JSON.stringify(renderEntry(reactName, launcher, "react", playground.ports.react), null, 2), 4));
+    out = out.replace(reactPlaceholder, reindent(JSON.stringify(renderEntry(reactName, launcher, playground, "react", playground.ports.react), null, 2), 4));
     if (launcher.wgpuOrder !== undefined) {
       const wgpuPlaceholder = JSON.stringify(`@generated:${variant}:wgpu`);
       if (!out.includes(wgpuPlaceholder)) throw new Error(`🚀️launch/🟦️.ts: seed is missing placeholder ${wgpuPlaceholder}`);
       const wgpuName = `🛠️dev${namePrefix}🧊️wgpu🌐️wasm`;
-      out = out.replace(wgpuPlaceholder, reindent(JSON.stringify(renderEntry(wgpuName, launcher, "wgpu", playground.ports.wgpu), null, 2), 4));
+      out = out.replace(wgpuPlaceholder, reindent(JSON.stringify(renderEntry(wgpuName, launcher, playground, "wgpu", playground.ports.wgpu), null, 2), 4));
     }
     if (launcher.users) {
       const usersPlaceholder = JSON.stringify(`@generated:${variant}:users`);
@@ -210,12 +217,13 @@ export function generateLaunchJson(repoRoot: string, playgrounds: readonly Playg
   out = refreshDevLaunchNames(out, playgrounds, repoRoot);
   const synthesized: object[] = [];
   for (const [index, playground] of [...playgrounds].sort((left, right) => left.variant.localeCompare(right.variant)).entries()) {
-    if (devLaunchers[playground.variant]) continue;
-    const launcher = defaultDevLauncher(playground, Math.round((420 + index * 0.01) * 1000) / 1000, repoRoot, playgrounds);
-    const reactName = `🛠️dev${launcher.namePrefix}⚛️react`;
-    const wgpuName = `🛠️dev${launcher.namePrefix}🧊️wgpu🌐️wasm`;
-    if (!out.includes(JSON.stringify(reactName))) synthesized.push(renderEntry(reactName, launcher, "react", playground.ports.react));
-    if (!out.includes(JSON.stringify(wgpuName))) synthesized.push(renderEntry(wgpuName, launcher, "wgpu", playground.ports.wgpu));
+    const curated = devLaunchers[playground.variant];
+    const fallback = defaultDevLauncher(playground, curated?.order ?? Math.round((420 + index * 0.01) * 1000) / 1000, repoRoot, playgrounds);
+    const launcher = curated ? { ...fallback, ...curated, wgpuOrder: curated.wgpuOrder ?? fallback.wgpuOrder } : fallback;
+    const reactName = `🛠️dev${fallback.namePrefix}⚛️react`;
+    const wgpuName = `🛠️dev${fallback.namePrefix}🧊️wgpu🌐️wasm`;
+    if (!out.includes(JSON.stringify(reactName))) synthesized.push(renderEntry(reactName, launcher, playground, "react", playground.ports.react));
+    if (!out.includes(JSON.stringify(wgpuName))) synthesized.push(renderEntry(wgpuName, launcher, playground, "wgpu", playground.ports.wgpu));
   }
   if (synthesized.length > 0) {
     const marker = '\n  ],\n  "compounds":';

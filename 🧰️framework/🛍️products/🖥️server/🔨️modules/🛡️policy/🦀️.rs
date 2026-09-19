@@ -23,8 +23,9 @@
 
 use std::collections::BTreeMap;
 
-use semio_framework_dispatch_macros::{dyn_enum, dyn_enum_close};
 use serde::{Deserialize, Serialize};
+use semio_framework_dispatch_macros::dyn_enum;
+use std::future::Future;
 
 use crate::contract::{CapabilityProof, DeviceId, PolicyDecision, PolicyGrant, PolicyPoint, PolicyTemplate, Principal, Scope, SessionId};
 
@@ -199,42 +200,22 @@ pub struct Resolved {
 
 /// 🪜️ One rung of the authentication ladder. Returning `None` means "not mine", never "denied":
 /// refusal is policy's job at [`PolicyEngine::evaluate`], not authentication's.
+/// **Send futures, declared not inferred.** Every method of this port returns
+/// `impl Future<..> + Send` instead of being written `async fn`, and that is structural, not a
+/// style choice: [`ServerState`](crate::gateway::ServerState) reaches this port behind an
+/// instance's associated type, so the concrete future is opaque at the call site and axum's
+/// handler and socket tasks — which are `Send` by construction — cannot otherwise prove it may
+/// cross a thread. An `async fn` here compiles and then fails at every route that uses it. The
+/// implementations stay ordinary `async fn`, which Rust accepts against this signature, and so does
+/// the delegate `dyn_enum_close!` generates for a set of them: the macro emits `async fn .. -> T`
+/// over the future's `Output`, because two match arms cannot unify two distinct opaque futures.
 #[dyn_enum]
 pub trait PrincipalResolver: Send + Sync {
     /// 🔍️ Recognize this credential, or decline so the next rung may try.
-    async fn resolve(&self, credential: &Credential) -> Option<Resolved>;
+    fn resolve(&self, credential: &Credential) -> impl Future<Output = Option<Resolved>> + Send;
 
     /// 🏷️ Stable rung name, reported as [`Resolved::via`].
-    async fn name(&self) -> &str;
-}
-
-/// 🪜️ A minimal reference [`PrincipalResolver`] rung: recognizes exactly one configured bearer
-/// token. Kept in production scope (not only in tests) so [`PrincipalResolvers`] closes over a real
-/// variant; a product's own rungs (session cookie, share-token, public-visibility) are added as
-/// further `PrincipalResolvers` variants alongside it.
-pub struct BearerTokenResolver {
-    pub name: String,
-    pub bearer: String,
-    pub principal: Principal,
-}
-
-impl PrincipalResolver for BearerTokenResolver {
-    async fn resolve(&self, credential: &Credential) -> Option<Resolved> {
-        if credential.bearer.as_deref() != Some(self.bearer.as_str()) {
-            return None;
-        }
-        Some(Resolved { principal: self.principal.clone(), session: Some(SessionId(format!("session-{}", self.name))), device: Some(DeviceId("d1".to_string())), via: self.name.clone() })
-    }
-
-    async fn name(&self) -> &str {
-        &self.name
-    }
-}
-
-dyn_enum_close! {
-    pub enum PrincipalResolvers: PrincipalResolver {
-        BearerToken(BearerTokenResolver),
-    }
+    fn name(&self) -> impl Future<Output = &str> + Send;
 }
 
 /// ⛓️ The ladder itself — generic here, its rungs supplied by the instance. The framework owns the
@@ -242,19 +223,31 @@ dyn_enum_close! {
 /// resolver, a share-token resolver reading a [`CapabilityProof`], a public-visibility resolver),
 /// and no rung is hard-coded into this crate. First match wins, so the most specific rung is pushed
 /// first and the broadest last.
-#[derive(Default)]
-pub struct ResolverChain {
-    pub resolvers: Vec<PrincipalResolvers>,
+///
+/// `R` is the instance's rung type — [`ServerInstance::Resolvers`](crate::gateway::ServerInstance::
+/// Resolvers). An instance with one rung names that rung directly; an instance with several closes
+/// them into one enum in its own crate. This module deliberately holds no
+/// rung of its own, so there is nothing here for an instance to inherit or work around.
+pub struct ResolverChain<R: PrincipalResolver> {
+    pub resolvers: Vec<R>,
 }
 
-impl ResolverChain {
+impl<R: PrincipalResolver> Default for ResolverChain<R> {
+    /// 🌿️ An empty ladder — `derive(Default)` would demand `R: Default`, which a rung carrying a
+    /// configured token never is.
+    fn default() -> Self {
+        Self { resolvers: Vec::new() }
+    }
+}
+
+impl<R: PrincipalResolver> ResolverChain<R> {
     /// 🌿️ An empty ladder, which resolves everything to [`Principal::Anonymous`].
     pub fn new() -> Self {
         Self::default()
     }
 
     /// ➕️ Append a rung below every rung already pushed.
-    pub fn push(&mut self, resolver: PrincipalResolvers) {
+    pub fn push(&mut self, resolver: R) {
         self.resolvers.push(resolver);
     }
 

@@ -23,10 +23,10 @@ export function dependencyTruthSelfTests(): number {
   if (goExternal.some((entry) => entry.name === "github.com/example/first") || goExternal.some((entry) => entry.name === "github.com/example/replaced")) throw new Error("[verify dependencies self-test] first-party Go module or local replace was retained as external.");
   if (!goExternal.some((entry) => entry.name === "example.net/external" && entry.kind === "production-build")) throw new Error("[verify dependencies self-test] external indirect Go requirement was not retained as production build input.");
   const oracleRuntime: DependencyBaselineEntry = { ecosystem: "rust", name: "runtime-oracle-name", version: "1", kinds: ["production-runtime"], users: ["product/Cargo.toml"], productionReachable: true };
-  dependencyClassifyOracleEntry(oracleRuntime, ["claimed-oracle"], {}, "🧪️oracle");
+  dependencyClassifyOracleEntry(oracleRuntime, ["claimed-oracle"], "🧪️oracle");
   if (!oracleRuntime.kinds.includes("production-runtime") || oracleRuntime.oracleConflictUsers?.[0] !== "product/Cargo.toml") throw new Error("[verify dependencies self-test] direct runtime manifest hid behind an oracle registry name.");
   const oracleOnly: DependencyBaselineEntry = { ecosystem: "rust", name: "isolated-oracle", version: "1", kinds: ["test-runner"], users: ["unit/oracleCargo.toml"], productionReachable: false };
-  dependencyClassifyOracleEntry(oracleOnly, ["isolated"], {}, "🧪️oracle");
+  dependencyClassifyOracleEntry(oracleOnly, ["isolated"], "🧪️oracle");
   if (oracleOnly.kinds.join() !== "test-oracle" || oracleOnly.oracleConflictUsers) throw new Error("[verify dependencies self-test] isolated test-only oracle was not classified as an oracle.");
   const entry = (ecosystem: DependencyEcosystem, name: string, kind: DependencyKind, user: string, version = "1"): DependencyBaselineEntry => ({ ecosystem, name, version, kinds: [kind], users: [user], productionReachable: kind === "production-runtime" || kind === "production-build", declarations: [{ user, version, kind }] });
   const mixedEntry = (name: string): DependencyBaselineEntry => ({ ecosystem: "js", name, version: "1", kinds: ["repository-tooling"], users: ["package.json", "product/package.json"], productionReachable: false, declarations: [{ user: "package.json", version: "1", kind: "repository-tooling" }, { user: "product/package.json", version: "2", kind: "repository-tooling" }] });

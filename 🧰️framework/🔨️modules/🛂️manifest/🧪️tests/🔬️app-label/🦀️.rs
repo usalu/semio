@@ -92,8 +92,8 @@ use crate::ui::{
     START_TUTORIAL_ACTION_ID,
     Terminology,
     ToolRef,
-    TutorialArtifactEvent,
-    TutorialArtifactEventKind,
+    TutorialDocumentEvent,
+    TutorialDocumentEventKind,
     TutorialAssetSrc,
     TutorialBase,
     TutorialCameraKeyframe,
@@ -937,7 +937,7 @@ async fn tutorial_definition_serde_defaults() {
     assert!(def.description.is_none());
     assert!(def.chapters.is_empty());
     assert!(def.tracks.narration.is_empty());
-    assert!(def.tracks.artifact.is_empty());
+    assert!(def.tracks.document.is_empty());
     assert!(def.base.cameras.is_empty());
     let round = serde_json::to_string(&def).unwrap();
     let round: TutorialDefinition = serde_json::from_str(&round).unwrap();
@@ -995,8 +995,8 @@ async fn tutorial_ui_change_round_trips_tagged_camel_case() {
 }
 
 #[semio_framework_async_macros::async_test]
-async fn tutorial_artifact_event_kind_round_trips_tagged_camel_case() {
-    let edit = TutorialArtifactEventKind::Edit {
+async fn tutorial_document_event_kind_round_trips_tagged_camel_case() {
+    let edit = TutorialDocumentEventKind::Edit {
         forwards: vec![dsl::os_pack::json::to_dsl_value(&dsl::json!({"op": "translate"}))],
         backwards: vec![dsl::os_pack::json::to_dsl_value(&dsl::json!({"op": "translate", "inverse": true}))],
         description: Some("Move object".into()),
@@ -1005,10 +1005,10 @@ async fn tutorial_artifact_event_kind_round_trips_tagged_camel_case() {
     let json = serde_json::to_string(&edit).unwrap();
     assert!(json.contains("\"kind\":\"edit\""), "{json}");
     assert!(json.contains("\"coalesceKey\":\"camera\""), "field must be camelCase: {json}");
-    let round: TutorialArtifactEventKind = serde_json::from_str(&json).unwrap();
+    let round: TutorialDocumentEventKind = serde_json::from_str(&json).unwrap();
     assert_eq!(round, edit);
 
-    let undo = TutorialArtifactEventKind::Undo;
+    let undo = TutorialDocumentEventKind::Undo;
     let json = serde_json::to_string(&undo).unwrap();
     assert_eq!(json, r#"{"kind":"undo"}"#);
 }
@@ -1134,37 +1134,37 @@ async fn compose_tutorial_ui_applies_snapshot_then_deltas() {
 }
 
 #[semio_framework_async_macros::async_test]
-async fn tutorial_artifact_track_language_neutral_serde_parity() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🎞️tutorial-artifact-track.json")).unwrap();
+async fn tutorial_document_track_language_neutral_serde_parity() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🎞️tutorial-document-track.json")).unwrap();
     let mut def = minimal_tutorial().await;
-    def.tracks.artifact = serde_json::from_value(fixture["artifact"].clone()).unwrap();
-    assert_eq!(serde_json::to_value(&def.tracks.artifact).unwrap(), fixture["artifact"]);
+    def.tracks.document = serde_json::from_value(fixture["document"].clone()).unwrap();
+    assert_eq!(serde_json::to_value(&def.tracks.document).unwrap(), fixture["document"]);
     let tracks = serde_json::to_value(&def.tracks).unwrap();
-    assert_eq!(tracks.get("artifact"), Some(&fixture["artifact"]));
-    assert!(tracks.get("document").is_none());
+    assert_eq!(tracks.get("document"), Some(&fixture["document"]));
+    assert!(tracks.get("artifact").is_none());
     for vector in fixture["cases"].as_array().unwrap() {
         let slice = tutorial_slice(&def, vector["from"].as_f64().unwrap(), vector["to"].as_f64().unwrap());
         assert_eq!(slice.forward, vector["forward"].as_bool().unwrap());
-        assert_eq!(serde_json::to_value(slice.artifact.iter().map(|event| event.at).collect::<Vec<_>>()).unwrap(), vector["expectedAt"]);
+        assert_eq!(serde_json::to_value(slice.document.iter().map(|event| event.at).collect::<Vec<_>>()).unwrap(), vector["expectedAt"]);
     }
 }
 
 #[semio_framework_async_macros::async_test]
-async fn tutorial_slice_forward_and_reverse_cross_artifact_events() {
+async fn tutorial_slice_forward_and_reverse_cross_document_events() {
     let mut def = minimal_tutorial().await;
-    def.tracks.artifact = vec![
-        TutorialArtifactEvent {
+    def.tracks.document = vec![
+        TutorialDocumentEvent {
             at: 100,
-            kind: TutorialArtifactEventKind::Edit {
+            kind: TutorialDocumentEventKind::Edit {
                 forwards: vec![dsl::os_pack::json::to_dsl_value(&dsl::json!({"op": "add", "id": "a"}))],
                 backwards: vec![dsl::os_pack::json::to_dsl_value(&dsl::json!({"op": "remove", "id": "a"}))],
                 description: None,
                 coalesce_key: None,
             },
         },
-        TutorialArtifactEvent {
+        TutorialDocumentEvent {
             at: 200,
-            kind: TutorialArtifactEventKind::Edit {
+            kind: TutorialDocumentEventKind::Edit {
                 forwards: vec![dsl::os_pack::json::to_dsl_value(&dsl::json!({"op": "add", "id": "b"}))],
                 backwards: vec![dsl::os_pack::json::to_dsl_value(&dsl::json!({"op": "remove", "id": "b"}))],
                 description: None,
@@ -1174,29 +1174,29 @@ async fn tutorial_slice_forward_and_reverse_cross_artifact_events() {
     ];
     let forward = tutorial_slice(&def, 0.0, 250.0);
     assert!(forward.forward);
-    assert_eq!(forward.artifact.len(), 2);
-    let TutorialArtifactEventKind::Edit { forwards, .. } = &forward.artifact[0].kind else { panic!("expected Edit") };
+    assert_eq!(forward.document.len(), 2);
+    let TutorialDocumentEventKind::Edit { forwards, .. } = &forward.document[0].kind else { panic!("expected Edit") };
     assert_eq!(forwards[0].get("id").and_then(DslValue::as_str), Some("a"), "forward order applies oldest-first");
 
     let backward = tutorial_slice(&def, 250.0, 0.0);
     assert!(!backward.forward);
-    assert_eq!(backward.artifact.len(), 2);
-    let TutorialArtifactEventKind::Edit { backwards, .. } = &backward.artifact[0].kind else { panic!("expected Edit") };
+    assert_eq!(backward.document.len(), 2);
+    let TutorialDocumentEventKind::Edit { backwards, .. } = &backward.document[0].kind else { panic!("expected Edit") };
     assert_eq!(backwards[0].get("id").and_then(DslValue::as_str), Some("b"), "backward order unwinds newest-first");
 
     let empty = tutorial_slice(&def, 250.0, 250.0);
-    assert!(empty.artifact.is_empty());
+    assert!(empty.document.is_empty());
 }
 
 #[semio_framework_async_macros::async_test]
-async fn tutorial_slice_partitions_events_artifact_and_ui_by_track() {
+async fn tutorial_slice_partitions_events_document_and_ui_by_track() {
     let mut def = minimal_tutorial().await;
     def.tracks.events = vec![TutorialEvent { at: 50, kind: TutorialEventKind::Action { action: "setFillCount".into(), args: None } }];
     def.tracks.ui = vec![TutorialUiKeyframe { at: 50, sample: TutorialUiSample::Delta { changes: vec![TutorialUiChange::ActiveTool { id: Some("fill".into()) }] } }];
     let slice = tutorial_slice(&def, 0.0, 100.0);
     assert_eq!(slice.events.len(), 1);
     assert_eq!(slice.ui_changes.len(), 1);
-    assert!(slice.artifact.is_empty());
+    assert!(slice.document.is_empty());
 }
 
 #[semio_framework_async_macros::async_test]

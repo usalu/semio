@@ -1,14 +1,15 @@
+/** 🏷️ Typed-wire vocabulary the suite annotates against; the destructured `OwnedUiPayload` value shadows its class name inside the body. */
+import type { OwnedUiPayload as OwnedUiPayloadOf, Profile, RetainedUiTypedValues } from "../../🟦️.ts";
+
 type TestSource = { readonly directory: string; readonly url: string };
 
-export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: any, source: TestSource): Promise<void> {
+export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: Pick<typeof import("../../🟦️.ts"), "Builder" | "OwnedUiPayload" | "activity" | "ownPayload" | "readers" | "saturationProbe">, source: TestSource): Promise<void> {
   const { Builder, OwnedUiPayload, activity, ownPayload, readers, saturationProbe } = dependencies;
-  type Profile = any;
-  type RetainedUiTypedValues = any;
 
   const { it, expect } = vitest;
       const { default: fixture } = await import("../../../🧫️fixtures/🏷️fields/🔣️.json");
 
-  function prepared<P extends Profile>(kind: P, value: unknown): OwnedUiPayload<RetainedUiTypedValues[P]> {
+  function prepared<P extends Profile>(kind: P, value: unknown): OwnedUiPayloadOf<RetainedUiTypedValues[P]> {
     const builder = new Builder();
     const program = readers[kind](builder, value);
     for (let i = 0; i < 100_000; i++) {

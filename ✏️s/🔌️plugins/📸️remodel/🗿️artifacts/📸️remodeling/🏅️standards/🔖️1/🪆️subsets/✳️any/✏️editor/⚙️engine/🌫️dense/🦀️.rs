@@ -286,11 +286,17 @@ pub struct PatchMatchConfig {
     /// 🔝️ Number of lowest-cost (highest-ZNCC) source views aggregated per pixel, per
     /// [`patch_zncc_cost`]; clamped to however many views produced a valid warp at that pixel.
     pub best_k: usize,
+    /// 🚧️ Confidence a published pixel must exceed, or `None` to publish every pixel a source view
+    /// warped into. Confidence is the aggregated ZNCC rescaled to `[0, 1]`, so `0.5` is ZNCC `0`:
+    /// exactly the score of a textureless patch (zero variance), which carries no depth evidence
+    /// yet otherwise publishes whatever hypothesis it was initialised with — a flat background
+    /// then fuses into the surface as a shell around the object.
+    pub confidence_floor: Option<f32>,
 }
 
 impl Default for PatchMatchConfig {
     fn default() -> Self {
-        Self { window_radius: 3, iterations: 4, depth_min: 0.1, depth_max: 100.0, seed: 0x5EED_1234_ABCD_EF01, best_k: 3 }
+        Self { window_radius: 3, iterations: 4, depth_min: 0.1, depth_max: 100.0, seed: 0x5EED_1234_ABCD_EF01, best_k: 3, confidence_floor: None }
     }
 }
 
@@ -377,7 +383,7 @@ pub fn patchmatch_mvs(
     for y in 0..height {
         for x in 0..width {
             let i = depthmap_index(width, x, y);
-            if costs[i] > -1.0 {
+            if costs[i] > -1.0 && publishes(costs[i], cfg.confidence_floor) {
                 out.depth[i] = depths[i];
                 out.normal[i] = normals[i];
                 out.confidence[i] = ((costs[i] + 1.0) * 0.5).clamp(0.0, 1.0);
@@ -385,6 +391,11 @@ pub fn patchmatch_mvs(
         }
     }
     out
+}
+
+/// 🚧️ Whether a pixel whose aggregated ZNCC is `cost` clears [`PatchMatchConfig::confidence_floor`].
+fn publishes(cost: f32, confidence_floor: Option<f32>) -> bool {
+    confidence_floor.is_none_or(|floor| ((cost + 1.0) * 0.5).clamp(0.0, 1.0) > floor)
 }
 
 /// 🧭️ Fuel-bounded phases for the production PatchMatch path.
@@ -556,7 +567,7 @@ impl PatchMatchPreparation {
             PatchMatchPhase::Publish => {
                 let end = self.cursor.saturating_add(budget.saturating_mul(PATCH_MATCH_BULK_PIXELS_PER_UNIT)).min(pixels);
                 for index in self.cursor..end {
-                    if self.costs[index] > -1.0 {
+                    if self.costs[index] > -1.0 && publishes(self.costs[index], cfg.confidence_floor) {
                         self.output.depth[index] = self.depths[index];
                         self.output.normal[index] = self.normals[index];
                         self.output.confidence[index] = ((self.costs[index] + 1.0) * 0.5).clamp(0.0, 1.0);
@@ -898,6 +909,10 @@ pub struct FusionPreparation {
     source_normal: [f32; 3],
     source_confidence: f32,
     output: PointCloud,
+    /// ✅️ Per view, one bit per pixel: set when that pixel's point reached `min_consistent_views`
+    /// agreeing views. Every pixel is judged whatever the output cap, so a TSDF integration can keep
+    /// exactly the multi-view-consistent depths (see [`TsdfIntegrationPreparation::advance_masked`]).
+    consistent: Vec<Vec<u64>>,
     complete: bool,
 }
 
@@ -914,11 +929,15 @@ impl FusionPreparation {
             source_normal: [0.0; 3],
             source_confidence: 0.0,
             output: PointCloud { positions: Vec::with_capacity(capacity), normals: Vec::with_capacity(capacity), confidence: Vec::with_capacity(capacity), ..PointCloud::default() },
+            consistent: Vec::new(),
             complete: false,
         }
     }
 
     fn finish_pixel(&mut self, minimum: usize) {
+        if self.agreeing_count >= minimum {
+            self.mark_consistent();
+        }
         if self.agreeing_count >= minimum && self.output.positions.len() < MAX_INTERACTIVE_FUSED_POINTS {
             let inverse = 1.0 / self.agreeing_count as f64;
             self.output.positions.push(self.agreeing_sum.map(|coordinate| coordinate * inverse));
@@ -930,8 +949,19 @@ impl FusionPreparation {
         self.point_world = None;
     }
 
+    fn mark_consistent(&mut self) {
+        if let Some(bits) = self.consistent.get_mut(self.view) {
+            if let Some(word) = bits.get_mut(self.pixel / 64) {
+                *word |= 1 << (self.pixel % 64);
+            }
+        }
+    }
+
     pub fn advance(&mut self, views: &[(remodeling_camera::CameraPose, remodeling_camera::Intrinsics)], depth_maps: &[DepthMap], cfg: &FusionConfig, comparison_budget: usize) -> bool {
         let mut remaining = comparison_budget.max(1);
+        if self.consistent.is_empty() {
+            self.consistent = depth_maps.iter().map(|map| vec![0; map.depth.len().div_ceil(64)]).collect();
+        }
         let cosine_threshold = cfg.max_normal_angle_deg.to_radians().cos();
         while remaining > 0 && self.view < views.len().min(depth_maps.len()) {
             let source = &depth_maps[self.view];
@@ -1006,6 +1036,11 @@ impl FusionPreparation {
 
     pub fn finish(self) -> Option<PointCloud> {
         self.complete.then_some(self.output)
+    }
+
+    /// ✅️ [`Self::finish`] plus the per-view consistency bitsets (one bit per pixel, row-major).
+    pub fn finish_with_consistency(self) -> Option<(PointCloud, Vec<Vec<u64>>)> {
+        self.complete.then_some((self.output, self.consistent))
     }
 }
 // #endregion 🔖️Fusion
@@ -1227,6 +1262,15 @@ impl TsdfIntegrationPreparation {
     }
 
     pub fn advance(&mut self, volume: &mut TsdfVolume, depth: &DepthMap, camera: &(remodeling_camera::CameraPose, remodeling_camera::Intrinsics), weight_by_grazing_angle: bool, sample_budget: usize) -> bool {
+        self.advance_masked(volume, depth, None, camera, weight_by_grazing_angle, sample_budget)
+    }
+
+    /// 🧊️ [`Self::advance`] integrating only the pixels whose bit is set in `mask` (one bit per
+    /// pixel, row-major, as [`FusionPreparation::finish_with_consistency`] answers). A single view's
+    /// PatchMatch outliers carry no less weight than its good depths, and each paints a truncation
+    /// band of wrong-signed voxels wherever it lands — inside the object or in free space — which no
+    /// later view's samples overwrite; the multi-view consistency mask keeps them out.
+    pub fn advance_masked(&mut self, volume: &mut TsdfVolume, depth: &DepthMap, mask: Option<&[u64]>, camera: &(remodeling_camera::CameraPose, remodeling_camera::Intrinsics), weight_by_grazing_angle: bool, sample_budget: usize) -> bool {
         if volume.voxel_size <= 0.0 || volume.truncation <= 0.0 {
             self.complete = true;
             return true;
@@ -1238,7 +1282,8 @@ impl TsdfIntegrationPreparation {
         while remaining > 0 && self.pixel < depth.depth.len() {
             let x = self.pixel as u32 % depth.width;
             let y = self.pixel as u32 / depth.width;
-            let Some(measured) = depth.get(x, y) else {
+            let admitted = mask.is_none_or(|bits| bits.get(self.pixel / 64).is_some_and(|word| word >> (self.pixel % 64) & 1 == 1));
+            let Some(measured) = depth.get(x, y).filter(|_| admitted) else {
                 self.pixel += 1;
                 self.ray_step = 0;
                 remaining -= 1;

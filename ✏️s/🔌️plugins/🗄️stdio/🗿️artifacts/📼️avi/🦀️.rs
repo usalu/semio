@@ -215,6 +215,16 @@ pub mod editor {
         mod component;
         pub use component::*;
         #[path = "."]
+        pub mod presence {
+            #[path = "🏅️standards/🔖️1.0/🪆️subsets/🎛️hdrl/✏️editor/👥️presence/🧬️schema/🦀️.rs"]
+            pub mod schema;
+        }
+        #[path = "."]
+        pub mod config {
+            #[path = "🏅️standards/🔖️1.0/🪆️subsets/🎛️hdrl/✏️editor/🎚️config/🧬️schema/🦀️.rs"]
+            pub mod schema;
+        }
+        #[path = "."]
         pub mod modes {
             #[path = "."]
             pub mod edit {
@@ -243,6 +253,16 @@ pub mod viewer {
         #[path = "🏅️standards/🔖️1.0/🪆️subsets/🎛️hdrl/👁️viewer/🦀️.rs"]
         mod component;
         pub use component::*;
+        #[path = "."]
+        pub mod presence {
+            #[path = "🏅️standards/🔖️1.0/🪆️subsets/🎛️hdrl/👁️viewer/👥️presence/🧬️schema/🦀️.rs"]
+            pub mod schema;
+        }
+        #[path = "."]
+        pub mod config {
+            #[path = "🏅️standards/🔖️1.0/🪆️subsets/🎛️hdrl/👁️viewer/🎚️config/🧬️schema/🦀️.rs"]
+            pub mod schema;
+        }
         #[path = "."]
         pub mod modes {
             #[path = "."]

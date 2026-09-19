@@ -34,7 +34,7 @@ fn host_test_apps() -> (AppDefinition, AppDefinition) {
     (home, studio)
 }
 
-fn host_test_shell() -> ShellState {
+pub(super) fn host_test_shell() -> ShellState {
     let (home, studio) = host_test_apps();
     let manifest = semio_framework::PluginManifest {
         plugin_id: "space".into(),
@@ -311,11 +311,67 @@ fn anchor_rect_bands_only_the_open_anchors_of_a_column() {
     let mut shell = fixture_dock_shell();
     shell.toggle_anchor(PanelAnchor::TopLeft);
     let alone = shell.anchor_rect(PanelAnchor::TopLeft, body, &theme);
-    assert_eq!(alone.h, body.h - theme.panel_inset * 2.0);
+    // 📐️ React's chrome-hosted open panel grows by the navbar overhang (`maxHeight: calc(100% + …)`),
+    // so a column's only open anchor is the body PLUS that overhang, never the body minus two insets.
+    assert_eq!(alone.h, body.h + (theme.navbar_height + theme.control_height) * 0.5);
     shell.toggle_anchor(PanelAnchor::BottomLeft);
     let shared = shell.anchor_rect(PanelAnchor::TopLeft, body, &theme);
     assert!(shared.h < alone.h * 0.6, "🧭️ opening the column's other anchor must shrink this one's band");
     assert_eq!(shell.open_anchors(), vec![PanelAnchor::TopLeft, PanelAnchor::BottomLeft]);
+}
+
+/// 🧭️ React's `chromeHostedOpenPanelPositionStyle`: an OPEN top anchor is pulled
+/// `-(size-large + size-medium)/2` out of the mode body and into the navbar band, so its own cap row
+/// sits beside the folded toggles and only its BODY covers the dock's window caps. Measured on
+/// React's live DOM at 1600×1000 (`🗑️generated/w14d-cap-occlusion.json`, ticket
+/// 26/09/17/WGPU-RENDERER-REACT-PARITY): mode body `y=29`, open Catalogue panel `y=3 h=168`, dock cap
+/// row `y=32..61`, focus/close chips `[48,35,22,22]`/`[73,35,22,22]` — under the panel's body.
+#[test]
+fn an_open_top_panel_is_pulled_into_the_navbar_band_like_reacts_chrome_hosted_style() {
+    let theme = Theme::default();
+    let overhang = (theme.navbar_height + theme.control_height) * 0.5;
+    let body = Rect::new(0.0, theme.navbar_height, 1600.0, 1000.0 - theme.navbar_height - theme.footer_height);
+    let mut shell = fixture_dock_shell();
+    shell.toggle_anchor(PanelAnchor::TopLeft);
+    let rect = shell.anchor_rect(PanelAnchor::TopLeft, body, &theme);
+    assert!((rect.y - (body.y - overhang)).abs() < 0.01, "🧭️ a top anchor starts one overhang ABOVE the body, not at it: {rect:?}");
+    assert!(rect.y < theme.navbar_height, "🧭️ …which is inside the navbar band React parks the folded toggle in");
+    assert!((rect.h - (body.h + overhang)).abs() < 0.01, "🧭️ and its band grows by exactly that overhang");
+}
+
+/// 🧭️ The same rule mirrored on the bottom row: a bottom anchor's LAST edge is one overhang into the
+/// footer band, and a middle anchor — which React gives no bonded vertical edge — still centres on the
+/// plain mode body.
+#[test]
+fn a_bottom_anchor_overhangs_into_the_footer_and_a_middle_anchor_keeps_the_body() {
+    let theme = Theme::default();
+    let overhang = (theme.navbar_height + theme.control_height) * 0.5;
+    let body = Rect::new(0.0, theme.navbar_height, 1600.0, 1000.0 - theme.navbar_height - theme.footer_height);
+    let mut shell = fixture_dock_shell();
+    shell.toggle_anchor(PanelAnchor::BottomLeft);
+    let bottom = shell.anchor_rect(PanelAnchor::BottomLeft, body, &theme);
+    assert!((bottom.y + bottom.h - (body.y + body.h + overhang)).abs() < 0.01, "🧭️ a bottom anchor ends one overhang BELOW the body: {bottom:?}");
+    let mut middle_shell = fixture_dock_shell();
+    middle_shell.toggle_anchor(PanelAnchor::LeftMiddle);
+    let middle = middle_shell.anchor_rect(PanelAnchor::LeftMiddle, body, &theme);
+    assert!((middle.y + middle.h * 0.5 - (body.y + body.h * 0.5)).abs() < 0.01, "🧭️ a middle anchor centres on the body itself: {middle:?}");
+}
+
+/// 🩸️ The regression this replaces: the panel band no longer depends on `dock_window_plan`, so an
+/// open panel occupies the SAME box whether the dock carries two stacks, one, or none — the geometry
+/// React has, where the dock's caps live under the panel instead of beside it. Two dock states, one
+/// rect.
+#[test]
+fn the_panel_band_no_longer_moves_with_the_dock_window_plan() {
+    let theme = Theme::default();
+    let body = Rect::new(0.0, theme.navbar_height, 1600.0, 900.0);
+    let mut shell = fixture_dock_shell();
+    shell.toggle_anchor(PanelAnchor::TopLeft);
+    let empty_plan = shell.anchor_rect(PanelAnchor::TopLeft, body, &theme);
+    shell.dock_window_plan = vec![("puzzle3d-main-top".to_string(), Rect::new(3.0, body.y + 32.0, 530.0, 800.0))];
+    let planned = shell.anchor_rect(PanelAnchor::TopLeft, body, &theme);
+    assert_eq!(empty_plan.y, planned.y, "🧭️ the dock's tab bar no longer pushes the panel down");
+    assert_eq!(empty_plan.h, planned.h);
 }
 //#endregion 🧭️AnchorGeometry
 
@@ -837,10 +893,20 @@ fn chat_panel_lines(node: &UiNode, out: &mut Vec<String>) {
     }
 }
 
-/// 🆔️ The ids of the conversation rows directly under the panel root.
+/// 🆔️ The ids of the conversation rows inside the panel's own FEED — React's
+/// `<ol id="framework.chat.feed">`, which the wgpu body wraps its rows in so the transcript is one
+/// addressable, labelled thing rather than rows loose beside the composer.
 fn chat_entry_ids(root: &UiNode) -> Vec<String> {
     let UiNode::Stack(panel) = root else { panic!("💬️ the chat panel root is a stack") };
-    panel.children.iter().filter_map(|child| if let UiNode::Stack(stack) = child { stack.id.clone() } else { None }).collect()
+    let feed = panel
+        .children
+        .iter()
+        .find_map(|child| match child {
+            UiNode::Stack(stack) if stack.id.as_deref() == Some(FRAMEWORK_CHAT_FEED_ID) => Some(stack),
+            _ => None,
+        })
+        .expect("💬️ the chat panel publishes its feed");
+    feed.children.iter().filter_map(|child| if let UiNode::Stack(stack) = child { stack.id.clone() } else { None }).collect()
 }
 
 /// 💬️ LAW: a bridge `AgentToolCall` frame — the one the gateway emits from its own `tools/call`

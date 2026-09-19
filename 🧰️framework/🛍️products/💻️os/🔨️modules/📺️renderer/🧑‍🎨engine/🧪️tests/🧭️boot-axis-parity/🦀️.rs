@@ -181,7 +181,7 @@ fn the_descriptor_rust_twin_matches_the_typescript_shape() {
     let renderer = read("🎯️targets/🧊️wgpu/🧊️renderer/🦀️.rs");
     let rust: BTreeSet<String> = rust_struct_fields(&renderer, "WgpuBootDescriptor").into_iter().collect();
     assert_eq!(typescript, rust, "`WgpuBootDescriptor` must carry the same fields in 🧭️boot-descriptor/🟦️.ts and 🧊️renderer/🦀️.rs");
-    for nested in ["WgpuBootLocks", "WgpuBootDefaults", "WgpuBootHub"] {
+    for nested in ["WgpuBootLocks", "WgpuBootDefaults", "WgpuBootHub", "WgpuBootBrand"] {
         let typescript: BTreeSet<String> = typescript_type_fields(&read("🎯️targets/🧊️wgpu/🧭️boot-descriptor/🟦️.ts"), nested).into_iter().collect();
         let rust: BTreeSet<String> = rust_struct_fields(&renderer, nested).into_iter().collect();
         assert_eq!(typescript, rust, "`{nested}` must carry the same fields on both sides");

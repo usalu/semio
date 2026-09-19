@@ -29,7 +29,7 @@ export default defineTestAdapter({
   scenarios: {
     "stored-documents-round-trip": {
       oracle: (ctx) => {
-        const schema = JSON.parse(readFileSync(ctx.fixture("asset://🧬️schema/🔣️.json"), "utf8")) as Record<string, unknown>;
+        const schema = JSON.parse(readFileSync(ctx.fixture("asset://🧬️schema/🔣️.json"), "utf8")) as { readonly $schema?: string; readonly $defs: Readonly<Record<string, unknown>> };
         const fixture = JSON.parse(readFileSync(ctx.fixture("shared://🎯️goal-documents.json"), "utf8")) as { documents: { id: string; json: string }[] };
         const ajv = new Ajv2020({ strict: false, allErrors: true });
         const validate = ajv.compile({ $schema: schema.$schema, $defs: schema.$defs, $ref: "#/$defs/GoalDocument" });

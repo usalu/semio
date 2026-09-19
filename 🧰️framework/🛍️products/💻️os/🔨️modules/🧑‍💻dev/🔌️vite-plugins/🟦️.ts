@@ -5,7 +5,7 @@
  * lazy dynamic import: Vite loads this module's exports under Node before the dev server's Bun
  * runtime exists. */
 import { createHash, randomBytes } from "node:crypto";
-import { existsSync, mkdirSync, readFileSync, readdirSync, statSync, watch, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, statSync, watch, writeFileSync } from "node:fs";
 import { dirname, isAbsolute, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { BACKBONE_ENDPOINT_PATH, BLOB_ENDPOINT_PATH, DOCUMENT_ARCHIVE_MAXIMUM_BYTES, backboneKindFromUri, decodeDocumentArchiveBytes } from "@semio-tech/framework-os";
@@ -1117,3 +1117,100 @@ export function semioSourceFreshnessVitePlugins(options: { readonly repoRoot: st
   return [semioTransformFreshnessVitePlugin({ freshness }), semioSourceWatchVitePlugin({ repoRoot: options.repoRoot, freshness })];
 }
 //#endregion SourceFreshnessVitePlugins
+
+//#region 🛰️AgentBridgeRendezvous
+/** @emoji 🛰️ Where a live os session and a `semio-os-mcp` stdio gateway find each other — the exact
+ * layout the gateway's own `🌉️mcp/🛰️rendezvous` facet owns (`~/.semio/agent/bridge`). */
+export const AGENT_BRIDGE_RENDEZVOUS_SCHEMA_VERSION = 1;
+export const AGENT_BRIDGE_OFFER_ENDPOINT_PATH = "/__semio/agent-bridge";
+
+/** @emoji 🏷️ The carrier that points this dev session and one `semio-os-mcp` gateway at a rendezvous
+ * of their own instead of the per-user default — the exact twin of the gateway's own
+ * `🛰️rendezvous::RENDEZVOUS_DIR_ENV`. It is a directory path, never a credential (the admission proof
+ * stays in the owner-only offer file the supervisor reads), and it is spelled with the `S_` prefix
+ * the gateway's process-entry seal admits. Without it, `newestLiveAgentBridgeOffer` hands a shell
+ * whichever gateway published last, so two agents running at once cross-wire. */
+export const AGENT_BRIDGE_RENDEZVOUS_DIR_ENV = "S_AGENT_BRIDGE_DIR";
+
+function agentBridgeRendezvousDir(): string {
+  const pinned = process.env[AGENT_BRIDGE_RENDEZVOUS_DIR_ENV];
+  if (pinned) return pinned;
+  const home = process.env.HOME ?? process.env.USERPROFILE ?? ".";
+  return join(home, ".semio", "agent", "bridge");
+}
+
+/** @emoji 📨️ The newest gateway offer whose publishing process is still alive — what the browser
+ * shell dials. `null` means no MCP gateway is currently offering a bridge, which is an ordinary
+ * state (nobody launched one), never an error. */
+export function newestLiveAgentBridgeOffer(root: string = agentBridgeRendezvousDir()): { readonly url: string; readonly admissionProof: string; readonly principal: string; readonly pid: number } | null {
+  const directory = join(root, "offers");
+  if (!existsSync(directory)) return null;
+  const offers = readdirSync(directory)
+    .filter((name) => name.endsWith(".json"))
+    .flatMap((name) => {
+      const path = join(directory, name);
+      try {
+        const offer = JSON.parse(readFileSync(path, "utf8")) as { schemaVersion?: number; url?: string; admissionProof?: string; principal?: string; pid?: number; publishedAtMs?: number };
+        if (offer.schemaVersion !== AGENT_BRIDGE_RENDEZVOUS_SCHEMA_VERSION || typeof offer.url !== "string" || typeof offer.admissionProof !== "string" || typeof offer.pid !== "number") return [];
+        try {
+          process.kill(offer.pid, 0);
+        } catch {
+          return [];
+        }
+        return [{ url: offer.url, admissionProof: offer.admissionProof, principal: offer.principal ?? "agent:local", pid: offer.pid, publishedAtMs: offer.publishedAtMs ?? 0 }];
+      } catch {
+        return [];
+      }
+    });
+  offers.sort((left, right) => right.publishedAtMs - left.publishedAtMs);
+  const newest = offers[0];
+  return newest ? { url: newest.url, admissionProof: newest.admissionProof, principal: newest.principal, pid: newest.pid } : null;
+}
+
+type RendezvousServerRequest = { url?: string; method?: string };
+type RendezvousServerResponse = { statusCode: number; setHeader: (name: string, value: string) => void; end: (body?: string) => void };
+
+/** @emoji 🛰️ Publishes THIS dev session as a live os session the stdio MCP gateway can discover, and
+ * serves the gateway's own offer back to the browser shell on
+ * {@link AGENT_BRIDGE_OFFER_ENDPOINT_PATH}. The admission proof never travels through an environment
+ * variable or a build-time define: the dev server reads the owner-only offer file and hands it over
+ * loopback, on request, exactly like the local supervisor it is.
+ *
+ * Both halves are removed when the dev server closes, so a gateway that starts later never believes a
+ * dead session. */
+export function semioAgentBridgeRendezvousVitePlugin(options: { readonly rendezvousRoot?: string; readonly sessionId?: string } = {}) {
+  const root = options.rendezvousRoot ?? agentBridgeRendezvousDir();
+  const sessionsDir = join(root, "sessions");
+  const recordPath = join(sessionsDir, `${process.pid}.json`);
+  const removeRecord = (): void => {
+    try {
+      if (existsSync(recordPath)) rmSync(recordPath, { force: true });
+    } catch {
+      // best effort — a stale record is swept by the gateway's own liveness probe
+    }
+  };
+  return {
+    name: "semio-agent-bridge-rendezvous",
+    apply: "serve" as const,
+    configureServer(server: { middlewares: { use: (handler: (req: RendezvousServerRequest, res: RendezvousServerResponse, next: () => void) => void) => void }; httpServer?: { once: (event: string, handler: () => void) => void } }) {
+      mkdirSync(sessionsDir, { recursive: true });
+      writeFileSync(
+        recordPath,
+        JSON.stringify({ schemaVersion: AGENT_BRIDGE_RENDEZVOUS_SCHEMA_VERSION, sessionId: options.sessionId ?? `dev-${process.pid}`, pid: process.pid, shellKind: "react", startedAtMs: Date.now() }, null, 2),
+        { mode: 0o600 },
+      );
+      process.once("exit", removeRecord);
+      server.httpServer?.once("close", removeRecord);
+      server.middlewares.use((req, res, next) => {
+        if (!req.url?.startsWith(AGENT_BRIDGE_OFFER_ENDPOINT_PATH)) return next();
+        const offer = newestLiveAgentBridgeOffer(root);
+        res.statusCode = offer ? 200 : 404;
+        res.setHeader("content-type", "application/json");
+        res.setHeader("cache-control", "no-store");
+        res.end(JSON.stringify(offer ?? { error: "no live semio-os-mcp gateway is offering a bridge" }));
+      });
+    },
+    closeBundle: removeRecord,
+  };
+}
+//#endregion 🛰️AgentBridgeRendezvous

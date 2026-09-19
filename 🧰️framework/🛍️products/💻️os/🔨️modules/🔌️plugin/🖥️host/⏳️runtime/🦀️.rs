@@ -376,7 +376,7 @@ impl AsyncActorTask {
                                     instance_id: u32,
                                     events: Vec<wit_events::Event>,
                                     command_page: Option<(wit_reactor::CommandPageCursor, Vec<u8>)>,
-                                    cold_pair_page: Option<wit_reactor::ColdArtifactPairPage>,
+                                    cold_pair_page: Option<wit_reactor::ColdDocumentPairPage>,
                                     budget: wit_reactor::Budget,
                                     max_patch_bytes: u32,
                                     reply: tokio::sync::oneshot::Sender<Result<KernelTurnResult, TurnFault>>,

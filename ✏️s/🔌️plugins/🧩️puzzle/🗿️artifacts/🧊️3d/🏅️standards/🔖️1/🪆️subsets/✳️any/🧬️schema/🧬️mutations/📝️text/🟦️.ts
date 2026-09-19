@@ -49,5 +49,5 @@ export const puzzlePuzzle3dMutationsTextGuardConstant = <T extends string | numb
 //#endregion 🚪️Parsers
 
 export function parsePuzzle3dMutationsText(value: unknown, at = "$"): Puzzle3dMutationsText {
-  return puzzlePuzzle3dMutationsTextGuardObject(value, `${at}`);
+  return puzzlePuzzle3dMutationsTextGuardString(value, `${at}`);
 }

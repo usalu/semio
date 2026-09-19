@@ -100,6 +100,11 @@ impl Gis2dInteractionSnapshot {
     }
 }
 
+/// 📏️ The default extent, in degrees, of the geometry `addFeature` mints for a route or a region —
+/// roughly a kilometre at mid latitude, so a freshly added feature is visible at the default camera
+/// instead of collapsing to a point.
+pub const GIS2D_DEFAULT_FEATURE_SPAN: f64 = 0.01;
+
 /// 🗂️ The app-wide map layer stack: `(id, native English name, icon id)?`. Every chrome node (document
 /// and catalogue trees, the layers/weights window options, the inspector summary) enumerates it.
 pub const GIS_MAP_LAYER_IDS: &[(&str, &str, &str)] = &[
@@ -282,12 +287,16 @@ semio_framework_plugin::app_commands! {
         "setLayerStrokeScale" as "layer-stroke-scale" => set_layer_stroke_scale::SetLayerStrokeScale,
         "openSource" as "open-source" => open_source::OpenSource,
         "proposeBoundsRegion" as "propose-bounds-region" => propose_bounds_region::ProposeBoundsRegion,
+        "addFeature" as "add-feature" => add_feature::AddFeature,
+        "moveFeature" as "move-feature" => move_feature::MoveFeature,
+        "renameFeature" as "rename-feature" => rename_feature::RenameFeature,
+        "deleteFeature" as "delete-feature" => delete_feature::DeleteFeature,
     }
 }
 
 // 🧷️ `app_commands!` addresses each payload module by a single identifier.
 use example::set_active_example;
-use features::{patch_positions, patch_route, patch_routes};
+use features::{add_feature, delete_feature, move_feature, patch_positions, patch_route, patch_routes, rename_feature};
 use inference::propose_bounds_region;
 use shell::open_source;
 use view::{fit_world, focus_feature, set_camera, set_layer_stroke_scale, set_lod_mode, set_render_mode, set_vector_style, toggle_layer_visibility};
@@ -304,7 +313,7 @@ pub struct Gis2dPlayApp;
 
 //#region 🧵️RetainedCommands
 const GIS2D_RETAINED_TOOL_IDS: &[&str] =
-    &["setActiveExample", "patchPositions", "patchRoutes", "patchRoute", "toggleLayerVisibility", "fitWorld", "setCamera", "setRenderMode", "setVectorStyle", "setLodMode", "focusFeature", "setLayerStrokeScale", "openSource", "proposeBoundsRegion"];
+    &["setActiveExample", "patchPositions", "patchRoutes", "patchRoute", "addFeature", "moveFeature", "renameFeature", "deleteFeature", "toggleLayerVisibility", "fitWorld", "setCamera", "setRenderMode", "setVectorStyle", "setLodMode", "focusFeature", "setLayerStrokeScale", "openSource", "proposeBoundsRegion"];
 const GIS2D_RETAINED_PAYLOAD_SCHEMA: &str = "gis.map.tool-command.v1";
 const GIS2D_RETAINED_RAW_BYTES: usize = 8_192;
 const GIS2D_RETAINED_WORK_ITEMS: usize = 64;
@@ -314,6 +323,10 @@ const GIS2D_RETAINED_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] =
     ArtifactToolPublicationContract { tool_id: "patchPositions", lanes: &[ArtifactToolPublicationLane::Artifact] },
     ArtifactToolPublicationContract { tool_id: "patchRoutes", lanes: &[ArtifactToolPublicationLane::Artifact] },
     ArtifactToolPublicationContract { tool_id: "patchRoute", lanes: &[ArtifactToolPublicationLane::Artifact] },
+    ArtifactToolPublicationContract { tool_id: "addFeature", lanes: &[ArtifactToolPublicationLane::Artifact] },
+    ArtifactToolPublicationContract { tool_id: "moveFeature", lanes: &[ArtifactToolPublicationLane::Artifact] },
+    ArtifactToolPublicationContract { tool_id: "renameFeature", lanes: &[ArtifactToolPublicationLane::Artifact] },
+    ArtifactToolPublicationContract { tool_id: "deleteFeature", lanes: &[ArtifactToolPublicationLane::Artifact] },
     ArtifactToolPublicationContract { tool_id: "toggleLayerVisibility", lanes: &[ArtifactToolPublicationLane::WindowConfig] },
     ArtifactToolPublicationContract { tool_id: "fitWorld", lanes: &[ArtifactToolPublicationLane::WindowConfig] },
     ArtifactToolPublicationContract { tool_id: "setCamera", lanes: &[ArtifactToolPublicationLane::WindowConfig] },
@@ -796,7 +809,7 @@ impl ArtifactEditor for Gis2dPlayApp {
         factory_type: Gis2dRetainedCommandJobFactory,
         contract: ToolExecutionContract::bounded_first_step(8_192, 64, 64, 16_384, 7_500),
         tools: [
-            "setActiveExample", "patchPositions", "patchRoutes", "patchRoute", "toggleLayerVisibility", "fitWorld", "setCamera", "setRenderMode", "setVectorStyle", "setLodMode", "focusFeature", "setLayerStrokeScale", "openSource",             "proposeBoundsRegion",
+            "setActiveExample", "patchPositions", "patchRoutes", "patchRoute", "addFeature", "moveFeature", "renameFeature", "deleteFeature", "toggleLayerVisibility", "fitWorld", "setCamera", "setRenderMode", "setVectorStyle", "setLodMode", "focusFeature", "setLayerStrokeScale", "openSource", "proposeBoundsRegion",
         ]
     }
 
@@ -1001,6 +1014,28 @@ impl ArtifactEditor for Gis2dPlayApp {
                 value: str_arg(&["value"]).unwrap_or_default(),
             })),
             "patchRoute" => Ok(Gis2dCommand::PatchRoute(patch_route::PatchRoute { route_id: str_arg(&["routeId", "route_id"]).unwrap_or_default(), field: str_arg(&["field"]).unwrap_or_default(), value: str_arg(&["value"]).unwrap_or_default() })),
+            "addFeature" => Ok(Gis2dCommand::AddFeature(add_feature::AddFeature {
+                collection: str_arg(&["collection"]).unwrap_or_else(|| "positions".into()),
+                label: str_arg(&["label"]).unwrap_or_default(),
+                lon: f64_arg(&["lon"]).unwrap_or_default(),
+                lat: f64_arg(&["lat"]).unwrap_or_default(),
+                span: f64_arg(&["span"]).unwrap_or(GIS2D_DEFAULT_FEATURE_SPAN),
+            })),
+            "moveFeature" => Ok(Gis2dCommand::MoveFeature(move_feature::MoveFeature {
+                collection: str_arg(&["collection"]).unwrap_or_else(|| "positions".into()),
+                feature_id: str_arg(&["featureId", "feature_id"]).unwrap_or_default(),
+                lon: f64_arg(&["lon"]).unwrap_or_default(),
+                lat: f64_arg(&["lat"]).unwrap_or_default(),
+            })),
+            "renameFeature" => Ok(Gis2dCommand::RenameFeature(rename_feature::RenameFeature {
+                collection: str_arg(&["collection"]).unwrap_or_else(|| "positions".into()),
+                feature_id: str_arg(&["featureId", "feature_id"]).unwrap_or_default(),
+                label: str_arg(&["label"]).unwrap_or_default(),
+            })),
+            "deleteFeature" => Ok(Gis2dCommand::DeleteFeature(delete_feature::DeleteFeature {
+                collection: str_arg(&["collection"]).unwrap_or_else(|| "positions".into()),
+                feature_id: str_arg(&["featureId", "feature_id"]).unwrap_or_default(),
+            })),
             "toggleLayerVisibility" => Ok(Gis2dCommand::ToggleLayerVisibility(toggle_layer_visibility::ToggleLayerVisibility { layer_id: str_arg(&["layerId", "layer_id"]).unwrap_or_default() })),
             "fitWorld" => Ok(Gis2dCommand::FitWorld(fit_world::FitWorld {})),
             "setCamera" => {
@@ -1099,6 +1134,42 @@ impl ArtifactEditor for Gis2dPlayApp {
 //#endregion 🔖️Gis2dPlayApp
 
 //#region 🔖️Manifest
+/// 🗣️ The manifest-time localized names of [`GIS_MAP_LAYER_IDS`], in the same order — the static twin
+/// of the runtime `gis2d_layer_label`, because `ActionArgOption` is built once at manifest time and
+/// cannot reach the view state's resolved label set. `gis2d_layer_arg_options_cover_every_layer` pins
+/// the two tables together.
+const GIS_MAP_LAYER_ARG_NAMES: &[(&str, &str)] = &[
+    ("Raster", "Raster"),
+    ("Water", "Wasser"),
+    ("Land", "Land"),
+    ("Roads", "Straßen"),
+    ("Buildings", "Gebäude"),
+    ("Borders", "Grenzen"),
+    ("Labels", "Beschriftungen"),
+    ("Positions", "Positionen"),
+    ("Position Labels", "Positionsbeschriftungen"),
+    ("Routes", "Routen"),
+    ("Regions", "Regionen"),
+];
+
+/// 🗂️ The staged map-layer choice shared by `toggleLayerVisibility` and `setLayerStrokeScale`.
+fn gis2d_layer_arg() -> ActionArgDef {
+    let options = GIS_MAP_LAYER_IDS.iter().zip(GIS_MAP_LAYER_ARG_NAMES).map(|((id, _, _), (english, german))| ActionArgOption::new(*id, LocalizedLabel::native(*english, *german))).collect();
+    ActionArgDef::select("layerId", LocalizedLabel::native("Layer", "Ebene"), options).default_value(&"positions")
+}
+
+/// 🗂️ The staged document-collection choice every per-feature editing verb takes.
+fn gis2d_collection_arg() -> ActionArgDef {
+    let options = features::GIS_MAP_FEATURE_COLLECTIONS.iter().map(|(id, english, german, _)| ActionArgOption::new(*id, LocalizedLabel::native(*english, *german))).collect();
+    ActionArgDef::select("collection", LocalizedLabel::native("Collection", "Sammlung"), options).default_value(&"positions")
+}
+
+/// 🎯️ The staged feature address — empty addresses the collection's newest entry, so the rail can
+/// dispatch `moveFeature`/`renameFeature`/`deleteFeature` right after an `addFeature` without typing.
+fn gis2d_feature_id_arg() -> ActionArgDef {
+    ActionArgDef::text("featureId", LocalizedLabel::native("Feature", "Objekt")).default_value(&"")
+}
+
 pub fn create_gis2d_app() -> semio_framework_plugin::AppDefinition {
     Editor::builder(crate::GISMAP_DIALECT).document(["semio", "gis", "2d"])
             .terminology("reuse")
@@ -1150,6 +1221,14 @@ pub fn create_gis2d_app() -> semio_framework_plugin::AppDefinition {
             .mutation("patchPositions", LocalizedLabel::native("Patch Positions", "Positionen aktualisieren"))
             .mutation("patchRoutes", LocalizedLabel::native("Patch Routes", "Routen aktualisieren"))
             .mutation("patchRoute", LocalizedLabel::native("Patch Route", "Route aktualisieren"))
+            // 🗺️ Per-feature editing vocabulary — the map editor's own add / move / rename / delete,
+            // each fully argument-staged so the Actions rail can dispatch it, and each routed through
+            // the collection's authored create/replace-data/delete leaves, so undo and redo are the
+            // leaves' own inverses rather than a bespoke history.
+            .mutation("addFeature", LocalizedLabel::native("Add Feature", "Objekt hinzufügen"))
+            .mutation("moveFeature", LocalizedLabel::native("Move Feature", "Objekt verschieben"))
+            .mutation("renameFeature", LocalizedLabel::native("Rename Feature", "Objekt umbenennen"))
+            .mutation("deleteFeature", LocalizedLabel::native("Delete Feature", "Objekt löschen"))
             // 👁️ View actions — mutate ephemeral config state (camera, render config, layer
             // visibility, stroke weights), never the document.
             .view_action("toggleLayerVisibility", LocalizedLabel::native("Toggle Layer Visibility", "Ebenensichtbarkeit umschalten"))
@@ -1170,6 +1249,10 @@ pub fn create_gis2d_app() -> semio_framework_plugin::AppDefinition {
             .action_interactive_job("patchPositions", InteractiveJobClassification::Migrated)
             .action_interactive_job("patchRoutes", InteractiveJobClassification::Migrated)
             .action_interactive_job("patchRoute", InteractiveJobClassification::Migrated)
+            .action_interactive_job("addFeature", InteractiveJobClassification::Migrated)
+            .action_interactive_job("moveFeature", InteractiveJobClassification::Migrated)
+            .action_interactive_job("renameFeature", InteractiveJobClassification::Migrated)
+            .action_interactive_job("deleteFeature", InteractiveJobClassification::Migrated)
             .action_interactive_job("toggleLayerVisibility", InteractiveJobClassification::Migrated)
             .action_interactive_job("fitWorld", InteractiveJobClassification::Migrated)
             .action_interactive_job("setCamera", InteractiveJobClassification::Migrated)
@@ -1184,6 +1267,30 @@ pub fn create_gis2d_app() -> semio_framework_plugin::AppDefinition {
             // and the registry validates the vocabulary. The arg id matches the key each handler reads.
             .action_args("setActiveExample", vec![
                 ActionArgDef::select("exampleId", LocalizedLabel::native("Example", "Beispiel"), example::example_arg_options()).default_value(&example::DEFAULT_EXAMPLE_ID),
+            ])
+            .action_args("addFeature", vec![
+                gis2d_collection_arg(),
+                ActionArgDef::text("label", LocalizedLabel::native("Label", "Bezeichnung")).default_value(&""),
+                ActionArgDef::number("lon", LocalizedLabel::native("Longitude", "Längengrad")).default_value(&0.0),
+                ActionArgDef::number("lat", LocalizedLabel::native("Latitude", "Breitengrad")).default_value(&0.0),
+                ActionArgDef::number("span", LocalizedLabel::native("Span", "Ausdehnung")).default_value(&GIS2D_DEFAULT_FEATURE_SPAN),
+            ])
+            .action_args("moveFeature", vec![
+                gis2d_collection_arg(),
+                gis2d_feature_id_arg(),
+                ActionArgDef::number("lon", LocalizedLabel::native("Longitude", "Längengrad")).default_value(&0.0),
+                ActionArgDef::number("lat", LocalizedLabel::native("Latitude", "Breitengrad")).default_value(&0.0),
+            ])
+            .action_args("renameFeature", vec![
+                gis2d_collection_arg(),
+                gis2d_feature_id_arg(),
+                ActionArgDef::text("label", LocalizedLabel::native("Label", "Bezeichnung")).default_value(&"Renamed Feature"),
+            ])
+            .action_args("deleteFeature", vec![gis2d_collection_arg(), gis2d_feature_id_arg()])
+            .action_args("toggleLayerVisibility", vec![gis2d_layer_arg()])
+            .action_args("setLayerStrokeScale", vec![
+                gis2d_layer_arg(),
+                ActionArgDef::slider("value", LocalizedLabel::native("Stroke Scale", "Strichstärke"), 0.25, 4.0).default_value(&1.0),
             ])
             .action_args("setRenderMode", vec![
                 ActionArgDef::select("value", LocalizedLabel::native("Render Mode", "Darstellungsmodus"), vec![

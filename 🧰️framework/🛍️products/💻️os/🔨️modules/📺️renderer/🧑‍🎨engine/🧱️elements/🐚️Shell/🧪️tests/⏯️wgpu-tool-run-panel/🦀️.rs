@@ -76,8 +76,8 @@ fn dispatched(input: &mut InputState<ActionDescriptor>) -> Vec<Value> {
 fn press(painted: &mut PaintedPanel, control: &str) {
     let hit = painted.input.staged_hits().iter().find(|hit| hit.control_id.as_deref() == Some(control)).unwrap_or_else(|| panic!("`{control}` registered a pointer target")).rect;
     let (x, y) = (hit.x + hit.w * 0.5, hit.y + hit.h * 0.5);
-    crate::interpreter::dispatch_ui_event(FRAMEWORK_PANEL_TAB_TOOL_RUN_ID, ui_wgpu::wgpu::UiEvent::PointerDown { x, y, button: ui_wgpu::wgpu::PointerButton::Primary }, &mut painted.input);
-    crate::interpreter::dispatch_ui_event(FRAMEWORK_PANEL_TAB_TOOL_RUN_ID, ui_wgpu::wgpu::UiEvent::PointerUp { x, y, button: ui_wgpu::wgpu::PointerButton::Primary }, &mut painted.input);
+    crate::interpreter::dispatch_ui_event(FRAMEWORK_PANEL_TAB_TOOL_RUN_ID, ui_wgpu::wgpu::UiEvent::PointerDown { x, y, button: ui_wgpu::wgpu::PointerButton::Primary, modifiers: Default::default() }, &mut painted.input);
+    crate::interpreter::dispatch_ui_event(FRAMEWORK_PANEL_TAB_TOOL_RUN_ID, ui_wgpu::wgpu::UiEvent::PointerUp { x, y, button: ui_wgpu::wgpu::PointerButton::Primary, modifiers: Default::default() }, &mut painted.input);
 }
 
 #[test]

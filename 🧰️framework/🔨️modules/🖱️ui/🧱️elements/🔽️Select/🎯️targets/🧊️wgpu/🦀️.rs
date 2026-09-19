@@ -152,6 +152,70 @@ pub(crate) fn select_clamped_scroll(items: usize, theme: &Theme, painted_height:
     offset.clamp(0.0, (content - inner).max(0.0))
 }
 
+//#region 🔼️ScrollSlots
+// 🔼️ The two `WidgetContext::scroll_offsets` slots one open popup owns. `select_scroll_step` and
+// `select_clamped_scroll` above were tested arithmetic with ZERO callers until ticket 26/09/17
+// packet W15a — the chevrons painted and did nothing, so a `Select` longer than its available height
+// was stuck on its first page. The press handler cannot clamp (it has neither the item list nor the
+// resolved popup height), so it writes a DIRECTION into the pending slot and this module's painter,
+// which has both, converts it into `select_scroll_step` pixels and clamps the result. Two f32 slots
+// per open select, cleared by `clear_select_scroll` when the popup closes — no new state type, and
+// nothing that grows per frame.
+
+/// 🔼️ The slot holding one popup's current scroll offset in pixels.
+pub(crate) fn select_scroll_key(id: &str) -> String {
+    format!("select.{id}.scroll")
+}
+
+/// 🔼️ The slot holding one popup's UNAPPLIED chevron direction (`-1.0` up, `+1.0` down, `0.0` idle).
+pub(crate) fn select_scroll_pending_key(id: &str) -> String {
+    format!("select.{id}.scrollStep")
+}
+
+/// 🔼️ The control id one scroll chevron registers its hit under — `SelectScrollUpButton` /
+/// `SelectScrollDownButton` (`🟦️.tsx:790-818`).
+pub(crate) fn select_scroll_control_id(id: &str, up: bool) -> String {
+    if up {
+        format!("{id}.scroll.up")
+    } else {
+        format!("{id}.scroll.down")
+    }
+}
+
+/// 🔼️ Splits a `{select}.scroll.{up|down}` control id back into `(select id, direction)`.
+pub(crate) fn select_scroll_control_parts(control_id: &str) -> Option<(&str, f32)> {
+    if let Some(id) = control_id.strip_suffix(".scroll.up") {
+        return Some((id, -1.0));
+    }
+    control_id.strip_suffix(".scroll.down").map(|id| (id, 1.0))
+}
+
+/// 🔼️ The scrollable viewport's own height inside a popup of `painted_height` — the popup minus its
+/// `p-single` inset, which is the `clientHeight` React's `scrollSelectViewport` reads.
+pub(crate) fn select_scroll_viewport_height(theme: &Theme, painted_height: f32) -> f32 {
+    (painted_height - theme.padding_standard * 2.0).max(0.0)
+}
+
+/// 🔼️ Applies one pending chevron `direction` to `offset` and clamps the result — the ONE place both
+/// scroll functions are consumed, shared by the immediate-mode kit below and any other popup painter.
+pub(crate) fn select_scrolled_offset(items: usize, theme: &Theme, painted_height: f32, offset: f32, direction: f32) -> f32 {
+    let stepped = offset + direction * select_scroll_step(select_scroll_viewport_height(theme, painted_height));
+    select_clamped_scroll(items, theme, painted_height, stepped)
+}
+
+/// 🔼️ The first row index a popup scrolled by `offset` draws, and how many rows cover the viewport
+/// (one extra so a partially scrolled band is never short a row at its bottom edge).
+pub(crate) fn select_scrolled_row_window(items: usize, theme: &Theme, painted_height: f32, offset: f32) -> (usize, usize) {
+    let row = select_row_height(theme);
+    if row <= 0.0 {
+        return (0, items);
+    }
+    let first = ((offset / row).floor().max(0.0) as usize).min(items);
+    let visible = select_visible_rows(items, theme, painted_height).saturating_add(1);
+    (first, (first + visible).min(items))
+}
+//#endregion 🔼️ScrollSlots
+
 /// 📐️ One popup row's `(x, y, w, h)` relative to the trigger's own top-left, given the popup top
 /// [`select_menu_top`] resolved. Shared by `paint`'s retained row layout, `paint_select`, and
 /// [`render_select_menu`] so geometry and hit-testing can never disagree.
@@ -361,21 +425,26 @@ pub(crate) fn render_select_menu<E: Clone, T: SelectItemView>(id: &str, value: &
     let scrolls = select_visible_rows(items.len(), ctx.theme, menu_h) < items.len();
     let inset = ctx.theme.padding_standard;
     let font_size = ctx.theme.font_size_body;
+    // 🔼️ Resolve this frame's scroll offset BEFORE anything paints: take whatever direction the
+    // press handler left pending, price it in `select_scroll_step` pixels against the popup's own
+    // viewport, clamp it to what the popup can actually scroll, and write both slots back. A popup
+    // that fits clamps straight to `0.0`, so the chevrons stay inert exactly as React's do.
+    let pending = ctx.scroll_offsets.remove(&select_scroll_pending_key(id)).unwrap_or(0.0);
+    let scroll_key = select_scroll_key(id);
+    let stored = ctx.scroll_offsets.get(&scroll_key).copied().unwrap_or(0.0);
+    let scroll = select_scrolled_offset(items.len(), ctx.theme, menu_h, stored, pending);
+    if scroll == 0.0 {
+        ctx.scroll_offsets.remove(&scroll_key);
+    } else {
+        ctx.scroll_offsets.insert(scroll_key, scroll);
+    }
+    let (first_row, last_row) = select_scrolled_row_window(items.len(), ctx.theme, menu_h, scroll);
     let mut render_rows = |draw: &mut crate::wgpu::draw::DrawList| {
         draw.push_glass([menu.x, menu.y, menu.w, menu.h], ctx.theme.border_radius, ctx.theme.glass(Level::Menu));
-        if scrolls {
-            let button_h = select_scroll_button_height(ctx.theme);
-            let chevron = crate::wgpu::chrome::SIZE_TINY;
-            let center_x = menu.x + (menu.w - chevron) * 0.5;
-            if let Some(icons) = ctx.icons {
-                crate::wgpu::chrome::push_icon(draw, icons, "chevron-up", center_x, menu.y + inset, chevron, ctx.theme.text_muted);
-                crate::wgpu::chrome::push_icon(draw, icons, "chevron-down", center_x, menu.y + menu.h - button_h + inset, chevron, ctx.theme.text_muted);
-            }
-        }
-        let visible = select_visible_rows(items.len(), ctx.theme, menu_h);
-        for (index, item) in items.iter().enumerate().take(visible.max(1)) {
+        draw.push_scissor(menu);
+        for (index, item) in items.iter().enumerate().take(last_row).skip(first_row) {
             let relative = select_row_rect(bounds.w, index, menu_top, ctx.theme);
-            let row = Rect::new(bounds.x + relative.x, bounds.y + relative.y, relative.w, relative.h);
+            let row = Rect::new(bounds.x + relative.x, bounds.y + relative.y - scroll, relative.w, relative.h);
             let row_hovered = ctx.input.hit_at(ctx.input.pointer_x, ctx.input.pointer_y).and_then(|h| h.control_id.as_deref()) == Some(&format!("{id}.item.{}", item.value()));
             if row_hovered || item.value() == value {
                 draw.push_rounded([row.x, row.y, row.w, row.h], ctx.theme.row_hover, ctx.theme.border_radius);
@@ -383,12 +452,44 @@ pub(crate) fn render_select_menu<E: Clone, T: SelectItemView>(id: &str, value: &
             draw_text_on(draw, ctx.atlas, item.label(), row.x + inset, row.y + (row.h + font_size) * 0.5 - 2.0, font_size, ctx.theme.text);
             ctx.input.register_hit(HitTarget { rect: row, event: None, control_id: Some(format!("{id}.item.{}", item.value())), kind: HitKind::DropdownItem, drag_axis: None, drag_data: None });
         }
+        draw.pop_scissor();
+        // 🔼️ The chevrons paint and register LAST so their bands win the hit resolve (`HitRegistry`
+        // resolves the most recently registered target first) over the rows they sit on top of.
+        if scrolls {
+            let button_h = select_scroll_button_height(ctx.theme);
+            let chevron = crate::wgpu::chrome::SIZE_TINY;
+            let center_x = menu.x + (menu.w - chevron) * 0.5;
+            let up = Rect::new(menu.x, menu.y, menu.w, button_h);
+            let down = Rect::new(menu.x, menu.y + menu.h - button_h, menu.w, button_h);
+            if let Some(icons) = ctx.icons {
+                crate::wgpu::chrome::push_icon(draw, icons, "chevron-up", center_x, up.y + inset, chevron, ctx.theme.text_muted);
+                crate::wgpu::chrome::push_icon(draw, icons, "chevron-down", center_x, down.y + inset, chevron, ctx.theme.text_muted);
+            }
+            ctx.input.register_hit(HitTarget { rect: up, event: None, control_id: Some(select_scroll_control_id(id, true)), kind: HitKind::DropdownItem, drag_axis: None, drag_data: None });
+            ctx.input.register_hit(HitTarget { rect: down, event: None, control_id: Some(select_scroll_control_id(id, false)), kind: HitKind::DropdownItem, drag_axis: None, drag_data: None });
+        }
     };
     if let Some(overlay) = ctx.overlay.as_deref_mut() {
         render_rows(overlay);
     } else {
         render_rows(ctx.draw);
     }
+}
+
+/// 🔼️ Arms one chevron press: the direction is stashed for [`render_select_menu`] to price and
+/// clamp on the next paint, which is the only place the item count and the resolved popup height are
+/// both in hand. Answers `false` for a control id that is not a scroll chevron.
+pub fn arm_select_scroll(scroll_offsets: &mut std::collections::HashMap<String, f32>, control_id: &str) -> bool {
+    let Some((id, direction)) = select_scroll_control_parts(control_id) else { return false };
+    scroll_offsets.insert(select_scroll_pending_key(id), direction);
+    true
+}
+
+/// 🧹️ Drops both of one popup's scroll slots — called when the popup closes so a reopened `Select`
+/// starts at its first page, like a freshly mounted `SelectContent`, and neither slot outlives it.
+pub fn clear_select_scroll(scroll_offsets: &mut std::collections::HashMap<String, f32>, id: &str) {
+    scroll_offsets.remove(&select_scroll_key(id));
+    scroll_offsets.remove(&select_scroll_pending_key(id));
 }
 
 #[cfg(test)]

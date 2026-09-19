@@ -125,7 +125,7 @@ crate::component_persistent_local! {
     /// again on `Event::InstanceClose`. `spawn_task`'s quota gate is the first real reader.
     static REACTOR_CLOSES: RefCell<ReactorCloseRegistry> = RefCell::new(ReactorCloseRegistry::new());
     static REACTOR_CLOSE_CURSOR: Cell<usize> = Cell::new(0);
-    static COLD_PAIR_INGRESS: RefCell<cold_pair::ColdArtifactPairIngressRegistry<PLUGIN_REACTOR_INSTANCE_SLOTS>> = RefCell::new(cold_pair::ColdArtifactPairIngressRegistry::new());
+    static COLD_PAIR_INGRESS: RefCell<cold_pair::ColdDocumentPairIngressRegistry<PLUGIN_REACTOR_INSTANCE_SLOTS>> = RefCell::new(cold_pair::ColdDocumentPairIngressRegistry::new());
 }
 
 /// 🧵️ A task retains its instance and optional checkpoint restart command.
@@ -1206,7 +1206,7 @@ mod wit_bridge {
     #[derive(Default)]
     struct StagedTurnPages {
         command: Option<(semio_framework::kernel::CommandPageCursor, Box<semio_framework::kernel::FixedCommandPage>)>,
-        cold_pair: Option<Box<semio_framework::kernel::ColdArtifactPairPage>>,
+        cold_pair: Option<Box<semio_framework::kernel::ColdDocumentPairPage>>,
     }
 
     fn staging_fault(reason: &'static str) -> semio_framework::Fault {
@@ -1232,7 +1232,7 @@ mod wit_bridge {
     }
 
     /// 🧊️ `reactor::stage-cold-pair-page` body — the cold-pair twin of [`stage_command_page`].
-    pub async fn stage_cold_pair_page(page: crate::component::wasip2::exports::semio::framework::reactor::ColdArtifactPairPage) -> Result<(), semio_framework::Fault> {
+    pub async fn stage_cold_pair_page(page: crate::component::wasip2::exports::semio::framework::reactor::ColdDocumentPairPage) -> Result<(), semio_framework::Fault> {
         let staged = Box::new(wit_cold_pair_page_to_kernel(page)?);
         STAGED_PAGES.with(|pages| {
             let mut pages = pages.try_borrow_mut().map_err(|_| staging_fault("turn page staging authority busy"))?;
@@ -1364,16 +1364,16 @@ mod wit_bridge {
         bytes.try_into().map_err(|_| semio_framework::Fault::new(semio_framework::FaultOrigin::Framework, semio_framework::FaultCode::new("plugin.cold-pair-hash-width"), field))
     }
 
-    fn wit_cold_pair_page_to_kernel(page: crate::component::wasip2::exports::semio::framework::reactor::ColdArtifactPairPage) -> Result<semio_framework::kernel::ColdArtifactPairPage, semio_framework::Fault> {
+    fn wit_cold_pair_page_to_kernel(page: crate::component::wasip2::exports::semio::framework::reactor::ColdDocumentPairPage) -> Result<semio_framework::kernel::ColdDocumentPairPage, semio_framework::Fault> {
         let header = page.header;
         let frontier = header.baseline_frontier;
-        Ok(semio_framework::kernel::ColdArtifactPairPage {
-            header: semio_framework::kernel::ColdArtifactPairHeader {
+        Ok(semio_framework::kernel::ColdDocumentPairPage {
+            header: semio_framework::kernel::ColdDocumentPairHeader {
                 lifetime: wit_lifetime_to_kernel(header.lifetime),
                 transfer_generation: header.transfer_generation,
                 descriptor_sha256: wit_cold_sha256(header.descriptor_sha256, "cold pair descriptor hash must be 32 bytes")?,
-                baseline_frontier: semio_framework::kernel::ColdArtifactPairFrontier {
-                    artifact_id: frontier.artifact_id,
+                baseline_frontier: semio_framework::kernel::ColdDocumentPairFrontier {
+                    document_id: frontier.document_id,
                     head_edit_ordinal: frontier.head_edit_ordinal,
                     head_edit_id: frontier.head_edit_id,
                     last_commit_seq: frontier.last_commit_seq,
@@ -1391,14 +1391,14 @@ mod wit_bridge {
         })
     }
 
-    fn kernel_cold_frontier_to_wit(frontier: semio_framework::kernel::ColdArtifactPairFrontier) -> crate::component::wasip2::exports::semio::framework::reactor::ColdArtifactPairFrontier {
+    fn kernel_cold_frontier_to_wit(frontier: semio_framework::kernel::ColdDocumentPairFrontier) -> crate::component::wasip2::exports::semio::framework::reactor::ColdDocumentPairFrontier {
         use crate::component::wasip2::exports::semio::framework::reactor as wit;
-        wit::ColdArtifactPairFrontier { artifact_id: frontier.artifact_id, head_edit_ordinal: frontier.head_edit_ordinal, head_edit_id: frontier.head_edit_id, last_commit_seq: frontier.last_commit_seq, chain_sha256: frontier.chain_sha256.to_vec() }
+        wit::ColdDocumentPairFrontier { document_id: frontier.document_id, head_edit_ordinal: frontier.head_edit_ordinal, head_edit_id: frontier.head_edit_id, last_commit_seq: frontier.last_commit_seq, chain_sha256: frontier.chain_sha256.to_vec() }
     }
 
-    fn kernel_cold_cursor_to_wit(cursor: semio_framework::kernel::ColdArtifactPairCursor) -> crate::component::wasip2::exports::semio::framework::reactor::ColdArtifactPairCursor {
+    fn kernel_cold_cursor_to_wit(cursor: semio_framework::kernel::ColdDocumentPairCursor) -> crate::component::wasip2::exports::semio::framework::reactor::ColdDocumentPairCursor {
         use crate::component::wasip2::exports::semio::framework::reactor as wit;
-        wit::ColdArtifactPairCursor { lifetime: kernel_lifetime_to_wit(cursor.lifetime), transfer_generation: cursor.transfer_generation, page_index: cursor.page_index, page_count: cursor.page_count }
+        wit::ColdDocumentPairCursor { lifetime: kernel_lifetime_to_wit(cursor.lifetime), transfer_generation: cursor.transfer_generation, page_index: cursor.page_index, page_count: cursor.page_count }
     }
 
     fn kernel_cold_pair_ingress_to_wit(status: semio_framework::kernel::ColdPairIngressStatus) -> crate::component::wasip2::exports::semio::framework::reactor::ColdPairIngressStatus {
@@ -1408,13 +1408,13 @@ mod wit_bridge {
             semio_framework::kernel::ColdPairIngressStatus::PageAccepted(cursor) => wit::ColdPairIngressStatus::PageAccepted(kernel_cold_cursor_to_wit(cursor)),
             semio_framework::kernel::ColdPairIngressStatus::Backpressure(cursor) => wit::ColdPairIngressStatus::Backpressure(kernel_cold_cursor_to_wit(cursor)),
             semio_framework::kernel::ColdPairIngressStatus::Loading(cursor) => wit::ColdPairIngressStatus::Loading(kernel_cold_cursor_to_wit(cursor)),
-            semio_framework::kernel::ColdPairIngressStatus::Applied(receipt) => wit::ColdPairIngressStatus::Applied(wit::ColdArtifactPairApplied {
+            semio_framework::kernel::ColdPairIngressStatus::Applied(receipt) => wit::ColdPairIngressStatus::Applied(wit::ColdDocumentPairApplied {
                 lifetime: kernel_lifetime_to_wit(receipt.lifetime),
                 transfer_generation: receipt.transfer_generation,
                 baseline_frontier: kernel_cold_frontier_to_wit(receipt.baseline_frontier),
                 aggregate_sha256: receipt.aggregate_sha256.to_vec(),
             }),
-            semio_framework::kernel::ColdPairIngressStatus::Fault { cursor, fault } => wit::ColdPairIngressStatus::Fault(wit::ColdArtifactPairFault { cursor: kernel_cold_cursor_to_wit(cursor), fault }),
+            semio_framework::kernel::ColdPairIngressStatus::Fault { cursor, fault } => wit::ColdPairIngressStatus::Fault(wit::ColdDocumentPairFault { cursor: kernel_cold_cursor_to_wit(cursor), fault }),
         }
     }
 

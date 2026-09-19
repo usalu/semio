@@ -1,5 +1,5 @@
 import { builtinModules } from "node:module";
-import { existsSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync, writeFileSync, type Dirent } from "node:fs";
 import { dirname, extname, join } from "node:path";
 import { runProbe } from "../../📦️packages/🟦️typescript/🟦️.ts";
 import { canonicalFilenameForKind } from "../../🔍️discovery/🟦️.ts";
@@ -14,7 +14,7 @@ export function dependencyReadFileSafe(repoRoot: string, ...parts: string[]): st
 function dependencyDiscoverNamedFiles(repoRoot: string, filename: string): string[] {
   const found: string[] = [];
   const walk = (relDir: string): void => {
-    let entries: ReturnType<typeof readdirSync>;
+    let entries: Dirent[];
     try { entries = readdirSync(join(repoRoot, relDir), { withFileTypes: true }); } catch { return; }
     for (const entry of entries) {
       const child = relDir ? `${relDir}/${entry.name}` : entry.name;
@@ -280,7 +280,7 @@ function dependencyJsOwnershipScope(manifest: string, manifests: readonly string
 function dependencyDiscoverJsSourceFiles(repoRoot: string): string[] {
   const found: string[] = [];
   const walk = (relDir: string): void => {
-    let entries: ReturnType<typeof readdirSync>;
+    let entries: Dirent[];
     try {
       entries = readdirSync(join(repoRoot, relDir), { withFileTypes: true });
     } catch {
@@ -609,7 +609,7 @@ function dependencyDiscoverPackageJsonFiles(repoRoot: string): string[] {
   const found: string[] = [];
   const walk = (relDir: string): void => {
     const abs = join(repoRoot, relDir);
-    let entries: ReturnType<typeof readdirSync>;
+    let entries: Dirent[];
     try {
       entries = readdirSync(abs, { withFileTypes: true });
     } catch {
@@ -732,7 +732,7 @@ function dependencyDiscoverContributionManifests(repoRoot: string, dirName: stri
   if (dirName === "" || fileName === "") return [];
   const found: string[] = [];
   const walk = (relDir: string): void => {
-    let entries: ReturnType<typeof readdirSync>;
+    let entries: Dirent[];
     try {
       entries = readdirSync(join(repoRoot, relDir || "."), { withFileTypes: true });
     } catch {
@@ -833,7 +833,7 @@ export function dependencyCollectGo(repoRoot: string, record: (ecosystem: Depend
 function dependencyCollectPython(repoRoot: string, record: (ecosystem: DependencyEcosystem, name: string, version: string, kind: DependencyKind, user: string) => void): void {
   const manifests: string[] = [];
   const walk = (relDir: string): void => {
-    let entries: ReturnType<typeof readdirSync>;
+    let entries: Dirent[];
     try {
       entries = readdirSync(join(repoRoot, relDir || "."), { withFileTypes: true });
     } catch {
@@ -878,7 +878,7 @@ function dependencyCollectPython(repoRoot: string, record: (ecosystem: Dependenc
 function dependencyCollectDotnet(repoRoot: string, record: (ecosystem: DependencyEcosystem, name: string, version: string, kind: DependencyKind, user: string) => void): void {
   const projects: string[] = [];
   const walk = (relDir: string): void => {
-    let entries: ReturnType<typeof readdirSync>;
+    let entries: Dirent[];
     try {
       entries = readdirSync(join(repoRoot, relDir || "."), { withFileTypes: true });
     } catch {

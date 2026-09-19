@@ -175,6 +175,15 @@ pub struct DrawList {
     retained_output: Option<RetainedOutputGrant>,
     prepared_items: usize,
     prepared_bytes: usize,
+    /// 🪟️ How many nested `begin_overlay_route`/`end_overlay_route` pairs are open. While non-zero
+    /// every ordinary `push_*` below routes into the layer's OVERLAY bucket instead of its normal
+    /// one — the bucket `ui_overlay_pass` draws after the main and raster passes, so whatever is
+    /// painted inside the pair composites above every panel in the frame. This is what lets
+    /// `engine::Ui`'s retained ladder paint a `Dialog`/`Popover`'s own surface chrome AND the
+    /// document subtree that sits on it into the same top layer, in that order, instead of the
+    /// chrome landing on top of its own content (ticket 26/09/17 packet W15a). Nothing else changes
+    /// bucket: a caller that never opens a pair paints exactly where it always did.
+    overlay_route: u32,
 }
 
 #[derive(Clone, Copy)]
@@ -200,6 +209,7 @@ impl Default for DrawList {
             retained_output: None,
             prepared_items: 0,
             prepared_bytes: 0,
+            overlay_route: 0,
         };
         list.layers.push(DrawLayer::default());
         list
@@ -264,7 +274,7 @@ impl std::error::Error for RetainedOutputError {}
 impl DrawList {
     /// 🪣 Creates an allocation-free transfer slot for a later exact draw admission.
     pub fn empty() -> Self {
-        Self { scene_passes: Vec::new(), layers: Vec::new(), glass_regions: Vec::new(), scissor_stack: Vec::new(), clip_stack: Vec::new(), glass_content_stack: Vec::new(), screen_h: 0.0, clock_seconds: 0.0, retained_output: None, prepared_items: 0, prepared_bytes: 0 }
+        Self { scene_passes: Vec::new(), layers: Vec::new(), glass_regions: Vec::new(), scissor_stack: Vec::new(), clip_stack: Vec::new(), glass_content_stack: Vec::new(), screen_h: 0.0, clock_seconds: 0.0, retained_output: None, prepared_items: 0, prepared_bytes: 0, overlay_route: 0 }
     }
 
     /// 🎟️ Pre-admits fixed candidate backing before a retained paint child transfers output.
@@ -597,7 +607,48 @@ impl DrawList {
         self.layers.last_mut().expect("layer")
     }
 
+    /// 🪟️ Opens an overlay-routed region — see [`DrawList::overlay_route`]. Nests; every `begin`
+    /// must be paired with an [`DrawList::end_overlay_route`].
+    pub fn begin_overlay_route(&mut self) {
+        self.overlay_route = self.overlay_route.saturating_add(1);
+    }
+
+    /// 🪟️ Closes the innermost overlay-routed region. Saturating, so an unbalanced `end` cannot
+    /// wrap the counter and silently route the rest of the frame into the overlay bucket.
+    pub fn end_overlay_route(&mut self) {
+        self.overlay_route = self.overlay_route.saturating_sub(1);
+    }
+
+    /// 🪟️ Whether pushes are currently routed into the overlay bucket.
+    pub fn overlay_routed(&self) -> bool {
+        self.overlay_route > 0
+    }
+
+    /// 🪟️ The quad bucket an ordinary `push_*` lands in: the overlay one inside an overlay-routed
+    /// region, the layer's own one otherwise.
+    fn active_ui_instances(&mut self) -> &mut Vec<UiInstance> {
+        let overlay = self.overlay_route > 0;
+        let layer = self.active_layer();
+        if overlay {
+            &mut layer.overlay_ui_instances
+        } else {
+            &mut layer.ui_instances
+        }
+    }
+
+    /// 🪟️ [`DrawList::active_ui_instances`] for vector geometry.
+    fn active_vector_vertices(&mut self) -> &mut Vec<VectorVertex> {
+        let overlay = self.overlay_route > 0;
+        let layer = self.active_layer();
+        if overlay {
+            &mut layer.overlay_vector_vertices
+        } else {
+            &mut layer.vector_vertices
+        }
+    }
+
     pub fn clear(&mut self) {
+        self.overlay_route = 0;
         self.scene_passes.clear();
         self.layers.clear();
         self.layers.push(DrawLayer::default());
@@ -681,14 +732,14 @@ impl DrawList {
         if !self.claim_retained_output(1, size_of::<UiInstance>()) {
             return;
         }
-        self.active_layer().ui_instances.push(UiInstance::solid(rect, color));
+        self.active_ui_instances().push(UiInstance::solid(rect, color));
     }
 
     pub fn push_rounded(&mut self, rect: [f32; 4], color: Rgba, radius: f32) {
         if !self.claim_retained_output(1, size_of::<UiInstance>()) {
             return;
         }
-        self.active_layer().ui_instances.push(UiInstance::rounded(rect, color, radius, 0.0, color));
+        self.active_ui_instances().push(UiInstance::rounded(rect, color, radius, 0.0, color));
     }
 
     /// 🌀️ Clockwise spinning + pulsing loading ring around `rect`, in `color` (gray `theme.border_normal` at rest, `theme.selected` when the node is selected/active).
@@ -696,7 +747,7 @@ impl DrawList {
         if !self.claim_retained_output(1, size_of::<UiInstance>()) {
             return;
         }
-        self.active_layer().ui_instances.push(UiInstance::loading_border(rect, color, radius, stroke));
+        self.active_ui_instances().push(UiInstance::loading_border(rect, color, radius, stroke));
     }
 
     /// 🌀️ Dashed, slow-spinning + gently pulsing waiting ring around `rect`, in `color` (gray `theme.border_normal` at rest, `theme.selected` when the node is selected/active).
@@ -704,7 +755,7 @@ impl DrawList {
         if !self.claim_retained_output(1, size_of::<UiInstance>()) {
             return;
         }
-        self.active_layer().ui_instances.push(UiInstance::waiting_border(rect, color, radius, stroke));
+        self.active_ui_instances().push(UiInstance::waiting_border(rect, color, radius, stroke));
     }
 
     /// ✅️ Solid, static at-bounds ring around `rect`, in `color` — `UiStatus::Finished`.
@@ -712,7 +763,7 @@ impl DrawList {
         if !self.claim_retained_output(1, size_of::<UiInstance>()) {
             return;
         }
-        self.active_layer().ui_instances.push(UiInstance::finished_border(rect, color, radius, stroke));
+        self.active_ui_instances().push(UiInstance::finished_border(rect, color, radius, stroke));
     }
 
     /// 💫️ Raised-cosine breathing pulse ring around `rect`, in `color` — `UiState::Introducing`.
@@ -720,7 +771,7 @@ impl DrawList {
         if !self.claim_retained_output(1, size_of::<UiInstance>()) {
             return;
         }
-        self.active_layer().ui_instances.push(UiInstance::introducing_border(rect, color, radius, stroke));
+        self.active_ui_instances().push(UiInstance::introducing_border(rect, color, radius, stroke));
     }
 
     /// 🧊️ Pushes a glass region rendered with an already-resolved `style` — callers derive `style`
@@ -756,7 +807,7 @@ impl DrawList {
         if !self.claim_retained_output(1, size_of::<UiInstance>()) {
             return;
         }
-        self.active_layer().ui_instances.push(UiInstance::glyph(rect, color, uv_rect));
+        self.active_ui_instances().push(UiInstance::glyph(rect, color, uv_rect));
     }
 
     pub fn push_glyph_overlay(&mut self, rect: [f32; 4], color: Rgba, uv_rect: [f32; 4]) {
@@ -777,7 +828,7 @@ impl DrawList {
         if !self.claim_retained_output(1, size_of::<UiInstance>()) {
             return;
         }
-        self.active_layer().ui_instances.push(UiInstance::textured(rect, uv_rect, color));
+        self.active_ui_instances().push(UiInstance::textured(rect, uv_rect, color));
     }
 
     pub fn push_raster_quad(&mut self, key: &str, rect: [f32; 4], uv_rect: [f32; 4], alpha: f32) {
@@ -801,8 +852,8 @@ impl DrawList {
         let nx = -dy / len * width * 0.5;
         let ny = dx / len * width * 0.5;
         let c = [color.r, color.g, color.b, color.a];
-        let layer = self.active_layer();
-        layer.vector_vertices.extend_from_slice(&[
+        let layer = self.active_vector_vertices();
+        layer.extend_from_slice(&[
             VectorVertex { position: [x0 + nx, y0 + ny], color: c },
             VectorVertex { position: [x1 + nx, y1 + ny], color: c },
             VectorVertex { position: [x0 - nx, y0 - ny], color: c },
@@ -849,11 +900,11 @@ impl DrawList {
             return;
         }
         let c = [color.r, color.g, color.b, color.a];
-        let layer = self.active_layer();
+        let layer = self.active_vector_vertices();
         for tri in 1..points.len() - 1 {
-            layer.vector_vertices.push(VectorVertex { position: points[0], color: c });
-            layer.vector_vertices.push(VectorVertex { position: points[tri], color: c });
-            layer.vector_vertices.push(VectorVertex { position: points[tri + 1], color: c });
+            layer.push(VectorVertex { position: points[0], color: c });
+            layer.push(VectorVertex { position: points[tri], color: c });
+            layer.push(VectorVertex { position: points[tri + 1], color: c });
         }
     }
 

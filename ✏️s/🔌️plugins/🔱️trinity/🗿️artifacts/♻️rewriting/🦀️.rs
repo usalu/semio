@@ -726,6 +726,14 @@ pub mod editor {
             pub(crate) use reset_rule_leaf::reset_rule;
 
             #[path = "."]
+            mod set_active_example_leaf {
+                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎯️set-active-example/🦀️.rs"]
+                mod component;
+                pub(crate) use component::*;
+            }
+            pub(crate) use set_active_example_leaf::{set_active_example, set_active_example_document};
+
+            #[path = "."]
             mod patch_nodes_leaf {
                 #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🩹️patch-nodes/🦀️.rs"]
                 mod component;
@@ -847,6 +855,16 @@ pub mod viewer {
         #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs"]
         mod component;
         pub use component::*;
+        #[path = "."]
+        pub mod presence {
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/👥️presence/🧬️schema/🦀️.rs"]
+            pub mod schema;
+        }
+        #[path = "."]
+        pub mod config {
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎚️config/🧬️schema/🦀️.rs"]
+            pub mod schema;
+        }
 
         #[path = "."]
         pub mod modes {

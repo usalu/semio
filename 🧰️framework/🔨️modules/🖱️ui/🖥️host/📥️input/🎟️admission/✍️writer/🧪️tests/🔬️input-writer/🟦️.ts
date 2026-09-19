@@ -3,8 +3,66 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import Ajv from "ajv";
 
+/** ✍️ The input-writer admission ledger: every writer turn's grant, publication and unwind claim. */
+type InputWriterFixture = {
+  readonly version: number;
+  readonly work: {
+    readonly phaseOrder: readonly string[];
+    readonly oneByteValidationAndCopyTurns: number;
+    readonly descriptorTransfers: number;
+    readonly metadataIsNotResidentFunding: boolean;
+    readonly callerByteSelectionPrivate: boolean;
+  };
+  readonly utf8: readonly {
+    readonly name: string;
+    readonly hex: string;
+    readonly valid: boolean;
+  }[];
+  readonly source: {
+    readonly text: string;
+    readonly utf8Hex: string;
+    readonly logicalBytes: number;
+    readonly minimumCapacity: number;
+  };
+  readonly copy: {
+    readonly byteGrants: readonly number[];
+    readonly copied: readonly number[];
+    readonly decodeOnlyWhenComplete: boolean;
+    readonly preserveBacking: boolean;
+  };
+  readonly close: {
+    readonly byteGrants: readonly number[];
+    readonly inspected: readonly number[];
+    readonly physicalReleasedDuringInspection: readonly number[];
+    readonly emptyBackingSeparateStep: boolean;
+    readonly clearInitializedBytes: boolean;
+    readonly sealedDescriptorTransferSeparateStep: boolean;
+    readonly scrubHexAfterGrant: readonly string[];
+  };
+  readonly refusals: readonly string[];
+  readonly unwind: {
+    readonly frontiers: readonly number[];
+    readonly sourceRetained: boolean;
+    readonly candidateRetained: boolean;
+    readonly physicalCapacityUnchanged: boolean;
+  };
+  readonly authority: {
+    readonly mutableRootEscapes: boolean;
+    readonly rawMutableBufferEscapes: boolean;
+    readonly callerVerdictAccepted: boolean;
+    readonly normalizationBeforeReservation: boolean;
+  };
+  readonly physical: {
+    readonly chargeActualCapacity: boolean;
+    readonly allocationErrorRetainsOriginalBacking: boolean;
+    readonly queueHeaderSeparate: boolean;
+    readonly queueBackingSeparate: boolean;
+    readonly payloadBackingSeparate: boolean;
+  };
+};
+
 export function testInputWriterFixture(): void {
-  const fixture = JSON.parse(readFileSync(new URL("../../🧫️fixtures/🔣️.json", import.meta.url), "utf8"));
+  const fixture: InputWriterFixture = JSON.parse(readFileSync(new URL("../../🧫️fixtures/🔣️.json", import.meta.url), "utf8"));
   const schema = JSON.parse(readFileSync(new URL("../../🧬️schema/🔣️.json", import.meta.url), "utf8"));
   const validate = new Ajv({ strict: true, allErrors: true }).compile(schema);
   assert(validate(fixture), JSON.stringify(validate.errors));

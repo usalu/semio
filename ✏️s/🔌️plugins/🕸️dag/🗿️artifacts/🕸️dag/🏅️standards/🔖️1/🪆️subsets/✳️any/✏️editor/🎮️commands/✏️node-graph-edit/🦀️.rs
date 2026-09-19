@@ -44,6 +44,13 @@ pub fn apply(payload: &NodeGraphEdit, doc: &ArtifactView<'_, DagSnapshot>, cfg: 
     Ok(apply_to(payload, doc, cfg, &interaction.selection("graph").ids))
 }
 
+/// 🧵️ The retained-tool twin of [`apply`] — see `delete_selection::apply_with_state` for why the raw
+/// `protocol::InteractionState` is read instead of an `InteractionView`.
+pub fn apply_with_state(payload: &NodeGraphEdit, doc: &ArtifactView<'_, DagSnapshot>, cfg: &ConfigView<'_, DagConfig>, interaction: &protocol::InteractionState) -> Result<Emit<DagMutation, DagConfigMutation>, Fault> {
+    let selected = interaction.selection.get("graph").map(|domain| domain.ids.clone()).unwrap_or_default();
+    Ok(apply_to(payload, doc, cfg, &selected))
+}
+
 fn apply_to(payload: &NodeGraphEdit, doc: &ArtifactView<'_, DagSnapshot>, _cfg: &ConfigView<'_, DagConfig>, selected: &[String]) -> Emit<DagMutation, DagConfigMutation> {
     let document = doc.snapshot;
     let mut artifact_mutations: Vec<DagMutation> = Vec::new();

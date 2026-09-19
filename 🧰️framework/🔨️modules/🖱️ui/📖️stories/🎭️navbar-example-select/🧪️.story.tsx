@@ -28,6 +28,7 @@ const meta = {
     layout: "centered",
   },
   tags: ["autodocs"],
+  args: { id: "navbar-example-select", value: "nakagin", options: exampleOptions, onValueChange: () => {} },
 } satisfies Meta<typeof NavbarExampleSelect>;
 
 export default meta;

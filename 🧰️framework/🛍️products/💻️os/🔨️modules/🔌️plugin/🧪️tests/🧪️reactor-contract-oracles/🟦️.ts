@@ -4,12 +4,53 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import Ajv from "ajv";
 
+/** 🪪️ One neutral admission row of the guest-lifecycle production corpus. */
+type GuestLifecycleCase = { readonly id: string; readonly exact: boolean; readonly live: boolean; readonly capacity: boolean; readonly accepted: boolean };
+type GuestLifecycleFixture = { readonly cases: readonly GuestLifecycleCase[] };
+
+/** 🧾️ One issued-patch acknowledgement row and the exact ack it must echo. */
+type IssuedPatchAck = Readonly<Record<string, unknown>>;
+type IssuedPatchCase = { readonly id: string; readonly ack: IssuedPatchAck; readonly committed: boolean; readonly pending: boolean; readonly live: boolean; readonly accepted: boolean };
+type IssuedPatchFixture = { readonly issued: IssuedPatchAck; readonly cases: readonly IssuedPatchCase[] };
+
+/** 🧮️ Deterministic byte pattern a cold-pair corpus row reproduces. */
+type ColdPairBytePattern = { readonly multiplier: number; readonly addend: number };
+type ColdPairFixture = {
+  readonly hostile: readonly { readonly id: string }[];
+  readonly exact: {
+    readonly packLength: number;
+    readonly packPattern: ColdPairBytePattern;
+    readonly sprLength: number;
+    readonly sprPattern: ColdPairBytePattern;
+    readonly packSha256: string;
+    readonly sprSha256: string;
+    readonly aggregateSha256: string;
+  };
+};
+type ActorColdPairFixture = { readonly statusRows: readonly unknown[]; readonly hostileRows: readonly unknown[] };
+
+/** 🔗️ One backbone binding transition: the state before, the command, the receipt and the state after. */
+type BackboneBindingRow = {
+  readonly id: string;
+  readonly initial: { readonly generation: string; readonly uri: string | null };
+  readonly command: { readonly bindingGeneration: string; readonly operation: string; readonly uri: string | null };
+  readonly receipt: { readonly operation: string; readonly code?: string };
+  readonly final: { readonly generation: string; readonly uri: string | null };
+};
+type BackboneBindingFixture = {
+  readonly cases: readonly BackboneBindingRow[];
+  readonly hostile: readonly { readonly id: string; readonly value: unknown }[];
+  readonly codec: { readonly golden: readonly unknown[]; readonly hostile: readonly unknown[] };
+  readonly dataLimits: Readonly<Record<string, unknown>>;
+};
+type BackboneBatchFixture = { readonly cases: readonly unknown[]; readonly retention: Readonly<Record<string, unknown>> };
+
 /** 🪪️ Validates neutral admission laws with independent AJV predicates and pins the real reducer. */
 export function guestLifecycleOracle(): number {
   const fixture = JSON.parse(readFileSync(new URL("../../⚛️reactor/🚪️lifetime/🧫️fixtures/🧵️production.json", import.meta.url), "utf8"));
   const schema = JSON.parse(readFileSync(new URL("../../⚛️reactor/🚪️lifetime/🧬️schema/🧵️production.json", import.meta.url), "utf8"));
   const ajv = new Ajv({ strict: true, allErrors: true });
-  const validate = ajv.compile(schema);
+  const validate = ajv.compile<GuestLifecycleFixture>(schema);
   assert(validate(fixture), JSON.stringify(validate.errors));
   const admit = ajv.compile({ type: "object", required: ["exact", "live", "capacity"], properties: { exact: { const: true }, live: { const: true }, capacity: { const: true } } });
   for (const row of fixture.cases) {
@@ -32,7 +73,7 @@ export function issuedPatchOracle(): number {
   const schema = JSON.parse(readFileSync(new URL("../../⚛️reactor/📨️pending/🧬️schema/🔣️.json", import.meta.url), "utf8"));
   const ajv = new Ajv({ strict: true, allErrors: true });
   ajv.addSchema(schema);
-  const validateReceipt = ajv.getSchema(`${schema.$id}#/$defs/PendingPatchReceiptV1`)!;
+  const validateReceipt = ajv.getSchema<IssuedPatchFixture>(`${schema.$id}#/$defs/PendingPatchReceiptV1`)!;
   assert(validateReceipt(fixture), JSON.stringify(validateReceipt.errors));
   const accept = ajv.compile({ type: "object", required: ["ack", "committed", "pending", "live"], properties: { ack: { const: fixture.issued }, committed: { const: true }, pending: { const: true }, live: { const: true } } });
   for (const row of fixture.cases) {
@@ -49,7 +90,7 @@ export function issuedPatchOracle(): number {
 export async function coldDocumentPairIngressOracle(repoRoot: string): Promise<number> {
   const fixture = JSON.parse(readFileSync(new URL("../../⚛️reactor/📥️cold-pair/🧫️fixtures/🔣️.json", import.meta.url), "utf8"));
   const schema = JSON.parse(readFileSync(new URL("../../⚛️reactor/📥️cold-pair/🧬️schema/🔣️.json", import.meta.url), "utf8"));
-  const validate = new Ajv({ strict: true, allErrors: true }).compile(schema);
+  const validate = new Ajv({ strict: true, allErrors: true }).compile<ColdPairFixture>(schema);
   assert(validate(fixture), JSON.stringify(validate.errors));
   assert.equal(validate({ ...fixture, hostile: fixture.hostile.slice(1) }), false, "cold pair corpus must retain every hostile row");
   const pattern = (length: number, row: { multiplier: number; addend: number }) => Uint8Array.from({ length }, (_, index) => (index * row.multiplier + row.addend) & 255);
@@ -65,22 +106,23 @@ export async function coldDocumentPairIngressOracle(repoRoot: string): Promise<n
   const actorFixture = JSON.parse(readFileSync(resolve(repoRoot, "🧰️framework/🔨️modules/🎭️actor/📥️cold-pair/🧫️fixtures/🔣️.json"), "utf8"));
   const actorSchema = JSON.parse(readFileSync(resolve(repoRoot, "🧰️framework/🔨️modules/🎭️actor/📥️cold-pair/🧬️schema/🔣️.json"), "utf8"));
   const validateActorStatus = new Ajv({ strict: true, allErrors: true }).compile(actorSchema);
-  for (const row of actorFixture.statusRows) assert(validateActorStatus(row), JSON.stringify(validateActorStatus.errors));
-  for (const row of [actorFixture.hostileRows[0], actorFixture.hostileRows[1], actorFixture.hostileRows[4]]) assert.equal(validateActorStatus(row), false, "actor cold status structural hostile must fail AJV");
+  const actorRows = actorFixture as ActorColdPairFixture;
+  for (const row of actorRows.statusRows) assert(validateActorStatus(row), JSON.stringify(validateActorStatus.errors));
+  for (const row of [actorRows.hostileRows[0], actorRows.hostileRows[1], actorRows.hostileRows[4]]) assert.equal(validateActorStatus(row), false, "actor cold status structural hostile must fail AJV");
   const actorCold = readFileSync(resolve(repoRoot, "🧰️framework/🔨️modules/🎭️actor/📥️cold-pair/🦀️.rs"), "utf8");
-  for (const marker of ["COLD_PAIR_PAGE_MAXIMUM_BYTES", "COLD_PAIR_MAXIMUM_BYTES", "COLD_PAIR_MAXIMUM_PAGES", "ColdArtifactPairHeader", "ColdPairIngressStatus"]) assert(kernel.includes(marker), marker);
-  for (const marker of ["ColdArtifactPairIngressRegistry", "cold-pair.not-live", "cold-pair.slot-collision", "try_reserve_exact", "reserved_bytes", "live != Some(header.lifetime)", "preflight_close_instance", "advance_close_one", "close_step", "files.spr[start..].fill(0)", "bounded terminal close before teardown"]) assert(ingress.includes(marker), marker);
-  for (const marker of ["ColdArtifactPairFrontier", "ColdArtifactPairCursor", "ColdArtifactPairApplied", "InvalidColdPair", "COLD_PAIR_FAULT_MAXIMUM_BYTES"]) assert(actorCold.includes(marker), marker);
-  return fixture.hostile.length + actorFixture.hostileRows.length;
+  for (const marker of ["COLD_PAIR_PAGE_MAXIMUM_BYTES", "COLD_PAIR_MAXIMUM_BYTES", "COLD_PAIR_MAXIMUM_PAGES", "ColdDocumentPairHeader", "ColdPairIngressStatus"]) assert(kernel.includes(marker), marker);
+  for (const marker of ["ColdDocumentPairIngressRegistry", "cold-pair.not-live", "cold-pair.slot-collision", "try_reserve_exact", "reserved_bytes", "live != Some(header.lifetime)", "preflight_close_instance", "advance_close_one", "close_step", "files.spr[start..].fill(0)", "bounded terminal close before teardown"]) assert(ingress.includes(marker), marker);
+  for (const marker of ["ColdDocumentPairFrontier", "ColdDocumentPairCursor", "ColdDocumentPairApplied", "InvalidColdPair", "COLD_PAIR_FAULT_MAXIMUM_BYTES"]) assert(actorCold.includes(marker), marker);
+  return fixture.hostile.length + actorRows.hostileRows.length;
 }
 
 
 export function documentBackboneBindingOracle(repoRoot: string): number {
   const fixture = JSON.parse(readFileSync(new URL("../../📡️backbone/🔗️binding/🧫️fixtures/🔣️.json", import.meta.url), "utf8"));
   const schema = JSON.parse(readFileSync(new URL("../../📡️backbone/🔗️binding/🧬️schema/🔣️.json", import.meta.url), "utf8"));
-  const validate = new Ajv({ strict: true, allErrors: true }).compile(schema);
+  const validate = new Ajv({ strict: true, allErrors: true }).compile<BackboneBindingFixture>(schema);
   assert(validate(fixture), JSON.stringify(validate.errors));
-  const reduce = (row: any) => {
+  const reduce = (row: BackboneBindingRow) => {
     const generation = BigInt(row.initial.generation),
       commandGeneration = BigInt(row.command.bindingGeneration),
       currentUri = row.initial.uri,
@@ -107,7 +149,7 @@ export function documentBackboneBindingOracle(repoRoot: string): number {
   const binding = readFileSync(new URL("../../📡️backbone/🔗️binding/🦀️.rs", import.meta.url), "utf8");
   const batchFixture = JSON.parse(readFileSync(resolve(repoRoot, "🧰️framework/🔨️modules/📡️replication/🔗️causal/🧫️fixtures/🧮️document-backbone-batch-v1/🔣️.json"), "utf8"));
   const batchSchema = JSON.parse(readFileSync(resolve(repoRoot, "🧰️framework/🔨️modules/📡️replication/🔗️causal/🧬️schema/🧮️document-backbone-batch-v1/🔣️.json"), "utf8"));
-  const validateBatch = new Ajv({ strict: true, allErrors: true }).compile(batchSchema);
+  const validateBatch = new Ajv({ strict: true, allErrors: true }).compile<BackboneBatchFixture>(batchSchema);
   assert(validateBatch(batchFixture), JSON.stringify(validateBatch.errors));
   const store = readFileSync(resolve(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs"), "utf8");
   const causal = readFileSync(resolve(repoRoot, "🧰️framework/🔨️modules/📡️replication/🔗️causal/🦀️.rs"), "utf8");

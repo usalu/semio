@@ -1,6 +1,6 @@
 type TestSource = { readonly directory: string; readonly url: string };
 
-export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: any, source: TestSource): Promise<void> {
+export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: Pick<typeof import("../../🟦️.ts"), "canvasDrawingPngExportPort" | "drawingSceneFromPreviewPayload" | "isDrawingRef">, source: TestSource): Promise<void> {
   const { canvasDrawingPngExportPort, drawingSceneFromPreviewPayload, isDrawingRef } = dependencies;
   type DrawingScene = any;
 

@@ -32,7 +32,7 @@ pub const DAG_DOCUMENT_SCHEMA: &str = "dag.dag";
 /// `s.dag.dag@1/*#editor` / `s.dag.dag@1/*#viewer`.
 pub const DAG_DIALECT: semio_framework_plugin::app::Dialect = semio_framework_plugin::app::Dialect { artifact_kind: "s.dag.dag", standard: semio_framework_plugin::app::StandardId("1"), subset: semio_framework_plugin::app::SubsetId::ANY };
 
-pub use crate::snapshot::schema::default_snapshot;
+pub use crate::snapshot::schema::{default_snapshot, empty_snapshot};
 pub use semio_framework_artifact_infinite_dag::{DagEdgePatch, DagHostSnapshotEdge, DagNodeKind, DagNodePatch, DagNodeSpec, DagPreviewContent, IoPortSpec};
 
 //#region 🔖️ContentBridge
@@ -166,6 +166,19 @@ pub fn dag_content_child_with_owner(nodes: Vec<DagNodeSpec>, edges: Vec<DagHostS
     let handle = dag_content_child_handle(&nodes, &edges);
     handle.with_local_owner(std::sync::Arc::new(DagWorkingScene { nodes, edges }))
 }
+/// 🌱️ Mints the composed `content` child's own pack for the archive-load genesis roster. The react
+/// shell's `loadDocumentPair` sends `members: []`, so a whole-document load (`setActiveExample` →
+/// `Effect::LoadDocument`) derives every `#[child]` slot through this hook; without it the archive
+/// closure completes `Incomplete` and the host answers `document archive replacement failed closure,
+/// authority, or retained publication validation`.
+pub fn genesis_dag_child_pack(snapshot: &DagSnapshot, slot: &str, child_id: &str) -> Option<Vec<u8>> {
+    use store::ArtifactPack;
+    (slot == "content" && child_id == snapshot.content.child_id).then(|| {
+        let scene = dag_working_scene(snapshot);
+        <SemioGraphSnapshot as ArtifactPack>::encode_pack(&dag_content_snapshot_from_working(&scene.nodes, &scene.edges))
+    })
+}
+
 //#endregion 🔖️WorkingScene
 
 //#region 🔖️Domain
@@ -277,14 +290,14 @@ pub fn artifact<A: DagApplication>() -> semio_framework_plugin::app::declaration
 
 /// 🧩️ App fleet capable of hosting this artifact's editor and viewer.
 pub trait DagApplication:
-    semio_framework_plugin::PluginApp + From<semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<editor::dag::DagPlayApp>>> + From<semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<viewer::dag::DagViewer>>>
+    semio_framework_plugin::PluginApp + From<semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<editor::dag::DagPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>> + From<semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<viewer::dag::DagViewer>, semio_s_artifact_stdio_semio::SemioMembers>>
 {
 }
 
 impl<A> DagApplication for A where
     A: semio_framework_plugin::PluginApp
-        + From<semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<editor::dag::DagPlayApp>>>
-        + From<semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<viewer::dag::DagViewer>>>
+        + From<semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<editor::dag::DagPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>>
+        + From<semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<viewer::dag::DagViewer>, semio_s_artifact_stdio_semio::SemioMembers>>
 {
 }
 
@@ -819,6 +832,8 @@ pub mod editor {
             pub mod node_graph_edit;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔭️node-graph-viewport/🦀️.rs"]
             pub mod node_graph_viewport;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧬️set-active-example/🦀️.rs"]
+            pub mod set_active_example;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🩹️patch-dag-nodes/🦀️.rs"]
             pub mod patch_dag_nodes;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/➖️remove-node/🦀️.rs"]
@@ -872,6 +887,16 @@ pub mod viewer {
         #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs"]
         mod component;
         pub use component::*;
+        #[path = "."]
+        pub mod presence {
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/👥️presence/🧬️schema/🦀️.rs"]
+            pub mod schema;
+        }
+        #[path = "."]
+        pub mod config {
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎚️config/🧬️schema/🦀️.rs"]
+            pub mod schema;
+        }
 
         #[path = "."]
         pub mod modes {

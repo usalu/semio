@@ -19,7 +19,7 @@ import types
 REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "..", "..", "..", "..", ".."))
 OWNER_REL = "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any"
 CASE_REL = f"{OWNER_REL}/🧪️tests/📸️mutate-remodeling-1"
-BASE_REL = {"asset": OWNER_REL, "local": f"{CASE_REL}/🧫️fixtures", "shared": f"{OWNER_REL}/🧫️fixtures"}
+BASE_REL = {"asset": f"{OWNER_REL}/🖼️assets", "local": f"{CASE_REL}/🧫️fixtures", "shared": f"{OWNER_REL}/🧫️fixtures"}
 
 
 class Outcome:

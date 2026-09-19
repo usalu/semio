@@ -14,7 +14,15 @@ pub(crate) mod context {
     
     /// ð§¬ï¸ A wrapper carrying the real registry so kind discipline (View-emits-operations rejection) runs.
     pub async fn app_with_registry() -> NormApp {
-        new_app_with_registry::<EditorApp<Din4108PlayApp>>(din4108_manifest_for_tests).await
+        let mut app = new_app_with_registry::<EditorApp<Din4108PlayApp>>(din4108_manifest_for_tests).await;
+        semio_framework::io::resolve_ready(app.bind_instance_id(meta("local").instance_id));
+        app
+    }
+
+    /// 🧹️ Closes every store the wrapper opened. A live `ArtifactStore` asserts in `Drop` unless it was
+    /// driven to its terminal-empty shallow shell, so every fixture that dispatches must end here.
+    pub fn close(app: &mut NormApp) {
+        semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(app);
     }
     
     pub async fn dispatch(app: &mut NormApp, command: Din4108Command) -> InvocationResult {
@@ -27,9 +35,18 @@ pub(crate) mod context {
                 ..Default::default()
             });
         }
-        app.dispatch_typed(command, &action_meta).await.expect("dispatch")
+        let result = app.dispatch_typed(command, &action_meta).await.expect("dispatch");
+        settle(app).await;
+        result
     }
     
+    /// 🔁️ Drives one dispatched typed operation to quiescence the way the plugin host does, draining
+    /// EVERY result page: a bare `maintenance_step` loop retires nothing and turns a publication fault
+    /// into a silent timeout, which is exactly how ticket 26/09/18 slice B2b lost the real cause.
+    pub async fn settle(app: &mut NormApp) {
+        semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(app, meta("local").instance_id).await.expect("settle the typed operation");
+    }
+
     pub async fn render(app: &mut NormApp, body_key: &str) -> String {
         semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(app.render(body_key, None, &ViewModel::default()).await.expect("render")).expect("render projection")
     }
@@ -127,6 +144,7 @@ async fn declares_model_in_and_report_out_ports() {
 async fn an_unknown_body_key_falls_back_to_a_text_node() {
     let mut app = context::app_with_registry().await;
     assert!(context::render(&mut app, "norm.din4108.play.nope").await.contains("Unknown body"));
+    context::close(&mut app);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -135,6 +153,7 @@ async fn every_declared_body_key_renders() {
     for body_key in [inputs::BODY_INPUTS, results::BODY_RESULTS, document_panel::BODY_ARTIFACT, catalogue_panel::BODY_CATALOGUE, inspection_panel::BODY_INSPECTION] {
         assert!(!context::render(&mut app, body_key).await.contains("Unknown body"), "{body_key} must render its own node");
     }
+    context::close(&mut app);
 }
 //#endregion ðï¸Manifest
 
@@ -143,8 +162,10 @@ async fn every_declared_body_key_renders() {
 async fn set_snapshot_commits_a_host_backed_report() {
     let mut app = context::app_with_registry().await;
     context::dispatch(&mut app, Din4108Command::ReplaceSnapshot(set_snapshot::ReplaceSnapshot { snapshot: Din4108Snapshot::default() })).await;
+    context::settle(&mut app).await;
     let host = NormHost::<Din4108Family>::from_artifact(app.snapshot().expect("projection"));
     assert!(!host.report().checks.is_empty());
+    context::close(&mut app);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -163,6 +184,7 @@ async fn evaluate_recommits_the_current_projection_without_changing_it() {
     let before = app.snapshot().expect("projection");
     context::dispatch(&mut app, Din4108Command::Evaluate(evaluate::Evaluate {})).await;
     assert_eq!(before, app.snapshot().expect("projection"));
+    context::close(&mut app);
 }
 
 /// 🧵️ The migrated route end to end: `dispatch_typed` passes the UI-dispatch classification gate,
@@ -174,17 +196,48 @@ async fn evaluate_recommits_the_current_projection_without_changing_it() {
 #[semio_framework_async_macros::async_test]
 async fn set_snapshot_dispatches_through_the_tool_job_path_and_publishes_the_payload_document() {
     let mut app = context::app_with_registry().await;
-    semio_framework::io::resolve_ready(app.bind_instance_id(1));
     let mut target = Din4108Snapshot::default();
     target.layers.clear();
     assert_ne!(target, app.snapshot().expect("projection"));
     context::dispatch(&mut app, Din4108Command::ReplaceSnapshot(set_snapshot::ReplaceSnapshot { snapshot: target.clone() })).await;
-    let mut ticks = 0usize;
-    while ticks < 5_000 && app.snapshot().expect("projection") != target {
-        app.maintenance_step(1_048_576, 1_048_576).expect("maintenance step drives the pending typed operation forward");
-        ticks += 1;
-    }
-    assert_eq!(app.snapshot().expect("projection"), target, "setSnapshot did not publish the payload document after {ticks} maintenance turns");
+    context::settle(&mut app).await;
+    assert_eq!(app.snapshot().expect("projection"), target, "setSnapshot did not publish the payload document");
+    context::close(&mut app);
+}
+
+/// 🔬️ The one link inside the artifact-lane preparation that `setSnapshot` cannot be debugged
+/// through the store for: `prepare_norm_one_item` takes the mutation, asks it for a diff and applies
+/// that diff to the base. If any of the three steps refuses, the preparation has already consumed
+/// the mutation and the next `advance` reports the *downstream* `norm-mutation-owner-missing`
+/// instead of the real cause, which is exactly what ticket 26/09/18 slice B2b saw in the shell.
+#[test]
+fn from_snapshot_yields_one_diff_appliable_mutation_for_a_one_field_change() {
+    let base = Din4108Snapshot::default();
+    let mut target = base.clone();
+    target.t_int_c = 22.5;
+    let mutations = Din4108Mutation::from_snapshot(&base, &target);
+    assert_eq!(mutations.len(), 1, "one changed field must decompose into exactly one mutation: {mutations:?}");
+    let diff = ::protocol::Mutation::diff(&mutations[0], &base).into_parts().0;
+    let post = ::protocol::MutationDiff::apply(&diff, &base).expect("the from_snapshot mutation's own diff must apply to the base it was derived from");
+    assert_eq!(post, target);
+}
+
+/// 🌡️ The narrowest `setSnapshot` there is: one field moved, so `Din4108Mutation::from_snapshot`
+/// yields exactly ONE mutation and the artifact lane's one-item preparation authority
+/// (`NormOneItemPreparationFactory`) has exactly one item to stage. Ticket 26/09/18 slice B2b
+/// measured the shell dispatching this verb and the operation failing
+/// `norm-mutation-owner-missing`; this test is the native witness of the same path, and it is the
+/// sibling of `set_snapshot_dispatches_…`, whose target differs in two fields.
+#[semio_framework_async_macros::async_test]
+async fn set_snapshot_publishes_a_one_field_change_through_the_tool_job_path() {
+    let mut app = context::app_with_registry().await;
+    let mut target = app.snapshot().expect("projection");
+    target.t_int_c = 22.5;
+    assert_ne!(target, app.snapshot().expect("projection"));
+    context::dispatch(&mut app, Din4108Command::ReplaceSnapshot(set_snapshot::ReplaceSnapshot { snapshot: target.clone() })).await;
+    context::settle(&mut app).await;
+    assert_eq!(app.snapshot().expect("projection"), target, "a one-field setSnapshot did not publish");
+    context::close(&mut app);
 }
 
 /// 🧵️ Three-way drift guard between the retained id list, the publication contracts and the proof
@@ -205,6 +258,7 @@ async fn selected_check_index_is_a_config_only_edit() {
     let result = context::dispatch(&mut app, Din4108Command::SetSelectedCheckIndex(selected_check::SetSelectedCheckIndex { index: Some(2) })).await;
     assert!(result.mutations.is_empty(), "a Results-window-config-only command must emit no document operations");
     assert_eq!(before, app.snapshot().expect("projection"), "a Results-window-config-only command must never mutate the document");
+    context::close(&mut app);
 }
 
 /// ð§¬ï¸ Kind-discipline wrapper: the real registry enforces that View actions never emit document
@@ -214,6 +268,7 @@ async fn view_actions_never_emit_artifact_mutations_under_the_real_registry() {
     let mut app = context::app_with_registry().await;
     let result = context::dispatch(&mut app, Din4108Command::SetSelectedCheckIndex(selected_check::SetSelectedCheckIndex { index: Some(1) })).await;
     assert!(result.mutations.is_empty());
+    context::close(&mut app);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -221,8 +276,11 @@ async fn undo_redo_round_trips_through_the_wrapper() {
     let mut app = context::app_with_registry().await;
     context::dispatch(&mut app, Din4108Command::ReplaceSnapshot(set_snapshot::ReplaceSnapshot { snapshot: Din4108Snapshot::default() })).await;
     app.handle_action("undo", None, &semio_framework_plugin::artifact_app_laws::meta("local")).await.expect("undo");
+    context::settle(&mut app).await;
     app.handle_action("redo", None, &semio_framework_plugin::artifact_app_laws::meta("local")).await.expect("redo");
+    context::settle(&mut app).await;
     assert_eq!(app.snapshot().expect("projection"), Din4108Snapshot::default());
+    context::close(&mut app);
 }
 
 /// ðï¸ `report:out` dumps the currently computed `CheckReport` as a `Structured` media payload.
@@ -234,5 +292,6 @@ async fn report_out_exports_the_computed_check_report() {
     assert_eq!(schema, crate::app_surface::artifact_kind_id(VARIANT));
     let report: crate::document::CheckReport = serde_json::from_str(&json).expect("report json parses");
     assert!(!report.checks.is_empty());
+    context::close(&mut app);
 }
 //#endregion ðï¸Behavior

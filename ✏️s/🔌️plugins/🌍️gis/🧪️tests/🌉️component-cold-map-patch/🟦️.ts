@@ -59,7 +59,7 @@ export async function proveGisComponentColdMapPatch(repoRoot: string): Promise<v
   }
   const testSource = readFileSync(join(testRoot, "🦀️.rs"), "utf8");
   for (const marker of [
-    "ColdArtifactPairPage",
+    "ColdDocumentPairPage",
     "ColdPairIngressStatus::Applied",
     "TiledMapScene",
     "UiTurnPatchTransportLease",

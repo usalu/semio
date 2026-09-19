@@ -58,10 +58,10 @@ export default defineTestAdapter({
   implementation: "typescript",
   scenarios: {
     "arguments-resolve-against-variables": {
-      oracle: (ctx) => ({ projection: project(JSON.parse(ctx.fixtureBytes("local://🔣️coercions.json").toString("utf8")) as { cases: Case[] }, false) }),
+      oracle: (ctx) => ({ projection: project(JSON.parse(Buffer.from(ctx.fixtureBytes("local://🔣️coercions.json")).toString("utf8")) as { cases: Case[] }, false) }),
     },
     "defaults-fill-only-absent-arguments": {
-      oracle: (ctx) => ({ projection: project(JSON.parse(ctx.fixtureBytes("local://🔣️coercions.json").toString("utf8")) as { cases: Case[] }, true) }),
+      oracle: (ctx) => ({ projection: project(JSON.parse(Buffer.from(ctx.fixtureBytes("local://🔣️coercions.json")).toString("utf8")) as { cases: Case[] }, true) }),
     },
   },
 });

@@ -37,12 +37,12 @@ function builtNode(key: string, component: Component, children: readonly BuiltNo
 
 function toItem(node: TreeNodeView): BuiltNode {
   const children = (node.children ?? []).map(toItem);
-  return builtNode(node.id, { type: "treeItem", label: node.label, description: null, icon: null, defaultOpen: null, draggable: null, dragData: null, dimmed: null, rowActions: [] }, children);
+  return builtNode(node.id, { type: "treeItem", label: node.label, description: null, icon: null, defaultOpen: null, draggable: null, dragData: null, dimmed: null, window: null, granularity: null, rowActions: [] }, children);
 }
 
 /** 🌳️ Twin of Rust `TreeWindowKit::render` — recursively expands `view.roots` into one tree section. */
 export function renderTree(view: TreeView): BuiltNode {
-  const section = builtNode(`${TREE_WINDOW_KIND_ID}-root`, { type: "treeSection", label: null, defaultOpen: true }, view.roots.map(toItem));
+  const section = builtNode(`${TREE_WINDOW_KIND_ID}-root`, { type: "treeSection", label: null, defaultOpen: true, window: null }, view.roots.map(toItem));
   return builtNode(TREE_WINDOW_KIND_ID, { type: "tree", interactionDomain: null }, [section]);
 }
 

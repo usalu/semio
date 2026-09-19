@@ -1,12 +1,12 @@
 type TestSource = { readonly directory: string; readonly url: string };
 
-export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: any, source: TestSource): Promise<void> {
+export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: Pick<typeof import("../../🔨️modules/🔌️plugin/⚡️effect-backbone/🟦️.ts"), "AllowAllCapabilities" | "EffectBackbone" | "MESSAGE_ENDPOINT_VARIANT_FIELDS" | "RecordingBackboneOverflowReporter" | "backboneMessageEndpoint" | "bridgeBackboneWorkerInbound" | "createBackboneWorkerTransport" | "decodeBackboneGuestMessage" | "encodeBackboneGuestMessage">, source: TestSource): Promise<void> {
   const { AllowAllCapabilities, EffectBackbone, MESSAGE_ENDPOINT_VARIANT_FIELDS, RecordingBackboneOverflowReporter, backboneMessageEndpoint, bridgeBackboneWorkerInbound, createBackboneWorkerTransport, decodeBackboneGuestMessage, encodeBackboneGuestMessage } = dependencies;
-  type BackboneTransport = any;
-  type BackboneWorkerLike = any;
-  type BackboneWorkerWireMessage = any;
-  type CapabilityChecker = any;
-  type EventMessage = any;
+  type BackboneTransport = import("../../🔨️modules/🔌️plugin/⚡️effect-backbone/🟦️.ts").BackboneTransport;
+  type BackboneWorkerLike = import("../../🔨️modules/🔌️plugin/⚡️effect-backbone/🟦️.ts").BackboneWorkerLike;
+  type BackboneWorkerWireMessage = import("../../🟦️.ts").BackboneWorkerWireMessage;
+  type CapabilityChecker = import("../../🔨️modules/🔌️plugin/⚡️effect-backbone/🟦️.ts").CapabilityChecker;
+  type EventMessage = import("../../🔨️modules/🔌️plugin/⚡️effect-backbone/🟦️.ts").EventMessage;
 
   const { describe, expect, it } = vitest;
 

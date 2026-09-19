@@ -8,7 +8,7 @@
  * trait/executor, never wire data — same reasoning `🦀️.rs`'s own doc comments give for
  * why those types skip `Serialize`/`Deserialize`.
  */
-export * from "./🤖️generated/🟦️async.js";
+export * from "./🤖️generated/⏳️async/🟦️.ts";
 /** 🪃️ The host's one continuation scheduler — the owned "run this again, soon" primitive every
  * evaluation/continuation loop on a JS host goes through. See `./🪃️continuation/🟦️.ts`. */
 export * from "./🪃️continuation/🟦️.ts";

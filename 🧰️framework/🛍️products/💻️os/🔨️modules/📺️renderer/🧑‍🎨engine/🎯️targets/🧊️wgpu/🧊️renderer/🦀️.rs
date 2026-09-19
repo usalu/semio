@@ -54,7 +54,18 @@ pub mod agent_approvals;
 
 #[path = "../../../🧱️elements/💬️AgentChatPanel/🎯️targets/🧊️wgpu/🦀️.rs"]
 pub mod agent_chat_panel;
+
+// 🌉️ WGPU-RENDERER-REACT-PARITY packet W15e — the socket itself, the one third of React's
+// `useAgentBridge` W1j deliberately left out: the browser half rides the duplex page door, the native
+// half a `tokio-tungstenite` connection on `Lane::Io`. Both drive the same bounded `SocketLane`.
+#[path = "../🌉️agent-bridge-door/🦀️.rs"]
+pub mod agent_bridge_door;
 //#endregion 🤖️AgentBridgeElements
+
+// 🛂️ WGPU-RENDERER-REACT-PARITY packet W15e — the administration sheet's CHROME. Its operation and
+// control set have been live on both targets since W1e; nothing painted them until this module.
+#[path = "../../../🧱️elements/🛂️SpaceAdministration/🎯️targets/🧊️wgpu/🦀️.rs"]
+pub mod space_administration;
 
 #[path = "../../../🧱️elements/⚙️EngineCanvas/🎯️targets/🧊️wgpu/🦀️.rs"]
 pub mod engine_canvas;
@@ -123,6 +134,12 @@ mod surface_lane;
 
 #[path = "../🎮️input-wire/🦀️.rs"]
 mod input_wire;
+
+// 🔌️ The DUPLEX door — the second browser door, beside the request/response mailbox. Mounted before
+// `directory_door` because that door's `open_ws` is one of its two consumers (the other is the MCP
+// agent bridge). See its module doc for why a socket cannot ride the mailbox.
+#[path = "../🔌️socket-door/🦀️.rs"]
+pub mod socket_door;
 
 // 📇️ The ONE directory transport seam the shell's identity/command/Space-Administration lanes are
 // parameterized over — native `ureq` here, the page `fetch` door there. See its module doc.
@@ -9221,8 +9238,42 @@ pub fn keybinding_platform_uses_meta(platform: &str) -> bool {
     ["mac", "iphone", "ipad", "ipod"].into_iter().any(|needle| platform.contains(needle))
 }
 
+/// ⌨️ The host OS as a MANIFEST platform — the axis every `PlatformKeybinding.platform` is declared
+/// against. Derived from the SAME string `keybinding_platform_uses_meta` reads, so the door can never
+/// answer "this is a Mac" for `mod` and "this is Linux" for a keybinding filter in the same breath.
+/// React does not re-derive it per call site either: `ui.platform` is resolved once for the whole
+/// shell.
+pub fn keybinding_platform_kind(platform: &str) -> semio_framework::manifest::Platform {
+    if keybinding_platform_uses_meta(platform) {
+        return semio_framework::manifest::Platform::MacOs;
+    }
+    if platform.to_ascii_lowercase().contains("win") {
+        return semio_framework::manifest::Platform::Windows;
+    }
+    semio_framework::manifest::Platform::Linux
+}
+
+/// ⌨️ The compile-time platform a NATIVE build runs on — the initializer both door cells start from.
+const fn compiled_host_platform() -> semio_framework::manifest::Platform {
+    #[cfg(target_os = "macos")]
+    {
+        semio_framework::manifest::Platform::MacOs
+    }
+    #[cfg(target_os = "windows")]
+    {
+        semio_framework::manifest::Platform::Windows
+    }
+    #[cfg(all(not(target_os = "macos"), not(target_os = "windows")))]
+    {
+        // 🌐️ `wasm32-unknown-unknown` lands here too, which is exactly the defect this door exists for:
+        // the value is a PLACEHOLDER until the page publishes the real one, never an answer.
+        semio_framework::manifest::Platform::Linux
+    }
+}
+
 thread_local! {
     static HOST_PLATFORM_USES_META: std::cell::Cell<bool> = const { std::cell::Cell::new(cfg!(target_os = "macos")) };
+    static HOST_PLATFORM: std::cell::Cell<semio_framework::manifest::Platform> = const { std::cell::Cell::new(compiled_host_platform()) };
 }
 
 /// ⌨️ Publishes the host's platform reading. Natively nothing calls this: the initializer already IS
@@ -9234,9 +9285,29 @@ pub fn set_host_platform_uses_meta(uses_meta: bool) {
     HOST_PLATFORM_USES_META.with(|cell| cell.set(uses_meta));
 }
 
+/// ⌨️ Publishes the host's platform KIND. Always set together with [`set_host_platform_uses_meta`] by
+/// [`set_host_platform`]; separate setters exist only because the `mod` rule and the manifest axis are
+/// two different questions with two different answers on `iphone`/`ipad`.
+pub fn set_host_platform_kind(platform: semio_framework::manifest::Platform) {
+    HOST_PLATFORM.with(|cell| cell.set(platform));
+}
+
+/// ⌨️ Publishes BOTH platform readings from the one string the page resolved — the only setter any
+/// door should call.
+pub fn set_host_platform(platform: &str) {
+    set_host_platform_uses_meta(keybinding_platform_uses_meta(platform));
+    set_host_platform_kind(keybinding_platform_kind(platform));
+}
+
 /// ⌨️ Whether `mod` is Command on this host — read by every chord formatter in the shell.
 pub fn host_platform_uses_meta() -> bool {
     HOST_PLATFORM_USES_META.with(std::cell::Cell::get)
+}
+
+/// ⌨️ The host platform every `PlatformKeybinding.platform` filter is answered against — read by the
+/// shell's `command_host_platform()`.
+pub fn host_platform() -> semio_framework::manifest::Platform {
+    HOST_PLATFORM.with(std::cell::Cell::get)
 }
 
 /// ⌨️ wasm platform hook — the browser twin of `cfg!(target_os = "macos")`.
@@ -9248,7 +9319,7 @@ pub fn host_platform_uses_meta() -> bool {
 #[cfg(target_arch = "wasm32")]
 #[wasm_bindgen(js_name = semioWgpuSetHostPlatform)]
 pub fn semio_wgpu_set_host_platform(platform: String) {
-    set_host_platform_uses_meta(keybinding_platform_uses_meta(&platform));
+    set_host_platform(&platform);
 }
 //#endregion ⌨️HostPlatform
 
@@ -14696,6 +14767,13 @@ impl AppInteractionState {
         if interpreter::apply_focused_text_editor_key(&action, &modifiers, &mut self.input) {
             return;
         }
+        // ⎋️🚚️ A live World3d relocate drag owns `Escape` before ANY chord table does — React binds it
+        // as a CAPTURE-phase `keydown` while `relocateMode` is on and calls `event.stopPropagation()`
+        // only when a drag was actually cancelled (`🌐️World3dHost/🟦️.tsx:6873-6881`). The drag is
+        // dropped, its ghost cleared, and nothing is dispatched.
+        if action == KeyAction::Escape && self.shell.world3d_states.values_mut().fold(false, |cancelled, state| infinite_world::world::world3d_cancel_relocate_drag(state) || cancelled) {
+            return;
+        }
         // ⌨️ A board pane under the pointer owns `Escape` (cancel area-select) and `Tab`/`shift+Tab`
         // (walk the brush slot's candidates) before the shell's chord table does — React gets the same
         // precedence from a CAPTURE-phase listener that calls `preventDefault` (`🖥️Board2dHost/🟦️.tsx`
@@ -14723,6 +14801,21 @@ impl AppInteractionState {
         self.pointer_down = down;
         self.pointer_button = button;
         self.modifiers = modifiers.clone();
+        // ⌨️🖱️ The AGGREGATE input state learns the modifier set too, not just this runtime's own
+        // field. Everything the shell resolves off the flat hit registry reads `InputState::modifiers`
+        // — the virtual file system's shift/ctrl row selection (`vfs_selection_for_click`), the text
+        // editor's alt-click completions — and the retained router's pointer events carry it onward
+        // into every `UiCommand::Scene`.
+        //
+        // 🩸️ NOTHING wrote it. `InputState::modifiers` was constructed at `PointerModifiers::default()`
+        // and stayed there for the whole session on both doors: the ui crate's own winit helper
+        // (`🖱️ui/🎯️targets/🧊️wgpu/🏃️host/🦀️.rs:28`) is not on this path, and this runtime kept the set in
+        // its OWN `self.modifiers` instead. So the one production call that already asked for
+        // shift/ctrl — `let additive = input.modifiers.meta || input.modifiers.ctrl` — could only ever
+        // read `false`, and ctrl/shift multi-select was dead on every list surface however the press
+        // was routed (ticket 26/09/17/WGPU-RENDERER-REACT-PARITY,
+        // `📓️audit-w14-scenes-residual.md` C1).
+        self.input.modifiers = modifiers.clone();
         // 🎯️ ONE owner per pointer sequence. The press resolves it once and the release consumes it,
         // so a gesture that began on chrome ends on chrome — React's DOM target capture, which is why
         // pressing a navbar panel tab, a pane chip, a window cap or the split gutter never produced an
@@ -14895,6 +14988,8 @@ impl AppInteractionState {
         self.pointer_down = down;
         self.pointer_button = button;
         self.modifiers = modifiers.clone();
+        // ⌨️🖱️ Same refresh as `handle_pointer_button`'s — see the comment there.
+        self.input.modifiers = modifiers.clone();
         self.shell.handle_pointer_move(x, y, down, &mut self.input, &self.theme);
         log_debug(&format!("[DEBUG] os_host pointer hit x={x} y={y} targets={} staged={} gen={} hit={:?}", self.input.hits().len(), self.input.staged_hits().len(), self.input.hit_generation(), self.input.hit_at(x, y).map(|target| (target.kind, target.control_id.clone()))));
         // 🖱️ A live shell-chrome drag CAPTURES the pointer, exactly as React's resize handle does with
@@ -15623,6 +15718,41 @@ pub struct WgpuBootDefaults {
     pub example_id: String,
 }
 
+/// 🏷️ The brand REGISTRY row this boot resolved — React's `resolveShellBrandById(brandId)` answer
+/// (`🧑‍💻dev/🏷️brand/🟦️.ts`), reduced to the facts the shell itself reads. The table stays where it is
+/// (a TypeScript catalogue over the demonstrator's own brand definitions); what crosses into the
+/// renderer is the resolved ROW, exactly as `locks`/`defaults` already do — so a brand added there
+/// needs no Rust edit and the two halves cannot drift into two catalogues.
+///
+/// `brand_id` alone was carried before this (`📓️w1d-boot-axis-parity.md` gap 1): the shell knew it was
+/// branded and nothing else, which is why the tour's persisted-seen key dropped React's brand prefix
+/// on every branded playground (`📓️w5a-browser-prefs-persistence.md` §7.1, demonstrated on
+/// `aggregator`).
+#[derive(Clone, Debug, Default, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase", default)]
+pub struct WgpuBootBrand {
+    /// 🏷️ React's `ShellBrand.windowTitle` — the native window's title; `""` leaves the default.
+    pub window_title: String,
+    /// 🧊️ React's `ShellBrand.ephemeral`: the shell never reads or writes device-local state.
+    pub ephemeral: bool,
+    /// 🎓️ React's `ShellBrand.replayIntroductionOnLoad` — auto-start every load, persist no seen flag.
+    /// `isEphemeralShellBrand` implies it there, and [`WgpuBootBrand::replays_introduction`] implies it
+    /// here, so the two predicates cannot disagree.
+    pub replay_introduction_on_load: bool,
+}
+
+impl WgpuBootBrand {
+    /// 🎓️ React's `shouldReplayIntroductionOnLoad(brand)`.
+    pub fn replays_introduction(&self) -> bool {
+        self.ephemeral || self.replay_introduction_on_load
+    }
+
+    /// 🎓️ React's `shouldPersistIntroductionSeen(brand)`.
+    pub fn persists_introduction_seen(&self) -> bool {
+        !self.replays_introduction()
+    }
+}
+
 /// 🌐️ The hub trio (`?hub=&user=&dataDir=`, `--hub/--user/--data-dir`).
 #[derive(Clone, Debug, Default, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "camelCase", default)]
@@ -15643,6 +15773,7 @@ pub struct WgpuBootDescriptor {
     pub app_mode: String,
     pub app_example: String,
     pub brand_id: String,
+    pub brand: WgpuBootBrand,
     pub broker_proof: String,
     pub locks: WgpuBootLocks,
     pub defaults: WgpuBootDefaults,
@@ -15654,13 +15785,14 @@ impl WgpuBootDescriptor {
     /// of `boundedBootField`. Applied before any axis is stored, never after.
     pub fn validated(self) -> Result<Self, String> {
         let hub = self.hub.as_ref();
-        let fields: [(&str, &str); 13] = [
+        let fields: [(&str, &str); 14] = [
             ("plugin", self.plugin_variant.as_str()),
             ("app", self.app_id.as_str()),
             ("role", self.app_role.as_str()),
             ("mode", self.app_mode.as_str()),
             ("example", self.app_example.as_str()),
             ("brand", self.brand_id.as_str()),
+            ("brand.windowTitle", self.brand.window_title.as_str()),
             ("brokerProof", self.broker_proof.as_str()),
             ("locks.exampleId", self.locks.example_id.as_str()),
             ("locks.locale", self.locks.locale.as_str()),
@@ -15693,6 +15825,13 @@ fn resolve_environment_boot_descriptor() -> WgpuBootDescriptor {
         app_id: read("SEMIO_APP_ID"),
         app_role: read("SEMIO_APP_ROLE"),
         brand_id: read("SEMIO_BRAND"),
+        // 🏷️ The resolved brand ROW, under the same `SEMIO_*` names the serve injects as
+        // `<meta semio-brand-*>` for the browser door — one vocabulary, three doors.
+        brand: WgpuBootBrand {
+            window_title: read("SEMIO_BRAND_WINDOW_TITLE"),
+            ephemeral: read("SEMIO_BRAND_EPHEMERAL") == "true",
+            replay_introduction_on_load: read("SEMIO_BRAND_REPLAY_INTRODUCTION") == "true",
+        },
         app_example: read("SEMIO_DEFAULT_EXAMPLE"),
         defaults: WgpuBootDefaults { example_id: read("SEMIO_DEFAULT_EXAMPLE") },
         locks: WgpuBootLocks { example_id: read("SEMIO_LOCKED_EXAMPLE"), locale: read("SEMIO_LOCKED_LOCALE"), terminology: read("SEMIO_LOCKED_TERMINOLOGY"), theme_id: read("SEMIO_LOCKED_THEME"), appearance: read("SEMIO_LOCKED_APPEARANCE") },
@@ -15769,6 +15908,13 @@ pub fn boot_app_example() -> Option<String> {
 /// 🏷️ The boot brand id, or `None` — React's `brand`, resolved there by `resolveShellBrandById`.
 pub fn boot_brand_id() -> Option<String> {
     boot_axis(|descriptor| &descriptor.brand_id)
+}
+
+/// 🏷️ The resolved brand ROW — React's `resolveShellBrandById(brandId)` answer. An UNBRANDED boot
+/// answers `WgpuBootBrand::default()`, whose predicates read exactly as React's do for `undefined`
+/// (`shouldReplayIntroductionOnLoad(undefined) === false`), so no caller needs an `Option` arm.
+pub fn boot_brand() -> WgpuBootBrand {
+    BOOT_DESCRIPTOR.with(|cell| cell.borrow().brand.clone())
 }
 
 /// #️⃣ The one-shot `#semio-broker=` proof the page carried, or `None`. React reads the same hash at

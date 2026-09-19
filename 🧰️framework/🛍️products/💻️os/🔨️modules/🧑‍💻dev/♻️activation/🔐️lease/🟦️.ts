@@ -152,4 +152,4 @@ function releasePluginBuildLease(variant: string): void {
   }
 }
 
-export { PLUGIN_BUILD_LEASE_READY_TIMEOUT_MS, PluginBuildLease, acquirePluginBuildLease, isPidAlive, markPluginBuildLeaseReady, pluginBuildLeaseDir, pluginBuildLeasePath, pluginBuildOutputsPresent, readPluginBuildLease, releasePluginBuildLease, takeOverPluginBuildLease, waitForPluginBuildLeaseReady };
+export { PLUGIN_BUILD_LEASE_READY_TIMEOUT_MS, type PluginBuildLease, acquirePluginBuildLease, isPidAlive, markPluginBuildLeaseReady, pluginBuildLeaseDir, pluginBuildLeasePath, pluginBuildOutputsPresent, readPluginBuildLease, releasePluginBuildLease, takeOverPluginBuildLease, waitForPluginBuildLeaseReady };

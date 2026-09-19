@@ -276,3 +276,43 @@ async fn directory_event_page_v1_append_admission_is_transactional_postgres() {
     assert_eq!(directory.head_seq().await.expect("head after oversized event"), head);
     assert_eq!(directory.get_space("default").await.expect("space after oversized event"), before);
 }
+
+// 🔬️ ticket 26/09/18 slice AU3 — the credential-lifecycle pair against a real postgres, mirroring
+// the sqlite law `credential_writes_and_facts_stay_in_one_transaction`: the projection column and
+// the `credential-changed` fact move together, an unknown target writes neither, and a refused
+// sign-in's fact carries its public reason code and no credential material.
+#[tokio::test]
+async fn credential_writes_and_facts_stay_in_one_transaction() {
+    let (directory, _container) = test_directory().await;
+    directory.seed().await.expect("seed");
+    let user = directory.create_user("postgres-credential@example.com", "Credential", None, None, None).await.expect("create user");
+    assert_eq!(directory.get_user(&user.id).await.expect("read user").expect("user").password_hash, None);
+
+    let encoded = "pbkdf2-sha256$210000$00112233445566778899aabbccddeeff$0000000000000000000000000000000000000000000000000000000000000001";
+    directory.set_password_credential(&user.id, encoded, Some(&user.id), "correlation-one").await.expect("set credential");
+    assert_eq!(directory.get_user(&user.id).await.expect("read user").expect("user").password_hash.as_deref(), Some(encoded));
+    let after_set = directory.list_auth_audit(64, 0).await.expect("audit after set");
+    let changed: Vec<_> = after_set.iter().filter(|record| record.event_kind == "credential-changed").collect();
+    assert_eq!(changed.len(), 1);
+    assert_eq!(changed[0].target_user_id.as_deref(), Some(user.id.as_str()));
+    assert_eq!(changed[0].outcome_code, "success");
+    assert_eq!(changed[0].correlation_id, "correlation-one");
+    assert!(!after_set.iter().any(|record| format!("{record:?}").contains(encoded)), "no audit fact may carry credential material");
+
+    assert!(directory.set_password_credential("usr_absent", encoded, None, "correlation-two").await.is_err());
+    assert_eq!(directory.list_auth_audit(64, 0).await.expect("audit after refusal").len(), after_set.len(), "a refused credential write appends nothing");
+
+    let fact = CredentialAuditFactV1 {
+        event_kind: "credential-sign-in".into(),
+        target_user_id: Some(user.id.clone()),
+        actor_user_id: None,
+        outcome_code: "failure".into(),
+        reason_code: Some("invalid-credentials".into()),
+        correlation_id: "correlation-three".into(),
+        peer_class: "browser".into(),
+    };
+    let appended = directory.append_credential_audit(&fact).await.expect("append sign-in fact");
+    assert_eq!(appended.reason_code.as_deref(), Some("invalid-credentials"));
+    assert_eq!(appended.peer_class, "browser");
+    assert_eq!(directory.list_auth_audit(64, 0).await.expect("audit after sign-in fact").len(), after_set.len() + 1);
+}

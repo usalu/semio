@@ -150,3 +150,23 @@ async fn trusted_publication_owner_refuses_nonregular_lock_leaves() {
     }
     println!("[DEBUG] publication lock admission: directory=refused linked-leaf=refused-on-unix");
 }
+
+#[cfg(unix)]
+#[tokio::test]
+async fn server_owned_data_root_resolves_linked_ancestors_and_still_refuses_a_linked_root() {
+    let real = fixture_root();
+    std::fs::write(real.join("trusted-catalog/current.json"), b"{\"schema\":\"probe\"}").unwrap();
+    let ancestor = real.parent().unwrap().join(format!("linked-ancestor-{}", real.file_name().unwrap().to_str().unwrap()));
+    std::os::unix::fs::symlink(real.parent().unwrap(), &ancestor).unwrap();
+    let through_link = ancestor.join(real.file_name().unwrap());
+    let control = Control(AtomicBool::new(false));
+    let context = OperationContext::new(60_000, AuthorityLimits::maximum(), &control);
+    let opened = TrustedCatalogDataRoot::open_server_owned(&through_link).unwrap();
+    assert_eq!(opened.open_current().unwrap().unwrap().read_bounded(65_536, &context).await.unwrap(), b"{\"schema\":\"probe\"}");
+    let linked_root = real.parent().unwrap().join(format!("linked-root-{}", real.file_name().unwrap().to_str().unwrap()));
+    std::os::unix::fs::symlink(&real, &linked_root).unwrap();
+    assert!(TrustedCatalogDataRoot::open_server_owned(&linked_root).is_err(), "linked configured data root was admitted");
+    let missing = fixture_root();
+    let opened = TrustedCatalogDataRoot::open_server_owned(&missing).unwrap();
+    assert!(opened.open_current().unwrap().is_none());
+}

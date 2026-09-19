@@ -61,6 +61,8 @@ export interface RunCmdOpts {
   /** ⏱️Wall-clock budget (ms); zero disables the timeout. Defaults to [[defaultBudgetMs]]. Named wrappers use [[orchestratorBudgetOpts]] / [[daemonBudgetOpts]]. */
   budgetMs?: number;
   onTimeoutHint?: string;
+  /** 🐚️ Resolve the command through the platform shell — required on native Windows for `.cmd`/`.bat` launchers such as `bunx`. */
+  shell?: boolean;
 }
 
 interface OwnedProcessRow {
@@ -143,6 +145,7 @@ function runCmdInternal(cmd: string, args: string[], opts: RunCmdOpts): number {
     env: opts.env ?? process.env,
     timeout: budgetMs,
     killSignal: "SIGKILL",
+    shell: opts.shell ?? false,
   });
   if (result.error) {
     if ((result.error as NodeJS.ErrnoException).code === "ETIMEDOUT") {

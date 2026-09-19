@@ -11,7 +11,7 @@
 
 // #endregion 🧲️Header
 
-import { ButtonGroup, ButtonGroupItem, Canvas, createIconComponent, HorizontalWindows, Ribbon, RibbonGroup, RibbonItem, RibbonZone, ToggleGroup, VerticalWindows, Window, type RibbonRow } from "@semio-tech/ui-react";
+import { ButtonGroup, ButtonGroupItem, Canvas, createIconComponent, HorizontalWindows, Ribbon, RibbonGroup, RibbonItem, type RibbonRow, RibbonZone, ToggleGroup, uiDataLabel, VerticalWindows, Window } from "@semio-tech/ui-react";
 import type { Meta, StoryObj } from "../../../🧪️tests/📚️storybook-types/🟦️.ts";
 import { useState } from "react";
 
@@ -68,7 +68,7 @@ export const Loading: Story = {
   args: {
     id: "loading-window",
     children: null,
-    loading: true,
+    status: "loading",
     skeleton: (
       <div className="flex items-center justify-center h-full animate-pulse">
         <div className="text-muted-foreground">Loading...</div>
@@ -101,11 +101,11 @@ export const WithEngagement: Story = {
     active: true,
     children: <WindowContent title="Window with Engagement" />,
     engagement: {
-      options: [{ id: "opt-grid", label: "Grid", onPress: () => {} }],
+      options: [{ id: "opt-grid", label: uiDataLabel("Grid"), icon: "grid-3x3", onPress: () => {} }],
       status: [{ id: "status", content: "Ready" }],
     },
     search: {
-      input: { placeholder: "Action…" },
+      input: { placeholder: uiDataLabel("Action…") },
     },
   },
   render: (args) => (
@@ -153,7 +153,7 @@ const MousePointer = createIconComponent("mouse-pointer");
 const Wrench = createIconComponent("wrench");
 const Move = createIconComponent("move");
 const RotateCw = createIconComponent("rotate-cw");
-const Maximize2 = createIconComponent("maximize2");
+const Maximize2 = createIconComponent("maximize-2");
 
 type CategoryDemoLeaf = { readonly id: string; readonly icon: typeof MousePointer };
 type CategoryDemoNode = { readonly id: string; readonly label: string; readonly icon: typeof MousePointer } & (
@@ -265,11 +265,11 @@ export const WithControlsMeasuresEngagementAndUtilityBar: Story = {
     onClose: () => {},
     measures: <div className="p-tiny text-sm">LOD 2</div>,
     engagement: {
-      options: [{ id: "opt-grid", label: "Grid", onPress: () => {} }],
+      options: [{ id: "opt-grid", label: uiDataLabel("Grid"), icon: "grid-3x3", onPress: () => {} }],
       status: [{ id: "status", content: "Ready" }],
     },
     search: {
-      input: { placeholder: "Action…" },
+      input: { placeholder: uiDataLabel("Action…") },
     },
     utilityBar: (
       <RibbonZone>

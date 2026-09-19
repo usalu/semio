@@ -691,6 +691,52 @@ export function downloadDataUrl(filename: string, dataUrl: string): void {
  * always an array (empty on cancel) so single-file callers just read `[0]` and `multiple` callers can
  * fan out over the whole list; single-file behavior (one `<input>`, one resolved entry) is unchanged
  * when `multiple` is false/absent. */
+type FileWithNativePath = File & { readonly path?: string };
+
+/** 📂 Opens a single-file picker for backbone `file://` attach — resolves an absolute path when the
+ * host exposes one (`File.path` on native shells); otherwise `null` (cancel or path unavailable). */
+export function requestBackboneFilePath(accept = ".json,application/json"): Promise<string | null> {
+  if (typeof document === "undefined") return Promise.resolve(null);
+  return new Promise((resolve) => {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = accept;
+    input.onchange = () => {
+      const file = input.files?.[0] as FileWithNativePath | undefined;
+      resolve(file?.path?.trim() ? file.path : null);
+    };
+    input.oncancel = () => resolve(null);
+    input.click();
+  });
+}
+
+/** 📂 Opens a folder picker for backbone `folder://` attach — resolves an absolute directory path when
+ * the host exposes one; otherwise `null`. */
+export function requestBackboneFolderPath(): Promise<string | null> {
+  if (typeof document === "undefined") return Promise.resolve(null);
+  return new Promise((resolve) => {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.webkitdirectory = true;
+    input.onchange = () => {
+      const files = input.files;
+      const first = files?.[0] as FileWithNativePath | undefined;
+      if (!first) {
+        resolve(null);
+        return;
+      }
+      const native = first.path?.trim();
+      if (native) {
+        resolve(native.replace(/[/\\][^/\\]+$/, "") || native);
+        return;
+      }
+      resolve(null);
+    };
+    input.oncancel = () => resolve(null);
+    input.click();
+  });
+}
+
 export function requestFileOpen(accept: string, readAs?: string, multiple?: boolean): Promise<readonly { contents: string; name: string }[]> {
   if (typeof document === "undefined") return Promise.resolve([]);
   return new Promise((resolve) => {
@@ -1791,7 +1837,7 @@ export async function loadPluginModuleResilient(pluginId: string, moduleUrl: str
       }),
     ]);
   } catch (error) {
-    if (signal?.aborted === true) console.debug(`[DEBUG] plugin install cancelled ${pluginId}`);
+    if (signal?.aborted === true) console.debug(`plugin install cancelled ${pluginId}`);
     else console.error("program load failed", pluginId, error);
     return null;
   } finally {
@@ -2511,6 +2557,17 @@ export function noneOptionText(locale: string): string {
  * `os.open-artifact-with` over the app channel — the picker's own row click does that). */
 export const OPEN_ARTIFACT_WITH_VIEWER_COMMAND_ID = "open-artifact-with-viewer";
 export const OPEN_ARTIFACT_WITH_EDITOR_COMMAND_ID = "open-artifact-with-editor";
+
+/** 🧵️ Reveals the `os.task-manager` window — the action-line half of audit
+ * `📓️g5-ux-completeness-audit.md` ranked item 1. Prefixed `os.` because it IS an os-owned command
+ * (`isOsCommandAddress`), unlike the two frozen artifact ids above. */
+export const OPEN_TASK_MANAGER_COMMAND_ID = "os.openTaskManager";
+
+/** 🔗️ The action-line/palette entry for the hub workspace (sign in, browse and switch spaces,
+ * invite, redeem). `ShellHost` owns the surface, so it handles this id in its own `onCommand`
+ * beside the other os commands that need more context than `dispatchOsCommand` has.
+ * Ticket `26/09/18/OS-HUB-COLLABORATION-AI-END-TO-END` slice AU3. */
+export const OPEN_HUB_COMMAND_ID = "os.openHub";
 
 /** 👁️✏️ `true` for a `mutation`-kind action/command — the one predicate every viewer-chrome hiding
  * rule in this lease (context menu, command palette, dispatch guard) shares, so "what counts as an
@@ -3435,6 +3492,18 @@ function puzzle3dBrushMeshBytes(positions: readonly number[], indices: readonly 
  * lets the plugin refuse a run whose pages do not reassemble into the mesh the client announced. */
 export function puzzle3dBrushMeshDigest(positions: readonly number[], indices: readonly number[]): string {
   return blake3Hex(puzzle3dBrushMeshBytes(positions, indices));
+}
+
+/** 🚪️ The mesh identities a world-3d surface may announce to its guest. `registerBrushMesh` is an
+ * APP-declared action, never a framework-reserved one, so a guest that does not own that lane answers
+ * every announcement with an `undeclared-action` drop and an upload run that can never settle
+ * (measured on `🎥️shooting` 2026-09-19: 12 dropped dispatches at boot). A guest that owns the lane
+ * publishes its monotone install counter as `interactionJson.meshResidency` — the same fact
+ * {@link Puzzle3dBrushMeshRegistry.observeResidency} folds — so the counter's PRESENCE is the opt-in,
+ * and a surface without one announces nothing however many meshes its scene names. */
+export function puzzle3dAnnounceableBrushMeshUrls(meshResidency: number | undefined, meshes: readonly { readonly url?: string }[]): readonly string[] {
+  if (meshResidency === undefined) return [];
+  return [...new Set(meshes.map((mesh) => mesh.url).filter((url): url is string => Boolean(url)))];
 }
 
 /** 📏️ Values this mesh id may put in one page without pushing the JSON envelope past
@@ -4553,6 +4622,35 @@ export function buildOsCommands(
           driverList.map((driver) => ({ value: driver.id, label: driverDisplayLabel(driver) })),
         ),
       ],
+    },
+    // 🧵️ The action-line entry for the `os.task-manager` window (audit `📓️g5-ux-completeness-audit.md`
+    // ranked item 1). Handled by `ShellHost`'s own `onCommand`, next to the other two os commands that
+    // need more context than `dispatchOsCommand` has — the panel id is a `📌️ChromePanels` export this
+    // module deliberately does not import.
+    {
+      id: OPEN_TASK_MANAGER_COMMAND_ID,
+      label: shellLabel("ui.command.openTaskManager"),
+      category: "general",
+      iconId: "cpu" as const,
+      semantics: actionSemanticsForKind("shell"),
+      kind: "shell",
+      inPalette: true,
+      args: [],
+      keybindings: [],
+    },
+    // 🔗️ The one discoverable entry point to the hub workspace (`📓️au2-os-sign-in-and-spaces-ui.md`
+    // §6 gap 2: it was reachable only by typing `/hub` into the address bar). Handled by `ShellHost`'s
+    // own `onCommand`, which owns the overlay state.
+    {
+      id: OPEN_HUB_COMMAND_ID,
+      label: shellLabel("ui.command.openHub"),
+      category: "general",
+      iconId: "users" as const,
+      semantics: actionSemanticsForKind("shell"),
+      kind: "shell",
+      inPalette: true,
+      args: [],
+      keybindings: [],
     },
     // 👁️✏️ Both share the frozen "Open with…" label (contract freeze §5) — the role is which picker
     // group they focus, not a different label; `dispatchOsCommand` opens the Document panel's

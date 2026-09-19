@@ -56,7 +56,19 @@ for (const mutant of [{ ...sharedFixture, extra: true }, { ...sharedFixture, exp
 console.log("[DEBUG] Shared-owner source fixtures=1 hostileRejections=2 oracle=fast-json-stable-stringify runtimeClaims=0");
 //#endregion 📤️SharedOwnership
 //#region 🧺️SetContract
-const setFixture = await Bun.file(new URL("../../🧺️set/🧫️fixtures/🔣️.json", import.meta.url)).json();
+/** 🧫️ Shape of `../../🧺️set/🧫️fixtures/🔣️.json`, the document its JSON Schema validates at load. */
+type OrderedSetFixture = {
+  readonly schema: string;
+  readonly values: readonly string[];
+  readonly expectedValues: readonly string[];
+  readonly grants: readonly number[];
+  readonly expected: {
+    readonly sharedClone: boolean;
+    readonly wireArray: boolean;
+    readonly explicitRetirement: boolean;
+  };
+};
+const setFixture: OrderedSetFixture = await Bun.file(new URL("../../🧺️set/🧫️fixtures/🔣️.json", import.meta.url)).json();
 const setSchema = await Bun.file(new URL("../../🧺️set/🧬️schema/🔣️.json", import.meta.url)).json();
 const validateSet = new Ajv({ strict: true, allErrors: true }).compile(setSchema);
 assert(validateSet(setFixture), JSON.stringify(validateSet.errors));

@@ -380,7 +380,24 @@ pub struct UiTree {
     /// new parameter: an overlay that paints at its placement but hit-tests at its in-flow position
     /// is the one failure mode a floating surface must not have.
     overlay_origins: Vec<(NodeId, f32, f32)>,
+    /// 🔽️ Arena nodes this target SYNTHESIZED under a composite widget rather than mounting from a
+    /// document record — today exactly one kind: the option rows an OPEN `Select` needs so that the
+    /// generic arena (paint, hit registry, accessibility projection, any tree walker) sees the popup
+    /// React's `SelectContent` mounts as real children. `(owner, row)`, in mint order.
+    ///
+    /// They are ledgered rather than left in the tree because the document reconcile relinks the
+    /// arena from the published record set: it `clear_links`es every document-bound node and
+    /// re-attaches the plan, which would orphan a synthesized child forever and leak one arena slot
+    /// per republish. [`UiTree::retire_composite_row_step`] drains this ledger before a reconcile,
+    /// and `paint::sync_interactive_state_node_step` re-mints for whatever is still open — so the
+    /// working set is bounded by [`UI_COMPOSITE_ROWS`] and never grows across frames.
+    composite_rows: Vec<(NodeId, NodeId)>,
 }
+
+/// 🔽️ The ceiling on synthesized composite rows held at once. One open popup at a time is the shell's
+/// own rule, and `RETAINED_SYNC_COLLECTION_ITEMS` caps a single popup at 256 rows, so this leaves
+/// room for a handful of simultaneously open ones without ever being unbounded.
+pub const UI_COMPOSITE_ROWS: usize = 1_024;
 
 impl UiTree {
     pub fn new() -> Self {
@@ -550,6 +567,91 @@ impl UiTree {
         }
     }
 
+    //#region 🔽️CompositeRows
+    /// 🔽️ Mints one synthesized child under `owner` and ledgers it. `None` when the ledger is full,
+    /// which a caller treats exactly like a row it could not mount — skipped, never a fault.
+    pub(crate) fn mint_composite_row(&mut self, owner: NodeId, node: Node) -> Option<NodeId> {
+        if self.composite_rows.len() >= UI_COMPOSITE_ROWS || !self.arena.contains(owner) {
+            return None;
+        }
+        let row = self.arena.insert(node);
+        self.attach_child(owner, row);
+        self.composite_rows.push((owner, row));
+        Some(row)
+    }
+
+    /// 🔽️ Retires ONE synthesized row — unlinked from its owner and freed. `true` once the ledger is
+    /// empty. Driven one row per step so a surface with a long popup open cannot spend a whole frame
+    /// budget tearing it down.
+    pub(crate) fn retire_composite_row_step(&mut self) -> bool {
+        let Some((owner, row)) = self.composite_rows.pop() else { return true };
+        self.detach_child(owner, row);
+        self.remove(row);
+        false
+    }
+
+    /// 🔽️ Retires ONE synthesized row belonging to `owner`. `true` once that owner has none left —
+    /// what a closing popup drives, so its rows go with it instead of waiting for the next document
+    /// reconcile to sweep the whole ledger.
+    pub(crate) fn retire_composite_row_of_step(&mut self, owner: NodeId) -> bool {
+        let Some(index) = self.composite_rows.iter().rposition(|(candidate, _)| *candidate == owner) else { return true };
+        let (_, row) = self.composite_rows.remove(index);
+        self.detach_child(owner, row);
+        self.remove(row);
+        false
+    }
+
+    /// 🔽️ How many synthesized rows this tree holds — what a law reads to prove the working set is
+    /// bounded and that a closed popup left nothing behind.
+    pub(crate) fn composite_row_count(&self) -> usize {
+        self.composite_rows.len()
+    }
+
+    /// 🔽️ Whether `owner` already has its synthesized rows this generation.
+    pub(crate) fn composite_rows_of(&self, owner: NodeId) -> usize {
+        self.composite_rows.iter().filter(|(candidate, _)| *candidate == owner).count()
+    }
+
+    /// 🔗️ Unlinks `child` from `parent`'s sibling chain without touching `child`'s own subtree — the
+    /// inverse of [`UiTree::attach_child`], so a retired composite row leaves the chain it was
+    /// appended to exactly as it found it.
+    fn detach_child(&mut self, parent: NodeId, child: NodeId) {
+        let (prev, next) = match self.arena.get(child) {
+            Some(node) if node.parent == Some(parent) => (node.prev_sibling, node.next_sibling),
+            _ => return,
+        };
+        match prev {
+            Some(prev) => {
+                if let Some(node) = self.arena.get_mut(prev) {
+                    node.next_sibling = next;
+                }
+            }
+            None => {
+                if let Some(node) = self.arena.get_mut(parent) {
+                    node.first_child = next;
+                }
+            }
+        }
+        match next {
+            Some(next) => {
+                if let Some(node) = self.arena.get_mut(next) {
+                    node.prev_sibling = prev;
+                }
+            }
+            None => {
+                if let Some(node) = self.arena.get_mut(parent) {
+                    node.last_child = prev;
+                }
+            }
+        }
+        if let Some(node) = self.arena.get_mut(child) {
+            node.parent = None;
+            node.prev_sibling = None;
+            node.next_sibling = None;
+        }
+    }
+    //#endregion 🔽️CompositeRows
+
     /// 🍃️ Inserts `node` unparented and unlinked — the reconcile links it in a later step.
     pub(crate) fn insert_detached(&mut self, node: Node) -> NodeId {
         self.arena.insert(node)
@@ -568,6 +670,11 @@ impl UiTree {
     /// retirement half of the ledger, driven by `Ui::close_document_step` so a surface that drops its
     /// document does not keep its records' arena nodes alive. `true` once the ledger is empty.
     pub(crate) fn close_document_binding_step(&mut self) -> bool {
+        // 🔽️ Synthesized composite rows go FIRST: they hang off document-bound owners, so freeing the
+        // owner before the row would leave the row pointing at a dead slot.
+        if !self.retire_composite_row_step() {
+            return false;
+        }
         let Some((_, node)) = self.document_nodes.pop() else { return true };
         self.clear_links(node);
         self.remove_detached(node);

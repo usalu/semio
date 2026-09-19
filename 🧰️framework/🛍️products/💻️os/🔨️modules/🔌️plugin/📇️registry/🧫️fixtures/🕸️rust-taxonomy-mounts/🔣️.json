@@ -126,6 +126,50 @@
       "expectedCodes": [],
       "expectedUnmounted": [],
       "rustcSuccess": true
+    },
+    {
+      "id": "neighbour-owned-path-target",
+      "files": {
+        "📦️packages/🦀️rust/Cargo.toml": "[package]\nname = \"taxonomy_mount_fixture\"\nversion = \"0.0.0\"\nedition = \"2021\"\n[lib]\npath = \"🦀️.rs\"\n",
+        "📦️packages/🦀️rust/🦀️.rs": "#[path = \"../../🦀️.rs\"]\npub mod owner;\n",
+        "🦀️.rs": "#[path = \"../neighbour-owned-path-target-neighbour/⚙️engine/🦀️.rs\"]\npub mod engine;\n"
+      },
+      "neighbourFiles": {
+        "⚙️engine/🦀️.rs": "pub fn value() -> u32 { 42 }\n"
+      },
+      "expectedCodes": [],
+      "rustcSuccess": true,
+      "expectedUnmounted": []
+    },
+    {
+      "id": "included-source-leaf",
+      "files": {
+        "📦️packages/🦀️rust/Cargo.toml": "[package]\nname = \"taxonomy_mount_fixture\"\nversion = \"0.0.0\"\nedition = \"2021\"\n[lib]\npath = \"🦀️.rs\"\n",
+        "📦️packages/🦀️rust/🦀️.rs": "#[path = \"../../🦀️.rs\"]\npub mod owner;\n",
+        "🦀️.rs": "pub mod facet {\n    include!(\"🧪️tests/🔬️unit/🦀️.rs\");\n}\n",
+        "🧪️tests/🔬️unit/🦀️.rs": "pub fn value() -> u32 { 7 }\n"
+      },
+      "expectedCodes": [],
+      "rustcSuccess": true,
+      "expectedUnmounted": []
+    },
+    {
+      "id": "included-leaf-chain-and-unincluded-sibling",
+      "files": {
+        "📦️packages/🦀️rust/Cargo.toml": "[package]\nname = \"taxonomy_mount_fixture\"\nversion = \"0.0.0\"\nedition = \"2021\"\n[lib]\npath = \"🦀️.rs\"\n",
+        "📦️packages/🦀️rust/🦀️.rs": "#[path = \"../../🦀️.rs\"]\npub mod owner;\n",
+        "🦀️.rs": "include!(\"🚪️io/🦀️.rs\");\n",
+        "🚪️io/🦀️.rs": "include!(\"🧪️tests/🔬️unit/🦀️.rs\");\n",
+        "🚪️io/🧪️tests/🔬️unit/🦀️.rs": "pub fn reached() -> u32 { 1 }\n",
+        "🚪️io/🧪️tests/🔬️orphan/🦀️.rs": "pub fn orphan() -> u32 { 0 }\n"
+      },
+      "expectedCodes": [
+        "unmounted"
+      ],
+      "rustcSuccess": true,
+      "expectedUnmounted": [
+        "🚪️io/🧪️tests/🔬️orphan/🦀️.rs"
+      ]
     }
   ]
 }

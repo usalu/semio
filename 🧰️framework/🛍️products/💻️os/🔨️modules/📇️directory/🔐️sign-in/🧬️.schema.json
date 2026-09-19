@@ -1,0 +1,141 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/os/directory/hub-sign-in-fixtures/v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "mintPath",
+    "sessionPath",
+    "requestSchema",
+    "errorSchema",
+    "requestMaxBytes",
+    "requestFieldOrder",
+    "timeoutMs",
+    "statusCodes",
+    "retryAfter",
+    "credentials",
+    "tokens",
+    "origins",
+    "persistedFields",
+    "neverPersisted",
+    "presentation"
+  ],
+  "properties": {
+    "schema": { "const": "semio.directory.hub-sign-in-fixtures.v1" },
+    "mintPath": { "const": "/auth/sessions" },
+    "sessionPath": { "const": "/auth/sessions/me" },
+    "requestSchema": { "const": "semio.hub.auth.credential-sign-in/v1" },
+    "errorSchema": { "const": "semio.hub.auth.error/v1" },
+    "requestMaxBytes": { "const": 1024 },
+    "requestFieldOrder": { "const": ["schema", "email", "password", "deviceInstanceId", "clientClass"] },
+    "timeoutMs": { "const": 10000 },
+    "statusCodes": {
+      "type": "array",
+      "minItems": 9,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["status", "code"],
+        "properties": {
+          "status": { "type": "integer", "minimum": 100, "maximum": 599 },
+          "code": { "$ref": "#/$defs/code" }
+        }
+      }
+    },
+    "retryAfter": {
+      "type": "array",
+      "minItems": 6,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["header", "seconds"],
+        "properties": {
+          "header": { "type": "string" },
+          "seconds": { "type": ["integer", "null"], "minimum": 0, "maximum": 86400 }
+        }
+      }
+    },
+    "credentials": {
+      "type": "array",
+      "minItems": 5,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["email", "password", "valid"],
+        "properties": {
+          "email": { "type": "string" },
+          "password": { "type": "string" },
+          "valid": { "type": "boolean" }
+        }
+      }
+    },
+    "tokens": {
+      "type": "array",
+      "minItems": 5,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["token", "valid"],
+        "properties": {
+          "token": { "type": "string" },
+          "valid": { "type": "boolean" }
+        }
+      }
+    },
+    "origins": {
+      "type": "array",
+      "minItems": 10,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["typed", "origin"],
+        "properties": {
+          "typed": { "type": "string" },
+          "origin": { "type": ["string", "null"] }
+        }
+      }
+    },
+    "persistedFields": { "const": ["id", "kind", "label", "lastUserId", "origin"] },
+    "neverPersisted": { "const": ["token", "password", "sessionId"] },
+    "presentation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["locales", "text"],
+      "properties": {
+        "locales": { "const": ["en", "de"] },
+        "text": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["en", "de"],
+          "properties": {
+            "en": { "$ref": "#/$defs/text" },
+            "de": { "$ref": "#/$defs/text" }
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "code": { "enum": ["invalid-credentials", "rate-limited", "unreachable", "hub-refused", "invalid-response", "cancelled", "password-sign-in-disabled", "malformed-request"] },
+    "text": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["invalidCredentials", "rateLimited", "unreachable", "hubRefused", "invalidResponse", "cancelled", "expired", "invalidOrigin", "passwordDisabled", "malformedRequest", "shortPassword", "invalidEmail"],
+      "properties": {
+        "invalidCredentials": { "type": "string", "minLength": 1 },
+        "rateLimited": { "type": "string", "pattern": "\\{\\{seconds\\}\\}" },
+        "unreachable": { "type": "string", "minLength": 1 },
+        "hubRefused": { "type": "string", "minLength": 1 },
+        "invalidResponse": { "type": "string", "minLength": 1 },
+        "cancelled": { "type": "string", "minLength": 1 },
+        "expired": { "type": "string", "minLength": 1 },
+        "invalidOrigin": { "type": "string", "minLength": 1 },
+        "passwordDisabled": { "type": "string", "minLength": 1 },
+        "malformedRequest": { "type": "string", "minLength": 1 },
+        "shortPassword": { "type": "string", "minLength": 1 },
+        "invalidEmail": { "type": "string", "minLength": 1 }
+      }
+    }
+  }
+}

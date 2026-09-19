@@ -629,7 +629,11 @@
         "deps-cpp",
         "deps-browsers",
         "deps-wasm",
-        "deps-tools"
+        "deps-tools",
+        "setup-git",
+        "prepare",
+        "repo-mcp:build",
+        "@semio-tech/framework-os-mcp-rs:build"
       ]
     },
     "start": {
@@ -1432,6 +1436,14 @@
         "forwardAllArgs": true
       }
     },
+    "verify-generated-corruption": {
+      "executor": "nx:run-commands",
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts verify generated-corruption",
+        "forwardAllArgs": true
+      }
+    },
     "verify-interactivity": {
       "executor": "nx:run-commands",
       "dependsOn": [],
@@ -1444,6 +1456,13 @@
       "dependsOn": [],
       "options": {
         "command": "bun ./📜️script.ts verify dependencies"
+      }
+    },
+    "verify-dependencies-literal-external": {
+      "executor": "nx:run-commands",
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts verify dependencies literal-external"
       }
     },
     "verify-dependencies-freeze-write-baseline": {

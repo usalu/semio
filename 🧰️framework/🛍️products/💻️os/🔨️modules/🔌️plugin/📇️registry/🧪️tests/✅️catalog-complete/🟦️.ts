@@ -467,7 +467,7 @@ describe("strict plugin catalog completion", () => {
     expect(auditInteractiveJobClassificationDrift("owner", join(ownerRoot, "absent"), descriptor)).toEqual([]);
   });
 
-  it("independently enumerates the 60 real manifests and the known 16 missing source pairs", () => {
+  it("independently enumerates the 60 real manifests and the known 15 missing source pairs", () => {
     const audit = auditPluginCatalogSources();
     const missing = audit.issues.filter(({ code }) => code === "descriptor-pair-missing").map(({ pluginId }) => pluginId).sort();
     expect(audit.manifestCount).toBe(60);
@@ -481,7 +481,7 @@ describe("strict plugin catalog completion", () => {
     expect(audit.entries.find(({ pluginId }) => pluginId === "cad-extension-aec-building")?.dependsOn).toEqual(["cad"]);
     expect(audit.issues.filter(({ code }) => code === "dependency-invalid")).toEqual([]);
     expect(missing).toEqual([
-      "block", "imperative-extension-control", "imperative-extension-effect", "imperative-extension-logic", "imperative-extension-math", "imperative-extension-text", "playbook", "playbook-module-procedural", "process-extension-concrete", "process-extension-metal", "process-extension-robotic", "process-extension-wood", "sourcing-module-beams", "sourcing-module-slabs", "sourcing-module-windows", "stdio",
+      "imperative-extension-control", "imperative-extension-effect", "imperative-extension-logic", "imperative-extension-math", "imperative-extension-text", "playbook", "playbook-module-procedural", "process-extension-concrete", "process-extension-metal", "process-extension-robotic", "process-extension-wood", "sourcing-module-beams", "sourcing-module-slabs", "sourcing-module-windows", "stdio",
     ]);
   }, 120_000);
 

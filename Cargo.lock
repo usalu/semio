@@ -6466,6 +6466,7 @@ dependencies = [
  "semio-framework-replication",
  "semio-framework-schema",
  "semio-framework-schema-registry",
+ "semio-framework-server",
  "semio-s-artifact-gis-gismap",
  "semio-s-artifact-stdio-json",
  "semio-s-artifact-stdio-semio",

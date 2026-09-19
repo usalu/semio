@@ -9,8 +9,8 @@ use semio_framework_plugin::{ExecutionMode, Plugin, PluginApp};
 semio_framework_dispatch_macros::dyn_enum_close! {
     /// 🗃️ Closed runtime app fleet for the declaration-owned reasoning surfaces.
     pub enum ReasoningApps: PluginApp {
-        Editor(VcsArtifactApp<EditorApp<crate::editor::wires::ReasoningWiresPlayApp>>),
-        Viewer(VcsArtifactApp<ViewerApp<crate::viewer::wires::WiresViewer>>),
+        Editor(VcsArtifactApp<EditorApp<crate::editor::wires::ReasoningWiresPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>),
+        Viewer(VcsArtifactApp<ViewerApp<crate::viewer::wires::WiresViewer>, semio_s_artifact_stdio_semio::SemioMembers>),
     }
 }
 //#endregion 🗃️Apps

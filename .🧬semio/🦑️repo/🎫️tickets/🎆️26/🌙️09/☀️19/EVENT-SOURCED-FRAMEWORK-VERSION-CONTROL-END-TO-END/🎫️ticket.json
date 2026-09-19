@@ -1,0 +1,10 @@
+{
+  "title": "Event-Sourced Framework Version Control End to End",
+  "emoji": "🌿️",
+  "status": "open",
+  "description": "Get the framework version control running end to end with event sourcing: no retrospective snapshot merging; artifacts are materialized by projecting all mutations; persistence stores only an initial snapshot plus the history of semantic changes. Symptom: two_instances_converge_disjoint_edits_via_backbone fails (ignored in lowpoly/remodel) because the store's merge_remote_snapshot always refuses and structural commands broadcast full snapshots.",
+  "summary": "",
+  "goal": "🎯️r2602/🎯️runningsketchpad",
+  "sessions": [],
+  "note": "Ticket bookkeeping manual on disk: repo MCP ticket_open returned 'invalid tool params' on 2026-09-19."
+}

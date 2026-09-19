@@ -3198,6 +3198,50 @@ impl ArtifactEditor for SequencePlayApp {
         command.command_id()
     }
 
+    /// 🎯️ Maps a host action id + its staged args onto `SequenceCommand`. The React/wgpu shells
+    /// still dispatch `{action, args}` while the guest channel is typed-only, and the trait default
+    /// refuses EVERY id (`app.command.unsupported`) — without this bridge no Actions-pane row, no
+    /// palette drop and no graph gesture ever reached `handle`. Key aliases mirror the shells' own
+    /// vocabularies (`value`/`id`, `nodeId`, `sourceNodeId`) rather than adding shell-side shims.
+    fn command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result<SequenceCommand, Fault> {
+        let text_arg = |keys: &[&str]| keys.iter().find_map(|key| args.and_then(|value| value.get(key)).and_then(dsl::DslValue::as_str).map(str::to_string));
+        let number_arg = |keys: &[&str]| keys.iter().find_map(|key| args.and_then(|value| value.get(key)).and_then(dsl::DslValue::as_f64)).unwrap_or_default();
+        let json_arg = |key: &str, fallback: &str| args.and_then(|value| value.get(key)).map_or_else(|| fallback.to_string(), dsl::json::to_json_string);
+        match action {
+            "addStep" => Ok(SequenceCommand::AddStep(add_step::AddStep { kind: text_arg(&["kind", "value"]).unwrap_or_else(|| "computation.import".into()), x: number_arg(&["x"]), y: number_arg(&["y"]) })),
+            "addStepToSlot" => Ok(SequenceCommand::AddStepToSlot(add_step_to_slot::AddStepToSlot {
+                kind: text_arg(&["kind", "value"]).unwrap_or_else(|| "computation.import".into()),
+                x: number_arg(&["x"]),
+                y: number_arg(&["y"]),
+                owner: text_arg(&["owner"]).unwrap_or_default(),
+                slot_name: text_arg(&["slotName", "slot_name", "slot"]).unwrap_or_default(),
+            })),
+            "addStepDropped" => Ok(SequenceCommand::AddStepDropped(add_step_dropped::AddStepDropped {
+                kind: text_arg(&["kind", "value"]).unwrap_or_else(|| "computation.import".into()),
+                x: number_arg(&["x"]),
+                y: number_arg(&["y"]),
+                picked_step_id: text_arg(&["pickedStepId", "picked_step_id"]),
+            })),
+            "removeStep" => Ok(SequenceCommand::RemoveStep(remove_step::RemoveStep { id: text_arg(&["id", "stepId", "value"]).unwrap_or_default() })),
+            "deleteSelection" => Ok(SequenceCommand::DeleteSelection(delete_selection::DeleteSelection {})),
+            "moveStep" => Ok(SequenceCommand::MoveStep(move_step::MoveStep { node_id: text_arg(&["nodeId", "node_id", "id"]).unwrap_or_default(), x: number_arg(&["x"]), y: number_arg(&["y"]) })),
+            "connectSteps" => Ok(SequenceCommand::ConnectSteps(connect_steps::ConnectSteps { source_node_id: text_arg(&["sourceNodeId", "source_node_id", "from"]).unwrap_or_default(), target_node_id: text_arg(&["targetNodeId", "target_node_id", "to"]).unwrap_or_default() })),
+            "disconnectSteps" => Ok(SequenceCommand::DisconnectSteps(disconnect_steps::DisconnectSteps { from_id: text_arg(&["fromId", "from_id", "from"]).unwrap_or_default(), to_id: text_arg(&["toId", "to_id", "to"]).unwrap_or_default() })),
+            "setStepParams" => Ok(SequenceCommand::SetStepParams(set_step_params::SetStepParams { id: text_arg(&["id", "stepId"]).unwrap_or_default(), params_json: json_arg("params", "null") })),
+            "setStepCollapsed" => Ok(SequenceCommand::SetStepCollapsed(set_step_collapsed::SetStepCollapsed { id: text_arg(&["id", "stepId", "value"]).unwrap_or_default() })),
+            "reorganize" => Ok(SequenceCommand::Reorganize(reorganize::Reorganize {})),
+            "nodeGraphEdit" => Ok(SequenceCommand::NodeGraphEdit(node_graph_edit::NodeGraphEdit { operations_json: json_arg("operations", "[]") })),
+            "setOrientation" => Ok(SequenceCommand::SetOrientation(set_orientation::SetOrientation { value: text_arg(&["value", "orientation"]).unwrap_or_else(|| "horizontal".into()) })),
+            "run" => Ok(SequenceCommand::Run(run_command::Run {})),
+            "stop" => Ok(SequenceCommand::Stop(stop_command::Stop {})),
+            "setViewport" => {
+                let value = args.and_then(|value| value.get("camera")).or_else(|| args.and_then(|value| value.get("viewport"))).cloned().ok_or_else(|| Fault::from("sequence setViewport requires a camera"))?;
+                Ok(SequenceCommand::SetViewport(set_viewport::SetViewport { camera: dsl::from_dsl_value(value).map_err(|error| Fault::from(format!("invalid sequence setViewport camera: {error}")))? }))
+            }
+            other => Err(Fault::from(format!("sequence: unhandled action id {other}"))),
+        }
+    }
+
     /// 🕹️ `deleteSelection`/`nodeGraphEdit` read the "steps" interaction domain directly (bypassing
     /// the `app_commands!`-generated `dispatch`, whose per-row `$module::handle(payload, doc, cfg)`
     /// signature is framework-fixed and has no `interaction` slot) — ticket

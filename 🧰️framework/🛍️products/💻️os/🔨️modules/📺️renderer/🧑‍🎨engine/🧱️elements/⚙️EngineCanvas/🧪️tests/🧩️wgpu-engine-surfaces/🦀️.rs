@@ -559,3 +559,48 @@ fn map_tile_url_substitutes_the_same_three_placeholders_react_does() {
     assert_eq!(map_tile_url("/vt/{z}/{x}/{y}.pbf", 0, 0, 0), "/vt/0/0/0.pbf");
     assert_eq!(map_tile_url("/no/placeholders", 3, 4, 5), "/no/placeholders", "a template without placeholders is passed through, as in JS");
 }
+
+/// 🧱️ A revision bump taken while the scene bridge's lease is IN FLIGHT must not lose the draws the
+/// apply built from that lease.
+///
+/// 🩸️ `step_world3d_snapshot`'s completion adopted `lease.revision` verbatim, and that lease carries
+/// this world's `interaction_revision` as of the bridge PUBLISH. Anything that bumps the revision
+/// between the publish and the apply — a document lane the producer republished, a parallel framing,
+/// a camera report — therefore rolled the counter BACKWARDS at completion, and the sealed draw
+/// rebuild the same apply had just filled answered `WorldDrawRebuildStep::Stale` on its very next
+/// turn, which closes it and throws every draw away. Measured on 6118: generation3d's
+/// `procedural-preview` sat at `state-meshes=3 state-instances=0 state-draws=0` forever, three
+/// `step=Stale` lines after `world3d delivery applied`, with the React twin showing the tessellated
+/// column (ticket 26/09/17/WGPU-RENDERER-REACT-PARITY, `📓️w14b-generation3d-labels-preview-layout.md`).
+#[test]
+fn a_revision_bump_while_the_bridge_lease_is_in_flight_still_publishes_the_draws() {
+    let fixture = fixture();
+    let surface_id = "world3d-inflight-revision";
+    let scene = world3d_preview_scene(surface_id, &fixture);
+    let bounds = Rect { x: 0.0, y: 0.0, w: 800.0, h: 600.0 };
+
+    // 1️⃣ The first paint STAGES the mesh-wire bridge; this drive seals its lease.
+    let mut frame = paint_scene(&scene, bounds, crate::scenes::AdmittedSurfaceMap::default());
+    assert!(frame.world3d_states.contains_key(surface_id), "the first painted frame constructs the World3d host");
+    drive_world3d_ladder(frame.world3d_states.get_mut(surface_id).expect("attached world state"));
+
+    // 2️⃣ …and only THEN does the producer republish a document lane, which bumps the revision.
+    //    The reference plane is `hidden`, so this is a pure revision bump and never a re-framing.
+    let mut moved = world3d_preview_scene(surface_id, &fixture);
+    moved.world_3d.as_mut().expect("world scene").references_json = Some(json!([{ "id": "plan", "origin": [0.0, 0.0, 0.0], "widthWorld": 4.0, "hidden": true }]).to_string());
+
+    let mut painted = false;
+    for turn in 0..16 {
+        frame = paint_scene(&moved, bounds, frame.world3d_states);
+        if frame.draw.scene_passes.first().is_some_and(|pass| !pass.draws.is_empty()) {
+            painted = true;
+            break;
+        }
+        drive_world3d_ladder(frame.world3d_states.get_mut(surface_id).expect("attached world state"));
+        assert!(turn < 15, "the preview settled into a drawn frame within its frame ceiling");
+    }
+    let state = frame.world3d_states.get(surface_id).expect("attached world state");
+    assert_eq!(state.snapshot_fault(), None, "a revision bump is not a snapshot fault");
+    assert!(painted, "the bridged draws survive a revision bump taken while their lease was in flight: {}", state.ingest_census());
+    drop_world3d_states(frame.world3d_states);
+}

@@ -59,6 +59,26 @@ pub(super) fn split_pane_shell() -> ShellState {
     shell
 }
 
+/// 🗣️ The split-pane fixture with ONE engagement payload on `pane-top` — a status line (React's
+/// `engagement` prop) and a typed line (React's `search` prop), which is the minimum that mounts the
+/// two top panes at all.
+pub(super) fn engaged_pane_shell() -> ShellState {
+    let mut shell = split_pane_shell();
+    shell.window_engagements.insert(
+        "pane-top".into(),
+        WindowEngagement {
+            session_active: None,
+            options: None,
+            input: Some(ui_wgpu::wgpu::WindowEngagementInput { id: Some("pane-engagement".into()), value: Some(String::new()), placeholder: None, disabled: None, on_change: None, on_submit: None, on_repeat_last: None, on_abort: None }),
+            control: None,
+            controls: None,
+            status: Some(vec![ui_wgpu::wgpu::WindowEngagementStatus { id: "pane.status".into(), text: "Ready".into() }]),
+            possible_engagements: None,
+        },
+    );
+    shell
+}
+
 /// 📐️ The two pane bodies this frame's dock plans at the React reference viewport.
 fn planned_panes(shell: &mut ShellState, theme: &Theme, atlas: &mut FontAtlas, width: f32, height: f32) -> Vec<(String, Rect)> {
     shell.screen_w = width;
@@ -140,6 +160,8 @@ fn pane_chips_mount_exactly_where_react_mounts_them() {
     let fixture = pane_fixture();
     let shell = split_pane_shell();
     let mounted = shell.window_pane_chips("pane-top");
+    let engaged = engaged_pane_shell();
+    let engaged_chips = engaged.window_pane_chips("pane-top");
     for declared in fixture["paneChips"].as_array().expect("fixture pane chips") {
         let chip = chip_of(declared["chip"].as_str().expect("chip name"));
         let entry = mounted.iter().find(|(candidate, _, _)| *candidate == chip);
@@ -149,9 +171,25 @@ fn pane_chips_mount_exactly_where_react_mounts_them() {
                 assert!(folded, "🪟️ every pane rail starts folded, as React's `useState(true)` does");
                 assert!(!disabled || declared["disabledWithoutBody"].as_bool().unwrap_or(false), "🪟️ only a chip the fixture allows to lose its body is ever disabled");
             }
+            // 🎬️ React mounts these two `Pane`s only when their PROP is defined, and both props are
+            // `undefined` for an empty payload — an unmounted pane is not a disabled one, so the bare
+            // fixture (no engagement, no panel-eligible action) must carry neither chip, and the same
+            // pane with a payload must carry both, enabled.
+            rule @ ("withEngagementOrActionPane" | "withSearchSpec") => {
+                assert!(entry.is_none(), "🎬️ a pane with no engagement and no panel-eligible action mounts no {rule} chip");
+                let (_, folded, disabled) = engaged_chips.iter().find(|(candidate, _, _)| *candidate == chip).copied().unwrap_or_else(|| panic!("🎬️ a pane whose engagement carries a status line AND a typed line mounts the {rule} chip"));
+                assert!(folded && !disabled, "🎬️ and it mounts folded and pressable, never React's disabled-toggle case");
+            }
             _ => assert!(entry.is_none(), "🪟️ a pane with no world surface mounts no projection chip"),
         }
     }
+    // 🧰️ The Actions chip's OTHER half of React's `engagement || actionPane`: a kind that declares a
+    // panel-eligible action mounts it with no engagement payload at all, and the Search chip — which
+    // reads only the engagement — still does not.
+    let action_only = super::window_actions_search_pane_tests::actions_shell();
+    let action_chips = action_only.window_pane_chips("pane-top");
+    assert!(action_chips.iter().any(|(chip, _, _)| *chip == WindowPaneChip::Actions), "🧰️ `actionPane` alone mounts the Actions pane");
+    assert!(!action_chips.iter().any(|(chip, _, _)| *chip == WindowPaneChip::Search), "🔎️ and it never mounts the Search pane, which React drives from the engagement's own spec");
     let mut bare = split_pane_shell();
     if let Some(session) = bare.session.as_mut() {
         session.app.utilities = Vec::new();
@@ -189,11 +227,11 @@ fn the_window_options_chip_registers_both_sides_of_its_fold() {
         // 🎯️ Deferred to `pane_overlay_hits` — see `ShellChromeFramePhase::PaneOverlayHits`.
         (shell.pane_overlay_hits.iter().filter_map(|hit| hit.control_id.clone()).collect::<Vec<_>>(), draw.glass_regions.len())
     };
-    let mut shell = split_pane_shell();
+    let mut shell = engaged_pane_shell();
     shell.measures_folded.insert("pane-top".into(), true);
     shell.window_measures_documents.clear();
     let (folded_ids, glass) = paint(&mut shell);
-    assert_eq!(glass, WindowPaneChip::ALL.len() - 1, "🪟️ every mounted chip is its own glass region (no world surface, so no projection chip)");
+    assert_eq!(glass, shell.window_pane_chips("pane-top").len(), "🪟️ every MOUNTED chip is its own glass region (no world surface, so no projection chip)");
     assert!(!folded_ids.iter().any(|id| id.starts_with("framework.window.paneTop.measures.")), "🎛️ a window that projects no measures mounts the chip DISABLED and registers no hit");
     shell.measures_folded.insert("pane-top".into(), false);
     assert!(!shell.measures_rail_folded("pane-top"));
@@ -246,7 +284,7 @@ fn each_pane_chip_dispatches_its_own_window_state() {
 fn a_pane_chips_hit_row_is_flushed_after_its_window_body_and_before_the_panels_that_occlude_it() {
     let theme = Theme::light();
     let window = Rect::new(0.0, 0.0, 800.0, 600.0);
-    let mut shell = split_pane_shell();
+    let mut shell = engaged_pane_shell();
     let mut input = InputState::<ActionDescriptor>::default();
     let mut draw = DrawList::default();
     let mut atlas = FontAtlas::builtin();
@@ -266,7 +304,7 @@ fn a_pane_chips_hit_row_is_flushed_after_its_window_body_and_before_the_panels_t
     // outranks the surface it floats on.
     let body = HitTarget { rect: window, event: None, control_id: Some("pane-top".into()), kind: HitKind::ScrollRegion, drag_axis: None, drag_data: None };
     input.register_hit(body);
-    let mut frame = ShellChromeFrameCursor { phase: ShellChromeFramePhase::PaneOverlayHits, setup: 0, child: ShellChromeChildCursor::default() };
+    let mut frame = ShellChromeFrameCursor { phase: ShellChromeFramePhase::PaneOverlayHits, setup: 0, child: ShellChromeChildCursor::default(), ..ShellChromeFrameCursor::default() };
     let mut overlay = DrawList::default();
     let mut world_resources = infinite_world::world::World3dBuildContext::new(infinite_world::world::WorldCursorWakeAuthority::new());
     for _ in 0..4096 {

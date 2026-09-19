@@ -1,6 +1,6 @@
 type TestSource = { readonly directory: string; readonly url: string };
 
-export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: any, source: TestSource): Promise<void> {
+export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: Pick<typeof import("../../🧵️turn-scheduler/🟦️.ts"), "TurnScheduler">, source: TestSource): Promise<void> {
   const { TurnScheduler } = dependencies;
 
   const { describe, expect, it, vi } = vitest;

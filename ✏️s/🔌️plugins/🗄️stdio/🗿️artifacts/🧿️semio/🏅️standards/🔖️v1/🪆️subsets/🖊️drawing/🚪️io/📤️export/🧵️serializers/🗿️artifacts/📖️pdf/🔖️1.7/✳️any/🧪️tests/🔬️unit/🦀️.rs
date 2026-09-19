@@ -23,18 +23,18 @@ fn sample_drawing() -> SemioDrawingSnapshot {
     }
 }
 
-/// 🧪️ Real round trip through pdf's own real writer/reader — `encode_pdf` regenerates a
-/// content stream from `text` and `decode_pdf` re-extracts it, so this proves genuinely
+/// 🧪️ Real round trip through pdf's own real writer/reader — `encode_pdf` writes the page's
+/// content-stream operators out and `decode_pdf` re-parses them, so this proves genuinely
 /// working PDF bytes, not just a plausible struct.
 #[semio_framework_async_macros::async_test]
 async fn real_byte_round_trip_through_pdf_codec() {
     let drawing = sample_drawing();
     let pdf = semio_framework_plugin::resolve_ready(SemioDrawingToPdf::serialize(&drawing)).expect("serialize");
     assert_eq!(pdf.pages.len(), 1);
-    assert_eq!(pdf.pages[0].text, "hello\nsemio");
+    assert_eq!(pdf.pages[0].text(), "hello\nsemio");
 
     let bytes = semio_s_artifact_stdio_pdf::standards::v1_7::subsets::base::io::encode_pdf(&pdf).expect("encode real pdf bytes");
     let decoded = semio_s_artifact_stdio_pdf::standards::v1_7::subsets::base::io::decode_pdf(&bytes).expect("decode real pdf bytes");
     assert_eq!(decoded.pages.len(), 1);
-    assert_eq!(decoded.pages[0].text, "hello\nsemio");
+    assert_eq!(decoded.pages[0].text(), "hello\nsemio");
 }

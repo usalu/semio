@@ -182,6 +182,63 @@ class DirectoryHomeBootstrapCheckScript extends BundleScript {
   }
 }
 
+/** 🔐️ Proves the os sign-in contract still agrees with the hub's OWN `hub.auth` schema — the only
+ * cross-implementation oracle for a wire neither side can validate alone. Compares the hub's
+ * `$defs/CredentialSignInRequestV1`/`SessionMintResponseV1`/`AuthErrorV1`/`AuthErrorCodeV1` against
+ * the os fixture (`📇️directory/🔐️sign-in/🔣️.json`) and against the Rust status table in
+ * `🌎️hub/🔐️auth/🦀️.rs`, so an AU1-side change to the route breaks this gate rather than the app. */
+export function hubAuthContractOracle(repoRoot: string): number {
+  const hubSchema = JSON.parse(readFileSync(join(repoRoot, "🌎️hub/🔐️auth/🧬️schema/🔣️.json"), "utf8")) as { $defs: Record<string, Record<string, unknown>> };
+  const osFixture = JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🔐️sign-in/🔣️.json"), "utf8")) as {
+    requestSchema: string;
+    errorSchema: string;
+    requestMaxBytes: number;
+    requestFieldOrder: readonly string[];
+    statusCodes: readonly { readonly status: number; readonly code: string }[];
+    tokens: readonly { readonly token: string; readonly valid: boolean }[];
+    credentials: readonly { readonly email: string; readonly password: string; readonly valid: boolean }[];
+  };
+  const request = hubSchema.$defs.CredentialSignInRequestV1!;
+  const requestProperties = request.properties as Record<string, Record<string, unknown>>;
+  assert.equal((requestProperties.schema as { const: string }).const, osFixture.requestSchema);
+  assert.equal((hubSchema.$defs.AuthErrorV1!.properties as Record<string, { const?: string }>).schema!.const, osFixture.errorSchema);
+  assert.deepEqual(request.required, osFixture.requestFieldOrder);
+  const rust = readFileSync(join(repoRoot, "🌎️hub/🔐️auth/🦀️.rs"), "utf8");
+  assert.match(rust, new RegExp(`SIGN_IN_REQUEST_MAX_BYTES: usize = ${osFixture.requestMaxBytes};`));
+  const validate = new Ajv({ strict: false, allErrors: true }).addSchema(hubSchema).getSchema(`${"https://json.schemas.assets.semio-tech.com/hub/auth/schema.json"}#/$defs/CredentialSignInRequestV1`);
+  if (!validate) throw new Error("hub auth schema publishes no CredentialSignInRequestV1");
+  for (const row of osFixture.credentials) {
+    const body = { schema: osFixture.requestSchema, email: row.email.trim().toLowerCase(), password: row.password, deviceInstanceId: "device-au2", clientClass: "browser" };
+    assert.equal(validate(body) === true, row.valid, `credential admission disagrees with the hub schema for ${row.email}`);
+  }
+  const token = new Ajv({ strict: false }).addSchema(hubSchema).getSchema(`${"https://json.schemas.assets.semio-tech.com/hub/auth/schema.json"}#/$defs/SessionCapabilityV1`);
+  if (!token) throw new Error("hub auth schema publishes no SessionCapabilityV1");
+  for (const row of osFixture.tokens) assert.equal(token(row.token) === true, row.valid, `token admission disagrees with the hub schema for ${row.token.slice(0, 24)}`);
+  const codes = (hubSchema.$defs.AuthErrorCodeV1!.enum as readonly string[]).slice().sort();
+  assert.deepEqual(codes, ["credential-sign-in-disabled", "directory-unavailable", "invalid-credentials", "malformed-request", "rate-limited"]);
+  for (const [code, status] of [["MalformedRequest", 400], ["InvalidCredentials", 401], ["CredentialSignInDisabled", 403], ["RateLimited", 429], ["DirectoryUnavailable", 503]] as const) {
+    assert.match(rust, new RegExp(`Self::${code} => ${status},`), `hub status for ${code} moved`);
+    assert(osFixture.statusCodes.some((row) => row.status === status), `os fixture has no row for status ${status}`);
+  }
+  return osFixture.credentials.length + osFixture.tokens.length + codes.length;
+}
+
+/** 🔐️ Proves the browser-facing hub sign-in contract and the end-user spaces surface: the fixture
+ * schemas, the closed refusal tables, the local-only connection book, and both panes under a fake
+ * hub transport speaking `📓️au1-hub-auth-sessions-and-rate-limit.md` §1's real wire. */
+class HubSignInSpacesCheckScript extends BundleScript {
+  run(segments: string[]): void {
+    if (segments.length !== 0) throw new Error("hub-sign-in-spaces-check accepts no arguments");
+    console.log(`hub-auth-contract-oracle: checks=${hubAuthContractOracle(this.repoRoot)} clean`);
+    process.env.SEMIO_TEST_LEVEL = "long";
+    runVitest(
+      this.root,
+      ["../../../../🧱️elements/🔐️HubSignIn/🧪️tests/🧩️component/🟦️.tsx", "../../../../🧱️elements/🏘️SpaceBrowser/🧪️tests/🧩️component/🟦️.tsx", "--silent=false", "--reporter=verbose"],
+      "../../🧪️tests/🎚️config/🟦️.ts",
+    );
+  }
+}
+
 /** 🎟️ Proves the language-neutral invite transfer machine and its typed browser/worker bridge. */
 export function directoryInviteCapabilityOracle(repoRoot: string): number {
   const contractRoot = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🎟️invite-capability");
@@ -902,6 +959,7 @@ const router = new ScriptRouter(fileURLToPath(new URL(".", import.meta.url)))
   .register("agent-bridge-check", AgentBridgeCheckScript)
   .register("directory-home-bootstrap-check", DirectoryHomeBootstrapCheckScript)
   .register("directory-invite-capability-check", DirectoryInviteCapabilityCheckScript)
+  .register("hub-sign-in-spaces-check", HubSignInSpacesCheckScript)
   .register("scoped-presence-check", ScopedPresenceCheckScript)
   .register("world3d-interaction-check", World3dInteractionCheckScript)
   .register("surface-switch-check", SurfaceSwitchCheckScript)

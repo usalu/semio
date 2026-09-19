@@ -73,10 +73,11 @@ import labelResolutionFixture from "../../🧱️elements/🛠️ShellHelpers/�
 import tutorialInteractionFixture from "../../🧱️elements/🛠️ShellHelpers/🧫️fixtures/🎥️tutorial-interaction/🔣️.json";
 import pluginAvailabilityRouteFixture from "../../🧱️elements/🛠️ShellHelpers/🧫️fixtures/🔁️plugin-availability-route/🔣️.json";
 import interactionSchema from "../../../../../../../🔨️modules/🕹️interaction/🧬️schema/🔣️.json";
+import { stubFetch } from "../../../../../🧪️tests/🌐️fetch-stub/🟦️.ts";
 import manifestFixtureSchema from "../../../../../../../🔨️modules/🛂️manifest/🧬️schema/🔣️.json";
 import actionSemanticsFixture from "../../../../../../../🔨️modules/🛂️manifest/🧫️fixtures/⚖️action-semantics.json";
 import examplePickerFixture from "../../../../../../../🔨️modules/🛂️manifest/🧫️fixtures/📚️example-picker.json";
-import tutorialDocumentFixture from "../../../../../../../🔨️modules/🛂️manifest/🧫️fixtures/🎞️tutorial-artifact-track.json";
+import tutorialDocumentFixture from "../../../../../../../🔨️modules/🛂️manifest/🧫️fixtures/🎞️tutorial-document-track.json";
 import boardSessionFixture from "../../../../../../../../✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌉️wasm/🧫️fixtures/🔣️session-factory.json";
 import boardSessionSchema from "../../../../../../../../✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json";
 import { tutorialSlice, validateTutorial } from "@semio-tech/ui-react";
@@ -1459,7 +1460,7 @@ describe("descriptor load admission", () => {
     const originalFetch = globalThis.fetch;
     const initialize = vi.fn();
     const fetch = vi.fn(async () => new Response(vector.body, { status: vector.status, headers: { "content-type": vector.contentType } }));
-    globalThis.fetch = fetch;
+    globalThis.fetch = stubFetch(fetch);
     try {
       await expect(resolveDescriptorBeforeRuntime(() => fetchDescriptorManifest(descriptorLoadFixture.pluginId, descriptorLoadFixture.moduleUrl), initialize)).rejects.toMatchObject({ fault: { code: vector.fault, scope: { pluginId: descriptorLoadFixture.pluginId } } });
       expect(fetch).toHaveBeenCalledExactlyOnceWith(descriptorLoadFixture.descriptorUrl, undefined);
@@ -1474,7 +1475,7 @@ describe("descriptor load admission", () => {
     try {
       for (const apps of [descriptorLoadFixture.descriptor.manifest.apps, []]) {
         const descriptor = { manifest: { ...descriptorLoadFixture.descriptor.manifest, apps } };
-        globalThis.fetch = async () => new Response(JSON.stringify(descriptor), { headers: { "content-type": "application/json" } });
+        globalThis.fetch = stubFetch(async () => new Response(JSON.stringify(descriptor), { headers: { "content-type": "application/json" } }));
         expect(await fetchDescriptorManifest(descriptorLoadFixture.pluginId, descriptorLoadFixture.moduleUrl)).toEqual(descriptor.manifest);
       }
     } finally {
@@ -1717,6 +1718,7 @@ import {
   createTurnOutcomeBroadcast,
   pendingPanelUiNode,
   type TurnOutcome,
+  type ActionDescriptor,
 } from "@semio-tech/framework";
 import {
   ENTWERFEN_MIT_BESTAND_AGGREGATOR_BRAND,
@@ -1849,8 +1851,6 @@ import {
   world3dFitProjectionContent,
   world3dFramingInstances,
   world3dFrameVisibleOverlayOffered,
-  worldSceneContentBounds,
-  worldSceneContentBoundsKey,
   world3dProjectionContentFrameMounted,
   world3dCameraDomJson,
   worldInstancePickBlocked,
@@ -2047,7 +2047,7 @@ import {
   SyncAttachCard,
 } from "../../🎯️targets/⚛️react/📦️packages/🟦️typescript/🟦️.tsx";
 import { windowActionPaneNode, applyTutorialUiChangeToShell, applyTutorialUiSnapshotToShell, browserActorDispatchUiScopeV1, browserActorWindowConfigDispatchUiScopeV1, captureTutorialUiSnapshot, chordUsesCanonicalKeyTokens, clipboardWriteFragmentFromEffect, createUiRefreshCoalescerV1, hostEffectRefreshScopeV1, keyboardEventMatchesChord, mergeUiDirtyScopeV1, pasteActionWithRetainedFragment, pasteArgsFragment, programArmedToolRevealV1, typedOperationCompletionRefreshV1 } from "../../🧱️elements/🛠️ShellHelpers/🟦️.tsx";
-import { decodeWorldProjectionTemplateId, encodeWorldProjectionTemplateId } from "@semio-tech/infinite-world-r3f";
+import { decodeWorldProjectionTemplateId, encodeWorldProjectionTemplateId, worldSceneContentBounds, worldSceneContentBoundsKey } from "@semio-tech/infinite-world-r3f";
 
 //#region 🔌️jsdom polyfills
 // Renderer hosts measure through ResizeObserver; jsdom does not implement it.
@@ -2203,6 +2203,7 @@ describe("framework sync utilities", () => {
         onClose: close,
         onAttach: vi.fn(),
         onDetach: vi.fn(),
+        onBrowsePath: vi.fn(),
       }),
     );
     const dialog = getByRole("dialog");
@@ -2211,6 +2212,67 @@ describe("framework sync utilities", () => {
     document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
     cleanup();
     expect(close).toHaveBeenCalledTimes(1);
+  });
+
+  it("offers a file picker affordance for file sync and a folder picker for folder sync", () => {
+    const browseFile = vi.fn();
+    const browseFolder = vi.fn();
+    const file = render(
+      createElement(SyncAttachCard, {
+        activeUri: null,
+        cardKind: "file",
+        draftPath: "",
+        syncUtilities: [],
+        status: null,
+        quarantinedConflicts: [],
+        onAction: vi.fn(),
+        onDraftPathChange: vi.fn(),
+        onClose: vi.fn(),
+        onAttach: vi.fn(),
+        onDetach: vi.fn(),
+        onBrowsePath: browseFile,
+      }),
+    );
+    file.getByTitle("Browse…").click();
+    expect(browseFile).toHaveBeenCalledTimes(1);
+    file.unmount();
+    const folder = render(
+      createElement(SyncAttachCard, {
+        activeUri: null,
+        cardKind: "folder",
+        draftPath: "",
+        syncUtilities: [],
+        status: null,
+        quarantinedConflicts: [],
+        onAction: vi.fn(),
+        onDraftPathChange: vi.fn(),
+        onClose: vi.fn(),
+        onAttach: vi.fn(),
+        onDetach: vi.fn(),
+        onBrowsePath: browseFolder,
+      }),
+    );
+    folder.getByTitle("Browse…").click();
+    expect(browseFolder).toHaveBeenCalledTimes(1);
+    folder.unmount();
+    const remote = render(
+      createElement(SyncAttachCard, {
+        activeUri: null,
+        cardKind: "remote",
+        draftPath: "",
+        syncUtilities: [],
+        status: null,
+        quarantinedConflicts: [],
+        onAction: vi.fn(),
+        onDraftPathChange: vi.fn(),
+        onClose: vi.fn(),
+        onAttach: vi.fn(),
+        onDetach: vi.fn(),
+        onBrowsePath: vi.fn(),
+      }),
+    );
+    expect(remote.container.querySelector("[data-semio-sync-browse]")).toBeNull();
+    remote.unmount();
   });
 
   it("builds three sync backbone toggles", async () => {
@@ -2234,6 +2296,18 @@ describe("framework sync utilities", () => {
     expect(grouped).toHaveLength(1);
     expect(grouped[0]).toMatchObject({ id: "sync", kind: "collection" });
     expect(grouped[0].kind === "collection" ? grouped[0].children.map((child) => child.id) : []).toEqual(["framework.sync.file", "framework.sync.folder", "framework.sync.remote"]);
+  });
+
+  it("matches the sync backbone path picker fixture", async () => {
+    const { readFileSync } = await import("node:fs");
+    const fixture = JSON.parse(readFileSync(new URL("../../../../🧫️fixtures/🔗️sync-backbone-path-picker/🔣️.json", import.meta.url), "utf8")) as {
+      react: { helpers: string[]; hostIoOps?: string[] };
+      wgpu: { hostIoOps: string[] };
+    };
+    const helpers = await import("../../🧱️elements/🛠️ShellHelpers/🟦️.tsx");
+    for (const name of fixture.react.helpers) expect(typeof (helpers as Record<string, unknown>)[name]).toBe("function");
+    const hostIo = readFileSync(new URL("../../../🎯️targets/🧊️wgpu/🚪️host-io/🟦️.ts", import.meta.url), "utf8");
+    for (const op of fixture.wgpu.hostIoOps) expect(hostIo).toContain(op);
   });
 });
 
@@ -3507,10 +3581,10 @@ describe("framework plugin runtime", () => {
   it("fetchDescriptorManifest refuses a missing descriptor and surfaces a published one", async () => {
     const originalFetch = globalThis.fetch;
     try {
-      globalThis.fetch = (async () => new Response(null, { status: 404 })) as typeof fetch;
+      globalThis.fetch = stubFetch(async () => new Response(null, { status: 404 }));
       await expect(fetchDescriptorManifest("mock", "/🔌️plugin-modules/mock/index.js")).rejects.toThrow("plugin.descriptor-unavailable");
 
-      globalThis.fetch = (async () => new Response(JSON.stringify({ manifest: { pluginId: "mock", label: "Mock", version: "1.0.0", apps: [{ id: "main" }] } }), { headers: { "content-type": "application/json" } })) as typeof fetch;
+      globalThis.fetch = stubFetch(async () => new Response(JSON.stringify({ manifest: { pluginId: "mock", label: "Mock", version: "1.0.0", apps: [{ id: "main" }] } }), { headers: { "content-type": "application/json" } }));
       const real = await fetchDescriptorManifest("mock", "/🔌️plugin-modules/mock/index.js");
       expect(real).toEqual({ pluginId: "mock", label: "Mock", version: "1.0.0", apps: [{ id: "main" }] });
     } finally {
@@ -7611,8 +7685,8 @@ describe("s workflow flow routing", () => {
         children: [
           {
             key: "catalogue.section",
-            component: { type: "treeSection", label: "Catalogue", defaultOpen: true },
-            children: [{ key: "s-play-catalogue.document.draw", component: { type: "treeItem", label: "Draw", description: null, icon: null, defaultOpen: null, draggable: true, dragData: { "application/x-semio-catalogue-item": '{"pluginId":"s.system","appId":"draw"}' }, dimmed: null, rowActions: [] } }],
+            component: { type: "treeSection", label: "Catalogue", defaultOpen: true, window: null },
+            children: [{ key: "s-play-catalogue.document.draw", component: { type: "treeItem", label: "Draw", description: null, icon: null, defaultOpen: null, draggable: true, dragData: { "application/x-semio-catalogue-item": '{"pluginId":"s.system","appId":"draw"}' }, dimmed: null, window: null, granularity: null, rowActions: [] } }],
           },
         ],
       }),
@@ -7638,13 +7712,13 @@ describe("s workflow flow routing", () => {
         children: [
           {
             key: "puzzle3d-play-kinds.objects",
-            component: { type: "treeSection", label: "Objects", defaultOpen: true },
+            component: { type: "treeSection", label: "Objects", defaultOpen: true, window: null },
             children: [
               {
                 key: "Hexagonal Cut Concrete Forest Left",
-                component: { type: "treeItem", label: "Hexagonal Cut Concrete Forest Left", description: "Hexagonal Cut Concrete Forest Left", icon: "box", defaultOpen: false, draggable: true, dragData: { "application/x-semio-catalogue-item": '{"objectKind":"Hexagonal Cut Concrete Forest Left"}' }, dimmed: null, rowActions: [] },
+                component: { type: "treeItem", label: "Hexagonal Cut Concrete Forest Left", description: "Hexagonal Cut Concrete Forest Left", icon: "box", defaultOpen: false, draggable: true, dragData: { "application/x-semio-catalogue-item": '{"objectKind":"Hexagonal Cut Concrete Forest Left"}' }, dimmed: null, window: null, granularity: null, rowActions: [] },
                 bindings: [{ trigger: "activate", action: { scope: "puzzle3d-play", name: "addObjectKind", version: 1 }, args: { objectKind: "Hexagonal Cut Concrete Forest Left" }, capability: null }],
-                children: [{ key: "puzzle3d-kind-vortex.0.b-l", component: { type: "treeItem", label: "b-l", description: "[4,4,3]", icon: "circle-dot", defaultOpen: null, draggable: null, dragData: null, dimmed: null, rowActions: [] } }],
+                children: [{ key: "puzzle3d-kind-vortex.0.b-l", component: { type: "treeItem", label: "b-l", description: "[4,4,3]", icon: "circle-dot", defaultOpen: null, draggable: null, dragData: null, dimmed: null, window: null, granularity: null, rowActions: [] } }],
               },
             ],
           },
@@ -7715,7 +7789,7 @@ describe("s workflow flow routing", () => {
       children: [
         {
           key: "puzzle3d-play-document.objects",
-          component: { type: "treeSection", label: "Objects", defaultOpen: true },
+          component: { type: "treeSection", label: "Objects", defaultOpen: true, window: null },
           children: [
             {
               key: "seed-left-001",
@@ -7728,6 +7802,8 @@ describe("s workflow flow routing", () => {
                 draggable: null,
                 dragData: null,
                 dimmed: null,
+                window: null,
+                granularity: null,
                 rowActions: [{ icon: "eye", label: "Hide", action: { trigger: "activate", action: { scope: "puzzle3d-play", name: "setSelectionFlag", version: 1 }, args: flagArgs, capability: null }, placement: "row" }],
               },
               bindings: [{ trigger: "activate", action: { scope: "puzzle3d-play", name: "interactionSelect", version: 1 }, args: { domainId: "puzzle3d" }, capability: null }],
@@ -8529,8 +8605,8 @@ describe("registry-derived utilities and activation (P5)", () => {
       children: [
         {
           key: "framework.history.commands",
-          component: { type: "treeSection", label: null, defaultOpen: true },
-          children: [{ key: "framework.history.entry.1", component: { type: "treeItem", label: "Increment", description: null, icon: null, defaultOpen: null, draggable: null, dragData: null, dimmed: null, rowActions: [] } }],
+          component: { type: "treeSection", label: null, defaultOpen: true, window: null },
+          children: [{ key: "framework.history.entry.1", component: { type: "treeItem", label: "Increment", description: null, icon: null, defaultOpen: null, draggable: null, dragData: null, dimmed: null, window: null, granularity: null, rowActions: [] } }],
         },
       ],
     });
@@ -10658,6 +10734,7 @@ import {
   PUZZLE3D_MESH_REUPLOAD_CLAIMS,
   PUZZLE3D_MESH_UPLOAD_MAX_PAGES,
   PUZZLE3D_MESH_UPLOAD_SLOTS,
+  puzzle3dAnnounceableBrushMeshUrls,
   puzzle3dBrushMeshDigest,
   Puzzle3dBrushMeshRegistry,
   puzzle3dBrushMeshPages,
@@ -10678,6 +10755,20 @@ function decodeBrushMeshPage(page: { readonly positionsB64?: string; readonly in
 }
 
 describe("puzzle3d brush mesh paged upload", () => {
+  // 🚪️ `registerBrushMesh` is an APP-declared action, so a world-3d guest that never declared it drops
+  // every announcement as `undeclared-action` and the upload run can never settle. `🎥️shooting` paints
+  // GLB-backed meshes and declares no such action: its boot journalled 12 dropped dispatches and 12
+  // console errors before this gate (ticket 26/09/18/OS-HUB-COLLABORATION-AI-END-TO-END slice B3d,
+  // `🗑️generated/b3d-shooting-console.txt`). A guest that OWNS the lane publishes its install counter
+  // as `interactionJson.meshResidency`, so the counter's presence is the opt-in.
+  it("announces brush meshes only to a guest that published a mesh residency", () => {
+    const meshes = [{ url: "/test/a.glb" }, { url: "/test/b.glb" }, { url: "/test/a.glb" }, {}];
+    expect(puzzle3dAnnounceableBrushMeshUrls(undefined, meshes)).toEqual([]);
+    expect(puzzle3dAnnounceableBrushMeshUrls(0, meshes)).toEqual(["/test/a.glb", "/test/b.glb"]);
+    expect(puzzle3dAnnounceableBrushMeshUrls(7, meshes)).toEqual(["/test/a.glb", "/test/b.glb"]);
+    expect(puzzle3dAnnounceableBrushMeshUrls(7, [])).toEqual([]);
+  });
+
   it("encodes the language-neutral page run the plugin decodes, with the Node base64 oracle", () => {
     expect(PUZZLE3D_MESH_COMMAND_RAW_BYTES).toBe(brushMeshUploadFixture.commandRawBytes);
     expect(PUZZLE3D_MESH_PAGE_VALUES).toBe(brushMeshUploadFixture.pageValues);

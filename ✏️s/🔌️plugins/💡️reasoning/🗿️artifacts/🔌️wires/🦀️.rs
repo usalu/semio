@@ -223,6 +223,18 @@ pub fn wires_content_child_with_owner(nodes: Vec<DslValue>, edges: Vec<DslValue>
     handle.with_local_owner(std::sync::Arc::new(WiresWorkingScene { nodes, edges }))
 }
 
+/// 🌱️ Mints the composed `content` child's own pack for the archive-load genesis roster. The react
+/// shell's `loadDocumentPair` sends `members: []`, so a whole-document load derives every `#[child]`
+/// slot through this hook; without it the archive closure completes `Incomplete` and the host answers
+/// `document archive replacement failed closure, authority, or retained publication validation`.
+pub fn genesis_wires_child_pack(snapshot: &WiresSnapshot, slot: &str, child_id: &str) -> Option<Vec<u8>> {
+    use store::ArtifactPack;
+    (slot == "content" && child_id == snapshot.content.child_id).then(|| {
+        let scene = wires_working_scene(snapshot);
+        <SemioGraphSnapshot as ArtifactPack>::encode_pack(&wires_content_snapshot_from_scene(&scene.nodes, &scene.edges))
+    })
+}
+
 /// 🔎 Reconstructs the FULL legacy board-shaped `DslValue`
 /// (`schema`/`camera`/`nodes`/`edges`/`meta`?/`wires`) from the working scene plus the snapshot's
 /// `meta` field and a neutral viewport — the single accessor every render/panel/command call site that used to read
@@ -345,15 +357,15 @@ pub fn artifact<A: WiresApplication>() -> semio_framework_plugin::app::declarati
 /// 🧩️ App fleet capable of hosting this artifact's editor and viewer.
 pub trait WiresApplication:
     semio_framework_plugin::PluginApp
-    + From<semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<editor::wires::ReasoningWiresPlayApp>>>
-    + From<semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<viewer::wires::WiresViewer>>>
+    + From<semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<editor::wires::ReasoningWiresPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>>
+    + From<semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<viewer::wires::WiresViewer>, semio_s_artifact_stdio_semio::SemioMembers>>
 {
 }
 
 impl<A> WiresApplication for A where
     A: semio_framework_plugin::PluginApp
-        + From<semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<editor::wires::ReasoningWiresPlayApp>>>
-        + From<semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<viewer::wires::WiresViewer>>>
+        + From<semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<editor::wires::ReasoningWiresPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>>
+        + From<semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<viewer::wires::WiresViewer>, semio_s_artifact_stdio_semio::SemioMembers>>
 {
 }
 
@@ -888,6 +900,16 @@ pub mod viewer {
         #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs"]
         mod component;
         pub use component::*;
+        #[path = "."]
+        pub mod presence {
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/👥️presence/🧬️schema/🦀️.rs"]
+            pub mod schema;
+        }
+        #[path = "."]
+        pub mod config {
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎚️config/🧬️schema/🦀️.rs"]
+            pub mod schema;
+        }
 
         #[path = "."]
         pub mod modes {

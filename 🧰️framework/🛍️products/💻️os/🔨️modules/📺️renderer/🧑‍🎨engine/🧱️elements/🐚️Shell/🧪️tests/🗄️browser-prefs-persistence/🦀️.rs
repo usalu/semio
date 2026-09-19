@@ -304,7 +304,7 @@ fn the_tour_answer_is_written_where_reacts_next_boot_reads_it() {
     seed_host_storage("{}");
     let fresh = host_storage_get(&seen_key).as_deref() == Some("true");
     assert!(!fresh);
-    assert!(should_auto_start_introduction(app_id, true, false, fresh), "a fresh profile arms the tour");
+    assert!(should_auto_start_introduction(app_id, true, false, fresh, false), "a fresh profile arms the tour");
 
     let mut chrome = ShellChromeBuildState::default();
     chrome.introduction_seen.insert(app_id.to_string(), false);
@@ -320,7 +320,7 @@ fn the_tour_answer_is_written_where_reacts_next_boot_reads_it() {
     host_storage_set(&seen_key, "true");
     let reloaded = host_storage_get(&seen_key).as_deref() == Some("true");
     assert!(reloaded, "the answer is in the store the page will hand the next boot");
-    assert!(!should_auto_start_introduction(app_id, true, false, reloaded));
+    assert!(!should_auto_start_introduction(app_id, true, false, reloaded, false));
     seed_host_storage("{}");
 }
 //#endregion 🎓️KeyEncodings

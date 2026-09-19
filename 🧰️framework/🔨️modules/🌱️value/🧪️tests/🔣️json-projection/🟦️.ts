@@ -27,7 +27,7 @@ export function testSharedDynamicValueOracle(): void {
     "accessor-field": accessor,
     "array-extra-field": Object.assign([], { hidden: 1 }),
   };
-  for (const name of fixture.rejectedConstructions) assert.throws(() => parseDslValue(constructions[name]), undefined, name);
+  for (const name of fixture.rejectedConstructions) assert.throws(() => parseDslValue(constructions[name]), Error, name);
   assert.equal(reads, 0, "validation must not execute accessor values");
   const child = { value: 1 }, shared = { left: child, right: child };
   assert.deepEqual(parseDslValue(shared), shared);

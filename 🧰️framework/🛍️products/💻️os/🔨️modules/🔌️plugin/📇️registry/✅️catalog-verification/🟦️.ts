@@ -866,7 +866,7 @@ export type NativeCatalogSelectionInputV1 = Readonly<{
 
 /** 🧭️ Plans only a bounded dependency-first selected provider inventory; no bytes or authority are published. */
 export function planNativeCatalogSelectionV1(input: NativeCatalogSelectionInputV1, profileId: string): readonly NativeCatalogSelectionPackageV1[] {
-  const deny = (): never => { throw new Error("native catalog selection denied"); };
+  const deny: () => never = () => { throw new Error("native catalog selection denied"); };
   const identity = (row: NativeCatalogSelectionIdentityV1): string => {
     if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(row.pluginId) || row.pluginId.length > 128 || row.packageId !== `semio:${row.pluginId}` || !/^[0-9]+\.[0-9]+\.[0-9]+$/.test(row.version) || row.version.length > 64) deny();
     return `${row.pluginId}/${row.packageId}/${row.version}`;

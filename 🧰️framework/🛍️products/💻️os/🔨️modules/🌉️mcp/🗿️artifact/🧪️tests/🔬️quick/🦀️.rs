@@ -121,13 +121,13 @@ fn artifact_create_then_open_round_trips_for_real_with_exactly_one_resolvable_pl
     let mut registry = InMemoryToolRegistry::new();
     register_artifact_tools(&mut registry, Some(workspace));
 
-    let created = registry.call("artifact_create", serde_json::json!({ "artifactId": "doc-1", "kind": "test.kind", "initial": { "n": 1 } })).unwrap();
+    let created = registry.call("artifact_create", serde_json::json!({ "artifactId": "doc-1", "kind": "os.agent.probe/v1", "initial": { "n": 1 } })).unwrap();
     assert!(!created.is_error, "{created:?}");
     let created_structured = created.structured_content.expect("structured content");
     assert_eq!(created_structured["artifactId"], "doc-1");
     assert!(!created_structured["revision"]["headEditId"].as_str().unwrap_or_default().is_empty(), "a real applied edit has a non-empty head edit id: {created_structured}");
 
-    let duplicate = registry.call("artifact_create", serde_json::json!({ "artifactId": "doc-1", "kind": "test.kind" })).unwrap();
+    let duplicate = registry.call("artifact_create", serde_json::json!({ "artifactId": "doc-1", "kind": "os.agent.probe/v1" })).unwrap();
     assert!(duplicate.is_error, "creating the same id twice must not silently no-op");
     assert_eq!(duplicate.structured_content.unwrap()["code"], "PRECONDITION_FAILED");
 

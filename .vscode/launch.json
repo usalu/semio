@@ -103,6 +103,94 @@
       }
     },
     {
+      "name": "▶️start",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run workspace:start",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": -49.9
+      }
+    },
+    {
+      "name": "🏭️generate",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run workspace:generate",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": -49.8
+      }
+    },
+    {
+      "name": "🧹lint",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run workspace:lint",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": -49.7
+      }
+    },
+    {
+      "name": "🎨format",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run workspace:format",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": -49.6
+      }
+    },
+    {
+      "name": "🧪️test",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run workspace:test",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": -49.5
+      }
+    },
+    {
+      "name": "📦️build",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run workspace:build",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": -49.4
+      }
+    },
+    {
+      "name": "🚢️publish",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run workspace:publish",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": -49.3
+      }
+    },
+    {
+      "name": "🗑️purge",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run workspace:purge",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": -49.2
+      }
+    },
+    {
       "name": "🧰️prepare",
       "type": "node-terminal",
       "request": "launch",
@@ -404,8 +492,10 @@
       "command": "bun nx run workspace:dev -- cad",
       "cwd": "${workspaceFolder}",
       "env": {
-        "CAD_JS_RENDERER_PLAY_PORT": "6020",
-        "SEMIO_RENDERER": "react"
+        "S_OS_PORT": "6020",
+        "SEMIO_PLUGIN": "cad",
+        "SEMIO_RENDERER": "react",
+        "SEMIO_APP": "s.cad.cad@1/*#editor"
       },
       "presentation": {
         "group": "3_dev",
@@ -424,8 +514,10 @@
       "command": "bun nx run workspace:dev -- cad",
       "cwd": "${workspaceFolder}",
       "env": {
-        "CAD_JS_RENDERER_PLAY_PORT": "6120",
-        "SEMIO_RENDERER": "wgpu"
+        "S_OS_PORT": "6120",
+        "SEMIO_PLUGIN": "cad",
+        "SEMIO_RENDERER": "wgpu",
+        "SEMIO_APP": "s.cad.cad@1/*#editor"
       },
       "presentation": {
         "group": "3_dev",
@@ -449,7 +541,7 @@
       }
     },
     {
-      "name": "🛠️dev📐️cad⚛️react",
+      "name": "🛠️dev📐️cad🧩️concrete🌲️forest⚛️react",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run workspace:dev -- cad fixture concrete",
@@ -469,7 +561,7 @@
       }
     },
     {
-      "name": "🛠️dev📐️cad🧊️wgpu🌐️wasm",
+      "name": "🛠️dev📐️cad🧩️concrete🌲️forest🧊️wgpu🌐️wasm",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run workspace:dev -- cad fixture concrete",
@@ -489,7 +581,7 @@
       }
     },
     {
-      "name": "🛠️dev📐️cad🧊️wgpu🖥️native",
+      "name": "🛠️dev📐️cad🧩️concrete🌲️forest🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run @semio-tech/framework-renderer-wgpu:native -- cad",
@@ -506,7 +598,8 @@
       "command": "bun nx run workspace:dev -- dag",
       "cwd": "${workspaceFolder}",
       "env": {
-        "DAG_PLAY_PORT": "6017",
+        "S_OS_PORT": "6017",
+        "SEMIO_PLUGIN": "dag",
         "SEMIO_RENDERER": "react"
       },
       "presentation": {
@@ -526,7 +619,8 @@
       "command": "bun nx run workspace:dev -- dag",
       "cwd": "${workspaceFolder}",
       "env": {
-        "DAG_PLAY_PORT": "6117",
+        "S_OS_PORT": "6117",
+        "SEMIO_PLUGIN": "dag",
         "SEMIO_RENDERER": "wgpu"
       },
       "presentation": {
@@ -557,8 +651,10 @@
       "command": "bun nx run workspace:dev -- mathematical",
       "cwd": "${workspaceFolder}",
       "env": {
-        "MATHEMATICAL_PLAY_PORT": "6084",
-        "SEMIO_RENDERER": "react"
+        "S_OS_PORT": "6084",
+        "SEMIO_PLUGIN": "mathematical",
+        "SEMIO_RENDERER": "react",
+        "SEMIO_APP": "s.mathematical.equation@1/*#editor"
       },
       "presentation": {
         "group": "3_dev",
@@ -577,8 +673,10 @@
       "command": "bun nx run workspace:dev -- mathematical",
       "cwd": "${workspaceFolder}",
       "env": {
-        "MATHEMATICAL_PLAY_PORT": "6184",
-        "SEMIO_RENDERER": "wgpu"
+        "S_OS_PORT": "6184",
+        "SEMIO_PLUGIN": "mathematical",
+        "SEMIO_RENDERER": "wgpu",
+        "SEMIO_APP": "s.mathematical.equation@1/*#editor"
       },
       "presentation": {
         "group": "3_dev",
@@ -608,7 +706,8 @@
       "command": "bun nx run workspace:dev -- architect",
       "cwd": "${workspaceFolder}",
       "env": {
-        "ARCHITECT_PLAY_PORT": "6090",
+        "S_OS_PORT": "6090",
+        "SEMIO_PLUGIN": "architect",
         "SEMIO_RENDERER": "react"
       },
       "presentation": {
@@ -628,7 +727,8 @@
       "command": "bun nx run workspace:dev -- architect",
       "cwd": "${workspaceFolder}",
       "env": {
-        "ARCHITECT_PLAY_PORT": "6190",
+        "S_OS_PORT": "6190",
+        "SEMIO_PLUGIN": "architect",
         "SEMIO_RENDERER": "wgpu"
       },
       "presentation": {
@@ -659,7 +759,8 @@
       "command": "bun nx run workspace:dev -- flow",
       "cwd": "${workspaceFolder}",
       "env": {
-        "FLOW_PLAY_PORT": "6016",
+        "S_OS_PORT": "6016",
+        "SEMIO_PLUGIN": "flow",
         "SEMIO_RENDERER": "react"
       },
       "presentation": {
@@ -679,7 +780,8 @@
       "command": "bun nx run workspace:dev -- flow",
       "cwd": "${workspaceFolder}",
       "env": {
-        "FLOW_PLAY_PORT": "6116",
+        "S_OS_PORT": "6116",
+        "SEMIO_PLUGIN": "flow",
         "SEMIO_RENDERER": "wgpu"
       },
       "presentation": {
@@ -710,7 +812,8 @@
       "command": "bun nx run workspace:dev -- imperative",
       "cwd": "${workspaceFolder}",
       "env": {
-        "IMPERATIVE_PLAY_PORT": "6076",
+        "S_OS_PORT": "6076",
+        "SEMIO_PLUGIN": "imperative",
         "SEMIO_RENDERER": "react"
       },
       "presentation": {
@@ -730,7 +833,8 @@
       "command": "bun nx run workspace:dev -- imperative",
       "cwd": "${workspaceFolder}",
       "env": {
-        "IMPERATIVE_PLAY_PORT": "6176",
+        "S_OS_PORT": "6176",
+        "SEMIO_PLUGIN": "imperative",
         "SEMIO_RENDERER": "wgpu"
       },
       "presentation": {
@@ -761,7 +865,8 @@
       "command": "bun nx run workspace:dev -- sequence",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEQUENCE_PLAY_PORT": "6077",
+        "S_OS_PORT": "6077",
+        "SEMIO_PLUGIN": "sequence",
         "SEMIO_RENDERER": "react"
       },
       "presentation": {
@@ -781,7 +886,8 @@
       "command": "bun nx run workspace:dev -- sequence",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEQUENCE_PLAY_PORT": "6177",
+        "S_OS_PORT": "6177",
+        "SEMIO_PLUGIN": "sequence",
         "SEMIO_RENDERER": "wgpu"
       },
       "presentation": {
@@ -812,8 +918,10 @@
       "command": "bun nx run workspace:dev -- lowpoly",
       "cwd": "${workspaceFolder}",
       "env": {
-        "LOWPOLY_PLAY_PORT": "6078",
-        "SEMIO_RENDERER": "react"
+        "S_OS_PORT": "6078",
+        "SEMIO_PLUGIN": "lowpoly",
+        "SEMIO_RENDERER": "react",
+        "SEMIO_APP": "s.lowpoly.lowpoly@1/*#editor"
       },
       "presentation": {
         "group": "3_dev",
@@ -832,9 +940,10 @@
       "command": "bun nx run workspace:dev -- lowpoly",
       "cwd": "${workspaceFolder}",
       "env": {
-        "LOWPOLY_PLAY_PORT": "6178",
+        "S_OS_PORT": "6178",
         "SEMIO_PLUGIN": "lowpoly",
-        "SEMIO_RENDERER": "wgpu"
+        "SEMIO_RENDERER": "wgpu",
+        "SEMIO_APP": "s.lowpoly.lowpoly@1/*#editor"
       },
       "presentation": {
         "group": "3_dev",
@@ -843,7 +952,7 @@
       "serverReadyAction": {
         "action": "openExternally",
         "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6178)",
-        "uriFormat": "%s?plugin=lowpoly"
+        "uriFormat": "%s"
       }
     },
     {
@@ -864,8 +973,10 @@
       "command": "bun nx run workspace:dev -- layout",
       "cwd": "${workspaceFolder}",
       "env": {
-        "LAYOUT_PLAY_PORT": "6079",
-        "SEMIO_RENDERER": "react"
+        "S_OS_PORT": "6079",
+        "SEMIO_PLUGIN": "layout",
+        "SEMIO_RENDERER": "react",
+        "SEMIO_APP": "s.layout.layout@1/*#editor"
       },
       "presentation": {
         "group": "3_dev",
@@ -884,8 +995,10 @@
       "command": "bun nx run workspace:dev -- layout",
       "cwd": "${workspaceFolder}",
       "env": {
-        "LAYOUT_PLAY_PORT": "6179",
-        "SEMIO_RENDERER": "wgpu"
+        "S_OS_PORT": "6179",
+        "SEMIO_PLUGIN": "layout",
+        "SEMIO_RENDERER": "wgpu",
+        "SEMIO_APP": "s.layout.layout@1/*#editor"
       },
       "presentation": {
         "group": "3_dev",
@@ -912,11 +1025,13 @@
       "name": "🛠️dev🌍️gis🗺️gismap⚛️react",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run workspace:dev -- gis 2d",
+      "command": "bun nx run workspace:dev -- gis2d",
       "cwd": "${workspaceFolder}",
       "env": {
-        "GIS_2D_PLAY_PORT": "6040",
-        "SEMIO_RENDERER": "react"
+        "S_OS_PORT": "6040",
+        "SEMIO_PLUGIN": "gis2d",
+        "SEMIO_RENDERER": "react",
+        "SEMIO_APP": "s.gis.gismap@1/*#editor"
       },
       "presentation": {
         "group": "3_dev",
@@ -924,7 +1039,7 @@
       },
       "serverReadyAction": {
         "action": "openExternally",
-        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost):6040)",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6040)",
         "uriFormat": "%s"
       }
     },
@@ -932,11 +1047,13 @@
       "name": "🛠️dev🌍️gis🗺️gismap🧊️wgpu🌐️wasm",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run workspace:dev -- gis 2d",
+      "command": "bun nx run workspace:dev -- gis2d",
       "cwd": "${workspaceFolder}",
       "env": {
-        "GIS_2D_PLAY_PORT": "6140",
-        "SEMIO_RENDERER": "wgpu"
+        "S_OS_PORT": "6140",
+        "SEMIO_PLUGIN": "gis2d",
+        "SEMIO_RENDERER": "wgpu",
+        "SEMIO_APP": "s.gis.gismap@1/*#editor"
       },
       "presentation": {
         "group": "3_dev",
@@ -944,7 +1061,7 @@
       },
       "serverReadyAction": {
         "action": "openExternally",
-        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost):6140)",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6140)",
         "uriFormat": "%s"
       }
     },
@@ -963,11 +1080,13 @@
       "name": "🛠️dev🌍️gis🏔️gisterrain⚛️react",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run workspace:dev -- gis 3d",
+      "command": "bun nx run workspace:dev -- gis3d",
       "cwd": "${workspaceFolder}",
       "env": {
-        "GIS_3D_PLAY_PORT": "6083",
-        "SEMIO_RENDERER": "react"
+        "S_OS_PORT": "6083",
+        "SEMIO_PLUGIN": "gis3d",
+        "SEMIO_RENDERER": "react",
+        "SEMIO_APP": "s.gis.gisterrain@1/*#editor"
       },
       "presentation": {
         "group": "3_dev",
@@ -975,7 +1094,7 @@
       },
       "serverReadyAction": {
         "action": "openExternally",
-        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost):6083)",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6083)",
         "uriFormat": "%s"
       }
     },
@@ -983,11 +1102,13 @@
       "name": "🛠️dev🌍️gis🏔️gisterrain🧊️wgpu🌐️wasm",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run workspace:dev -- gis 3d",
+      "command": "bun nx run workspace:dev -- gis3d",
       "cwd": "${workspaceFolder}",
       "env": {
-        "GIS_3D_PLAY_PORT": "6183",
-        "SEMIO_RENDERER": "wgpu"
+        "S_OS_PORT": "6183",
+        "SEMIO_PLUGIN": "gis3d",
+        "SEMIO_RENDERER": "wgpu",
+        "SEMIO_APP": "s.gis.gisterrain@1/*#editor"
       },
       "presentation": {
         "group": "3_dev",
@@ -995,7 +1116,7 @@
       },
       "serverReadyAction": {
         "action": "openExternally",
-        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost):6183)",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6183)",
         "uriFormat": "%s"
       }
     },
@@ -1017,7 +1138,8 @@
       "command": "bun nx run workspace:dev -- animate",
       "cwd": "${workspaceFolder}",
       "env": {
-        "PRESENTATION_PLAY_PORT": "6051",
+        "S_OS_PORT": "6051",
+        "SEMIO_PLUGIN": "animate",
         "SEMIO_RENDERER": "react"
       },
       "presentation": {
@@ -1026,7 +1148,7 @@
       },
       "serverReadyAction": {
         "action": "openExternally",
-        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost):6051)",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6051)",
         "uriFormat": "%s"
       }
     },
@@ -1037,7 +1159,8 @@
       "command": "bun nx run workspace:dev -- animate",
       "cwd": "${workspaceFolder}",
       "env": {
-        "PRESENTATION_PLAY_PORT": "6151",
+        "S_OS_PORT": "6151",
+        "SEMIO_PLUGIN": "animate",
         "SEMIO_RENDERER": "wgpu"
       },
       "presentation": {
@@ -1046,7 +1169,7 @@
       },
       "serverReadyAction": {
         "action": "openExternally",
-        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost):6151)",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6151)",
         "uriFormat": "%s"
       }
     },
@@ -1083,11 +1206,13 @@
       "name": "🛠️dev🌀️procedural🌀️generation2d⚛️react",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run workspace:dev -- procedural 2d",
+      "command": "bun nx run workspace:dev -- generation2d",
       "cwd": "${workspaceFolder}",
       "env": {
         "S_OS_PORT": "6021",
-        "SEMIO_RENDERER": "react"
+        "SEMIO_PLUGIN": "generation2d",
+        "SEMIO_RENDERER": "react",
+        "SEMIO_APP": "s.procedural.generation2d@1/*#editor"
       },
       "presentation": {
         "group": "3_dev",
@@ -1103,11 +1228,13 @@
       "name": "🛠️dev🌀️procedural🌀️generation2d🧊️wgpu🌐️wasm",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run workspace:dev -- procedural 2d",
+      "command": "bun nx run workspace:dev -- generation2d",
       "cwd": "${workspaceFolder}",
       "env": {
         "S_OS_PORT": "6121",
-        "SEMIO_RENDERER": "wgpu"
+        "SEMIO_PLUGIN": "generation2d",
+        "SEMIO_RENDERER": "wgpu",
+        "SEMIO_APP": "s.procedural.generation2d@1/*#editor"
       },
       "presentation": {
         "group": "3_dev",
@@ -1134,11 +1261,13 @@
       "name": "🛠️dev🌀️procedural🧊️generation3d⚛️react",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run workspace:dev -- procedural 3d",
+      "command": "bun nx run workspace:dev -- generation3d",
       "cwd": "${workspaceFolder}",
       "env": {
         "S_OS_PORT": "6018",
-        "SEMIO_RENDERER": "react"
+        "SEMIO_PLUGIN": "generation3d",
+        "SEMIO_RENDERER": "react",
+        "SEMIO_APP": "s.procedural.generation3d@1/*#editor"
       },
       "presentation": {
         "group": "3_dev",
@@ -1154,11 +1283,13 @@
       "name": "🛠️dev🌀️procedural🧊️generation3d🧊️wgpu🌐️wasm",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run workspace:dev -- procedural 3d",
+      "command": "bun nx run workspace:dev -- generation3d",
       "cwd": "${workspaceFolder}",
       "env": {
         "S_OS_PORT": "6118",
-        "SEMIO_RENDERER": "wgpu"
+        "SEMIO_PLUGIN": "generation3d",
+        "SEMIO_RENDERER": "wgpu",
+        "SEMIO_APP": "s.procedural.generation3d@1/*#editor"
       },
       "presentation": {
         "group": "3_dev",
@@ -1185,11 +1316,13 @@
       "name": "🛠️dev🏭️process🧊️process3d⚛️react",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run workspace:dev -- process 3d",
+      "command": "bun nx run workspace:dev -- process3d",
       "cwd": "${workspaceFolder}",
       "env": {
-        "PROCESS_3D_PLAY_PORT": "6022",
-        "SEMIO_RENDERER": "react"
+        "S_OS_PORT": "6022",
+        "SEMIO_PLUGIN": "process3d",
+        "SEMIO_RENDERER": "react",
+        "SEMIO_APP": "s.process.process3d@1/*#editor"
       },
       "presentation": {
         "group": "3_dev",
@@ -1205,11 +1338,13 @@
       "name": "🛠️dev🏭️process🧊️process3d🧊️wgpu🌐️wasm",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run workspace:dev -- process 3d",
+      "command": "bun nx run workspace:dev -- process3d",
       "cwd": "${workspaceFolder}",
       "env": {
-        "PROCESS_3D_PLAY_PORT": "6122",
-        "SEMIO_RENDERER": "wgpu"
+        "S_OS_PORT": "6122",
+        "SEMIO_PLUGIN": "process3d",
+        "SEMIO_RENDERER": "wgpu",
+        "SEMIO_APP": "s.process.process3d@1/*#editor"
       },
       "presentation": {
         "group": "3_dev",
@@ -1240,7 +1375,9 @@
       "cwd": "${workspaceFolder}",
       "env": {
         "S_OS_PORT": "6081",
-        "SEMIO_RENDERER": "react"
+        "SEMIO_PLUGIN": "sourcing",
+        "SEMIO_RENDERER": "react",
+        "SEMIO_APP": "s.sourcing.curation@1/*#editor"
       },
       "presentation": {
         "group": "3_dev",
@@ -1260,7 +1397,9 @@
       "cwd": "${workspaceFolder}",
       "env": {
         "S_OS_PORT": "6181",
-        "SEMIO_RENDERER": "wgpu"
+        "SEMIO_PLUGIN": "sourcing",
+        "SEMIO_RENDERER": "wgpu",
+        "SEMIO_APP": "s.sourcing.curation@1/*#editor"
       },
       "presentation": {
         "group": "3_dev",
@@ -1287,11 +1426,13 @@
       "name": "🛠️dev🀄️wfc🖼️bitmap⚛️react",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run workspace:dev -- wfc bitmap",
+      "command": "bun nx run workspace:dev -- bitmap",
       "cwd": "${workspaceFolder}",
       "env": {
         "S_OS_PORT": "6041",
-        "SEMIO_RENDERER": "react"
+        "SEMIO_PLUGIN": "bitmap",
+        "SEMIO_RENDERER": "react",
+        "SEMIO_APP": "s.wfc.bitmap@1/*#editor"
       },
       "presentation": {
         "group": "3_dev",
@@ -1307,11 +1448,13 @@
       "name": "🛠️dev🀄️wfc🖼️bitmap🧊️wgpu🌐️wasm",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run workspace:dev -- wfc bitmap",
+      "command": "bun nx run workspace:dev -- bitmap",
       "cwd": "${workspaceFolder}",
       "env": {
         "S_OS_PORT": "6141",
-        "SEMIO_RENDERER": "wgpu"
+        "SEMIO_PLUGIN": "bitmap",
+        "SEMIO_RENDERER": "wgpu",
+        "SEMIO_APP": "s.wfc.bitmap@1/*#editor"
       },
       "presentation": {
         "group": "3_dev",
@@ -1338,11 +1481,13 @@
       "name": "🛠️dev🀄️wfc🔲️grid2d⚛️react",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run workspace:dev -- wfc 2d grid",
+      "command": "bun nx run workspace:dev -- grid2d",
       "cwd": "${workspaceFolder}",
       "env": {
         "S_OS_PORT": "6042",
-        "SEMIO_RENDERER": "react"
+        "SEMIO_PLUGIN": "grid2d",
+        "SEMIO_RENDERER": "react",
+        "SEMIO_APP": "s.wfc.grid2d@1/*#editor"
       },
       "presentation": {
         "group": "3_dev",
@@ -1358,11 +1503,13 @@
       "name": "🛠️dev🀄️wfc🔲️grid2d🧊️wgpu🌐️wasm",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run workspace:dev -- wfc 2d grid",
+      "command": "bun nx run workspace:dev -- grid2d",
       "cwd": "${workspaceFolder}",
       "env": {
         "S_OS_PORT": "6142",
-        "SEMIO_RENDERER": "wgpu"
+        "SEMIO_PLUGIN": "grid2d",
+        "SEMIO_RENDERER": "wgpu",
+        "SEMIO_APP": "s.wfc.grid2d@1/*#editor"
       },
       "presentation": {
         "group": "3_dev",
@@ -1389,11 +1536,13 @@
       "name": "🛠️dev🀄️wfc◻️2d⚛️react",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run workspace:dev -- wfc 2d",
+      "command": "bun nx run workspace:dev -- wfc2d",
       "cwd": "${workspaceFolder}",
       "env": {
         "S_OS_PORT": "6043",
-        "SEMIO_RENDERER": "react"
+        "SEMIO_PLUGIN": "wfc2d",
+        "SEMIO_RENDERER": "react",
+        "SEMIO_APP": "s.wfc.wfc2d@1/*#editor"
       },
       "presentation": {
         "group": "3_dev",
@@ -1409,11 +1558,13 @@
       "name": "🛠️dev🀄️wfc◻️2d🧊️wgpu🌐️wasm",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run workspace:dev -- wfc 2d",
+      "command": "bun nx run workspace:dev -- wfc2d",
       "cwd": "${workspaceFolder}",
       "env": {
         "S_OS_PORT": "6143",
-        "SEMIO_RENDERER": "wgpu"
+        "SEMIO_PLUGIN": "wfc2d",
+        "SEMIO_RENDERER": "wgpu",
+        "SEMIO_APP": "s.wfc.wfc2d@1/*#editor"
       },
       "presentation": {
         "group": "3_dev",
@@ -1440,11 +1591,13 @@
       "name": "🛠️dev🀄️wfc🧱️grid3d⚛️react",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run workspace:dev -- wfc 3d grid",
+      "command": "bun nx run workspace:dev -- grid3d",
       "cwd": "${workspaceFolder}",
       "env": {
         "S_OS_PORT": "6044",
-        "SEMIO_RENDERER": "react"
+        "SEMIO_PLUGIN": "grid3d",
+        "SEMIO_RENDERER": "react",
+        "SEMIO_APP": "s.wfc.grid3d@1/*#editor"
       },
       "presentation": {
         "group": "3_dev",
@@ -1460,11 +1613,13 @@
       "name": "🛠️dev🀄️wfc🧱️grid3d🧊️wgpu🌐️wasm",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run workspace:dev -- wfc 3d grid",
+      "command": "bun nx run workspace:dev -- grid3d",
       "cwd": "${workspaceFolder}",
       "env": {
         "S_OS_PORT": "6144",
-        "SEMIO_RENDERER": "wgpu"
+        "SEMIO_PLUGIN": "grid3d",
+        "SEMIO_RENDERER": "wgpu",
+        "SEMIO_APP": "s.wfc.grid3d@1/*#editor"
       },
       "presentation": {
         "group": "3_dev",
@@ -1491,11 +1646,13 @@
       "name": "🛠️dev🀄️wfc🧊️3d⚛️react",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run workspace:dev -- wfc 3d",
+      "command": "bun nx run workspace:dev -- wfc3d",
       "cwd": "${workspaceFolder}",
       "env": {
         "S_OS_PORT": "6045",
-        "SEMIO_RENDERER": "react"
+        "SEMIO_PLUGIN": "wfc3d",
+        "SEMIO_RENDERER": "react",
+        "SEMIO_APP": "s.wfc.wfc3d@1/*#editor"
       },
       "presentation": {
         "group": "3_dev",
@@ -1511,11 +1668,13 @@
       "name": "🛠️dev🀄️wfc🧊️3d🧊️wgpu🌐️wasm",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run workspace:dev -- wfc 3d",
+      "command": "bun nx run workspace:dev -- wfc3d",
       "cwd": "${workspaceFolder}",
       "env": {
         "S_OS_PORT": "6145",
-        "SEMIO_RENDERER": "wgpu"
+        "SEMIO_PLUGIN": "wfc3d",
+        "SEMIO_RENDERER": "wgpu",
+        "SEMIO_APP": "s.wfc.wfc3d@1/*#editor"
       },
       "presentation": {
         "group": "3_dev",
@@ -1642,7 +1801,7 @@
       }
     },
     {
-      "name": "🛠️dev♻️mit-bestand📋️zwischenbericht",
+      "name": "🛠️dev♻️mit-bestand📚️bericht",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run @semio-tech/mit-bestand-bericht:watch",
@@ -1660,7 +1819,9 @@
       "cwd": "${workspaceFolder}",
       "env": {
         "S_OS_PORT": "6023",
-        "SEMIO_RENDERER": "react"
+        "SEMIO_PLUGIN": "aggregator",
+        "SEMIO_RENDERER": "react",
+        "SEMIO_APP": "s.puzzle.puzzle3d@1/*#editor"
       },
       "presentation": {
         "group": "3_dev",
@@ -1668,7 +1829,7 @@
       },
       "serverReadyAction": {
         "action": "openExternally",
-        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost):6023)",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6023)",
         "uriFormat": "%s"
       }
     },
@@ -1722,7 +1883,9 @@
       "cwd": "${workspaceFolder}",
       "env": {
         "S_OS_PORT": "6027",
-        "SEMIO_RENDERER": "react"
+        "SEMIO_PLUGIN": "generator",
+        "SEMIO_RENDERER": "react",
+        "SEMIO_APP": "s.procedural.generation3d@1/*#editor"
       },
       "presentation": {
         "group": "3_dev",
@@ -1730,7 +1893,7 @@
       },
       "serverReadyAction": {
         "action": "openExternally",
-        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost):6027)",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6027)",
         "uriFormat": "%s"
       }
     },
@@ -1742,7 +1905,9 @@
       "cwd": "${workspaceFolder}",
       "env": {
         "S_OS_PORT": "6028",
-        "SEMIO_RENDERER": "react"
+        "SEMIO_PLUGIN": "koordinator",
+        "SEMIO_RENDERER": "react",
+        "SEMIO_APP": "s.cad.cad@1/*#editor"
       },
       "presentation": {
         "group": "3_dev",
@@ -1750,7 +1915,7 @@
       },
       "serverReadyAction": {
         "action": "openExternally",
-        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost):6028)",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6028)",
         "uriFormat": "%s"
       }
     },
@@ -1762,7 +1927,9 @@
       "cwd": "${workspaceFolder}",
       "env": {
         "S_OS_PORT": "6030",
-        "SEMIO_RENDERER": "react"
+        "SEMIO_PLUGIN": "aussuchen",
+        "SEMIO_RENDERER": "react",
+        "SEMIO_APP": "s.sourcing.curation@1/*#editor"
       },
       "presentation": {
         "group": "3_dev",
@@ -1770,7 +1937,7 @@
       },
       "serverReadyAction": {
         "action": "openExternally",
-        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost):6030)",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6030)",
         "uriFormat": "%s"
       }
     },
@@ -1782,7 +1949,9 @@
       "cwd": "${workspaceFolder}",
       "env": {
         "S_OS_PORT": "6031",
-        "SEMIO_RENDERER": "react"
+        "SEMIO_PLUGIN": "bearbeiten",
+        "SEMIO_RENDERER": "react",
+        "SEMIO_APP": "s.process.process3d@1/*#editor"
       },
       "presentation": {
         "group": "3_dev",
@@ -1790,7 +1959,7 @@
       },
       "serverReadyAction": {
         "action": "openExternally",
-        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost):6031)",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6031)",
         "uriFormat": "%s"
       }
     },
@@ -1802,7 +1971,9 @@
       "cwd": "${workspaceFolder}",
       "env": {
         "S_OS_PORT": "6032",
-        "SEMIO_RENDERER": "react"
+        "SEMIO_PLUGIN": "verfolgen",
+        "SEMIO_RENDERER": "react",
+        "SEMIO_APP": "s.gis.gismap@1/*#editor"
       },
       "presentation": {
         "group": "3_dev",
@@ -1810,7 +1981,7 @@
       },
       "serverReadyAction": {
         "action": "openExternally",
-        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost):6032)",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6032)",
         "uriFormat": "%s"
       }
     },
@@ -1818,11 +1989,13 @@
       "name": "🛠️dev🧩️puzzle◻️2d⚛️react",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run workspace:dev -- 2d",
+      "command": "bun nx run workspace:dev -- puzzle2d",
       "cwd": "${workspaceFolder}",
       "env": {
-        "PUZZLE_2D_PLAY_PORT": "6012",
-        "SEMIO_RENDERER": "react"
+        "S_OS_PORT": "6012",
+        "SEMIO_PLUGIN": "puzzle2d",
+        "SEMIO_RENDERER": "react",
+        "SEMIO_APP": "s.puzzle.puzzle2d@1/*#editor"
       },
       "presentation": {
         "group": "3_dev",
@@ -1830,7 +2003,7 @@
       },
       "serverReadyAction": {
         "action": "openExternally",
-        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost):6012)",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6012)",
         "uriFormat": "%s"
       }
     },
@@ -1838,11 +2011,13 @@
       "name": "🛠️dev🧩️puzzle◻️2d🧊️wgpu🌐️wasm",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run workspace:dev -- 2d",
+      "command": "bun nx run workspace:dev -- puzzle2d",
       "cwd": "${workspaceFolder}",
       "env": {
-        "PUZZLE_2D_PLAY_PORT": "6112",
-        "SEMIO_RENDERER": "wgpu"
+        "S_OS_PORT": "6112",
+        "SEMIO_PLUGIN": "puzzle2d",
+        "SEMIO_RENDERER": "wgpu",
+        "SEMIO_APP": "s.puzzle.puzzle2d@1/*#editor"
       },
       "presentation": {
         "group": "3_dev",
@@ -1850,7 +2025,7 @@
       },
       "serverReadyAction": {
         "action": "openExternally",
-        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost):6112)",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6112)",
         "uriFormat": "%s"
       }
     },
@@ -1869,11 +2044,13 @@
       "name": "🛠️dev🧩️puzzle🧊️3d⚛️react",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run workspace:dev -- 3d",
+      "command": "bun nx run workspace:dev -- puzzle3d",
       "cwd": "${workspaceFolder}",
       "env": {
-        "PUZZLE_3D_PLAY_PORT": "6013",
-        "SEMIO_RENDERER": "react"
+        "S_OS_PORT": "6013",
+        "SEMIO_PLUGIN": "puzzle3d",
+        "SEMIO_RENDERER": "react",
+        "SEMIO_APP": "s.puzzle.puzzle3d@1/*#editor"
       },
       "presentation": {
         "group": "3_dev",
@@ -1881,7 +2058,7 @@
       },
       "serverReadyAction": {
         "action": "openExternally",
-        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost):6013)",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6013)",
         "uriFormat": "%s"
       }
     },
@@ -1889,11 +2066,13 @@
       "name": "🛠️dev🧩️puzzle🧊️3d🧊️wgpu🌐️wasm",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run workspace:dev -- 3d",
+      "command": "bun nx run workspace:dev -- puzzle3d",
       "cwd": "${workspaceFolder}",
       "env": {
-        "PUZZLE_3D_PLAY_PORT": "6113",
-        "SEMIO_RENDERER": "wgpu"
+        "S_OS_PORT": "6113",
+        "SEMIO_PLUGIN": "puzzle3d",
+        "SEMIO_RENDERER": "wgpu",
+        "SEMIO_APP": "s.puzzle.puzzle3d@1/*#editor"
       },
       "presentation": {
         "group": "3_dev",
@@ -1901,7 +2080,7 @@
       },
       "serverReadyAction": {
         "action": "openExternally",
-        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost):6113)",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6113)",
         "uriFormat": "%s"
       }
     },
@@ -1957,7 +2136,7 @@
       }
     },
     {
-      "name": "🛠️dev🧩️puzzle🧊️3d🧊️wgpu🖥️native",
+      "name": "🛠️dev🧩️puzzle🏙️3d🎛️concrete🌲️forest🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run @semio-tech/framework-renderer-wgpu:native -- puzzle3d",
@@ -1971,11 +2150,13 @@
       "name": "🛠️dev🧩️puzzle🖐️5d⚛️react",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run workspace:dev -- 5d",
+      "command": "bun nx run workspace:dev -- puzzle5d",
       "cwd": "${workspaceFolder}",
       "env": {
-        "PUZZLE_5D_PLAY_PORT": "6014",
-        "SEMIO_RENDERER": "react"
+        "S_OS_PORT": "6014",
+        "SEMIO_PLUGIN": "puzzle5d",
+        "SEMIO_RENDERER": "react",
+        "SEMIO_APP": "s.puzzle.puzzle5d@1/*#editor"
       },
       "presentation": {
         "group": "3_dev",
@@ -1983,7 +2164,7 @@
       },
       "serverReadyAction": {
         "action": "openExternally",
-        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost):6014)",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6014)",
         "uriFormat": "%s"
       }
     },
@@ -1991,11 +2172,13 @@
       "name": "🛠️dev🧩️puzzle🖐️5d🧊️wgpu🌐️wasm",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run workspace:dev -- 5d",
+      "command": "bun nx run workspace:dev -- puzzle5d",
       "cwd": "${workspaceFolder}",
       "env": {
-        "PUZZLE_5D_PLAY_PORT": "6114",
-        "SEMIO_RENDERER": "wgpu"
+        "S_OS_PORT": "6114",
+        "SEMIO_PLUGIN": "puzzle5d",
+        "SEMIO_RENDERER": "wgpu",
+        "SEMIO_APP": "s.puzzle.puzzle5d@1/*#editor"
       },
       "presentation": {
         "group": "3_dev",
@@ -2003,7 +2186,7 @@
       },
       "serverReadyAction": {
         "action": "openExternally",
-        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost):6114)",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6114)",
         "uriFormat": "%s"
       }
     },
@@ -2059,7 +2242,7 @@
       }
     },
     {
-      "name": "🛠️dev🧩️puzzle🖐️5d🧊️wgpu🖥️native",
+      "name": "🛠️dev🧩️puzzle👯️5d🎛️concrete🌲️forest🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run @semio-tech/framework-renderer-wgpu:native -- puzzle5d",
@@ -2117,11 +2300,13 @@
       "name": "🛠️dev🧱️block◻️2d⚛️react",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run workspace:dev -- block 2d",
+      "command": "bun nx run workspace:dev -- block2d",
       "cwd": "${workspaceFolder}",
       "env": {
-        "BLOCK_2D_PLAY_PORT": "6024",
-        "SEMIO_RENDERER": "react"
+        "S_OS_PORT": "6024",
+        "SEMIO_PLUGIN": "block2d",
+        "SEMIO_RENDERER": "react",
+        "SEMIO_APP": "s.block.block2d@1/*#editor"
       },
       "presentation": {
         "group": "3_dev",
@@ -2129,7 +2314,7 @@
       },
       "serverReadyAction": {
         "action": "openExternally",
-        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost):6024)",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6024)",
         "uriFormat": "%s"
       }
     },
@@ -2137,11 +2322,13 @@
       "name": "🛠️dev🧱️block◻️2d🧊️wgpu🌐️wasm",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run workspace:dev -- block 2d",
+      "command": "bun nx run workspace:dev -- block2d",
       "cwd": "${workspaceFolder}",
       "env": {
-        "BLOCK_2D_PLAY_PORT": "6124",
-        "SEMIO_RENDERER": "wgpu"
+        "S_OS_PORT": "6124",
+        "SEMIO_PLUGIN": "block2d",
+        "SEMIO_RENDERER": "wgpu",
+        "SEMIO_APP": "s.block.block2d@1/*#editor"
       },
       "presentation": {
         "group": "3_dev",
@@ -2149,7 +2336,7 @@
       },
       "serverReadyAction": {
         "action": "openExternally",
-        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost):6124)",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6124)",
         "uriFormat": "%s"
       }
     },
@@ -2168,11 +2355,13 @@
       "name": "🛠️dev🧱️block🧊️3d⚛️react",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run workspace:dev -- block 3d",
+      "command": "bun nx run workspace:dev -- block3d",
       "cwd": "${workspaceFolder}",
       "env": {
-        "BLOCK_3D_PLAY_PORT": "6025",
-        "SEMIO_RENDERER": "react"
+        "S_OS_PORT": "6025",
+        "SEMIO_PLUGIN": "block3d",
+        "SEMIO_RENDERER": "react",
+        "SEMIO_APP": "s.block.block3d@1/*#editor"
       },
       "presentation": {
         "group": "3_dev",
@@ -2180,7 +2369,7 @@
       },
       "serverReadyAction": {
         "action": "openExternally",
-        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost):6025)",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6025)",
         "uriFormat": "%s"
       }
     },
@@ -2188,11 +2377,13 @@
       "name": "🛠️dev🧱️block🧊️3d🧊️wgpu🌐️wasm",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run workspace:dev -- block 3d",
+      "command": "bun nx run workspace:dev -- block3d",
       "cwd": "${workspaceFolder}",
       "env": {
-        "BLOCK_3D_PLAY_PORT": "6125",
-        "SEMIO_RENDERER": "wgpu"
+        "S_OS_PORT": "6125",
+        "SEMIO_PLUGIN": "block3d",
+        "SEMIO_RENDERER": "wgpu",
+        "SEMIO_APP": "s.block.block3d@1/*#editor"
       },
       "presentation": {
         "group": "3_dev",
@@ -2200,7 +2391,7 @@
       },
       "serverReadyAction": {
         "action": "openExternally",
-        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost):6125)",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6125)",
         "uriFormat": "%s"
       }
     },
@@ -2219,11 +2410,13 @@
       "name": "🛠️dev🧱️block🖐️5d⚛️react",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run workspace:dev -- block 5d",
+      "command": "bun nx run workspace:dev -- block5d",
       "cwd": "${workspaceFolder}",
       "env": {
-        "BLOCK_5D_PLAY_PORT": "6026",
-        "SEMIO_RENDERER": "react"
+        "S_OS_PORT": "6026",
+        "SEMIO_PLUGIN": "block5d",
+        "SEMIO_RENDERER": "react",
+        "SEMIO_APP": "s.block.block5d@1/*#editor"
       },
       "presentation": {
         "group": "3_dev",
@@ -2231,7 +2424,7 @@
       },
       "serverReadyAction": {
         "action": "openExternally",
-        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost):6026)",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6026)",
         "uriFormat": "%s"
       }
     },
@@ -2239,11 +2432,13 @@
       "name": "🛠️dev🧱️block🖐️5d🧊️wgpu🌐️wasm",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run workspace:dev -- block 5d",
+      "command": "bun nx run workspace:dev -- block5d",
       "cwd": "${workspaceFolder}",
       "env": {
-        "BLOCK_5D_PLAY_PORT": "6126",
-        "SEMIO_RENDERER": "wgpu"
+        "S_OS_PORT": "6126",
+        "SEMIO_PLUGIN": "block5d",
+        "SEMIO_RENDERER": "wgpu",
+        "SEMIO_APP": "s.block.block5d@1/*#editor"
       },
       "presentation": {
         "group": "3_dev",
@@ -2251,7 +2446,7 @@
       },
       "serverReadyAction": {
         "action": "openExternally",
-        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost):6126)",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6126)",
         "uriFormat": "%s"
       }
     },
@@ -2270,10 +2465,11 @@
       "name": "🛠️dev💡️reasoning🔌️wires⚛️react",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run workspace:dev -- wires",
+      "command": "bun nx run workspace:dev -- reasoning-wires",
       "cwd": "${workspaceFolder}",
       "env": {
-        "WIRES_PLAY_PORT": "6015",
+        "S_OS_PORT": "6015",
+        "SEMIO_PLUGIN": "reasoning-wires",
         "SEMIO_RENDERER": "react"
       },
       "presentation": {
@@ -2282,7 +2478,7 @@
       },
       "serverReadyAction": {
         "action": "openExternally",
-        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost):6015)",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6015)",
         "uriFormat": "%s"
       }
     },
@@ -2290,10 +2486,11 @@
       "name": "🛠️dev💡️reasoning🔌️wires🧊️wgpu🌐️wasm",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run workspace:dev -- wires",
+      "command": "bun nx run workspace:dev -- reasoning-wires",
       "cwd": "${workspaceFolder}",
       "env": {
-        "WIRES_PLAY_PORT": "6115",
+        "S_OS_PORT": "6115",
+        "SEMIO_PLUGIN": "reasoning-wires",
         "SEMIO_RENDERER": "wgpu"
       },
       "presentation": {
@@ -2302,7 +2499,7 @@
       },
       "serverReadyAction": {
         "action": "openExternally",
-        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost):6115)",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6115)",
         "uriFormat": "%s"
       }
     },
@@ -2363,6 +2560,7 @@
       "name": "🛠️dev🧰️repo⌨️client",
       "type": "node-terminal",
       "request": "launch",
+      "command": "bun nx run @semio-tech/repo-cli-rs:run",
       "env": {
         "SEMIO_REPO_IMPLEMENTATION": "go",
         "GOWORK": "${workspaceFolder}/go.work"
@@ -2371,17 +2569,6 @@
       "presentation": {
         "group": "3_dev",
         "order": 280.25
-      }
-    },
-    {
-      "name": "🛠️dev🧰️repo🔌️mcp🦀️rust",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "bun nx run @semio-tech/repo-cli-rs:mcp",
-      "cwd": "${workspaceFolder}",
-      "presentation": {
-        "group": "3_dev",
-        "order": 280.3
       }
     },
     {
@@ -2399,7 +2586,7 @@
       "name": "🛠️dev🧰️repo🖥️coordinator🐹️go",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @semio-tech/repo-coordinator-go:run",
+      "command": "bun nx run @semio-tech/repo-coordinator-go:dev",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -2435,8 +2622,10 @@
       "command": "bun nx run workspace:dev -- shooting",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SHOOTING_PLAY_PORT": "6019",
-        "SEMIO_RENDERER": "react"
+        "S_OS_PORT": "6019",
+        "SEMIO_PLUGIN": "shooting",
+        "SEMIO_RENDERER": "react",
+        "SEMIO_APP": "s.shooting.shooting@1/*#editor"
       },
       "presentation": {
         "group": "3_dev",
@@ -2455,8 +2644,10 @@
       "command": "bun nx run workspace:dev -- shooting",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SHOOTING_PLAY_PORT": "6119",
-        "SEMIO_RENDERER": "wgpu"
+        "S_OS_PORT": "6119",
+        "SEMIO_PLUGIN": "shooting",
+        "SEMIO_RENDERER": "wgpu",
+        "SEMIO_APP": "s.shooting.shooting@1/*#editor"
       },
       "presentation": {
         "group": "3_dev",
@@ -2480,7 +2671,7 @@
       }
     },
     {
-      "name": "🛠️dev🎥️shooting⚛️react",
+      "name": "🛠️dev📸️shooting🎛️base⚛️react",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run workspace:dev -- shooting fixture base-icon",
@@ -2500,7 +2691,7 @@
       }
     },
     {
-      "name": "🛠️dev🎥️shooting🧊️wgpu🌐️wasm",
+      "name": "🛠️dev📸️shooting🎛️base🧊️wgpu🌐️wasm",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run workspace:dev -- shooting fixture base-icon",
@@ -2520,7 +2711,7 @@
       }
     },
     {
-      "name": "🛠️dev🎥️shooting🧊️wgpu🖥️native",
+      "name": "🛠️dev📸️shooting🎛️base🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run @semio-tech/framework-renderer-wgpu:native -- shooting",
@@ -2762,11 +2953,13 @@
       "name": "🛠️dev🔱️trinity🔌️jack⚛️react",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run workspace:dev -- trinity jack",
+      "command": "bun nx run workspace:dev -- trinity-jack",
       "cwd": "${workspaceFolder}",
       "env": {
-        "TRINITY_JACK_PLAY_PORT": "6054",
-        "SEMIO_RENDERER": "react"
+        "S_OS_PORT": "6054",
+        "SEMIO_PLUGIN": "trinity-jack",
+        "SEMIO_RENDERER": "react",
+        "SEMIO_APP": "s.trinity.jack@1/*#editor"
       },
       "presentation": {
         "group": "3_dev",
@@ -2782,11 +2975,13 @@
       "name": "🛠️dev🔱️trinity🔌️jack🧊️wgpu🌐️wasm",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run workspace:dev -- trinity jack",
+      "command": "bun nx run workspace:dev -- trinity-jack",
       "cwd": "${workspaceFolder}",
       "env": {
-        "TRINITY_JACK_PLAY_PORT": "6154",
-        "SEMIO_RENDERER": "wgpu"
+        "S_OS_PORT": "6154",
+        "SEMIO_PLUGIN": "trinity-jack",
+        "SEMIO_RENDERER": "wgpu",
+        "SEMIO_APP": "s.trinity.jack@1/*#editor"
       },
       "presentation": {
         "group": "3_dev",
@@ -2824,11 +3019,13 @@
       "name": "🛠️dev🔱️trinity♻️rewriting⚛️react",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run workspace:dev -- trinity rewriting",
+      "command": "bun nx run workspace:dev -- trinity-rewriting",
       "cwd": "${workspaceFolder}",
       "env": {
-        "TRINITY_REWRITING_PLAY_PORT": "6056",
-        "SEMIO_RENDERER": "react"
+        "S_OS_PORT": "6056",
+        "SEMIO_PLUGIN": "trinity-rewriting",
+        "SEMIO_RENDERER": "react",
+        "SEMIO_APP": "s.trinity.rewriting@1/*#editor"
       },
       "presentation": {
         "group": "3_dev",
@@ -2844,11 +3041,13 @@
       "name": "🛠️dev🔱️trinity♻️rewriting🧊️wgpu🌐️wasm",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run workspace:dev -- trinity rewriting",
+      "command": "bun nx run workspace:dev -- trinity-rewriting",
       "cwd": "${workspaceFolder}",
       "env": {
-        "TRINITY_REWRITING_PLAY_PORT": "6156",
-        "SEMIO_RENDERER": "wgpu"
+        "S_OS_PORT": "6156",
+        "SEMIO_PLUGIN": "trinity-rewriting",
+        "SEMIO_RENDERER": "wgpu",
+        "SEMIO_APP": "s.trinity.rewriting@1/*#editor"
       },
       "presentation": {
         "group": "3_dev",
@@ -2878,8 +3077,10 @@
       "command": "bun nx run workspace:dev -- forms",
       "cwd": "${workspaceFolder}",
       "env": {
-        "FORMS_PLAY_PORT": "6058",
-        "SEMIO_RENDERER": "react"
+        "S_OS_PORT": "6058",
+        "SEMIO_PLUGIN": "forms",
+        "SEMIO_RENDERER": "react",
+        "SEMIO_APP": "s.forms.forms@1/*#editor"
       },
       "presentation": {
         "group": "3_dev",
@@ -2898,8 +3099,10 @@
       "command": "bun nx run workspace:dev -- forms",
       "cwd": "${workspaceFolder}",
       "env": {
-        "FORMS_PLAY_PORT": "6158",
-        "SEMIO_RENDERER": "wgpu"
+        "S_OS_PORT": "6158",
+        "SEMIO_PLUGIN": "forms",
+        "SEMIO_RENDERER": "wgpu",
+        "SEMIO_APP": "s.forms.forms@1/*#editor"
       },
       "presentation": {
         "group": "3_dev",
@@ -2929,8 +3132,10 @@
       "command": "bun nx run workspace:dev -- raster",
       "cwd": "${workspaceFolder}",
       "env": {
-        "RASTER_PLAY_PORT": "6060",
-        "SEMIO_RENDERER": "react"
+        "S_OS_PORT": "6060",
+        "SEMIO_PLUGIN": "raster",
+        "SEMIO_RENDERER": "react",
+        "SEMIO_APP": "s.raster.raster@1/*#editor"
       },
       "presentation": {
         "group": "3_dev",
@@ -2949,8 +3154,10 @@
       "command": "bun nx run workspace:dev -- raster",
       "cwd": "${workspaceFolder}",
       "env": {
-        "RASTER_PLAY_PORT": "6160",
-        "SEMIO_RENDERER": "wgpu"
+        "S_OS_PORT": "6160",
+        "SEMIO_PLUGIN": "raster",
+        "SEMIO_RENDERER": "wgpu",
+        "SEMIO_APP": "s.raster.raster@1/*#editor"
       },
       "presentation": {
         "group": "3_dev",
@@ -2980,7 +3187,8 @@
       "command": "bun nx run workspace:dev -- vcs",
       "cwd": "${workspaceFolder}",
       "env": {
-        "VCS_PLAY_PORT": "6075",
+        "S_OS_PORT": "6075",
+        "SEMIO_PLUGIN": "vcs",
         "SEMIO_RENDERER": "react"
       },
       "presentation": {
@@ -3000,7 +3208,8 @@
       "command": "bun nx run workspace:dev -- vcs",
       "cwd": "${workspaceFolder}",
       "env": {
-        "VCS_PLAY_PORT": "6175",
+        "S_OS_PORT": "6175",
+        "SEMIO_PLUGIN": "vcs",
         "SEMIO_RENDERER": "wgpu"
       },
       "presentation": {
@@ -3028,7 +3237,7 @@
       "name": "🛠️dev🪐️space⚛️react",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @semio-tech/framework-os-dev:dev",
+      "command": "bun nx run workspace:dev -- s",
       "cwd": "${workspaceFolder}",
       "env": {
         "S_OS_PORT": "6070",
@@ -3049,7 +3258,7 @@
       "name": "🛠️dev🪐️space🧊️wgpu🌐️wasm",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @semio-tech/framework-os-dev:dev",
+      "command": "bun nx run workspace:dev -- s",
       "cwd": "${workspaceFolder}",
       "env": {
         "S_OS_PORT": "6066",
@@ -3067,17 +3276,17 @@
       }
     },
     {
-      "name": "🛠️dev🖥️s👤️1⚛️react",
+      "name": "🛠️dev🪐️space👤️1⚛️react",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @semio-tech/framework-os-dev:dev",
+      "command": "bun nx run workspace:dev -- s",
       "cwd": "${workspaceFolder}",
       "env": {
         "S_OS_PORT": "6072",
         "SEMIO_PLUGIN": "s",
+        "SEMIO_RENDERER": "react",
         "S_HUB_URL": "http://127.0.0.1:8787",
-        "S_DATA_DIR": "${workspaceFolder}/.🧬semio/🔗space/s-user1",
-        "SEMIO_RENDERER": "react"
+        "S_DATA_DIR": "${workspaceFolder}/.🧬semio/🔗space/s-user1"
       },
       "presentation": {
         "group": "3_dev",
@@ -3090,17 +3299,17 @@
       }
     },
     {
-      "name": "🛠️dev🖥️s👤️2⚛️react",
+      "name": "🛠️dev🪐️space👤️2⚛️react",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @semio-tech/framework-os-dev:dev",
+      "command": "bun nx run workspace:dev -- s",
       "cwd": "${workspaceFolder}",
       "env": {
         "S_OS_PORT": "6073",
         "SEMIO_PLUGIN": "s",
+        "SEMIO_RENDERER": "react",
         "S_HUB_URL": "http://127.0.0.1:8787",
-        "S_DATA_DIR": "${workspaceFolder}/.🧬semio/🔗space/s-user2",
-        "SEMIO_RENDERER": "react"
+        "S_DATA_DIR": "${workspaceFolder}/.🧬semio/🔗space/s-user2"
       },
       "presentation": {
         "group": "3_dev",
@@ -3113,17 +3322,17 @@
       }
     },
     {
-      "name": "🛠️dev🖥️s👤️1🧊️wgpu🌐️wasm",
+      "name": "🛠️dev🪐️space👤️1🧊️wgpu🌐️wasm",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @semio-tech/framework-os-dev:dev",
+      "command": "bun nx run workspace:dev -- s",
       "cwd": "${workspaceFolder}",
       "env": {
         "S_OS_PORT": "6067",
         "SEMIO_PLUGIN": "s",
+        "SEMIO_RENDERER": "wgpu",
         "S_HUB_URL": "http://127.0.0.1:8787",
-        "S_DATA_DIR": "${workspaceFolder}/.🧬semio/🔗space/s-user1",
-        "SEMIO_RENDERER": "wgpu"
+        "S_DATA_DIR": "${workspaceFolder}/.🧬semio/🔗space/s-user1"
       },
       "presentation": {
         "group": "3_dev",
@@ -3136,17 +3345,17 @@
       }
     },
     {
-      "name": "🛠️dev🖥️s👤️2🧊️wgpu🌐️wasm",
+      "name": "🛠️dev🪐️space👤️2🧊️wgpu🌐️wasm",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @semio-tech/framework-os-dev:dev",
+      "command": "bun nx run workspace:dev -- s",
       "cwd": "${workspaceFolder}",
       "env": {
         "S_OS_PORT": "6068",
         "SEMIO_PLUGIN": "s",
+        "SEMIO_RENDERER": "wgpu",
         "S_HUB_URL": "http://127.0.0.1:8787",
-        "S_DATA_DIR": "${workspaceFolder}/.🧬semio/🔗space/s-user2",
-        "SEMIO_RENDERER": "wgpu"
+        "S_DATA_DIR": "${workspaceFolder}/.🧬semio/🔗space/s-user2"
       },
       "presentation": {
         "group": "3_dev",
@@ -3155,6 +3364,27 @@
       "serverReadyAction": {
         "action": "openExternally",
         "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6068)",
+        "uriFormat": "%s"
+      }
+    },
+    {
+      "name": "🛠️dev🪐️space⚛️react📦️served",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run workspace:dev -- s served",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "S_OS_PORT": "6070",
+        "SEMIO_PLUGIN": "s",
+        "SEMIO_RENDERER": "react"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 386.05
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6070)",
         "uriFormat": "%s"
       }
     },
@@ -3304,6 +3534,20 @@
       }
     },
     {
+      "name": "🛠️dev🤝️os-collab-e2e",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-os-dev:collab-e2e",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "SEMIO_BUILD_BUDGET_MS": "5400000"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 387.064
+      }
+    },
+    {
       "name": "🛠️dev🌉️os-mcp🧵️stdio",
       "type": "node-terminal",
       "request": "launch",
@@ -3323,6 +3567,17 @@
       "presentation": {
         "group": "3_dev",
         "order": 387.06
+      }
+    },
+    {
+      "name": "🛠️dev🌉️os-mcp🤝️client-e2e",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-os-mcp:client-e2e",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 387.07
       }
     },
     {
@@ -3351,12 +3606,13 @@
       "name": "🛠️dev🖍️draw🖍️drawing⚛️react",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @semio-tech/framework-os-dev:dev",
+      "command": "bun nx run workspace:dev -- draw",
       "cwd": "${workspaceFolder}",
       "env": {
         "S_OS_PORT": "6064",
         "SEMIO_PLUGIN": "draw",
-        "SEMIO_RENDERER": "react"
+        "SEMIO_RENDERER": "react",
+        "SEMIO_APP": "s.draw.drawing@1/*#editor"
       },
       "presentation": {
         "group": "3_dev",
@@ -3372,12 +3628,13 @@
       "name": "🛠️dev🖍️draw🖍️drawing🧊️wgpu🌐️wasm",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @semio-tech/framework-os-dev:dev",
+      "command": "bun nx run workspace:dev -- draw",
       "cwd": "${workspaceFolder}",
       "env": {
         "S_OS_PORT": "6164",
         "SEMIO_PLUGIN": "draw",
-        "SEMIO_RENDERER": "wgpu"
+        "SEMIO_RENDERER": "wgpu",
+        "SEMIO_APP": "s.draw.drawing@1/*#editor"
       },
       "presentation": {
         "group": "3_dev",
@@ -3407,8 +3664,10 @@
       "command": "bun nx run workspace:dev -- note",
       "cwd": "${workspaceFolder}",
       "env": {
-        "NOTE_PLAY_PORT": "6080",
-        "SEMIO_RENDERER": "react"
+        "S_OS_PORT": "6080",
+        "SEMIO_PLUGIN": "note",
+        "SEMIO_RENDERER": "react",
+        "SEMIO_APP": "s.note.note@1/*#editor"
       },
       "presentation": {
         "group": "3_dev",
@@ -3427,8 +3686,10 @@
       "command": "bun nx run workspace:dev -- note",
       "cwd": "${workspaceFolder}",
       "env": {
-        "NOTE_PLAY_PORT": "6180",
-        "SEMIO_RENDERER": "wgpu"
+        "S_OS_PORT": "6180",
+        "SEMIO_PLUGIN": "note",
+        "SEMIO_RENDERER": "wgpu",
+        "SEMIO_APP": "s.note.note@1/*#editor"
       },
       "presentation": {
         "group": "3_dev",
@@ -3458,7 +3719,8 @@
       "command": "bun nx run workspace:dev -- writer",
       "cwd": "${workspaceFolder}",
       "env": {
-        "WRITER_PLAY_PORT": "6062",
+        "S_OS_PORT": "6062",
+        "SEMIO_PLUGIN": "writer",
         "SEMIO_RENDERER": "react"
       },
       "presentation": {
@@ -3478,7 +3740,8 @@
       "command": "bun nx run workspace:dev -- writer",
       "cwd": "${workspaceFolder}",
       "env": {
-        "WRITER_PLAY_PORT": "6162",
+        "S_OS_PORT": "6162",
+        "SEMIO_PLUGIN": "writer",
         "SEMIO_RENDERER": "wgpu"
       },
       "presentation": {
@@ -3509,8 +3772,10 @@
       "command": "bun nx run workspace:dev -- remodel",
       "cwd": "${workspaceFolder}",
       "env": {
-        "REMODEL_PLAY_PORT": "6063",
-        "SEMIO_RENDERER": "react"
+        "S_OS_PORT": "6063",
+        "SEMIO_PLUGIN": "remodel",
+        "SEMIO_RENDERER": "react",
+        "SEMIO_APP": "s.remodel.remodeling@1/*#editor"
       },
       "presentation": {
         "group": "3_dev",
@@ -3529,8 +3794,10 @@
       "command": "bun nx run workspace:dev -- remodel",
       "cwd": "${workspaceFolder}",
       "env": {
-        "REMODEL_PLAY_PORT": "6163",
-        "SEMIO_RENDERER": "wgpu"
+        "S_OS_PORT": "6163",
+        "SEMIO_PLUGIN": "remodel",
+        "SEMIO_RENDERER": "wgpu",
+        "SEMIO_APP": "s.remodel.remodeling@1/*#editor"
       },
       "presentation": {
         "group": "3_dev",
@@ -3565,14 +3832,27 @@
       }
     },
     {
+      "name": "🛠️dev🧰️framework🪁️typecheck",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework:typecheck",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 390.1
+      }
+    },
+    {
       "name": "🛠️dev🏗️fem◻️2d⚛️react",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run workspace:dev -- fem 2d",
+      "command": "bun nx run workspace:dev -- fem2d",
       "cwd": "${workspaceFolder}",
       "env": {
-        "FEM_2D_PLAY_PORT": "6086",
-        "SEMIO_RENDERER": "react"
+        "S_OS_PORT": "6086",
+        "SEMIO_PLUGIN": "fem2d",
+        "SEMIO_RENDERER": "react",
+        "SEMIO_APP": "s.fem.fem2d@1/*#editor"
       },
       "presentation": {
         "group": "3_dev",
@@ -3580,7 +3860,7 @@
       },
       "serverReadyAction": {
         "action": "openExternally",
-        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost):6086)",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6086)",
         "uriFormat": "%s"
       }
     },
@@ -3588,11 +3868,13 @@
       "name": "🛠️dev🏗️fem◻️2d🧊️wgpu🌐️wasm",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run workspace:dev -- fem 2d",
+      "command": "bun nx run workspace:dev -- fem2d",
       "cwd": "${workspaceFolder}",
       "env": {
-        "FEM_2D_PLAY_PORT": "6186",
-        "SEMIO_RENDERER": "wgpu"
+        "S_OS_PORT": "6186",
+        "SEMIO_PLUGIN": "fem2d",
+        "SEMIO_RENDERER": "wgpu",
+        "SEMIO_APP": "s.fem.fem2d@1/*#editor"
       },
       "presentation": {
         "group": "3_dev",
@@ -3600,7 +3882,7 @@
       },
       "serverReadyAction": {
         "action": "openExternally",
-        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost):6186)",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6186)",
         "uriFormat": "%s"
       }
     },
@@ -3619,11 +3901,13 @@
       "name": "🛠️dev🏗️fem🧊️3d⚛️react",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run workspace:dev -- fem 3d",
+      "command": "bun nx run workspace:dev -- fem3d",
       "cwd": "${workspaceFolder}",
       "env": {
-        "FEM_3D_PLAY_PORT": "6087",
-        "SEMIO_RENDERER": "react"
+        "S_OS_PORT": "6087",
+        "SEMIO_PLUGIN": "fem3d",
+        "SEMIO_RENDERER": "react",
+        "SEMIO_APP": "s.fem.fem3d@1/*#editor"
       },
       "presentation": {
         "group": "3_dev",
@@ -3631,7 +3915,7 @@
       },
       "serverReadyAction": {
         "action": "openExternally",
-        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost):6087)",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6087)",
         "uriFormat": "%s"
       }
     },
@@ -3639,11 +3923,13 @@
       "name": "🛠️dev🏗️fem🧊️3d🧊️wgpu🌐️wasm",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run workspace:dev -- fem 3d",
+      "command": "bun nx run workspace:dev -- fem3d",
       "cwd": "${workspaceFolder}",
       "env": {
-        "FEM_3D_PLAY_PORT": "6187",
-        "SEMIO_RENDERER": "wgpu"
+        "S_OS_PORT": "6187",
+        "SEMIO_PLUGIN": "fem3d",
+        "SEMIO_RENDERER": "wgpu",
+        "SEMIO_APP": "s.fem.fem3d@1/*#editor"
       },
       "presentation": {
         "group": "3_dev",
@@ -3651,7 +3937,7 @@
       },
       "serverReadyAction": {
         "action": "openExternally",
-        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost):6187)",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6187)",
         "uriFormat": "%s"
       }
     },
@@ -3799,6 +4085,17 @@
       }
     },
     {
+      "name": "📦️check⚛️react🔐️hub-sign-in",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-renderer-react:hub-sign-in-spaces-check",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 206.1475
+      }
+    },
+    {
       "name": "📦️test🧊️wgpu🖱️ui",
       "type": "node-terminal",
       "request": "launch",
@@ -3832,6 +4129,292 @@
       }
     },
     {
+      "name": "📦️build🗄️os-hub",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run os-hub:build",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 206.159
+      }
+    },
+    {
+      "name": "📦️build-dev🗄️os-hub",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run os-hub:build-dev",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 206.16
+      }
+    },
+    {
+      "name": "📦️test🗄️os-hub",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run os-hub:test",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 206.161
+      }
+    },
+    {
+      "name": "📦️test🗄️os-hub♾️all-features",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run os-hub:test-all-features",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 206.162
+      }
+    },
+    {
+      "name": "📦️test🖥️server",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-server-rs:test",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 206.1625
+      }
+    },
+    {
+      "name": "📦️test🖥️server🟦️typescript",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-server:test",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 206.1626
+      }
+    },
+    {
+      "name": "📦️check🗄️os-hub🚀️launch",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run os-hub:local-bootstrap-launch-check",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 206.163
+      }
+    },
+    {
+      "name": "📦️check🤖️generated🔬️corruption",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run workspace:verify-generated-corruption",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 206.164
+      }
+    },
+    {
+      "name": "📦️check🗄️os-hub🟦️types",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run os-hub-ts:typecheck",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 206.165
+      }
+    },
+    {
+      "name": "📦️check🦑️repo🟦️types",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/repo-lib:typecheck",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 206.166
+      }
+    },
+    {
+      "name": "🧹clean🧩️taxonomy🧪️root-clean-scaffold-source",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/repo-lib:test-root-clean-scaffold-source",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 206.167
+      }
+    },
+    {
+      "name": "🧬schema🗺️surface🏛️abstraction🧪source-ownership",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/repo-lib:test-root-surface-abstraction-law-source",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 206.168
+      }
+    },
+    {
+      "name": "🧬schema🗿artifact🧪root-artifact-schema-law-source",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/repo-lib:test-root-artifact-schema-law-source",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 206.169
+      }
+    },
+    {
+      "name": "🧬schema💡️inference🧪source-ownership",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/repo-lib:test-root-inference-law-source",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 206.170
+      }
+    },
+    {
+      "name": "🧹clean🧩️taxonomy🧪️root-schema-field-source",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/repo-lib:test-root-schema-field-source",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 206.171
+      }
+    },
+    {
+      "name": "🧹clean🦑️repo🧪️source-ownership",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/repo-lib:test-repo-source-ownership",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 206.172
+      }
+    },
+    {
+      "name": "🧹clean🧩️taxonomy🎚️vitest-configuration-ownership",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/repo-lib:test-vitest-configuration-ownership",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 206.173
+      }
+    },
+    {
+      "name": "🧹clean🧩️taxonomy🎚️tool-configuration-ownership",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/repo-lib:test-tool-configuration-ownership",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 206.174
+      }
+    },
+    {
+      "name": "📦️check🗿️taxonomy",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run workspace:verify-taxonomy-report",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 206.165
+      }
+    },
+    {
+      "name": "📦️check🗿️taxonomy🧩️implementation",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run workspace:verify-taxonomy-implementation-report",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 206.166
+      }
+    },
+    {
+      "name": "📦️check🔒️dependencies📃️literal-external",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run workspace:verify-dependencies-literal-external",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 206.167
+      }
+    },
+    {
+      "name": "📦️check🧅️layering",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run workspace:verify-layering",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 206.168
+      }
+    },
+    {
+      "name": "📦️check🔌️plugin-registry",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/plugin-registry:check",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 206.169
+      }
+    },
+    {
+      "name": "📦️generate🧬️surface-schema",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/plugin-registry:surface-schema",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 206.1691
+      }
+    },
+    {
+      "name": "📦️check🧬️surface-schema",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/plugin-registry:surface-schema-check",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 206.1692
+      }
+    },
+    {
+      "name": "📦️check🧹️fixture-sweep",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/dsl-fixture-sweep-rs:source-check",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 206.17
+      }
+    },
+    {
       "name": "📦️wasm🧊️wgpu",
       "type": "node-terminal",
       "request": "launch",
@@ -3852,8 +4435,569 @@
         "group": "4_build",
         "order": 500.811
       }
+    },
+    {
+      "name": "⚖️gate🧱️hub-foundations📐️source",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run os-hub:foundation-source-check",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 411.10755
+      }
+    },
+    {
+      "name": "⚖️gate🧭️local-relay📛️admission",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run os-hub:local-relay-routing-check",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 411.10756
+      }
+    },
+    {
+      "name": "⚖️gate🔐️hub-auth🤝️live-sign-in",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run os-hub:live-sign-in-check",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 411.10757
+      }
+    },
+    {
+      "name": "🧹clean🧩️taxonomy❄️frozen-markdown-coordinates",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/repo-lib:test-frozen-markdown-coordinates --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 410.18
+      }
+    },
+    {
+      "name": "🧹clean🧩️taxonomy🕰️historical-json-source-encoding",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/repo-lib:test-historical-json-source-encoding --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 410.19
+      }
+    },
+    {
+      "name": "⚖️gate🌱️value💾️resident",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun x nx run @semio-tech/value-resident:test",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 408.32
+      }
+    },
+    {
+      "name": "⚖️gate🌱️value💾️resident🦀️native",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun x nx run @semio-tech/value-resident-rs:test --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 408.33
+      }
+    },
+    {
+      "name": "⚖️gate🌱️value💾️resident🌐️wasm",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun x nx run @semio-tech/value-resident-rs:check-wasm --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 408.34
+      }
+    },
+    {
+      "name": "⚖️gate🖱️ui🖥️host🔣️source",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun x nx run @semio-tech/ui-host-rs:test-source --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 408.35
+      }
+    },
+    {
+      "name": "⚖️gate🖱️ui🖥️host🦀️native",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun x nx run @semio-tech/ui-host-rs:test --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 408.36
+      }
+    },
+    {
+      "name": "⚖️gate🖱️ui🖥️host🦀️check",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun x nx run @semio-tech/ui-host-rs:check --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 408.37
+      }
+    },
+    {
+      "name": "⚖️gate🖱️ui🖥️host🌐️wasm",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun x nx run @semio-tech/ui-host-rs:check-wasm --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 408.38
+      }
+    },
+    {
+      "name": "🧹clean🧩️taxonomy🧪️artifact-support",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/repo-lib:test-artifact-support --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 410.06
+      }
+    },
+    {
+      "name": "🧹clean🧩️taxonomy🏺️historical-package-owner-identity",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/repo-lib:test-historical-package-owner-identity --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 410.07
+      }
+    },
+    {
+      "name": "🧹clean🧩️taxonomy🧲️rust-physical-reference-context",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/repo-lib:test-rust-physical-reference-context --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 410.08
+      }
+    },
+    {
+      "name": "🧹clean🧩️taxonomy🧪️cli-cancellation",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/repo-lib:test-taxonomy-cli-cancellation --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 410.09
+      }
+    },
+    {
+      "name": "🧹clean🧩️taxonomy💠️inventory-artifact-shards",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/repo-lib:test-inventory-artifact-shards --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 410.1
+      }
+    },
+    {
+      "name": "🧹clean🧩️taxonomy🧪️root-script-compiler",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/repo-lib:test-root-script-compiler",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 410.11
+      }
+    },
+    {
+      "name": "🧹clean🧩️taxonomy🔎️json-reference-owner-lookup",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/repo-lib:test-json-reference-owner-lookup --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 410.12
+      }
+    },
+    {
+      "name": "🧹clean🧩️taxonomy🚧️cargo-discovery-exclusions",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/repo-lib:test-cargo-discovery-exclusions --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 410.13
+      }
+    },
+    {
+      "name": "🧹clean🧩️taxonomy💥️nested-cargo-collision-authority",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/repo-lib:test-nested-cargo-collision-authority --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 410.14
+      }
+    },
+    {
+      "name": "🧹clean🧩️taxonomy🌐️registry-import-language",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/repo-lib:test-registry-import-language --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 410.15
+      }
+    },
+    {
+      "name": "🧹clean🧩️taxonomy🛫️preflight-reference-basis",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/repo-lib:test-preflight-reference-basis --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 410.16
+      }
+    },
+    {
+      "name": "🧹clean🧩️taxonomy🛤️typescript-path-collection",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/repo-lib:test-typescript-path-collection --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 410.17
+      }
+    },
+    {
+      "name": "🧹clean🧩️taxonomy🗺️testing-readme-coordinates",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/repo-lib:test-testing-readme-coordinates --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 410.192
+      }
+    },
+    {
+      "name": "🧹clean🧩️taxonomy🔖️readme-current-source-revision",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/repo-lib:test-readme-current-source-revision --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 410.195
+      }
+    },
+    {
+      "name": "🧹clean🧩️taxonomy🚚️readme-move-source-authority",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/repo-lib:test-readme-move-source-authority --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 410.197
+      }
+    },
+    {
+      "name": "🧹clean🧩️taxonomy🫙️artifact-empty-facet-authority",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/repo-lib:test-artifact-empty-facet-authority --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 410.199
+      }
+    },
+    {
+      "name": "🧹clean🧩️taxonomy🟢️readme-current-source-activation",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/repo-lib:test-readme-current-source-activation --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 410.204
+      }
+    },
+    {
+      "name": "🧹clean🧩️taxonomy🪶️artifact-empty-facet-authoring",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/repo-lib:test-artifact-empty-facet-authoring --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 410.205
+      }
+    },
+    {
+      "name": "🧹clean🧩️taxonomy👀️readme-reviewed-fixture-inputs",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/repo-lib:test-readme-reviewed-fixture-inputs --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 410.206
+      }
+    },
+    {
+      "name": "🧹clean🧩️taxonomy♻️taxonomy-pattern-compiler-reuse",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/repo-lib:test-taxonomy-pattern-compiler-reuse --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 410.207
+      }
+    },
+    {
+      "name": "🧹clean🧩️taxonomy🔤️taxonomy-leading-grapheme",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/repo-lib:test-taxonomy-leading-grapheme --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 410.209
+      }
+    },
+    {
+      "name": "🧹clean🧩️taxonomy📈️reference-coordinate-progress",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/repo-lib:test-reference-coordinate-progress --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 410.21
+      }
+    },
+    {
+      "name": "🧹clean🧩️taxonomy🎯️draw-destination-observation",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/repo-lib:test-draw-destination-observation --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 410.211
+      }
+    },
+    {
+      "name": "🧹clean🧩️taxonomy🧾️registry-catalog-gitlink-boundary",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/repo-lib:test-registry-catalog-gitlink-boundary --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 410.2152
+      }
+    },
+    {
+      "name": "🧹clean🧩️taxonomy🎯️cargo-target-discovery-skip",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/repo-lib:test-cargo-target-discovery-skip --skip-nx-cache",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 410.2154
+      }
+    },
+    {
+      "name": "⚖️gate🔌️socket-grant📐️source",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run os-hub:socket-grant-command-source-check",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 411.09999
+      }
+    },
+    {
+      "name": "⚖️gate🔌️socket-grant🛡️server",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run os-hub:socket-grant-check",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 411.1
+      }
+    },
+    {
+      "name": "⚖️gate⚡️interactivity",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run workspace:verify -- interactivity",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 411.43
+      }
+    },
+    {
+      "name": "⚖️gate⚡️interactivity🎯️tool-jobs",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run workspace:verify -- interactivity tool-jobs",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 411.44
+      }
+    },
+    {
+      "name": "⚖️gate⚡️interactivity🧭️apps",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run workspace:verify -- interactivity apps",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 411.45
+      }
+    },
+    {
+      "name": "⚖️gate⚡️interactivity🧭️apps🎛️actions",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run workspace:verify -- interactivity apps --actions",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 411.46
+      }
+    },
+    {
+      "name": "⚖️gate📦️dependencies",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run workspace:verify -- dependencies",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 411.47
+      }
+    },
+    {
+      "name": "⚖️gate📦️dependencies0️⃣",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run workspace:verify -- dependencies literal-external",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 411.48
+      }
     }
     ,
+{
+      "name": "🛠️dev♻️mit-bestand🧩️puzzle🧊️3d🧊️wgpu🌐️wasm",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run workspace:dev -- aggregator",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "S_OS_PORT": "6123",
+        "SEMIO_PLUGIN": "aggregator",
+        "SEMIO_RENDERER": "wgpu",
+        "SEMIO_APP": "s.puzzle.puzzle3d@1/*#editor"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 212.001
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6123)",
+        "uriFormat": "%s"
+      }
+    },
+{
+      "name": "🛠️dev♻️mit-bestand🪵️sourcing🗂️curation🧊️wgpu🌐️wasm",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run workspace:dev -- aussuchen",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "S_OS_PORT": "6130",
+        "SEMIO_PLUGIN": "aussuchen",
+        "SEMIO_RENDERER": "wgpu",
+        "SEMIO_APP": "s.sourcing.curation@1/*#editor"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 216.001
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6130)",
+        "uriFormat": "%s"
+      }
+    },
+{
+      "name": "🛠️dev♻️mit-bestand🏭️process🧊️process3d🧊️wgpu🌐️wasm",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run workspace:dev -- bearbeiten",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "S_OS_PORT": "6131",
+        "SEMIO_PLUGIN": "bearbeiten",
+        "SEMIO_RENDERER": "wgpu",
+        "SEMIO_APP": "s.process.process3d@1/*#editor"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 217.001
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6131)",
+        "uriFormat": "%s"
+      }
+    },
 {
       "name": "🛠️dev♻️mit-bestand🧺️demonstrator⚛️react",
       "type": "node-terminal",
@@ -3906,7 +5050,7 @@
       "cwd": "${workspaceFolder}",
       "env": {
         "S_OS_PORT": "6092",
-        "SEMIO_PLUGIN": "norm",
+        "SEMIO_PLUGIN": "din16798",
         "SEMIO_RENDERER": "react",
         "SEMIO_APP": "s.norm.din16798@1/*#editor"
       },
@@ -3928,7 +5072,7 @@
       "cwd": "${workspaceFolder}",
       "env": {
         "S_OS_PORT": "6192",
-        "SEMIO_PLUGIN": "norm",
+        "SEMIO_PLUGIN": "din16798",
         "SEMIO_RENDERER": "wgpu",
         "SEMIO_APP": "s.norm.din16798@1/*#editor"
       },
@@ -3950,7 +5094,7 @@
       "cwd": "${workspaceFolder}",
       "env": {
         "S_OS_PORT": "6093",
-        "SEMIO_PLUGIN": "norm",
+        "SEMIO_PLUGIN": "din18599",
         "SEMIO_RENDERER": "react",
         "SEMIO_APP": "s.norm.din18599@1/*#editor"
       },
@@ -3972,7 +5116,7 @@
       "cwd": "${workspaceFolder}",
       "env": {
         "S_OS_PORT": "6193",
-        "SEMIO_PLUGIN": "norm",
+        "SEMIO_PLUGIN": "din18599",
         "SEMIO_RENDERER": "wgpu",
         "SEMIO_APP": "s.norm.din18599@1/*#editor"
       },
@@ -3994,7 +5138,7 @@
       "cwd": "${workspaceFolder}",
       "env": {
         "S_OS_PORT": "6091",
-        "SEMIO_PLUGIN": "norm",
+        "SEMIO_PLUGIN": "din4108",
         "SEMIO_RENDERER": "react",
         "SEMIO_APP": "s.norm.din4108@1/*#editor"
       },
@@ -4016,7 +5160,7 @@
       "cwd": "${workspaceFolder}",
       "env": {
         "S_OS_PORT": "6191",
-        "SEMIO_PLUGIN": "norm",
+        "SEMIO_PLUGIN": "din4108",
         "SEMIO_RENDERER": "wgpu",
         "SEMIO_APP": "s.norm.din4108@1/*#editor"
       },
@@ -4038,7 +5182,7 @@
       "cwd": "${workspaceFolder}",
       "env": {
         "S_OS_PORT": "6094",
-        "SEMIO_PLUGIN": "norm",
+        "SEMIO_PLUGIN": "en1990",
         "SEMIO_RENDERER": "react",
         "SEMIO_APP": "s.norm.en1990@1/*#editor"
       },
@@ -4060,7 +5204,7 @@
       "cwd": "${workspaceFolder}",
       "env": {
         "S_OS_PORT": "6194",
-        "SEMIO_PLUGIN": "norm",
+        "SEMIO_PLUGIN": "en1990",
         "SEMIO_RENDERER": "wgpu",
         "SEMIO_APP": "s.norm.en1990@1/*#editor"
       },
@@ -4082,7 +5226,7 @@
       "cwd": "${workspaceFolder}",
       "env": {
         "S_OS_PORT": "6095",
-        "SEMIO_PLUGIN": "norm",
+        "SEMIO_PLUGIN": "en1991",
         "SEMIO_RENDERER": "react",
         "SEMIO_APP": "s.norm.en1991@1/*#editor"
       },
@@ -4104,7 +5248,7 @@
       "cwd": "${workspaceFolder}",
       "env": {
         "S_OS_PORT": "6195",
-        "SEMIO_PLUGIN": "norm",
+        "SEMIO_PLUGIN": "en1991",
         "SEMIO_RENDERER": "wgpu",
         "SEMIO_APP": "s.norm.en1991@1/*#editor"
       },
@@ -4126,7 +5270,7 @@
       "cwd": "${workspaceFolder}",
       "env": {
         "S_OS_PORT": "6096",
-        "SEMIO_PLUGIN": "norm",
+        "SEMIO_PLUGIN": "en1992",
         "SEMIO_RENDERER": "react",
         "SEMIO_APP": "s.norm.en1992@1/*#editor"
       },
@@ -4148,7 +5292,7 @@
       "cwd": "${workspaceFolder}",
       "env": {
         "S_OS_PORT": "6196",
-        "SEMIO_PLUGIN": "norm",
+        "SEMIO_PLUGIN": "en1992",
         "SEMIO_RENDERER": "wgpu",
         "SEMIO_APP": "s.norm.en1992@1/*#editor"
       },
@@ -4170,7 +5314,7 @@
       "cwd": "${workspaceFolder}",
       "env": {
         "S_OS_PORT": "6097",
-        "SEMIO_PLUGIN": "norm",
+        "SEMIO_PLUGIN": "en1993",
         "SEMIO_RENDERER": "react",
         "SEMIO_APP": "s.norm.en1993@1/*#editor"
       },
@@ -4192,7 +5336,7 @@
       "cwd": "${workspaceFolder}",
       "env": {
         "S_OS_PORT": "6197",
-        "SEMIO_PLUGIN": "norm",
+        "SEMIO_PLUGIN": "en1993",
         "SEMIO_RENDERER": "wgpu",
         "SEMIO_APP": "s.norm.en1993@1/*#editor"
       },
@@ -4214,7 +5358,7 @@
       "cwd": "${workspaceFolder}",
       "env": {
         "S_OS_PORT": "6098",
-        "SEMIO_PLUGIN": "norm",
+        "SEMIO_PLUGIN": "en1994",
         "SEMIO_RENDERER": "react",
         "SEMIO_APP": "s.norm.en1994@1/*#editor"
       },
@@ -4236,7 +5380,7 @@
       "cwd": "${workspaceFolder}",
       "env": {
         "S_OS_PORT": "6198",
-        "SEMIO_PLUGIN": "norm",
+        "SEMIO_PLUGIN": "en1994",
         "SEMIO_RENDERER": "wgpu",
         "SEMIO_APP": "s.norm.en1994@1/*#editor"
       },
@@ -4258,7 +5402,7 @@
       "cwd": "${workspaceFolder}",
       "env": {
         "S_OS_PORT": "6099",
-        "SEMIO_PLUGIN": "norm",
+        "SEMIO_PLUGIN": "en1995",
         "SEMIO_RENDERER": "react",
         "SEMIO_APP": "s.norm.en1995@1/*#editor"
       },
@@ -4280,7 +5424,7 @@
       "cwd": "${workspaceFolder}",
       "env": {
         "S_OS_PORT": "6199",
-        "SEMIO_PLUGIN": "norm",
+        "SEMIO_PLUGIN": "en1995",
         "SEMIO_RENDERER": "wgpu",
         "SEMIO_APP": "s.norm.en1995@1/*#editor"
       },
@@ -4302,7 +5446,7 @@
       "cwd": "${workspaceFolder}",
       "env": {
         "S_OS_PORT": "6100",
-        "SEMIO_PLUGIN": "norm",
+        "SEMIO_PLUGIN": "en1996",
         "SEMIO_RENDERER": "react",
         "SEMIO_APP": "s.norm.en1996@1/*#editor"
       },
@@ -4324,7 +5468,7 @@
       "cwd": "${workspaceFolder}",
       "env": {
         "S_OS_PORT": "6200",
-        "SEMIO_PLUGIN": "norm",
+        "SEMIO_PLUGIN": "en1996",
         "SEMIO_RENDERER": "wgpu",
         "SEMIO_APP": "s.norm.en1996@1/*#editor"
       },
@@ -4346,7 +5490,7 @@
       "cwd": "${workspaceFolder}",
       "env": {
         "S_OS_PORT": "6101",
-        "SEMIO_PLUGIN": "norm",
+        "SEMIO_PLUGIN": "en1997",
         "SEMIO_RENDERER": "react",
         "SEMIO_APP": "s.norm.en1997@1/*#editor"
       },
@@ -4368,7 +5512,7 @@
       "cwd": "${workspaceFolder}",
       "env": {
         "S_OS_PORT": "6201",
-        "SEMIO_PLUGIN": "norm",
+        "SEMIO_PLUGIN": "en1997",
         "SEMIO_RENDERER": "wgpu",
         "SEMIO_APP": "s.norm.en1997@1/*#editor"
       },
@@ -4390,7 +5534,7 @@
       "cwd": "${workspaceFolder}",
       "env": {
         "S_OS_PORT": "6102",
-        "SEMIO_PLUGIN": "norm",
+        "SEMIO_PLUGIN": "en1998",
         "SEMIO_RENDERER": "react",
         "SEMIO_APP": "s.norm.en1998@1/*#editor"
       },
@@ -4412,7 +5556,7 @@
       "cwd": "${workspaceFolder}",
       "env": {
         "S_OS_PORT": "6202",
-        "SEMIO_PLUGIN": "norm",
+        "SEMIO_PLUGIN": "en1998",
         "SEMIO_RENDERER": "wgpu",
         "SEMIO_APP": "s.norm.en1998@1/*#editor"
       },
@@ -4434,7 +5578,7 @@
       "cwd": "${workspaceFolder}",
       "env": {
         "S_OS_PORT": "6103",
-        "SEMIO_PLUGIN": "norm",
+        "SEMIO_PLUGIN": "en1999",
         "SEMIO_RENDERER": "react",
         "SEMIO_APP": "s.norm.en1999@1/*#editor"
       },
@@ -4456,7 +5600,7 @@
       "cwd": "${workspaceFolder}",
       "env": {
         "S_OS_PORT": "6203",
-        "SEMIO_PLUGIN": "norm",
+        "SEMIO_PLUGIN": "en1999",
         "SEMIO_RENDERER": "wgpu",
         "SEMIO_APP": "s.norm.en1999@1/*#editor"
       },
@@ -4515,6 +5659,28 @@
       }
     },
 {
+      "name": "🛠️dev♻️mit-bestand🌀️procedural🧊️generation3d🧊️wgpu🌐️wasm",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run workspace:dev -- generator",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "S_OS_PORT": "6127",
+        "SEMIO_PLUGIN": "generator",
+        "SEMIO_RENDERER": "wgpu",
+        "SEMIO_APP": "s.procedural.generation3d@1/*#editor"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 214.001
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6127)",
+        "uriFormat": "%s"
+      }
+    },
+{
       "name": "🛠️dev📕️norm📇️iso16757⚛️react",
       "type": "node-terminal",
       "request": "launch",
@@ -4522,7 +5688,7 @@
       "cwd": "${workspaceFolder}",
       "env": {
         "S_OS_PORT": "6104",
-        "SEMIO_PLUGIN": "norm",
+        "SEMIO_PLUGIN": "iso16757",
         "SEMIO_RENDERER": "react",
         "SEMIO_APP": "s.norm.iso16757@1/*#editor"
       },
@@ -4544,7 +5710,7 @@
       "cwd": "${workspaceFolder}",
       "env": {
         "S_OS_PORT": "6204",
-        "SEMIO_PLUGIN": "norm",
+        "SEMIO_PLUGIN": "iso16757",
         "SEMIO_RENDERER": "wgpu",
         "SEMIO_APP": "s.norm.iso16757@1/*#editor"
       },
@@ -4555,6 +5721,28 @@
       "serverReadyAction": {
         "action": "openExternally",
         "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6204)",
+        "uriFormat": "%s"
+      }
+    },
+{
+      "name": "🛠️dev♻️mit-bestand📐️cad🧊️wgpu🌐️wasm",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run workspace:dev -- koordinator",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "S_OS_PORT": "6128",
+        "SEMIO_PLUGIN": "koordinator",
+        "SEMIO_RENDERER": "wgpu",
+        "SEMIO_APP": "s.cad.cad@1/*#editor"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 215.001
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6128)",
         "uriFormat": "%s"
       }
     },
@@ -4608,7 +5796,7 @@
       "cwd": "${workspaceFolder}",
       "env": {
         "S_OS_PORT": "6105",
-        "SEMIO_PLUGIN": "norm",
+        "SEMIO_PLUGIN": "vdi3805",
         "SEMIO_RENDERER": "react",
         "SEMIO_APP": "s.norm.vdi3805@1/*#editor"
       },
@@ -4630,7 +5818,7 @@
       "cwd": "${workspaceFolder}",
       "env": {
         "S_OS_PORT": "6205",
-        "SEMIO_PLUGIN": "norm",
+        "SEMIO_PLUGIN": "vdi3805",
         "SEMIO_RENDERER": "wgpu",
         "SEMIO_APP": "s.norm.vdi3805@1/*#editor"
       },
@@ -4643,12 +5831,34 @@
         "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6205)",
         "uriFormat": "%s"
       }
+    },
+{
+      "name": "🛠️dev♻️mit-bestand🌍️gis🗺️gismap🧊️wgpu🌐️wasm",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run workspace:dev -- verfolgen",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "S_OS_PORT": "6132",
+        "SEMIO_PLUGIN": "verfolgen",
+        "SEMIO_RENDERER": "wgpu",
+        "SEMIO_APP": "s.gis.gismap@1/*#editor"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 218.001
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6132)",
+        "uriFormat": "%s"
+      }
     }
   ],
   "compounds": [
     {
       "name": "🧭️compound🖥️s⚛️react🌉️os-mcp",
-      "configurations": ["🛠️dev🌉️os-mcp🌐️http", "🛠️dev🖥️s⚛️react"],
+      "configurations": ["🛠️dev🌉️os-mcp🌐️http", "🛠️dev🪐️space⚛️react"],
       "stopAll": true,
       "presentation": {
         "group": "3_dev",
@@ -4657,7 +5867,7 @@
     },
     {
       "name": "🧭️compound🖥️s⚛️react🗄️os-hub",
-      "configurations": ["🛠️dev🗄️os-hub", "🛠️dev🖥️s⚛️react"],
+      "configurations": ["🛠️dev🗄️os-hub", "🛠️dev🪐️space⚛️react"],
       "stopAll": true,
       "presentation": {
         "group": "3_dev",
@@ -4666,7 +5876,7 @@
     },
     {
       "name": "🧭️compound🖥️s👥️users🗄️os-hub",
-      "configurations": ["🛠️dev🗄️os-hub", "🛠️dev🖥️s👤️1⚛️react", "🛠️dev🖥️s👤️2⚛️react"],
+      "configurations": ["🛠️dev🗄️os-hub", "🛠️dev🪐️space👤️1⚛️react", "🛠️dev🪐️space👤️2⚛️react"],
       "stopAll": true,
       "presentation": {
         "group": "3_dev",

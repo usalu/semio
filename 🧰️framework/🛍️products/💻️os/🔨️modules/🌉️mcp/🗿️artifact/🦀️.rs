@@ -11,17 +11,19 @@
 //! `artifact_export` alone needs one, resolved by `require_resolvable_export_plugin`, honest about
 //! the one thing it cannot yet do — see that fn's own doc.
 //!
-//! 🚧️ **Known, honest gaps** (not fabricated, not hidden): `artifact_create`'s `kind` argument is
-//! accepted but not yet wire-routed to a plugin-specific document type — creation always goes
-//! through this crate's own generic, host-opaque probe-document mechanism
-//! ([`HeadlessWorkspace::ensure_probe_artifact`]) because the real `PluginArtifactChannel` wire
-//! protocol has no "create a document of schema X" command yet (see `🏠️workspace/🦀️.rs`'s
-//! own module doc for the same class of gap). `artifact_validate`/`artifact_export` forward the SAME
-//! real "the wire protocol has no validate/export query command yet" gap
-//! `read_artifact_resource`'s `validation` arm already answers with — never a hardcoded `{"valid":
-//! true}`, never a synthesized export. `artifact_export` DOES enumerate the resolved plugin's real,
-//! committed `export_formats` (`semio_framework::manifest::ArtifactKindSpec`) so a caller sees exactly
-//! what that plugin declares, even though nothing can act on the request yet.
+//! 🆕️📤️ `artifact_create`'s `kind` and `artifact_export` are both routed for real (ticket 26/09/18
+//! slice A1, closing `📓️g7-mcp-agent-and-collaboration-audit.md` §6 P1.4/P1.5): `kind` is validated
+//! against the artifact kinds the INSTALLED plugins declare
+//! ([`HeadlessWorkspace::installed_artifact_kinds`]) and, for a real plugin kind, the artifact is
+//! seeded from that plugin's own freshly-opened document (`AppCommand::ReadArtifact`) and persisted
+//! under its real schema id — which is also what finally gives `artifact_export` an artifact → plugin
+//! mapping. `artifact_export` then drives the owning app's own media OUT port
+//! (`AppCommand::ExportMedia` → the guest's `LoadDocument` + `MediaOut`, the identical pair `🏃️run`'s
+//! workflow executor uses) and returns the guest's own bytes, never a synthesized export.
+//!
+//! 🚧️ **Known, honest gap** (not fabricated, not hidden): `artifact_validate` still forwards the real
+//! "the wire protocol has no validate query command yet" gap `read_artifact_resource`'s `validation`
+//! arm answers with — never a hardcoded `{"valid": true}`.
 
 use crate::catalog::{CapabilityDefinition, CapabilityKind, CapabilityOwner, CapabilityPresentation, CapabilityRef, CapabilitySource, ToolExposure};
 use crate::errors::{GatewayError, GatewayErrorCode};
@@ -158,6 +160,9 @@ fn require_workspace_has_a_plugin(workspace: &HeadlessWorkspace) -> Result<(), G
 /// owns `artifact_id`), same real, retryable `PLUGIN_UNAVAILABLE` shape the deleted
 /// `resolve_default_plugin_id` used to build.
 fn require_resolvable_export_plugin(workspace: &HeadlessWorkspace, artifact_id: &str) -> Result<String, GatewayError> {
+    if let Some(binding) = workspace.plugin_artifact_binding(artifact_id) {
+        return Ok(binding.plugin_id);
+    }
     let plugin_ids = workspace.catalog_plugin_ids();
     match plugin_ids.len() {
         0 => Err(GatewayError::new(GatewayErrorCode::PluginUnavailable, "no plugin-owned capability is registered in this workspace's catalog — nothing to export against").retryable()),
@@ -277,6 +282,26 @@ fn artifact_create_handler(workspace: &Option<Arc<HeadlessWorkspace>>, arguments
         }
         Ok(_) => {}
     }
+    if kind != crate::workspace::PROBE_SCHEMA {
+        let installed = match workspace.installed_artifact_kinds() {
+            Ok(kinds) => kinds,
+            Err(error) => return CallToolResult::tool_error(&error),
+        };
+        let Some(declared) = installed.iter().find(|row| row.schema == kind) else {
+            let known: Vec<&str> = std::iter::once(crate::workspace::PROBE_SCHEMA).chain(installed.iter().map(|row| row.schema.as_str())).collect();
+            return CallToolResult::tool_error(
+                &GatewayError::new(GatewayErrorCode::InputInvalid, format!("no installed plugin declares artifact kind `{kind}`"))
+                    .with_details(serde_json::json!({ "requestedKind": kind, "installedKinds": known })),
+            );
+        };
+        return match workspace.create_plugin_artifact(&artifact_id, declared) {
+            Ok((pack_bytes, spr_bytes)) => CallToolResult::ok(
+                vec![ContentBlock::Text { text: format!("created {artifact_id} as {kind}") }],
+                Some(serde_json::json!({ "artifactId": artifact_id, "kind": kind, "pluginId": declared.plugin_id, "appId": declared.app_id, "sizeBytes": pack_bytes + spr_bytes, "revision": resolve_artifact_revision(workspace, &artifact_id) })),
+            ),
+            Err(error) => CallToolResult::tool_error(&error),
+        };
+    }
     let initial = arguments.get("initial").cloned().unwrap_or_else(|| serde_json::json!({}));
     match semio_framework::io::resolve_ready(workspace.ensure_probe_artifact(&artifact_id, initial)) {
         Ok(revision) => CallToolResult::ok(vec![ContentBlock::Text { text: format!("created {artifact_id}") }], Some(serde_json::json!({ "artifactId": artifact_id, "kind": kind, "revision": revision }))),
@@ -354,14 +379,80 @@ fn artifact_export_handler(workspace: &Option<Arc<HeadlessWorkspace>>, arguments
         Ok(Some(_)) => {}
     }
     let requested_format = arguments.get("format").and_then(serde_json::Value::as_str).map(str::to_string);
-    match resolve_plugin_export_formats(&plugin_id) {
-        Ok(available_formats) => CallToolResult::tool_error(
-            &GatewayError::new(GatewayErrorCode::PluginUnavailable, format!("plugin `{plugin_id}` declares {} export format(s) but no live export command is wired yet — the real wire protocol has no export query command", available_formats.len()))
-                .with_details(serde_json::json!({ "pluginId": plugin_id, "availableFormats": available_formats, "requestedFormat": requested_format }))
-                .retryable(),
+    let ports = match export_ports_for(workspace, &artifact_id, &plugin_id) {
+        Ok(ports) => ports,
+        Err(error) => return CallToolResult::tool_error(&error),
+    };
+    let declared_formats = resolve_plugin_export_formats(&plugin_id).unwrap_or_default();
+    let port = match &requested_format {
+        Some(format) => match ports.iter().find(|port| *port == format) {
+            Some(port) => port.clone(),
+            None => {
+                return CallToolResult::tool_error(
+                    &GatewayError::new(GatewayErrorCode::InputInvalid, format!("plugin `{plugin_id}` exposes no output port `{format}` for `{artifact_id}`"))
+                        .with_details(serde_json::json!({ "pluginId": plugin_id, "availablePorts": ports, "declaredExportFormats": declared_formats, "requestedFormat": format })),
+                )
+            }
+        },
+        None => match ports.first() {
+            Some(port) => port.clone(),
+            None => {
+                return CallToolResult::tool_error(
+                    &GatewayError::new(GatewayErrorCode::PluginUnavailable, format!("plugin `{plugin_id}` declares no media output port to export `{artifact_id}` through"))
+                        .with_details(serde_json::json!({ "pluginId": plugin_id, "declaredExportFormats": declared_formats }))
+                        .retryable(),
+                )
+            }
+        },
+    };
+    match workspace.export_artifact_media(&plugin_id, &artifact_id, &port) {
+        Ok((descriptor, data, answered_port)) => CallToolResult::ok(
+            vec![ContentBlock::Text { text: format!("exported {artifact_id} through `{answered_port}` ({} byte(s))", data.len()) }],
+            Some(serde_json::json!({
+                "artifactId": artifact_id,
+                "format": answered_port,
+                "mimeType": serde_json::Value::Null,
+                "contentBase64": base64_encode(&data),
+                "pluginId": plugin_id,
+                "descriptorBytes": descriptor.len(),
+                "availablePorts": ports,
+                "declaredExportFormats": declared_formats,
+            })),
         ),
         Err(error) => CallToolResult::tool_error(&error),
     }
+}
+
+/// 📤️ The output ports `artifact_id` can actually be exported through: the ports declared by the app
+/// that owns this artifact's kind when this workspace minted it (`plugin_artifact_binding`), else
+/// every port `plugin_id`'s editor apps declare. Real declared data either way — never a guess at a
+/// port name.
+fn export_ports_for(workspace: &Arc<HeadlessWorkspace>, artifact_id: &str, plugin_id: &str) -> Result<Vec<String>, GatewayError> {
+    let installed = workspace.installed_artifact_kinds()?;
+    if let Some(binding) = workspace.plugin_artifact_binding(artifact_id) {
+        if let Some(row) = installed.iter().find(|row| row.schema == binding.schema) {
+            return Ok(row.media_out_ports.clone());
+        }
+    }
+    let mut ports: Vec<String> = installed.iter().filter(|row| row.plugin_id == plugin_id).flat_map(|row| row.media_out_ports.iter().cloned()).collect();
+    ports.dedup();
+    Ok(ports)
+}
+
+/// 🔢️ Standard base64 of the exported bytes — the `contentBase64` field `artifact.export`'s own
+/// output schema declares.
+fn base64_encode(bytes: &[u8]) -> String {
+    const ALPHABET: &[u8; 64] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+    let mut out = String::with_capacity(bytes.len().div_ceil(3) * 4);
+    for chunk in bytes.chunks(3) {
+        let triple = [chunk[0], *chunk.get(1).unwrap_or(&0), *chunk.get(2).unwrap_or(&0)];
+        let packed = (u32::from(triple[0]) << 16) | (u32::from(triple[1]) << 8) | u32::from(triple[2]);
+        out.push(ALPHABET[(packed >> 18) as usize & 63] as char);
+        out.push(ALPHABET[(packed >> 12) as usize & 63] as char);
+        out.push(if chunk.len() > 1 { ALPHABET[(packed >> 6) as usize & 63] as char } else { '=' });
+        out.push(if chunk.len() > 2 { ALPHABET[packed as usize & 63] as char } else { '=' });
+    }
+    out
 }
 //#endregion 🔖️Handlers
 

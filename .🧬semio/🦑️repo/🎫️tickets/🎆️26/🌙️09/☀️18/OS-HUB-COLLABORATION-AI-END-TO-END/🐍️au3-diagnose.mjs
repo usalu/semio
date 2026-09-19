@@ -1,0 +1,17 @@
+import { chromium } from "playwright";
+const browser = await chromium.launch({ headless: true, args: ["--use-angle=metal"] });
+const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
+const logs = [];
+page.on("console", (m) => logs.push(`${m.type()} ${m.text().slice(0, 300)}`));
+page.on("pageerror", (e) => logs.push(`pageerror ${String(e).slice(0, 300)}`));
+await page.goto("http://127.0.0.1:6081", { waitUntil: "domcontentloaded" });
+await page.waitForSelector("[data-semio-hub-connection]", { timeout: 180000 });
+console.log("url before:", page.url());
+await page.click('[data-semio-hub-sign-in=""]');
+await page.waitForTimeout(4000);
+console.log("url after:", page.url());
+console.log("workspace count:", await page.locator("[data-semio-hub-workspace]").count());
+console.log("hub env:", await page.evaluate(() => import.meta?.env?.VITE_S_HUB_URL ?? "n/a").catch(() => "n/a"));
+console.log("--- last 25 console ---");
+console.log(logs.slice(-25).join("\n"));
+await browser.close();

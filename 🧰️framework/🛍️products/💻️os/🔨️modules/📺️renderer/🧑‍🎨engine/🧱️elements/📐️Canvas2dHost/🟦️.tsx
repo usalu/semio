@@ -241,9 +241,12 @@ function drawSceneNode(ctx: CanvasRenderingContext2D, layer: CanvasLayerRecord, 
     }
   }
   if (layer.text?.content) {
-    ctx.fillStyle = layer.fill?.color ? rgbaToCss(layer.fill.color, opacity) : rgbaToCss([0.89, 0.91, 0.94, 1], opacity);
-    ctx.font = `${layer.text.size ?? 14}px ui-monospace, monospace`;
-    ctx.fillText(layer.text.content, 0, layer.text.size ?? 14);
+    const size = layer.text.size ?? 14;
+    const tx = layer.x ?? 0;
+    const ty = layer.y ?? 0;
+    ctx.fillStyle = layer.fill?.color ? rgbaToCss(layer.fill.color, opacity) : rgbaToCss([0.0, 0.0, 0.0, 1.0], opacity);
+    ctx.font = `${size}px ui-sans-serif, system-ui, sans-serif`;
+    ctx.fillText(layer.text.content, tx, ty + size);
   }
   if (layer.image?.src) {
     const width = layer.image.width ?? layer.width ?? 64;

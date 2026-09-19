@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 import { createHash, randomBytes, timingSafeEqual, webcrypto } from "node:crypto";
-import { chmodSync, closeSync, existsSync, fsyncSync, lstatSync, mkdirSync, mkdtempSync, openSync, readFileSync, readdirSync, realpathSync, renameSync, rmSync, statSync, writeFileSync, writeSync } from "node:fs";
+import { chmodSync, closeSync, existsSync, fsyncSync, lstatSync, mkdirSync, mkdtempSync, openSync, readFileSync, readdirSync, realpathSync, renameSync, rmSync, statSync, writeFileSync, writeSync, type Stats } from "node:fs";
 import { basename, dirname, isAbsolute, join, relative, resolve } from "node:path";
 import { spawn, type ChildProcess } from "node:child_process";
 import type { Duplex } from "node:stream";
@@ -87,6 +87,7 @@ import {
   orchestratorBudgetOpts,
   resolveTestLevel,
   readStableBuildFile,
+  type ExactCargoLawGroup,
 } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { hubSchemaExport } from "../🟦️typescript/🟦️.ts";
 import { exactCargoStageEnvironments } from "../../🏗️build/🛂staging-environment/🟦️.ts";
@@ -95,6 +96,8 @@ import { DIRECT_CHILD_BENIGN_ENV_KEY, DIRECT_CHILD_BENIGN_ENV_VALUE, deliverCred
 import { proveMcpCredentialSourceOrder, proveNativeCredentialSourceOrder } from "../../🔐️auth/🧪️tests/🧭️credential-source-order/🟦️.ts";
 import { assertHubFixtureExpectation, type HubFixtureExpectationV1 } from "../../🧪️tests/🧬️schema/🛂expectation/🟦️.ts";
 import { HubFoundationSourceScript } from "../../🧪️tests/🧱️foundation-source/🏃️execution/🟦️.ts";
+import { LocalRelayRoutingScript } from "../../🚀️local-relay/🧭️routing/🧪️tests/🏃️execution/🟦️.ts";
+import { HubLiveSignInScript } from "../../🔐️auth/🧪️tests/🤝️live-sign-in/🏃️execution/🟦️.ts";
 import { HubSocketGrantCommandSourceScript } from "../../🧪️tests/🧱️socket-grant-command-source/🏃️execution/🟦️.ts";
 import { proveScopedDirectorySocketRevocationFixture } from "../../📇️directory/🔐️authorization/🔌️socket-grant/🧪️tests/🧾️fixture-verification/🟦️.ts";
 import { SocketGrantCheckScript } from "../../📇️directory/🔐️authorization/🔌️socket-grant/🧪️tests/🏃️execution/🟦️.ts";
@@ -102,7 +105,7 @@ import { localRelayExecutionTargetAsset, localRelayInferencePath, localRelaySpac
 import { issueLocalCredential } from "../../🚀️local-bootstrap/🔐️credential-issuance/🟦️.ts";
 import { authenticatedFrame, LOCAL_BOOTSTRAP_SCHEMA, type LocalClientClass, type LocalProfile, verifyAuthenticatedFrame } from "../../🚀️local-bootstrap/🛂authentication/🟦️.ts";
 import { LOCAL_BOOTSTRAP_DEADLINE_MS, LOCAL_BOOTSTRAP_FRAME_MAX, LocalFrameReader, writeLocalFrame } from "../../🚀️local-bootstrap/📡️framing/🟦️.ts";
-import { finishLocalHub, freeLoopbackPort, hubBinaryPath, hubDevBinaryPath, LOCAL_READINESS_DEADLINE_MS, type LocalHubRun, startLocalHub, waitForChildExit, waitForReadiness } from "../../🚀️local-bootstrap/🏃️execution/🟦️.ts";
+import { finishLocalHub, freeLoopbackPort, HUB_DEV_BINARY_TARGET, hubBinaryPath, hubDevBinaryPath, LOCAL_READINESS_DEADLINE_MS, type LocalHubRun, startLocalHub, waitForChildExit, waitForReadiness } from "../../🚀️local-bootstrap/🏃️execution/🟦️.ts";
 import { GIS_INFERENCE_CHECKPOINT_CONTROL_FRAME_MAX_BYTES } from "../../💡️inference/🧬️schema/🟦️.ts";
 type AdminLiveJourneyFixture = {
   readonly schema: "semio.hub.admin-live-journey/v1";
@@ -348,7 +351,7 @@ function startLocalAdminRelay(hubOrigin: string, envelope: Record<string, any>, 
   };
 }
 
-async function readLocalRelayBody(request: Request, maximumBytes = LOCAL_RELAY_MAX_BODY_BYTES, signal?: AbortSignal): Promise<Uint8Array | undefined> {
+async function readLocalRelayBody(request: Request, maximumBytes = LOCAL_RELAY_MAX_BODY_BYTES, signal?: AbortSignal): Promise<Uint8Array<ArrayBuffer> | undefined> {
   signal?.throwIfAborted();
   if (request.method === "GET" || request.method === "DELETE" || request.body === null) return undefined;
   const contentLength = Number(request.headers.get("content-length") ?? "0");
@@ -386,7 +389,7 @@ async function readLocalRelayBody(request: Request, maximumBytes = LOCAL_RELAY_M
   return body;
 }
 
-async function readLocalRelayResponse(response: Response, maximumBytes = LOCAL_RELAY_MAX_BODY_BYTES): Promise<Uint8Array> {
+async function readLocalRelayResponse(response: Response, maximumBytes = LOCAL_RELAY_MAX_BODY_BYTES): Promise<Uint8Array<ArrayBuffer>> {
   const contentLength = Number(response.headers.get("content-length") ?? "0");
   if (!Number.isSafeInteger(contentLength) || contentLength < 0 || contentLength > maximumBytes) throw new Error("response too large");
   if (response.body === null) return new Uint8Array();
@@ -410,6 +413,13 @@ async function readLocalRelayResponse(response: Response, maximumBytes = LOCAL_R
     offset += chunk.byteLength;
   }
   return body;
+}
+
+/** 🔐️ `crypto.subtle` accepts only `ArrayBuffer`-backed views, while a `Uint8Array`/`Buffer` may be typed over
+ * `ArrayBufferLike` (which includes `SharedArrayBuffer`). Every WebCrypto digest here is therefore taken over an
+ * exact non-shared copy of the bytes. */
+async function webSha256Hex(bytes: Uint8Array | ArrayBuffer): Promise<string> {
+  return Buffer.from(await crypto.subtle.digest("SHA-256", new Uint8Array(bytes))).toString("hex");
 }
 
 function matchesSecret(supplied: string | null, expected: Buffer): boolean {
@@ -673,7 +683,7 @@ type CheckpointPublicationProcessFixtureV1 = {
   };
 };
 
-function checkpointPublicationProcessFixture(): { readonly root: string; readonly fixture: CheckpointPublicationProcessFixtureV1; readonly pack: Buffer; readonly spr: Buffer; readonly diff: Buffer; readonly inverse: Buffer } {
+function checkpointPublicationProcessFixture(): { readonly root: string; readonly fixture: CheckpointPublicationProcessFixtureV1; readonly pack: Buffer<ArrayBuffer>; readonly spr: Buffer<ArrayBuffer>; readonly diff: Buffer<ArrayBuffer>; readonly inverse: Buffer<ArrayBuffer> } {
   const artifactRoot = process.env.SEMIO_TEST_ARTIFACT_DIR;
   if (!artifactRoot) throw new Error("checkpoint publication process requires its ticket-owned artifact root");
   const root = join(resolve(artifactRoot), "checkpoint-publication-process-fixture");
@@ -689,7 +699,7 @@ function checkpointPublicationProcessFixture(): { readonly root: string; readonl
     fixture.payload.inverse.schema !== "db.pathmap.v1"
   )
     throw new Error("checkpoint publication process fixture identity is invalid");
-  const readPayload = (part: "pack" | "spr" | "diff" | "inverse"): Buffer => {
+  const readPayload = (part: "pack" | "spr" | "diff" | "inverse"): Buffer<ArrayBuffer> => {
     const record = fixture.payload[part];
     const path = resolve(root, record.path);
     if (relative(root, path).startsWith("..")) throw new Error(`checkpoint publication ${part} escaped its fixture root`);
@@ -763,9 +773,9 @@ async function createCheckpointPublicationProcessGenesis(run: LocalHubRun, capab
     status.ready?.kindId !== fixture.artifact.kind ||
     status.ready.artifactSchema !== fixture.artifact.schema ||
     status.ready.parentDialect.artifactKind !== fixture.artifact.kind ||
-    !/^artifact-[0-9a-f]{32}$/u.test(status.ready.documentId)
+    !/^artifact-[0-9a-f]{32}$/u.test(status.ready.artifactId)
   ) throw new Error("checkpoint process genesis Ready coordinates differ from the selected GIS target");
-  return Object.freeze({ ...fixture, documentId: status.ready.documentId });
+  return Object.freeze({ ...fixture, documentId: status.ready.artifactId });
 }
 
 async function commitCheckpointPublicationProcessMutation(
@@ -871,8 +881,8 @@ async function publishCheckpointPublicationProcessPairV1(
   fixture: CheckpointPublicationProcessFixtureV1,
   plan: ReturnType<typeof parseDocumentOpenPlanV1>,
   frontier: WireFrontierSummary,
-  pack: Buffer,
-  spr: Buffer,
+  pack: Buffer<ArrayBuffer>,
+  spr: Buffer<ArrayBuffer>,
 ): Promise<CheckpointPublicationProcessResultV1> {
   const chainSha256 = Buffer.from(frontier.chain_hash).toString("hex");
   if (!/^[0-9a-f]{64}$/u.test(chainSha256)) throw new Error("checkpoint publication process actor returned an invalid chain hash");
@@ -1144,7 +1154,9 @@ async function proveCheckpointPublicationMcpProcess(repoRoot: string, root: stri
       stderrBytes += chunk.byteLength;
       if (stderrBytes <= 16_384) stderr.push(Buffer.from(chunk));
     });
-    const writeRequest = (id: number, method: string, params: Record<string, unknown>): void => child?.stdin?.write(`${JSON.stringify({ jsonrpc: "2.0", id, method, params })}\n`);
+    const writeRequest = (id: number, method: string, params: Record<string, unknown>): void => {
+      child?.stdin?.write(`${JSON.stringify({ jsonrpc: "2.0", id, method, params })}\n`);
+    };
     try {
       const boundDeadline = Date.now() + 10_000;
       while (!Buffer.concat(stderr).toString("utf8").includes("real per-capability ArtifactChannel routing bound")) {
@@ -1605,6 +1617,11 @@ async function runSecureLocalSmoke(repoRoot: string, root: string): Promise<void
 
 type BrowserBrokerOracleUpstream = { effects: number; status: number; hold: boolean };
 
+/** 🔢️ Reads a relay-oracle counter that the upstream `Bun.serve` handler advances out of band, where control-flow narrowing would otherwise freeze the field at the literal the previous assertion proved. */
+function observedCount(counter: number): number {
+  return counter;
+}
+
 function browserBrokerOracleEnvelope(): Record<string, unknown> {
   return { schema: "semio.hub.local-credential-envelope/v1", clientClass: "react-relay", capability: `session.v1.${"1".repeat(32)}.${"2".repeat(64)}` };
 }
@@ -1624,8 +1641,8 @@ async function browserBrokerOracleRequest(relay: LocalBrowserRelay, uiOrigin: st
 
 async function waitForBrowserBrokerEffect(upstream: BrowserBrokerOracleUpstream, expected: number): Promise<void> {
   const deadline = Date.now() + 2_000;
-  while (upstream.effects < expected && Date.now() < deadline) await Bun.sleep(5);
-  if (upstream.effects !== expected) throw new Error("browser broker upstream effect deadline exceeded");
+  while (observedCount(upstream.effects) < expected && Date.now() < deadline) await Bun.sleep(5);
+  if (observedCount(upstream.effects) !== expected) throw new Error("browser broker upstream effect deadline exceeded");
 }
 
 async function runHostilePluginShard(relay: LocalBrowserRelay, uiOrigin: string): Promise<{ readonly status: number; readonly hasProof: boolean; readonly hasPort: boolean; readonly hash: string }> {
@@ -1695,9 +1712,9 @@ async function proveBrowserBrokerRelay(repoRoot: string): Promise<void> {
   try {
     relay = startLocalBrowserRelay(hubOrigin, uiOrigin, browserBrokerOracleEnvelope());
     const rawLocal = await browserBrokerOracleRequest(relay, uiOrigin);
-    if (rawLocal.status !== lifecycleFixture.expected.unarmed || upstreamState.effects !== 0) throw new Error("unarmed browser broker reached upstream");
+    if (rawLocal.status !== lifecycleFixture.expected.unarmed || observedCount(upstreamState.effects) !== 0) throw new Error("unarmed browser broker reached upstream");
     const shardAttempt = await runHostilePluginShard(relay, uiOrigin);
-    if (shardAttempt.status !== 401 || shardAttempt.hasProof || shardAttempt.hasPort || shardAttempt.hash !== "" || upstreamState.effects !== 0) throw new Error("running same-origin plugin shard crossed private broker boundary");
+    if (shardAttempt.status !== 401 || shardAttempt.hasProof || shardAttempt.hasPort || shardAttempt.hash !== "" || observedCount(upstreamState.effects) !== 0) throw new Error("running same-origin plugin shard crossed private broker boundary");
     const proof0 = relay.takeBrowserBootstrapProof();
     const proof0Hex = proof0.toString("hex");
     proof0.fill(0);
@@ -1710,9 +1727,9 @@ async function proveBrowserBrokerRelay(repoRoot: string): Promise<void> {
     if (!duplicateTakeRejected) throw new Error("browser broker issued duplicate bootstrap proof");
     const proof1 = randomBytes(32);
     const admitted = await browserBrokerOracleRequest(relay, uiOrigin, proof0Hex, proof1);
-    if (admitted.status !== lifecycleFixture.expected.admitted || admitted.headers.get("x-semio-browser-broker-advanced") !== "1" || upstreamState.effects !== 1) throw new Error("browser broker did not acknowledge an admitted ratchet");
+    if (admitted.status !== lifecycleFixture.expected.admitted || admitted.headers.get("x-semio-browser-broker-advanced") !== "1" || observedCount(upstreamState.effects) !== 1) throw new Error("browser broker did not acknowledge an admitted ratchet");
     const replay = await browserBrokerOracleRequest(relay, uiOrigin, proof0Hex, randomBytes(32));
-    if (replay.status !== lifecycleFixture.expected.replayed || upstreamState.effects !== 1 || (await replay.text()).includes(proof0Hex)) throw new Error("browser broker accepted or reflected a replayed proof");
+    if (replay.status !== lifecycleFixture.expected.replayed || observedCount(upstreamState.effects) !== 1 || (await replay.text()).includes(proof0Hex)) throw new Error("browser broker accepted or reflected a replayed proof");
     await relay.stop();
 
     upstreamState.effects = 0;
@@ -1723,10 +1740,10 @@ async function proveBrowserBrokerRelay(repoRoot: string): Promise<void> {
     ttlProof.fill(0);
     const ttlNext = randomBytes(32);
     const ttlAdvanced = await browserBrokerOracleRequest(relay, uiOrigin, ttlProofHex, ttlNext);
-    if (ttlAdvanced.status !== lifecycleFixture.expected.admitted || ttlAdvanced.headers.get("x-semio-browser-broker-advanced") !== "1" || upstreamState.effects !== 1) throw new Error("delayed bootstrap did not advance the initial broker proof");
+    if (ttlAdvanced.status !== lifecycleFixture.expected.admitted || ttlAdvanced.headers.get("x-semio-browser-broker-advanced") !== "1" || observedCount(upstreamState.effects) !== 1) throw new Error("delayed bootstrap did not advance the initial broker proof");
     await Bun.sleep(lifecycleFixture.delayedBootstrap.delayMs);
     const expired = await browserBrokerOracleRequest(relay, uiOrigin, ttlNext.toString("hex"), randomBytes(32));
-    if (expired.status !== lifecycleFixture.expected.expired || upstreamState.effects !== 1) throw new Error("expired rotated broker proof reached upstream");
+    if (expired.status !== lifecycleFixture.expected.expired || observedCount(upstreamState.effects) !== 1) throw new Error("expired rotated broker proof reached upstream");
     await relay.stop();
 
     upstreamState.effects = 0;
@@ -1736,7 +1753,7 @@ async function proveBrowserBrokerRelay(repoRoot: string): Promise<void> {
     expiredBootstrapProof.fill(0);
     await Bun.sleep(lifecycleFixture.bootstrapExpiry.delayMs);
     const expiredBootstrap = await browserBrokerOracleRequest(relay, uiOrigin, expiredBootstrapProofHex, randomBytes(32));
-    if (expiredBootstrap.status !== lifecycleFixture.expected.expired || upstreamState.effects !== 0) throw new Error("expired bootstrap proof reached upstream");
+    if (expiredBootstrap.status !== lifecycleFixture.expected.expired || observedCount(upstreamState.effects) !== 0) throw new Error("expired bootstrap proof reached upstream");
     await relay.stop();
 
     upstreamState.effects = 0;
@@ -1747,9 +1764,9 @@ async function proveBrowserBrokerRelay(repoRoot: string): Promise<void> {
     upstreamState.status = 401;
     const rejectedNext = randomBytes(32);
     const rejected = await browserBrokerOracleRequest(relay, uiOrigin, rejectedProofHex, rejectedNext);
-    if (rejected.status !== 401 || rejected.headers.get("x-semio-browser-broker-advanced") !== "1" || upstreamState.effects !== 1) throw new Error("upstream rejection did not close the broker epoch");
+    if (rejected.status !== 401 || rejected.headers.get("x-semio-browser-broker-advanced") !== "1" || observedCount(upstreamState.effects) !== 1) throw new Error("upstream rejection did not close the broker epoch");
     const afterRejection = await browserBrokerOracleRequest(relay, uiOrigin, rejectedNext.toString("hex"), randomBytes(32));
-    if (afterRejection.status !== 401 || upstreamState.effects !== 1) throw new Error("broker retained authority after upstream rejection");
+    if (afterRejection.status !== 401 || observedCount(upstreamState.effects) !== 1) throw new Error("broker retained authority after upstream rejection");
     await relay.stop();
 
     upstreamState.effects = 0;
@@ -1765,12 +1782,42 @@ async function proveBrowserBrokerRelay(repoRoot: string): Promise<void> {
     abort.abort();
     await cancelled;
     const replayAfterCancel = await browserBrokerOracleRequest(relay, uiOrigin, cancelProofHex, randomBytes(32));
-    if (replayAfterCancel.status !== 401 || upstreamState.effects !== 1) throw new Error("cancel-after-send allowed proof reuse");
+    if (replayAfterCancel.status !== 401 || observedCount(upstreamState.effects) !== 1) throw new Error("cancel-after-send allowed proof reuse");
   } finally {
     await relay?.stop();
     await upstreamServer.stop(true);
   }
 }
+
+/** 🧵️ The browser-actor child Worker containment fixture (`🌐️browser-bundle/🧵️child/🧫️fixtures/🔣️.json`). */
+type BrowserActorChildWorkerFixture = {
+  readonly schema: string;
+  readonly limits: Readonly<Record<string, number>>;
+  readonly modules: Readonly<Record<string, string>>;
+  readonly laws: readonly string[];
+  readonly wireRows: readonly Record<string, any>[];
+  readonly ownerFaults: readonly string[];
+};
+
+/** 📇️ The `document.indexed` directory event body as `schema://os.directory/DirectoryEventBody` declares it. */
+type DocumentIndexedEventBodyV1 = {
+  readonly kind: "document.indexed";
+  readonly scope: { readonly spaceId: string; readonly documentId: string };
+  readonly descriptorDigestV1: readonly number[];
+  readonly entry: { readonly name: string; readonly dialect: { readonly artifactKind: string; readonly standard: string; readonly subset: string } };
+};
+
+/** ✍️ A mutable working copy of the browser-actor GIS descriptor, mutated one field per hostile case. */
+type BrowserActorGisDescriptorDraft = { hashes: Record<string, string>; manifest: Record<string, unknown>; executionProtocol: Record<string, unknown>; [key: string]: unknown };
+
+/** 🧾️ The browser-actor GIS descriptor fixture (`🌐️browser-bundle/🧾️describe/🧫️fixtures/🔣️.json`). */
+type BrowserActorGisDescribeFixture = {
+  readonly schema: string;
+  readonly descriptor: { readonly hashes: Record<string, string>; readonly manifest: Record<string, unknown>; readonly executionProtocol: Record<string, unknown>; readonly [key: string]: unknown };
+  readonly hashKeys: readonly string[];
+  readonly cases: readonly Record<string, any>[];
+  readonly localTransport: { readonly stallMs: number; readonly bodyMs: number };
+};
 
 type BrowserDocumentOpenFixture = {
   readonly nowMs: number;
@@ -1978,7 +2025,7 @@ async function proveBrowserDocumentOpenRuntime(repoRoot: string, fixture: Browse
   );
   let proofHex = "";
   let relay: LocalBrowserRelay | undefined;
-  let viteServer: { close(): Promise<void> } | undefined;
+  let viteServer: { close(): Promise<void>; listen(): Promise<unknown> } | undefined;
   let browser: Awaited<ReturnType<(typeof import("playwright"))["chromium"]["launch"]>> | undefined;
   const browserDiagnostics: string[] = [];
   const priorViteEnvironment = {
@@ -2005,7 +2052,7 @@ async function proveBrowserDocumentOpenRuntime(repoRoot: string, fixture: Browse
       server: { host: "127.0.0.1", port: uiPort, strictPort: true },
       clearScreen: false,
     });
-    await (viteServer as { listen(): Promise<void> }).listen();
+    await viteServer.listen();
     const { chromium } = await import("playwright");
     browser = await chromium.launch({ headless: true });
     const page = await browser.newPage();
@@ -2028,7 +2075,7 @@ async function proveBrowserDocumentOpenRuntime(repoRoot: string, fixture: Browse
     liveProof.fill(0);
     await page.evaluate(
       ({ workerUrl, proof, openWire }) => {
-        const state = ((globalThis as any).__semio = { messages: [], errors: [], started: false });
+        const state: { messages: unknown[]; errors: string[]; started: boolean; worker?: Worker } = ((globalThis as any).__semio = { messages: [], errors: [], started: false });
         history.replaceState(history.state, "", `${location.pathname}${location.search}`);
         const worker = new Worker(workerUrl, { type: "module" });
         const channel = new MessageChannel();
@@ -2197,7 +2244,7 @@ async function proveAdminRelayBoundary(repoRoot: string): Promise<void> {
     upstream.staticResponseBytes = 0;
     if (oversizedStatic.status !== 503) throw new Error("admin relay static response max+1 law failed");
     const rawLocal = await fetch(`${relay.url}/admin/api/overview`);
-    if (rawLocal.status !== 401 || upstream.effects !== 0 || (await rawLocal.text()).includes(capability)) throw new Error("raw local caller crossed the admin relay cookie boundary");
+    if (rawLocal.status !== 401 || observedCount(upstream.effects) !== 0 || (await rawLocal.text()).includes(capability)) throw new Error("raw local caller crossed the admin relay cookie boundary");
     const bootstrapped = await adminRelayBootstrap(relay, proofHex);
     const setCookie = bootstrapped.headers.get("set-cookie") ?? "";
     const cookie = setCookie.match(new RegExp(`^${ADMIN_RELAY_COOKIE}=([0-9a-f]{64});`, "u"))?.[1];
@@ -2213,27 +2260,27 @@ async function proveAdminRelayBoundary(repoRoot: string): Promise<void> {
     )
       throw new Error("admin relay did not issue an opaque host-only HttpOnly strict cookie");
     const replay = await adminRelayBootstrap(relay, proofHex);
-    if (replay.status !== 401 || upstream.effects !== 0) throw new Error("admin relay replayed its one-use fragment bootstrap");
+    if (replay.status !== 401 || observedCount(upstream.effects) !== 0) throw new Error("admin relay replayed its one-use fragment bootstrap");
     const admitted = await fetch(`${relay.url}/admin/api/overview`, { headers: { cookie: `${ADMIN_RELAY_COOKIE}=${cookie}` } });
     const admittedText = await admitted.text();
-    if (!admitted.ok || admittedText !== '{"ok":true}' || admittedText.includes(capability) || upstream.effects !== 1) throw new Error("admin relay did not proxy an opaque-cookie request with memory-only authority");
+    if (!admitted.ok || admittedText !== '{"ok":true}' || admittedText.includes(capability) || observedCount(upstream.effects) !== 1) throw new Error("admin relay did not proxy an opaque-cookie request with memory-only authority");
     const intentBody = JSON.stringify({ kind: "rebuild-directory-projections", requestId: "relay-oracle:rebuild", expectedHeadSeq: 0 });
     const forgedUnsafe = await fetch(`${relay.url}/admin/api/intents`, { method: "POST", headers: { cookie: `${ADMIN_RELAY_COOKIE}=${cookie}`, "content-type": "application/json" }, body: intentBody });
-    if (forgedUnsafe.status !== 401 || upstream.unsafeEffects !== 0) throw new Error("admin relay admitted a cross-origin unsafe request");
+    if (forgedUnsafe.status !== 401 || observedCount(upstream.unsafeEffects) !== 0) throw new Error("admin relay admitted a cross-origin unsafe request");
     const admittedUnsafe = await fetch(`${relay.url}/admin/api/intents`, {
       method: "POST",
       headers: { cookie: `${ADMIN_RELAY_COOKIE}=${cookie}`, origin: relay.url, referer: `${relay.url}/admin/`, "sec-fetch-site": "same-origin", "content-type": "application/json" },
       body: intentBody,
     });
-    if (!admittedUnsafe.ok || upstream.unsafeEffects !== 1) throw new Error("admin relay rejected its same-origin unsafe request");
+    if (!admittedUnsafe.ok || observedCount(upstream.unsafeEffects) !== 1) throw new Error("admin relay rejected its same-origin unsafe request");
     const paged = await fetch(`${relay.url}/admin/api/connections?limit=100`, { headers: { cookie: `${ADMIN_RELAY_COOKIE}=${cookie}` } });
-    if (!paged.ok || upstream.effects !== 3) throw new Error("admin relay rejected an exact bounded page query");
+    if (!paged.ok || observedCount(upstream.effects) !== 3) throw new Error("admin relay rejected an exact bounded page query");
     const documents = await fetch(`${relay.url}/admin/api/documents?limit=100&space=studio`, { headers: { cookie: `${ADMIN_RELAY_COOKIE}=${cookie}` } });
-    if (!documents.ok || upstream.effects !== 4) throw new Error("admin relay rejected an exact bounded document projection query");
+    if (!documents.ok || observedCount(upstream.effects) !== 4) throw new Error("admin relay rejected an exact bounded document projection query");
     const spaces = await fetch(`${relay.url}/admin/api/spaces?limit=100`, { headers: { cookie: `${ADMIN_RELAY_COOKIE}=${cookie}` } });
-    if (!spaces.ok || upstream.effects !== 5) throw new Error("admin relay rejected an exact bounded space projection query");
+    if (!spaces.ok || observedCount(upstream.effects) !== 5) throw new Error("admin relay rejected an exact bounded space projection query");
     const space = await fetch(`${relay.url}/admin/api/spaces/studio?limit=100`, { headers: { cookie: `${ADMIN_RELAY_COOKIE}=${cookie}` } });
-    if (!space.ok || upstream.effects !== 6) throw new Error("admin relay rejected an exact bounded space-member projection query");
+    if (!space.ok || observedCount(upstream.effects) !== 6) throw new Error("admin relay rejected an exact bounded space-member projection query");
     const arbitraryQuery = await fetch(`${relay.url}/admin/api/connections?limit=100&scope=all`, { headers: { cookie: `${ADMIN_RELAY_COOKIE}=${cookie}` } });
     const unboundedDocuments = await fetch(`${relay.url}/admin/api/documents?space=studio`, { headers: { cookie: `${ADMIN_RELAY_COOKIE}=${cookie}` } });
     const unboundedSpaces = await fetch(`${relay.url}/admin/api/spaces`, { headers: { cookie: `${ADMIN_RELAY_COOKIE}=${cookie}` } });
@@ -2242,50 +2289,51 @@ async function proveAdminRelayBoundary(repoRoot: string): Promise<void> {
       method: "POST",
       headers: { cookie: `${ADMIN_RELAY_COOKIE}=${cookie}`, origin: relay.url, referer: `${relay.url}/admin/`, "sec-fetch-site": "same-origin" },
     });
-    if (arbitraryQuery.status !== 404 || unboundedDocuments.status !== 404 || unboundedSpaces.status !== 404 || unboundedSpace.status !== 404 || legacyMutation.status !== 404 || upstream.effects !== 6)
+    if (arbitraryQuery.status !== 404 || unboundedDocuments.status !== 404 || unboundedSpaces.status !== 404 || unboundedSpace.status !== 404 || legacyMutation.status !== 404 || observedCount(upstream.effects) !== 6)
       throw new Error("admin relay admitted an arbitrary, unbounded, or legacy request");
 
     const sameOriginHeaders = { cookie: `${ADMIN_RELAY_COOKIE}=${cookie}`, origin: relay.url, referer: `${relay.url}/admin/`, "sec-fetch-site": "same-origin", "content-type": "application/json" };
     const beforeLimits = upstream.effects;
     const exactBody = await fetch(`${relay.url}/admin/api/intents`, { method: "POST", headers: sameOriginHeaders, body: new Uint8Array(8 * 1024) });
     const oversizedBody = await fetch(`${relay.url}/admin/api/intents`, { method: "POST", headers: sameOriginHeaders, body: new Uint8Array(8 * 1024 + 1) });
-    if (!exactBody.ok || oversizedBody.status !== 413 || upstream.effects !== beforeLimits + 1) throw new Error("admin relay request-body max+1 law failed");
+    if (!exactBody.ok || oversizedBody.status !== 413 || observedCount(upstream.effects) !== beforeLimits + 1) throw new Error("admin relay request-body max+1 law failed");
     upstream.responseBytes = 64 * 1024;
     const exactResponse = await fetch(`${relay.url}/admin/api/overview`, { headers: { cookie: `${ADMIN_RELAY_COOKIE}=${cookie}` } });
     if (!exactResponse.ok || (await exactResponse.arrayBuffer()).byteLength !== 64 * 1024) throw new Error("admin relay rejected its exact response ceiling");
     upstream.responseBytes = 64 * 1024 + 1;
     const oversizedResponse = await fetch(`${relay.url}/admin/api/overview`, { headers: { cookie: `${ADMIN_RELAY_COOKIE}=${cookie}` } });
     upstream.responseBytes = 0;
-    if (oversizedResponse.status !== 503 || upstream.effects !== beforeLimits + 3) throw new Error("admin relay response max+1 law failed");
+    if (oversizedResponse.status !== 503 || observedCount(upstream.effects) !== beforeLimits + 3) throw new Error("admin relay response max+1 law failed");
 
     upstream.blocked = true;
     upstream.started = 0;
     const abortController = new AbortController();
     const abortedRequest = fetch(`${relay.url}/admin/api/overview`, { headers: { cookie: `${ADMIN_RELAY_COOKIE}=${cookie}` }, signal: abortController.signal }).catch(() => undefined);
-    for (let attempt = 0; upstream.started !== 1 && attempt < 200; attempt += 1) await Bun.sleep(5);
-    if (upstream.started !== 1) throw new Error("admin relay downstream-abort law did not reach upstream");
+    for (let attempt = 0; observedCount(upstream.started) !== 1 && attempt < 200; attempt += 1) await Bun.sleep(5);
+    if (observedCount(upstream.started) !== 1) throw new Error("admin relay downstream-abort law did not reach upstream");
     const abortedBefore = upstream.aborted;
     abortController.abort();
     await abortedRequest;
     for (let attempt = 0; upstream.aborted === abortedBefore && attempt < 200; attempt += 1) await Bun.sleep(5);
-    if (upstream.aborted !== abortedBefore + 1) throw new Error("admin relay did not propagate downstream cancellation upstream");
+    if (observedCount(upstream.aborted) !== abortedBefore + 1) throw new Error("admin relay did not propagate downstream cancellation upstream");
 
     upstream.staticBlocked = true;
     upstream.staticStarted = 0;
     const staticAbortController = new AbortController();
     const abortedStatic = fetch(`${relay.url}/admin/static-abort.js`, { signal: staticAbortController.signal }).catch(() => undefined);
-    for (let attempt = 0; upstream.staticStarted !== 1 && attempt < 200; attempt += 1) await Bun.sleep(5);
+    for (let attempt = 0; observedCount(upstream.staticStarted) !== 1 && attempt < 200; attempt += 1) await Bun.sleep(5);
     const staticAbortedBefore = upstream.staticAborted;
     staticAbortController.abort();
     await abortedStatic;
     for (let attempt = 0; upstream.staticAborted === staticAbortedBefore && attempt < 200; attempt += 1) await Bun.sleep(5);
     upstream.staticBlocked = false;
-    if (upstream.staticStarted !== 1 || upstream.staticAborted !== staticAbortedBefore + 1) throw new Error("admin relay did not propagate static downstream cancellation upstream");
+    if (observedCount(upstream.staticStarted) !== 1 || observedCount(upstream.staticAborted) !== staticAbortedBefore + 1) throw new Error("admin relay did not propagate static downstream cancellation upstream");
 
     upstream.started = 0;
-    const saturated = Array.from({ length: LOCAL_RELAY_MAX_IN_FLIGHT }, () => fetch(`${relay.url}/admin/api/overview`, { headers: { cookie: `${ADMIN_RELAY_COOKIE}=${cookie}` } }));
-    for (let attempt = 0; upstream.started !== LOCAL_RELAY_MAX_IN_FLIGHT && attempt < 400; attempt += 1) await Bun.sleep(5);
-    if (upstream.started !== LOCAL_RELAY_MAX_IN_FLIGHT) throw new Error("admin relay did not fill its exact in-flight boundary");
+    const saturationUrl = `${relay.url}/admin/api/overview`;
+    const saturated = Array.from({ length: LOCAL_RELAY_MAX_IN_FLIGHT }, () => fetch(saturationUrl, { headers: { cookie: `${ADMIN_RELAY_COOKIE}=${cookie}` } }));
+    for (let attempt = 0; observedCount(upstream.started) !== LOCAL_RELAY_MAX_IN_FLIGHT && attempt < 400; attempt += 1) await Bun.sleep(5);
+    if (observedCount(upstream.started) !== LOCAL_RELAY_MAX_IN_FLIGHT) throw new Error("admin relay did not fill its exact in-flight boundary");
     const overflow = await fetch(`${relay.url}/admin/api/overview`, { headers: { cookie: `${ADMIN_RELAY_COOKIE}=${cookie}` } });
     const staticOverflow = await fetch(`${relay.url}/admin/static-overflow.js`);
     if (overflow.status !== 503 || staticOverflow.status !== 503) throw new Error("admin relay admitted max+1 API or static request outside its aggregate boundary");
@@ -2296,11 +2344,11 @@ async function proveAdminRelayBoundary(repoRoot: string): Promise<void> {
     upstream.staticBlocked = true;
     upstream.staticStarted = 0;
     const stoppedRequest = fetch(`${relay.url}/admin/static-stop.js`).catch(() => undefined);
-    for (let attempt = 0; upstream.staticStarted !== 1 && attempt < 200; attempt += 1) await Bun.sleep(5);
+    for (let attempt = 0; observedCount(upstream.staticStarted) !== 1 && attempt < 200; attempt += 1) await Bun.sleep(5);
     const stopAbortedBefore = upstream.staticAborted;
     await relay.stop();
     await stoppedRequest;
-    if (upstream.staticStarted !== 1 || upstream.staticAborted !== stopAbortedBefore + 1)
+    if (observedCount(upstream.staticStarted) !== 1 || observedCount(upstream.staticAborted) !== stopAbortedBefore + 1)
       throw new Error(`admin relay stop did not cancel active static upstream ownership: started=${upstream.staticStarted} aborted=${upstream.staticAborted} before=${stopAbortedBefore}`);
     upstream.staticBlocked = false;
 
@@ -2313,7 +2361,7 @@ async function proveAdminRelayBoundary(repoRoot: string): Promise<void> {
     if (!expiringCookie) throw new Error("admin relay expiry oracle lacked its opaque cookie");
     await Bun.sleep(300);
     const expired = await fetch(`${relay.url}/admin/api/overview`, { headers: { cookie: `${ADMIN_RELAY_COOKIE}=${expiringCookie}` } });
-    if (expired.status !== 401 || upstream.effects !== 0) throw new Error("expired admin relay cookie reached upstream");
+    if (expired.status !== 401 || observedCount(upstream.effects) !== 0) throw new Error("expired admin relay cookie reached upstream");
 
     const sessionSource = readFileSync(join(repoRoot, "🌎️hub/🔨️modules/🛡️admin/🧱️elements/🔑️AdminSession/🟦️.tsx"), "utf8");
     const viteSource = readFileSync(join(repoRoot, "🌎️hub/🔨️modules/🛡️admin/🏗️builder/🌐️vite/🟦️.ts"), "utf8");
@@ -2505,15 +2553,27 @@ class SetupScript extends BundleScript {
   }
 }
 
-/** 🎛️ The default sqlite-only dev loop runs on the crate's default features (`sqlite` +
- * `native-artifact-execution`); a leading `all-features` segment opts into the full
- * directory-backend matrix (sqlite/postgres/neo4j drivers linked) that the `test-all-features`
- * nx target names, whose `postgres` laws additionally need a live Docker daemon. */
+/** 🗂️ The package-owned artifact root the descriptor-rooted hub laws demand when no ticket supplies one:
+ * `fixture_root()` in the trusted-catalog, publication and browser-actor suites reads
+ * `SEMIO_TEST_ARTIFACT_DIR` and panics without it, so a plain `nx run os-hub:test` would report panics
+ * instead of assertions. */
+function hubTestArtifactRoot(root: string): string {
+  const path = join(root, "🗑️generated", "test-artifacts");
+  mkdirSync(path, { recursive: true, mode: 0o700 });
+  return path;
+}
+
+/** 🎛️ The default dev loop runs on the crate's default features (`sqlite` + `native-artifact-execution`);
+ * a leading `all-features` segment opts into the full directory-backend matrix (sqlite/postgres/neo4j
+ * drivers linked) that the `test-all-features` nx target names, whose `postgres` laws additionally need
+ * a live Docker daemon. */
 class TestScript extends BundleScript {
-  run(segments: string[]): void {
+  async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
-    const allFeatures = rest[0] === "all-features";
-    runCargoTestBudgeted(["semio-hub"], this.repoRoot, [...(allFeatures ? ["--all-features"] : []), ...(allFeatures ? rest.slice(1) : rest)]);
+    const [head, ...tail] = rest;
+    const allFeatures = head === "all-features";
+    process.env.SEMIO_TEST_ARTIFACT_DIR ??= hubTestArtifactRoot(this.root);
+    await runCargoTestBudgeted(["semio-hub"], this.repoRoot, allFeatures ? ["--all-features", ...tail] : rest);
   }
 }
 
@@ -3856,7 +3916,7 @@ function documentOpenNeutralIssueOutcome(candidate: Record<string, any>, subject
     return { code: "denied" };
   }
   if (candidate.scope.spaceId !== fixture.descriptor.spaceId || candidate.scope.documentId !== fixture.descriptor.documentId) return { code: "denied" };
-  if (subjectKind !== "share" && (subjectKind !== "session" || !new Set(["author", "spectator"]).has(role))) return { code: "denied" };
+  if (subjectKind !== "share" && (subjectKind !== "session" || !new Set<unknown>(["author", "spectator"]).has(role))) return { code: "denied" };
   const writable = subjectKind === "session" && role === "author";
   const matches = fixture.catalogRows.filter((row: Record<string, any>) => {
     try {
@@ -4294,7 +4354,7 @@ async function proveNativeOpenableCatalogProviderFixture(repoRoot: string): Prom
       });
     }
   }
-  const sha256 = async (bytes: Uint8Array): Promise<string> => Buffer.from(await crypto.subtle.digest("SHA-256", bytes)).toString("hex");
+  const sha256 = async (bytes: Uint8Array): Promise<string> => await webSha256Hex(bytes);
   const protocolDigests = new Map<string, string>();
   const stdioRoot = dirname(definitionRoot);
   for (const receipt of projection.receipts) protocolDigests.set(receipt.protocol_path, await sha256(readFileSync(join(stdioRoot, receipt.protocol_path))));
@@ -4770,7 +4830,7 @@ class NativeOpenableCatalogProviderCheckScript extends BundleScript {
     };
     const [integration, ...remaining] = stdioOnly ? options.groups.filter((group) => group.package === "semio-s-plugin-stdio") : options.groups;
     if (!integration) throw new Error("native Stdio integration target is absent");
-    const receipts = await runExactCargoLaws({ ...options, groups: [integration] });
+    const receipts = [...(await runExactCargoLaws({ ...options, groups: [integration] }))];
     const stdioReceipt = receipts[0];
     if (!stdioReceipt) throw new Error("native Stdio catalog receipt is absent");
     await proveNativeStdioCommitmentSchema(this.repoRoot, stdioReceipt);
@@ -5162,9 +5222,11 @@ function executionTargetLeaseMutate(source: Record<string, any>, path: string, v
 /** 🤖️ Independent Node state machine for one browser install: it walks manifest → component →
  * descriptor → verify → exchange with its own byte reader and hashers, and answers `published` only
  * when every field and byte agrees. It never imports the browser worker. */
+type ExecutionTargetLeaseInstallInput = { manifest: Record<string, any>; component: Buffer; declaredComponentLength: number; descriptor: Buffer; declaredDescriptorLength: number; planGeneration: string; cancelAt?: string; missing?: string };
+
 function executionTargetLeaseInstall(
   fixture: ExecutionTargetLeaseFixture,
-  input: { manifest: Record<string, any>; component: Buffer; declaredComponentLength: number; descriptor: Buffer; declaredDescriptorLength: number; planGeneration: string; cancelAt?: string; missing?: string },
+  input: ExecutionTargetLeaseInstallInput,
   blake3Hex: (bytes: Uint8Array) => string,
 ): { readonly outcome: "published" | "unpublished"; readonly stage: string } {
   const stages = ["manifest", "component", "descriptor", "verify", "exchange"] as const;
@@ -5340,7 +5402,7 @@ async function proveExecutionTargetLeaseCorpus(repoRoot: string): Promise<void> 
       byteVectors += 1;
       continue;
     }
-    const mutated = { ...baseline };
+    const mutated: ExecutionTargetLeaseInstallInput = { ...baseline };
     if (vector.kind === "component-bytes" || vector.kind === "mixed-generation") mutated.component = Buffer.concat([Buffer.from([component[0]! ^ 0xff]), component.subarray(1)]);
     else if (vector.kind === "component-truncated") mutated.component = component.subarray(0, component.length - 1);
     else if (vector.kind === "component-extra-byte") mutated.component = Buffer.concat([component, Buffer.from([7])]);
@@ -5442,7 +5504,7 @@ class BrowserActorChildWorkerContainmentCheckScript extends BundleScript {
     const ownerPath = "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🧵️child";
     const fixture = JSON.parse(readFileSync(join(this.repoRoot, ownerPath, "🧫️fixtures/🔣️.json"), "utf8"));
     const schema = JSON.parse(readFileSync(join(this.repoRoot, ownerPath, "🧬️schema/🔣️.json"), "utf8"));
-    const validate = new Ajv({ strict: true }).compile(schema);
+    const validate = new Ajv({ strict: true }).compile<BrowserActorChildWorkerFixture>(schema);
     if (!validate(fixture)) throw new Error("child Worker fixture: " + JSON.stringify(validate.errors));
     const ts = await import("typescript");
     const program = ts.createProgram([join(this.repoRoot, ownerPath, "🟦️.ts"), join(this.repoRoot, ownerPath, "👷️worker/🟦️.ts")], {
@@ -5667,8 +5729,8 @@ class BrowserActorChildWorkerContainmentCheckScript extends BundleScript {
                     }
                   };
                 if (fault === "boot-init-denial")
-                  Worker.prototype.postMessage = function (message, transfer) {
-                    return nativeWorkerPost.call(this, { ...message, extra: true }, transfer as Transferable[]);
+                  Worker.prototype.postMessage = function (this: Worker, message: Readonly<Record<string, unknown>>, transfer?: Transferable[] | StructuredSerializeOptions): void {
+                    Reflect.apply(nativeWorkerPost, this, [{ ...message, extra: true }, transfer]);
                   };
                 if (fault === "constructor-failure" || fault === "boot-init-denial") {
                   await rejected(() => reserve(), fault);
@@ -5685,11 +5747,11 @@ class BrowserActorChildWorkerContainmentCheckScript extends BundleScript {
                       };
                     });
                   };
-                MessagePort.prototype.postMessage = function (message, transfer) {
+                MessagePort.prototype.postMessage = function (this: MessagePort, message: { kind?: string; bytes?: ArrayBuffer; readonly [key: string]: unknown }, transfer?: Transferable[] | StructuredSerializeOptions): void {
                   if ((message.kind === "load" && fault === "load-transfer-failure") || (message.kind === "invoke" && fault === "invoke-transfer-failure")) throw new Error("fixture transfer");
                   if ((message.kind === "load" && fault === "child-load-shape") || (message.kind === "invoke" && fault === "child-invoke-shape")) message = { ...message, extra: true };
-                  if (message.kind === "load" && fault === "child-rehash-after-transfer") new Uint8Array(message.bytes)[modules.normal.source.indexOf("'echo'") + 1] = 69;
-                  return nativePortPost.call(this, message, transfer as Transferable[]);
+                  if (message.kind === "load" && fault === "child-rehash-after-transfer") new Uint8Array(message.bytes!)[modules.normal.source.indexOf("'echo'") + 1] = 69;
+                  Reflect.apply(nativePortPost, this, [message, transfer]);
                 };
                 const source = new TextEncoder().encode(modules.normal.source);
                 const loading = owner.load(source.buffer);
@@ -5798,7 +5860,7 @@ function retainBrowserActorGisEvidenceV1(
 
 /** 🧪️ Proves exact retained-byte identity and replacement rejection with WebCrypto. */
 async function proveBrowserActorGisEvidenceV1(artifactRoot: string): Promise<void> {
-  const { default: assert } = await import("node:assert/strict");
+  const assert: (typeof import("node:assert"))["strict"] = (await import("node:assert/strict")).default;
   const { writeFileSync } = await import("node:fs");
   const root = mkdtempSync(join(artifactRoot, "gis-qualified-evidence-law-"));
   const stage = join(root, "stage");
@@ -5806,7 +5868,7 @@ async function proveBrowserActorGisEvidenceV1(artifactRoot: string): Promise<voi
   const component = Uint8Array.from([0, 97, 115, 109, 1]),
     descriptor = Uint8Array.from([0x92, 0xa3, 0x67, 0x69, 0x73]),
     actorBytes = Uint8Array.from([0x65, 0x78, 0x70, 0x6f, 0x72, 0x74]);
-  const identity = async (bytes: Uint8Array) => ({ byteLength: bytes.byteLength, sha256: Buffer.from(await crypto.subtle.digest("SHA-256", bytes)).toString("hex") });
+  const identity = async (bytes: Uint8Array) => ({ byteLength: bytes.byteLength, sha256: await webSha256Hex(bytes) });
   const componentIdentity = await identity(component),
     descriptorIdentity = await identity(descriptor),
     actorIdentity = await identity(actorBytes);
@@ -5859,7 +5921,7 @@ async function proveBrowserActorGisChildV1(
   const ownerPath = "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle";
   const fixture = JSON.parse(readFileSync(join(repoRoot, ownerPath, "🧾️describe/🧫️fixtures/🔣️.json"), "utf8"));
   const schema = JSON.parse(readFileSync(join(repoRoot, ownerPath, "🧾️describe/🧬️schema/🔣️.json"), "utf8"));
-  if (!new Ajv({ strict: true }).compile(schema)(fixture)) throw new Error("GIS describe transport fixture");
+  if (!new Ajv({ strict: true }).compile<BrowserActorGisDescribeFixture>(schema)(fixture)) throw new Error("GIS describe transport fixture");
   const api = await import(join(repoRoot, ownerPath, "🧾️describe/🟦️.ts"));
   const codec = { encode: encodePackValue, decode: decodePackValue };
   api.assertBrowserActorDescribeCapacityV1(descriptor.byteLength);
@@ -6009,7 +6071,7 @@ class BrowserActorGisDescribeCheckScript extends BundleScript {
     const ownerPath = "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle";
     const fixture = JSON.parse(readFileSync(join(this.repoRoot, ownerPath, "🧾️describe/🧫️fixtures/🔣️.json"), "utf8"));
     const schema = JSON.parse(readFileSync(join(this.repoRoot, ownerPath, "🧾️describe/🧬️schema/🔣️.json"), "utf8"));
-    if (!new Ajv({ strict: true }).compile(schema)(fixture)) throw new Error("GIS describe fixture");
+    if (!new Ajv({ strict: true }).compile<BrowserActorGisDescribeFixture>(schema)(fixture)) throw new Error("GIS describe fixture");
     const ts = await import("typescript");
     const program = ts.createProgram([join(this.repoRoot, ownerPath, "🧾️describe/🟦️.ts")], {
       noEmit: true,
@@ -6027,11 +6089,11 @@ class BrowserActorGisDescribeCheckScript extends BundleScript {
     const api = await import(join(this.repoRoot, ownerPath, "🧾️describe/🟦️.ts"));
     const codec = { encode: encodePackValue, decode: decodePackValue };
     const deepEqual = (await import("fast-deep-equal")).default;
-    const expected = structuredClone(fixture.descriptor);
+    const expected: BrowserActorGisDescriptorDraft = structuredClone(fixture.descriptor);
     for (const key of fixture.hashKeys) expected.hashes[key] = "";
     const staged = encodePackValue(fixture.descriptor);
     for (const row of fixture.cases) {
-      const value = structuredClone(fixture.descriptor);
+      const value: BrowserActorGisDescriptorDraft = structuredClone(fixture.descriptor);
       for (const key of fixture.hashKeys) value.hashes[key] = "";
       if (row.name === "hash-not-empty") value.hashes.wasmSha256 = "a".repeat(64);
       if (row.name === "plugin-change") value.manifest.pluginId = "stdio";
@@ -7630,7 +7692,7 @@ async function proveGisNativeProviderSelectionFixture(repoRoot: string): Promise
 async function proveTrustedCatalogIdentityRolesFixture(repoRoot: string): Promise<void> {
   const root = join(repoRoot, "🌎️hub", "🗿️artifact-authority", "🔏️trusted-catalog", "🧫️fixtures", "🪪️identity-roles");
   const fixture = JSON.parse(readFileSync(join(root, "🔣️.json"), "utf8"));
-  const assert = (await import("node:assert/strict")).default;
+  const assert: (typeof import("node:assert"))["strict"] = (await import("node:assert/strict")).default;
   const validateBundle = hubSchemaExport(repoRoot, "schema://hub.artifact-authority.trusted-catalog/TrustedBundleV1");
   assert.deepEqual(Object.keys(fixture), ["schema", "source", "packageReferenceHash", "descriptorOwnerHash", "cases"]);
   assert.equal(fixture.schema, "semio.hub.trusted-catalog-identity-roles/v1");
@@ -7987,7 +8049,7 @@ async function proveDocumentBrowserActorIdentityFixture(repoRoot: string): Promi
 
 /** 🧪️ Exercises the private catalog actor against the scope-owned closed actor contract. */
 async function proveTrustedBrowserActorCatalogFixture(repoRoot: string): Promise<void> {
-  const { default: assert } = await import("node:assert/strict");
+  const assert: (typeof import("node:assert"))["strict"] = (await import("node:assert/strict")).default;
   const root = join(repoRoot, "🌎️hub/🗿️artifact-authority/🔏️trusted-catalog");
   const fixture = JSON.parse(readFileSync(join(root, "🧫️fixtures/🌐️browser-actor/🔣️.json"), "utf8"));
   const validate = hubSchemaExport(repoRoot, "schema://hub.artifact-authority.trusted-catalog/TrustedBundleBrowserActorV1");
@@ -8028,18 +8090,18 @@ async function proveTrustedBrowserActorCatalogFixture(repoRoot: string): Promise
   }
   const bytes = Buffer.from(fixture.bodyHex, "hex");
   assert.equal(bytes.byteLength, fixture.closed.byteLength);
-  assert.equal(Buffer.from(await crypto.subtle.digest("SHA-256", bytes)).toString("hex"), fixture.closed.sha256);
+  assert.equal(await webSha256Hex(bytes), fixture.closed.sha256);
   for (const [actor, renderer, expected] of [
     [fixture.closed, "wasm", fixture.encodingSha256],
     [{ kind: "none" }, "react", fixture.noneEncodingSha256],
   ] as const) {
     const encoded = trustedBootstrapBrowserActorEncoding(actor, source, renderer);
-    assert.equal(Buffer.from(await crypto.subtle.digest("SHA-256", encoded)).toString("hex"), expected);
+    assert.equal(await webSha256Hex(encoded), expected);
     assert.equal(createHash("sha256").update(encoded).digest("hex"), expected);
   }
   for (const law of fixture.loadCases) {
     const body = law.bodyHex === null ? undefined : Buffer.from(law.bodyHex, "hex");
-    const oracle = body !== undefined && body.byteLength === law.byteLength && body.byteLength > 0 && Buffer.from(await crypto.subtle.digest("SHA-256", body)).toString("hex") === fixture.closed.sha256 && !law.cancelAfterDescriptor;
+    const oracle = body !== undefined && body.byteLength === law.byteLength && body.byteLength > 0 && await webSha256Hex(body) === fixture.closed.sha256 && !law.cancelAfterDescriptor;
     assert.equal(oracle, law.accepted, `${law.id} body oracle`);
   }
   for (const law of fixture.rawLengths) {
@@ -8071,7 +8133,7 @@ function moduleRustSource(root: string): string {
 }
 
 async function proveTrustedCatalogOpenedRootFixture(repoRoot: string): Promise<void> {
-  const { default: assert } = await import("node:assert/strict");
+  const assert: (typeof import("node:assert"))["strict"] = (await import("node:assert/strict")).default;
   const root = join(repoRoot, "🌎️hub/🗿️artifact-authority/🔏️trusted-catalog");
   const fixtureRoot = join(root, "🧫️fixtures/🛡️opened-root");
   const fixture = JSON.parse(readFileSync(join(fixtureRoot, "🔣️.json"), "utf8"));
@@ -8143,7 +8205,7 @@ async function proveTrustedCatalogOpenedRootFixture(repoRoot: string): Promise<v
 async function proveTrustedGisRetainedBrowserFixture(repoRoot: string): Promise<void> {
   const root = join(repoRoot, "🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🧫️fixtures/🧬️retained-gis-browser");
   const fixture = JSON.parse(readFileSync(join(root, "🔣️.json"), "utf8"));
-  const assert = (await import("node:assert/strict")).default;
+  const assert: (typeof import("node:assert"))["strict"] = (await import("node:assert/strict")).default;
   assert.deepEqual(Object.keys(fixture), ["schema", "bootstrapFixture", "contract", "cases", "nonclaims"]);
   assert.equal(fixture.schema, "semio.hub.retained-gis-browser/v1");
   assert.equal(fixture.bootstrapFixture, "🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🧫️fixtures/🧬️stdio-gis-bootstrap/🔣️.json");
@@ -8212,7 +8274,7 @@ async function proveTrustedGisRetainedBrowserFixture(repoRoot: string): Promise<
 
 /** 🤝️ Pins the genuine two-peer acceptance specification without claiming any observed runtime trace. */
 async function proveTrustedGisMapCollaborationContractFixture(repoRoot: string): Promise<void> {
-  const assert = (await import("node:assert/strict")).default;
+  const assert: (typeof import("node:assert"))["strict"] = (await import("node:assert/strict")).default;
   const equal = (await import("fast-deep-equal")).default;
   const root = join(repoRoot, "🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🧫️fixtures/🤝️gis-map-collaboration");
   const fixture = JSON.parse(readFileSync(join(root, "🔣️.json"), "utf8"));
@@ -8308,7 +8370,7 @@ async function proveTrustedGisMapCollaborationContractFixture(repoRoot: string):
 
 /** 🛂️ Checks one mandatory exact-generation proof before every new current publication. */
 async function proveTrustedGisPublicationFixture(repoRoot: string, fixture: Record<string, any>): Promise<void> {
-  const assert = (await import("node:assert/strict")).default;
+  const assert: (typeof import("node:assert"))["strict"] = (await import("node:assert/strict")).default;
   assert.deepEqual(fixture.entryPoints, ["development", "bootstrap", "native", "process-rotation"]);
   assert.deepEqual(fixture.steps, ["materialized", "exact-gis-cold-proof", "candidate-validated", "current-published"]);
   assert.deepEqual(fixture.cases.map((row: any) => row.name), ["exact", "omitted", "late", "wrong-generation", "proof-failed"]);
@@ -8381,7 +8443,7 @@ async function proveTrustedStdioGisBootstrapFixture(repoRoot: string): Promise<v
   await proveTrustedBootstrapCodecCaptureFixture(repoRoot);
   const root = join(repoRoot, "🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🧫️fixtures/🧬️stdio-gis-bootstrap");
   const fixture = JSON.parse(readFileSync(join(root, "🔣️.json"), "utf8"));
-  const { default: bootstrapAssert } = await import("node:assert/strict");
+  const bootstrapAssert: (typeof import("node:assert"))["strict"] = (await import("node:assert/strict")).default;
   const validateIdentity = hubSchemaExport(repoRoot, "schema://hub.artifact-authority.trusted-catalog/TrustedBundleIdentityV1");
   const validateActor = hubSchemaExport(repoRoot, "schema://hub.artifact-authority.trusted-catalog/TrustedBundleBrowserActorV1");
   const validateProtocol = hubSchemaExport(repoRoot, "schema://hub.artifact-authority.trusted-catalog/TrustedBundleExecutionProtocolV1");
@@ -8442,11 +8504,11 @@ async function proveTrustedStdioGisBootstrapFixture(repoRoot: string): Promise<v
     throw new Error("trusted bootstrap package/target cardinality drifted");
   const closure = trustedBootstrapClosureEncoding(profile);
   const closureNode = createHash("sha256").update(closure).digest("hex");
-  const closureWeb = Buffer.from(await crypto.subtle.digest("SHA-256", closure)).toString("hex");
+  const closureWeb = await webSha256Hex(closure);
   if (closureNode !== profile.selectedClosureSha256 || closureWeb !== closureNode) throw new Error("trusted bootstrap selected closure digest mismatch");
   const generationBytes = trustedBootstrapProfileEncoding(profile, codecs);
   const generationNode = createHash("sha256").update(generationBytes).digest("hex");
-  const generationWeb = Buffer.from(await crypto.subtle.digest("SHA-256", generationBytes)).toString("hex");
+  const generationWeb = await webSha256Hex(generationBytes);
   if (generationNode !== profile.generationId || generationWeb !== generationNode) throw new Error(`trusted bootstrap full generation mismatch: ${generationNode}`);
   const changed = structuredClone(profile);
   changed.packages[1].componentSha256 = "31".repeat(32);
@@ -8535,7 +8597,7 @@ async function proveTrustedStdioGisBootstrapFixture(repoRoot: string): Promise<v
 /** 🔗️ Exercises receipt-derived dependency claims with Pack, AJV and independent byte framing. */
 async function proveTrustedCompiledDependenciesFixture(repoRoot: string): Promise<void> {
   await (await import("../../../🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/🌱️value/📜️script.ts")).proveWireValueMaterializationFixture(repoRoot);
-  const { default: assert } = await import("node:assert/strict");
+  const assert: (typeof import("node:assert"))["strict"] = (await import("node:assert/strict")).default;
   const root = join(repoRoot, "🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🧫️fixtures/🔗️compiled-dependencies");
   const fixture = JSON.parse(readFileSync(join(root, "🔣️.json"), "utf8"));
   const validateIdentity = hubSchemaExport(repoRoot, "schema://hub.artifact-authority.trusted-catalog/TrustedBundleIdentityV1");
@@ -8807,7 +8869,7 @@ function captureTrustedBootstrapCodecsV1(repoRoot: string, check: (stage?: strin
 
 /** 🧪️ Compares fixed source admission with package schemas and independent generation hashes. */
 async function proveTrustedBootstrapCodecCaptureFixture(repoRoot: string): Promise<void> {
-  const { default: assert } = await import("node:assert/strict");
+  const assert: (typeof import("node:assert"))["strict"] = (await import("node:assert/strict")).default;
   const { writeFileSync, truncateSync } = await import("node:fs");
   const root = join(repoRoot, "🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🧫️fixtures/🧊️codec-source");
   const fixture = JSON.parse(readFileSync(join(root, "🔣️.json"), "utf8"));
@@ -8828,7 +8890,7 @@ async function proveTrustedBootstrapCodecCaptureFixture(repoRoot: string): Promi
   const originals = { stdio: JSON.parse(readFileSync(join(repoRoot, sourcePaths.stdio), "utf8")), gis: JSON.parse(readFileSync(join(repoRoot, sourcePaths.gis), "utf8")) };
   const schemas = { stdio: hubSchemaExport(repoRoot, "schema://s.stdio.registry/NativeCodecFactories"), gis: hubSchemaExport(repoRoot, "schema://s.gis/GisNativeCodecs") };
   const artifactRoot = process.env.SEMIO_TEST_ARTIFACT_DIR;
-  assert(artifactRoot?.includes("🗑️generated"));
+  assert(artifactRoot !== undefined && artifactRoot.includes("🗑️generated"));
   mkdirSync(artifactRoot, { recursive: true });
   const evidence = mkdtempSync(join(artifactRoot, "codec-source-"));
   let expected: string | undefined, generation: string | undefined;
@@ -8878,7 +8940,7 @@ async function proveTrustedBootstrapCodecCaptureFixture(repoRoot: string): Promi
     }
     const canonical = JSON.stringify(result);
     const bytes = trustedBootstrapProfileEncoding(profile, result.codecs);
-    const digest = Buffer.from(await crypto.subtle.digest("SHA-256", bytes)).toString("hex");
+    const digest = await webSha256Hex(bytes);
     assert.equal(createHash("sha256").update(bytes).digest("hex"), digest);
     if (expected === undefined) {
       expected = canonical;
@@ -8933,7 +8995,7 @@ function trustedBootstrapVerifyGeneration(root: string, bundle: Uint8Array, rece
       [join(root, "packages", "gis", "browser"), ["closed-actor.mjs"]],
       [join(root, "packages", "stdio"), ["component.wasm", "descriptor.semio"]],
     ] as const;
-    const identities = new Map<string, ReturnType<typeof lstatSync>>();
+    const identities = new Map<string, Stats>();
     for (const [path, entries] of directories) {
       check();
       const info = lstatSync(path);
@@ -8999,7 +9061,7 @@ function trustedBootstrapStageFixturePackages(fixture: any, actor: any, componen
 
 /** 🧪️ Exercises the actual pre-publication file fence against independent digest oracles. */
 async function proveTrustedGenerationStageFixture(repoRoot: string): Promise<void> {
-  const { default: assert } = await import("node:assert/strict");
+  const assert: (typeof import("node:assert"))["strict"] = (await import("node:assert/strict")).default;
   const { symlinkSync, truncateSync, writeFileSync } = await import("node:fs");
   const root = join(repoRoot, "🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🧫️fixtures/🧱️generation-stage");
   const fixture = JSON.parse(readFileSync(join(root, "🔣️.json"), "utf8"));
@@ -9021,11 +9083,11 @@ async function proveTrustedGenerationStageFixture(repoRoot: string): Promise<voi
   ]);
   assert.deepEqual(fixture.cases.filter((row: any) => row.accepted).map((row: any) => row.change), ["none", "receipt-path"]);
   const artifactRoot = process.env.SEMIO_TEST_ARTIFACT_DIR;
-  assert(artifactRoot?.includes("🗑️generated"));
+  assert(artifactRoot !== undefined && artifactRoot.includes("🗑️generated"));
   mkdirSync(artifactRoot, { recursive: true });
   const evidence = mkdtempSync(join(artifactRoot, "generation-stage-"));
   const component = Buffer.from(fixture.componentHex, "hex");
-  const identity = async (bytes: Uint8Array) => ({ byteLength: bytes.byteLength, sha256: Buffer.from(await crypto.subtle.digest("SHA-256", bytes)).toString("hex") });
+  const identity = async (bytes: Uint8Array) => ({ byteLength: bytes.byteLength, sha256: await webSha256Hex(bytes) });
   const actorFixture = JSON.parse(readFileSync(join(root, "../🌐️browser-actor/🔣️.json"), "utf8"));
   const { packages, descriptors } = trustedBootstrapStageFixturePackages(fixture, actorFixture.closed, component);
   const receipts = new Map(packages.map((record) => [record.pluginId, trustedBootstrapGenerationReceipt(record)]));
@@ -9117,7 +9179,7 @@ async function proveTrustedGenerationStageFixture(repoRoot: string): Promise<voi
 
 /** 📤️ Proves the publisher rechecks each receipt-bound leaf after candidate validation. */
 async function proveTrustedPublicationFixture(repoRoot: string): Promise<void> {
-  const { default: assert } = await import("node:assert/strict");
+  const assert: (typeof import("node:assert"))["strict"] = (await import("node:assert/strict")).default;
   const { writeFileSync } = await import("node:fs");
   const root = join(repoRoot, "🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🧫️fixtures/📤️publication");
   const fixture = JSON.parse(readFileSync(join(root, "🔣️.json"), "utf8"));
@@ -9180,7 +9242,7 @@ async function proveTrustedPublicationFixture(repoRoot: string): Promise<void> {
     else assert.throws(decode, `receipt ${law.id} must be refused by the production decoder`);
   }
   const artifactRoot = process.env.SEMIO_TEST_ARTIFACT_DIR;
-  assert(artifactRoot?.includes("🗑️generated"));
+  assert(artifactRoot !== undefined && artifactRoot.includes("🗑️generated"));
   const evidence = mkdtempSync(join(artifactRoot, "publication-fence-"));
   const fixtureChild = `
     const fs = require("node:fs"), crypto = require("node:crypto"), path = require("node:path");
@@ -9263,7 +9325,7 @@ async function proveTrustedPublicationFixture(repoRoot: string): Promise<void> {
       const current = trustedBootstrapReadCurrentPointer(casRoot);
       if (row.expectedRevision !== undefined) {
         const bytes = Buffer.from(JSON.stringify(pointerFor(row.expectedRevision)) + "\n");
-        assert.equal(current?.sha256, Buffer.from(await crypto.subtle.digest("SHA-256", bytes)).toString("hex"));
+        assert.equal(current?.sha256, await webSha256Hex(bytes));
       }
       const next = trustedBootstrapPublicationRevision((BigInt(current?.pointer.publicationRevision ?? "0") + 1n).toString());
       if (row.nextRevision !== undefined) assert.equal(next, row.nextRevision);
@@ -9273,7 +9335,7 @@ async function proveTrustedPublicationFixture(repoRoot: string): Promise<void> {
   }
   const stageFixture = JSON.parse(readFileSync(join(root, "../🧱️generation-stage/🔣️.json"), "utf8"));
   const component = Buffer.from("abc");
-  const digest = async (bytes: Uint8Array) => Buffer.from(await crypto.subtle.digest("SHA-256", bytes)).toString("hex");
+  const digest = async (bytes: Uint8Array) => await webSha256Hex(bytes);
   const actorFixture = JSON.parse(readFileSync(join(root, "../🌐️browser-actor/🔣️.json"), "utf8"));
   const { packages, descriptors } = trustedBootstrapStageFixturePackages(stageFixture, actorFixture.closed, component);
   for (const record of packages) {
@@ -9308,8 +9370,15 @@ async function proveTrustedPublicationFixture(repoRoot: string): Promise<void> {
   console.log(`[DEBUG] trusted publication final-byte fence: scope-exports=3 WebCrypto=1 Node-replace-oracle=1 cases=${fixture.cases.length} command-cases=${fixture.commandCases.length} receipt-cases=${fixture.receiptCases.length} revision-cases=${cas.cases.length} transport-outcomes=3 real-child-cases=${transport.processCases.length}; native-owner/CAS remain unqualified; evidence=${evidence}`);
 }
 
-/** ⏳️ Owns interrupt and progress observation for a bounded catalog build. */
+/** ♾️ The repository's unlimited build budget (`SEMIO_BUILD_BUDGET_MS` unset, so [[BUILD_BUDGET_MS]] is `0`)
+ * expressed inside the fresh-component process contract, whose own window is 1..86_400_000 ms and therefore
+ * admits neither a zero nor an infinite deadline. */
+const UNLIMITED_TRUSTED_BUILD_DEADLINE_MS = 86_400_000;
+
+/** ⏳️ Owns interrupt and progress observation for a bounded catalog build, reading a zero deadline as the
+ * repository-wide unlimited budget rather than as one that already expired. */
 function trustedBootstrapBuildControl(deadlineMs: number): { control: FreshBuildControlV1; close(): void } {
+  const deadline = deadlineMs > 0 ? Math.min(deadlineMs, UNLIMITED_TRUSTED_BUILD_DEADLINE_MS) : UNLIMITED_TRUSTED_BUILD_DEADLINE_MS;
   const diagnosticsRoot = process.env.SEMIO_TEST_ARTIFACT_DIR;
   let interrupted = false;
   const interrupt = (): void => {
@@ -9322,7 +9391,7 @@ function trustedBootstrapBuildControl(deadlineMs: number): { control: FreshBuild
     control: Object.freeze({
       ...(diagnosticsRoot ? { diagnosticsRoot } : {}),
       cancelled: () => interrupted,
-      remainingMs: () => Math.max(0, deadlineMs - (Date.now() - started)),
+      remainingMs: () => Math.max(0, deadline - (Date.now() - started)),
       checkpoint(stage, completed, total) {
         console.log(`trusted-stdio-gis-bootstrap ${stage}: ${completed}/${total}`);
       },
@@ -9632,7 +9701,7 @@ async function proveTrustedGisColdMapComponentV1(repoRoot: string, current: Trus
 /** 🪢️ Executes the closed GIS actor of the exact published generation without rebuilding its parents. */
 async function proveTrustedGisClosedActorV1(repoRoot: string, dataRoot: string, current: TrustedBootstrapMaterializationV1, artifactRoot: string): Promise<void> {
   const work = mkdtempSync(join(artifactRoot, "retained-gis-browser-"));
-  const owner = trustedBootstrapBuildControl(Math.min(buildBudgetMs(), 300_000));
+  const owner = trustedBootstrapBuildControl(Math.min(buildBudgetMs() || 300_000, 300_000));
   const check = (): void => {
     if (owner.control.cancelled() || owner.control.remainingMs() <= 0) throw new Error("retained GIS browser proof cancelled");
   };
@@ -9765,16 +9834,16 @@ function stageTrustedBootstrapCandidateCurrent(candidateDataRoot: string, curren
 
 /** 🧪️ Independent WebCrypto receipt oracle exercises the production rotation capture boundary. */
 async function proveTrustedRotationSourceFixture(fixture: Record<string, any>): Promise<void> {
-  const { default: assert } = await import("node:assert/strict");
+  const assert: (typeof import("node:assert"))["strict"] = (await import("node:assert/strict")).default;
   const { writeFileSync } = await import("node:fs");
   const artifactRoot = process.env.SEMIO_TEST_ARTIFACT_DIR;
-  assert(artifactRoot?.includes("🗑️generated"));
+  assert(artifactRoot !== undefined && artifactRoot.includes("🗑️generated"));
   const evidence = mkdtempSync(join(artifactRoot, "rotation-source-"));
   for (const law of fixture.rotation.sourceCases) {
     const path = join(evidence, `${law.change}.json`);
     const bundle = { schemaVersion: 2, profiles: [{ id: fixture.profile.id, generationId: fixture.profile.generationId }], packages: [{}, {}] };
     const bytes = Buffer.from(JSON.stringify(bundle));
-    const sha256 = Buffer.from(await crypto.subtle.digest("SHA-256", bytes)).toString("hex");
+    const sha256 = await webSha256Hex(bytes);
     writeFileSync(path, bytes, { flag: "wx" });
     const receipt = { profileId: fixture.profile.id, generationId: fixture.profile.generationId, bundleSha256: sha256, bundlePath: path };
     if (law.change === "wrong-generation") receipt.generationId = "42".repeat(32);
@@ -9814,7 +9883,7 @@ async function proveTrustedRotationSourceFixture(fixture: Record<string, any>): 
     if (law.retained !== "absent") {
       const retained = readFileSync(path),
         expected = law.retained === "old" ? previous : bytes;
-      assert.equal(createHash("sha256").update(retained).digest("hex"), Buffer.from(await crypto.subtle.digest("SHA-256", expected)).toString("hex"), `${law.id} exact bytes`);
+      assert.equal(createHash("sha256").update(retained).digest("hex"), await webSha256Hex(expected), `${law.id} exact bytes`);
     }
   }
   console.log(`trusted-rotation-source: WebCrypto=1 cases=${fixture.rotation.sourceCases.length} writes=${fixture.rotation.writeCases.length} evidence=${evidence}; capture/write ownership only, no generation publication`);
@@ -10196,7 +10265,7 @@ type TrustedBootstrapValidationV1 = Readonly<{ binaryPath: string; cargoTargetDi
 
 /** 🧪️ Qualifies the real Hub publication command with explicit synthetic guest fixture bytes. */
 async function proveTrustedPublicationCli(repoRoot: string, hubRoot: string): Promise<void> {
-  const assert = (await import("node:assert/strict")).default;
+  const assert: (typeof import("node:assert"))["strict"] = (await import("node:assert/strict")).default;
   const artifactRoot = process.env.SEMIO_TEST_ARTIFACT_DIR, cargoTargetDir = process.env.CARGO_TARGET_DIR;
   if (!artifactRoot || !cargoTargetDir || !isAbsolute(artifactRoot) || !isAbsolute(cargoTargetDir) || !artifactRoot.split(/[\\/]/u).includes("🗑️generated")) throw new Error("publication CLI laws require exact ticket-owned artifact and Cargo roots");
   await runExactCargoLaws({
@@ -10383,7 +10452,7 @@ async function proveInferenceCommandFixture(repoRoot: string): Promise<void> {
   };
   const canonical = encode(source.command);
   if (canonical.toString("hex") !== source.encodedHex || createHash("sha256").update(canonical).digest("hex") !== source.commandHash) throw new Error("canonical source mismatch");
-  const webDigest = Buffer.from(await crypto.subtle.digest("SHA-256", canonical)).toString("hex");
+  const webDigest = await webSha256Hex(canonical);
   if (webDigest !== source.commandHash) throw new Error("independent WebCrypto command hash mismatch");
   for (const vector of fixture.vectors) {
     const command = structuredClone(source.command);
@@ -11343,7 +11412,7 @@ function assertGisMapCompositionCurrent(prepared: GisMapTwoAuthorPreparedV1): vo
 /** 🧑‍🤝‍🧑️ One current selection, two ordinary Shell peers, private MCP cancellation and durable restart. */
 async function proveGisMapTwoAuthorShellProcess(repoRoot: string, hubRoot: string, prepared: GisMapTwoAuthorPreparedV1): Promise<void> {
   assertGisMapCompositionCurrent(prepared);
-  const assert = await import("node:assert/strict");
+  const assert: (typeof import("node:assert"))["strict"] = (await import("node:assert/strict")).default;
   const { chromium } = await import("playwright");
   const bundle = trustedBootstrapReadCurrentBundle(prepared.current, () => {});
   const selected = bundle.packages.find((row: any) => row.pluginId === "gis");
@@ -11918,6 +11987,87 @@ function runNativeDocumentAdmissionLaws(repoRoot: string): void {
   console.log(`native-document-admission-laws: nativeExact=${suffixes.length} mcpExact=${mcpSuffixes.length} passed`);
 }
 
+/** ⏳️ Proves the two launch-route boundaries a fresh `OS_HUB_DATA` boot depends on: an unset
+ * `SEMIO_BUILD_BUDGET_MS` (the repository's unlimited budget, `0`) never presents as an already expired
+ * deadline, and a missing staged executable is staged through its own Nx target before it is reported. */
+class LocalBootstrapLaunchCheckScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    if (segments.length) throw new Error("local-bootstrap-launch-check accepts no arguments");
+    const assert: (typeof import("node:assert"))["strict"] = (await import("node:assert/strict")).default;
+    const { tmpdir } = await import("node:os");
+    const configured = process.env.SEMIO_BUILD_BUDGET_MS;
+    delete process.env.SEMIO_BUILD_BUDGET_MS;
+    try {
+      assert.equal(buildBudgetMs(), 0);
+      const unlimited = trustedBootstrapBuildControl(buildBudgetMs());
+      try {
+        assert.equal(unlimited.control.cancelled(), false);
+        const remaining = unlimited.control.remainingMs();
+        assert(remaining > 0 && Number.isSafeInteger(remaining) && remaining <= UNLIMITED_TRUSTED_BUILD_DEADLINE_MS);
+        assert(remaining > UNLIMITED_TRUSTED_BUILD_DEADLINE_MS - 60_000);
+      } finally {
+        unlimited.close();
+      }
+      const opted = trustedBootstrapBuildControl(5_000);
+      try {
+        assert(opted.control.remainingMs() > 0 && opted.control.remainingMs() <= 5_000);
+      } finally {
+        opted.close();
+      }
+      const expired = trustedBootstrapBuildControl(-1);
+      try {
+        assert(expired.control.remainingMs() > 0);
+      } finally {
+        expired.close();
+      }
+    } finally {
+      if (configured === undefined) delete process.env.SEMIO_BUILD_BUDGET_MS;
+      else process.env.SEMIO_BUILD_BUDGET_MS = configured;
+    }
+    const stagingRoot = mkdtempSync(join(tmpdir(), "hub-dev-binary-"));
+    try {
+      const staged = join(stagingRoot, "dist", "build-dev", process.platform === "win32" ? "os-hub.exe" : "os-hub");
+      let attempts = 0;
+      assert.throws(
+        () => hubDevBinaryPath(stagingRoot, { stage: () => (attempts += 1) && 1 }),
+        (error: Error) => error.message.includes(HUB_DEV_BINARY_TARGET) && error.message.includes(staged) && error.message.includes("status 1"),
+      );
+      assert.equal(attempts, 1);
+      assert.throws(
+        () => hubDevBinaryPath(stagingRoot, { stage: () => (attempts += 1) && 0 }),
+        (error: Error) => error.message.includes(HUB_DEV_BINARY_TARGET),
+      );
+      assert.equal(attempts, 2);
+      assert.equal(
+        hubDevBinaryPath(stagingRoot, {
+          stage: () => {
+            attempts += 1;
+            mkdirSync(dirname(staged), { recursive: true });
+            writeFileSync(staged, "staged");
+            return 0;
+          },
+        }),
+        staged,
+      );
+      assert.equal(attempts, 3);
+      assert.equal(hubDevBinaryPath(stagingRoot, { stage: () => (attempts += 1) && 0 }), staged);
+      assert.equal(attempts, 3);
+    } finally {
+      rmSync(stagingRoot, { recursive: true, force: true });
+    }
+    console.log("local-bootstrap-launch: unlimited-budget=1 opted-budget=1 negative-budget=1 staging-cases=4 passed");
+  }
+}
+
+/** 📦️ Stages the release-profile `os-hub` binary as the project's `dist/build` deliverable. The hub owns
+ * this the same way it owns `build-dev`, so `📋️project.json` names only this package's `📜️script.ts`. */
+class BuildScript extends BundleScript {
+  async run(args: string[]): Promise<void> {
+    if (args.length) throw new Error("Select build through Nx without additional arguments");
+    await buildCargoArtifacts(join(this.root, "Cargo.toml"), ["--release", "--bin", "os-hub"], this.repoRoot, { output: "dist/build" });
+  }
+}
+
 /** 🏗️ Stages the dev-profile `os-hub` binary as a cached Nx package deliverable, mirroring
  * `framework-renderer-wgpu:native-build`'s `dist/native-<profile>` pattern, so `DevScript` execs a
  * built artifact instead of running `cargo build` inline on every launch. */
@@ -12075,7 +12225,7 @@ class AdminRelayCheckScript extends BundleScript {
 
 /** 🤝️ Pins one selected-current, private-owner Shell journey before any process is started. */
 async function proveGisMapSocketRetirement(repoRoot: string, fixture: { maximumMs: number; hostileDeadlineMs: number; cases: string[] }): Promise<void> {
-  const assert = await import("node:assert/strict");
+  const assert: (typeof import("node:assert"))["strict"] = (await import("node:assert/strict")).default;
   const observed: string[] = [];
   class HeldSocket extends EventTarget {
     readyState: number = WebSocket.OPEN;
@@ -12157,7 +12307,7 @@ ${finishGisMapProcessDocumentSocket.toString()}
 async function proveGisMapTwoAuthorCompositionFixture(repoRoot: string): Promise<void> {
   const root = join(repoRoot, "🌎️hub/🧫️fixtures/🤝️two-author-shell-v1");
   const fixture = JSON.parse(readFileSync(join(root, "🔣️.json"), "utf8"));
-  const assert = await import("node:assert/strict");
+  const assert: (typeof import("node:assert"))["strict"] = (await import("node:assert/strict")).default;
   assert.equal(fixture.selection.executionProtocol, DOCUMENT_EXECUTION_PROTOCOL_APP_CHANNEL_VERSION_V1, "two-author fixture must name the currently compiled AppChannel");
   const laws: readonly (readonly [string, unknown])[] = [
     ["schema", "semio.hub.gis-map-two-author-composition-fixture/v1"],
@@ -12502,6 +12652,7 @@ class AdminLiveJourneyCheckScript extends BundleScript {
 
 type InviteRedemptionFixture = {
   readonly schema: "semio.hub.invite-redemption-transaction/v1";
+  readonly limits: { readonly credentialBytes: 4096; readonly identifierBytes: 4096; readonly maximumContenders: 3 };
   readonly receiptRelease: readonly { readonly name: string; readonly outcome: "rejected-before-commit" | "appended" | "uncertain"; readonly disposition: "pending" | "completed"; readonly digest: "exact" | "different"; readonly release: boolean }[];
   readonly backendOrders: readonly { readonly name: string; readonly first: "archive" | "member"; readonly between: "invite" | "archive"; readonly accepted: boolean; readonly appended: number }[];
   readonly authorityRaces: readonly { readonly name: string; readonly revocation: "session" | "archive" | "delete"; readonly order: readonly ("hint" | "revoke" | "fence")[]; readonly status: number; readonly appended: number }[];
@@ -13391,8 +13542,9 @@ async function proveDirectoryHomeBrowserStaticWasmProcessRuntime(
     const result = await Promise.race([
       page.evaluate(
         async ({ home, source }) => {
-          const controller = await import("/controller.js");
-          const runtime = await import("/plugin-runtime.js");
+          const served = <T,>(url: string): Promise<T> => import(url) as Promise<T>;
+          const controller = await served<DirectoryHomeControllerSurfaceV1>("/controller.js");
+          const runtime = await served<BrowserPluginRuntimeSurfaceV1>("/plugin-runtime.js");
           runtime.setPluginRuntimeActor(`user:${source.userId}#directory-home-process`);
           const plugin = await runtime.loadPluginModule(home.pluginId, `/🔌️plugin-modules/${home.moduleDirectory}/🌉️bridge.js`, AbortSignal.timeout(10_000));
           const app = plugin.manifest.apps.find((candidate: any) => candidate.id === home.appId);
@@ -13607,7 +13759,7 @@ async function serveScopedPresenceBrowserRuntime(repoRoot: string): Promise<void
     SEMIO_RENDERER: process.env.SEMIO_RENDERER,
   };
   let relay: LocalBrowserRelay | undefined;
-  let vite: { close(): Promise<void>; listen(): Promise<void>; transformRequest(url: string): Promise<unknown> } | undefined;
+  let vite: { close(): Promise<void>; listen(): Promise<unknown>; transformRequest(url: string): Promise<unknown> } | undefined;
   try {
     const uiPort = await freeLoopbackPort();
     const uiOrigin = `http://127.0.0.1:${uiPort}`;
@@ -14379,7 +14531,7 @@ function proveSpaceArtifactCreationContractV1(repoRoot: string): number {
    * `os.directory` drops it the `document.indexed` branch is compiled on its own, in the right dialect. */
   const directorySchema = JSON.parse(readFileSync(join(base, "../🔣️.json"), "utf8"));
   const indexedBodySchema = directorySchema.$defs.DirectoryEventBody.oneOf.find((row: any) => row.properties.kind.const === "document.indexed");
-  const validateIndex = new Ajv({ strict: true, allErrors: true }).compile({ ...indexedBodySchema, $defs: directorySchema.$defs });
+  const validateIndex = new Ajv({ strict: true, allErrors: true }).compile<DocumentIndexedEventBodyV1>({ ...indexedBodySchema, $defs: directorySchema.$defs });
   for (const row of indexed.cases) {
     const client = foldDirectoryIndexEvents({ spaces: new Map(), users: new Map(), cursor: 0 }, row.events);
     if (client.spaces.get("space-fixture")?.indexedDocuments.length !== row.clientRows) throw new Error(`document index client order differs: ${row.id}`);
@@ -14496,7 +14648,7 @@ class SpaceArtifactCreationCheckScript extends BundleScript {
       const backend = phase === "postgres" ? { feature: "postgres", laws: ["directory::postgres::creation_tests::genesis_commit_ack_and_locked_expiry_are_atomic_postgres"] }
         : phase === "neo4j" ? { feature: "neo4j", laws: ["directory::neo4j::creation_tests::genesis_commit_ack_and_locked_expiry_are_atomic_neo4j"] }
           : { feature: phase === "native" ? "sqlite,native-artifact-execution" : "sqlite", laws: sqliteLaws };
-      const groups: Parameters<typeof runExactCargoLaws>[0]["groups"] = [
+      const groups: ExactCargoLawGroup[] = [
         { package: "semio-hub", target: { kind: "lib" }, cargoArgs: ["--no-default-features", "--features", backend.feature], laws: backend.laws },
       ];
       if (phase === "native") {
@@ -16269,10 +16421,11 @@ async function proveDirectorySpaceJourneyV1Process(repoRoot: string, root: strin
     let at = Date.now();
     const authorPage = await fetchLiveSpaceAdministrationPage(first, envelopeA, userA, spaceId, fixture);
     const authorExpect = spaceJourneyStep(fixture, "author-reads-administration-page").expect;
-    if (authorPage.page?.access !== authorExpect.access || !authorPage.page.invites || !authorPage.page.capabilities || authorPage.page.members?.rows?.length !== authorExpect.memberRows) {
+    const authorView = authorPage.page;
+    if (!authorView || authorView.access !== authorExpect.access || !authorView.invites || !authorView.capabilities || authorView.members?.rows?.length !== authorExpect.memberRows) {
       throw new Error(`space journey author administration page differed: ${authorPage.status}/${authorPage.page?.access}`);
     }
-    step("author-reads-administration-page", at, "author", { status: authorPage.status, bytes: Buffer.byteLength(authorPage.source, "utf8"), memberRows: authorPage.page.members.rows.length, receiptVerified: true });
+    step("author-reads-administration-page", at, "author", { status: authorPage.status, bytes: Buffer.byteLength(authorPage.source, "utf8"), memberRows: authorView.members.rows.length, receiptVerified: true });
 
     at = Date.now();
     const hidden = await fetchLiveSpaceAdministrationPage(first, envelopeB, userB, spaceId, fixture);
@@ -16286,10 +16439,11 @@ async function proveDirectorySpaceJourneyV1Process(repoRoot: string, root: strin
     at = Date.now();
     const memberPage = await fetchLiveSpaceAdministrationPage(first, envelopeB, userB, spaceId, fixture);
     const memberExpect = spaceJourneyStep(fixture, "member-reads-administration-page").expect;
-    if (memberPage.page?.access !== memberExpect.access || "invites" in (memberPage.page ?? {}) || "capabilities" in (memberPage.page ?? {}) || memberPage.page.members?.rows?.length !== memberExpect.memberRows) {
+    const memberView = memberPage.page;
+    if (!memberView || memberView.access !== memberExpect.access || "invites" in memberView || "capabilities" in memberView || memberView.members?.rows?.length !== memberExpect.memberRows) {
       throw new Error(`space journey member administration page differed: ${memberPage.status}/${memberPage.page?.access}`);
     }
-    step("member-reads-administration-page", at, "member", { status: memberPage.status, bytes: Buffer.byteLength(memberPage.source, "utf8"), memberRows: memberPage.page.members.rows.length, omitsInvites: true, omitsCapabilities: true });
+    step("member-reads-administration-page", at, "member", { status: memberPage.status, bytes: Buffer.byteLength(memberPage.source, "utf8"), memberRows: memberView.members.rows.length, omitsInvites: true, omitsCapabilities: true });
 
     await submit(first, envelopeA, "author-promotes-b", { kind: "upsert-member", spaceId, email: userB.email, role: "author" });
     const descriptor = {
@@ -16394,7 +16548,7 @@ async function proveDirectorySpaceJourneyV1Process(repoRoot: string, root: strin
     }
     step("self-revoked-read-denied", at, String(stale.status), { status: stale.status, bodyBytes: staleBody.byteLength, globalSocketCloseCode: socketA.closeCode });
 
-    const priorBinding = String(authorPage.page.sessionBindingSha256);
+    const priorBinding = String(authorView.sessionBindingSha256);
     closeLiveDirectorySocket(socketA);
     closeLiveDirectorySocket(socketB);
     closeLiveDirectorySocket(scopedB);
@@ -16411,7 +16565,8 @@ async function proveDirectorySpaceJourneyV1Process(repoRoot: string, root: strin
     const restartedUser = await liveDirectoryEventPageUser(second, restartedA);
     const restored = await fetchLiveSpaceAdministrationPage(second, restartedA, restartedUser, spaceId, fixture);
     const restoredExpect = spaceJourneyStep(fixture, "restart-preserves-history").expect;
-    if (restored.page?.access !== restoredExpect.access || restored.page.members?.rows?.length !== restoredExpect.memberRows || restored.page.space?.name !== fixture.space.renamedName || restored.page.sessionBindingSha256 === priorBinding) {
+    const restoredView = restored.page;
+    if (!restoredView || restoredView.access !== restoredExpect.access || restoredView.members?.rows?.length !== restoredExpect.memberRows || restoredView.space?.name !== fixture.space.renamedName || restoredView.sessionBindingSha256 === priorBinding) {
       throw new Error(`space journey restart lost the space, its membership history, or rebound a stale session: ${restored.status}/${restored.page?.access}`);
     }
     const restoredHistory = await readLiveDirectoryHistory(second, restartedA, restartedUser, 0);
@@ -16419,7 +16574,7 @@ async function proveDirectorySpaceJourneyV1Process(repoRoot: string, root: strin
     if (!restoredSource.includes(fixture.space.renamedName) || !restoredSource.includes("member.removed") || restoredSource.includes(spaceB) || restoredSource.includes(fixture.space.privateBName)) {
       throw new Error("space journey restarted hub lost the durable membership history or leaked a foreign private space");
     }
-    step("restart-preserves-history", at, "author", { status: restored.status, memberRows: restored.page.members.rows.length, name: restored.page.space.name, rebound: true, events: restoredHistory.events.length, priorHubExitCode: firstExit });
+    step("restart-preserves-history", at, "author", { status: restored.status, memberRows: restoredView.members.rows.length, name: restoredView.space.name, rebound: true, events: restoredHistory.events.length, priorHubExitCode: firstExit });
 
     await finishLocalHub(second);
     const secondExit = second.child.exitCode;
@@ -16492,6 +16647,8 @@ const router = new ScriptRouter(import.meta.dir)
   .register("retained-short-admin-check", RetainedShortAdminCheckScript)
   .register("directory-message-authority-check", DirectoryMessageAuthorityCheckScript)
   .register("scoped-directory-socket-check", ScopedDirectorySocketCheckScript)
+  .register("local-relay-routing-check", LocalRelayRoutingScript)
+  .register("live-sign-in-check", HubLiveSignInScript)
   .register("browser-broker-check", BrowserBrokerCheckScript)
   .register("execution-target-relay-check", ExecutionTargetRelayCheckScript)
   .register("inference-relay-check", InferenceRelayCheckScript)
@@ -16532,6 +16689,8 @@ const router = new ScriptRouter(import.meta.dir)
   .register("gis-inference-ledger-check", GisInferenceLedgerCheckScript)
   .register("gis-map-frozen-binding-check", GisMapFrozenBindingCheckScript)
   .register("native-document-open-check", NativeDocumentOpenCheckScript)
+  .register("local-bootstrap-launch-check", LocalBootstrapLaunchCheckScript)
+  .register("build", BuildScript)
   .register("build-dev", BuildDevScript)
   .register("dev", DevScript)
   .register("secure-local-smoke", SecureLocalSmokeScript);

@@ -1,14 +1,21 @@
 //! 📤️ `s.stdio.semio/v1/drawing` → `pdf` (1.7) — mirrors the import leaf's honest text-only
-//! boundary: one `PdfPage` per `DrawLayer`, `media_box` from the drawing canvas, `text` built by
-//! concatenating every `DrawNode::Text.value` found anywhere in that layer's tree (real recursive
-//! walk). `Path`/`Group`(-transform)/`Image` nodes have no vector-graphics writer on this codec's
-//! side (`encode_pdf` only regenerates a content stream FROM `PdfPage.text`, per that snapshot's
-//! own module doc — it has no path-painting operator emission at all) and are dropped, documented,
-//! not fabricated.
+//! boundary: one `PdfPage` per `DrawLayer`, `media_box` from the drawing canvas, and the page's
+//! text built by concatenating every `DrawNode::Text.value` found anywhere in that layer's tree
+//! (real recursive walk). Painting it is `pdf`'s own `io::text_document`, which turns those lines
+//! into real content-stream operators with the font's own metrics — this leaf emits no operators
+//! itself, per the zero-codec-reimplementation rule.
+//!
+//! Honest, documented losses (never fabricated):
+//! - `Path`/`Group`(-transform)/`Image` nodes are dropped: this pair's text lane has no
+//!   path-painting emission, and inventing one here would be writing a vector backend inside a
+//!   conversion leaf.
+//! - A layer whose text overflows its canvas loses the lines that do not fit — `text_document`
+//!   lays each layer out on exactly ONE page, because `DrawLayer` is this subset's only page
+//!   signal.
 
 use crate::standards::v1::subsets::drawing::schema::snapshot::{DrawNode, SemioDrawingSnapshot};
 use semio_framework_plugin::{ArtifactSerializer, Dialect, StandardId, SubsetId};
-use semio_s_artifact_stdio_pdf::{schema::snapshot::PdfPage, PdfSnapshot};
+use semio_s_artifact_stdio_pdf::{io::text_document, PdfSnapshot};
 
 const FROM_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("drawing") };
 const INTO_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.pdf", standard: StandardId("1.7"), subset: SubsetId::ANY };
@@ -44,16 +51,19 @@ impl ArtifactSerializer for SemioDrawingToPdf {
         if from.layers.is_empty() {
             return Err(store::PackError::Schema("semio/drawing→pdf: no layers to export".into()));
         }
-        let pages = from
+        let width = from.canvas.width.max(1.0);
+        let height = from.canvas.height.max(1.0);
+        let texts: Vec<String> = from
             .layers
             .iter()
             .map(|layer| {
                 let mut text = String::new();
                 collect_text(&layer.root, &mut text);
-                PdfPage { text, ..PdfPage::new(from.canvas.width.max(1.0), from.canvas.height.max(1.0)) }
+                text
             })
             .collect();
-        Ok(PdfSnapshot { schema: semio_s_artifact_stdio_pdf::schema::snapshot::STDIO_PDF17_DOCUMENT_SCHEMA.into(), declared_version: "1.7".into(), pages, ..PdfSnapshot::default() })
+        let pages: Vec<(f64, f64, &str)> = texts.iter().map(|text| (width, height, text.as_str())).collect();
+        Ok(text_document(&pages))
     }
 }
 //#endregion 🔖️Serializer

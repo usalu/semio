@@ -117,8 +117,8 @@ import type {
   DialogDefinition as GeneratedDialogDefinition,
   // 🎬️ `//#region 🔖️Tutorial` (`🛂️manifest/🦀️.rs`) — the timeline sibling of
   // `IntroductionDefinition`, typegen-mirrored here exactly like its `Introduction*` neighbors above.
-  TutorialArtifactEvent as GeneratedTutorialArtifactEvent,
-  TutorialArtifactEventKind as GeneratedTutorialArtifactEventKind,
+  TutorialDocumentEvent as GeneratedTutorialDocumentEvent,
+  TutorialDocumentEventKind as GeneratedTutorialDocumentEventKind,
   TutorialAssetSrc as GeneratedTutorialAssetSrc,
   TutorialBase as GeneratedTutorialBase,
   TutorialCameraKeyframe as GeneratedTutorialCameraKeyframe,
@@ -758,9 +758,9 @@ export type TutorialUiKeyframe = Omit<GeneratedTutorialUiKeyframe, "at" | "sampl
 
 /** 🖋️ Mirrors `store::ArtifactCommand` with `Mutation = unknown` (opaque per-app mutation JSON) — the
  * SOLE source of document mutation during playback; `TutorialEvent`s are annotational only. */
-export type TutorialArtifactEventKind = GeneratedTutorialArtifactEventKind;
+export type TutorialDocumentEventKind = GeneratedTutorialDocumentEventKind;
 
-export type TutorialArtifactEvent = Omit<GeneratedTutorialArtifactEvent, "at"> & { readonly at: number };
+export type TutorialDocumentEvent = Omit<GeneratedTutorialDocumentEvent, "at"> & { readonly at: number };
 
 export type TutorialCameraState = GeneratedTutorialCameraState;
 
@@ -776,7 +776,7 @@ export type TutorialTracks = {
   readonly video: readonly TutorialVideoCue[];
   readonly events: readonly TutorialEvent[];
   readonly ui: readonly TutorialUiKeyframe[];
-  readonly artifact: readonly TutorialArtifactEvent[];
+  readonly document: readonly TutorialDocumentEvent[];
   readonly camera: readonly TutorialCameraKeyframe[];
   readonly gestures: readonly TutorialGestureCue[];
 };

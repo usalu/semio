@@ -1,35 +1,58 @@
-export function createFreshComponentTests(dependencies: Record<string, any>, source: { directory: string; url: string }) {
+export function createFreshComponentTests(dependencies: import("../../🏭️fresh-component/🟦️.ts").FreshComponentTestDependencies, source: { directory: string; url: string }) {
   const { captureFreshComponentInputs, captureFreshSourceEpochV1, closeSync, createHash, existsSync, FRESH_COMPONENT_MAX_BYTES, FRESH_IO_CHUNK_BYTES, FRESH_SOURCE_EPOCH_LIMITS, freshRun, freshSourceEpochBytesV1, freshSourceOrderedJson, freshStage, freshWasmArtifactSize, isAbsolute, join, mkdirSync, mkdtempSync, openSync, parseFreshRustDepInfoV1, readdirSync, readFileSync, readStableBuildFile, renameSync, resolve, rmSync, semanticOwnedInputFileSnapshot, stageFreshComponentInputs, writeFileSync } = dependencies;
-  type FreshBuildControlV1 = any;
-  type FreshComponentLeaseV1 = any;
-  type FreshSourceEpochLegV1 = any;
-  type FreshSourceEpochPlanV1 = any;
+  type FreshSourceEpochLawsFixtureV1 = Readonly<{
+    schema: string;
+    limits: Readonly<{ fileBytes: number; totalBytes: number; files: number; legs: number }>;
+    files: readonly Readonly<{ path: string; text: string }>[];
+    legs: readonly Readonly<{ id: string; package: string; args: readonly string[]; inputs: readonly string[] }>[];
+    cases: readonly string[];
+  }>;
+  type FreshStagingFixtureV1 = Readonly<{
+    schema: string;
+    appChannelVersion: number;
+    componentHex: string;
+    componentSha256: string;
+    componentBlake3: string;
+    coreHex: string;
+    laws: readonly string[];
+  }>;
+  type FreshProcessFixtureV1 = Readonly<{
+    schema: string;
+    maxOutputBytes: number;
+    diagnosticChars: number;
+    cases: readonly Readonly<{ name: string; mode: "exit" | "missing" | "cancel" | "timeout" | "flood" | "pre-cancel"; stdout: string; stderr: string; exitCode: number; reason: "exit" | "spawn-error" | "cancelled" | "timeout" | "output-limit"; diagnostic: string }>[];
+  }>;
+  type RustDepInfoLawsFixtureV1 = Readonly<{ maximumBytes: number; cases: readonly Readonly<{ id: string; text: string; expected: unknown }>[] }>;
+  type FreshBuildControlV1 = import("../../🧾️source-epoch/🟦️.ts").FreshBuildControlV1;
+  type FreshComponentLeaseV1 = import("../../🧾️source-epoch/🟦️.ts").FreshComponentLeaseV1;
+  type FreshSourceEpochLegV1 = import("../../🧾️source-epoch/🟦️.ts").FreshSourceEpochLegV1;
+  type FreshSourceEpochPlanV1 = import("../../🧾️source-epoch/🟦️.ts").FreshSourceEpochPlanV1;
   /** 🧪️ Exercises the physical epoch owner against neutral races and independent canonical/hash oracles. */
   async function testFreshComponentSourceEpochV1(repoRoot: string): Promise<void> {
-    const { default: assert } = await import("node:assert/strict");
+    const assert: typeof import("node:assert/strict") = (await import("node:assert/strict")).default;
     const { default: stableStringify } = await import("fast-json-stable-stringify");
     const { dirname } = await import("node:path");
     const { symlinkSync, ftruncateSync } = await import("node:fs");
     const fixtureRoot = resolve(source.directory, "../../🧫️fixtures/🧾️fresh-source-epoch");
-    const fixture = JSON.parse(readFileSync(join(fixtureRoot, "🔣️.json"), "utf8"));
+    const fixture: unknown = JSON.parse(readFileSync(join(fixtureRoot, "🔣️.json"), "utf8"));
     const { default: Ajv } = await import("ajv");
     const ajv = new Ajv({ strict: true, allErrors: true });
     const describeSchema = JSON.parse(readFileSync(resolve(source.directory, "../../🧬️schema/🔣️.json"), "utf8"));
     ajv.addSchema(describeSchema);
-    const validate = ajv.getSchema(`${describeSchema.$id}#/$defs/FreshSourceEpochLawsV1`)!;
-    const validateEpoch = ajv.getSchema(`${describeSchema.$id}#/$defs/FreshSourceEpochV1`)!;
+    const validate = ajv.compile<FreshSourceEpochLawsFixtureV1>({ $ref: `${describeSchema.$id}#/$defs/FreshSourceEpochLawsV1` });
+    const validateEpoch = ajv.compile({ $ref: `${describeSchema.$id}#/$defs/FreshSourceEpochV1` });
     assert(validate(fixture), JSON.stringify(validate.errors));
     assert.deepEqual(fixture.limits, FRESH_SOURCE_EPOCH_LIMITS);
-    const depInfo = JSON.parse(readFileSync(join(fixtureRoot, "📃️dep-info.json"), "utf8"));
-    const validateDepInfo = ajv.getSchema(`${describeSchema.$id}#/$defs/RustDepInfoLawsV1`)!;
+    const depInfo: unknown = JSON.parse(readFileSync(join(fixtureRoot, "📃️dep-info.json"), "utf8"));
+    const validateDepInfo = ajv.compile<RustDepInfoLawsFixtureV1>({ $ref: `${describeSchema.$id}#/$defs/RustDepInfoLawsV1` });
     assert(validateDepInfo(depInfo), JSON.stringify(validateDepInfo.errors));
     for (const row of depInfo.cases) {
       const bytes = Buffer.from(row.text);
-      if (row.expected === null) assert.throws(() => parseFreshRustDepInfoV1(bytes, () => {}), undefined, row.id);
+      if (row.expected === null) assert.throws(() => parseFreshRustDepInfoV1(bytes, () => {}), row.id);
       else assert.equal(stableStringify(parseFreshRustDepInfoV1(bytes, () => {})), stableStringify(row.expected), row.id);
     }
-    assert.throws(() => parseFreshRustDepInfoV1(new Uint8Array([0xff, 0x0a]), () => {}), undefined, "lossy UTF-8");
-    assert.throws(() => parseFreshRustDepInfoV1(new Uint8Array(depInfo.maximumBytes + 1), () => {}), undefined, "dep-info byte bound");
+    assert.throws(() => parseFreshRustDepInfoV1(new Uint8Array([0xff, 0x0a]), () => {}), "lossy UTF-8");
+    assert.throws(() => parseFreshRustDepInfoV1(new Uint8Array(depInfo.maximumBytes + 1), () => {}), "dep-info byte bound");
     assert.throws(() => parseFreshRustDepInfoV1(Buffer.from(depInfo.cases[0].text), () => { throw new Error("dep-info cancelled"); }), /dep-info cancelled/);
     const artifactRoot = process.env.SEMIO_TEST_ARTIFACT_DIR;
     assert(artifactRoot && isAbsolute(artifactRoot) && artifactRoot.split(/[\\/]/u).includes("🗑️generated"));
@@ -37,7 +60,7 @@ export function createFreshComponentTests(dependencies: Record<string, any>, sou
     const legs: FreshSourceEpochLegV1[] = fixture.legs.map(({ id, package: cargoPackage, args }) => ({ id, package: cargoPackage, args }));
     const environment = [["CARGO_INCREMENTAL", "0"], ["RUSTC_WRAPPER", ""], ["RUSTFLAGS", null]] as const;
     const plan: FreshSourceEpochPlanV1 = { toolchain: { cargo: "cargo fixture", rustc: "rustc fixture" }, environment, legs, files: fixture.files.map((file) => file.path) };
-    for (const name of fixture.cases as string[]) {
+    for (const name of fixture.cases) {
       const root = join(evidence, name);
       mkdirSync(root);
       for (const file of fixture.files) {
@@ -88,7 +111,7 @@ export function createFreshComponentTests(dependencies: Record<string, any>, sou
           else if (name === "deadline") { expired = true; start(0); }
           else if (name === "closed-owner") { owner.abort(); start(0); }
           else assert.fail("unknown epoch law " + name);
-        }, undefined, name);
+        }, name);
         assert.throws(() => owner.finish(), /closed/, name + " terminal refusal");
       }
       assert.deepEqual(readFileSync(pointer), prior, name + " pointer is untouched");
@@ -101,23 +124,23 @@ export function createFreshComponentTests(dependencies: Record<string, any>, sou
     assert.throws(() => semanticOwnedInputFileSnapshot(bounded, "input.rs", { maximumBytes: 3 * FRESH_IO_CHUNK_BYTES, checkpoint() { if (++checks === 4) throw new Error("bounded snapshot cancellation"); } }), /bounded snapshot cancellation/);
     assert.equal(checks, 4);
     for (const path of ["../foreign.rs", "/foreign.rs", "C:/foreign.rs", "a\\foreign.rs", "node_modules/source.rs", "target/source.rs", "🗑️generated/source.rs"]) assert.throws(() => captureFreshSourceEpochV1(bounded, { ...plan, files: [path] }, { cancelled: () => false, remainingMs: () => 10000, checkpoint() {} }), /coordinate|refuses/);
-    console.log(`[DEBUG] fresh-source-epoch: AJV=3 stable-stringify=1 WebCrypto=1 physical-laws=${fixture.cases.length} bounded-capture=2 unsafe-paths=7 dep-info=${depInfo.cases.length}+3 evidence=${evidence}; Cargo resolver/dep-info integration remains unqualified`);
+    console.log(`fresh-source-epoch: AJV=3 stable-stringify=1 WebCrypto=1 physical-laws=${fixture.cases.length} bounded-capture=2 unsafe-paths=7 dep-info=${depInfo.cases.length}+3 evidence=${evidence}; Cargo resolver/dep-info integration remains unqualified`);
   }
   
   /** 🧪️ Qualifies retained verified inputs and staging independently of Cargo or descriptor execution. */
   async function testFreshComponentStagingV1(repoRoot: string): Promise<void> {
-    const { default: assert } = await import("node:assert/strict");
+    const assert: typeof import("node:assert/strict") = (await import("node:assert/strict")).default;
     const { default: Ajv } = await import("ajv");
     const { encodePackValue } = await import("../../../../../🟦️.ts");
     const fixtureRoot = resolve(source.directory, "../../🧫️fixtures/🧊️fresh-staging");
-    const fixture = JSON.parse(readFileSync(join(fixtureRoot, "🔣️.json"), "utf8"));
+    const fixture: unknown = JSON.parse(readFileSync(join(fixtureRoot, "🔣️.json"), "utf8"));
     const describeSchema = JSON.parse(readFileSync(resolve(source.directory, "../../🧬️schema/🔣️.json"), "utf8"));
     const stagingAjv = new Ajv({ strict: true, allErrors: true });
     stagingAjv.addSchema(describeSchema);
-    const validate = stagingAjv.getSchema(`${describeSchema.$id}#/$defs/FreshStagingV1`)!;
+    const validate = stagingAjv.compile<FreshStagingFixtureV1>({ $ref: `${describeSchema.$id}#/$defs/FreshStagingV1` });
     assert(validate(fixture), JSON.stringify(validate.errors));
     const artifactRoot = process.env.SEMIO_TEST_ARTIFACT_DIR;
-    assert(artifactRoot?.includes("🗑️generated"));
+    assert(artifactRoot !== undefined && artifactRoot.includes("🗑️generated"));
     mkdirSync(artifactRoot, { recursive: true });
     const evidence = mkdtempSync(join(artifactRoot, "fresh-component-staging-"));
     const component = Buffer.from(fixture.componentHex, "hex"),
@@ -204,7 +227,7 @@ export function createFreshComponentTests(dependencies: Record<string, any>, sou
       mkdirSync(stage);
       return await stageFreshComponentInputs({ pluginId: "gis", componentPackageId: "semio:gis" }, input, stage, ["checkpoint", "describe", "jobs", "reactor"], buildControl, derive);
     };
-    let retainedLease: FreshComponentLeaseV1 | undefined, retainedLoan: Uint8Array | undefined;
+    let retainedLease: FreshComponentLeaseV1 | undefined, retainedLoan: Uint8Array<ArrayBuffer> | undefined;
     const retainedInput = cloneSnapshot();
     const produced = await handoff("loan-success", retainedInput, control, async (lease) => {
       retainedLease = lease;
@@ -319,15 +342,15 @@ export function createFreshComponentTests(dependencies: Record<string, any>, sou
   
   /** 🧪️ Qualifies fresh producer diagnostics and bounded real process retirement without Cargo. */
   async function testFreshComponentProcessV1(repoRoot: string): Promise<void> {
-    const { default: assert } = await import("node:assert/strict");
+    const assert: typeof import("node:assert/strict") = (await import("node:assert/strict")).default;
     const { default: Ajv } = await import("ajv");
     const { default: deepEqual } = await import("fast-deep-equal");
     const fixtureRoot = resolve(source.directory, "../../🧫️fixtures/🧵️fresh-process");
-    const fixture = JSON.parse(readFileSync(join(fixtureRoot, "🔣️.json"), "utf8"));
+    const fixture: unknown = JSON.parse(readFileSync(join(fixtureRoot, "🔣️.json"), "utf8"));
     const describeSchema = JSON.parse(readFileSync(resolve(source.directory, "../../🧬️schema/🔣️.json"), "utf8"));
     const processAjv = new Ajv({ strict: true, allErrors: true });
     processAjv.addSchema(describeSchema);
-    const validate = processAjv.getSchema(`${describeSchema.$id}#/$defs/FreshProcessV1`)!;
+    const validate = processAjv.compile<FreshProcessFixtureV1>({ $ref: `${describeSchema.$id}#/$defs/FreshProcessV1` });
     assert(validate(fixture), JSON.stringify(validate.errors));
     const artifactRoot = process.env.SEMIO_TEST_ARTIFACT_DIR;
     assert(artifactRoot && isAbsolute(artifactRoot) && artifactRoot.split(/[\\/]/u).includes("🗑️generated"));
@@ -391,7 +414,7 @@ export function createFreshComponentTests(dependencies: Record<string, any>, sou
         assert.equal(failure, undefined);
         assert.deepEqual(checkpoints, [0, 1]);
       } else {
-        assert(failure?.message.includes(row.diagnostic), row.name + " surfaced cause: " + failure?.message);
+        assert(failure !== undefined && failure.message.includes(row.diagnostic), row.name + " surfaced cause: " + failure?.message);
         assert(failure.message.includes(trace), row.name + " exact trace location");
         assert(failure.message.length <= fixture.diagnosticChars + trace.length + 500);
         assert.deepEqual(checkpoints, [0]);

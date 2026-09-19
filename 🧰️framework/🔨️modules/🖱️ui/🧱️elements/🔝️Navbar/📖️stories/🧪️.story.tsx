@@ -73,7 +73,7 @@ export const Default: Story = {
 
 // 🔷️#region 🌙️Ribbon
 export const RibbonDefault: Story = {
-  args: { items: defaultItems },
+  args: { items: [] },
   render: () => (
     <LevelProvider level="panel">
       <div className="p-4 ui-surface" data-level="panel">

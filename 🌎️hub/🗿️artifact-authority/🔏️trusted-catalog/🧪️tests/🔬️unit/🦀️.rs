@@ -6,6 +6,7 @@ use crate::artifact_authority::trusted_catalog::schema::{TrustedBundleBrowserAct
 use crate::artifact_authority::{AuthorityLimits, AuthorityOperationControl};
 use directory::os_store::{ArtifactPackFiles, ArtifactTextFiles, VcsError, document_codec};
 use std::io::Write;
+use std::path::PathBuf;
 use std::sync::Mutex;
 use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 

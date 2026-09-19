@@ -37,7 +37,7 @@ export async function testWgpuLiveActivation(workspace: string, output: string):
   assert.deepEqual(targets[activate].outputs, [`{projectRoot}/dist/runtime/wgpu/${fixture.profile}/${fixture.variant}`], "Uncached activation still owns its complete live output namespace");
   assert.deepEqual(targets[activate].dependsOn, [prepare]);
   const ts = require("typescript"), activationOwner = dirname(activationModule);
-  const definitions = [["🧰️preparation/🟦️.ts", ["PreparationScript"]], ["🏃️execution/🟦️.ts", ["ActivationScript"]], ["📥️installation/🟦️.ts", ["activationFilesDigest", "publishActivatedExtension"]]] as const;
+  const definitions: readonly (readonly [string, readonly string[]])[] = [["🧰️preparation/🟦️.ts", ["PreparationScript"]], ["🏃️execution/🟦️.ts", ["ActivationScript"]], ["📥️installation/🟦️.ts", ["activationFilesDigest", "publishActivatedExtension"]]] as const;
   const code = definitions.map(([file, names]) => {
     const source = ts.createSourceFile(file, readFileSync(join(activationOwner, file), "utf8"), ts.ScriptTarget.Latest, true);
     const nodes = source.statements.filter((node: any) => names.includes(node.name?.text));

@@ -1,4 +1,9 @@
 /** 🧬️ Puzzle2d diff schema — sparse field delta. */
+import {
+  parsePuzzle2dEdge,
+  parsePuzzle2dNode,
+  parsePuzzle2dTargetRegion,
+} from "../🟦️.ts";
 
 export interface Puzzle2dDiff {
   /** @state artifact */
@@ -20,13 +25,13 @@ export interface Puzzle2dDiff {
 export interface Puzzle2dStringList { values: string[]; }
 export interface Puzzle2dNodesDelta { added: Puzzle2dNode[]; removed: string[]; patched: Puzzle2dNodePatchEntry[]; reordered?: string[]; }
 export interface Puzzle2dNodePatchEntry { id: string; patch: Puzzle2dNodePatch; }
-export interface Puzzle2dNodePatch { replacement?: Puzzle2dNode; }
+export interface Puzzle2dNodePatch { replacement?: Puzzle2dNode | null; }
 export interface Puzzle2dEdgesDelta { added: Puzzle2dEdge[]; removed: string[]; patched: Puzzle2dEdgePatchEntry[]; reordered?: string[]; }
 export interface Puzzle2dEdgePatchEntry { id: string; patch: Puzzle2dEdgePatch; }
-export interface Puzzle2dEdgePatch { replacement?: Puzzle2dEdge; }
+export interface Puzzle2dEdgePatch { replacement?: Puzzle2dEdge | null; }
 export interface Puzzle2dTargetRegionsDelta { added: Puzzle2dTargetRegion[]; removed: string[]; patched: Puzzle2dTargetRegionPatchEntry[]; reordered?: string[]; }
 export interface Puzzle2dTargetRegionPatchEntry { id: string; patch: Puzzle2dTargetRegionPatch; }
-export interface Puzzle2dTargetRegionPatch { replacement?: Puzzle2dTargetRegion; }
+export interface Puzzle2dTargetRegionPatch { replacement?: Puzzle2dTargetRegion | null; }
 export interface Puzzle2dArtifact { schema: string; [key: string]: unknown; }
 
 export type Puzzle2dNodeAnchor = "fixed" | "derived";
@@ -273,5 +278,34 @@ export function parsePuzzle2dEdgePatchEntry(value: unknown, at = "$"): Puzzle2dE
   return {
     id: puzzlePuzzle2dDiffGuardString(row["id"], `${at}.id`),
     patch: parsePuzzle2dEdgePatch(row["patch"], `${at}.patch`),
+  };
+}
+
+export function parsePuzzle2dNodePatch(value: unknown, at = "$"): Puzzle2dNodePatch {
+  const row = puzzlePuzzle2dDiffGuardObject(value, at);
+  return {
+    replacement: row["replacement"] === undefined || row["replacement"] === null ? row["replacement"] as undefined | null : parsePuzzle2dNode(row["replacement"], `${at}.replacement`),
+  };
+}
+
+export function parsePuzzle2dEdgePatch(value: unknown, at = "$"): Puzzle2dEdgePatch {
+  const row = puzzlePuzzle2dDiffGuardObject(value, at);
+  return {
+    replacement: row["replacement"] === undefined || row["replacement"] === null ? row["replacement"] as undefined | null : parsePuzzle2dEdge(row["replacement"], `${at}.replacement`),
+  };
+}
+
+export function parsePuzzle2dTargetRegionPatchEntry(value: unknown, at = "$"): Puzzle2dTargetRegionPatchEntry {
+  const row = puzzlePuzzle2dDiffGuardObject(value, at);
+  return {
+    id: puzzlePuzzle2dDiffGuardString(row["id"], `${at}.id`),
+    patch: parsePuzzle2dTargetRegionPatch(row["patch"], `${at}.patch`),
+  };
+}
+
+export function parsePuzzle2dTargetRegionPatch(value: unknown, at = "$"): Puzzle2dTargetRegionPatch {
+  const row = puzzlePuzzle2dDiffGuardObject(value, at);
+  return {
+    replacement: row["replacement"] === undefined || row["replacement"] === null ? row["replacement"] as undefined | null : parsePuzzle2dTargetRegion(row["replacement"], `${at}.replacement`),
   };
 }

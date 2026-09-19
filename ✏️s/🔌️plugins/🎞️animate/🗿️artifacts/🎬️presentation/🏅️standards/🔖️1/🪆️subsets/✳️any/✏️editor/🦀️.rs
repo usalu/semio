@@ -224,8 +224,12 @@ pub(crate) fn tile_morph_prompt_effect(deck: &PresentationSnapshot) -> Effect {
 /// spr is a fresh, edit-free op-log — a genesis envelope with no history to encode.
 pub fn reset_presentation_document_effect(document: &PresentationSnapshot) -> Effect {
     let pack = <PresentationSnapshot as store::ArtifactPack>::encode_pack(document);
-    let envelope = store::create_document_envelope::<PresentationSnapshot, PresentationMutation>(PRESENTATION_DOCUMENT_SCHEMA, "presentation", document.clone(), None);
-    let spr = semio_framework_plugin::resolve_ready(store::print_document_spr(&envelope)).expect("presentation document spr encode is infallible for a fresh, edit-free envelope");
+    // 🪦️ NOT `create_document_envelope` + `print_document_spr`: an envelope is a terminal store shell
+    // whose `Drop` asserts that its app-owned bounded retirement authority detached every nested
+    // owner first, and nothing here ever mounts or retires it — so building this effect panicked the
+    // guest (`unreachable`) at boot, before any window kind existed. `🗒️note`/`✒️writer`/`📐️cad` all
+    // take the `empty_document_spr` route; the log is edit-free by construction either way.
+    let spr = semio_framework_plugin::resolve_ready(store::empty_document_spr("presentation", PRESENTATION_DOCUMENT_SCHEMA));
     Effect::LoadDocument { pack, spr }
 }
 //#endregion 🔖️Helpers
@@ -602,6 +606,29 @@ impl ArtifactEditor for AnimatePresentationPlayApp {
     const DIALECT: Dialect = crate::ANIMATE_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = PRESENTATION_DOCUMENT_SCHEMA;
 
+    /// 🧺️ Without these owners the document store holds no `initial_snapshot_retirement_factory`, so
+    /// the boot `setActiveExample` archive load is refused with `module.vcs: validation failed:
+    /// returned snapshot read requires its exact owned-snapshot retirement factory` — measured
+    /// against the live React playground.
+    fn build_document_store_owners() -> Option<store::DocumentStoreOwners<Self::Snapshot, Self::Mutation>> {
+        Some(semio_framework_plugin::bounded_document_store_owners::<Self::Snapshot, Self::Mutation>())
+    }
+
+    fn build_document_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
+        Some(semio_framework_plugin::bounded_document_store_disposer::<Self::Snapshot, Self::Mutation>())
+    }
+
+    /// 📥️ The trait default owns no retained initialization authority, so the host refuses every
+    /// archive this app hands back (`artifact-store.persisted-initializer-refused`) — which is
+    /// exactly what `setActiveExample`'s `Effect::LoadDocument` is.
+    fn build_document_store_initialization_job(
+        envelope: store::ArtifactEnvelope<Self::Snapshot, Self::Mutation>,
+        operation: semio_framework_job::OperationId,
+        generation: semio_framework_job::Generation,
+    ) -> Result<semio_framework_plugin::ArtifactStoreInitializationJob<Self::Snapshot, Self::Mutation>, store::ArtifactEnvelope<Self::Snapshot, Self::Mutation>> {
+        Ok(semio_framework_plugin::bounded_document_store_initialization_job(envelope, PRESENTATION_DOCUMENT_SCHEMA, operation, generation))
+    }
+
     fn build_config_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Config, Self::ConfigMutation>>> {
         Some(std::sync::Arc::new(AnimatePresentationConfigPreparationFactory))
     }
@@ -702,6 +729,46 @@ impl ArtifactEditor for AnimatePresentationPlayApp {
     /// `app_commands!`'s generated `command_id()`.
     fn command_id(command: &PresentationCommand) -> &'static str {
         command.command_id()
+    }
+
+    /// 🎯️ Maps a host action id + its staged args onto `PresentationCommand`. The React/wgpu shells
+    /// still dispatch `{action, args}` while the guest channel is typed-only, and the trait default
+    /// refuses EVERY id (`app.command.unsupported`) — without this bridge the boot
+    /// `setActiveExample`, every Actions-pane row and every canvas pick died before reaching
+    /// `handle`. The `#[dsl(block)]` payloads (`crop`/`frame`/`source`) decode through
+    /// `dsl::from_dsl_value`, the same codec the typed channel uses.
+    fn command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result<PresentationCommand, Fault> {
+        let text_arg = |keys: &[&str]| keys.iter().find_map(|key| args.and_then(|value| value.get(key)).and_then(dsl::DslValue::as_str).map(str::to_string));
+        let number_arg = |keys: &[&str]| keys.iter().find_map(|key| args.and_then(|value| value.get(key)).and_then(dsl::DslValue::as_f64)).unwrap_or_default();
+        let id_list = |keys: &[&str]| match keys.iter().find_map(|key| args.and_then(|value| value.get(key))) {
+            Some(dsl::DslValue::Array(items)) => items.iter().filter_map(|item| item.as_str().map(str::to_string)).collect(),
+            Some(dsl::DslValue::String(raw)) if !raw.is_empty() => vec![raw.clone()],
+            _ => Vec::new(),
+        };
+        fn decode<T: dsl::FromValue>(action: &str, args: Option<&dsl::DslValue>, key: &str) -> Result<T, Fault> {
+            let value = args.and_then(|value| value.get(key)).cloned().ok_or_else(|| Fault::from(format!("presentation {action} requires a '{key}' block")))?;
+            dsl::from_dsl_value(value).map_err(|error| Fault::from(format!("invalid presentation {action} '{key}': {error}")))
+        }
+        match action {
+            "seedGrid" => Ok(PresentationCommand::SeedGrid(seed_grid::SeedGrid { rows: number_arg(&["rows"]) as u32, columns: number_arg(&["columns", "cols"]) as u32 })),
+            "addTile" => Ok(PresentationCommand::AddTile(add_tile::AddTile { crop: args.and_then(|value| value.get("crop")).cloned().map(dsl::from_dsl_value).transpose().map_err(|error| Fault::from(format!("invalid presentation addTile 'crop': {error}")))? })),
+            "deleteTile" => Ok(PresentationCommand::DeleteTile(delete_tile::DeleteTile { id: text_arg(&["id", "tileId", "value"]).unwrap_or_default() })),
+            "deleteSelection" => Ok(PresentationCommand::DeleteSelection(delete_selection::DeleteSelection {})),
+            "renameTiles" => Ok(PresentationCommand::RenameTiles(rename_tiles::RenameTiles { ids: id_list(&["ids", "id"]), value: text_arg(&["value", "name"]).unwrap_or_default() })),
+            "patchTileCrops" => Ok(PresentationCommand::PatchTileCrops(patch_tile_crops::PatchTileCrops { ids: id_list(&["ids", "id"]), field: text_arg(&["field"]).unwrap_or_default(), value: number_arg(&["value"]) })),
+            "setSource" => Ok(PresentationCommand::SetSource(set_source::SetSource { source: decode(action, args, "source")? })),
+            "setFrame" => Ok(PresentationCommand::SetFrame(set_frame::SetFrame { frame: decode(action, args, "frame")? })),
+            "setActiveExample" => Ok(PresentationCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: text_arg(&["exampleId", "example_id", "id", "value"]).unwrap_or_else(|| crate::examples::demo::ID.into()) })),
+            "clearTiles" => Ok(PresentationCommand::ClearTiles(clear_tiles::ClearTiles {})),
+            "engagementSubmit" => Ok(PresentationCommand::EngagementSubmit(engagement_submit::EngagementSubmit { value: text_arg(&["value", "text"]).unwrap_or_default() })),
+            "resetGrid" => Ok(PresentationCommand::ResetGrid(reset_grid::ResetGrid {})),
+            "engagementInput" => Ok(PresentationCommand::EngagementInput(engagement_input::EngagementInput { value: text_arg(&["value", "text"]).unwrap_or_default() })),
+            "canvasPointerDown" => Ok(PresentationCommand::CanvasPointerDown(canvas_pointer_down::CanvasPointerDown { layer_id: text_arg(&["layerId", "layer_id", "id"]) })),
+            "noMutation" => Ok(PresentationCommand::NoOperation(no_operation::NoOperation {})),
+            "copyPrompt" => Ok(PresentationCommand::CopyPrompt(copy_prompt::CopyPrompt {})),
+            "exportVideoFromDeck" => Ok(PresentationCommand::ExportVideoFromDeck(export_video_from_deck::ExportVideoFromDeck { output_dir: text_arg(&["outputDir", "output_dir"]).unwrap_or_default(), scene_json: args.and_then(|value| value.get("scene")).map_or_else(|| "null".into(), dsl::json::to_json_string) })),
+            other => Err(Fault::from(format!("presentation: unhandled action id {other}"))),
+        }
     }
 
     fn handle(

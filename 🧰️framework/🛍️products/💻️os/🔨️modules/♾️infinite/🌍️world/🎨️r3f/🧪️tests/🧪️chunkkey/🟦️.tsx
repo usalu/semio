@@ -1,14 +1,14 @@
 type TestSource = { readonly directory: string; readonly url: string };
 
-export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: any, source: TestSource): Promise<void> {
+export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: import("../../🟦️.tsx").WorldR3fTestDependencies, source: TestSource): Promise<void> {
   const { BoxGeometry, HalfFloatType, LineBasicMaterial, LinearFilter, LinearSRGBColorSpace, MOUSE, Matrix4, Mesh, ORBIT_CAMERA_VIEW_COMMAND, Object3D, ThreeOrbitControls, ThreeOrthographicCamera, ThreePerspectiveCamera, Vector3, WORLD_CURVILINEAR_CAPTURE_TARGET_OPTIONS, WORLD_CURVILINEAR_FRAGMENT_SHADER, WORLD_LOD_GRID_COVERAGE_MARGIN, WORLD_LOD_REFERENCE_FOV_DEG, WORLD_MESH_OUTLINE_USER_DATA_KEY, WORLD_ORBIT_CAMERA_MIN_FAR, WORLD_PROJECTION_COMMAND, WORLD_PROJECTION_KINDS, WORLD_REFERENCE_SELECTED_CONTENT_OPACITY, adaptiveOrbitCameraFar, applyOrbitProjectionToCameraState, applyWorldMeshEdgeBorders, applyWorldOrbitMouseButtonsIdle, applyWorldReferenceTransform, applyWorldVolumeTransform, cameraGridFadeDistance, cameraGridVisibleRadius, chunkDistanceVisible, chunkKey, classifyWorldNavigationGestures, computeOrbitCameraViewState, computeWorldProjectionPose, createOrbitCameraViewLayoutDescriptors, createOrbitCameraViewTemplates, createWorldProjectionTemplates, decodeWorldProjectionTemplateId, dispatchProjectionGizmoHit, encodeWorldProjectionTemplateId, floatingOriginRebase, frameWorldProjectionPose, lodFromCameraDistance, lodGridStepWorld, lodOrbitDistanceForCamera, orbitCameraDistance, orbitCameraViewGumballPlane, orbitCameraViewRigApplyToken, orbitViewToWorldProjectionSpec, patchWorldReferenceProps, projectionGizmoHeadFillColor, projectionGizmoHitVisualState, resetWorldMeshBorderColorCache, resolveOrbitCameraViewFromTemplateId, resolveOrbitGizmoViewFromDirection, resolveProjectionGizmoSpec, resolveProjectionGizmoVisualPalette, resolveWorldOrbitMouseButtonsIdle, resolveWorldOrbitRightMouseAction, sceneHostPort, shouldApplyOrbitCameraViewRigSeed, shouldAssignWorldOrbitRightMouse, tokenHex, worldCurvilinearUnproject, worldEntityInspectable, worldEntityRenderMode, worldEntityRendered, worldEntitySelectable, worldMeshBorderColor, worldObliqueShearMatrix, worldProjectionDefaults, worldProjectionFamily, worldProjectionGoalMatrix, worldProjectionGumballPlane, worldProjectionKindSwitchSpec, worldProjectionMatchedOrthoZoom, worldProjectionMatchedPerspectiveDistance, worldProjectionModeOptions, worldProjectionMorphMatrix, worldProjectionOrbitConstraints, worldProjectionPerspectiveFov, worldProjectionSnapZoom, worldProjectionSpecIconId, worldProjectionSpecLabel, worldProjectionSpecToOrbitView, worldProjectionSwitchTreeItems, worldProjectionTemplateApplySpec, worldProjectionTemplateSelectionId, worldProjectionTransitionPose, worldReferenceAppearance, worldSceneContentBounds, worldSceneContentBoundsKey, worldVolumesContainAabb } = dependencies;
-  type OrbitCameraViewId = any;
-  type ProjectionGizmoHit = any;
-  type WorldNavigationSnapshot = any;
-  type WorldProjectionSpec = any;
-  type WorldProjectionTemplateDescriptor = any;
-  type WorldReferenceProps = any;
-  type WorldVolumeProps = any;
+  type OrbitCameraViewId = import("../../🟦️.tsx").OrbitCameraViewId;
+  type ProjectionGizmoHit = import("../../🟦️.tsx").ProjectionGizmoHit;
+  type WorldNavigationSnapshot = import("../../🟦️.tsx").WorldNavigationSnapshot;
+  type WorldProjectionSpec = import("../../🟦️.tsx").WorldProjectionSpec;
+  type WorldProjectionTemplateDescriptor = import("../../🟦️.tsx").WorldProjectionTemplateDescriptor;
+  type WorldReferenceProps = import("../../🟦️.tsx").WorldReferenceProps;
+  type WorldVolumeProps = import("../../🟦️.tsx").WorldVolumeProps;
 
   const { describe, expect, it } = vitest;
 

@@ -1114,18 +1114,18 @@ interface reactor {
     cursor: command-page-cursor,
     fault: list<u8>,
   }
-  record cold-artifact-pair-frontier {
-    artifact-id: string,
+  record cold-document-pair-frontier {
+    document-id: string,
     head-edit-ordinal: u64,
     head-edit-id: string,
     last-commit-seq: u64,
     chain-sha256: list<u8>,
   }
-  record cold-artifact-pair-header {
+  record cold-document-pair-header {
     lifetime: lifetime,
     transfer-generation: u64,
     descriptor-sha256: list<u8>,
-    baseline-frontier: cold-artifact-pair-frontier,
+    baseline-frontier: cold-document-pair-frontier,
     pack-sha256: list<u8>,
     spr-sha256: list<u8>,
     aggregate-sha256: list<u8>,
@@ -1133,34 +1133,34 @@ interface reactor {
     spr-length: u64,
     page-count: u32,
   }
-  record cold-artifact-pair-page {
-    header: cold-artifact-pair-header,
+  record cold-document-pair-page {
+    header: cold-document-pair-header,
     page-index: u32,
     bytes: list<u8>,
   }
-  record cold-artifact-pair-cursor {
+  record cold-document-pair-cursor {
     lifetime: lifetime,
     transfer-generation: u64,
     page-index: u32,
     page-count: u32,
   }
-  record cold-artifact-pair-applied {
+  record cold-document-pair-applied {
     lifetime: lifetime,
     transfer-generation: u64,
-    baseline-frontier: cold-artifact-pair-frontier,
+    baseline-frontier: cold-document-pair-frontier,
     aggregate-sha256: list<u8>,
   }
-  record cold-artifact-pair-fault {
-    cursor: cold-artifact-pair-cursor,
+  record cold-document-pair-fault {
+    cursor: cold-document-pair-cursor,
     fault: list<u8>,
   }
   variant cold-pair-ingress-status {
     idle,
-    page-accepted(cold-artifact-pair-cursor),
-    backpressure(cold-artifact-pair-cursor),
-    loading(cold-artifact-pair-cursor),
-    applied(cold-artifact-pair-applied),
-    fault(cold-artifact-pair-fault),
+    page-accepted(cold-document-pair-cursor),
+    backpressure(cold-document-pair-cursor),
+    loading(cold-document-pair-cursor),
+    applied(cold-document-pair-applied),
+    fault(cold-document-pair-fault),
   }
   variant turn-status {
     idle,
@@ -1215,7 +1215,7 @@ interface reactor {
 
   /// 🧊️ Hands the next `poll` the ONE cold document-pair page it may admit — same staging contract
   /// and the same reason as `stage-command-page`.
-  stage-cold-pair-page: async func(page: cold-artifact-pair-page) -> result<_, plugin-error>;
+  stage-cold-pair-page: async func(page: cold-document-pair-page) -> result<_, plugin-error>;
 
   /// ▶️ One guest turn. Carries NO bulk payload: `list<event>` and `budget` flatten to seven values,
   /// which the canonical ABI passes directly, so this call — the one the host makes hundreds of

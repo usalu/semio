@@ -17,16 +17,16 @@ fn lifetime(guest_lifetime: u64) -> ActorInstanceLifetime {
     ActorInstanceLifetime { activation_generation: 41, instance_id: 7, guest_lifetime }
 }
 
-fn header(pack: &[u8], spr: &[u8], lifetime: ActorInstanceLifetime, transfer_generation: u64) -> ColdArtifactPairHeader {
+fn header(pack: &[u8], spr: &[u8], lifetime: ActorInstanceLifetime, transfer_generation: u64) -> ColdDocumentPairHeader {
     let mut aggregate = semio_framework_hash::Sha256::new();
     aggregate.update(pack);
     aggregate.update(spr);
     let total = pack.len() + spr.len();
-    ColdArtifactPairHeader {
+    ColdDocumentPairHeader {
         lifetime,
         transfer_generation,
         descriptor_sha256: [0x11; 32],
-        baseline_frontier: semio_framework::kernel::ColdArtifactPairFrontier { artifact_id: "shared-map".into(), head_edit_ordinal: 7, head_edit_id: "edit-7".into(), last_commit_seq: 5, chain_sha256: [0x22; 32] },
+        baseline_frontier: semio_framework::kernel::ColdDocumentPairFrontier { document_id: "shared-map".into(), head_edit_ordinal: 7, head_edit_id: "edit-7".into(), last_commit_seq: 5, chain_sha256: [0x22; 32] },
         pack_sha256: semio_framework_hash::Sha256::digest(pack),
         spr_sha256: semio_framework_hash::Sha256::digest(spr),
         aggregate_sha256: aggregate.finalize(),
@@ -36,7 +36,7 @@ fn header(pack: &[u8], spr: &[u8], lifetime: ActorInstanceLifetime, transfer_gen
     }
 }
 
-fn page(header: &ColdArtifactPairHeader, pack: &[u8], spr: &[u8], index: u32) -> ColdArtifactPairPage {
+fn page(header: &ColdDocumentPairHeader, pack: &[u8], spr: &[u8], index: u32) -> ColdDocumentPairPage {
     let offset = index as usize * COLD_PAIR_PAGE_MAXIMUM_BYTES;
     let length = header.page_length(index).unwrap();
     let mut bytes = Vec::with_capacity(length);
@@ -49,10 +49,10 @@ fn page(header: &ColdArtifactPairHeader, pack: &[u8], spr: &[u8], index: u32) ->
         let spr_offset = combined - pack.len();
         bytes.extend_from_slice(&spr[spr_offset..spr_offset + length - bytes.len()]);
     }
-    ColdArtifactPairPage { header: header.clone(), page_index: index, bytes }
+    ColdDocumentPairPage { header: header.clone(), page_index: index, bytes }
 }
 
-fn close_all<const N: usize>(ingress: &mut ColdArtifactPairIngressRegistry<N>, lifetime: ActorInstanceLifetime) -> (usize, usize) {
+fn close_all<const N: usize>(ingress: &mut ColdDocumentPairIngressRegistry<N>, lifetime: ActorInstanceLifetime) -> (usize, usize) {
     assert!(ingress.request_close(lifetime));
     let mut work = 0;
     let mut steps = 0;
@@ -78,7 +78,7 @@ fn cold_pair_ingress_streams_the_exact_four_mibibyte_pair_and_loads_once() {
     let exact_header = header(&pack, &spr, lifetime(13), 51);
     assert_eq!(exact_header.aggregate_sha256, hex32(fixture["exact"]["aggregateSha256"].as_str().unwrap()));
     assert_eq!(exact_header.page_count, COLD_PAIR_MAXIMUM_PAGES);
-    let mut ingress = ColdArtifactPairIngressRegistry::<16>::new();
+    let mut ingress = ColdDocumentPairIngressRegistry::<16>::new();
     for index in 0..exact_header.page_count {
         let status = ingress.accept_page(&page(&exact_header, &pack, &spr, index), Some(exact_header.lifetime));
         if index + 1 == exact_header.page_count {
@@ -110,7 +110,7 @@ fn cold_pair_ingress_rechecks_live_and_rejects_hostile_pages_without_displacemen
     let pack = patterned(COLD_PAIR_PAGE_MAXIMUM_BYTES, 3, 1);
     let spr = patterned(COLD_PAIR_PAGE_MAXIMUM_BYTES + 1, 5, 2);
     let exact_header = header(&pack, &spr, lifetime(13), 52);
-    let mut ingress = ColdArtifactPairIngressRegistry::<1>::new();
+    let mut ingress = ColdDocumentPairIngressRegistry::<1>::new();
     let mut malformed_first = page(&exact_header, &pack, &spr, 0);
     malformed_first.bytes.pop();
     assert!(matches!(ingress.accept_page(&malformed_first, Some(exact_header.lifetime)), ColdPairIngressStatus::Fault { .. }));
@@ -139,7 +139,7 @@ fn cold_pair_ingress_keeps_the_structural_owner_across_load_cancel_and_bounded_c
     let pack = patterned(COLD_PAIR_PAGE_MAXIMUM_BYTES, 7, 3);
     let spr = vec![9];
     let exact_header = header(&pack, &spr, lifetime(13), 54);
-    let mut ingress = ColdArtifactPairIngressRegistry::<1>::new();
+    let mut ingress = ColdDocumentPairIngressRegistry::<1>::new();
     for index in 0..exact_header.page_count {
         ingress.accept_page(&page(&exact_header, &pack, &spr, index), Some(exact_header.lifetime));
     }
@@ -147,7 +147,7 @@ fn cold_pair_ingress_keeps_the_structural_owner_across_load_cancel_and_bounded_c
     assert_eq!(load.lifetime(), exact_header.lifetime);
     assert_eq!(ingress.retained_bytes(exact_header.lifetime), pack.len() + spr.len());
     assert!(ingress.request_close(exact_header.lifetime));
-    assert_eq!(ingress.close_step(exact_header.lifetime), ColdArtifactPairCloseStep { wiped_bytes: 0, closed: false });
+    assert_eq!(ingress.close_step(exact_header.lifetime), ColdDocumentPairCloseStep { wiped_bytes: 0, closed: false });
     assert!(matches!(ingress.finish_load(load, Ok(()), Some(exact_header.lifetime)), ColdPairIngressStatus::Fault { ref fault, .. } if fault == b"cold-pair.stale-load"));
     let (wiped, _) = close_all(&mut ingress, exact_header.lifetime);
     assert_eq!(wiped, pack.len() + spr.len());
@@ -168,7 +168,7 @@ fn cold_pair_ingress_final_live_fence_rejects_post_await_revocation() {
     let pack = patterned(COLD_PAIR_PAGE_MAXIMUM_BYTES, 7, 3);
     let spr = vec![9];
     let exact_header = header(&pack, &spr, lifetime(13), 56);
-    let mut ingress = ColdArtifactPairIngressRegistry::<1>::new();
+    let mut ingress = ColdDocumentPairIngressRegistry::<1>::new();
     for index in 0..exact_header.page_count {
         ingress.accept_page(&page(&exact_header, &pack, &spr, index), Some(exact_header.lifetime));
     }
@@ -186,7 +186,7 @@ fn cold_pair_ingress_charges_aggregate_reserved_capacity_until_final_close() {
     let second_lifetime = ActorInstanceLifetime { activation_generation: 41, instance_id: 2, guest_lifetime: 14 };
     let first = header(&pack, &spr, first_lifetime, 57);
     let second = header(&pack, &spr, second_lifetime, 58);
-    let mut ingress = ColdArtifactPairIngressRegistry::<4>::new();
+    let mut ingress = ColdDocumentPairIngressRegistry::<4>::new();
     assert!(matches!(ingress.accept_page(&page(&first, &pack, &spr, 0), Some(first_lifetime)), ColdPairIngressStatus::PageAccepted(_)));
     assert!(matches!(ingress.accept_page(&page(&second, &pack, &spr, 0), Some(second_lifetime)), ColdPairIngressStatus::Fault { ref fault, .. } if fault == b"cold-pair.capacity"));
     assert!(!ingress.is_mounted(second_lifetime));
@@ -203,7 +203,7 @@ fn cold_pair_ingress_is_an_exact_retained_native_close_participant() {
     let exact_header = header(&pack, &spr, close_lifetime, 59);
     let key = super::super::instance_lifetime::NativeCloseKey::fixture(exact_header.lifetime.instance_id, exact_header.lifetime.guest_lifetime);
     let foreign = super::super::instance_lifetime::NativeCloseKey::fixture(exact_header.lifetime.instance_id, exact_header.lifetime.guest_lifetime + 1);
-    let mut ingress = ColdArtifactPairIngressRegistry::<1>::new();
+    let mut ingress = ColdDocumentPairIngressRegistry::<1>::new();
     assert!(matches!(ingress.accept_page(&page(&exact_header, &pack, &spr, 0), Some(exact_header.lifetime)), ColdPairIngressStatus::PageAccepted(_)));
     ingress.preflight_close_instance(key).unwrap();
     ingress.reserve_close_instance(key).unwrap();

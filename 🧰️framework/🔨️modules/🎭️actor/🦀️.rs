@@ -153,27 +153,27 @@ pub mod schema_metadata {
         SchemaMetadata {
             name: "TurnResult",
             version: 1,
-            typescript: "export type TurnResult = { ui_patches: Array<number>, effects: Array<number>, command_ingress: Array<number>, cold_pair_ingress: ColdPairIngressStatus, lifecycle_receipt: import(\"../🚪️lifetime/🟦️component.js\").ActorInstanceLifecycleReceipt | null, ui_patch_receipt: import(\"../🚪️lifetime/🩹️patch/🟦️component.js\").ActorUiPatchReceipt | null, next_wake: bigint | null, status: TurnStatus, usage: Usage, };",
+            typescript: "export type TurnResult = { ui_patches: Array<number>, effects: Array<number>, command_ingress: Array<number>, cold_pair_ingress: ColdPairIngressStatus, lifecycle_receipt: import(\"../../🚪️lifetime/🟦️.ts\").ActorInstanceLifecycleReceipt | null, ui_patch_receipt: import(\"../../🚪️lifetime/🩹️patch/🟦️.ts\").ActorUiPatchReceipt | null, next_wake: bigint | null, status: TurnStatus, usage: Usage, };",
         },
         SchemaMetadata {
             name: "ColdPairIngressStatus",
             version: 1,
-            typescript: r#"export type ColdPairIngressStatus = { "kind": "idle" } | { "kind": "pageAccepted", cursor: ColdArtifactPairCursor, } | { "kind": "backpressure", cursor: ColdArtifactPairCursor, } | { "kind": "loading", cursor: ColdArtifactPairCursor, } | { "kind": "applied", receipt: ColdArtifactPairApplied, } | { "kind": "fault", cursor: ColdArtifactPairCursor, fault: Array<number>, };"#,
+            typescript: r#"export type ColdPairIngressStatus = { "kind": "idle" } | { "kind": "pageAccepted", cursor: ColdDocumentPairCursor, } | { "kind": "backpressure", cursor: ColdDocumentPairCursor, } | { "kind": "loading", cursor: ColdDocumentPairCursor, } | { "kind": "applied", receipt: ColdDocumentPairApplied, } | { "kind": "fault", cursor: ColdDocumentPairCursor, fault: Array<number>, };"#,
         },
         SchemaMetadata {
-            name: "ColdArtifactPairCursor",
+            name: "ColdDocumentPairCursor",
             version: 1,
-            typescript: "export type ColdArtifactPairCursor = { lifetime: import(\"../🚪️lifetime/🟦️component.js\").ActorInstanceLifetime, transfer_generation: bigint, page_index: number, page_count: number, };",
+            typescript: "export type ColdDocumentPairCursor = { lifetime: import(\"../../🚪️lifetime/🟦️.ts\").ActorInstanceLifetime, transfer_generation: bigint, page_index: number, page_count: number, };",
         },
         SchemaMetadata {
-            name: "ColdArtifactPairFrontier",
+            name: "ColdDocumentPairFrontier",
             version: 1,
-            typescript: "export type ColdArtifactPairFrontier = { artifact_id: string, head_edit_ordinal: bigint, head_edit_id: string, last_commit_seq: bigint, chain_sha256: Array<number>, };",
+            typescript: "export type ColdDocumentPairFrontier = { document_id: string, head_edit_ordinal: bigint, head_edit_id: string, last_commit_seq: bigint, chain_sha256: Array<number>, };",
         },
         SchemaMetadata {
-            name: "ColdArtifactPairApplied",
+            name: "ColdDocumentPairApplied",
             version: 1,
-            typescript: "export type ColdArtifactPairApplied = { lifetime: import(\"../🚪️lifetime/🟦️component.js\").ActorInstanceLifetime, transfer_generation: bigint, baseline_frontier: ColdArtifactPairFrontier, aggregate_sha256: Array<number>, };",
+            typescript: "export type ColdDocumentPairApplied = { lifetime: import(\"../../🚪️lifetime/🟦️.ts\").ActorInstanceLifetime, transfer_generation: bigint, baseline_frontier: ColdDocumentPairFrontier, aggregate_sha256: Array<number>, };",
         },
         SchemaMetadata {
             name: "TurnStatus",

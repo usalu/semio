@@ -538,6 +538,9 @@ pub struct ReconstructionEngine {
     fusion_capacity: usize,
     fusion_finalized: bool,
     dense_cloud: Option<remodeling_dense::PointCloud>,
+    /// ✅️ Per dense view, the fusion stage's multi-view consistency bits; the TSDF integrates only
+    /// those pixels, so a single view's PatchMatch outliers never reach the volume.
+    consistency_masks: Vec<Vec<u64>>,
 
     mesh_pipeline: Option<remodeling_mesh::MeshPipeline>,
     meshing_preparation: Option<MeshingPreparation>,
@@ -547,6 +550,16 @@ pub struct ReconstructionEngine {
     failure: Option<String>,
     recorded: Option<Vec<EngineObservation>>,
 }
+
+/// 🧊️ Coarsest-needed TSDF voxel in the normalised reconstruction frame; see
+/// [`ReconstructionEngine::meshing_voxel`].
+const MIN_MESHING_VOXEL: f64 = 0.2;
+/// 🧊️ Truncation floor in voxels: a band thinner than this leaves the observed sheet full of gaps.
+const MIN_TRUNCATION_VOXELS: f64 = 2.0;
+/// ✅️ Relative depth agreement two views' pixels need to count as one surface point. PatchMatch at
+/// the interactive iteration counts is ~1.5 % noisy in depth, so the batch default of 1 % rejected
+/// most good pixels; 3 % is still well inside one meshing voxel at the orbit's viewing distance.
+const FUSION_MAX_RELATIVE_DEPTH_DIFF: f32 = 0.03;
 
 /// 🗻️ Pyramid levels the bounded ORB detection spreads its keypoints over.
 const FEATURE_PYRAMID_LEVELS: usize = 3;
@@ -737,6 +750,10 @@ struct TrackPreparation {
     phase: TrackPhase,
     pair: usize,
     matched: usize,
+    /// Sized once for every observation the pair table can name (see [`Self::with_capacity`]): a
+    /// table growing past 2¹⁵ keypoint nodes rehashed every one of them inside a single bounded union
+    /// step (10 ms on the adversarial law's 200 000-match pair), and an ordered map instead spends as
+    /// long freeing its nodes in the step that completes the tracks.
     node_of: std::collections::HashMap<(usize, u32), usize>,
     observations: Vec<(usize, u32)>,
     parent: Vec<usize>,
@@ -752,16 +769,19 @@ struct TrackPreparation {
 }
 
 impl TrackPreparation {
-    fn new() -> Self {
+    /// 🧮️ A preparation whose node table and per-node vectors hold `observations` entries without
+    /// ever growing: two per match at most. The reservation is address space the union steps then
+    /// touch page by page, so no step pays a whole-table rehash or vector doubling.
+    fn with_capacity(observations: usize) -> Self {
         Self {
             phase: TrackPhase::Union,
             pair: 0,
             matched: 0,
-            node_of: std::collections::HashMap::new(),
-            observations: Vec::new(),
-            parent: Vec::new(),
-            rank: Vec::new(),
-            frames: Vec::new(),
+            node_of: std::collections::HashMap::with_capacity(observations),
+            observations: Vec::with_capacity(observations),
+            parent: Vec::with_capacity(observations),
+            rank: Vec::with_capacity(observations),
+            frames: Vec::with_capacity(observations),
             grouping_cursor: 0,
             groups: std::collections::BTreeMap::new(),
             tracks: Vec::new(),
@@ -880,6 +900,7 @@ impl ReconstructionEngine {
             fusion_capacity: 0,
             fusion_finalized: false,
             dense_cloud: None,
+            consistency_masks: Vec::new(),
             mesh_pipeline: None,
             meshing_preparation: None,
             mesh_data: None,
@@ -1296,7 +1317,8 @@ impl ReconstructionEngine {
         // inside the worker law with room for the host's scheduling jitter.
         const OBSERVATIONS_PER_STEP: usize = 1_024;
         const GROUPS_PER_STEP: usize = 64;
-        let preparation = self.track_preparation.get_or_insert_with(TrackPreparation::new);
+        let pairwise_matches = &self.pairwise_matches;
+        let preparation = self.track_preparation.get_or_insert_with(|| TrackPreparation::with_capacity(pairwise_matches.iter().map(|(_, _, matches)| 2 * matches.len()).sum()));
         match preparation.phase {
             TrackPhase::Union => {
                 let mut work = 0;
@@ -1731,9 +1753,13 @@ impl ReconstructionEngine {
                 self.fusion_views.push((recon.cameras[camera].1, recon.intrinsics));
                 return true;
             }
+            let config = self.fusion_config();
             let preparation = self.fusion_preparation.get_or_insert_with(|| remodeling_dense::FusionPreparation::new(self.fusion_capacity));
-            if preparation.advance(&self.fusion_views, &self.depth_maps, &remodeling_dense::FusionConfig::default(), FUSION_COMPARISONS_PER_STEP) {
-                self.dense_cloud = self.fusion_preparation.take().and_then(remodeling_dense::FusionPreparation::finish);
+            if preparation.advance(&self.fusion_views, &self.depth_maps, &config, FUSION_COMPARISONS_PER_STEP) {
+                if let Some((cloud, masks)) = self.fusion_preparation.take().and_then(remodeling_dense::FusionPreparation::finish_with_consistency) {
+                    self.dense_cloud = Some(cloud);
+                    self.consistency_masks = masks;
+                }
                 self.fusion_finalized = true;
                 let points = self.dense_positions().len();
                 self.record(EngineObservation::DenseCloudFused { points });
@@ -1750,9 +1776,10 @@ impl ReconstructionEngine {
         // `"mesh pipeline not initialized"` failure instead of an honest empty-reconstruction outcome.
         if self.tsdf.is_none() {
             let preparation = self.meshing_preparation.as_ref().expect("walked meshing preparation");
-            let (lattice_min, lattice_max) = compute_voxel_bounds_from_extrema(preparation.bounds_min, preparation.bounds_max, self.params.tsdf_voxel_size);
+            let (voxel_size, truncation) = self.meshing_voxel();
+            let (lattice_min, lattice_max) = compute_voxel_bounds_from_extrema(preparation.bounds_min, preparation.bounds_max, voxel_size);
             self.tsdf = Some(
-                remodeling_dense::TsdfVolume::new(self.params.tsdf_voxel_size, self.params.tsdf_truncation)
+                remodeling_dense::TsdfVolume::new(voxel_size, truncation)
                     .with_voxel_bounds(lattice_min.map(|coordinate| coordinate.saturating_sub(TSDF_INTEGRATION_MARGIN_VOXELS)), lattice_max.map(|coordinate| coordinate.saturating_add(TSDF_INTEGRATION_MARGIN_VOXELS))),
             );
         }
@@ -1765,18 +1792,44 @@ impl ReconstructionEngine {
                 (pose, recon.intrinsics)
             };
             let preparation = self.tsdf_preparation.get_or_insert_with(remodeling_dense::TsdfIntegrationPreparation::new);
-            if preparation.advance(self.tsdf.as_mut().expect("just ensured"), &self.depth_maps[slot], &(pose, intrinsics), true, TSDF_SAMPLES_PER_STEP) {
+            let mask = self.consistency_masks.get(slot).map(Vec::as_slice);
+            if preparation.advance_masked(self.tsdf.as_mut().expect("just ensured"), &self.depth_maps[slot], mask, &(pose, intrinsics), true, TSDF_SAMPLES_PER_STEP) {
                 self.tsdf_preparation = None;
                 // 🧹️ This map's three per-pixel buffers (~1.5 MiB for a 320x240 view, ~5 MiB at the
                 // admitted 512x512 envelope) are dead the moment it is integrated: fusion already read
                 // every map above and nothing downstream reads them again. The slot itself stays so the
                 // stage's cursors and counts keep their meaning.
                 self.depth_maps[slot] = remodeling_dense::DepthMap::new(0, 0);
+                if let Some(mask) = self.consistency_masks.get_mut(slot) {
+                    *mask = Vec::new();
+                }
                 self.stage_cursor += 1;
             }
             return true;
         }
         false
+    }
+
+    /// 🧊️ The TSDF voxel size and truncation the meshing stage uses: the configured ones, floored
+    /// at [`MIN_MESHING_VOXEL`] and [`MIN_TRUNCATION_VOXELS`] voxels. The reconstruction is meshed in
+    /// its normalised frame (points' RMS radius one unit, see `normalize_reconstruction_frame`), so a
+    /// configured size is a fraction of the scene there, not millimetres; and the interactive surface
+    /// is capped at 512 elements, which a closed surface of unit RMS radius (area ~13–16) only fits
+    /// at about a fifth of a unit per net cell. Finer voxels are not more detail: the extraction then
+    /// reads every second or fourth sample of a volume whose observed band has more gaps per
+    /// sample, and on the synthetic orbit a 0.1 lattice covered half the cube where 0.2 covered 90 %.
+    /// ✅️ Cross-view agreement the fusion stage demands of a depth pixel before the TSDF takes it:
+    /// [`FUSION_MAX_RELATIVE_DEPTH_DIFF`] and the document's `min-view-consistency` views (counting
+    /// the pixel's own). Two views are not enough: a background pixel beside the object's silhouette
+    /// takes the object's depth in PatchMatch (its patch holds object texture), two neighbouring views
+    /// fatten the silhouette alike and agree, and the pair fused a fin out of the orbit's cube.
+    fn fusion_config(&self) -> remodeling_dense::FusionConfig {
+        remodeling_dense::FusionConfig { max_relative_depth_diff: FUSION_MAX_RELATIVE_DEPTH_DIFF, min_consistent_views: self.params.dense_source_views.max(2), ..remodeling_dense::FusionConfig::default() }
+    }
+
+    fn meshing_voxel(&self) -> (f64, f64) {
+        let voxel_size = self.params.tsdf_voxel_size.max(MIN_MESHING_VOXEL);
+        (voxel_size, self.params.tsdf_truncation.max(MIN_TRUNCATION_VOXELS * voxel_size))
     }
 
     /// 🏗️ Advances the shared extrema walk, texture-view copying and pipeline creation with finite
@@ -1815,9 +1868,9 @@ impl ReconstructionEngine {
             }
         }
         let preparation = self.meshing_preparation.take().expect("completed meshing preparation");
-        let (bounds_min, bounds_max) = compute_voxel_bounds_from_extrema(preparation.bounds_min, preparation.bounds_max, self.params.tsdf_voxel_size);
+        let (bounds_min, bounds_max) = compute_voxel_bounds_from_extrema(preparation.bounds_min, preparation.bounds_max, self.meshing_voxel().0);
         let volume = self.tsdf.take().expect("meshing volume");
-        self.mesh_pipeline = Some(remodeling_mesh::MeshPipeline::new_bounded(volume, 0.0, bounds_min, bounds_max, self.params.mesh.clone()).with_views(preparation.views));
+        self.mesh_pipeline = Some(remodeling_mesh::MeshPipeline::new_bounded(volume, 0.0, bounds_min, bounds_max, self.params.mesh.clone()).with_observed_only_surface().with_views(preparation.views));
         // 🧹️ Input pixels are dead here: the texture views above hold their own copies and the mesh
         // stages read only the volume and those views. Ten 320x240 frames are 3 MiB, the admitted
         // envelope (64 frames of 512x512) is 64 MiB — all of it retained through meshing otherwise.

@@ -15,9 +15,10 @@ fn sample_semio() -> SemioDocumentSnapshot {
 async fn splits_pages_on_pagebreak() {
     let pdf = semio_framework_plugin::resolve_ready(SemioDocumentToPdf::serialize(&sample_semio())).expect("serialize");
     assert_eq!(pdf.pages.len(), 2);
-    assert_eq!(pdf.pages[0].text, "Page one text.");
-    assert_eq!(pdf.pages[1].text, "Page two text.");
+    assert_eq!(pdf.pages[0].text(), "Page one text.");
+    assert_eq!(pdf.pages[1].text(), "Page two text.");
     assert_eq!(pdf.declared_version, "1.7");
+    assert_eq!(pdf.fonts.len(), 1);
 }
 
 #[semio_framework_async_macros::async_test]

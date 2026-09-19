@@ -1,12 +1,9 @@
+import type { ActorInstanceCloseRequest, ActorInstanceLifecycleReceipt, ActorInstanceLifecycleWire, ActorInstanceOpenRequest } from "../../🟦️.ts";
+
 type TestSource = { readonly directory: string; readonly url: string };
 
-export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: any, source: TestSource): Promise<void> {
+export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: Pick<typeof import("../../🟦️.ts"), "ACTOR_INSTANCE_LIFECYCLE_MAXIMUM_BYTES" | "actorInstanceCapturedReceiptMatches" | "actorInstanceCloseReceiptMatches" | "actorInstanceLifecycleReceiptEquals" | "actorInstanceLifetimeEquals" | "decodeActorInstanceLifecycle" | "encodeActorInstanceLifecycle">, source: TestSource): Promise<void> {
   const { ACTOR_INSTANCE_LIFECYCLE_MAXIMUM_BYTES, actorInstanceCapturedReceiptMatches, actorInstanceCloseReceiptMatches, actorInstanceLifecycleReceiptEquals, actorInstanceLifetimeEquals, decodeActorInstanceLifecycle, encodeActorInstanceLifecycle } = dependencies;
-  type ActorInstanceCloseRequest = any;
-  type ActorInstanceLifecycleReceipt = any;
-  type ActorInstanceLifecycleWire = any;
-  type ActorInstanceOpenRequest = any;
-
   const { it, expect } = vitest;
   it("actor instance close fault publication fixture preserves watchdog and terminal-outcome precedence", async () => {
     const { readFileSync } = await import("node:fs");

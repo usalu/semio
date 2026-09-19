@@ -125,7 +125,12 @@ fn row_click_dispatches_select_row_with_full_row_payload() {
 /// press takes now that a `ComponentScene` leaf's single retained hit target shadows every row the
 /// paint stages.
 fn press(node: &UiComponentSceneNode, x: f32, y: f32) -> Option<SceneListHit> {
-    table_hit(node, Rect::new(0.0, 0.0, 400.0, 300.0), x, y, &Theme::default())
+    press_with(node, x, y, SceneModifiers::default())
+}
+
+/// 🧪️ `press` with the modifier set the pointer event carried.
+fn press_with(node: &UiComponentSceneNode, x: f32, y: f32, modifiers: SceneModifiers) -> Option<SceneListHit> {
+    table_hit(node, Rect::new(0.0, 0.0, 400.0, 300.0), x, y, &Theme::default(), modifiers)
 }
 
 fn row_center_y(index: usize) -> f32 {
@@ -217,3 +222,78 @@ fn row_without_an_id_is_keyed_by_its_ordinal() {
     assert_eq!(press(&node, 40.0, row_center_y(1)).expect("row hit").control_id, "table-press-ordinal.row.1");
 }
 //#endregion TablePointerTests
+
+/// 🎯️ React `🖱️ui/🎯️targets/⚛️react/🟦️.tsx` `interactionMergeFromModifiers`, pinned by its own vitest
+/// law "interactionMergeFromModifiers: shift wins Range even with ctrl/meta also held; alt is
+/// Subtractive; no modifier is Replace". A row pick carries the merge its MODIFIERS select — before
+/// `UiEvent`'s pointer variants carried `EventModifiers` the wgpu side could only ever write
+/// `"replace"` (ticket 26/09/17/WGPU-RENDERER-REACT-PARITY, `📓️audit-w14-scenes-residual.md` C1).
+#[test]
+fn row_press_merge_mode_follows_the_pointer_modifiers() {
+    let rows = json!([{ "id": "r1", "name": "Alpha" }]).to_string();
+    let mut table = TableScene::base(columns_json(&[("name", "Name", false)]), rows);
+    table.domain_id = Some("catalogue".into());
+    table.domain_granularity_id = Some("part".into());
+    let node = table_scene("table-press-merge", table);
+    let merge_for = |modifiers: SceneModifiers| {
+        press_with(&node, 40.0, row_center_y(0), modifiers)
+            .expect("row hit")
+            .action
+            .expect("interactionSelect")
+            .args
+            .as_ref()
+            .and_then(|args| args.get("merge"))
+            .and_then(semio_framework::DslValue::as_str)
+            .map(str::to_string)
+            .expect("merge")
+    };
+    assert_eq!(merge_for(SceneModifiers::default()), "replace");
+    assert_eq!(merge_for(SceneModifiers { shift: true, ..SceneModifiers::default() }), "range");
+    assert_eq!(merge_for(SceneModifiers { ctrl: true, ..SceneModifiers::default() }), "invertive");
+    assert_eq!(merge_for(SceneModifiers { meta: true, ..SceneModifiers::default() }), "invertive");
+    assert_eq!(merge_for(SceneModifiers { alt: true, ..SceneModifiers::default() }), "subtractive");
+    assert_eq!(merge_for(SceneModifiers { shift: true, ctrl: true, ..SceneModifiers::default() }), "range", "shift wins a range pick even with ctrl also held");
+}
+
+//#region TableRowTransferTests
+/// 🫳️ React `📊️Table/🟦️.tsx` `rowDragProps`: a row is `draggable` only when the scene names a
+/// `rowDragMime` AND the row itself carries a `_drag` record, and the transfer payload is that
+/// record serialized.
+#[test]
+fn a_row_is_a_drag_source_only_with_both_a_row_drag_mime_and_a_drag_record() {
+    let rows = json!([{ "id": "r1", "name": "Alpha", "_drag": { "partId": "p1" } }, { "id": "r2", "name": "Beta" }]).to_string();
+    let bounds = Rect::new(0.0, 0.0, 400.0, 300.0);
+    let theme = Theme::default();
+    let without_mime = table_scene("table-drag-none", TableScene::base(columns_json(&[("name", "Name", false)]), rows.clone()));
+    assert!(scene_transfer_drag_source(&without_mime, bounds, 40.0, row_center_y(0), &theme).is_none(), "a table with no rowDragMime declares no drag source");
+
+    let mut table = TableScene::base(columns_json(&[("name", "Name", false)]), rows);
+    table.row_drag_mime = Some("application/x-semio-part".into());
+    let node = table_scene("table-drag-src", table);
+    let (mime, payload) = scene_transfer_drag_source(&node, bounds, 40.0, row_center_y(0), &theme).expect("row 0 carries _drag");
+    assert_eq!(mime, "application/x-semio-part");
+    assert_eq!(serde_json::from_str::<Value>(&payload).expect("payload json"), json!({ "partId": "p1" }));
+    assert!(scene_transfer_drag_source(&node, bounds, 40.0, row_center_y(1), &theme).is_none(), "a row without a _drag record is not draggable");
+}
+
+/// 🫴️ React `📊️Table/🟦️.tsx` `onDrop`: the first `application/x-semio-*` entry on the transfer is
+/// JSON-parsed and SPREAD over `dropActionJson`'s own args (`dispatchCellAction`), so the drop action
+/// keeps everything it declared and gains the dragged record's keys.
+#[test]
+fn a_drop_spreads_the_transfer_payload_over_the_declared_drop_action_args() {
+    let mut table = TableScene::base(columns_json(&[("name", "Name", false)]), json!([{ "id": "r1", "name": "Alpha" }]).to_string());
+    table.drop_action_json = Some(json!({ "controllerId": "controller", "action": "acceptDrop", "args": { "surfaceId": "table-drop", "slot": "inbox" } }).to_string());
+    let node = table_scene("table-drop", table);
+    let bounds = Rect::new(0.0, 0.0, 400.0, 300.0);
+    let theme = Theme::default();
+    let action = scene_transfer_drop_action(&node, bounds, 40.0, row_center_y(0), &theme, "application/x-semio-part", &json!({ "partId": "p1" }).to_string()).expect("drop action");
+    assert_eq!(action.action, "acceptDrop");
+    let args = action.args.as_ref().expect("args");
+    assert_eq!(args.get("slot").and_then(semio_framework::DslValue::as_str), Some("inbox"), "the declared args survive the spread");
+    assert_eq!(args.get("partId").and_then(semio_framework::DslValue::as_str), Some("p1"), "the dragged record's keys are merged in");
+    assert!(
+        scene_transfer_drop_action(&node, bounds, 40.0, row_center_y(0), &theme, "text/plain", &json!({ "partId": "p1" }).to_string()).is_none(),
+        "React filters the transfer types to `application/x-semio-*`; anything else is not a drop"
+    );
+}
+//#endregion TableRowTransferTests

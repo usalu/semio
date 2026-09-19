@@ -84,6 +84,7 @@ import {
   type SceneLaneRef,
   BOARD2D_SCENE_LANES,
   CANVAS2D_SCENE_LANES,
+  TILEDMAP_SCENE_LANES,
   WORLD3D_SCENE_LANES,
   WORLD3D_SCENE_LANE_KEY_PREFIX,
   board2dSceneFromLanes,
@@ -953,7 +954,7 @@ function styleSpecDataAttributes(style: StyleSpec): Record<string, string> {
 /** ♿️ `AccessibilitySpec` → real ARIA props, plus an optional rendered visually-hidden description
  * span (its id feeds `aria-describedby`) — no `role` here, the semantic role comes from `Component`
  * itself (a `Component::Button` is a button on every renderer; see `🦀️accessibility.rs`'s own doc). */
-function accessibilityAriaProps(spec: AccessibilitySpec, idBase: string): { readonly props: Record<string, unknown>; readonly describedBy?: ReactNode } {
+export function accessibilityAriaProps(spec: AccessibilitySpec, idBase: string): { readonly props: Record<string, unknown>; readonly describedBy?: ReactNode } {
   const describedById = spec.description ? `${idBase}-desc` : undefined;
   const props: Record<string, unknown> = {
     "aria-label": spec.label ?? undefined,
@@ -2018,7 +2019,7 @@ function PagedSurfaceView({ record, component, context }: { readonly record: UiN
   const store = context.store;
   const revision = useUiDocumentRevision(store);
   const carrierEpoch = useSurfaceCarrierEpoch(store, record);
-  const lanes = (component.kind === "canvas-2d" ? CANVAS2D_SCENE_LANES : component.kind === "board-2d" ? BOARD2D_SCENE_LANES : WORLD3D_SCENE_LANES) as readonly SceneLane<Record<string, unknown>>[];
+  const lanes = (component.kind === "canvas-2d" ? CANVAS2D_SCENE_LANES : component.kind === "board-2d" ? BOARD2D_SCENE_LANES : component.kind === "tiled-map" ? TILEDMAP_SCENE_LANES : WORLD3D_SCENE_LANES) as readonly SceneLane<Record<string, unknown>>[];
   const assemble = useCallback(
     (spine: Record<string, unknown>): Record<string, unknown> => {
       void revision;
@@ -2083,7 +2084,7 @@ function SurfaceAccessibilityShell({ record, context, children }: { readonly rec
 
 function SurfaceView({ record, context }: { readonly record: UiNodeRecord; readonly context: UiInterpreterContext }) {
   const component = record.component as Extract<Component, { type: "surface" }>;
-  const body = component.kind === "world-3d" || component.kind === "canvas-2d" || component.kind === "board-2d" ? <PagedSurfaceView record={record} component={component} context={context} /> : <>{renderComponentSceneHost(record, component, context.onAction, context.store.getState().surface, context.requestContextMenu)}</>;
+  const body = component.kind === "world-3d" || component.kind === "canvas-2d" || component.kind === "board-2d" || component.kind === "tiled-map" ? <PagedSurfaceView record={record} component={component} context={context} /> : <>{renderComponentSceneHost(record, component, context.onAction, context.store.getState().surface, context.requestContextMenu)}</>;
   return (
     <SurfaceAccessibilityShell record={record} context={context}>
       {body}

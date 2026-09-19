@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "target": "ES2022",
+    "target": "ES2023",
     "module": "ESNext",
     "moduleResolution": "Bundler",
     "strict": true,
@@ -10,6 +10,7 @@
     "types": ["node"],
     "resolveJsonModule": true
   },
+  "files": ["../../🏃️process/🌿️environment/🟦️.d.ts"],
   "include": ["**/*.ts", "../../**/*.ts"],
   "exclude": ["**/node_modules/**", "../../**/node_modules/**", "../../**/dist/**", "../../**/📤️dist/**", "../../**/🗑️generated/**", "../../**/🤖️generated/**"]
 }

@@ -12,9 +12,9 @@
 // #region 🔌️Adapters
 import { cleanup, fireEvent, render, screen, waitFor } from "@semio-tech/ui-react/test";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { buildTaskManagerTableScene, createTaskManagerDispatcher, taskManagerColumns, taskManagerRowAction, taskManagerRows, TaskManagerPanel, type TaskManagerLabels, type TaskManagerRow } from "./🟦️.tsx";
-import { ActivationRegistry, type ShardBudget } from "../../../../../../../../../🔨️modules/🎠️kernel/🟦️.ts";
-import { ShardClient, type ShardWorkerLike } from "../../../../../../../../../🔨️modules/🎭️actor/📮️shard-client/🟦️.ts";
+import { buildTaskManagerTableScene, createTaskManagerDispatcher, runtimeMetricsRowsV1, taskManagerColumns, taskManagerMetricCell, taskManagerRowAction, taskManagerRows, TaskManagerPanel, TaskManagerWindow, TASK_MANAGER_UNOBSERVED_METRIC, type TaskManagerLabels, type TaskManagerRow, type TaskManagerTableCell } from "../../🟦️.tsx";
+import { ActivationRegistry } from "../../../../../../../../../🔨️modules/🎠️kernel/🟦️.ts";
+import { ShardClient, type ShardBudget, type ShardWorkerLike } from "../../../../../../../../../🔨️modules/🎭️actor/📮️shard-client/🟦️.ts";
 import { OwnedResidentLedger } from "../../../../../../../../../🔨️modules/🌱️value/💾️resident/🟦️.ts";
 // #endregion 🔌️Adapters
 
@@ -24,6 +24,8 @@ const LABELS: TaskManagerLabels = {
   lanes: { interactive: "Interactive", userVisible: "User-visible", background: "Background", maintenance: "Maintenance" },
   statuses: { cold: "Cold", activating: "Activating", active: "Active", suspended: "Suspended", draining: "Draining", trapped: "Trapped", quarantined: "Quarantined", disabled: "Disabled" },
   actions: { suspend: "Suspend", resume: "Resume", cancel: "Cancel" },
+  empty: "No actors are running.",
+  noRuntime: "No actor runtime is attached to this shell.",
 };
 
 const ROW: TaskManagerRow = { actorId: "actor-1", packageId: "s.cad", lane: "interactive", status: "active", stage: "healthy", shard: 2, wallUsP95: 1500, mailboxLen: 3, turns: 42, traps: 0, restarts: 0 };
@@ -58,8 +60,10 @@ describe("taskManagerRows", () => {
 
   it("emits all three row actions (suspend/resume/cancel), each addressed at this row's actor id", () => {
     const [row] = taskManagerRows([ROW], LABELS);
-    const actionsCell = row!.actions;
-    if (actionsCell.kind !== "buttons") throw new Error("expected a buttons cell");
+    // 🔖️ `TaskManagerTableRow`'s index signature admits the row's own `id` string beside its cells,
+    // so a cell read narrows explicitly rather than assuming every key is a cell.
+    const actionsCell = row!.actions as TaskManagerTableCell;
+    if (typeof actionsCell === "string" || actionsCell.kind !== "buttons") throw new Error("expected a buttons cell");
     expect(actionsCell.buttons.map((button) => button.action.action)).toEqual(["suspend", "resume", "cancel"]);
     for (const button of actionsCell.buttons) expect(button.action.args).toEqual({ actorId: "actor-1" });
   });
@@ -183,3 +187,61 @@ describe("createTaskManagerDispatcher wired to a real ActivationRegistry/ShardCl
   });
 });
 //#endregion 🔖️LiveDispatch
+
+//#region 🔖️LiveFeed
+/** 🧪️ Ticket `26/09/18/OS-HUB-COLLABORATION-AI-END-TO-END` slice U1 (audit ranked item 1): the pane is
+ * now a mounted window with a real row source. These drive `runtimeMetricsRowsV1`/`TaskManagerWindow`
+ * against a REAL `ActivationRegistry` (same auto-replying `ShardClient` the dispatch tests use), so
+ * the `os.runtime.metrics` publisher that had no consumer anywhere in the codebase has one. */
+describe("runtimeMetricsRowsV1", () => {
+  it("maps residency onto status and leaves every counter a web registry cannot observe as null, never a silent zero", async () => {
+    const shardClient = autoReplyingShardClient();
+    const registry = new ActivationRegistry({ shardClient, defaultBudget: BUDGET, fetchAssets: async () => [] });
+    registry.registerManifest({ pluginId: "s.cad", moduleUrl: "https://x/cad.js", caps: [] });
+    await registry.activate("s.cad", "actor-1", "manual");
+
+    const [row] = runtimeMetricsRowsV1(registry.runtimeMetricsSnapshot());
+    expect(row!.actorId).toBe("actor-1");
+    expect(row!.packageId).toBe("s.cad");
+    expect(row!.status).toBe("active");
+    expect(row!.turns).toBeNull();
+    expect(row!.traps).toBeNull();
+    expect(row!.wallUsP95).toBeNull();
+
+    await registry.suspend("actor-1");
+    expect(runtimeMetricsRowsV1(registry.runtimeMetricsSnapshot())[0]!.status).toBe("suspended");
+  });
+});
+
+describe("taskManagerMetricCell", () => {
+  it("renders an unobservable counter as an em dash rather than a number cell", () => {
+    expect(taskManagerMetricCell(null)).toEqual({ kind: "text", value: TASK_MANAGER_UNOBSERVED_METRIC });
+    expect(taskManagerMetricCell(0)).toEqual({ kind: "number", value: 0 });
+  });
+});
+
+describe("TaskManagerWindow", () => {
+  it("distinguishes 'no runtime attached' from 'the runtime reports no actors'", async () => {
+    render(<TaskManagerWindow registry={null} />);
+    expect(screen.getByRole("status").getAttribute("data-semio-task-manager-empty")).toBe("no-runtime");
+    cleanup();
+
+    const registry = new ActivationRegistry({ shardClient: autoReplyingShardClient(), defaultBudget: BUDGET, fetchAssets: async () => [] });
+    render(<TaskManagerWindow registry={registry} />);
+    await waitFor(() => expect(screen.getByRole("status").getAttribute("data-semio-task-manager-empty")).toBe("no-actors"));
+  });
+
+  it("renders the live actor the registry publishes, and follows an os.runtime.metrics event", async () => {
+    const registry = new ActivationRegistry({ shardClient: autoReplyingShardClient(), defaultBudget: BUDGET, fetchAssets: async () => [] });
+    registry.registerManifest({ pluginId: "s.cad", moduleUrl: "https://x/cad.js", caps: [] });
+    await registry.activate("s.cad", "actor-1", "manual");
+
+    render(<TaskManagerWindow registry={registry} />);
+    await waitFor(() => expect(screen.getByText("actor-1")).toBeTruthy());
+
+    await registry.activate("s.cad", "actor-2", "manual");
+    registry.metricsBus.dispatchEvent(new CustomEvent("os.runtime.metrics", { detail: registry.runtimeMetricsSnapshot() }));
+    await waitFor(() => expect(screen.getByText("actor-2")).toBeTruthy());
+  });
+});
+//#endregion 🔖️LiveFeed

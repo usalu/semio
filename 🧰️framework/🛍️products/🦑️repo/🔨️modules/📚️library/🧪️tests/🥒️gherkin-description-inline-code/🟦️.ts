@@ -60,10 +60,10 @@ function codeInlineValues(source: string): string[] {
   const state = new md.core.State(source, md, env);
   md.core.process(state);
   const values: string[] = [];
-  const visit = (tokens: readonly import("markdown-it/lib/token.mjs").default[]): void => {
-    for (const token of tokens) {
+  const visit = (tokens: readonly import("markdown-it").Token[] | null): void => {
+    for (const token of tokens ?? []) {
       if (token.type === "code_inline") values.push(token.content);
-      if (token.children) visit(token.children);
+      visit(token.children);
     }
   };
   visit(state.tokens);

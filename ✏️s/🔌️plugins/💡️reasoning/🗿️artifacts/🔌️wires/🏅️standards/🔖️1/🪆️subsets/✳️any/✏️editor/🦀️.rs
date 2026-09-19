@@ -479,6 +479,10 @@ impl ArtifactOwnedToolJobFactory for WiresRetainedCommandJobFactory {
 //#endregion 🧵️RetainedCommands
 
 impl ArtifactEditor for ReasoningWiresPlayApp {
+    /// 🧩️ The roster the composed `s.stdio.semio` `content` child opens through. A `NoMembers` editor
+    /// cannot materialise the child `genesis_child_pack` derives, so every whole-document load
+    /// (`setActiveExample` → `Effect::LoadDocument`) failed its archive closure.
+    type Members = semio_s_artifact_stdio_semio::SemioMembers;
     type Snapshot = WiresSnapshot;
     type Mutation = WiresMutation;
     type Config = NoConfig;
@@ -627,6 +631,10 @@ impl ArtifactEditor for ReasoningWiresPlayApp {
             return Ok(None);
         }
         reorganize::build_job(request.identity, &request.snapshot, request.checkpoint, request.provisional).map(Some)
+    }
+
+    fn genesis_child_pack(snapshot: &Self::Snapshot, slot: &str, child_id: &str) -> Option<Vec<u8>> {
+        crate::genesis_wires_child_pack(snapshot, slot, child_id)
     }
 
     fn initial_snapshot() -> WiresSnapshot {

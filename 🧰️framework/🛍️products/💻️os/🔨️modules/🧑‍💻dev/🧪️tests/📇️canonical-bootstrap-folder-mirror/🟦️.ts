@@ -234,4 +234,4 @@ class CanonicalBootstrapFolderMirrorCheckScript extends BundleScript {
   }
 }
 
-export { CanonicalBootstrapFolderMirrorCheckScript, CanonicalBootstrapFolderMirrorCorpusV1, CanonicalPairFrontierCaseV1, canonicalBootstrapFolderMirrorFixtureRoot, canonicalBootstrapFolderMirrorReserve, expectCanonicalBootstrapFolderMirrorFailure };
+export { CanonicalBootstrapFolderMirrorCheckScript, type CanonicalBootstrapFolderMirrorCorpusV1, type CanonicalPairFrontierCaseV1, canonicalBootstrapFolderMirrorFixtureRoot, canonicalBootstrapFolderMirrorReserve, expectCanonicalBootstrapFolderMirrorFailure };

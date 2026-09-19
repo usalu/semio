@@ -22,32 +22,63 @@
 //! **No clock, no driver.** Every timestamp is passed in by the caller, so a decider and its store
 //! can be replayed deterministically in a test even though every method is `async` (O1: the literal
 //! `async` keyword is universal here regardless of whether a given backend actually suspends — the
-//! in-memory reference backends below never do, a real disk/network backend will). Backends
-//! (embedded file storage in Wave 2, a server-grade engine later) implement these traits behind
-//! [`StorageProfile`]; the in-memory implementations here are the reference semantics every
-//! backend must reproduce. Each trait is `#[dyn_enum]`'d and closed over its one reference
-//! implementation (`AuthorityStores`/`ProjectionStores`/`BlobStores`/`SessionStores`) rather than
-//! boxed as `dyn` (O1 — drop dyn dispatch); a real second backend adds a variant here, not a `Box`.
+//! reference in-memory backends never do, a real disk/network backend will). Backends
+//! (embedded file storage, a server-grade engine later) implement these traits behind
+//! [`StorageProfile`], which the instance opens them from.
+//!
+//! **Four contracts, zero implementations.** This module declares the four roles and nothing that
+//! fulfils them: a [`ServerInstance`](crate::gateway::ServerInstance) names the concrete backend for
+//! each role as an associated type, so the set of backends is closed where the instance is defined
+//! and never here. An instance that really does carry several backends of one role closes them
+//! into one enum in its own crate — the site that closes the set. The reference in-memory semantics every durable backend
+//! must reproduce now live with the test instance that uses them
+//! (`🧪️tests/🧩️instance/🦀️.rs`), because a reference implementation is a test fixture, not a
+//! product surface.
 
 use crate::contract::{ActorKey, CommandReceipt, DeviceId, EventRecord, IdempotencyKey, Principal, Revision, SessionId};
 use protocol::codec::ids::ContentHash;
 use protocol::crypto::RecordHasher;
 use protocol::format::Blake3Hasher;
-use semio_framework_dispatch_macros::{dyn_enum, dyn_enum_close};
 use serde::{Deserialize, Serialize};
-use std::collections::{BTreeMap, HashMap};
+use semio_framework_dispatch_macros::dyn_enum;
+use std::future::Future;
 
 //#region 🔖️Profile
-/// @emoji 🏗️ Which deployment shape the storage backends are opened in. Wave 2 ships exactly one
-/// profile on purpose: a single-process authority owning a local data directory. Clustered and
-/// hosted profiles are added as further variants when a second backend actually exists, never as a
-/// speculative option flag on this one.
+/// @emoji 🏗️ Which deployment shape the storage backends are opened in — the one instruction the
+/// framework gives an instance's [`ServerInstance::open`](crate::gateway::ServerInstance::open),
+/// and the only thing it says about durability.
+///
+/// Two variants, because two shapes genuinely exist and are both implemented: a process that keeps
+/// nothing past its own lifetime, and a process that owns one directory. What a backend *does* with
+/// either is the instance's decision — [`Ephemeral`](Self::Ephemeral) is not "no storage", it is
+/// "no storage that outlives me", and an instance is free to open the same four roles over RAM for
+/// it. Clustered and hosted shapes are added when a backend implements them, never as a speculative
+/// option flag on these.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase", tag = "kind")]
+#[serde(rename_all = "camelCase", rename_all_fields = "camelCase", tag = "kind")]
 pub enum StorageProfile {
-    /// @emoji 🏠️ Everything lives under one directory owned by one process: the Wave-2 deployment
-    /// profile for hub, zentrale and a developer's laptop alike.
+    /// @emoji 🫧️ Nothing survives the process: the shape a test, a scratch instance or a
+    /// short-lived edge replica opens its roles in.
+    Ephemeral,
+    /// @emoji 🏠️ Everything lives under one directory owned by one process: the deployment profile
+    /// for hub, zentrale and a developer's laptop alike.
     Embedded { data_dir: String },
+}
+
+impl StorageProfile {
+    /// @emoji 📁️ The directory this profile owns, or `None` when it owns none. A backend that needs
+    /// a path asks here instead of matching, so adding a shape later is not a breaking match.
+    pub fn data_dir(&self) -> Option<&str> {
+        match self {
+            Self::Ephemeral => None,
+            Self::Embedded { data_dir } => Some(data_dir),
+        }
+    }
+
+    /// @emoji 💾️ Whether state opened in this profile is expected to outlive the process.
+    pub fn is_durable(&self) -> bool {
+        self.data_dir().is_some()
+    }
 }
 //#endregion 🔖️Profile
 
@@ -128,257 +159,112 @@ impl OutboxEntry {
 
 /// @emoji 🏛️ The authoritative state of a server: command inbox, per-actor event streams, snapshots,
 /// transactional outbox and actor leases. The one role whose data cannot be regenerated.
+/// **Send futures, declared not inferred.** Every method of this port returns
+/// `impl Future<..> + Send` instead of being written `async fn`, and that is structural, not a
+/// style choice: [`ServerState`](crate::gateway::ServerState) reaches this port behind an
+/// instance's associated type, so the concrete future is opaque at the call site and axum's
+/// handler and socket tasks — which are `Send` by construction — cannot otherwise prove it may
+/// cross a thread. An `async fn` here compiles and then fails at every route that uses it. The
+/// implementations stay ordinary `async fn`, which Rust accepts against this signature, and so does
+/// the delegate `dyn_enum_close!` generates for a set of them: the macro emits `async fn .. -> T`
+/// over the future's `Output`, because two match arms cannot unify two distinct opaque futures.
 #[dyn_enum]
 pub trait AuthorityStore: Send + Sync {
     /// @emoji 🔎️ The receipt already recorded for `key`, if this command was seen before. A retry
     /// answers from here instead of re-executing.
-    async fn receipt(&self, key: &IdempotencyKey) -> Result<Option<CommandReceipt>, StorageError>;
+    fn receipt(&self, key: &IdempotencyKey) -> impl Future<Output = Result<Option<CommandReceipt>, StorageError>> + Send;
 
     /// @emoji 🧾️ Binds `key` to `receipt`. Recording the identical receipt again succeeds silently;
     /// binding a key to a *different* receipt is a [`StorageError::Conflict`].
-    async fn record_receipt(&mut self, key: &IdempotencyKey, receipt: &CommandReceipt) -> Result<(), StorageError>;
+    fn record_receipt(&mut self, key: &IdempotencyKey, receipt: &CommandReceipt) -> impl Future<Output = Result<(), StorageError>> + Send;
 
     /// @emoji ➕️ Appends `events` to `actor`'s stream and returns the new last sequence. Every event
     /// must carry `actor` as its stream and a sequence exactly one past its predecessor, starting at
     /// `last_seq + 1`; anything else is a [`StorageError::SequenceGap`] and nothing is written.
-    async fn append_events(&mut self, actor: &ActorKey, events: &[EventRecord], outbox: &[OutboxEntry]) -> Result<u64, StorageError>;
+    fn append_events(&mut self, actor: &ActorKey, events: &[EventRecord], outbox: &[OutboxEntry]) -> impl Future<Output = Result<u64, StorageError>> + Send;
 
     /// @emoji 📜️ Every event of `actor` with a sequence strictly greater than `since`, in order.
-    async fn events_since(&self, actor: &ActorKey, since: u64) -> Result<Vec<EventRecord>, StorageError>;
+    fn events_since(&self, actor: &ActorKey, since: u64) -> impl Future<Output = Result<Vec<EventRecord>, StorageError>> + Send;
 
     /// @emoji 🔚️ The highest sequence written for `actor`; `0` for an actor with no history.
-    async fn last_seq(&self, actor: &ActorKey) -> Result<u64, StorageError>;
+    fn last_seq(&self, actor: &ActorKey) -> impl Future<Output = Result<u64, StorageError>> + Send;
 
     /// @emoji 📸️ Replaces `actor`'s replay accelerator. A snapshot older than the stored one is a
     /// [`StorageError::Conflict`] — snapshots only ever move forward.
-    async fn put_snapshot(&mut self, actor: &ActorKey, revision: Revision, bytes: Vec<u8>) -> Result<(), StorageError>;
+    fn put_snapshot(&mut self, actor: &ActorKey, revision: Revision, bytes: Vec<u8>) -> impl Future<Output = Result<(), StorageError>> + Send;
 
     /// @emoji 🖼️ The stored snapshot of `actor` and the revision it was taken at, if any.
-    async fn snapshot(&self, actor: &ActorKey) -> Result<Option<(Revision, Vec<u8>)>, StorageError>;
+    fn snapshot(&self, actor: &ActorKey) -> impl Future<Output = Result<Option<(Revision, Vec<u8>)>, StorageError>> + Send;
 
     /// @emoji 📤️ Queues `entries` for publication, stamping each with the next queue id and marking
     /// it undelivered; the caller's `id` and `delivered` fields are ignored.
-    async fn enqueue_outbox(&mut self, entries: Vec<OutboxEntry>) -> Result<(), StorageError>;
+    fn enqueue_outbox(&mut self, entries: Vec<OutboxEntry>) -> impl Future<Output = Result<(), StorageError>> + Send;
 
     /// @emoji 📥️ Up to `limit` undelivered entries in queue order.
-    async fn pending_outbox(&self, limit: usize) -> Result<Vec<OutboxEntry>, StorageError>;
+    fn pending_outbox(&self, limit: usize) -> impl Future<Output = Result<Vec<OutboxEntry>, StorageError>> + Send;
 
     /// @emoji 📬️ Acknowledges delivery of `ids`. Re-acknowledging is idempotent; an unknown id is a
     /// [`StorageError::NotFound`] and nothing is marked.
-    async fn mark_outbox_delivered(&mut self, ids: &[u64]) -> Result<(), StorageError>;
+    fn mark_outbox_delivered(&mut self, ids: &[u64]) -> impl Future<Output = Result<(), StorageError>> + Send;
 
     /// @emoji 🤝️ Takes ownership of `actor` for `holder`. Re-acquiring as the current holder renews
     /// at the same epoch; taking it from a different holder bumps the epoch, which fences the
     /// previous holder out for good.
-    async fn acquire_lease(&mut self, actor: &ActorKey, holder: &str) -> Result<Lease, StorageError>;
+    fn acquire_lease(&mut self, actor: &ActorKey, holder: &str) -> impl Future<Output = Result<Lease, StorageError>> + Send;
 
     /// @emoji 🛡️ Whether `lease` is still the live lease on `actor`. A stale epoch answers `false`,
     /// and the caller must abandon its turn with [`StorageError::LeaseLost`].
-    async fn validate_lease(&self, actor: &ActorKey, lease: &Lease) -> bool;
+    fn validate_lease(&self, actor: &ActorKey, lease: &Lease) -> impl Future<Output = bool> + Send;
 }
 
-/// @emoji 🧠️ Reference in-memory [`AuthorityStore`]: the semantics every durable backend must match,
-/// and the store a deterministic decider test runs against.
-#[derive(Debug, Default)]
-pub struct MemoryAuthorityStore {
-    receipts: HashMap<IdempotencyKey, CommandReceipt>,
-    streams: BTreeMap<ActorKey, Vec<EventRecord>>,
-    snapshots: BTreeMap<ActorKey, (Revision, Vec<u8>)>,
-    outbox: BTreeMap<u64, OutboxEntry>,
-    next_outbox_id: u64,
-    leases: BTreeMap<ActorKey, Lease>,
-}
-
-impl MemoryAuthorityStore {
-    /// @emoji 🐣️ An empty authority store.
-    pub fn new() -> Self {
-        Self::default()
-    }
-}
-
-impl AuthorityStore for MemoryAuthorityStore {
-    async fn receipt(&self, key: &IdempotencyKey) -> Result<Option<CommandReceipt>, StorageError> {
-        Ok(self.receipts.get(key).cloned())
-    }
-
-    async fn record_receipt(&mut self, key: &IdempotencyKey, receipt: &CommandReceipt) -> Result<(), StorageError> {
-        match self.receipts.get(key) {
-            Some(existing) if existing == receipt => Ok(()),
-            Some(existing) => Err(StorageError::Conflict(format!("idempotency key {} is already bound to command {}", key.0, existing.command_id.0))),
-            None => {
-                self.receipts.insert(key.clone(), receipt.clone());
-                Ok(())
-            }
-        }
-    }
-
-    async fn append_events(&mut self, actor: &ActorKey, events: &[EventRecord], outbox: &[OutboxEntry]) -> Result<u64, StorageError> {
-        let stream = self.streams.entry(actor.clone()).or_default();
-        let mut expected = stream.last().map_or(0, |record| record.seq) + 1;
-        for event in events {
-            if &event.stream != actor {
-                return Err(StorageError::Conflict(format!("event at seq {} belongs to stream {}/{}", event.seq, event.stream.kind, event.stream.id)));
-            }
-            if event.seq != expected {
-                return Err(StorageError::SequenceGap { expected, got: event.seq });
-            }
-            expected += 1;
-        }
-        stream.extend_from_slice(events);
-        let head = stream.last().map_or(0, |record| record.seq);
-        for entry in outbox {
-            self.next_outbox_id += 1;
-            let mut queued = entry.clone();
-            queued.id = self.next_outbox_id;
-            queued.delivered = false;
-            self.outbox.insert(queued.id, queued);
-        }
-        Ok(head)
-    }
-
-    async fn events_since(&self, actor: &ActorKey, since: u64) -> Result<Vec<EventRecord>, StorageError> {
-        Ok(self.streams.get(actor).into_iter().flatten().filter(|record| record.seq > since).cloned().collect())
-    }
-
-    async fn last_seq(&self, actor: &ActorKey) -> Result<u64, StorageError> {
-        Ok(self.streams.get(actor).and_then(|stream| stream.last()).map_or(0, |record| record.seq))
-    }
-
-    async fn put_snapshot(&mut self, actor: &ActorKey, revision: Revision, bytes: Vec<u8>) -> Result<(), StorageError> {
-        if let Some((stored, _)) = self.snapshots.get(actor) {
-            if revision < *stored {
-                return Err(StorageError::Conflict(format!("snapshot revision {} is older than stored {}", revision.0, stored.0)));
-            }
-        }
-        self.snapshots.insert(actor.clone(), (revision, bytes));
-        Ok(())
-    }
-
-    async fn snapshot(&self, actor: &ActorKey) -> Result<Option<(Revision, Vec<u8>)>, StorageError> {
-        Ok(self.snapshots.get(actor).cloned())
-    }
-
-    async fn enqueue_outbox(&mut self, entries: Vec<OutboxEntry>) -> Result<(), StorageError> {
-        for mut entry in entries {
-            self.next_outbox_id += 1;
-            entry.id = self.next_outbox_id;
-            entry.delivered = false;
-            self.outbox.insert(entry.id, entry);
-        }
-        Ok(())
-    }
-
-    async fn pending_outbox(&self, limit: usize) -> Result<Vec<OutboxEntry>, StorageError> {
-        Ok(self.outbox.values().filter(|entry| !entry.delivered).take(limit).cloned().collect())
-    }
-
-    async fn mark_outbox_delivered(&mut self, ids: &[u64]) -> Result<(), StorageError> {
-        if ids.iter().any(|id| !self.outbox.contains_key(id)) {
-            return Err(StorageError::NotFound);
-        }
-        for id in ids {
-            if let Some(entry) = self.outbox.get_mut(id) {
-                entry.delivered = true;
-            }
-        }
-        Ok(())
-    }
-
-    async fn acquire_lease(&mut self, actor: &ActorKey, holder: &str) -> Result<Lease, StorageError> {
-        let lease = match self.leases.get(actor) {
-            Some(current) if current.holder == holder => current.clone(),
-            Some(current) => Lease { epoch: current.epoch + 1, holder: holder.to_owned() },
-            None => Lease { epoch: 1, holder: holder.to_owned() },
-        };
-        self.leases.insert(actor.clone(), lease.clone());
-        Ok(lease)
-    }
-
-    async fn validate_lease(&self, actor: &ActorKey, lease: &Lease) -> bool {
-        self.leases.get(actor).is_some_and(|current| current == lease)
-    }
-}
-
-dyn_enum_close! {
-    pub enum AuthorityStores: AuthorityStore {
-        Memory(MemoryAuthorityStore),
-    }
-}
 //#endregion 🔖️Authority
 
 //#region 🔖️Projection
 /// @emoji 🔭️ Rebuildable read models, addressed by projection name and key. Nothing here is a source
 /// of truth: [`ProjectionStore::clear`] plus a replay from sequence zero must reproduce it exactly,
 /// which is what makes a schema change a rebuild rather than a migration.
+///
+/// **Every write answers.** `put`, `set_checkpoint` and `clear` return
+/// `Result<(), `[`StorageError`]`>` rather than `()`, because a backend that journals to disk can
+/// fail at the sink, and a read model whose memory silently ran ahead of its journal reports state
+/// a restart will not reproduce. Rebuildability is the *repair*, never a licence to swallow the
+/// fault: a refused write leaves the read models exactly as they were, and the caller decides
+/// whether to retry the fold, hold the checkpoint back or rebuild. Reads keep their plain return
+/// types — the fold is in memory, so there is nothing for a read to fail at.
+/// **Send futures, declared not inferred.** Every method of this port returns
+/// `impl Future<..> + Send` instead of being written `async fn`, and that is structural, not a
+/// style choice: [`ServerState`](crate::gateway::ServerState) reaches this port behind an
+/// instance's associated type, so the concrete future is opaque at the call site and axum's
+/// handler and socket tasks — which are `Send` by construction — cannot otherwise prove it may
+/// cross a thread. An `async fn` here compiles and then fails at every route that uses it. The
+/// implementations stay ordinary `async fn`, which Rust accepts against this signature, and so does
+/// the delegate `dyn_enum_close!` generates for a set of them: the macro emits `async fn .. -> T`
+/// over the future's `Output`, because two match arms cannot unify two distinct opaque futures.
 #[dyn_enum]
 pub trait ProjectionStore: Send + Sync {
-    /// @emoji ✍️ Writes `value` at `key` inside `projection`, replacing any previous value.
-    async fn put(&mut self, projection: &str, key: &str, value: Vec<u8>);
+    /// @emoji ✍️ Writes `value` at `key` inside `projection`, replacing any previous value. A
+    /// backend that could not durably record the write answers [`StorageError::Backend`] and leaves
+    /// the read models exactly as they were — see the trait note on write outcomes.
+    fn put(&mut self, projection: &str, key: &str, value: Vec<u8>) -> impl Future<Output = Result<(), StorageError>> + Send;
 
     /// @emoji 📖️ The value stored at `key`, if the projection has one.
-    async fn get(&self, projection: &str, key: &str) -> Option<Vec<u8>>;
+    fn get(&self, projection: &str, key: &str) -> impl Future<Output = Option<Vec<u8>>> + Send;
 
     /// @emoji 📋️ Every entry of `projection` whose key starts with `prefix`, ascending by key —
     /// ordering is part of the contract so a paged query is stable across backends.
-    async fn list(&self, projection: &str, prefix: &str) -> Vec<(String, Vec<u8>)>;
+    fn list(&self, projection: &str, prefix: &str) -> impl Future<Output = Vec<(String, Vec<u8>)>> + Send;
 
     /// @emoji 🚩️ The last event sequence folded into `projection`; `0` when it has never been built.
-    async fn checkpoint(&self, projection: &str) -> u64;
+    fn checkpoint(&self, projection: &str) -> impl Future<Output = u64> + Send;
 
     /// @emoji 🏁️ Records that `projection` now reflects everything up to `seq`.
-    async fn set_checkpoint(&mut self, projection: &str, seq: u64);
+    fn set_checkpoint(&mut self, projection: &str, seq: u64) -> impl Future<Output = Result<(), StorageError>> + Send;
 
     /// @emoji 🧹️ Drops every entry of `projection` and resets its checkpoint to zero, so the next
     /// fold rebuilds it from the beginning.
-    async fn clear(&mut self, projection: &str);
+    fn clear(&mut self, projection: &str) -> impl Future<Output = Result<(), StorageError>> + Send;
 }
 
-/// @emoji 🗂️ Reference in-memory [`ProjectionStore`], ordered by key so `list` is deterministic.
-#[derive(Debug, Default)]
-pub struct MemoryProjectionStore {
-    projections: BTreeMap<String, BTreeMap<String, Vec<u8>>>,
-    checkpoints: BTreeMap<String, u64>,
-}
-
-impl MemoryProjectionStore {
-    /// @emoji 🥚️ An empty projection store.
-    pub fn new() -> Self {
-        Self::default()
-    }
-}
-
-impl ProjectionStore for MemoryProjectionStore {
-    async fn put(&mut self, projection: &str, key: &str, value: Vec<u8>) {
-        self.projections.entry(projection.to_owned()).or_default().insert(key.to_owned(), value);
-    }
-
-    async fn get(&self, projection: &str, key: &str) -> Option<Vec<u8>> {
-        self.projections.get(projection).and_then(|entries| entries.get(key)).cloned()
-    }
-
-    async fn list(&self, projection: &str, prefix: &str) -> Vec<(String, Vec<u8>)> {
-        self.projections.get(projection).into_iter().flat_map(|entries| entries.range(prefix.to_owned()..).take_while(|(key, _)| key.starts_with(prefix))).map(|(key, value)| (key.clone(), value.clone())).collect()
-    }
-
-    async fn checkpoint(&self, projection: &str) -> u64 {
-        self.checkpoints.get(projection).copied().unwrap_or(0)
-    }
-
-    async fn set_checkpoint(&mut self, projection: &str, seq: u64) {
-        self.checkpoints.insert(projection.to_owned(), seq);
-    }
-
-    async fn clear(&mut self, projection: &str) {
-        self.projections.remove(projection);
-        self.checkpoints.remove(projection);
-    }
-}
-
-dyn_enum_close! {
-    pub enum ProjectionStores: ProjectionStore {
-        Memory(MemoryProjectionStore),
-    }
-}
 //#endregion 🔖️Projection
 
 //#region 🔖️Blob
@@ -392,58 +278,28 @@ pub fn content_hash(bytes: &[u8]) -> ContentHash {
 /// @emoji 🧱️ Immutable, content-addressed bytes. The caller supplies the hash (see [`content_hash`])
 /// because the address is minted where the content is produced — an upload is verified once, at the
 /// edge, and every later reference is by hash alone. Identical content is stored once.
+/// **Send futures, declared not inferred.** Every method of this port returns
+/// `impl Future<..> + Send` instead of being written `async fn`, and that is structural, not a
+/// style choice: [`ServerState`](crate::gateway::ServerState) reaches this port behind an
+/// instance's associated type, so the concrete future is opaque at the call site and axum's
+/// handler and socket tasks — which are `Send` by construction — cannot otherwise prove it may
+/// cross a thread. An `async fn` here compiles and then fails at every route that uses it. The
+/// implementations stay ordinary `async fn`, which Rust accepts against this signature, and so does
+/// the delegate `dyn_enum_close!` generates for a set of them: the macro emits `async fn .. -> T`
+/// over the future's `Output`, because two match arms cannot unify two distinct opaque futures.
 #[dyn_enum]
 pub trait BlobStore: Send + Sync {
     /// @emoji 💾️ Stores `bytes` under `hash`. Storing identical content again succeeds silently;
     /// binding a hash to different bytes is a [`StorageError::Conflict`].
-    async fn put(&mut self, hash: ContentHash, bytes: &[u8]) -> Result<(), StorageError>;
+    fn put(&mut self, hash: ContentHash, bytes: &[u8]) -> impl Future<Output = Result<(), StorageError>> + Send;
 
     /// @emoji 📦️ The bytes stored under `hash`, if any.
-    async fn get(&self, hash: &ContentHash) -> Option<Vec<u8>>;
+    fn get(&self, hash: &ContentHash) -> impl Future<Output = Option<Vec<u8>>> + Send;
 
     /// @emoji ❓️ Whether `hash` is already stored — the cheap half of an upload negotiation.
-    async fn has(&self, hash: &ContentHash) -> bool;
+    fn has(&self, hash: &ContentHash) -> impl Future<Output = bool> + Send;
 }
 
-/// @emoji 🎒️ Reference in-memory [`BlobStore`], deduplicating by hash.
-#[derive(Debug, Default)]
-pub struct MemoryBlobStore {
-    blobs: HashMap<ContentHash, Vec<u8>>,
-}
-
-impl MemoryBlobStore {
-    /// @emoji 🐤️ An empty blob store.
-    pub fn new() -> Self {
-        Self::default()
-    }
-}
-
-impl BlobStore for MemoryBlobStore {
-    async fn put(&mut self, hash: ContentHash, bytes: &[u8]) -> Result<(), StorageError> {
-        match self.blobs.get(&hash) {
-            Some(existing) if existing.as_slice() == bytes => Ok(()),
-            Some(_) => Err(StorageError::Conflict(format!("content hash {hash} already stores different bytes"))),
-            None => {
-                self.blobs.insert(hash, bytes.to_vec());
-                Ok(())
-            }
-        }
-    }
-
-    async fn get(&self, hash: &ContentHash) -> Option<Vec<u8>> {
-        self.blobs.get(hash).cloned()
-    }
-
-    async fn has(&self, hash: &ContentHash) -> bool {
-        self.blobs.contains_key(hash)
-    }
-}
-
-dyn_enum_close! {
-    pub enum BlobStores: BlobStore {
-        Memory(MemoryBlobStore),
-    }
-}
 //#endregion 🔖️Blob
 
 //#region 🔖️Session
@@ -464,60 +320,42 @@ pub struct SessionRecord {
 
 /// @emoji 🎫️ Live authentication state. Deliberately not event-sourced: a revoked session must
 /// vanish rather than survive as a replayable fact, and revocation must be immediate.
+///
+/// **Every write answers, and here it is a security property.** `create`, `delete` and
+/// `revoke_principal` return a [`StorageError`] on failure rather than `()`/`usize`, because a
+/// revocation the backend could not carry out leaves a key that still opens the door. A caller
+/// told "signed out everywhere" when the store failed to remove the records has been told
+/// something false; it must see the fault and refuse the sign-out instead. Reads stay plain — a
+/// live session set is answered from memory.
+/// **Send futures, declared not inferred.** Every method of this port returns
+/// `impl Future<..> + Send` instead of being written `async fn`, and that is structural, not a
+/// style choice: [`ServerState`](crate::gateway::ServerState) reaches this port behind an
+/// instance's associated type, so the concrete future is opaque at the call site and axum's
+/// handler and socket tasks — which are `Send` by construction — cannot otherwise prove it may
+/// cross a thread. An `async fn` here compiles and then fails at every route that uses it. The
+/// implementations stay ordinary `async fn`, which Rust accepts against this signature, and so does
+/// the delegate `dyn_enum_close!` generates for a set of them: the macro emits `async fn .. -> T`
+/// over the future's `Output`, because two match arms cannot unify two distinct opaque futures.
 #[dyn_enum]
 pub trait SessionStore: Send + Sync {
-    /// @emoji 🆕️ Stores `session`, replacing any record with the same id.
-    async fn create(&mut self, session: SessionRecord);
+    /// @emoji 🆕️ Stores `session`, replacing any record with the same id. A backend that could not
+    /// record it answers [`StorageError::Backend`] and stores nothing, so a caller never hands out
+    /// a session id the store does not hold.
+    fn create(&mut self, session: SessionRecord) -> impl Future<Output = Result<(), StorageError>> + Send;
 
     /// @emoji 🔑️ The session with `id`, if it is still live.
-    async fn get(&self, id: &SessionId) -> Option<SessionRecord>;
+    fn get(&self, id: &SessionId) -> impl Future<Output = Option<SessionRecord>> + Send;
 
-    /// @emoji 🗑️ Removes `id`; a no-op if it is already gone.
-    async fn delete(&mut self, id: &SessionId);
+    /// @emoji 🗑️ Removes `id`; a no-op if it is already gone. A removal the backend refused is a
+    /// [`StorageError::Backend`], never a silent success — the session still opens the door.
+    fn delete(&mut self, id: &SessionId) -> impl Future<Output = Result<(), StorageError>> + Send;
 
     /// @emoji 🚪️ Removes every session of `principal` and returns how many were removed — the
-    /// "sign out everywhere" primitive.
-    async fn revoke_principal(&mut self, principal: &Principal) -> usize;
+    /// "sign out everywhere" primitive. Refusing on the first record it cannot remove is
+    /// deliberate: a partial sign-out reported as a number is indistinguishable from a complete one.
+    fn revoke_principal(&mut self, principal: &Principal) -> impl Future<Output = Result<usize, StorageError>> + Send;
 }
 
-/// @emoji 🗝️ Reference in-memory [`SessionStore`].
-#[derive(Debug, Default)]
-pub struct MemorySessionStore {
-    sessions: HashMap<SessionId, SessionRecord>,
-}
-
-impl MemorySessionStore {
-    /// @emoji 🪺️ An empty session store.
-    pub fn new() -> Self {
-        Self::default()
-    }
-}
-
-impl SessionStore for MemorySessionStore {
-    async fn create(&mut self, session: SessionRecord) {
-        self.sessions.insert(session.id.clone(), session);
-    }
-
-    async fn get(&self, id: &SessionId) -> Option<SessionRecord> {
-        self.sessions.get(id).cloned()
-    }
-
-    async fn delete(&mut self, id: &SessionId) {
-        self.sessions.remove(id);
-    }
-
-    async fn revoke_principal(&mut self, principal: &Principal) -> usize {
-        let before = self.sessions.len();
-        self.sessions.retain(|_, session| &session.principal != principal);
-        before - self.sessions.len()
-    }
-}
-
-dyn_enum_close! {
-    pub enum SessionStores: SessionStore {
-        Memory(MemorySessionStore),
-    }
-}
 //#endregion 🔖️Session
 
 #[cfg(test)]

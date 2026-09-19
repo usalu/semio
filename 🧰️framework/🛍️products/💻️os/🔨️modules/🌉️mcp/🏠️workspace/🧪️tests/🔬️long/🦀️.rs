@@ -1,6 +1,15 @@
 
 use super::*;
 
+/// 🔁 How long this test waits on one `ExternalChanged` poke before poking again. A SINGLE poke is
+/// not enough: `FolderEventLogStorage::read_archive` answering `Some` proves the archive key exists,
+/// not that the agent actor has finished appending this commit's rows to it, so a poke that reaches
+/// the shell actor in that window is consumed against an archive it has already fully ingested — and
+/// nothing ever pokes it again. Re-poking on every idle interval makes the propagation wait converge
+/// on the real disk state instead of on one instant of it, and turns the observed failure mode
+/// (`Status(… remote: Detached)` and then silence to the deadline) into an ordinary retry.
+const EXTERNAL_CHANGE_REPOKE_INTERVAL: std::time::Duration = std::time::Duration::from_millis(250);
+
 fn empty_catalog() -> Arc<Catalog> {
     Arc::new(crate::compile(&crate::CatalogSource::default(), semio_framework::Locale::En, semio_framework::Terminology::Native).expect("empty catalog source compiles"))
 }
@@ -89,13 +98,17 @@ async fn a_headless_commit_propagates_to_a_second_host_on_the_same_folder() {
     let deadline = tokio::time::Instant::now() + std::time::Duration::from_secs(20);
     let mut seen: Vec<String> = Vec::new();
     loop {
-        match tokio::time::timeout_at(deadline, shell_events.recv()).await {
+        match tokio::time::timeout(EXTERNAL_CHANGE_REPOKE_INTERVAL, shell_events.recv()).await {
             Ok(Ok(store::sync::ArtifactEvent::RemoteMutations { envelopes })) if !envelopes.is_empty() => break,
             Ok(Ok(other)) => {
                 seen.push(format!("{other:?}").chars().take(120).collect::<String>());
                 continue;
             }
-            other => panic!("no RemoteMutations before the 20s deadline: {other:?}; saw {seen:?}"),
+            Err(_elapsed) => {
+                assert!(tokio::time::Instant::now() < deadline, "no RemoteMutations before the 20s deadline; saw {seen:?}");
+                shell_host.send("shared-doc", store::sync::ArtifactActorMsg::ExternalChanged).await;
+            }
+            other => panic!("the shell's event channel closed before any RemoteMutations: {other:?}; saw {seen:?}"),
         }
     }
     shell_store.tick().await.expect("shell ingests the propagated edit");
@@ -120,10 +133,14 @@ async fn a_headless_commit_propagates_to_a_second_host_on_the_same_folder() {
     shell_host.send("shared-doc", store::sync::ArtifactActorMsg::ExternalChanged).await;
     let second_deadline = tokio::time::Instant::now() + std::time::Duration::from_secs(20);
     loop {
-        match tokio::time::timeout_at(second_deadline, shell_events.recv()).await {
+        match tokio::time::timeout(EXTERNAL_CHANGE_REPOKE_INTERVAL, shell_events.recv()).await {
             Ok(Ok(store::sync::ArtifactEvent::RemoteMutations { envelopes })) if !envelopes.is_empty() => break,
             Ok(Ok(_other)) => continue,
-            other => panic!("no second RemoteMutations before the 20s deadline: {other:?}"),
+            Err(_elapsed) => {
+                assert!(tokio::time::Instant::now() < second_deadline, "no second RemoteMutations before the 20s deadline");
+                shell_host.send("shared-doc", store::sync::ArtifactActorMsg::ExternalChanged).await;
+            }
+            other => panic!("the shell's event channel closed before the second RemoteMutations: {other:?}"),
         }
     }
     shell_store.tick().await.expect("shell ingests the second propagated edit");

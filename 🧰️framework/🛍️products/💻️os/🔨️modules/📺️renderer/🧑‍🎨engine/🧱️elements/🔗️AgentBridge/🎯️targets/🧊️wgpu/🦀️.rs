@@ -44,6 +44,67 @@ pub fn reconnect_delay_ms(attempt: u32) -> f64 {
 }
 //#endregion 🔖️BridgeVersion
 
+//#region 🔖️Config
+/// 🔗️ Everything needed to dial the gateway — React's `AgentBridgeConfig`, field for field.
+///
+/// 🔒️ `admission_proof` is a PROTECTED in-memory value the local supervisor hands over, never an
+/// environment credential: it travels as the second websocket subprotocol (see
+/// [`bridge_protocols`]), which is what keeps it out of urls, logs and referrers. It is therefore
+/// deliberately not `Debug`-printed and never reaches a `[DEBUG]` line.
+#[derive(Clone, PartialEq, Eq)]
+pub struct AgentBridgeConfig {
+    pub url: String,
+    pub admission_proof: String,
+}
+
+impl std::fmt::Debug for AgentBridgeConfig {
+    /// 🔒️ Prints the url and the LENGTH of the proof, never the proof. A `{config:?}` that leaked
+    /// admission into a console dump would defeat the whole subprotocol arrangement.
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        formatter.debug_struct("AgentBridgeConfig").field("url", &self.url).field("admission_proof_len", &self.admission_proof.len()).finish()
+    }
+}
+
+/// 🚧️ The largest url/proof this shell will carry, so a malformed boot hook cannot hand the door an
+/// unbounded string.
+pub const AGENT_BRIDGE_FIELD_MAX_BYTES: usize = 2048;
+
+impl AgentBridgeConfig {
+    /// ✅️ Admits one config, or refuses it by NAME. A bridge url must be a websocket url: React's
+    /// own `new WebSocket(url, …)` throws on anything else, and a throw at dial time is a worse
+    /// place to find out than a refusal at the door.
+    pub fn admit(url: &str, admission_proof: &str) -> Result<Self, String> {
+        let url = url.trim();
+        if url.is_empty() || admission_proof.is_empty() {
+            return Err("agent bridge config is incomplete".to_string());
+        }
+        if url.len() > AGENT_BRIDGE_FIELD_MAX_BYTES || admission_proof.len() > AGENT_BRIDGE_FIELD_MAX_BYTES {
+            return Err(format!("agent bridge config exceeds {AGENT_BRIDGE_FIELD_MAX_BYTES} bytes"));
+        }
+        if !(url.starts_with("ws://") || url.starts_with("wss://")) {
+            return Err("agent bridge url is not a websocket url".to_string());
+        }
+        Ok(Self { url: url.to_string(), admission_proof: admission_proof.to_string() })
+    }
+}
+
+/// 🔗️ The EXACT ordered websocket subprotocols — React's `bridgeProtocols`, byte for byte. The
+/// first names the frame contract, the second IS the admission proof.
+pub fn bridge_protocols(config: &AgentBridgeConfig) -> [String; 2] {
+    [BRIDGE_SUBPROTOCOL.to_string(), config.admission_proof.clone()]
+}
+
+/// 🔎️ React's `discoverAgentBridgeConfig`, ported including its decision: environment discovery is
+/// deliberately DISABLED, because bridge admission is a protected in-memory value supplied by the
+/// local supervisor, never a Vite/env credential carrier. It answers `None` on both targets, so a
+/// shell with no supervisor stays `Disabled` forever instead of dialling something it guessed — the
+/// same live behaviour React has today. The config arrives through the boot door instead
+/// (`semioWgpuSetAgentBridgeConfig` in the browser, `--agent-bridge-url` natively).
+pub fn discover_agent_bridge_config() -> Option<AgentBridgeConfig> {
+    None
+}
+//#endregion 🔖️Config
+
 //#region 🔖️SharedTypes
 /// 🐚️ Which shell dialled the bridge — the wgpu shell announces `WgpuWeb`/`WgpuNative`, the two
 /// tags the gateway already reserves for it.
@@ -690,6 +751,120 @@ impl AgentBridgeState {
     }
 }
 //#endregion 🔖️State
+
+//#region 🔖️Dialer
+/// 🔌️ What the transport holds right now, as the dialer needs to see it. Deliberately NOT
+/// `AgentBridgeStatus`: that one is the human-facing status React renders (`disabled` while no
+/// config exists at all), this one is the socket's own readiness.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub enum AgentBridgeSocketState {
+    /// 🕳️ Nothing dialled — either never, or the previous socket was retired.
+    #[default]
+    Absent,
+    Connecting,
+    Open,
+    Closed,
+}
+
+/// 🎬️ One finite turn the transport executes. Every one of them is bounded work; none of them
+/// blocks, and `Wait` carries the instant the next dial is due so a caller can report it.
+#[derive(Clone, Debug, PartialEq)]
+pub enum AgentBridgeDialTurn {
+    /// 😴️ Nothing to do this turn.
+    Idle,
+    /// 🔌️ Open a socket at this url with these EXACT ordered subprotocols.
+    Dial { url: String, protocols: [String; 2] },
+    /// 👋️ The socket just reached `open`: announce this shell.
+    Announce,
+    /// 💓️ Keep-alive due.
+    Ping,
+    /// 🧯️ The socket died; retire it before the next dial.
+    Retire,
+    /// ⏱️ A reconnect is armed for this instant.
+    Wait { until_ms: f64 },
+}
+
+/// ⏱️ The transport-free half of React's `useAgentBridge` effect: WHEN to dial, when to announce,
+/// when to ping, and when to back off. Holding it apart from any socket is what makes the whole
+/// reconnect ladder testable on the target the renderer suite runs on, and what lets the browser
+/// door and the native `tokio-tungstenite` half share one policy instead of two that drift.
+#[derive(Clone, Debug, Default)]
+pub struct AgentBridgeDialer {
+    config: Option<AgentBridgeConfig>,
+    reconnect_at_ms: Option<f64>,
+    next_ping_ms: Option<f64>,
+    announced: bool,
+}
+
+impl AgentBridgeDialer {
+    /// 🔗️ Installs (or clears) the config. A NEW config retires whatever was dialled and restarts
+    /// the ladder from zero — React re-runs the whole effect on a `config.url`/`admissionProof`
+    /// change, which is the same thing.
+    pub fn set_config(&mut self, config: Option<AgentBridgeConfig>, state: &mut AgentBridgeState) -> bool {
+        if self.config == config {
+            return false;
+        }
+        self.config = config;
+        self.reconnect_at_ms = None;
+        self.next_ping_ms = None;
+        self.announced = false;
+        state.reconnect_attempt = 0;
+        state.status = if self.config.is_some() { AgentBridgeStatus::Connecting } else { AgentBridgeStatus::Disabled };
+        true
+    }
+
+    pub fn config(&self) -> Option<&AgentBridgeConfig> {
+        self.config.as_ref()
+    }
+
+    pub fn is_armed(&self) -> bool {
+        self.config.is_some()
+    }
+
+    /// 🎬️ One turn. The order is React's own: a dead socket is retired and its backoff armed before
+    /// anything else, an armed backoff is respected, an absent socket is dialled, a freshly opened
+    /// one is announced exactly once, and only a settled open socket pings.
+    pub fn turn(&mut self, state: &mut AgentBridgeState, socket: AgentBridgeSocketState, now_ms: f64) -> AgentBridgeDialTurn {
+        let Some(config) = self.config.clone() else {
+            state.status = AgentBridgeStatus::Disabled;
+            return AgentBridgeDialTurn::Idle;
+        };
+        if matches!(socket, AgentBridgeSocketState::Closed) {
+            self.announced = false;
+            self.next_ping_ms = None;
+            state.note_socket_closed();
+            self.reconnect_at_ms = Some(now_ms + state.reconnect_delay_ms());
+            return AgentBridgeDialTurn::Retire;
+        }
+        if matches!(socket, AgentBridgeSocketState::Absent) {
+            if let Some(until_ms) = self.reconnect_at_ms {
+                if now_ms < until_ms {
+                    state.status = AgentBridgeStatus::Reconnecting;
+                    return AgentBridgeDialTurn::Wait { until_ms };
+                }
+                self.reconnect_at_ms = None;
+            }
+            self.announced = false;
+            state.note_connecting();
+            return AgentBridgeDialTurn::Dial { protocols: bridge_protocols(&config), url: config.url.clone() };
+        }
+        if matches!(socket, AgentBridgeSocketState::Connecting) {
+            state.note_connecting();
+            return AgentBridgeDialTurn::Idle;
+        }
+        if !self.announced {
+            self.announced = true;
+            self.next_ping_ms = Some(now_ms + PING_INTERVAL_MS);
+            return AgentBridgeDialTurn::Announce;
+        }
+        if self.next_ping_ms.is_some_and(|due| now_ms >= due) {
+            self.next_ping_ms = Some(now_ms + PING_INTERVAL_MS);
+            return AgentBridgeDialTurn::Ping;
+        }
+        AgentBridgeDialTurn::Idle
+    }
+}
+//#endregion 🔖️Dialer
 
 //#region 🌐️Labels
 /// 🌐️ This element's own framework-owned copy, resolved without a default language — the same

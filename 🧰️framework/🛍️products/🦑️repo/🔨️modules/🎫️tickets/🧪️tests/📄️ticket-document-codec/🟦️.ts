@@ -39,7 +39,7 @@ function vectors(ctx: AdapterContext): { documents: Document[]; refused: string[
 
 /** 🔮️ Judges one document against `🧬️schema/🔣️.json` with a real draft 2020-12 validator. */
 function validator(ctx: AdapterContext): (value: unknown, source: string) => void {
-  const schema = JSON.parse(readFileSync(ctx.fixture(SCHEMA), "utf8")) as Record<string, unknown>;
+  const schema = JSON.parse(readFileSync(ctx.fixture(SCHEMA), "utf8")) as { readonly $schema?: string; readonly $defs: Readonly<Record<string, unknown>> };
   const ajv = new Ajv2020({ strict: false, allErrors: true });
   const compiled = ajv.compile({ $schema: schema.$schema, $defs: schema.$defs, $ref: "#/$defs/TicketDocument" });
   return (value, source) => {

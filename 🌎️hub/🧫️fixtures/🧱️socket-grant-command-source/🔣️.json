@@ -13,8 +13,8 @@
       "imports": [],
       "rootImports": [
         "localRelayExecutionTargetAsset",
-        "localRelaySpaceArtifactCreationPath",
         "localRelayInferencePath",
+        "localRelaySpaceArtifactCreationPath",
         "localRelayUpstreamPath"
       ],
       "contextChain": [

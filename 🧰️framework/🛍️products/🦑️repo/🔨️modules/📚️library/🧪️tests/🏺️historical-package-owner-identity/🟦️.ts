@@ -6,9 +6,24 @@ import { dirname, join, relative, resolve } from "node:path";
 import Ajv from "ajv";
 import fastGlob from "fast-glob";
 import { findNodeAtLocation, getNodeValue, parseTree } from "jsonc-parser";
-import { clearDiscoveryCache, discoverPackageProblems, loadCatalogTaxonomy, validateFrozenCoordinateEvidenceContracts, type FrozenCoordinateEvidenceContract } from "../../🔍️discovery/🟦️.ts";
+import { clearDiscoveryCache, discoverPackageProblems, loadCatalogTaxonomy, validateFrozenCoordinateEvidenceContracts, type FrozenCoordinateEvidenceContract, type GeneratorContract, type Taxonomy } from "../../🔍️discovery/🟦️.ts";
 import { applyTaxonomyPlan, frozenCoordinateEvidenceCoordinates, inventoryTaxonomy, planTaxonomy } from "../../🧹️normalization/🟦️.ts";
 //#endregion Imports
+
+/** 🧬️ A deeply mutable projection of one frozen contract record, for the `structuredClone`-then-mutate probe below. */
+type Mutable<T> = { -readonly [Key in keyof T]: T[Key] };
+
+/** 🧬️ The frozen taxonomy with exactly the two registries this probe rewrites opened for writing; every other field
+ * keeps its declared shape, so the value stays assignable wherever a `Taxonomy` is expected. */
+type ProbeTaxonomy = Omit<Taxonomy, "generatorContracts" | "frozenCoordinateEvidenceContracts"> & {
+  generatorContracts: Record<string, Mutable<GeneratorContract>>;
+  frozenCoordinateEvidenceContracts: Record<string, Mutable<FrozenCoordinateEvidenceContract>>;
+};
+
+/** 🧬️ A structured deep copy is a fresh object graph, so the copy is safe to mutate even where the source type is frozen. */
+function probeClone(value: Taxonomy): ProbeTaxonomy {
+  return structuredClone(value) as ProbeTaxonomy;
+}
 
 //#region Authority
 const libraryRoot = resolve(import.meta.dir, "../..");
@@ -140,7 +155,7 @@ test("genuine historical census remains unchanged through a scoped Draw transact
   const root = mkdtempSync(join(ticketRoot, "🧪️purity-transaction-"));
   const write = (path: string, bytes: string | Buffer) => { mkdirSync(dirname(join(root, path)), { recursive: true }); writeFileSync(join(root, path), bytes); };
   const git = (args: string[]) => { const run = Bun.spawnSync(["git", ...args], { cwd: root, stdout: "pipe", stderr: "pipe" }); if (run.exitCode) throw new Error(run.stderr.toString()); return run.stdout.toString().trim(); };
-  const taxonomy = structuredClone(loadCatalogTaxonomy());
+  const taxonomy = probeClone(loadCatalogTaxonomy());
   const schemaPath = golden.taxonomy.path;
   const historyPath = relative(repoRoot, goldenPath).replaceAll("\\", "/");
   const catalog = JSON.parse(readFileSync(join(libraryRoot, "🧫️fixtures/📐️cad-draw-path-projection/🔣️.json"), "utf8"));
@@ -167,7 +182,7 @@ test("genuine historical census remains unchanged through a scoped Draw transact
   expect(source.edits.filter((row) => row.path === historyPath)).toHaveLength(0);
   expect(source.edits.filter((row) => row.path === "🔣️neighbor.json")).toHaveLength(1);
   const changed = Buffer.from(JSON.stringify({ ...golden, extraOwner: golden.mappings[29][3] }));
-  const altered = structuredClone(taxonomy);
+  const altered: ProbeTaxonomy = structuredClone(taxonomy);
   altered.frozenCoordinateEvidenceContracts["remaining-package-purity-history-v1"] = { ...altered.frozenCoordinateEvidenceContracts["remaining-package-purity-history-v1"]!, sha256: sha(changed) };
   write(historyPath, changed);
   write(schemaPath, JSON.stringify(altered));

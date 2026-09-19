@@ -105,8 +105,10 @@ fn world_points_json(scene: &RemodelingSnapshot) -> Option<String> {
                 "id": "remodeling-sparse",
                 "positionsB64": PackedF32::from_f32_slice(&sparse.points.to_f32_vec_from(&scene.durable_artifacts)).0,
                 "colorsB64": sparse.colors.as_ref().map(|colors| colors.0.clone()),
+                // 📏️ Screen pixels: the reconstruction is normalised to unit RMS radius, where an
+                // attenuated (world-unit) size drew each point larger than the object.
                 "size": 3.0,
-                "sizeAttenuation": true,
+                "sizeAttenuation": false,
             }));
         }
     }
@@ -117,7 +119,7 @@ fn world_points_json(scene: &RemodelingSnapshot) -> Option<String> {
                 "positionsB64": dense.positions.0,
                 "colorsB64": dense.colors.as_ref().map(|colors| colors.0.clone()),
                 "size": 2.0,
-                "sizeAttenuation": true,
+                "sizeAttenuation": false,
             }));
         }
     }

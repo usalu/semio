@@ -1,6 +1,6 @@
 type TestSource = { readonly directory: string; readonly url: string };
 
-export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: any, source: TestSource): Promise<void> {
+export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: Pick<typeof import("../../🟦️.ts"), "ArtifactBootstrapAssembler" | "artifactBootstrapAggregateHash" | "artifactBootstrapSha256" | "decodeClientFrame" | "decodePresencePeer" | "decodeServerFrame" | "encodeClientFrame" | "encodePresencePeer" | "encodeServerFrame">, source: TestSource): Promise<void> {
   const { ArtifactBootstrapAssembler, artifactBootstrapAggregateHash, artifactBootstrapSha256, decodeClientFrame, decodePresencePeer, decodeServerFrame, encodeClientFrame, encodePresencePeer, encodeServerFrame } = dependencies;
   type ArtifactBootstrapControl = any;
   type ArtifactBootstrapLimits = any;

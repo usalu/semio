@@ -36,6 +36,8 @@ impl protocol::OpBinary for DagViewCommand {
 pub struct DagViewer;
 
 impl ArtifactViewer for DagViewer {
+    /// 🧩️ The same member roster the editor declares — see `DagPlayApp`'s `Members`.
+    type Members = semio_s_artifact_stdio_semio::SemioMembers;
     type Snapshot = DagSnapshot;
     type Mutation = crate::op::DagMutation;
     type Config = NoConfig;
@@ -48,6 +50,10 @@ impl ArtifactViewer for DagViewer {
 
     const DIALECT: Dialect = DAG_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = DAG_DOCUMENT_SCHEMA;
+
+    fn genesis_child_pack(snapshot: &Self::Snapshot, slot: &str, child_id: &str) -> Option<Vec<u8>> {
+        crate::genesis_dag_child_pack(snapshot, slot, child_id)
+    }
 
     fn initial_snapshot() -> DagSnapshot {
         default_snapshot()

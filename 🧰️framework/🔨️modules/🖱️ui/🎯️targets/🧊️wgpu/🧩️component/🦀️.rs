@@ -2035,6 +2035,24 @@ pub mod ui {
         #[value(skip_serializing_if = "Option::is_none")]
         pub accept: Option<String>,
         pub on_change: ActionDescriptor,
+        /// ⏎️ React's `SearchInput.onSubmit` — the line the user CONFIRMS with Enter, dispatched
+        /// through [`ui_contract::Trigger::Submit`]. Distinct from `on_change`, which React fires on
+        /// every keystroke of the same field (`🖥️ui/🎯️targets/⚛️react/🟦️.tsx`'s `Search`: `onChange` →
+        /// `applyDraft`, `onKeyDown` Enter → `input.onSubmit(draft.trim())`), so a command line that
+        /// feeds autocomplete while typing and runs the verb on Enter needs BOTH bound at once.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[value(default, skip_serializing_if = "Option::is_none")]
+        pub on_submit: Option<ActionDescriptor>,
+        /// ⎋️ React's `SearchInput.onAbort` — Escape inside the field cancels the active engagement
+        /// session and hands the line back to the program ([`ui_contract::Trigger::Abort`]).
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[value(default, skip_serializing_if = "Option::is_none")]
+        pub on_abort: Option<ActionDescriptor>,
+        /// 🔁️ React's `SearchInput.onRepeatLast` — Space on an EMPTY idle line restarts the last
+        /// finalized engagement (`applySearchSpaceAction`, [`ui_contract::Trigger::RepeatLast`]).
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[value(default, skip_serializing_if = "Option::is_none")]
+        pub on_repeat_last: Option<ActionDescriptor>,
         #[serde(default, skip_serializing_if = "UiPresence::is_default")]
         #[value(default, skip_serializing_if = "UiPresence::is_default")]
         pub presence: UiPresence,
@@ -2623,7 +2641,7 @@ pub mod ui {
                 max: None,
                 step: None,
                 accept: None,
-                presence: UiPresence::default(),
+                on_submit: None, on_abort: None, on_repeat_last: None, presence: UiPresence::default(),
             })),
             description: None,
             required: None,

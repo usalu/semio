@@ -34,7 +34,6 @@ export default defineConfig({
   test: {
     root: testRoot,
     name: "@semio-tech/framework-replication",
-    mode: "test",
     environment: "node",
     include: [],
     coverage: { include: ["*.ts"] },

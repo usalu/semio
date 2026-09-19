@@ -157,7 +157,7 @@ fn clipboard_paste_requested_reads_the_mocked_clipboard_and_inserts_it_at_the_fo
         step: None,
         accept: None,
         on_change: action("onChange", None),
-        presence: UiPresence::default(),
+        on_submit: None, on_abort: None, on_repeat_last: None, presence: UiPresence::default(),
         menu: None,
     });
     UI_ENGINE.with(|cell| cell.borrow_mut().apply_tree(window_id, &stack_with("root", None, vec![input_node])));
@@ -274,7 +274,7 @@ fn scene_command_dispatches_a_canvas2d_pointer_down_action() {
             surface_id: "s1".into(),
             kind: ui_wgpu::wgpu::SurfaceKind::Canvas2d,
             rect,
-            event: ui_wgpu::wgpu::UiEvent::PointerDown { x: 10.0, y: 10.0, button: ui_wgpu::wgpu::PointerButton::Primary },
+            event: ui_wgpu::wgpu::UiEvent::PointerDown { x: 10.0, y: 10.0, button: ui_wgpu::wgpu::PointerButton::Primary, modifiers: Default::default() },
         }],
         &mut input,
     );
@@ -303,7 +303,7 @@ fn canvas2d_pointer_payload_is_react_shaped_screen_logical_with_a_world_lane() {
             surface_id: "s1".into(),
             kind: ui_wgpu::wgpu::SurfaceKind::Canvas2d,
             rect,
-            event: ui_wgpu::wgpu::UiEvent::PointerDown { x: 50.0, y: 70.0, button: ui_wgpu::wgpu::PointerButton::Primary },
+            event: ui_wgpu::wgpu::UiEvent::PointerDown { x: 50.0, y: 70.0, button: ui_wgpu::wgpu::PointerButton::Primary, modifiers: Default::default() },
         }],
         &mut input,
     );
@@ -338,7 +338,7 @@ fn scene_command_dispatches_an_ink_canvas_scroll_action() {
     let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
 
     apply_ui_commands(
-        &[ui_wgpu::wgpu::UiCommand::Scene { window_id: window_id.into(), node, surface_id: "s1".into(), kind: ui_wgpu::wgpu::SurfaceKind::InkCanvas, rect, event: ui_wgpu::wgpu::UiEvent::Scroll { x: 10.0, y: 10.0, delta_x: 0.0, delta_y: -1.0 } }],
+        &[ui_wgpu::wgpu::UiCommand::Scene { window_id: window_id.into(), node, surface_id: "s1".into(), kind: ui_wgpu::wgpu::SurfaceKind::InkCanvas, rect, event: ui_wgpu::wgpu::UiEvent::Scroll { x: 10.0, y: 10.0, delta_x: 0.0, delta_y: -1.0, modifiers: Default::default() } }],
         &mut input,
     );
 
@@ -353,7 +353,7 @@ fn stale_scene_revision_retires_without_mutation_or_action_publication() {
     let node = seed_scene_window(window_id, "original", ui_wgpu::wgpu::SurfaceKind::Canvas2d);
     let rect = Rect::new(0.0, 0.0, 200.0, 200.0);
     let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
-    apply_scene_ui_command(window_id, node, ui_wgpu::wgpu::SurfaceKind::Canvas2d, rect, &ui_wgpu::wgpu::UiEvent::PointerDown { x: 10.0, y: 10.0, button: ui_wgpu::wgpu::PointerButton::Primary }, &mut input);
+    apply_scene_ui_command(window_id, node, ui_wgpu::wgpu::SurfaceKind::Canvas2d, rect, &ui_wgpu::wgpu::UiEvent::PointerDown { x: 10.0, y: 10.0, button: ui_wgpu::wgpu::PointerButton::Primary, modifiers: Default::default() }, &mut input);
     UI_ENGINE.with(|cell| cell.borrow_mut().apply_tree(window_id, &stack_with("root", None, vec![component_scene_ui("replacement", ui_wgpu::wgpu::SurfaceKind::Canvas2d)])));
 
     assert!(drive_scene_interaction_step(&mut input));
@@ -375,7 +375,7 @@ fn scene_command_skips_bespoke_surface_kinds_to_avoid_double_dispatch() {
             surface_id: "s1".into(),
             kind: ui_wgpu::wgpu::SurfaceKind::NodeGraph,
             rect,
-            event: ui_wgpu::wgpu::UiEvent::PointerDown { x: 10.0, y: 10.0, button: ui_wgpu::wgpu::PointerButton::Primary },
+            event: ui_wgpu::wgpu::UiEvent::PointerDown { x: 10.0, y: 10.0, button: ui_wgpu::wgpu::PointerButton::Primary, modifiers: Default::default() },
         }],
         &mut input,
     );
@@ -417,10 +417,10 @@ fn scene_command_reaches_every_generic_fallback_surface_kind_without_panicking()
         let rect = Rect::new(0.0, 0.0, 200.0, 200.0);
         let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
         let events = [
-            ui_wgpu::wgpu::UiEvent::PointerDown { x: 10.0, y: 10.0, button: ui_wgpu::wgpu::PointerButton::Primary },
-            ui_wgpu::wgpu::UiEvent::PointerMove { x: 12.0, y: 12.0 },
-            ui_wgpu::wgpu::UiEvent::PointerUp { x: 12.0, y: 12.0, button: ui_wgpu::wgpu::PointerButton::Primary },
-            ui_wgpu::wgpu::UiEvent::Scroll { x: 10.0, y: 10.0, delta_x: 0.0, delta_y: 4.0 },
+            ui_wgpu::wgpu::UiEvent::PointerDown { x: 10.0, y: 10.0, button: ui_wgpu::wgpu::PointerButton::Primary, modifiers: Default::default() },
+            ui_wgpu::wgpu::UiEvent::PointerMove { x: 12.0, y: 12.0, modifiers: Default::default() },
+            ui_wgpu::wgpu::UiEvent::PointerUp { x: 12.0, y: 12.0, button: ui_wgpu::wgpu::PointerButton::Primary, modifiers: Default::default() },
+            ui_wgpu::wgpu::UiEvent::Scroll { x: 10.0, y: 10.0, delta_x: 0.0, delta_y: 4.0, modifiers: Default::default() },
         ];
         for event in events {
             apply_ui_commands(&[ui_wgpu::wgpu::UiCommand::Scene { window_id: window_id.clone(), node, surface_id: "s1".into(), kind, rect, event }], &mut input);
@@ -454,7 +454,7 @@ fn scene_command_right_click_on_text_editor_does_not_panic_and_stays_a_graceful_
             surface_id: "s1".into(),
             kind: ui_wgpu::wgpu::SurfaceKind::TextEditor,
             rect,
-            event: ui_wgpu::wgpu::UiEvent::PointerDown { x: 10.0, y: 10.0, button: ui_wgpu::wgpu::PointerButton::Secondary },
+            event: ui_wgpu::wgpu::UiEvent::PointerDown { x: 10.0, y: 10.0, button: ui_wgpu::wgpu::PointerButton::Secondary, modifiers: Default::default() },
         }],
         &mut input,
     );

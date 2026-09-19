@@ -88,6 +88,24 @@
       "cache": true,
       "outputs": []
     },
+    "surface-schema": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry",
+        "command": "bun ./📜️script.ts surface-schema",
+        "forwardAllArgs": true
+      },
+      "cache": false
+    },
+    "surface-schema-check": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry",
+        "command": "bun ./📜️script.ts surface-schema --check"
+      },
+      "cache": true,
+      "outputs": []
+    },
     "new": {
       "executor": "nx:run-commands",
       "options": {

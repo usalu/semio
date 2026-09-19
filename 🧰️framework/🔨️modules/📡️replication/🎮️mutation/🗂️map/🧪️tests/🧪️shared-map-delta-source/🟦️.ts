@@ -50,10 +50,11 @@ export function testSharedMapDeltaOracle(): void {
     parseMapDelta({ entries: [{ key: "key", precondition, operation: { kind: "remove" } }] }),
   ]);
   const outcome = (run: () => unknown): unknown => { try { return { value: run() }; } catch { return { rejected: true }; } };
+  const freshBases = (): Record<string, DslValue>[] => [{}, { key: "old" }, { key: null }];
   for (const a of changes) for (const b of changes) for (const c of changes) {
     assert.deepEqual(composeMapDelta(composeMapDelta(a, b), c), composeMapDelta(a, composeMapDelta(b, c)));
-    for (const base of [{}, { key: "old" }, { key: null }]) {
-      const expected = outcome(() => [...a.entries, ...b.entries, ...c.entries].reduce((state, entry) => patch(entry, state), base as Record<string, DslValue>));
+    for (const base of freshBases()) {
+      const expected = outcome(() => [...a.entries, ...b.entries, ...c.entries].reduce((state, entry) => patch(entry, state), base));
       assert.deepEqual(outcome(() => applyMapDelta(composeMapDelta(composeMapDelta(a, b), c), base)), expected);
     }
   }

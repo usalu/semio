@@ -23,7 +23,7 @@ export async function testBrowserWasiActivation(repoRoot: string): Promise<void>
   const port = { nowNs: () => BigInt(Math.floor(performance.now() * 1e6)), write(_stream: "stdout" | "stderr", bytes: Uint8Array) { writes.push([...bytes]); } };
   const a = createBrowserWasiActivation(port), b = createBrowserWasiActivation(port);
   const aImports = a.imports, bImports = b.imports;
-  const key = (path: string) => `wasi:${path}@0.2.0`;
+  const key = <P extends string>(path: P): `wasi:${P}@0.2.0` => `wasi:${path}@0.2.0`;
   const environment = aImports[key("cli/environment")];
   assert.deepEqual({ environment: environment.getEnvironment(), arguments: environment.getArguments(), cwd: environment.initialCwd() ?? null, terminal: aImports[key("cli/terminal-stdin")].getTerminalStdin() ?? null }, fixture.emptyAmbient);
   assert.notEqual(aImports[key("io/streams")].OutputStream, bImports[key("io/streams")].OutputStream);
@@ -104,7 +104,7 @@ export async function testBrowserWasiActivation(repoRoot: string): Promise<void>
     console.log(JSON.stringify({ writes, ready: [...ready], preview2: 1 }));
   `, join(testSourceDirectory, "🔣️.json"), repoRoot], { cwd: repoRoot, env: process.env, budgetMs: 60_000, maxOutputBytes: 64 * 1024, stdoutPath: join(evidence, "oracle.stdout.json"), stderrPath: join(evidence, "oracle.stderr"), cancelled: () => false });
   assert.equal(oracle.status, 0, oracle.stderr);
-  const hostCalls = [];
+  const hostCalls: Parameters<Parameters<typeof createGuestLogLineSink>[0]>[0][] = [];
   const sink = createGuestLogLineSink((line) => hostCalls.push(line));
   for (const chunk of fixture.lineBuffer.chunks) sink.write("stderr", new TextEncoder().encode(chunk));
   assert.deepEqual(hostCalls, fixture.lineBuffer.hostCalls);

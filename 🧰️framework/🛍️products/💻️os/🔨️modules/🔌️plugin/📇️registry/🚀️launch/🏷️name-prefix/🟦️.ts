@@ -88,12 +88,17 @@ export function playgroundLaunchNamePrefix(playground: PlaygroundEntry, repoRoot
   return combinePluginAndArtifact(pluginDirectoryName, findArtifactFolder(artifactFolders, playground.variant));
 }
 
-/** @emoji ✂️ Keeps fixture/concrete suffixes after the playground-specific prefix in a `3_dev` launch name. */
+/** @emoji ✂️ Keeps the renderer marker and the `👤️<slot>` multi-user discriminator after the
+ * playground-specific prefix in a `3_dev` launch name. The user slot is part of a row's identity
+ * exactly like the renderer is — dropping it collapses the two-user collaboration rows onto the
+ * single-user one. */
 export function devLaunchNameSuffix(name: string): string | undefined {
   const body = name.startsWith("🛠️dev") ? name.slice("🛠️dev".length) : name;
   for (const marker of ["⚛️react", "🧊️wgpu🌐️wasm", "🧊️wgpu🖥️native"]) {
     const index = body.indexOf(marker);
-    if (index !== -1) return body.slice(index);
+    if (index === -1) continue;
+    const slot = body.slice(0, index).match(/👤️\d+$/);
+    return slot ? `${slot[0]}${body.slice(index)}` : body.slice(index);
   }
   return undefined;
 }
@@ -111,9 +116,13 @@ export function devLaunchVariantFromCommand(command: string | undefined, playgro
   return undefined;
 }
 
-/** @emoji 🔄 Rewrites `3_dev` launch names whose command maps to a playground row so emojis match taxonomy folders. */
+/** @emoji 🔄 Rewrites `3_dev` launch names whose command maps to a playground row so emojis match
+ * taxonomy folders. A rename that would land on a name another row already carries is skipped: a
+ * fixture row (`…🧩️concrete🌲️forest⚛️react`) normalizes onto its own plain sibling, and a stale-emoji
+ * name a dev can still tell apart beats two indistinguishable rows in the Run panel. */
 export function normalizeDevLaunchConfigurationNames(configurations: readonly object[], playgrounds: readonly PlaygroundEntry[], repoRoot: string): object[] {
   const byVariant = new Map(playgrounds.map((row) => [row.variant, row]));
+  const taken = new Set((configurations as readonly { readonly name?: string }[]).map((entry) => entry.name).filter((name): name is string => name !== undefined));
   return configurations.map((entry) => {
     const config = entry as { readonly name?: string; readonly command?: string; readonly presentation?: { readonly group?: string } };
     if (config.presentation?.group !== "3_dev" || !config.name?.startsWith("🛠️dev")) return entry;
@@ -125,7 +134,9 @@ export function normalizeDevLaunchConfigurationNames(configurations: readonly ob
     if (!suffix) return entry;
     const prefix = playgroundLaunchNamePrefix(playground, repoRoot, playgrounds);
     const name = `🛠️dev${prefix}${suffix}`;
-    if (name === config.name) return entry;
+    if (name === config.name || taken.has(name)) return entry;
+    taken.delete(config.name);
+    taken.add(name);
     return { ...(entry as Record<string, unknown>), name };
   });
 }

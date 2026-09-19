@@ -2669,7 +2669,7 @@ export type DependencyRatchet = Readonly<{ ok: boolean; newProduction: readonly 
  * a new test dependency is only permitted when an oracle registry entry claims it, and removing
  * dependencies always passes.
  */
-export function ratchetDependencies(baseline: readonly ClassifiedDependency[], candidate: readonly ClassifiedDependency[], registry: OracleRegistry): DependencyRatchet {
+export function ratchetDependencies(baseline: readonly ClassifiedDependency[], candidate: readonly ClassifiedDependency[], registry: Pick<OracleRegistry, "oracles">): DependencyRatchet {
   const key = (entry: ClassifiedDependency): string => `${entry.ecosystem}:${entry.name}`;
   const baselineKeys = new Set(baseline.map(key));
   const candidateKeys = new Set(candidate.map(key));
@@ -7300,7 +7300,7 @@ export function measureCoverage(registry: OracleRegistry, rows: readonly Coverag
   const runtimeMissing = [...runtimeIds.filter((id) => !owned.has(id)), ...uninventoried];
   const wildcards = manifestMutations.filter(({ manifest, mutation }) => isWildcardSubsetFor(repoRoot, manifest.artifact, manifest.standard, owningSubsetOf(manifest, mutation))).map(({ manifest, mutation }) => `${manifest.artifact}::${mutation.id}`);
   const withoutOracle = manifestMutations
-    .filter(({ mutation }) => !mutation.oracleRequirements.every((requirement) => registry.oracles.some((oracle) => isQualifyingOracleKind(oracle.kind) && oracle.capabilities.includes(requirement.capability) && (requirement.oracle === undefined || oracle.id === requirement.oracle))))
+    .filter(({ mutation }) => !mutation.oracleRequirements.every((requirement) => registry.oracles.some((oracle) => isQualifyingOracleKind(oracle.kind) && oracle.capabilities.includes(requirement.capability))))
     .map(({ manifest, mutation }) => `${manifest.artifact}::${mutation.id}`);
   const fixtureSubsets = new Set(registry.contributions.flatMap((contribution) => contribution.fixtureManifests).filter((fixture) => fixture?.target?.artifact !== undefined).map((fixture) => `${fixture.target.artifact}@${fixture.target.standard}/${fixture.target.subset}`));
   // 🧪️EVIDENCE IS THE CONJUNCTION, not the fixture alone. Counting only "a fixture targets this subset"

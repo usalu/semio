@@ -32,7 +32,7 @@ export function testArtifactFieldParityOracle(): void {
     );
   }
   for (const row of fixture.typescriptModules) {
-    const files: Record<string, string> = row.files;
+    const files: Record<string, string | undefined> = row.files;
     const host = ts.createCompilerHost({ noLib: true });
     host.getSourceFile = (name, languageVersion) => (files[name] === undefined ? undefined : ts.createSourceFile(name, files[name], languageVersion, true));
     host.fileExists = (name) => files[name] !== undefined;

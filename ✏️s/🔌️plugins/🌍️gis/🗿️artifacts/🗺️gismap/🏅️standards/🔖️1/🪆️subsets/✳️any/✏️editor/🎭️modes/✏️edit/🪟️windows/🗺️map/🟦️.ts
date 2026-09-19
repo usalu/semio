@@ -3,7 +3,7 @@
  * kind/body/surface ids the manifest and host both address this window by. */
 
 /** 🧮️ Mirror of `MapWindowConfig`'s per-window-relevant fields — the editor's own session view state
- * (`⚙️config/🦀️.rs`), owned by each concrete Map window instance. */
+ * (`🎚️config/🦀️.rs`), owned by each concrete Map window instance. */
 export interface Gis2dMapWindowViewModel {
   windowKindId: "gis2d-main";
   bodyKey: "gis2d.play.composite";
@@ -20,8 +20,8 @@ export interface Gis2dMapWindowViewModel {
 export const GIS2D_PLAY_WINDOW_MAIN = "gis2d-main" as const;
 export const GIS2D_PLAY_BODY_COMPOSITE = "gis2d.play.composite" as const;
 
-export * as vectorStyleOption from "./🎚️options/🎨️vector-style/🟦️";
-export * as layersOption from "./🎚️options/👁️layers/🟦️";
-export * as layerWeightsOption from "./🎚️options/📏️layer-weights/🟦️";
-export * as lodModeOption from "./🎚️options/🔽️lod-mode/🟦️";
-export * as renderModeOption from "./🎚️options/🖼️render-mode/🟦️";
+export * as vectorStyleOption from "./☑️options/🎨️vector-style/🟦️";
+export * as layersOption from "./☑️options/👁️layers/🟦️";
+export * as layerWeightsOption from "./☑️options/📏️layer-weights/🟦️";
+export * as lodModeOption from "./☑️options/🔽️lod-mode/🟦️";
+export * as renderModeOption from "./☑️options/🖼️render-mode/🟦️";

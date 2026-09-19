@@ -1,12 +1,12 @@
 use std::{cell::RefCell, rc::Rc};
 
 use semio_framework::kernel::{
-    ActorInstanceLifetime, ColdArtifactPairApplied, ColdArtifactPairCursor, ColdArtifactPairHeader, ColdArtifactPairPage, ColdPairIngressStatus, COLD_PAIR_MAXIMUM_BYTES, COLD_PAIR_MAXIMUM_PAGES, COLD_PAIR_PAGE_MAXIMUM_BYTES,
+    ActorInstanceLifetime, ColdDocumentPairApplied, ColdDocumentPairCursor, ColdDocumentPairHeader, ColdDocumentPairPage, ColdPairIngressStatus, COLD_PAIR_MAXIMUM_BYTES, COLD_PAIR_MAXIMUM_PAGES, COLD_PAIR_PAGE_MAXIMUM_BYTES,
 };
 
 const COLD_PAIR_FAULT_MAXIMUM_BYTES: usize = 4 * 1024;
 
-enum ColdArtifactPairPhase {
+enum ColdDocumentPairPhase {
     Receiving,
     Verified,
     Loading,
@@ -15,8 +15,8 @@ enum ColdArtifactPairPhase {
     Closing,
 }
 
-struct ColdArtifactPairOwner {
-    header: ColdArtifactPairHeader,
+struct ColdDocumentPairOwner {
+    header: ColdDocumentPairHeader,
     files: Rc<store::ArtifactPackFiles>,
     pack_hash: semio_framework_hash::Sha256,
     spr_hash: semio_framework_hash::Sha256,
@@ -24,11 +24,11 @@ struct ColdArtifactPairOwner {
     reserved_bytes: usize,
     reserved_pages: u32,
     next_page: u32,
-    phase: ColdArtifactPairPhase,
+    phase: ColdDocumentPairPhase,
 }
 
-impl ColdArtifactPairOwner {
-    fn reserve(header: ColdArtifactPairHeader) -> Result<Self, &'static str> {
+impl ColdDocumentPairOwner {
+    fn reserve(header: ColdDocumentPairHeader) -> Result<Self, &'static str> {
         header.validate()?;
         let pack_length = usize::try_from(header.pack_length).map_err(|_| "cold-pair.length")?;
         let spr_length = usize::try_from(header.spr_length).map_err(|_| "cold-pair.length")?;
@@ -47,12 +47,12 @@ impl ColdArtifactPairOwner {
             reserved_bytes,
             reserved_pages,
             next_page: 0,
-            phase: ColdArtifactPairPhase::Receiving,
+            phase: ColdDocumentPairPhase::Receiving,
         })
     }
 
-    fn accept(&mut self, page: &ColdArtifactPairPage) -> Result<bool, &'static str> {
-        if !matches!(self.phase, ColdArtifactPairPhase::Receiving) || page.header != self.header || page.page_index != self.next_page {
+    fn accept(&mut self, page: &ColdDocumentPairPage) -> Result<bool, &'static str> {
+        if !matches!(self.phase, ColdDocumentPairPhase::Receiving) || page.header != self.header || page.page_index != self.next_page {
             return Err("cold-pair.cursor");
         }
         if page.bytes.len() != self.header.page_length(page.page_index)? {
@@ -77,11 +77,11 @@ impl ColdArtifactPairOwner {
             && self.pack_hash.clone().finalize() == self.header.pack_sha256
             && self.spr_hash.clone().finalize() == self.header.spr_sha256
             && self.aggregate_hash.clone().finalize() == self.header.aggregate_sha256;
-        self.phase = if verified { ColdArtifactPairPhase::Verified } else { ColdArtifactPairPhase::Faulted };
+        self.phase = if verified { ColdDocumentPairPhase::Verified } else { ColdDocumentPairPhase::Faulted };
         verified
     }
 
-    fn cursor(&self) -> ColdArtifactPairCursor {
+    fn cursor(&self) -> ColdDocumentPairCursor {
         self.header.cursor(self.next_page.saturating_sub(1).min(self.header.page_count - 1))
     }
 
@@ -90,10 +90,10 @@ impl ColdArtifactPairOwner {
         self.files.pack.len() + self.files.spr.len()
     }
 
-    fn close_step(&mut self) -> ColdArtifactPairCloseStep {
-        self.phase = ColdArtifactPairPhase::Closing;
+    fn close_step(&mut self) -> ColdDocumentPairCloseStep {
+        self.phase = ColdDocumentPairPhase::Closing;
         let Some(files) = Rc::get_mut(&mut self.files) else {
-            return ColdArtifactPairCloseStep { wiped_bytes: 0, closed: false };
+            return ColdDocumentPairCloseStep { wiped_bytes: 0, closed: false };
         };
         let mut remaining = COLD_PAIR_PAGE_MAXIMUM_BYTES;
         let spr_count = remaining.min(files.spr.len());
@@ -110,17 +110,17 @@ impl ColdArtifactPairOwner {
             files.pack.truncate(start);
         }
         files.ops.clear();
-        ColdArtifactPairCloseStep { wiped_bytes: spr_count + pack_count, closed: files.pack.is_empty() && files.spr.is_empty() }
+        ColdDocumentPairCloseStep { wiped_bytes: spr_count + pack_count, closed: files.pack.is_empty() && files.spr.is_empty() }
     }
 }
 
-pub(crate) struct ColdArtifactPairLoad {
-    owner: Rc<RefCell<ColdArtifactPairOwner>>,
+pub(crate) struct ColdDocumentPairLoad {
+    owner: Rc<RefCell<ColdDocumentPairOwner>>,
     files: Rc<store::ArtifactPackFiles>,
     finished: bool,
 }
 
-impl ColdArtifactPairLoad {
+impl ColdDocumentPairLoad {
     #[cfg(test)]
     pub(crate) fn lifetime(&self) -> ActorInstanceLifetime {
         self.owner.borrow().header.lifetime
@@ -131,39 +131,39 @@ impl ColdArtifactPairLoad {
     }
 }
 
-impl Drop for ColdArtifactPairLoad {
+impl Drop for ColdDocumentPairLoad {
     fn drop(&mut self) {
         if !self.finished {
             let mut owner = self.owner.borrow_mut();
-            if matches!(owner.phase, ColdArtifactPairPhase::Loading) {
-                owner.phase = ColdArtifactPairPhase::Faulted;
+            if matches!(owner.phase, ColdDocumentPairPhase::Loading) {
+                owner.phase = ColdDocumentPairPhase::Faulted;
             }
         }
     }
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(crate) struct ColdArtifactPairCloseStep {
+pub(crate) struct ColdDocumentPairCloseStep {
     pub(crate) wiped_bytes: usize,
     pub(crate) closed: bool,
 }
 
-pub(crate) struct ColdArtifactPairIngressRegistry<const N: usize> {
-    slots: [Option<Rc<RefCell<ColdArtifactPairOwner>>>; N],
-    closes: [Option<ColdArtifactPairCloseState>; N],
+pub(crate) struct ColdDocumentPairIngressRegistry<const N: usize> {
+    slots: [Option<Rc<RefCell<ColdDocumentPairOwner>>>; N],
+    closes: [Option<ColdDocumentPairCloseState>; N],
     reserved_bytes: usize,
     reserved_pages: u32,
     close_cursor: usize,
 }
 
 #[derive(Clone, Copy)]
-struct ColdArtifactPairCloseState {
+struct ColdDocumentPairCloseState {
     key: super::instance_lifetime::NativeCloseKey,
     active: bool,
     complete: bool,
 }
 
-impl<const N: usize> ColdArtifactPairIngressRegistry<N> {
+impl<const N: usize> ColdDocumentPairIngressRegistry<N> {
     pub(crate) fn new() -> Self {
         assert!(N > 0, "cold pair ingress requires fixed capacity");
         Self { slots: std::array::from_fn(|_| None), closes: [None; N], reserved_bytes: 0, reserved_pages: 0, close_cursor: 0 }
@@ -173,11 +173,11 @@ impl<const N: usize> ColdArtifactPairIngressRegistry<N> {
         lifetime.instance_id as usize % N
     }
 
-    fn fault(cursor: ColdArtifactPairCursor, code: &'static str) -> ColdPairIngressStatus {
+    fn fault(cursor: ColdDocumentPairCursor, code: &'static str) -> ColdPairIngressStatus {
         ColdPairIngressStatus::Fault { cursor, fault: code.as_bytes()[..code.len().min(COLD_PAIR_FAULT_MAXIMUM_BYTES)].to_vec() }
     }
 
-    pub(crate) fn accept_page(&mut self, page: &ColdArtifactPairPage, live: Option<ActorInstanceLifetime>) -> ColdPairIngressStatus {
+    pub(crate) fn accept_page(&mut self, page: &ColdDocumentPairPage, live: Option<ActorInstanceLifetime>) -> ColdPairIngressStatus {
         let cursor = page.header.cursor(page.page_index);
         if let Err(code) = page.header.validate() {
             return Self::fault(cursor, code);
@@ -208,7 +208,7 @@ impl<const N: usize> ColdArtifactPairIngressRegistry<N> {
             if self.reserved_bytes.checked_add(declared_bytes).is_none_or(|reserved| reserved > COLD_PAIR_MAXIMUM_BYTES) || self.reserved_pages.checked_add(page.header.page_count).is_none_or(|reserved| reserved > COLD_PAIR_MAXIMUM_PAGES) {
                 return Self::fault(cursor, "cold-pair.capacity");
             }
-            let owner = match ColdArtifactPairOwner::reserve(page.header.clone()) {
+            let owner = match ColdDocumentPairOwner::reserve(page.header.clone()) {
                 Ok(owner) => Rc::new(RefCell::new(owner)),
                 Err(code) => return Self::fault(cursor, code),
             };
@@ -231,7 +231,7 @@ impl<const N: usize> ColdArtifactPairIngressRegistry<N> {
             owner
         };
         let mut owner = owner.borrow_mut();
-        if !matches!(owner.phase, ColdArtifactPairPhase::Receiving) {
+        if !matches!(owner.phase, ColdDocumentPairPhase::Receiving) {
             return ColdPairIngressStatus::Backpressure(owner.cursor());
         }
         let terminal = match owner.accept(page) {
@@ -247,7 +247,7 @@ impl<const N: usize> ColdArtifactPairIngressRegistry<N> {
         ColdPairIngressStatus::Loading(cursor)
     }
 
-    pub(crate) fn begin_load(&mut self, lifetime: ActorInstanceLifetime, transfer_generation: u64, live: Option<ActorInstanceLifetime>) -> Option<ColdArtifactPairLoad> {
+    pub(crate) fn begin_load(&mut self, lifetime: ActorInstanceLifetime, transfer_generation: u64, live: Option<ActorInstanceLifetime>) -> Option<ColdDocumentPairLoad> {
         if live != Some(lifetime) {
             return None;
         }
@@ -257,37 +257,37 @@ impl<const N: usize> ColdArtifactPairIngressRegistry<N> {
         let owner = Rc::clone(self.slots[Self::slot_index(lifetime)].as_ref()?);
         let files = {
             let mut state = owner.borrow_mut();
-            if state.header.lifetime != lifetime || state.header.transfer_generation != transfer_generation || !matches!(state.phase, ColdArtifactPairPhase::Verified) {
+            if state.header.lifetime != lifetime || state.header.transfer_generation != transfer_generation || !matches!(state.phase, ColdDocumentPairPhase::Verified) {
                 return None;
             }
-            state.phase = ColdArtifactPairPhase::Loading;
+            state.phase = ColdDocumentPairPhase::Loading;
             Rc::clone(&state.files)
         };
-        Some(ColdArtifactPairLoad { owner, files, finished: false })
+        Some(ColdDocumentPairLoad { owner, files, finished: false })
     }
 
-    pub(crate) fn finish_load(&mut self, mut load: ColdArtifactPairLoad, result: Result<(), Vec<u8>>, live: Option<ActorInstanceLifetime>) -> ColdPairIngressStatus {
+    pub(crate) fn finish_load(&mut self, mut load: ColdDocumentPairLoad, result: Result<(), Vec<u8>>, live: Option<ActorInstanceLifetime>) -> ColdPairIngressStatus {
         let header = load.owner.borrow().header.clone();
         let cursor = header.cursor(header.page_count - 1);
         let index = Self::slot_index(header.lifetime);
-        if self.slots[index].as_ref().is_none_or(|owner| !Rc::ptr_eq(owner, &load.owner)) || !matches!(load.owner.borrow().phase, ColdArtifactPairPhase::Loading) {
+        if self.slots[index].as_ref().is_none_or(|owner| !Rc::ptr_eq(owner, &load.owner)) || !matches!(load.owner.borrow().phase, ColdDocumentPairPhase::Loading) {
             load.finished = true;
             return Self::fault(cursor, "cold-pair.stale-load");
         }
         if live != Some(header.lifetime) {
-            load.owner.borrow_mut().phase = ColdArtifactPairPhase::Closing;
+            load.owner.borrow_mut().phase = ColdDocumentPairPhase::Closing;
             load.finished = true;
             return Self::fault(cursor, "cold-pair.not-live");
         }
         let status = match result {
             Ok(()) => {
-                let receipt = ColdArtifactPairApplied { lifetime: header.lifetime, transfer_generation: header.transfer_generation, baseline_frontier: header.baseline_frontier.clone(), aggregate_sha256: header.aggregate_sha256 };
-                load.owner.borrow_mut().phase = ColdArtifactPairPhase::Applied;
+                let receipt = ColdDocumentPairApplied { lifetime: header.lifetime, transfer_generation: header.transfer_generation, baseline_frontier: header.baseline_frontier.clone(), aggregate_sha256: header.aggregate_sha256 };
+                load.owner.borrow_mut().phase = ColdDocumentPairPhase::Applied;
                 ColdPairIngressStatus::Applied(receipt)
             }
             Err(mut fault) => {
                 fault.truncate(COLD_PAIR_FAULT_MAXIMUM_BYTES);
-                load.owner.borrow_mut().phase = ColdArtifactPairPhase::Faulted;
+                load.owner.borrow_mut().phase = ColdDocumentPairPhase::Faulted;
                 ColdPairIngressStatus::Fault { cursor, fault }
             }
         };
@@ -303,7 +303,7 @@ impl<const N: usize> ColdArtifactPairIngressRegistry<N> {
         if owner.borrow().header.lifetime != lifetime {
             return false;
         }
-        owner.borrow_mut().phase = ColdArtifactPairPhase::Closing;
+        owner.borrow_mut().phase = ColdDocumentPairPhase::Closing;
         true
     }
 
@@ -322,7 +322,7 @@ impl<const N: usize> ColdArtifactPairIngressRegistry<N> {
         self.preflight_close_instance(key)?;
         let index = Self::slot_index(key.lifetime());
         if self.closes[index].is_none() {
-            self.closes[index] = Some(ColdArtifactPairCloseState { key, active: false, complete: false });
+            self.closes[index] = Some(ColdDocumentPairCloseState { key, active: false, complete: false });
         }
         Ok(())
     }
@@ -335,7 +335,7 @@ impl<const N: usize> ColdArtifactPairIngressRegistry<N> {
             if owner.borrow().header.lifetime != key.lifetime() {
                 return Err("cold pair close lifetime changed");
             }
-            owner.borrow_mut().phase = ColdArtifactPairPhase::Closing;
+            owner.borrow_mut().phase = ColdDocumentPairPhase::Closing;
         }
         Ok(())
     }
@@ -364,13 +364,13 @@ impl<const N: usize> ColdArtifactPairIngressRegistry<N> {
         Ok(())
     }
 
-    pub(crate) fn close_step(&mut self, lifetime: ActorInstanceLifetime) -> ColdArtifactPairCloseStep {
+    pub(crate) fn close_step(&mut self, lifetime: ActorInstanceLifetime) -> ColdDocumentPairCloseStep {
         let index = Self::slot_index(lifetime);
         let Some(owner) = self.slots[index].as_ref().cloned() else {
-            return ColdArtifactPairCloseStep { wiped_bytes: 0, closed: true };
+            return ColdDocumentPairCloseStep { wiped_bytes: 0, closed: true };
         };
         if owner.borrow().header.lifetime != lifetime {
-            return ColdArtifactPairCloseStep { wiped_bytes: 0, closed: false };
+            return ColdDocumentPairCloseStep { wiped_bytes: 0, closed: false };
         }
         let step = owner.borrow_mut().close_step();
         if step.closed {
@@ -399,12 +399,12 @@ impl<const N: usize> ColdArtifactPairIngressRegistry<N> {
     fn is_applied(&self, lifetime: ActorInstanceLifetime) -> bool {
         self.slots[Self::slot_index(lifetime)].as_ref().is_some_and(|owner| {
             let owner = owner.borrow();
-            owner.header.lifetime == lifetime && matches!(owner.phase, ColdArtifactPairPhase::Applied)
+            owner.header.lifetime == lifetime && matches!(owner.phase, ColdDocumentPairPhase::Applied)
         })
     }
 }
 
-impl<const N: usize> Drop for ColdArtifactPairIngressRegistry<N> {
+impl<const N: usize> Drop for ColdDocumentPairIngressRegistry<N> {
     fn drop(&mut self) {
         assert!(self.slots.iter().all(Option::is_none) && self.closes.iter().all(Option::is_none) && self.reserved_bytes == 0 && self.reserved_pages == 0, "cold pair ingress requires bounded terminal close before teardown");
     }

@@ -988,7 +988,7 @@ impl CommandBatchDriver {
     }
 
     pub fn observe(&mut self, status: &CommandIngressStatus, maximum_release_bytes: usize) -> Result<CommandBatchProgress, crate::Fault> {
-        let cursor = match status {
+        let (cursor, shape) = match status {
             CommandIngressStatus::Idle => {
                 return Ok(if self.batch.commands.is_empty() {
                     CommandBatchProgress::Complete
@@ -1000,10 +1000,11 @@ impl CommandBatchDriver {
                     CommandBatchProgress::PageReady
                 });
             }
-            CommandIngressStatus::PageAccepted(cursor) | CommandIngressStatus::Backpressure(cursor) | CommandIngressStatus::CommandPending(cursor) | CommandIngressStatus::CommandComplete(cursor) => cursor,
-            CommandIngressStatus::Fault { cursor, .. } => cursor,
+            CommandIngressStatus::PageAccepted(cursor) | CommandIngressStatus::Backpressure(cursor) => (cursor, CursorShape::Page),
+            CommandIngressStatus::CommandPending(cursor) | CommandIngressStatus::CommandComplete(cursor) => (cursor, CursorShape::Terminal),
+            CommandIngressStatus::Fault { cursor, .. } => (cursor, CursorShape::Fault),
         };
-        self.validate_cursor(cursor)?;
+        self.validate_cursor(cursor, shape)?;
         match status {
             CommandIngressStatus::Backpressure(_) => Ok(CommandBatchProgress::PageReady),
             CommandIngressStatus::PageAccepted(_) => {
@@ -1040,8 +1041,22 @@ impl CommandBatchDriver {
                 let Some(command) = self.batch.commands.front() else {
                     return Err(crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.command-owner-missing"), "terminal command has no exact host owner"));
                 };
-                if command.remaining_pages != 0 {
+                if command.remaining_pages > 1 {
                     return Err(crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.command-terminal-pages"), "terminal acknowledgement arrived before every exact page was released"));
+                }
+                if command.remaining_pages == 1 {
+                    let page_len = self
+                        .batch
+                        .pages
+                        .front()
+                        .map(FixedCommandPage::len)
+                        .ok_or_else(|| crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.command-owner-missing"), "terminal command has no exact retained batch page"))?;
+                    if page_len > maximum_release_bytes {
+                        return Err(crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.command-release-budget"), "terminal page exceeds its exact release grant"));
+                    }
+                    let page = self.batch.pages.pop_front().expect("terminal retained batch page was present");
+                    self.batch.bytes -= page.len();
+                    drop(page);
                 }
                 let _terminal = self.batch.commands.pop_front().expect("terminal command was present");
                 self.command_index = self.command_index.saturating_add(1);
@@ -1111,22 +1126,53 @@ impl CommandBatchDriver {
         self.batch.bytes
     }
 
-    fn validate_cursor(&self, cursor: &CommandPageCursor) -> Result<(), crate::Fault> {
+    /// 🎯️ A terminal status carries `last_page_index + 1`, and a guest that consumed a command's LAST
+    /// page and ran it to completion inside ONE turn publishes only that terminal — the per-page
+    /// `PageAccepted` the host would otherwise have stepped through never exists. (`⚛️reactor/🔄️turn`'s
+    /// single-page fast path does exactly this for every `page_count == 1` command, i.e. every ordinary
+    /// mutation.) So a terminal cursor is validated against `page_index + remaining_pages`, which is
+    /// the same number in both shapes, and a fault's cursor is accepted at either end of that range —
+    /// a fault must attribute itself to its owner, never be replaced by a cursor complaint that hides
+    /// the guest's own message (ticket 26/09/18 slice A2).
+    fn validate_cursor(&self, cursor: &CommandPageCursor, shape: CursorShape) -> Result<(), crate::Fault> {
         let Some(command) = self.batch.commands.front() else {
             return Err(crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.command-owner-missing"), "ingress status has no exact host owner"));
         };
-        if cursor.owner != self.owner
-            || cursor.generation != self.batch.generation
-            || cursor.command_index != self.command_index
-            || cursor.instance != command.instance
-            || cursor.seq != command.seq
-            || cursor.kind != self.admitted_kind
-            || cursor.page_index != self.page_index
-            || cursor.page_count != self.admitted_page_count
-            || cursor.item_count != command.item_count
-            || cursor.metadata != command.metadata
-        {
-            return Err(crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.command-cursor-mismatch"), "ingress status does not identify the exact retained host owner"));
+        let terminal_page_index = self.page_index.saturating_add(command.remaining_pages);
+        let page_index_matches = match shape {
+            CursorShape::Page => cursor.page_index == self.page_index,
+            CursorShape::Terminal => cursor.page_index == terminal_page_index,
+            CursorShape::Fault => cursor.page_index == self.page_index || cursor.page_index == terminal_page_index,
+        };
+        let mismatch = if cursor.owner != self.owner {
+            Some(("owner", u64::from(cursor.owner), self.owner))
+        } else if cursor.generation != self.batch.generation {
+            Some(("generation", cursor.generation, self.batch.generation))
+        } else if cursor.command_index != self.command_index {
+            Some(("commandIndex", u64::from(cursor.command_index), u64::from(self.command_index)))
+        } else if cursor.instance != command.instance {
+            Some(("instance", u64::from(cursor.instance), u64::from(command.instance)))
+        } else if cursor.seq != command.seq {
+            Some(("seq", cursor.seq, command.seq))
+        } else if cursor.kind != self.admitted_kind {
+            Some(("kind", u64::from(cursor.kind), u64::from(self.admitted_kind)))
+        } else if !page_index_matches {
+            Some(("pageIndex", u64::from(cursor.page_index), u64::from(if matches!(shape, CursorShape::Page) { self.page_index } else { terminal_page_index })))
+        } else if cursor.page_count != self.admitted_page_count {
+            Some(("pageCount", u64::from(cursor.page_count), u64::from(self.admitted_page_count)))
+        } else if cursor.item_count != command.item_count {
+            Some(("itemCount", u64::from(cursor.item_count), u64::from(command.item_count)))
+        } else if cursor.metadata != command.metadata {
+            Some(("metadata", u64::from(cursor.metadata), u64::from(command.metadata)))
+        } else {
+            None
+        };
+        if let Some((field, reported, expected)) = mismatch {
+            return Err(crate::Fault::new(
+                crate::FaultOrigin::Framework,
+                crate::FaultCode::new("plugin.command-cursor-mismatch"),
+                format!("ingress status does not identify the exact retained host owner: {field} is {reported}, the retained owner's is {expected}"),
+            ));
         }
         Ok(())
     }
@@ -1328,6 +1374,11 @@ impl PresenceCommandCursor {
 
 //#region 🔖️PagedAppCommandDecode
 const APP_COMMAND_FIELD_MAXIMUM_BYTES: usize = COMMAND_MAXIMUM_BYTES;
+
+/// 🧮️ `AppCommand::PureCommand`'s seven byte fields, in `encode_app_command`'s own order: `command`,
+/// then the `document`/`config`/`draft` pack+spr pairs. One field per retained decode step, so a
+/// mutation's payload never costs more than one bounded read per host turn.
+const PURE_COMMAND_FIELDS: usize = 7;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum DocumentArchiveDecodePhase {
@@ -1602,6 +1653,7 @@ enum PagedAppCommandDecodeState {
     LoadWindowConfigKind { seq: u64, window_id: Option<String> },
     LoadWindowConfigPack { seq: u64, window_id: Option<String>, window_kind_id: Option<String> },
     ReadWindowConfigs { seq: u64 },
+    PureCommandFields { seq: u64, fields: Vec<Vec<u8>> },
     ReadDocumentArchive { seq: u64 },
     LoadDocumentArchive { seq: u64, decode: PagedDocumentArchiveDecode },
     DocumentArchiveOperation { seq: u64, kind: u8 },
@@ -1690,6 +1742,14 @@ impl DecodedAppCommandOwner {
     }
 }
 
+/// 🧭️ Which page index an ingress cursor is expected to carry — see `validate_cursor`.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum CursorShape {
+    Page,
+    Terminal,
+    Fault,
+}
+
 impl PagedAppCommandDecodeCursor {
     pub fn new(command: PagedCommand) -> Self {
         Self { reader: PagedCommandReader::new(command), state: PagedAppCommandDecodeState::Header }
@@ -1715,6 +1775,7 @@ impl PagedAppCommandDecodeCursor {
                     7 => PagedAppCommandDecodeState::ReadDocument { seq },
                     8 => PagedAppCommandDecodeState::LoadConfigPack { seq },
                     9 => PagedAppCommandDecodeState::ReadConfig { seq },
+                    13 => PagedAppCommandDecodeState::PureCommandFields { seq, fields: Vec::with_capacity(PURE_COMMAND_FIELDS) },
                     15 => PagedAppCommandDecodeState::ReadChildren { seq },
                     16 => PagedAppCommandDecodeState::ReadHistory { seq },
                     27 => PagedAppCommandDecodeState::ReadConflicts { seq },
@@ -1858,7 +1919,24 @@ impl PagedAppCommandDecodeCursor {
                 })
             }
             PagedAppCommandDecodeState::ReadWindowConfigs { seq } => Some(AppCommand::ReadWindowConfigs { seq }),
-            PagedAppCommandDecodeState::ReadDocumentArchive { seq } => Some(AppCommand::ReadDocumentArchive { seq }),
+            PagedAppCommandDecodeState::PureCommandFields { seq, mut fields } => {
+                let field = match self.reader.read_bounded_bytes(APP_COMMAND_FIELD_MAXIMUM_BYTES) {
+                    Ok(field) => field,
+                    Err(fault) => {
+                        self.state = PagedAppCommandDecodeState::PureCommandFields { seq, fields };
+                        return Err(fault);
+                    }
+                };
+                fields.push(field);
+                if fields.len() < PURE_COMMAND_FIELDS {
+                    self.state = PagedAppCommandDecodeState::PureCommandFields { seq, fields };
+                    return Ok(None);
+                }
+                let mut fields = fields.into_iter();
+                let mut next = || fields.next().expect("retained pure-command field");
+                Some(AppCommand::PureCommand { seq, command: next(), document: next(), document_spr: next(), config: next(), config_spr: next(), draft: next(), draft_spr: next() })
+            }
+            PagedAppCommandDecodeState::ReadDocumentArchive { seq } =>Some(AppCommand::ReadDocumentArchive { seq }),
             PagedAppCommandDecodeState::LoadDocumentArchive { seq, mut decode } => match decode.step(&mut self.reader) {
                 Ok(Some(archive)) => Some(AppCommand::LoadDocumentArchive { seq, archive }),
                 Ok(None) => {

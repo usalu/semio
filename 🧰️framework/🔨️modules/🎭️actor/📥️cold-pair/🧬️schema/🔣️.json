@@ -75,14 +75,14 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "artifactId",
+        "documentId",
         "headEditOrdinal",
         "headEditId",
         "lastCommitSeq",
         "chainSha256"
       ],
       "properties": {
-        "artifactId": {
+        "documentId": {
           "type": "string",
           "minLength": 1,
           "maxLength": 512

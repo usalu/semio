@@ -318,6 +318,28 @@ async fn the_run_matches_the_language_neutral_fixture() {
     }
 }
 
+/// 🧾️ Prints every fixture case's recorded quantities as JSON (`[fixture-actual] {...}`), for
+/// re-recording `🧫️fixtures/🔣️.json` after an intended pipeline change. Run explicitly.
+#[semio_framework_async_macros::async_test]
+#[ignore = "prints the run fixture's actual values for re-recording, run explicitly"]
+async fn prints_the_run_fixture_actuals() {
+    for case in fixture()["cases"].as_array().expect("cases") {
+        let document = case["document"].as_str().expect("document");
+        let mut job = fresh_run(imported_document(document).await);
+        let mirror = run_to_end(&mut job, StepBudget::new(1, u64::MAX));
+        let counters: serde_json::Map<String, serde_json::Value> = ReconstructionRunCounter::ALL.iter().map(|counter| (counter.id().to_string(), serde_json::json!(mirror.counter(*counter)))).collect();
+        let stages: Vec<&str> = mirror.stages.iter().map(|stage| ReconstructionRunStage::ALL[usize::from(*stage)].id()).collect();
+        let appends = mirror.ops.iter().filter(|op| matches!(op, RemodelingMutation::AppendContent(_))).count();
+        let commits = mirror.ops.iter().filter(|op| matches!(op, RemodelingMutation::CommitReconstruction(_))).count();
+        let (kind, reason, args) = mirror.steps.last().expect("a last step");
+        println!(
+            "[fixture-actual] {}",
+            serde_json::json!({ "document": document, "final": if mirror.completed { "complete" } else if mirror.faulted { "faulted" } else { "open" }, "verdicts": mirror.verdicts.len(), "counters": counters, "stagesVisited": stages, "appendContentOps": appends, "commitReconstructionOps": commits, "lastStep": { "kind": step_kind_id(*kind), "reason": reason_id(*reason), "args": args } })
+        );
+        let _ = job;
+    }
+}
+
 /// 🔬️ Recomputes one match candidate's verdict with `bitvec` Hamming distances over the descriptor words.
 fn oracle_match_verdict(descriptors: &[Vec<[u64; 4]>], frame_a: usize, frame_b: usize, query: usize, ratio: f32, mutual: bool) -> Option<ReconstructionRunReason> {
     use bitvec::prelude::{BitVec, Lsb0};

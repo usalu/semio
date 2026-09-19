@@ -745,6 +745,7 @@
       ]
     },
     "energy-history-fixture-audit": {
+      "retired": { "ticket": "2026/08/23/END-TO-END-TESTING-REFACTOR", "reason": "ticket-close-generated-output-removed" },
       "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️23/END-TO-END-TESTING-REFACTOR/w14-audit/fixtures2.json",
       "sha256": "904d9ce36a0d9231b22a5d1b63adca68a0a0286f673a61b32ec950e0bd72f003",
       "schemaVersion": null,
@@ -1022,6 +1023,7 @@
       ]
     },
     "draw-evidence-coordinator-official-tool-jobs-live-2026-08-26": {
+      "retired": { "ticket": "2026/08/20/INTERACTIVE-JOB-RUNTIME-REFACTOR", "reason": "ticket-close-generated-output-removed" },
       "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️20/INTERACTIVE-JOB-RUNTIME-REFACTOR/📊️coordinator-official-tool-jobs-live-2026-08-26.json",
       "sha256": "2de8e5ad239ce4808066e003798bddf60a889dbaa7c5b5328e2a99046413027d",
       "schemaVersion": null,
@@ -1037,6 +1039,7 @@
       ]
     },
     "draw-evidence-sol-draw-envelope-peer-roots-2026-08-26": {
+      "retired": { "ticket": "2026/08/20/INTERACTIVE-JOB-RUNTIME-REFACTOR", "reason": "ticket-close-generated-output-removed" },
       "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️20/INTERACTIVE-JOB-RUNTIME-REFACTOR/📊️sol-draw-envelope-peer-roots-2026-08-26.json",
       "sha256": "daf759dc5bbbd2e262c08313aa03678ccd7b19c5571c67009c6d5fb88bbd780e",
       "schemaVersion": null,
@@ -1052,6 +1055,7 @@
       ]
     },
     "draw-evidence-sol-draw-instance-owner-preview-final-2-2026-08-26": {
+      "retired": { "ticket": "2026/08/20/INTERACTIVE-JOB-RUNTIME-REFACTOR", "reason": "ticket-close-generated-output-removed" },
       "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️20/INTERACTIVE-JOB-RUNTIME-REFACTOR/📊️sol-draw-instance-owner-preview-final-2-2026-08-26.json",
       "sha256": "bc437d1a4b767f7dad77e45a11c505d19ac674f805b1a334a2f85d2555efff7a",
       "schemaVersion": null,
@@ -1067,6 +1071,7 @@
       ]
     },
     "draw-evidence-sol-draw-instance-owner-preview-final-2026-08-26": {
+      "retired": { "ticket": "2026/08/20/INTERACTIVE-JOB-RUNTIME-REFACTOR", "reason": "ticket-close-generated-output-removed" },
       "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️20/INTERACTIVE-JOB-RUNTIME-REFACTOR/📊️sol-draw-instance-owner-preview-final-2026-08-26.json",
       "sha256": "d0f64b510556abd3c8af6392f3fc2378d67bc63aa2f090ce8965a3bc37ba955a",
       "schemaVersion": null,
@@ -1082,6 +1087,7 @@
       ]
     },
     "draw-evidence-sol-draw-instance-owner-preview-official-2026-08-26": {
+      "retired": { "ticket": "2026/08/20/INTERACTIVE-JOB-RUNTIME-REFACTOR", "reason": "ticket-close-generated-output-removed" },
       "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️20/INTERACTIVE-JOB-RUNTIME-REFACTOR/📊️sol-draw-instance-owner-preview-official-2026-08-26.json",
       "sha256": "08e5af739b6f21299ca867058289e64fbc99533ca1abf493a4ae1ffca650ae7e",
       "schemaVersion": null,
@@ -1097,6 +1103,7 @@
       ]
     },
     "draw-evidence-sol-draw-real-owner-checkpoint-2026-08-26": {
+      "retired": { "ticket": "2026/08/20/INTERACTIVE-JOB-RUNTIME-REFACTOR", "reason": "ticket-close-generated-output-removed" },
       "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️20/INTERACTIVE-JOB-RUNTIME-REFACTOR/📊️sol-draw-real-owner-checkpoint-2026-08-26.json",
       "sha256": "74ea5fbd10a342260ad2d9e169a059d42be1996dd4373df6e366272734504bad",
       "schemaVersion": null,
@@ -1112,6 +1119,7 @@
       ]
     },
     "draw-evidence-sol-draw-semantic-honesty-final-2026-08-26": {
+      "retired": { "ticket": "2026/08/20/INTERACTIVE-JOB-RUNTIME-REFACTOR", "reason": "ticket-close-generated-output-removed" },
       "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️20/INTERACTIVE-JOB-RUNTIME-REFACTOR/📊️sol-draw-semantic-honesty-final-2026-08-26.json",
       "sha256": "c62a8c65aeba6c62244d1f2dc3aab7c90ed907456389f70ec1a4a96b0c9ca5f1",
       "schemaVersion": null,
@@ -1127,6 +1135,7 @@
       ]
     },
     "draw-evidence-sol-envelope-peer-roots-final-2026-08-26": {
+      "retired": { "ticket": "2026/08/20/INTERACTIVE-JOB-RUNTIME-REFACTOR", "reason": "ticket-close-generated-output-removed" },
       "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️20/INTERACTIVE-JOB-RUNTIME-REFACTOR/📊️sol-envelope-peer-roots-final-2026-08-26.json",
       "sha256": "92d7ae5ac228f4e129caeba3ae2817fe05a9907b3e04f05f4dbc82794bf92ffa",
       "schemaVersion": null,
@@ -1142,6 +1151,7 @@
       ]
     },
     "draw-evidence-sol-fem2d-mounted-final-2026-08-26": {
+      "retired": { "ticket": "2026/08/20/INTERACTIVE-JOB-RUNTIME-REFACTOR", "reason": "ticket-close-generated-output-removed" },
       "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️20/INTERACTIVE-JOB-RUNTIME-REFACTOR/📊️sol-fem2d-mounted-final-2026-08-26.json",
       "sha256": "015fe475f5232a00d780170f881831bc3c95b584db9c656cb9ec1899a37d979d",
       "schemaVersion": null,
@@ -1157,6 +1167,7 @@
       ]
     },
     "draw-evidence-sol-fixed-operation-language-neutral-draw-honesty-2026-08-26": {
+      "retired": { "ticket": "2026/08/20/INTERACTIVE-JOB-RUNTIME-REFACTOR", "reason": "ticket-close-generated-output-removed" },
       "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️20/INTERACTIVE-JOB-RUNTIME-REFACTOR/📊️sol-fixed-operation-language-neutral-draw-honesty-2026-08-26.json",
       "sha256": "2de8e5ad239ce4808066e003798bddf60a889dbaa7c5b5328e2a99046413027d",
       "schemaVersion": null,
@@ -1172,6 +1183,7 @@
       ]
     },
     "draw-evidence-sol-fixed-operation-registry-foundation-2026-08-26": {
+      "retired": { "ticket": "2026/08/20/INTERACTIVE-JOB-RUNTIME-REFACTOR", "reason": "ticket-close-generated-output-removed" },
       "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️20/INTERACTIVE-JOB-RUNTIME-REFACTOR/📊️sol-fixed-operation-registry-foundation-2026-08-26.json",
       "sha256": "bdb8c4bbab347f0d18aa34aca4879ba302d65deb1f3985dfd4f0b87fbf8695f6",
       "schemaVersion": null,
@@ -1187,6 +1199,7 @@
       ]
     },
     "draw-evidence-sol-fixed-operation-registry-qualified-final-2026-08-26": {
+      "retired": { "ticket": "2026/08/20/INTERACTIVE-JOB-RUNTIME-REFACTOR", "reason": "ticket-close-generated-output-removed" },
       "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️20/INTERACTIVE-JOB-RUNTIME-REFACTOR/📊️sol-fixed-operation-registry-qualified-final-2026-08-26.json",
       "sha256": "35a12078ce7c4f36c2803c6f149798a04e18371837279c330edfcf1655c4d7c1",
       "schemaVersion": null,
@@ -1202,6 +1215,7 @@
       ]
     },
     "draw-evidence-sol-global-payload-inventory-2026-08-26": {
+      "retired": { "ticket": "2026/08/20/INTERACTIVE-JOB-RUNTIME-REFACTOR", "reason": "ticket-close-generated-output-removed" },
       "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️20/INTERACTIVE-JOB-RUNTIME-REFACTOR/📊️sol-global-payload-inventory-2026-08-26.json",
       "sha256": "459d4436ba1ee609b06fe18ba11007688c68f31f4f1176851b64c6e80ce027df",
       "schemaVersion": null,
@@ -1217,6 +1231,7 @@
       ]
     },
     "draw-evidence-sol-global-payload-inventory-live-2026-08-26": {
+      "retired": { "ticket": "2026/08/20/INTERACTIVE-JOB-RUNTIME-REFACTOR", "reason": "ticket-close-generated-output-removed" },
       "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️20/INTERACTIVE-JOB-RUNTIME-REFACTOR/📊️sol-global-payload-inventory-live-2026-08-26.json",
       "sha256": "1432fbe712c91be71303ae2a0ed17cc4e32024813442a249e89ece18aec97c2f",
       "schemaVersion": null,
@@ -1232,6 +1247,7 @@
       ]
     },
     "draw-evidence-sol-global-payload-owner-local-1-2026-08-26": {
+      "retired": { "ticket": "2026/08/20/INTERACTIVE-JOB-RUNTIME-REFACTOR", "reason": "ticket-close-generated-output-removed" },
       "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️20/INTERACTIVE-JOB-RUNTIME-REFACTOR/📊️sol-global-payload-owner-local-1-2026-08-26.json",
       "sha256": "2f912eedec6d565198bc24d9c78186665dff58ebeb64cb2160917e7713323dd9",
       "schemaVersion": null,
@@ -1247,6 +1263,7 @@
       ]
     },
     "draw-evidence-sol-media-mounted-after-2026-08-26": {
+      "retired": { "ticket": "2026/08/20/INTERACTIVE-JOB-RUNTIME-REFACTOR", "reason": "ticket-close-generated-output-removed" },
       "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️20/INTERACTIVE-JOB-RUNTIME-REFACTOR/📊️sol-media-mounted-after-2026-08-26.json",
       "sha256": "de83b6a80772984b7999f52bfeabe1aed452c50d4ca22d18148a16da1275859c",
       "schemaVersion": null,
@@ -1262,6 +1279,7 @@
       ]
     },
     "draw-evidence-sol-member-owner-final-2026-08-26": {
+      "retired": { "ticket": "2026/08/20/INTERACTIVE-JOB-RUNTIME-REFACTOR", "reason": "ticket-close-generated-output-removed" },
       "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️20/INTERACTIVE-JOB-RUNTIME-REFACTOR/📊️sol-member-owner-final-2026-08-26.json",
       "sha256": "372ca8d2577478a4b6dfafebdf1d7b2924d9c0030b74caa171dd845942febb3e",
       "schemaVersion": null,
@@ -1277,6 +1295,7 @@
       ]
     },
     "draw-evidence-sol-present-writer-envelope-2026-08-26": {
+      "retired": { "ticket": "2026/08/20/INTERACTIVE-JOB-RUNTIME-REFACTOR", "reason": "ticket-close-generated-output-removed" },
       "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️20/INTERACTIVE-JOB-RUNTIME-REFACTOR/📊️sol-present-writer-envelope-2026-08-26.json",
       "sha256": "9e743827fa9f5e7a13bcfe3c53315987cdd8c7fe89a0a7cd29fb6cfd62d25c0b",
       "schemaVersion": null,
@@ -1292,6 +1311,7 @@
       ]
     },
     "draw-evidence-sol-structural-universal-final-2-2026-08-26": {
+      "retired": { "ticket": "2026/08/20/INTERACTIVE-JOB-RUNTIME-REFACTOR", "reason": "ticket-close-generated-output-removed" },
       "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️20/INTERACTIVE-JOB-RUNTIME-REFACTOR/📊️sol-structural-universal-final-2-2026-08-26.json",
       "sha256": "d01ef79a6ee8f0747bb3e6814accdb42eef81c17849079e19871b536a3e15ec5",
       "schemaVersion": null,
@@ -1307,6 +1327,7 @@
       ]
     },
     "draw-evidence-sol-structural-universal-final-2026-08-26": {
+      "retired": { "ticket": "2026/08/20/INTERACTIVE-JOB-RUNTIME-REFACTOR", "reason": "ticket-close-generated-output-removed" },
       "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️20/INTERACTIVE-JOB-RUNTIME-REFACTOR/📊️sol-structural-universal-final-2026-08-26.json",
       "sha256": "77c9721affa30196b38b8db499a2ce8016559ee993ccc8bfd6fdf18f0e2b9da7",
       "schemaVersion": null,
@@ -1322,6 +1343,7 @@
       ]
     },
     "draw-evidence-sol-structural-universal-final-3-2026-08-26": {
+      "retired": { "ticket": "2026/08/20/INTERACTIVE-JOB-RUNTIME-REFACTOR", "reason": "ticket-close-generated-output-removed" },
       "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️20/INTERACTIVE-JOB-RUNTIME-REFACTOR/📊️sol-structural-universal-final-3-2026-08-26.json",
       "sha256": "ba3fdc304c2c628230eaa608de2803f77561fd3189f37a06bb5295f5ee999a40",
       "schemaVersion": null,
@@ -1337,6 +1359,7 @@
       ]
     },
     "draw-evidence-sol-universal-media-final-2026-08-26": {
+      "retired": { "ticket": "2026/08/20/INTERACTIVE-JOB-RUNTIME-REFACTOR", "reason": "ticket-close-generated-output-removed" },
       "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️20/INTERACTIVE-JOB-RUNTIME-REFACTOR/📊️sol-universal-media-final-2026-08-26.json",
       "sha256": "9b9d63881d343c5a1f18842ba30b21f43d494b2978ea6c023dd99d143436c4cd",
       "schemaVersion": null,
@@ -1352,6 +1375,7 @@
       ]
     },
     "draw-evidence-sol-universal-paged-after-2026-08-26": {
+      "retired": { "ticket": "2026/08/20/INTERACTIVE-JOB-RUNTIME-REFACTOR", "reason": "ticket-close-generated-output-removed" },
       "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️20/INTERACTIVE-JOB-RUNTIME-REFACTOR/📊️sol-universal-paged-after-2026-08-26.json",
       "sha256": "4f97dbc42ac85f2676146f5807b190868a105622dcc106d50009920543764400",
       "schemaVersion": null,
@@ -1367,6 +1391,7 @@
       ]
     },
     "draw-evidence-sol-universal-retained-after-2026-08-26": {
+      "retired": { "ticket": "2026/08/20/INTERACTIVE-JOB-RUNTIME-REFACTOR", "reason": "ticket-close-generated-output-removed" },
       "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️20/INTERACTIVE-JOB-RUNTIME-REFACTOR/📊️sol-universal-retained-after-2026-08-26.json",
       "sha256": "5138526e71ccf4d273c40fefd60ebc54fa65c17fc18b01f5204fe9ed4245b822",
       "schemaVersion": null,
@@ -1382,6 +1407,7 @@
       ]
     },
     "draw-evidence-sol-universal-retained-baseline-2026-08-26": {
+      "retired": { "ticket": "2026/08/20/INTERACTIVE-JOB-RUNTIME-REFACTOR", "reason": "ticket-close-generated-output-removed" },
       "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️20/INTERACTIVE-JOB-RUNTIME-REFACTOR/📊️sol-universal-retained-baseline-2026-08-26.json",
       "sha256": "19e9b8941e078f9d9fbe61226ffee4d79670cfe81ebbfba47b2d36d223b294fe",
       "schemaVersion": null,
@@ -1397,6 +1423,7 @@
       ]
     },
     "draw-evidence-coordinator-writer-set-locale-tool-jobs": {
+      "retired": { "ticket": "2026/08/20/INTERACTIVE-JOB-RUNTIME-REFACTOR", "reason": "ticket-close-generated-output-removed" },
       "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️20/INTERACTIVE-JOB-RUNTIME-REFACTOR/🧪️coordinator-writer-set-locale-tool-jobs.json",
       "sha256": "c3f00acdcac166117673951676fd74934ecbec407cb5152d5632475653a64c92",
       "schemaVersion": null,
@@ -1443,6 +1470,7 @@
       ]
     },
     "readme-authored-correction-vector-v1": {
+      "retired": { "ticket": "2026/08/17/END-TO-END-TAXONOMY-NORMALIZATION", "reason": "ticket-close-generated-output-removed" },
       "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION/🔣️readme-authored-correction.json",
       "sha256": "35db5a0ae52f6e4779453782708ee65efbda63e40439bc1124e022f78cd183b0",
       "schemaVersion": 1,
@@ -8822,6 +8850,19 @@
       ],
       "memberNames": [
         "◻️2d",
+        "⚡️epjson",
+        "🎬️gltf",
+        "🏗️dwg",
+        "📄️txt",
+        "🔄️dxf",
+        "🏃️commands",
+        "🏃️run",
+        "📇️inventory",
+        "🔁️workflow",
+        "🕸️graph",
+        "🗂️collection",
+        "🛂️contract",
+        "🧾️json",
         "🔲️grid2d",
         "☁️las",
         "🧱️ply",

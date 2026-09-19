@@ -376,6 +376,20 @@ pub struct World3dScene {
     pub interaction_json: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub engagement_preview_json: Option<String>,
+    /// 🧲️ The SUB-OBJECT pick targets this surface hit-tests against, as a JSON array of
+    /// `{kind, id, point, points, typology, selectable, style}` — the wire half of the CAD picking
+    /// engine's `SpatialPickTarget`/`target_style`
+    /// (`✏️editor/⚙️engine/🧲️picking/🦀️.rs`), and the one lane that lets a renderer resolve a
+    /// click to a `vertex`/`edge`/`face`/`object` instead of only to the whole instance.
+    ///
+    /// 🩸️ Before ticket 26/09/17 packet W14g the overlay rode `engagement_preview_json`, which is a
+    /// PAINT lane: sub-object picking could be shown and never hit-tested, so every pick still
+    /// resolved to the object through the domain's `object` granularity.
+    ///
+    /// 🧮️ Bounded by construction on both ends: a producer caps the array it publishes and a
+    /// consumer caps what it retains, so the lane can never grow an unbounded `Vec` on the wire.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub pick_targets_json: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub lod_json: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -459,6 +473,7 @@ scene_pack_wire!(World3dScenePack, World3dScene {
     brush_preview_json: Option<String>,
     interaction_json: Option<String>,
     engagement_preview_json: Option<String>,
+    pick_targets_json: Option<String>,
     lod_json: Option<String>,
     chunking_json: Option<String>,
     environment_json: Option<String>,
@@ -535,6 +550,7 @@ impl World3dScene {
             brush_preview_json: None,
             interaction_json: None,
             engagement_preview_json: None,
+            pick_targets_json: None,
             lod_json: None,
             chunking_json: None,
             environment_json: None,
@@ -567,6 +583,7 @@ impl ToValue for World3dScene {
         value_push_option(&mut entries, "brushPreviewJson", &self.brush_preview_json);
         value_push_option(&mut entries, "interactionJson", &self.interaction_json);
         value_push_option(&mut entries, "engagementPreviewJson", &self.engagement_preview_json);
+        value_push_option(&mut entries, "pickTargetsJson", &self.pick_targets_json);
         value_push_option(&mut entries, "lodJson", &self.lod_json);
         value_push_option(&mut entries, "chunkingJson", &self.chunking_json);
         value_push_option(&mut entries, "environmentJson", &self.environment_json);
@@ -600,6 +617,7 @@ impl FromValue for World3dScene {
             brush_preview_json: value_decode_option(&entries, "brushPreviewJson")?,
             interaction_json: value_decode_option(&entries, "interactionJson")?,
             engagement_preview_json: value_decode_option(&entries, "engagementPreviewJson")?,
+            pick_targets_json: value_decode_option(&entries, "pickTargetsJson")?,
             lod_json: value_decode_option(&entries, "lodJson")?,
             chunking_json: value_decode_option(&entries, "chunkingJson")?,
             environment_json: value_decode_option(&entries, "environmentJson")?,
@@ -618,7 +636,7 @@ impl FromValue for World3dScene {
 //#endregion 🔖️World3dScene
 
 //#region 🔖️World3dSceneLanes
-/// 🚚️ The twenty world-3d payload fields that ride OUTSIDE the fixed-capacity surface doc, each as
+/// 🚚️ The twenty-one world-3d payload fields that ride OUTSIDE the fixed-capacity surface doc, each as
 /// its own retained, individually paged text carrier rooted at [`World3dSceneLane::body_key`].
 ///
 /// Everything NOT in this list stays in the spine: `camera_json` (a ~120-byte per-frame descriptor
@@ -645,6 +663,7 @@ pub enum World3dSceneLane {
     BrushPreview,
     Interaction,
     EngagementPreview,
+    PickTargets,
     Lod,
     Chunking,
     Environment,
@@ -661,7 +680,7 @@ pub enum World3dSceneLane {
 pub const WORLD3D_SCENE_LANE_KEY_PREFIX: &str = "framework.scene.world3d.";
 
 /// 🚚️ Wire name of each [`World3dSceneLane`], in `World3dSceneLane::ALL` order.
-pub const WORLD3D_SCENE_LANE_NAMES: [&str; 20] = [
+pub const WORLD3D_SCENE_LANE_NAMES: [&str; 21] = [
     "meshes",
     "instances",
     "instancesDelta",
@@ -673,6 +692,7 @@ pub const WORLD3D_SCENE_LANE_NAMES: [&str; 20] = [
     "brushPreview",
     "interaction",
     "engagementPreview",
+    "pickTargets",
     "lod",
     "chunking",
     "environment",
@@ -685,7 +705,7 @@ pub const WORLD3D_SCENE_LANE_NAMES: [&str; 20] = [
 ];
 
 /// 🚚️ [`World3dScene`] field each lane carries, spelled as its serialized (camelCase) name.
-pub const WORLD3D_SCENE_LANE_FIELDS: [&str; 20] = [
+pub const WORLD3D_SCENE_LANE_FIELDS: [&str; 21] = [
     "meshesJson",
     "instancesJson",
     "instancesDeltaJson",
@@ -697,6 +717,7 @@ pub const WORLD3D_SCENE_LANE_FIELDS: [&str; 20] = [
     "brushPreviewJson",
     "interactionJson",
     "engagementPreviewJson",
+    "pickTargetsJson",
     "lodJson",
     "chunkingJson",
     "environmentJson",
@@ -710,7 +731,7 @@ pub const WORLD3D_SCENE_LANE_FIELDS: [&str; 20] = [
 
 /// 🚚️ Reserved carrier key of each lane — `WORLD3D_SCENE_LANE_KEY_PREFIX` + its name, spelled out
 /// so the constant is greppable and pinnable rather than assembled at runtime.
-pub const WORLD3D_SCENE_LANE_BODY_KEYS: [&str; 20] = [
+pub const WORLD3D_SCENE_LANE_BODY_KEYS: [&str; 21] = [
     "framework.scene.world3d.meshes",
     "framework.scene.world3d.instances",
     "framework.scene.world3d.instancesDelta",
@@ -722,6 +743,7 @@ pub const WORLD3D_SCENE_LANE_BODY_KEYS: [&str; 20] = [
     "framework.scene.world3d.brushPreview",
     "framework.scene.world3d.interaction",
     "framework.scene.world3d.engagementPreview",
+    "framework.scene.world3d.pickTargets",
     "framework.scene.world3d.lod",
     "framework.scene.world3d.chunking",
     "framework.scene.world3d.environment",
@@ -736,10 +758,10 @@ pub const WORLD3D_SCENE_LANE_BODY_KEYS: [&str; 20] = [
 /// 🚚️ Whether each lane's [`World3dScene`] field is an `Option<String>` (`true`) rather than a plain
 /// required `String` (`false`). A required lane always publishes — its empty payload is still a lane
 /// — while an absent optional lane publishes no carrier at all.
-pub const WORLD3D_SCENE_LANE_OPTIONAL: [bool; 20] = [false, false, true, false, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true];
+pub const WORLD3D_SCENE_LANE_OPTIONAL: [bool; 21] = [false, false, true, false, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true];
 
 impl World3dSceneLane {
-    pub const ALL: [Self; 20] = [
+    pub const ALL: [Self; 21] = [
         Self::Meshes,
         Self::Instances,
         Self::InstancesDelta,
@@ -751,6 +773,7 @@ impl World3dSceneLane {
         Self::BrushPreview,
         Self::Interaction,
         Self::EngagementPreview,
+        Self::PickTargets,
         Self::Lod,
         Self::Chunking,
         Self::Environment,
@@ -814,6 +837,7 @@ impl World3dSceneLane {
             Self::BrushPreview => scene.brush_preview_json.clone(),
             Self::Interaction => scene.interaction_json.take(),
             Self::EngagementPreview => scene.engagement_preview_json.take(),
+            Self::PickTargets => scene.pick_targets_json.take(),
             Self::Lod => scene.lod_json.take(),
             Self::Chunking => scene.chunking_json.take(),
             Self::Environment => scene.environment_json.take(),
@@ -841,6 +865,7 @@ impl World3dSceneLane {
             Self::BrushPreview => scene.brush_preview_json = Some(payload),
             Self::Interaction => scene.interaction_json = Some(payload),
             Self::EngagementPreview => scene.engagement_preview_json = Some(payload),
+            Self::PickTargets => scene.pick_targets_json = Some(payload),
             Self::Lod => scene.lod_json = Some(payload),
             Self::Chunking => scene.chunking_json = Some(payload),
             Self::Environment => scene.environment_json = Some(payload),
@@ -1901,10 +1926,120 @@ pub struct TiledMapScene {
     pub selection_method: String,
     #[serde(default = "tiled_map_default_selection_mode")]
     pub selection_mode: String,
+    /// 🚚️ The spine's lane manifest — see [`TiledMapSceneLane`].
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub lanes: Vec<SceneLaneRef>,
 }
 
 impl SceneDoc for TiledMapScene {
     const SCHEMA: &'static str = "tiled-map@1";
+
+    fn split_lanes(&self) -> (Self, Vec<SceneLanePayload>) {
+        let mut spine = self.clone();
+        let mut lanes = Vec::new();
+        let mut refs = Vec::new();
+        for lane in TiledMapSceneLane::ALL {
+            let Some(payload) = lane.take(&mut spine) else { continue };
+            refs.push(SceneLaneRef { lane: lane.name().to_string(), bytes: payload.len() as u32, hash: scene_lane_hash(&payload) });
+            lanes.push(SceneLanePayload { key: lane.body_key(), payload });
+        }
+        spine.lanes = refs;
+        (spine, lanes)
+    }
+
+    fn merge_lane(&mut self, key: &str, payload: String) -> bool {
+        let Some(lane) = TiledMapSceneLane::from_body_key(key) else { return false };
+        lane.put(self, payload);
+        true
+    }
+}
+
+/// 🚚️ The tiled-map payload field that rides OUTSIDE the fixed-capacity surface doc — the map twin of
+/// [`Board2dSceneLane`]/[`Paint2dSceneLane`], pinned against
+/// `🧫️fixtures/🚚️tiledmap-scene-lanes/🔣️.json` on both sides.
+///
+/// `map_fixture_json` is the whole map descriptor (`{ positions, routes, regions }`, one opaque
+/// payload per feature), so it scales with the DOCUMENT, not with the frame: the gis `demo` map's
+/// 152 positions and 149 routes encode to 59 667 bytes, nearly twice `UI_FIXED_BYTES` (32 KiB). A
+/// surface doc cannot page, so `scene_surface.encode` refused the whole surface and the gis window
+/// never published at all — `ui.fixed-capacity: fixed UI admission failed at scene-surface.encode`.
+/// Everything else (camera, render/vector/LOD mode, tile templates, layer visibility and stroke
+/// scales, selection, hover, selection method/mode) is a bounded per-frame descriptor and stays in
+/// the spine.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum TiledMapSceneLane {
+    MapFixture,
+}
+
+/// 🚚️ Reserved carrier-key namespace of the tiled-map lanes.
+pub const TILEDMAP_SCENE_LANE_KEY_PREFIX: &str = "framework.scene.tiledmap.";
+
+/// 🚚️ Wire name of each [`TiledMapSceneLane`], in `TiledMapSceneLane::ALL` order.
+pub const TILEDMAP_SCENE_LANE_NAMES: [&str; 1] = ["mapFixture"];
+
+/// 🚚️ [`TiledMapScene`] field each lane carries, spelled as its serialized (camelCase) name.
+pub const TILEDMAP_SCENE_LANE_FIELDS: [&str; 1] = ["mapFixtureJson"];
+
+/// 🚚️ Reserved carrier key of each lane.
+pub const TILEDMAP_SCENE_LANE_BODY_KEYS: [&str; 1] = ["framework.scene.tiledmap.mapFixture"];
+
+/// 🚚️ Whether each lane's [`TiledMapScene`] field is an `Option<String>`.
+pub const TILEDMAP_SCENE_LANE_OPTIONAL: [bool; 1] = [false];
+
+impl TiledMapSceneLane {
+    pub const ALL: [Self; 1] = [Self::MapFixture];
+
+    /// 🏷️ See [`TILEDMAP_SCENE_LANE_NAMES`].
+    // 🚫️async: E1 pure table lookup — see R9.
+    pub fn name(self) -> &'static str {
+        TILEDMAP_SCENE_LANE_NAMES[self as usize]
+    }
+
+    /// 🏷️ See [`TILEDMAP_SCENE_LANE_FIELDS`].
+    // 🚫️async: E1 pure table lookup — see R9.
+    pub fn field(self) -> &'static str {
+        TILEDMAP_SCENE_LANE_FIELDS[self as usize]
+    }
+
+    /// 🪧️ See [`TILEDMAP_SCENE_LANE_BODY_KEYS`].
+    // 🚫️async: E1 pure table lookup — see R9.
+    pub fn body_key(self) -> &'static str {
+        TILEDMAP_SCENE_LANE_BODY_KEYS[self as usize]
+    }
+
+    /// 🏷️ See [`TILEDMAP_SCENE_LANE_OPTIONAL`].
+    // 🚫️async: E1 pure table lookup — see R9.
+    pub fn optional(self) -> bool {
+        TILEDMAP_SCENE_LANE_OPTIONAL[self as usize]
+    }
+
+    /// 🔎️ Resolves a carrier root key back to its lane.
+    // 🚫️async: E1 pure table lookup — see R9.
+    pub fn from_body_key(body_key: &str) -> Option<Self> {
+        Self::ALL.into_iter().find(|lane| lane.body_key() == body_key)
+    }
+
+    /// 🔎️ Resolves a lane wire name back to its lane.
+    // 🚫️async: E1 pure table lookup — see R9.
+    pub fn from_name(name: &str) -> Option<Self> {
+        Self::ALL.into_iter().find(|lane| lane.name() == name)
+    }
+
+    /// 📤️ Removes this lane's payload from `scene`.
+    // 🚫️async: E6 sync payload construction — see this module's own header.
+    pub fn take(self, scene: &mut TiledMapScene) -> Option<String> {
+        match self {
+            Self::MapFixture => Some(std::mem::take(&mut scene.map_fixture_json)),
+        }
+    }
+
+    /// 📥️ Writes this lane's payload back into `scene` — the inverse of [`TiledMapSceneLane::take`].
+    // 🚫️async: E6 sync payload construction — see this module's own header.
+    pub fn put(self, scene: &mut TiledMapScene, payload: String) {
+        match self {
+            Self::MapFixture => scene.map_fixture_json = payload,
+        }
+    }
 }
 
 // 🚫️async: E1 pure accessor consumed by external-trait impls (serde default) — see R9
@@ -1969,6 +2104,7 @@ impl TiledMapScene {
             hover_json: tiled_map_default_hover_json(),
             selection_method: tiled_map_default_selection_method(),
             selection_mode: tiled_map_default_selection_mode(),
+            lanes: Vec::new(),
         }
     }
 }
@@ -1989,6 +2125,7 @@ impl ToValue for TiledMapScene {
         value_push(&mut entries, "hoverJson", &self.hover_json);
         value_push(&mut entries, "selectionMethod", &self.selection_method);
         value_push(&mut entries, "selectionMode", &self.selection_mode);
+        value_push_if_nonempty(&mut entries, "lanes", &self.lanes);
         DslValue::Object(entries)
     }
 }
@@ -2010,6 +2147,7 @@ impl FromValue for TiledMapScene {
             hover_json: value_decode_default(&entries, "hoverJson", tiled_map_default_hover_json)?,
             selection_method: value_decode_default(&entries, "selectionMethod", tiled_map_default_selection_method)?,
             selection_mode: value_decode_default(&entries, "selectionMode", tiled_map_default_selection_mode)?,
+            lanes: value_decode_default(&entries, "lanes", Vec::new)?,
         })
     }
 }

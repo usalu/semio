@@ -57,8 +57,6 @@ export async function buildRegisteredPrintTemplate(id: string, signal?: AbortSig
 
 export type PrintArtifact = { readonly id: string; readonly sourceRoot: string; readonly texPath: string; readonly sources: readonly string[]; readonly output: string; readonly owner: string; readonly dark: boolean };
 
-}
-
 /** 🪟️ Renders registered panel-glass PNGs from a first-pass template PDF. */
 export async function renderPrintPanelGlass(options: { readonly manifestPath: string; readonly pdfPath: string; readonly glassDirectory: string; readonly theme: PrintTheme }): Promise<void> {
   const entries = parsePanelManifest(options.manifestPath);
@@ -145,6 +143,7 @@ function parseHex(hex: string): [number, number, number] {
   return [(integer >> 16) & 0xff, (integer >> 8) & 0xff, integer & 0xff];
 }
 
+async function compileLightAndDark(tectonic: string, lightTexPath: string, outDirectory: string, libraryRoot: string, signal?: AbortSignal): Promise<void> {
   const lightDirectory = dirname(lightTexPath);
   await compilePrintDocumentWithPanels(tectonic, lightTexPath, outDirectory, lightDirectory, libraryRoot, signal);
   const darkPath = writeDerivedDarkTex(lightTexPath);
@@ -163,6 +162,7 @@ async function compilePrintDocumentWithPanels(tectonic: string, texPath: string,
   }
 }
 
+async function compilePrintDocument(tectonic: string, texPath: string, outDirectory: string, workDirectory: string, libraryRoot: string, signal?: AbortSignal): Promise<void> {
   const jobname = basename(texPath, ".tex");
   mkdirSync(outDirectory, { recursive: true });
   clearStaleTableOfContentsFiles(workDirectory, outDirectory, jobname);

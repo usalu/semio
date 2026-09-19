@@ -101,6 +101,29 @@ fn glyph_colors(draw: &ui_wgpu::wgpu::DrawList) -> Vec<Rgba> {
     draw.layers.iter().flat_map(|layer| layer.ui_instances.iter()).map(|instance| Rgba::new(instance.color[0], instance.color[1], instance.color[2], instance.color[3])).collect()
 }
 
+/// 🔢️ Colours of the glyphs painted INSIDE the line-number gutter band, and colours of the glyphs
+/// painted after it. React's gutter is muted (`text-muted-foreground`) while the line text keeps its
+/// own tint, so a palette-wide "no muted anywhere" assertion cannot tell the two apart — every
+/// brightness law below scopes itself to the text band by x.
+fn glyph_colors_split_at_gutter(draw: &ui_wgpu::wgpu::DrawList, gutter_right_x: f32) -> (Vec<Rgba>, Vec<Rgba>) {
+    let mut gutter = Vec::new();
+    let mut text = Vec::new();
+    for instance in draw.layers.iter().flat_map(|layer| layer.ui_instances.iter()) {
+        let color = Rgba::new(instance.color[0], instance.color[1], instance.color[2], instance.color[3]);
+        if instance.rect[0] < gutter_right_x {
+            gutter.push(color);
+        } else {
+            text.push(color);
+        }
+    }
+    (gutter, text)
+}
+
+/// 📏️ Where the unified gutter band ends — `render_diff_view`'s own derivation (`pad` + two columns + `pad`), restated here so the law moves with the paint instead of hardcoding a pixel.
+fn unified_gutter_right_x(theme: &Theme) -> f32 {
+    theme.padding_standard + DIFF_GUTTER_COLUMN_W * 2.0 + theme.padding_standard
+}
+
 #[test]
 fn unified_added_line_text_is_tinted_accent_not_a_row_background() {
     let (draw, theme) = render_diff("a\n", "a\nnew\n", Some("unified"));
@@ -121,9 +144,40 @@ fn unified_removed_line_text_is_tinted_error() {
 #[test]
 fn unchanged_lines_stay_full_brightness_not_dimmed() {
     let (draw, theme) = render_diff("same\n", "same\n", Some("unified"));
-    let colors = glyph_colors(&draw);
-    assert!(colors.contains(&theme.text), "an unchanged line must render at full theme.text brightness (React never dims equal lines), got {colors:?}");
-    assert!(!colors.contains(&theme.text_muted), "unchanged lines must not be dimmed to theme.text_muted, got {colors:?}");
+    // 🔢️ Scoped to the TEXT band: the gutter to its left is legitimately muted (React's
+    // `text-muted-foreground` number spans), and this law is about the line text only. It used to
+    // assert `theme.text_muted` was absent from the WHOLE palette, which is why the gutter could not
+    // be painted at all (ticket 26/09/17/WGPU-RENDERER-REACT-PARITY,
+    // `📓️audit-w14-scenes-residual.md` item 8).
+    let (_, text_colors) = glyph_colors_split_at_gutter(&draw, unified_gutter_right_x(&theme));
+    assert!(text_colors.contains(&theme.text), "an unchanged line must render at full theme.text brightness (React never dims equal lines), got {text_colors:?}");
+    assert!(!text_colors.contains(&theme.text_muted), "unchanged line TEXT must not be dimmed to theme.text_muted, got {text_colors:?}");
+}
+
+/// 🔢️ React `🔺️DiffViewHost/🟦️.tsx` `UnifiedDiff`: every row opens with two muted, right-aligned
+/// `tabular-nums` spans holding `line.beforeNo ?? ""` and `line.afterNo ?? ""`.
+#[test]
+fn unified_rows_open_with_a_muted_before_and_after_line_number_gutter() {
+    let (draw, theme) = render_diff("a\nb\n", "a\nb\n", Some("unified"));
+    let (gutter_colors, text_colors) = glyph_colors_split_at_gutter(&draw, unified_gutter_right_x(&theme));
+    assert!(!gutter_colors.is_empty(), "a unified diff must paint line numbers in the gutter band");
+    assert!(gutter_colors.iter().all(|color| *color == theme.text_muted), "every gutter glyph is theme.text_muted, like React's text-muted-foreground spans, got {gutter_colors:?}");
+    assert!(text_colors.contains(&theme.text), "the line text still paints to the right of the gutter");
+}
+
+/// 🔢️ React assigns `beforeNo` to `equal`/`remove` lines and `afterNo` to `equal`/`add` lines
+/// (`🔺️DiffViewHost/🟦️.tsx:40`/`:44`/`:47`), and prints `""` for the missing one.
+#[test]
+fn removed_lines_carry_only_a_before_number_and_added_lines_only_an_after_number() {
+    let before = vec!["a", "old", "c"];
+    let after = vec!["a", "new", "c"];
+    let operations = diff_lines(&before, &after);
+    let removed = operations.iter().find(|line| line.operation == DiffLineOperation::Removed).expect("a removed line");
+    let added = operations.iter().find(|line| line.operation == DiffLineOperation::Added).expect("an added line");
+    let equal = operations.iter().find(|line| line.operation == DiffLineOperation::Equal).expect("an equal line");
+    assert_eq!((removed.before_no, removed.after_no), (Some(2), None), "a removed line numbers only the BEFORE side");
+    assert_eq!((added.before_no, added.after_no), (None, Some(2)), "an added line numbers only the AFTER side");
+    assert_eq!((equal.before_no, equal.after_no), (Some(1), Some(1)), "an equal line numbers both sides, 1-based");
 }
 
 #[test]

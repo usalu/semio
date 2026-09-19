@@ -39,7 +39,7 @@ mod value_round_trip_tests {
                 step: None,
                 accept: None,
                 on_change: act("change"),
-                presence: UiPresence::default(),
+                on_submit: None, on_abort: None, on_repeat_last: None, presence: UiPresence::default(),
                 menu: None,
             }),
             UiControlNode::Select(UiSelectNode {

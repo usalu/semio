@@ -1,15 +1,79 @@
 import { expect, test } from "bun:test";
 import { chmodSync, mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { dirname, join, relative, resolve } from "node:path";
-import Ajv from "ajv";
+import Ajv, { type AnySchema } from "ajv";
 import glob from "fast-glob";
 import ts from "typescript";
 import { loadTaxonomy, semanticDirectoryKindId } from "../../📦️packages/🟦️typescript/🟦️.ts";
 
+/** 🧱️ One extracted owner module: its path, the semantic context that names it, and the declarations it owns. */
+interface SourceOwner {
+  readonly path: string;
+  readonly directoryName: string;
+  readonly parentKindId: string;
+  readonly kindId: string;
+  readonly declarations: readonly string[];
+}
+
+/** 🧭️ One directory whose semantic kind the taxonomy must resolve from its parent. */
+interface SourceContext {
+  readonly directoryName: string;
+  readonly parentKindId: string;
+  readonly kindId: string;
+}
+
+/** 🔗️ One consumer file and the owner modules it must bind to. */
+interface SourceConsumer {
+  readonly path: string;
+  readonly owners: readonly string[];
+}
+
+/** 🚀️ One Nx target and the launch row generated from it. */
+interface SourceRoute {
+  readonly target: string;
+  readonly command: string;
+  readonly launchName: string;
+  readonly launchCommand: string;
+  readonly inputs: readonly string[];
+}
+
+/** 🗿️ One filesystem state the artifact-schema law reader must survive. */
+interface SourceState {
+  readonly name: string;
+  readonly stat: string;
+  readonly read: string;
+  readonly expected: string;
+}
+
+/** 🔗️ The ancestor symlink whose resolution the law owner must refuse to follow. */
+interface SourceAncestorSymlink {
+  readonly ancestor: string;
+  readonly path: string;
+}
+
+/** 🔎️ The discovery owner and the symlink it publishes. */
+interface SourceDiscovery {
+  readonly owner: string;
+  readonly symlink: string;
+}
+
+/** 🗿️ The artifact-schema law ownership fixture, mirroring `🧬️schema/🧱️root-artifact-schema-law-source/🔣️.json`. */
+interface SourceOwnershipFixture {
+  readonly schemaVersion: number;
+  readonly owners: readonly SourceOwner[];
+  readonly contexts: readonly SourceContext[];
+  readonly consumers: readonly SourceConsumer[];
+  readonly sourceStates: readonly SourceState[];
+  readonly ancestorSymlink: SourceAncestorSymlink;
+  readonly discovery: SourceDiscovery;
+  readonly lawKinds: readonly string[];
+  readonly route: SourceRoute;
+}
+
 const repoRoot = resolve(import.meta.dir, "../../../../../../../");
 const libraryRoot = resolve(repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library");
-const fixture = JSON.parse(readFileSync(resolve(import.meta.dir, "../../🧫️fixtures/🧱️root-artifact-schema-law-source/🔣️.json"), "utf8"));
-const schema = JSON.parse(readFileSync(resolve(import.meta.dir, "../../🧬️schema/🧱️root-artifact-schema-law-source/🔣️.json"), "utf8"));
+const fixture: SourceOwnershipFixture = JSON.parse(readFileSync(resolve(import.meta.dir, "../../🧫️fixtures/🧱️root-artifact-schema-law-source/🔣️.json"), "utf8"));
+const schema: AnySchema = JSON.parse(readFileSync(resolve(import.meta.dir, "../../🧬️schema/🧱️root-artifact-schema-law-source/🔣️.json"), "utf8"));
 
 function namedDeclarations(path: string): string[] {
   const source = ts.createSourceFile(path, readFileSync(path, "utf8"), ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
@@ -32,8 +96,8 @@ test("validates the portable artifact-schema law ownership contract", () => {
   expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);
   expect(JSON.parse(JSON.stringify(fixture))).toEqual(fixture);
   expect(fixture.owners).toHaveLength(11);
-  expect(new Set(fixture.owners.map((owner: { path: string }) => owner.path)).size).toBe(fixture.owners.length);
-  expect(ts.parseJsonText("fixture.json", JSON.stringify(fixture)).parseDiagnostics).toEqual([]);
+  expect(new Set(fixture.owners.map((owner) => owner.path)).size).toBe(fixture.owners.length);
+  expect((ts.parseJsonText("fixture.json", JSON.stringify(fixture)) as ts.JsonSourceFile & { readonly parseDiagnostics: readonly ts.Diagnostic[] }).parseDiagnostics).toEqual([]);
 });
 
 test("resolves every artifact-schema owner through its exact semantic context", { timeout: 30_000 }, () => {
@@ -47,7 +111,7 @@ test("resolves every artifact-schema owner through its exact semantic context", 
 });
 
 test("typechecks every artifact-schema law owner with the installed TypeScript compiler", { timeout: 30_000 }, () => {
-  const paths = fixture.owners.map((owner: { path: string }) => resolve(repoRoot, owner.path));
+  const paths = fixture.owners.map((owner) => resolve(repoRoot, owner.path));
   const program = ts.createProgram(paths, {
     target: ts.ScriptTarget.ESNext,
     module: ts.ModuleKind.ESNext,
@@ -73,7 +137,7 @@ test("typechecks every artifact-schema law owner with the installed TypeScript c
 });
 
 test("removes root implementations and binds the actual command and oracle consumers", () => {
-  const moved = new Set(fixture.owners.flatMap((owner: { declarations: string[] }) => owner.declarations));
+  const moved = new Set(fixture.owners.flatMap((owner) => owner.declarations));
   expect(namedDeclarations(resolve(repoRoot, "📜️script.ts")).filter((name) => moved.has(name))).toEqual([]);
   for (const consumer of fixture.consumers) {
     const source = readFileSync(resolve(repoRoot, consumer.path), "utf8");
@@ -82,8 +146,8 @@ test("removes root implementations and binds the actual command and oracle consu
 });
 
 test("keeps the artifact-schema owner graph acyclic and free of root back imports", () => {
-  const owners = new Set(fixture.owners.map((owner: { path: string }) => resolve(repoRoot, owner.path)));
-  const edges = new Map<string, string[]>([...owners].map((owner) => [owner, []]));
+  const owners = new Set(fixture.owners.map((owner) => resolve(repoRoot, owner.path)));
+  const edges = new Map<string, string[]>([...owners].map((owner): [string, string[]] => [owner, []]));
   for (const owner of owners) {
     const syntax = ts.createSourceFile(owner, readFileSync(owner, "utf8"), ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
     for (const statement of syntax.statements) {
@@ -259,7 +323,7 @@ test("retains real artifact law and field-oracle behavior without fixed diagnost
 test("registers one Bun Nx and seed-derived launch route", () => {
   const project = JSON.parse(readFileSync(resolve(libraryRoot, "📦️packages/🟦️typescript/📋️project.json"), "utf8"));
   const packageJson = JSON.parse(readFileSync(resolve(libraryRoot, "📦️packages/🟦️typescript/package.json"), "utf8"));
-  expect(project.targets[fixture.route.target]?.options.command).toBe(fixture.route.command);
+  expect(project.targets[fixture.route.target]?.options?.command).toBe(fixture.route.command);
   for (const input of fixture.route.inputs) expect(project.targets[fixture.route.target]?.inputs).toContain(input);
   expect(packageJson.scripts[fixture.route.target]).toBe(`nx run @semio-tech/repo-lib:${fixture.route.target}`);
   for (const path of [".vscode/🧩️launch.seed.jsonc", ".vscode/launch.json"]) {

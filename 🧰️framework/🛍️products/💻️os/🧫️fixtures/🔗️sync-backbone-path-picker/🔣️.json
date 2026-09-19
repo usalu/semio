@@ -1,0 +1,14 @@
+{
+  "schema": "semio.framework.sync-backbone-path-picker/v1",
+  "why": "File and folder backbone attach must use the matching native picker — file sync opens a file dialog, folder sync opens a folder dialog — on every artifact editor session through framework.sync.",
+  "react": {
+    "helpers": ["requestBackboneFilePath", "requestBackboneFolderPath"],
+    "cardBrowseAttribute": "data-semio-sync-browse",
+    "selectActionsOpenPicker": ["selectFile", "selectFolder"]
+  },
+  "wgpu": {
+    "nativePickers": ["pick_file_path", "pick_folder"],
+    "hostIoOps": ["request-native-file-path", "request-native-folder-path"],
+    "draftAction": "setSyncDraft"
+  }
+}

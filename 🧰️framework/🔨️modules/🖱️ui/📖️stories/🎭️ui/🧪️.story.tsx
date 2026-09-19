@@ -3,7 +3,7 @@
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
-import { App, Mode, Ui, reactHostPort } from "@semio-tech/ui-react";
+import { App, Mode, reactHostPort, Ui, uiDataLabel } from "@semio-tech/ui-react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 // #endregion 🔌️Adapters
 
@@ -21,6 +21,7 @@ const meta = {
   component: Ui,
   parameters: { layout: "fullscreen" },
   tags: ["autodocs"],
+  args: { apps: [], activeAppId: "editor" },
 } satisfies Meta<typeof Ui>;
 
 export default meta;
@@ -36,18 +37,18 @@ export const Default: Story = {
           apps={[
             {
               id: "editor",
-              label: "Editor",
+              label: uiDataLabel("Editor"),
               children: (
                 <App
                   modes={[
                     {
                       id: "design",
-                      label: "Design",
+                      label: uiDataLabel("Design"),
                       children: (
                         <Mode
                           windows={[
-                            { id: "scene", children: <Pane title="Scene" /> },
-                            { id: "tree", children: <Pane title="Tree" /> },
+                            { id: "scene", iconId: "app-window", children: <Pane title="Scene" /> },
+                            { id: "tree", iconId: "app-window", children: <Pane title="Tree" /> },
                           ]}
                           activeWindowId="scene"
                           onActiveWindowChange={() => {}}
@@ -56,8 +57,8 @@ export const Default: Story = {
                     },
                     {
                       id: "review",
-                      label: "Review",
-                      children: <Mode windows={[{ id: "preview", children: <Pane title="Preview" /> }]} activeWindowId="preview" />,
+                      label: uiDataLabel("Review"),
+                      children: <Mode windows={[{ id: "preview", iconId: "app-window", children: <Pane title="Preview" /> }]} activeWindowId="preview" />,
                     },
                   ]}
                   activeModeId="design"
@@ -67,8 +68,8 @@ export const Default: Story = {
             },
             {
               id: "dashboard",
-              label: "Dashboard",
-              children: <Mode windows={[{ id: "stats", children: <Pane title="Statistics" /> }]} activeWindowId="stats" />,
+              label: uiDataLabel("Dashboard"),
+              children: <Mode windows={[{ id: "stats", iconId: "app-window", children: <Pane title="Statistics" /> }]} activeWindowId="stats" />,
             },
           ]}
           activeAppId={activeAppId}

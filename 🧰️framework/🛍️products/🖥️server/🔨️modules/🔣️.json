@@ -6,7 +6,7 @@
         "directory": "📡️gateway",
         "id": "framework.product.server.module.gateway",
         "kind": "module",
-        "responsibility": "Owns the transport layer: the module and document-authority ports, the shared server state, lane fan-out, presence and colour leases, CORS, credential extraction, blob and static-app hosting, the replay-then-live event bridge and the command/query endpoints the server builder wires together.",
+        "responsibility": "Owns the transport layer and the ServerInstance seam: the module, query and document-authority ports, the instance-generic server state, lane fan-out, presence and colour leases, CORS, credential extraction, blob and static-app hosting, the replay-then-live event bridge and the command/query endpoints the server builder wires together.",
         "module": {
           "productionConsumers": ["framework.product.server", "hub"]
         }
@@ -24,7 +24,7 @@
         "directory": "🗄️storage",
         "id": "framework.product.server.module.storage",
         "kind": "module",
-        "responsibility": "Defines the four durability roles an authority needs as separate contracts — authority store, rebuildable projections, content-addressed blobs, sessions — with in-memory reference implementations.",
+        "responsibility": "Defines the four durability roles an authority needs as separate contracts — authority store, rebuildable projections, content-addressed blobs, sessions — and no implementation of any of them: the instance names the backend for each role.",
         "module": {
           "productionConsumers": ["framework.product.server", "hub"]
         }

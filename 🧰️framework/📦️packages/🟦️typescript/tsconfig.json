@@ -3,11 +3,16 @@
   "extends": "../../../tsconfig.json",
   "compilerOptions": {
     "allowImportingTsExtensions": true,
-    "tsBuildInfoFile": "node_modules/.cache/framework-typecheck.tsbuildinfo"
+    "tsBuildInfoFile": "node_modules/.cache/framework-typecheck.tsbuildinfo",
+    "paths": {
+      "dom-accessibility-api": ["../../../node_modules/dom-accessibility-api/dist/index.d.ts"],
+      "fast-json-stable-stringify": ["./🌿️ambient/🔤️fast-json-stable-stringify/🟦️.d.ts"]
+    }
   },
   "include": [
     "./🟦️.ts",
     "./📜️script.ts",
+    "./🌿️ambient/🟦️.d.ts",
     "../🦀️rust/📜️script.ts",
     "../../🔨️modules/**/*.ts",
     "../../🔨️modules/**/*.tsx",

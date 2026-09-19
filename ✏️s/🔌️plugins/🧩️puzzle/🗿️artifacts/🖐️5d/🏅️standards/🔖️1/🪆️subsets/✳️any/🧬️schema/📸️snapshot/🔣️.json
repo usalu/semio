@@ -81,7 +81,7 @@
           "type": "string"
         },
         "target": {
-          "type": "string"
+          "$ref": "https://json.schemas.assets.semio-tech.com/framework/io/schema.json#/$defs/ArtifactRef"
         }
       }
     },

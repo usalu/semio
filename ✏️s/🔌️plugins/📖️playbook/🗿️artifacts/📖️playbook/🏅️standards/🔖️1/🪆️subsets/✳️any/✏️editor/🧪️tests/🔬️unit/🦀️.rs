@@ -254,3 +254,45 @@ async fn import_media_rejects_unknown_ports_and_malformed_payloads() {
     assert!(matches!(PlaybookPlayApp::import_media("chapters:in", &bad_media, &doc_view), Err(MediaError::Payload(..))));
 }
 //#endregion 🔖️PortTests
+
+//#region 🧵️RetainedToolCatalog
+/// 🧾️ The exact three-way join the guest checks at boot, plus the store ownership a published edit
+/// needs. playbook declared only `setContributions` retained — its six structural verbs were
+/// `BatchOnlyPendingRewrite` and hard dead in the shell — and declared no store owners at all, so
+/// the first real document publication answered `returned snapshot read requires its exact
+/// owned-snapshot retirement factory` (ticket 26/09/18 slice B2b). The disposer is `mem::forget`ed
+/// rather than dropped: a live `ArtifactStoreCursorDisposer` fails closed in `Drop` unless it has
+/// been driven to terminal-empty through a real store, which an existence check has none of.
+#[test]
+fn every_retained_tool_id_is_migrated_contracted_and_backed_by_store_owners() {
+    use semio_framework_plugin::{ArtifactEditor, ArtifactOwnedToolJobFactory};
+    assert_eq!(PLAYBOOK_RETAINED_TOOL_IDS.len(), PLAYBOOK_RETAINED_PUBLICATION_CONTRACTS.len());
+    for tool_id in PLAYBOOK_RETAINED_TOOL_IDS {
+        assert!(PLAYBOOK_RETAINED_PUBLICATION_CONTRACTS.iter().any(|contract| contract.tool_id == *tool_id), "{tool_id} has no publication contract");
+    }
+    assert_eq!(<PlaybookRetainedCommandJobFactory as ArtifactOwnedToolJobFactory>::TOOL_IDS, PLAYBOOK_RETAINED_TOOL_IDS);
+    let definition = create_playbook_play_app();
+    for window in definition.window_kinds.iter() {
+        for action in window.actions.iter().filter(|action| PLAYBOOK_RETAINED_TOOL_IDS.contains(&action.id.as_str())) {
+            assert_eq!(action.semantics.execution.interactive_job, InteractiveJobClassification::Migrated, "{} is retained but not Migrated", action.id);
+        }
+    }
+    assert!(PlaybookPlayApp::build_artifact_store_one_item_preparation_factory().is_some(), "an Artifact-lane retained tool needs an artifact-lane preparation authority");
+    std::mem::forget(PlaybookPlayApp::build_document_store_owners().expect("a published artifact edit needs its exact owned-snapshot retirement factory"));
+    std::mem::forget(PlaybookPlayApp::build_document_store_disposer().expect("the document store needs its exact owned disposer"));
+    std::mem::forget(PlaybookPlayApp::build_config_store_owners().expect("the config lane needs its exact owners"));
+    std::mem::forget(PlaybookPlayApp::build_config_store_disposer().expect("the config store needs its exact owned disposer"));
+}
+
+/// 🌉️ The `{action,args}` bridge resolves every declared verb; without it the trait default refused
+/// every id with `app.command.unsupported` and no Builder palette row could reach `dispatch`.
+#[test]
+fn command_from_action_resolves_every_declared_verb() {
+    use semio_framework_plugin::ArtifactEditor;
+    for tool_id in PLAYBOOK_RETAINED_TOOL_IDS.iter().chain(["updatePlaybook"].iter()) {
+        let command = PlaybookPlayApp::command_from_action(tool_id, None).unwrap_or_else(|error| panic!("{tool_id} has no bridge: {error:?}"));
+        assert_eq!(command.command_id(), *tool_id);
+    }
+    assert!(PlaybookPlayApp::command_from_action("thereIsNoSuchVerb", None).is_err());
+}
+//#endregion 🧵️RetainedToolCatalog

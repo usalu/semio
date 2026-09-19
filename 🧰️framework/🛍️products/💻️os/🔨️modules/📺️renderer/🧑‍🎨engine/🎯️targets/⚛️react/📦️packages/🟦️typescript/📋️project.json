@@ -8,8 +8,9 @@
       "{projectRoot}/**/*",
       "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/**/*",
       "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/**/*",
-      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/**/*"
-    , "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/🧪️tests/🎚️config/🟦️.ts"]
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/**/*",
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/🧪️tests/🎚️config/🟦️.ts"
+    ]
   },
   "targets": {
     "scoped-presence-check": {
@@ -26,6 +27,15 @@
       "cache": true,
       "options": {
         "command": "bun ./📜️script.ts directory-invite-capability-check",
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/📦️packages/🟦️typescript"
+      },
+      "outputs": []
+    },
+    "hub-sign-in-spaces-check": {
+      "executor": "nx:run-commands",
+      "cache": true,
+      "options": {
+        "command": "bun ./📜️script.ts hub-sign-in-spaces-check",
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/📦️packages/🟦️typescript"
       },
       "outputs": []
@@ -121,7 +131,7 @@
       "executor": "nx:run-commands",
       "cache": true,
       "options": {
-        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts view-state-carriage-check",
+        "command": "bun ./📜️script.ts view-state-carriage-check",
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/📦️packages/🟦️typescript"
       },
       "outputs": []

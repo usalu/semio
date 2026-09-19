@@ -147,7 +147,7 @@ async fn display_list_to_scene_handles_drop_preview_variants_and_rect_styles() {
             DisplayRect { object_id: "r-implicit-hover".into(), x: 20.0, y: 0.0, width: 10.0, height: 10.0, fill: None, stroke: None, inherited: false, selected: false, hovered: true },
             DisplayRect { object_id: "r-implicit-select".into(), x: 40.0, y: 0.0, width: 10.0, height: 10.0, fill: None, stroke: None, inherited: false, selected: true, hovered: false },
         ],
-        text_runs: vec![DisplayTextRun { object_id: "text-1".into(), glyphs: vec![DisplayGlyph { glyph_id: 1, font_size: 12.0, x: 0.0, y: 0.0, color: DisplayColor([0.0, 0.0, 0.0, 1.0]) }] }],
+        text_runs: vec![DisplayTextRun { object_id: "text-1".into(), glyphs: vec![DisplayGlyph { glyph_id: 1, font_size: 12.0, x: 0.0, y: 12.0, color: DisplayColor([0.0, 0.0, 0.0, 1.0]) }], content: "Hi".into(), origin_x: 0.0, origin_y: 0.0, font_size: 12.0 }],
         images: vec![DisplayImage { object_id: "img-1".into(), x: 0.0, y: 60.0, width: 10.0, height: 10.0, placeholder: true }],
         guides: vec![DisplayGuide { rect: LayoutRect { x: 0.0, y: 0.0, width: 10.0, height: 0.0 }, kind: "unrecognized".into() }],
     };

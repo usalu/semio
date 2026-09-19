@@ -1,0 +1,51 @@
+{
+  "schema": "semio.hub.auth.pbkdf2-sha256-vectors/v1",
+  "oracle": "python3 hashlib (OpenSSL) pbkdf2_hmac/hmac — third-party implementation",
+  "hmacSha256": [
+    {
+      "keyHex": "6b6579",
+      "message": "The quick brown fox jumps over the lazy dog",
+      "macHex": "f7bc83f430538424b13298e6aa6fb143ef4d59a14946175997479dbc2d1a3cd8"
+    },
+    {
+      "keyHex": "6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b",
+      "message": "long-key",
+      "macHex": "05a1d10a9df1cf4597789d0fd721e724699a102ed05f334f146a1791d48a62fa"
+    },
+    {
+      "keyHex": "",
+      "message": "",
+      "macHex": "b613679a0814d9ec772f95d778c35fc5ff1697c493715653c6c712144292c5ad"
+    }
+  ],
+  "pbkdf2Sha256": [
+    {
+      "name": "rfc7914-passwd-salt-1",
+      "password": "passwd",
+      "saltHex": "73616c74",
+      "iterations": 1,
+      "digestHex": "55ac046e56e3089fec1691c22544b605f94185216dde0465e68b9d57c20dacbc"
+    },
+    {
+      "name": "rfc7914-password-nacl-80000",
+      "password": "Password",
+      "saltHex": "4e61436c",
+      "iterations": 80000,
+      "digestHex": "4ddcd8f60b98be21830cee5ef22701f9641a4418d04c0414aeff08876b34ab56"
+    },
+    {
+      "name": "semio-lowcost",
+      "password": "correct horse battery staple",
+      "saltHex": "000102030405060708090a0b0c0d0e0f",
+      "iterations": 1000,
+      "digestHex": "a69b179e3add3c1e0aaf227a0eb3aa2aa8645ab86fecf6ca00c17512697c719e"
+    },
+    {
+      "name": "semio-unicode",
+      "password": "pässwörd-mit-ümlauten",
+      "saltHex": "ffeeddccbbaa99887766554433221100",
+      "iterations": 2048,
+      "digestHex": "ef073f870b19c8c95ef2e007c6bf55525879eee4808b81f0ab74863e56177b14"
+    }
+  ]
+}

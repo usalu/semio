@@ -751,11 +751,16 @@ pub fn zncc(a: &Patch, b: &Patch) -> f32 {
         var_a += da * da;
         var_b += db * db;
     }
-    let denominator = (var_a * var_b).sqrt();
-    if denominator < 1e-12 {
+    // 🧱️ Each patch needs texture of its own: a flat patch's variance is float rounding around its
+    // mean (~1e-13 per pixel), and against a textured partner the product still clears any joint
+    // guard, so the ratio returns noise that PatchMatch then maximises — a flat background fused
+    // into a shell around the object. A pixel standard deviation of 1e-3 (a quarter grey level on
+    // the `[0, 1]` scale) is the floor.
+    const MIN_PIXEL_VARIANCE: f32 = 1e-6;
+    if var_a < MIN_PIXEL_VARIANCE * n || var_b < MIN_PIXEL_VARIANCE * n {
         return 0.0;
     }
-    numerator / denominator
+    numerator / (var_a * var_b).sqrt()
 }
 
 /// 📏️ Sum of squared differences between two patches (mismatched sizes compare only the overlapping prefix).

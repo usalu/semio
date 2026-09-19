@@ -9,7 +9,7 @@
     {"kind":"paint-2d","schema":"paint-2d@1","value":{"documentSyncJson":"{}","assetsJson":"[]","cameraJson":"{}","selectionJson":"[]","activeUtility":"brush","brushSize":10,"brushOpacity":1,"viewMode":"composite"}},
     {"kind":"virtual-file-system","schema":"virtual-file-system@1","value":{"schemaJson":"{}","rowsJson":"[]"}},
     {"kind":"tiled-map","schema":"tiled-map@1","value":{"mapFixtureJson":"{}","cameraJson":"{}"}},
-    {"kind":"board-2d","schema":"board-2d@1","value":{"fixtureJson":"{}","cameraJson":"{}","glyphCatalogsJson":"{}","selectionJson":"[]","interactive":true,"selectionMethod":"rectangle","gridSnapEnabled":false,"gridFactor":1,"suggestionOffset":0,"brushWeightsJson":"{}","placementCompatibilityJson":"[]","lodMode":"automatic"}},
+    {"kind":"board-2d","schema":"board-2d@1","value":{"fixtureJson":"{}","cameraJson":"{}","glyphCatalogsJson":"{}","selectionJson":"[]","interactive":true,"selectionMethod":"rectangle","gridVisible":true,"gridSnapEnabled":false,"gridFactor":1,"selectableNodes":true,"selectableEdges":true,"selectableHandles":true,"suggestionOffset":0,"brushWeightsJson":"{}","placementCompatibilityJson":"[]","lodMode":"automatic"}},
     {"kind":"icon-render","schema":"icon-render@1","value":{"requestJson":"{}"}},
     {"kind":"ink-canvas","schema":"ink-canvas@1","value":{"documentJson":"[]","activeUtility":"pen","viewMode":"document"}},
     {"kind":"graph-timeline","schema":"graph-timeline@1","value":{"columnsJson":"[]"}},

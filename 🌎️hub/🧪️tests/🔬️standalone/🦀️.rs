@@ -1,3 +1,5 @@
+use semio_hub::directory::CommandResult;
+
 #[cfg(test)]
 async fn issue_document_socket_grant_fixture(Path((space_id, document_id)): Path<(String, String)>, headers: HeaderMap, State(state): State<HubState>) -> Result<Json<SocketGrantReceiptV1>, StatusCode> {
     if !socket_text_bounded(&space_id) || !socket_text_bounded(&document_id) {

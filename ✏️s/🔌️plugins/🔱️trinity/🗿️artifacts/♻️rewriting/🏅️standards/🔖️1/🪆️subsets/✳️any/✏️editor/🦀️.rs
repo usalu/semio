@@ -379,6 +379,8 @@ pub enum TrinityRewritingCommand {
     AddRuleClause { kind: String },
     #[dsl(key = "reset-rule")]
     ResetRule,
+    #[dsl(key = "set-active-example")]
+    SetActiveExample { example_id: String },
     #[dsl(key = "patch-nodes")]
     PatchNodes { node_ids: Vec<String>, field: String, value: String },
 
@@ -418,7 +420,7 @@ impl protocol::OpText for TrinityRewritingCommand {
 
 /// 🎯️ Handcrafted OpBinary (P6).
 impl protocol::OpBinary for TrinityRewritingCommand {
-    const TOOL_JOB_IDS: &'static [&'static str] = &["nodeGraphViewport", "setLodMode", "addRuleClause", "resetRule", "setParameter", "patchNodes", "nodeGraphEdit", "setLhsJson", "setRhsJson", "reorganize"];
+    const TOOL_JOB_IDS: &'static [&'static str] = &["nodeGraphViewport", "setLodMode", "addRuleClause", "resetRule", "setActiveExample", "setParameter", "patchNodes", "nodeGraphEdit", "setLhsJson", "setRhsJson", "reorganize"];
 
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
@@ -516,6 +518,7 @@ mod args_bridge {
             "setParameter" => TrinityRewritingCommand::SetParameter { name: required(action, args, &["name"])?, value: text(args, &["value"]).unwrap_or_default() },
             "addRuleClause" => TrinityRewritingCommand::AddRuleClause { kind: required(action, args, &["kind", "value"])? },
             "resetRule" => TrinityRewritingCommand::ResetRule,
+            "setActiveExample" => TrinityRewritingCommand::SetActiveExample { example_id: required(action, args, &["exampleId", "example_id", "value", "id"])? },
             "patchNodes" => TrinityRewritingCommand::PatchNodes { node_ids: ids(args), field: text(args, &["field"]).unwrap_or_else(|| "name".into()), value: required(action, args, &["value"])? },
             "nodeGraphViewport" => TrinityRewritingCommand::SetViewport { surface_id: text(args, SURFACE), viewport: viewport(action, args)? },
             "reorganize" => TrinityRewritingCommand::Reorganize,
@@ -531,7 +534,7 @@ mod args_bridge {
 /// refuses UI dispatch of every command not classified `Migrated`, which left every rule edit dead in the
 /// shell. Each verb publishes granular `RewriteRuleMutation`s on the artifact lane except `resetRule`, a
 /// host-applied `Effect::LoadDocument`.
-const REWRITING_DOCUMENT_TOOL_IDS: &[&str] = &["addRuleClause", "resetRule", "setParameter", "patchNodes", "nodeGraphEdit", "setLhsJson", "setRhsJson", "reorganize"];
+const REWRITING_DOCUMENT_TOOL_IDS: &[&str] = &["addRuleClause", "resetRule", "setActiveExample", "setParameter", "patchNodes", "nodeGraphEdit", "setLhsJson", "setRhsJson", "reorganize"];
 const REWRITING_DOCUMENT_PAYLOAD_SCHEMA: &str = "trinity.rewriting.document-command.v1";
 const REWRITING_DOCUMENT_RAW_BYTES: usize = 32_768;
 /// 📬️ One retained rule mutation: `edit-before-fixture` carries the whole working graph JSON (the Nakagin
@@ -548,6 +551,7 @@ fn rewriting_document_extent(command: &TrinityRewritingCommand, _snapshot: &Rewr
         TrinityRewritingCommand::SetLhsJson { value } | TrinityRewritingCommand::SetRhsJson { value } => value.len(),
         TrinityRewritingCommand::SetParameter { name, value } => name.len().checked_add(value.len())?,
         TrinityRewritingCommand::AddRuleClause { kind } => kind.len(),
+        TrinityRewritingCommand::SetActiveExample { example_id } => example_id.len(),
         TrinityRewritingCommand::PatchNodes { node_ids, field, value } => node_ids.iter().map(String::len).try_fold(field.len().checked_add(value.len())?, usize::checked_add)?,
         TrinityRewritingCommand::ResetRule | TrinityRewritingCommand::Reorganize => 1,
         _ => return None,
@@ -574,6 +578,7 @@ fn rewriting_document_reduce(
         TrinityRewritingCommand::SetParameter { name, value } => commands::set_parameter(state, name, value),
         TrinityRewritingCommand::AddRuleClause { kind } => commands::add_rule_clause_command(state, kind),
         TrinityRewritingCommand::ResetRule => commands::reset_rule(state),
+        TrinityRewritingCommand::SetActiveExample { example_id } => commands::set_active_example(example_id),
         TrinityRewritingCommand::PatchNodes { node_ids, field, value } => commands::patch_nodes(state, node_ids, field, value),
         TrinityRewritingCommand::Reorganize => commands::reorganize(state),
         _ => return Err(Fault::from("rewriting-document-command-route-mismatch")),
@@ -630,6 +635,7 @@ impl semio_framework_plugin::ArtifactOwnedToolJobFactory for RewritingDocumentJo
     const PUBLICATION_CONTRACTS: &'static [semio_framework_plugin::ArtifactToolPublicationContract] = &[
         semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "addRuleClause", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
         semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "resetRule", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly] },
+        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setActiveExample", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly] },
         semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setParameter", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
         semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "patchNodes", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
         semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "nodeGraphEdit", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
@@ -698,6 +704,21 @@ impl ArtifactEditor for TrinityRewritingPlayApp {
 
     fn build_document_store_owners() -> Option<store::DocumentStoreOwners<Self::Snapshot, Self::Mutation>> {
         Some(schema::retirement::document_store_owners())
+    }
+
+    /// 🏗️ Admits the whole-document replacement every `Effect::LoadDocument` of this app carries —
+    /// `resetRule` and `setActiveExample` both build one through `reset_document_effect`. The trait
+    /// default REFUSES the envelope, so the host answered each of them at the archive-load boundary
+    /// with `artifact-store.persisted-initializer-refused` and neither verb could ever land; the boot
+    /// example switch failed that way on every single boot
+    /// (ticket 26/09/18/OS-HUB-COLLABORATION-AI-END-TO-END, `📓️b3b-trinity-wfc-puzzle.md` §3.1b).
+    /// Same generic authority `🕸️dag` and `💡️reasoning` pair with their own retirement owners.
+    fn build_document_store_initialization_job(
+        envelope: store::ArtifactEnvelope<Self::Snapshot, Self::Mutation>,
+        operation: semio_framework_job::OperationId,
+        generation: semio_framework_job::Generation,
+    ) -> Result<semio_framework_plugin::ArtifactStoreInitializationJob<Self::Snapshot, Self::Mutation>, store::ArtifactEnvelope<Self::Snapshot, Self::Mutation>> {
+        Ok(semio_framework_plugin::bounded_document_store_initialization_job(envelope, REWRITE_RULE_SCHEMA, operation, generation))
     }
 
     fn build_document_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
@@ -852,6 +873,7 @@ impl ArtifactEditor for TrinityRewritingPlayApp {
             TrinityRewritingCommand::SetParameter { .. } => "setParameter",
             TrinityRewritingCommand::AddRuleClause { .. } => "addRuleClause",
             TrinityRewritingCommand::ResetRule => "resetRule",
+            TrinityRewritingCommand::SetActiveExample { .. } => "setActiveExample",
             TrinityRewritingCommand::PatchNodes { .. } => "patchNodes",
             TrinityRewritingCommand::SetViewport { .. } => "nodeGraphViewport",
             TrinityRewritingCommand::Reorganize => "reorganize",
@@ -876,6 +898,7 @@ impl ArtifactEditor for TrinityRewritingPlayApp {
             TrinityRewritingCommand::SetParameter { name, value } => crate::editor::rewriting::commands::set_parameter(state, name, value),
             TrinityRewritingCommand::AddRuleClause { kind } => crate::editor::rewriting::commands::add_rule_clause_command(state, kind),
             TrinityRewritingCommand::ResetRule => crate::editor::rewriting::commands::reset_rule(state),
+            TrinityRewritingCommand::SetActiveExample { example_id } => crate::editor::rewriting::commands::set_active_example(example_id),
             TrinityRewritingCommand::PatchNodes { node_ids, field, value } => crate::editor::rewriting::commands::patch_nodes(state, node_ids, field, value),
             TrinityRewritingCommand::SetViewport { surface_id, viewport } => crate::editor::rewriting::commands::set_viewport(surface_id, viewport, view_state)?,
             TrinityRewritingCommand::Reorganize => crate::editor::rewriting::commands::reorganize(state),
@@ -927,7 +950,7 @@ impl ArtifactEditor for TrinityRewritingPlayApp {
             .action("reorganize")
             .group("transform", |m| m.action("patchNodes").action("nodeGraphEdit"))
             .group("history", |m| m.action("resetRule"))
-            .group("mode", |m| m.action("setLodMode"))
+            .group("mode", |m| m.action("setLodMode").action("setActiveExample"))
             .group("tools", |m| m.action("setLhsJson").action("setRhsJson"));
         if let Some(spec) = node_graph_delete_selection_spec("Delete selection", is_de, nodes.len(), edges.len(), NodeGraphDeleteDispatch::ViaNodeGraphEdit) {
             menu = menu.item(spec);
@@ -1036,6 +1059,12 @@ pub fn create_rewriting_app() -> semio_framework_plugin::AppDefinition {
             // ✏️ Document-mutating actions — dispatched as VCS operations with true inverses.
             .action_with(semio_framework_plugin::ActionDefinition::bounded_catalog("addRuleClause", LocalizedLabel::native("Add Rule Clause", "Regelklausel hinzufügen"), ActionKind::Mutation).with_category("create"))
             .action_with(semio_framework_plugin::ActionDefinition::bounded_catalog("resetRule", LocalizedLabel::native("Reset Rule", "Regel zurücksetzen"), ActionKind::Mutation).with_category("history"))
+            // 🎬️ The navbar example picker dispatches `setActiveExample` at boot and on every pick
+            // (`🧱️elements/🛠️ShellHelpers/🟦️.tsx:373`). Without this declaration the shell's very first
+            // dispatch was dropped `undeclared-action` — an error line on every boot and an inert
+            // picker — while the sibling `🔌️jack` app declared it all along. It stays UNSCOPED (no
+            // `window_kind_action_refs`) because it reads the document, not a pane.
+            .action_with(semio_framework_plugin::ActionDefinition::new("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"), ActionKind::Mutation, "panel-left").with_category("mode"))
             .action_with(semio_framework_plugin::ActionDefinition::bounded_catalog("setParameter", LocalizedLabel::native("Set Parameter", "Parameter festlegen"), ActionKind::Mutation).with_category("settings"))
             .action_with(semio_framework_plugin::ActionDefinition::bounded_catalog("patchNodes", LocalizedLabel::native("Patch Nodes", "Knoten aktualisieren"), ActionKind::Mutation).with_category("transform"))
             .action_with(semio_framework_plugin::ActionDefinition::bounded_catalog("nodeGraphEdit", LocalizedLabel::native("Edit Graph", "Graph bearbeiten"), ActionKind::Mutation).with_category("transform"))
@@ -1050,6 +1079,7 @@ pub fn create_rewriting_app() -> semio_framework_plugin::AppDefinition {
             .action_interactive_job("nodeGraphViewport", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_interactive_job("setLodMode", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_interactive_job("addRuleClause", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("setActiveExample", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_interactive_job("resetRule", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_interactive_job("setParameter", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_interactive_job("patchNodes", semio_framework_plugin::InteractiveJobClassification::Migrated)
@@ -1075,6 +1105,13 @@ pub fn create_rewriting_app() -> semio_framework_plugin::AppDefinition {
             .window_kind_interactions(TRINITY_REWRITING_PLAY_WINDOW_LHS, vec![InteractionRef::new("graph")])
             .window_kind_interactions(TRINITY_REWRITING_PLAY_WINDOW_RHS, vec![InteractionRef::new("graph")])
             // 📝️ Staged argument forms.
+            // 🎬️ The option list IS the subset's registered example set — the navbar picker only ever
+            // dispatches a registered id.
+            .action_args("setActiveExample", vec![
+                ActionArgDef::select("exampleId", LocalizedLabel::native("Example", "Beispiel"), vec![
+                    ActionArgOption::new(crate::examples::demo::ID, crate::examples::demo::label()),
+                ]).required(),
+            ])
             .action_args("addRuleClause", vec![
                 ActionArgDef::select("kind", LocalizedLabel::native("Clause", "Klausel"), vec![
                     ActionArgOption::new("where", LocalizedLabel::native("Where", "Wo")),

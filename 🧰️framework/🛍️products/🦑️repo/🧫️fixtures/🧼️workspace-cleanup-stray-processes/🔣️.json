@@ -1,0 +1,68 @@
+{
+  "selfPid": 500,
+  "cases": [
+    {
+      "id": "defunct-zombie-under-bun-parent",
+      "rows": [
+        { "pid": 500, "ppid": 1, "stat": "S", "name": "bun", "command": "bun ./📜️script.ts clean" },
+        { "pid": 510, "ppid": 499, "stat": "S", "name": "bun", "command": "/usr/local/bin/bun run dev" },
+        { "pid": 511, "ppid": 510, "stat": "Z", "name": "<defunct>", "command": "<defunct>" }
+      ],
+      "expected": [{ "pid": 511, "ppid": 510, "name": "bun", "action": "reaped-zombie" }]
+    },
+    {
+      "id": "orphan-rustc",
+      "rows": [
+        { "pid": 500, "ppid": 1, "stat": "S", "name": "bun", "command": "bun test" },
+        { "pid": 600, "ppid": 1, "stat": "S", "name": "rustc", "command": "/Users/dev/.rustup/toolchains/stable/bin/rustc build.rs" }
+      ],
+      "expected": [{ "pid": 600, "ppid": 1, "name": "rustc", "action": "killed-stray" }]
+    },
+    {
+      "id": "defunct-under-ide-node-not-stray",
+      "rows": [
+        { "pid": 500, "ppid": 1, "stat": "S", "name": "bun", "command": "bun" },
+        { "pid": 700, "ppid": 701, "stat": "Z", "name": "<defunct>", "command": "<defunct>" },
+        { "pid": 701, "ppid": 1, "stat": "S", "name": "Code Helper (Plugin)", "command": "/Applications/Visual Studio Code.app/Contents/Frameworks/Code Helper (Plugin).app/Contents/MacOS/Code Helper (Plugin) --type=utility" }
+      ],
+      "expected": []
+    },
+    {
+      "id": "live-bun-tree-not-orphan",
+      "rows": [
+        { "pid": 500, "ppid": 1, "stat": "S", "name": "bun", "command": "bun ./📜️script.ts clean" },
+        { "pid": 800, "ppid": 799, "stat": "S", "name": "bun", "command": "bun ./📜️script.ts serve puzzle2d react dev" },
+        { "pid": 801, "ppid": 800, "stat": "S", "name": "vite", "command": "/Users/dev/semio/node_modules/.bin/vite --port 6012" },
+        { "pid": 802, "ppid": 801, "stat": "S", "name": "esbuild", "command": "/Users/dev/semio/node_modules/@esbuild/darwin-arm64/bin/esbuild --service=0.27.7 --ping" }
+      ],
+      "expected": [
+        { "pid": 802, "ppid": 801, "name": "esbuild", "action": "killed-stray" },
+        { "pid": 801, "ppid": 800, "name": "vite", "action": "killed-stray" },
+        { "pid": 800, "ppid": 799, "name": "bun", "action": "killed-stray" }
+      ]
+    },
+    {
+      "id": "cursor-agent-worker-semio",
+      "rows": [
+        { "pid": 500, "ppid": 1, "stat": "S", "name": "bun", "command": "bun ./📜️script.ts clean" },
+        {
+          "pid": 900,
+          "ppid": 1,
+          "stat": "S",
+          "name": "cursor-agent",
+          "command": "/path/cursor-agent worker start --worker-dir /Users/dev/Documents/semio --verbose"
+        }
+      ],
+      "expected": [{ "pid": 900, "ppid": 1, "name": "cursor-agent", "action": "killed-stray" }]
+    },
+    {
+      "id": "ancestry-protected-bun",
+      "rows": [
+        { "pid": 500, "ppid": 480, "stat": "S", "name": "bun", "command": "bun ./📜️script.ts clean" },
+        { "pid": 480, "ppid": 1, "stat": "S", "name": "zsh", "command": "-zsh" },
+        { "pid": 520, "ppid": 500, "stat": "Z", "name": "<defunct>", "command": "<defunct>" }
+      ],
+      "expected": []
+    }
+  ]
+}

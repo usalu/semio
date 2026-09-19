@@ -45,7 +45,7 @@ test("resolves every anonymous owner and semantic context", () => {
 });
 
 test("typechecks an acyclic owner graph with no command back edge", { timeout: 30_000 }, () => {
-  const paths = fixture.owners.map((owner: { path: string }) => resolve(repoRoot, owner.path));
+  const paths: string[] = fixture.owners.map((owner: { path: string }) => resolve(repoRoot, owner.path));
   const present = paths.filter(existsSync);
   expect(present).toHaveLength(paths.length);
   if (present.length !== paths.length) return;
@@ -113,11 +113,11 @@ test("the semantic policy owner admits every extracted concern", async () => {
 
 test("keeps selector behavior implementation-neutral", async () => {
   const api = await import("../../🔍️discovery/🎛️selection/🟦️.ts");
-  const selectors = api.readSelectors(["--artifact", "jack", "--standard", "1", "--fixture-class", "canonical", "--status", "passed"]);
-  expect(selectors).toEqual(expect.objectContaining({ artifact: "jack", standard: "1", fixtureClass: "canonical", status: "passed", implementation: null }));
+  const selectors = api.readSelectors(["--artifact", "jack", "--standard", "1", "--fixture-class", "handcrafted", "--status", "passed"]);
+  expect(selectors).toEqual(expect.objectContaining({ artifact: "jack", standard: "1", fixtureClass: "handcrafted", status: "passed", implementation: null }));
   expect(api.matchesTarget({ artifact: "plugin.jack", standard: "1", subset: "any", mutations: [{ id: "move", subset: "any" }] }, selectors)).toBe(true);
-  expect(api.matchesFixture({ target: { artifact: "plugin.jack", standard: "1", subset: "any" }, class: "canonical" }, selectors)).toBe(true);
-  expect(api.matchesRow({ artifact: "plugin.jack", standard: "1", subset: "any", fixtureClass: "canonical", status: "passed" }, selectors)).toBe(true);
+  expect(api.matchesFixture({ target: { artifact: "plugin.jack", standard: "1", subset: "any" }, class: "handcrafted" }, selectors)).toBe(true);
+  expect(api.matchesRow({ artifact: "plugin.jack", standard: "1", subset: "any", fixtureClass: "handcrafted", status: "passed" }, selectors)).toBe(true);
 });
 
 test("preserves native host parsing and separates build and scenario budgets", async () => {

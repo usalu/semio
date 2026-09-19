@@ -31,6 +31,7 @@ import { cn } from "../../🔨️modules/🏷️class-name-composition/🟦️.t
 import { surfaceClass } from "../../🔨️modules/🌈️surface-presentation/🟦️.ts";
 import { loadingBorderClass } from "../../🔨️modules/🌀️status-border-presentation/🟦️.ts";
 import { HostReactFlow, HostReactFlowProvider } from "../🔌️Ports/🟦️.tsx";
+import { useLabel } from "../🏷️Label/🟦️.tsx";
 import { createDiagramLayoutPublication, diagramLayoutCredits, DIAGRAM_LAYOUT_CODEC_KIND, DIAGRAM_UNIT, type DiagramLayoutOptions, type DiagramLayoutPublicationResult } from "./📐️layout/🟦️.ts";
 export { DIAGRAM_UNIT, DIAGRAM_LAYOUT_CODEC_KIND, DIAGRAM_LAYOUT_INGRESS_BYTES, DIAGRAM_LAYOUT_INGRESS_ITEMS, DIAGRAM_LAYOUT_MAX_EDGE_BYTES, DIAGRAM_LAYOUT_MAX_ID_CHARACTERS, DIAGRAM_LAYOUT_MAX_INPUT_ITEMS, DIAGRAM_LAYOUT_MAX_NODE_BYTES, DIAGRAM_LAYOUT_MAX_RESERVED_BYTES, DIAGRAM_LAYOUT_OUTPUT_ITEMS } from "./📐️layout/🟦️.ts";
 export type { DiagramLayoutDescriptor, DiagramLayoutDirection, DiagramLayoutEdgeWire, DiagramLayoutIngressPage, DiagramLayoutNodeWire, DiagramLayoutOptions, DiagramLayoutPosition, DiagramLayoutPositionPage, DiagramLayoutTerminal } from "./📐️layout/🟦️.ts";
@@ -1068,6 +1069,67 @@ class DiagramHandoffQueue implements DiagramHandoffStatus {
   }
 }
 
+// #region ♿️Accessibility
+/** ♿️ The four directions arrow-key navigation walks a node graph in. */
+export type DiagramArrowDirection = "up" | "down" | "left" | "right";
+
+/** ♿️ Arrow keys mapped to graph directions — the ONE place the mapping lives, so the keyboard handler
+ * and its test cannot disagree. */
+export const DIAGRAM_ARROW_KEYS: Readonly<Record<string, DiagramArrowDirection>> = { ArrowUp: "up", ArrowDown: "down", ArrowLeft: "left", ArrowRight: "right" };
+
+type DiagramNavigableNode = { readonly id: string; readonly position: { readonly x: number; readonly y: number } };
+
+/**
+ * ♿️ The node an arrow press moves to: the nearest node in that half-plane, measured with the
+ * ALONG-axis distance weighted over the across-axis one, so `ArrowRight` prefers the node to the right
+ * over one that is merely further away diagonally. Ties break on id so the walk is deterministic.
+ *
+ * With no focused node (the first arrow press after the canvas takes focus) the extreme node in the
+ * OPPOSITE direction is entered — pressing Right enters at the leftmost node, which is where a reader
+ * would expect to start. Returns `null` only when there is nowhere to go.
+ *
+ * `🖱️ui/🧬️contract/♿️accessibility/🦀️.rs:108-112` records that this surface carries its whole
+ * interaction inside a texture no assistive technology can walk, and that its `application` role is the
+ * ARIA promise the widget handles its own arrow/Enter keys. This function is that promise.
+ */
+export function diagramArrowNavigationTarget(nodes: readonly DiagramNavigableNode[], focusedId: string | null | undefined, direction: DiagramArrowDirection): string | null {
+  if (nodes.length === 0) return null;
+  const horizontal = direction === "left" || direction === "right";
+  const sign = direction === "right" || direction === "down" ? 1 : -1;
+  const along = (node: DiagramNavigableNode) => (horizontal ? node.position.x : node.position.y);
+  const across = (node: DiagramNavigableNode) => (horizontal ? node.position.y : node.position.x);
+  const current = focusedId == null ? undefined : nodes.find((node) => node.id === focusedId);
+  if (!current) {
+    let entry = nodes[0]!;
+    for (const node of nodes) {
+      const better = sign > 0 ? along(node) < along(entry) : along(node) > along(entry);
+      if (better || (along(node) === along(entry) && node.id < entry.id)) entry = node;
+    }
+    return entry.id;
+  }
+  let best: DiagramNavigableNode | null = null;
+  let bestCost = Number.POSITIVE_INFINITY;
+  for (const node of nodes) {
+    if (node.id === current.id) continue;
+    const forward = (along(node) - along(current)) * sign;
+    if (forward <= 0) continue;
+    const cost = forward + Math.abs(across(node) - across(current)) * 2;
+    if (cost < bestCost || (cost === bestCost && best !== null && node.id < best.id)) {
+      best = node;
+      bestCost = cost;
+    }
+  }
+  return best?.id ?? null;
+}
+
+/** ♿️ The selection an Enter press produces: plain Enter replaces, Shift+Enter toggles membership —
+ * the same replace/additive vocabulary `🕹️interaction`'s `MergeMode` names. */
+export function diagramActivateSelection(selectedIds: readonly string[], focusedId: string, additive: boolean): string[] {
+  if (!additive) return [focusedId];
+  return selectedIds.includes(focusedId) ? selectedIds.filter((id) => id !== focusedId) : [...selectedIds, focusedId];
+}
+// #endregion ♿️Accessibility
+
 /**
  * Props interface for the Diagram component.
  **/
@@ -1247,6 +1309,14 @@ const DiagramInner: React.FC<DiagramProps> = ({
     };
   }, [rfStoreApi]);
 
+  const diagramLabel = useLabel("ui.diagram.label");
+  const diagramRoleDescriptionLabel = useLabel("ui.diagram.roleDescription");
+  const diagramKeyboardHelpLabel = useLabel("ui.diagram.keyboardHelp");
+  const diagramNodesLabel = useLabel("ui.diagram.nodes");
+  const diagramEdgesLabel = useLabel("ui.diagram.edges");
+  const diagramKeyboardHelpId = reactHostPort.useId();
+  const [keyboardFocusedNodeId, setKeyboardFocusedNodeId] = reactHostPort.useState<string | null>(null);
+
   const [internalNodes, setInternalNodes] = reactHostPort.useState<Node[]>(initialNodes);
   const [internalEdges, setInternalEdges] = reactHostPort.useState<Edge[]>(initialEdges);
 
@@ -1257,6 +1327,12 @@ const DiagramInner: React.FC<DiagramProps> = ({
   const virtualizedHost = forceConfig.enabled && finalNodes.length > diagramForceHostPage.maxNodes;
   const renderedNodes = virtualizedHost ? hostNodes : finalNodes;
   const renderedEdges = virtualizedHost ? hostEdges : finalEdges;
+  // ♿️ Refs, not deps: the keyboard handler must read the CURRENT graph without being re-created on
+  // every node move, which would re-subscribe the wrapper's `onKeyDown` during a drag.
+  const renderedNodesRef = reactHostPort.useRef(renderedNodes);
+  renderedNodesRef.current = renderedNodes;
+  const keyboardFocusedNodeIdRef = reactHostPort.useRef(keyboardFocusedNodeId);
+  keyboardFocusedNodeIdRef.current = keyboardFocusedNodeId;
 
   const onNodesChangeReactFlowRef = reactHostPort.useRef(onNodesChangeReactFlow);
   onNodesChangeReactFlowRef.current = onNodesChangeReactFlow;
@@ -1284,6 +1360,45 @@ const DiagramInner: React.FC<DiagramProps> = ({
       }
     },
     [isControlled],
+  );
+  const handleNodesChangeRef = reactHostPort.useRef(handleNodesChange);
+  handleNodesChangeRef.current = handleNodesChange;
+
+  /**
+   * ♿️ The `application` role's side of the bargain: arrows walk nodes, Enter selects (Shift+Enter adds
+   * or removes), Escape clears. Selection travels as a real `select` node change through the SAME
+   * `handleNodesChange` lane a mouse pick uses, so a keyboard-driven selection is indistinguishable
+   * downstream from a pointer-driven one — no second selection path to drift.
+   */
+  const handleDiagramKeyDown = reactHostPort.useCallback(
+    (event: React.KeyboardEvent<HTMLDivElement>) => {
+      const target = event.target as HTMLElement | null;
+      if (target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable)) return;
+      const nodes = renderedNodesRef.current;
+      const direction = DIAGRAM_ARROW_KEYS[event.key];
+      if (direction) {
+        const next = diagramArrowNavigationTarget(nodes, keyboardFocusedNodeIdRef.current, direction);
+        if (!next) return;
+        event.preventDefault();
+        setKeyboardFocusedNodeId(next);
+        return;
+      }
+      if (event.key === "Escape") {
+        if (nodes.every((node) => !node.selected) && keyboardFocusedNodeIdRef.current === null) return;
+        event.preventDefault();
+        setKeyboardFocusedNodeId(null);
+        handleNodesChangeRef.current(nodes.filter((node) => node.selected).map((node) => ({ id: node.id, type: "select", selected: false })));
+        return;
+      }
+      if (event.key !== "Enter" && event.key !== " ") return;
+      const focused = keyboardFocusedNodeIdRef.current;
+      if (!focused) return;
+      event.preventDefault();
+      const selectedIds = nodes.filter((node) => node.selected).map((node) => node.id);
+      const nextSelected = diagramActivateSelection(selectedIds, focused, event.shiftKey);
+      handleNodesChangeRef.current(nodes.filter((node) => Boolean(node.selected) !== nextSelected.includes(node.id)).map((node) => ({ id: node.id, type: "select", selected: nextSelected.includes(node.id) })));
+    },
+    [keyboardFocusedNodeId],
   );
 
   const handleEdgesChange = reactHostPort.useCallback(
@@ -1563,7 +1678,24 @@ const DiagramInner: React.FC<DiagramProps> = ({
   }, [handoff, internalEdges, onEdgesChangeProp, isControlled]);
 
   return (
-    <div ref={wrapperRef as any} className={`relative w-full h-full ${className}`}>
+    <div
+      ref={wrapperRef as any}
+      className={`relative w-full h-full ${className}`}
+      // ♿️ `application` is the ARIA promise that this widget handles its OWN arrow/Enter keys — the exact
+      // contract `🧬️contract/♿️accessibility/🦀️.rs:108-112` writes for a canvas surface — so the role, the
+      // tab stop, the spoken key help and the keydown handler below are one indivisible commitment.
+      role="application"
+      tabIndex={0}
+      aria-roledescription={diagramRoleDescriptionLabel}
+      aria-label={`${diagramLabel} — ${renderedNodes.length} ${diagramNodesLabel}, ${renderedEdges.length} ${diagramEdgesLabel}`}
+      aria-describedby={diagramKeyboardHelpId}
+      aria-activedescendant={keyboardFocusedNodeId ?? undefined}
+      data-diagram-focused-node={keyboardFocusedNodeId ?? undefined}
+      onKeyDown={handleDiagramKeyDown}
+    >
+      <span id={diagramKeyboardHelpId} className="sr-only">
+        {diagramKeyboardHelpLabel}
+      </span>
       <HostReactFlow
         nodes={renderedNodes}
         edges={renderedEdges}

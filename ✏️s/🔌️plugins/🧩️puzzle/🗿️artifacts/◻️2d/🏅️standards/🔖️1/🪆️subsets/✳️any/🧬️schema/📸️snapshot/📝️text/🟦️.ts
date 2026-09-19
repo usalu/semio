@@ -49,5 +49,5 @@ export const puzzlePuzzle2dSnapshotTextGuardConstant = <T extends string | numbe
 //#endregion 🚪️Parsers
 
 export function parsePuzzle2dSnapshotText(value: unknown, at = "$"): Puzzle2dSnapshotText {
-  return puzzlePuzzle2dSnapshotTextGuardObject(value, `${at}`);
+  return puzzlePuzzle2dSnapshotTextGuardString(value, `${at}`);
 }

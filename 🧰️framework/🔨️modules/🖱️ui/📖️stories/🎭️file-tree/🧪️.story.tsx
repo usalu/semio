@@ -8,7 +8,7 @@
 
 // #endregion 🧲️Header
 
-import { FileTree, type FileTreeNode } from "@semio-tech/ui-react";
+import { FileTree, type FileTreeNode, uiDataLabel } from "@semio-tech/ui-react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
 
@@ -53,7 +53,7 @@ const kitNodes: FileTreeNode[] = [
 
 export const Default: Story = {
   args: {
-    title: "Nakagin Kit",
+    title: uiDataLabel("Nakagin Kit"),
     nodes: kitNodes,
     as: "div",
   },
@@ -62,7 +62,7 @@ export const Default: Story = {
 export const WithCurrentPath: Story = {
   name: "Current Path Highlighted",
   args: {
-    title: "Nakagin Kit",
+    title: uiDataLabel("Nakagin Kit"),
     nodes: kitNodes,
     currentPath: "kit/capsules/capsule-l.json",
     as: "div",
@@ -71,7 +71,7 @@ export const WithCurrentPath: Story = {
 
 export const Navigable: Story = {
   args: {
-    title: "Nakagin Kit",
+    title: uiDataLabel("Nakagin Kit"),
     nodes: kitNodes,
     as: "div",
   },

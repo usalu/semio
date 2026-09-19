@@ -44,7 +44,7 @@ export const TreeGroupHeader: Story = {
     id: "label-story-visibility",
     label: "Visibility",
     labelLayoutKind: "treeGroupHeader",
-    children: <Toggle id="label-story-visibility-toggle" pressed text="On" />,
+    children: <Toggle id="label-story-visibility-toggle" icon="eye" pressed text="On" />,
   },
   render: (args) => (
     <div className="w-70 border">

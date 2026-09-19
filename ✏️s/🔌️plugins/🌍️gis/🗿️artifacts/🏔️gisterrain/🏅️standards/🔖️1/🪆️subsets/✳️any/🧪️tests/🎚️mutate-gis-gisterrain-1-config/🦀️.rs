@@ -1,11 +1,11 @@
 //! 🦀️ GIS Terrain window-config mutation case for the `set-camera` kind declared by
-//! `../../✏️editor/🎭️modes/👁️view/🪟️windows/🏔️terrain/⚙️config/🔮️oracles/🔣️.json`. No third-party implementation
+//! `../../✏️editor/🎭️modes/👁️view/🪟️windows/🏔️terrain/🎚️config/🔮️oracles/🔣️.json`. No third-party implementation
 //! could adjudicate it (`gis-gisterrain-config-mutation-semantics` no-oracle decision, same file),
 //! so this case registers the SUBJECT role only — no `.oracle(...)` handler, matching
 //! `os.config.opening`'s own precedent (`🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/
 //! 🧪️tests/mutate-os-config-opening/🥒️.feature`).
 //!
-//! `gis_terrain_window_config_mutation_report_json` (`../../✏️editor/🎭️modes/👁️view/🪟️windows/🏔️terrain/⚙️config/🦀️.rs`) is the whole surface this adapter needs —
+//! `gis_terrain_window_config_mutation_report_json` (`../../✏️editor/🎭️modes/👁️view/🪟️windows/🏔️terrain/🎚️config/🦀️.rs`) is the whole surface this adapter needs —
 //! every field of `GisTerrainWindowConfig` is a plain `String`, so this bridge never needs
 //! `serde_json::from_str::<GisTerrainWindowConfig>` (unreachable from a `sut`-feature adapter crate, which
 //! links `semio-s-plugin-gis` as an ordinary dependency, not under `cfg(test)`) — it reaches the

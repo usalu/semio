@@ -1,7 +1,8 @@
 //! 🕸️ CLI: `semio-os-mcp stdio [--folder <dir> | --hub <url> --space <id>]
-//! [--principal <id>] [--scopes a,b]` and `semio-os-mcp http [--port <p>] [--bind <addr>]
+//! [--principal <id>] [--scopes a,b] [--auto-approve never|readonly|all] [--no-bridge]` and
+//! `semio-os-mcp http [--port <p>] [--bind <addr>]
 //! [--folder <dir> | --hub <url> --space <id>] [--principal <id>] [--scopes a,b]
-//! [--audit-dir <dir>] [--allow-origin <origin>]…` (P1b + P1c +
+//! [--auto-approve never|readonly|all] [--audit-dir <dir>] [--allow-origin <origin>]…` (P1b + P1c +
 //! P7-headless-workspace) — this binary owns argv parsing only; all real logic lives in
 //! `semio_framework_os_mcp::{run_stdio, run_http}`. `semio-os-mcp schemas` additionally prints the
 //! `os.mcp` draft-07 schema mirror on stdout (the `schema-mirror` nx target's generator) (P1a's brief §2.5, "keep main thin, all logic in
@@ -10,7 +11,7 @@
 //! "`--folder <space dir>`…`--hub <url> --space <id>`"). Hub authority is claimed from protected fd 3
 //! before argv parsing and never enters argv or workspace state. HTTP and bridge admission reuse
 //! that protected authority without copying it into argv, a URL, a file, logs, or protocol output.
-use semio_framework_os_mcp::{HttpOptions, HubOptions, StdioOptions};
+use semio_framework_os_mcp::{AutoApprovePolicy, HttpOptions, HubOptions, StdioOptions};
 
 //#region 🔖️Args
 enum Mode {
@@ -20,6 +21,13 @@ enum Mode {
 
 fn parse_scopes(raw: &str) -> Vec<String> {
     raw.split(',').map(str::trim).filter(|scope| !scope.is_empty()).map(str::to_string).collect()
+}
+
+/// 🚦️ `--auto-approve never|readonly|all` — the launch-time human decision that waives the approval
+/// gate when no `elicitation`-capable client and no attached OS shell can be asked. An unknown value
+/// is a hard argv error, never a silent downgrade to `never`.
+fn parse_auto_approve(raw: &str) -> Result<AutoApprovePolicy, String> {
+    AutoApprovePolicy::parse(raw).ok_or_else(|| format!("--auto-approve expects never|readonly|all, got `{raw}`"))
 }
 
 /// 🏠️ Shared credential-free `--hub <url> --space <id>` selector.
@@ -50,6 +58,8 @@ fn parse_stdio_args(argv: &mut impl Iterator<Item = String>) -> Result<StdioOpti
             "--space" => hub.space_id = Some(argv.next().ok_or("--space requires a value")?),
             "--principal" => options.principal = Some(argv.next().ok_or("--principal requires a value")?),
             "--scopes" => options.scopes = parse_scopes(&argv.next().ok_or("--scopes requires a comma-separated value")?),
+            "--auto-approve" => options.auto_approve = parse_auto_approve(&argv.next().ok_or("--auto-approve requires never|readonly|all")?)?,
+            "--no-bridge" => options.no_bridge = true,
             other => return Err(format!("unknown flag {other}")),
         }
     }
@@ -69,6 +79,7 @@ fn parse_http_args(argv: &mut impl Iterator<Item = String>) -> Result<HttpOption
     let mut scopes = Vec::new();
     let mut audit_dir = None;
     let mut allow_origin = Vec::new();
+    let mut auto_approve = AutoApprovePolicy::default();
     while let Some(flag) = argv.next() {
         match flag.as_str() {
             "--port" => port = argv.next().ok_or("--port requires a value")?.parse().map_err(|_| "--port must be a number".to_string())?,
@@ -80,6 +91,7 @@ fn parse_http_args(argv: &mut impl Iterator<Item = String>) -> Result<HttpOption
             "--scopes" => scopes = parse_scopes(&argv.next().ok_or("--scopes requires a comma-separated value")?),
             "--audit-dir" => audit_dir = Some(argv.next().ok_or("--audit-dir requires a value")?),
             "--allow-origin" => allow_origin.push(argv.next().ok_or("--allow-origin requires a value")?),
+            "--auto-approve" => auto_approve = parse_auto_approve(&argv.next().ok_or("--auto-approve requires never|readonly|all")?)?,
             other => return Err(format!("unknown flag {other}")),
         }
     }
@@ -87,14 +99,14 @@ fn parse_http_args(argv: &mut impl Iterator<Item = String>) -> Result<HttpOption
     if folder.is_some() && hub.is_some() {
         return Err("--folder and --hub are mutually exclusive".to_string());
     }
-    Ok(HttpOptions { port, bind, folder, hub, principal, scopes, audit_dir, allow_origin })
+    Ok(HttpOptions { port, bind, folder, hub, principal, scopes, audit_dir, allow_origin, auto_approve })
 }
 
 fn parse_args() -> Result<Mode, String> {
     let mut argv = std::env::args().skip(1);
     let Some(mode) = argv.next() else {
         return Err(
-            "usage: semio-os-mcp <stdio|http|schemas> [--folder <dir> | --hub <url> --space <id>] [--principal <id>] [--scopes a,b] [http-only: --port <p> --bind <addr> --audit-dir <dir> --allow-origin <origin>]".to_string()
+            "usage: semio-os-mcp <stdio|http|schemas> [--folder <dir> | --hub <url> --space <id>] [--principal <id>] [--scopes a,b] [--auto-approve never|readonly|all] [stdio-only: --no-bridge] [http-only: --port <p> --bind <addr> --audit-dir <dir> --allow-origin <origin>]".to_string()
         );
     };
     match mode.as_str() {

@@ -24,6 +24,14 @@ import {
   cssAnimationScopeUnclockedPaints,
   cssAnimationScopeViolations,
   CSS_ANIMATION_SCOPE_LAWS,
+  contrastRatio,
+  contrastRatioRgba,
+  themePaintContrast,
+  wcagContrastGrade,
+  WCAG_AA_CONTRAST,
+  WCAG_AA_LARGE_CONTRAST,
+  WCAG_AAA_CONTRAST,
+  type Rgba8,
 } from "../../📦️packages/🟦️typescript/🟦️.ts";
 import { meshCollectionVitePlugin, PLAYGROUND_PLAY_BOOT_APPEARANCE_SCRIPT, PLAYGROUND_PLAY_BOOT_THEME_SCRIPT, resolveSemioAssetRoot, SEMIO_ASSET_ROOT, SEMIO_FAVICON_HEAD_HTML, semioAssetsVitePlugin, semioBrandHtmlVitePlugins, semioEmojiIndexHtmlVitePlugin, semioFaviconSources, semioFaviconSvgMarkup, semioFaviconVitePlugin, staticDirVitePlugin, tileProxyVitePlugin, type PlaygroundAssetSpec } from "../../🏗️builder/🌐️vite/🟦️.ts";
 import { fontCatalogSources, parseFontCatalog, parseGoogleFontWoff2Map, resolveFontFaceUrl, resolveFontSource } from "../../🔤️fonts/🟦️.ts";
@@ -88,7 +96,7 @@ describe("shared asset delivery", () => {
   it("serves encoded handpicked asset routes with exact source bytes and rejects the old route", async () => {
     let handler: OwnedBuildMiddleware | undefined;
     const plugin = semioAssetsVitePlugin(repoRoot)[0]!;
-    plugin.configureServer!({ middlewares: { use(value: OwnedBuildMiddleware) { handler = value; } } });
+    plugin.configureServer!({ middlewares: { use(value: OwnedBuildMiddleware) { handler = value; } }, ws: { send() {} }, config: { root: repoRoot, cacheDir: resolve(repoRoot, "node_modules/.vite") } });
     const server = createServer((request, response) => handler!(request, response, () => { response.statusCode = 404; response.end(); }));
     try {
       await new Promise<void>(done => server.listen(0, "127.0.0.1", done));
@@ -121,7 +129,7 @@ describe("favicon delivery", () => {
     const expected = { svg: Buffer.from(semioFaviconSvgMarkup(sources.svg)!), ico: readFileSync(sources.ico) };
     for (const configure of ["configureServer", "configurePreviewServer"] as const) {
       let handler: OwnedBuildMiddleware | undefined;
-      semioFaviconVitePlugin(repoRoot)[0]![configure]!({ middlewares: { use(value: OwnedBuildMiddleware) { handler = value; } } });
+      semioFaviconVitePlugin(repoRoot)[0]![configure]!({ middlewares: { use(value: OwnedBuildMiddleware) { handler = value; } }, ws: { send() {} }, config: { root: repoRoot, cacheDir: resolve(repoRoot, "node_modules/.vite") } });
       const server = createServer((request, response) => handler!(request, response, () => { response.statusCode = 404; response.end(); }));
       try {
         await new Promise<void>(done => server.listen(0, "127.0.0.1", done));
@@ -144,7 +152,7 @@ describe("favicon delivery", () => {
     const { parse } = await import("parse5");
     for (const markup of [SEMIO_FAVICON_HEAD_HTML, ...fixture.documents.map((path: string) => readFileSync(resolve(repoRoot, path), "utf8"))]) {
       const icons: string[] = [];
-      const visit = (node: ReturnType<typeof parse>["childNodes"][number]) => {
+      const visit = (node: import("parse5").DefaultTreeAdapterTypes.ChildNode) => {
         if ("tagName" in node && node.tagName === "link" && node.attrs.some(attribute => attribute.name === "rel" && attribute.value === "icon")) icons.push(node.attrs.find(attribute => attribute.name === "href")!.value);
         if ("childNodes" in node) node.childNodes.forEach(visit);
       };
@@ -489,7 +497,7 @@ describe("nested mesh source identity", () => {
       });
       const catalog = parseMeshDeliveryCatalog(fixture.catalog, () => { throw new Error("Unexpected source catalog"); });
       let handler: OwnedBuildMiddleware | undefined;
-      plugins[0]!.configureServer!({ middlewares: { use(value) { handler = value; } } });
+      plugins[0]!.configureServer!({ middlewares: { use(value) { handler = value; } }, ws: { send() {} }, config: { root: repoRoot, cacheDir: resolve(repoRoot, "node_modules/.vite") } });
       server = createServer((request, response) => handler!(request, response, () => { response.statusCode = 404; response.end(); }));
       await new Promise<void>(done => server!.listen(0, "127.0.0.1", done));
       const address = server.address();
@@ -525,7 +533,7 @@ describe("puzzle3d mesh-collection asset spec", () => {
     const sandbox = mkdtempSync(join(tmpdir(), "semio-current-mesh-"));
     const plugins = meshCollectionVitePlugin(repoRoot, puzzle3dMeshSpec);
     let handler: OwnedBuildMiddleware | undefined;
-    plugins[0]!.configureServer!({ middlewares: { use(value) { handler = value; } } });
+    plugins[0]!.configureServer!({ middlewares: { use(value) { handler = value; } }, ws: { send() {} }, config: { root: repoRoot, cacheDir: resolve(repoRoot, "node_modules/.vite") } });
     const server = createServer((request, response) => handler!(request, response, () => { response.statusCode = 404; response.end(); }));
     try {
       await new Promise<void>(done => server.listen(0, "127.0.0.1", done));
@@ -923,3 +931,62 @@ describe("pre-paint appearance bootstrap", () => {
   });
 });
 //#endregion 🌓️AppearanceBoot
+
+//#region ♿️CustomThemeContrast
+/** ♿️ The theme editor prints a LIVE WCAG verdict for every user-customized appearance paint
+ * (`📌️ChromePanels/🟦️.tsx`'s `themeContrastBadgeText`). The generated default palette is gated ≥ AA by
+ * `🧪️levels-oklabmix/🟦️.ts`; an arbitrary custom theme has no such gate, which is exactly the hole this
+ * closes. `contrastRatio01` above is this suite's OWN independent implementation (0-1 float pipeline,
+ * written for the palette laws long before these exports existed) and is used here as the oracle. */
+describe("custom theme contrast verdict", () => {
+  const cases: readonly (readonly [string, string])[] = [
+    ["#ffffff", "#000000"],
+    ["#000000", "#ffffff"],
+    ["#767676", "#ffffff"],
+    ["#7b827d", "#101010"],
+    ["#1f2a44", "#c8d2e0"],
+    ["#c8c8c8", "#ffffff"],
+    ["#123456", "#123456"],
+  ];
+
+  it("agrees with this suite's own independent 0-1 luminance pipeline on every pair", () => {
+    for (const [a, b] of cases) expect(contrastRatio(a, b)).toBeCloseTo(contrastRatio01(hexToRgb01(a), hexToRgb01(b)), 10);
+  });
+
+  it("is symmetric and bounded by the spec's 1:1 and 21:1 extremes", () => {
+    for (const [a, b] of cases) {
+      expect(contrastRatio(a, b)).toBeCloseTo(contrastRatio(b, a), 12);
+      expect(contrastRatio(a, b)).toBeGreaterThanOrEqual(1);
+      expect(contrastRatio(a, b)).toBeLessThanOrEqual(21);
+    }
+    expect(contrastRatio("#ffffff", "#000000")).toBeCloseTo(21, 6);
+    expect(contrastRatio("#123456", "#123456")).toBeCloseTo(1, 10);
+  });
+
+  it("grades at the WCAG 2.2 thresholds, inclusive at each floor", () => {
+    expect([WCAG_AA_LARGE_CONTRAST, WCAG_AA_CONTRAST, WCAG_AAA_CONTRAST]).toEqual([3, 4.5, 7]);
+    expect(wcagContrastGrade(WCAG_AAA_CONTRAST)).toBe("aaa");
+    expect(wcagContrastGrade(WCAG_AAA_CONTRAST - 0.01)).toBe("aa");
+    expect(wcagContrastGrade(WCAG_AA_CONTRAST)).toBe("aa");
+    expect(wcagContrastGrade(WCAG_AA_CONTRAST - 0.01)).toBe("aaLarge");
+    expect(wcagContrastGrade(WCAG_AA_LARGE_CONTRAST)).toBe("aaLarge");
+    expect(wcagContrastGrade(WCAG_AA_LARGE_CONTRAST - 0.01)).toBe("fail");
+    expect(wcagContrastGrade(Number.NaN)).toBe("fail");
+  });
+
+  it("themePaintContrast ignores alpha, rounds to the 0.01 the badge prints, and flags sub-AA pairs", () => {
+    const opaque: Rgba8 = [255, 255, 255, 255];
+    const translucent: Rgba8 = [255, 255, 255, 3];
+    const ink: Rgba8 = [0, 0, 0, 255];
+    expect(contrastRatioRgba(translucent, ink)).toBeCloseTo(contrastRatioRgba(opaque, ink), 12);
+    const good = themePaintContrast(opaque, ink);
+    expect(good.ratio).toBe(21);
+    expect(good.grade).toBe("aaa");
+    expect(good.passesBodyText).toBe(true);
+    const bad = themePaintContrast([200, 200, 200, 255], opaque);
+    expect(bad.passesBodyText).toBe(false);
+    expect(bad.grade).toBe("fail");
+    expect(Number.isInteger(Math.round(bad.ratio * 100) - bad.ratio * 100)).toBe(true);
+  });
+});
+//#endregion ♿️CustomThemeContrast

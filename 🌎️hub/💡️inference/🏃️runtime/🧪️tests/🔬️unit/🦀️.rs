@@ -491,7 +491,7 @@ async fn gis_map_approval_committed_event_reaches_actor_frontier_and_public_chec
     let first_ingress_released = Arc::new(std::sync::atomic::AtomicBool::new(false));
     let first_ingress = tracked_approval_ingress(&identity, Some(first_ingress_released.clone()));
     let first = commit_prepared_approval(&committer_port, &identity, &accepted.job_id, &proposal_hash, &command, &base, 60_000, 1_004, gate.clone(), first_ingress).await;
-    assert!(matches!(first, Err(InferenceRouteErrorV1::Storage)), "public checkpoint refusal remains a retained nonterminal publication");
+    assert!(matches!(first, Err(InferenceRouteErrorV1::Storage)), "public checkpoint refusal remains a retained nonterminal publication, got {:?}", first.as_ref().err());
     assert!(first_ingress_released.load(Ordering::Acquire), "a failed request releases its live Hub ingress authority after the durable decision is retained");
     assert!(gate.try_lock().is_err(), "the exact document write authority remains held after publication refusal");
     assert_eq!(ledger.read(&accepted.job_id, &owner, 1_005).expect("retained proposal").proposal_state, super::super::schema::InferenceProposalStateV1::Offered);

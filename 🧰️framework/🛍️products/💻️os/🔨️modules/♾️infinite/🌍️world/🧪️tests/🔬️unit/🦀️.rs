@@ -1439,6 +1439,8 @@ fn world_ray_pick_cursor_advances_one_triangle_or_boundary_per_grant() {
         mesh_probe: 0,
         merge: 0,
         best: None,
+        pick_target: 0,
+        best_target: None,
         complete: false,
         faulted: false,
     };
@@ -1480,6 +1482,8 @@ fn world_ray_pick_cursor_stale_and_interrupted_close_do_not_publish() {
         mesh_probe: 0,
         merge: 0,
         best: None,
+        pick_target: 0,
+        best_target: None,
         complete: false,
         faulted: false,
     };
@@ -1760,6 +1764,7 @@ fn scene_with_selection_and_domain(selection_json: &str, domain: Option<(&str, &
             brush_preview_json: None,
             interaction_json: None,
             engagement_preview_json: None,
+            pick_targets_json: None,
             lod_json: None,
             chunking_json: None,
             environment_json: None,
@@ -1888,6 +1893,230 @@ fn an_engagement_preview_item_missing_its_geometry_is_skipped_not_faulted() {
     assert!(lines.is_empty());
 }
 
+//#region 🧲️PickTargetLane
+/// 🧲️ One pane's `pickTargets` lane as `cad`'s `pick_target_lane_items` publishes it: a vertex on
+/// the orbit target, an edge through it, and a locked face that RENDERS but is never hit.
+const PICK_TARGETS_JSON: &str = r#"[
+    {"kind":"object","id":"solid-1","point":[0.0,0.0,0.0],"points":[[-2.0,-2.0,-2.0],[2.0,2.0,2.0]],"typology":"wall","selectable":true,
+     "style":{"color":"--muted-foreground","emissive":"--hover-panel","opacity":0.28,"lineWidth":7.0}},
+    {"kind":"vertex","id":"v-1","point":[0.0,0.0,0.0],"points":[],"selectable":true,
+     "style":{"color":"--foreground","emissive":"--hover-base","opacity":1.0,"lineWidth":5.0}},
+    {"kind":"face","id":"f-locked","point":[0.0,0.0,0.0],"points":[[-1.0,-1.0,0.0],[1.0,1.0,0.0]],"selectable":false,
+     "style":{"color":"--accent-secondary","emissive":"--hover-window","opacity":0.042,"lineWidth":4.0}}
+]"#;
+
+fn scene_with_pick_targets(pick_targets_json: Option<&str>) -> UiComponentSceneNode {
+    let mut scene = scene_with_selection_and_domain("{}", Some(("cad", "object")));
+    if let Some(world) = scene.world_3d.as_mut() {
+        world.pick_targets_json = pick_targets_json.map(str::to_string);
+    }
+    scene
+}
+
+/// 🧲️ A pane aiming straight down the world -Z axis at the origin, with the lane loaded — the
+/// smallest scene in which a ray hits every pick target at once, so what the laws below observe is
+/// the ORDERING, not the geometry.
+fn pick_target_state(pick_targets_json: &str) -> World3dState {
+    let mut state = World3dState::new("surface-1".into(), "controller-1".into());
+    state.bounds = Rect { x: 0.0, y: 0.0, w: 400.0, h: 400.0 };
+    state.pick_bounds = state.bounds;
+    state.active_utility = "select".into();
+    state.bound_domain_id = Some("cad".into());
+    state.bound_domain_granularity_id = Some("object".into());
+    state.pick_targets = world_pick_targets_from_json(pick_targets_json);
+    state
+}
+
+fn pick_target_ray(state: &World3dState) -> (Vec3, Vec3) {
+    let camera = state.orbit.to_camera();
+    camera.ray_from_screen(200.0, 200.0, 400.0, 400.0)
+}
+
+/// 🧲️ LAW (packet W14g item 1): the `pickTargets` lane is READ, bounded, hit-tested with React's own
+/// `targetRayScore` ordering, and dispatched as `interactionSelect`/`interactionHover` at the
+/// target's own granularity.
+///
+/// ⚖️ Four things at once, because they are one mechanism: a lane that parses but never hit-tests is
+/// exactly the gap this packet closed (`📓️w2f-cad-spatial-editor-wgpu.md` §5.1 — the overlay could
+/// be SHOWN and not picked).
+#[test]
+fn the_pick_target_lane_hit_tests_finest_first_skips_unselectable_rows_and_dispatches_react_payloads() {
+    let mut state = World3dState::new("surface-1".into(), "controller-1".into());
+    sync_world3d_state(&mut state, &scene_with_pick_targets(Some(PICK_TARGETS_JSON)), Rect { x: 0.0, y: 0.0, w: 400.0, h: 400.0 });
+    assert_eq!(state.pick_targets.len(), 3, "the lane is parsed off the scene, not only off a hand-built state");
+
+    let mut state = pick_target_state(PICK_TARGETS_JSON);
+    let (origin, direction) = pick_target_ray(&state);
+    let scores: Vec<Option<f32>> = state.pick_targets.iter().map(|target| world_pick_target_ray_score(target, origin, direction)).collect();
+    assert!(scores.iter().all(Option::is_some), "the ray through the origin crosses every padded box");
+    let vertex = scores[1].expect("vertex score");
+    let object = scores[0].expect("object score");
+    assert!(vertex < object, "React's spatialPickPriority makes the FINEST kind win a tie ({vertex} < {object})");
+
+    // 🖱️ A real click through the retained authority — the pick target beats the instance under it.
+    let modifiers = PointerModifiers::default();
+    enqueue_world3d_event(&mut state, WorldInteractionIntent::pointer_button(200.0, 200.0, true, 0, &modifiers)).expect("press admitted");
+    enqueue_world3d_event(&mut state, WorldInteractionIntent::pointer_button(200.0, 200.0, false, 0, &modifiers)).expect("release admitted");
+    let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
+    let mut published: Vec<ActionDescriptor> = Vec::new();
+    let mut turns = 0;
+    while let Some(generation) = world3d_interaction_front_generation(&state) {
+        let step = with_world_step_context(1, |context| step_world3d_interaction(&mut state, generation, &mut input, context));
+        assert_ne!(step, WorldInteractionAuthorityStep::Fault, "a pick-target click never faults the authority");
+        published.extend(take_actions(&mut input));
+        turns += 1;
+        assert!(turns < 4096, "a bounded pick terminates");
+        if step == WorldInteractionAuthorityStep::Idle {
+            break;
+        }
+    }
+    let select = published.iter().find(|action| action.action == "interactionSelect").expect("a sub-object pick publishes interactionSelect");
+    let args = select.args.as_ref().expect("interactionSelect carries args");
+    assert_eq!(args.get("domainId").and_then(dsl::DslValue::as_str), Some("cad"), "the bound domain, not the world fallback");
+    // 🎯️ `targets` is JSON TEXT on the wire (see `push_interaction_targets`), never a nested array.
+    let targets = args.get("targets").and_then(dsl::DslValue::as_str).expect("targets is JSON text");
+    assert!(targets.contains(r#""granularity":"vertex""#), "the WINNING target's own kind is the granularity: {targets}");
+    assert!(targets.contains(r#""id":"v-1""#), "the kernel entity id, not the instance id: {targets}");
+    assert!(!targets.contains("f-locked"), "an unselectable (hidden/locked) row is rendered and never hit: {targets}");
+}
+
+/// 🧲️ LAW: the lane is BOUNDED on the wire — the retained set and every row's polyline are capped at
+/// parse time, so no pointer move can carry an unbounded `Vec` behind it.
+#[test]
+fn the_pick_target_lane_is_capped_at_parse_time_however_large_it_arrives() {
+    let rows: Vec<String> = (0..WORLD_PICK_TARGET_CAPACITY + 64)
+        .map(|index| {
+            let points: Vec<String> = (0..WORLD_PICK_TARGET_POINT_CAPACITY + 32).map(|sample| format!("[{sample}.0,0.0,0.0]")).collect();
+            format!(r#"{{"kind":"edge","id":"e-{index}","point":[0,0,0],"points":[{}]}}"#, points.join(","))
+        })
+        .collect();
+    let parsed = world_pick_targets_from_json(&format!("[{}]", rows.join(",")));
+    assert_eq!(parsed.len(), WORLD_PICK_TARGET_CAPACITY);
+    assert!(parsed.iter().all(|target| target.points.len() == WORLD_PICK_TARGET_POINT_CAPACITY));
+    assert!(world_pick_targets_from_json("not json").is_empty(), "a broken lane leaves the retained set empty, never faults");
+}
+
+/// 🪪️ LAW: hover keys match across the kernel/pick ALIASES (`solid:` ↔ `object:`, `shell:` → `face:`,
+/// `wire:` → `edge:`, `anchor:` → `vertex:`) — the framework twin of the CAD engine's
+/// `spatial_hover_key_aliases`, and what stops a guest echo from re-publishing the same hover.
+#[test]
+fn pick_hover_keys_match_across_the_kernel_and_pick_aliases() {
+    assert!(world_pick_keys_match(Some("object:s1"), Some("solid:s1")));
+    assert!(world_pick_keys_match(Some("solid:s1"), Some("object:s1")));
+    assert!(world_pick_keys_match(Some("shell:h1"), Some("face:h1")));
+    assert!(world_pick_keys_match(Some("wire:w1"), Some("edge:w1")));
+    assert!(world_pick_keys_match(Some("anchor:a1"), Some("vertex:a1")));
+    assert!(!world_pick_keys_match(Some("object:s1"), Some("object:s2")));
+    assert!(!world_pick_keys_match(None, Some("object:s1")));
+    assert!(!world_pick_keys_match(Some(""), Some("")));
+}
+//#endregion 🧲️PickTargetLane
+
+//#region 🌫️InstanceStyleWire
+/// 🌫️ LAW (packet W14g items 3 + 4): the instance lane carries the per-instance OPACITY a locked
+/// object is dimmed by, and the `highlighted`/`disabled`/`celebrating` flags that reach the three
+/// `MESH_STYLE_PAINT` rows nothing published before.
+#[test]
+fn the_instance_lane_carries_locked_opacity_and_the_three_unreachable_style_rows() {
+    let instances = r##"[
+        {"id":"obj-1","meshId":"mesh-1","position":[0,0,0],"color":"#ffffff","disabled":true,"opacity":0.35},
+        {"id":"obj-2","meshId":"mesh-1","position":[1,0,0],"color":"#ffffff","highlighted":true},
+        {"id":"obj-3","meshId":"mesh-1","position":[2,0,0],"color":"#ffffff","celebrating":true}
+    ]"##;
+    let mut scene = scene_with_selection("{}");
+    if let Some(world) = scene.world_3d.as_mut() {
+        world.instances_json = instances.into();
+    }
+    let mut state = World3dState::new("surface-1".into(), "controller-1".into());
+    sync_world3d_state(&mut state, &scene, Rect { x: 0.0, y: 0.0, w: 400.0, h: 400.0 });
+    assert!(state.disabled_instance_ids.contains("obj-1"));
+    assert!(state.highlighted_instance_ids.contains("obj-2"));
+    assert!(state.celebrating_instance_ids.contains("obj-3"));
+    let alpha = state
+        .draws
+        .iter()
+        .flat_map(|draw| draw.instances.iter())
+        .find(|instance| instance.id == "obj-1")
+        .map(|instance| instance.color[3])
+        .expect("the locked instance reaches a draw");
+    assert!((alpha - 0.35).abs() < 1e-3, "WORLD_LOCKED_OPACITY_SCALE multiplies the authored alpha, got {alpha}");
+    let opaque = state.draws.iter().flat_map(|draw| draw.instances.iter()).find(|instance| instance.id == "obj-2").map(|instance| instance.color[3]).expect("obj-2 reaches a draw");
+    assert!((opaque - 1.0).abs() < 1e-3, "an instance with no opacity keeps its authored alpha, got {opaque}");
+    // 🎨️ Each flag resolves to its OWN row of React's table, not to the two rows that existed here.
+    assert_eq!(resolve_mesh_style(MeshStyleState { disabled: true, ..MeshStyleState::default() }), MeshStyleKind::Disabled);
+    assert_eq!(resolve_mesh_style(MeshStyleState { highlighted: true, ..MeshStyleState::default() }), MeshStyleKind::Highlighted);
+    assert_eq!(resolve_mesh_style(MeshStyleState { celebrating: true, ..MeshStyleState::default() }), MeshStyleKind::Celebrated);
+}
+//#endregion 🌫️InstanceStyleWire
+
+//#region 🎛️GumballConfig
+/// 🎛️ LAW (packet W14g item 5): the gumball's handle set is the PLUGIN-AUTHORED `gumballConfig` when
+/// the producer published one (`cad`'s dislocate utility does), the single-mode fallback otherwise,
+/// and the drafting-plane subset intersects both — React's `gumballHandleEnabled`.
+#[test]
+fn the_gumball_offers_the_authored_config_then_the_transform_mode_fallback_intersected_with_the_plane() {
+    let mut state = World3dState::new("surface-1".into(), "controller-1".into());
+    sync_world3d_state(
+        &mut state,
+        &scene_with_selection(r#"{"transformMode":"transform","gumballConfig":{"moveAxes":true,"movePlanes":true,"rotate":true,"scaleAxes":false,"scalePlanes":false,"scaleUniform":false}}"#),
+        Rect { x: 0.0, y: 0.0, w: 400.0, h: 400.0 },
+    );
+    let config = world3d_gumball_config(&state);
+    assert!(config.admits(GumballHandle::MoveX) && config.admits(GumballHandle::MoveXY) && config.admits(GumballHandle::RotateZ));
+    assert!(!config.admits(GumballHandle::ScaleX), "an authored config that disables scaling hides AND unpicks the scale handles");
+
+    // 🎛️ No authored config → React's `gumballConfigForTransformMode`, whose `rotate` arm offers the
+    // rings ONLY. This host used to admit the three move axes unconditionally in every mode.
+    let mut state = World3dState::new("surface-1".into(), "controller-1".into());
+    sync_world3d_state(&mut state, &scene_with_selection(r#"{"transformMode":"rotateSelection"}"#), Rect { x: 0.0, y: 0.0, w: 400.0, h: 400.0 });
+    let config = world3d_gumball_config(&state);
+    assert!(config.admits(GumballHandle::RotateX));
+    assert!(!config.admits(GumballHandle::MoveX), "React's rotate mode offers no translation handle");
+    assert!(!config.admits(GumballHandle::ScaleZ));
+
+    // 📐️ A Top pane's `xy` drafting plane keeps the in-plane move/scale pair and the NORMAL rotation.
+    let mut state = World3dState::new("surface-1".into(), "controller-1".into());
+    sync_world3d_state(&mut state, &scene_with_selection(r#"{"transformMode":"transform","gumballConfig":{"plane":"xy"}}"#), Rect { x: 0.0, y: 0.0, w: 400.0, h: 400.0 });
+    let config = world3d_gumball_config(&state);
+    assert!(config.admits(GumballHandle::MoveX) && config.admits(GumballHandle::MoveY) && config.admits(GumballHandle::MoveXY) && config.admits(GumballHandle::RotateZ));
+    assert!(!config.admits(GumballHandle::MoveZ) && !config.admits(GumballHandle::RotateX) && !config.admits(GumballHandle::MoveYZ));
+    assert!(config.admits(GumballHandle::ScaleX), "an ABSENT group key means enabled — React reads every group as `!== false`");
+}
+//#endregion 🎛️GumballConfig
+
+//#region 🔘️VertexMarkerPixels
+/// 🔘️ LAW (packet W14g item 5): a vertex marker is sized in SCREEN PIXELS
+/// (`WORLD_VERTEX_DOT_PX`/`WORLD_VERTEX_MARK_PX`, `sizeAttenuation={false}`), so it keeps its
+/// apparent size as the camera pulls away instead of collapsing to a sub-pixel world-unit cross —
+/// the same defect React shipped and fixed on lowpoly.
+#[test]
+fn vertex_markers_hold_their_pixel_size_at_every_camera_distance() {
+    let mut state = World3dState::new("surface-1".into(), "controller-1".into());
+    state.bounds = Rect { x: 0.0, y: 0.0, w: 400.0, h: 400.0 };
+    let viewport = state.bounds;
+    let near = {
+        let mut orbit = state.orbit.clone();
+        orbit.distance = 4.0;
+        orbit.to_camera()
+    };
+    let far = {
+        let mut orbit = state.orbit.clone();
+        orbit.distance = 400.0;
+        orbit.to_camera()
+    };
+    let centre = Vec3::new(0.0, 0.0, 0.0);
+    let near_half = vertex_marker_half_extent(&near, viewport, centre, VERTEX_BASE_SCALE);
+    let far_half = vertex_marker_half_extent(&far, viewport, centre, VERTEX_BASE_SCALE);
+    assert!(far_half > near_half * 10.0, "a marker 100x further away spans ~100x more world units to keep its pixels ({near_half} → {far_half})");
+    let near_pixels = near_half / world_units_per_pixel(&near, viewport, near.position.sub(centre).length());
+    assert!((near_pixels - WORLD_VERTEX_DOT_PX * 0.5).abs() < 1e-3, "the plain dot is React's 6 px, got {}", near_pixels * 2.0);
+    let mark = vertex_marker_half_extent(&near, viewport, centre, VERTEX_HOVER_SCALE);
+    assert!(mark > near_half, "a hovered/selected marker is React's larger 11 px mark");
+    // 🩸️ The pre-W14g cross was `VERTEX_BASE_SCALE * 0.15` = 0.0075 world units, at ANY distance.
+    assert!(far_half > 0.0075, "the old world-unit cross was sub-pixel at this distance");
+}
+//#endregion 🔘️VertexMarkerPixels
+
 #[test]
 fn sync_parses_selection_targets_and_active_object() {
     let selection = r#"{
@@ -2000,9 +2229,13 @@ fn append_component_vertex_spheres_render_base_vertices() {
     assert_eq!(instances.len(), 0);
 
     let mut lines = Vec::new();
-    append_component_overlays(&state, &mut lines);
+    append_component_overlays(&state, &state.orbit.to_camera(), COMPONENT_OVERLAY_VIEWPORT, &mut lines);
     assert_eq!(lines.len(), 28); // 4 from edges + 24 from 4 vertex crosses
 }
+
+/// 🔘️ The viewport the component-overlay laws measure vertex markers against — their size is now in
+/// SCREEN PIXELS (`vertex_marker_half_extent`), so every one of them needs a camera and a rect.
+const COMPONENT_OVERLAY_VIEWPORT: Rect = Rect { x: 0.0, y: 0.0, w: 400.0, h: 400.0 };
 
 #[test]
 fn append_component_overlays_highlights_only_hovered_edge() {
@@ -2016,7 +2249,7 @@ fn append_component_overlays_highlights_only_hovered_edge() {
     state.meshes.insert("mesh-1".into(), mesh);
     state.draws.push(SceneDraw3d { mesh_key: "mesh-1".into(), mesh_version: 0, instances: vec![Instance3d { id: "obj-1".into(), model: Mat4::identity(), color: [1.0, 1.0, 1.0, 1.0], selected: false, hovered: false }] });
     let mut lines = Vec::new();
-    append_component_overlays(&state, &mut lines);
+    append_component_overlays(&state, &state.orbit.to_camera(), COMPONENT_OVERLAY_VIEWPORT, &mut lines);
     assert!(lines.len() >= 2);
     assert!(lines.iter().any(|vertex| vertex.color[2] > 0.9));
 }
@@ -2030,7 +2263,7 @@ fn append_component_overlays_highlights_selected_edge() {
     state.meshes.insert("mesh-1".into(), mesh);
     state.draws.push(SceneDraw3d { mesh_key: "mesh-1".into(), mesh_version: 0, instances: vec![Instance3d { id: "obj-1".into(), model: Mat4::identity(), color: [1.0, 1.0, 1.0, 1.0], selected: false, hovered: false }] });
     let mut lines = Vec::new();
-    append_component_overlays(&state, &mut lines);
+    append_component_overlays(&state, &state.orbit.to_camera(), COMPONENT_OVERLAY_VIEWPORT, &mut lines);
     assert!(lines.len() >= 2);
     assert!(lines.iter().any(|vertex| vertex.color[2] > 0.9));
 }
@@ -2182,7 +2415,7 @@ fn marquee_face_preview_and_overlay_use_logical_face_ids() {
     update_marquee_preview(&mut state, bounds);
     assert!(state.marquee_preview_ids.iter().any(|id| id == "10" || id == "11"), "preview ids: {:?}", state.marquee_preview_ids);
     let mut lines = Vec::new();
-    append_component_overlays(&state, &mut lines);
+    append_component_overlays(&state, &state.orbit.to_camera(), COMPONENT_OVERLAY_VIEWPORT, &mut lines);
     assert!(!lines.is_empty(), "face marquee preview should draw triangle edge lines");
 }
 
@@ -2560,7 +2793,7 @@ fn append_component_face_overlay_lines_include_hovered_face() {
     state.meshes.insert("mesh-1".into(), mesh);
     state.draws.push(SceneDraw3d { mesh_key: "mesh-1".into(), mesh_version: 0, instances: vec![Instance3d { id: "obj-1".into(), model: Mat4::identity(), color: [1.0, 1.0, 1.0, 1.0], selected: false, hovered: false }] });
     let mut lines = Vec::new();
-    append_component_overlays(&state, &mut lines);
+    append_component_overlays(&state, &state.orbit.to_camera(), COMPONENT_OVERLAY_VIEWPORT, &mut lines);
     assert!(lines.len() >= 6, "hovered face should emit triangle edge lines, got {}", lines.len());
 }
 

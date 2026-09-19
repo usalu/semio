@@ -317,6 +317,13 @@ enum SceneDragMode {
     InkStroke { block_id: String },
     InkEraser { mode: String },
     InkMarqueeDrag { start_x: f32, start_y: f32 },
+    /// 🫳️ A row/palette TRANSFER drag inside a list surface — the renderer's stand-in for React's
+    /// native HTML5 drag: `dataTransfer.setData(mime, payload)` on the press, a drop target resolved
+    /// on the release. `Table` sets it from a row's `_drag` record under `rowDragMime`
+    /// (`📊️Table/🟦️.tsx:207-217`); `BlockList` sets it from a palette entry under
+    /// `PALETTE_DRAG_MIME` (`🧩️BlockListHost/🟦️.tsx:142-146`). Both drop back into the SAME surface,
+    /// which is the only geometry React's own handlers accept either.
+    RowTransfer { mime: String, payload: String, start_x: f32, start_y: f32 },
 }
 
 #[derive(Clone, Debug)]
@@ -1279,12 +1286,140 @@ pub(crate) fn passive_scene_wheel(scene: &UiComponentSceneNode, bounds: Rect, x:
     true
 }
 
+//#region SceneRowTransfer
+/// 🧩️ `PALETTE_DRAG_MIME` in `🧩️BlockListHost/🟦️.tsx:41` — the block-kind mime its palette rows set
+/// and its step cards read back.
+pub(crate) const BLOCK_LIST_PALETTE_DRAG_MIME: &str = "application/x-semio-block-list-block-kind";
+
+/// 📏️ How far a press must travel before it counts as a drag rather than a click — the same 5 px the
+/// shell's own tree drag uses, and the reason a plain row click still selects instead of transferring.
+const SCENE_TRANSFER_DRAG_SLOP_SQUARED: f32 = 25.0;
+
+/// 🫳️ The `(mime, payload)` a press at this point would put on the drag, or `None` for a point that
+/// is not a drag SOURCE. The two sources React declares are a `Table` row carrying `_drag` (only when
+/// the scene names a `rowDragMime`) and a `BlockList` palette entry.
+fn scene_transfer_drag_source(scene: &UiComponentSceneNode, bounds: Rect, x: f32, y: f32, theme: &Theme) -> Option<(String, String)> {
+    match scene.component_kind {
+        SurfaceKind::Table => {
+            let table = scene.table.as_ref()?;
+            let mime = table.row_drag_mime.clone()?;
+            let columns: Vec<TableColumn> = serde_json::from_str(&table.columns_json).unwrap_or_default();
+            let metrics = table_metrics(bounds, columns.len(), theme);
+            if y < metrics.body.y {
+                return None;
+            }
+            let rows: Vec<Value> = serde_json::from_str(&table.rows_json).unwrap_or_default();
+            let scroll = scroll_offset(&scene.surface_id, "body");
+            let index = usize::try_from(((y - metrics.body.y + scroll) / metrics.row_h.max(1.0)).floor() as i64).ok()?;
+            let payload = rows.get(index)?.get("_drag")?;
+            Some((mime, payload.to_string()))
+        }
+        SurfaceKind::BlockList => {
+            scene.block_list.as_ref()?;
+            let plan = block_list_plan(scene, bounds, theme);
+            let target = plan.targets[plan.body_range.end..].iter().find(|target| target.rect.contains(x, y))?;
+            let kind = target.control_id.rsplit_once(".palette.")?.1.to_string();
+            Some((BLOCK_LIST_PALETTE_DRAG_MIME.to_string(), kind))
+        }
+        _ => None,
+    }
+}
+
+/// 🫴️ The action a drop of `(mime, payload)` at this point dispatches, or `None` for a point that is
+/// not a drop TARGET.
+///
+/// `Table`'s whole host is the target: React's `onDrop` takes the first `application/x-semio-*` entry
+/// on the transfer, `JSON.parse`s it and spreads it over `dropActionJson`'s own args
+/// (`📊️Table/🟦️.tsx:177-189` through `dispatchCellAction`). `BlockList`'s target is a STEP CARD, and
+/// the drop adds a block of the dragged kind to that step (`🧩️BlockListHost/🟦️.tsx:107-112`).
+fn scene_transfer_drop_action(scene: &UiComponentSceneNode, bounds: Rect, x: f32, y: f32, theme: &Theme, mime: &str, payload: &str) -> Option<ActionDescriptor> {
+    if !bounds.contains(x, y) {
+        return None;
+    }
+    match scene.component_kind {
+        SurfaceKind::Table => {
+            if !mime.starts_with("application/x-semio-") {
+                return None;
+            }
+            let table = scene.table.as_ref()?;
+            let descriptor: ActionDescriptor = serde_json::from_str(table.drop_action_json.as_deref()?).ok()?;
+            let patch: Value = serde_json::from_str(payload).ok()?;
+            if !patch.is_object() {
+                return None;
+            }
+            Some(merge_action_args(&descriptor, patch))
+        }
+        SurfaceKind::BlockList => {
+            if mime != BLOCK_LIST_PALETTE_DRAG_MIME {
+                return None;
+            }
+            scene.block_list.as_ref()?;
+            let plan = block_list_plan(scene, bounds, theme);
+            if !plan.body.contains(x, y) {
+                return None;
+            }
+            let step_id = plan.targets[plan.body_range.clone()]
+                .iter()
+                .rev()
+                .filter(|target| target.rect.contains(x, y))
+                .find_map(|target| target.control_id.rsplit_once(".step.").map(|(_, suffix)| suffix))
+                .filter(|suffix| !suffix.contains('.'))?
+                .to_string();
+            Some(scene_action(scene, "addBlock", json!({ "stepId": step_id, "kind": payload })))
+        }
+        _ => None,
+    }
+}
+//#endregion SceneRowTransfer
+
+/// ⌨️🖱️ The modifier set a scene press carries, as `UiEvent`'s pointer variants deliver it. Kept as
+/// this module's own tiny `Copy` type rather than threading `ui_wgpu::wgpu::EventModifiers` through
+/// every hit signature, so the merge-mode policy below has ONE home.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub struct SceneModifiers {
+    pub shift: bool,
+    pub ctrl: bool,
+    pub alt: bool,
+    pub meta: bool,
+}
+
+impl From<ui_wgpu::wgpu::EventModifiers> for SceneModifiers {
+    fn from(modifiers: ui_wgpu::wgpu::EventModifiers) -> Self {
+        Self { shift: modifiers.shift, ctrl: modifiers.ctrl, alt: modifiers.alt, meta: modifiers.meta }
+    }
+}
+
+impl SceneModifiers {
+    /// 🍎️ The platform-neutral "add to the selection" key — `event.metaKey || event.ctrlKey`, exactly
+    /// as `VirtualFileSystem`'s own row handler folds it (`⚙️VirtualFileSystem/🟦️.tsx:520`).
+    pub fn additive(self) -> bool {
+        self.ctrl || self.meta
+    }
+
+    /// 🎯️ The wgpu twin of `interactionMergeFromModifiers` (`🖱️ui/🎯️targets/⚛️react/🟦️.tsx:945`) — the ONE
+    /// click-select modifier→merge policy every surface routes through. Priority is shift, then
+    /// ctrl/meta, then alt, so a chord holding more than one picks the first that matches and shift
+    /// always wins a range pick. Distinct from `paint2d_merge_mode`'s marquee-drag policy, which never
+    /// produces `range` because a drag has no ordered topology to range over.
+    pub fn interaction_merge(self) -> &'static str {
+        if self.shift {
+            "range"
+        } else if self.additive() {
+            "invertive"
+        } else if self.alt {
+            "subtractive"
+        } else {
+            "replace"
+        }
+    }
+}
+
 /** @emoji 🖱️ The generic (non-bespoke, non-Canvas2d/Ink/TextEditor/Paint2d) per-event press route.
  * Every list kind resolves the press against its own painted row
  * geometry and publishes the action React's matching host dispatches — a row select, a header sort, a
  * stepper delta, a feed activation, a checkpoint checkout, a block add/remove/move, a virtual file
  * system double-click. The action is published on RELEASE, mirroring a DOM `click`. */
-pub(crate) fn passive_scene_pointer_button(scene: &UiComponentSceneNode, bounds: Rect, x: f32, y: f32, down: bool, button: i16, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
+pub(crate) fn passive_scene_pointer_button(scene: &UiComponentSceneNode, bounds: Rect, x: f32, y: f32, down: bool, button: i16, modifiers: SceneModifiers, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
     if !bounds.contains(x, y) {
         if !down {
             mutate_scene_state(&scene.surface_id, |state| {
@@ -1298,11 +1433,22 @@ pub(crate) fn passive_scene_pointer_button(scene: &UiComponentSceneNode, bounds:
         return Ok(false);
     }
     if down {
+        // 🫳️ A press on a drag SOURCE arms the transfer; it only becomes a drag if the pointer then
+        // travels (below), so a plain row click still selects. React gets the same split for free
+        // from the DOM: `draggable` rows fire `dragstart` on movement and `click` without it.
+        let source = (button == 0).then(|| scene_transfer_drag_source(scene, bounds, x, y, &scene_input_theme())).flatten();
         mutate_scene_state(&scene.surface_id, |state| {
             state.pointer_was_down = true;
+            if let Some((mime, payload)) = source.clone() {
+                state.drag = Some(SceneDrag { mode: SceneDragMode::RowTransfer { mime, payload, start_x: x, start_y: y } });
+            }
         });
         return Ok(true);
     }
+    let transfer = scene_state(&scene.surface_id).drag.and_then(|drag| match drag.mode {
+        SceneDragMode::RowTransfer { mime, payload, start_x, start_y } => Some((mime, payload, start_x, start_y)),
+        _ => None,
+    });
     mutate_scene_state(&scene.surface_id, |state| {
         state.pointer_was_down = false;
         state.drag = None;
@@ -1310,11 +1456,22 @@ pub(crate) fn passive_scene_pointer_button(scene: &UiComponentSceneNode, bounds:
     if button != 0 {
         return Ok(true);
     }
+    if let Some((mime, payload, start_x, start_y)) = transfer {
+        let (dx, dy) = (x - start_x, y - start_y);
+        if dx * dx + dy * dy > SCENE_TRANSFER_DRAG_SLOP_SQUARED {
+            // 🫴️ A real drag: it drops, or it is discarded. Either way it never also fires the click
+            // action underneath, exactly as a DOM `dragend` never produces a `click`.
+            if let Some(action) = scene_transfer_drop_action(scene, bounds, x, y, &scene_input_theme(), &mime, &payload) {
+                write_scene_action(input, &action)?;
+            }
+            return Ok(true);
+        }
+    }
     if let Some(action) = scene_double_click_action(scene, bounds, x, y) {
         write_scene_action(input, &action)?;
         return Ok(true);
     }
-    let Some(hit) = scene_list_hit(scene, bounds, x, y, &scene_input_theme(), true) else {
+    let Some(hit) = scene_list_hit(scene, bounds, x, y, &scene_input_theme(), true, modifiers) else {
         return Ok(true);
     };
     if let Some(row_id) = hit.toggle_expanded {
@@ -1335,7 +1492,7 @@ pub(crate) fn passive_scene_pointer_move(scene: &UiComponentSceneNode, bounds: R
         return false;
     }
     if scene_kind_is_list(scene.component_kind) {
-        let hovered = scene_list_hit(scene, bounds, x, y, &scene_input_theme(), false).map(|hit| hit.control_id);
+        let hovered = scene_list_hit(scene, bounds, x, y, &scene_input_theme(), false, SceneModifiers::default()).map(|hit| hit.control_id);
         mutate_scene_state(&scene.surface_id, |state| {
             state.hovered_control_id = hovered;
             state.last_pointer_pos = (x, y);
@@ -1387,10 +1544,10 @@ pub(crate) fn scene_kind_is_list(kind: SurfaceKind) -> bool {
 /// 🎯️ Resolves `(x, y)` inside a list surface. `activate` is `false` for a hover sample: the action
 /// is then not built at all, which keeps a pointer move free of both the allocation and — for the
 /// virtual file system — the selection-anchor mutation `vfs_selection_for_click` performs.
-fn scene_list_hit(scene: &UiComponentSceneNode, bounds: Rect, x: f32, y: f32, theme: &Theme, activate: bool) -> Option<SceneListHit> {
+fn scene_list_hit(scene: &UiComponentSceneNode, bounds: Rect, x: f32, y: f32, theme: &Theme, activate: bool, modifiers: SceneModifiers) -> Option<SceneListHit> {
     match scene.component_kind {
-        SurfaceKind::Table => table_hit(scene, bounds, x, y, theme),
-        SurfaceKind::VirtualFileSystem => vfs_hit(scene, bounds, x, y, theme, activate),
+        SurfaceKind::Table => table_hit(scene, bounds, x, y, theme, modifiers),
+        SurfaceKind::VirtualFileSystem => vfs_hit(scene, bounds, x, y, theme, activate, modifiers),
         SurfaceKind::GraphTimeline => graph_timeline_hit(scene, bounds, y, theme),
         SurfaceKind::EventFeed => event_feed_hit(scene, bounds, y, theme),
         SurfaceKind::BlockList => block_list_hit(scene, bounds, x, y, theme),
@@ -1748,8 +1905,16 @@ pub fn render_component_scene_step(scene: &UiComponentSceneNode, bounds: Rect, c
         }
         7 => {
             if scene.component_kind == SurfaceKind::NodeGraph {
+                // ✂️ Captions are clipped to the surface they annotate, exactly like React's overlay
+                // (`🕸️NodeGraph/🟦️.tsx` paints them inside the canvas's own `overflow: hidden` box):
+                // the engine publishes a row for EVERY node, including the ones the camera has pushed
+                // off screen, so an unclipped run of glyphs lands on the neighbouring window. The
+                // scissor also opens a fresh draw layer, which keeps the captions above the engine
+                // raster pushed in phase 6 whatever a single layer's own channel order is.
+                ctx.draw.push_scissor(bounds);
                 engine_canvas::paint_node_graph_labels(ctx, scene, bounds);
-            } else if scene.component_kind != SurfaceKind::TextEditor {
+                ctx.draw.pop_scissor();
+            } else if !matches!(scene.component_kind, SurfaceKind::TextEditor | SurfaceKind::Paint2d) {
                 return cursor.finish();
             }
             if cursor.advance_phase().is_err() {
@@ -1760,6 +1925,14 @@ pub fn render_component_scene_step(scene: &UiComponentSceneNode, bounds: Rect, c
         8 => {
             if scene.component_kind == SurfaceKind::NodeGraph {
                 engine_canvas::paint_node_graph_overlays(ctx, scene, bounds);
+            }
+            // 🖌️🧭️ Paint2d's own two chrome overlays — the live marquee and the navigator's
+            // "you are here" rectangle — ride the SAME overlay phase, clipped to the surface so a
+            // lasso dragged past the pane edge cannot paint over its neighbour.
+            if scene.component_kind == SurfaceKind::Paint2d {
+                ctx.draw.push_scissor(bounds);
+                engine_canvas::paint_paint2d_overlays(ctx, scene, bounds);
+                ctx.draw.pop_scissor();
             }
             if cursor.advance_phase().is_err() {
                 return ui_wgpu::wgpu::ScenePaintStep::Fault;
@@ -2145,12 +2318,12 @@ fn table_row_id(row: &Value, index: usize) -> String {
 /// (`interactionSelect`, with `targets` a JSON STRING of `[{granularity, id}]` — the wire shape the
 /// framework's interaction bus reads); a plugin-private table keeps its own `selectRow` verb.
 /// Ported from `TableHost`'s `onRowClick`.
-fn table_row_action(scene: &UiComponentSceneNode, table: &ui_wgpu::wgpu::TableScene, row: &Value, row_id: &str) -> ActionDescriptor {
+fn table_row_action(scene: &UiComponentSceneNode, table: &ui_wgpu::wgpu::TableScene, row: &Value, row_id: &str, modifiers: SceneModifiers) -> ActionDescriptor {
     match (table.domain_id.as_deref(), table.domain_granularity_id.as_deref()) {
         (Some(domain_id), Some(granularity)) => scene_action(
             scene,
             "interactionSelect",
-            json!({ "domainId": domain_id, "targets": json!([{ "granularity": granularity, "id": row_id }]).to_string(), "merge": "replace", "method": "pick" }),
+            json!({ "domainId": domain_id, "targets": json!([{ "granularity": granularity, "id": row_id }]).to_string(), "merge": modifiers.interaction_merge(), "method": "pick" }),
         ),
         _ => scene_action(scene, "selectRow", json!({ "surfaceId": scene.surface_id, "row": row })),
     }
@@ -2258,7 +2431,7 @@ fn table_cell_hit(cell: &Value, cell_rect: Rect, x: f32) -> Option<Option<Action
 
 /// 🎯️ Resolves a pointer point inside a `SurfaceKind::Table`: a sortable header band, a stepper
 /// segment, a row action button, or the row itself.
-fn table_hit(scene: &UiComponentSceneNode, inner: Rect, x: f32, y: f32, theme: &Theme) -> Option<SceneListHit> {
+fn table_hit(scene: &UiComponentSceneNode, inner: Rect, x: f32, y: f32, theme: &Theme, modifiers: SceneModifiers) -> Option<SceneListHit> {
     let table = scene.table.as_ref()?;
     let columns: Vec<TableColumn> = serde_json::from_str(&table.columns_json).unwrap_or_default();
     let metrics = table_metrics(inner, columns.len(), theme);
@@ -2288,7 +2461,7 @@ fn table_hit(scene: &UiComponentSceneNode, inner: Rect, x: f32, y: f32, theme: &
             }
         }
     }
-    Some(SceneListHit::row(control_id, Some(table_row_action(scene, table, row, &row_id))))
+    Some(SceneListHit::row(control_id, Some(table_row_action(scene, table, row, &row_id, modifiers))))
 }
 
 /// 📊️ Renders `SurfaceKind::Table`: a sortable header band over a scrolling, selectable row body
@@ -2367,7 +2540,11 @@ fn render_table(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkW
             }
         }
         let drag_data = table.row_drag_mime.as_ref().and_then(|mime| row.get("_drag").map(|payload| HashMap::from([(mime.clone(), payload.to_string())])));
-        ctx.input.register_hit(HitTarget { rect: row_rect, event: Some(table_row_action(scene, table, row, &row_id)), control_id: Some(control_id), kind: HitKind::Generic, drag_axis: None, drag_data });
+        // 🖱️ The PAINT-time fallback action carries the unmodified merge: a paint cannot know which
+        // keys a press three frames later will hold. The live press resolves through
+        // `passive_scene_pointer_button` → `table_hit`, which re-derives this row from the same
+        // geometry WITH the press's own `SceneModifiers` — that is the path that answers shift/ctrl.
+        ctx.input.register_hit(HitTarget { rect: row_rect, event: Some(table_row_action(scene, table, row, &row_id, SceneModifiers::default())), control_id: Some(control_id), kind: HitKind::Generic, drag_axis: None, drag_data });
     }
     ctx.draw.pop_scissor();
 }
@@ -2660,6 +2837,11 @@ enum DiffLineOperation {
 struct DiffLine<'a> {
     operation: DiffLineOperation,
     text: &'a str,
+    /// 🔢️ 1-based line number in `before`, present on `Equal` and `Removed` lines — React's
+    /// `beforeNo` (`🔺️DiffViewHost/🟦️.tsx:20`, assigned at `:40`/`:44`/`:52`).
+    before_no: Option<u32>,
+    /// 🔢️ 1-based line number in `after`, present on `Equal` and `Added` lines — React's `afterNo`.
+    after_no: Option<u32>,
 }
 
 /// 🧮️ Above this many `before.len() * after.len()` DP cells, [`diff_lines`] skips the LCS table and
@@ -2668,19 +2850,41 @@ struct DiffLine<'a> {
 /// `render_graph_timeline` re-parses `columns_json` every frame rather than caching it).
 const DIFF_LCS_CELL_BUDGET: usize = 200_000;
 
+/// 🔢️ A 0-based source index as the 1-based gutter number React prints (`i + 1`).
+fn diff_line_no(index: usize) -> Option<u32> {
+    u32::try_from(index + 1).ok()
+}
+
+/// 📏️ One gutter column's width. React gives each number span `w-10` — Tailwind's 2.5rem, 40 logical
+/// px at the default root font size (`🔺️DiffViewHost/🟦️.tsx:106-107`, `:123`).
+const DIFF_GUTTER_COLUMN_W: f32 = 40.0;
+
+/// 🔢️ Draws one right-aligned, muted gutter number inside the column whose RIGHT edge is `right_x`,
+/// exactly React's `text-right tabular-nums text-muted-foreground` span. A `None` number prints
+/// nothing at all (React renders `""`), which is what a removed line's `afterNo` is.
+fn draw_diff_gutter_number(ctx: &mut FrameworkWidgetContext<'_>, number: Option<u32>, right_x: f32, baseline_y: f32, size: f32, color: Rgba) {
+    let Some(number) = number else {
+        return;
+    };
+    let text = number.to_string();
+    let width = ctx.atlas.measure_text(&text, size).0;
+    draw_text(ctx, &text, right_x - width, baseline_y, size, color);
+}
+
 fn diff_lines<'a>(before: &[&'a str], after: &[&'a str]) -> Vec<DiffLine<'a>> {
     let (n, m) = (before.len(), after.len());
     if n.saturating_mul(m) > DIFF_LCS_CELL_BUDGET {
         let mut out = Vec::with_capacity(n + m);
         for i in 0..n.max(m) {
+            let (before_no, after_no) = (u32::try_from(i + 1).ok(), u32::try_from(i + 1).ok());
             match (before.get(i).copied(), after.get(i).copied()) {
-                (Some(b), Some(a)) if b == a => out.push(DiffLine { operation: DiffLineOperation::Equal, text: b }),
+                (Some(b), Some(a)) if b == a => out.push(DiffLine { operation: DiffLineOperation::Equal, text: b, before_no, after_no }),
                 (Some(b), Some(a)) => {
-                    out.push(DiffLine { operation: DiffLineOperation::Removed, text: b });
-                    out.push(DiffLine { operation: DiffLineOperation::Added, text: a });
+                    out.push(DiffLine { operation: DiffLineOperation::Removed, text: b, before_no, after_no: None });
+                    out.push(DiffLine { operation: DiffLineOperation::Added, text: a, before_no: None, after_no });
                 }
-                (Some(b), None) => out.push(DiffLine { operation: DiffLineOperation::Removed, text: b }),
-                (None, Some(a)) => out.push(DiffLine { operation: DiffLineOperation::Added, text: a }),
+                (Some(b), None) => out.push(DiffLine { operation: DiffLineOperation::Removed, text: b, before_no, after_no: None }),
+                (None, Some(a)) => out.push(DiffLine { operation: DiffLineOperation::Added, text: a, before_no: None, after_no }),
                 (None, None) => {}
             }
         }
@@ -2696,23 +2900,23 @@ fn diff_lines<'a>(before: &[&'a str], after: &[&'a str]) -> Vec<DiffLine<'a>> {
     let (mut i, mut j) = (0, 0);
     while i < n && j < m {
         if before[i] == after[j] {
-            out.push(DiffLine { operation: DiffLineOperation::Equal, text: before[i] });
+            out.push(DiffLine { operation: DiffLineOperation::Equal, text: before[i], before_no: diff_line_no(i), after_no: diff_line_no(j) });
             i += 1;
             j += 1;
         } else if table[i + 1][j] >= table[i][j + 1] {
-            out.push(DiffLine { operation: DiffLineOperation::Removed, text: before[i] });
+            out.push(DiffLine { operation: DiffLineOperation::Removed, text: before[i], before_no: diff_line_no(i), after_no: None });
             i += 1;
         } else {
-            out.push(DiffLine { operation: DiffLineOperation::Added, text: after[j] });
+            out.push(DiffLine { operation: DiffLineOperation::Added, text: after[j], before_no: None, after_no: diff_line_no(j) });
             j += 1;
         }
     }
     while i < n {
-        out.push(DiffLine { operation: DiffLineOperation::Removed, text: before[i] });
+        out.push(DiffLine { operation: DiffLineOperation::Removed, text: before[i], before_no: diff_line_no(i), after_no: None });
         i += 1;
     }
     while j < m {
-        out.push(DiffLine { operation: DiffLineOperation::Added, text: after[j] });
+        out.push(DiffLine { operation: DiffLineOperation::Added, text: after[j], before_no: None, after_no: diff_line_no(j) });
         j += 1;
     }
     out
@@ -2751,7 +2955,8 @@ fn split_diff_rows<'a>(operations: &[DiffLine<'a>]) -> Vec<(Option<DiffLine<'a>>
 /// scrolling column with `+`/`-` markers (default, or `mode: "unified"`) or as two aligned columns
 /// (`mode: "split"`). Add/remove TEXT is tinted with the theme's `accent`/`error` tokens and equal
 /// text stays full-brightness `theme.text`, matching `DIFF_LINE_CLASS`'s per-line text-color classes
-/// in `🔺️DiffViewHost/🟦️.tsx` — never a whole-row background wash.
+/// in `🔺️DiffViewHost/🟦️.tsx` — never a whole-row background wash. Every row is preceded by React's
+/// muted, right-aligned line-number gutter (`beforeNo`/`afterNo`).
 fn render_diff_view(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>) {
     let theme = ctx.theme;
     let Some(diff) = &scene.diff_view else {
@@ -2777,19 +2982,27 @@ fn render_diff_view(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut Framew
 
     let col_w = if split { (inner.w * 0.5).max(1.0) } else { inner.w };
     let right_x = inner.x + col_w;
+    // 🔢️ The line-number gutter React prints ahead of every line: TWO columns in unified mode
+    // (`beforeNo` then `afterNo`), ONE per pane in split mode (`🔺️DiffViewHost/🟦️.tsx:106-107`,
+    // `:123`). It is muted, right-aligned and non-selectable there; here it is muted, right-aligned
+    // and carries no hit target, and the line text starts after it.
+    let gutter_w = if split { DIFF_GUTTER_COLUMN_W } else { DIFF_GUTTER_COLUMN_W * 2.0 + pad };
     if split {
         for (row_index, (left, right)) in split_diff_rows(&operations).iter().enumerate() {
             let y = inner.y + row_index as f32 * row_h - scroll;
             if y + row_h < inner.y || y > inner.y + inner.h {
                 continue;
             }
+            let baseline = y + row_h * 0.7;
+            draw_diff_gutter_number(ctx, left.and_then(|line| line.before_no), inner.x + pad + gutter_w, baseline, theme.font_size_small, theme.text_muted);
+            draw_diff_gutter_number(ctx, right.and_then(|line| line.after_no), right_x + pad + gutter_w, baseline, theme.font_size_small, theme.text_muted);
             if let Some(line) = left {
                 let color = if line.operation == DiffLineOperation::Removed { theme.error } else { theme.text };
-                draw_text(ctx, line.text, inner.x + pad, y + row_h * 0.7, theme.font_size_small, color);
+                draw_text(ctx, line.text, inner.x + pad + gutter_w + pad, baseline, theme.font_size_small, color);
             }
             if let Some(line) = right {
                 let color = if line.operation == DiffLineOperation::Added { theme.accent } else { theme.text };
-                draw_text(ctx, line.text, right_x + pad, y + row_h * 0.7, theme.font_size_small, color);
+                draw_text(ctx, line.text, right_x + pad + gutter_w + pad, baseline, theme.font_size_small, color);
             }
             ctx.draw.push_line(right_x, y, right_x, y + row_h, theme.separator, theme.stroke_hairline);
         }
@@ -2801,12 +3014,15 @@ fn render_diff_view(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut Framew
         if y + row_h < inner.y || y > inner.y + inner.h {
             continue;
         }
+        let baseline = y + row_h * 0.7;
+        draw_diff_gutter_number(ctx, line.before_no, inner.x + pad + DIFF_GUTTER_COLUMN_W, baseline, theme.font_size_small, theme.text_muted);
+        draw_diff_gutter_number(ctx, line.after_no, inner.x + pad + DIFF_GUTTER_COLUMN_W * 2.0 + pad, baseline, theme.font_size_small, theme.text_muted);
         let (marker, color) = match line.operation {
             DiffLineOperation::Added => ('+', theme.accent),
             DiffLineOperation::Removed => ('-', theme.error),
             DiffLineOperation::Equal => (' ', theme.text),
         };
-        draw_text(ctx, &format!("{marker} {}", line.text), inner.x + pad, y + row_h * 0.7, theme.font_size_small, color);
+        draw_text(ctx, &format!("{marker} {}", line.text), inner.x + pad + gutter_w + pad, baseline, theme.font_size_small, color);
     }
     ctx.draw.pop_scissor();
 }
@@ -3793,6 +4009,14 @@ fn render_canvas_2d(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut Framew
                     let h = ih as f32 * viewport.zoom;
                     ctx.draw.push_raster_quad(&key, [sx, sy, w.max(1.0), h.max(1.0)], [0.0, 0.0, 1.0, 1.0], opacity);
                 }
+            }
+            continue;
+        }
+        if layer.kind == "text" {
+            if let Some(text) = layer.text.as_ref().and_then(|text| text.content.as_deref()) {
+                let size = layer.text.as_ref().and_then(|text| text.size).unwrap_or(14.0) as f32;
+                let (sx, sy) = viewport.world_to_screen(layer.x as f32, layer.y as f32, inner);
+                draw_text(ctx, text, sx, sy + size.max(8.0), size.max(8.0), theme.text);
             }
             continue;
         }
@@ -7095,7 +7319,7 @@ fn vfs_row_id(row: &Value) -> String {
 /// 🎯️ Resolves a pointer point inside a `SurfaceKind::VirtualFileSystem`: a row's expand chevron, or
 /// the row itself. A row press sends `selectRows` with `{ surfaceId, ids }`, the payload
 /// `VirtualFileSystemHost`'s `onSelectionChange` sends.
-fn vfs_hit(scene: &UiComponentSceneNode, inner: Rect, x: f32, y: f32, theme: &Theme, activate: bool) -> Option<SceneListHit> {
+fn vfs_hit(scene: &UiComponentSceneNode, inner: Rect, x: f32, y: f32, theme: &Theme, activate: bool, modifiers: SceneModifiers) -> Option<SceneListHit> {
     let vfs = scene.virtual_file_system.as_ref()?;
     let metrics = vfs_metrics(inner, theme);
     if y < metrics.body.y {
@@ -7119,7 +7343,7 @@ fn vfs_hit(scene: &UiComponentSceneNode, inner: Rect, x: f32, y: f32, theme: &Th
         return Some(SceneListHit::row(control_id, None));
     }
     let ordered: Vec<String> = visible.iter().map(|entry| vfs_row_id(&entry.row)).collect();
-    let ids = vfs_selection_for_click(&scene.surface_id, &row_id, &ordered, false, false);
+    let ids = vfs_selection_for_click(&scene.surface_id, &row_id, &ordered, modifiers.shift, modifiers.additive());
     Some(SceneListHit::row(control_id, Some(scene_action(scene, "selectRows", json!({ "surfaceId": scene.surface_id, "ids": ids })))))
 }
 

@@ -8,6 +8,14 @@ import { parse as parseJson, type ParseError } from "jsonc-parser";
 import ts from "typescript";
 import * as discovery from "../../🔍️discovery/🟦️.ts";
 
+/** 👀️ The reviewed-fixture-input manifest these contracts read: its catalog anchor, the revision it belongs to and
+ * the per-role inputs with the preimage each one must still hash to. */
+interface ReviewedFixtureAuthority {
+  readonly catalog: Readonly<{ path: string; sha256: string; caseIndex: number }>;
+  readonly revision: Readonly<{ path: string; id: string }>;
+  readonly inputs: readonly Readonly<{ role: string; path: string; preimage: Readonly<{ sha256: string; size: number; mode: number }> }>[];
+}
+
 const libraryRoot = resolve(import.meta.dir, "../.."), root = resolve(libraryRoot, "../../../../..");
 const vector = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/🔖️readme-current-source-revision/🔣️.json"), "utf8"));
 const schema = JSON.parse(readFileSync(join(import.meta.dir, "../../🧬️schema/🔖️readme-current-source-revision/🔣️.json"), "utf8"));
@@ -38,13 +46,15 @@ function evidence(path: string) {
 }
 
 const catalogBytes = evidence(vector.catalogPath).bytes, originalCatalog = JSON.parse(catalogBytes.toString("utf8"));
-const fixtureAuthorityInput = evidence(vector.fixtureInputs.path), fixtureAuthority = JSON.parse(fixtureAuthorityInput.bytes.toString("utf8"));
+const fixtureAuthorityInput = evidence(vector.fixtureInputs.path), fixtureAuthority: ReviewedFixtureAuthority = JSON.parse(fixtureAuthorityInput.bytes.toString("utf8"));
 const fixtureSchema = JSON.parse(evidence("🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/👀️readme-reviewed-fixture-inputs/📋️manifest/🔣️.json").bytes.toString("utf8"));
-if (sha(fixtureAuthorityInput.bytes) !== vector.fixtureInputs.sha256 || !new Ajv({ allErrors: true }).compile(fixtureSchema)(fixtureAuthority) || fixtureAuthority.catalog.path !== vector.catalogPath || fixtureAuthority.catalog.sha256 !== vector.catalogSha256 || fixtureAuthority.revision.id !== vector.revisionId) throw new Error("Reviewed fixture authority drift");
+if (sha(fixtureAuthorityInput.bytes) !== vector.fixtureInputs.sha256 || !new Ajv({ allErrors: true }).compile<ReviewedFixtureAuthority>(fixtureSchema)(fixtureAuthority) || fixtureAuthority.catalog.path !== vector.catalogPath || fixtureAuthority.catalog.sha256 !== vector.catalogSha256 || fixtureAuthority.revision.id !== vector.revisionId) throw new Error("Reviewed fixture authority drift");
 
 /** 🧫️ Maps verified fixture bytes to declared logical evidence without reading the historical live path. */
 function reviewedEvidence(role: "source" | "expectation") {
-  const row = fixtureAuthority.inputs.find((input: any) => input.role === role), captured = evidence(row.path);
+  const row = fixtureAuthority.inputs.find((input) => input.role === role);
+  if (!row) throw new Error(`reviewed fixture manifest declares no ${role} input`);
+  const captured = evidence(row.path);
   if (sha(captured.bytes) !== row.preimage.sha256 || captured.bytes.length !== row.preimage.size || captured.mode !== row.preimage.mode) throw new Error("Reviewed fixture preimage drift");
   const path = role === "source" ? originalCatalog.cases[31].sourcePath : revision.expectationsPath;
   return { ...captured, path, ancestorNodeKinds: path.split("/").slice(1).map(() => "directory") };

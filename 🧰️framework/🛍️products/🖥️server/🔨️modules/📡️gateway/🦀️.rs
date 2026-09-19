@@ -15,13 +15,20 @@
 //! [`document_lane`]) precisely so no future refactor can quietly start replaying a cursor position
 //! or dropping a committed event.
 //!
-//! **The document engine is a port, not a dependency.** [`DocumentAuthority`] is the whole of what
-//! this product knows about replication engines. The server product deliberately does not depend on
-//! the os product, on `db`, or on any concrete engine; an instance supplies the implementation.
+//! **Every extension point is a port, and [`ServerInstance`] is the one place they are all named.**
+//! An instance — hub, zentrale, this crate's own test profile — is a type implementing that trait,
+//! and its ten associated types say which module set, query set, document engine, decider set, saga
+//! set, resolver ladder and four storage backends this deployment is made of. [`ServerBuilder`],
+//! [`ServerState`], [`Server`] and every handler below are generic over it, so the set of
+//! implementations is closed in the instance's own crate and never here. The server product
+//! deliberately depends on no document engine: not on the os product, not on `db`, not on any
+//! concrete CRDT — and with the sets closed downstream it does not have to name one to be usable.
 
 use std::collections::BTreeMap;
 use std::net::SocketAddr;
 use std::path::{Path as FsPath, PathBuf};
+use semio_framework_dispatch_macros::dyn_enum;
+use std::future::Future;
 use std::sync::{Arc, Mutex as StdMutex, RwLock};
 use std::time::{SystemTime, UNIX_EPOCH};
 
@@ -34,17 +41,16 @@ use axum::routing::{get, post};
 use axum::{Json, Router};
 use futures::{Sink, SinkExt, StreamExt};
 use semio_framework_async::ShardedMap;
-use semio_framework_dispatch_macros::{dyn_enum, dyn_enum_close};
 use serde::{Deserialize, Serialize};
 use tokio::sync::{broadcast, Mutex, Notify};
 
-use crate::authority::{AuthorityDirectory, AuthorityError, CommandBus, Deciders, PolicyHook};
+use crate::authority::{AuthorityDirectory, AuthorityError, CommandBus, Decider, PolicyHook, Saga, SagaRunner};
 use crate::contract::{
-    ActorKey, CommandEnvelope, CommandOutcome, EphemeralFrame, EventRecord, HybridLogicalClock, ModuleManifest, PolicyDecision, PolicyGrant, PolicyPoint, PolicyTemplate, Principal, QueryEnvelope, QueryResult, Scope, ServerInstanceDefinition,
+    ActorKey, CommandEnvelope, CommandOutcome, EphemeralFrame, EventRecord, HybridLogicalClock, ModuleManifest, PolicyDecision, PolicyPoint, PolicyTemplate, Principal, QueryEnvelope, QueryResult, Scope, ServerInstanceDefinition,
     TenantId,
 };
-use crate::policy::{AdminGate, Credential, PolicyEngine, PolicyRequest, PrincipalResolvers, ResolverChain};
-use crate::storage::{content_hash, AuthorityStore, AuthorityStores, BlobStore, BlobStores, MemoryAuthorityStore, MemoryBlobStore, MemoryProjectionStore, MemorySessionStore, ProjectionStores, SessionStores, StorageError, StorageProfile};
+use crate::policy::{AdminGate, Credential, PolicyEngine, PolicyRequest, PrincipalResolver, ResolverChain};
+use crate::storage::{content_hash, AuthorityStore, BlobStore, ProjectionStore, SessionStore, StorageError, StorageProfile};
 
 //#region 🔖️Reexport
 /// 🚪️ The router type a [`ServerModule`] contributes routes to. Reexported so an instance never has
@@ -154,34 +160,110 @@ impl From<AuthorityError> for ServerError {
 }
 //#endregion 🔖️Error
 
+//#region 🔖️Instance
+/// 🪪️ One deployment of this product — hub, zentrale, a test profile — expressed as a **type**.
+///
+/// Every extension point of the server is an associated type here, and every one of them is chosen
+/// by the deployment rather than by the framework. That is the whole design: a set of
+/// implementations must be closed at the site that owns the implementations, so a downstream crate
+/// names its own module set, its own deciders, its own storage backends, and — when it really has
+/// several of one kind — closes them into one enum in its own crate with `dyn_enum_close!`, which
+/// writes that enum for every port of this product, whether it is declared with plain `async fn` or
+/// with `impl Future<..> + Send` (the macro delegates the latter as an `async fn` over the future's
+/// `Output`, since one `match` cannot return two different opaque futures).
+/// Closing those sets inside this crate instead would force this crate to name hub's types, which
+/// inverts the dependency the product exists to avoid — and it is what made the document port
+/// unusable before: an empty enum cannot be implemented from outside, so the document websocket
+/// answered 404 unconditionally and the presence code behind it was unreachable.
+///
+/// Nothing in this crate implements `ServerInstance`. The reference profile that exercises it lives
+/// with the tests (`🧪️tests/🧩️instance/🦀️.rs`), because a demo decider and an in-memory store are
+/// fixtures, not product surface.
+pub trait ServerInstance: Sized + Send + Sync + 'static {
+    /// 🧩️ The module set this deployment is assembled from.
+    type Modules: ServerModule<Instance = Self> + 'static;
+    /// ❓️ The read handlers it answers queries with; [`NoQueryHandler`] when it has none yet.
+    type Queries: QueryHandler + 'static;
+    /// 📄️ The replication engine behind its document websocket; [`NoDocumentAuthority`] when it
+    /// hosts none.
+    type Documents: DocumentAuthority + 'static;
+    /// ⚖️ The deterministic cores its actors are decided by.
+    type Deciders: Decider + 'static;
+    /// 🧵️ The cross-actor workflows it runs off the outbox.
+    type Sagas: Saga + 'static;
+    /// 🪜️ The rungs of its authentication ladder.
+    type Resolvers: PrincipalResolver + 'static;
+    /// 🏛️ The backend holding its authoritative history.
+    type AuthorityStore: AuthorityStore + 'static;
+    /// 🔭️ The backend holding its rebuildable read models.
+    type ProjectionStore: ProjectionStore + 'static;
+    /// 🧱️ The backend holding its content-addressed bytes.
+    type BlobStore: BlobStore + 'static;
+    /// 🎫️ The backend holding its live authentication state.
+    type SessionStore: SessionStore + 'static;
+
+    /// 🗄️ Open the four durable roles for this deployment shape. The instance decides what
+    /// [`StorageProfile::Embedded`]'s `data_dir` means — a directory to open, or nothing at all for
+    /// a profile that keeps everything in memory — because the framework has no backend to impose.
+    async fn open(profile: &StorageProfile) -> Result<InstanceStores<Self>, StorageError>;
+}
+
+/// 🗄️ The four durable roles of one instance, opened together so a half-open server is not a state
+/// [`ServerBuilder::build`] has to handle.
+pub struct InstanceStores<I: ServerInstance> {
+    pub authority: I::AuthorityStore,
+    pub projections: I::ProjectionStore,
+    pub blobs: I::BlobStore,
+    pub sessions: I::SessionStore,
+}
+
+/// 🧵️ The saga runner of one instance, over the workflows that instance declared.
+pub type ServerSagas<I> = SagaRunner<<I as ServerInstance>::Sagas>;
+//#endregion 🔖️Instance
+
 //#region 🔖️Module
 /// 🧩️ The runtime half of a server module.
 ///
 /// The declarative half is [`ModuleManifest`], which is pure data and lives in the contract so an
 /// instance definition can be inspected, diffed and served without ever constructing a server. This
 /// trait is the half that cannot be data: [`routes`](Self::routes) hands out a live
-/// [`Router<ServerState>`] and therefore names the transport library, which is exactly why it is
-/// declared here in layer 3 and not next to the manifest in layer 1. Keeping the two halves apart
-/// is what lets a client, a CLI or a documentation generator read a manifest without linking axum.
-#[dyn_enum]
+/// `Router<`[`ServerState`]`>` and therefore names the transport library, which is exactly why it
+/// is declared here in layer 3 and not next to the manifest in layer 1. Keeping the two halves
+/// apart is what lets a client, a CLI or a documentation generator read a manifest without axum.
+///
+/// A module belongs to exactly one [`ServerInstance`], named by [`Instance`](Self::Instance): its
+/// routes take that instance's [`ServerState`], its deciders and rungs are that instance's decider
+/// and resolver types. That binding is also why this trait is not `#[dyn_enum]`'d — the macro
+/// refuses an associated type, because an enum has no single type to give it — so an instance with
+/// several modules writes the delegating enum by hand, or gives each module its own server.
 pub trait ServerModule: Send + Sync {
+    /// 🪪️ The deployment this module is part of.
+    type Instance: ServerInstance;
+
     /// 📇️ What this module declares to the instance registering it.
     async fn manifest(&self) -> ModuleManifest;
 
     /// ⚖️ The deciders this module registers on the command bus, one per actor kind it serves.
-    async fn deciders(&self) -> Vec<Deciders> {
+    async fn deciders(&self) -> Vec<<Self::Instance as ServerInstance>::Deciders> {
+        Vec::new()
+    }
+
+    /// 🧵️ The cross-actor workflows this module reacts with, appended to the instance's one saga
+    /// runner in module registration order. A module owns its workflows for the same reason it owns
+    /// its deciders: the subsystem that emits an event is the subsystem that knows what must follow.
+    async fn sagas(&self) -> Vec<<Self::Instance as ServerInstance>::Sagas> {
         Vec::new()
     }
 
     /// 🛣️ The routes this module mounts. Called once at build time with the router under
     /// construction; a module that serves no HTTP surface returns it untouched.
-    async fn routes(&self, router: Router<ServerState>) -> Router<ServerState> {
+    async fn routes(&self, router: Router<ServerState<Self::Instance>>) -> Router<ServerState<Self::Instance>> {
         router
     }
 
     /// 🪜️ The authentication rungs this module contributes, appended to the shared ladder in
     /// module registration order.
-    async fn resolvers(&self) -> Vec<PrincipalResolvers> {
+    async fn resolvers(&self) -> Vec<<Self::Instance as ServerInstance>::Resolvers> {
         Vec::new()
     }
 
@@ -191,28 +273,6 @@ pub trait ServerModule: Send + Sync {
     }
 }
 
-/// 🧮️ The framework's reference [`ServerModule`]: contributes one policy template and one health
-/// route, nothing else. Kept in production scope (not only in tests) so [`ServerModules`] closes
-/// over a real variant and this crate's own `build_collects_every_module_contribution` test
-/// exercises the genuine enum-dispatch path; a product's own modules are added as further
-/// `ServerModules` variants alongside it.
-pub struct CountingModule;
-
-impl ServerModule for CountingModule {
-    async fn manifest(&self) -> ModuleManifest {
-        ModuleManifest { id: "counting".into(), policies: vec![PolicyTemplate { name: "author".into(), grants: vec![PolicyGrant { point: PolicyPoint::CommandAdmission, resource: "*".into(), action: "*".into() }] }], ..Default::default() }
-    }
-
-    async fn routes(&self, router: Router<ServerState>) -> Router<ServerState> {
-        router.route("/counting/health", get(|| async { "ok" }))
-    }
-}
-
-dyn_enum_close! {
-    pub enum ServerModules: ServerModule {
-        Counting(CountingModule),
-    }
-}
 //#endregion 🔖️Module
 
 //#region 🔖️DocumentPort
@@ -223,47 +283,82 @@ dyn_enum_close! {
 /// websocket — handshake, submit, relay — while naming nothing but opaque byte frames. Hub supplies
 /// the implementation; another instance may supply a different one, or none at all, in which case
 /// the document route answers [`ServerError::NotFound`].
+/// **Send futures, declared not inferred.** Every method of this port returns
+/// `impl Future<..> + Send` instead of being written `async fn`, and that is structural, not a
+/// style choice: [`ServerState`](crate::gateway::ServerState) reaches this port behind an
+/// instance's associated type, so the concrete future is opaque at the call site and axum's
+/// handler and socket tasks — which are `Send` by construction — cannot otherwise prove it may
+/// cross a thread. An `async fn` here compiles and then fails at every route that uses it. The
+/// implementations stay ordinary `async fn`, which Rust accepts against this signature, and so does
+/// the delegate `dyn_enum_close!` generates for a set of them: the macro emits `async fn .. -> T`
+/// over the future's `Output`, because two match arms cannot unify two distinct opaque futures.
 #[dyn_enum]
 pub trait DocumentAuthority: Send + Sync {
     /// 👋️ The handshake frame for a joining actor. `resume` carries whatever resumption token the
     /// engine minted previously; the gateway never interprets it.
-    async fn welcome(&self, scope: &Scope, actor: &str, resume: Option<&str>) -> Result<Vec<u8>, ServerError>;
+    fn welcome(&self, scope: &Scope, actor: &str, resume: Option<&str>) -> impl Future<Output = Result<Vec<u8>, ServerError>> + Send;
 
     /// 📨️ Apply one client frame and return the frames to send back to the submitter and relay to
     /// the other sessions on the same document.
-    async fn submit_frame(&self, scope: &Scope, principal: &Principal, frame: &[u8]) -> Result<Vec<Vec<u8>>, ServerError>;
+    fn submit_frame(&self, scope: &Scope, principal: &Principal, frame: &[u8]) -> impl Future<Output = Result<Vec<Vec<u8>>, ServerError>> + Send;
 }
 
-// 📄️ Not closed over a real reference variant (O1 de-dyn): this crate has zero implementors by
-// design — the replication engine is always caller-supplied (Hub or another product this
-// framework product deliberately does not depend on, per the module doc above) — so
-// `DocumentAuthorities` closes over an empty, uninhabited set. `Option<Arc<DocumentAuthorities>>`
-// therefore always observes `None` today, matching every existing test's expectation exactly; the
-// day a real engine lands, it is added here as the first variant, never as a `Box<dyn ..>`.
-dyn_enum_close! {
-    pub enum DocumentAuthorities: DocumentAuthority {}
+/// 🕳️ The document authority of an instance that hosts none.
+///
+/// Uninhabited on purpose, and the only honest way to say "no replication engine here": naming it
+/// as [`ServerInstance::Documents`] makes `Option<Arc<Self>>` permanently `None`, so
+/// `/scopes/{scope}/document/ws` answers [`ServerError::NotFound`] by construction. An instance
+/// that *does* have an engine names that engine instead, and the same route starts working —
+/// which is exactly what the previous empty enum in this crate made impossible for everyone.
+pub enum NoDocumentAuthority {}
+
+impl DocumentAuthority for NoDocumentAuthority {
+    async fn welcome(&self, _scope: &Scope, _actor: &str, _resume: Option<&str>) -> Result<Vec<u8>, ServerError> {
+        match *self {}
+    }
+
+    async fn submit_frame(&self, _scope: &Scope, _principal: &Principal, _frame: &[u8]) -> Result<Vec<Vec<u8>>, ServerError> {
+        match *self {}
+    }
 }
 //#endregion 🔖️DocumentPort
 
 //#region 🔖️Query
 /// ❓️ One registered read. A query never touches an actor's private state — it answers from a
 /// [`ProjectionStore`], which is why the handler is handed nothing else.
+/// The projection store is taken as a type parameter rather than as one instance's concrete
+/// backend, so a handler keeps the property that makes it a query: it reads through
+/// [`ProjectionStore`] and can reach nothing else.
+/// **Send futures, declared not inferred.** Every method of this port returns
+/// `impl Future<..> + Send` instead of being written `async fn`, and that is structural, not a
+/// style choice: [`ServerState`](crate::gateway::ServerState) reaches this port behind an
+/// instance's associated type, so the concrete future is opaque at the call site and axum's
+/// handler and socket tasks — which are `Send` by construction — cannot otherwise prove it may
+/// cross a thread. An `async fn` here compiles and then fails at every route that uses it. The
+/// implementations stay ordinary `async fn`, which Rust accepts against this signature, and so does
+/// the delegate `dyn_enum_close!` generates for a set of them: the macro emits `async fn .. -> T`
+/// over the future's `Output`, because two match arms cannot unify two distinct opaque futures.
 #[dyn_enum]
 pub trait QueryHandler: Send + Sync {
     /// 🏷️ The [`QueryEnvelope::kind`] this handler answers.
-    async fn kind(&self) -> &str;
+    fn kind(&self) -> impl Future<Output = &str> + Send;
 
     /// 📤️ Answer one query against the read models.
-    async fn handle(&self, envelope: &QueryEnvelope, projections: &ProjectionStores) -> Result<QueryResult, ServerError>;
+    fn handle<P: ProjectionStore>(&self, envelope: &QueryEnvelope, projections: &P) -> impl Future<Output = Result<QueryResult, ServerError>> + Send;
 }
 
-// ❓️ Not closed over a real reference variant (O1 de-dyn): this crate has zero implementors by
-// design — every query kind is defined by the product built on this framework, not by the
-// framework itself — so `QueryHandlers` closes over an empty, uninhabited set, matching every
-// existing test's expectation that `queries` starts and stays empty. A product's first real
-// handler is added here as the first variant, never as a `Box<dyn ..>`.
-dyn_enum_close! {
-    pub enum QueryHandlers: QueryHandler {}
+/// 🕳️ The query set of an instance that registers no read handler. Uninhabited, so `queries` stays
+/// empty and `POST /queries` answers [`ServerError::NotFound`] for every kind.
+pub enum NoQueryHandler {}
+
+impl QueryHandler for NoQueryHandler {
+    async fn kind(&self) -> &str {
+        match *self {}
+    }
+
+    async fn handle<P: ProjectionStore>(&self, _envelope: &QueryEnvelope, _projections: &P) -> Result<QueryResult, ServerError> {
+        match *self {}
+    }
 }
 //#endregion 🔖️Query
 
@@ -566,31 +661,35 @@ pub fn credential(headers: &HeaderMap, peer: Option<SocketAddr>) -> Credential {
 //#endregion 🔖️Credential
 
 //#region 🔖️Store
-/// 🏛️ The bus shape this gateway serializes every command through. `AuthorityStores` (O1 de-dyn:
-/// `🗄️storage`'s `#[dyn_enum]`-closed enum) replaces the former `DynAuthorityStore` boxed-trait
-/// wrapper — a [`StorageProfile`] still picks a backend at runtime, but now as a concrete enum
-/// variant known to the compiler at every call site rather than an erased `Box<dyn AuthorityStore>`.
-pub type ServerAuthority = CommandBus<AuthorityStores>;
+/// 🏛️ The bus shape this gateway serializes every command through: the instance's own authority
+/// store and its own decider set, both known to the compiler at every call site — no boxed trait
+/// object, and no enum this crate had to invent on the instance's behalf.
+pub type ServerAuthority<I> = CommandBus<<I as ServerInstance>::AuthorityStore, <I as ServerInstance>::Deciders>;
 //#endregion 🔖️Store
 
 //#region 🔖️State
-/// 🧠️ Everything a handler may reach. Cloneable and cheap: every field is an [`Arc`], so the whole
-/// value is a bundle of handles rather than a bundle of data.
-#[derive(Clone)]
-pub struct ServerState {
+/// 🧠️ Everything a handler may reach, for one [`ServerInstance`]. Cloneable and cheap: every field
+/// is an [`Arc`], so the whole value is a bundle of handles rather than a bundle of data.
+pub struct ServerState<I: ServerInstance> {
     /// 🏛️ The command bus, serialized behind a mutex because a turn is by definition one at a time.
-    pub authority: Arc<Mutex<ServerAuthority>>,
+    pub authority: Arc<Mutex<ServerAuthority<I>>>,
+    /// 🧵️ The cross-actor workflows this instance reacts with, over the outbox the bus commits into.
+    /// Held here rather than by whoever calls [`ServerBuilder::build`] because the outbox and the
+    /// workflows that drain it are two halves of one exactly-once guarantee: a runner living
+    /// somewhere else is a runner that can be forgotten, and a forgotten runner is a queue that
+    /// grows forever while every event looks delivered.
+    pub sagas: Arc<Mutex<ServerSagas<I>>>,
     /// 🔭️ The rebuildable read models every query answers from.
-    pub projections: Arc<Mutex<ProjectionStores>>,
+    pub projections: Arc<Mutex<I::ProjectionStore>>,
     /// 🧱️ Content-addressed bytes.
-    pub blobs: Arc<Mutex<BlobStores>>,
+    pub blobs: Arc<Mutex<I::BlobStore>>,
     /// 🎫️ Live authentication state.
-    pub sessions: Arc<Mutex<SessionStores>>,
+    pub sessions: Arc<Mutex<I::SessionStore>>,
     /// ⚖️ Roles as data. A standard lock rather than an async one because the command bus's own
     /// admission hook is synchronous and must consult it inside a turn.
     pub policy: Arc<RwLock<PolicyEngine>>,
     /// 🪜️ The authentication ladder, fixed at build time.
-    pub resolvers: Arc<ResolverChain>,
+    pub resolvers: Arc<ResolverChain<I::Resolvers>>,
     /// 🚪️ The gate in front of the administration plane.
     pub admin: Arc<AdminGate>,
     /// 📡️ Lane fan-out for both the durable and the ephemeral lane.
@@ -602,16 +701,43 @@ pub struct ServerState {
     /// 🧩️ The static apps this instance hosts.
     pub apps: Arc<AppRegistry>,
     /// ❓️ The registered read handlers, keyed by query kind.
-    pub queries: Arc<ShardedMap<String, Arc<QueryHandlers>>>,
+    pub queries: Arc<ShardedMap<String, Arc<I::Queries>>>,
     /// 📄️ The replication engine, when the instance supplied one.
-    pub documents: Option<Arc<DocumentAuthorities>>,
-    /// 🏗️ Where this instance's durable state lives.
-    pub data_dir: Arc<PathBuf>,
+    pub documents: Option<Arc<I::Documents>>,
+    /// 🏗️ The deployment shape this instance's storage was opened in — the profile itself rather
+    /// than a path, because [`StorageProfile::Ephemeral`] owns no directory and a handler that
+    /// asked for one would have been handed a fabricated empty path.
+    pub profile: Arc<StorageProfile>,
     /// 🕰️ The instance's hybrid logical clock, advanced once per stamped command.
     clock: Arc<StdMutex<HybridLogicalClock>>,
 }
 
-impl ServerState {
+impl<I: ServerInstance> Clone for ServerState<I> {
+    /// 🧬️ Handle-by-handle, never field-by-field through `derive(Clone)`: the derive would demand
+    /// `I: Clone` of the instance MARKER type, which is not a value anybody clones.
+    fn clone(&self) -> Self {
+        Self {
+            authority: Arc::clone(&self.authority),
+            sagas: Arc::clone(&self.sagas),
+            projections: Arc::clone(&self.projections),
+            blobs: Arc::clone(&self.blobs),
+            sessions: Arc::clone(&self.sessions),
+            policy: Arc::clone(&self.policy),
+            resolvers: Arc::clone(&self.resolvers),
+            admin: Arc::clone(&self.admin),
+            fanout: Arc::clone(&self.fanout),
+            presence: Arc::clone(&self.presence),
+            kicks: Arc::clone(&self.kicks),
+            apps: Arc::clone(&self.apps),
+            queries: Arc::clone(&self.queries),
+            documents: self.documents.clone(),
+            profile: Arc::clone(&self.profile),
+            clock: Arc::clone(&self.clock),
+        }
+    }
+}
+
+impl<I: ServerInstance> ServerState<I> {
     /// 🕰️ The next clock reading: wall-clock milliseconds, with the counter breaking ties so two
     /// commands stamped inside the same millisecond still order.
     pub fn now(&self) -> HybridLogicalClock {
@@ -639,6 +765,34 @@ impl ServerState {
     pub async fn replay_events(&self, actor: &ActorKey, since: u64) -> Result<Vec<EventRecord>, ServerError> {
         let authority = self.authority.lock().await;
         Ok(authority.store().events_since(actor, since).await?)
+    }
+
+    /// @emoji 🚰️ Hand up to `limit` committed outbox rows to this instance's workflows and run every
+    /// follow-up command as its own turn, returning what each turn answered.
+    ///
+    /// The two halves are deliberately one call. A drain that only *returned* commands would leave
+    /// the rows acknowledged while their consequences sat in a `Vec` the caller might drop, which is
+    /// precisely the "state changed but the world was never told" the transactional outbox exists to
+    /// rule out. Both locks are released before the first follow-up is submitted, because a turn
+    /// takes the bus lock itself and holding it across the drain would deadlock the server on its
+    /// own workflow.
+    ///
+    /// Exactly-once is a property of the *queue*, not of this call: a row leaves `pending` only once
+    /// it is marked delivered, so a restart between two drains re-delivers nothing, and a crash
+    /// between mapping and marking re-delivers a row whose follow-up command carries an
+    /// [`IdempotencyKey`](crate::contract::IdempotencyKey) and is deduplicated by the bus.
+    pub async fn drain_sagas(&self, limit: usize) -> Vec<CommandOutcome> {
+        let commands = {
+            let mut sagas = self.sagas.lock().await;
+            let mut authority = self.authority.lock().await;
+            sagas.drain_outbox(authority.store_mut(), limit).await
+        };
+        let mut outcomes = Vec::with_capacity(commands.len());
+        for command in commands {
+            let now = self.now();
+            outcomes.push(self.authority.lock().await.submit(command, now).await);
+        }
+        outcomes
     }
 }
 //#endregion 🔖️State
@@ -671,7 +825,7 @@ pub struct BlobReceipt {
 /// 💾️ Store bytes at a client-supplied content address. The address is re-derived from the bytes
 /// and a mismatch is a [`ServerError::Conflict`]: the caller asked to bind an address to content
 /// that does not hash to it, which is the one thing a content-addressed store may never do.
-pub async fn put_blob(Path(hash): Path<String>, headers: HeaderMap, ConnectInfo(peer): ConnectInfo<SocketAddr>, State(state): State<ServerState>, body: Bytes) -> Result<Json<BlobReceipt>, ServerError> {
+pub async fn put_blob<I: ServerInstance>(Path(hash): Path<String>, headers: HeaderMap, ConnectInfo(peer): ConnectInfo<SocketAddr>, State(state): State<ServerState<I>>, body: Bytes) -> Result<Json<BlobReceipt>, ServerError> {
     let resolved = state.identify(&headers, Some(peer)).await;
     state.authorize(&PolicyRequest { point: PolicyPoint::BlobWrite, principal: resolved.principal, scope: None, resource: hash.clone(), action: "write".to_string() })?;
     let addressed = parse_content_hash(&hash).ok_or_else(|| ServerError::BadRequest("blob address is not 64 hex characters".to_string()))?;
@@ -684,7 +838,7 @@ pub async fn put_blob(Path(hash): Path<String>, headers: HeaderMap, ConnectInfo(
 }
 
 /// 📦️ Read bytes back by address.
-pub async fn get_blob(Path(hash): Path<String>, headers: HeaderMap, ConnectInfo(peer): ConnectInfo<SocketAddr>, State(state): State<ServerState>) -> Result<Response, ServerError> {
+pub async fn get_blob<I: ServerInstance>(Path(hash): Path<String>, headers: HeaderMap, ConnectInfo(peer): ConnectInfo<SocketAddr>, State(state): State<ServerState<I>>) -> Result<Response, ServerError> {
     let resolved = state.identify(&headers, Some(peer)).await;
     state.authorize(&PolicyRequest { point: PolicyPoint::BlobRead, principal: resolved.principal, scope: None, resource: hash.clone(), action: "read".to_string() })?;
     let addressed = parse_content_hash(&hash).ok_or_else(|| ServerError::BadRequest("blob address is not 64 hex characters".to_string()))?;
@@ -693,7 +847,7 @@ pub async fn get_blob(Path(hash): Path<String>, headers: HeaderMap, ConnectInfo(
 }
 
 /// ❓️ The cheap half of an upload negotiation: does this address already hold bytes.
-pub async fn head_blob(Path(hash): Path<String>, headers: HeaderMap, ConnectInfo(peer): ConnectInfo<SocketAddr>, State(state): State<ServerState>) -> StatusCode {
+pub async fn head_blob<I: ServerInstance>(Path(hash): Path<String>, headers: HeaderMap, ConnectInfo(peer): ConnectInfo<SocketAddr>, State(state): State<ServerState<I>>) -> StatusCode {
     let resolved = state.identify(&headers, Some(peer)).await;
     let request = PolicyRequest { point: PolicyPoint::BlobRead, principal: resolved.principal, scope: None, resource: hash.clone(), action: "read".to_string() };
     if let Err(error) = state.authorize(&request) {
@@ -853,7 +1007,7 @@ impl AppRegistry {
 /// 📨️ Submit one command. The envelope's principal is overwritten with the resolved one before the
 /// turn runs — a client may address a command, it may never assert who is sending it. Accepted
 /// events are published onto the actor's durable lane so live subscribers see them without polling.
-pub async fn post_command(headers: HeaderMap, ConnectInfo(peer): ConnectInfo<SocketAddr>, State(state): State<ServerState>, Json(envelope): Json<CommandEnvelope>) -> Result<Json<CommandOutcome>, ServerError> {
+pub async fn post_command<I: ServerInstance>(headers: HeaderMap, ConnectInfo(peer): ConnectInfo<SocketAddr>, State(state): State<ServerState<I>>, Json(envelope): Json<CommandEnvelope>) -> Result<Json<CommandOutcome>, ServerError> {
     let resolved = state.identify(&headers, Some(peer)).await;
     let mut envelope = envelope;
     envelope.principal = resolved.principal;
@@ -872,19 +1026,19 @@ pub async fn post_command(headers: HeaderMap, ConnectInfo(peer): ConnectInfo<Soc
 }
 
 /// ❓️ Answer one query from the projections, after checking the caller may read it.
-pub async fn post_query(headers: HeaderMap, ConnectInfo(peer): ConnectInfo<SocketAddr>, State(state): State<ServerState>, Json(envelope): Json<QueryEnvelope>) -> Result<Json<QueryResult>, ServerError> {
+pub async fn post_query<I: ServerInstance>(headers: HeaderMap, ConnectInfo(peer): ConnectInfo<SocketAddr>, State(state): State<ServerState<I>>, Json(envelope): Json<QueryEnvelope>) -> Result<Json<QueryResult>, ServerError> {
     let resolved = state.identify(&headers, Some(peer)).await;
     let mut envelope = envelope;
     envelope.principal = resolved.principal;
     state.authorize(&PolicyRequest { point: PolicyPoint::QueryAccess, principal: envelope.principal.clone(), scope: Some(envelope.scope.clone()), resource: envelope.kind.clone(), action: "read".to_string() })?;
     let handler = state.queries.get_cloned(&envelope.kind).ok_or_else(|| ServerError::NotFound(format!("no handler for query kind '{}'", envelope.kind)))?;
     let projections = state.projections.lock().await;
-    Ok(Json(handler.handle(&envelope, &projections).await?))
+    Ok(Json(handler.handle(&envelope, &*projections).await?))
 }
 
 /// 💨️ Publish one ephemeral frame onto its scope's lossy lane. Nothing is persisted and nothing is
 /// replayed — a subscriber that was not listening simply missed it.
-pub async fn post_ephemeral(headers: HeaderMap, ConnectInfo(peer): ConnectInfo<SocketAddr>, State(state): State<ServerState>, Json(frame): Json<EphemeralFrame>) -> Result<Json<usize>, ServerError> {
+pub async fn post_ephemeral<I: ServerInstance>(headers: HeaderMap, ConnectInfo(peer): ConnectInfo<SocketAddr>, State(state): State<ServerState<I>>, Json(frame): Json<EphemeralFrame>) -> Result<Json<usize>, ServerError> {
     let resolved = state.identify(&headers, Some(peer)).await;
     let mut frame = frame;
     frame.principal = resolved.principal;
@@ -931,7 +1085,7 @@ impl EventSeam {
 /// between the read and the first `recv` is buffered rather than lost; the [`EventSeam`] then drops
 /// whatever the replay already covered, so the seam has neither a gap nor a duplicate. Returns once
 /// the sink refuses a frame or the lane closes.
-pub async fn pump_events<S>(state: &ServerState, actor: &ActorKey, since: u64, live: &mut Subscription, sink: &mut S) -> Result<(), ServerError>
+pub async fn pump_events<I: ServerInstance, S>(state: &ServerState<I>, actor: &ActorKey, since: u64, live: &mut Subscription, sink: &mut S) -> Result<(), ServerError>
 where
     S: Sink<Message> + Unpin,
 {
@@ -967,12 +1121,12 @@ pub struct EventStreamQuery {
 }
 
 /// 📜️ One page of durable history, for a client that would rather poll than hold a socket.
-pub async fn get_events(
+pub async fn get_events<I: ServerInstance>(
     Path((tenant, kind, id)): Path<(String, String, String)>,
     Query(query): Query<EventStreamQuery>,
     headers: HeaderMap,
     ConnectInfo(peer): ConnectInfo<SocketAddr>,
-    State(state): State<ServerState>,
+    State(state): State<ServerState<I>>,
 ) -> Result<Json<Vec<EventRecord>>, ServerError> {
     let actor = ActorKey { tenant: TenantId(tenant), kind, id };
     let resolved = state.identify(&headers, Some(peer)).await;
@@ -981,13 +1135,13 @@ pub async fn get_events(
 }
 
 /// 📡️ The durable lane as a websocket: replay then live, gap-free and duplicate-free.
-pub async fn get_event_stream_ws(
+pub async fn get_event_stream_ws<I: ServerInstance>(
     ws: WebSocketUpgrade,
     Path((tenant, kind, id)): Path<(String, String, String)>,
     Query(query): Query<EventStreamQuery>,
     headers: HeaderMap,
     ConnectInfo(peer): ConnectInfo<SocketAddr>,
-    State(state): State<ServerState>,
+    State(state): State<ServerState<I>>,
 ) -> Result<Response, ServerError> {
     let actor = ActorKey { tenant: TenantId(tenant), kind, id };
     let resolved = state.identify(&headers, Some(peer)).await;
@@ -995,7 +1149,7 @@ pub async fn get_event_stream_ws(
     Ok(ws.on_upgrade(move |socket| handle_event_stream(socket, actor, query.since, state)))
 }
 
-async fn handle_event_stream(socket: WebSocket, actor: ActorKey, since: u64, state: ServerState) {
+async fn handle_event_stream<I: ServerInstance>(socket: WebSocket, actor: ActorKey, since: u64, state: ServerState<I>) {
     let (mut sender, mut receiver) = socket.split();
     let mut live = state.fanout.subscribe(&stream_lane(&actor));
     let pump = pump_events(&state, &actor, since, &mut live, &mut sender);
@@ -1029,13 +1183,13 @@ pub struct DocumentStreamQuery {
 }
 
 /// 🔗️ Bridge one document socket onto the instance's [`DocumentAuthority`].
-pub async fn get_document_ws(
+pub async fn get_document_ws<I: ServerInstance>(
     ws: WebSocketUpgrade,
     Path(scope): Path<String>,
     Query(query): Query<DocumentStreamQuery>,
     headers: HeaderMap,
     ConnectInfo(peer): ConnectInfo<SocketAddr>,
-    State(state): State<ServerState>,
+    State(state): State<ServerState<I>>,
 ) -> Result<Response, ServerError> {
     if state.documents.is_none() {
         return Err(ServerError::NotFound("this instance hosts no document authority".to_string()));
@@ -1064,7 +1218,7 @@ fn unwrap_relay(bytes: &[u8]) -> Option<(&str, &[u8])> {
     Some((origin, bytes.get(2 + length..)?))
 }
 
-async fn handle_document(socket: WebSocket, scope: Scope, query: DocumentStreamQuery, principal: Principal, state: ServerState) {
+async fn handle_document<I: ServerInstance>(socket: WebSocket, scope: Scope, query: DocumentStreamQuery, principal: Principal, state: ServerState<I>) {
     let Some(documents) = state.documents.clone() else { return };
     let (mut sender, mut receiver) = socket.split();
     let session = query.session.clone().unwrap_or_else(|| query.actor.clone());
@@ -1138,27 +1292,27 @@ async fn handle_document(socket: WebSocket, scope: Scope, query: DocumentStreamQ
 
 //#region 🔖️AppRoutes
 /// 📋️ The names of every app this instance hosts.
-pub async fn get_apps(State(state): State<ServerState>) -> Json<Vec<String>> {
+pub async fn get_apps<I: ServerInstance>(State(state): State<ServerState<I>>) -> Json<Vec<String>> {
     Json(state.apps.names())
 }
 
 /// 🧩️ The `install.json` entries under one app's root.
-pub async fn get_app_installs(Path(app): Path<String>, State(state): State<ServerState>) -> Result<Json<Vec<AppInstall>>, ServerError> {
+pub async fn get_app_installs<I: ServerInstance>(Path(app): Path<String>, State(state): State<ServerState<I>>) -> Result<Json<Vec<AppInstall>>, ServerError> {
     let host = state.apps.host(&app).ok_or_else(|| ServerError::NotFound(format!("no app '{app}'")))?;
     Ok(Json(scan_installs(host.root())))
 }
 
 /// 🏠️ One app's entry document.
-pub async fn get_app_root(Path(app): Path<String>, State(state): State<ServerState>) -> Response {
+pub async fn get_app_root<I: ServerInstance>(Path(app): Path<String>, State(state): State<ServerState<I>>) -> Response {
     serve_app(&state, &app, "index.html")
 }
 
 /// 📎️ One asset inside an app.
-pub async fn get_app_asset(Path((app, rest)): Path<(String, String)>, State(state): State<ServerState>) -> Response {
+pub async fn get_app_asset<I: ServerInstance>(Path((app, rest)): Path<(String, String)>, State(state): State<ServerState<I>>) -> Response {
     serve_app(&state, &app, &rest)
 }
 
-fn serve_app(state: &ServerState, app: &str, rest: &str) -> Response {
+fn serve_app<I: ServerInstance>(state: &ServerState<I>, app: &str, rest: &str) -> Response {
     match state.apps.host(app) {
         Some(host) => host.serve(rest),
         None => ServerError::NotFound(format!("no app '{app}'")).into_response(),
@@ -1167,34 +1321,42 @@ fn serve_app(state: &ServerState, app: &str, rest: &str) -> Response {
 //#endregion 🔖️AppRoutes
 
 //#region 🔖️Server
-/// 🏗️ Assembles one server out of a storage profile and a set of modules.
-pub struct ServerBuilder {
+/// 🏗️ Assembles one server out of a storage profile and one [`ServerInstance`]'s modules.
+pub struct ServerBuilder<I: ServerInstance> {
     profile: StorageProfile,
-    modules: Vec<ServerModules>,
-    queries: Vec<QueryHandlers>,
+    modules: Vec<I::Modules>,
+    queries: Vec<I::Queries>,
+    sagas: Vec<I::Sagas>,
     apps: Vec<(String, PathBuf)>,
-    documents: Option<Arc<DocumentAuthorities>>,
+    documents: Option<Arc<I::Documents>>,
     admin_token: Option<String>,
     id: String,
     version: String,
 }
 
-impl ServerBuilder {
+impl<I: ServerInstance> ServerBuilder<I> {
     /// 🧩️ Register one module. Its deciders, templates, resolvers and routes are collected at
     /// [`build`](Self::build) time, in registration order.
-    pub fn module(mut self, module: ServerModules) -> Self {
+    pub fn module(mut self, module: I::Modules) -> Self {
         self.modules.push(module);
         self
     }
 
     /// ❓️ Register one query handler under the kind it declares.
-    pub fn query(mut self, handler: QueryHandlers) -> Self {
+    pub fn query(mut self, handler: I::Queries) -> Self {
         self.queries.push(handler);
         self
     }
 
+    /// 🧵️ Register one cross-actor workflow on this instance's saga runner, for a workflow that
+    /// belongs to the deployment rather than to one of its modules.
+    pub fn saga(mut self, saga: I::Sagas) -> Self {
+        self.sagas.push(saga);
+        self
+    }
+
     /// 📄️ Supply the replication engine backing the document websocket.
-    pub fn document_authority(mut self, documents: Arc<DocumentAuthorities>) -> Self {
+    pub fn document_authority(mut self, documents: Arc<I::Documents>) -> Self {
         self.documents = Some(documents);
         self
     }
@@ -1218,12 +1380,14 @@ impl ServerBuilder {
         self
     }
 
-    /// 🔨️ Collect every module's contribution into one shared engine, bus, ladder and router.
-    pub async fn build(self) -> Server {
+    /// 🔨️ Collect every module's contribution into one shared engine, bus, ladder and router, over
+    /// the storage the instance opens for this profile.
+    pub async fn build(self) -> Result<Server<I>, ServerError> {
         let policy = Arc::new(RwLock::new(PolicyEngine::new()));
-        let mut chain = ResolverChain::new();
+        let mut chain = ResolverChain::<I::Resolvers>::new();
         let mut definition = ServerInstanceDefinition { id: self.id.clone(), version: self.version.clone(), modules: Vec::new() };
-        let mut deciders: Vec<Deciders> = Vec::new();
+        let mut deciders: Vec<I::Deciders> = Vec::new();
+        let mut workflows: Vec<I::Sagas> = Vec::new();
         for module in &self.modules {
             let manifest = module.manifest().await;
             if let Ok(mut engine) = policy.write() {
@@ -1233,6 +1397,7 @@ impl ServerBuilder {
             }
             definition.modules.push(manifest);
             deciders.extend(module.deciders().await);
+            workflows.extend(module.sagas().await);
             for resolver in module.resolvers().await {
                 chain.push(resolver);
             }
@@ -1246,27 +1411,31 @@ impl ServerBuilder {
             })
         };
 
-        let StorageProfile::Embedded { data_dir } = &self.profile;
-        let store = AuthorityStores::Memory(MemoryAuthorityStore::new());
-        let mut bus = CommandBus::new(AuthorityDirectory::new(), store, hook);
+        let stores = I::open(&self.profile).await?;
+        let mut bus = CommandBus::new(AuthorityDirectory::new(), stores.authority, hook);
         for decider in deciders {
             bus.register(decider).await;
+        }
+        let mut runner = ServerSagas::<I>::new();
+        for saga in workflows.into_iter().chain(self.sagas) {
+            runner.register(saga);
         }
 
         let apps = AppRegistry::new();
         for (name, dir) in &self.apps {
             apps.register(name, dir.clone());
         }
-        let queries: ShardedMap<String, Arc<QueryHandlers>> = ShardedMap::new();
+        let queries: ShardedMap<String, Arc<I::Queries>> = ShardedMap::new();
         for handler in self.queries {
             queries.insert(handler.kind().await.to_string(), Arc::new(handler));
         }
 
         let state = ServerState {
             authority: Arc::new(Mutex::new(bus)),
-            projections: Arc::new(Mutex::new(ProjectionStores::Memory(MemoryProjectionStore::new()))),
-            blobs: Arc::new(Mutex::new(BlobStores::Memory(MemoryBlobStore::new()))),
-            sessions: Arc::new(Mutex::new(SessionStores::Memory(MemorySessionStore::new()))),
+            sagas: Arc::new(Mutex::new(runner)),
+            projections: Arc::new(Mutex::new(stores.projections)),
+            blobs: Arc::new(Mutex::new(stores.blobs)),
+            sessions: Arc::new(Mutex::new(stores.sessions)),
             policy,
             resolvers: Arc::new(chain),
             admin: Arc::new(AdminGate::new(self.admin_token.clone())),
@@ -1276,7 +1445,7 @@ impl ServerBuilder {
             apps: Arc::new(apps),
             queries: Arc::new(queries),
             documents: self.documents.clone(),
-            data_dir: Arc::new(PathBuf::from(data_dir)),
+            profile: Arc::new(self.profile.clone()),
             clock: Arc::new(StdMutex::new(HybridLogicalClock::default())),
         };
 
@@ -1285,7 +1454,7 @@ impl ServerBuilder {
             router = module.routes(router).await;
         }
         let router = router.layer(axum::middleware::from_fn(cors_middleware)).with_state(state.clone());
-        Server { state, router, definition }
+        Ok(Server { state, router, definition })
     }
 }
 
@@ -1294,21 +1463,23 @@ fn admission_request(envelope: &CommandEnvelope) -> PolicyRequest {
     PolicyRequest { point: PolicyPoint::CommandAdmission, principal: envelope.principal.clone(), scope: Some(envelope.scope.clone()), resource: format!("{}/{}", envelope.target.kind, envelope.target.id), action: envelope.kind.clone() }
 }
 
-/// 🛣️ Every route the framework itself owns, before any module adds its own.
-fn base_router(definition: ServerInstanceDefinition) -> Router<ServerState> {
+/// 🛣️ Every route the framework itself owns, before any module adds its own. Each handler is
+/// instantiated at the instance being built, so a route is monomorphic even though the set of
+/// backends behind it is chosen downstream.
+fn base_router<I: ServerInstance>(definition: ServerInstanceDefinition) -> Router<ServerState<I>> {
     Router::new()
         .route("/instance", get(move || instance_body(definition.clone())))
-        .route("/commands", post(post_command))
-        .route("/queries", post(post_query))
-        .route("/scopes/{scope}/ephemeral", post(post_ephemeral))
-        .route("/scopes/{scope}/document/ws", get(get_document_ws))
-        .route("/actors/{tenant}/{kind}/{id}/events", get(get_events))
-        .route("/actors/{tenant}/{kind}/{id}/events/ws", get(get_event_stream_ws))
-        .route("/blobs/{hash}", get(get_blob).head(head_blob).put(put_blob))
-        .route("/apps", get(get_apps))
-        .route("/apps/{app}/installs", get(get_app_installs))
-        .route("/apps/{app}", get(get_app_root))
-        .route("/apps/{app}/{*rest}", get(get_app_asset))
+        .route("/commands", post(post_command::<I>))
+        .route("/queries", post(post_query::<I>))
+        .route("/scopes/{scope}/ephemeral", post(post_ephemeral::<I>))
+        .route("/scopes/{scope}/document/ws", get(get_document_ws::<I>))
+        .route("/actors/{tenant}/{kind}/{id}/events", get(get_events::<I>))
+        .route("/actors/{tenant}/{kind}/{id}/events/ws", get(get_event_stream_ws::<I>))
+        .route("/blobs/{hash}", get(get_blob::<I>).head(head_blob::<I>).put(put_blob::<I>))
+        .route("/apps", get(get_apps::<I>))
+        .route("/apps/{app}/installs", get(get_app_installs::<I>))
+        .route("/apps/{app}", get(get_app_root::<I>))
+        .route("/apps/{app}/{*rest}", get(get_app_asset::<I>))
 }
 
 async fn instance_body(definition: ServerInstanceDefinition) -> Json<ServerInstanceDefinition> {
@@ -1316,16 +1487,16 @@ async fn instance_body(definition: ServerInstanceDefinition) -> Json<ServerInsta
 }
 
 /// 🖥️ One built server: its shared state, its router and the definition it reports.
-pub struct Server {
-    state: ServerState,
+pub struct Server<I: ServerInstance> {
+    state: ServerState<I>,
     router: Router,
     definition: ServerInstanceDefinition,
 }
 
-impl Server {
+impl<I: ServerInstance> Server<I> {
     /// 🏗️ Start assembling a server over one storage profile.
-    pub fn builder(profile: StorageProfile) -> ServerBuilder {
-        ServerBuilder { profile, modules: Vec::new(), queries: Vec::new(), apps: Vec::new(), documents: None, admin_token: None, id: "server".to_string(), version: env!("CARGO_PKG_VERSION").to_string() }
+    pub fn builder(profile: StorageProfile) -> ServerBuilder<I> {
+        ServerBuilder { profile, modules: Vec::new(), queries: Vec::new(), sagas: Vec::new(), apps: Vec::new(), documents: None, admin_token: None, id: "server".to_string(), version: env!("CARGO_PKG_VERSION").to_string() }
     }
 
     /// 🛣️ The fully wired router, ready to be served or mounted.
@@ -1334,7 +1505,7 @@ impl Server {
     }
 
     /// 🧠️ The shared state every handler runs against.
-    pub fn state(&self) -> &ServerState {
+    pub fn state(&self) -> &ServerState<I> {
         &self.state
     }
 

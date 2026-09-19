@@ -42,6 +42,7 @@ export default defineConfig({
       "../../../../🧱️elements/🌳️Tree/🧪️tests/🧩️component/🟦️.tsx",
       "../../../../🧱️elements/🦴️Skeletons/🧪️tests/🧩️component/🟦️.tsx",
       "../../../../🧱️elements/📑️Tabs/🧪️tests/🧩️component/🟦️.tsx",
+      "../../../../📱️device/🧪️tests/🔬️unit/🟦️.ts",
       "../../../../🔨️modules/🕹️control-keybinding-context/🧪️tests/🧩️component/🟦️.tsx",
       "../../../../🔨️modules/🏷️class-name-composition/🧪️tests/🧩️slot/🟦️.tsx",
       "../../../../🧪️tests/📦️react-package-export/🟦️.ts",

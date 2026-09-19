@@ -70,7 +70,7 @@ fn vfs_row_center_y(index: usize) -> f32 {
 fn row_press_dispatches_select_rows_with_the_row_id() {
     let node = vfs_scene("vfs-press-rows", json!([{ "id": "n1", "name": "Alpha" }, { "id": "n2", "name": "Beta" }]));
     let theme = Theme::default();
-    let hit = vfs_hit(&node, Rect::new(0.0, 0.0, 400.0, 300.0), 120.0, vfs_row_center_y(1), &theme, true).expect("row hit");
+    let hit = vfs_hit(&node, Rect::new(0.0, 0.0, 400.0, 300.0), 120.0, vfs_row_center_y(1), &theme, true, SceneModifiers::default()).expect("row hit");
     assert_eq!(hit.control_id, "vfs-press-rows.vfs.n2");
     let action = hit.action.expect("selectRows action");
     assert_eq!(action.action, "selectRows");
@@ -85,7 +85,7 @@ fn row_press_dispatches_select_rows_with_the_row_id() {
 fn chevron_press_toggles_expansion_and_dispatches_nothing() {
     let node = vfs_scene("vfs-press-chevron", json!([{ "id": "n1", "name": "Folder", "hasChildren": true }, { "id": "n2", "name": "Child", "parentId": "n1" }]));
     let theme = Theme::default();
-    let hit = vfs_hit(&node, Rect::new(0.0, 0.0, 400.0, 300.0), theme.padding_standard + 4.0, vfs_row_center_y(0), &theme, true).expect("chevron hit");
+    let hit = vfs_hit(&node, Rect::new(0.0, 0.0, 400.0, 300.0), theme.padding_standard + 4.0, vfs_row_center_y(0), &theme, true, SceneModifiers::default()).expect("chevron hit");
     assert_eq!(hit.toggle_expanded.as_deref(), Some("n1"));
     assert!(hit.action.is_none());
 }
@@ -102,3 +102,43 @@ fn double_click_on_an_instance_row_opens_the_instance() {
     assert_eq!(action.args.as_ref().and_then(|args| args.get("instanceId")).and_then(semio_framework::DslValue::as_str), Some("inst-7"));
 }
 //#endregion VirtualFileSystemPointerTests
+
+//#region VirtualFileSystemModifierTests
+/// 🗂️ React `⚙️VirtualFileSystem/🟦️.tsx:518-521` folds the DOM pointer event into
+/// `additiveKey: event.metaKey || event.ctrlKey` and `rangeKey: event.shiftKey` before
+/// `getVirtualFileSystemNextSelectionState` runs. `vfs_selection_for_click` is that function's twin,
+/// and until `UiEvent`'s pointer variants carried `EventModifiers` this call site could only pass
+/// `(false, false)` — so ctrl-toggle and shift-extend were unreachable, not merely unbound
+/// (ticket 26/09/17/WGPU-RENDERER-REACT-PARITY, `📓️audit-w14-scenes-residual.md` C1).
+#[test]
+fn ctrl_click_extends_the_selection_where_a_plain_click_replaces_it() {
+    let node = vfs_scene("vfs-modifier-ctrl", json!([{ "id": "n1", "name": "Alpha" }, { "id": "n2", "name": "Beta" }]));
+    let theme = Theme::default();
+    let bounds = Rect::new(0.0, 0.0, 400.0, 300.0);
+    let ids_of = |hit: SceneListHit| {
+        hit.action
+            .expect("selectRows")
+            .args
+            .as_ref()
+            .and_then(|args| args.get("ids"))
+            .and_then(|ids| ids.as_array().map(|entries| entries.iter().filter_map(semio_framework::DslValue::as_str).map(str::to_string).collect::<Vec<_>>()))
+            .expect("ids")
+    };
+    let first = vfs_hit(&node, bounds, 120.0, vfs_row_center_y(0), &theme, true, SceneModifiers::default()).expect("row 0");
+    assert_eq!(ids_of(first), vec!["n1".to_string()]);
+    let additive = vfs_hit(&node, bounds, 120.0, vfs_row_center_y(1), &theme, true, SceneModifiers { ctrl: true, ..SceneModifiers::default() }).expect("row 1");
+    assert_eq!(ids_of(additive), vec!["n1".to_string(), "n2".to_string()], "ctrl adds to the live selection instead of replacing it");
+    let plain = vfs_hit(&node, bounds, 120.0, vfs_row_center_y(0), &theme, true, SceneModifiers::default()).expect("row 0 again");
+    assert_eq!(ids_of(plain), vec!["n1".to_string()], "an unmodified click still replaces");
+}
+
+/// 🍎️ React reads `event.metaKey || event.ctrlKey` as ONE additive key, so cmd and ctrl are the same
+/// gesture; `alt` is neither additive nor a range on this surface.
+#[test]
+fn the_additive_key_is_meta_or_ctrl_and_nothing_else() {
+    assert!(SceneModifiers { meta: true, ..SceneModifiers::default() }.additive());
+    assert!(SceneModifiers { ctrl: true, ..SceneModifiers::default() }.additive());
+    assert!(!SceneModifiers { shift: true, ..SceneModifiers::default() }.additive());
+    assert!(!SceneModifiers { alt: true, ..SceneModifiers::default() }.additive());
+}
+//#endregion VirtualFileSystemModifierTests

@@ -92,6 +92,24 @@
       },
       "outputs": []
     },
+    "client-e2e": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "dependsOn": [
+        {
+          "target": "build",
+          "projects": [
+            "@semio-tech/framework-os-mcp-rs"
+          ]
+        }
+      ],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts client-e2e",
+        "forwardAllArgs": true
+      },
+      "outputs": []
+    },
     "test-exhaustive": {
       "executor": "nx:run-commands",
       "cache": true,

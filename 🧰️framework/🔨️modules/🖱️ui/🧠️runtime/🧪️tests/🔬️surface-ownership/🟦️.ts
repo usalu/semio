@@ -3,9 +3,196 @@ import { readFileSync } from "node:fs";
 import assert from "node:assert/strict";
 import Ajv from "ajv";
 
+/** 📏️ Physical backing, inline growth and transfer ledgers for one owned surface. */
+type SurfaceOwnershipFixture = {
+  readonly version: number;
+  readonly componentCopy: {
+    readonly allocationGrant: number;
+    readonly workGrant: number;
+    readonly payloadBytes: number;
+    readonly cancelFrontiers: readonly number[];
+  };
+  readonly existingComponent: {
+    readonly allocationGrant: number;
+    readonly workGrant: number;
+    readonly payloadBytes: number;
+    readonly minimumTurns: number;
+    readonly rejectionAllocationBytes: number;
+    readonly oldRootCopied: boolean;
+  };
+  readonly patchAllocation: {
+    readonly maximumBytesPerTurn: number;
+    readonly directoryBytes: number;
+    readonly operationBytes: number;
+  };
+  readonly bindingClone: {
+    readonly items: number;
+    readonly elementBytes: number;
+    readonly wholeBackingBytes: number;
+    readonly maximumBytesPerTurn: number;
+    readonly cancelFrontiers: readonly number[];
+    readonly unwindRetainsRoots: boolean;
+  };
+  readonly inlineCases: readonly {
+    readonly name: string;
+    readonly before: number;
+    readonly after: number;
+    readonly backingCapacity: number;
+    readonly additionalOwnedBytes: number;
+  }[];
+  readonly transfer: {
+    readonly capacity: number;
+    readonly values: readonly number[];
+    readonly sourceBackingBytes: number;
+    readonly sourceItems: number;
+    readonly rejectedPayload: string;
+  };
+  readonly backingCases: readonly {
+    readonly name: string;
+    readonly capacity: number;
+    readonly initialized: number;
+    readonly elementBytes: number;
+    readonly ownedBytes: number;
+  }[];
+};
+
+/** 🩹️ The patch handoff ledger: grants, unwind frontiers and the source-preservation claims. */
+type SurfacePatchFixture = {
+  readonly version: number;
+  readonly generation: number;
+  readonly surface: string;
+  readonly surfaceBytes: number;
+  readonly revision: number;
+  readonly grants: readonly number[];
+  readonly handoffGrant: number;
+  readonly unwindFrontiers: readonly number[];
+  readonly occupiedTargetPreservesSource: boolean;
+  readonly invalidAckPreservesSource: boolean;
+  readonly contendedReleasePreservesSource: boolean;
+};
+
+/** 🚪️ The handback ledger: which contention outcomes may move the owner out of its slot. */
+type SurfaceHandbackFixture = {
+  readonly version: number;
+  readonly generation: number;
+  readonly surface: string;
+  readonly surfaceUtf8: string;
+  readonly entryWaits: boolean;
+  readonly poisonIsFault: boolean;
+  readonly poisonMutatesOwner: boolean;
+  readonly busyLosesOwner: boolean;
+  readonly queuedOwnerLeavesSlotDuringStep: boolean;
+};
+
+/** 📃️ The document-level byte and slot ledger the aggregate ceiling funds resident surfaces against. */
+type SurfaceDocumentFixture = {
+  readonly version: number;
+  readonly surfaces: number;
+  readonly surfaceCeilingBytes: number;
+  readonly documentBytes: number;
+  readonly residentSlots: number;
+  readonly aggregateCeilingBytes: number;
+  readonly workBytes: number;
+  readonly physicalBytes: number;
+  readonly comparisonHeapAllocations: number;
+  readonly comparisonLogicalDepth: number;
+  readonly unwindPhases: readonly string[];
+  readonly freshCompletionFields: readonly string[];
+  readonly completionTransferUsesSeparateGrant: boolean;
+  readonly sameRootForReader: boolean;
+  readonly oldReaderSurvivesReplacement: boolean;
+  readonly readerReleaseGrants: readonly number[];
+};
+
+/** 📤️ The producer-output ledger: entry slots, admission outcomes and every unwind-retention claim. */
+type SurfaceOutputFixture = {
+  readonly version: number;
+  readonly entrySlots: number;
+  readonly queueSlots: number;
+  readonly physicalGrant: number;
+  readonly closeGrants: readonly number[];
+  readonly zeroGrantInvocations: number;
+  readonly saturatedInvocations: number;
+  readonly extraInvocation: boolean;
+  readonly surfaces: readonly string[];
+  readonly surfaceUtf8: readonly string[];
+  readonly reserveBeforeProducer: boolean;
+  readonly refusalPreservesReady: boolean;
+  readonly partialProducerUnwindRetainsOwner: boolean;
+  readonly incompleteProducerSourcesPreserveRemainingOwners: boolean;
+  readonly cancelledAdmission: {
+    readonly surface: string;
+    readonly revision: number;
+    readonly generationPreserved: boolean;
+    readonly terminal: boolean;
+  };
+  readonly dropWaits: boolean;
+  readonly concurrentAdmission: {
+    readonly occupied: number;
+    readonly workers: number;
+    readonly accepted: number;
+    readonly restored: number;
+  };
+  readonly capturedLifetime: {
+    readonly instance: number;
+    readonly original: number;
+    readonly reused: number;
+    readonly foreignCloseAccepted: boolean;
+    readonly terminal: boolean;
+  };
+  readonly directReceiver: {
+    readonly zeroGrantTransfers: boolean;
+    readonly occupiedTransfers: boolean;
+    readonly unwindRetainsPayload: boolean;
+    readonly terminal: boolean;
+  };
+  readonly aggregateCeilingBytes: number;
+  readonly residentCapacity: {
+    readonly reservationBytes: number;
+    readonly cases: readonly {
+      readonly fixedBytes: number;
+      readonly capacity: number;
+    }[];
+    readonly capPlusOneAccepted: boolean;
+    readonly refusalPreservesTree: boolean;
+    readonly terminal: boolean;
+  };
+  readonly returnedEntryReusableBeforeDrain: boolean;
+  readonly staleEpochAccepted: boolean;
+  readonly zeroGrantMutates: boolean;
+  readonly handbackAdmission: {
+    readonly slots: number;
+    readonly perProducer: number;
+    readonly onlyOneFreeAccepted: boolean;
+    readonly saturatedAfterSealTransfers: boolean;
+  };
+  readonly readyRevalidation: readonly {
+    readonly case: string;
+    readonly cancelled: boolean;
+    readonly sameGeneration: boolean;
+    readonly fuel: number;
+    readonly deadline: number;
+    readonly now: number;
+    readonly outcome: string;
+  }[];
+};
+
+/** 🔄️ The transaction credit ledger: required nodes against each case's node ceiling. */
+type SurfaceTransactionFixture = {
+  readonly version: number;
+  readonly requiredNodes: number;
+  readonly maximumItems: number;
+  readonly maximumBytes: number;
+  readonly cases: readonly {
+    readonly maximumNodes: number;
+    readonly patches: number;
+    readonly creditFault: boolean;
+  }[];
+};
+
 /** 📐️ Validates physical backing independently with Ajv and Node's fixed byte-buffer allocation. */
 export function surfaceOwnershipSelfTests(): number {
-  const fixture = JSON.parse(readFileSync(new URL("../../📏️ownership/🧫️fixtures/🔣️.json", import.meta.url), "utf8"));
+  const fixture: SurfaceOwnershipFixture = JSON.parse(readFileSync(new URL("../../📏️ownership/🧫️fixtures/🔣️.json", import.meta.url), "utf8"));
   const schema = JSON.parse(readFileSync(new URL("../../📏️ownership/🧬️schema/🔣️.json", import.meta.url), "utf8"));
   const validate = new Ajv({ strict: true, allErrors: true }).compile(schema);
   assert(validate(fixture), JSON.stringify(validate.errors));
@@ -46,21 +233,21 @@ export function surfaceOwnershipSelfTests(): number {
   assert.equal(existing.equals(different), false);
   assert.equal(existing.byteLength / fixture.existingComponent.workGrant, fixture.existingComponent.minimumTurns);
   assert.equal(validate({ ...fixture, existingComponent: { ...fixture.existingComponent, oldRootCopied: true } }), false);
-  const patch = JSON.parse(readFileSync(new URL("../../🩹️patch/🧫️fixtures/🔣️.json", import.meta.url), "utf8"));
+  const patch: SurfacePatchFixture = JSON.parse(readFileSync(new URL("../../🩹️patch/🧫️fixtures/🔣️.json", import.meta.url), "utf8"));
   const patchSchema = JSON.parse(readFileSync(new URL("../../🩹️patch/🧬️schema/🔣️.json", import.meta.url), "utf8"));
   const validatePatch = new Ajv({ strict: true, allErrors: true }).compile(patchSchema);
   assert(validatePatch(patch), JSON.stringify(validatePatch.errors));
   assert.equal(Buffer.from(patch.surface).byteLength, patch.surfaceBytes);
   assert.equal(validatePatch({ ...patch, occupiedTargetPreservesSource: false }), false);
   assert.equal(validatePatch({ ...patch, contendedReleasePreservesSource: false }), false);
-  const handback = JSON.parse(readFileSync(new URL("../../🚪️handback/🧫️fixtures/🔣️.json", import.meta.url), "utf8"));
+  const handback: SurfaceHandbackFixture = JSON.parse(readFileSync(new URL("../../🚪️handback/🧫️fixtures/🔣️.json", import.meta.url), "utf8"));
   const handbackSchema = JSON.parse(readFileSync(new URL("../../🚪️handback/🧬️schema/🔣️.json", import.meta.url), "utf8"));
   const validateHandback = new Ajv({ strict: true, allErrors: true }).compile(handbackSchema);
   assert(validateHandback(handback), JSON.stringify(validateHandback.errors));
   assert.equal(Buffer.from(handback.surface).toString("hex"), handback.surfaceUtf8);
   for (const field of ["entryWaits", "poisonMutatesOwner", "busyLosesOwner", "queuedOwnerLeavesSlotDuringStep"]) assert.equal(validateHandback({ ...handback, [field]: true }), false);
   assert.equal(validateHandback({ ...handback, poisonIsFault: false }), false);
-  const document = JSON.parse(readFileSync(new URL("../../📃️document/🧫️fixtures/🔣️.json", import.meta.url), "utf8"));
+  const document: SurfaceDocumentFixture = JSON.parse(readFileSync(new URL("../../📃️document/🧫️fixtures/🔣️.json", import.meta.url), "utf8"));
   const documentSchema = JSON.parse(readFileSync(new URL("../../📃️document/🧬️schema/🔣️.json", import.meta.url), "utf8"));
   const validateDocument = new Ajv({ strict: true, allErrors: true }).compile(documentSchema);
   assert(validateDocument(document), JSON.stringify(validateDocument.errors));
@@ -78,7 +265,7 @@ export function surfaceOwnershipSelfTests(): number {
   assert.equal(alias.byteOffset, canonical.byteOffset);
   assert.equal(validateDocument({ ...document, sameRootForReader: false }), false);
   assert.equal(validateDocument({ ...document, oldReaderSurvivesReplacement: false }), false);
-  const outputs = JSON.parse(readFileSync(new URL("../../📤️output/🧫️fixtures/🔣️.json", import.meta.url), "utf8"));
+  const outputs: SurfaceOutputFixture = JSON.parse(readFileSync(new URL("../../📤️output/🧫️fixtures/🔣️.json", import.meta.url), "utf8"));
   const outputSchema = JSON.parse(readFileSync(new URL("../../📤️output/🧬️schema/🔣️.json", import.meta.url), "utf8"));
   const validateOutputs = new Ajv({ strict: true, allErrors: true }).compile(outputSchema);
   assert(validateOutputs(outputs), JSON.stringify(validateOutputs.errors));
@@ -158,7 +345,7 @@ export function surfaceOwnershipSelfTests(): number {
     const outcome = row.cancelled || !row.sameGeneration ? "fault" : row.fuel === 0 || BigInt(row.now) >= deadline.readBigUInt64LE() ? "pending" : "ready";
     assert.equal(outcome, row.outcome);
   }
-  const transaction = JSON.parse(readFileSync(new URL("../../🔄️transaction/🧫️fixtures/🔣️.json", import.meta.url), "utf8"));
+  const transaction: SurfaceTransactionFixture = JSON.parse(readFileSync(new URL("../../🔄️transaction/🧫️fixtures/🔣️.json", import.meta.url), "utf8"));
   const transactionSchema = JSON.parse(readFileSync(new URL("../../🔄️transaction/🧬️schema/🔣️.json", import.meta.url), "utf8"));
   const validateTransaction = new Ajv({ strict: true, allErrors: true }).compile(transactionSchema);
   assert(validateTransaction(transaction), JSON.stringify(validateTransaction.errors));

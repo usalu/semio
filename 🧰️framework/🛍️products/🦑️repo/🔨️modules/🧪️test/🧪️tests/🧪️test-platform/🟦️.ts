@@ -440,7 +440,7 @@ describe("📈️ non-aggregate metrics", () => {
 
 describe("🔮️ oracle evidence rules", () => {
   test("a differential scenario with neither an oracle nor a second implementation is a contract breach", () => {
-    const registry = { schemaVersion: 1, oracles: [], noOracleDecisions: [{ id: "vectors-only", capabilities: ["x"], rationale: "a rationale long enough to satisfy the schema minimum length", substitutes: ["specification-vectors"] }], comparisonProfiles: [...CORE_COMPARISON_PROFILES], oracleHostPackages: [], contributions: [] };
+    const registry: import("../../📦️packages/🟦️typescript/🟦️.ts").OracleRegistry = { schemaVersion: 1, oracles: [], probes: [], noOracleDecisions: [{ id: "vectors-only", capabilities: ["x"], rationale: "a rationale long enough to satisfy the schema minimum length", substitutes: ["specification-vectors"] }], comparisonProfiles: [...CORE_COMPARISON_PROFILES], comparisonPipelines: [], toleranceProfiles: [], oracleHostPackages: [], mutationCatalogs: [], mutationManifests: [], fixtureManifests: [], contributions: [] };
     const feature = "@capability-x @no-oracle-vectors-only @comparison-ordered-json-v1\nFeature: F\n  @id-s @level-quick @mode-differential\n  Scenario: S\n    Given a value\n";
     const taxonomy = testTaxonomy(repoRoot);
     const featureFilename = testFilenameForKind(taxonomy, taxonomy.testFeatureFileKindId);

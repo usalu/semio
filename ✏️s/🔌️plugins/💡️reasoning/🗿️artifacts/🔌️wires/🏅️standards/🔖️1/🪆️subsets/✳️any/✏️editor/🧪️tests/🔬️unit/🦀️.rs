@@ -1,9 +1,9 @@
 pub(crate) mod context {
     use super::super::*;
-    use semio_framework_plugin::artifact_app_laws::{meta, new_app_with_registry};
+    use semio_framework_plugin::artifact_app_laws::{meta, new_app_with_registry_and_members};
     use semio_framework_plugin::{App, EditorApp, InvocationResult, PluginApp, VcsArtifactApp, ViewModel};
     
-    pub type WiresApp = VcsArtifactApp<EditorApp<ReasoningWiresPlayApp>>;
+    pub type WiresApp = VcsArtifactApp<EditorApp<ReasoningWiresPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>;
     
     /// 🧪️ A registry-backed app bound to the live runtime instance `meta("local")` addresses. The registry-less
     /// `artifact_app_laws::new_app` cannot construct this app: its tool proofs need the manifest's `Migrated`
@@ -31,7 +31,7 @@ pub(crate) mod context {
     /// 🧪️ An app wired to the real manifest registry — required to resolve the "graph" interaction
     /// domain's declaration when dispatching a framework-injected verb like `interactionSelect`.
     pub async fn app_with_registry() -> WiresApp {
-        new_app_with_registry::<EditorApp<ReasoningWiresPlayApp>>(wires_manifest_for_tests).await
+        new_app_with_registry_and_members::<EditorApp<ReasoningWiresPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(wires_manifest_for_tests).await
     }
     
     /// 🧪️ An app pre-loaded with the metabolism example document, for tests exercising a populated board.

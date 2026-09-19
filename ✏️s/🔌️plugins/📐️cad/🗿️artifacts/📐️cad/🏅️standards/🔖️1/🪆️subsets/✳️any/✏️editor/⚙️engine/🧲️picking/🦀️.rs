@@ -409,13 +409,190 @@ fn unique_points(points: Vec<[f64; 3]>) -> Vec<[f64; 3]> {
     points.into_iter().filter(|point| seen.insert(point_key(*point))).collect()
 }
 
+//#region 🔖️CurveSampling
+/// 📐️ `edgeSamplePoints`' default segment count (`🧮️preview/🟦️.ts:262`).
+pub const EDGE_SAMPLE_SEGMENTS: usize = 32;
+/// ⭕️ The floor `circleSamplePoints`/`ellipseSamplePoints` raise `segments` to (`:272`, `:274`).
+pub const CLOSED_CURVE_SAMPLE_SEGMENTS: usize = 64;
+
+fn v_sub(a: [f64; 3], b: [f64; 3]) -> [f64; 3] {
+    [a[0] - b[0], a[1] - b[1], a[2] - b[2]]
+}
+
+fn v_add(a: [f64; 3], b: [f64; 3]) -> [f64; 3] {
+    [a[0] + b[0], a[1] + b[1], a[2] + b[2]]
+}
+
+fn v_scale(a: [f64; 3], s: f64) -> [f64; 3] {
+    [a[0] * s, a[1] * s, a[2] * s]
+}
+
+fn v_dot(a: [f64; 3], b: [f64; 3]) -> f64 {
+    a[0] * b[0] + a[1] * b[1] + a[2] * b[2]
+}
+
+fn v_cross(a: [f64; 3], b: [f64; 3]) -> [f64; 3] {
+    [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]]
+}
+
+fn v_length(a: [f64; 3]) -> f64 {
+    v_dot(a, a).sqrt()
+}
+
+fn v_normalize(a: [f64; 3]) -> [f64; 3] {
+    let length = v_length(a);
+    if length < 1e-12 { a } else { v_scale(a, 1.0 / length) }
+}
+
+/// 🔵️ The plane frame of an arc — React's `arcPlaneFrame` (`🧮️preview/🟦️.ts:117`).
+struct ArcPlaneFrame {
+    center: [f64; 3],
+    radius: f64,
+    u: [f64; 3],
+    v: [f64; 3],
+}
+
+fn arc_plane_frame(center: [f64; 3], start: [f64; 3], end: [f64; 3]) -> Option<ArcPlaneFrame> {
+    let rs = v_sub(start, center);
+    let re = v_sub(end, center);
+    let radius = v_length(rs);
+    if radius < 1e-9 {
+        return None;
+    }
+    let mut normal = v_cross(rs, re);
+    normal = if v_length(normal) < 1e-9 { [0.0, 0.0, 1.0] } else { v_normalize(normal) };
+    let u = v_normalize(rs);
+    let v = v_cross(normal, u);
+    Some(ArcPlaneFrame { center, radius, u, v })
+}
+
+/// 🔵️ React's `arcFrameFromRadiusPoint` (`:154`) — Z-up axis unless the radius is already Z-ish.
+fn arc_frame_from_radius_point(center: [f64; 3], on_circle: [f64; 3]) -> Option<ArcPlaneFrame> {
+    let rs = v_sub(on_circle, center);
+    let radius = v_length(rs);
+    if radius < 1e-9 {
+        return None;
+    }
+    let u = v_normalize(rs);
+    let axis = if v_dot(u, [0.0, 0.0, 1.0]).abs() > 0.99 { [0.0, 1.0, 0.0] } else { [0.0, 0.0, 1.0] };
+    let v = v_normalize(v_cross(axis, u));
+    Some(ArcPlaneFrame { center, radius, u, v })
+}
+
+/// 🔵️ React's `arcSweepRadians` (`:131`) — positive CCW, and a zero sweep means a full turn.
+fn arc_sweep_radians(frame: &ArcPlaneFrame, end: [f64; 3]) -> f64 {
+    let re = v_sub(end, frame.center);
+    let mut sweep = v_dot(re, frame.v).atan2(v_dot(re, frame.u));
+    if sweep < 0.0 {
+        sweep += std::f64::consts::TAU;
+    }
+    if sweep < 1e-9 {
+        sweep = std::f64::consts::TAU;
+    }
+    sweep
+}
+
+fn frame_point(frame: &ArcPlaneFrame, angle: f64) -> [f64; 3] {
+    v_add(frame.center, v_add(v_scale(frame.u, frame.radius * angle.cos()), v_scale(frame.v, frame.radius * angle.sin())))
+}
+
+/// 🔵️ React's `arcSamplePoints` (`:140`).
+pub fn arc_sample_points(center: [f64; 3], start: [f64; 3], end: [f64; 3], segments: usize) -> Vec<[f64; 3]> {
+    let Some(frame) = arc_plane_frame(center, start, end) else { return vec![start, end] };
+    let sweep = arc_sweep_radians(&frame, end);
+    let n = segments.max(2);
+    (0..=n).map(|index| frame_point(&frame, index as f64 / n as f64 * sweep)).collect()
+}
+
+/// ⭕️ React's `circleSamplePoints` (`:183`).
+///
+/// ⚖️ The frame is built from `center + normalize(normal) * radius`, so the circle's own `u` IS the
+/// normal direction — a quirk of React's implementation, ported verbatim rather than "corrected",
+/// because a divergence here would move every circle both hosts draw.
+pub fn circle_sample_points(center: [f64; 3], normal: [f64; 3], radius: f64, segments: usize) -> Vec<[f64; 3]> {
+    let Some(frame) = arc_frame_from_radius_point(center, v_add(center, v_scale(v_normalize(normal), radius))) else { return vec![center] };
+    let n = segments.max(8);
+    (0..=n).map(|index| frame_point(&frame, index as f64 / n as f64 * std::f64::consts::TAU)).collect()
+}
+
+/// 🥚️ React's `ellipseSamplePoints` (`:196`).
+pub fn ellipse_sample_points(center: [f64; 3], normal: [f64; 3], major_axis: [f64; 3], major_radius: f64, minor_radius: f64, segments: usize) -> Vec<[f64; 3]> {
+    let u = v_normalize(major_axis);
+    let v = v_normalize(v_cross(normal, u));
+    let n = segments.max(8);
+    (0..=n)
+        .map(|index| {
+            let angle = index as f64 / n as f64 * std::f64::consts::TAU;
+            v_add(center, v_add(v_scale(u, major_radius * angle.cos()), v_scale(v, minor_radius * angle.sin())))
+        })
+        .collect()
+}
+
+/// 📈️ React's `nurbsDisplaySamplePoints` (`:209`) — centripetal Catmull-Rom through the poles.
+pub fn nurbs_display_sample_points(poles: &[[f64; 3]], segments_per_span: usize) -> Vec<[f64; 3]> {
+    if poles.len() < 3 {
+        return poles.to_vec();
+    }
+    let n = poles.len();
+    let segs = segments_per_span.max(1);
+    let mut out: Vec<[f64; 3]> = Vec::new();
+    for index in 0..n - 1 {
+        let p0 = poles[index.saturating_sub(1)];
+        let p1 = poles[index];
+        let p2 = poles[index + 1];
+        let p3 = poles[(index + 2).min(n - 1)];
+        for step in 0..segs {
+            let t = step as f64 / segs as f64;
+            let t2 = t * t;
+            let t3 = t2 * t;
+            out.push([0, 1, 2].map(|axis| 0.5 * (2.0 * p1[axis] + (-p0[axis] + p2[axis]) * t + (2.0 * p0[axis] - 5.0 * p1[axis] + 4.0 * p2[axis] - p3[axis]) * t2 + (-p0[axis] + 3.0 * p1[axis] - 3.0 * p2[axis] + p3[axis]) * t3)));
+        }
+    }
+    out.push(poles[n - 1]);
+    out
+}
+
+/// 📍️ React's `edgeSamplePoints` (`🧮️preview/🟦️.ts:262`) — the exact family ladder, over the curve
+/// parameters `CadEdgeCurve` now carries. A producer-supplied `points` polyline wins outright.
+pub fn edge_sample_points(curve: &CadEdgeCurve, ends: &[[f64; 3]], segments: usize) -> Vec<[f64; 3]> {
+    if !curve.points.is_empty() {
+        return curve.points.clone();
+    }
+    if ends.len() < 1 {
+        return ends.to_vec();
+    }
+    match curve.kind.as_str() {
+        "arc" if ends.len() >= 2 => match curve.center {
+            Some(center) => arc_sample_points(center, ends[0], ends[1], segments),
+            None => ends.to_vec(),
+        },
+        "circle" => match (curve.center, curve.normal, curve.radius) {
+            (Some(center), Some(normal), Some(radius)) => circle_sample_points(center, normal, radius, segments.max(CLOSED_CURVE_SAMPLE_SEGMENTS)),
+            _ => ends.to_vec(),
+        },
+        "ellipse" => match (curve.center, curve.normal, curve.major_axis, curve.major_radius, curve.minor_radius) {
+            (Some(center), Some(normal), Some(major_axis), Some(major_radius), Some(minor_radius)) => ellipse_sample_points(center, normal, major_axis, major_radius, minor_radius, segments.max(CLOSED_CURVE_SAMPLE_SEGMENTS)),
+            _ => ends.to_vec(),
+        },
+        "nurbs" if !curve.poles.is_empty() => {
+            let span = if curve.through { 12.max(curve.poles.len() * 8) } else { 4.max(segments.div_ceil(4)) };
+            nurbs_display_sample_points(&curve.poles, span)
+        }
+        _ => ends.to_vec(),
+    }
+}
+//#endregion 🔖️CurveSampling
+
 impl<'a> GeometryBuckets<'a> {
-    /// 📍️ `edgeSamplePoints` for the only curve family the Rust import carries: straight edges, so
-    /// the samples ARE the endpoints. Curved edges (`arc`/`circle`/`nurbs`) have no pole/centre data
-    /// on `CadEdgeCurve`, so they degrade to their endpoints instead of a tessellated polyline —
-    /// tracked as a gap in the packet report §5.
+    /// 📍️ React's `edgeSamplePoints` for one edge — the boundary vertices for a straight edge, and
+    /// the tessellated polyline for every curved family [`edge_sample_points`] knows.
+    ///
+    /// 🩸️ This used to return the boundary vertices UNCONDITIONALLY, because `CadEdgeCurve` carried
+    /// only `kind`: a circle picked and drew as one chord where React draws 64 samples. The struct
+    /// now carries the curve parameters (ticket 26/09/17 packet W14g).
     pub fn edge_points(&self, edge: &CadEdge) -> Vec<[f64; 3]> {
-        edge.vertex_ids.iter().filter_map(|id| self.vertices.get(id.as_str()).map(|vertex| vertex.position)).collect()
+        let ends: Vec<[f64; 3]> = edge.vertex_ids.iter().filter_map(|id| self.vertices.get(id.as_str()).map(|vertex| vertex.position)).collect();
+        edge_sample_points(&edge.curve, &ends, EDGE_SAMPLE_SEGMENTS)
     }
 
     pub fn wire_points(&self, wire: &CadWire) -> Vec<[f64; 3]> {

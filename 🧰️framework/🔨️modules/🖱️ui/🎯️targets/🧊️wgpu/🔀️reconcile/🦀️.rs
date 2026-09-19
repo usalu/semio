@@ -92,7 +92,14 @@ pub enum UiDocumentReconcileStep {
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 enum UiDocumentReconcilePhase {
+    /// 🔽️ Drains the tree's synthesized composite rows (an open `Select`'s option rows) one node per
+    /// step BEFORE anything relinks the arena. `Unlink`/`Mount` below rebuild the sibling chains from
+    /// the published record set alone, which would orphan every synthesized child and leak its arena
+    /// slot on each republish; `paint::sync_interactive_state_node_step` re-mints whatever is still
+    /// open on the next frame, so nothing is lost and the working set stays bounded
+    /// (ticket 26/09/17 packet W15a).
     #[default]
+    Compose,
     Adopt,
     Plan,
     Unlink,
@@ -141,7 +148,7 @@ impl UiDocumentReconcileCursor {
         if self.generation == generation && !matches!(self.phase, UiDocumentReconcilePhase::Complete | UiDocumentReconcilePhase::Fault) {
             return;
         }
-        self.phase = UiDocumentReconcilePhase::Adopt;
+        self.phase = UiDocumentReconcilePhase::Compose;
         self.fault = None;
         self.generation = generation;
         self.plan.clear();
@@ -656,6 +663,14 @@ fn input_node(record: &UiNodeRecord, controller: &str) -> UiNode {
         step: props.step,
         accept: props.accept.as_ref().map(|value| value.as_str().to_string()),
         on_change: input_commit_action(record, props, controller),
+        // ⏎️⎋️🔁️ The three moments React's `SearchInput` binds BESIDE `onChange`. They are read
+        // per-trigger (not resolved into the single `on_change` slot the way `input_commit_action`
+        // resolves Change/Commit) because React fires them at the SAME time as `onChange`, never
+        // instead of it: the window search line feeds the guest's autocomplete on every keystroke
+        // and runs the verb on Enter (`🖥️ui/🎯️targets/⚛️react/🟦️.tsx`'s `Search`).
+        on_submit: record_action(record, ui_contract::Trigger::Submit, controller),
+        on_abort: record_action(record, ui_contract::Trigger::Abort, controller),
+        on_repeat_last: record_action(record, ui_contract::Trigger::RepeatLast, controller),
         presence: record_presence(record),
         menu: menu_ref(record),
     })
@@ -917,6 +932,13 @@ impl UiTree {
         }
         let Some(root_id) = self.document().map(UiDocumentTree::root_id) else { return cursor.refuse(UiDocumentReconcileFault::MissingRecord) };
         match cursor.phase {
+            UiDocumentReconcilePhase::Compose => {
+                if !self.retire_composite_row_step() {
+                    return UiDocumentReconcileStep::Pending;
+                }
+                cursor.phase = UiDocumentReconcilePhase::Adopt;
+                UiDocumentReconcileStep::Pending
+            }
             UiDocumentReconcilePhase::Adopt => {
                 // 🧹️ A root this ledger never minted can only come from the testkit `apply_tree`
                 // path; it is removed whole so the document owns the arena outright.
@@ -1134,18 +1156,24 @@ fn children_of(node: &UiNode, open: bool) -> Vec<Cow<'_, UiNode>> {
 /// 🔽️ Synthesizes one retained `Button` row per `Select` item, keyed by the item's own `value` (via
 /// `explicit_id`'s `UiNode::Button` arm) — `UiSelectItem.value` is already Select's stable per-option
 /// identity (it's what `UiSelectNode.value` itself holds to name the current choice), so reusing it as
-/// the row's key needs no extra bookkeeping. See this module's doc comment for the open/closed
-/// `WidgetState` wiring request this groundwork is waiting on.
-#[cfg(any(test, feature = "testkit"))]
-fn select_item_row(select: &UiSelectNode, item: &UiSelectItem) -> UiNode {
+/// the row's key needs no extra bookkeeping.
+///
+/// 🔓️ Ungated in ticket 26/09/17 packet W15a. It used to be `cfg(test, testkit)` alongside the
+/// `apply_tree` reconciler that was its only caller, which meant PRODUCTION never materialized an
+/// open popup's rows at all: `paint_select` (which draws the rows from the inline `items`) is itself
+/// `cfg(test)`, the retained `UiNode::Select` paint arm draws only the trigger, and
+/// `retained_hit_registration`'s `Select` arm mints one target for the trigger — so an open popup on
+/// the live renderer painted nothing, hit nothing and projected nothing. The production minter is
+/// `paint::sync_interactive_state_node_step`'s `SelectMint` phase, through
+/// `UiTree::mint_composite_row`.
+pub(crate) fn select_item_row(select: &UiSelectNode, item: &UiSelectItem) -> UiNode {
     UiNode::Button(UiButtonNode { id: Some(item.value.clone()), icon_id: IconName::CircleDot, label: item.label.clone(), action: with_item_value_arg(&select.on_change, &item.value), style: None, presence: UiPresence::default(), menu: None })
 }
 
 /// 🏷️ Clones `action`, merging a `"value"` key into its JSON `args` object (creating one if absent)
 /// so a click on one synthesized `Select` row is distinguishable from any other row once a later
 /// events milestone dispatches it — `on_change.clone()` alone would fire an identical, valueless
-/// action for every row.
-#[cfg(any(test, feature = "testkit"))]
+/// action for every row. Ungated with [`select_item_row`] (packet W15a).
 fn with_item_value_arg(action: &ActionDescriptor, value: &str) -> ActionDescriptor {
     let mut merged = action.clone();
     let mut entries = match merged.args.take() {

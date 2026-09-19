@@ -11,7 +11,7 @@ const NO_OUTPUT_FAULT = Symbol("actor-output.no-fault");
 const MAX_SEQUENCE = 0xffffffffffffffffn;
 const OUTPUT_ENVELOPE = Object.freeze({ bytes: 448, slots: 3, owners: 3 });
 let createOutput: (slot: Slot) => OwnedActorTurnOutput;
-let cancelEmpty: (slot: Slot) => boolean;
+export let cancelEmpty: (slot: Slot) => boolean;
 let canRun: (slot: Slot) => boolean;
 function granted(grant: ResidentGrant, bytes: number): boolean { return Number.isSafeInteger(grant.maxItems) && grant.maxItems >= 1 && Number.isSafeInteger(grant.maxBytes) && grant.maxBytes >= bytes; }
 function admission(kind: ResidentStep["kind"], phase: string, bytes = 0, output: OwnedActorTurnOutput | null = null): OwnedActorTurnOutputAdmission { return { step: { kind, phase, items: bytes ? 1 : 0, bytes }, output }; }

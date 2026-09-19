@@ -96,3 +96,6 @@ pub use mutations::*;
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+#[path = "🧬️schema/🦀️.rs"]
+pub mod schema;

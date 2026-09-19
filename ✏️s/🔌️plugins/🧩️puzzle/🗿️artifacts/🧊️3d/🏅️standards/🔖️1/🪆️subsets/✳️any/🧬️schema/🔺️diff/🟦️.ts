@@ -1,4 +1,10 @@
 /** 🧬️ Puzzle3d diff schema — sparse field delta. */
+import {
+  parsePuzzle3dAttraction,
+  parsePuzzle3dObject,
+  parsePuzzle3dReference,
+  parsePuzzle3dTargetVolume,
+} from "../🟦️.ts";
 
 export interface Puzzle3dDiff {
   /** @state artifact */
@@ -231,5 +237,33 @@ export function parsePuzzle3dReferencePatchEntry(value: unknown, at = "$"): Puzz
   return {
     id: puzzlePuzzle3dDiffGuardString(row["id"], `${at}.id`),
     patch: parsePuzzle3dReferencePatch(row["patch"], `${at}.patch`),
+  };
+}
+
+export function parsePuzzle3dObjectPatch(value: unknown, at = "$"): Puzzle3dObjectPatch {
+  const row = puzzlePuzzle3dDiffGuardObject(value, at);
+  return {
+    replacement: row["replacement"] === undefined ? undefined : parsePuzzle3dObject(row["replacement"], `${at}.replacement`),
+  };
+}
+
+export function parsePuzzle3dAttractionPatch(value: unknown, at = "$"): Puzzle3dAttractionPatch {
+  const row = puzzlePuzzle3dDiffGuardObject(value, at);
+  return {
+    replacement: row["replacement"] === undefined ? undefined : parsePuzzle3dAttraction(row["replacement"], `${at}.replacement`),
+  };
+}
+
+export function parsePuzzle3dTargetVolumePatch(value: unknown, at = "$"): Puzzle3dTargetVolumePatch {
+  const row = puzzlePuzzle3dDiffGuardObject(value, at);
+  return {
+    replacement: row["replacement"] === undefined ? undefined : parsePuzzle3dTargetVolume(row["replacement"], `${at}.replacement`),
+  };
+}
+
+export function parsePuzzle3dReferencePatch(value: unknown, at = "$"): Puzzle3dReferencePatch {
+  const row = puzzlePuzzle3dDiffGuardObject(value, at);
+  return {
+    replacement: row["replacement"] === undefined ? undefined : parsePuzzle3dReference(row["replacement"], `${at}.replacement`),
   };
 }

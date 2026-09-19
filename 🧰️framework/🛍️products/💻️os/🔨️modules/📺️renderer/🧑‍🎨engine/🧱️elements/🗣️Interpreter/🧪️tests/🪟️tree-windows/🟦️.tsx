@@ -24,7 +24,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
   }
 
   function treeItem(id: number, key: string, label: string, extra: AnyRecord = {}, children: readonly number[] = [], bindings: readonly AnyRecord[] = []): AnyRecord {
-    return node(id, key, { type: "treeItem", label, description: null, icon: null, defaultOpen: null, draggable: null, dragData: null, dimmed: null, rowActions: [], ...extra }, children, bindings);
+    return node(id, key, { type: "treeItem", label, description: null, icon: null, defaultOpen: null, draggable: null, dragData: null, dimmed: null, window: null, granularity: null, rowActions: [], ...extra }, children, bindings);
   }
 
   const selectBinding = { trigger: "activate", action: { scope: "outliner", name: "interactionSelect", version: 1 }, args: { domainId: "outliner.objects" }, capability: null };
@@ -149,7 +149,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       const rendered = mount(
         [
           node(1, "outliner", { type: "tree", interactionDomain: "outliner.objects" }, [2], [selectBinding]),
-          node(2, "outliner.objects", { type: "treeSection", label: "Objects", defaultOpen: true }, [3]),
+          node(2, "outliner.objects", { type: "treeSection", label: "Objects", defaultOpen: true, window: null }, [3]),
           treeItem(3, "seed-left-001", "Seed Left", { granularity: "piece" }),
         ],
         1,
@@ -170,7 +170,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       const rendered = mount(
         [
           node(1, "outliner", { type: "tree", interactionDomain: "outliner.objects" }, [2], [selectBinding]),
-          node(2, "outliner.objects", { type: "treeSection", label: "Objects", defaultOpen: true }, [3]),
+          node(2, "outliner.objects", { type: "treeSection", label: "Objects", defaultOpen: true, window: null }, [3]),
           treeItem(3, "seed-left-001", "Seed Left", { granularity: "piece" }, [], [own]),
         ],
         1,

@@ -10,7 +10,7 @@ import { EXTENSION_TARGETS, PLUGIN_BUILD_TARGETS } from "../../../🔌️plugin/
 import { MODULE_PLUGIN_ROUTE, MODULE_EXTENSION_ROUTE, moduleDirectoryName, MODULE_VENDOR_DIRECTORY, MODULE_SHARD_DIRECTORY } from "../../../🔌️plugin/📇️registry/📦️deployment/🟦️.ts";
 import { isHostPlaygroundFilter } from "../../../🔌️plugin/📇️registry/🟦️.ts";
 import { resolveShellBrandById } from "../../🏷️brand/🟦️.ts";
-import { semioBackboneVitePlugin, semioBlobVitePlugin, semioDescriptorRouteGuardVitePlugin, semioActivationVitePlugin, semioPlaygroundReactRefreshCoherenceVitePlugin, semioProductionTestBoundaryVitePlugin, semioSourceFreshnessVitePlugins } from "../../🔌️vite-plugins/🟦️.ts";
+import { semioAgentBridgeRendezvousVitePlugin, semioBackboneVitePlugin, semioBlobVitePlugin, semioDescriptorRouteGuardVitePlugin, semioActivationVitePlugin, semioPlaygroundReactRefreshCoherenceVitePlugin, semioProductionTestBoundaryVitePlugin, semioSourceFreshnessVitePlugins } from "../../🔌️vite-plugins/🟦️.ts";
 import { semioExtensionStoreVitePlugin } from "../../../🔌️plugin/🏪️store/📥️installation/🟦️.ts";
 import { developmentRuntimeRoot, playgroundSessionViteAlias, pluginModulesRoot, readActivationReceipt } from "../../♻️activation/🟦️.ts";
 import { resolveTestBrowserHostRootsV1 } from "../../♻️activation/🌐️browser-host/🟦️.ts";
@@ -187,6 +187,7 @@ return {
     ]),
     semioBackboneVitePlugin(),
     semioBlobVitePlugin(),
+    semioAgentBridgeRendezvousVitePlugin(),
     ...(command === "serve" ? [...semioSourceFreshnessVitePlugins({ repoRoot }), semioActivationVitePlugin({ receiptDirectory, moduleRoot: pluginModulesDir, installRoot: installedExtensionsDir, components: activationComponents }), semioExtensionStoreVitePlugin({ installRoot: installedExtensionsDir, repoRoot })] : []),
     ...semioAssetsVitePlugin(repoRoot),
     ...(productionComponents ? [productionBrowserArtifactsVitePlugin(repoRoot, productionComponents)] : [

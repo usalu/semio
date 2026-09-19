@@ -8,7 +8,7 @@ import { cleanCollectMarkerOnlyFolderRemovals, cleanDirectoryTreeIsOnlyEmptyMark
 
 type Fixture = Readonly<{
   version: number;
-  trees: readonly Readonly<{ id: string; expectRemoval: boolean; root: string; paths: readonly Readonly<{ path: string; bytes: string }>[] }>;
+  trees: readonly Readonly<{ id: string; expectRemoval: boolean; root: string; paths: readonly Readonly<{ path: string; bytes: string }>[] }>[];
 }>;
 
 const fixture = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/🧼️marker-only-folders/🔣️.json"), "utf8")) as Fixture;

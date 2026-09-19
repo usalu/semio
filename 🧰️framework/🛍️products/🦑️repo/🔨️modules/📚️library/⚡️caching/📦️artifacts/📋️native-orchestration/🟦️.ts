@@ -37,10 +37,7 @@ export class NativeScript extends BundleScript {
           "wasm32-wasip2",
           "--profile",
           `wasm-${operation}`,
-          "--",
-          "-C",
-          "link-arg=-zstack-size=8388608",
-          ...(process.env.SEMIO_PLUGIN_SYMBOLS === "1" ? ["-C", "strip=none"] : []),
+          ...(process.env.SEMIO_PLUGIN_SYMBOLS === "1" ? ["--", "-C", "strip=none"] : []),
         ],
         this.repoRoot,
         {

@@ -8,6 +8,10 @@ import Ajv from "ajv";
 import ts from "typescript";
 import { semanticDirectoryKindId } from "../../🔍️discovery/🟦️.ts";
 
+/** 🧾️ Reads the parse diagnostics every `createSourceFile` result carries and the public `SourceFile` type omits. */
+const parsedDiagnostics = (source: ts.SourceFile): readonly ts.Diagnostic[] =>
+  (source as ts.SourceFile & { readonly parseDiagnostics: readonly ts.Diagnostic[] }).parseDiagnostics;
+
 type Owner = Readonly<{ path: string; language: "python" | "typescript"; anchors: readonly string[] }>;
 type Source = Readonly<{ legacy: string; legacyDisposition: "absent" | "thin-command"; owners: readonly Owner[]; consumers: readonly string[] }>;
 type Alias = Readonly<{ config: string; specifier: string; target: string; consumer: string }>;
@@ -123,7 +127,7 @@ describe("manifestless source closure", () => {
       const source = readFileSync(resolve(repoRoot, owner.path), "utf8");
       if (owner.language === "typescript") {
         const parsed = ts.createSourceFile(owner.path, source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
-        expect(parsed.parseDiagnostics, owner.path).toHaveLength(0);
+        expect(parsedDiagnostics(parsed), owner.path).toHaveLength(0);
       } else {
         const parsed = spawnSync("python3", ["-c", "import ast,sys; ast.parse(sys.stdin.read())"], { input: source, encoding: "utf8" });
         expect(parsed.status, parsed.stderr).toBe(0);

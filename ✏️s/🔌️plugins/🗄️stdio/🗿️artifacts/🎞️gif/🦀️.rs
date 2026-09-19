@@ -407,6 +407,16 @@ pub mod editor {
         mod component;
         pub use component::*;
         #[path = "."]
+        pub mod presence {
+            #[path = "🏅️standards/7️⃣87a/🪆️subsets/✳️any/✏️editor/👥️presence/🧬️schema/🦀️.rs"]
+            pub mod schema;
+        }
+        #[path = "."]
+        pub mod config {
+            #[path = "🏅️standards/7️⃣87a/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🦀️.rs"]
+            pub mod schema;
+        }
+        #[path = "."]
         pub mod modes {
             #[path = "."]
             pub mod edit {
@@ -430,6 +440,16 @@ pub mod editor {
         #[path = "🏅️standards/9️⃣89a/🪆️subsets/🧱️base/✏️editor/🦀️.rs"]
         mod component;
         pub use component::*;
+        #[path = "."]
+        pub mod presence {
+            #[path = "🏅️standards/9️⃣89a/🪆️subsets/🧱️base/✏️editor/👥️presence/🧬️schema/🦀️.rs"]
+            pub mod schema;
+        }
+        #[path = "."]
+        pub mod config {
+            #[path = "🏅️standards/9️⃣89a/🪆️subsets/🧱️base/✏️editor/🎚️config/🧬️schema/🦀️.rs"]
+            pub mod schema;
+        }
         #[path = "."]
         pub mod modes {
             #[path = "."]
@@ -460,6 +480,16 @@ pub mod viewer {
         mod component;
         pub use component::*;
         #[path = "."]
+        pub mod presence {
+            #[path = "🏅️standards/7️⃣87a/🪆️subsets/✳️any/👁️viewer/👥️presence/🧬️schema/🦀️.rs"]
+            pub mod schema;
+        }
+        #[path = "."]
+        pub mod config {
+            #[path = "🏅️standards/7️⃣87a/🪆️subsets/✳️any/👁️viewer/🎚️config/🧬️schema/🦀️.rs"]
+            pub mod schema;
+        }
+        #[path = "."]
         pub mod modes {
             #[path = "."]
             pub mod view {
@@ -483,6 +513,16 @@ pub mod viewer {
         #[path = "🏅️standards/9️⃣89a/🪆️subsets/🧱️base/👁️viewer/🦀️.rs"]
         mod component;
         pub use component::*;
+        #[path = "."]
+        pub mod presence {
+            #[path = "🏅️standards/9️⃣89a/🪆️subsets/🧱️base/👁️viewer/👥️presence/🧬️schema/🦀️.rs"]
+            pub mod schema;
+        }
+        #[path = "."]
+        pub mod config {
+            #[path = "🏅️standards/9️⃣89a/🪆️subsets/🧱️base/👁️viewer/🎚️config/🧬️schema/🦀️.rs"]
+            pub mod schema;
+        }
         #[path = "."]
         pub mod modes {
             #[path = "."]

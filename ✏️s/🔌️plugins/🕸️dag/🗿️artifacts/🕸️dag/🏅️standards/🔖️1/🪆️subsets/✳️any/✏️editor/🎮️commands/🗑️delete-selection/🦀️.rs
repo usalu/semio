@@ -41,6 +41,14 @@ pub fn apply(payload: &DeleteSelection, doc: &ArtifactView<'_, DagSnapshot>, _cf
     Ok(apply_to(payload, doc, &interaction.selection("graph").ids))
 }
 
+/// 🧵️ The retained-tool twin of [`apply`]: a bounded tool-job reducer is handed the raw
+/// `protocol::InteractionState`, and `InteractionView`'s fields are framework-private, so the domain
+/// selection is read straight off the state instead of being wrapped first.
+pub fn apply_with_state(payload: &DeleteSelection, doc: &ArtifactView<'_, DagSnapshot>, _cfg: &ConfigView<'_, DagConfig>, interaction: &protocol::InteractionState) -> Result<Emit<DagMutation, DagConfigMutation>, Fault> {
+    let selected = interaction.selection.get("graph").map(|domain| domain.ids.clone()).unwrap_or_default();
+    Ok(apply_to(payload, doc, &selected))
+}
+
 fn apply_to(_payload: &DeleteSelection, doc: &ArtifactView<'_, DagSnapshot>, selected: &[String]) -> Emit<DagMutation, DagConfigMutation> {
     match delete_selection_result(doc.snapshot, selected) {
         Some(removes) => Emit::mutations(removes),

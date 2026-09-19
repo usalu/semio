@@ -1585,7 +1585,7 @@
       "required": [
         "syncSessionId",
         "spaceId",
-        "artifactId",
+        "documentId",
         "surface",
         "actor",
         "role",
@@ -1599,7 +1599,7 @@
         "spaceId": {
           "type": "string"
         },
-        "artifactId": {
+        "documentId": {
           "type": "string"
         },
         "surface": {
@@ -1726,7 +1726,7 @@
           "required": [
             "kind",
             "spaceId",
-            "artifactId",
+            "documentId",
             "actors"
           ],
           "properties": {
@@ -1736,7 +1736,7 @@
             "spaceId": {
               "type": "string"
             },
-            "artifactId": {
+            "documentId": {
               "type": "string"
             },
             "actors": {
@@ -1937,14 +1937,14 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "artifactId",
+        "documentId",
         "artifactKind",
         "artifactSchema",
         "owner",
         "packSchemaHash"
       ],
       "properties": {
-        "artifactId": {
+        "documentId": {
           "type": "string"
         },
         "artifactKind": {
@@ -2460,7 +2460,7 @@
       "additionalProperties": false,
       "required": [
         "spaceId",
-        "artifactId"
+        "documentId"
       ],
       "properties": {
         "spaceId": {
@@ -2468,7 +2468,7 @@
           "minLength": 1,
           "maxLength": 256
         },
-        "artifactId": {
+        "documentId": {
           "type": "string",
           "minLength": 1,
           "maxLength": 256
@@ -2677,7 +2677,7 @@
       "additionalProperties": false,
       "required": [
         "spaceId",
-        "artifactId",
+        "documentId",
         "artifactKind",
         "artifactSchema",
         "owner",
@@ -2691,7 +2691,7 @@
           "type": "string",
           "minLength": 1
         },
-        "artifactId": {
+        "documentId": {
           "type": "string",
           "minLength": 1
         },
@@ -2733,14 +2733,14 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "artifactId",
+        "documentId",
         "headEditOrdinal",
         "headEditId",
         "lastCommitSeq",
         "chainHash"
       ],
       "properties": {
-        "artifactId": {
+        "documentId": {
           "type": "string",
           "minLength": 1,
           "maxLength": 256
@@ -3153,7 +3153,7 @@
               ],
               "properties": {
                 "appChannelVersion": {
-                  "const": 15
+                  "const": 17
                 }
               }
             }
@@ -3785,14 +3785,14 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "artifactId",
+        "documentId",
         "headEditOrdinal",
         "headEditId",
         "lastCommitSeq",
         "chainSha256"
       ],
       "properties": {
-        "artifactId": {
+        "documentId": {
           "$ref": "#/$defs/CheckpointPublicationCommandText"
         },
         "headEditOrdinal": {
@@ -5472,13 +5472,13 @@
       "additionalProperties": false,
       "required": [
         "spaceId",
-        "artifactId"
+        "documentId"
       ],
       "properties": {
         "spaceId": {
           "$ref": "#/$defs/BrowserDocumentOpenTransportId"
         },
-        "artifactId": {
+        "documentId": {
           "$ref": "#/$defs/BrowserDocumentOpenTransportId"
         }
       }
@@ -5597,7 +5597,7 @@
               ],
               "properties": {
                 "appChannelVersion": {
-                  "const": 15
+                  "const": 17
                 }
               }
             }
@@ -5825,7 +5825,7 @@
               ],
               "properties": {
                 "appChannelVersion": {
-                  "const": 15
+                  "const": 17
                 }
               }
             }
@@ -5940,14 +5940,14 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "artifactId",
+        "documentId",
         "headEditOrdinal",
         "headEditId",
         "lastCommitSeq",
         "chainHash"
       ],
       "properties": {
-        "artifactId": {
+        "documentId": {
           "$ref": "#/$defs/BrowserDocumentOpenTransportId"
         },
         "headEditOrdinal": {
@@ -6296,7 +6296,7 @@
           "additionalProperties": false,
           "required": [
             "spaceId",
-            "artifactId"
+            "documentId"
           ],
           "properties": {
             "spaceId": {
@@ -6304,7 +6304,7 @@
               "minLength": 1,
               "maxLength": 256
             },
-            "artifactId": {
+            "documentId": {
               "type": "string",
               "minLength": 1,
               "maxLength": 256

@@ -1,14 +1,9 @@
+import type { ActorReturnControl, ActorReturnDrive, ActorReturnIdentity, ActorReturnOrigin, ActorReturnPageReceipt, ActorReturnResult } from "../../🟦️.ts";
+
 type TestSource = { readonly directory: string; readonly url: string };
 
-export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: any, testSource: TestSource): Promise<void> {
+export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: Pick<typeof import("../../../📃️page/🟦️.ts"), "createActorBytePage" | "readActorBytePage"> & Pick<typeof import("../../🟦️.ts"), "ACTOR_RETURN_CONTROL_MAXIMUM_BYTES" | "ACTOR_RETURN_DRIVE_MAXIMUM_BYTES" | "ACTOR_RETURN_IDENTITY_MAXIMUM_BYTES" | "ACTOR_RETURN_ORIGIN_MAXIMUM_BYTES" | "ACTOR_RETURN_PAGE_RECEIPT_MAXIMUM_BYTES" | "ACTOR_RETURN_RESULT_MAXIMUM_BYTES" | "ActorReturnResultFraming" | "decodeActorReturnDrive" | "decodeActorReturnResult" | "encodeActorReturnDrive" | "encodeActorReturnResult">, testSource: TestSource): Promise<void> {
   const { ACTOR_RETURN_CONTROL_MAXIMUM_BYTES, ACTOR_RETURN_DRIVE_MAXIMUM_BYTES, ACTOR_RETURN_IDENTITY_MAXIMUM_BYTES, ACTOR_RETURN_ORIGIN_MAXIMUM_BYTES, ACTOR_RETURN_PAGE_RECEIPT_MAXIMUM_BYTES, ACTOR_RETURN_RESULT_MAXIMUM_BYTES, ActorReturnResultFraming, createActorBytePage, decodeActorReturnDrive, decodeActorReturnResult, encodeActorReturnDrive, encodeActorReturnResult, readActorBytePage } = dependencies;
-  type ActorReturnControl = any;
-  type ActorReturnDrive = any;
-  type ActorReturnIdentity = any;
-  type ActorReturnOrigin = any;
-  type ActorReturnPageReceipt = any;
-  type ActorReturnResult = any;
-
   const { it, expect, vi } = vitest;
   const hydrate = (value: unknown): ActorReturnDrive => JSON.parse(JSON.stringify(value), (key, item) => ["activationGeneration", "returnSequence", "pageSequence"].includes(key) ? BigInt(item) : item);
   const hydrateResult = (value: unknown): ActorReturnResult => JSON.parse(JSON.stringify(value), (key, item) => ["activationGeneration", "returnSequence", "pageSequence"].includes(key) ? BigInt(item) : item);

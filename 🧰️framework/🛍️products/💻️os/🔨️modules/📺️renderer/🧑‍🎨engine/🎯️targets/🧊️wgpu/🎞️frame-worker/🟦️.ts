@@ -23,9 +23,9 @@ type BrowserRendererWorkerHandle = {
   enqueueBatch(eventsJson: string, generation: bigint): void;
   tick(timestampMs: number, sequence: bigint, generation: bigint): string;
   pollAssetRequest(): string;
-  reserveAssetResponse(byteCredits: number): void;
+  reserveAssetResponse(byteCredits: number): boolean;
   pushAssetResponsePage(bytes: Uint8Array): void;
-  sealAssetResponse(): void;
+  sealAssetResponse(): boolean;
   abortAssetResponse(): void;
   closeStep(): boolean;
 };
@@ -306,6 +306,7 @@ async function receive(message: BrowserFrameUiMessage): Promise<void> {
     await boot(message);
     return;
   }
+  if (message.kind === "shard-port") return;
   if (message.lifecycle !== lifecycle) return;
   if (message.kind === "close") {
     if (closed || closing) return;

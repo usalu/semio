@@ -12,7 +12,8 @@
  *   1. the default example renders (a document witness is non-empty at boot),
  *   2. one Actions-panel row dispatches and appends an APPLIED mutation entry to the ledger,
  *   3. `framework.history.undo` retires that entry,
- *   4. no console error or refusal line in the whole run.
+ *   4. `framework.history.redo` puts it back,
+ *   5. no console error or refusal line in the whole run.
  */
 import { chromium } from "/Users/ueli/Documents/semio/node_modules/playwright/index.mjs";
 import { mkdirSync, writeFileSync } from "node:fs";
@@ -21,7 +22,9 @@ import { join } from "node:path";
 const TICKET = "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️18/OS-HUB-COLLABORATION-AI-END-TO-END";
 const OUT = join(TICKET, "🗑️generated");
 const FAULT = /unreachable|trapped|\btrap\b|panicked|fault|refused|dropped action|not-ui-safe|missing-owned|invalid-args|unsupported|pageerror|Uncaught|dispatch-failed/i;
-const NOISE = /staged plugin module\(s\) are behind their source|\[stale\]|Failed to load resource: the server responded with a status of 404|Download the (React|Vue) DevTools|typed-operation slots/;
+// 🔇️ `ws://…/bridge` is the shell's agent/MCP bridge socket, served by a process no dev playground
+// starts; its reconnect attempts are environmental, not a plugin fault (slice B2c).
+const NOISE = /staged plugin module\(s\) are behind their source|\[stale\]|Failed to load resource: the server responded with a status of 404|Download the (React|Vue) DevTools|typed-operation slots|WebSocket connection to 'ws:[^']*\/bridge' failed/;
 
 /** 🧾️ The whole shell surface one page evaluation, including the ledger witness. */
 const readShell = (page) => page.evaluate(() => {
@@ -83,10 +86,22 @@ export async function runInteractionProbe(config) {
     writeFileSync(join(outDir, "report.json"), JSON.stringify(report, null, 2));
     console.log(`${name} ${JSON.stringify(detail).slice(0, 1000)}`);
   };
-  const click = async (selector) => {
+  // 🖱️ A hit-tested click first, then a synthetic `element.click()` when the DOM did not move: an
+  // anchored chrome panel paints over a window's top-left Actions chip and swallows the real pointer
+  // event without throwing, so `imperative` was recorded by slice B2b as "the Actions pane paints zero
+  // rows" when the pane simply never unfolded (slice B2c measured 24 rows behind the same toggle).
+  const click = async (selector, settled) => {
     const locator = page.locator(selector).first();
     if (!(await page.locator(selector).count())) return "absent";
-    return locator.click({ timeout: 8000, force: true }).then(() => "ok").catch((e) => String(e).split("\n")[0].slice(0, 120));
+    const outcome = await locator.click({ timeout: 8000, force: true }).then(() => "ok").catch((e) => String(e).split("\n")[0].slice(0, 120));
+    if (settled !== undefined) {
+      await page.waitForTimeout(600);
+      if (!(await settled())) {
+        await page.evaluate((css) => document.querySelector(css)?.click(), selector).catch(() => undefined);
+        return `${outcome}+synthetic`;
+      }
+    }
+    return outcome;
   };
   const until = async (predicate, budgetMs) => {
     const deadline = Date.now() + budgetMs;
@@ -126,7 +141,7 @@ export async function runInteractionProbe(config) {
   {
     const from = lines.length;
     for (const toggle of shell.toggles) {
-      await click(`[id="${toggle}"]`);
+      await click(`[id="${toggle}"]`, () => page.locator('[data-slot="window-action-pane"]').count().then((count) => count > 0));
       await page.waitForTimeout(900);
     }
     shell = await readShell(page);
@@ -143,7 +158,11 @@ export async function runInteractionProbe(config) {
     // 🧷️ An argument-less row IS its own trigger. A row with arguments folds open a staged form whose
     // `…​.action.<id>.execute` control is the real trigger, so the witness is re-taken after staging.
     const filled = [];
-    for (const [key, value] of Object.entries(config.args ?? {})) {
+    // 🧾️ A staged value may be a function of the live page — `norm`'s `setSnapshot` carries the whole
+    // compliance document, so its argument is derived from what the Inputs window currently renders.
+    const staged = {};
+    for (const [key, value] of Object.entries(config.args ?? {})) staged[key] = typeof value === "function" ? await value(page) : value;
+    for (const [key, value] of Object.entries(staged)) {
       const select = page.locator(`select[id$=".arg.${key}"], select[id$="${key}"], select[name="${key}"]`).first();
       if (await select.count()) {
         filled.push(await select.selectOption(String(value)).then(() => `${key}=${value}`).catch((e) => `${key}:${String(e).split("\n")[0].slice(0, 80)}`));
@@ -169,12 +188,31 @@ export async function runInteractionProbe(config) {
   {
     const from = lines.length;
     const afterInvoke = witness(shell);
-    const clicked = await click('[id="framework.history.undo"] button, [id="framework.history.undo"]');
+    // ⏪️ The Actions pane's own `#action.undo` row, not the History panel's button: the pane overlays
+    // the footer panel, so `framework.history.undo` is in the DOM but not hit-testable while the rail
+    // this interaction was dispatched from is open. Both routes reach the same `undo` action.
+    let clicked = await click('[id="action.undo"]');
+    if (clicked !== "ok") clicked = await click('[id="framework.history.undo"] button, [id="framework.history.undo"]');
     const settled = await until((next) => witness(next).edits < afterInvoke.edits, 25_000);
     shell = settled.shell;
     const after = witness(shell);
     undone = after.edits < afterInvoke.edits && after.edits === before.edits;
     note("undo", { clicked, undone, before, afterInvoke, after }, from);
+  }
+
+  let redone = false;
+  {
+    const from = lines.length;
+    const afterUndo = witness(shell);
+    // ⏩️ Redo has to put the retired entry back: the same edit count AND the same rendered document
+    // the invoke produced, otherwise the ledger is bookkeeping over a document that never moved.
+    let clicked = await click('[id="action.redo"]');
+    if (clicked !== "ok") clicked = await click('[id="framework.history.redo"] button, [id="framework.history.redo"]');
+    const settled = await until((next) => witness(next).edits > afterUndo.edits, 25_000);
+    shell = settled.shell;
+    const after = witness(shell);
+    redone = after.edits > afterUndo.edits;
+    note("redo", { clicked, redone, afterUndo, after }, from);
   }
 
   await page.screenshot({ path: join(OUT, `b2b-${config.plugin}.png`) });
@@ -186,8 +224,9 @@ export async function runInteractionProbe(config) {
     actionCount: shell.actions.length,
     mutated,
     undone,
+    redone,
     faultLines: faults.length,
-    interactionBar: (report.steps.find((s) => s.step === "example-rendered")?.detail.rendered ?? false) && mutated && undone && faults.length === 0 && !shell.error,
+    interactionBar: (report.steps.find((s) => s.step === "example-rendered")?.detail.rendered ?? false) && mutated && undone && redone && faults.length === 0 && !shell.error,
   };
   writeFileSync(join(outDir, "report.json"), JSON.stringify(report, null, 2));
   writeFileSync(join(OUT, `b2b-${config.plugin}-console.txt`), [

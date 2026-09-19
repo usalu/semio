@@ -1,6 +1,6 @@
 //! 📥️ Deserialize `s.stdio.semio/v1/document` from a real `s.stdio.pdf` (1.7) snapshot — honest
 //! best-effort: PDF page-content-stream text extraction is real but structurally flat (no
-//! block/run knowledge survives rasterized/ToUnicode-mapped text), so each `PdfPage::text` becomes
+//! block/run knowledge survives rasterized/ToUnicode-mapped text), so each `PdfPage::text()` becomes
 //! exactly ONE `DocBlock::Paragraph` with a single unstyled run, and page BOUNDARIES (the one real
 //! structural signal PDF genuinely offers) are modeled honestly via `DocBlock::PageBreak` between
 //! consecutive pages — never fabricating paragraph/heading/list/table structure PDF's own text
@@ -14,7 +14,8 @@
 //!   engine produced; re-parsing `objects` to recover finer structure would be codec
 //!   reimplementation, which this leaf must not do.
 //! - No paragraph/heading/list/table distinction inside a page — PDF's content-stream text has no
-//!   such markup at the level `PdfPage::text` models it.
+//!   such markup at the level `PdfPage::text()` reads it (the Unicode operands of the page's own
+//!   text-showing operators, in painting order).
 
 use crate::standards::v1::subsets::document::schema::snapshot::{DocBlock, DocRun, SemioDocumentSnapshot, STDIO_SEMIODOCUMENT_DOCUMENT_SCHEMA};
 use semio_framework_plugin::{ArtifactDeserializer, Dialect, StandardId, SubsetId};
@@ -35,7 +36,8 @@ impl ArtifactDeserializer for SemioDocumentFromPdf {
             if i > 0 {
                 blocks.push(DocBlock::PageBreak);
             }
-            let runs = if page.text.is_empty() { Vec::new() } else { vec![DocRun::plain(page.text.clone())] };
+            let text = page.text();
+            let runs = if text.is_empty() { Vec::new() } else { vec![DocRun::plain(text)] };
             blocks.push(DocBlock::Paragraph { style_id: None, runs });
         }
         Ok(SemioDocumentSnapshot { schema: STDIO_SEMIODOCUMENT_DOCUMENT_SCHEMA.into(), styles: Vec::new(), images: Vec::new(), blocks })

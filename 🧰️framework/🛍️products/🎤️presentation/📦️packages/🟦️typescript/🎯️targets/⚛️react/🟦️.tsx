@@ -63,7 +63,6 @@ import {
   Scrollable,
   SelectionMarquee,
   type ElementsSurfaceChromeInput,
-  act,
   createContext,
   Fragment,
   useCallback,
@@ -5434,6 +5433,7 @@ export function unmountPresentation(): void {
 //#region 🧪️Tests
 if (import.meta.vitest) {
   const { describe, expect, it, beforeEach, afterEach } = import.meta.vitest;
+  const { act } = await import("@semio-tech/ui-react/test");
   const { readFileSync } = await import("node:fs");
   const { dirname, join } = await import("node:path");
   const { fileURLToPath } = await import("node:url");

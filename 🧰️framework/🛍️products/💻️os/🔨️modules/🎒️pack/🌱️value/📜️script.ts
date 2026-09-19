@@ -3,7 +3,7 @@ import { join } from "node:path";
 
 /** 🧮️ Checks the literal strict-wire corpus with an independent BigInt/UTF-8 accounting oracle. */
 export async function proveWireValueMaterializationFixture(repoRoot: string): Promise<void> {
-  const assert = (await import("node:assert/strict")).default;
+  const assert: typeof import("node:assert/strict") = (await import("node:assert/strict")).default;
   const Ajv = (await import("ajv")).default;
   const equal = (await import("fast-deep-equal")).default;
   const root = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🎒️pack/🌱️value");

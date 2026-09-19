@@ -90,7 +90,20 @@ import { isIconName } from "@semio-tech/assets";
 import { ToolRunProvisionalOutline, ToolRunTraceLayer, TOOL_RUN_PROVISIONAL_PAINT, toolRunTraceDataAttributes, useToolRunProvisional, useToolRunTraceCursorEcho, useToolRunTraceStore, type ToolRunTraceRecordStore } from "./⏯️tool-run-trace/🟦️.tsx";
 
 const { useFrame, useLoader, useThree } = sceneHostPort.fiber;
-import { windowElementId, world3dComputeStatusV1, type ComponentSceneHostProps, type ContextMenuItemSpec, type MergeMode, type PluginContextMenuSurfaceTarget } from "@semio-tech/framework";
+import {
+  EMPTY_GESTURE_POINTERS,
+  gestureIsMultiTouch,
+  gesturePointerDown,
+  gesturePointerMove,
+  gesturePointerUp,
+  windowElementId,
+  world3dComputeStatusV1,
+  type ComponentSceneHostProps,
+  type ContextMenuItemSpec,
+  type GesturePointers,
+  type MergeMode,
+  type PluginContextMenuSurfaceTarget,
+} from "@semio-tech/framework";
 import {
   cadVec3ToThree,
   computeWorldProjectionPose,
@@ -127,7 +140,7 @@ import { CAMERA_SYNC_DEBOUNCE_MS } from "../📐️Canvas2dHost/🟦️.tsx";
 import { openSurfaceContextMenu, useShellContextMenuFallback, wireLabel, type SurfaceContextMenuResult } from "../🗣️Interpreter/🟦️.tsx";
 import { WorldTerrainLayer } from "../🗺️WorldTerrainLayer/🟦️.tsx";
 import { base64ToBytes } from "../🖌️Paint2dHost/🟦️.tsx";
-import { contextMenuGroupLabel, createCoalescingActionDispatcher, declareSurfaceCancelAction, world3dMarqueeOverlayShape, type Puzzle3dBrushMeshPage, puzzle3dBrushMeshDigest, puzzle3dBrushMeshPages, drainPuzzle3dBrushMeshQueue, PUZZLE3D_MESH_UPLOAD_QUEUE_PAGES, puzzle3dBrushMeshRegistry, NOTE_WORLD_NAVIGATION_ACTION_ID, shellLabel, leftoverWorldGumballPoseV1 } from "../🛠️ShellHelpers/🟦️.tsx";
+import { contextMenuGroupLabel, createCoalescingActionDispatcher, declareSurfaceCancelAction, world3dMarqueeOverlayShape, type Puzzle3dBrushMeshPage, puzzle3dAnnounceableBrushMeshUrls, puzzle3dBrushMeshDigest, puzzle3dBrushMeshPages, drainPuzzle3dBrushMeshQueue, PUZZLE3D_MESH_UPLOAD_QUEUE_PAGES, puzzle3dBrushMeshRegistry, NOTE_WORLD_NAVIGATION_ACTION_ID, shellLabel, leftoverWorldGumballPoseV1 } from "../🛠️ShellHelpers/🟦️.tsx";
 import { SetWindowIconContext, SetWindowTitleContext, useMapContextMenuSpecs } from "../🏛️ShellHost/🟦️.tsx";
 // #endregion 🔌️Adapters
 
@@ -225,7 +238,7 @@ type WorldSelectionRecord = {
   readonly targetVolumeIds?: readonly string[];
   readonly granularity?: string;
   readonly selectionMode?: string;
-  readonly activeObjectId?: string;
+  readonly activeObjectId?: string | null;
   readonly componentIds?: readonly number[];
   readonly targets?: WorldSelectionTargets;
   readonly transformMode?: string;
@@ -1608,7 +1621,7 @@ export function leftoverTreeItemSelectedV1(itemId: string, leftoverIds: readonly
 
 /** 🕹️ True when a leftover wrongly treats hover as selection (empty background pick must not do this). */
 export function leftoverSelectIdsMustNameHoverPickV1(selectedIds: readonly string[] | undefined, hoverId: string | null | undefined): boolean {
-  return Boolean(hoverId) && (selectedIds ?? []).includes(hoverId);
+  return hoverId !== null && hoverId !== undefined && (selectedIds ?? []).includes(hoverId);
 }
 
 export function subscribeLeftoverWorldSelectionV1(listener: () => void): () => void {
@@ -1980,10 +1993,13 @@ function parseEngagementPreview(engagementPreviewJson: string | undefined): read
 function geometryFromMesh(mesh: WorldMeshData) {
   const geometry = new BufferGeometry();
   geometry.setAttribute("position", new BufferAttribute(new Float32Array(mesh.positions), 3));
-  geometry.setAttribute("normal", new BufferAttribute(new Float32Array(mesh.normals), 3));
   if (mesh.uvs?.length) geometry.setAttribute("uv", new BufferAttribute(new Float32Array(mesh.uvs), 2));
   if (mesh.colors?.length) geometry.setAttribute("color", new BufferAttribute(new Float32Array(mesh.colors), 3));
   if (mesh.indices.length > 0) geometry.setIndex([...mesh.indices]);
+  // 🧭️ A mesh published without per-vertex normals (e.g. a tool-run trace marker) would otherwise bind a
+  // shorter normal buffer than its index reaches, and WebGL drops every draw of it.
+  if (mesh.normals?.length === mesh.positions.length) geometry.setAttribute("normal", new BufferAttribute(new Float32Array(mesh.normals), 3));
+  else geometry.computeVertexNormals();
   return geometry;
 }
 
@@ -5737,6 +5753,11 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
   const meshesRef = useRef(meshes);
   meshesRef.current = meshes;
   const marqueeStartRef = useRef<SelectionMarqueePoint | null>(null);
+  /** 🤏️ Every contact on this viewport, `pointerId`-keyed. A second finger hands the surface to the
+   * orbit rig's own two-finger gesture (`TOUCH.DOLLY_PAN`, seeded in `WorldOrbitControlsBridge`): the
+   * host's single-pointer lane — marquee, pick, paint stroke, relocate, engagement — must go quiet for
+   * the whole pinch instead of growing a marquee under it. */
+  const gesturePointersRef = useRef<GesturePointers>(EMPTY_GESTURE_POINTERS);
   const vorticesRef = useRef(vortices);
   vorticesRef.current = vortices;
   const referencesRef = useRef(references);
@@ -6072,7 +6093,9 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
 
   // 🥽️ Every mesh the scene lane names — placed kinds and catalogue kinds alike — is uploaded for collision, so
   // the brush suggestions run tests a candidate against its real geometry.
-  const brushMeshUrls = useMemo(() => [...new Set(meshes.map((mesh) => mesh.url).filter((url): url is string => Boolean(url)))], [meshes]);
+  //
+  // 🚪️ …but only for a guest that OWNS that lane — see `puzzle3dAnnounceableBrushMeshUrls`.
+  const brushMeshUrls = useMemo(() => puzzle3dAnnounceableBrushMeshUrls(meshResidency, meshes), [meshResidency, meshes]);
 
   const handleFrameVisibleInstances = useCallback(() => {
     noteUserMovedCamera();
@@ -6881,8 +6904,28 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
     return () => window.removeEventListener("keydown", onKeyDown, true);
   }, [endRelocateDrag, relocateMode]);
 
+  /** @emoji 🤏️ Abandons whatever single-pointer gesture is in flight and releases its capture, so the
+   * orbit rig owns the surface alone for the rest of a two-finger pinch/pan. */
+  const yieldToPinch = useCallback(
+    (event: React.PointerEvent<HTMLDivElement>) => {
+      for (const tracked of gesturePointersRef.current.pointers) {
+        if (event.currentTarget.hasPointerCapture?.(tracked.pointerId)) event.currentTarget.releasePointerCapture(tracked.pointerId);
+      }
+      endRelocateDrag(null);
+      setMarqueePath([]);
+      marqueeStartRef.current = null;
+      marqueeFinalizeOnceRef.current = true;
+    },
+    [endRelocateDrag],
+  );
+
   const handlePointerDown = useCallback(
     (event: React.PointerEvent<HTMLDivElement>) => {
+      gesturePointersRef.current = gesturePointerDown(gesturePointersRef.current, { pointerId: event.pointerId, x: event.clientX, y: event.clientY });
+      if (gestureIsMultiTouch(gesturePointersRef.current)) {
+        yieldToPinch(event);
+        return;
+      }
       if (event.button !== 0) return;
       if (relocateMode && beginRelocateDrag(event)) return;
       if (world3dVolumeBrushCommits(volumeBrushMode, event.altKey)) {
@@ -6917,11 +6960,13 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
       marqueeStartRef.current = start;
       setMarqueePath([start]);
     },
-    [beginRelocateDrag, dispatch, handleVoxelPlace, node.surfaceId, paintMode, relocateMode, selection.engagementSessionActive, toLocalPoint, volumeBrushMode, voxelGroundOriginAt],
+    [beginRelocateDrag, dispatch, handleVoxelPlace, node.surfaceId, paintMode, relocateMode, selection.engagementSessionActive, toLocalPoint, volumeBrushMode, voxelGroundOriginAt, yieldToPinch],
   );
 
   const handlePointerMove = useCallback(
     (event: React.PointerEvent<HTMLDivElement>) => {
+      gesturePointersRef.current = gesturePointerMove(gesturePointersRef.current, { pointerId: event.pointerId, x: event.clientX, y: event.clientY });
+      if (gestureIsMultiTouch(gesturePointersRef.current)) return;
       if (updateRelocateDrag(event)) return;
       if (volumeBrushMode) setVoxelHoverOrigin(voxelGroundOriginAt(event.clientX, event.clientY));
       if (selection.engagementSessionActive && hostRef.current && cameraRef.current) {
@@ -6997,8 +7042,17 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
 
   const handlePointerUp = useCallback(
     (event: React.PointerEvent<HTMLDivElement>) => {
+      const wasMultiTouch = gestureIsMultiTouch(gesturePointersRef.current);
+      gesturePointersRef.current = gesturePointerUp(gesturePointersRef.current, event.pointerId);
       if (event.currentTarget.hasPointerCapture?.(event.pointerId)) {
         event.currentTarget.releasePointerCapture(event.pointerId);
+      }
+      // 🤏️ Lifting the second finger ENDS the pinch; the finger still down must not resume the
+      // single-pointer lane mid-gesture, so the whole release is swallowed.
+      if (wasMultiTouch) {
+        setMarqueePath([]);
+        marqueeStartRef.current = null;
+        return;
       }
       if (endRelocateDrag(event)) return;
       if (faceDragSession) {
@@ -7271,7 +7325,7 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
   return (
     <div
       ref={hostRef}
-      className="semio-world-3d-host relative h-full min-h-0 w-full overflow-hidden"
+      className="semio-world-3d-host relative h-full min-h-0 w-full touch-none overflow-hidden"
       data-surface-id={node.surfaceId}
       data-window-instance-id={windowInstanceId || undefined}
       data-selection-json={JSON.stringify(worldSurfaceSelectionDomV1(selection, interaction))}

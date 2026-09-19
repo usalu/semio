@@ -609,3 +609,61 @@ async fn jack_graph_window_config_query_ownership_isolates_two_editor_result_pai
     reopened.close();
     eprintln!("[DEBUG] two editor/result pairs kept query source and output isolated; reload restored only the authored editor configs and reset both results transients");
 }
+
+/// 🎫️ Slice B3b (ticket 26/09/18/OS-HUB-COLLABORATION-AI-END-TO-END). Every retained WINDOW-CONFIG
+/// verb reads the config of the window it was dispatched from, so leaving one unowned is a live
+/// fault: `build_definition` copies an unowned action onto EVERY window kind, and the graph pane's
+/// Actions list then offered `formatDocument`, which the reducer refused with "Jack query formatting
+/// requires the exact editor-window config snapshot". Measured on the React shell at 6054 before the
+/// fix (`🗑️generated/b3b-trinity-jack-console.txt`).
+#[semio_framework_async_macros::async_test]
+async fn window_kind_actions_scope_text_verbs_to_the_query_editor() {
+    let definition = create_trinity_jack_app();
+    let resolve = |window_id: &str| -> Vec<String> {
+        let window = definition.window_kinds.iter().find(|window| window.id == window_id).expect("window kind");
+        semio_framework_plugin::resolve_window_actions(&definition, window).into_iter().map(|action| action.id.clone()).collect()
+    };
+    let graph = resolve(TRINITY_JACK_PLAY_WINDOW_GRAPH);
+    let editor = resolve(TRINITY_JACK_PLAY_WINDOW_EDITOR);
+    let results = resolve(TRINITY_JACK_PLAY_WINDOW_RESULTS);
+    for text_verb in ["textEdit", "textSelect", "formatDocument"] {
+        assert!(editor.contains(&text_verb.to_string()), "the query editor must expose {text_verb}");
+        assert!(!graph.contains(&text_verb.to_string()), "the graph pane must NOT expose {text_verb}");
+        assert!(!results.contains(&text_verb.to_string()), "the results pane must NOT expose {text_verb}");
+    }
+    for graph_verb in ["nodeGraphViewport", "setLodMode"] {
+        assert!(graph.contains(&graph_verb.to_string()), "the graph pane must expose {graph_verb}");
+        assert!(!editor.contains(&graph_verb.to_string()), "the query editor must NOT expose {graph_verb}");
+    }
+    for shared in ["setActiveExample", "runQuery", "deleteSelection", "patchNodes"] {
+        assert!(graph.contains(&shared.to_string()) && editor.contains(&shared.to_string()), "{shared} reads the document, so it stays on every pane");
+    }
+}
+
+/// 🎫️ Slice B3b. The navbar example picker dispatches a REGISTERED example id, and `demo` is the only
+/// example this subset registers — `fixture_dsl_for_preset` knew `nakagin`/`branch-chain` only, so
+/// every navbar pick resolved to `None` and loaded nothing with no fault anywhere. The staged argument
+/// form must offer the same registered id, never an id the resolver would drop.
+#[semio_framework_async_macros::async_test]
+async fn set_active_example_resolves_every_id_the_shell_can_send() {
+    let mut app = new_app().await;
+    let result = app.dispatch_typed(TrinityJackCommand::SetActiveExample { example_id: crate::examples::demo::ID.into() }, &meta("local")).await.expect("set active example");
+    let receipt = settle(&mut app).await;
+    assert!(!result.requested_effects.is_empty() || !receipt.effects.is_empty(), "the registered example id must request the LoadDocument effect");
+    app.close();
+
+    let definition = create_trinity_jack_app();
+    let offered: Vec<String> = definition
+        .actions
+        .iter()
+        .find(|action| action.id == "setActiveExample")
+        .expect("setActiveExample declared")
+        .args
+        .iter()
+        .flat_map(|arg| match &arg.schema {
+            semio_framework_plugin::ArgSchema::String { options, .. } | semio_framework_plugin::ArgSchema::Select { options } => options.iter().map(|option| option.value.clone()).collect::<Vec<_>>(),
+            _ => Vec::new(),
+        })
+        .collect();
+    assert!(offered.contains(&crate::examples::demo::ID.to_string()), "the staged form must offer the registered example, offered {offered:?}");
+}

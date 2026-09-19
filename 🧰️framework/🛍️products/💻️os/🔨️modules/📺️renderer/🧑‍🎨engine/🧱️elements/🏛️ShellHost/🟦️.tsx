@@ -125,7 +125,7 @@ import {
   type TutorialCameraState,
   type TutorialChapter,
   type TutorialDefinition,
-  type TutorialArtifactEventKind,
+  type TutorialDocumentEventKind,
   type TutorialEvent,
   type TutorialGestureCue,
   type TutorialUiChange,
@@ -183,6 +183,11 @@ import {
   type DirectoryEvent,
   type DirectorySpaceAdministrationPageV1,
   parseDirectorySpaceAdministrationPageV1,
+  parseDirectorySpaceListEntryV1,
+  parseDirectoryCommandReceiptV1,
+  sealDirectoryCommandRequestV1,
+  directoryCommandRequestJson,
+  hubDeviceInstanceIdV1,
   type DocumentScope,
   type DocumentArchivePack,
   type ArtifactFrontier,
@@ -281,6 +286,7 @@ import {
   dockSkeletonOf,
   dockSkeletonsEqual,
   elementIdSelector,
+  elementsSurfaceDeviceIsMobile,
   type ElementsSurfaceAppearance,
   type ElementsSurfaceDevice,
   findPanelTabInDock,
@@ -350,7 +356,6 @@ import {
   tutorialSlice,
   type TutorialSlice,
   TutorialVideoOverlay,
-  UI_MOBILE_MEDIA_QUERY,
   UI_TERMINOLOGY_NATIVE,
   type UiChromeLayout,
   type UiDriver,
@@ -364,7 +369,7 @@ import {
   useActionHotkey,
   useElementsSurfaceChrome,
   useLabel,
-  useMediaQuery,
+  useUiDevice,
   usePanelChromeHotkeys,
   useShellKeydown,
   useShellScope,
@@ -385,6 +390,8 @@ import {
 } from "../🗣️Interpreter/🟦️.tsx";
 import { builtNodeToSnapshot, UiDocumentStore } from "../📃️UiDocumentStore/🟦️.tsx";
 import { SpaceAdministrationPane, spaceAdministrationCapabilities, spaceAdministrationInviteRevocable, spaceAdministrationMemberRemovable, spaceAdministrationNameValid, type SpaceAdministrationIntentV1 } from "../🛂️SpaceAdministration/🟦️.tsx";
+import { HubWorkspace } from "../🔗️HubConnection/🏛️workspace/🟦️.tsx";
+import { createHubConnectionFetchPortV1, type HubConnectionPortV1 } from "../🔗️HubConnection/🟦️.tsx";
 import { BoardSessionFactoryContext, resolveAppSurfaceSessionFactory, type AppSurfaceSessionFactory } from "../🪪️WasmSessionLoader/🟦️.tsx";
 import { resolveDocumentOpeningBindings, resolveDocumentOpeningTarget, type DocumentOpeningReference, type DocumentOpeningTarget } from "./🧭️opening/🟦️.ts";
 import {
@@ -456,6 +463,7 @@ import {
   buildCommandCategoryTabs,
   buildNoteShellCommandAction,
   buildOsCommands,
+  OPEN_HUB_COMMAND_ID,
   buildSpacePanelState,
   buildToolTabs,
   toolCategoryOpenPath,
@@ -504,6 +512,7 @@ import {
   openArtifactWithText,
   OPEN_ARTIFACT_WITH_EDITOR_COMMAND_ID,
   OPEN_ARTIFACT_WITH_VIEWER_COMMAND_ID,
+  OPEN_TASK_MANAGER_COMMAND_ID,
   type OpenWithEntry,
   panelAnchorForGroup,
   panelJsonFromState,
@@ -532,6 +541,8 @@ import {
   reconcileToolTabSelection,
   renderStagedArgControl,
   requestFileOpen,
+  requestBackboneFilePath,
+  requestBackboneFolderPath,
   resolveAppLabel,
   resolveAppBreadcrumb,
   resolveCanvasBodyKey,
@@ -604,6 +615,8 @@ import {
   createFrameworkChatPanelTab,
   createFrameworkDisplayPanelTabs,
   createFrameworkMarketplacePanelTab,
+  createFrameworkTaskManagerPanelTab,
+  FRAMEWORK_TASK_MANAGER_PANEL_ID,
   createFrameworkSettingsPanelTab,
   DEFAULT_APP_NONE_VALUE,
   type ConflictsHostApi,
@@ -645,10 +658,12 @@ import {
 } from "./📇️directory-bootstrap/🟦️.tsx";
 
 
-import { SyncAttachCard } from "../🔄️ShellSync/🟦️.tsx";
+import { HubConnectionIndicator, SyncAttachCard, type HubSessionPresenceV1 } from "../🔄️ShellSync/🟦️.tsx";
 import { useAgentBridge } from "../🔗️AgentBridge/🟦️.tsx";
 import { AgentChatPanel } from "../💬️AgentChatPanel/🟦️.tsx";
 import { AgentApprovals } from "../🤖️AgentApprovals/🟦️.tsx";
+import { TaskManagerWindow } from "../🧵️TaskManager/🟦️.tsx";
+import { type ActivationRegistry } from "../../../../../../../🔨️modules/🎠️kernel/🟦️.ts";
 import { UIFind, UIFindProvider, UISearch, type UISearchItem } from "../🔎️ShellSearch/🟦️.tsx";
 import { UTILITY_CATEGORY_ICON_ID } from "../🎛️UtilityTree/🟦️.tsx";
 import { coerceWireBytes } from "../🔌️PluginRuntime/🟦️.tsx";
@@ -1165,7 +1180,7 @@ export class TutorialRecorder {
       durationMs,
       chapters: this.chapters,
       base: { documentDsl: this.baseDocumentJson ?? undefined, exampleId, ui: this.baseUiSnapshot, cameras: [] },
-      tracks: { narration: [], video: [], events: this.events, ui: this.uiKeyframes, document: [], camera: this.cameraKeyframes, gestures: [] },
+      tracks: { narration: [], video: [], events: this.events, ui: this.uiKeyframes, artifact: [], camera: this.cameraKeyframes, gestures: [] },
       recordedAt: new Date().toISOString(),
     };
   }
@@ -1201,6 +1216,11 @@ export interface FrameworkOsShellProps {
    * otherwise all auto-play their onboarding at once the moment they boot. Defaults to `false` (existing
    * single-shell-per-page behavior unchanged). */
   readonly suppressAutoIntroduction?: boolean;
+  /** 🧵️ The actor runtime this shell watches in its `os.task-manager` window: row source
+   * (`ActivationRegistry.metricsBus`'s `os.runtime.metrics`) and the target of its suspend/resume/
+   * cancel row actions. Optional because a host may legitimately run no kernel — the window then says
+   * so instead of showing an empty table (ticket `26/09/18/OS-HUB-COLLABORATION-AI-END-TO-END`, U1). */
+  readonly activationRegistry?: ActivationRegistry | null;
 }
 
 //#region 🔖️Identity
@@ -1218,6 +1238,23 @@ function readViteSEnv(name: "VITE_S_HUB_URL" | "VITE_S_DATA_DIR"): string | unde
   } catch {
     return undefined;
   }
+}
+
+/** 🌐️ The origin the hub workspace signs in against. `VITE_S_HUB_URL` is the hub's own origin (the
+ * same value `hubEnv` uses for the directory lane); it is normalized to a bare origin because
+ * `parseHubOriginV1` refuses a path, credentials, a query or a fragment. Without that define the
+ * page origin is the only honest guess — a shell embedded beside its own hub. */
+function hubBootstrapOriginV1(): string {
+  const declared = readViteSEnv("VITE_S_HUB_URL");
+  if (declared !== undefined) {
+    try {
+      return new URL(declared).origin;
+    } catch {
+      /* 🚫️ A malformed define is not a reason to fail the shell; the page origin still renders the
+       * surface, and signing in against it reports `unreachable` rather than crashing. */
+    }
+  }
+  return typeof globalThis.location === "undefined" ? "http://127.0.0.1:7777" : globalThis.location.origin;
 }
 
 /** 🪪️ One `MutationEnvelope` wrapping an {@link IdentityConfigMutation} — mirrors the exact shape the
@@ -1961,6 +1998,7 @@ function FrameworkOsShellInner({
   defaults: defaultsProp,
   brand,
   suppressAutoIntroduction = false,
+  activationRegistry,
 }: {
   readonly pluginFilter?: string;
   readonly plugins: readonly { readonly pluginId: string; readonly moduleUrl: string }[];
@@ -1971,6 +2009,7 @@ function FrameworkOsShellInner({
   readonly defaults?: FrameworkOsDefaults;
   readonly brand?: ShellBrand;
   readonly suppressAutoIntroduction?: boolean;
+  readonly activationRegistry?: ActivationRegistry | null;
 }) {
   const scope = useShellScope();
   const shellContextMenuTitleLabel = useLabel("ui.surfaceContextMenu.workspace");
@@ -1979,7 +2018,10 @@ function FrameworkOsShellInner({
   // manifest's own `controllerId`/`panelTabs` on those apps below, never from a separate literal.
   const hostConfig = pluginFilter ? resolvePluginHostConfig(PLUGIN_CATALOG, pluginFilter) : undefined;
   const hostMode = hostConfig !== undefined;
-  const mobile = useMediaQuery(UI_MOBILE_MEDIA_QUERY);
+  // 📱️ `measuredDevice` is the THREE-way viewport read (`🖱️ui/📱️device/🟦️.ts`, shared byte-for-byte with
+  // the wgpu dock); `mobile` stays the binary flag every panel-collapse call site below already reads.
+  const measuredDevice = useUiDevice();
+  const mobile = elementsSurfaceDeviceIsMobile(measuredDevice);
   const locks = locksProp ?? EMPTY_SHELL_LOCKS;
   const defaults = defaultsProp ?? EMPTY_SHELL_DEFAULTS;
   const ephemeral = isEphemeralShellBrand(brand);
@@ -2376,7 +2418,7 @@ function FrameworkOsShellInner({
   // committed tree instead of from inside `FrameworkOsShellInner`'s render.
   useLayoutEffect(() => builtNodeStoreCacheRef.current.flushPendingReloads());
   //#endregion 🔖️BuiltNodeStores
-  const uiDevice: ElementsSurfaceDevice = mobile ? "mobile" : uiLayout;
+  const uiDevice: ElementsSurfaceDevice = measuredDevice === "desktop" ? uiLayout : measuredDevice;
   const uiTheme: UiTheme = useMemo(() => {
     if (uiThemeDraft) return uiThemeDraft;
     const found = builtinUiThemes().find((t) => t.id === uiThemeId) ?? uiCustomThemes[uiThemeId];
@@ -2564,6 +2606,33 @@ function FrameworkOsShellInner({
    * bearer, cursor key, or invite token is ever stored here — a terminal phase arrives with the page
    * already erased, so an unmount, identity change, 401/403 or scoped 4401 clears the pane. */
   const [spaceAdministration, setSpaceAdministration] = useState<ShellSpaceAdministrationStateV1 | null>(null);
+  // 🔗️ ticket 26/09/18/OS-HUB-COLLABORATION-AI-END-TO-END slice AU2 — the hub connection surface
+  // (sign in, browse/switch/create spaces, invite, redeem). Reached at `/hub`; the port is built once
+  // per shell and keeps the minted capability inside its own closure, never in React state.
+  const [hubWorkspaceOpen, setHubWorkspaceOpen] = useState(false);
+  const hubConnectionPort = useMemo<HubConnectionPortV1>(
+    () =>
+      createHubConnectionFetchPortV1({
+        request: (url, init, signal) => fetch(url, { ...init, credentials: "include", signal }),
+        storage: typeof globalThis.localStorage === "undefined" ? null : globalThis.localStorage,
+        // 🌐️ The hub is its own origin, not the UI's: `VITE_S_HUB_URL` is the dev/production value the
+        // build already injects as non-secret collaborative endpoint metadata
+        // (`🧑‍💻dev/🏗️builder/🌐️vite/🟦️.ts`). Falling back to the page origin only matters where hub and
+        // UI really are co-served; a sign-in against the UI origin would otherwise post credentials
+        // at the SPA's own index route. The shell's local-relay lane is unaffected — it carries the
+        // relay's own bootstrap capability over `/_semio/hub/*` and never this human's session.
+        bootstrapOrigin: hubBootstrapOriginV1(),
+        deviceInstanceId: hubDeviceInstanceIdV1(typeof globalThis.localStorage === "undefined" ? null : globalThis.localStorage),
+        clientClass: "browser",
+        parseSpaces: (body) => (JSON.parse(body) as unknown[]).map(parseDirectorySpaceListEntryV1),
+        sealCommand: (command) => {
+          const request = sealDirectoryCommandRequestV1(mintDirectoryCommandRequestId(), command);
+          return { body: directoryCommandRequestJson(request), parseReceipt: (text) => parseDirectoryCommandReceiptV1(text, request) };
+        },
+        writeClipboard: typeof navigator === "undefined" || navigator.clipboard === undefined ? undefined : (text) => navigator.clipboard.writeText(text),
+      }),
+    [],
+  );
   const spaceAdministrationRef = useRef<ShellSpaceAdministrationStateV1 | null>(null);
   spaceAdministrationRef.current = spaceAdministration;
   const spaceAdministrationEpochRef = useRef(0);
@@ -4620,7 +4689,7 @@ function FrameworkOsShellInner({
   useEffect(() => {
     const registryIds = new Set(registry.map((entry) => entry.pluginId));
     let aborted = false;
-    const pending: Array<{ readonly pluginId: string; readonly rebuiltAt: number }> = [];
+    const pending: Array<{ readonly pluginId: string; readonly rebuiltAt: number | undefined }> = [];
     let activeWorkers = 0;
     const limit = pluginInstallConcurrency();
 
@@ -4640,7 +4709,7 @@ function FrameworkOsShellInner({
       }
     };
 
-    const handlePluginAvailable = (pluginId: string, rebuiltAt: number) => {
+    const handlePluginAvailable = (pluginId: string, rebuiltAt: number | undefined) => {
       if (aborted || !registryIds.has(pluginId)) return;
       pending.push({ pluginId, rebuiltAt });
       pump();
@@ -5756,7 +5825,7 @@ function FrameworkOsShellInner({
               }
               const target = await openArtifactWithAppRefRef.current(opening.app, opening.dialect, opening.role, () => isCurrentEffectOwner(effectOwner));
               if (target && opening.documentId && opening.schema) {
-                await openDocumentRef.current({ documentId: opening.artifactId, schema: opening.schema, ...(opening.spaceId ? { spaceId: opening.spaceId } : {}) }, undefined, target);
+                await openDocumentRef.current({ documentId: opening.documentId, schema: opening.schema, ...(opening.spaceId ? { spaceId: opening.spaceId } : {}) }, undefined, target);
               }
             } catch (openingError) {
               console.warn("[os-shell] replayShellCommand: artifact opening rejected", openingError, args);
@@ -6006,6 +6075,14 @@ function FrameworkOsShellInner({
         // `ShellHelpers/🟦️.tsx`, outside this lane's lease) has no concept of a `/studio`
         // segment, so it's matched locally here first — `parseShellRoute` itself is never edited, and
         // its own existing route classification (and tests) stay exactly as they were.
+        // 🔗️ AU2 — `/hub` is the shell's hub connection surface: sign in, browse/switch/create a
+        // space, invite, redeem. It is an overlay over whatever is already open, so it never tears
+        // down the running session and the app stays usable while no hub is reachable.
+        if (path === "/hub") {
+          setHubWorkspaceOpen(true);
+          return;
+        }
+        setHubWorkspaceOpen(false);
         const studioMatch = /^\/spaces\/([^/]+)\/studio(?:\/instances\/([^/]+))?$/.exec(path);
         const route = studioMatch ? ({ kind: "space" as const, spaceId: studioMatch[1]!, instanceId: studioMatch[2] } as const) : parseShellRoute(path);
         const sPlugin = loadedPlugins.find((entry) => entry.handle.pluginId === hostConfig.pluginId)?.handle;
@@ -6336,6 +6413,11 @@ function FrameworkOsShellInner({
     dispatch({ type: "SET_SYNC_CARD_KIND", value: null });
   }, [closeDocument, syncBackboneUri]);
 
+  const browseSyncBackbonePath = useCallback(async (kind: "file" | "folder") => {
+    const path = kind === "folder" ? await requestBackboneFolderPath() : await requestBackboneFilePath();
+    if (path) dispatch({ type: "SET_SYNC_DRAFT_PATH", value: path });
+  }, []);
+
   const spawnProgram = useCallback(
     async (program: SpaceProgramEntry) => {
       const pluginEntry = loadedPlugins.find((entry) => entry.handle.pluginId === program.pluginId);
@@ -6599,11 +6681,18 @@ function FrameworkOsShellInner({
           if (action.action === "selectFile") {
             dispatch({ type: "SET_SYNC_CARD_KIND", value: "file" });
             dispatch({ type: "SET_SYNC_DRAFT_PATH", value: syncBackboneUri?.startsWith("file://") ? syncBackboneUri.slice("file://".length) : "" });
+            void browseSyncBackbonePath("file");
             return applied();
           }
           if (action.action === "selectFolder") {
             dispatch({ type: "SET_SYNC_CARD_KIND", value: "folder" });
             dispatch({ type: "SET_SYNC_DRAFT_PATH", value: syncBackboneUri?.startsWith("folder://") ? syncBackboneUri.slice("folder://".length) : "" });
+            void browseSyncBackbonePath("folder");
+            return applied();
+          }
+          if (action.action === "browse") {
+            if (syncCardKind === "folder") void browseSyncBackbonePath("folder");
+            else if (syncCardKind === "file") void browseSyncBackbonePath("file");
             return applied();
           }
           if (action.action === "selectRemote") {
@@ -6896,6 +6985,7 @@ function FrameworkOsShellInner({
       applyHistoryPatch,
       applyLeftoverInteractionView,
       attachSyncBackbone,
+      browseSyncBackbonePath,
       clearAllWindowUtilities,
       detachSyncBackbone,
       injectActiveUtility,
@@ -6908,6 +6998,7 @@ function FrameworkOsShellInner({
       spawnProgram,
       hostMode,
       syncBackboneUri,
+      syncCardKind,
       syncDraftPath,
       updateSpacePanel,
       hostControllerId,
@@ -7095,14 +7186,14 @@ function FrameworkOsShellInner({
    * `onAction` funnel the app's own undo/redo buttons dispatch through (never a bespoke channel) — then
    * pulses any annotational event's target element via the existing `celebrateElements` vocabulary. */
   const applyTutorialSliceToShell = useCallback(
-    async (slice: TutorialSlice, activeSession: ActiveSession, run: OwnedTutorialRunV1, driveToken: number) => {
+    async (slice: TutorialSlice, activeSession: ActiveSession, run: OwnedTutorialRunV1<DocumentArchivePack>, driveToken: number) => {
       if (tutorialRunRef.current !== run || !run.ready || !tutorialDrivenRef.current.accepts(driveToken) || !shellDialogOriginIsCurrentV1(run.origin, captureDialogOrigin(activeSession))) return;
       for (const change of slice.uiChanges) applyTutorialUiChangeToShell(dispatch, change, uiBridgeCtxRef.current);
       const plugin = loadedPlugins.find((entry) => entry.handle.pluginId === activeSession.pluginId)?.handle;
       let documentTouched = false;
       for (const documentEvent of slice.document) {
         if (tutorialRunRef.current !== run || !run.ready || !tutorialDrivenRef.current.accepts(driveToken)) return;
-        const kind: TutorialArtifactEventKind = documentEvent.kind;
+        const kind: TutorialDocumentEventKind = documentEvent.kind;
         if (kind.kind === "edit") {
           documentTouched = true;
           const mutations = (slice.forward ? kind.forwards : kind.backwards) as readonly MutationEnvelope[];
@@ -7187,7 +7278,7 @@ function FrameworkOsShellInner({
         let documentTouched = false;
         for (const documentEvent of slice.document) {
           if (tutorialRunRef.current !== run || !run.ready || !tutorialDrivenRef.current.accepts(driveToken)) return;
-          const kind: TutorialArtifactEventKind = documentEvent.kind;
+          const kind: TutorialDocumentEventKind = documentEvent.kind;
           if (kind.kind === "edit") {
             documentTouched = true;
             const mutations = (slice.forward ? kind.forwards : kind.backwards) as readonly MutationEnvelope[];
@@ -8623,9 +8714,15 @@ function FrameworkOsShellInner({
   marketplaceHostRef.current = marketplaceHost;
   const frameworkMarketplaceTab = useMemo(() => createFrameworkMarketplacePanelTab(() => marketplaceHostRef.current), [marketplaceHost]);
   const frameworkChatTab = useMemo(
-    () => createFrameworkChatPanelTab(() => <AgentChatPanel status={agentBridge.status} presence={agentBridge.presence} conversation={agentBridge.conversation} onSendMessage={agentBridge.sendAgentMessage} />),
-    [agentBridge.presence, agentBridge.status, agentBridge.conversation, agentBridge.sendAgentMessage],
+    () => createFrameworkChatPanelTab(() => <AgentChatPanel status={agentBridge.status} presence={agentBridge.presence} conversation={agentBridge.conversation} onSendMessage={agentBridge.sendAgentMessage} onCancelToolCall={agentBridge.cancelToolCall} onResolveApproval={agentBridge.resolveApproval} />),
+    [agentBridge.presence, agentBridge.status, agentBridge.conversation, agentBridge.sendAgentMessage, agentBridge.cancelToolCall],
   );
+  /** 🧵️ The `os.task-manager` window — the one central progress + cancel surface for actor-level work
+   * (audit `📓️g5-ux-completeness-audit.md` ranked item 1), until now present in code and reachable by
+   * nobody. `activationRegistry` is the shell's optional actor runtime: absent on this React host,
+   * whose plugin runtime talks to `ShardClient` without a kernel, so `TaskManagerWindow` says
+   * "no runtime attached" rather than showing an empty table that reads as "nothing is running". */
+  const frameworkTaskManagerTab = useMemo(() => createFrameworkTaskManagerPanelTab(() => <TaskManagerWindow registry={activationRegistry ?? null} />), [activationRegistry]);
 
   // 🐚️ Gated to this shell via `useShellKeydown` below — was an unconditional `window` keydown listener,
   // so every mounted shell fired its bound action (and could `preventDefault()` out from under another
@@ -8867,6 +8964,29 @@ function FrameworkOsShellInner({
 
   const currentSyncStatus = currentDocumentRuntimeKey ? (syncStatusByDocumentId[currentDocumentRuntimeKey] ?? null) : null;
   const syncPillState: SyncPillState = useMemo(() => computeSyncPillState(currentSyncStatus), [currentSyncStatus]);
+
+  /** 📶️ Every attached document's sync status, for the footer's one hub badge — the whole point of
+   * that badge is that it is NOT the active document's, so this reads the full map rather than
+   * `currentSyncStatus`. */
+  const hubConnectionStatuses = useMemo(() => Object.values(syncStatusByDocumentId), [syncStatusByDocumentId]);
+  /** 🔐️ Mirrors the hub workspace's own session phase (AU2's `useHubConnection`). It starts
+   * `"signedOut"` rather than `"none"` because the badge now has something to open — the workspace
+   * overlay — and the workspace reports every phase change back here, so closing the overlay does
+   * not make a live session look absent. Never `"none"`: this shell always mounts the surface. */
+  const [hubSessionPresence, setHubSessionPresence] = useState<HubSessionPresenceV1>("signedOut");
+  /** 🔗️ Opens the hub workspace through its own address, so the badge, the palette verb and a pasted
+   * `/hub` link all take one path — but the overlay's own state is opened directly, because the URI
+   * lane is host-mode-only: `applyShellUri` is guarded by `hostMode`, so in a plugin playground a
+   * `/hub` navigation never reaches the route branch and the entry point would be a dead button
+   * everywhere except the hub host. Signing in to a hub is shell chrome, not a host-mode privilege. */
+  const openHubWorkspace = useCallback(() => {
+    setHubWorkspaceOpen(true);
+    if (hostMode) navigateHistory("/hub");
+  }, [hostMode, navigateHistory]);
+  /** 👥️ The hub identities this shell's presence lane currently sees. A peer with no hub identity
+   * (a folder-only or anonymous participant) contributes nothing, so the roster can never show a
+   * member the directory does not know. */
+  const hubOnlineUserIds = useMemo(() => [...new Set(presencePeers.flatMap((peer) => (typeof peer.userId === "string" && peer.userId.length > 0 ? [peer.userId] : [])))], [presencePeers]);
 
   /** 📌️ Uncommitted-since-last-checkpoint count, derived purely from the already-tracked
    * `historyProjection.entries` (no new wire field): every applied `mutation`-kind entry counts,
@@ -9177,6 +9297,7 @@ function FrameworkOsShellInner({
                     onClose={() => dispatch({ type: "SET_SYNC_CARD_KIND", value: null })}
                     onAttach={attachSyncBackbone}
                     onDetach={detachSyncBackbone}
+                    onBrowsePath={() => (syncCardKind === "folder" ? browseSyncBackbonePath("folder") : syncCardKind === "file" ? browseSyncBackbonePath("file") : undefined)}
                   />
                 ),
               },
@@ -9185,7 +9306,7 @@ function FrameworkOsShellInner({
         ],
       },
     });
-  }, [attachSyncBackbone, detachSyncBackbone, onAction, syncBackboneUri, syncCardKind, syncDraftPath, syncStatusByDocumentId, syncPillState, quarantinedConflicts, uiLocale]);
+  }, [attachSyncBackbone, browseSyncBackbonePath, detachSyncBackbone, onAction, syncBackboneUri, syncCardKind, syncDraftPath, syncStatusByDocumentId, syncPillState, quarantinedConflicts, uiLocale]);
   //#endregion 🔄️SyncLeaf
 
   const activePluginManifest = useMemo(() => loadedPlugins.find((entry) => entry.handle.pluginId === session?.pluginId)?.manifest, [loadedPlugins, session?.pluginId]);
@@ -9379,6 +9500,18 @@ function FrameworkOsShellInner({
       if (isOsCommandAddress(address) && commandId === "os.toggleFullscreen") {
         void toggleDocumentFullscreen(scope.rootRef.current ?? document.documentElement).catch((error) => console.error("Fullscreen request was rejected", error));
       }
+      // 🧵️ Reveals the task-manager window on its own anchor — the same "select the tab, then show the
+      // anchor" pair `dispatchOsCommand`'s `open-artifact-with-*` arm uses for the Document panel.
+      // 🔗️ The hub workspace is an overlay `ShellHost` owns, and `/hub` is its address — routing the
+      // verb through `navigateHistory` keeps the palette entry, the connection badge and a pasted
+      // link on exactly one code path.
+      if (isOsCommandAddress(address) && commandId === OPEN_HUB_COMMAND_ID) {
+        navigateHistory("/hub");
+      }
+      if (isOsCommandAddress(address) && commandId === OPEN_TASK_MANAGER_COMMAND_ID) {
+        dispatch({ type: "SET_PANEL_PATH", anchor: "bottom-right", value: [FRAMEWORK_TASK_MANAGER_PANEL_ID] });
+        dispatch({ type: "SET_PANEL_VISIBLE", anchor: "bottom-right", value: true });
+      }
       if (isOsCommandAddress(address)) {
         dispatchOsCommand(commandId, args, commitUiPreference, dispatch, dockLayoutStore, dockUiStateStore, locks);
         const rawCommandLabel = resolvedCommands.find((entry) => commandAddressKey(entry.address) === commandAddressKey(address))?.definition.label as LocalizedLabel | string | undefined;
@@ -9503,7 +9636,9 @@ function FrameworkOsShellInner({
     const topRight: PanelTabNode[] = [...detailsRightTabs, frameworkChatTab];
     // 🧭️ App Settings-group tabs nest inside the framework Settings branch (document-first child order)
     // so the anchor carries one Settings toggle; Marketplace stays a sibling leaf beside that branch.
-    const bottomRight: PanelTabNode[] = [settingsBottomRightDockTab, frameworkMarketplaceTab];
+    // 🧵️ Task manager sits beside Marketplace on the same anchor: both are shell-owned windows about
+    // what the runtime is doing, not about the open document.
+    const bottomRight: PanelTabNode[] = [settingsBottomRightDockTab, frameworkMarketplaceTab, frameworkTaskManagerTab];
     if (frameworkUtilitiesHistoryTab) bottomRight.push(frameworkUtilitiesHistoryTab);
     // 🛠️ Tool categories stay nested under one expandable Tool branch, exactly like Command categories,
     // placed left of Command (order 0 vs 1) — like commands not being window-level, tools are not
@@ -9526,7 +9661,7 @@ function FrameworkOsShellInner({
         "left-middle": [],
       },
     };
-  }, [commandCategoryTabs, detailsRightTabs, displayBottomLeftTabs, frameworkChatTab, frameworkDisplayTabs, frameworkMarketplaceTab, frameworkSyncTab, frameworkUtilitiesHistoryTab, settingsBottomRightDockTab, toolTabs, uiLocale, workbenchLeftTabs]);
+  }, [commandCategoryTabs, detailsRightTabs, displayBottomLeftTabs, frameworkChatTab, frameworkDisplayTabs, frameworkMarketplaceTab, frameworkSyncTab, frameworkTaskManagerTab, frameworkUtilitiesHistoryTab, settingsBottomRightDockTab, toolTabs, uiLocale, workbenchLeftTabs]);
 
   useEffect(() => {
     dispatch({ type: "SET_DOCK_OVERRIDE", value: dockLayoutStore.getSnapshot() });
@@ -10697,9 +10832,14 @@ function FrameworkOsShellInner({
     // shell's own `render_presence_bar` placement (`🐚️Shell/🎯️targets/🧊️wgpu/🦀️.rs`) rather than hiding behind a
     // panel tab click: presence is ambient chrome, always visible while a document is open.
     if (!mobile) items.push({ key: "presenceBar", content: <PresenceBar id="s-presence-peers" peers={presencePeers} /> });
+    // 📶️ The hub link itself, beside presence and on every device — a human with several documents
+    // open used to have to open each one's own sync popover to learn the hub was unreachable
+    // (`📓️g5-ux-completeness-audit.md` §5). Mobile keeps it too: it is one short badge, and a phone is
+    // exactly where a connection drops.
+    items.push({ key: "hubConnection", content: <HubConnectionIndicator statuses={hubConnectionStatuses} session={hubSessionPresence} onSignIn={openHubWorkspace} /> });
     if (!mobile) items.push({ key: "bottomRightPanelTabs", content: <PanelChromeTabBar anchor="bottom-right" {...buildPanelSelectionProps("bottom-right")} /> });
     return items;
-  }, [brand?.id, buildPanelSelectionProps, mobile, presencePeers, uiLocale]);
+  }, [brand?.id, buildPanelSelectionProps, hubConnectionStatuses, hubSessionPresence, mobile, openHubWorkspace, presencePeers, uiLocale]);
 
   const buildPanelProps = useCallback(
     (anchor: Anchor) => ({
@@ -10974,6 +11114,26 @@ function FrameworkOsShellInner({
           {directoryBootstrapUi.kind !== "idle" ? (
             <div className="pointer-events-auto absolute top-workbench right-double z-50 rounded-sm border bg-base px-double py-single text-sm shadow-sm">
               <DirectoryBootstrapStatusNotice state={directoryBootstrapUi} locale={uiLocale} onCancel={cancelDirectoryBootstrap} />
+            </div>
+          ) : null}
+          {/* 🔗️ AU2 — the hub connection surface, over the running session. In host mode it is also
+           * addressed at `/hub`, and closing it navigates back to the open space (or the landing
+           * route) so the shell is never left behind an overlay that still owns focus; in a plugin
+           * playground there is no shell router to address, and the overlay is plain shell state. */}
+          {hubWorkspaceOpen ? (
+            <div className="pointer-events-auto absolute top-workbench left-1/2 z-50 max-h-[80vh] w-full max-w-[44rem] -translate-x-1/2 overflow-auto rounded-sm border bg-base shadow-sm">
+              <HubWorkspace
+                port={hubConnectionPort}
+                locale={uiLocale === "de" ? "de" : "en"}
+                activeSpaceId={openSpaceIdRef.current}
+                onlineUserIds={hubOnlineUserIds}
+                onSessionChange={setHubSessionPresence}
+                onOpenSpace={(spaceId) => navigateHistory(`/spaces/${spaceId}`)}
+                onClose={() => {
+                  setHubWorkspaceOpen(false);
+                  if (hostMode) navigateHistory(openSpaceIdRef.current === null ? "/" : `/spaces/${openSpaceIdRef.current}`);
+                }}
+              />
             </div>
           ) : null}
           {/* 🏛️ The Shell-owned administration pane for exactly one space. It is mounted only while

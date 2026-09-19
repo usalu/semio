@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-/** 🧭️ `@semio-tech/repo-lib` router: `bun ./📜️script.ts <lint|test [level]|workspaces <--write|--check>>`. */
+/** 🧭️ `@semio-tech/repo-lib` router: `bun ./📜️script.ts <typecheck|test [level]|workspaces <--write|--check>>`. */
 import { join } from "node:path";
 import { BundleScript, ScriptRouter, runBundleScriptMain, runBunx, resolveTestLevel, runTestBudgeted } from "./🟦️.ts";
 import { repoTestArtifactEnvironment } from "../../🏃️process/🌿️environment/🧪️test-output/🟦️.ts";
@@ -7,9 +7,16 @@ import { runTransactionV2 } from "../../🔄️transactions/🧪️verification/
 import { GoTestScript } from "../../🧪️execution/🐹️go/🟦️.ts";
 import { WorkspacePublicationScript } from "../../🗂️workspaces/🏃️execution/🟦️.ts";
 
-class LintScript extends BundleScript {
-  run(): void {
-    runBunx(["tsc", "-p", "tsconfig.json", "--noEmit"], this.root);
+/** 🪁️ Type-checks every `🦑️repo` product TypeScript source.
+ *
+ * Two programs, because the coordinator is a Next.js application: `next-env.d.ts` pulls in Next's global
+ * augmentation of `NodeJS.ProcessEnv` (which makes `NODE_ENV` required), so compiling it together with the
+ * repository tooling would reject every `env: { … }` literal the tooling passes to `spawnSync`. The
+ * coordinator therefore keeps its own `tsconfig.json` next to its `next.config.ts`, and both are checked. */
+class TypecheckScript extends BundleScript {
+  run(segments: string[]): void {
+    runBunx(["tsc", "--noEmit", "-p", "../../../../tsconfig.json", ...segments], this.root);
+    runBunx(["tsc", "--noEmit", "-p", "../../../🖥️server/🎛️coordinator/📦️packages/🟦️typescript/tsconfig.json", ...segments], this.root);
   }
 }
 
@@ -481,7 +488,7 @@ class TestScript extends BundleScript {
 }
 
 const router = new ScriptRouter(import.meta.dir)
-  .register("lint", LintScript)
+  .register("typecheck", TypecheckScript)
   .register("test", TestScript)
   .register("go-test", GoTestScript)
   .register("workspaces", WorkspacePublicationScript);

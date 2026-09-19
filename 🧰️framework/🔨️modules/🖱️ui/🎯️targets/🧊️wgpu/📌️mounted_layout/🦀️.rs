@@ -505,6 +505,13 @@ impl MountedLayoutJob {
             }
             UiNode::ExternalSlot(slot) => LayoutNodeKind::HostContent { height: host_content_height(&slot.params_json, &self.theme) },
             UiNode::ComponentScene(_) => LayoutNodeKind::EngineSurface,
+            // 📶️ React's bar is `h-tiny w-full` (`🗣️Interpreter/🟦️.tsx`). As a plain `Leaf` it measured
+            // from arena children — a progress node has none — so it solved to height ZERO and
+            // `progress_bar_rects`' `SIZE_TINY.min(bounds.h)` painted nothing at all: the live
+            // generation3d Tool-runs panel showed the run title and an empty gap where React shows the
+            // filled bar (ticket 26/09/17/WGPU-RENDERER-REACT-PARITY,
+            // `📓️w14b-generation3d-labels-preview-layout.md`).
+            UiNode::Progress(_) => LayoutNodeKind::Control { height: crate::wgpu::chrome::SIZE_TINY, label_padding: None },
             _ => LayoutNodeKind::Leaf,
         };
         let index = self.nodes.len();

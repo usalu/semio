@@ -19,7 +19,7 @@ const functions = () => {
   expect(typeof coordinates).toBe("function");
   return { validate, coordinates };
 };
-const contractFor = (row: any) => ({ path: "🧪️tests/📝️history.md", grammar: vector.contract, sha256: sha(row.content), coordinates: [{ start: row.start ?? row.content.indexOf(row.value), end: row.end ?? row.content.indexOf(row.value) + row.value.length, kind: "source", form: row.form, valueSha256: sha(row.value) }] });
+const contractFor = (row: any): discovery.FrozenMarkdownCoordinateEvidenceContract => ({ path: "🧪️tests/📝️history.md", grammar: vector.contract, sha256: sha(row.content), coordinates: [{ start: row.start ?? row.content.indexOf(row.value), end: row.end ?? row.content.indexOf(row.value) + row.value.length, kind: "source", form: row.form, valueSha256: sha(row.value) }] });
 
 /** 📦️ Reuses the executed Draw collector without importing or running its test suite. */
 function producerInputs(schema: discovery.Taxonomy) {
@@ -113,7 +113,7 @@ test("all 21 reviewed historical spans retain exact physical bytes and independe
     expect(bytes.length).toBe(row.size);
     expect(before.mode & 0o7777).toBe(row.mode);
     expect(coordinates).toHaveLength(row.contract.coordinates.length);
-    for (const coordinate of coordinates) {
+    for (const coordinate of coordinates ?? []) {
       expect(oracle({ content, ...coordinate, form: coordinate.pointer.split(":")[1].split("@")[0] })).toBe(true);
       expect(sha(coordinate.value)).toBe(row.contract.coordinates.find((declaration: any) => declaration.start === coordinate.start).valueSha256);
       count++;

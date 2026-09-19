@@ -58,8 +58,6 @@ const WGPU_SCRIPT_PATH = join(WGPU_PACKAGE_ROOT, "📜️script.ts");
 
 const PLUGIN_WASM_TARGET = "wasm32-wasip2";
 
-const PLUGIN_WASM_STACK_BYTES = 8 * 1024 * 1024;
-
 /** @emoji 🎭️ Playwright is a TEST-ONLY dependency, loaded lazily by the harness commands below. The
  * specifier is held in a constant so no bundler can statically resolve it: `⚙️vite.config.ts` imports
  * this module for its Vite plugins, and a literal `import("playwright")` makes bun follow the dynamic
@@ -80,10 +78,13 @@ function pluginWasmProfile(mode = semioBuildMode(), override: string | null = pr
   return selectComponentWasmProfile(mode, override ?? undefined);
 }
 
+/** @emoji 🧊️ The guest's shadow stack is NOT passed here: `-zstack-size` lives in `.cargo/config.toml`'s
+ * `[target.wasm32-wasip2]` beside the memory maximum it is carved out of, so a plain `cargo build` into
+ * the shared target directory produces the same component this plan does. */
 function pluginCargoArgs(packageName: string, profile: string): string[] {
   selectComponentWasmProfile("dev", profile);
-  const args = ["rustc", "-p", packageName, "--target", PLUGIN_WASM_TARGET, "--profile", profile, "--", "-C", `link-arg=-zstack-size=${PLUGIN_WASM_STACK_BYTES}`];
-  if (process.env.SEMIO_PLUGIN_SYMBOLS === "1") args.push("-C", "strip=none");
+  const args = ["rustc", "-p", packageName, "--target", PLUGIN_WASM_TARGET, "--profile", profile];
+  if (process.env.SEMIO_PLUGIN_SYMBOLS === "1") args.push("--", "-C", "strip=none");
   return args;
 }
 
@@ -126,4 +127,4 @@ function resolveCatalogFilterPluginId(filterPlugin?: string): string | undefined
   return filterPlugin && !isHostPlaygroundFilter(filterPlugin) ? resolvePlaygroundFilter(filterPlugin).pluginId : undefined;
 }
 
-export { PLAYWRIGHT_MODULE_SPECIFIER, PLUGIN_WASM_STACK_BYTES, PLUGIN_WASM_TARGET, ResolvedPlaygroundFilter, WGPU_PACKAGE_ROOT, WGPU_SCRIPT_PATH, devStagingProfile, ensureWasmTarget, playgroundCatalog, pluginCargoArgs, pluginOutRoot, pluginWasmProfile, resolveCatalogFilterPluginId, resolvePlaygroundFilter, resolvePluginBuildTargets };
+export { PLAYWRIGHT_MODULE_SPECIFIER, PLUGIN_WASM_TARGET, type ResolvedPlaygroundFilter, WGPU_PACKAGE_ROOT, WGPU_SCRIPT_PATH, devStagingProfile, ensureWasmTarget, playgroundCatalog, pluginCargoArgs, pluginOutRoot, pluginWasmProfile, resolveCatalogFilterPluginId, resolvePlaygroundFilter, resolvePluginBuildTargets };

@@ -207,7 +207,11 @@ export type ShellToGateway =
   | { variant: "approval"; approvalId: string; decision: ApprovalDecision; note: string | null }
   | { variant: "ping" }
   | { variant: "bye" }
-  | { variant: "agentMessage"; messageId: string; text: string };
+  | { variant: "agentMessage"; messageId: string; text: string }
+  /** 🛑️ The human pressed cancel on a tool call the panel still shows as running — `invocationId` is
+   * the id `agentToolCall` published, which is also that call's job id in the gateway's one
+   * process-wide job registry, so this reaches the same cooperative cancel `job_cancel` flips. */
+  | { variant: "agentCancel"; invocationId: string };
 
 export function encodeShellToGateway(frame: ShellToGateway): Uint8Array {
   const writer = new Writer();
@@ -265,6 +269,10 @@ export function encodeShellToGateway(frame: ShellToGateway): Uint8Array {
       writer.string(frame.messageId);
       writer.string(frame.text);
       break;
+    case "agentCancel":
+      writer.u8(10);
+      writer.string(frame.invocationId);
+      break;
   }
   return writer.finish();
 }
@@ -307,6 +315,9 @@ export function decodeShellToGateway(bytes: Uint8Array): ShellToGateway {
       break;
     case 9:
       frame = { variant: "agentMessage", messageId: reader.string(), text: reader.string() };
+      break;
+    case 10:
+      frame = { variant: "agentCancel", invocationId: reader.string() };
       break;
     default:
       throw new Error(`bridge frame: unknown ShellToGateway tag ${tag}`);

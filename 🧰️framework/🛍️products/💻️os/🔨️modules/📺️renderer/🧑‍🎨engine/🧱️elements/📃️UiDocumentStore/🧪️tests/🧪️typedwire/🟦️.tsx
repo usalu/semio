@@ -1,16 +1,16 @@
 type TestSource = { readonly directory: string; readonly url: string };
 
-export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: any, source: TestSource): Promise<void> {
+export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: Pick<typeof import("../../🟦️.tsx"), "DEFAULT_UI_DOCUMENT_LIMITS" | "UiDocumentStore" | "applyUiPatch" | "emitIntent" | "uiDocumentStateFromSnapshot" | "validateUiDocumentCore"> & Pick<typeof import("@semio-tech/framework"), "RetainedUiPatchCursor" | "RetainedUiSnapshotCursor" | "RetainedUiSurfaceOwner">, source: TestSource): Promise<void> {
   const { DEFAULT_UI_DOCUMENT_LIMITS, RetainedUiPatchCursor, RetainedUiSnapshotCursor, RetainedUiSurfaceOwner, UiDocumentStore, applyUiPatch, emitIntent, uiDocumentStateFromSnapshot, validateUiDocumentCore } = dependencies;
-  type AccessibilitySpec = any;
-  type RetainedUiPatchCursorRef = any;
-  type RetainedUiSurfaceOwnerRef = any;
-  type RetainedUiState = any;
-  type RetainedUiTransaction = any;
-  type StyleSpec = any;
-  type UiNodeRecord = any;
-  type UiPatch = any;
-  type UiSnapshot = any;
+  type AccessibilitySpec = import("../../../../../../../../../🔨️modules/🛂️manifest/🟦️.ts").AccessibilitySpec;
+  type RetainedUiPatchCursorRef = import("../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🟦️.ts").RetainedUiPatchCursor;
+  type RetainedUiSurfaceOwnerRef = import("../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🟦️.ts").RetainedUiSurfaceOwner;
+  type RetainedUiState = import("../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🟦️.ts").RetainedUiState;
+  type RetainedUiTransaction = import("../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🟦️.ts").RetainedUiTransaction;
+  type StyleSpec = import("../../../../../../../../../🔨️modules/🛂️manifest/🟦️.ts").StyleSpec;
+  type UiNodeRecord = import("../../../../../../../../../🔨️modules/🛂️manifest/🟦️.ts").UiNodeRecord;
+  type UiPatch = import("../../../../../../../../../🔨️modules/🛂️manifest/🟦️.ts").UiPatch;
+  type UiSnapshot = import("../../../../../../../../../🔨️modules/🛂️manifest/🟦️.ts").UiSnapshot;
 
   const { describe, expect, it, vi } = vitest;
   const exactSchemaDefinitionV1 = (source: unknown, name: string): object => {

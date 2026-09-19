@@ -13,7 +13,7 @@ fn vertex(id: &str, position: [f64; 3]) -> CadVertex {
 }
 
 fn edge(id: &str, a: &str, b: &str) -> CadEdge {
-    CadEdge { id: id.to_string(), vertex_ids: vec![a.to_string(), b.to_string()], curve: CadEdgeCurve { kind: "line".into() } }
+    CadEdge { id: id.to_string(), vertex_ids: vec![a.to_string(), b.to_string()], curve: CadEdgeCurve { kind: "line".into(), ..Default::default() } }
 }
 
 fn wire(id: &str, edge_ids: &[&str]) -> CadWire {
@@ -629,3 +629,73 @@ fn object_rows_are_scoped_to_their_declaring_model_definition() {
     assert!(list_model_objects_for_model_definition(&objects, "spatial.shape").is_empty());
 }
 //#endregion 🔖️Indices
+
+//#region 📐️CurvedEdges
+/// 📐️ LAW (ticket 26/09/17 packet W14g item 2): a CURVED edge samples as the polyline React's
+/// `edgeSamplePoints` tessellates, not as its two boundary vertices.
+///
+/// 🩸️ `CadEdgeCurve` carried only `kind` until this packet, so `arc`/`circle`/`ellipse`/`nurbs`
+/// edges reached both renderers as a single chord — the pick target, the wireframe and the snap
+/// points of every curved edge in the model (`📓️w2f-cad-spatial-editor-wgpu.md` §5.2).
+#[test]
+fn a_curved_edge_samples_its_whole_polyline_where_a_straight_one_stays_its_endpoints() {
+    let ends = [[1.0, 0.0, 0.0], [0.0, 1.0, 0.0]];
+    let line = CadEdgeCurve { kind: "line".into(), ..Default::default() };
+    assert_eq!(edge_sample_points(&line, &ends, EDGE_SAMPLE_SEGMENTS), ends.to_vec(), "a straight edge IS its endpoints");
+
+    // 🔵️ A quarter arc about the origin: 32 segments ⇒ 33 samples, all on the unit circle, and the
+    // ends are the authored boundary vertices.
+    let arc = CadEdgeCurve { kind: "arc".into(), center: Some([0.0, 0.0, 0.0]), ..Default::default() };
+    let samples = edge_sample_points(&arc, &ends, EDGE_SAMPLE_SEGMENTS);
+    assert_eq!(samples.len(), EDGE_SAMPLE_SEGMENTS + 1);
+    assert!(samples.iter().all(|point| ((point[0] * point[0] + point[1] * point[1]).sqrt() - 1.0).abs() < 1e-9), "every arc sample sits on the radius");
+    assert!(samples.first().is_some_and(|point| (point[0] - 1.0).abs() < 1e-9 && point[1].abs() < 1e-9));
+    assert!(samples.last().is_some_and(|point| point[0].abs() < 1e-9 && (point[1] - 1.0).abs() < 1e-9));
+
+    // ⭕️ A circle is closed and raised to React's 64-segment floor however few were asked for.
+    let circle = CadEdgeCurve { kind: "circle".into(), center: Some([0.0, 0.0, 0.0]), normal: Some([0.0, 0.0, 1.0]), radius: Some(2.0), ..Default::default() };
+    let samples = edge_sample_points(&circle, &ends, 4);
+    assert_eq!(samples.len(), CLOSED_CURVE_SAMPLE_SEGMENTS + 1);
+    assert_eq!(samples.first(), samples.last(), "a full turn closes on itself");
+
+    // 🥚️ An ellipse takes the two radii on its own axes.
+    let ellipse = CadEdgeCurve {
+        kind: "ellipse".into(),
+        center: Some([0.0, 0.0, 0.0]),
+        normal: Some([0.0, 0.0, 1.0]),
+        major_axis: Some([1.0, 0.0, 0.0]),
+        major_radius: Some(3.0),
+        minor_radius: Some(1.0),
+        ..Default::default()
+    };
+    let samples = edge_sample_points(&ellipse, &ends, 8);
+    assert_eq!(samples.len(), CLOSED_CURVE_SAMPLE_SEGMENTS + 1);
+    let max_x = samples.iter().map(|point| point[0]).fold(f64::MIN, f64::max);
+    assert!((max_x - 3.0).abs() < 1e-9, "the major radius reaches 3, got {max_x}");
+
+    // 📈️ A nurbs curve passes through its first and last pole and keeps the interior ones company.
+    let nurbs = CadEdgeCurve { kind: "nurbs".into(), poles: vec![[0.0, 0.0, 0.0], [1.0, 2.0, 0.0], [2.0, 0.0, 0.0]], degree: Some(2), ..Default::default() };
+    let samples = edge_sample_points(&nurbs, &ends, EDGE_SAMPLE_SEGMENTS);
+    assert!(samples.len() > 3, "a nurbs span tessellates, got {}", samples.len());
+    assert_eq!(samples.first().copied(), Some([0.0, 0.0, 0.0]));
+    assert_eq!(samples.last().copied(), Some([2.0, 0.0, 0.0]));
+
+    // 📍️ A producer-supplied polyline wins over every parametric family.
+    let sampled = CadEdgeCurve { kind: "arc".into(), center: Some([0.0, 0.0, 0.0]), points: vec![[9.0, 9.0, 9.0], [8.0, 8.0, 8.0]], ..Default::default() };
+    assert_eq!(edge_sample_points(&sampled, &ends, EDGE_SAMPLE_SEGMENTS), vec![[9.0, 9.0, 9.0], [8.0, 8.0, 8.0]]);
+}
+
+/// 📐️ LAW: the sampled polyline reaches the PICK TARGETS — an arc edge's target carries its
+/// tessellation, so a renderer's ray meets the curve and not the chord.
+#[test]
+fn a_curved_edges_pick_target_carries_its_tessellation() {
+    let mut geometry = box_geometry();
+    geometry.edges[0].curve = CadEdgeCurve { kind: "arc".into(), center: Some([0.0, 0.0, 0.0]), ..Default::default() };
+    let buckets = geometry_buckets(&geometry);
+    let points = buckets.entity_points(ModelEntityKind::Edge, "e0");
+    assert_eq!(points.len(), EDGE_SAMPLE_SEGMENTS + 1, "the curved edge's points are its samples, not its two vertices");
+    let segments = buckets.entity_wire_segments(ModelEntityKind::Edge, "e0");
+    assert_eq!(segments.len(), EDGE_SAMPLE_SEGMENTS, "and its wireframe is the whole polyline");
+    assert_eq!(buckets.entity_points(ModelEntityKind::Edge, "e1").len(), 2, "a straight sibling is unchanged");
+}
+//#endregion 📐️CurvedEdges

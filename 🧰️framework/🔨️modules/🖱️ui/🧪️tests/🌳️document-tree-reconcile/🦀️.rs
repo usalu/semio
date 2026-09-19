@@ -601,3 +601,76 @@ fn an_extension_slot_carries_its_publishers_plugin_id_instead_of_an_empty_string
     retire(tree);
 }
 //#endregion 🎬️IntentStamping
+
+//#region 🗺️EngineSurfaceRootDocument
+/// 🗺️ The document shape gis2d publishes: ONE record, and that record IS the engine surface
+/// (`componentScene#gis2d-main`, `nodes=1`). Every other wgpu playground wraps its surface in at
+/// least one container, so this shape had no law at all.
+fn engine_surface_root_record(id: u64, key: &str, kind: &str) -> serde_json::Value {
+    serde_json::json!({
+        "id": id,
+        "key": key,
+        // 📐️ `leaf` with no `grow`, no width and no height — exactly what a producer that does not
+        // spell its scene's sizing publishes, and what `TiledMapScene`'s `scene_surface` emits.
+        "layout": { "kind": "leaf" },
+        "component": { "type": "surface", "kind": kind, "docSchema": "tiled-map@1", "doc": { "bytes": [] } },
+        "style": {},
+        "activity": "idle",
+        "accessibility": {},
+        "children": [],
+    })
+}
+
+/// 🚦️ The wgpu shell's OWN per-window loop, bounded: layout first, paint only when this window's own
+/// root is clean, and a `Pending` that finds the root dirty again goes back to layout — the exact
+/// ladder `render_ui_document_step` walks (`🗣️Interpreter/🎯️targets/🧊️wgpu`'s `UiDocumentFramePhase`).
+/// Answers the number of opportunities the window spent, or `None` if it never terminated.
+fn drive_window_to_painted(ui: &mut Ui, window_id: &str, viewport: crate::wgpu::geometry::Rect, atlas: &mut FontAtlas, budget: usize) -> Option<usize> {
+    let pool = semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 1));
+    let operation = semio_framework_job::allocate_operation_id();
+    let cancel = semio_framework_job::CancelToken::root_now();
+    let mut preview_sequence = 0;
+    let mut target = crate::wgpu::draw::DrawList::default();
+    for spent in 0..budget {
+        if ui.layout_is_dirty(window_id) {
+            ui.request_layout(window_id);
+            let mut cx = semio_framework_job::StepContext::new(operation, semio_framework_job::Generation(0), semio_framework_job::StepBudget::new(1, u64::MAX), cancel.clone(), test_clock, &mut preview_sequence);
+            let _ = ui.step_layouts(&pool, atlas, &mut cx);
+            continue;
+        }
+        match ui.frame_into_step::<NoSceneHost>(window_id, viewport, atlas, None, None, &mut target) {
+            UiFrameStep::Ready | UiFrameStep::Missing => return Some(spent),
+            UiFrameStep::Pending => {}
+            UiFrameStep::Fault => panic!("the window's retained paint faulted at {}", ui.paint_stall_census(window_id)),
+        }
+    }
+    None
+}
+
+/// 🗺️ LAW: a document whose ROOT is the engine surface itself reaches a painted frame.
+///
+/// 🩸️ What this pins: `FrameBuildPhase::Chrome` holds the WHOLE frame — navbar, dock, footer, every
+/// window — until the shell's chrome walk answers `true`, and that walk cannot leave a window whose
+/// retained document never reports itself complete. gis2d on wgpu booted `data-semio-os-ready`, laid
+/// `componentScene#gis2d-main` out at the full `1433.6 × 813.6` viewport, fetched its first map tile
+/// — and presented a uniformly empty canvas, with no fault, no paint-stall notice and a chrome
+/// ledger stuck at `generation: 0` (ticket 26/09/17/WGPU-RENDERER-REACT-PARITY, `📓️w14a-*`).
+#[test]
+fn a_document_whose_root_is_the_engine_surface_reaches_a_painted_frame() {
+    let mut ui = Ui::new();
+    let root = engine_surface_root_record(0, "gis2d.play.composite", "tiled-map");
+    assert!(ui.publish_document("gis2d-main", tiny_document("gis2d-main", 1, &root, None)));
+    let mut cx_sequence = 0;
+    let mut cx = semio_framework_job::StepContext::new(semio_framework_job::allocate_operation_id(), semio_framework_job::Generation(11), semio_framework_job::StepBudget::new(4096, u64::MAX), semio_framework_job::CancelToken::root_now(), test_clock, &mut cx_sequence);
+    assert_eq!(ui.step_document_reconcile("gis2d-main", "gis", &mut cx), UiDocumentReconcileStep::Complete);
+    assert!(ui.tree("gis2d-main").and_then(|tree| tree.root).is_some(), "the single surface record mounts as the arena root");
+
+    let mut atlas = FontAtlas::builtin();
+    let viewport = crate::wgpu::geometry::Rect { x: 0.0, y: 0.0, w: 1433.6, h: 813.6 };
+    let spent = drive_window_to_painted(&mut ui, "gis2d-main", viewport, &mut atlas, 1 << 16);
+    assert!(spent.is_some(), "the window never finished one paint in 65 536 opportunities — the shell's chrome walk can never leave it: {}", ui.paint_stall_census("gis2d-main"));
+
+    let rect = ui.tree("gis2d-main").and_then(|tree| tree.root.and_then(|root| tree.accepted_layout(root))).expect("the root solved a layout");
+    assert!(rect.width > 1000.0 && rect.height > 600.0, "an engine-surface ROOT fills the viewport it is given, got {rect:?}");
+}
+//#endregion 🗺️EngineSurfaceRootDocument

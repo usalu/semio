@@ -342,6 +342,16 @@ pub mod editor {
         mod component;
         pub use component::*;
         #[path = "."]
+        pub mod presence {
+            #[path = "🏅️standards/🔖️r12/🪆️subsets/📰️header/✏️editor/👥️presence/🧬️schema/🦀️.rs"]
+            pub mod schema;
+        }
+        #[path = "."]
+        pub mod config {
+            #[path = "🏅️standards/🔖️r12/🪆️subsets/📰️header/✏️editor/🎚️config/🧬️schema/🦀️.rs"]
+            pub mod schema;
+        }
+        #[path = "."]
         pub mod modes {
             #[path = "."]
             pub mod edit {
@@ -370,6 +380,16 @@ pub mod viewer {
         #[path = "🏅️standards/🔖️r12/🪆️subsets/📰️header/👁️viewer/🦀️.rs"]
         mod component;
         pub use component::*;
+        #[path = "."]
+        pub mod presence {
+            #[path = "🏅️standards/🔖️r12/🪆️subsets/📰️header/👁️viewer/👥️presence/🧬️schema/🦀️.rs"]
+            pub mod schema;
+        }
+        #[path = "."]
+        pub mod config {
+            #[path = "🏅️standards/🔖️r12/🪆️subsets/📰️header/👁️viewer/🎚️config/🧬️schema/🦀️.rs"]
+            pub mod schema;
+        }
         #[path = "."]
         pub mod modes {
             #[path = "."]

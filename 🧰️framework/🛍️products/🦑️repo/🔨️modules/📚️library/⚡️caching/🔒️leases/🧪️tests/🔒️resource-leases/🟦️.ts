@@ -5,10 +5,22 @@ import { createRequire } from "node:module";
 import { dirname, join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
+/** 🔒️ One side of a lease race, exactly as `🧬️schema/🔣️.json` declares it. */
+type ResourceLeaseParticipant = { readonly runtime: "bun" | "node" | "python"; readonly mode: "shared" | "exclusive"; readonly resource: string };
+
+/** 🔒️ The lease race corpus (`🧫️cases.json`). */
+type ResourceLeaseFixture = {
+  readonly repetitions: number;
+  readonly cases: readonly { readonly name: string; readonly first: ResourceLeaseParticipant; readonly second: ResourceLeaseParticipant; readonly action: "parallel" | "release-first" | "cancel-second" | "kill-first" }[];
+};
+
+/** 🔒️ One spawned participant plus the output the race is decided on. */
+type ResourceLeaseChild = { process: ReturnType<typeof Bun.spawn>; output: string; errors: string; done: Promise<number> };
+
 /** 🔒️ Compares resource ownership against independent Node, Bun and Python SQLite processes. */
 export async function testResourceLeases(generated: string): Promise<void> {
   const moduleRoot = join(dirname(fileURLToPath(import.meta.url)), "../.."), implementation = join(moduleRoot, "🟦️.ts");
-  const fixture = JSON.parse(readFileSync(join(moduleRoot, "🧫️cases.json"), "utf8"));
+  const fixture: ResourceLeaseFixture = JSON.parse(readFileSync(join(moduleRoot, "🧫️cases.json"), "utf8"));
   assert.ok(new (createRequire(import.meta.url)("ajv").default)().validate(JSON.parse(readFileSync(join(moduleRoot, "🧬️schema/🔣️.json"), "utf8")), fixture));
   const api = await import(pathToFileURL(implementation).href);
   const root = mkdtempSync(join(generated, "resource-leases-")), directory = join(root, "store");
@@ -26,7 +38,7 @@ try {
 } catch (error) { if (controller.signal.aborted) console.log("cancelled"); else throw error; }
 finally { clearTimeout(timer); process.stdin.destroy(); }
 `);
-  const resources = [...new Set(fixture.cases.flatMap(row => [row.first.resource, row.second.resource]))] as string[];
+  const resources = [...new Set(fixture.cases.flatMap(row => [row.first.resource, row.second.resource]))];
   for (const resource of new Set(fixture.cases.filter(row => row.first.runtime === "python").map(row => row.first.resource))) (await api.acquireResourceLease({ directory, resource, mode: "exclusive", signal: new AbortController().signal })).release();
   const python = `import sqlite3,sys
 db=sqlite3.connect(sys.argv[1], timeout=0, isolation_level=None)
@@ -38,17 +50,17 @@ db.rollback()
 db.close()
 print("released", flush=True)
 `;
-  const children: { process: ReturnType<typeof Bun.spawn>; output: string; errors: string; done: Promise<number> }[] = [];
-  const start = (row: { runtime: string; resource: string; mode: string }) => {
+  const children: ResourceLeaseChild[] = [];
+  const start = (row: ResourceLeaseParticipant): ResourceLeaseChild => {
     const database = join(directory, createHash("sha256").update(row.resource).digest("hex") + ".sqlite");
     const args = row.runtime === "python" ? [Bun.which("python3") ?? Bun.which("python") ?? "python3", "-u", "-c", python, database, row.mode] : [row.runtime === "bun" ? process.execPath : "node", worker, directory, row.resource, row.mode];
     const child = { process: Bun.spawn(args, { stdout: "pipe", stderr: "pipe", stdin: "pipe" }), output: "", errors: "", done: undefined as unknown as Promise<number> };
-    const drain = async (stream, key: "output" | "errors") => { for await (const chunk of stream) child[key] += Buffer.from(chunk).toString(); };
+    const drain = async (stream: ReadableStream<Uint8Array>, key: "output" | "errors") => { for await (const chunk of stream) child[key] += Buffer.from(chunk).toString(); };
     child.done = Promise.all([drain(child.process.stdout, "output"), drain(child.process.stderr, "errors"), child.process.exited]).then(rows => rows[2]);
     children.push(child); return child;
   };
-  const until = async (child, phase: string) => { const deadline = Date.now() + 10000; while (!child.output.split("\n").includes(phase)) { assert.equal(child.process.exitCode, null, child.errors || child.output); assert.ok(Date.now() < deadline, `${phase}: ${child.output} ${child.errors}`); await Bun.sleep(20); } };
-  const release = async child => { child.process.stdin.write("release\n"); child.process.stdin.end(); assert.equal(await child.done, 0, child.errors); };
+  const until = async (child: ResourceLeaseChild, phase: string) => { const deadline = Date.now() + 10000; while (!child.output.split("\n").includes(phase)) { assert.equal(child.process.exitCode, null, child.errors || child.output); assert.ok(Date.now() < deadline, `${phase}: ${child.output} ${child.errors}`); await Bun.sleep(20); } };
+  const release = async (child: ResourceLeaseChild) => { child.process.stdin.write("release\n"); child.process.stdin.end(); assert.equal(await child.done, 0, child.errors); };
   try {
     for (const row of fixture.cases) {
       const first = start(row.first); await until(first, "held");
@@ -79,7 +91,7 @@ print("released", flush=True)
     try {
       heldController.abort();
       const progress: unknown[] = [];
-      await assert.rejects(() => api.acquireResourceLease({ directory, resource: "deadline", mode: "shared", signal: new AbortController().signal, timeoutMs: 60, onWait: row => progress.push(row) }), /timed out/i);
+      await assert.rejects(() => api.acquireResourceLease({ directory, resource: "deadline", mode: "shared", signal: new AbortController().signal, timeoutMs: 60, onWait: (row: unknown) => progress.push(row) }), /timed out/i);
       assert.ok(progress.length > 0, "Contended acquisition must report waiting");
       await assert.rejects(() => api.acquireResourceLease({ directory, resource: "deadline", mode: "shared", signal: new AbortController().signal, onWait: () => { throw new Error("progress consumer failed"); } }), /progress consumer failed/);
     } finally { owner.release(); owner.release(); }

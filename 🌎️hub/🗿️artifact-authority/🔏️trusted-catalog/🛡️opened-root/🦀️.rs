@@ -42,8 +42,16 @@ pub(super) struct TrustedCatalogDataRoot {
 }
 
 impl TrustedCatalogDataRoot {
+    /// 🏠️ Resolves the *ancestors* of the operator-configured data root before the descriptor-rooted walk,
+    /// and never the root itself. Ancestors are not server-owned and are routinely links — macOS's own
+    /// `TMPDIR` lives under `/var`, a link to `/private/var`, so an unresolved walk rejects every default
+    /// temporary data root with `ENOTDIR` before the hub can bind. The configured root and everything below
+    /// it stay link-refusing, which is what `trusted_catalog_opened_root_rejects_linked_roots_leaves_intermediates_and_actors` holds.
     pub(super) fn open_server_owned(path: &Path) -> Result<Self, AuthorityError> {
-        Ok(Self { directory: platform::open_server_owned(path).map_err(catalog_error)? })
+        let parent = path.parent().ok_or_else(|| catalog("server-owned data root has no resolvable parent"))?;
+        let leaf = path.file_name().ok_or_else(|| catalog("server-owned data root is not a named directory"))?;
+        let resolved = std::fs::canonicalize(parent).map_err(catalog_error)?.join(leaf);
+        Ok(Self { directory: platform::open_server_owned(&resolved).map_err(catalog_error)? })
     }
 
     pub(super) fn open_current(&self) -> Result<Option<TrustedCatalogOpenedFile>, AuthorityError> {

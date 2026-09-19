@@ -19,9 +19,13 @@
  * (not exported), so this file re-states their JSON shape by hand rather than importing it — see
  * `📓️terra-T1-report.md` for the byte-shape this was checked against.
  *
- * Mounting this as a real window (`host.open_window("os.task-manager", …)`, committing a scene from
- * `Kernel::runtime_metrics_snapshot` on every publish) needs a window-kind registration and a
- * `ShellHost` mount — both registrar-only; see the report's lease-request.
+ * ✅️ Ticket `26/09/18/OS-HUB-COLLABORATION-AI-END-TO-END` slice U1 (audit
+ * `📓️g5-ux-completeness-audit.md` ranked item 1) closed the mount half of that punch-list: the pane is
+ * registered as the `os.task-manager` chrome panel (`📌️ChromePanels/🟦️.tsx`'s
+ * `createFrameworkTaskManagerPanelTab`), docked by `🏛️ShellHost`, and reachable from the command
+ * palette through the `os.openTaskManager` os command. `useRuntimeMetricsRows` below is the live feed:
+ * it subscribes to `ActivationRegistry.metricsBus`'s `os.runtime.metrics` topic — the publisher that
+ * until now had no consumer anywhere in the codebase.
  *
  * `TaskManagerPanel`'s three row actions are REAL on web: `createTaskManagerDispatcher` (region
  * `🔖️LiveDispatch` below) routes them through `ActivationRegistry.suspend`/`resume`/`cancel`, which
@@ -33,10 +37,10 @@
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
-import { type ReactElement } from "react";
-import { Button, Icon, Table, registerUiTranslationBundles, useLabel, type IconName, type TableColumn } from "@semio-tech/ui-react";
+import { useEffect, useState, type ReactElement } from "react";
+import { Button, Table, registerUiTranslationBundles, useLabel, type IconName, type TableColumn } from "@semio-tech/ui-react";
 import { type ActionDescriptor } from "@semio-tech/framework";
-import { type ActivationRegistry } from "../../../../../../../🔨️modules/🎠️kernel/🟦️.ts";
+import { type ActivationRegistry, type RuntimeMetricsSnapshot } from "../../../../../../../🔨️modules/🎠️kernel/🟦️.ts";
 // #endregion 🔌️Adapters
 
 //#region 🔖️Types
@@ -50,20 +54,29 @@ export type TaskManagerStatus = "cold" | "activating" | "active" | "suspended" |
 export type TaskManagerStage = "healthy" | "warned" | "throttled" | "trapped" | "quarantined" | "disabled" | "cancelled";
 
 /** 🧵️ One live-actor row — field-compatible with `semio_framework_actor::ActorMetricsSample` joined
- * with its own `ActorMetrics` (`wallUsP95` is that type's `wall_us_p95()`). */
+ * with its own `ActorMetrics` (`wallUsP95` is that type's `wall_us_p95()`).
+ *
+ * 🚧️ Every counter is `number | null` because a web `ActivationRegistry` genuinely cannot observe
+ * some of them: it delegates straight to `ShardClient` and never holds a `Kernel`, so `turns`/`traps`/
+ * `wallUsP95`/`mailboxLen`/`restarts` have no source on that side of the boundary
+ * (`🎠️kernel/🟦️.ts`'s `runtimeMetricsActorRows` says the same). `null` renders as an em dash — an
+ * honest "not observable here", never a silent zero that reads as "nothing has happened". */
 export interface TaskManagerRow {
   readonly actorId: string;
   readonly packageId: string;
   readonly lane: TaskManagerLane;
   readonly status: TaskManagerStatus;
   readonly stage: TaskManagerStage;
-  readonly shard: number;
-  readonly wallUsP95: number;
-  readonly mailboxLen: number;
-  readonly turns: number;
-  readonly traps: number;
-  readonly restarts: number;
+  readonly shard: number | null;
+  readonly wallUsP95: number | null;
+  readonly mailboxLen: number | null;
+  readonly turns: number | null;
+  readonly traps: number | null;
+  readonly restarts: number | null;
 }
+
+/** 🚧️ What an unobservable counter reads as, in every locale — a typographic dash, not a word. */
+export const TASK_MANAGER_UNOBSERVED_METRIC = "—";
 
 /** 🎬️ The three actions routed through `Kernel::suspend`/`Kernel::resume`/the shard-loop's
  * `Payload::Cancel` — see this file's header doc for what is (and isn't) wired yet. */
@@ -90,6 +103,11 @@ export interface TaskManagerLabels {
   readonly lanes: Record<TaskManagerLane, string>;
   readonly statuses: Record<TaskManagerStatus, string>;
   readonly actions: Record<TaskManagerActionKind, string>;
+  /** 🈳️ Shown instead of a table when the registry reports no actor at all. */
+  readonly empty: string;
+  /** 🈳️ Shown when no `ActivationRegistry` is attached to this shell — a different fact from "no
+   * actors", and the human deserves to be told which one it is. */
+  readonly noRuntime: string;
 }
 //#endregion 🔖️Types
 
@@ -134,6 +152,8 @@ export const taskManagerUiLabel = registerUiTranslationBundles({
             resume: { label: { normal: "Resume", beginner: "Resume" } },
             cancel: { label: { normal: "Cancel", beginner: "Stop" } },
           },
+          empty: { label: { normal: "No actors are running.", beginner: "Nothing is running right now." } },
+          noRuntime: { label: { normal: "No actor runtime is attached to this shell.", beginner: "This window has nothing to watch yet." } },
         },
       },
     },
@@ -177,6 +197,8 @@ export const taskManagerUiLabel = registerUiTranslationBundles({
             resume: { label: { normal: "Fortsetzen", beginner: "Fortsetzen" } },
             cancel: { label: { normal: "Abbrechen", beginner: "Stopp" } },
           },
+          empty: { label: { normal: "Es laufen keine Akteure.", beginner: "Im Moment läuft nichts." } },
+          noRuntime: { label: { normal: "Mit dieser Shell ist keine Akteur-Laufzeit verbunden.", beginner: "Dieses Fenster hat noch nichts zu beobachten." } },
         },
       },
     },
@@ -222,6 +244,8 @@ export function useTaskManagerLabels(): TaskManagerLabels {
       resume: useLabel(taskManagerUiLabel("os.taskManager.actions.resume")),
       cancel: useLabel(taskManagerUiLabel("os.taskManager.actions.cancel")),
     },
+    empty: useLabel(taskManagerUiLabel("os.taskManager.empty")),
+    noRuntime: useLabel(taskManagerUiLabel("os.taskManager.noRuntime")),
   };
 }
 //#endregion 🌐️Labels
@@ -247,8 +271,9 @@ export interface TaskManagerTableButton {
 export type TaskManagerTableCell = { readonly kind: "text"; readonly value: string } | { readonly kind: "number"; readonly value: number } | { readonly kind: "buttons"; readonly buttons: readonly TaskManagerTableButton[] };
 
 /** 🔖️ Hand-stated mirror of `Table/🟦️.tsx`'s private `TableRowRecord` — `id` is what
- * `TableHost`'s `getRowId` falls back to. */
-export type TaskManagerTableRow = Record<string, TaskManagerTableCell> & { readonly id: string };
+ * `TableHost`'s `getRowId` falls back to, and is the ONE key carrying a bare string rather than a
+ * cell (an intersection with `Record<string, TaskManagerTableCell>` would make `id` unsatisfiable). */
+export type TaskManagerTableRow = { readonly id: string; readonly [column: string]: TaskManagerTableCell | string };
 
 const TASK_MANAGER_CONTROLLER_ID = "os.task-manager";
 
@@ -282,6 +307,11 @@ export function taskManagerColumns(labels: TaskManagerLabels): readonly TaskMana
  * `taskManagerRowAction`s, each with its own accessible `label` (rendered as the button's `title` by
  * `Table/🟦️.tsx`'s `renderTableCell`, the same convention every other button cell in that
  * file already relies on for its accessible name). */
+/** 🚧️ A counter cell that tells the truth about an unobservable metric — see {@link TaskManagerRow}. */
+export function taskManagerMetricCell(value: number | null): TaskManagerTableCell {
+  return value === null ? { kind: "text", value: TASK_MANAGER_UNOBSERVED_METRIC } : { kind: "number", value };
+}
+
 export function taskManagerRows(rows: readonly TaskManagerRow[], labels: TaskManagerLabels): readonly TaskManagerTableRow[] {
   return rows.map((row) => ({
     id: row.actorId,
@@ -290,12 +320,12 @@ export function taskManagerRows(rows: readonly TaskManagerRow[], labels: TaskMan
     lane: { kind: "text", value: labels.lanes[row.lane] },
     status: { kind: "text", value: labels.statuses[row.status] },
     stage: { kind: "text", value: row.stage },
-    shard: { kind: "number", value: row.shard },
-    wallUsP95: { kind: "number", value: row.wallUsP95 },
-    mailboxLen: { kind: "number", value: row.mailboxLen },
-    turns: { kind: "number", value: row.turns },
-    traps: { kind: "number", value: row.traps },
-    restarts: { kind: "number", value: row.restarts },
+    shard: taskManagerMetricCell(row.shard),
+    wallUsP95: taskManagerMetricCell(row.wallUsP95),
+    mailboxLen: taskManagerMetricCell(row.mailboxLen),
+    turns: taskManagerMetricCell(row.turns),
+    traps: taskManagerMetricCell(row.traps),
+    restarts: taskManagerMetricCell(row.restarts),
     actions: {
       kind: "buttons",
       buttons: [
@@ -321,6 +351,15 @@ export function buildTaskManagerTableScene(rows: readonly TaskManagerRow[], labe
 export interface TaskManagerPanelProps {
   readonly rows: readonly TaskManagerRow[];
   readonly onAction: (action: TaskManagerActionKind, actorId: string) => void | Promise<void>;
+  /** 🈳️ `false` distinguishes "no runtime is attached to this shell" from "the runtime reports no
+   * actors" — two very different facts that an empty table alone would conflate. Defaults to `true`. */
+  readonly runtimeAttached?: boolean;
+}
+
+/** 🚧️ A counter's cell text — the em dash for an unobservable metric, so the React table and the
+ * wgpu `TableScene` say the identical thing. */
+function metricText(value: number | null): string {
+  return value === null ? TASK_MANAGER_UNOBSERVED_METRIC : String(value);
 }
 
 /** @emoji 🧵️ Directly-mountable React view of `TaskManagerRow[]` — for a standalone dialog/pane
@@ -328,7 +367,7 @@ export interface TaskManagerPanelProps {
  * scene-commit path above. Renders through the SAME `@semio-tech/ui-react` `Table` primitive
  * `Table/🟦️.tsx`'s `TableHost` uses, so it inherits that component's table semantics/
  * keyboard navigation rather than a bespoke one. */
-export function TaskManagerPanel({ rows, onAction }: TaskManagerPanelProps): ReactElement {
+export function TaskManagerPanel({ rows, onAction, runtimeAttached = true }: TaskManagerPanelProps): ReactElement {
   const labels = useTaskManagerLabels();
   const columns: TableColumn<TaskManagerRow>[] = [
     { id: "actorId", header: labels.columns.actorId, accessor: (row) => row.actorId, sortable: true },
@@ -336,33 +375,90 @@ export function TaskManagerPanel({ rows, onAction }: TaskManagerPanelProps): Rea
     { id: "lane", header: labels.columns.lane, accessor: (row) => labels.lanes[row.lane], sortable: true },
     { id: "status", header: labels.columns.status, accessor: (row) => labels.statuses[row.status], sortable: true },
     { id: "stage", header: labels.columns.stage, accessor: (row) => row.stage, sortable: true },
-    { id: "shard", header: labels.columns.shard, accessor: (row) => String(row.shard), sortable: true },
-    { id: "wallUsP95", header: labels.columns.wallUsP95, accessor: (row) => String(row.wallUsP95), sortable: true },
-    { id: "mailboxLen", header: labels.columns.mailboxLen, accessor: (row) => String(row.mailboxLen), sortable: true },
-    { id: "turns", header: labels.columns.turns, accessor: (row) => String(row.turns), sortable: true },
-    { id: "traps", header: labels.columns.traps, accessor: (row) => String(row.traps), sortable: true },
-    { id: "restarts", header: labels.columns.restarts, accessor: (row) => String(row.restarts), sortable: true },
+    { id: "shard", header: labels.columns.shard, accessor: (row) => metricText(row.shard), sortable: true },
+    { id: "wallUsP95", header: labels.columns.wallUsP95, accessor: (row) => metricText(row.wallUsP95), sortable: true },
+    { id: "mailboxLen", header: labels.columns.mailboxLen, accessor: (row) => metricText(row.mailboxLen), sortable: true },
+    { id: "turns", header: labels.columns.turns, accessor: (row) => metricText(row.turns), sortable: true },
+    { id: "traps", header: labels.columns.traps, accessor: (row) => metricText(row.traps), sortable: true },
+    { id: "restarts", header: labels.columns.restarts, accessor: (row) => metricText(row.restarts), sortable: true },
     {
       id: "actions",
       header: labels.columns.actions,
       accessor: (row) => (
         <div className="flex items-center gap-1">
-          <Button type="button" variant="outline" aria-label={`${labels.actions.suspend}: ${row.actorId}`} onClick={() => onAction("suspend", row.actorId)}>
-            <Icon icon="pause" size="small" />
-          </Button>
-          <Button type="button" variant="outline" aria-label={`${labels.actions.resume}: ${row.actorId}`} onClick={() => onAction("resume", row.actorId)}>
-            <Icon icon="play" size="small" />
-          </Button>
-          <Button type="button" variant="outline" aria-label={`${labels.actions.cancel}: ${row.actorId}`} onClick={() => onAction("cancel", row.actorId)}>
-            <Icon icon="square" size="small" />
-          </Button>
+          <Button type="button" variant="outline" icon="pause" aria-label={`${labels.actions.suspend}: ${row.actorId}`} onClick={() => onAction("suspend", row.actorId)} />
+          <Button type="button" variant="outline" icon="play" aria-label={`${labels.actions.resume}: ${row.actorId}`} onClick={() => onAction("resume", row.actorId)} />
+          <Button type="button" variant="outline" icon="square" aria-label={`${labels.actions.cancel}: ${row.actorId}`} onClick={() => onAction("cancel", row.actorId)} />
         </div>
       ),
     },
   ];
-  return <Table columns={columns} data={[...rows]} getRowId={(row) => row.actorId} />;
+  if (rows.length === 0) {
+    return (
+      <p role="status" data-semio-task-manager-empty={runtimeAttached ? "no-actors" : "no-runtime"} className="p-single text-xs text-muted-foreground">
+        {runtimeAttached ? labels.empty : labels.noRuntime}
+      </p>
+    );
+  }
+  return (
+    <div data-semio-task-manager="" className="min-h-0 min-w-0">
+      <Table columns={columns} data={[...rows]} getRowId={(row) => row.actorId} />
+    </div>
+  );
 }
 //#endregion 🔖️TaskManagerPanel
+
+//#region 🔖️LiveFeed
+/** 📈️ Maps one `os.runtime.metrics` snapshot onto the pane's rows. Residency is the only status a
+ * web `ActivationRegistry` can state (`active` vs `suspended`); `lane`/`stage` and every counter it
+ * cannot observe stay honest — `maintenance` is NOT guessed, it is the lane an unlabelled row is
+ * scheduled on, and the counters are `null`. Pure, so a test drives it without a registry. */
+export function runtimeMetricsRowsV1(snapshot: RuntimeMetricsSnapshot): readonly TaskManagerRow[] {
+  return snapshot.actors.map((actor) => ({
+    actorId: actor.actorId,
+    packageId: actor.pluginId,
+    lane: "maintenance",
+    status: actor.resident ? "active" : "suspended",
+    stage: "healthy",
+    shard: actor.shard,
+    wallUsP95: null,
+    mailboxLen: null,
+    turns: null,
+    traps: null,
+    restarts: null,
+  }));
+}
+
+/** 📈️ The live feed: seeds from `runtimeMetricsSnapshot()` on mount and then follows
+ * `ActivationRegistry.metricsBus`'s `os.runtime.metrics` events — the consumer that publisher never
+ * had (`🎠️kernel/🟦️.ts`'s `startRuntimeMetricsPublisher` doc called its absence an honest gap).
+ * A `null`/absent registry yields no rows, which {@link TaskManagerPanel} reports as "no runtime
+ * attached" rather than as an empty runtime. */
+export function useRuntimeMetricsRows(registry: ActivationRegistry | null | undefined): readonly TaskManagerRow[] {
+  const [rows, setRows] = useState<readonly TaskManagerRow[]>([]);
+  useEffect(() => {
+    if (!registry) {
+      setRows([]);
+      return;
+    }
+    setRows(runtimeMetricsRowsV1(registry.runtimeMetricsSnapshot()));
+    const listener = (event: Event) => {
+      const snapshot = (event as CustomEvent<RuntimeMetricsSnapshot>).detail;
+      if (snapshot) setRows(runtimeMetricsRowsV1(snapshot));
+    };
+    registry.metricsBus.addEventListener("os.runtime.metrics", listener);
+    return () => registry.metricsBus.removeEventListener("os.runtime.metrics", listener);
+  }, [registry]);
+  return rows;
+}
+
+/** @emoji 🧵️ The mounted pane: live rows from `registry`, the three real row actions dispatched
+ * through {@link createTaskManagerDispatcher}. This is what `os.task-manager` renders. */
+export function TaskManagerWindow({ registry }: { readonly registry: ActivationRegistry | null | undefined }): ReactElement {
+  const rows = useRuntimeMetricsRows(registry);
+  return <TaskManagerPanel rows={rows} runtimeAttached={Boolean(registry)} onAction={registry ? createTaskManagerDispatcher(registry) : () => undefined} />;
+}
+//#endregion 🔖️LiveFeed
 
 //#region 🔖️LiveDispatch
 /** @emoji 🎬️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (T1 follow-up, K1 landed): the REAL dispatch

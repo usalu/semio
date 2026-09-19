@@ -127,31 +127,37 @@ fn dispatch_shell_command_times_out_when_the_shell_never_replies() {
     assert!(error.retryable);
 }
 
-/// 🔁️ Both reply paths in ONE test, deliberately: `SHELL_COMMAND_SEQ` is process-global, so two
-/// separate `#[test]`s each predicting "the next seq" race each other under the default parallel
-/// runner and one of them times out with `PLUGIN_UNAVAILABLE` instead of asserting what it meant to.
-/// Sequenced here, each dispatch's seq is the one this test predicted.
+/// 🔁️ Both reply paths in ONE test, driven by a stand-in shell that answers the `seq` the command
+/// ACTUALLY carried — read off this connection's own outbox — instead of predicting it from the
+/// process-global `SHELL_COMMAND_SEQ`. Any other `#[test]` in this binary that dispatches a shell
+/// command bumps that counter concurrently, so a predicted seq is only ever right by luck and the
+/// unlucky run times out with `PLUGIN_UNAVAILABLE` instead of asserting what it meant to.
 #[test]
 fn dispatch_shell_command_resolves_a_matching_ok_reply_and_surfaces_a_shell_fault() {
     let bridge = Arc::new(BridgeHandle::new());
-    let (connection_id, _outbox) = bridge.register();
+    let (connection_id, mut outbox) = bridge.register();
 
-    let expected_seq = SHELL_COMMAND_SEQ.load(Ordering::SeqCst);
     let reply_bridge = bridge.clone();
     let replier = std::thread::spawn(move || {
-        std::thread::sleep(Duration::from_millis(10));
-        reply_bridge.record(connection_id, ShellToGateway::ShellCommandResult { in_reply_to: expected_seq, ok: true, fault: None });
+        for (ok, fault) in [(true, None), (false, Some("unknown window".to_string()))] {
+            let deadline = Instant::now() + Duration::from_millis(2_000);
+            let seq = loop {
+                match outbox.try_recv() {
+                    Some(GatewayToShell::ShellCommand { seq, .. }) => break seq,
+                    Some(other) => panic!("the gateway queued {other:?} instead of a ShellCommand"),
+                    None => {
+                        assert!(Instant::now() < deadline, "no ShellCommand was queued on the outbox");
+                        std::thread::sleep(Duration::from_millis(1));
+                    }
+                }
+            };
+            reply_bridge.record(connection_id, ShellToGateway::ShellCommandResult { in_reply_to: seq, ok, fault });
+        }
     });
+
     let result = dispatch_shell_command_with_timeout(&bridge, serde_json::json!({ "type": "focusWindow", "windowId": null }), Duration::from_millis(2_000));
-    replier.join().expect("reply thread");
     assert!(result.is_ok(), "{result:?}");
 
-    let expected_seq = SHELL_COMMAND_SEQ.load(Ordering::SeqCst);
-    let reply_bridge = bridge.clone();
-    let replier = std::thread::spawn(move || {
-        std::thread::sleep(Duration::from_millis(10));
-        reply_bridge.record(connection_id, ShellToGateway::ShellCommandResult { in_reply_to: expected_seq, ok: false, fault: Some("unknown window".to_string()) });
-    });
     let result = dispatch_shell_command_with_timeout(&bridge, serde_json::json!({ "type": "focusWindow", "windowId": "nope" }), Duration::from_millis(2_000));
     replier.join().expect("reply thread");
     let error = result.expect_err("the shell rejected the command");
@@ -308,6 +314,55 @@ async fn agent_conversation_publishes_the_real_tool_call_and_its_result() {
             GatewayToShell::AgentPresence { active: false, label: "claude-code".into(), invocation_id: None },
         ]
     );
+}
+
+/// 🛑️ Ticket `26/09/18/OS-HUB-COLLABORATION-AI-END-TO-END` slice U1 (audit ranked item 2): the shell's
+/// cancel control reaches the REAL cooperative cancellation, not a second mechanism. Every tool call
+/// is a job in the one process-wide registry keyed by the invocation id the panel renders, an inbound
+/// `ShellToGateway::AgentCancel` flips that job's flag, and the call then settles `Cancelled` rather
+/// than as whatever the handler happened to return.
+#[test]
+fn an_agent_cancel_frame_flips_the_tool_calls_own_job_and_settles_it_cancelled() {
+    let slot: BridgeSlot = Arc::new(OnceLock::new());
+    let handle = Arc::new(BridgeHandle::new());
+    assert!(slot.set(handle.clone()).is_ok());
+    let (connection, _outbox) = handle.register();
+    let conversation = crate::bridge::AgentConversation::new(slot, "claude-code");
+
+    let invocation = conversation.begin_tool_call("inference_run", &serde_json::json!({ "artifactKind": "cad" }));
+    let opened = crate::ui::job_registry().snapshot(&invocation).expect("a tool call is a real job keyed by its invocation id");
+    assert_eq!(opened.kind, "toolCall");
+    assert!(!opened.cancel_requested, "nothing has asked it to stop yet");
+    assert!(!crate::ui::job_registry().is_cancel_requested(&invocation));
+
+    handle.record(connection, crate::bridge::ShellToGateway::AgentCancel { invocation_id: invocation.clone() });
+    assert!(crate::ui::job_registry().is_cancel_requested(&invocation), "the frame must reach the same flag `job_cancel` flips");
+
+    conversation.finish_tool_call(&invocation, "inference_run", true, "done");
+    let settled = crate::ui::job_registry().snapshot(&invocation).expect("the job outlives the call");
+    assert_eq!(settled.status, crate::ui::JobStatus::Cancelled, "a cancelled call settles cancelled, not succeeded");
+}
+
+/// 🛑️ A cancel that arrives after its call already finished is the honest outcome of a late click,
+/// never an error the gateway reports or a panic — and it must not resurrect a settled job.
+#[test]
+fn a_late_agent_cancel_frame_is_absorbed_without_disturbing_the_settled_job() {
+    let slot: BridgeSlot = Arc::new(OnceLock::new());
+    let handle = Arc::new(BridgeHandle::new());
+    assert!(slot.set(handle.clone()).is_ok());
+    let (connection, _outbox) = handle.register();
+    let conversation = crate::bridge::AgentConversation::new(slot, "claude-code");
+
+    let invocation = conversation.begin_tool_call("action_invoke", &serde_json::Value::Null);
+    conversation.finish_tool_call(&invocation, "action_invoke", true, "moved 1 object");
+    assert_eq!(crate::ui::job_registry().snapshot(&invocation).expect("job").status, crate::ui::JobStatus::Succeeded);
+
+    handle.record(connection, crate::bridge::ShellToGateway::AgentCancel { invocation_id: invocation.clone() });
+    let after = crate::ui::job_registry().snapshot(&invocation).expect("job");
+    assert_eq!(after.status, crate::ui::JobStatus::Succeeded, "a late cancel must not rewrite a settled outcome");
+    assert!(!after.cancel_requested);
+
+    handle.record(connection, crate::bridge::ShellToGateway::AgentCancel { invocation_id: "inv_never_existed".into() });
 }
 
 /// ✂️ An agent calling a tool with an enormous argument blob must not be able to starve the bounded

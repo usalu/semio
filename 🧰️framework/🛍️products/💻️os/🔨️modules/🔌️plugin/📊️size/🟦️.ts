@@ -242,4 +242,4 @@ class PluginSizeScript extends BundleScript {
   }
 }
 
-export { ENGINE_SIZE_REPORT_PATH, EngineWasmSizeRow, PLUGIN_SIZE_REPORT_PATH, PluginSizeScript, PluginWasmSizeBreakdown, PluginWasmSizeRow, analyzePluginWasmModule, collectEngineWasmSizeRows, collectPluginWasmSizeRows, formatPluginSizeBytes, readULEB128 };
+export { ENGINE_SIZE_REPORT_PATH, type EngineWasmSizeRow, PLUGIN_SIZE_REPORT_PATH, PluginSizeScript, type PluginWasmSizeBreakdown, type PluginWasmSizeRow, analyzePluginWasmModule, collectEngineWasmSizeRows, collectPluginWasmSizeRows, formatPluginSizeBytes, readULEB128 };

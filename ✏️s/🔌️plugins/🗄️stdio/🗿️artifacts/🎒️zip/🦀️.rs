@@ -414,6 +414,16 @@ pub mod editor {
             mod component;
             pub use component::*;
             #[path = "."]
+            pub mod presence {
+                #[path = "🏅️standards/🔖️2.0/🪆️subsets/🧱️base/✏️editor/👥️presence/🧬️schema/🦀️.rs"]
+                pub mod schema;
+            }
+            #[path = "."]
+            pub mod config {
+                #[path = "🏅️standards/🔖️2.0/🪆️subsets/🧱️base/✏️editor/🎚️config/🧬️schema/🦀️.rs"]
+                pub mod schema;
+            }
+            #[path = "."]
             pub mod modes {
                 #[path = "."]
                 pub mod edit {
@@ -437,6 +447,16 @@ pub mod editor {
             #[path = "🏅️standards/🔖️2.0/🪆️subsets/🌐️iso21320/✏️editor/🦀️.rs"]
             mod component;
             pub use component::*;
+            #[path = "."]
+            pub mod presence {
+                #[path = "🏅️standards/🔖️2.0/🪆️subsets/🌐️iso21320/✏️editor/👥️presence/🧬️schema/🦀️.rs"]
+                pub mod schema;
+            }
+            #[path = "."]
+            pub mod config {
+                #[path = "🏅️standards/🔖️2.0/🪆️subsets/🌐️iso21320/✏️editor/🎚️config/🧬️schema/🦀️.rs"]
+                pub mod schema;
+            }
             #[path = "."]
             pub mod modes {
                 #[path = "."]
@@ -470,6 +490,16 @@ pub mod viewer {
             mod component;
             pub use component::*;
             #[path = "."]
+            pub mod presence {
+                #[path = "🏅️standards/🔖️2.0/🪆️subsets/🧱️base/👁️viewer/👥️presence/🧬️schema/🦀️.rs"]
+                pub mod schema;
+            }
+            #[path = "."]
+            pub mod config {
+                #[path = "🏅️standards/🔖️2.0/🪆️subsets/🧱️base/👁️viewer/🎚️config/🧬️schema/🦀️.rs"]
+                pub mod schema;
+            }
+            #[path = "."]
             pub mod modes {
                 #[path = "."]
                 pub mod view {
@@ -493,6 +523,16 @@ pub mod viewer {
             #[path = "🏅️standards/🔖️2.0/🪆️subsets/🌐️iso21320/👁️viewer/🦀️.rs"]
             mod component;
             pub use component::*;
+            #[path = "."]
+            pub mod presence {
+                #[path = "🏅️standards/🔖️2.0/🪆️subsets/🌐️iso21320/👁️viewer/👥️presence/🧬️schema/🦀️.rs"]
+                pub mod schema;
+            }
+            #[path = "."]
+            pub mod config {
+                #[path = "🏅️standards/🔖️2.0/🪆️subsets/🌐️iso21320/👁️viewer/🎚️config/🧬️schema/🦀️.rs"]
+                pub mod schema;
+            }
             #[path = "."]
             pub mod modes {
                 #[path = "."]

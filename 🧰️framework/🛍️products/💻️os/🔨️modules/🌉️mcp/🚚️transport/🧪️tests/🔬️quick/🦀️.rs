@@ -4,6 +4,34 @@ use crate::protocol::{InMemoryPromptRegistry, InMemoryResourceRegistry, InMemory
 use crate::workspace::GatewayBackends;
 use std::io::Cursor;
 
+
+/// 📝️ An owned, cloneable `Write` sink — `StdioTransport` now takes its output stream by value
+/// (`'static`, because the elicitation channel shares it), so a test keeps its own handle on the
+/// bytes through an `Arc` rather than lending a `&mut Vec<u8>`.
+#[derive(Clone, Default)]
+struct SharedWriter(Arc<Mutex<Vec<u8>>>);
+
+impl SharedWriter {
+    fn text(&self) -> String {
+        String::from_utf8(self.0.lock().expect("shared writer poisoned").clone()).expect("utf8")
+    }
+
+    fn is_empty(&self) -> bool {
+        self.0.lock().expect("shared writer poisoned").is_empty()
+    }
+}
+
+impl Write for SharedWriter {
+    fn write(&mut self, buffer: &[u8]) -> std::io::Result<usize> {
+        self.0.lock().expect("shared writer poisoned").extend_from_slice(buffer);
+        Ok(buffer.len())
+    }
+
+    fn flush(&mut self) -> std::io::Result<()> {
+        Ok(())
+    }
+}
+
 fn fresh_server() -> McpServer {
     McpServer::new(Box::new(InMemoryToolRegistry::new()), Box::new(InMemoryResourceRegistry::new()), Box::new(InMemoryPromptRegistry::new()), Box::new(GatewayBackends::Null(NullBackend)))
 }
@@ -12,12 +40,12 @@ fn fresh_server() -> McpServer {
 #[test]
 fn one_request_line_produces_exactly_one_response_line_on_stdout() {
     let input = Cursor::new(b"{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"ping\"}\n".to_vec());
-    let mut output = Vec::new();
+    let output = SharedWriter::default();
     let mut log = Vec::new();
-    let mut transport = StdioTransport::new(input, &mut output, &mut log);
+    let mut transport = StdioTransport::new(input, output.clone(), &mut log);
     transport.serve(fresh_server()).unwrap();
 
-    let output_text = String::from_utf8(output).unwrap();
+    let output_text = output.text();
     let lines: Vec<&str> = output_text.lines().collect();
     assert_eq!(lines.len(), 1);
     let response: JsonRpcResponse = serde_json::from_str(lines[0]).unwrap();
@@ -27,15 +55,15 @@ fn one_request_line_produces_exactly_one_response_line_on_stdout() {
 #[test]
 fn malformed_json_logs_to_the_log_writer_and_never_pollutes_stdout_with_non_json_text() {
     let input = Cursor::new(b"not json at all\n".to_vec());
-    let mut output = Vec::new();
+    let output = SharedWriter::default();
     let mut log = Vec::new();
-    let mut transport = StdioTransport::new(input, &mut output, &mut log);
+    let mut transport = StdioTransport::new(input, output.clone(), &mut log);
     transport.serve(fresh_server()).unwrap();
 
     let log_text = String::from_utf8(log).unwrap();
     assert!(log_text.contains("malformed JSON-RPC line rejected"), "diagnostic text must land in the log writer");
 
-    let output_text = String::from_utf8(output).unwrap();
+    let output_text = output.text();
     for line in output_text.lines() {
         let parsed: Result<serde_json::Value, _> = serde_json::from_str(line);
         assert!(parsed.is_ok(), "every stdout line must be valid JSON, got: {line}");
@@ -46,20 +74,20 @@ fn malformed_json_logs_to_the_log_writer_and_never_pollutes_stdout_with_non_json
 #[test]
 fn blank_lines_are_skipped_without_producing_output() {
     let input = Cursor::new(b"\n\n{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"ping\"}\n\n".to_vec());
-    let mut output = Vec::new();
+    let output = SharedWriter::default();
     let mut log = Vec::new();
-    let mut transport = StdioTransport::new(input, &mut output, &mut log);
+    let mut transport = StdioTransport::new(input, output.clone(), &mut log);
     transport.serve(fresh_server()).unwrap();
-    let output_text = String::from_utf8(output).unwrap();
+    let output_text = output.text();
     assert_eq!(output_text.lines().count(), 1);
 }
 
 #[test]
 fn a_notification_line_produces_no_output_line_at_all() {
     let input = Cursor::new(b"{\"jsonrpc\":\"2.0\",\"method\":\"notifications/cancelled\"}\n".to_vec());
-    let mut output = Vec::new();
+    let output = SharedWriter::default();
     let mut log = Vec::new();
-    let mut transport = StdioTransport::new(input, &mut output, &mut log);
+    let mut transport = StdioTransport::new(input, output.clone(), &mut log);
     transport.serve(fresh_server()).unwrap();
     assert!(output.is_empty());
 }
@@ -67,9 +95,9 @@ fn a_notification_line_produces_no_output_line_at_all() {
 #[test]
 fn eof_ends_the_loop_cleanly() {
     let input = Cursor::new(Vec::new());
-    let mut output = Vec::new();
+    let output = SharedWriter::default();
     let mut log = Vec::new();
-    let mut transport = StdioTransport::new(input, &mut output, &mut log);
+    let mut transport = StdioTransport::new(input, output.clone(), &mut log);
     assert!(transport.serve(fresh_server()).is_ok());
     assert!(output.is_empty());
 }
@@ -373,7 +401,7 @@ fn state_with_connection() -> (HttpTransportState, TcpStream) {
     let options = HttpTransportOptions::fixture("test-token").bind_addr(address);
     let events = Arc::new(Mutex::new(EventLog::default()));
     let bridge = crate::bridge::BridgeHandle::new();
-    let mut state = HttpTransportState::new(listener, fresh_server(), &options, events, bridge);
+    let mut state = HttpTransportState::new(listener, Some(fresh_server()), &options, events, bridge);
     state.io_cursor = 1;
     state.connections[0] = Some(HttpConnection {
         key: HttpConnectionKey { slot: 0, generation: 1 },
@@ -449,3 +477,121 @@ pub(super) fn masked_client_frame(opcode: u8, payload: &[u8], fin: bool) -> Vec<
     frame
 }
 //#endregion 🧵️OwnedHttpAuthority
+
+//#region 🔖️Elicitation
+// 🎫️ slice M4 (audit §6 P0.2): `elicitation/create` is a server→client REQUEST issued from inside a
+// tool call, while the serve loop is suspended in `dispatch`. These tests drive the real duplex
+// channel: the request really lands on the output stream, and a client line that is NOT the answer
+// is deferred back onto the serve loop rather than dropped.
+fn elicitation_over(client_lines: &str, advertised: bool) -> (ElicitationChannel, SharedWriter, Arc<StdioLines>) {
+    let features = Arc::new(crate::protocol::ClientFeatures::default());
+    features.record(advertised.then(|| serde_json::json!({ "elicitation": {} })).as_ref());
+    let output = SharedWriter::default();
+    let lines = Arc::new(StdioLines::new(Box::new(Cursor::new(client_lines.as_bytes().to_vec())), Box::new(output.clone())));
+    (ElicitationChannel::new(lines.clone(), features), output, lines)
+}
+
+#[test]
+fn an_elicitation_writes_a_real_jsonrpc_request_and_reads_its_own_answer() {
+    let (channel, output, _lines) = elicitation_over("{\"jsonrpc\":\"2.0\",\"id\":\"semio-elicit-1\",\"result\":{\"action\":\"accept\",\"content\":{\"approve\":true}}}\n", true);
+    assert_eq!(channel.request_boolean("delete everything?", "Delete Selection"), Ok(ElicitationAction::Accept));
+    let request: serde_json::Value = serde_json::from_str(output.text().lines().next().expect("one request line")).expect("the request is valid JSON-RPC");
+    assert_eq!(request["method"], "elicitation/create");
+    assert_eq!(request["id"], "semio-elicit-1");
+    assert_eq!(request["params"]["message"], "delete everything?");
+    assert_eq!(request["params"]["requestedSchema"]["properties"]["approve"]["type"], "boolean");
+}
+
+#[test]
+fn a_client_request_arriving_mid_elicitation_is_deferred_back_to_the_serve_loop() {
+    let interleaved = "{\"jsonrpc\":\"2.0\",\"id\":7,\"method\":\"ping\"}\n{\"jsonrpc\":\"2.0\",\"id\":\"semio-elicit-1\",\"result\":{\"action\":\"accept\",\"content\":{\"approve\":true}}}\n";
+    let (channel, _output, lines) = elicitation_over(interleaved, true);
+    assert_eq!(channel.request_boolean("proceed?", "Proceed"), Ok(ElicitationAction::Accept));
+    let deferred = lines.read_line().expect("deferred read").expect("the unrelated request survived the elicitation");
+    let parsed: serde_json::Value = serde_json::from_str(deferred.trim()).expect("valid JSON");
+    assert_eq!(parsed["method"], "ping", "a client request that arrives while a human decides must never be dropped");
+}
+
+#[test]
+fn an_unadvertised_client_is_never_sent_an_elicitation_at_all() {
+    let (channel, output, _lines) = elicitation_over("", false);
+    assert_eq!(channel.request_boolean("proceed?", "Proceed"), Err(ElicitationUnavailable::ClientDoesNotSupportIt));
+    assert!(output.text().is_empty(), "nothing may be written to a client that did not advertise elicitation");
+}
+
+#[test]
+fn an_error_response_to_an_elicitation_is_a_cancel_never_an_approval() {
+    let (channel, _output, _lines) = elicitation_over("{\"jsonrpc\":\"2.0\",\"id\":\"semio-elicit-1\",\"error\":{\"code\":-32601,\"message\":\"unsupported\"}}\n", true);
+    assert_eq!(channel.request_boolean("proceed?", "Proceed"), Ok(ElicitationAction::Cancel));
+}
+
+#[test]
+fn eof_before_an_answer_is_reported_as_a_closed_client() {
+    let (channel, _output, _lines) = elicitation_over("", true);
+    assert_eq!(channel.request_boolean("proceed?", "Proceed"), Err(ElicitationUnavailable::ClientClosed));
+}
+
+// 🎫️ slice M7 (`📓️m4-…` §5.3): the elicitation lane is now wall-clock bounded, exactly like the
+// shell lane. A client whose human walks away must close its lane instead of wedging the agent.
+/// 🚧️ A client stream that never delivers a line and never ends — the silent client. Blocks in
+/// `read` until the test drops `gate`, so the reader thread ends cleanly with the test.
+struct SilentClient {
+    gate: std::sync::mpsc::Receiver<u8>,
+}
+
+impl std::io::Read for SilentClient {
+    fn read(&mut self, _buffer: &mut [u8]) -> std::io::Result<usize> {
+        let _ = self.gate.recv();
+        Ok(0)
+    }
+}
+
+/// 🕰️ A clock that jumps a fixed step on every reading — proves the deadline arithmetic without
+/// spending the deadline.
+struct SteppingClock {
+    step_ms: u64,
+    reads: std::sync::atomic::AtomicU64,
+}
+
+impl crate::transport::ElicitationClock for SteppingClock {
+    fn now_ms(&self) -> u64 {
+        self.reads.fetch_add(1, std::sync::atomic::Ordering::SeqCst) * self.step_ms
+    }
+}
+
+fn silent_client_elicitation(timeout_ms: u64, clock: Box<dyn crate::transport::ElicitationClock>) -> (ElicitationChannel, std::sync::mpsc::Sender<u8>) {
+    let (keep_open, gate) = std::sync::mpsc::channel();
+    let features = Arc::new(crate::protocol::ClientFeatures::default());
+    features.record(Some(&serde_json::json!({ "elicitation": {} })));
+    let lines = Arc::new(StdioLines::new(Box::new(std::io::BufReader::new(SilentClient { gate })), Box::new(SharedWriter::default())));
+    (ElicitationChannel::new(lines, features).with_deadline(timeout_ms, clock), keep_open)
+}
+
+#[test]
+fn a_silent_client_times_out_instead_of_wedging_the_agent_forever() {
+    let clock = Box::new(SteppingClock { step_ms: 1_000, reads: std::sync::atomic::AtomicU64::new(0) });
+    let (channel, keep_open) = silent_client_elicitation(crate::transport::ELICITATION_TIMEOUT_MS, clock);
+    assert_eq!(channel.request_boolean("delete everything?", "Delete Selection"), Err(ElicitationUnavailable::TimedOut), "the wait must end on the injected clock passing the deadline, not on an answer");
+    drop(keep_open);
+}
+
+#[test]
+fn the_elicitation_deadline_is_real_wall_clock_not_only_an_injected_one() {
+    let (channel, keep_open) = silent_client_elicitation(120, Box::new(crate::transport::SystemElicitationClock::default()));
+    let started = std::time::Instant::now();
+    assert_eq!(channel.request_boolean("proceed?", "Proceed"), Err(ElicitationUnavailable::TimedOut));
+    assert!(started.elapsed() >= std::time::Duration::from_millis(120), "the wait must actually spend its budget, not return early");
+    drop(keep_open);
+}
+
+#[test]
+fn the_client_feature_mirror_records_exactly_what_was_advertised() {
+    let features = crate::protocol::ClientFeatures::default();
+    features.record(Some(&serde_json::json!({ "elicitation": {}, "roots": { "listChanged": true } })));
+    assert!(features.elicitation.load(std::sync::atomic::Ordering::SeqCst));
+    assert!(features.roots.load(std::sync::atomic::Ordering::SeqCst));
+    assert!(!features.sampling.load(std::sync::atomic::Ordering::SeqCst));
+    features.record(None);
+    assert!(!features.elicitation.load(std::sync::atomic::Ordering::SeqCst), "a re-handshake with no capabilities clears the mirror");
+}
+//#endregion 🔖️Elicitation

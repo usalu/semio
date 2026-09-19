@@ -31,6 +31,21 @@ export interface Puzzle3dVortex {
   locked?: boolean;
 }
 
+export interface Puzzle3dAttribute {
+  id?: string;
+  key: string;
+  value: string;
+  definition?: string;
+}
+
+export interface Puzzle3dAuthor {
+  id?: string;
+  name: string;
+  email?: string;
+  role?: string;
+  rank?: number;
+}
+
 export interface Puzzle3dObject {
   id: string;
   label?: string;
@@ -95,8 +110,8 @@ export interface Puzzle3dCatalogObjectKind {
   baseKinds?: string[];
   representations?: Puzzle3dRepresentation[];
   vortices?: Puzzle3dCatalogVortexTemplate[];
-  attributes?: Array<{ id?: string; key: string; value: string; definition?: string }>;
-  authors?: Array<{ id?: string; name: string; email?: string; role?: string; rank?: number }>;
+  attributes?: Puzzle3dAttribute[];
+  authors?: Puzzle3dAuthor[];
 }
 
 export interface Puzzle3dCatalogVortexKind {
@@ -175,6 +190,14 @@ export const puzzlePuzzle3dArtifactGuardInteger = (value: unknown, at: string, b
   Number.isSafeInteger(value) ? puzzlePuzzle3dArtifactGuardNumber(value, at, bounds) : puzzlePuzzle3dArtifactGuardReject(at, "value is not an integer");
 export const puzzlePuzzle3dArtifactGuardMember = <T extends string>(value: unknown, at: string, members: readonly T[]): T =>
   members.includes(value as T) ? (value as T) : puzzlePuzzle3dArtifactGuardReject(at, `value is not one of ${members.join(", ")}`);
+export const puzzlePuzzle3dArtifactGuardVector3 = (value: unknown, at: string): [number, number, number] => {
+  const items = puzzlePuzzle3dArtifactGuardArray(value, at, { minItems: 3, maxItems: 3 }).map((item, index) => puzzlePuzzle3dArtifactGuardNumber(item, `${at}[${index}]`));
+  return [items[0]!, items[1]!, items[2]!];
+};
+export const puzzlePuzzle3dArtifactGuardVector4 = (value: unknown, at: string): [number, number, number, number] => {
+  const items = puzzlePuzzle3dArtifactGuardArray(value, at, { minItems: 4, maxItems: 4 }).map((item, index) => puzzlePuzzle3dArtifactGuardNumber(item, `${at}[${index}]`));
+  return [items[0]!, items[1]!, items[2]!, items[3]!];
+};
 export const puzzlePuzzle3dArtifactGuardConstant = <T extends string | number | boolean>(value: unknown, at: string, expected: T): T =>
   value === expected ? expected : puzzlePuzzle3dArtifactGuardReject(at, `value is not ${String(expected)}`);
 //#endregion 🚪️Parsers
@@ -220,14 +243,14 @@ export function parsePuzzle3dAttraction(value: unknown, at = "$"): Puzzle3dAttra
 export function parsePuzzle3dTargetVolume(value: unknown, at = "$"): Puzzle3dTargetVolume {
   const row = puzzlePuzzle3dArtifactGuardObject(value, at);
   return {
-    id: row["id"] === undefined ? undefined : puzzlePuzzle3dArtifactGuardString(row["id"], `${at}.id`),
+    id: puzzlePuzzle3dArtifactGuardString(row["id"], `${at}.id`),
   };
 }
 
 export function parsePuzzle3dReference(value: unknown, at = "$"): Puzzle3dReference {
   const row = puzzlePuzzle3dArtifactGuardObject(value, at);
   return {
-    id: row["id"] === undefined ? undefined : puzzlePuzzle3dArtifactGuardString(row["id"], `${at}.id`),
+    id: puzzlePuzzle3dArtifactGuardString(row["id"], `${at}.id`),
   };
 }
 
@@ -237,8 +260,8 @@ export function parsePuzzle3dVortex(value: unknown, at = "$"): Puzzle3dVortex {
     id: puzzlePuzzle3dArtifactGuardString(row["id"], `${at}.id`),
     vortexKind: row["vortexKind"] === undefined ? undefined : puzzlePuzzle3dArtifactGuardString(row["vortexKind"], `${at}.vortexKind`),
     label: row["label"] === undefined ? undefined : puzzlePuzzle3dArtifactGuardString(row["label"], `${at}.label`),
-    position: puzzlePuzzle3dArtifactGuardArray(row["position"], `${at}.position`, {"minItems": 3, "maxItems": 3}).map((item, index) => puzzlePuzzle3dArtifactGuardNumber(item, `${at}.position[${index}]`)),
-    direction: row["direction"] === undefined ? undefined : puzzlePuzzle3dArtifactGuardArray(row["direction"], `${at}.direction`, {"minItems": 3, "maxItems": 3}).map((item, index) => puzzlePuzzle3dArtifactGuardNumber(item, `${at}.direction[${index}]`)),
+    position: puzzlePuzzle3dArtifactGuardVector3(row["position"], `${at}.position`),
+    direction: row["direction"] === undefined ? undefined : puzzlePuzzle3dArtifactGuardVector3(row["direction"], `${at}.direction`),
     radius: row["radius"] === undefined ? undefined : puzzlePuzzle3dArtifactGuardNumber(row["radius"], `${at}.radius`),
     hidden: row["hidden"] === undefined ? undefined : puzzlePuzzle3dArtifactGuardBoolean(row["hidden"], `${at}.hidden`),
     locked: row["locked"] === undefined ? undefined : puzzlePuzzle3dArtifactGuardBoolean(row["locked"], `${at}.locked`),
@@ -278,8 +301,8 @@ export function parsePuzzle3dCatalogVortexTemplate(value: unknown, at = "$"): Pu
     description: row["description"] === undefined ? undefined : puzzlePuzzle3dArtifactGuardString(row["description"], `${at}.description`),
     icon: row["icon"] === undefined ? undefined : puzzlePuzzle3dArtifactGuardString(row["icon"], `${at}.icon`),
     vortexKind: row["vortexKind"] === undefined ? undefined : puzzlePuzzle3dArtifactGuardString(row["vortexKind"], `${at}.vortexKind`),
-    point: row["point"] === undefined ? undefined : puzzlePuzzle3dArtifactGuardArray(row["point"], `${at}.point`, {"minItems": 3, "maxItems": 3}).map((item, index) => puzzlePuzzle3dArtifactGuardNumber(item, `${at}.point[${index}]`)),
-    direction: row["direction"] === undefined ? undefined : puzzlePuzzle3dArtifactGuardArray(row["direction"], `${at}.direction`, {"minItems": 3, "maxItems": 3}).map((item, index) => puzzlePuzzle3dArtifactGuardNumber(item, `${at}.direction[${index}]`)),
+    point: row["point"] === undefined ? undefined : puzzlePuzzle3dArtifactGuardVector3(row["point"], `${at}.point`),
+    direction: row["direction"] === undefined ? undefined : puzzlePuzzle3dArtifactGuardVector3(row["direction"], `${at}.direction`),
     t: row["t"] === undefined ? undefined : puzzlePuzzle3dArtifactGuardNumber(row["t"], `${at}.t`),
     mandatory: row["mandatory"] === undefined ? undefined : puzzlePuzzle3dArtifactGuardBoolean(row["mandatory"], `${at}.mandatory`),
     radius: row["radius"] === undefined ? undefined : puzzlePuzzle3dArtifactGuardNumber(row["radius"], `${at}.radius`),
@@ -300,8 +323,8 @@ export function parsePuzzle3dCatalogObjectKind(value: unknown, at = "$"): Puzzle
     baseKinds: row["baseKinds"] === undefined ? undefined : puzzlePuzzle3dArtifactGuardArray(row["baseKinds"], `${at}.baseKinds`).map((item, index) => puzzlePuzzle3dArtifactGuardString(item, `${at}.baseKinds[${index}]`)),
     representations: row["representations"] === undefined ? undefined : puzzlePuzzle3dArtifactGuardArray(row["representations"], `${at}.representations`).map((item, index) => parsePuzzle3dRepresentation(item, `${at}.representations[${index}]`)),
     vortices: row["vortices"] === undefined ? undefined : puzzlePuzzle3dArtifactGuardArray(row["vortices"], `${at}.vortices`).map((item, index) => parsePuzzle3dCatalogVortexTemplate(item, `${at}.vortices[${index}]`)),
-    attributes: row["attributes"] === undefined ? undefined : puzzlePuzzle3dArtifactGuardArray(row["attributes"], `${at}.attributes`).map((item, index) => puzzlePuzzle3dArtifactGuardObject(item, `${at}.attributes[${index}]`)),
-    authors: row["authors"] === undefined ? undefined : puzzlePuzzle3dArtifactGuardArray(row["authors"], `${at}.authors`).map((item, index) => puzzlePuzzle3dArtifactGuardObject(item, `${at}.authors[${index}]`)),
+    attributes: row["attributes"] === undefined ? undefined : puzzlePuzzle3dArtifactGuardArray(row["attributes"], `${at}.attributes`).map((item, index) => parsePuzzle3dAttribute(item, `${at}.attributes[${index}]`)),
+    authors: row["authors"] === undefined ? undefined : puzzlePuzzle3dArtifactGuardArray(row["authors"], `${at}.authors`).map((item, index) => parsePuzzle3dAuthor(item, `${at}.authors[${index}]`)),
   };
 }
 
@@ -317,5 +340,43 @@ export function parsePuzzle3dCatalogVortexKind(value: unknown, at = "$"): Puzzle
     icon: row["icon"] === undefined ? undefined : puzzlePuzzle3dArtifactGuardString(row["icon"], `${at}.icon`),
     color: row["color"] === undefined ? undefined : puzzlePuzzle3dArtifactGuardString(row["color"], `${at}.color`),
     defaultCableKind: row["defaultCableKind"] === undefined ? undefined : puzzlePuzzle3dArtifactGuardString(row["defaultCableKind"], `${at}.defaultCableKind`),
+  };
+}
+
+export function parsePuzzle3dAttribute(value: unknown, at = "$"): Puzzle3dAttribute {
+  const row = puzzlePuzzle3dArtifactGuardObject(value, at);
+  return {
+    id: row["id"] === undefined ? undefined : puzzlePuzzle3dArtifactGuardString(row["id"], `${at}.id`),
+    key: puzzlePuzzle3dArtifactGuardString(row["key"], `${at}.key`),
+    value: puzzlePuzzle3dArtifactGuardString(row["value"], `${at}.value`),
+    definition: row["definition"] === undefined ? undefined : puzzlePuzzle3dArtifactGuardString(row["definition"], `${at}.definition`),
+  };
+}
+
+export function parsePuzzle3dAuthor(value: unknown, at = "$"): Puzzle3dAuthor {
+  const row = puzzlePuzzle3dArtifactGuardObject(value, at);
+  return {
+    id: row["id"] === undefined ? undefined : puzzlePuzzle3dArtifactGuardString(row["id"], `${at}.id`),
+    name: puzzlePuzzle3dArtifactGuardString(row["name"], `${at}.name`),
+    email: row["email"] === undefined ? undefined : puzzlePuzzle3dArtifactGuardString(row["email"], `${at}.email`),
+    role: row["role"] === undefined ? undefined : puzzlePuzzle3dArtifactGuardString(row["role"], `${at}.role`),
+    rank: row["rank"] === undefined ? undefined : puzzlePuzzle3dArtifactGuardNumber(row["rank"], `${at}.rank`),
+  };
+}
+
+export function parsePuzzle3dObject(value: unknown, at = "$"): Puzzle3dObject {
+  const row = puzzlePuzzle3dArtifactGuardObject(value, at);
+  return {
+    id: puzzlePuzzle3dArtifactGuardString(row["id"], `${at}.id`),
+    label: row["label"] === undefined ? undefined : puzzlePuzzle3dArtifactGuardString(row["label"], `${at}.label`),
+    objectKind: row["objectKind"] === undefined ? undefined : puzzlePuzzle3dArtifactGuardString(row["objectKind"], `${at}.objectKind`),
+    anchor: row["anchor"] === undefined ? undefined : puzzlePuzzle3dArtifactGuardMember(row["anchor"], `${at}.anchor`, ["fixed", "derived"] as const),
+    origin: puzzlePuzzle3dArtifactGuardVector3(row["origin"], `${at}.origin`),
+    orientation: row["orientation"] === undefined ? undefined : puzzlePuzzle3dArtifactGuardVector4(row["orientation"], `${at}.orientation`),
+    scale: row["scale"] === undefined ? undefined : Array.isArray(row["scale"]) ? puzzlePuzzle3dArtifactGuardVector3(row["scale"], `${at}.scale`) : puzzlePuzzle3dArtifactGuardNumber(row["scale"], `${at}.scale`),
+    meshUrl: row["meshUrl"] === undefined ? undefined : puzzlePuzzle3dArtifactGuardString(row["meshUrl"], `${at}.meshUrl`),
+    vortices: row["vortices"] === undefined ? undefined : puzzlePuzzle3dArtifactGuardArray(row["vortices"], `${at}.vortices`).map((item, index) => parsePuzzle3dVortex(item, `${at}.vortices[${index}]`)),
+    hidden: row["hidden"] === undefined ? undefined : puzzlePuzzle3dArtifactGuardBoolean(row["hidden"], `${at}.hidden`),
+    locked: row["locked"] === undefined ? undefined : puzzlePuzzle3dArtifactGuardBoolean(row["locked"], `${at}.locked`),
   };
 }

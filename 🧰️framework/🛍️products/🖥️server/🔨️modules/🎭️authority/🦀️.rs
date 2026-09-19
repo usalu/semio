@@ -8,7 +8,7 @@
 //! would start deciding. This file owns the middle layer and nothing else — admission,
 //! deduplication, placement, revision fencing, decision, commit, evolution, receipt.
 //!
-//! Two laws govern everything here. **Exactly-once**: a resubmitted [`IdempotencyKey`] returns the
+//! Two laws govern everything here. **Exactly-once**: a resubmitted [`IdempotencyKey`](crate::contract::IdempotencyKey) returns the
 //! byte-identical [`CommandReceipt`] and appends no second event. **Never trust the client**: the
 //! optimistic replica runs the very same [`Decider`] and may produce events, but the authority
 //! re-derives and re-stamps every [`EventRecord`] it commits.
@@ -17,9 +17,10 @@
 
 use std::collections::HashMap;
 
-use crate::contract::{ActorKey, CommandEnvelope, CommandOutcome, CommandReceipt, EventRecord, HybridLogicalClock, IdempotencyKey, Notice, PolicyDecision, Principal, ProcessId, Rejection, Revision, Scope};
+use crate::contract::{ActorKey, CommandEnvelope, CommandOutcome, CommandReceipt, EventRecord, HybridLogicalClock, Notice, PolicyDecision, Principal, ProcessId, Rejection, Revision, Scope};
 use crate::storage::{AuthorityStore, Lease, OutboxEntry};
-use semio_framework_dispatch_macros::{dyn_enum, dyn_enum_close};
+use semio_framework_dispatch_macros::dyn_enum;
+use std::future::Future;
 
 //#region 🔖️Error
 /// @emoji 💥️ What can go wrong inside a turn that is not a domain [`Rejection`]. A rejection is an
@@ -105,71 +106,38 @@ pub enum Decision {
 /// The authority never trusts a client-produced [`EventRecord`]. A replica may run `decide` and
 /// apply the result locally, but the authority re-runs `decide` itself and re-stamps `stream`,
 /// `seq` and `hlc` on every event before committing; only `kind` and `payload` survive.
+/// **Send futures, declared not inferred.** Every method of this port returns
+/// `impl Future<..> + Send` instead of being written `async fn`, and that is structural, not a
+/// style choice: [`ServerState`](crate::gateway::ServerState) reaches this port behind an
+/// instance's associated type, so the concrete future is opaque at the call site and axum's
+/// handler and socket tasks — which are `Send` by construction — cannot otherwise prove it may
+/// cross a thread. An `async fn` here compiles and then fails at every route that uses it. The
+/// implementations stay ordinary `async fn`, which Rust accepts against this signature, and so does
+/// the delegate `dyn_enum_close!` generates for a set of them: the macro emits `async fn .. -> T`
+/// over the future's `Output`, because two match arms cannot unify two distinct opaque futures.
 #[dyn_enum]
 pub trait Decider: Send + Sync {
     /// 🏷️ The actor kind this decider serves, matched against [`ActorKey::kind`].
-    async fn actor_kind(&self) -> &str;
+    fn actor_kind(&self) -> impl Future<Output = &str> + Send;
     /// 🎲️ Decide one command against one state. Pure — see the trait documentation.
-    async fn decide(&self, state: &ActorState, command: &CommandEnvelope, context: &DecisionContext) -> Decision;
+    fn decide(&self, state: &ActorState, command: &CommandEnvelope, context: &DecisionContext) -> impl Future<Output = Decision> + Send;
     /// 🌀️ Fold one committed event into the domain state. Never mutates the revision.
-    async fn evolve(&self, state: &mut ActorState, event: &EventRecord);
+    fn evolve(&self, state: &mut ActorState, event: &EventRecord) -> impl Future<Output = ()> + Send;
 }
 
-/// 🔢️ The actor kind [`CounterDecider`] serves.
-pub const COUNTER: &str = "counter";
-
-/// 🧮️ Fold [`CounterDecider`]'s little-endian counter bytes back to a `u64`, defaulting to zero for
-/// an unstarted or malformed state.
-fn read_counter(bytes: &[u8]) -> u64 {
-    <[u8; 8]>::try_from(bytes).map(u64::from_le_bytes).unwrap_or(0)
-}
-
-/// 🧮️ The framework's reference [`Decider`]: a little-endian counter over one command kind. Kept in
-/// production scope (not only in tests) so [`Deciders`] closes over a real variant and every
-/// `CommandBus` example in this crate's own tests exercises the genuine enum-dispatch path rather
-/// than a mock. A product built on this framework adds its own deciders as further `Deciders`
-/// variants alongside this one (O1 — closed-set dyn removal, see `dyn_enum_close!` below).
-pub struct CounterDecider;
-
-impl Decider for CounterDecider {
-    async fn actor_kind(&self) -> &str {
-        COUNTER
-    }
-
-    async fn decide(&self, state: &ActorState, command: &CommandEnvelope, _context: &DecisionContext) -> Decision {
-        match command.kind.as_str() {
-            "counter.increment" => Decision::Emit { events: vec![EventRecord { stream: command.target.clone(), seq: 0, hlc: HybridLogicalClock::default(), kind: "counter.incremented".into(), payload: command.payload.clone() }], effects: vec![] },
-            "counter.audit" => Decision::Emit { events: vec![], effects: vec![Effect { kind: "counter.audited".into(), payload: state.bytes.clone() }] },
-            "counter.forbid" => Decision::Reject(Rejection::Invalid { detail: "counter refuses".into() }),
-            "counter.rebuild" => Decision::Defer(ProcessId("rebuild-1".into())),
-            other => Decision::Reject(Rejection::UnknownCommandKind { command_kind: other.into() }),
-        }
-    }
-
-    async fn evolve(&self, state: &mut ActorState, event: &EventRecord) {
-        let step = u64::from(event.payload.first().copied().unwrap_or(0));
-        let current = read_counter(&state.bytes);
-        state.bytes = (current + step).to_le_bytes().to_vec();
-    }
-}
-
-dyn_enum_close! {
-    pub enum Deciders: Decider {
-        Counter(CounterDecider),
-    }
-}
 //#endregion 🔖️Turn
 
 //#region 🔖️Directory
-/// @emoji 📇️ One actor kind bound to the implementation that serves it.
-pub struct ActorRegistration {
+/// @emoji 📇️ One actor kind bound to the implementation that serves it. `D` is the instance's
+/// decider type — [`ServerInstance::Deciders`](crate::gateway::ServerInstance::Deciders).
+pub struct ActorRegistration<D: Decider> {
     pub actor_kind: String,
-    pub decider: Deciders,
+    pub decider: D,
 }
 
-impl ActorRegistration {
+impl<D: Decider> ActorRegistration<D> {
     /// 🔗️ Bind a decider under the actor kind it declares.
-    pub async fn new(decider: Deciders) -> Self {
+    pub async fn new(decider: D) -> Self {
         Self { actor_kind: decider.actor_kind().await.to_string(), decider }
     }
 }
@@ -250,22 +218,22 @@ pub type PolicyHook = Box<dyn Fn(&CommandEnvelope) -> PolicyDecision + Send + Sy
 
 /// @emoji 🏛️ The command side of the dual bus: it runs exactly one turn per submitted command,
 /// against exactly one actor, in a fixed and non-negotiable order.
-pub struct CommandBus<S: AuthorityStore> {
+pub struct CommandBus<S: AuthorityStore, D: Decider> {
     directory: AuthorityDirectory,
     store: S,
     policy_hook: PolicyHook,
-    registrations: HashMap<String, ActorRegistration>,
+    registrations: HashMap<String, ActorRegistration<D>>,
     holder: String,
 }
 
-impl<S: AuthorityStore> CommandBus<S> {
+impl<S: AuthorityStore, D: Decider> CommandBus<S, D> {
     /// 🆕️ Build a bus over a placement directory, a durable store and a policy admission hook.
     pub fn new(directory: AuthorityDirectory, store: S, policy_hook: PolicyHook) -> Self {
         Self { directory, store, policy_hook, registrations: HashMap::new(), holder: HOLDER.to_string() }
     }
 
     /// 📇️ Register a decider under the actor kind it declares, replacing any previous one.
-    pub async fn register(&mut self, decider: Deciders) {
+    pub async fn register(&mut self, decider: D) {
         let registration = ActorRegistration::new(decider).await;
         self.registrations.insert(registration.actor_kind.clone(), registration);
     }
@@ -292,7 +260,7 @@ impl<S: AuthorityStore> CommandBus<S> {
     /// 1. **Admit** — a command is servable only if a [`Decider`] is registered for its target
     ///    actor kind; otherwise [`Rejection::UnknownCommandKind`]. Cheapest check first, so an
     ///    unroutable command costs no storage read.
-    /// 2. **Deduplicate** — if the [`IdempotencyKey`] already carries a [`CommandReceipt`], return
+    /// 2. **Deduplicate** — if the [`IdempotencyKey`](crate::contract::IdempotencyKey) already carries a [`CommandReceipt`], return
     ///    that same receipt as [`CommandOutcome::Accepted`] with no events. This runs *before*
     ///    policy and *before* placement: a retry must be answered identically even if the caller's
     ///    grants or the actor's placement changed since the original turn. This is the
@@ -449,56 +417,28 @@ pub trait Saga: Send + Sync {
     async fn on_event(&self, event: &EventRecord) -> Vec<CommandEnvelope>;
 }
 
-/// 🔁️ The framework's reference [`Saga`]: re-issues the triggering event's command verbatim. Kept
-/// in production scope (not only in tests) so [`Sagas`] closes over a real variant; a product's own
-/// workflows are added as further `Sagas` variants alongside it.
-pub struct EchoSaga;
-
-impl Saga for EchoSaga {
-    /// 🎬️ Re-issues a `counter.increment` at the triggering event's own stream — the framework's
-    /// minimal reference workflow, exercised end-to-end by this crate's own outbox-draining test.
-    async fn on_event(&self, event: &EventRecord) -> Vec<CommandEnvelope> {
-        vec![CommandEnvelope {
-            command_id: crate::contract::CommandId("cmd-counter.increment".into()),
-            kind: "counter.increment".into(),
-            version: 1,
-            target: event.stream.clone(),
-            scope: Scope("space-1".into()),
-            principal: Principal::User { id: "alice".into() },
-            session: Some(crate::contract::SessionId("s1".into())),
-            device: Some(crate::contract::DeviceId("d1".into())),
-            payload: vec![3],
-            causal_frontier: None,
-            client_hlc: HybridLogicalClock { millis: 1, counter: 0 },
-            expected_revision: None,
-            idempotency_key: Some(IdempotencyKey("echo".into())),
-            capability_proof: None,
-            trace: crate::contract::TraceContext::default(),
-        }]
-    }
-}
-
-dyn_enum_close! {
-    pub enum Sagas: Saga {
-        Echo(EchoSaga),
-    }
-}
-
 /// @emoji 🔁️ Turns committed outbox rows into follow-up commands. A seam: it decides *what* to
 /// issue, never *when* to run — the caller owns the scheduling.
-#[derive(Default)]
-pub struct SagaRunner {
-    pub sagas: Vec<Sagas>,
+pub struct SagaRunner<W: Saga> {
+    pub sagas: Vec<W>,
 }
 
-impl SagaRunner {
+impl<W: Saga> Default for SagaRunner<W> {
+    /// 🌿️ A runner with no workflow — `derive(Default)` would demand `W: Default`, which a
+    /// workflow holding configuration never is.
+    fn default() -> Self {
+        Self { sagas: Vec::new() }
+    }
+}
+
+impl<W: Saga> SagaRunner<W> {
     /// 🆕️ A runner with no workflow registered.
     pub fn new() -> Self {
         Self::default()
     }
 
     /// 📇️ Register one workflow.
-    pub fn register(&mut self, saga: Sagas) {
+    pub fn register(&mut self, saga: W) {
         self.sagas.push(saga);
     }
 
@@ -506,7 +446,7 @@ impl SagaRunner {
     /// delivered and return the follow-up commands.
     ///
     /// Delivery is at-least-once: a crash between mapping and marking replays the rows, which is
-    /// safe precisely because every command the sagas emit carries an [`IdempotencyKey`] and is
+    /// safe precisely because every command the sagas emit carries an [`IdempotencyKey`](crate::contract::IdempotencyKey) and is
     /// deduplicated by [`CommandBus::submit`]. Rows without an event are pure effects and belong to
     /// the effect dispatcher, not to a saga; they are drained here so one cursor advances.
     pub async fn drain_outbox<S: AuthorityStore + ?Sized>(&mut self, store: &mut S, limit: usize) -> Vec<CommandEnvelope> {

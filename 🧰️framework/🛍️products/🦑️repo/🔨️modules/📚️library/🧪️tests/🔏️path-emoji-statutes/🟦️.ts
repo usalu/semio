@@ -11,9 +11,29 @@ import { createTaxonomyPathMatcher, fixedDirectoryContractIdsForPath, fixedFilen
 import { inventoryTaxonomySources } from "../../🧹️normalization/🟦️.ts";
 import { jsonDocumentDuplicateKeys, mutationPayloadSchemaProblems, mutationPayloadSchemaDocumentProblems, mutationPayloadSchemaRelativePath, semanticExactOwnedFileCatalog } from "../../🔍️discovery/🟦️.ts";
 import { mutationCatalogSourceOwner, mutationCatalogSourceOwnersProblems } from "../../🔍️discovery/🟦️.ts";
+import type { SemanticDescendantDirectoryNode, SemanticDescendantKindFileNode, SemanticDescendantNode, SemanticExactDescendantContract } from "../../🔍️discovery/🟦️.ts";
 import { mutationCatalogProblems } from "../../../🧪️test/📦️packages/🟦️typescript/🟦️.ts";
 
 const root = import.meta.dir;
+
+/** 🔣️ One emoji spelling the statute fixture declares, with whether the taxonomy must admit it as an identity. */
+interface TaxonomyEmojiIdentityCase {
+  readonly emoji: string;
+  readonly expected: boolean;
+}
+
+/** 🧱️ Proves an exclusive-alternative leaf is one of the two kind-identified node shapes before its ancestry is read. */
+function kindIdentifiedNode(node: SemanticDescendantNode): SemanticDescendantDirectoryNode | SemanticDescendantKindFileNode {
+  if (!("kindId" in node)) throw new Error(`exclusive alternative leaf carries no kind identity: ${JSON.stringify(node)}`);
+  return node;
+}
+
+/** 🧬️ Reads one descendant contract and proves it is the exact (non-catalog) variant before use. */
+function exactDescendantContract(taxonomy: ReturnType<typeof loadCatalogTaxonomy>, id: string): SemanticExactDescendantContract {
+  const contract = taxonomy.semanticDescendantContracts[id];
+  if (!contract || "contractKind" in contract) throw new Error(`${id} is not an exact semantic descendant contract`);
+  return contract;
+}
 const fixture = JSON.parse(readFileSync(join(root, "../../🧫️fixtures/🔏️path-emoji-statutes/🔣️.json"), "utf8"));
 const schema = JSON.parse(readFileSync(join(root, "../../🧬️schema/🔏️path-emoji-statutes/🔣️.json"), "utf8"));
 
@@ -167,6 +187,7 @@ test("generated asset documentation keeps README literal without rewriting froze
   const taxonomy = loadCatalogTaxonomy(), contract = fixture.assetDocumentation;
   expect(taxonomy.generatorContracts[contract.generatorId].outputRoots.some((row) => row.path === contract.outputPath)).toBe(true);
   const evidence = taxonomy.semanticOwnedFileProjectionContracts["readme-license-owner-leaves-v1"];
+  if (evidence?.contractKind !== "exact-owner-path-catalog") throw new Error("readme-license-owner-leaves-v1 is not the exact owner-path catalog contract");
   const repoRoot = resolve(root, "../../../../../../..");
   const before = readFileSync(join(repoRoot, evidence.authorityCatalogPath));
   const catalog = semanticExactOwnedFileCatalog(repoRoot, taxonomy);
@@ -391,12 +412,12 @@ test("mutation catalogs declare one canonical implementation and fixture bundle 
   expect(taxonomy.semanticPathProjectionContracts[pair.contractId]).toBeUndefined();
   expect(pair.implementationSegments.map((segment) => "literal" in segment ? segment.literal : segment.capture)).toEqual(["🏅️standards", "standardVersion", "🪆️subsets", "subsetId", "🧬️schema", "🧬️mutations", "mutationId", "🧪️tests", "scenarioId"]);
   expect(pair.fixtureSegments.map((segment) => "literal" in segment ? segment.literal : segment.capture)).toEqual(["🏅️standards", "standardVersion", "🪆️subsets", "subsetId", "🧫️fixtures", "🧬️mutations", "mutationId", "scenarioId"]);
-  const implementation = taxonomy.semanticDescendantContracts[pair.implementationDescendantContractId], fixtureBundle = taxonomy.semanticDescendantContracts[pair.fixtureDescendantContractId];
+  const implementation = exactDescendantContract(taxonomy, pair.implementationDescendantContractId), fixtureBundle = exactDescendantContract(taxonomy, pair.fixtureDescendantContractId);
   expect(implementation.realizedNodeCount).toBe(2);
   expect(implementation.requiredNodes.map((node) => node.nodeType)).toEqual(["directory", "file"]);
   expect(fixtureBundle.realizedNodeCount).toBe(12);
   expect(fixtureBundle.requiredNodes).toHaveLength(11);
-  expect(fixtureBundle.exclusiveAlternatives.map((alternative) => ({ id: alternative.id, mode: alternative.mode, kinds: alternative.nodes.map((node) => node.kindId), paths: alternative.nodes.map((node) => node.pathSegments.map((segment) => segment.literal)) }))).toEqual([{ id: "diff-leaf", mode: "exactly-one", kinds: ["json", "absence-marker"], paths: [["🔺️diff"], ["🔺️diff"]] }]);
+  expect(fixtureBundle.exclusiveAlternatives.map((alternative) => ({ id: alternative.id, mode: alternative.mode, kinds: alternative.nodes.map((node) => kindIdentifiedNode(node).kindId), paths: alternative.nodes.map((node) => kindIdentifiedNode(node).pathSegments.map((segment) => segment.literal)) }))).toEqual([{ id: "diff-leaf", mode: "exactly-one", kinds: ["json", "absence-marker"], paths: [["🔺️diff"], ["🔺️diff"]] }]);
   expect(validateTaxonomy(taxonomy)).toEqual([]);
 });
 
@@ -638,7 +659,8 @@ test("the normalization reader accepts the same current reserved-name contracts"
 
 test("taxonomy accepts single keycaps and pictographic sequences without accepting stacked identities", () => {
   const baseline = loadCatalogTaxonomy();
-  const probes = fixture.taxonomyEmojiIdentities.map((row, index) => ({ row, kindId: `identity-probe-${index}`, memberId: `identity-member-probe-${index}` }));
+  const identities: readonly TaxonomyEmojiIdentityCase[] = fixture.taxonomyEmojiIdentities;
+  const probes = identities.map((row, index) => ({ row, kindId: `identity-probe-${index}`, memberId: `identity-member-probe-${index}` }));
   const taxonomy = {
     ...baseline,
     semanticDirectoryKinds: Object.fromEntries([

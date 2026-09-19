@@ -6,12 +6,68 @@
     "lowerHex32": { "type": "string", "pattern": "^[0-9a-f]{32}$" },
     "lowerHex64": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
     "boundedText": { "type": "string", "minLength": 1, "maxLength": 256 },
-
     "InviteCapabilityV1": { "type": "string", "minLength": 107, "maxLength": 107, "pattern": "^invite\\.v1\\.[0-9a-f]{32}\\.[0-9a-f]{64}$" },
     "SessionCapabilityV1": { "type": "string", "minLength": 108, "maxLength": 108, "pattern": "^session\\.v1\\.[0-9a-f]{32}\\.[0-9a-f]{64}$" },
     "ShareCapabilityV1": { "type": "string", "minLength": 106, "maxLength": 106, "pattern": "^share\\.v1\\.[0-9a-f]{32}\\.[0-9a-f]{64}$" },
     "SocketGrantCapabilityV1": { "type": "string", "minLength": 107, "maxLength": 107, "pattern": "^socket\\.v1\\.[0-9a-f]{32}\\.[0-9a-f]{64}$" },
-
+    "CredentialHashV1": { "type": "string", "minLength": 32, "maxLength": 192, "pattern": "^pbkdf2-sha256\\$[1-9][0-9]{3,8}\\$[0-9a-f]{32}\\$[0-9a-f]{64}$" },
+    "AuthErrorCodeV1": { "enum": ["malformed-request", "invalid-credentials", "credential-sign-in-disabled", "rate-limited", "directory-unavailable"] },
+    "AuthClientClassV1": { "enum": ["browser", "native", "cli"] },
+    "CredentialSignInRequestV1": {
+      "x-semio-formats": ["🔣️jsonschema", "🦀️rust", "🟦️typescript"],
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema", "email", "password", "deviceInstanceId", "clientClass"],
+      "properties": {
+        "schema": { "const": "semio.hub.auth.credential-sign-in/v1" },
+        "email": { "type": "string", "minLength": 3, "maxLength": 254, "pattern": "^[^\\u0000-\\u0020@\\u007f]+@[^\\u0000-\\u0020@\\u007f]+$" },
+        "password": { "type": "string", "minLength": 8, "maxLength": 256 },
+        "deviceInstanceId": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[A-Za-z0-9._:-]+$" },
+        "clientClass": { "$ref": "#/$defs/AuthClientClassV1" }
+      }
+    },
+    "CredentialChangeRequestV1": {
+      "x-semio-formats": ["🔣️jsonschema", "🦀️rust", "🟦️typescript"],
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema", "currentPassword", "newPassword"],
+      "properties": {
+        "schema": { "const": "semio.hub.auth.credential-change/v1" },
+        "currentPassword": { "type": "string", "minLength": 8, "maxLength": 256 },
+        "newPassword": { "type": "string", "minLength": 8, "maxLength": 256 }
+      }
+    },
+    "SessionMintResponseV1": {
+      "x-semio-formats": ["🔣️jsonschema", "🦀️rust", "🟦️typescript"],
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["token", "user_id"],
+      "properties": { "token": {"$ref": "#/$defs/SessionCapabilityV1" }, "user_id": { "$ref": "#/$defs/boundedText"} }
+    },
+    "AuthErrorV1": {
+      "x-semio-formats": ["🔣️jsonschema", "🦀️rust", "🟦️typescript"],
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema", "error"],
+      "properties": {
+        "schema": { "const": "semio.hub.auth.error/v1" },
+        "error": { "$ref": "#/$defs/AuthErrorCodeV1" },
+        "retryAfterMs": { "type": "integer", "minimum": 0, "maximum": 9007199254740991 }
+      }
+    },
+    "AuthRateLimitClassV1": { "enum": ["auth", "directory-command", "invite-redemption", "socket-grant"] },
+    "AuthRateLimitPolicyV1": {
+      "x-semio-formats": ["🔣️jsonschema", "🦀️rust"],
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["class", "burst", "costMs"],
+      "properties": {
+        "class": { "$ref": "#/$defs/AuthRateLimitClassV1" },
+        "burst": { "type": "integer", "minimum": 1, "maximum": 4096 },
+        "costMs": { "type": "integer", "minimum": 1, "maximum": 3600000 }
+      }
+    },
+    "AuthDurableEventKindV1": { "enum": ["session-issued", "session-revoked", "credential-sign-in", "credential-changed"] },
     "SocketGrantReceiptV1": {
       "x-semio-formats": ["🔣️jsonschema"],
       "type": "object",
@@ -25,7 +81,6 @@
         "expiresAtMs": { "type": "integer", "minimum": 0, "maximum": 9007199254740991 }
       }
     },
-
     "capabilityVector": {
       "type": "object",
       "additionalProperties": false,
@@ -38,7 +93,6 @@
         "digestHex": { "$ref": "#/$defs/lowerHex64" }
       }
     },
-
     "socketGrantVector": {
       "type": "object",
       "additionalProperties": false,
@@ -50,21 +104,15 @@
         "secretHex": { "$ref": "#/$defs/lowerHex64" },
         "digestHex": { "$ref": "#/$defs/lowerHex64" },
         "receipt": { "$ref": "#/$defs/SocketGrantReceiptV1" },
-        "rejectedCapabilities": { "type": "array", "minItems": 5, "maxItems": 5, "uniqueItems": true, "items": { "type": "string", "maxLength": 256 } }
+        "rejectedCapabilities": { "type": "array", "minItems": 5, "maxItems": 5, "uniqueItems": true, "items": {"type": "string", "maxLength": 256} }
       }
     },
-
     "identityVector": {
       "type": "object",
       "additionalProperties": false,
       "required": ["provider", "subject", "digestHex"],
-      "properties": {
-        "provider": { "$ref": "#/$defs/boundedText" },
-        "subject": { "$ref": "#/$defs/boundedText" },
-        "digestHex": { "$ref": "#/$defs/lowerHex64" }
-      }
+      "properties": { "provider": {"$ref": "#/$defs/boundedText" }, "subject": { "$ref": "#/$defs/boundedText" }, "digestHex": { "$ref": "#/$defs/lowerHex64"} }
     },
-
     "revocationVector": {
       "type": "object",
       "additionalProperties": false,
@@ -77,7 +125,6 @@
         "reason": { "$ref": "#/$defs/boundedText" }
       }
     },
-
     "auditVector": {
       "type": "object",
       "additionalProperties": false,
@@ -93,7 +140,6 @@
         "peerClass": { "$ref": "#/$defs/boundedText" }
       }
     },
-
     "AuthLimitsV1": {
       "x-semio-formats": ["🔣️jsonschema"],
       "type": "object",
@@ -107,7 +153,6 @@
         "assertionBytesMax": { "const": 16384 }
       }
     },
-
     "AuthCapabilityVectorsV1": {
       "x-semio-formats": ["🔣️jsonschema"],
       "type": "object",
@@ -124,9 +169,18 @@
         "limits": { "$ref": "#/$defs/AuthLimitsV1" }
       },
       "allOf": [
-        { "type": "object", "properties": { "session": { "type": "object", "properties": { "kind": { "const": "session" }, "capability": { "$ref": "#/$defs/SessionCapabilityV1" } } } } },
-        { "type": "object", "properties": { "share": { "type": "object", "properties": { "kind": { "const": "share" }, "capability": { "$ref": "#/$defs/ShareCapabilityV1" } } } } },
-        { "type": "object", "properties": { "invite": { "type": "object", "properties": { "kind": { "const": "invite" }, "capability": { "$ref": "#/$defs/InviteCapabilityV1" } } } } }
+        {
+          "type": "object",
+          "properties": { "session": {"type": "object", "properties": {"kind": {"const": "session" }, "capability": { "$ref": "#/$defs/SessionCapabilityV1"}}} }
+        },
+        {
+          "type": "object",
+          "properties": { "share": {"type": "object", "properties": {"kind": {"const": "share" }, "capability": { "$ref": "#/$defs/ShareCapabilityV1"}}} }
+        },
+        {
+          "type": "object",
+          "properties": { "invite": {"type": "object", "properties": {"kind": {"const": "invite" }, "capability": { "$ref": "#/$defs/InviteCapabilityV1"}}} }
+        }
       ]
     }
   }

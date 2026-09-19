@@ -98,7 +98,7 @@ fn authenticated_hub_discovery_uses_retained_selection_and_never_installed_fallb
     assert_eq!(roster.len(), 1);
     assert_eq!(roster[0].owner, "gis");
     let principal = AgentPrincipal::from_scope_names("agent:hub-test", "hub test", &[], None);
-    let server = crate::build_server_with_workspace(principal, Arc::new(AuditSinks::InMemory(InMemoryAuditSink::new())), workspace.clone(), Box::new(ArtifactChannels::Mock(MockArtifactChannel::new())), None);
+    let server = crate::build_server_with_workspace(principal, Arc::new(AuditSinks::InMemory(InMemoryAuditSink::new())), workspace.clone(), Box::new(ArtifactChannels::Mock(MockArtifactChannel::new())), crate::GatewayRuntime::default());
     let listed = server.tools.list();
     let inference_list = listed.iter().find(|tool| tool.name == "inference_list").expect("inference_list tool");
     let selected = inference_list.meta.as_ref().expect("ready tools/list selection metadata");

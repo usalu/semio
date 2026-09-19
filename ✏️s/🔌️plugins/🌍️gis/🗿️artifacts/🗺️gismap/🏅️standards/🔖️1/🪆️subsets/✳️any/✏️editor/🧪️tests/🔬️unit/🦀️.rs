@@ -500,3 +500,59 @@ async fn context_menu_stays_within_budget_and_keeps_clear_selection_destructive_
     close(&mut app);
 }
 //#endregion 🔖️ContextMenu
+
+//#region 🎬️StageableActionVocabulary
+/// 🔎️ One declared action of the gis2d manifest, wherever its window kind declares it.
+fn declared_action(definition: &semio_framework_plugin::AppDefinition, id: &str) -> ActionDefinition {
+    definition.window_kinds.iter().flat_map(|window| &window.actions).find(|action| action.id == id).unwrap_or_else(|| panic!("{id} is declared")).clone()
+}
+
+/// 🗺️ Every per-feature editing verb is declared a document `Mutation`, is argument-staged so the
+/// Actions rail can dispatch it, and every one of its arguments carries an effective default — the
+/// palette must be able to run it without the operator typing anything.
+#[semio_framework_async_macros::async_test]
+async fn every_feature_editing_verb_is_a_fully_defaulted_stageable_mutation() {
+    let definition = create_gis2d_app();
+    for id in ["addFeature", "moveFeature", "renameFeature", "deleteFeature"] {
+        let action = declared_action(&definition, id);
+        assert_eq!(action.kind, ActionKind::Mutation, "{id} writes the document");
+        assert!(action.in_palette, "{id} is reachable from the command palette");
+        assert!(!action.args.is_empty(), "{id} declares staged arguments");
+        for arg in &action.args {
+            assert!(arg.default.is_some(), "{id} argument {} must carry a default so the rail can dispatch it unattended", arg.id);
+        }
+        assert!(action.args.iter().any(|arg| arg.id == "collection"), "{id} addresses a document collection");
+    }
+}
+
+/// 🗂️ The layer verbs that were unreachable from the rail (no argument schema meant an empty
+/// `layerId` and a silent no-op) now stage the same layer vocabulary the panels enumerate.
+#[semio_framework_async_macros::async_test]
+async fn layer_verbs_stage_every_declared_map_layer() {
+    let definition = create_gis2d_app();
+    assert_eq!(GIS_MAP_LAYER_IDS.len(), GIS_MAP_LAYER_ARG_NAMES.len(), "the manifest-time layer names mirror the layer stack one-to-one");
+    let declared: Vec<&str> = GIS_MAP_LAYER_IDS.iter().map(|(layer_id, _, _)| *layer_id).collect();
+    for id in ["toggleLayerVisibility", "setLayerStrokeScale"] {
+        let action = declared_action(&definition, id);
+        let layer = action.args.iter().find(|arg| arg.id == "layerId").unwrap_or_else(|| panic!("{id} stages a layer"));
+        let semio_framework_plugin::ArgSchema::String { options, .. } = &layer.schema else {
+            panic!("{id} stages its layer as a discrete choice");
+        };
+        let staged: Vec<&str> = options.iter().map(|option| option.value.as_str()).collect();
+        assert_eq!(staged, declared, "{id} stages exactly the declared layer stack, in order");
+    }
+}
+
+/// 🧬️ The retained tool surface, the publication contracts and the bounded-first-step proof catalog
+/// must agree on the tool set — a command missing from any one of the three is dead at runtime even
+/// though `cargo check` is green (the `TOOL_JOB_IDS` + factory + proofs chain).
+#[semio_framework_async_macros::async_test]
+async fn the_retained_tool_surface_proofs_and_publication_contracts_cover_every_command() {
+    use std::collections::BTreeSet;
+    let retained: BTreeSet<String> = GIS2D_RETAINED_TOOL_IDS.iter().map(|id| (*id).to_string()).collect();
+    let published: BTreeSet<String> = GIS2D_RETAINED_PUBLICATION_CONTRACTS.iter().map(|contract| contract.tool_id.to_string()).collect();
+    assert_eq!(retained, published, "every retained tool declares its publication lanes");
+    let proofs: BTreeSet<String> = <Gis2dPlayApp as ArtifactEditor>::bounded_first_step_tool_proofs().into_iter().map(|proof| proof.tool_id().to_string()).collect();
+    assert_eq!(proofs, retained, "every retained tool carries its owner-local bounded reducer proof");
+}
+//#endregion 🎬️StageableActionVocabulary

@@ -11,7 +11,7 @@ fn fixture_catalog() -> std::sync::Arc<Catalog> {
 /// 🧫️ [`build_server`] over [`fixture_catalog`] — a deterministic capability census.
 fn fixture_server() -> McpServer {
     let principal = AgentPrincipal::from_scope_names("agent:local", "local agent", &[], None);
-    build_server_from_catalog(fixture_catalog(), principal, std::sync::Arc::new(AuditSinks::InMemory(InMemoryAuditSink::new())), Box::new(ArtifactChannels::Mock(MockArtifactChannel::new())), None)
+    build_server_from_catalog(fixture_catalog(), principal, std::sync::Arc::new(AuditSinks::InMemory(InMemoryAuditSink::new())), Box::new(ArtifactChannels::Mock(MockArtifactChannel::new())), GatewayRuntime::default())
 }
 
 #[test]
@@ -44,7 +44,7 @@ fn p1b_facet_re_exports_are_reachable_from_the_crate_root_too() {
 
 #[test]
 fn http_options_round_trip_without_a_credential_carrier() {
-    let options = HttpOptions { port: 7401, bind: "127.0.0.1".to_string(), folder: None, hub: None, principal: None, scopes: vec![], audit_dir: None, allow_origin: vec![] };
+    let options = HttpOptions { port: 7401, bind: "127.0.0.1".to_string(), folder: None, hub: None, principal: None, scopes: vec![], audit_dir: None, allow_origin: vec![], auto_approve: AutoApprovePolicy::Never };
     assert_eq!(options.port, 7401);
     assert_eq!(options.bind, "127.0.0.1");
 }
@@ -129,7 +129,7 @@ fn the_tool_census_matches_the_registry_exactly() {
 #[test]
 fn action_prepare_tool_call_returns_a_prepared_action_report_for_a_granted_scope() {
     let principal = AgentPrincipal::from_scope_names("agent:demo", "demo", &["artifact.write".to_string()], None);
-    let server = build_server_from_catalog(fixture_catalog(), principal, std::sync::Arc::new(AuditSinks::InMemory(InMemoryAuditSink::new())), Box::new(ArtifactChannels::Mock(MockArtifactChannel::new())), None);
+    let server = build_server_from_catalog(fixture_catalog(), principal, std::sync::Arc::new(AuditSinks::InMemory(InMemoryAuditSink::new())), Box::new(ArtifactChannels::Mock(MockArtifactChannel::new())), GatewayRuntime::default());
     let result = server.tools.call("action_prepare", serde_json::json!({ "capabilityId": "cad.editor.translateSelection", "input": { "dx": 1.0, "dy": 0.0, "dz": 0.0, "objectIds": ["a"] } })).expect("known tool name resolves");
     assert!(!result.is_error, "{result:?}");
     let structured = result.structured_content.expect("structured content");
@@ -142,7 +142,7 @@ fn action_prepare_tool_call_returns_a_prepared_action_report_for_a_granted_scope
 #[test]
 fn action_prepare_tool_call_is_permission_denied_for_a_scope_the_principal_lacks() {
     let principal = AgentPrincipal::from_scope_names("agent:demo", "demo", &[], None); // no scopes granted
-    let server = build_server_from_catalog(fixture_catalog(), principal, std::sync::Arc::new(AuditSinks::InMemory(InMemoryAuditSink::new())), Box::new(ArtifactChannels::Mock(MockArtifactChannel::new())), None);
+    let server = build_server_from_catalog(fixture_catalog(), principal, std::sync::Arc::new(AuditSinks::InMemory(InMemoryAuditSink::new())), Box::new(ArtifactChannels::Mock(MockArtifactChannel::new())), GatewayRuntime::default());
     let result = server.tools.call("action_prepare", serde_json::json!({ "capabilityId": "cad.editor.translateSelection", "input": { "dx": 1.0, "dy": 0.0, "dz": 0.0, "objectIds": ["a"] } })).expect("known tool name resolves");
     assert!(result.is_error);
     assert_eq!(result.structured_content.as_ref().unwrap()["code"], "PERMISSION_DENIED");
@@ -151,7 +151,7 @@ fn action_prepare_tool_call_is_permission_denied_for_a_scope_the_principal_lacks
 #[test]
 fn action_invoke_tool_call_commits_a_prepared_capability_end_to_end() {
     let principal = AgentPrincipal::from_scope_names("agent:demo", "demo", &["artifact.write".to_string()], None);
-    let server = build_server_from_catalog(fixture_catalog(), principal, std::sync::Arc::new(AuditSinks::InMemory(InMemoryAuditSink::new())), Box::new(ArtifactChannels::Mock(MockArtifactChannel::new())), None);
+    let server = build_server_from_catalog(fixture_catalog(), principal, std::sync::Arc::new(AuditSinks::InMemory(InMemoryAuditSink::new())), Box::new(ArtifactChannels::Mock(MockArtifactChannel::new())), GatewayRuntime::default());
     let prepared = server.tools.call("action_prepare", serde_json::json!({ "capabilityId": "cad.editor.translateSelection", "input": { "dx": 1.0, "dy": 0.0, "dz": 0.0, "objectIds": ["a"] } })).unwrap();
     let handle = prepared.structured_content.unwrap()["preparedHandle"].as_str().unwrap().to_string();
     let invoked = server.tools.call("action_invoke", serde_json::json!({ "preparedActionHandle": handle })).expect("known tool name resolves");

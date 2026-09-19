@@ -225,7 +225,7 @@ fn p7c3_commit_lease_ack_is_the_exact_terminal_detach_witness() {
 fn p7c2_preview_typed_view_is_derived_from_canonical_wire_with_live_facility_total() {
     let operation = Operation::new(allocate_operation_id(), RevisionId(96), Generation(15), 0xcafe);
     let config = SimulationConfig { warmup_days: 0, run_period_end_month: 1, run_period_end_day: 1, environment: SimulationEnvironment::HeatingDesignDay, ..Default::default() };
-    let mut job = EnergyJob::new(operation, test_model_single_zone(), config).expect("preview source admission");
+    let mut job = EnergyJob::new(operation, test_model_full_topology(), config).expect("preview source admission");
     let mut sequence = 0;
     for _ in 0..50_000 {
         let mut context = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, u64::MAX), CancelToken::root_now(), default_now_us, &mut sequence);
@@ -240,7 +240,13 @@ fn p7c2_preview_typed_view_is_derived_from_canonical_wire_with_live_facility_tot
                 assert_eq!(projected, decoded);
                 close_retained_payload(&mut packet.payload);
                 if decoded.facility_electricity_kwh > 0.0 {
-                    return;
+                    InteractiveJob::begin_close(&mut job);
+                    for _ in 0..100_000 {
+                        if matches!(InteractiveJob::close_step(&mut job, 1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES), semio_framework_job::InteractiveJobCloseStep::Complete) {
+                            return;
+                        }
+                    }
+                    panic!("canonical preview source did not close");
                 }
             }
             StepOutcome::CheckpointReady(mut checkpoint) => {
@@ -252,7 +258,11 @@ fn p7c2_preview_typed_view_is_derived_from_canonical_wire_with_live_facility_tot
             StepOutcome::Yield => {}
             StepOutcome::Fault(fault) => panic!("preview source faulted: {fault:?}"),
             StepOutcome::Cancelled => panic!("preview source cancelled"),
-            StepOutcome::Complete(_) => break,
+            StepOutcome::Complete(mut candidate) => {
+                close_retained_payload(&mut candidate.state);
+                close_retained_payload(&mut candidate.output);
+                break;
+            }
         }
     }
     panic!("canonical preview never exposed a substantive retained facility total")
@@ -711,8 +721,14 @@ fn p7c1_weather_owner_is_exactly_admitted_never_grows_and_retries_maximum_plus_o
     assert_eq!(*job.weather.get_index(0).expect("weather zero"), before_records[0]);
     assert_eq!(*job.weather.get_index(1).expect("weather one"), before_records[1]);
     job.weather_cursor = 1;
-    let mut context = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, u64::MAX), CancelToken::root_now(), default_now_us, &mut preview_sequence);
-    let mut outcome = job.step(&mut context);
+    let mut outcome = StepOutcome::Yield;
+    for _ in 0..1024 {
+        let mut context = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, u64::MAX), CancelToken::root_now(), default_now_us, &mut preview_sequence);
+        outcome = job.step(&mut context);
+        if matches!(outcome, StepOutcome::Fault(_)) {
+            break;
+        }
+    }
     assert!(matches!(outcome, StepOutcome::Fault(_)));
     assert_eq!(job.weather_fault, Some(WeatherFault::SlotRejected));
     while !matches!(outcome.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES), semio_framework_job::JobPayloadCloseStep::Complete) {}

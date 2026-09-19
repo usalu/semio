@@ -16,7 +16,7 @@
 
 use crate::editor::dag::commands::{add_node, patch_dag_nodes, remove_node, rename_dag_node};
 use crate::editor::dag::commands::{connect_media_ports, delete_selection, disconnect, move_media_node, node_graph_edit};
-use crate::editor::dag::commands::{graph_pointer_down, node_graph_viewport};
+use crate::editor::dag::commands::{graph_pointer_down, node_graph_viewport, set_active_example};
 use crate::editor::dag::config::{dag_config_camera, DagConfig, DagConfigMutation};
 use crate::editor::dag::modes::edit;
 use crate::editor::dag::modes::edit::tools::reorganize;
@@ -25,6 +25,7 @@ use crate::editor::dag::panels::{catalogue as catalogue_panel, document as docum
 use crate::editor::dag::terminology::{dag_play_labels, is_de_locale};
 use crate::op::DagMutation;
 use crate::DagSnapshot;
+use semio_framework::kernel::Effect;
 use semio_framework::{ToolExecutionContract, ToolFactoryKey, ToolJobFactoryError};
 use semio_framework_plugin::app::{Dialect, InteractionView};
 use semio_framework_plugin::retained_command::{ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
@@ -127,6 +128,7 @@ semio_framework_plugin::app_commands! {
         "patchDagNodes" as "patch-dag-nodes" => patch_dag_nodes::PatchDagNodes,
         "nodeGraphViewport" as "node-graph-viewport" => node_graph_viewport::NodeGraphViewport,
         "graphPointerDown" as "graph-pointer-down" => graph_pointer_down::GraphPointerDown,
+        "setActiveExample" as "active-example" => set_active_example::SetActiveExample,
     }
 }
 //#endregion 🔖️Commands
@@ -164,6 +166,184 @@ fn dag_context_menu_items(registry: &AppActionRegistry, labels: &crate::editor::
 #[derive(Default)]
 pub struct DagPlayApp;
 
+/// 🧬️ The whole-document replacement `setActiveExample` emits. `store::empty_document_spr` (never a
+/// minted `create_document_envelope`) is what keeps the guest off the `terminal shell reached Drop
+/// before its app-owned bounded retirement authority detached` trap on this path.
+pub fn reset_dag_document_effect(document: &DagSnapshot) -> Effect {
+    let pack = <DagSnapshot as store::ArtifactPack>::encode_pack(document);
+    let spr = semio_framework_plugin::resolve_ready(store::empty_document_spr("dag", crate::DAG_DOCUMENT_SCHEMA));
+    Effect::LoadDocument { pack, spr }
+}
+
+//#region 🧵️RetainedDocumentCommands
+/// 🧵️ Every document verb the shell may dispatch is a retained tool.
+/// `validate_ui_dispatch_classification` refuses anything not classified `Migrated`, and `Migrated`
+/// only survives the guest's `interactive-job.catalog-incomplete` boot check when this list, the
+/// publication contracts, the extent function and the `bounded_first_step_tool_proofs!` block below
+/// all name the same ids. Every one of these verbs was `BatchOnlyPendingRewrite` and therefore hard
+/// dead in the shell (`UI dispatch rejected action:addNode with interactive-job classification
+/// BatchOnlyPendingRewrite`).
+const DAG_RETAINED_DOCUMENT_TOOL_IDS: &[&str] =
+    &["setActiveExample", "addNode", "removeNode", "deleteSelection", "nodeGraphEdit", "connectMediaPorts", "disconnect", "moveMediaNode", "renameDagNode", "patchDagNodes", "graphPointerDown"];
+
+/// 🧾️ The ONE roster the tool-proof catalog joins against. `bounded_first_step_tool_proofs!` binds
+/// every id it lists to a single `factory_type`, and the catalog authority then demands that the
+/// registered concrete factory for each id IS that type (`typed_join=false` otherwise → guest
+/// `unreachable` at boot). Two factories over one owner therefore cannot both be proven, so the
+/// config verb and the document verbs share one factory and the reduce is picked per id in
+/// `build_tool_job`.
+const DAG_RETAINED_TOOL_IDS: &[&str] = &[
+    "nodeGraphViewport",
+    "setActiveExample",
+    "addNode",
+    "removeNode",
+    "deleteSelection",
+    "nodeGraphEdit",
+    "connectMediaPorts",
+    "disconnect",
+    "moveMediaNode",
+    "renameDagNode",
+    "patchDagNodes",
+    "graphPointerDown",
+];
+
+/// 🚦️ The config verb's lane in front of the document verbs' lanes, in `DAG_RETAINED_TOOL_IDS` order.
+const DAG_RETAINED_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] = &[
+    ArtifactToolPublicationContract { tool_id: "nodeGraphViewport", lanes: &[ArtifactToolPublicationLane::Config] },
+    ArtifactToolPublicationContract { tool_id: "setActiveExample", lanes: &[ArtifactToolPublicationLane::HostOnly] },
+    ArtifactToolPublicationContract { tool_id: "addNode", lanes: &[ArtifactToolPublicationLane::Artifact] },
+    ArtifactToolPublicationContract { tool_id: "removeNode", lanes: &[ArtifactToolPublicationLane::Artifact] },
+    ArtifactToolPublicationContract { tool_id: "deleteSelection", lanes: &[ArtifactToolPublicationLane::Artifact] },
+    ArtifactToolPublicationContract { tool_id: "nodeGraphEdit", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::Config] },
+    ArtifactToolPublicationContract { tool_id: "connectMediaPorts", lanes: &[ArtifactToolPublicationLane::Artifact] },
+    ArtifactToolPublicationContract { tool_id: "disconnect", lanes: &[ArtifactToolPublicationLane::Artifact] },
+    ArtifactToolPublicationContract { tool_id: "moveMediaNode", lanes: &[ArtifactToolPublicationLane::Artifact] },
+    ArtifactToolPublicationContract { tool_id: "renameDagNode", lanes: &[ArtifactToolPublicationLane::Artifact] },
+    ArtifactToolPublicationContract { tool_id: "patchDagNodes", lanes: &[ArtifactToolPublicationLane::Artifact] },
+    ArtifactToolPublicationContract { tool_id: "graphPointerDown", lanes: &[ArtifactToolPublicationLane::HostOnly] },
+];
+
+/// 🧵️ One-shot reducer for the document verbs — the very dispatch `DagPlayApp::handle` performs,
+/// so the bounded job and the batch path stay one piece of code. `deleteSelection`/`nodeGraphEdit`
+/// read the `graph` domain off the raw `protocol::InteractionState` (`InteractionView`'s fields are
+/// framework-private) through each command's own `apply_with_state`.
+#[expect(clippy::too_many_arguments, reason = "Implements the framework ArtifactCommandReducer callback signature.")]
+fn dag_retained_document_reduce(
+    command: &DagCommand,
+    snapshot: &DagSnapshot,
+    config: &DagConfig,
+    history: &semio_framework_plugin::HistoryView,
+    interaction: &protocol::InteractionState,
+    _hover: &semio_framework_plugin::app::InteractionHoverState,
+    _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<DagPlayApp>>>,
+    operation: &AppOperationContext,
+) -> Result<Emit<DagMutation, DagConfigMutation, NoDraftMutation>, Fault> {
+    if !DAG_RETAINED_DOCUMENT_TOOL_IDS.contains(&command.command_id()) {
+        return Err(Fault::from("dag-retained-document-route-mismatch"));
+    }
+    let doc = ArtifactView::with_operation(snapshot, history, operation.clone());
+    let cfg = ConfigView { snapshot: config, window: None };
+    match command {
+        DagCommand::DeleteSelection(payload) => delete_selection::apply_with_state(payload, &doc, &cfg, interaction),
+        DagCommand::NodeGraphEdit(payload) => node_graph_edit::apply_with_state(payload, &doc, &cfg, interaction),
+        _ => command.dispatch(&doc, &cfg),
+    }
+}
+
+fn dag_retained_document_extent(command: &DagCommand, _snapshot: &DagSnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
+    DAG_RETAINED_DOCUMENT_TOOL_IDS.contains(&command.command_id()).then_some(1)
+}
+
+/// 🌉️ Resolves the React/wgpu shells' `{action, args}` pair into the typed `DagCommand` every
+/// dispatch path already speaks. `ArtifactEditor::command_from_action`'s default refuses EVERY id
+/// (`app.command.unsupported`), so without this bridge no Actions-pane row, example pick or canvas
+/// gesture could ever reach `DagCommand::dispatch`.
+fn dag_command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result<DagCommand, Fault> {
+    let entries: &[(String, dsl::DslValue)] = match args {
+        Some(dsl::DslValue::Object(object)) => object.as_slice(),
+        _ => &[],
+    };
+    let lookup = |keys: &[&str]| keys.iter().find_map(|key| entries.iter().find(|(name, _)| name == key).map(|(_, value)| value));
+    let text = |keys: &[&str], fallback: &str| match lookup(keys) {
+        Some(dsl::DslValue::String(raw)) if !raw.is_empty() => raw.clone(),
+        Some(dsl::DslValue::String(_)) | None => fallback.to_string(),
+        Some(other) => dsl::json::to_json_string(other),
+    };
+    let number = |keys: &[&str]| match lookup(keys) {
+        Some(dsl::DslValue::Number(value)) => Some(value.as_f64()),
+        Some(dsl::DslValue::String(raw)) => raw.trim().parse::<f64>().ok(),
+        _ => None,
+    };
+    match action {
+        "setActiveExample" => Ok(DagCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: text(&["exampleId", "example_id", "id", "value"], crate::examples::demo::ID) })),
+        "addNode" => Ok(DagCommand::AddNode(add_node::AddNode { kind: text(&["kind", "value"], "computation"), x: number(&["x"]), y: number(&["y"]) })),
+        "removeNode" => Ok(DagCommand::RemoveNode(remove_node::RemoveNode { node_id: text(&["nodeId", "node_id", "id", "value"], "") })),
+        "deleteSelection" => Ok(DagCommand::DeleteSelection(delete_selection::DeleteSelection {})),
+        "disconnect" => Ok(DagCommand::Disconnect(disconnect::Disconnect { edge_id: text(&["edgeId", "edge_id", "id", "value"], "") })),
+        "graphPointerDown" => Ok(DagCommand::GraphPointerDown(graph_pointer_down::GraphPointerDown {})),
+        "nodeGraphViewport" => Ok(DagCommand::NodeGraphViewport(node_graph_viewport::NodeGraphViewport {
+            viewport: semio_framework_os_kernel::Viewport2d { x: number(&["x"]).unwrap_or_default(), y: number(&["y"]).unwrap_or_default(), zoom: number(&["zoom"]).unwrap_or(1.0) },
+        })),
+        other => Err(Fault::new(
+            semio_framework_plugin::FaultOrigin::App,
+            semio_framework_plugin::FaultCode::new("dag.unhandled-action"),
+            format!("action '{other}' carries a payload no shell `{{action,args}}` pair can express (it is dispatched through the typed command channel only)"),
+        )),
+    }
+}
+
+struct DagRetainedCommandJobFactory {
+    keys: Vec<ToolFactoryKey>,
+}
+
+impl DagRetainedCommandJobFactory {
+    fn new(controller_id: &str) -> Self {
+        Self { keys: DAG_RETAINED_TOOL_IDS.iter().map(|tool_id| ToolFactoryKey::new(controller_id, *tool_id)).collect() }
+    }
+}
+
+impl semio_framework::ToolJobFactory for DagRetainedCommandJobFactory {
+    type Payload = ArtifactRetainedCommandPayload<EditorApp<DagPlayApp>>;
+    type Job = ArtifactRetainedCommandJob<EditorApp<DagPlayApp>>;
+
+    fn keys(&self) -> &[ToolFactoryKey] {
+        &self.keys
+    }
+    fn payload_schema_id(&self) -> &str {
+        DAG_RETAINED_COMMAND_SCHEMA
+    }
+    fn classification(&self) -> semio_framework::InteractiveJobClassification {
+        semio_framework::InteractiveJobClassification::Migrated
+    }
+    fn execution_contract(&self) -> ToolExecutionContract {
+        ToolExecutionContract::bounded_first_step(DAG_RETAINED_RAW_BYTES, 64, 1, 8_192, 7_500)
+    }
+    fn create_job(&mut self, _operation: semio_framework_job::Operation, payload: Self::Payload) -> Result<Self::Job, ToolJobFactoryError> {
+        Ok(ArtifactRetainedCommandJob::new(payload))
+    }
+
+    fn create_job_from_wire_pages_with_payload(
+        &mut self,
+        _operation: semio_framework_job::Operation,
+        payload: Self::Payload,
+        input: semio_framework::action_bus::RetainedToolWireInput,
+        checkpoint: Option<semio_framework::action_bus::RetainedToolWireInput>,
+    ) -> Result<Self::Job, (ToolJobFactoryError, semio_framework::action_bus::RetainedToolWireInput, Option<semio_framework::action_bus::RetainedToolWireInput>)> {
+        if input.declared_bytes() > DAG_RETAINED_RAW_BYTES || checkpoint.is_some() {
+            return Err((ToolJobFactoryError::new("bounded DAG retained command rejects oversized wire or checkpoint owner"), input, checkpoint));
+        }
+        Ok(ArtifactRetainedCommandJob::from_wire(payload, input))
+    }
+}
+
+impl semio_framework_plugin::ArtifactOwnedToolJobFactory for DagRetainedCommandJobFactory {
+    type Owner = EditorApp<DagPlayApp>;
+    const TOOL_IDS: &'static [&'static str] = DAG_RETAINED_TOOL_IDS;
+    const DOCUMENT_SCHEMA: &'static str = "dag.dag";
+    const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = DAG_RETAINED_PUBLICATION_CONTRACTS;
+}
+//#endregion 🧵️RetainedDocumentCommands
+
 //#region 🧵️RetainedConfigCommands
 const DAG_RETAINED_CONFIG_TOOL_IDS: &[&str] = &["nodeGraphViewport"];
 const DAG_RETAINED_COMMAND_SCHEMA: &str = "dag.dag/v1.tool-command.v1";
@@ -193,56 +373,6 @@ fn dag_retained_config_extent(command: &DagCommand, _snapshot: &DagSnapshot, _in
     DAG_RETAINED_CONFIG_TOOL_IDS.contains(&command.command_id()).then_some(1)
 }
 
-struct DagConfigCommandJobFactory {
-    keys: Vec<ToolFactoryKey>,
-}
-
-impl DagConfigCommandJobFactory {
-    fn new(controller_id: &str) -> Self {
-        Self { keys: DAG_RETAINED_CONFIG_TOOL_IDS.iter().map(|tool_id| ToolFactoryKey::new(controller_id, *tool_id)).collect() }
-    }
-}
-
-impl semio_framework::ToolJobFactory for DagConfigCommandJobFactory {
-    type Payload = ArtifactRetainedCommandPayload<EditorApp<DagPlayApp>>;
-    type Job = ArtifactRetainedCommandJob<EditorApp<DagPlayApp>>;
-
-    fn keys(&self) -> &[ToolFactoryKey] {
-        &self.keys
-    }
-    fn payload_schema_id(&self) -> &str {
-        DAG_RETAINED_COMMAND_SCHEMA
-    }
-    fn classification(&self) -> semio_framework::InteractiveJobClassification {
-        semio_framework::InteractiveJobClassification::Migrated
-    }
-    fn execution_contract(&self) -> ToolExecutionContract {
-        ToolExecutionContract::bounded_first_step(DAG_RETAINED_RAW_BYTES, 64, 1, 8_192, 7_500)
-    }
-    fn create_job(&mut self, _operation: semio_framework_job::Operation, payload: Self::Payload) -> Result<Self::Job, ToolJobFactoryError> {
-        Ok(ArtifactRetainedCommandJob::new(payload))
-    }
-
-    fn create_job_from_wire_pages_with_payload(
-        &mut self,
-        _operation: semio_framework_job::Operation,
-        payload: Self::Payload,
-        input: semio_framework::action_bus::RetainedToolWireInput,
-        checkpoint: Option<semio_framework::action_bus::RetainedToolWireInput>,
-    ) -> Result<Self::Job, (ToolJobFactoryError, semio_framework::action_bus::RetainedToolWireInput, Option<semio_framework::action_bus::RetainedToolWireInput>)> {
-        if input.declared_bytes() > DAG_RETAINED_RAW_BYTES || checkpoint.is_some() {
-            return Err((ToolJobFactoryError::new("bounded DAG Config command rejects oversized wire or checkpoint owner"), input, checkpoint));
-        }
-        Ok(ArtifactRetainedCommandJob::from_wire(payload, input))
-    }
-}
-
-impl semio_framework_plugin::ArtifactOwnedToolJobFactory for DagConfigCommandJobFactory {
-    type Owner = EditorApp<DagPlayApp>;
-    const TOOL_IDS: &'static [&'static str] = DAG_RETAINED_CONFIG_TOOL_IDS;
-    const DOCUMENT_SCHEMA: &'static str = "dag.dag";
-    const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = &[ArtifactToolPublicationContract { tool_id: "nodeGraphViewport", lanes: &[ArtifactToolPublicationLane::Config] }];
-}
 //#endregion 🧵️RetainedConfigCommands
 
 //#region 📬️ConfigStorePreparation
@@ -444,6 +574,10 @@ impl store::ArtifactStoreOneItemPreparation<DagConfig, DagConfigMutation> for Da
 //#endregion 📬️ConfigStorePreparation
 
 impl ArtifactEditor for DagPlayApp {
+    /// 🧩️ The roster the composed `s.stdio.semio` `content` child opens through. A `NoMembers` editor
+    /// cannot materialise the child `genesis_child_pack` derives, so every whole-document load fails
+    /// its archive closure.
+    type Members = semio_s_artifact_stdio_semio::SemioMembers;
     type Snapshot = DagSnapshot;
     type Mutation = DagMutation;
     type Config = DagConfig;
@@ -465,10 +599,21 @@ impl ArtifactEditor for DagPlayApp {
         owner_file: "✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
         controller: "s.dag.dag@1/*#editor",
         artifact_schema: "dag.dag",
-        factory: "DagConfigCommandJobFactory",
-        factory_type: DagConfigCommandJobFactory,
+        factory: "DagRetainedCommandJobFactory",
+        factory_type: DagRetainedCommandJobFactory,
         tools: {
             "nodeGraphViewport" => ToolExecutionContract::bounded_first_step(8_192, 64, 1, 8_192, 7_500),
+            "setActiveExample" => ToolExecutionContract::bounded_first_step(8_192, 64, 1, 8_192, 7_500),
+            "addNode" => ToolExecutionContract::bounded_first_step(8_192, 64, 1, 8_192, 7_500),
+            "removeNode" => ToolExecutionContract::bounded_first_step(8_192, 64, 1, 8_192, 7_500),
+            "deleteSelection" => ToolExecutionContract::bounded_first_step(8_192, 64, 1, 8_192, 7_500),
+            "nodeGraphEdit" => ToolExecutionContract::bounded_first_step(8_192, 64, 1, 8_192, 7_500),
+            "connectMediaPorts" => ToolExecutionContract::bounded_first_step(8_192, 64, 1, 8_192, 7_500),
+            "disconnect" => ToolExecutionContract::bounded_first_step(8_192, 64, 1, 8_192, 7_500),
+            "moveMediaNode" => ToolExecutionContract::bounded_first_step(8_192, 64, 1, 8_192, 7_500),
+            "renameDagNode" => ToolExecutionContract::bounded_first_step(8_192, 64, 1, 8_192, 7_500),
+            "patchDagNodes" => ToolExecutionContract::bounded_first_step(8_192, 64, 1, 8_192, 7_500),
+            "graphPointerDown" => ToolExecutionContract::bounded_first_step(8_192, 64, 1, 8_192, 7_500),
         }
     }
 
@@ -536,11 +681,12 @@ impl ArtifactEditor for DagPlayApp {
 
     fn register_tool_job_factories(registry: &mut ArtifactToolFactoryRegistry<'_, EditorApp<Self>>) -> Result<(), Fault> {
         let controller = registry.controller_id().to_string();
-        registry.register(DagConfigCommandJobFactory::new(&controller))
+        registry.register(DagRetainedCommandJobFactory::new(&controller))
     }
 
     fn build_tool_job(request: ArtifactOwnedToolJobRequest<EditorApp<Self>>) -> Result<Option<semio_framework::ToolOperationSpec>, Fault> {
-        if !DAG_RETAINED_CONFIG_TOOL_IDS.contains(&request.tool_id.as_str()) {
+        let is_config = DAG_RETAINED_CONFIG_TOOL_IDS.contains(&request.tool_id.as_str());
+        if !is_config && !DAG_RETAINED_DOCUMENT_TOOL_IDS.contains(&request.tool_id.as_str()) {
             return Ok(None);
         }
         if request.command.command_id() != request.tool_id {
@@ -569,13 +715,32 @@ impl ArtifactEditor for DagPlayApp {
             DagCommand::command_id,
             DAG_RETAINED_RAW_BYTES,
             1,
-            Box::new(BoundedArtifactCommandWork::new(tool_id, dag_retained_config_reduce, dag_retained_config_extent)),
+            if is_config {
+                Box::new(BoundedArtifactCommandWork::new(tool_id, dag_retained_config_reduce, dag_retained_config_extent))
+            } else {
+                Box::new(BoundedArtifactCommandWork::new(tool_id, dag_retained_document_reduce, dag_retained_document_extent))
+            },
         )?;
         Ok(Some(semio_framework::ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
     }
 
     fn app_schema() -> Option<::framework_schema::AppSchemaDescriptor> {
         Some(crate::editor::dag::config::schema::app_schema_descriptor())
+    }
+
+    /// 🏗️ Admits the whole-document replacement `reset_dag_document_effect` emits for every example
+    /// switch. The trait default refuses the envelope, so the host answered every `setActiveExample`
+    /// with `artifact-store.persisted-initializer-refused` at the archive-load boundary.
+    fn build_document_store_initialization_job(
+        envelope: store::ArtifactEnvelope<Self::Snapshot, Self::Mutation>,
+        operation: semio_framework_job::OperationId,
+        generation: semio_framework_job::Generation,
+    ) -> Result<semio_framework_plugin::ArtifactStoreInitializationJob<Self::Snapshot, Self::Mutation>, store::ArtifactEnvelope<Self::Snapshot, Self::Mutation>> {
+        Ok(semio_framework_plugin::bounded_document_store_initialization_job(envelope, crate::DAG_DOCUMENT_SCHEMA, operation, generation))
+    }
+
+    fn genesis_child_pack(snapshot: &Self::Snapshot, slot: &str, child_id: &str) -> Option<Vec<u8>> {
+        crate::genesis_dag_child_pack(snapshot, slot, child_id)
     }
 
     fn initial_snapshot() -> DagSnapshot {
@@ -592,6 +757,10 @@ impl ArtifactEditor for DagPlayApp {
     /// `app_commands!`'s generated `command_id()`.
     fn command_id(command: &DagCommand) -> &'static str {
         command.command_id()
+    }
+
+    fn command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result<DagCommand, Fault> {
+        dag_command_from_action(action, args)
     }
 
     /// 🕹️ `deleteSelection`/`nodeGraphEdit` read the `graph` interaction domain directly (bypassing the
@@ -712,6 +881,10 @@ pub fn create_dag_app() -> semio_framework_plugin::AppDefinition {
             // actions yourself).
             .action_with(ActionDefinition::new("nodeGraphViewport", LocalizedLabel::native("Node Graph Viewport", "Knotengraph-Ansicht"), ActionKind::View, "camera"))
             .action_with(ActionDefinition::new("graphPointerDown", LocalizedLabel::native("Graph Pointer Down", "Graph-Zeiger gedrückt"), ActionKind::View, "mouse-pointer"))
+            // 🧬️ The example picker's verb. The subset registers `crate::examples::demo`, so the shell
+            // dispatches this at boot and on every navbar pick; with no declaration at all every one of
+            // those was dropped `undeclared-action` before it reached the app.
+            .action_with(ActionDefinition::new("setActiveExample", LocalizedLabel::native("Set Active Example", "Beispiel setzen"), ActionKind::View, "file").with_args(vec![ActionArgDef::text("exampleId", LocalizedLabel::native("Example", "Beispiel")).default_value(&crate::examples::demo::ID)]))
             .keybinding("delete,backspace", "deleteSelection")
             // 📝️ Staged argument form for the panel-visible create action.
             .action_args("addNode", vec![
@@ -756,17 +929,18 @@ pub fn create_dag_app() -> semio_framework_plugin::AppDefinition {
             // call are dropped here (reported in the migration report, not silently lost). The
             // subset's own `📚️examples/🎬️demo` facet (`crate::examples::demo`,
             // real content, pre-existing) is the modern, role-agnostic replacement surface for this.
-            .action_interactive_job("addNode", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("removeNode", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("deleteSelection", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("nodeGraphEdit", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("connectMediaPorts", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("disconnect", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("moveMediaNode", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("renameDagNode", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("patchDagNodes", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("addNode", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("removeNode", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("deleteSelection", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("nodeGraphEdit", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("connectMediaPorts", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("disconnect", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("moveMediaNode", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("renameDagNode", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("patchDagNodes", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_interactive_job("nodeGraphViewport", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_interactive_job("graphPointerDown", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("setActiveExample", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("graphPointerDown", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .config(DagPlayApp::config_spec())
             .build_definition()
 }

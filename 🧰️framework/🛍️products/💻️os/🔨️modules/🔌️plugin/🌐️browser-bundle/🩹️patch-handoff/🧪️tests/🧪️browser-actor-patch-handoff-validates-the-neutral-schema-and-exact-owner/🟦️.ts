@@ -1,6 +1,6 @@
 type TestSource = { readonly directory: string; readonly url: string };
 
-export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: any, source: TestSource): Promise<void> {
+export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: Pick<typeof import("../../🟦️.ts"), "browserActorUiPatchOwnerMatchesV1" | "parseBrowserActorUiPatchOfferV1" | "parseBrowserActorUiPatchResultV1">, source: TestSource): Promise<void> {
   const { browserActorUiPatchOwnerMatchesV1, parseBrowserActorUiPatchOfferV1, parseBrowserActorUiPatchResultV1 } = dependencies;
 
   const { expect, it } = vitest;

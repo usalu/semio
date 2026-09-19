@@ -1,0 +1,90 @@
+{
+  "schema": "semio.directory.hub-sign-in-fixtures.v1",
+  "mintPath": "/auth/sessions",
+  "sessionPath": "/auth/sessions/me",
+  "requestSchema": "semio.hub.auth.credential-sign-in/v1",
+  "errorSchema": "semio.hub.auth.error/v1",
+  "requestMaxBytes": 1024,
+  "requestFieldOrder": ["schema", "email", "password", "deviceInstanceId", "clientClass"],
+  "timeoutMs": 10000,
+  "statusCodes": [
+    { "status": 400, "code": "malformed-request" },
+    { "status": 401, "code": "invalid-credentials" },
+    { "status": 403, "code": "password-sign-in-disabled" },
+    { "status": 408, "code": "unreachable" },
+    { "status": 409, "code": "hub-refused" },
+    { "status": 413, "code": "malformed-request" },
+    { "status": 429, "code": "rate-limited" },
+    { "status": 500, "code": "unreachable" },
+    { "status": 503, "code": "unreachable" }
+  ],
+  "retryAfter": [
+    { "header": "30", "seconds": 30 },
+    { "header": "0", "seconds": 0 },
+    { "header": " 45 ", "seconds": 45 },
+    { "header": "Wed, 21 Oct 2026 07:28:00 GMT", "seconds": null },
+    { "header": "-5", "seconds": null },
+    { "header": "999999999", "seconds": null }
+  ],
+  "credentials": [
+    { "email": "ada@example.org", "password": "correct horse", "valid": true },
+    { "email": "ada@example.org", "password": "short", "valid": false },
+    { "email": "ada", "password": "correct horse", "valid": false },
+    { "email": "ada@a@example.org", "password": "correct horse", "valid": false },
+    { "email": "@example.org", "password": "correct horse", "valid": false }
+  ],
+  "tokens": [
+    { "token": "session.v1.0123456789abcdef0123456789abcdef.0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef", "valid": true },
+    { "token": "session.v1.0123456789ABCDEF0123456789abcdef.0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef", "valid": false },
+    { "token": "session.v2.0123456789abcdef0123456789abcdef.0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef", "valid": false },
+    { "token": "session.v1.0123456789abcdef.0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef", "valid": false },
+    { "token": "<!doctype html>", "valid": false }
+  ],
+  "origins": [
+    { "typed": "hub.example.org", "origin": "https://hub.example.org" },
+    { "typed": "https://hub.example.org", "origin": "https://hub.example.org" },
+    { "typed": "https://hub.example.org/", "origin": "https://hub.example.org" },
+    { "typed": "http://127.0.0.1:7777", "origin": "http://127.0.0.1:7777" },
+    { "typed": "https://hub.example.org/spaces", "origin": null },
+    { "typed": "https://user:secret@hub.example.org", "origin": null },
+    { "typed": "https://hub.example.org?token=abc", "origin": null },
+    { "typed": "https://hub.example.org#semio-broker=abc", "origin": null },
+    { "typed": "ftp://hub.example.org", "origin": null },
+    { "typed": "", "origin": null }
+  ],
+  "persistedFields": ["id", "kind", "label", "lastUserId", "origin"],
+  "neverPersisted": ["token", "password", "sessionId"],
+  "presentation": {
+    "locales": ["en", "de"],
+    "text": {
+      "en": {
+        "invalidCredentials": "That email and password do not match an account on this hub.",
+        "rateLimited": "Too many sign-in attempts. Try again in {{seconds}} s.",
+        "unreachable": "This hub cannot be reached. You can keep working locally; sign in again when the connection is back.",
+        "hubRefused": "This hub refused the sign-in request.",
+        "invalidResponse": "This hub answered with something this app cannot read.",
+        "cancelled": "Sign-in was cancelled.",
+        "expired": "Your session on this hub expired. Sign in again to continue collaborating.",
+        "invalidOrigin": "Enter a hub address such as https://hub.example.org.",
+        "passwordDisabled": "This hub does not accept password sign-in. Open it from its own launcher instead.",
+        "malformedRequest": "This app sent something this hub could not read. Check the address and try again.",
+        "shortPassword": "Passwords on this hub are at least 8 characters.",
+        "invalidEmail": "Enter the email address you use on this hub."
+      },
+      "de": {
+        "invalidCredentials": "E-Mail und Passwort passen zu keinem Konto auf diesem Hub.",
+        "rateLimited": "Zu viele Anmeldeversuche. Versuche es in {{seconds}} s erneut.",
+        "unreachable": "Dieser Hub ist nicht erreichbar. Du kannst lokal weiterarbeiten und dich erneut anmelden, sobald die Verbindung wieder steht.",
+        "hubRefused": "Dieser Hub hat die Anmeldung abgelehnt.",
+        "invalidResponse": "Dieser Hub hat mit etwas geantwortet, das diese App nicht lesen kann.",
+        "cancelled": "Die Anmeldung wurde abgebrochen.",
+        "expired": "Deine Sitzung auf diesem Hub ist abgelaufen. Melde dich erneut an, um weiter zusammenzuarbeiten.",
+        "invalidOrigin": "Gib eine Hub-Adresse ein, zum Beispiel https://hub.example.org.",
+        "passwordDisabled": "Dieser Hub akzeptiert keine Passwort-Anmeldung. Öffne ihn stattdessen über seinen eigenen Starter.",
+        "malformedRequest": "Diese App hat etwas gesendet, das dieser Hub nicht lesen konnte. Prüfe die Adresse und versuche es erneut.",
+        "shortPassword": "Passwörter auf diesem Hub haben mindestens 8 Zeichen.",
+        "invalidEmail": "Gib die E-Mail-Adresse ein, die du auf diesem Hub verwendest."
+      }
+    }
+  }
+}

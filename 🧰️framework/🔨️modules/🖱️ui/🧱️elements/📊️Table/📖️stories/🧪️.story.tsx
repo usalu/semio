@@ -222,11 +222,17 @@ export const WithIconAvatars: Story = {
 // #endregion 🛎️Table
 
 // 📊️#region ⏰️TableSkeleton
+const skeletonColumns: TableColumn<unknown>[] = [
+  { id: "name", header: "Name", accessor: () => null },
+  { id: "role", header: "Role", accessor: () => null },
+  { id: "status", header: "Status", accessor: () => null },
+];
+
 export const SkeletonDefault: Story = {
   args: { columns: [], data: [] },
   render: () => (
     <div className="h-64">
-      <TableSkeleton columns={3} rowCount={5} />
+      <TableSkeleton columns={skeletonColumns} rowCount={5} />
     </div>
   ),
 };
@@ -235,7 +241,7 @@ export const SkeletonMinimal: Story = {
   args: { columns: [], data: [] },
   render: () => (
     <div className="h-32">
-      <TableSkeleton columns={2} rowCount={3} />
+      <TableSkeleton columns={skeletonColumns.slice(0, 2)} rowCount={3} />
     </div>
   ),
 };

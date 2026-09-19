@@ -12,6 +12,7 @@ export type OwnedBuildMiddleware = (request: IncomingMessage, response: ServerRe
 export type OwnedBuildServer = {
   readonly middlewares: { use(middleware: OwnedBuildMiddleware): void };
   readonly ws: { send(payload: Readonly<Record<string, unknown>>): void };
+  readonly config: { readonly root: string; readonly cacheDir: string };
 };
 
 export type OwnedResolvedBuildConfig = {

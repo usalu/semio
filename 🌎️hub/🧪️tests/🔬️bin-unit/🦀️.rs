@@ -1,8 +1,10 @@
 use super::*;
-use directory::os_directory::{DirectoryCommandOutcomeV1, DirectoryCommandResultV1};
+use directory::os_directory::{same_lease_fields_v1, CheckpointPublicationBlobV1, CheckpointPublicationFrontierV1, DirectoryCommandOutcomeV1, DirectoryCommandResultV1};
 use protocol::{ArtifactId as WireArtifactId, Bootstrap};
 use semio_framework_hash::Sha256;
 use semio_hub::artifact_authority::checkpoint_id_encoding_v1;
+use semio_hub::directory::model::{DirectoryCommandClaimV1, DirectoryCommandDispositionV1, DirectoryCommandReceiptCompletion, DirectoryCommandReceiptRecord, DirectoryCommandResultKindV1};
+use semio_hub::directory::replay_directory_command_receipt;
 
 struct StartupVerifier;
 
@@ -539,6 +541,8 @@ async fn test_state_with_directory(dir: std::path::PathBuf, directory: SqliteDir
         artifact_publication,
         artifact_maintenance: ArtifactCasMaintenanceSupervisor::disabled(),
         directory_service,
+        credential_sign_in: CredentialSignInPolicyV1::default(),
+        rate_limits: Arc::new(HubRateLimiterV1::system()),
         admin_subjects: Arc::from([]),
         admin_cursor_key: [0x5a; 32],
         space_administration_cursor_key: [0xa5; 32],
@@ -619,6 +623,8 @@ async fn lag_test_state(directory_capacity: usize, fanout_capacity: usize) -> Hu
         artifact_publication,
         artifact_maintenance: ArtifactCasMaintenanceSupervisor::disabled(),
         directory_service,
+        credential_sign_in: CredentialSignInPolicyV1::default(),
+        rate_limits: Arc::new(HubRateLimiterV1::system()),
         admin_subjects: Arc::from([]),
         admin_cursor_key: [0x5a; 32],
         space_administration_cursor_key: [0xa5; 32],
@@ -702,7 +708,7 @@ fn artifact_document_id_for_test(label: &str) -> String {
 
 async fn announce_document_for_test(state: &HubState, space_id: &str, document_id: &str) {
     let actor = DirectoryActor { kind: DirectoryActorKind::User, id: "user:seed#test".into() };
-    state.directory_service.execute(actor, DirectoryCommand::AnnounceDocument { descriptor: document_descriptor_for_test(space_id, document_id) }).await.expect("announce document");
+    state.directory_service.execute(actor, DirectoryCommand::AnnounceDocument { descriptor: Box::new(document_descriptor_for_test(space_id, document_id)) }).await.expect("announce document");
 }
 
 async fn publish_checkpoint_for_test(state: &HubState, space_id: &str, document_id: &str) -> os_directory::ArtifactCheckpoint {
@@ -1124,6 +1130,34 @@ async fn raw_http_request(addr: SocketAddr, method: &str, path: &str, headers: &
 
 async fn raw_http_get(addr: SocketAddr, path: &str, headers: &[(&str, &str)]) -> RawHttpResponse {
     raw_http_request(addr, "GET", path, headers, &[]).await
+}
+
+/// 🫀️ Liveness and readiness are two different questions, and a hub that has not finished booting
+/// must answer them differently: `/readyz` refuses with `503` while a required subsystem is down,
+/// and `/healthz` still answers `200 live` on the very same process so an orchestrator restarts a
+/// wedged hub without ever restarting a warming one.
+#[tokio::test]
+async fn healthz_reports_liveness_on_a_process_whose_readyz_still_refuses() {
+    let state = test_state().await;
+    let run_id = state.readiness.run_id.clone();
+    let addr = spawn_server(state).await;
+
+    let readiness = raw_http_get(addr, "/readyz", &[]).await;
+    assert_eq!(readiness.status, 503);
+
+    let liveness = raw_http_get(addr, "/healthz", &[]).await;
+    assert_eq!(liveness.status, 200, "{}", String::from_utf8_lossy(&liveness.body));
+    let body: serde_json::Value = serde_json::from_slice(&liveness.body).expect("liveness JSON");
+    assert_eq!(body["schema"], "semio.hub.liveness/v1");
+    assert_eq!(body["status"], "live");
+    assert_eq!(body["runId"], run_id);
+    assert!(body["uptimeMs"].is_u64());
+    assert!(body.get("directory").is_none(), "liveness never republishes a readiness subsystem");
+    assert!(body.get("artifactAuthority").is_none(), "liveness never republishes a readiness subsystem");
+
+    let again = raw_http_get(addr, "/healthz", &[]).await;
+    let repeated: serde_json::Value = serde_json::from_slice(&again.body).expect("second liveness JSON");
+    assert!(repeated["uptimeMs"].as_u64().expect("uptime") >= body["uptimeMs"].as_u64().expect("uptime"));
 }
 
 //#region 💡️Inference
@@ -3420,7 +3454,7 @@ async fn scoped_directory_socket_ledger_indexes_and_invalidates_exact_membership
 fn scoped_directory_socket_message_matching_is_body_exact_and_removal_private() {
     let scope = DocumentScope::new("space-a", "document-a");
     let event = |body: os_directory::DirectoryEventBody| DirectoryStreamMessage::Event {
-        event: DirectoryEvent {
+        event: Box::new(DirectoryEvent {
             seq: 1,
             id: "event-a".into(),
             hlc: os_directory::Hlc { physical_ms: 1, logical: 0 },
@@ -3429,7 +3463,7 @@ fn scoped_directory_socket_message_matching_is_body_exact_and_removal_private() 
             user_id: None,
             body,
             recorded_at_ms: 1,
-        },
+        }),
     };
     assert!(directory_message_matches_scope(&scope, &event(os_directory::DirectoryEventBody::DocumentAnnounced { descriptor: document_descriptor_for_test("space-a", "document-a") })));
     assert!(!directory_message_matches_scope(&scope, &event(os_directory::DirectoryEventBody::DocumentAnnounced { descriptor: document_descriptor_for_test("space-a", "document-b") })));
@@ -4107,7 +4141,7 @@ fn directory_global_socket_delivery_and_revocation_share_one_transient_authority
             *gate.socket_global_send_pause.lock().expect("clear global pause") = None;
             gate.socket_global_send_release.add_permits(1);
             if row["a"] == true {
-                assert!(matches!(next_directory_message(&mut socket).await, DirectoryStreamMessage::Event { event } if event == event_a), "one exact A event wins before revocation");
+                assert!(matches!(next_directory_message(&mut socket).await, DirectoryStreamMessage::Event { event } if *event == event_a), "one exact A event wins before revocation");
             }
             if delivery_first {
                 assert_eq!(tokio::time::timeout(std::time::Duration::from_secs(2), revoke).await.expect("trailing revocation deadline").expect("trailing revocation"), if membership { 202 } else { 204 });
@@ -4122,7 +4156,7 @@ fn directory_global_socket_delivery_and_revocation_share_one_transient_authority
                     .into_iter()
                     .next()
                     .expect("B event");
-                assert!(matches!(next_directory_message(&mut socket).await, DirectoryStreamMessage::Event { event } if event == event_b), "removed A membership neither leaks A nor closes unrelated B");
+                assert!(matches!(next_directory_message(&mut socket).await, DirectoryStreamMessage::Event { event } if *event == event_b), "removed A membership neither leaks A nor closes unrelated B");
                 socket.close(None).await.expect("close unaffected global socket");
             } else {
                 assert_eq!(u64::from(next_close_code(&mut socket, false).await), row["close"].as_u64().unwrap(), "revoked principal closes without a later message");
@@ -4207,7 +4241,7 @@ async fn socket_directory_visibility_requires_membership_even_for_public_spaces(
         expires_at_ms: session.expires_at,
         state: SocketGrantStateV1::Consumed,
     };
-    assert_eq!(socket_directory_membership_visibility(&state, &record, &DirectoryStreamMessage::Event { event }).await, SocketBindingValidityV1::Unauthorized);
+    assert_eq!(socket_directory_membership_visibility(&state, &record, &DirectoryStreamMessage::Event { event: Box::new(event) }).await, SocketBindingValidityV1::Unauthorized);
 }
 
 fn assert_public_projection_has_no_private_keys(value: &serde_json::Value) {
@@ -6203,7 +6237,7 @@ async fn checkpoint_publication_route_rejects_stale_or_cross_scope_inputs_before
     fixture
         .state
         .directory_service
-        .execute(DirectoryActor { kind: DirectoryActorKind::User, id: format!("user:{}#checkpoint-test", fixture.author.user_id) }, DirectoryCommand::AnnounceDocument { descriptor: other_descriptor })
+        .execute(DirectoryActor { kind: DirectoryActorKind::User, id: format!("user:{}#checkpoint-test", fixture.author.user_id) }, DirectoryCommand::AnnounceDocument { descriptor: Box::new(other_descriptor) })
         .await
         .expect("announce same-id other-space document");
     let addr = spawn_server(fixture.state.clone()).await;
@@ -6260,7 +6294,7 @@ async fn checkpoint_publication_route_rejects_stale_or_cross_scope_inputs_before
     fixture
         .state
         .directory_service
-        .execute(DirectoryActor { kind: DirectoryActorKind::User, id: format!("user:{}#checkpoint-test", fixture.author.user_id) }, DirectoryCommand::AnnounceDocument { descriptor: changed_descriptor })
+        .execute(DirectoryActor { kind: DirectoryActorKind::User, id: format!("user:{}#checkpoint-test", fixture.author.user_id) }, DirectoryCommand::AnnounceDocument { descriptor: Box::new(changed_descriptor) })
         .await
         .expect("replace publication descriptor");
     gate.checkpoint_publication_release.add_permits(1);
@@ -6270,7 +6304,7 @@ async fn checkpoint_publication_route_rejects_stale_or_cross_scope_inputs_before
     fixture
         .state
         .directory_service
-        .execute(DirectoryActor { kind: DirectoryActorKind::User, id: format!("user:{}#checkpoint-test", fixture.author.user_id) }, DirectoryCommand::AnnounceDocument { descriptor: descriptor.clone() })
+        .execute(DirectoryActor { kind: DirectoryActorKind::User, id: format!("user:{}#checkpoint-test", fixture.author.user_id) }, DirectoryCommand::AnnounceDocument { descriptor: Box::new(descriptor.clone()) })
         .await
         .expect("restore publication descriptor");
 
@@ -6320,3 +6354,210 @@ async fn auth_sessions_me_roundtrip() {
     assert_eq!(delete_session_me(headers.clone(), State(state.clone())).await, StatusCode::NO_CONTENT);
     assert_eq!(get_session_me(headers, State(state)).await.err(), Some(StatusCode::UNAUTHORIZED));
 }
+
+//#region 🔖️CredentialSignIn
+const SIGN_IN_PASSWORD: &str = "correct horse battery staple";
+const SIGN_IN_ITERATIONS: u32 = 1_000;
+
+/// 🕰️ A hand-stepped clock for the rate limiter, so a lockout law never sleeps.
+struct TestRateLimitClock(std::sync::atomic::AtomicI64);
+
+impl TestRateLimitClock {
+    fn advance(&self, milliseconds: i64) {
+        self.0.fetch_add(milliseconds, std::sync::atomic::Ordering::SeqCst);
+    }
+}
+
+impl semio_hub::auth::rate_limit::RateLimitClockV1 for TestRateLimitClock {
+    fn now_ms(&self) -> i64 {
+        self.0.load(std::sync::atomic::Ordering::SeqCst)
+    }
+}
+
+async fn credential_sign_in_state() -> (HubState, Arc<TestRateLimitClock>) {
+    let mut state = test_state().await;
+    let clock = Arc::new(TestRateLimitClock(std::sync::atomic::AtomicI64::new(1_000_000)));
+    state.credential_sign_in = CredentialSignInPolicyV1::enabled(3_600, SIGN_IN_ITERATIONS).expect("credential sign-in policy");
+    state.rate_limits = Arc::new(HubRateLimiterV1::new(clock.clone()));
+    (state, clock)
+}
+
+async fn seed_credential_user(state: &HubState, email: &str, password: Option<&str>) -> String {
+    let credential = password.map(|password| semio_hub::auth::password::PasswordCredentialV1::mint(password, SIGN_IN_ITERATIONS).expect("mint credential").encode());
+    state.directory.create_user(email, email, credential.as_deref(), None, None).await.expect("credential user").id
+}
+
+fn sign_in_body(email: &str, password: &str) -> Vec<u8> {
+    serde_json::json!({ "schema": "semio.hub.auth.credential-sign-in/v1", "email": email, "password": password, "deviceInstanceId": "test-device", "clientClass": "browser" }).to_string().into_bytes()
+}
+
+async fn post_sign_in(addr: SocketAddr, body: &[u8]) -> RawHttpResponse {
+    raw_http_request(addr, "POST", "/auth/sessions", &[("content-type", "application/json")], body).await
+}
+
+fn json_body(response: &RawHttpResponse) -> serde_json::Value {
+    serde_json::from_slice(&response.body).expect("JSON body")
+}
+
+/// 🔬️ `POST /auth/sessions` mints a real session from a password credential: the email is matched
+/// case-insensitively, the response is exactly `{token, user_id}`, the token then authenticates
+/// `GET /auth/sessions/me` as an `external` session, and both the attempt and the issuance are in
+/// the durable authentication log.
+#[tokio::test]
+async fn credential_sign_in_mints_a_session_whose_token_then_authenticates() {
+    let (state, _clock) = credential_sign_in_state().await;
+    let user_id = seed_credential_user(&state, "signin@example.com", Some(SIGN_IN_PASSWORD)).await;
+    let addr = spawn_server(state.clone()).await;
+    let response = post_sign_in(addr, &sign_in_body("  SignIn@Example.COM ", SIGN_IN_PASSWORD)).await;
+    assert_eq!(response.status, 200, "{}", String::from_utf8_lossy(&response.body));
+    assert!(response.headers.to_lowercase().contains("cache-control: no-store"));
+    let minted = json_body(&response);
+    assert_eq!(minted.as_object().expect("mint object").len(), 2);
+    assert_eq!(minted["user_id"].as_str(), Some(user_id.as_str()));
+    let token = minted["token"].as_str().expect("minted token").to_string();
+    assert!(token.starts_with("session.v1.") && token.len() == 108);
+
+    let mut headers = HeaderMap::new();
+    headers.insert(axum::http::header::AUTHORIZATION, format!("Bearer {token}").parse().expect("bearer"));
+    let me = get_session_me(headers, State(state.clone())).await.expect("session authority");
+    assert_eq!(me.0.user_id, user_id);
+    assert_eq!(me.0.email, "signin@example.com");
+    assert!(matches!(me.0.session_kind, DirectorySessionKindV1::External));
+    assert!(me.0.expires_at > now_ms() && me.0.expires_at <= now_ms() + 3_600_000);
+
+    let audit = state.directory.list_auth_audit(32, 0).await.expect("auth audit");
+    assert!(audit.iter().any(|fact| fact.event_kind == "credential-sign-in" && fact.outcome_code == "success" && fact.target_user_id.as_deref() == Some(user_id.as_str()) && fact.peer_class == "browser"));
+    assert!(audit.iter().any(|fact| fact.event_kind == "session-issued" && fact.target_user_id.as_deref() == Some(user_id.as_str())));
+}
+
+/// 🔬️ An unknown account, an account with no password credential, an unreadable stored credential
+/// and a wrong password are ONE observable refusal — a caller cannot enumerate accounts — and each
+/// refusal is journaled with its public reason code and no user-distinguishing detail.
+#[tokio::test]
+async fn credential_sign_in_refuses_every_wrong_credential_with_one_code() {
+    let (state, _clock) = credential_sign_in_state().await;
+    let known = seed_credential_user(&state, "known@example.com", Some(SIGN_IN_PASSWORD)).await;
+    seed_credential_user(&state, "credential-free@example.com", None).await;
+    let addr = spawn_server(state.clone()).await;
+    for (email, password) in [("known@example.com", "a different password"), ("missing@example.com", SIGN_IN_PASSWORD), ("credential-free@example.com", SIGN_IN_PASSWORD)] {
+        let response = post_sign_in(addr, &sign_in_body(email, password)).await;
+        assert_eq!(response.status, 401, "{email}");
+        let body = json_body(&response);
+        assert_eq!(body["schema"].as_str(), Some("semio.hub.auth.error/v1"));
+        assert_eq!(body["error"].as_str(), Some("invalid-credentials"), "{email}");
+        assert!(body.get("retryAfterMs").is_none());
+    }
+    for malformed in [
+        serde_json::json!({ "schema": "semio.hub.auth.credential-sign-in/v1", "email": "known@example.com", "password": SIGN_IN_PASSWORD, "deviceInstanceId": "test-device", "clientClass": "browser", "extra": 1 }),
+        serde_json::json!({ "schema": "semio.hub.auth.credential-sign-in/v2", "email": "known@example.com", "password": SIGN_IN_PASSWORD, "deviceInstanceId": "test-device", "clientClass": "browser" }),
+        serde_json::json!({ "schema": "semio.hub.auth.credential-sign-in/v1", "email": "known@example.com", "password": "short", "deviceInstanceId": "test-device", "clientClass": "browser" }),
+        serde_json::json!({ "schema": "semio.hub.auth.credential-sign-in/v1", "email": "not-an-email", "password": SIGN_IN_PASSWORD, "deviceInstanceId": "test-device", "clientClass": "browser" }),
+    ] {
+        let response = post_sign_in(addr, malformed.to_string().as_bytes()).await;
+        assert_eq!(response.status, 400, "{malformed}");
+        assert_eq!(json_body(&response)["error"].as_str(), Some("malformed-request"));
+    }
+    let failures = state.directory.list_auth_audit(32, 0).await.expect("auth audit").into_iter().filter(|fact| fact.event_kind == "credential-sign-in" && fact.outcome_code == "failure").collect::<Vec<_>>();
+    assert_eq!(failures.len(), 3, "one journaled fact per attempt that reached the decision");
+    assert!(failures.iter().all(|fact| fact.reason_code.as_deref() == Some("invalid-credentials")));
+    assert_eq!(failures.iter().filter(|fact| fact.target_user_id.as_deref() == Some(known.as_str())).count(), 1);
+}
+
+/// 🔬️ A hub that was not told to issue publicly refuses every credential — including a correct one —
+/// and `/readyz` says so: `publicSessionIssuance` is the policy, not a constant.
+#[tokio::test]
+async fn credential_sign_in_is_refused_and_undeclared_when_the_deployment_did_not_enable_it() {
+    let state = test_state().await;
+    assert!(!state.credential_sign_in.is_enabled());
+    seed_credential_user(&state, "disabled@example.com", Some(SIGN_IN_PASSWORD)).await;
+    let addr = spawn_server(state.clone()).await;
+    let response = post_sign_in(addr, &sign_in_body("disabled@example.com", SIGN_IN_PASSWORD)).await;
+    assert_eq!(response.status, 403);
+    assert_eq!(json_body(&response)["error"].as_str(), Some("credential-sign-in-disabled"));
+    let readiness = hub_readiness(HubMode::Development, "loopback", "00112233445566778899aabbccddeeff".into(), true, true, false, true, true, false, false);
+    assert!(!declare_public_session_issuance(readiness.clone(), false).authentication.public_session_issuance);
+    assert!(declare_public_session_issuance(readiness, true).authentication.public_session_issuance);
+}
+
+/// 🔬️ The token bucket in front of sign-in is real: the burst is admitted, the next attempt is
+/// `429` with a `retry-after`, a CORRECT password is refused while the bucket is empty, and exactly
+/// one recovered token later the same correct password mints.
+#[tokio::test]
+async fn credential_sign_in_locks_out_after_its_burst_and_recovers_on_the_clock() {
+    let (state, clock) = credential_sign_in_state().await;
+    seed_credential_user(&state, "lockout@example.com", Some(SIGN_IN_PASSWORD)).await;
+    let addr = spawn_server(state.clone()).await;
+    let burst = RateLimitClassV1::Auth.policy().burst;
+    for attempt in 0..burst {
+        assert_eq!(post_sign_in(addr, &sign_in_body("lockout@example.com", "a different password")).await.status, 401, "attempt {attempt}");
+    }
+    let refused = post_sign_in(addr, &sign_in_body("lockout@example.com", "a different password")).await;
+    assert_eq!(refused.status, 429);
+    assert!(refused.headers.to_lowercase().contains("retry-after:"), "{}", refused.headers);
+    let body = json_body(&refused);
+    assert_eq!(body["error"].as_str(), Some("rate-limited"));
+    assert!(body["retryAfterMs"].as_u64().is_some_and(|milliseconds| milliseconds > 0));
+    assert_eq!(post_sign_in(addr, &sign_in_body("lockout@example.com", SIGN_IN_PASSWORD)).await.status, 429, "a correct password is refused while the bucket is empty");
+    clock.advance(i64::from(RateLimitClassV1::Auth.policy().cost_ms));
+    assert_eq!(post_sign_in(addr, &sign_in_body("lockout@example.com", SIGN_IN_PASSWORD)).await.status, 200);
+}
+
+/// 🔬️ Signing out revokes the credential-minted session durably: the same token stops resolving and
+/// the revocation is a fact in the log.
+#[tokio::test]
+async fn signing_out_a_credential_session_revokes_it_durably() {
+    let (state, _clock) = credential_sign_in_state().await;
+    let user_id = seed_credential_user(&state, "signout@example.com", Some(SIGN_IN_PASSWORD)).await;
+    let addr = spawn_server(state.clone()).await;
+    let minted = json_body(&post_sign_in(addr, &sign_in_body("signout@example.com", SIGN_IN_PASSWORD)).await);
+    let authorization = format!("Bearer {}", minted["token"].as_str().expect("minted token"));
+    assert_eq!(raw_http_get(addr, "/auth/sessions/me", &[("authorization", authorization.as_str())]).await.status, 200);
+    assert_eq!(raw_http_request(addr, "DELETE", "/auth/sessions/me", &[("authorization", authorization.as_str())], &[]).await.status, 204);
+    assert_eq!(raw_http_get(addr, "/auth/sessions/me", &[("authorization", authorization.as_str())]).await.status, 401);
+    assert_eq!(raw_http_request(addr, "DELETE", "/auth/sessions/me", &[("authorization", authorization.as_str())], &[]).await.status, 401);
+    assert!(state.directory.list_auth_audit(32, 0).await.expect("auth audit").iter().any(|fact| fact.event_kind == "session-revoked" && fact.target_user_id.as_deref() == Some(user_id.as_str())));
+}
+
+/// 🔬️ A session stops resolving the moment it expires — the expiry is durable state, not a token
+/// claim the hub trusts.
+#[tokio::test]
+async fn an_expired_session_stops_resolving() {
+    let state = test_state().await;
+    let user_id = seed_credential_user(&state, "expiring@example.com", Some(SIGN_IN_PASSWORD)).await;
+    let issue = AuthSessionIssue {
+        user_id,
+        identity_provider: semio_hub::auth::CREDENTIAL_IDENTITY_PROVIDER.into(),
+        identity_subject_digest: identity_subject_digest(semio_hub::auth::CREDENTIAL_IDENTITY_PROVIDER, "expiring@example.com").expect("subject digest"),
+        ttl_secs: 1,
+        device_instance_id: "test-device".into(),
+        session_kind: AuthSessionKind::External,
+        correlation_id: directory::os_identity::time_ordered_id(),
+        peer_class: "browser".into(),
+    };
+    let session = state.directory.issue_auth_session(&issue).await.expect("short session");
+    let mut headers = HeaderMap::new();
+    headers.insert(axum::http::header::AUTHORIZATION, format!("Bearer {}", session.capability.expose_once()).parse().expect("bearer"));
+    assert!(get_session_me(headers.clone(), State(state.clone())).await.is_ok());
+    tokio::time::sleep(std::time::Duration::from_millis(1_200)).await;
+    assert_eq!(get_session_me(headers, State(state)).await.err(), Some(StatusCode::UNAUTHORIZED));
+}
+
+/// 🔬️ Authentication is not optional anywhere else either: an unauthenticated document WebSocket is
+/// refused at the upgrade, a session bearer is NOT a socket grant, and the document status route
+/// refuses an anonymous reader.
+#[test]
+fn an_unauthenticated_document_route_is_refused() {
+    run_socket_test(|| async {
+        let state = test_state().await;
+        let session = issue_test_session(&state, "anonymous@example.com").await;
+        announce_document_for_test(&state, STUDIO, "socket-unauthenticated").await;
+        let addr = spawn_server(state.clone()).await;
+        let url = format!("ws://{addr}/spaces/{STUDIO}/documents/socket-unauthenticated/socket/v1");
+        let anonymous = connect_async(url.clone().into_client_request().expect("socket request")).await.expect_err("an ungranted socket is refused");
+        assert!(matches!(anonymous, tokio_tungstenite::tungstenite::Error::Http(ref response) if response.status().as_u16() == 401), "{anonymous}");
+        let bearer_instead_of_grant = connect_async(socket_request(&url, &session.token)).await.expect_err("a session bearer is not a socket grant");
+        assert!(matches!(bearer_instead_of_grant, tokio_tungstenite::tungstenite::Error::Http(ref response) if response.status().as_u16() == 401), "{bearer_instead_of_grant}");
+        assert_eq!(raw_http_get(addr, &format!("/spaces/{STUDIO}/documents/socket-unauthenticated"), &[]).await.status, 401);
+    });
+}
+//#endregion 🔖️CredentialSignIn

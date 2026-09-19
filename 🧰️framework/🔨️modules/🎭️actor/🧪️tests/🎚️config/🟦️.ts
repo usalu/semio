@@ -18,7 +18,6 @@ export default {
   test: {
     root: testRoot,
     name: "@semio-tech/framework-actor",
-    mode: "test",
     environment: "node",
     // 🩹️ `include` MUST stay empty: these are in-source (`import.meta.vitest`) suites, collected via
     // `includeSource`. Listing the same files in BOTH keys makes vitest collect each one twice, which

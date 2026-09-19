@@ -448,6 +448,55 @@ fn opening_a_selects_popup_gives_its_synthesized_item_rows_real_hit_testable_lay
     assert!(bucket_b.y > bucket_a.y, "row \"b\" should be laid out below row \"a\"");
 }
 
+/// 🔽️ W15a item 7. `reconcile::children_of`/`apply_tree` — the only thing that ever synthesized an
+/// open `Select`'s option rows — are `cfg(test, testkit)`, so PRODUCTION materialized none: with
+/// `paint_select` itself `cfg(test)` and the retained `UiNode::Select` arm painting only the
+/// trigger, an open popup on the live renderer painted nothing, registered no row hit target and
+/// projected no accessibility children. This law drives the PRODUCTION stepper
+/// (`sync_interactive_state_node_step`, no `apply_tree` anywhere) and pins: the rows appear, they
+/// are keyed by item value, they are laid out at the popup geometry paint resolves, re-running the
+/// pass does not mint a second copy, closing the popup unmounts them, and the ledger is bounded.
+#[test]
+fn the_production_sync_pass_materialises_an_open_selects_option_rows_and_unmounts_them_on_close() {
+    let fixture = select("sel", "a");
+    let (mut tree, root, theme, _atlas) = setup(&fixture);
+    assert_eq!(tree.composite_row_count(), 0, "a closed Select owns no synthesized rows");
+
+    let drive = |tree: &mut UiTree, theme: &Theme| {
+        let mut cursor = RetainedInteractiveSyncCursor::default();
+        for _ in 0..4_096 {
+            match sync_interactive_state_node_step(tree, root, theme, &mut cursor) {
+                RetainedInteractiveSyncStep::Pending => {}
+                RetainedInteractiveSyncStep::Complete => return,
+                RetainedInteractiveSyncStep::Fault => panic!("the production sync pass faulted at line {}", cursor.fault_line),
+            }
+        }
+        panic!("the production sync pass never completed");
+    };
+
+    drive(&mut tree, &theme);
+    assert_eq!(tree.composite_row_count(), 0, "a CLOSED popup mounts nothing, exactly as React mounts no `SelectContent`");
+
+    tree.node_mut(root).unwrap().state.open = true;
+    drive(&mut tree, &theme);
+    let row_a = find_child_by_key(&tree, root, &NodeKey::Explicit("a".into())).expect("the production pass must synthesize a row for item \"a\"");
+    let row_b = find_child_by_key(&tree, root, &NodeKey::Explicit("b".into())).expect("the production pass must synthesize a row for item \"b\"");
+    assert_eq!(tree.composite_row_count(), 2, "one ledgered row per item, no more");
+    let (bucket_a, bucket_b) = (tree.node(row_a).unwrap().layout.clone(), tree.node(row_b).unwrap().layout.clone());
+    assert!(bucket_a.width > 0.0 && bucket_a.height > 0.0, "a synthesized row gets real layout, so `events::hit_test` and the hit registry can find it");
+    assert!(bucket_b.y > bucket_a.y, "row \"b\" is laid out below row \"a\", at the popup geometry paint resolves");
+    assert!(matches!(tree.node(row_a).map(|node| &node.spec.0), Some(UiNode::Button(_))), "a row is a real retained Button — which is what gives it a paint arm AND a hit registration");
+
+    drive(&mut tree, &theme);
+    assert_eq!(tree.composite_row_count(), 2, "a second pass over the SAME open popup re-finds its rows by key instead of minting a second copy");
+
+    tree.node_mut(root).unwrap().state.open = false;
+    drive(&mut tree, &theme);
+    assert_eq!(tree.composite_row_count(), 0, "a closed popup unmounts its rows");
+    assert!(find_child_by_key(&tree, root, &NodeKey::Explicit("a".into())).is_none(), "and leaves no arena node behind");
+    assert_eq!(tree.children(root).count(), 0, "the owner's sibling chain is left exactly as the rows found it");
+}
+
 fn drop_stack(drop_action: Option<ActionDescriptor>) -> UiNode {
     UiNode::Stack(UiStackNode { direction: "vertical".into(), gap: None, padding: None, id: Some("dz".into()), presence: UiPresence::default(), activate: None, drop_action, drop_overlay: None, children: vec![text("child")], menu: None })
 }
@@ -534,7 +583,7 @@ fn a_trees_draggable_item_gets_real_row_layout_and_the_drag_source_flag() {
 // focusable control kind (`Button`/`Select`/`Toggle`/`NumberStepper`/`IconSelect`, plus a
 // `NumberStepper` hover tint) that only `paint_input` had before this pass.
 fn input(id: &str, value: &str) -> UiNode {
-    UiNode::Input(UiInputNode { id: id.into(), input_kind: "text".into(), value: value.into(), placeholder: None, commit: None, min: None, max: None, step: None, accept: None, on_change: action(), presence: UiPresence::default(), menu: None })
+    UiNode::Input(UiInputNode { id: id.into(), input_kind: "text".into(), value: value.into(), placeholder: None, commit: None, min: None, max: None, step: None, accept: None, on_change: action(), on_submit: None, on_abort: None, on_repeat_last: None, presence: UiPresence::default(), menu: None })
 }
 
 // ⌨️ Keyboard focus: BOTH bits, the way `EventRouter::set_focus` stamps them for a `Tab` move.
@@ -706,6 +755,40 @@ fn retained_text_paint_emits_at_most_one_glyph_per_grant() {
     assert_eq!(paint_node_step(&tree, root, 0.0, 0.0, &theme, &mut atlas, None, false, &mut draw, &mut cursor), RetainedNodePaintStep::Pending);
     assert_eq!(retained_glyph_count(&draw), before + 2);
     assert_eq!(cursor.glyph.byte(), 2);
+}
+
+/// 🅰️ W15a item 3. React's `TextView` swaps `text-sm` for `font-semibold` when `emphasize` is set
+/// (`🗣️Interpreter/🟦️.tsx:1168`), so an emphasized run is a real WEIGHT change, not only a size
+/// bump. `draw_text_weighted`/`TextWeight::Semibold` were built and unit-tested by W2k with zero
+/// callers: this pins the production retained painter to the synthetic double strike, and pins the
+/// advance (and with it every wrap point) to be unchanged by it.
+#[test]
+fn an_emphasized_retained_text_node_strikes_every_glyph_twice_without_moving_the_pen() {
+    let emphasized = UiNode::Text(UiTextNode { value: Label::data("ab"), emphasize: Some(true), data_attributes: None, presence: UiPresence::default(), menu: None });
+    let strike_run = |node: &UiNode| {
+        let (tree, root, theme, mut atlas) = setup(node);
+        let mut draw = DrawList::default();
+        let mut cursor = RetainedNodePaintCursor::default();
+        let mut per_step = Vec::new();
+        for _ in 0..4 {
+            let before = retained_glyph_count(&draw);
+            if paint_node_step(&tree, root, 0.0, 0.0, &theme, &mut atlas, None, false, &mut draw, &mut cursor) == RetainedNodePaintStep::Fault {
+                panic!("retained text paint must not fault");
+            }
+            per_step.push(retained_glyph_count(&draw) - before);
+        }
+        let xs: Vec<f32> = draw.layers.iter().flat_map(|layer| layer.ui_instances.iter()).filter(|instance| (instance.params[2] - KIND_GLYPH).abs() < 0.01).map(|instance| instance.rect[0]).collect();
+        (per_step, xs)
+    };
+    let (regular_steps, regular_xs) = strike_run(&text("ab"));
+    let (semibold_steps, semibold_xs) = strike_run(&emphasized);
+    assert!(regular_steps.iter().all(|count| *count <= 1), "a regular run still costs at most one strike per grant: {regular_steps:?}");
+    assert!(semibold_steps.contains(&2), "an emphasized run must emit BOTH strikes of a glyph inside ONE grant, never split across two: {semibold_steps:?}");
+    assert_eq!(semibold_xs.len(), regular_xs.len() * 2, "every emphasized glyph is struck exactly twice");
+    let offset = crate::wgpu::text::faux_bold_offset(Theme::default().font_size_emphasized);
+    assert!(offset > 0.0);
+    assert!(semibold_xs.windows(2).any(|pair| (pair[1] - pair[0] - offset).abs() < 0.001), "the second strike sits exactly `faux_bold_offset` along x");
+    assert!(regular_xs.first().is_some_and(|x| semibold_xs.first().is_some_and(|semibold| (semibold - x).abs() < 0.001)), "the FIRST strike lands on the same pen position, so the advance — and every wrap point priced from it — is untouched");
 }
 
 /// 🔽️ See `opening_a_selects_popup_...`: the rows exist only once the tree is reconciled OPEN.

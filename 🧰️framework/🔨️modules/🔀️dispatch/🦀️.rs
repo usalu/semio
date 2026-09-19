@@ -13,7 +13,11 @@
 //!   closes the set) parses the small DSL, emits the real `enum`, one `impl From<VariantTy> for E` per
 //!   variant (`From` is E1 — an externally-declared trait, its `fn from` stays sync), and an invocation
 //!   of the captured `__semio_dispatch_<TraitName>!` macro that expands to `impl Trait for E`, `match`ing
-//!   `self` and delegating every method (`.await` present exactly when the trait method is `async`).
+//!   `self` and delegating every method (`.await` present exactly when the trait method hands back a
+//!   future — written `async fn`, or written `fn .. -> impl Future<Output = T> + Send`, the shape a port
+//!   MUST declare once its call site reaches it behind a generic parameter and needs a provably `Send`
+//!   future; the delegate of such a method is emitted as `async fn .. -> T`, because two match arms
+//!   cannot unify two distinct opaque future types in one return position).
 //!
 //! ## Why every fn in this crate is plain `fn`, never `async fn`
 //!
@@ -148,6 +152,68 @@ fn simple_ident_params(method_name: &Ident, sig: &Signature) -> syn::Result<(Vec
 
 //#endregion 🔖️Parameter analysis
 
+//#region 🔖️Return-position analysis
+
+/// ⏳️ How a method hands its result back, which decides the SHAPE of its delegate.
+enum ReturnShape {
+    /// 🧾️ Anything an enum delegate can return verbatim — a concrete type, `()`, or the opaque type
+    /// of an `async fn` (whose delegate is itself an `async fn`, so both sides are the SAME opaque
+    /// type and the arms unify through the one `async` body).
+    Plain,
+    /// 🔮️ `-> impl Future<Output = T> + ..` on a NON-`async` method: the declared return is opaque,
+    /// and N match arms would each produce a DIFFERENT opaque future type in one return position
+    /// (`E0308`). The delegate is emitted as `async fn .. -> T` with `.await` in every arm instead —
+    /// legal because Rust accepts an `async fn` implementation against an `impl Future` declaration,
+    /// and the one `async` body is one type no matter how many arms it matches. `T` is the only
+    /// thing that has to be nameable, and it always is: it is the tokens the trait already wrote.
+    FutureOutput(Type),
+}
+
+/// 🔎 Reads a method's return position into a [`ReturnShape`]. Only a bound whose LAST path segment
+/// is literally `Future` counts (`Future`, `core::future::Future`, `std::future::Future` — there is
+/// no type resolution inside a proc-macro), and only on a method that is not already `async`. An
+/// `impl Future` with no `Output = ..` binding is the one hard rejection: the delegate has no name
+/// to give its own return type. Any other `impl Trait` return is left [`ReturnShape::Plain`] and
+/// keeps the pre-existing behaviour, which is correct for a one-variant set and an honest `E0308`
+/// for a larger one.
+fn classify_return(method_name: &Ident, sig: &Signature) -> syn::Result<ReturnShape> {
+    if sig.asyncness.is_some() {
+        return Ok(ReturnShape::Plain);
+    }
+    let syn::ReturnType::Type(_, ty) = &sig.output else {
+        return Ok(ReturnShape::Plain);
+    };
+    let Type::ImplTrait(impl_trait) = ty.as_ref() else {
+        return Ok(ReturnShape::Plain);
+    };
+    let future_bound = impl_trait.bounds.iter().find_map(|bound| match bound {
+        TypeParamBound::Trait(trait_bound) => trait_bound.path.segments.last().filter(|segment| segment.ident == "Future"),
+        _ => None,
+    });
+    let Some(segment) = future_bound else {
+        return Ok(ReturnShape::Plain);
+    };
+    let output = match &segment.arguments {
+        syn::PathArguments::AngleBracketed(args) => args.args.iter().find_map(|arg| match arg {
+            syn::GenericArgument::AssocType(assoc) if assoc.ident == "Output" => Some(assoc.ty.clone()),
+            _ => None,
+        }),
+        _ => None,
+    };
+    output.map(ReturnShape::FutureOutput).ok_or_else(|| {
+        syn::Error::new_spanned(
+            ty,
+            format!(
+                "dyn_enum: `{method_name}` returns `impl Future` without a named `Output = ..` — the generated \
+                 delegate is an `async fn` and has no way to name its own return type; write \
+                 `impl Future<Output = T> + Send`"
+            ),
+        )
+    })
+}
+
+//#endregion 🔖️Return-position analysis
+
 //#region 🔖️`#[dyn_enum]` — trait capture
 
 /// 🪄️ Re-emits `item` (a trait declaration) UNCHANGED, plus a hidden `__semio_dispatch_<Name>!`
@@ -245,7 +311,7 @@ fn analyze_and_build_body(item_trait: &ItemTrait) -> TokenStream {
     let mut delegate_methods = Vec::new();
     if errors.is_empty() {
         for method in &methods {
-            match build_delegate_method(method) {
+            match build_delegate_method(&item_trait.ident, method) {
                 Ok(tokens) => delegate_methods.push(tokens),
                 Err(error) => errors.push(error),
             }
@@ -278,22 +344,38 @@ fn analyze_and_build_body(item_trait: &ItemTrait) -> TokenStream {
     }
 }
 
-/// 🚚 One delegating method: `match self { $(Self::$variant(inner) => inner.name(args).await,)* }` for
-/// `&self`/`&mut self`/`self` (uniform via match ergonomics — verified against real rustc, see report),
-/// or `match &*self { $(Self::$variant(inner) => inner.clone().name(args).await,)* }` for `self:
-/// Arc<Self>` (every variant's inner type must itself be `Arc<Concrete>` — `inner.clone()` is then the
-/// cheap refcount bump that reproduces the `Arc<Concrete>` receiver the concrete impl expects).
-fn build_delegate_method(method: &TraitItemFn) -> syn::Result<TokenStream> {
+/// 🚚 One delegating method, whose signature is the trait's own except for a
+/// [`ReturnShape::FutureOutput`] method, which is re-declared `async fn .. -> T` (see
+/// [`classify_return`]): `match self { $(Self::$variant(inner) => Trait::name(inner, args).await,)* }`
+/// for `&self`/`&mut self`/`self` (uniform via match ergonomics — verified against real rustc, see
+/// report), or `match &*self { $(Self::$variant(inner) => Trait::name(inner.clone(), args).await,)* }`
+/// for `self: Arc<Self>` (every variant's inner type must itself be `Arc<Concrete>` — `inner.clone()`
+/// is then the cheap refcount bump that reproduces the `Arc<Concrete>` receiver the concrete impl
+/// expects).
+///
+/// The arm calls through the TRAIT (`Trait::name(inner, ..)`), never through method-call syntax
+/// (`inner.name(..)`). Method-call syntax resolves by name against everything the variant type
+/// offers, which is wrong twice over for a delegate: a variant type that implements two ports
+/// sharing a method name — `ProjectionStore::get` and `BlobStore::get` on one backend, the obvious
+/// shape for a single durable store — is an outright `E0034 multiple applicable items in scope`,
+/// and an INHERENT method of the same name silently wins over the trait's, delegating to something
+/// the closed set never promised. Naming the trait makes the call unambiguous by construction. The
+/// trait must be in scope at the closing site either way: the generated `impl Trait for $enum_name`
+/// already names it.
+fn build_delegate_method(trait_ident: &Ident, method: &TraitItemFn) -> syn::Result<TokenStream> {
     let sig = &method.sig;
     let method_name = &sig.ident;
     let receiver_kind = classify_receiver(method_name, sig)?;
     let (arg_names, inputs) = simple_ident_params(method_name, sig)?;
 
-    let asyncness = &sig.asyncness;
     let generics = &sig.generics;
     let where_clause = &sig.generics.where_clause;
-    let output = &sig.output;
-    let dot_await = asyncness.map(|_| quote! { .await });
+    let declared_output = &sig.output;
+    let (asyncness, output) = match classify_return(method_name, sig)? {
+        ReturnShape::Plain => (sig.asyncness.map(|token| quote! { #token }), quote! { #declared_output }),
+        ReturnShape::FutureOutput(ty) => (Some(quote! { async }), quote! { -> #ty }),
+    };
+    let dot_await = asyncness.as_ref().map(|_| quote! { .await });
 
     // 🎯 `*self` (a DEREF'd PLACE, not the bare reference `self`) for every receiver that isn't owned —
     // verified against real rustc for BOTH arm counts: `match self {}` on `&Self`/`&mut Self` is
@@ -311,7 +393,7 @@ fn build_delegate_method(method: &TraitItemFn) -> syn::Result<TokenStream> {
         ReceiverKind::ByMutRef => (quote! { *self }, quote! { ref mut inner }, quote! { inner }),
         ReceiverKind::Arc => (quote! { *self }, quote! { ref inner }, quote! { inner.clone() }),
     };
-    let call = quote! { #receiver_expr.#method_name(#(#arg_names),*) #dot_await };
+    let call = quote! { #trait_ident::#method_name(#receiver_expr #(, #arg_names)*) #dot_await };
 
     Ok(quote! {
         #asyncness fn #method_name #generics (#inputs) #output #where_clause {
@@ -423,7 +505,12 @@ impl Parse for DynEnumVariant {
 /// `dyn_enum!` call site is in a DIFFERENT module or crate than the trait declaration, write `use
 /// crate::__semio_dispatch_<TraitName>;` (or `use other_crate::…`) yourself, immediately above the
 /// `dyn_enum!` call — this is the one piece of cross-module/cross-crate wiring `dyn_enum!` cannot inject
-/// silently, documented in `📓️terra-dyn-enum-macro-report.md`'s "applying dyn_enum: the recipe".
+/// silently, documented in `📓️terra-dyn-enum-macro-report.md`'s "applying dyn_enum: the recipe". The
+/// second half of that recipe is type scope: the generated impl reproduces the trait's parameter and
+/// return TYPES as literal tokens, so every one of them must resolve at the closing site — a
+/// downstream crate imports them exactly as it would to hand-write the same impl. A method declared
+/// `-> impl Future<Output = T> + Send` is the one signature that needs LESS: its delegate is an
+/// `async fn .. -> T`, so `Future` itself never has to be in scope there.
 pub fn expand_dyn_enum_call(input: TokenStream) -> syn::Result<TokenStream> {
     let parsed: DynEnumInput = syn::parse2(input)?;
     let DynEnumInput { attrs, vis, ident, trait_path, variants } = parsed;

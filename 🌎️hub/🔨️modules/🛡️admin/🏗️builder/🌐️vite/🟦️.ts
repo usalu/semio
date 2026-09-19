@@ -1,20 +1,18 @@
 // #region 🔌️Adapters
-import tailwindcss from "@tailwindcss/vite";
-import react from "@vitejs/plugin-react";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { defineConfig } from "vite";
+import { defineOwnedBuildConfig, uiReactBuildPlugin, uiTailwindBuildPlugins } from "../../../../../🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🛠️build-tooling/🟦️.ts";
 import { semioEmojiIndexHtmlVitePlugin, semioFaviconVitePlugin, staticDeployMarkerVitePlugins } from "../../../../../🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🟦️.ts";
 // #endregion 🔌️Adapters
 
 const dir = resolve(dirname(fileURLToPath(import.meta.url)), "../../📦️packages/🟦️typescript");
 const repoRoot = resolve(dir, "../../../../..");
 
-export default defineConfig({
+export default defineOwnedBuildConfig({
   root: dir,
   base: "/admin/",
   define: { "import.meta.vitest": "undefined" },
-  plugins: [semioEmojiIndexHtmlVitePlugin(dir), ...semioFaviconVitePlugin(repoRoot), ...staticDeployMarkerVitePlugins(undefined), react(), tailwindcss()],
+  plugins: [semioEmojiIndexHtmlVitePlugin(dir), ...semioFaviconVitePlugin(repoRoot), ...staticDeployMarkerVitePlugins(undefined), uiReactBuildPlugin(), ...uiTailwindBuildPlugins()],
   resolve: {
     alias: [
       { find: "@semio-tech/ui-react", replacement: resolve(repoRoot, "./🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/🟦️.tsx") },

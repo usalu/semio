@@ -60,7 +60,8 @@ export const MAP_CACHE_DIR_NAME = "🗺️map";
 export function readStableBuildFile(path: string, maximum: number, admission: { remaining: number }, check: () => void): Uint8Array {
   check();
   const info = lstatSync(path);
-  if (!info.isFile() || info.isSymbolicLink() || info.size > maximum) throw new Error("build input: file bound");
+  if (!info.isFile() || info.isSymbolicLink()) throw new Error(`build input: not a regular file (${path})`);
+  if (info.size > maximum) throw new Error(`build input: ${path} is ${info.size} bytes, over the ${maximum}-byte bound`);
   const file = openSync(path, "r");
   try {
     const before = fstatSync(file);
@@ -2729,7 +2730,10 @@ export function resolveFrameworkOsPlaygroundPlugin(catalog: readonly PlaygroundV
   return null;
 }
 
-/** @emoji 🧊️ Env for `@semio-tech/framework-os-dev:dev` with wgpu renderer and plugin filter. */
+/** @emoji 🧊️ Env for `@semio-tech/framework-os-dev:dev` with a plugin filter and the renderer an
+ * explicit `SEMIO_RENDERER` (launch row, `extra`) selects — wgpu only as the unset default. The value
+ * picks the `dev-<variant>-<renderer>-<profile>` target in `resolveNxInvocation`, so a react launch
+ * row reaches Vite and never the wgpu browser server. */
 export function frameworkOsPlaygroundDevEnv(catalog: readonly PlaygroundVariant[], plugin: string, extra: NodeJS.ProcessEnv = {}, env: NodeJS.ProcessEnv = process.env): NodeJS.ProcessEnv {
   const renderer = extra.SEMIO_RENDERER ?? env.SEMIO_RENDERER ?? "wgpu";
   const defaultPort = frameworkOsPlaygroundDefaultPort(catalog, plugin, renderer);
@@ -5263,6 +5267,21 @@ function emitPrepareStdout(message: string): void {
   writeSync(1, Buffer.from(message.endsWith("\n") ? message : `${message}\n`));
 }
 
+function stageMicroCommitChanges(root: string): ReturnType<typeof git> {
+  const excludedPaths = new Set<string>();
+  for (;;) {
+    const args = ["add", "-A"];
+    if (excludedPaths.size > 0) args.push("--", ".", ...[...excludedPaths].map((path) => `:(exclude)${path}`));
+    const staged = git(root, args);
+    if (staged.ok) return staged;
+    const rejectedPaths = [...staged.out.matchAll(/^error: '(.+)' does not have a commit checked out$/gm)]
+      .map((match) => match[1]!)
+      .filter((path) => !isAbsolute(path) && path !== "." && !path.startsWith(`..${sep}`));
+    if (rejectedPaths.length === 0 || rejectedPaths.every((path) => excludedPaths.has(path))) return staged;
+    for (const path of rejectedPaths) excludedPaths.add(path);
+  }
+}
+
 export function runMicroCommit(root: string, segments: string[]): void {
   root = gitRepoRoot(root);
   const cmd = segments[0] ?? "prepare";
@@ -5292,7 +5311,7 @@ export function runMicroCommit(root: string, segments: string[]): void {
   }
   if (cmd === "stage") {
     clearStaleTemplatesBeforePrepare(root);
-    const staged = git(root, ["add", "-A"]);
+    const staged = stageMicroCommitChanges(root);
     if (!staged.ok) {
       console.error(staged.out || "git add -A failed");
       process.exit(1);
@@ -5325,7 +5344,7 @@ export function runMicroCommit(root: string, segments: string[]): void {
 
   const level = loadLevel(root, contributor, levelSegments);
   clearStaleTemplatesBeforePrepare(root);
-  const staged = git(root, ["add", "-A"]);
+  const staged = stageMicroCommitChanges(root);
   if (!staged.ok) {
     console.error(staged.out || "git add -A failed");
     process.exit(1);

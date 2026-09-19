@@ -152,3 +152,218 @@ fn auto_approve_parses_the_three_frozen_values_and_nothing_else() {
     assert_eq!(AutoApprovePolicy::default(), AutoApprovePolicy::Never);
 }
 //#endregion 🔖️ApprovalGate
+
+//#region 🔖️ApprovalCoordinator
+// 🎫️ ticket 26/09/18/OS-HUB-COLLABORATION-AI-END-TO-END slice M4 (audit §6 P0.2): the approval gate
+// used to be unresolvable in EVERY configuration — no elicitation was ever sent, no bridge frame was
+// ever published, no tool could decide a handle, and `--auto-approve` had no flag. These tests drive
+// the real chain end to end: the real `ElicitationChannel` over real in-memory streams, and the real
+// `BridgeHandle` with a real registered connection.
+
+use crate::bridge::{ApprovalDecision, BridgeHandle, GatewayToShell, ShellToGateway};
+use crate::protocol::ClientFeatures;
+use crate::transport::{ElicitationChannel, ElicitationSlot, StdioLines};
+use std::sync::OnceLock;
+
+fn approval_request<'a>(handle: &'a str, diff: &'a serde_json::Value) -> ApprovalRequest<'a> {
+    ApprovalRequest { approval_handle: handle, capability_id: "cad.editor.deleteSelection", capability_title: "Delete Selection", principal_id: "agent:local", diff_summary: diff }
+}
+
+/// 🙋 An elicitation slot whose client already answered `response_line`, with `elicitation` either
+/// advertised or not.
+fn elicitation_slot(response_line: &str, advertised: bool) -> ElicitationSlot {
+    let features = Arc::new(ClientFeatures::default());
+    features.record(advertised.then(|| serde_json::json!({ "elicitation": {} })).as_ref());
+    let lines = Arc::new(StdioLines::new(Box::new(std::io::Cursor::new(response_line.as_bytes().to_vec())), Box::new(Vec::new())));
+    let slot: ElicitationSlot = Arc::new(OnceLock::new());
+    let _ = slot.set(Arc::new(ElicitationChannel::new(lines, features)));
+    slot
+}
+
+#[test]
+fn an_elicitation_accept_approves_and_names_its_channel() {
+    let coordinator = ApprovalCoordinator::new(Some(elicitation_slot("{\"jsonrpc\":\"2.0\",\"id\":\"semio-elicit-1\",\"result\":{\"action\":\"accept\",\"content\":{\"approve\":true}}}\n", true)), None);
+    let diff = serde_json::json!({ "opsCount": 1 });
+    assert_eq!(coordinator.resolve(&approval_request("appr_1", &diff)), ApprovalResolution::Approved { channel: ApprovalChannel::Elicitation });
+}
+
+#[test]
+fn an_elicitation_decline_denies_and_never_falls_through_to_another_lane() {
+    let coordinator = ApprovalCoordinator::new(Some(elicitation_slot("{\"jsonrpc\":\"2.0\",\"id\":\"semio-elicit-1\",\"result\":{\"action\":\"decline\"}}\n", true)), None);
+    let diff = serde_json::json!({});
+    match coordinator.resolve(&approval_request("appr_2", &diff)) {
+        ApprovalResolution::Denied { channel, .. } => assert_eq!(channel, ApprovalChannel::Elicitation),
+        other => panic!("a declined elicitation must deny, got {other:?}"),
+    }
+}
+
+#[test]
+fn an_elicitation_cancel_denies_rather_than_approving_by_default() {
+    let coordinator = ApprovalCoordinator::new(Some(elicitation_slot("{\"jsonrpc\":\"2.0\",\"id\":\"semio-elicit-1\",\"result\":{\"action\":\"cancel\"}}\n", true)), None);
+    let diff = serde_json::json!({});
+    match coordinator.resolve(&approval_request("appr_3", &diff)) {
+        ApprovalResolution::Denied { channel, .. } => assert_eq!(channel, ApprovalChannel::Elicitation),
+        other => panic!("a cancelled elicitation must deny, got {other:?}"),
+    }
+}
+
+#[test]
+fn an_accept_without_an_approve_field_is_a_denial_not_an_approval() {
+    let coordinator = ApprovalCoordinator::new(Some(elicitation_slot("{\"jsonrpc\":\"2.0\",\"id\":\"semio-elicit-1\",\"result\":{\"action\":\"accept\",\"content\":{}}}\n", true)), None);
+    let diff = serde_json::json!({});
+    assert!(matches!(coordinator.resolve(&approval_request("appr_4", &diff)), ApprovalResolution::Denied { .. }));
+}
+
+#[test]
+fn a_client_that_never_advertised_elicitation_is_not_asked_at_all() {
+    let coordinator = ApprovalCoordinator::new(Some(elicitation_slot("{\"jsonrpc\":\"2.0\",\"id\":\"semio-elicit-1\",\"result\":{\"action\":\"accept\",\"content\":{\"approve\":true}}}\n", false)), None);
+    let diff = serde_json::json!({});
+    match coordinator.resolve(&approval_request("appr_5", &diff)) {
+        ApprovalResolution::Unreachable { details } => assert_eq!(details["channels"]["elicitation"], "the connected client did not advertise capabilities.elicitation"),
+        other => panic!("an unadvertised client must not be asked, got {other:?}"),
+    }
+}
+
+#[test]
+fn a_client_that_closes_mid_elicitation_is_unreachable_never_approved() {
+    let coordinator = ApprovalCoordinator::new(Some(elicitation_slot("", true)), None);
+    let diff = serde_json::json!({});
+    match coordinator.resolve(&approval_request("appr_6", &diff)) {
+        ApprovalResolution::Unreachable { details } => assert_eq!(details["channels"]["elicitation"], "the client closed the connection while the elicitation was pending"),
+        other => panic!("EOF mid-elicitation must never approve, got {other:?}"),
+    }
+}
+
+// 🎫️ slice M7: a client whose human walks away closes the elicitation lane the same way a silent
+// shell closes the bridge lane — a named, typed, non-approving outcome.
+#[test]
+fn a_client_that_never_answers_its_elicitation_times_out_into_the_same_typed_outcome_as_a_silent_shell() {
+    let (keep_open, gate) = std::sync::mpsc::channel::<u8>();
+    struct SilentClient {
+        gate: std::sync::mpsc::Receiver<u8>,
+    }
+    impl std::io::Read for SilentClient {
+        fn read(&mut self, _buffer: &mut [u8]) -> std::io::Result<usize> {
+            let _ = self.gate.recv();
+            Ok(0)
+        }
+    }
+    let features = Arc::new(ClientFeatures::default());
+    features.record(Some(&serde_json::json!({ "elicitation": {} })));
+    let lines = Arc::new(StdioLines::new(Box::new(std::io::BufReader::new(SilentClient { gate })), Box::new(Vec::new())));
+    let slot: ElicitationSlot = Arc::new(OnceLock::new());
+    let _ = slot.set(Arc::new(ElicitationChannel::new(lines, features).with_deadline(60, Box::new(crate::transport::SystemElicitationClock::default()))));
+    let coordinator = ApprovalCoordinator::new(Some(slot), None);
+    let diff = serde_json::json!({});
+    match coordinator.resolve(&approval_request("appr_timeout", &diff)) {
+        ApprovalResolution::Unreachable { details } => {
+            assert_eq!(details["channels"]["elicitation"], "the connected client did not answer the elicitation in time");
+            assert!(details["remedy"].as_str().expect("remedy").contains("--auto-approve"));
+        }
+        other => panic!("a silent client must never approve, got {other:?}"),
+    }
+    drop(keep_open);
+}
+
+#[test]
+fn with_no_lane_at_all_the_answer_names_both_closed_lanes_and_the_remedy() {
+    let coordinator = ApprovalCoordinator::new(None, None);
+    let diff = serde_json::json!({});
+    match coordinator.resolve(&approval_request("appr_7", &diff)) {
+        ApprovalResolution::Unreachable { details } => {
+            assert_eq!(details["approvalHandle"], "appr_7");
+            assert_eq!(details["channels"]["elicitation"], "no server-initiated request channel on this transport");
+            assert_eq!(details["channels"]["shell"], "this gateway is serving no /bridge — no OS shell can be asked");
+            assert!(details["remedy"].as_str().expect("remedy").contains("--auto-approve"));
+        }
+        other => panic!("nothing attached must be Unreachable, got {other:?}"),
+    }
+}
+
+/// 🌉️ A live bridge with one registered connection, plus the receiver that would be the shell's
+/// socket — kept alive so the outbox is never closed under the coordinator.
+fn live_bridge() -> (Arc<BridgeHandle>, crate::bridge::ShellConnectionId, impl FnMut() -> Option<GatewayToShell>) {
+    let bridge = Arc::new(BridgeHandle::new());
+    let (connection, mut receiver) = bridge.register();
+    (bridge, connection, move || receiver.try_recv())
+}
+
+#[test]
+fn a_bridge_with_no_shell_attached_is_unreachable_and_says_so() {
+    let bridge = Arc::new(BridgeHandle::new());
+    let slot: crate::ui::BridgeSlot = Arc::new(OnceLock::new());
+    let _ = slot.set(bridge);
+    let coordinator = ApprovalCoordinator::new(None, Some(slot));
+    let diff = serde_json::json!({});
+    match coordinator.resolve(&approval_request("appr_8", &diff)) {
+        ApprovalResolution::Unreachable { details } => assert_eq!(details["channels"]["shell"], "a /bridge is running but no OS shell is attached to it"),
+        other => panic!("an empty bridge must be Unreachable, got {other:?}"),
+    }
+}
+
+#[test]
+fn the_shell_lane_publishes_a_structured_request_and_honours_the_humans_yes() {
+    let (bridge, connection, mut next_frame) = live_bridge();
+    let slot: crate::ui::BridgeSlot = Arc::new(OnceLock::new());
+    let _ = slot.set(bridge.clone());
+    bridge.record(connection, ShellToGateway::Approval { approval_id: "appr_9".to_string(), decision: ApprovalDecision::Once, note: None });
+    let coordinator = ApprovalCoordinator::new(None, Some(slot)).with_shell_timeout_ms(8_000);
+    let diff = serde_json::json!({ "opsCount": 3 });
+    assert_eq!(coordinator.resolve(&approval_request("appr_9", &diff)), ApprovalResolution::Approved { channel: ApprovalChannel::Shell });
+
+    let published = next_frame().expect("the shell lane publishes an ApprovalRequested frame");
+    match published {
+        GatewayToShell::ApprovalRequested { approval_id, summary } => {
+            assert_eq!(approval_id, "appr_9");
+            let parsed: serde_json::Value = serde_json::from_str(&summary).expect("the summary is the structured shape 🤖️AgentApprovals parses");
+            assert_eq!(parsed["capabilityId"], "cad.editor.deleteSelection");
+            assert_eq!(parsed["requestedBy"], "agent:local");
+            assert_eq!(parsed["risk"], "high");
+        }
+        other => panic!("expected ApprovalRequested, got {other:?}"),
+    }
+}
+
+#[test]
+fn the_shell_lane_carries_a_humans_deny_back_as_a_denial() {
+    let (bridge, connection, _next_frame) = live_bridge();
+    let slot: crate::ui::BridgeSlot = Arc::new(OnceLock::new());
+    let _ = slot.set(bridge.clone());
+    bridge.record(connection, ShellToGateway::Approval { approval_id: "appr_10".to_string(), decision: ApprovalDecision::Deny, note: Some("not on my document".to_string()) });
+    let coordinator = ApprovalCoordinator::new(None, Some(slot)).with_shell_timeout_ms(2_000);
+    let diff = serde_json::json!({});
+    match coordinator.resolve(&approval_request("appr_10", &diff)) {
+        ApprovalResolution::Denied { channel, note } => {
+            assert_eq!(channel, ApprovalChannel::Shell);
+            assert_eq!(note.as_deref(), Some("not on my document"));
+        }
+        other => panic!("a human's Deny must deny, got {other:?}"),
+    }
+}
+
+#[test]
+fn a_shell_that_never_answers_times_out_into_unreachable_never_into_approved() {
+    let (bridge, _connection, _next_frame) = live_bridge();
+    let slot: crate::ui::BridgeSlot = Arc::new(OnceLock::new());
+    let _ = slot.set(bridge);
+    let coordinator = ApprovalCoordinator::new(None, Some(slot)).with_shell_timeout_ms(120);
+    let diff = serde_json::json!({});
+    let started = std::time::Instant::now();
+    match coordinator.resolve(&approval_request("appr_11", &diff)) {
+        ApprovalResolution::Unreachable { details } => assert_eq!(details["channels"]["shell"], "the attached OS shell did not answer the approval request in time"),
+        other => panic!("a silent shell must time out into Unreachable, got {other:?}"),
+    }
+    assert!(started.elapsed() >= std::time::Duration::from_millis(120), "the timeout is real wall-clock, not an immediate give-up");
+}
+
+#[test]
+fn a_stale_decision_for_another_handle_is_never_mistaken_for_this_one() {
+    let (bridge, connection, _next_frame) = live_bridge();
+    let slot: crate::ui::BridgeSlot = Arc::new(OnceLock::new());
+    let _ = slot.set(bridge.clone());
+    bridge.record(connection, ShellToGateway::Approval { approval_id: "appr_other".to_string(), decision: ApprovalDecision::Session, note: None });
+    let coordinator = ApprovalCoordinator::new(None, Some(slot)).with_shell_timeout_ms(120);
+    let diff = serde_json::json!({});
+    assert!(matches!(coordinator.resolve(&approval_request("appr_12", &diff)), ApprovalResolution::Unreachable { .. }));
+}
+//#endregion 🔖️ApprovalCoordinator

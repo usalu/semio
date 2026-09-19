@@ -1,3 +1,53 @@
+/** 🌲️ The built-tree retirement ledger: page chain, foreign-page ownership and the extra payload budget. */
+type BuiltTreeRetirementFixture = {
+  readonly version: number;
+  readonly grants: readonly number[];
+  readonly maximumPages: number;
+  readonly payloadFields: readonly string[];
+  readonly stackOrder: readonly string[];
+  readonly chain: {
+    readonly pages: number;
+    readonly nodes: number;
+    readonly ordinaryPages: number;
+    readonly rejectedPages: number;
+    readonly observerDepth: number;
+  };
+  readonly foreignPage: {
+    readonly ownedPages: number;
+    readonly queuedPages: number;
+    readonly cursor: number;
+    readonly nodes: number;
+  };
+  readonly binding: {
+    readonly trigger: string;
+    readonly action: {
+      readonly scope: string;
+      readonly name: string;
+      readonly version: number;
+    };
+    readonly args: {
+      readonly x: readonly string[];
+    };
+    readonly capability: string;
+  };
+  readonly menu: {
+    readonly id: string;
+    readonly args: {
+      readonly x: readonly string[];
+    };
+  };
+  readonly extraPayloadBytes: number;
+  readonly ownership: {
+    readonly zeroGrantAdvances: boolean;
+    readonly contentionWaits: boolean;
+    readonly globalQueueAdvances: boolean;
+    readonly foreignOwnerConsumed: boolean;
+    readonly ordinaryAndRejectedRetired: boolean;
+    readonly partialDropCompletes: boolean;
+    readonly safeAbandon: boolean;
+  };
+};
+
 /** 🔬️ Canonical testBuiltTreeRetirementFixture fixture and oracle checks. */
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
@@ -6,7 +56,7 @@ import { inspectRustModuleGraphFacts } from "../../../../../../../🛍️product
 
 export function testBuiltTreeRetirementFixture(): void {
   const read = (path: string) => readFileSync(new URL(path, new URL("../../", import.meta.url)), "utf8");
-  const fixture = JSON.parse(read("./🧫️fixtures/🔣️.json"));
+  const fixture: BuiltTreeRetirementFixture = JSON.parse(read("./🧫️fixtures/🔣️.json"));
   const validate = new Ajv({ strict: true, allErrors: true }).compile(JSON.parse(read("./🧬️schema/🔣️.json")));
   assert(validate(fixture), JSON.stringify(validate.errors));
   const valueBytes = (value: unknown): number => typeof value === "string" ? Buffer.byteLength(value) : Array.isArray(value) ? value.reduce((sum, item) => sum + valueBytes(item), 0) : value && typeof value === "object" ? Object.entries(value).reduce((sum, [key, item]) => sum + Buffer.byteLength(key) + valueBytes(item), 0) : 0;

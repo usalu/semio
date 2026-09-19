@@ -459,8 +459,8 @@ function normalizedBoundaryJson(value: unknown, key = "", root = ""): unknown {
 }
 
 function normalizedBoundaryLedger(value: Snapshot, root: string): BoundaryNode[] {
-  return Object.entries(value).map(([path, record]) => {
-    const [kind, mode, bytesBase64 = ""] = record.split("|");
+  return Object.entries(value).map(([path, record]): BoundaryNode => {
+    const [kind, mode = "", bytesBase64 = ""] = record.split("|");
     const normalizedPath = normalizedBoundaryPath(path, root);
     if (kind === "directory") return { path: normalizedPath, kind: "directory", mode };
     const bytes = Buffer.from(bytesBase64, "base64");

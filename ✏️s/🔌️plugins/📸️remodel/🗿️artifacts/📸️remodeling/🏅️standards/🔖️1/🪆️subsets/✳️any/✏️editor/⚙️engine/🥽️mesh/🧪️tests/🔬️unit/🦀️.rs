@@ -927,3 +927,39 @@ mod long {
         assert!(mesh_data.paint_texture_base64.is_some(), "expected texture bake+encode to populate paint_texture_base64");
     }
 }
+
+/// 📦️ A unit cube's surface without its top face (`z = 1`, the loop 4-5-6-7), outward winding.
+fn open_top_box() -> TriMesh {
+    TriMesh {
+        positions: vec![[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [1.0, 1.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0], [1.0, 0.0, 1.0], [1.0, 1.0, 1.0], [0.0, 1.0, 1.0]],
+        triangles: vec![[0, 2, 1], [0, 3, 2], [0, 1, 5], [0, 5, 4], [3, 7, 6], [3, 6, 2], [0, 4, 7], [0, 7, 3], [1, 2, 6], [1, 6, 5]],
+    }
+}
+
+fn fill_bounded(mesh: &mut TriMesh) {
+    let mut preparation = BoundedHoleFillPreparation::new(128);
+    while !preparation.advance(mesh, 1) {}
+    assert!(!preparation.exceeded());
+}
+
+#[test]
+fn bounded_hole_fill_caps_an_open_box_into_a_watertight_outward_solid() {
+    let mut mesh = open_top_box();
+    fill_bounded(&mut mesh);
+    let report = validate_watertight(&mesh, false);
+    assert!(report.is_watertight, "capped box must be watertight: {report:?}");
+    assert!(report.signed_volume > 0.0, "the cap must follow the boundary faces' outward winding: {report:?}");
+}
+
+#[test]
+fn bounded_hole_fill_never_reuses_an_existing_edge_as_a_diagonal() {
+    // A flap triangle (4, 6, 8) already owns the edge 4-6 across the open top: a cap that closes
+    // the square along 4-6 would give that edge three faces. The cap must take the 5-7 diagonal.
+    let mut mesh = open_top_box();
+    mesh.positions.push([0.5, 0.5, 1.5]);
+    mesh.triangles.push([4, 6, 8]);
+    fill_bounded(&mut mesh);
+    let report = validate_watertight(&mesh, false);
+    assert_eq!(report.non_manifold_edge_count, 0, "{report:?}");
+    assert_eq!(report.boundary_edge_count, 0, "{report:?}");
+}

@@ -2,7 +2,11 @@
   "name": "@semio-tech/presentation-react",
   "$schema": "../../../../../../../node_modules/nx/schemas/project-schema.json",
   "namedInputs": {
-    "default": ["{projectRoot}/**/*", "{workspaceRoot}/🧰️framework/🛍️products/🎤️presentation/📦️packages/🟦️typescript/🟦️.ts"]
+    "default": [
+      "{projectRoot}/**/*",
+      "{workspaceRoot}/🧰️framework/🛍️products/🎤️presentation/📦️packages/🟦️typescript/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/🎤️presentation/🎯️targets/⚛️react/🧪️tests/🎚️config/🟦️.ts"
+    ]
   },
   "targets": {
     "test": {

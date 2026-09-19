@@ -54,7 +54,7 @@ export default defineTestAdapter({
   scenarios: {
     "author-lines-resolve-to-aliases": {
       oracle: (ctx) => {
-        const schema = JSON.parse(readFileSync(ctx.fixture("asset://🧬️schema/🔣️.json"), "utf8")) as Record<string, unknown>;
+        const schema = JSON.parse(readFileSync(ctx.fixture("asset://🧬️schema/🔣️.json"), "utf8")) as { readonly $schema?: string; readonly $defs: Readonly<Record<string, unknown>> };
         const fixture = JSON.parse(readFileSync(ctx.fixture("shared://🧑️‍💻️contributor-documents.json"), "utf8")) as { documents: { directory: string; json: string }[] };
         const log = JSON.parse(readFileSync(ctx.fixture("shared://🏁️checkpoint-log.json"), "utf8")) as { identities: string[]; malformed: string[] };
         const ajv = new Ajv2020({ strict: false, allErrors: true });

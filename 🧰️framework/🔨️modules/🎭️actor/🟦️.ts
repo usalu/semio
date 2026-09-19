@@ -6,4 +6,4 @@
  * `📮️shard-client/🟦️.ts`, not mounted here yet. This file re-exports only the
  * generated type mirror.
  */
-export * from "./🤖️generated/🟦️actor.js";
+export * from "./🤖️generated/🎭️actor/🟦️.ts";

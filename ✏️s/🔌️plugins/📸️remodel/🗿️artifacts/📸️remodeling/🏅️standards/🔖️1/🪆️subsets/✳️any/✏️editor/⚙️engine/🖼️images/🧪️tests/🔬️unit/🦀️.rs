@@ -222,6 +222,11 @@ fn zncc_is_invariant_to_gain_and_bias_and_flips_sign() {
     assert!((zncc(&a, &negated) + 1.0).abs() < 1e-4);
     let flat = Patch { radius: 3, data: vec![0.5; a.data.len()] };
     assert_eq!(zncc(&a, &flat), 0.0);
+    // A flat patch carrying only rounding-level variation (far below a grey level) is still flat:
+    // correlating it against texture is noise, not evidence.
+    let nearly_flat = Patch { radius: 3, data: a.data.iter().map(|&v| 0.137 + v * 1e-5).collect() };
+    assert_eq!(zncc(&nearly_flat, &a), 0.0);
+    assert_eq!(zncc(&a, &nearly_flat), 0.0);
     assert_eq!(ssd(&a, &a), 0.0);
     assert!(ssd(&a, &gained) > 0.0);
 }

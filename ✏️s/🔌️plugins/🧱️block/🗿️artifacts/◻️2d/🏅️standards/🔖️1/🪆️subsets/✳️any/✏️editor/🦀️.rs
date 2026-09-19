@@ -39,7 +39,7 @@ pub const BLOCK2D_GRANULARITY_HANDLE: &str = "handle";
 pub const BLOCK2D_GRANULARITY_HANDLE_KIND: &str = "handleKind";
 /// 🗂️ The `s/plugin/puzzle` 2d catalog artifact kind block2d's `"catalog:out"` port produces — see
 /// `block2d_io` and `Block2dPlayApp::export_media`.
-const KIT_CATALOG_ARTIFACT_ID: &str = "kit.catalog";
+use crate::KIT_CATALOG_ARTIFACT_ID;
 
 /// 🎯️ An `ActionDescriptor` addressed at this app — the single factory every taxonomy node's chrome
 /// (`📌️panels/*`, `🎮️commands/*`)? builds its `on_change`/item actions with.
@@ -561,20 +561,7 @@ pub fn create_block2d_app() -> semio_framework_plugin::AppDefinition {
             .artifact_kind(artifact_kind())
             // 🗂️ The puzzle2d catalog artifact this app's new `"catalog:out"` port produces — see
             // `block2d_io`/`Block2dPlayApp::export_media`.
-            .artifact_kind(ArtifactKindSpec {
-                id: KIT_CATALOG_ARTIFACT_ID.into(),
-                name: "Kit Catalog".into(),
-                source_format: KIT_CATALOG_ARTIFACT_ID.into(),
-                component_kind: "kit-catalog".into(),
-                dimension: "2d".into(),
-                media_capability: semio_framework_plugin::OsMediaCapability::MeshOnly,
-                media_type: MediaType { class: MediaClass::Kit, form: MediaForm::Type },
-                schema: KIT_CATALOG_ARTIFACT_ID.into(),
-                export_formats: vec![],
-                import_formats: vec![],
-                    export_stdio_kinds: vec![],
-        import_stdio_kinds: vec![],
-    })
+            .artifact_kind(crate::kit_catalog_artifact_kind())
             .icon_id("layout-grid")
             .mode_def(edit_mode::definition())
             .default_mode_id(edit_mode::BLOCK2D_PLAY_MODE_EDIT)

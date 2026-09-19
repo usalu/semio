@@ -377,7 +377,7 @@ function contributionPassesScope(topicContribution: unknown, kinds: ReadonlySet<
  * topics it declares and nothing else.
  */
 export function scopeContributionsJson(
-  loaded: ReadonlyArray<{ readonly pluginId: string; readonly manifest: PluginManifest }>,
+  loaded: ReadonlyArray<{ readonly pluginId: string; readonly manifest: Pick<PluginManifest, "topicContributions"> }>,
   receiverPluginId: string,
   reachableKinds: readonly string[],
   consumedTopics: readonly string[] = [],
@@ -2771,7 +2771,7 @@ if (import.meta.vitest) {
  * once on connect (a reconnecting/late-connecting browser must not miss builds that already finished),
  * or a single plugin's rebuild landing. `rebuiltAt` is the artifact's build timestamp and doubles as
  * the cache-busting query value {@link PluginSource.moduleUrl} mints. */
-export type PluginSourceEvent = { readonly kind: "snapshot"; readonly plugins: readonly { readonly pluginId: string; readonly rebuiltAt: number }[] } | { readonly kind: "built"; readonly pluginId: string; readonly rebuiltAt: number };
+export type PluginSourceEvent = { readonly kind: "snapshot"; readonly plugins: readonly { readonly pluginId: string; readonly rebuiltAt?: number }[] } | { readonly kind: "built"; readonly pluginId: string; readonly rebuiltAt: number };
 
 /**
  * @emoji 🔌️ Where the shell's incremental plugin runtime (install/uninstall/reload — see the react

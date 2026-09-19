@@ -892,10 +892,10 @@ pub mod editor {
                         mod component;
                         pub use component::*;
 
-                        #[path = "⚙️config/🦀️.rs"]
+                        #[path = "🎚️config/🦀️.rs"]
                         pub mod config;
 
-                        #[path = "🎚️options/🔢️instance-display/🦀️.rs"]
+                        #[path = "☑️options/🔢️instance-display/🦀️.rs"]
                         pub mod instance_display;
                     }
                     #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🏊️pool/🦀️.rs"]
@@ -915,6 +915,16 @@ pub mod viewer {
         #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs"]
         mod component;
         pub use component::*;
+        #[path = "."]
+        pub mod presence {
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/👥️presence/🧬️schema/🦀️.rs"]
+            pub mod schema;
+        }
+        #[path = "."]
+        pub mod config {
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎚️config/🧬️schema/🦀️.rs"]
+            pub mod schema;
+        }
 
         #[path = "."]
         pub mod modes {

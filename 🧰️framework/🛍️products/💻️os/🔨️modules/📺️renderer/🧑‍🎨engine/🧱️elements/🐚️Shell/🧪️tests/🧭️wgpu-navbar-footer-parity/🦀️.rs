@@ -407,8 +407,8 @@ fn the_puzzle3d_app_carries_the_introduction_the_tour_arms_on() {
     assert_eq!(app.breadcrumb, vec!["semio".to_string(), "puzzle".to_string(), "3d".to_string()], "🎓️ and the navbar title law's own oracle is the authored breadcrumb");
     assert_eq!(shell_navbar_title(&app, "native"), "semio · puzzle · 3d");
 
-    assert!(should_auto_start_introduction(&app.id, app.introduction.is_some(), false, false), "🎓️ an unseen tour on a tutorial-free shell arms");
-    assert!(!should_auto_start_introduction(&app.id, app.introduction.is_some(), false, true), "🎓️ an answered one never re-arms");
-    assert!(!should_auto_start_introduction(&app.id, false, false, false), "🎓️ an app that authors none arms nothing");
+    assert!(should_auto_start_introduction(&app.id, app.introduction.is_some(), false, false, false), "🎓️ an unseen tour on a tutorial-free shell arms");
+    assert!(!should_auto_start_introduction(&app.id, app.introduction.is_some(), false, true, false), "🎓️ an answered one never re-arms");
+    assert!(!should_auto_start_introduction(&app.id, false, false, false, false), "🎓️ an app that authors none arms nothing");
 }
 //#endregion 🎓️Introduction

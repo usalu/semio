@@ -23,6 +23,7 @@ import {
 } from "../../🎯️targets/🧊️wgpu/🫀️boot-liveness/🟦️.ts";
 import { evictCachedRendererModule, readCachedRendererModule, rendererArtifactTag, writeCachedRendererModule } from "../../🎯️targets/🧊️wgpu/🗄️wasm-module-cache/🟦️.ts";
 import { resolveWgpuBootDescriptor, resolveWgpuHostPlatform, type WgpuBootDescriptor, type WgpuHostAppearance } from "../../🎯️targets/🧊️wgpu/🧭️boot-descriptor/🟦️.ts";
+import { stubFetch } from "../../../../../🧪️tests/🌐️fetch-stub/🟦️.ts";
 
 /** @emoji 🧭️ One resolved boot descriptor for a fixture transport — the shared resolver, never a hand
  * rolled literal, so these fixtures cannot drift from the shape the three real doors produce
@@ -404,6 +405,37 @@ describe("browser frame worker transport", () => {
     expect(resolveWgpuHostPlatform({})).toBe("");
   });
 
+  // 🏷️ W15f — the brand REGISTRY row rides the SAME descriptor `locks`/`defaults` do. The catalogue
+  // stays TypeScript (`🧑‍💻dev/🏷️brand/🟦️.ts`'s `resolveShellBrandById`); only its resolved row crosses
+  // into the renderer, so the shell can key the tour's seen flag the way React does
+  // (`"<brandId>:<appId>"`) and honour `ephemeral`/`replayIntroductionOnLoad` at all.
+  it("carries the resolved shell brand row on the boot descriptor", () => {
+    const root = dirname(fileURLToPath(import.meta.url));
+    const serveSource = readFileSync(join(root, "../../🎯️targets/🧊️wgpu/🌐️server/🟦️.ts"), "utf8");
+    const rendererSource = readFileSync(join(root, "../../🎯️targets/🧊️wgpu/🧊️renderer/🦀️.rs"), "utf8");
+
+    const unbranded = resolveWgpuBootDescriptor({ defaultVariant: "s" });
+    expect(unbranded.brandId).toBe("");
+    expect(unbranded.brand).toEqual({ windowTitle: "", ephemeral: false, replayIntroductionOnLoad: false });
+
+    const meta: Record<string, string> = {
+      "semio-brand": "entwerfen-mit-bestand-aggregator",
+      "semio-brand-window-title": "Aggregator",
+      "semio-brand-ephemeral": "true",
+      "semio-brand-replay-introduction": "true",
+    };
+    const branded = resolveWgpuBootDescriptor({ defaultVariant: "s", meta: (name) => meta[name] ?? "" });
+    expect(branded.brandId).toBe("entwerfen-mit-bestand-aggregator");
+    expect(branded.brand).toEqual({ windowTitle: "Aggregator", ephemeral: true, replayIntroductionOnLoad: true });
+
+    // 🎛️ An override beats the page, exactly as every other axis does — the embeddable door's path.
+    expect(resolveWgpuBootDescriptor({ defaultVariant: "s", meta: (name) => meta[name] ?? "", overrides: { brand: { ephemeral: false } } }).brand.ephemeral).toBe(false);
+
+    // 🧭️ All three doors: the serve injects the meta tags, the native side reads the env twins.
+    for (const tag of ["semio-brand-window-title", "semio-brand-ephemeral", "semio-brand-replay-introduction"]) expect(serveSource).toContain(`["${tag}"`);
+    for (const variable of ["SEMIO_BRAND_WINDOW_TITLE", "SEMIO_BRAND_EPHEMERAL", "SEMIO_BRAND_REPLAY_INTRODUCTION"]) expect(rendererSource).toContain(variable);
+  });
+
   it("keeps product discovery and native UI capability out of the UI/Worker seams", () => {
     const root = dirname(fileURLToPath(import.meta.url));
     const bootSource = readFileSync(join(root, "../../🎯️targets/🧊️wgpu/🚀️browser-boot/🟦️.ts"), "utf8");
@@ -635,15 +667,15 @@ describe("wgpu renderer module cache", () => {
   it("reads the artifact's server-asserted identity and disables itself when the server offers none", async () => {
     const original = globalThis.fetch;
     try {
-      globalThis.fetch = (async () => new Response(null, { status: 200, headers: { etag: 'W/"7ab1"' } })) as typeof fetch;
+      globalThis.fetch = stubFetch(async () => new Response(null, { status: 200, headers: { etag: 'W/"7ab1"' } }));
       expect(await rendererArtifactTag("http://host/renderer_bg.wasm")).toBe('etag:W/"7ab1"');
-      globalThis.fetch = (async () => new Response(null, { status: 200, headers: { "last-modified": "Thu, 10 Sep 2026 09:29:09 GMT", "content-length": "76048601" } })) as typeof fetch;
+      globalThis.fetch = stubFetch(async () => new Response(null, { status: 200, headers: { "last-modified": "Thu, 10 Sep 2026 09:29:09 GMT", "content-length": "76048601" } }));
       expect(await rendererArtifactTag("http://host/renderer_bg.wasm")).toBe("mtime:Thu, 10 Sep 2026 09:29:09 GMT:76048601");
-      globalThis.fetch = (async () => new Response(null, { status: 200 })) as typeof fetch;
+      globalThis.fetch = stubFetch(async () => new Response(null, { status: 200 }));
       expect(await rendererArtifactTag("http://host/renderer_bg.wasm")).toBe("");
-      globalThis.fetch = (async () => new Response(null, { status: 404 })) as typeof fetch;
+      globalThis.fetch = stubFetch(async () => new Response(null, { status: 404 }));
       expect(await rendererArtifactTag("http://host/renderer_bg.wasm")).toBe("");
-      globalThis.fetch = (async () => { throw new Error("offline"); }) as typeof fetch;
+      globalThis.fetch = stubFetch(async () => { throw new Error("offline"); });
       expect(await rendererArtifactTag("http://host/renderer_bg.wasm")).toBe("");
     } finally {
       globalThis.fetch = original;

@@ -146,4 +146,4 @@ class CapabilityLayeringLintScript extends BundleScript {
   }
 }
 
-export { CapabilityLayeringLintScript, KNOWN_LAYERING_VIOLATIONS, LAYERING_ROLES, LayeringRole, extractSemioRole };
+export { CapabilityLayeringLintScript, KNOWN_LAYERING_VIOLATIONS, LAYERING_ROLES, type LayeringRole, extractSemioRole };

@@ -122,6 +122,13 @@ use view::set_camera;
 pub struct Gis3dPlayApp;
 
 //#region 🧵️RetainedCommands
+/// ⛰️ The vertical-exaggeration range the Actions rail stages: flattened terrain through a five-fold
+/// relief. `GIS3D_EXAGGERATION_STAGED_DEFAULT` is deliberately NOT the document's own default, so a
+/// one-click dispatch from the rail produces a real edit instead of a zero-operation re-apply.
+const GIS3D_EXAGGERATION_MINIMUM: f64 = 0.5;
+const GIS3D_EXAGGERATION_MAXIMUM: f64 = 5.0;
+const GIS3D_EXAGGERATION_STAGED_DEFAULT: f64 = 2.5;
+
 const GIS3D_RETAINED_TOOL_IDS: &[&str] = &["setExaggeration", "setCamera"];
 const GIS3D_RETAINED_PAYLOAD_SCHEMA: &str = "gis.terrain.tool-command.v1";
 const GIS3D_RETAINED_RAW_BYTES: usize = 8_192;
@@ -676,6 +683,13 @@ pub fn create_gis3d_app() -> semio_framework_plugin::AppDefinition {
             .window_kind_interactions(terrain::GIS3D_PLAY_WINDOW_MAIN, vec![InteractionRef::new("features")])
             .action_with(semio_framework_plugin::ActionDefinition::new("setCamera", LocalizedLabel::native("Set Camera", "Kamera festlegen"), semio_framework_plugin::ActionKind::View, "camera"))
             .mutation("setExaggeration", LocalizedLabel::native("Set Exaggeration", "Überhöhung festlegen"))
+            // 📝️ Vertical exaggeration is the terrain's ONE editable document property, so its slider
+            // is also the only argument schema this app needs — without it the palette staged nothing
+            // and `command_from_action` fell back to 1.0, re-applying the value already in the
+            // document and diffing to zero operations.
+            .action_args("setExaggeration", vec![
+                semio_framework_plugin::ActionArgDef::slider("value", LocalizedLabel::native("Exaggeration", "Überhöhung"), GIS3D_EXAGGERATION_MINIMUM, GIS3D_EXAGGERATION_MAXIMUM).default_value(&GIS3D_EXAGGERATION_STAGED_DEFAULT),
+            ])
             .action_interactive_job("setCamera", InteractiveJobClassification::Migrated)
             .action_interactive_job("setExaggeration", InteractiveJobClassification::Migrated)
             .keybinding("mod+z", "undo")

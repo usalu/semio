@@ -153,7 +153,7 @@ async function withFreshComponentLease<T>(component: Uint8Array, control: FreshB
     used = false,
     pending: Promise<unknown> | undefined;
   const lease: FreshComponentLeaseV1 = Object.freeze({
-    consume<R>(consumer: (bytes: Uint8Array) => Promise<R>): Promise<R> {
+    consume<R>(consumer: (bytes: Uint8Array<ArrayBuffer>) => Promise<R>): Promise<R> {
       if (!open) return Promise.reject(new Error("fresh component lease expired"));
       if (used) return Promise.reject(new Error("fresh component lease already consumed"));
       used = true;
@@ -341,6 +341,37 @@ export function describeExtensionComponent(repoRoot: string, rsDir: string, cont
   const manifest = parseExtensionCargoManifest(join(resolve(rsDir), "Cargo.toml"), repoRoot);
   return describePluginComponent(repoRoot, manifest.packageName, resolve(rsDir, "..", ".."), false, control);
 }
+/** 🧬️ The exact bag handed to `createFreshComponentTests` — `typeof` of the live bindings, so it cannot drift. */
+export type FreshComponentTestDependencies = Readonly<{
+  readonly captureFreshComponentInputs: typeof captureFreshComponentInputs;
+  readonly captureFreshSourceEpochV1: typeof captureFreshSourceEpochV1;
+  readonly closeSync: typeof closeSync;
+  readonly createHash: typeof createHash;
+  readonly existsSync: typeof existsSync;
+  readonly FRESH_COMPONENT_MAX_BYTES: typeof FRESH_COMPONENT_MAX_BYTES;
+  readonly FRESH_IO_CHUNK_BYTES: typeof FRESH_IO_CHUNK_BYTES;
+  readonly FRESH_SOURCE_EPOCH_LIMITS: typeof FRESH_SOURCE_EPOCH_LIMITS;
+  readonly freshRun: typeof freshRun;
+  readonly freshSourceEpochBytesV1: typeof freshSourceEpochBytesV1;
+  readonly freshSourceOrderedJson: typeof freshSourceOrderedJson;
+  readonly freshStage: typeof freshStage;
+  readonly freshWasmArtifactSize: typeof freshWasmArtifactSize;
+  readonly isAbsolute: typeof isAbsolute;
+  readonly join: typeof join;
+  readonly mkdirSync: typeof mkdirSync;
+  readonly mkdtempSync: typeof mkdtempSync;
+  readonly openSync: typeof openSync;
+  readonly parseFreshRustDepInfoV1: typeof parseFreshRustDepInfoV1;
+  readonly readdirSync: typeof readdirSync;
+  readonly readFileSync: typeof readFileSync;
+  readonly readStableBuildFile: typeof readStableBuildFile;
+  readonly renameSync: typeof renameSync;
+  readonly resolve: typeof resolve;
+  readonly rmSync: typeof rmSync;
+  readonly semanticOwnedInputFileSnapshot: typeof semanticOwnedInputFileSnapshot;
+  readonly stageFreshComponentInputs: typeof stageFreshComponentInputs;
+  readonly writeFileSync: typeof writeFileSync;
+}>;
 const createFreshComponentTestsInstance = createFreshComponentTests({ captureFreshComponentInputs, captureFreshSourceEpochV1, closeSync, createHash, existsSync, FRESH_COMPONENT_MAX_BYTES, FRESH_IO_CHUNK_BYTES, FRESH_SOURCE_EPOCH_LIMITS, freshRun, freshSourceEpochBytesV1, freshSourceOrderedJson, freshStage, freshWasmArtifactSize, isAbsolute, join, mkdirSync, mkdtempSync, openSync, parseFreshRustDepInfoV1, readdirSync, readFileSync, readStableBuildFile, renameSync, resolve, rmSync, semanticOwnedInputFileSnapshot, stageFreshComponentInputs, writeFileSync }, { directory: resolve(import.meta.dir, "../📦️packages/🦀️rust"), url: import.meta.url });
 export const testFreshComponentSourceEpochV1 = createFreshComponentTestsInstance.testFreshComponentSourceEpochV1;
 export const testFreshComponentStagingV1 = createFreshComponentTestsInstance.testFreshComponentStagingV1;

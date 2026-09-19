@@ -129,7 +129,7 @@ describe("Tabs", () => {
     function Probe({ name }: { readonly name: string }) {
       React.useEffect(() => {
         lifecycle.push(`mount:${name}`);
-        return () => lifecycle.push(`cleanup:${name}`);
+        return () => { lifecycle.push(`cleanup:${name}`); };
       }, [name]);
       return <span>{name}</span>;
     }

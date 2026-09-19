@@ -2,7 +2,7 @@ import Ajv from "ajv";
 
 type TestSource = { readonly directory: string; readonly url: string };
 
-export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: any, source: TestSource): Promise<void> {
+export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: Pick<typeof import("../../🟦️.ts"), "DOCUMENT_BACKBONE_RETENTION_LIMITS" | "DocumentBackboneBatchError" | "decodeDocumentBackboneEnvelopeBatchExact" | "encodeDocumentBackboneEnvelopeBatchExact">, source: TestSource): Promise<void> {
   const { DOCUMENT_BACKBONE_RETENTION_LIMITS, DocumentBackboneBatchError, decodeDocumentBackboneEnvelopeBatchExact, encodeDocumentBackboneEnvelopeBatchExact } = dependencies;
   const { describe, expect, it } = vitest;
 

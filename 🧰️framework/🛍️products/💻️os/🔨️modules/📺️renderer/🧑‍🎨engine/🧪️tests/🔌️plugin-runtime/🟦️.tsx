@@ -6,6 +6,7 @@ import type { ActivationRegistry, TurnOutcome } from "../../../../../../../🔨�
 import type { ShardBudget, ShardClient, ShardEventEnvelope, ShardInstanceLifecycleLease, ShardJobStep, ShardWorkerLike } from "../../../../../../../🔨️modules/🎭️actor/📮️shard-client/🟦️.ts";
 import type { PluginManifest } from "../../🧱️elements/🐚️Shell/🟦️.tsx";
 import type { PluginRuntimeTestDependenciesV1, PluginWasmHandle, RetainedSurface, WireTurnResult, WireVariant } from "../../🧱️elements/🔌️PluginRuntime/🟦️.tsx";
+import { stubFetch } from "../../../../../🧪️tests/🌐️fetch-stub/🟦️.ts";
 
 /** 🧩️ One packed text leaf of a paged text carrier: slice 0 in `value`, slices 1..32 as
  * `dataAttributes` keyed `01`..`32` — the exact node shape `section_text_chunks`
@@ -477,7 +478,7 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
           },
           dispose,
         } as unknown as ShardClient;
-        globalThis.fetch = (async () => new Response(JSON.stringify({ manifest: { pluginId: "extension-requester", apps: [] } }), { headers: { "content-type": "application/json" } })) as typeof fetch;
+        globalThis.fetch = stubFetch(async () => new Response(JSON.stringify({ manifest: { pluginId: "extension-requester", apps: [] } }), { headers: { "content-type": "application/json" } }));
         let handle: PluginWasmHandle | undefined;
         try {
           handle = await loadPluginModule("extension-requester", "https://fixture.invalid/plugin.js");
@@ -1952,7 +1953,7 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
         const client = new ShardClient({ residentLedger: new OwnedResidentLedger({ bytes: 1048576, slots: 4096, owners: 4096, control: { bytes: 65536, slots: 256, owners: 256 } }), shardCount: 1, createWorker: () => worker });
         testState.sharedShardClient = client;
         testState.sharedActivationRegistry = { registerManifest: () => {}, activate: async (_plugin: string, actorId: string) => client.activate(actorId, "/fixture.js", [], DEFAULT_SHARD_BUDGET), touch: () => {}, cancel: (actorId: string) => client.dispose(actorId) } as unknown as ActivationRegistry;
-        globalThis.fetch = (async () => new Response(JSON.stringify({ manifest: { pluginId: "owned-ui", apps: [] } }), { headers: { "content-type": "application/json" } })) as typeof fetch;
+        globalThis.fetch = stubFetch(async () => new Response(JSON.stringify({ manifest: { pluginId: "owned-ui", apps: [] } }), { headers: { "content-type": "application/json" } }));
         let handle: PluginWasmHandle | null = null;
         try {
           handle = await loadPluginModule("owned-ui", "https://fixture.invalid/plugin.js");
@@ -2049,7 +2050,7 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
           const client = new ShardClient({ residentLedger: new OwnedResidentLedger({ bytes: 1048576, slots: 4096, owners: 4096, control: { bytes: 65536, slots: 256, owners: 256 } }), shardCount: 1, createWorker: () => worker });
           testState.sharedShardClient = client;
           testState.sharedActivationRegistry = { registerManifest: () => {}, activate: async (_plugin: string, actorId: string) => client.activate(actorId, "/fixture.js", [], DEFAULT_SHARD_BUDGET), touch: () => {}, cancel: (actorId: string) => client.dispose(actorId) } as unknown as ActivationRegistry;
-          globalThis.fetch = (async () => new Response(JSON.stringify({ manifest: { pluginId: "ingress-census", apps: [] } }), { headers: { "content-type": "application/json" } })) as typeof fetch;
+          globalThis.fetch = stubFetch(async () => new Response(JSON.stringify({ manifest: { pluginId: "ingress-census", apps: [] } }), { headers: { "content-type": "application/json" } }));
           let handle: PluginWasmHandle | null = null;
           try {
             handle = await loadPluginModule("ingress-census", "https://fixture.invalid/plugin.js");
@@ -2126,7 +2127,7 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
           const witnesses = vi.spyOn(OwnedUiInstance.prototype, "takeRetirementWitness");
           testState.sharedShardClient = client;
           testState.sharedActivationRegistry = { registerManifest: () => {}, activate: async (_plugin: string, actorId: string) => client.activate(actorId, "/fixture.js", [], DEFAULT_SHARD_BUDGET), touch: () => {}, cancel: () => {} } as unknown as ActivationRegistry;
-          globalThis.fetch = (async () => new Response(JSON.stringify({ manifest: { pluginId: "retirement-retry", apps: [] } }), { headers: { "content-type": "application/json" } })) as typeof fetch;
+          globalThis.fetch = stubFetch(async () => new Response(JSON.stringify({ manifest: { pluginId: "retirement-retry", apps: [] } }), { headers: { "content-type": "application/json" } }));
           let handle: PluginWasmHandle | null = null;
           try {
             handle = await loadPluginModule("retirement-retry", "https://fixture.invalid/plugin.js");
@@ -3000,9 +3001,9 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
         const controller = new AbortController();
         controller.abort();
         const originalFetch = globalThis.fetch;
-        globalThis.fetch = (async () => {
+        globalThis.fetch = stubFetch(async () => {
           throw new DOMException("aborted", "AbortError");
-        }) as typeof fetch;
+        });
         try {
           await expect(fetchDescriptorManifest("p", "https://x/p.js", controller.signal)).rejects.toThrow();
         } finally {
@@ -3013,9 +3014,9 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
       it("propagates a network failure without manufacturing an empty descriptor", async () => {
         const originalFetch = globalThis.fetch;
         const failure = new Error("network down");
-        globalThis.fetch = (async () => {
+        globalThis.fetch = stubFetch(async () => {
           throw failure;
-        }) as typeof fetch;
+        });
         try {
           await expect(fetchDescriptorManifest("p", "https://x/p.js")).rejects.toBe(failure);
         } finally {
@@ -3030,7 +3031,7 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
         console.warn = () => {
           warningCount += 1;
         };
-        globalThis.fetch = (async () => new Response("<!doctype html>", { status: 200, headers: { "content-type": "text/html" } })) as typeof fetch;
+        globalThis.fetch = stubFetch(async () => new Response("<!doctype html>", { status: 200, headers: { "content-type": "text/html" } }));
         try {
           await expect(fetchDescriptorManifest("p", "https://x/p.js")).rejects.toThrow("plugin.descriptor-invalid");
           expect(warningCount).toBe(0);
@@ -3537,7 +3538,7 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
       const client = new ShardClient({ residentLedger: new OwnedResidentLedger({ bytes: 1048576, slots: 4096, owners: 4096, control: { bytes: 65536, slots: 256, owners: 256 } }), shardCount: 1, createWorker: () => worker });
       testState.sharedShardClient = client;
       testState.sharedActivationRegistry = { registerManifest: () => {}, activate: async (_plugin: string, actorId: string) => client.activate(actorId, "/fixture.js", [], DEFAULT_SHARD_BUDGET), touch: () => {}, cancel: (actorId: string) => client.dispose(actorId) } as unknown as ActivationRegistry;
-      globalThis.fetch = (async () => new Response(JSON.stringify({ manifest: { pluginId: "intake-rounds", apps: [] } }), { headers: { "content-type": "application/json" } })) as typeof fetch;
+      globalThis.fetch = stubFetch(async () => new Response(JSON.stringify({ manifest: { pluginId: "intake-rounds", apps: [] } }), { headers: { "content-type": "application/json" } }));
       const consoleError = console.error;
       console.error = (...args: unknown[]) => { refusals.push(args.map(String).join(" ")); };
       let handle: PluginWasmHandle | null = null;

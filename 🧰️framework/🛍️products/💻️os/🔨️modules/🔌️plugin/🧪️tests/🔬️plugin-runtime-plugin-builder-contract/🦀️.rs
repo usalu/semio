@@ -3632,6 +3632,8 @@ mod plugin_builder_contract_tests {
 
     include!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🧪️tests/🧩️composition/🦀️.rs"));
 
+    include!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🧪️tests/🧾️document-archive-load-legs/🦀️.rs"));
+
     #[semio_framework_async_macros::async_test]
     async fn member_factory_closed_dialect_open_failure_retains_pin_and_drains_exact_member() {
         let mut app = VcsArtifactApp::<ComposedParentApp, TestMembers>::new(ComposedParentApp::default()).await;
@@ -4639,7 +4641,12 @@ mod plugin_builder_contract_tests {
         assert_eq!(all_panel.children.len(), 2, "Actions + Commands sections");
         let Component::TreeSection(actions_props) = &all_panel.children[0].component else { panic!("expected a TreeSection") };
         assert_eq!(actions_props.label.as_ref().map(|label| label.0.as_str()), Some("Actions"));
-        assert_eq!(all_panel.children[0].children.len(), 5, "undo/redo/commit/alternative/filter");
+        // 📌️ Six since the explicit check-in row landed (`#s-checkin`, React's
+        // `framework.history.checkin`) between Commit Checkpoint and Create Alternative.
+        assert_eq!(all_panel.children[0].children.len(), 6, "undo/redo/commit/checkin/alternative/filter");
+        assert_eq!(all_panel.children[0].children[3].key.as_str(), "framework.history.checkin", "the check-in row follows Commit Checkpoint");
+        let viewer_panel = ui_history_panel(&history, "ctrl", false, true, &ViewModel::default()).await.expect("viewer history panel");
+        assert_eq!(viewer_panel.children[0].children.len(), 5, "a viewer never gets the check-in row at all \u{2014} React's `canCheckIn` gate removes it rather than disabling it");
         assert!(all_panel.children[0].children.iter().all(|item| !item.children.is_empty()), "Actions rows carry their control as a child node");
         let Component::TreeSection(commands_props) = &all_panel.children[1].component else { panic!("expected a TreeSection") };
         assert_eq!(commands_props.label.as_ref().map(|label| label.0.as_str()), Some("Commands"));

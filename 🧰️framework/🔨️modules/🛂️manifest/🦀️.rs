@@ -2352,10 +2352,10 @@ pub struct TutorialTracks {
     #[serde(default)]
     #[value(default)]
     pub ui: Vec<TutorialUiKeyframe>,
-    /// 🖋️ The sole source of document mutation during playback — see `TutorialArtifactEventKind`.
+    /// 🖋️ The sole source of document mutation during playback — see `TutorialDocumentEventKind`.
     #[serde(default)]
     #[value(default)]
-    pub artifact: Vec<TutorialArtifactEvent>,
+    pub document: Vec<TutorialDocumentEvent>,
     #[serde(default)]
     #[value(default)]
     pub camera: Vec<TutorialCameraKeyframe>,
@@ -2659,18 +2659,18 @@ pub enum TutorialUiChange {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
-pub struct TutorialArtifactEvent {
+pub struct TutorialDocumentEvent {
     pub at: u64,
-    pub kind: TutorialArtifactEventKind,
+    pub kind: TutorialDocumentEventKind,
 }
 
-/// @emoji 🖋️ See `TutorialArtifactEvent`. `Edit` carries both `forwards` and `backwards` operations
+/// @emoji 🖋️ See `TutorialDocumentEvent`. `Edit` carries both `forwards` and `backwards` operations
 /// verbatim from the vcs edit that produced it — the source of exact bidirectional scrubbing.
 // 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase", rename_all_fields = "camelCase", tag = "kind")]
 #[value(rename_all = "camelCase", rename_all_fields = "camelCase", tag = "kind")]
-pub enum TutorialArtifactEventKind {
+pub enum TutorialDocumentEventKind {
     Edit {
         forwards: Vec<DslValue>,
         backwards: Vec<DslValue>,
@@ -2838,7 +2838,7 @@ pub fn validate_tutorial(def: &TutorialDefinition) -> Result<(), String> {
     sorted_by_at("video", &def.tracks.video, |c| c.at, def.duration_ms)?;
     sorted_by_at("events", &def.tracks.events, |e| e.at, def.duration_ms)?;
     sorted_by_at("ui", &def.tracks.ui, |k| k.at, def.duration_ms)?;
-    sorted_by_at("artifact", &def.tracks.artifact, |e| e.at, def.duration_ms)?;
+    sorted_by_at("document", &def.tracks.document, |e| e.at, def.duration_ms)?;
     sorted_by_at("camera", &def.tracks.camera, |k| k.at, def.duration_ms)?;
     sorted_by_at("gestures", &def.tracks.gestures, |c| c.at, def.duration_ms)?;
 
@@ -3006,14 +3006,14 @@ pub fn compose_tutorial_ui(def: &TutorialDefinition, at_ms: f64) -> TutorialUiSn
 /// @emoji ✂️ Everything a live director's tick from `from_ms` to `to_ms` must apply: annotational
 /// events, document edits, and UI deltas within the half-open interval on the crossing direction (empty
 /// when `from_ms == to_ms`). Backward direction (scrubbing left) reverses entry order so callers apply
-/// each `TutorialArtifactEventKind::Edit`'s `backwards` ops from most-recent to least-recent. Plain Rust
+/// each `TutorialDocumentEventKind::Edit`'s `backwards` ops from most-recent to least-recent. Plain Rust
 /// struct (not owned schema mirrored) — the TS port lives in `framework/renderer/react/index.tsx` and is pinned
 /// to this one via shared golden fixtures, not a wasm call per frame.
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct TutorialSlice {
     pub forward: bool,
     pub events: Vec<TutorialEvent>,
-    pub artifact: Vec<TutorialArtifactEvent>,
+    pub document: Vec<TutorialDocumentEvent>,
     pub ui_changes: Vec<TutorialUiChange>,
 }
 
@@ -3032,7 +3032,7 @@ pub fn tutorial_slice(def: &TutorialDefinition, from_ms: f64, to_ms: f64) -> Tut
     let in_range = |at: u64| (at as f64) > lo && (at as f64) <= hi;
 
     let mut events: Vec<TutorialEvent> = def.tracks.events.iter().filter(|e| in_range(e.at)).cloned().collect();
-    let mut artifact: Vec<TutorialArtifactEvent> = def.tracks.artifact.iter().filter(|e| in_range(e.at)).cloned().collect();
+    let mut document: Vec<TutorialDocumentEvent> = def.tracks.document.iter().filter(|e| in_range(e.at)).cloned().collect();
     let mut ui_changes: Vec<TutorialUiChange> = Vec::new();
     for keyframe in def.tracks.ui.iter().filter(|k| in_range(k.at)) {
         if let TutorialUiSample::Delta { changes } = &keyframe.sample {
@@ -3041,10 +3041,10 @@ pub fn tutorial_slice(def: &TutorialDefinition, from_ms: f64, to_ms: f64) -> Tut
     }
     if !forward {
         events.reverse();
-        artifact.reverse();
+        document.reverse();
         ui_changes.reverse();
     }
-    TutorialSlice { forward, events, artifact, ui_changes }
+    TutorialSlice { forward, events, document, ui_changes }
 }
 //#endregion 🔖️TutorialEngine
 //#endregion 🔖️Tutorial

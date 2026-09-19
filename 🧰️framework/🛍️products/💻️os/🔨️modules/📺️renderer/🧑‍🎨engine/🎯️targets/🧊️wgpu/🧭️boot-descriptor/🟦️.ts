@@ -36,6 +36,9 @@ export const WGPU_BOOT_META_NAMES = {
   appId: "semio-app-id",
   appRole: "semio-app-role",
   brandId: "semio-brand",
+  brandWindowTitle: "semio-brand-window-title",
+  brandEphemeral: "semio-brand-ephemeral",
+  brandReplayIntroduction: "semio-brand-replay-introduction",
   defaultExample: "semio-default-example",
   lockedExample: "semio-locked-example",
   lockedLocale: "semio-locked-locale",
@@ -69,6 +72,19 @@ export type WgpuBootDefaults = {
   readonly exampleId: string;
 };
 
+/** @emoji 🏷️ The brand REGISTRY row this boot resolved — what `resolveShellBrandById(brandId)`
+ * (`🧑‍💻dev/🏷️brand/🟦️.ts`) answers, reduced to the facts the shell itself reads. The catalogue stays
+ * TypeScript; only the resolved row crosses into the renderer, exactly as `locks`/`defaults` already
+ * do, so a brand added to the catalogue needs no Rust edit. Its Rust twin is `WgpuBootBrand`. */
+export type WgpuBootBrand = {
+  /** @emoji 🏷️ `ShellBrand.windowTitle` — `""` leaves the shell's default title. */
+  readonly windowTitle: string;
+  /** @emoji 🧊️ `ShellBrand.ephemeral`: no device-local shell state is read or written. */
+  readonly ephemeral: boolean;
+  /** @emoji 🎓️ `ShellBrand.replayIntroductionOnLoad` — auto-start every load, persist no seen flag. */
+  readonly replayIntroductionOnLoad: boolean;
+};
+
 /** @emoji 🌐️ The hub trio (`?hub=&user=&dataDir=`), present only when a hub url was named. */
 export type WgpuBootHub = {
   readonly hubUrl: string;
@@ -88,6 +104,7 @@ export type WgpuBootDescriptor = {
   readonly appMode: string;
   readonly appExample: string;
   readonly brandId: string;
+  readonly brand: WgpuBootBrand;
   readonly brokerProof: string;
   readonly locks: WgpuBootLocks;
   readonly defaults: WgpuBootDefaults;
@@ -103,6 +120,7 @@ export type WgpuBootOverrides = {
   readonly appMode?: string;
   readonly appExample?: string;
   readonly brandId?: string;
+  readonly brand?: Partial<WgpuBootBrand>;
   readonly locks?: Partial<WgpuBootLocks>;
   readonly defaults?: Partial<WgpuBootDefaults>;
   readonly hub?: WgpuBootHub;
@@ -171,6 +189,11 @@ export function resolveWgpuBootDescriptor(input: { readonly search?: string; rea
     appMode: axis("mode", overrides.appMode, WGPU_BOOT_QUERY_PARAMS.mode),
     appExample: boundedBootField(overrides.appExample ?? (query(WGPU_BOOT_QUERY_PARAMS.example) || defaultExample), "example"),
     brandId: locked("brand", overrides.brandId, WGPU_BOOT_META_NAMES.brandId),
+    brand: {
+      windowTitle: locked("brand.windowTitle", overrides.brand?.windowTitle, WGPU_BOOT_META_NAMES.brandWindowTitle),
+      ephemeral: overrides.brand?.ephemeral ?? meta(WGPU_BOOT_META_NAMES.brandEphemeral) === "true",
+      replayIntroductionOnLoad: overrides.brand?.replayIntroductionOnLoad ?? meta(WGPU_BOOT_META_NAMES.brandReplayIntroduction) === "true",
+    },
     brokerProof: readBootBrokerProof(input.hash ?? ""),
     locks: {
       exampleId: locked("locks.exampleId", overrides.locks?.exampleId, WGPU_BOOT_META_NAMES.lockedExample),

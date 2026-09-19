@@ -81,7 +81,7 @@
         "success:matchAccepted",
         "success:matchAccepted"
       ],
-      "verdicts": 8466,
+      "verdicts": 8483,
       "counters": {
         "cameras": 8,
         "densePoints": 512,
@@ -89,8 +89,8 @@
         "framesRejected": 0,
         "keypoints": 2513,
         "matchesAccepted": 1492,
-        "matchesRejected": 6733,
-        "sparsePoints": 416
+        "matchesRejected": 6720,
+        "sparsePoints": 431
       },
       "stagesVisited": [
         "ingest",
@@ -142,16 +142,16 @@
         "success:frameAccepted",
         "success:frameAccepted"
       ],
-      "verdicts": 118579,
+      "verdicts": 119519,
       "counters": {
-        "cameras": 15,
+        "cameras": 36,
         "densePoints": 512,
         "framesAccepted": 36,
         "framesRejected": 0,
         "keypoints": 11310,
         "matchesAccepted": 15060,
-        "matchesRejected": 113133,
-        "sparsePoints": 711
+        "matchesRejected": 112990,
+        "sparsePoints": 1631
       },
       "stagesVisited": [
         "ingest",
@@ -163,11 +163,11 @@
         "fusion",
         "products"
       ],
-      "appendContentOps": 7,
+      "appendContentOps": 6,
       "commitReconstructionOps": 1,
       "lastStep": {
         "args": [
-          8
+          7
         ],
         "kind": "success",
         "reason": "resultReady"

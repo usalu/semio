@@ -3317,7 +3317,7 @@ where
         next_sequence_number: edit.sequence_number,
         next_clock: meta.timestamp,
         actor,
-        group_id: None,
+        group_id: meta.group_id.clone(),
     });
     let prepared = authority.prepare_one_item(edit, Arc::new(post_snapshot)).map_err(DurableOwnedGroupDecisionError::Codec)?;
     DurableStorePreparedOutcomeV1::from_prepared(recovery_schema, &prepared)

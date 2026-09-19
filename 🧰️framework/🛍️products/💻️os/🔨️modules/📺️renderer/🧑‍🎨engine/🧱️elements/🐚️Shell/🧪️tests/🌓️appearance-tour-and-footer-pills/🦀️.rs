@@ -181,11 +181,15 @@ pub(crate) fn tour_shell(introduction: Option<semio_framework::IntroductionDefin
 /// and a running tutorial owns the surface instead (Design Decision 8).
 #[test]
 fn a_fresh_profile_arms_the_app_introduction_exactly_once() {
-    assert!(should_auto_start_introduction("tour-app", true, false, false));
-    assert!(!should_auto_start_introduction("tour-app", true, false, true), "a device that has seen it is not offered it again");
-    assert!(!should_auto_start_introduction("tour-app", false, false, false), "an app with no introduction has nothing to show");
-    assert!(!should_auto_start_introduction("tour-app", true, true, false), "a tutorial and an introduction are mutually exclusive");
-    assert!(!should_auto_start_introduction("", true, false, false), "no app id is no session");
+    assert!(should_auto_start_introduction("tour-app", true, false, false, false));
+    assert!(!should_auto_start_introduction("tour-app", true, false, true, false), "a device that has seen it is not offered it again");
+    assert!(!should_auto_start_introduction("tour-app", false, false, false, false), "an app with no introduction has nothing to show");
+    assert!(!should_auto_start_introduction("tour-app", true, true, false, false), "a tutorial and an introduction are mutually exclusive");
+    assert!(!should_auto_start_introduction("", true, false, false, false), "no app id is no session");
+    // 🏷️ React's `replayIntroductionOnLoad` brand flag (packet W15f): the seen flag is ignored, but the
+    // other three terms still hold — a replaying brand does not fight a running tutorial either.
+    assert!(should_auto_start_introduction("brand:tour-app", true, false, true, true), "a replaying brand plays its tour on a device that already saw it");
+    assert!(!should_auto_start_introduction("brand:tour-app", true, true, false, true), "and still yields to a running tutorial");
 
     let mut shell = tour_shell(Some(tour_introduction()));
     assert!(shell.chrome_build.tour_state.is_none());

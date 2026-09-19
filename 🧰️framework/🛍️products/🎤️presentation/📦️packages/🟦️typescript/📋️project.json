@@ -2,7 +2,10 @@
   "name": "@semio-tech/presentation",
   "$schema": "../../../../../node_modules/nx/schemas/project-schema.json",
   "namedInputs": {
-    "default": ["{projectRoot}/**/*"]
+    "default": [
+      "{projectRoot}/**/*",
+      "{workspaceRoot}/🧰️framework/🛍️products/🎤️presentation/🧪️tests/🎚️config/🟦️.ts"
+    ]
   },
   "targets": {
     "test": {

@@ -1,0 +1,51 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/os/directory/spaces-browser-fixtures/v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "commandsPath", "spacesPath", "inviteLinkFragment", "inviteTtlChoicesSecs", "commandFieldOrder", "accessOrder", "inviteTokens", "redemptionStatusCodes"],
+  "properties": {
+    "schema": { "const": "semio.directory.spaces-browser-fixtures.v1" },
+    "commandsPath": { "const": "/directory/commands" },
+    "spacesPath": { "const": "/directory/spaces" },
+    "inviteLinkFragment": { "const": "#semio-invite=" },
+    "inviteTtlChoicesSecs": { "const": [3600, 86400, 604800] },
+    "commandFieldOrder": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["create-space", "create-invite", "archive-space"],
+      "properties": {
+        "create-space": { "const": ["kind", "name", "spaceKind", "visibility"] },
+        "create-invite": { "const": ["kind", "spaceId", "role", "ttlSecs"] },
+        "archive-space": { "const": ["kind", "spaceId"] }
+      }
+    },
+    "accessOrder": { "const": ["author", "member", "public"] },
+    "inviteTokens": {
+      "type": "array",
+      "minItems": 7,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["typed", "token"],
+        "properties": {
+          "typed": { "type": "string" },
+          "token": { "type": ["string", "null"] }
+        }
+      }
+    },
+    "redemptionStatusCodes": {
+      "type": "array",
+      "minItems": 9,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["status", "code"],
+        "properties": {
+          "status": { "type": "integer", "minimum": 100, "maximum": 599 },
+          "code": { "enum": ["invalid-invite", "expired-invite", "already-member", "unauthorized", "unreachable", "hub-refused", "cancelled"] }
+        }
+      }
+    }
+  }
+}

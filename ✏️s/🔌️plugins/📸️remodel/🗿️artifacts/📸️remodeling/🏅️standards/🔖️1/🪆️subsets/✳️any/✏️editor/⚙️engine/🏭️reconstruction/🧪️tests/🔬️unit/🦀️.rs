@@ -384,7 +384,11 @@ fn orbit_sfm_registers_enough_cameras_for_gauge() {
 
 #[test]
 fn orbit_sfm_survives_jpeg_video_ingest() {
-    const N_FRAMES: usize = 16;
+    // 🎞️ The capture `orbit_sfm_registers_enough_cameras_for_gauge` registers from lossless frames
+    // (24 views 15° apart at 128 px), so what this test measures is the JPEG/MP4 path alone. At 16
+    // views 22.5° apart the lossless frames register only the seed pair too: no adjacent pair
+    // keeps half its ORB matches under one-pixel verification at that step.
+    const N_FRAMES: usize = 24;
     const SIZE: u32 = 128;
     const HALF: f64 = 1.0;
     const RADIUS: f64 = 3.2;
@@ -393,9 +397,9 @@ fn orbit_sfm_survives_jpeg_video_ingest() {
     let mp4_bytes = remodeling_video::write_mp4_mjpeg(&jpegs, 12.0);
     let mut params = tiny_engine_params(HALF, RADIUS);
     params.sequential_window = 6;
-    params.match_ratio = 0.9;
-    params.match_mutual = false;
-    params.target_feature_count = 600;
+    params.match_ratio = 0.85;
+    params.match_mutual = true;
+    params.target_feature_count = 500;
     params.texture_enabled = false;
     let mut engine = ReconstructionEngine::new(&params);
     let opts = remodeling_video::VideoIngestOptions { stride: 1, max_frames: 0, max_long_edge_px: 0 };
@@ -954,3 +958,517 @@ fn diagnose_synthetic_orbit_geometry() {
     let finalized = engine.reconstruction.as_ref().expect("finalized reconstruction");
     report("after bundle", &finalized.cameras);
 }
+
+/// 🔭️ Dense-stage audit of the shipped `synthetic-orbit` example against its ground truth: runs the
+/// engine to the end and scores, in the truth frame (Sim(3) over the registered camera centres), the
+/// sparse points, every depth map (object vs background pixels, depth error, object coverage), the
+/// fused cloud and the final mesh by their distance to the cube's surface in half-sizes. Diagnostic,
+/// therefore `#[ignore]`:
+/// `cargo test -p semio-s-artifact-remodel-remodeling --lib -- --ignored --nocapture diagnose_synthetic_orbit_dense_against_truth`.
+#[test]
+#[ignore = "diagnostic dense audit against the fixture's ground truth, run explicitly"]
+fn diagnose_synthetic_orbit_dense_against_truth() {
+    use crate::lie::{Quatd, Se3, So3};
+    let truth: serde_json::Value = serde_json::from_str(crate::examples::synthetic_orbit::GROUND_TRUTH_JSON).expect("ground truth json");
+    let number = |node: &serde_json::Value| node.as_f64().expect("number");
+    let half = number(&truth["scene"]["halfExtentM"]);
+    let truth_world_to_camera: Vec<Se3> = truth["extrinsics"]
+        .as_array()
+        .expect("extrinsics")
+        .iter()
+        .map(|node| {
+            let q = node["rotationWxyzWorldToCamera"].as_array().expect("quaternion");
+            let rotation = So3::from_quat(Quatd { w: number(&q[0]), x: number(&q[1]), y: number(&q[2]), z: number(&q[3]) });
+            let c = node["cameraCenterM"].as_array().expect("centre");
+            Se3 { r: rotation, t: scale3(rotation.act([number(&c[0]), number(&c[1]), number(&c[2])]), -1.0) }
+        })
+        .collect();
+    let surface = |p: [f64; 3]| {
+        let outside = [(p[0].abs() - half).max(0.0), (p[1].abs() - half).max(0.0), (p[2].abs() - half).max(0.0)];
+        let outside = (outside[0] * outside[0] + outside[1] * outside[1] + outside[2] * outside[2]).sqrt();
+        let inside = (half - p[0].abs()).min(half - p[1].abs()).min(half - p[2].abs()).max(0.0);
+        (outside + inside) / half
+    };
+    // Slab test: distance along a unit ray from `origin` to the cube, if it hits.
+    let hit = |origin: [f64; 3], direction: [f64; 3]| -> Option<f64> {
+        let (mut near, mut far) = (f64::NEG_INFINITY, f64::INFINITY);
+        for axis in 0..3 {
+            if direction[axis].abs() < 1e-12 {
+                if origin[axis].abs() > half {
+                    return None;
+                }
+                continue;
+            }
+            let a = (-half - origin[axis]) / direction[axis];
+            let b = (half - origin[axis]) / direction[axis];
+            near = near.max(a.min(b));
+            far = far.min(a.max(b));
+        }
+        (near <= far && far > 0.0).then_some(near.max(0.0))
+    };
+    let quantiles = |mut values: Vec<f64>| -> String {
+        if values.is_empty() {
+            return "n=0".into();
+        }
+        values.sort_by(f64::total_cmp);
+        let q = |f: f64| values[((values.len() as f64 - 1.0) * f).round() as usize];
+        format!("n={} p10 {:.3} median {:.3} p90 {:.3}", values.len(), q(0.1), q(0.5), q(0.9))
+    };
+
+    let scene = <crate::RemodelingSnapshot as store::ArtifactDsl>::parse_dsl(crate::examples::synthetic_orbit::PRIMARY_TEXT).expect("parses");
+    let params = crate::editor::remodeling::engine::build_engine_params(&scene.params, &scene.calibration);
+    eprintln!("[DENSE] params dense={:?} voxel={} trunc={} dense_source_views={} max_dense_cameras={}", params.dense, params.tsdf_voxel_size, params.tsdf_truncation, params.dense_source_views, params.max_dense_cameras);
+    let mut engine = ReconstructionEngine::new(&params);
+    for (index, (_, bytes)) in crate::examples::synthetic_orbit::FRAMES.iter().enumerate() {
+        let image = crate::editor::remodeling::decode_still_image("image/png", bytes).expect("decodes");
+        engine.push_frame_with_sharpness(index as u32, image, index as f64 * 500.0, 1.0);
+    }
+    let mut captured: Option<(remodeling_sfm::Reconstruction, Vec<usize>, Vec<remodeling_dense::DepthMap>)> = None;
+    let mut cloud: Vec<[f64; 3]> = Vec::new();
+    let mut last = engine.stage();
+    let mut volume: Option<(remodeling_dense::TsdfVolume, [i32; 3], [i32; 3], [f64; 3], [f64; 3])> = None;
+    let mut meshes: Vec<(usize, Vec<[f64; 3]>)> = Vec::new();
+    loop {
+        let budget = if matches!(engine.stage(), EngineStage::FusingVolume | EngineStage::ExtractingSurface | EngineStage::CleaningMesh | EngineStage::Texturing) { 1 } else { 64 };
+        let status = engine.advance(budget);
+        if volume.is_none() && engine.stage() == EngineStage::FusingVolume && engine.fusion_finalized && engine.stage_cursor >= engine.dense_camera_indices.len() {
+            if let (Some(tsdf), Some(preparation)) = (&engine.tsdf, &engine.meshing_preparation) {
+                let (lattice_min, lattice_max) = compute_voxel_bounds_from_extrema(preparation.bounds_min, preparation.bounds_max, engine.meshing_voxel().0);
+                volume = Some((tsdf.clone(), lattice_min, lattice_max, preparation.bounds_min, preparation.bounds_max));
+            }
+        }
+        if let Some(pipeline) = &engine.mesh_pipeline {
+            let triangles = pipeline.mesh().triangles.len();
+            if meshes.last().is_none_or(|(count, _)| *count != triangles) {
+                meshes.push((triangles, pipeline.mesh().positions.clone()));
+            }
+        }
+        if engine.stage() != last {
+            eprintln!("[DENSE] {last:?} -> {:?}", engine.stage());
+            if last == EngineStage::DenseStereo {
+                captured = Some((engine.reconstruction.clone().expect("reconstruction"), engine.dense_camera_indices.clone(), engine.depth_maps.clone()));
+            }
+            if !engine.dense_positions().is_empty() && cloud.is_empty() {
+                cloud = engine.dense_positions().to_vec();
+            }
+            last = engine.stage();
+        }
+        if cloud.is_empty() && !engine.dense_positions().is_empty() {
+            cloud = engine.dense_positions().to_vec();
+        }
+        match status {
+            EngineStatus::Working { .. } => {}
+            EngineStatus::Done => break,
+            EngineStatus::Failed(message) => panic!("engine failed: {message}"),
+        }
+    }
+    let (reconstruction, dense_indices, depth_maps) = captured.expect("the run passed the dense stage");
+    if let Ok(path) = std::env::var("DENSE_DUMP") {
+        std::fs::write(&path, dense_dump::encode(&reconstruction, &dense_indices, &depth_maps)).expect("write dense dump");
+        eprintln!("[DENSE] dumped to {path}");
+    }
+    let recovered: Vec<[f64; 3]> = reconstruction.cameras.iter().map(|(_, pose)| pose.0.inverse().t).collect();
+    let targets: Vec<[f64; 3]> = reconstruction.cameras.iter().map(|(frame, _)| truth_world_to_camera[*frame].inverse().t).collect();
+    let sim = crate::lie::umeyama(&recovered, &targets, true).expect("Sim(3) over camera centres");
+    let centre_errors: Vec<f64> = recovered.iter().zip(&targets).map(|(r, t)| norm3(sub3(sim.act(*r), *t))).collect();
+    eprintln!("[DENSE] {} cameras, sim scale {:.4}, centre error {}", recovered.len(), sim.s, quantiles(centre_errors));
+    eprintln!("[DENSE] sparse surface distance {}", quantiles(reconstruction.points.iter().map(|p| surface(sim.act(*p))).collect()));
+
+    let intrinsics = reconstruction.intrinsics;
+    for (slot, (camera, map)) in dense_indices.iter().zip(&depth_maps).enumerate() {
+        let (frame, pose) = reconstruction.cameras[*camera];
+        let truth_pose = truth_world_to_camera[frame];
+        let truth_centre = truth_pose.inverse().t;
+        let camera_to_world = truth_pose.r.inverse();
+        let (mut object_pixels, mut object_valid, mut background_valid) = (0usize, 0usize, 0usize);
+        let (mut object_errors, mut background_errors, mut depth_errors) = (Vec::new(), Vec::new(), Vec::new());
+        for y in 0..map.height {
+            for x in 0..map.width {
+                let ray = intrinsics.unproject_ray([f64::from(x), f64::from(y)]);
+                let direction = camera_to_world.act(ray);
+                let length = norm3(direction);
+                let truth_depth = hit(truth_centre, scale3(direction, 1.0 / length)).map(|distance| distance / length);
+                if truth_depth.is_some() {
+                    object_pixels += 1;
+                }
+                let Some(depth) = map.get(x, y) else { continue };
+                let world = sim.act(pose.0.inverse().act(scale3(ray, f64::from(depth))));
+                match truth_depth {
+                    Some(expected) => {
+                        object_valid += 1;
+                        object_errors.push(surface(world));
+                        depth_errors.push((f64::from(depth) * sim.s - expected).abs() / half);
+                    }
+                    None => {
+                        background_valid += 1;
+                        background_errors.push(surface(world));
+                    }
+                }
+            }
+        }
+        eprintln!(
+            "[DENSE] map {slot} frame {frame}: object px {object_pixels}, valid on object {object_valid} ({:.0}%), valid on background {background_valid}; object surface dist {}; |depth err| {}; background surface dist {}",
+            100.0 * object_valid as f64 / object_pixels.max(1) as f64,
+            quantiles(object_errors),
+            quantiles(depth_errors),
+            quantiles(background_errors)
+        );
+    }
+    let views: Vec<(remodeling_camera::CameraPose, remodeling_camera::Intrinsics)> = dense_indices.iter().map(|camera| (reconstruction.cameras[*camera].1, intrinsics)).collect();
+    for (tolerance, minimum) in [(0.01f32, 2usize), (0.02, 2), (0.03, 2), (0.02, 3), (0.03, 3), (0.05, 3)] {
+        let fused = remodeling_dense::fuse_depth_maps(&views, &depth_maps, &remodeling_dense::FusionConfig { max_relative_depth_diff: tolerance, max_normal_angle_deg: 30.0, min_consistent_views: minimum });
+        let distances: Vec<f64> = fused.positions.iter().map(|p| surface(sim.act(*p))).collect();
+        let far = distances.iter().filter(|distance| **distance > 0.2).count();
+        eprintln!("[DENSE] fusion tolerance {tolerance} views {minimum}: {} points ({far} > 0.2 half-sizes off), surface distance {}", fused.positions.len(), quantiles(distances));
+    }
+    if let Some((tsdf, lattice_min, lattice_max, extrema_min, extrema_max)) = &volume {
+        eprintln!("[DENSE] extrema {extrema_min:.3?}..{extrema_max:.3?} lattice {lattice_min:?}..{lattice_max:?} blocks {}", tsdf.block_count());
+        let voxel = engine.meshing_voxel().0;
+        let (mut unobserved, mut agree, mut disagree) = (0usize, 0usize, 0usize);
+        let mut disagreeing_depth = Vec::new();
+        for z in lattice_min[2]..=lattice_max[2] {
+            for y in lattice_min[1]..=lattice_max[1] {
+                for x in lattice_min[0]..=lattice_max[0] {
+                    let centre = sim.act([(f64::from(x) + 0.5) * voxel, (f64::from(y) + 0.5) * voxel, (f64::from(z) + 0.5) * voxel]);
+                    let inside = centre.iter().all(|c| c.abs() < half);
+                    match tsdf.sample(x, y, z) {
+                        None => unobserved += 1,
+                        Some((sdf, _)) => {
+                            if (sdf < 0.0) == inside {
+                                agree += 1;
+                            } else {
+                                disagree += 1;
+                                disagreeing_depth.push(surface(centre));
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        let truth_points: Vec<[f64; 3]> = truth["pointsWorldM"].as_array().expect("points").iter().map(|p| { let p = p.as_array().expect("point"); [number(&p[0]), number(&p[1]), number(&p[2])] }).collect();
+        let mut fusion = remodeling_dense::FusionPreparation::new(0);
+        while !fusion.advance(&views, &depth_maps, &engine.fusion_config(), usize::MAX / 2) {}
+        let (_, masks) = fusion.finish_with_consistency().expect("fusion completes");
+        let masked: Vec<remodeling_dense::DepthMap> = depth_maps
+            .iter()
+            .zip(&masks)
+            .map(|(map, bits)| {
+                let mut map = map.clone();
+                for (index, depth) in map.depth.iter_mut().enumerate() {
+                    if bits[index / 64] >> (index % 64) & 1 == 0 {
+                        *depth = 0.0;
+                    }
+                }
+                map
+            })
+            .collect();
+        let grid: Vec<(f64, f64)> = std::env::var("DENSE_GRID").ok().map_or_else(
+            || vec![(0.1, 0.33), (0.1, 0.2), (0.1, 0.15), (0.15, 0.3), (0.2, 0.2), (0.2, 0.3), (0.2, 0.4), (0.25, 0.25), (0.25, 0.5)],
+            |text| text.split(';').map(|pair| { let (v, t) = pair.split_once(',').expect("voxel,truncation"); (v.parse().expect("voxel"), t.parse().expect("truncation")) }).collect(),
+        );
+        for (voxel_size, truncation) in grid {
+            let (grid_min, grid_max) = compute_voxel_bounds_from_extrema(*extrema_min, *extrema_max, voxel_size);
+            let mut volume = remodeling_dense::TsdfVolume::new(voxel_size, truncation).with_voxel_bounds(grid_min.map(|c| c - 2), grid_max.map(|c| c + 2));
+            for (map, view) in masked.iter().zip(&views) {
+                volume.integrate(map, view, true);
+            }
+            let mut pipeline = remodeling_mesh::MeshPipeline::new_bounded(volume, 0.0, grid_min, grid_max, engine.params.mesh.clone());
+            let outcome = loop {
+                match remodeling_mesh::mesh_pipeline_step(&mut pipeline, 1) {
+                    remodeling_mesh::MeshPipelineStatus::Working { .. } => {}
+                    remodeling_mesh::MeshPipelineStatus::Done => break "done".to_string(),
+                    remodeling_mesh::MeshPipelineStatus::Failed(message) => break message.chars().take(90).collect(),
+                }
+            };
+            let positions: Vec<[f64; 3]> = pipeline.result().map_or_else(|| pipeline.mesh().positions.iter().map(|p| sim.act(*p)).collect(), |mesh| mesh.positions.chunks_exact(3).map(|p| sim.act([f64::from(p[0]), f64::from(p[1]), f64::from(p[2])])).collect());
+            let covered = truth_points.iter().filter(|point| positions.iter().any(|vertex| norm3(sub3(*vertex, **point)) <= 0.4)).count();
+            eprintln!("[DENSE] grid voxel {voxel_size} trunc {truncation}: {outcome}; {} vertices, surface distance {}, completeness {:.1}%", positions.len(), quantiles(positions.iter().map(|p| surface(*p)).collect()), 100.0 * covered as f64 / truth_points.len() as f64);
+        }
+        eprintln!("[DENSE] tsdf lattice voxels: unobserved {unobserved}, sign agrees with truth {agree}, disagrees {disagree}; disagreeing voxels' surface distance {}", quantiles(disagreeing_depth));
+    }
+    for (triangles, positions) in &meshes {
+        eprintln!("[DENSE] pipeline mesh {triangles} triangles / {} vertices: surface distance {}", positions.len(), quantiles(positions.iter().map(|p| surface(sim.act(*p))).collect()));
+    }
+    eprintln!("[DENSE] fused cloud surface distance {}", quantiles(cloud.iter().map(|p| surface(sim.act(*p))).collect()));
+    let mesh = engine.mesh_data.as_ref().expect("mesh");
+    let vertices: Vec<[f64; 3]> = mesh.positions.chunks_exact(3).map(|p| sim.act([f64::from(p[0]), f64::from(p[1]), f64::from(p[2])])).collect();
+    let mut lo = [f64::INFINITY; 3];
+    let mut hi = [f64::NEG_INFINITY; 3];
+    for vertex in &vertices {
+        for axis in 0..3 {
+            lo[axis] = lo[axis].min(vertex[axis]);
+            hi[axis] = hi[axis].max(vertex[axis]);
+        }
+    }
+    eprintln!("[DENSE] mesh {} vertices / {} triangles, aligned bounds {lo:.2?}..{hi:.2?}, surface distance {}", vertices.len(), mesh.indices.len() / 3, quantiles(vertices.iter().map(|v| surface(*v)).collect()));
+}
+
+/// 💾️ Binary snapshot of a finished dense stage (reconstruction, dense camera indices, depth maps)
+/// so fusion/TSDF/meshing experiments replay in seconds instead of re-running SfM and PatchMatch.
+mod dense_dump {
+    use super::*;
+
+    struct Writer(Vec<u8>);
+    impl Writer {
+        fn u64(&mut self, value: usize) {
+            self.0.extend_from_slice(&(value as u64).to_le_bytes());
+        }
+        fn f64(&mut self, value: f64) {
+            self.0.extend_from_slice(&value.to_le_bytes());
+        }
+        fn f32(&mut self, value: f32) {
+            self.0.extend_from_slice(&value.to_le_bytes());
+        }
+    }
+    struct Reader<'a>(&'a [u8], usize);
+    impl Reader<'_> {
+        fn take<const N: usize>(&mut self) -> [u8; N] {
+            let bytes: [u8; N] = self.0[self.1..self.1 + N].try_into().expect("bytes");
+            self.1 += N;
+            bytes
+        }
+        fn u64(&mut self) -> usize {
+            u64::from_le_bytes(self.take()) as usize
+        }
+        fn f64(&mut self) -> f64 {
+            f64::from_le_bytes(self.take())
+        }
+        fn f32(&mut self) -> f32 {
+            f32::from_le_bytes(self.take())
+        }
+    }
+
+    pub(super) fn encode(reconstruction: &remodeling_sfm::Reconstruction, dense: &[usize], maps: &[remodeling_dense::DepthMap]) -> Vec<u8> {
+        let mut w = Writer(Vec::new());
+        let i = reconstruction.intrinsics;
+        for value in [i.fx, i.fy, i.cx, i.cy, i.skew] {
+            w.f64(value);
+        }
+        match i.distortion {
+            remodeling_camera::Distortion::BrownConrady { k1, k2, k3, p1, p2 } => {
+                w.u64(1);
+                for value in [k1, k2, k3, p1, p2] {
+                    w.f64(value);
+                }
+            }
+            _ => w.u64(0),
+        }
+        w.u64(reconstruction.cameras.len());
+        for (frame, pose) in &reconstruction.cameras {
+            w.u64(*frame);
+            for column in pose.0.r.0.cols {
+                for value in column {
+                    w.f64(value);
+                }
+            }
+            for value in pose.0.t {
+                w.f64(value);
+            }
+        }
+        w.u64(reconstruction.points.len());
+        for point in &reconstruction.points {
+            for value in point {
+                w.f64(*value);
+            }
+        }
+        w.u64(dense.len());
+        for index in dense {
+            w.u64(*index);
+        }
+        w.u64(maps.len());
+        for map in maps {
+            w.u64(map.width as usize);
+            w.u64(map.height as usize);
+            for index in 0..map.depth.len() {
+                w.f32(map.depth[index]);
+                for value in map.normal[index] {
+                    w.f32(value);
+                }
+                w.f32(map.confidence[index]);
+            }
+        }
+        w.0
+    }
+
+    pub(super) fn decode(bytes: &[u8]) -> (remodeling_sfm::Reconstruction, Vec<usize>, Vec<remodeling_dense::DepthMap>) {
+        let mut r = Reader(bytes, 0);
+        let (fx, fy, cx, cy, skew) = (r.f64(), r.f64(), r.f64(), r.f64(), r.f64());
+        let distortion = if r.u64() == 1 {
+            let (k1, k2, k3, p1, p2) = (r.f64(), r.f64(), r.f64(), r.f64(), r.f64());
+            remodeling_camera::Distortion::BrownConrady { k1, k2, k3, p1, p2 }
+        } else {
+            remodeling_camera::Distortion::None
+        };
+        let intrinsics = remodeling_camera::Intrinsics { fx, fy, cx, cy, skew, distortion };
+        let cameras = (0..r.u64())
+            .map(|_| {
+                let frame = r.u64();
+                let cols: [[f64; 3]; 3] = std::array::from_fn(|_| std::array::from_fn(|_| r.f64()));
+                let t = [r.f64(), r.f64(), r.f64()];
+                (frame, remodeling_camera::CameraPose(crate::lie::Se3 { r: crate::lie::So3(crate::algebra::Mat3d { cols }), t }))
+            })
+            .collect();
+        let points = (0..r.u64()).map(|_| [r.f64(), r.f64(), r.f64()]).collect::<Vec<_>>();
+        let point_track_ids = (0..points.len()).collect();
+        let dense = (0..r.u64()).map(|_| r.u64()).collect();
+        let maps = (0..r.u64())
+            .map(|_| {
+                let (width, height) = (r.u64() as u32, r.u64() as u32);
+                let mut map = remodeling_dense::DepthMap::new(width, height);
+                for index in 0..map.depth.len() {
+                    map.depth[index] = r.f32();
+                    map.normal[index] = [r.f32(), r.f32(), r.f32()];
+                    map.confidence[index] = r.f32();
+                }
+                map
+            })
+            .collect();
+        (remodeling_sfm::Reconstruction { cameras, points, point_track_ids, intrinsics }, dense, maps)
+    }
+}
+
+/// 🔁️ Replays fusion → TSDF → surface pipeline over a [`dense_dump`] written by
+/// [`diagnose_synthetic_orbit_dense_against_truth`] (`DENSE_DUMP=<path>`), scoring each mesh
+/// against the fixture's truth cube. `DENSE_FUSION="tolerance,views"` and
+/// `DENSE_GRID="voxel,truncation;…"` pick the experiments. Diagnostic, therefore `#[ignore]`.
+#[test]
+#[ignore = "diagnostic replay of a dumped dense stage, run explicitly"]
+fn diagnose_dense_replay() {
+    use crate::lie::{Quatd, Se3, So3};
+    let path = std::env::var("DENSE_DUMP").expect("DENSE_DUMP names the dump");
+    let (reconstruction, dense_indices, depth_maps) = dense_dump::decode(&std::fs::read(path).expect("read dump"));
+    let truth: serde_json::Value = serde_json::from_str(crate::examples::synthetic_orbit::GROUND_TRUTH_JSON).expect("ground truth json");
+    let number = |node: &serde_json::Value| node.as_f64().expect("number");
+    let half = number(&truth["scene"]["halfExtentM"]);
+    let truth_centres: Vec<[f64; 3]> = truth["extrinsics"]
+        .as_array()
+        .expect("extrinsics")
+        .iter()
+        .map(|node| {
+            let q = node["rotationWxyzWorldToCamera"].as_array().expect("quaternion");
+            let rotation = So3::from_quat(Quatd { w: number(&q[0]), x: number(&q[1]), y: number(&q[2]), z: number(&q[3]) });
+            let c = node["cameraCenterM"].as_array().expect("centre");
+            Se3 { r: rotation, t: scale3(rotation.act([number(&c[0]), number(&c[1]), number(&c[2])]), -1.0) }.inverse().t
+        })
+        .collect();
+    let truth_points: Vec<[f64; 3]> = truth["pointsWorldM"].as_array().expect("points").iter().map(|p| { let p = p.as_array().expect("point"); [number(&p[0]), number(&p[1]), number(&p[2])] }).collect();
+    let surface = |p: [f64; 3]| {
+        let outside = [(p[0].abs() - half).max(0.0), (p[1].abs() - half).max(0.0), (p[2].abs() - half).max(0.0)];
+        let outside = (outside[0] * outside[0] + outside[1] * outside[1] + outside[2] * outside[2]).sqrt();
+        let inside = (half - p[0].abs()).min(half - p[1].abs()).min(half - p[2].abs()).max(0.0);
+        (outside + inside) / half
+    };
+    let quantiles = |mut values: Vec<f64>| -> String {
+        if values.is_empty() {
+            return "n=0".into();
+        }
+        values.sort_by(f64::total_cmp);
+        let q = |f: f64| values[((values.len() as f64 - 1.0) * f).round() as usize];
+        format!("n={} median {:.3} p90 {:.3}", values.len(), q(0.5), q(0.9))
+    };
+    let recovered: Vec<[f64; 3]> = reconstruction.cameras.iter().map(|(_, pose)| pose.0.inverse().t).collect();
+    let targets: Vec<[f64; 3]> = reconstruction.cameras.iter().map(|(frame, _)| truth_centres[*frame]).collect();
+    let sim = crate::lie::umeyama(&recovered, &targets, true).expect("Sim(3) over camera centres");
+    let scene = <crate::RemodelingSnapshot as store::ArtifactDsl>::parse_dsl(crate::examples::synthetic_orbit::PRIMARY_TEXT).expect("parses");
+    let params = crate::editor::remodeling::engine::build_engine_params(&scene.params, &scene.calibration);
+    let mut extrema_min = [f64::INFINITY; 3];
+    let mut extrema_max = [f64::NEG_INFINITY; 3];
+    for point in &reconstruction.points {
+        for axis in 0..3 {
+            extrema_min[axis] = extrema_min[axis].min(point[axis]);
+            extrema_max[axis] = extrema_max[axis].max(point[axis]);
+        }
+    }
+    let views: Vec<(remodeling_camera::CameraPose, remodeling_camera::Intrinsics)> = dense_indices.iter().map(|camera| (reconstruction.cameras[*camera].1, reconstruction.intrinsics)).collect();
+    let fusion_config = std::env::var("DENSE_FUSION").ok().map_or_else(remodeling_dense::FusionConfig::default, |text| {
+        let (tolerance, views) = text.split_once(',').expect("tolerance,views");
+        remodeling_dense::FusionConfig { max_relative_depth_diff: tolerance.parse().expect("tolerance"), max_normal_angle_deg: 30.0, min_consistent_views: views.parse().expect("views") }
+    });
+    let mut fusion = remodeling_dense::FusionPreparation::new(0);
+    while !fusion.advance(&views, &depth_maps, &fusion_config, usize::MAX / 2) {}
+    let (_, masks) = fusion.finish_with_consistency().expect("fusion completes");
+    let masked: Vec<remodeling_dense::DepthMap> = depth_maps
+        .iter()
+        .zip(&masks)
+        .map(|(map, bits)| {
+            let mut map = map.clone();
+            for (index, depth) in map.depth.iter_mut().enumerate() {
+                if bits[index / 64] >> (index % 64) & 1 == 0 {
+                    *depth = 0.0;
+                }
+            }
+            map
+        })
+        .collect();
+    let kept: usize = masked.iter().map(|map| map.depth.iter().filter(|depth| **depth > 0.0).count()).sum();
+    eprintln!("[REPLAY] fusion {fusion_config:?}: {kept} consistent pixels");
+    let grid: Vec<(f64, f64)> = std::env::var("DENSE_GRID").ok().map_or_else(
+        || vec![(0.1, 0.33), (0.1, 0.2), (0.15, 0.3), (0.2, 0.2), (0.25, 0.25)],
+        |text| text.split(';').map(|pair| { let (v, t) = pair.split_once(',').expect("voxel,truncation"); (v.parse().expect("voxel"), t.parse().expect("truncation")) }).collect(),
+    );
+    for (voxel_size, truncation) in grid {
+        let (grid_min, grid_max) = compute_voxel_bounds_from_extrema(extrema_min, extrema_max, voxel_size);
+        let mut volume = remodeling_dense::TsdfVolume::new(voxel_size, truncation).with_voxel_bounds(grid_min.map(|c| c - 2), grid_max.map(|c| c + 2));
+        if std::env::var_os("DENSE_BOUNDED").is_some() {
+            for ((map, view), mask) in depth_maps.iter().zip(&views).zip(&masks) {
+                let mut preparation = remodeling_dense::TsdfIntegrationPreparation::new();
+                while !preparation.advance_masked(&mut volume, map, Some(mask), view, true, 256) {}
+            }
+        } else {
+            for (map, view) in masked.iter().zip(&views) {
+                volume.integrate(map, view, true);
+            }
+        }
+        eprintln!("[REPLAY] extrema {extrema_min:.3?}..{extrema_max:.3?} lattice {grid_min:?}..{grid_max:?} volume blocks {}", volume.block_count());
+        let mut pipeline = remodeling_mesh::MeshPipeline::new_bounded(volume, 0.0, grid_min, grid_max, params.mesh.clone());
+        if std::env::var_os("DENSE_OBSERVED").is_some() {
+            pipeline = pipeline.with_observed_only_surface();
+        }
+        let mut extracted = None;
+        let mut trail: Vec<String> = Vec::new();
+        let mut last_triangles = usize::MAX;
+        let outcome = loop {
+            let status = remodeling_mesh::mesh_pipeline_step(&mut pipeline, 1);
+            if pipeline.mesh().triangles.len() != last_triangles {
+                last_triangles = pipeline.mesh().triangles.len();
+                let report = remodeling_mesh::validate_watertight(pipeline.mesh(), false);
+                let worst = pipeline.mesh().positions.iter().map(|p| surface(sim.act(*p))).fold(0.0f64, f64::max);
+                trail.push(format!("{}t/b{}/nm{}/nv{}/c{}/worst{:.2}", report.triangle_count, report.boundary_edge_count, report.non_manifold_edge_count, report.non_manifold_vertex_count, report.connected_components, worst));
+            }
+            if extracted.is_none() && !pipeline.mesh().triangles.is_empty() {
+                let mesh = pipeline.mesh();
+                let mut parent: Vec<usize> = (0..mesh.positions.len()).collect();
+                fn root(parent: &mut [usize], mut index: usize) -> usize {
+                    while parent[index] != index {
+                        parent[index] = parent[parent[index]];
+                        index = parent[index];
+                    }
+                    index
+                }
+                for triangle in &mesh.triangles {
+                    let a = root(&mut parent, triangle[0] as usize);
+                    for corner in &triangle[1..] {
+                        let b = root(&mut parent, *corner as usize);
+                        parent[b] = a;
+                    }
+                }
+                let mut sizes = std::collections::BTreeMap::new();
+                for triangle in &mesh.triangles {
+                    *sizes.entry(root(&mut parent, triangle[0] as usize)).or_insert(0usize) += 1;
+                }
+                let mut sizes: Vec<usize> = sizes.into_values().collect();
+                sizes.sort_unstable_by(|a, b| b.cmp(a));
+                extracted = Some((mesh.positions.len(), mesh.triangles.len(), sizes));
+            }
+            match status {
+                remodeling_mesh::MeshPipelineStatus::Working { .. } => {}
+                remodeling_mesh::MeshPipelineStatus::Done => break "done".to_string(),
+                remodeling_mesh::MeshPipelineStatus::Failed(message) => break message.chars().take(400).collect(),
+            }
+        };
+        let positions: Vec<[f64; 3]> = pipeline.result().map_or_else(|| pipeline.mesh().positions.iter().map(|p| sim.act(*p)).collect(), |mesh| mesh.positions.chunks_exact(3).map(|p| sim.act([f64::from(p[0]), f64::from(p[1]), f64::from(p[2])])).collect());
+        let covered = truth_points.iter().filter(|point| positions.iter().any(|vertex| norm3(sub3(*vertex, **point)) <= 0.4)).count();
+        eprintln!("[REPLAY] voxel {voxel_size} trunc {truncation}: trail {trail:?}; extracted {extracted:?} -> {outcome}; {} vertices, surface distance {}, completeness {:.1}%", positions.len(), quantiles(positions.iter().map(|p| surface(*p)).collect()), 100.0 * covered as f64 / truth_points.len() as f64);
+    }
+}
+

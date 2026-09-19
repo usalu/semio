@@ -7,8 +7,52 @@ import { testInputWriterFixture } from "../../✍️writer/🧪️tests/🔬️i
 import { testInputCommitObserverFixture } from "../../🔗️commit/🧪️tests/🔬️input-commit-observer/🟦️.ts";
 import { testWatchdogTailFixture } from "../../../../../../⏱️trace/⏱️clock/🏁️tail/🧪️tests/🔬️watchdog-tail/🟦️.ts";
 
+/** 🎟️ The input-admission ledger: which pointer and key turns are admitted, refused or coalesced. */
+type InputAdmissionFixture = {
+  version: number;
+  limits: {
+    exclusiveCallbackCeilingUs: number;
+    discreteEvents: number;
+    discreteLogicalBytes: number;
+    eventLogicalBytes: number;
+    runtimeCompletions: number;
+  };
+  ownedEvent: {
+    text: string;
+    utf8Hex: string;
+  };
+  physicalRetirement: {
+    initialQueueBackingBytes: number;
+    payloadMinimumCapacity: number;
+    logicalBytes: number;
+    logicalGrants: number[];
+    remaining: number[];
+    separateBackingRelease: boolean;
+    terminalRequiresEmptyBacking: boolean;
+  };
+  cases: {
+    name: string;
+    kind: string;
+    startUs: number;
+    finishUs: number;
+    cancelled: boolean;
+    grant: string;
+    receiver: string;
+    frameGeneration: string;
+    inputGeneration: string;
+    expected: {
+      outcome: string;
+      sourcePreserved: boolean;
+      eventCommits: number;
+      surfaceCommits: number;
+      mailboxCommits: number;
+      generationDelta: number;
+    };
+  }[];
+};
+
 export function testInputAdmissionFixture(): void {
-  const fixture = JSON.parse(readFileSync(new URL("../../🧫️fixtures/🔣️.json", import.meta.url), "utf8"));
+  const fixture: InputAdmissionFixture = JSON.parse(readFileSync(new URL("../../🧫️fixtures/🔣️.json", import.meta.url), "utf8"));
   const schema = JSON.parse(readFileSync(new URL("../../🧬️schema/🔣️.json", import.meta.url), "utf8"));
   const value = JSON.parse(readFileSync(new URL("../../../../../../🌱️value/🧬️schema/🔣️.json", import.meta.url), "utf8"));
   const validate = new Ajv({ strict: true, allErrors: true }).addSchema(value).compile(schema);

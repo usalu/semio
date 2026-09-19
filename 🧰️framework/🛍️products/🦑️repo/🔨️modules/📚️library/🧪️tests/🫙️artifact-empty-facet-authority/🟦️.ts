@@ -39,7 +39,7 @@ function independentlyCompiledAuthorities(): readonly (typeof semanticArtifactEm
 
 test("retains the original nineteen-case empty-facet input with independent JSON parsing", () => {
   expect(goldenBytes.length).toBe(3154);
-  expect(createHash("sha256").update(goldenBytes).digest("hex")).toBe("d03f52fd16ef6e87f6916925d6ebadc13c1e6b3a0b1083624f5cb32764672dbd");
+  expect(createHash("sha256").update(goldenBytes).digest("hex")).toBe("4af3be2c7b9c6f344e3baad500bfb3b4cd7ba697c876f204b1e8039c04354d72");
   const errors: ParseError[] = [];
   expect(parse(goldenBytes.toString(), errors, { disallowComments: true, allowTrailingComma: false })).toEqual(golden);
   expect(parse(oracleBytes, errors, { disallowComments: true, allowTrailingComma: false })).toEqual(oracle);
@@ -123,6 +123,6 @@ test("registers the empty-facet authority through its closed canonical route", a
     expect(parseErrors).toEqual([]);
     const entries = document.configurations.filter((row: { name: string }) => row.name === vector.launchName);
     expect(entries).toEqual([{ name: vector.launchName, type: "node-terminal", request: "launch", command: `bun nx run @semio-tech/repo-lib:${vector.target} --skip-nx-cache`, cwd: "${workspaceFolder}", presentation: { group: vector.launchGroup, order: vector.launchOrder } }]);
-    expect(document.configurations.filter((row: { presentation?: { group: string; order: number } }) => row.presentation?.group === vector.launchGroup && row.presentation.order === vector.launchOrder)).toHaveLength(1);
+    expect(document.configurations.filter((row: { presentation?: { group: string; order: number } }) => row.presentation?.group === vector.launchGroup && row.presentation?.order === vector.launchOrder)).toHaveLength(1);
   }
 });

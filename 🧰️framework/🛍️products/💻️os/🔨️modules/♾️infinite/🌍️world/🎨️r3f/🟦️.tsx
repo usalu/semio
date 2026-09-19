@@ -65,6 +65,7 @@ const {
   RGBAFormat,
   Scene,
   ShaderMaterial,
+  TOUCH,
   Vector2,
   Vector3,
   WebGLRenderTarget,
@@ -3502,6 +3503,12 @@ function WorldOrbitControlsBridge({
     controls.enableDamping = false;
     controls.enablePan = true;
     controls.enableZoom = true;
+    // 🤏️ Said out loud rather than inherited from the control's own defaults: ONE finger orbits, TWO
+    // fingers pinch-zoom AND pan together, which is the only zoom path a touch-only device has (there is
+    // no wheel). `WorldCanvas` already stamps `touch-action: none` on this same element, so the browser
+    // never steals the second contact for a page scroll; `🌐️World3dHost` goes quiet for the whole
+    // multi-touch gesture so its marquee cannot grow underneath it.
+    controls.touches = { ONE: TOUCH.ROTATE, TWO: TOUCH.DOLLY_PAN };
     controls.enabled = enabled;
     controls.mouseButtons = { ...mouseButtons };
     const change = () => callbacksRef.current.onChange();
@@ -4356,6 +4363,106 @@ export function WorldVolumeLayer(props: {
 // #endregion 🧊️Volume
 
 // #region 🧪️Tests
+/** 🧪️ Exact shape of the bag `🧪️tests/🧪️chunkkey` is handed — `typeof` of the live bindings, so a
+ * renamed or dropped member is a compile error on both sides rather than a silent `any`. */
+export type WorldR3fTestDependencies = {
+  readonly BoxGeometry: typeof BoxGeometry;
+  readonly HalfFloatType: typeof HalfFloatType;
+  readonly LineBasicMaterial: typeof LineBasicMaterial;
+  readonly LinearFilter: typeof LinearFilter;
+  readonly LinearSRGBColorSpace: typeof LinearSRGBColorSpace;
+  readonly MOUSE: typeof MOUSE;
+  readonly Matrix4: typeof Matrix4;
+  readonly Mesh: typeof Mesh;
+  readonly ORBIT_CAMERA_VIEW_COMMAND: typeof ORBIT_CAMERA_VIEW_COMMAND;
+  readonly Object3D: typeof Object3D;
+  readonly ThreeOrbitControls: typeof ThreeOrbitControls;
+  readonly ThreeOrthographicCamera: typeof ThreeOrthographicCamera;
+  readonly ThreePerspectiveCamera: typeof ThreePerspectiveCamera;
+  readonly Vector3: typeof Vector3;
+  readonly WORLD_CURVILINEAR_CAPTURE_TARGET_OPTIONS: typeof WORLD_CURVILINEAR_CAPTURE_TARGET_OPTIONS;
+  readonly WORLD_CURVILINEAR_FRAGMENT_SHADER: typeof WORLD_CURVILINEAR_FRAGMENT_SHADER;
+  readonly WORLD_LOD_GRID_COVERAGE_MARGIN: typeof WORLD_LOD_GRID_COVERAGE_MARGIN;
+  readonly WORLD_LOD_REFERENCE_FOV_DEG: typeof WORLD_LOD_REFERENCE_FOV_DEG;
+  readonly WORLD_MESH_OUTLINE_USER_DATA_KEY: typeof WORLD_MESH_OUTLINE_USER_DATA_KEY;
+  readonly WORLD_ORBIT_CAMERA_MIN_FAR: typeof WORLD_ORBIT_CAMERA_MIN_FAR;
+  readonly WORLD_PROJECTION_COMMAND: typeof WORLD_PROJECTION_COMMAND;
+  readonly WORLD_PROJECTION_KINDS: typeof WORLD_PROJECTION_KINDS;
+  readonly WORLD_REFERENCE_SELECTED_CONTENT_OPACITY: typeof WORLD_REFERENCE_SELECTED_CONTENT_OPACITY;
+  readonly adaptiveOrbitCameraFar: typeof adaptiveOrbitCameraFar;
+  readonly applyOrbitProjectionToCameraState: typeof applyOrbitProjectionToCameraState;
+  readonly applyWorldMeshEdgeBorders: typeof applyWorldMeshEdgeBorders;
+  readonly applyWorldOrbitMouseButtonsIdle: typeof applyWorldOrbitMouseButtonsIdle;
+  readonly applyWorldReferenceTransform: typeof applyWorldReferenceTransform;
+  readonly applyWorldVolumeTransform: typeof applyWorldVolumeTransform;
+  readonly cameraGridFadeDistance: typeof cameraGridFadeDistance;
+  readonly cameraGridVisibleRadius: typeof cameraGridVisibleRadius;
+  readonly chunkDistanceVisible: typeof chunkDistanceVisible;
+  readonly chunkKey: typeof chunkKey;
+  readonly classifyWorldNavigationGestures: typeof classifyWorldNavigationGestures;
+  readonly computeOrbitCameraViewState: typeof computeOrbitCameraViewState;
+  readonly computeWorldProjectionPose: typeof computeWorldProjectionPose;
+  readonly createOrbitCameraViewLayoutDescriptors: typeof createOrbitCameraViewLayoutDescriptors;
+  readonly createOrbitCameraViewTemplates: typeof createOrbitCameraViewTemplates;
+  readonly createWorldProjectionTemplates: typeof createWorldProjectionTemplates;
+  readonly decodeWorldProjectionTemplateId: typeof decodeWorldProjectionTemplateId;
+  readonly dispatchProjectionGizmoHit: typeof dispatchProjectionGizmoHit;
+  readonly encodeWorldProjectionTemplateId: typeof encodeWorldProjectionTemplateId;
+  readonly floatingOriginRebase: typeof floatingOriginRebase;
+  readonly frameWorldProjectionPose: typeof frameWorldProjectionPose;
+  readonly lodFromCameraDistance: typeof lodFromCameraDistance;
+  readonly lodGridStepWorld: typeof lodGridStepWorld;
+  readonly lodOrbitDistanceForCamera: typeof lodOrbitDistanceForCamera;
+  readonly orbitCameraDistance: typeof orbitCameraDistance;
+  readonly orbitCameraViewGumballPlane: typeof orbitCameraViewGumballPlane;
+  readonly orbitCameraViewRigApplyToken: typeof orbitCameraViewRigApplyToken;
+  readonly orbitViewToWorldProjectionSpec: typeof orbitViewToWorldProjectionSpec;
+  readonly patchWorldReferenceProps: typeof patchWorldReferenceProps;
+  readonly projectionGizmoHeadFillColor: typeof projectionGizmoHeadFillColor;
+  readonly projectionGizmoHitVisualState: typeof projectionGizmoHitVisualState;
+  readonly resetWorldMeshBorderColorCache: typeof resetWorldMeshBorderColorCache;
+  readonly resolveOrbitCameraViewFromTemplateId: typeof resolveOrbitCameraViewFromTemplateId;
+  readonly resolveOrbitGizmoViewFromDirection: typeof resolveOrbitGizmoViewFromDirection;
+  readonly resolveProjectionGizmoSpec: typeof resolveProjectionGizmoSpec;
+  readonly resolveProjectionGizmoVisualPalette: typeof resolveProjectionGizmoVisualPalette;
+  readonly resolveWorldOrbitMouseButtonsIdle: typeof resolveWorldOrbitMouseButtonsIdle;
+  readonly resolveWorldOrbitRightMouseAction: typeof resolveWorldOrbitRightMouseAction;
+  readonly sceneHostPort: typeof sceneHostPort;
+  readonly shouldApplyOrbitCameraViewRigSeed: typeof shouldApplyOrbitCameraViewRigSeed;
+  readonly shouldAssignWorldOrbitRightMouse: typeof shouldAssignWorldOrbitRightMouse;
+  readonly tokenHex: typeof tokenHex;
+  readonly worldCurvilinearUnproject: typeof worldCurvilinearUnproject;
+  readonly worldEntityInspectable: typeof worldEntityInspectable;
+  readonly worldEntityRenderMode: typeof worldEntityRenderMode;
+  readonly worldEntityRendered: typeof worldEntityRendered;
+  readonly worldEntitySelectable: typeof worldEntitySelectable;
+  readonly worldMeshBorderColor: typeof worldMeshBorderColor;
+  readonly worldObliqueShearMatrix: typeof worldObliqueShearMatrix;
+  readonly worldProjectionDefaults: typeof worldProjectionDefaults;
+  readonly worldProjectionFamily: typeof worldProjectionFamily;
+  readonly worldProjectionGoalMatrix: typeof worldProjectionGoalMatrix;
+  readonly worldProjectionGumballPlane: typeof worldProjectionGumballPlane;
+  readonly worldProjectionKindSwitchSpec: typeof worldProjectionKindSwitchSpec;
+  readonly worldProjectionMatchedOrthoZoom: typeof worldProjectionMatchedOrthoZoom;
+  readonly worldProjectionMatchedPerspectiveDistance: typeof worldProjectionMatchedPerspectiveDistance;
+  readonly worldProjectionModeOptions: typeof worldProjectionModeOptions;
+  readonly worldProjectionMorphMatrix: typeof worldProjectionMorphMatrix;
+  readonly worldProjectionOrbitConstraints: typeof worldProjectionOrbitConstraints;
+  readonly worldProjectionPerspectiveFov: typeof worldProjectionPerspectiveFov;
+  readonly worldProjectionSnapZoom: typeof worldProjectionSnapZoom;
+  readonly worldProjectionSpecIconId: typeof worldProjectionSpecIconId;
+  readonly worldProjectionSpecLabel: typeof worldProjectionSpecLabel;
+  readonly worldProjectionSpecToOrbitView: typeof worldProjectionSpecToOrbitView;
+  readonly worldProjectionSwitchTreeItems: typeof worldProjectionSwitchTreeItems;
+  readonly worldProjectionTemplateApplySpec: typeof worldProjectionTemplateApplySpec;
+  readonly worldProjectionTemplateSelectionId: typeof worldProjectionTemplateSelectionId;
+  readonly worldProjectionTransitionPose: typeof worldProjectionTransitionPose;
+  readonly worldReferenceAppearance: typeof worldReferenceAppearance;
+  readonly worldSceneContentBounds: typeof worldSceneContentBounds;
+  readonly worldSceneContentBoundsKey: typeof worldSceneContentBoundsKey;
+  readonly worldVolumesContainAabb: typeof worldVolumesContainAabb;
+};
+
 if (import.meta.vitest) {
   const { registerTests1 } = await import("./🧪️tests/🧪️chunkkey/🟦️.tsx");
   await registerTests1(import.meta.vitest, { BoxGeometry, HalfFloatType, LineBasicMaterial, LinearFilter, LinearSRGBColorSpace, MOUSE, Matrix4, Mesh, ORBIT_CAMERA_VIEW_COMMAND, Object3D, ThreeOrbitControls, ThreeOrthographicCamera, ThreePerspectiveCamera, Vector3, WORLD_CURVILINEAR_CAPTURE_TARGET_OPTIONS, WORLD_CURVILINEAR_FRAGMENT_SHADER, WORLD_LOD_GRID_COVERAGE_MARGIN, WORLD_LOD_REFERENCE_FOV_DEG, WORLD_MESH_OUTLINE_USER_DATA_KEY, WORLD_ORBIT_CAMERA_MIN_FAR, WORLD_PROJECTION_COMMAND, WORLD_PROJECTION_KINDS, WORLD_REFERENCE_SELECTED_CONTENT_OPACITY, adaptiveOrbitCameraFar, applyOrbitProjectionToCameraState, applyWorldMeshEdgeBorders, applyWorldOrbitMouseButtonsIdle, applyWorldReferenceTransform, applyWorldVolumeTransform, cameraGridFadeDistance, cameraGridVisibleRadius, chunkDistanceVisible, chunkKey, classifyWorldNavigationGestures, computeOrbitCameraViewState, computeWorldProjectionPose, createOrbitCameraViewLayoutDescriptors, createOrbitCameraViewTemplates, createWorldProjectionTemplates, decodeWorldProjectionTemplateId, dispatchProjectionGizmoHit, encodeWorldProjectionTemplateId, floatingOriginRebase, frameWorldProjectionPose, lodFromCameraDistance, lodGridStepWorld, lodOrbitDistanceForCamera, orbitCameraDistance, orbitCameraViewGumballPlane, orbitCameraViewRigApplyToken, orbitViewToWorldProjectionSpec, patchWorldReferenceProps, projectionGizmoHeadFillColor, projectionGizmoHitVisualState, resetWorldMeshBorderColorCache, resolveOrbitCameraViewFromTemplateId, resolveOrbitGizmoViewFromDirection, resolveProjectionGizmoSpec, resolveProjectionGizmoVisualPalette, resolveWorldOrbitMouseButtonsIdle, resolveWorldOrbitRightMouseAction, sceneHostPort, shouldApplyOrbitCameraViewRigSeed, shouldAssignWorldOrbitRightMouse, tokenHex, worldCurvilinearUnproject, worldEntityInspectable, worldEntityRenderMode, worldEntityRendered, worldEntitySelectable, worldMeshBorderColor, worldObliqueShearMatrix, worldProjectionDefaults, worldProjectionFamily, worldProjectionGoalMatrix, worldProjectionGumballPlane, worldProjectionKindSwitchSpec, worldProjectionMatchedOrthoZoom, worldProjectionMatchedPerspectiveDistance, worldProjectionModeOptions, worldProjectionMorphMatrix, worldProjectionOrbitConstraints, worldProjectionPerspectiveFov, worldProjectionSnapZoom, worldProjectionSpecIconId, worldProjectionSpecLabel, worldProjectionSpecToOrbitView, worldProjectionSwitchTreeItems, worldProjectionTemplateApplySpec, worldProjectionTemplateSelectionId, worldProjectionTransitionPose, worldReferenceAppearance, worldSceneContentBounds, worldSceneContentBoundsKey, worldVolumesContainAabb }, { directory: import.meta.dir, url: import.meta.url });

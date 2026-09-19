@@ -1,14 +1,56 @@
 import { expect, test } from "bun:test";
 import { readFileSync } from "node:fs";
 import { dirname, relative, resolve } from "node:path";
-import Ajv from "ajv";
+import Ajv, { type AnySchema } from "ajv";
 import ts from "typescript";
 import { loadTaxonomy, semanticDirectoryKindId } from "../../📦️packages/🟦️typescript/🟦️.ts";
 
+/** 🧱️ One extracted owner module: its path, the semantic context that names it, and the declarations it owns. */
+interface SourceOwner {
+  readonly path: string;
+  readonly directoryName: string;
+  readonly parentKindId: string;
+  readonly kindId: string;
+  readonly declarations: readonly string[];
+}
+
+/** 🧭️ One directory whose semantic kind the taxonomy must resolve from its parent. */
+interface SourceContext {
+  readonly directoryName: string;
+  readonly parentKindId: string;
+  readonly kindId: string;
+}
+
+/** 🔗️ One consumer file and the owner modules it must bind to. */
+interface SourceConsumer {
+  readonly path: string;
+  readonly owners: readonly string[];
+}
+
+/** 🚀️ One Nx target and the launch row generated from it. */
+interface SourceRoute {
+  readonly target: string;
+  readonly command: string;
+  readonly launchName: string;
+  readonly launchCommand: string;
+  readonly inputs?: readonly string[];
+}
+
+/** 🧿️ The surface-abstraction law ownership fixture, mirroring `🧬️schema/🧱️root-surface-abstraction-law-source/🔣️.json`. */
+interface SourceOwnershipFixture {
+  readonly schemaVersion: number;
+  readonly owners: readonly SourceOwner[];
+  readonly contexts: readonly SourceContext[];
+  readonly consumers: readonly SourceConsumer[];
+  readonly sourceData: readonly string[];
+  readonly lawKinds: readonly string[];
+  readonly route: SourceRoute;
+}
+
 const repoRoot = resolve(import.meta.dir, "../../../../../../../");
 const libraryRoot = resolve(repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library");
-const fixture = JSON.parse(readFileSync(resolve(import.meta.dir, "../../🧫️fixtures/🧱️root-surface-abstraction-law-source/🔣️.json"), "utf8"));
-const schema = JSON.parse(readFileSync(resolve(import.meta.dir, "../../🧬️schema/🧱️root-surface-abstraction-law-source/🔣️.json"), "utf8"));
+const fixture: SourceOwnershipFixture = JSON.parse(readFileSync(resolve(import.meta.dir, "../../🧫️fixtures/🧱️root-surface-abstraction-law-source/🔣️.json"), "utf8"));
+const schema: AnySchema = JSON.parse(readFileSync(resolve(import.meta.dir, "../../🧬️schema/🧱️root-surface-abstraction-law-source/🔣️.json"), "utf8"));
 
 function tsIsNamed(statement: ts.Statement): statement is ts.FunctionDeclaration | ts.TypeAliasDeclaration | ts.InterfaceDeclaration | ts.ClassDeclaration {
   return ts.isFunctionDeclaration(statement) || ts.isTypeAliasDeclaration(statement) || ts.isInterfaceDeclaration(statement) || ts.isClassDeclaration(statement);
@@ -35,8 +77,8 @@ test("validates the portable surface and abstraction ownership contract", () => 
   expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);
   expect(JSON.parse(JSON.stringify(fixture))).toEqual(fixture);
   expect(fixture.owners).toHaveLength(17);
-  expect(new Set(fixture.owners.map((owner: { path: string }) => owner.path)).size).toBe(fixture.owners.length);
-  expect(ts.parseJsonText("fixture.json", JSON.stringify(fixture)).parseDiagnostics).toEqual([]);
+  expect(new Set(fixture.owners.map((owner) => owner.path)).size).toBe(fixture.owners.length);
+  expect((ts.parseJsonText("fixture.json", JSON.stringify(fixture)) as ts.JsonSourceFile & { readonly parseDiagnostics: readonly ts.Diagnostic[] }).parseDiagnostics).toEqual([]);
 });
 
 test("resolves every owner through its exact semantic context", { timeout: 30_000 }, () => {
@@ -50,7 +92,7 @@ test("resolves every owner through its exact semantic context", { timeout: 30_00
 });
 
 test("typechecks all surface and abstraction owners", { timeout: 30_000 }, () => {
-  const paths = fixture.owners.map((owner: { path: string }) => resolve(repoRoot, owner.path));
+  const paths = fixture.owners.map((owner) => resolve(repoRoot, owner.path));
   const program = ts.createProgram(paths, {
     target: ts.ScriptTarget.ESNext,
     module: ts.ModuleKind.ESNext,
@@ -71,7 +113,7 @@ test("typechecks all surface and abstraction owners", { timeout: 30_000 }, () =>
 });
 
 test("removes root implementations and binds direct command consumers", () => {
-  const moved = new Set(fixture.owners.flatMap((owner: { declarations: string[] }) => owner.declarations));
+  const moved = new Set(fixture.owners.flatMap((owner) => owner.declarations));
   expect(declarations(resolve(repoRoot, "📜️script.ts")).filter((name) => moved.has(name))).toEqual([]);
   for (const consumer of fixture.consumers) {
     const source = readFileSync(resolve(repoRoot, consumer.path), "utf8");
@@ -80,8 +122,8 @@ test("removes root implementations and binds direct command consumers", () => {
 });
 
 test("keeps the owner graph acyclic and free of root back imports", () => {
-  const owners = new Set(fixture.owners.map((owner: { path: string }) => resolve(repoRoot, owner.path)));
-  const edges = new Map<string, string[]>([...owners].map((owner) => [owner, []]));
+  const owners = new Set(fixture.owners.map((owner) => resolve(repoRoot, owner.path)));
+  const edges = new Map<string, string[]>([...owners].map((owner): [string, string[]] => [owner, []]));
   for (const owner of owners) {
     const syntax = ts.createSourceFile(owner, readFileSync(owner, "utf8"), ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
     for (const statement of syntax.statements) {
@@ -155,7 +197,7 @@ test("retains live surface law behavior without freezing diagnostic totals", { t
 test("registers one Bun Nx and seed-derived launch route", () => {
   const project = JSON.parse(readFileSync(resolve(libraryRoot, "📦️packages/🟦️typescript/📋️project.json"), "utf8"));
   const packageJson = JSON.parse(readFileSync(resolve(libraryRoot, "📦️packages/🟦️typescript/package.json"), "utf8"));
-  expect(project.targets[fixture.route.target]?.options.command).toBe(fixture.route.command);
+  expect(project.targets[fixture.route.target]?.options?.command).toBe(fixture.route.command);
   expect(packageJson.scripts[fixture.route.target]).toBe(`nx run @semio-tech/repo-lib:${fixture.route.target}`);
   for (const path of [".vscode/🧩️launch.seed.jsonc", ".vscode/launch.json"]) {
     const source = readFileSync(resolve(repoRoot, path), "utf8");

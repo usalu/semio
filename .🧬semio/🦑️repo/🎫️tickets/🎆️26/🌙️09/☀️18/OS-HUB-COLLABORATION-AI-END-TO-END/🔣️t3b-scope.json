@@ -1,0 +1,35 @@
+{
+  "extends": "../../../../../../../🧰️framework/📦️packages/🟦️typescript/tsconfig.json",
+  "compilerOptions": {
+    "incremental": false,
+    "noEmit": true
+  },
+  "files": [
+    "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌿️ambient/🟦️.d.ts",
+    "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🌿️environment/🟦️.d.ts",
+    "../../../../../../../🧰️framework/🔨️modules/⏯️tool-run/🧪️tests/🧩️conformance/🟦️.ts",
+    "../../../../../../../🧰️framework/🔨️modules/⏳️async/🟦️.ts",
+    "../../../../../../../🧰️framework/🔨️modules/◻️2d/🟦️.ts",
+    "../../../../../../../🧰️framework/🔨️modules/🌱️value/💾️resident/🧪️tests/🧪️resident-oracle/🟦️.ts",
+    "../../../../../../../🧰️framework/🔨️modules/🎠️kernel/🟦️.ts",
+    "../../../../../../../🧰️framework/🔨️modules/🎠️kernel/🧪️tests/🔬️scope-contributions/🟦️.ts",
+    "../../../../../../../🧰️framework/🔨️modules/🎭️actor/📤️return/🧪️tests/🧪️actorreturn-codecs-load-natively-in-node-strip-only-mode-and-preserve-ev/🟦️.ts",
+    "../../../../../../../🧰️framework/🔨️modules/🎭️actor/🚪️lifetime/🧪️tests/🧪️actor-instance-close-fault-publication-fixture-preserves-watchdog-and-te/🟦️.ts",
+    "../../../../../../../🧰️framework/🔨️modules/🎭️actor/🟦️.ts",
+    "../../../../../../../🧰️framework/🔨️modules/🎭️actor/🤖️generated/🎭️actor/🟦️.ts",
+    "../../../../../../../🧰️framework/🔨️modules/📡️replication/🎮️mutation/🗂️map/🧪️tests/🧪️shared-map-delta-source/🟦️.ts",
+    "../../../../../../../🧰️framework/🔨️modules/📡️replication/📡️wire/🏠️local-interaction/🧪️tests/🧪️source-contract/🟦️.ts",
+    "../../../../../../../🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/📜️script.ts",
+    "../../../../../../../🧰️framework/🔨️modules/🖱️ui/🎨️styling/🌓️theme/🟦️.ts",
+    "../../../../../../../🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🟦️.ts",
+    "../../../../../../../🧰️framework/🔨️modules/🖱️ui/🎨️styling/🧪️tests/🧩️suite/🟦️.ts",
+    "../../../../../../../🧰️framework/🔨️modules/🖱️ui/🎨️styling/🧪️tests/🧪️playgroundflowwasmdevstubplugin/🟦️.ts",
+    "../../../../../../../🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/🟦️.ts",
+    "../../../../../../../🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🟦️.tsx",
+    "../../../../../../../🧰️framework/🔨️modules/🖱️ui/🧪️tests/🎚️axes/🟦️.ts",
+    "../../../../../../../🧰️framework/🔨️modules/🖱️ui/🧱️elements/🕸️Diagram/🧪️tests/🧩️component/🟦️.tsx",
+    "../../../../../../../🧰️framework/🔨️modules/🧊️3d/🧪️tests/🧪️semio-tech-geometry-brep-js/🟦️.ts",
+    "🌿️t3b-ambient.d.ts"
+  ],
+  "include": []
+}

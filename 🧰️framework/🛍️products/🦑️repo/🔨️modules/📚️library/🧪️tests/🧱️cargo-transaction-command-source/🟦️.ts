@@ -5,7 +5,7 @@ import Ajv from "ajv";
 import ts from "typescript";
 import { getWorkspaceRoot, loadTaxonomy, semanticDirectoryKindId } from "../../📦️packages/🟦️typescript/🟦️.ts";
 
-const repoRoot = getWorkspaceRoot(import.meta.url);
+const repoRoot = getWorkspaceRoot();
 const libraryRoot = resolve(import.meta.dir, "../..");
 const fixture = JSON.parse(readFileSync(resolve(import.meta.dir, "../../🧫️fixtures/🧱️cargo-transaction-command-source/🔣️.json"), "utf8"));
 const schema = JSON.parse(readFileSync(resolve(import.meta.dir, "../../🧬️schema/🧱️cargo-transaction-command-source/🔣️.json"), "utf8"));
@@ -53,7 +53,7 @@ test("resolves every anonymous owner and semantic context", () => {
 });
 
 test("typechecks an acyclic owner graph with no command-module back edge", { timeout: 30_000 }, () => {
-  const paths = fixture.owners.map((owner: { path: string }) => resolve(repoRoot, owner.path));
+  const paths: string[] = fixture.owners.map((owner: { path: string }) => resolve(repoRoot, owner.path));
   const present = paths.filter(existsSync);
   expect(present).toHaveLength(paths.length);
   if (present.length !== paths.length) return;

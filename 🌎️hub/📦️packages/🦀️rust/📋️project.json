@@ -63,8 +63,8 @@
         }
       ],
       "options": {
-        "cwd": ".",
-        "command": "bun \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📜️script.ts\" native cargo build --manifest \"🌎️hub/📦️packages/🦀️rust/Cargo.toml\" --release --bin os-hub"
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts build"
       }
     },
     "build-dev": {
@@ -494,6 +494,30 @@
       },
       "outputs": []
     },
+    "live-sign-in-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "dependsOn": ["build-dev"],
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts live-sign-in-check"
+      },
+      "outputs": []
+    },
+    "local-relay-routing-check": {
+      "executor": "nx:run-commands",
+      "cache": true,
+      "inputs": [
+        "{workspaceRoot}/🌎️hub/🚀️local-relay/🧭️routing/🟦️.ts",
+        "{workspaceRoot}/🌎️hub/🚀️local-relay/🧭️routing/🧪️tests/🔬️admission/🟦️.ts",
+        "{workspaceRoot}/🌎️hub/🔐️auth/🧬️schema/🟦️.ts"
+      ],
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts local-relay-routing-check"
+      },
+      "outputs": []
+    },
     "browser-broker-check": {
       "executor": "nx:run-commands",
       "cache": true,
@@ -906,6 +930,15 @@
       "options": {
         "cwd": "🌎️hub/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts native-document-open-check"
+      },
+      "outputs": []
+    },
+    "local-bootstrap-launch-check": {
+      "executor": "nx:run-commands",
+      "cache": true,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts local-bootstrap-launch-check"
       },
       "outputs": []
     },

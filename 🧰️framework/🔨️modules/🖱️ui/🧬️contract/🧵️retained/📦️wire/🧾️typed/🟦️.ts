@@ -9,7 +9,7 @@ export interface UiSurfaceByteView { readonly length: number; byteAt(index: numb
 export type RetainedUiComponent = Exclude<Contract.Component, { type: "surface" }> | { readonly type: "surface"; readonly kind: Contract.UiSurfaceKind; readonly docSchema: string; readonly doc: { readonly bytes: UiSurfaceByteView }; readonly bindings: Contract.ActionBinding[] };
 export type RetainedUiNodeRecord = Omit<Required<Contract.UiNodeRecord>, "component"> & { readonly component: RetainedUiComponent };
 export type RetainedUiTypedValues = { component: RetainedUiComponent; node: RetainedUiNodeRecord; layout: Contract.LayoutSpec; style: Contract.StyleSpec; activity: { readonly activity: Contract.Activity; readonly disabled: boolean }; accessibility: Contract.AccessibilitySpec; bindings: Contract.ActionBinding[]; menu: Contract.MenuRef | null; children: number[] };
-type Profile = keyof RetainedUiTypedValues;
+export type Profile = keyof RetainedUiTypedValues;
 type Field = "component" | "layout" | "style" | "accessibility" | "bindings" | "menu" | "children";
 type NodeFields = { [K in Field]: OwnedUiPayload<RetainedUiTypedValues[K]> };
 export type RetainedUiFieldChange = { [K in Field]: { readonly field: K; readonly payload: OwnedUiPayload<RetainedUiTypedValues[K]> } }[Field];
@@ -30,7 +30,7 @@ function optional<T>(value: unknown, read: (value: unknown) => T): T | null { re
 function choice<const T extends string>(value: unknown, choices: readonly T[]): T { for (const candidate of choices) if (value === candidate) return candidate; throw new Error("Unknown UI schema discriminator"); }
 function defaulted<T>(value: unknown, fallback: T, read: (value: unknown) => T): T { return value === undefined ? fallback : read(value); }
 const space = (value: unknown): Contract.SpaceToken => choice(value, ["none", "xs", "sm", "md", "lg", "xl", "xxl"]);
-const activity = (value: unknown): Contract.Activity => choice(value, ["waiting", "loading", "idle", "finished"]);
+export const activity = (value: unknown): Contract.Activity => choice(value, ["waiting", "loading", "idle", "finished"]);
 //#endregion 🧾️TypedContract
 
 //#region 📚️PayloadOwnership
@@ -41,7 +41,7 @@ class ByteView implements UiSurfaceByteView {
   byteAt(index: number): number { return this.#source.byteAt(index); }
 }
 
-let ownPayload: <T>(root: Root<T>) => OwnedUiPayload<T>;
+export let ownPayload: <T>(root: Root<T>) => OwnedUiPayload<T>;
 let retirePayload: <T>(root: Root<T>) => UiPayloadRetirement<T>;
 let payloadFields: (payload: OwnedUiPayload<RetainedUiNodeRecord>) => NodeFields;
 let movedPayload: <T>(payload: OwnedUiPayload<T>, kind: Profile) => OwnedUiPayload<T>;
@@ -50,7 +50,7 @@ let checkCapture: (payload: OwnedUiPayload<unknown>, kind: Profile) => void;
 let exactPayload: <T>(payload: OwnedUiPayload<T>) => T;
 let nodeFields: (node: OwnedUiNode) => NodeFields;
 type CaptureProbe = { readonly operation: string; readonly field: Field; readonly rejected: boolean; readonly preserved: boolean };
-let saturationProbe: ((source: OwnedUiPayload<RetainedUiNodeRecord>, replacement: OwnedUiPayload<RetainedUiComponent>, activity: OwnedUiPayload<RetainedUiTypedValues["activity"]>) => readonly CaptureProbe[]) | undefined;
+export let saturationProbe: ((source: OwnedUiPayload<RetainedUiNodeRecord>, replacement: OwnedUiPayload<RetainedUiComponent>, activity: OwnedUiPayload<RetainedUiTypedValues["activity"]>) => readonly CaptureProbe[]) | undefined;
 
 /** 📚️ Captured immutable typed payload; readers retain this owner, not a borrowed value alone. */
 export class OwnedUiPayload<T> {
@@ -220,7 +220,7 @@ export class UiNodeRetirement {
 //#region 🏗️TypedBuilder
 type JsonFrame = { index: number; count: number; parent: JsonFrame | null } & ({ input: readonly unknown[]; output: Contract.UiValue[]; keys: null } | { input: Readonly<Record<string, unknown>>; output: { [key: string]: Contract.UiValue }; keys: readonly string[] });
 
-class Builder {
+export class Builder {
   owned: Owned | null = null;
   bytes: Bytes | null = null;
   json: JsonFrame | null = null;
@@ -410,7 +410,7 @@ class Builder {
 //#endregion 🏗️TypedBuilder
 
 //#region 🚶️TypedCursor
-const readers: { [P in Profile]: (builder: Builder, value: unknown) => Program<RetainedUiTypedValues[P]> } = {
+export const readers: { [P in Profile]: (builder: Builder, value: unknown) => Program<RetainedUiTypedValues[P]> } = {
   component: (b, v) => b.component(v), node: (b, v) => b.node(v), layout: (b, v) => b.layout(v), style: (b, v) => b.style(v), activity: (b, v) => b.activity(v), accessibility: (b, v) => b.accessibility(v), bindings: (b, v) => b.bindings(v), menu: (b, v) => b.menu(v), children: (b, v) => b.childIds(v),
 };
 

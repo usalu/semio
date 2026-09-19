@@ -1419,8 +1419,6 @@ impl RetainedGisMapApprovalCommitterV1 {
                     }
                     Ok(DurableOwnedThreeStoreMapAssemblyAdvanceV1::Terminal) => {
                         let terminal = owner.take_terminal_owners().expect("terminal assembly returns every owner");
-                        #[cfg(test)]
-                        eprintln!("[DEBUG] GIS fixed-three assembly terminal failure={:?}", terminal.failure);
                         drop(owner);
                         let owners = Self::restored_stores(terminal.parent, terminal.drawing, terminal.value, handle, scope, generation, identity.document_write.clone(), fence);
                         documents.insert(key.to_owned(), RetainedGisMapDocumentStateV1::Ready { owners, pending: None, document_write: None });

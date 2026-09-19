@@ -59,7 +59,7 @@ async fn command_ids_are_unique_and_match_the_declared_manifest_actions() {
     sorted.sort_unstable();
     sorted.dedup();
     assert_eq!(sorted.len(), ids.len(), "duplicate command ids in {ids:?}");
-    assert_eq!(ids.len(), 20, "every LayoutCommand row must be covered by every_command()");
+    assert_eq!(ids.len(), 21, "every LayoutCommand row must be covered by every_command()");
 }
 
 /// ⚖️ LAW: text and binary are two projections of the same command, for every single row.
@@ -97,6 +97,7 @@ async fn every_printed_op_line_starts_with_the_rows_wire_keyword() {
             "exportPdf" => "export-pdf",
             "exportPackage" => "export-package",
             "engagementSubmit" => "engagement-submit",
+            "deleteSelection" => "delete-selection",
             other => panic!("every_command() row {other} missing from this test's expected-keyword table"),
         }
     };
@@ -149,8 +150,242 @@ pub(super) fn every_command() -> Vec<LayoutCommand> {
         LayoutCommand::ExportPdf(export_pdf::ExportPdf { page_id: None }),
         LayoutCommand::ExportPackage(export_package::ExportPackage {}),
         LayoutCommand::EngagementSubmit(engagement_submit::EngagementSubmit { value: "export png".into() }),
+        LayoutCommand::DeleteSelection(crate::editor::layout::commands::delete_selection::DeleteSelection {}),
     ]
 }
+
+//#region 🔖️ContextMenu
+use crate::editor::layout::commands::focus_preflight_issue::FocusPreflightIssue;
+use crate::editor::layout::modes::edit::windows::blueprint::config::LayoutBlueprintWindowConfigOwner;
+use crate::editor::layout::panels::preflight::run_layout_preflight;
+use crate::editor::layout::terminology::layout_labels;
+use crate::editor::layout::unit_tests::context::LayoutApp;
+use semio_framework_plugin::{ActionMeta, INTERACTION_SELECT_ACTION_ID, ViewModel, ViewWindowInstance, WindowConfigOwner};
+
+async fn context_menu_json(app: &mut LayoutApp, surface: Option<semio_framework_plugin::ContextMenuSurfaceTarget>) -> String {
+    use semio_framework_plugin::{ContextMenuRequest, PluginApp, UiMenuRef};
+    let request = ContextMenuRequest { menu: UiMenuRef { id: "layout".into(), args: None }, surface, window_instance_id: None, point: None };
+    serde_json::to_string(&app.context_menu(&request, &semio_framework_plugin::ViewModel::default()).await).unwrap_or_default()
+}
+
+/// ⚖️ LAW: an empty blueprint canvas offers creation verbs and never delete-selection.
+#[semio_framework_async_macros::async_test]
+async fn context_menu_on_empty_canvas_offers_create_verbs_not_delete() {
+    let mut app = layout_app_with_registry().await;
+    let menu = context_menu_json(
+        &mut app,
+        Some(semio_framework_plugin::ContextMenuSurfaceTarget {
+            surface_id: crate::editor::layout::LAYOUT_PLAY_SURFACE_BLUEPRINT.into(),
+            kind: "canvas2d".into(),
+            hits: vec![],
+            selection: vec![],
+            text: None,
+        }),
+    )
+    .await;
+    assert!(menu.contains(r#""id":"addPage""#), "empty canvas should offer addPage: {menu}");
+    assert!(menu.contains(r#""action":"addFrame""#), "empty canvas should offer addFrame kinds: {menu}");
+    assert!(!menu.contains(r#""action":"deleteSelection""#), "empty canvas must not offer deleteSelection: {menu}");
+    artifact_app_laws::close_registered_fixture_app(&mut app);
+}
+
+/// ⚖️ LAW: a frame selection ends with delete-selection and clearSelection.
+#[semio_framework_async_macros::async_test]
+async fn context_menu_on_frame_selection_offers_delete_last() {
+    let mut app = layout_app_with_registry().await;
+    let frame_id = app.snapshot().expect("projection").pages[0].frames.first().map(|frame| frame.id().to_string()).unwrap_or_else(|| "frame-1".into());
+    let menu = context_menu_json(
+        &mut app,
+        Some(semio_framework_plugin::ContextMenuSurfaceTarget {
+            surface_id: crate::editor::layout::LAYOUT_PLAY_SURFACE_BLUEPRINT.into(),
+            kind: "canvas2d".into(),
+            hits: vec![],
+            selection: vec![semio_framework_plugin::ContextMenuSelectionGroup { domain: crate::editor::layout::LAYOUT_GRANULARITY_ELEMENT.into(), ids: vec![frame_id] }],
+            text: None,
+        }),
+    )
+    .await;
+    assert!(menu.contains(r#""action":"deleteSelection""#), "selection menu must include deleteSelection: {menu}");
+    assert!(menu.contains(r#""action":"clearSelection""#), "selection menu must include clearSelection: {menu}");
+    artifact_app_laws::close_registered_fixture_app(&mut app);
+}
+
+/// ⚖️ LAW: a page-tree row hit offers setActivePage, not canvas delete verbs.
+#[semio_framework_async_macros::async_test]
+async fn context_menu_on_page_row_offers_set_active_page() {
+    let mut app = layout_app_with_registry().await;
+    let page_id = app.snapshot().expect("projection").pages.first().map(|page| page.id.clone()).unwrap_or_else(|| "page-1".into());
+    let menu = context_menu_json(
+        &mut app,
+        Some(semio_framework_plugin::ContextMenuSurfaceTarget {
+            surface_id: crate::editor::layout::panels::document::LAYOUT_PLAY_BODY_ARTIFACT.into(),
+            kind: "tree".into(),
+            hits: vec![semio_framework_plugin::ContextMenuHit { domain: "row".into(), id: format!("layout-document.page.{page_id}"), label: None }],
+            selection: vec![],
+            text: None,
+        }),
+    )
+    .await;
+    assert!(menu.contains(r#""action":"setActivePage""#), "page row menu must set active page: {menu}");
+    assert!(!menu.contains(r#""action":"deleteSelection""#), "page row menu must not delete frames: {menu}");
+    artifact_app_laws::close_registered_fixture_app(&mut app);
+}
+
+/// ⚖️ LAW: preview is read-only — selectAll only, no authoring delete/create.
+#[semio_framework_async_macros::async_test]
+async fn context_menu_on_preview_surface_is_read_only() {
+    let mut app = layout_app_with_registry().await;
+    let menu = context_menu_json(
+        &mut app,
+        Some(semio_framework_plugin::ContextMenuSurfaceTarget {
+            surface_id: crate::editor::layout::modes::edit::windows::preview::LAYOUT_PLAY_SURFACE_PREVIEW.into(),
+            kind: "canvas2d".into(),
+            hits: vec![],
+            selection: vec![],
+            text: None,
+        }),
+    )
+    .await;
+    assert!(menu.contains(r#""action":"selectAll""#), "preview should offer selectAll: {menu}");
+    assert!(!menu.contains(r#""action":"addFrame""#), "preview must not offer addFrame: {menu}");
+    assert!(!menu.contains(r#""action":"deleteSelection""#), "preview must not offer deleteSelection: {menu}");
+    artifact_app_laws::close_registered_fixture_app(&mut app);
+}
+
+/// ⚖️ LAW: multi-frame selection uses a plural delete label and still exposes clipboard verbs.
+#[semio_framework_async_macros::async_test]
+async fn context_menu_on_multi_frame_selection_offers_plural_delete() {
+    let mut app = layout_app_with_registry().await;
+    let frames = app.snapshot().expect("projection").pages[0].frames.iter().take(2).map(|frame| frame.id().to_string()).collect::<Vec<_>>();
+    assert_eq!(frames.len(), 2, "demo document must expose two frames on page 1");
+    let menu = context_menu_json(
+        &mut app,
+        Some(semio_framework_plugin::ContextMenuSurfaceTarget {
+            surface_id: crate::editor::layout::LAYOUT_PLAY_SURFACE_BLUEPRINT.into(),
+            kind: "canvas2d".into(),
+            hits: vec![],
+            selection: vec![semio_framework_plugin::ContextMenuSelectionGroup { domain: crate::editor::layout::LAYOUT_GRANULARITY_ELEMENT.into(), ids: frames }],
+            text: None,
+        }),
+    )
+    .await;
+    assert!(menu.contains(r#""action":"deleteSelection""#), "multi selection must delete: {menu}");
+    assert!(menu.contains("frames") || menu.contains("Rahmen"), "multi selection label should mention frames: {menu}");
+    artifact_app_laws::close_registered_fixture_app(&mut app);
+}
+
+/// ⚖️ LAW: a links-tree row hit offers interactionSelect over referencing image frames.
+#[semio_framework_async_macros::async_test]
+async fn context_menu_on_link_row_offers_select_linked_frames() {
+    let mut app = layout_app_with_registry().await;
+    let link_id = app.snapshot().expect("projection").links.first().map(|link| link.id.clone()).expect("demo link");
+    let menu = context_menu_json(
+        &mut app,
+        Some(semio_framework_plugin::ContextMenuSurfaceTarget {
+            surface_id: crate::editor::layout::panels::document::LAYOUT_PLAY_BODY_ARTIFACT.into(),
+            kind: "tree".into(),
+            hits: vec![semio_framework_plugin::ContextMenuHit { domain: "row".into(), id: format!("layout-document.link.{link_id}"), label: None }],
+            selection: vec![],
+            text: None,
+        }),
+    )
+    .await;
+    assert!(menu.contains(INTERACTION_SELECT_ACTION_ID), "link row must select referencing frames: {menu}");
+    assert!(menu.contains("frame-image-1"), "link row must target the demo image frame: {menu}");
+    artifact_app_laws::close_registered_fixture_app(&mut app);
+}
+
+/// ⚖️ LAW: a preflight issue row hit offers focusPreflightIssue with the issue payload.
+#[semio_framework_async_macros::async_test]
+async fn context_menu_on_preflight_row_offers_focus_issue() {
+    let mut app = layout_app_with_registry().await;
+    let snapshot = app.snapshot().expect("projection");
+    let labels = layout_labels(&semio_framework_plugin::ViewModel::default());
+    let issue = run_layout_preflight(&snapshot, &labels).into_iter().next().expect("demo document must surface at least one preflight issue");
+    let row_id = format!("layout-preflight.{}.{}", issue.code, issue.object_id.clone().unwrap_or_else(|| issue.message.clone()));
+    let menu = context_menu_json(
+        &mut app,
+        Some(semio_framework_plugin::ContextMenuSurfaceTarget {
+            surface_id: crate::editor::layout::panels::preflight::LAYOUT_PLAY_BODY_PREFLIGHT.into(),
+            kind: "tree".into(),
+            hits: vec![semio_framework_plugin::ContextMenuHit { domain: "row".into(), id: row_id, label: None }],
+            selection: vec![],
+            text: None,
+        }),
+    )
+    .await;
+    assert!(menu.contains(r#""action":"focusPreflightIssue""#), "preflight row must focus the issue: {menu}");
+    assert!(menu.contains(&issue.code), "preflight menu must carry the issue code: {menu}");
+    artifact_app_laws::close_registered_fixture_app(&mut app);
+}
+
+/// ⚖️ LAW: right-clicking an unselected frame hit offers Select before create verbs.
+#[semio_framework_async_macros::async_test]
+async fn context_menu_on_frame_hit_without_selection_offers_select() {
+    let mut app = layout_app_with_registry().await;
+    let frame_id = "frame-1".to_string();
+    let menu = context_menu_json(
+        &mut app,
+        Some(semio_framework_plugin::ContextMenuSurfaceTarget {
+            surface_id: crate::editor::layout::LAYOUT_PLAY_SURFACE_BLUEPRINT.into(),
+            kind: "canvas2d".into(),
+            hits: vec![semio_framework_plugin::ContextMenuHit { domain: crate::editor::layout::LAYOUT_GRANULARITY_ELEMENT.into(), id: frame_id.clone(), label: None }],
+            selection: vec![],
+            text: None,
+        }),
+    )
+    .await;
+    assert!(menu.contains(r#""id":"select-hit""#), "frame hit must offer select: {menu}");
+    assert!(menu.contains(INTERACTION_SELECT_ACTION_ID), "select must dispatch interactionSelect: {menu}");
+    artifact_app_laws::close_registered_fixture_app(&mut app);
+}
+
+/// ⚖️ LAW: a single text-frame selection adds a same-kind create row in the create group.
+#[semio_framework_async_macros::async_test]
+async fn context_menu_on_text_frame_selection_offers_same_kind_create() {
+    let mut app = layout_app_with_registry().await;
+    let frame_id = "frame-text-1".to_string();
+    let menu = context_menu_json(
+        &mut app,
+        Some(semio_framework_plugin::ContextMenuSurfaceTarget {
+            surface_id: crate::editor::layout::LAYOUT_PLAY_SURFACE_BLUEPRINT.into(),
+            kind: "canvas2d".into(),
+            hits: vec![],
+            selection: vec![semio_framework_plugin::ContextMenuSelectionGroup { domain: crate::editor::layout::LAYOUT_GRANULARITY_ELEMENT.into(), ids: vec![frame_id] }],
+            text: None,
+        }),
+    )
+    .await;
+    assert!(menu.contains(r#""id":"add-text-frame""#), "text selection must offer add text frame: {menu}");
+    assert!(menu.contains(r#""kind":"text""#), "create row must target text frames: {menu}");
+    artifact_app_laws::close_registered_fixture_app(&mut app);
+}
+
+/// ⚖️ LAW: when the surface carries no selection, the live interaction snapshot supplies element ids.
+#[semio_framework_async_macros::async_test]
+async fn context_menu_uses_live_interaction_when_surface_selection_empty() {
+    let mut app = layout_app_with_registry().await;
+    let frame_id = app.snapshot().expect("projection").pages[0].frames.first().expect("frame").id().to_string();
+    let view = ViewModel { window_instances: vec![ViewWindowInstance { id: "layout-blueprint".into(), window_kind_id: LayoutBlueprintWindowConfigOwner::WINDOW_KIND_ID.into() }], ..Default::default() };
+    let meta = ActionMeta { view_state: Some(view.for_window_instance("layout-blueprint").expect("blueprint window instance")), ..artifact_app_laws::meta("local") };
+    app.bind_instance_id(meta.instance_id).await;
+    app.dispatch_typed(LayoutCommand::FocusPreflightIssue(FocusPreflightIssue { object_id: Some(frame_id.clone()), page_id: Some("page-1".into()) }), &meta).await.expect("select frame");
+    artifact_app_laws::settle_registered_typed_operation(&mut app, meta.instance_id).await.expect("focus settles");
+    let menu = context_menu_json(
+        &mut app,
+        Some(semio_framework_plugin::ContextMenuSurfaceTarget {
+            surface_id: crate::editor::layout::LAYOUT_PLAY_SURFACE_BLUEPRINT.into(),
+            kind: "canvas2d".into(),
+            hits: vec![],
+            selection: vec![],
+            text: None,
+        }),
+    )
+    .await;
+    assert!(menu.contains(r#""action":"deleteSelection""#), "live interaction selection must drive delete menu: {menu}");
+    artifact_app_laws::close_registered_fixture_app(&mut app);
+}
+//#endregion 🔖️ContextMenu
 //#endregion 🔖️CommandSurface
 
 //#region 🔖️ActionBridge
@@ -282,12 +517,6 @@ async fn an_unknown_body_key_renders_a_diagnostic_instead_of_panicking() {
     let mut app = layout_app().await;
     assert!(render(&mut app, "layout.play.nope").await.contains("Unknown body"));
 }
-
-// 🕹️ `selected_and_hovered_frames_get_chrome_strokes` deleted: selection/hover chrome strokes read
-// `config.selected_ids`/`hovered_id`, both deleted with the framework-owned "elements" domain.
-// `canvas_layers` always renders with empty selection/hover now — `ArtifactApp::render` carries no
-// `InteractionView` (a known SDK gap, same as gis2d's/puzzle3d's inspection panels — see this
-// ticket's w3b-summary.md) — flagged, not fixed here (framework file, out of this crate's remit)?.
 
 #[semio_framework_async_macros::async_test]
 async fn window_engagements_cover_both_windows() {

@@ -24,6 +24,7 @@ import {
   PLUGIN_LOAD_CEILING_MS,
   PLUGIN_LOAD_IDLE_TIMEOUT_MS,
 } from "../../🧱️elements/🔌️PluginRuntime/🫀️load-progress/🟦️.ts";
+import { stubFetch } from "../../../../../🧪️tests/🌐️fetch-stub/🟦️.ts";
 
 const IDLE = SHARD_LIVENESS_POLICY.pluginLoadIdleTimeoutMs;
 const CEILING = SHARD_LIVENESS_POLICY.pluginLoadCeilingMs;
@@ -155,7 +156,7 @@ describe("descriptor fetch progress", () => {
 
   const withFetch = async <T,>(response: Response, run: () => Promise<T>): Promise<T> => {
     const original = globalThis.fetch;
-    globalThis.fetch = (async () => response) as typeof globalThis.fetch;
+    globalThis.fetch = stubFetch(async () => response);
     try { return await run(); } finally { globalThis.fetch = original; }
   };
 

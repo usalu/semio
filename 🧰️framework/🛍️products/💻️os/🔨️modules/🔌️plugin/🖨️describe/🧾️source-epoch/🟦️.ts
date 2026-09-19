@@ -29,7 +29,7 @@ export type FreshBuildControlV1 = Readonly<{
 }>;
 
 export type FreshComponentLeaseV1 = Readonly<{
-  consume<T>(derive: (component: Uint8Array) => Promise<T>): Promise<T>;
+  consume<T>(derive: (component: Uint8Array<ArrayBuffer>) => Promise<T>): Promise<T>;
 }>;
 
 export type FreshComponentProducedV1<T> = Readonly<{

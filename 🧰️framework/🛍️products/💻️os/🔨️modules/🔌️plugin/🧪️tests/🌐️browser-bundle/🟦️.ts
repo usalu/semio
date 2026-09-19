@@ -1,6 +1,8 @@
-export function createBrowserBundleTests(dependencies: Record<string, any>, source: { directory: string; url: string }) {
-  const { assert, browserActorAsyncImports, browserActorInterfaces, browserBundleValidator, buildBrowserCodegenModule, buildClosedBrowserActorArtifactOwned, buildClosedBrowserActorArtifactV1, captureBrowserActorRuntime, captureBrowserCodegenSources, closeBrowserCodegenModule, closedBrowserActorBundle, closedBrowserActorBundleFromRuntime, closedBrowserComponentFactory, dirname, exactExecutableFingerprint, join, lstatSync, mkdirSync, mkdtempSync, parseBrowserActorCodegenManifest, readdirSync, readFileSync, realpathSync, renameSync, runExactCargoLawProcess, sealBrowserCodegenPolicy, ts, writeFileSync } = dependencies;
-  type BrowserActorBuildControl = any;
+import assert from "node:assert/strict";
+
+export function createBrowserBundleTests(dependencies: import("../../🌐️browser-bundle/📜️script.ts").BrowserBundleTestDependencies, source: { directory: string; url: string }) {
+  const { browserActorAsyncImports, browserActorInterfaces, browserBundleValidator, buildBrowserCodegenModule, buildClosedBrowserActorArtifactOwned, buildClosedBrowserActorArtifactV1, captureBrowserActorRuntime, captureBrowserCodegenSources, closeBrowserCodegenModule, closedBrowserActorBundle, closedBrowserActorBundleFromRuntime, closedBrowserComponentFactory, dirname, exactExecutableFingerprint, join, lstatSync, mkdirSync, mkdtempSync, parseBrowserActorCodegenManifest, readdirSync, readFileSync, realpathSync, renameSync, runExactCargoLawProcess, sealBrowserCodegenPolicy, ts, writeFileSync } = dependencies;
+  type BrowserActorBuildControl = import("../../🌐️browser-bundle/📜️script.ts").BrowserActorBuildControl;
   async function testClosedBrowserComponentFactory(repoRoot: string): Promise<void> {
     await testBrowserActorCodegenManifest();
     await testBrowserCodegenCapsule(repoRoot);
@@ -14,7 +16,7 @@ export function createBrowserBundleTests(dependencies: Record<string, any>, sour
     const validate = await browserBundleValidator("ComponentFactoryV1");
     assert(validate(fixture), JSON.stringify(validate.errors));
     const artifactBase = process.env.SEMIO_TEST_ARTIFACT_DIR;
-    assert(artifactBase?.includes("🗑️generated"), "browser factory law requires ticket-generated evidence root");
+    assert(artifactBase !== undefined && artifactBase.includes("🗑️generated"), "browser factory law requires ticket-generated evidence root");
     mkdirSync(artifactBase, { recursive: true });
     const evidence = mkdtempSync(join(artifactBase, "browser-component-factory-"));
     const probe = await runExactCargoLawProcess("node", ["--input-type=module", "-e", `
@@ -251,7 +253,7 @@ export function createBrowserBundleTests(dependencies: Record<string, any>, sour
     const validate = await browserBundleValidator("ActorFactoryV1");
     assert(validate(fixture), JSON.stringify(validate.errors));
     const artifactBase = process.env.SEMIO_TEST_ARTIFACT_DIR;
-    assert(artifactBase?.includes("🗑️generated"));
+    assert(artifactBase !== undefined && artifactBase.includes("🗑️generated"));
     mkdirSync(artifactBase, { recursive: true });
     const evidence = mkdtempSync(join(artifactBase, "browser-actor-factory-"));
     const probe = await runExactCargoLawProcess("node", ["--input-type=module", "-e", `
@@ -317,7 +319,7 @@ export function createBrowserBundleTests(dependencies: Record<string, any>, sour
     } finally {
       for (const [name, value] of Object.entries(ambient)) if (value === undefined) delete process.env[name]; else process.env[name] = value;
     }
-    const digest = async (bytes: Uint8Array) => Buffer.from(await crypto.subtle.digest("SHA-256", bytes)).toString("hex");
+    const digest = async (bytes: Uint8Array<ArrayBuffer>) => Buffer.from(await crypto.subtle.digest("SHA-256", bytes)).toString("hex");
     assert.equal(artifact.schema, fixture.artifact.schema);
     assert.equal(artifact.codegenPolicy, fixture.artifact.codegenPolicy);
     assert.equal(artifact.componentSha256, await digest(componentBytes));
@@ -464,16 +466,16 @@ export function createBrowserBundleTests(dependencies: Record<string, any>, sour
     const program = ts.createProgram([join(source.directory, "🌐️host/🟦️.ts")], { noEmit: true, strict: true, target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext, lib: ["lib.es2023.d.ts", "lib.dom.d.ts"], types: [], skipLibCheck: true });
     const diagnostics = ts.getPreEmitDiagnostics(program);
     assert.equal(diagnostics.length, 0, ts.formatDiagnosticsWithColorAndContext(diagnostics, { getCanonicalFileName: path => path, getCurrentDirectory: () => source.directory, getNewLine: () => "\n" }));
-    const frames: import("./🌐️host/🟦️.ts").BrowserHostFrame[] = [];
+    const frames: import("../../🌐️browser-bundle/🌐️host/🟦️.ts").BrowserHostFrame[] = [];
     const cancellations: string[] = [];
-    const port = { dispatch: (frame: import("./🌐️host/🟦️.ts").BrowserHostFrame) => { frames.push(frame); }, cancelEffect: (id: string) => { cancellations.push(id); return "queued" as const; }, log() {}, nowMs: () => 12n, traceSpan() {} };
+    const port = { dispatch: (frame: import("../../🌐️browser-bundle/🌐️host/🟦️.ts").BrowserHostFrame) => { frames.push(frame); }, cancelEffect: (id: string) => { cancellations.push(id); return "queued" as const; }, log() {}, nowMs: () => 12n, traceSpan() {} };
     const ok = (val: unknown) => ({ tag: "ok", val });
     const make = (index: number, signal?: AbortSignal) => createBrowserHostActivation({ actorId: fixture.actors[index].id, activationGeneration: BigInt(fixture.actors[index].generation) }, port, signal);
     const requestId = (index = frames.length - 1) => (frames[index].frame.envelope.payload.payload as { requestId: string }).requestId;
     const a = make(0), b = make(1);
-    const first = a.hostAsync.documentRead({ document: 1n });
+    const first = a.hostAsync.artifactRead({ artifact: 1n });
     const aId = requestId();
-    const second = b.hostAsync.documentRead({ document: 2n });
+    const second = b.hostAsync.artifactRead({ artifact: 2n });
     const bId = requestId();
     assert.notEqual(aId, bId);
     assert.equal(a.resolveEffect(bId, new Uint8Array([99])), false);
@@ -498,7 +500,7 @@ export function createBrowserBundleTests(dependencies: Record<string, any>, sour
     assert.deepEqual(cancellations, [pendingId]);
     assert.equal(a.resolveEffect(pendingId, new Uint8Array()), false);
     assert.equal(a.rejectEffect(pendingId, "late"), false);
-    await assert.rejects(a.hostAsync.documentRead({}), /closed/);
+    await assert.rejects(a.hostAsync.artifactRead({}), /closed/);
     assert.throws(() => a.hostAsync.emit({}), /closed/);
     assert.equal(frames.length, beforeClose);
     b.resolveEffect(bId, ok(new Uint8Array(fixture.responses[1])));
@@ -540,7 +542,7 @@ export function createBrowserBundleTests(dependencies: Record<string, any>, sour
     assert.equal(unusedCancelled, 1);
     const abort = new AbortController();
     const aborted = make(0, abort.signal);
-    const abortedResult = aborted.hostAsync.documentRead({});
+    const abortedResult = aborted.hostAsync.artifactRead({});
     const abortedRejected = assert.rejects(abortedResult, /closed/);
     abort.abort();
     await aborted.close();
@@ -551,7 +553,7 @@ export function createBrowserBundleTests(dependencies: Record<string, any>, sour
     const errorRejected = assert.rejects(errorResult, error => { assert.deepEqual(error, errorPack.val); return true; });
     errors.resolveEffect(requestId(), errorPack);
     await errorRejected;
-    const malformed = errors.hostAsync.documentRead({});
+    const malformed = errors.hostAsync.artifactRead({});
     errors.resolveEffect(requestId(), new Uint8Array([4, 0, 3]));
     await assert.rejects(malformed, /invalid result/);
     await errors.close();

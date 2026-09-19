@@ -12,10 +12,16 @@ pub(crate) fn preset_query(preset_id: &str) -> &'static str {
     }
 }
 
+/// 🎬️ The ids this verb answers. `crate::examples::demo::ID` is the one the SHELL ever sends: the
+/// navbar example picker dispatches a REGISTERED example id, and `demo` is the only example this
+/// subset registers. Without it every navbar pick resolved to `None` and loaded nothing at all, with
+/// no fault anywhere (`📓️b3b-trinity-wfc-puzzle.md`). The catalogue panel's own fixture rows keep
+/// sending `nakagin`/`branch-chain`, which name the same asset.
 fn fixture_dsl_for_preset(preset_id: &str) -> Option<&'static str> {
     match preset_id {
         "nakagin" | "nakagin-capsule-tower" => Some(crate::editor::jack::NAKAGIN_FIXTURE_DSL),
         "branch-chain" => Some(crate::editor::jack::BRANCH_FIXTURE_DSL),
+        id if id == crate::examples::demo::ID => Some(crate::editor::jack::NAKAGIN_FIXTURE_DSL),
         _ => None,
     }
 }

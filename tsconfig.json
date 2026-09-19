@@ -10,6 +10,7 @@
     "esModuleInterop": true,
     "isolatedModules": true,
     "resolveJsonModule": true,
+    "allowImportingTsExtensions": true,
     "skipLibCheck": true,
     "allowJs": false,
     "incremental": true,
@@ -17,5 +18,28 @@
     "noEmit": true
   },
   "include": ["**/*.ts", "**/*.tsx", "js/compose/.storybook/**/*.ts", "js/compose/.storybook/**/*.tsx"],
-  "exclude": ["**/node_modules/**", "js/temp", "temp", "reports", "log"]
+  "exclude": [
+    "**/node_modules/**",
+    "js/temp",
+    "temp",
+    "reports",
+    "log",
+    "**/dist/**",
+    "**/📤️dist/**",
+    "**/out/**",
+    "**/coverage/**",
+    "**/target/**",
+    "**/🎯️target/**",
+    "**/.nx/**",
+    "storybook-static",
+    "**/🗑️generated/**",
+    "**/🤖️generated/**",
+    "**/⚡️cache/**",
+    "**/🕸️bindings/**",
+    "**/🔌️plugin-modules/**",
+    "**/🧩️extension-modules/**",
+    "**/📺️renderer-modules/**",
+    "**/🌐️browser-bundles/**",
+    ".🧬semio/🦑️repo/🎫️tickets/**"
+  ]
 }

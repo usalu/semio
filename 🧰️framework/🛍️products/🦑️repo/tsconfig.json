@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "extends": "../../../tsconfig.json",
+  "compilerOptions": {
+    "tsBuildInfoFile": "../../../node_modules/.cache/tsconfig.repo.tsbuildinfo",
+    "allowJs": true,
+    "types": ["node", "react", "react-dom"],
+    "paths": {
+      "@/lib/authentication": ["./🔨️modules/🖥️server/📚️library/🔐️authentication/🟦️.ts"],
+      "@/lib/event": ["./🔨️modules/🖥️server/📚️library/📡️event/🟦️.ts"],
+      "@/lib/persistence": ["./🔨️modules/🖥️server/📚️library/🗄️persistence/🟦️.ts"],
+      "@/lib/source-index": ["./🔨️modules/🖥️server/📚️library/🔎️source-index/🟦️.ts"],
+      "@semio-tech/assets": ["../../🔨️modules/🖼️assets/📦️packages/🟦️typescript/🟦️.ts"],
+      "@semio-tech/assets/*": ["../../🔨️modules/🖼️assets/*"]
+    }
+  },
+  "files": ["🔨️modules/📚️library/🏃️process/🌿️environment/🟦️.d.ts"],
+  "include": ["**/*.ts", "**/*.tsx"],
+  "exclude": [
+    "**/node_modules/**",
+    "**/dist/**",
+    "**/📤️dist/**",
+    "**/out/**",
+    "**/.next/**",
+    "**/target/**",
+    "**/🎯️target/**",
+    "**/🗑️generated/**",
+    "**/🤖️generated/**",
+    "🔨️modules/💻️client/⌨️cli/🧫️fixtures/🔎️analyzer-paths/**",
+    "🔨️modules/🖥️server/🎛️coordinator/📦️packages/🟦️typescript/**"
+  ]
+}

@@ -474,6 +474,6 @@ test("registers empty-facet authoring through its closed canonical route", async
         presentation: { group: registration.launchGroup, order: registration.launchOrder },
       },
     ]);
-    expect(document.configurations.filter((row: { presentation?: { group: string; order: number } }) => row.presentation?.group === registration.launchGroup && row.presentation.order === registration.launchOrder)).toHaveLength(1);
+    expect(document.configurations.filter((row: { presentation?: { group: string; order: number } }) => row.presentation?.group === registration.launchGroup && row.presentation?.order === registration.launchOrder)).toHaveLength(1);
   }
 });

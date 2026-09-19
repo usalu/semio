@@ -584,12 +584,14 @@
         "command": "bun ./📜️script.ts test typescript-declaration-facts"
       }
     },
-    "lint": {
+    "typecheck": {
       "executor": "nx:run-commands",
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts lint"
-      }
+        "command": "bun ./📜️script.ts typecheck",
+        "forwardAllArgs": true
+      },
+      "outputs": []
     },
     "test": {
       "executor": "nx:run-commands",

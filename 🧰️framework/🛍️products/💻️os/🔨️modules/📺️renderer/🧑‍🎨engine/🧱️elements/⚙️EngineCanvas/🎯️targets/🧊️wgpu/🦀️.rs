@@ -4195,6 +4195,29 @@ fn paint_node_graph_selection_marquee(ctx: &mut FrameworkWidgetContext<'_>, inne
     ui_wgpu::wgpu::paint_selection_marquee(&mut ctx.draw, theme, crossing, lasso, &global, true);
 }
 
+/// 🖌️🧭️ The two paint-2d overlays React layers OVER its canvas: a live marquee
+/// (`SelectionMarquee`, `🖌️Paint2dHost/🟦️.tsx:178`) and the navigator's "you are here" viewport
+/// rectangle (`overlayRect`, `:275`). Both are chrome — neither belongs in the vello raster the
+/// composite phase pushes — so they are painted here, in the scene's own overlay phase.
+pub fn paint_paint2d_overlays(ctx: &mut FrameworkWidgetContext<'_>, scene: &UiComponentSceneNode, inner: Rect) {
+    let Some(paint) = scene.paint_2d.as_ref() else {
+        return;
+    };
+    let theme = *ctx.theme;
+    if let Some(rect) = paint2d_navigator_overlay_rect(scene) {
+        let bounds = [inner.x + rect[0], inner.y + rect[1], rect[2], rect[3]];
+        ctx.draw.push_solid(bounds, theme.accent.with_alpha(0.12));
+        ctx.draw.push_line(bounds[0], bounds[1], bounds[0] + bounds[2], bounds[1], theme.accent, theme.stroke_hairline);
+        ctx.draw.push_line(bounds[0], bounds[1] + bounds[3], bounds[0] + bounds[2], bounds[1] + bounds[3], theme.accent, theme.stroke_hairline);
+        ctx.draw.push_line(bounds[0], bounds[1], bounds[0], bounds[1] + bounds[3], theme.accent, theme.stroke_hairline);
+        ctx.draw.push_line(bounds[0] + bounds[2], bounds[1], bounds[0] + bounds[2], bounds[1] + bounds[3], theme.accent, theme.stroke_hairline);
+        return;
+    }
+    if let Some((points, crossing, lasso)) = paint2d_marquee_overlay(&scene.surface_id, &paint.active_utility) {
+        ui_wgpu::wgpu::paint_selection_marquee(ctx.draw, &theme, crossing, lasso, &points, true);
+    }
+}
+
 fn paint_node_graph_selection_bounds(ctx: &mut FrameworkWidgetContext<'_>, inner: Rect, bounds_json: &str, theme: &Theme) {
     if bounds_json.trim() == "null" {
         return;
@@ -5398,6 +5421,90 @@ fn paint2d_merge_ids(mode: &str, current: &[String], next: &[String]) -> Vec<Str
     }
 }
 
+//#region Paint2dMarquee
+/// 📏️ `PAINT_2D_MARQUEE_THRESHOLD_PX` (`🖌️Paint2dHost/🟦️.tsx:45`) — how far the pointer must travel
+/// before a selection press becomes a marquee rather than a single-point pick.
+const PAINT2D_MARQUEE_THRESHOLD_PX: f32 = 4.0;
+
+/// 🖱️ One live paint-2d marquee gesture, the wgpu twin of `marqueeRef` in `🖌️Paint2dHost/🟦️.tsx:168`.
+/// `points` holds the lasso path, or the two rectangle corners.
+#[derive(Clone, Debug, Default)]
+struct Paint2dMarquee {
+    tracking: bool,
+    active: bool,
+    start: (f32, f32),
+    points: Vec<(f32, f32)>,
+    /// 🧭️ The navigator's own middle-button pan anchor (`panRef`, `🖌️Paint2dHost/🟦️.tsx:430`). A
+    /// navigator surface runs no marquee, so the two gestures share one per-surface slot.
+    pan_last: Option<(f32, f32)>,
+}
+
+/// 🧮️ Marquee gestures are per SURFACE and never outlive one press/release pair, so a plain map
+/// keyed by surface id is the whole bound — the same shape `scenes`' own `map_marquee_points` uses.
+static PAINT2D_MARQUEES: WorkerCell<HashMap<String, Paint2dMarquee>> = WorkerCell::new();
+
+fn with_paint2d_marquee<R>(surface_id: &str, f: impl FnOnce(&mut Paint2dMarquee) -> R) -> R {
+    PAINT2D_MARQUEES.with(|cell| {
+        let mut map = cell.borrow_mut();
+        f(map.entry(surface_id.to_string()).or_default())
+    })
+}
+
+fn paint2d_marquee_snapshot(surface_id: &str) -> Option<Paint2dMarquee> {
+    PAINT2D_MARQUEES.with(|cell| cell.borrow().get(surface_id).filter(|marquee| marquee.active).cloned())
+}
+
+/// 🖱️ The selection METHOD a utility puts the surface in — `paint2dSelectionMethod`
+/// (`🖌️Paint2dHost/🟦️.tsx:101`). `selectWand` is a selection utility with no marquee gesture.
+fn paint2d_selection_method(active_utility: &str) -> Option<&'static str> {
+    match active_utility {
+        "selectMarquee" => Some("rectangle"),
+        "selectLasso" => Some("lasso"),
+        _ => None,
+    }
+}
+
+/// 🖱️ The marquee path as `marquee_hits_json` wants it, plus the crossing flag React derives from
+/// `marqueeCoverageFromGesture` (a right-to-left drag is a partial/crossing marquee).
+fn paint2d_marquee_path(marquee: &Paint2dMarquee, lasso: bool, point: (f32, f32)) -> (Vec<[f32; 2]>, bool) {
+    let points: Vec<[f32; 2]> = if lasso {
+        marquee.points.iter().chain(std::iter::once(&point)).map(|(x, y)| [*x, *y]).collect()
+    } else {
+        vec![[marquee.start.0, marquee.start.1], [point.0, point.1]]
+    };
+    let crossing = ui_wgpu::wgpu::marquee_is_crossing_from_path(&points, lasso);
+    (points, crossing)
+}
+
+/// 🖌️ The overlay a live marquee paints, in SURFACE-LOCAL coordinates, or `None` when no marquee is
+/// running — read by the scene paint's overlay phase. React renders the same gesture as a
+/// `SelectionMarquee` element layered over the canvas (`🖌️Paint2dHost/🟦️.tsx:178`).
+pub fn paint2d_marquee_overlay(surface_id: &str, active_utility: &str) -> Option<(Vec<[f32; 2]>, bool, bool)> {
+    let lasso = paint2d_selection_method(active_utility)? == "lasso";
+    let marquee = paint2d_marquee_snapshot(surface_id)?;
+    let last = marquee.points.last().copied().unwrap_or(marquee.start);
+    let (points, crossing) = paint2d_marquee_path(&marquee, lasso, last);
+    (points.len() >= 2).then_some((points, crossing, lasso))
+}
+
+/// 🧭️ The navigator's "you are here" rectangle in navigator-surface-local coordinates — the wgpu twin
+/// of `session.navigatorViewportOverlayJson(scene.cameraJson, scene.compositeViewportJson)` and the
+/// `overlayRect` React draws from it (`🖌️Paint2dHost/🟦️.tsx:275`). `None` whenever the scene is not a
+/// navigator, carries no composite viewport, or the host refuses the query.
+pub fn paint2d_navigator_overlay_rect(scene: &UiComponentSceneNode) -> Option<[f32; 4]> {
+    let paint = scene.paint_2d.as_ref()?;
+    if paint.view_mode != "navigator" {
+        return None;
+    }
+    let viewport_json = paint.composite_viewport_json.as_deref()?;
+    let json = with_raster_host_mut(&scene.surface_id, |host| host.navigator_viewport_overlay_json(&paint.camera_json, viewport_json).ok()).flatten()?;
+    let value: Value = serde_json::from_str(&json).ok()?;
+    let read = |key: &str| value.get(key).and_then(Value::as_f64).unwrap_or(0.0) as f32;
+    let rect = [read("x"), read("y"), read("width"), read("height")];
+    (rect[2] > 0.0 && rect[3] > 0.0).then_some(rect)
+}
+//#endregion Paint2dMarquee
+
 fn paint2d_selection(scene: &UiComponentSceneNode) -> Vec<String> {
     scene.paint_2d.as_ref().and_then(|paint| serde_json::from_str::<Vec<String>>(&paint.selection_json).ok()).unwrap_or_default()
 }
@@ -5412,13 +5519,53 @@ pub fn paint2d_pointer_button_into(scene: &UiComponentSceneNode, inner: Rect, x:
         return Ok(false);
     };
     if paint.view_mode == "navigator" {
+        // 🧭️ A navigator pans the CONTENT camera with the middle button and does nothing else —
+        // React's `onPointerDown`/`onPointerUp` navigator arms (`🖌️Paint2dHost/🟦️.tsx:430`, `:453`).
+        if button == 1 {
+            with_paint2d_marquee(&scene.surface_id, |marquee| marquee.pan_last = down.then_some((x, y)));
+        }
         return Ok(false);
     }
     let sx = f64::from(x - inner.x);
     let sy = f64::from(y - inner.y);
     if paint2d_selection_utility(&paint.active_utility) {
+        let method = paint2d_selection_method(&paint.active_utility);
         if down {
+            // 🖱️ React arms `marqueeRef` on the press and only promotes it to a real marquee once the
+            // pointer travels (`🖌️Paint2dHost/🟦️.tsx:438`), so a press that never moves stays a pick.
+            if method.is_some() {
+                with_paint2d_marquee(&scene.surface_id, |marquee| {
+                    *marquee = Paint2dMarquee { tracking: true, active: false, start: (x, y), points: vec![(x, y)], pan_last: None };
+                });
+            }
             return Ok(false);
+        }
+        // 🖱️ A committed MARQUEE takes the release: it asks the host which pixel layers the path
+        // covers and publishes them merged, never the single point under the pointer
+        // (`commitMarqueeSelection`, `🖌️Paint2dHost/🟦️.tsx:406-420`).
+        let committed = method.and_then(|method| {
+            let marquee = with_paint2d_marquee(&scene.surface_id, |marquee| {
+                let snapshot = marquee.clone();
+                *marquee = Paint2dMarquee::default();
+                snapshot
+            });
+            marquee.active.then(|| paint2d_marquee_path(&marquee, method == "lasso", (x, y)))
+        });
+        if let Some((points, crossing)) = committed {
+            let merge = paint2d_merge_mode(shift, ctrl_or_meta);
+            let local: Vec<[f64; 2]> = points.iter().map(|point| [f64::from(point[0] - inner.x), f64::from(point[1] - inner.y)]).collect();
+            let query = json!({ "points": local.iter().map(|point| json!({ "x": point[0], "y": point[1] })).collect::<Vec<_>>(), "crossing": crossing }).to_string();
+            let hits: Vec<String> = with_raster_host_mut(&scene.surface_id, |host| host.marquee_hits_json(&query).ok())
+                .flatten()
+                .and_then(|json| serde_json::from_str::<Vec<String>>(&json).ok())
+                .unwrap_or_default();
+            let ids = paint2d_merge_ids(merge, &paint2d_selection(scene), &hits);
+            let targets = interaction_targets_json(PAINT2D_LAYER_GRANULARITY, &ids);
+            let bytes = ui_wgpu::wgpu::checked_action_string_bytes(&[&scene.controller_id, "interactionSelect", "domainId", PAINT2D_INTERACTION_DOMAIN, "targets", &targets, "merge", merge, "method", "pick"])?;
+            let mut batch = input.reserve_actions(1, bytes)?;
+            write_interaction_select(&mut batch, &scene.controller_id, PAINT2D_INTERACTION_DOMAIN, &targets, merge)?;
+            batch.publish()?;
+            return Ok(true);
         }
         let merge = paint2d_merge_mode(shift, ctrl_or_meta);
         // 🖱️ React reaches `onSelectTarget(target, …)` only through a resolved pick, so an empty
@@ -5464,11 +5611,47 @@ pub fn paint2d_pointer_move_into(scene: &UiComponentSceneNode, inner: Rect, x: f
         return Ok(false);
     };
     if paint.view_mode == "navigator" {
-        return Ok(false);
+        // 🧭️ Navigator pan drives the CONTENT camera, in content-world units: React divides the
+        // screen delta by the CONTENT camera's zoom and dispatches `setCamera`
+        // (`🖌️Paint2dHost/🟦️.tsx:453-462`). The navigator's own camera stays fit to the document.
+        let Some((last_x, last_y)) = with_paint2d_marquee(&scene.surface_id, |marquee| {
+            let last = marquee.pan_last;
+            if last.is_some() {
+                marquee.pan_last = Some((x, y));
+            }
+            last
+        }) else {
+            return Ok(false);
+        };
+        let Some((cx, cy, zoom)) = engine_camera_from_json(&paint.camera_json) else {
+            return Ok(false);
+        };
+        let camera = (cx - f64::from(x - last_x) / zoom, cy - f64::from(y - last_y) / zoom, zoom);
+        let bytes = ui_wgpu::wgpu::checked_action_string_bytes(&[&scene.controller_id, "setCamera", "surfaceId", &scene.surface_id, "camera", "x", "y", "zoom"])?;
+        let mut batch = input.reserve_actions(1, bytes)?;
+        write_surface_camera(&mut batch, scene, camera)?;
+        batch.publish()?;
+        return Ok(true);
     }
     let sx = f64::from(x - inner.x);
     let sy = f64::from(y - inner.y);
     if paint2d_selection_utility(&paint.active_utility) {
+        // 🖱️ The armed gesture becomes a marquee once the pointer clears the threshold, and the lasso
+        // accumulates its path — `onPointerMove`'s marquee branch (`🖌️Paint2dHost/🟦️.tsx:466-475`).
+        if let Some(method) = paint2d_selection_method(&paint.active_utility) {
+            with_paint2d_marquee(&scene.surface_id, |marquee| {
+                if !marquee.tracking {
+                    return;
+                }
+                let distance = ((x - marquee.start.0).powi(2) + (y - marquee.start.1).powi(2)).sqrt();
+                if !marquee.active && distance >= PAINT2D_MARQUEE_THRESHOLD_PX {
+                    marquee.active = true;
+                }
+                if marquee.active && method == "lasso" && marquee.points.last().copied() != Some((x, y)) {
+                    marquee.points.push((x, y));
+                }
+            });
+        }
         let hit = paint2d_pick_layer(&scene.surface_id, sx, sy);
         if hit.as_deref() == paint.hovered_id.as_deref() {
             return Ok(false);

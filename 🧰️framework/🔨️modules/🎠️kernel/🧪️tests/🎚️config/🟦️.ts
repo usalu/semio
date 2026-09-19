@@ -18,7 +18,6 @@ export default defineConfig({
   test: {
     root: testRoot,
     name: "@semio-tech/framework-kernel",
-    mode: "test",
     environment: "jsdom",
     include: ["🧪️tests/🔬️scope-contributions/🟦️.ts"],
     coverage: { include: ["*.ts"] },

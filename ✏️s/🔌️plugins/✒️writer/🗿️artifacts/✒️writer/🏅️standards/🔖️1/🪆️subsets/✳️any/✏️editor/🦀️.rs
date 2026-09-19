@@ -1152,6 +1152,48 @@ impl ArtifactEditor for WriterPlayApp {
         command.command_id()
     }
 
+    /// 🎯️ Maps a host action id + its staged args onto `WriterCommand` — the bridge the React/wgpu
+    /// shells still need because they speak `{action, args}` while dispatch is typed-only. Without it
+    /// the trait default refuses EVERY id (`app.command.unsupported`), so the boot `setActiveExample`,
+    /// every Actions-pane row and every chrome control died before reaching `handle`.
+    /// `setEditorSetting` carries three payload types under one manifest id, so it selects on the
+    /// `setting` key the way the `app_commands!` rows split on their wire keyword.
+    fn command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result<WriterCommand, Fault> {
+        let text_arg = |keys: &[&str]| keys.iter().find_map(|key| args.and_then(|value| value.get(key)).and_then(dsl::DslValue::as_str).map(str::to_string));
+        let number_arg = |keys: &[&str]| keys.iter().find_map(|key| args.and_then(|value| value.get(key)).and_then(dsl::DslValue::as_f64));
+        match action {
+            "textEdit" => Ok(WriterCommand::TextEdit(text_edit::TextEdit { text: text_arg(&["text", "value"]).unwrap_or_default() })),
+            "setText" => Ok(WriterCommand::SetText(set_text::SetText { text: text_arg(&["text", "value"]).unwrap_or_default() })),
+            "setSnapshot" => Ok(WriterCommand::SetSnapshot(set_snapshot::SetSnapshot { json: text_arg(&["json", "value"]).unwrap_or_default() })),
+            "openDocument" => Ok(WriterCommand::OpenDocument(open_document::OpenDocument { uri: text_arg(&["uri"]).unwrap_or_default(), text: text_arg(&["text"]).unwrap_or_default() })),
+            "setSnapshotJson" => Ok(WriterCommand::SetSnapshotJson(set_snapshot_json::SetSnapshotJson { json: text_arg(&["json", "value"]).unwrap_or_default() })),
+            "setFixtureJson" => Ok(WriterCommand::SetFixtureJson(set_fixture_json::SetFixtureJson { json: text_arg(&["json", "value"]).unwrap_or_default() })),
+            "setActiveExample" => Ok(WriterCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: text_arg(&["exampleId", "example_id", "id", "value"]).unwrap_or_else(|| "jack".into()) })),
+            "formatDocument" => Ok(WriterCommand::FormatDocument(format_document::FormatDocument {})),
+            "commitRename" => Ok(WriterCommand::CommitRename(commit_rename::CommitRename { text: text_arg(&["text", "value"]).unwrap_or_default() })),
+            "setCamera" => {
+                let value = args.and_then(|value| value.get("camera")).cloned().ok_or_else(|| Fault::from("writer setCamera requires a camera"))?;
+                Ok(WriterCommand::SetCamera(set_camera::SetCamera { camera: dsl::from_dsl_value(value).map_err(|error| Fault::from(format!("invalid writer setCamera camera: {error}")))? }))
+            }
+            "requestCompletions" => Ok(WriterCommand::RequestCompletions(request_completions::RequestCompletions {})),
+            "lintDocument" => Ok(WriterCommand::LintDocument(lint_document::LintDocument {})),
+            "setEditorSelection" => Ok(WriterCommand::SetEditorSelection(set_editor_selection::SetEditorSelection { start: number_arg(&["start"]).unwrap_or_default() as usize, end: number_arg(&["end"]).unwrap_or_default() as usize })),
+            "toggleLineNumbers" => Ok(WriterCommand::ToggleLineNumbers(toggle_line_numbers::ToggleLineNumbers {})),
+            "setEditorSetting" => {
+                let value = number_arg(&["value"]).unwrap_or_default() as u32;
+                match text_arg(&["setting", "key"]).as_deref().unwrap_or("fontPx") {
+                    "lineHeight" | "line-height" => Ok(WriterCommand::SetLineHeight(set_line_height::SetLineHeight { value })),
+                    "tabSize" | "tab-size" => Ok(WriterCommand::SetTabSize(set_tab_size::SetTabSize { value })),
+                    "fontPx" | "font-px" => Ok(WriterCommand::SetFontPx(set_font_px::SetFontPx { value })),
+                    other => Err(Fault::from(format!("writer setEditorSetting has no setting '{other}' (fontPx/lineHeight/tabSize)"))),
+                }
+            }
+            "engagementInput" => Ok(WriterCommand::EngagementInput(engagement_input::EngagementInput { value: text_arg(&["value", "text"]).unwrap_or_default() })),
+            "engagementSubmit" => Ok(WriterCommand::EngagementSubmit(engagement_submit::EngagementSubmit { value: text_arg(&["value", "text"]) })),
+            other => Err(Fault::from(format!("writer: unhandled action id {other}"))),
+        }
+    }
+
     fn register_tool_job_factories(registry: &mut ArtifactToolFactoryRegistry<'_, EditorApp<Self>>) -> Result<(), Fault> {
         let controller_id = registry.controller_id().to_string();
         registry.register(WriterCommandJobFactory::new(&controller_id))

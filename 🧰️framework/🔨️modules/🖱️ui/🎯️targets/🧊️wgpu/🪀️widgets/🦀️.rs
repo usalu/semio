@@ -224,6 +224,45 @@ pub enum WidgetNode<E> {
     Field { id: String, label: String, child: ControlNode<E> },
     Section { id: String, label: Option<String>, default_open: bool, children: Vec<WidgetNode<E>> },
     Tree { sections: Vec<TreeSection<E>>, selected_ids: Vec<String>, highlighted_ids: Vec<String>, selection_change: Option<E> },
+    //#region 🧩️KitCompositeParity
+    // 🧩️ The five `UiNode` kinds this second, smaller paint kit carried NO arm for until ticket
+    // 26/09/17 packet W15a — a panel painted through `render_widget` (scene-embedded chrome, the
+    // standalone `🌳️Tree` target) could not show a progress bar, an image, a nested group, a scene
+    // or an extension slot AT ALL, while the retained `paint_node` ladder painted all five. Each arm
+    // below is the same geometry and the same theme tokens as its retained twin
+    // (`🖌️paint/🦀️.rs`'s `paint_progress`/`UiNode::Image`/`UiNode::Group`/`UiNode::ComponentScene`/
+    // `UiNode::ExternalSlot` arms), so the two kits cannot drift.
+    /// 📶️ React's `ProgressView` (`🗣️Interpreter/🟦️.tsx:2098-2118`): a `bg-muted h-tiny w-full`
+    /// track with a `bg-accent` fill at `uiProgressFractionV1(completed, total)`, or the centred
+    /// one-third busy band when `total` is absent. `completed`/`total` are `UiProgressNode`'s own
+    /// fields, so `paint::progress_bar_rects` prices both kits' geometry.
+    Progress { id: String, completed: f64, total: Option<f64> },
+    /// 🖼️ React's `ImageView` — a real `<img src>`. A `data:` PNG decodes through the shared
+    /// `🖼️UiImageSources` ledger and draws a raster quad at `object-contain`; anything else is a host
+    /// fetch and shows the `alt` placeholder, exactly as the retained arm does.
+    Image { id: String, src: String, alt: Option<String> },
+    /// 🗂️ A `container` with `role="group"` on React's side; a chevron + label header over its
+    /// children here, sharing `Section`'s own `collapsed_sections` slot so the two fold the same way.
+    Group { id: String, label: String, default_open: bool, children: Vec<WidgetNode<E>> },
+    /// 🎬️ A scene surface's rect. With no host to fill it this paints the retained arm's placeholder
+    /// chrome; the hit target is minted by `scene_hit_kind` so a press resolves the same
+    /// kind/control id `input::retained_hit_registration`'s `ComponentScene` arm resolves.
+    ComponentScene { surface_id: String, hit_kind: HitKind, hit_control_id: String },
+    /// 🧩️ A plugin body slot: placeholder chrome labelled with its `body_key`, like the retained arm.
+    ExternalSlot { body_key: String },
+    //#endregion 🧩️KitCompositeParity
+}
+
+impl<E> WidgetNode<E> {
+    /// 🎬️ The kit's `ComponentScene` arm for one retained scene node, taking its `HitKind`/control id
+    /// from `input::retained_scene_hit` — the ONE derivation the retained hit registry uses, so a
+    /// scene painted through this kit and the same scene painted through the retained ladder answer
+    /// the identical hit contract (`World3d` its own kind, node-graph/board `\u{2026}.pane`, map `\u{2026}.map`).
+    #[cfg(feature = "wgpu-engine")]
+    pub fn component_scene(scene: &crate::wgpu::component::ui::UiComponentSceneNode) -> Self {
+        let (hit_kind, hit_control_id) = crate::wgpu::input::retained_scene_hit(scene);
+        WidgetNode::ComponentScene { surface_id: scene.surface_id.clone(), hit_kind, hit_control_id }
+    }
 }
 
 const PANEL_HEADER: f32 = (ui_styling::metrics::chrome::UI_SPACING_COMPACT_PX * ui_styling::metrics::chrome::PANEL_HEADER_HEIGHT_UI_SPACING) as f32;
@@ -301,6 +340,35 @@ pub fn measure_widget<E>(atlas: &mut FontAtlas, theme: &Theme, node: &WidgetNode
             (max_w.max(120.0), height)
         }
         WidgetNode::Tree { sections, .. } => (measure_tree_sections_width(sections, atlas, theme), measure_tree_sections(sections)),
+        // 📶️ React's bar is `h-tiny w-full` — a full-width track one `--size-tiny` tall, which is
+        // what `paint::progress_bar_rects` centres inside whatever box this measure asks for.
+        WidgetNode::Progress { .. } => (120.0, crate::wgpu::chrome::SIZE_TINY.max(theme.gap_standard)),
+        // 🖼️ React caps the `<img>` at `max-h-64` (`UI_IMAGE_MAX_BOX_HEIGHT`); a source the process
+        // cannot decode itself measures as one `alt` line, which is what it paints.
+        WidgetNode::Image { src, alt, .. } => match crate::wgpu::paint::ui_image_natural_size(src.as_str()) {
+            Some((natural_w, natural_h)) => {
+                let height = (natural_h as f32).min(crate::wgpu::paint::UI_IMAGE_MAX_BOX_HEIGHT);
+                let scale = if natural_h > 0 { height / natural_h as f32 } else { 1.0 };
+                ((natural_w as f32 * scale).max(1.0), height.max(1.0))
+            }
+            None => {
+                let label = alt.as_deref().unwrap_or("");
+                (atlas.measure_text(label, theme.font_size_small).0.max(120.0), theme.control_height)
+            }
+        },
+        WidgetNode::Group { children, label, .. } => {
+            let mut height = PANEL_HEADER;
+            let mut max_w = atlas.measure_text(label, theme.font_size_body).0 + TREE_TOGGLE_WIDTH + theme.gap_standard;
+            for child in children {
+                let (w, h) = measure_widget(atlas, theme, child);
+                max_w = max_w.max(w);
+                height += h + theme.gap_standard;
+            }
+            (max_w.max(120.0), height)
+        }
+        // 🎬️🧩️ Neither a scene surface nor a plugin slot has an intrinsic size — both fill whatever
+        // box their container grants, exactly like the retained ladder's `LayoutNodeKind::EngineSurface`.
+        WidgetNode::ComponentScene { .. } | WidgetNode::ExternalSlot { .. } => (120.0, theme.control_height),
     }
 }
 
@@ -419,8 +487,83 @@ pub fn render_widget<E: Clone>(node: &WidgetNode<E>, bounds: Rect, ctx: &mut Wid
                 render_tree(sections, selected_ids, highlighted_ids, content, ctx);
             });
         }
+        WidgetNode::Progress { completed, total, .. } => render_progress(*completed, *total, bounds, ctx),
+        WidgetNode::Image { id, src, alt } => render_image(id, src, alt.as_deref(), bounds, ctx),
+        WidgetNode::Group { id, label, default_open, children } => render_group(id, label, *default_open, children, bounds, ctx),
+        WidgetNode::ComponentScene { surface_id, hit_kind, hit_control_id } => {
+            render_scene_placeholder(surface_id, bounds, ctx);
+            ctx.input.register_hit(HitTarget { rect: bounds, event: None, control_id: Some(hit_control_id.clone()), kind: *hit_kind, drag_axis: None, drag_data: None });
+        }
+        WidgetNode::ExternalSlot { body_key } => render_external_slot(body_key, bounds, ctx),
     }
 }
+
+//#region 🧩️KitCompositeParity
+/// 📶️ The kit's progress bar — the SAME track/fill rects `paint::progress_bar_rects` hands the
+/// retained ladder, so the two kits cannot drift on geometry, the indeterminate share, or the
+/// `muted`/`accent` token pair.
+fn render_progress<E>(completed: f64, total: Option<f64>, bounds: Rect, ctx: &mut WidgetContext<'_, E>) {
+    let (track, fill) = crate::wgpu::paint::progress_bar_rects_of(completed, total, bounds, ctx.theme);
+    ctx.draw.push_rounded(track, ctx.theme.muted, ctx.theme.border_radius);
+    if fill[2] > 0.0 {
+        ctx.draw.push_rounded(fill, ctx.theme.accent, ctx.theme.border_radius);
+    }
+}
+
+/// 🖼️ A decodable (`data:`) source draws its real bitmap at React's `object-contain` rect; every
+/// other source is a host fetch this crate has no authority to perform, so it shows the placeholder
+/// panel plus `alt` — which is also what React's `<img>` shows while it is pending or broken.
+fn render_image<E>(id: &str, src: &str, alt: Option<&str>, bounds: Rect, ctx: &mut WidgetContext<'_, E>) {
+    let decoded = matches!(crate::wgpu::paint::admit_ui_image(src), crate::wgpu::paint::UiImageAdmission::Ready).then(|| crate::wgpu::paint::ui_image_natural_size(src)).flatten();
+    if let Some((natural_w, natural_h)) = decoded {
+        let content = crate::wgpu::paint::ui_image_content_rect(bounds, natural_w, natural_h);
+        ctx.draw.push_raster_quad(src, [content.x, content.y, content.w, content.h], [0.0, 0.0, 1.0, 1.0], 1.0);
+        return;
+    }
+    ctx.draw.push_rounded([bounds.x, bounds.y, bounds.w, bounds.h], ctx.theme.panel, ctx.theme.border_radius);
+    let label = alt.unwrap_or(id);
+    draw_text(ctx, label, bounds.x + ctx.theme.padding_standard, bounds.y + (bounds.h + ctx.theme.font_size_small) * 0.5 - 2.0, ctx.theme.font_size_small, ctx.theme.text_muted);
+}
+
+/// 🗂️ A `Group` folds through the same `collapsed_sections` slot a `Section` does — one fold state
+/// per id, so a panel that mixes both kinds cannot end up with two disagreeing open bits.
+fn render_group<E: Clone>(id: &str, label: &str, default_open: bool, children: &[WidgetNode<E>], bounds: Rect, ctx: &mut WidgetContext<'_, E>) {
+    let section_key = format!("section.{id}");
+    if !ctx.collapsed_sections.contains_key(&section_key) {
+        ctx.collapsed_sections.insert(section_key.clone(), !default_open);
+    }
+    let collapsed = tree_row_collapsed(ctx.collapsed_sections, &section_key, default_open);
+    let header = Rect::new(bounds.x, bounds.y, bounds.w, PANEL_HEADER);
+    let chevron_rect = Rect::new(bounds.x, bounds.y, TREE_TOGGLE_WIDTH, PANEL_HEADER);
+    tree_draw_chevron(ctx, if collapsed { "chevron-right" } else { "chevron-down" }, chevron_rect, crate::wgpu::chrome::ICON_TINY);
+    draw_text(ctx, label, bounds.x + TREE_TOGGLE_WIDTH + ctx.theme.gap_standard, bounds.y + (PANEL_HEADER + ctx.theme.font_size_body) * 0.5 - 2.0, ctx.theme.font_size_body, ctx.theme.text);
+    ctx.input.register_hit(HitTarget { rect: header, event: None, control_id: Some(format!("section.chevron.{id}")), kind: HitKind::Generic, drag_axis: None, drag_data: None });
+    if collapsed {
+        return;
+    }
+    let mut y = bounds.y + PANEL_HEADER;
+    for child in children {
+        let (_, h) = measure_widget(ctx.atlas, ctx.theme, child);
+        render_widget(child, Rect::new(bounds.x, y, bounds.w, h), ctx);
+        y += h + ctx.theme.gap_standard;
+    }
+}
+
+/// 🎬️ The no-host placeholder for a scene rect — "there is something in that box" chrome, identical
+/// to the retained ladder's own `ComponentScene` fallback.
+fn render_scene_placeholder<E>(surface_id: &str, bounds: Rect, ctx: &mut WidgetContext<'_, E>) {
+    let _ = surface_id;
+    ctx.draw.push_rounded([bounds.x, bounds.y, bounds.w, bounds.h], ctx.theme.panel, ctx.theme.border_radius);
+    crate::wgpu::chrome::push_control_border(ctx.draw, bounds, ctx.theme, ctx.theme.border_normal, ctx.theme.panel);
+}
+
+/// 🧩️ A plugin body slot labelled by its `body_key`; the body itself is the host's concern.
+fn render_external_slot<E>(body_key: &str, bounds: Rect, ctx: &mut WidgetContext<'_, E>) {
+    ctx.draw.push_rounded([bounds.x, bounds.y, bounds.w, bounds.h], ctx.theme.panel, ctx.theme.border_radius);
+    crate::wgpu::chrome::push_control_border(ctx.draw, bounds, ctx.theme, ctx.theme.border_normal, ctx.theme.panel);
+    draw_text(ctx, body_key, bounds.x + ctx.theme.padding_standard, bounds.y + (bounds.h + ctx.theme.font_size_small) * 0.5 - 2.0, ctx.theme.font_size_small, ctx.theme.text_muted);
+}
+//#endregion 🧩️KitCompositeParity
 
 fn render_control<E: Clone>(control: &ControlNode<E>, bounds: Rect, ctx: &mut WidgetContext<'_, E>) {
     match control {

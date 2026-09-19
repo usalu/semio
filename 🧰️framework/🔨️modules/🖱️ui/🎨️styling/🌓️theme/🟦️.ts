@@ -1,4 +1,5 @@
 // #region 🧲️Header
+/// <reference types="vite/client" />
 /** @emoji 🎨️ `@semio-tech/ui-styling` centralizes palette CSS, theme tokens and the shared typography preset for ui consumers.
  * Browser-only by construction: this barrel is served to the browser through `📦️packages/🟦️typescript/🟦️.ts`, so it MUST NOT
  * reach `../💨️tailwind/🟦️.ts` (the build-time Tailwind config, whose `@tailwindcss/typography` → `@tailwindcss/node` →
@@ -682,6 +683,61 @@ export function relativeLuminance(hex: string): number {
   return 0.2126 * r + 0.7152 * g + 0.0722 * b;
 }
 
+/** 🌓️ WCAG 2.2 minimum contrast for normal body text (1.4.3 Contrast Minimum, level AA). */
+export const WCAG_AA_CONTRAST = 4.5;
+
+/** 🌓️ WCAG 2.2 minimum contrast for large text (≥18.66 px bold or ≥24 px) and for non-text UI
+ * components and graphical objects (1.4.11), level AA. */
+export const WCAG_AA_LARGE_CONTRAST = 3;
+
+/** 🌓️ WCAG 2.2 enhanced contrast for normal body text (1.4.6, level AAA). */
+export const WCAG_AAA_CONTRAST = 7;
+
+/** 🌓️ How a measured contrast ratio grades against WCAG 2.2 — `"fail"` is below the large-text/UI
+ * floor, so it is unreadable at ANY size. */
+export type WcagContrastGrade = "aaa" | "aa" | "aaLarge" | "fail";
+
+/**
+ * 🌓️ The WCAG 2.2 contrast ratio between two resolved `#rrggbb` colors: `(L₁ + 0.05) / (L₂ + 0.05)`
+ * with `L₁` the lighter relative luminance. Always ≥ 1 and ≤ 21, and symmetric in its arguments.
+ *
+ * @see {@link https://www.w3.org/TR/WCAG22/#dfn-contrast-ratio | WCAG 2.2 — contrast ratio}
+ */
+export function contrastRatio(a: string, b: string): number {
+  const first = relativeLuminance(a);
+  const second = relativeLuminance(b);
+  const lighter = Math.max(first, second);
+  const darker = Math.min(first, second);
+  return (lighter + 0.05) / (darker + 0.05);
+}
+
+/** 🌓️ {@link contrastRatio} for two resolved RGBA8888 paints, ignoring alpha (a ratio is only defined
+ * for the colors that actually land on the pixel; a translucent paint's real contrast depends on what is
+ * behind it, which a token table cannot know). */
+export function contrastRatioRgba(a: Rgba8, b: Rgba8): number {
+  const hex = ([r, g, blue]: Rgba8) => `#${[r, g, blue].map((channel) => Math.max(0, Math.min(255, Math.round(channel))).toString(16).padStart(2, "0")).join("")}`;
+  return contrastRatio(hex(a), hex(b));
+}
+
+/** 🌓️ Grades a ratio against the three WCAG thresholds. The bands are inclusive at each floor, matching
+ * the spec's "at least" wording. */
+export function wcagContrastGrade(ratio: number): WcagContrastGrade {
+  if (!Number.isFinite(ratio)) return "fail";
+  if (ratio >= WCAG_AAA_CONTRAST) return "aaa";
+  if (ratio >= WCAG_AA_CONTRAST) return "aa";
+  if (ratio >= WCAG_AA_LARGE_CONTRAST) return "aaLarge";
+  return "fail";
+}
+
+/** 🌓️ One live contrast verdict for a theme-editor row: the ratio a user's custom paint reaches against
+ * its own appearance foreground, rounded to the 0.01 the UI prints, and whether it clears body-text AA.
+ * `🎨️styling/🧪️tests/🧪️levels-oklabmix/🟦️.ts` asserts the GENERATED palette clears the same bar; this is
+ * the same law applied live to a palette the generator never saw. */
+export function themePaintContrast(paint: Rgba8, foreground: Rgba8): { readonly ratio: number; readonly grade: WcagContrastGrade; readonly passesBodyText: boolean } {
+  const ratio = Math.round(contrastRatioRgba(paint, foreground) * 100) / 100;
+  return { ratio, grade: wcagContrastGrade(ratio), passesBodyText: ratio >= WCAG_AA_CONTRAST };
+}
+
 /** @emoji 🏷️ Picks a readable palette foreground hex for text on the given background color expression. */
 export function readableForegroundHex(backgroundRef: string, lightKey: StylingTokenKey | string = "light", darkKey: StylingTokenKey | string = "dark"): string {
   const cacheKey = `${backgroundRef}|${lightKey}|${darkKey}`;
@@ -787,7 +843,7 @@ export function syncSessionCanvasTheme(session: CanvasThemeSession | null | unde
 //#region 🧪️Tests
 if (import.meta.vitest) {
   const { registerTests2 } = await import("../🧪️tests/🧪️theme-resolve/🟦️.ts");
-  await registerTests2(import.meta.vitest, { SPATIAL_AXIS_COLOR_REFS, STYLING_BOARD_PALETTES, blendTokenHex, clearColorResolveCache, readableForegroundHex, relativeLuminance, resolveColorHex, resolveColorRgba, resolveSemanticColorHex, resolveSpatialAxisColors, serializeCanvasThemeJson, syncSessionCanvasTheme, tokenHex, tokenVar }, { directory: import.meta.dir, url: import.meta.url });
+  await registerTests2(import.meta.vitest, { SPATIAL_AXIS_COLOR_REFS, STYLING_BOARD_PALETTES, blendTokenHex, clearColorResolveCache, contrastRatio, contrastRatioRgba, themePaintContrast, wcagContrastGrade, readableForegroundHex, relativeLuminance, resolveColorHex, resolveColorRgba, resolveSemanticColorHex, resolveSpatialAxisColors, serializeCanvasThemeJson, syncSessionCanvasTheme, tokenHex, tokenVar }, { directory: import.meta.dir, url: import.meta.url });
 }
 //#endregion 🧪️Tests
 //#endregion 🔖️resolve
@@ -821,12 +877,12 @@ export function builtinUiThemes(): readonly UiTheme[] {
 //#endregion 🔑️Premades
 
 //#region 🔑️ActiveTheme
-const _activeUiTheme = ephemeralBox<UiTheme | undefined>("framework.modules.ui.styling.packages.typescript.index.ts._activeUiTheme", undefined);
+export const _activeUiTheme = ephemeralBox<UiTheme | undefined>("framework.modules.ui.styling.packages.typescript.index.ts._activeUiTheme", undefined);
 const _activeUiThemeSubscribers = ephemeralSet<(theme: UiTheme) => void>("framework.modules.ui.styling.packages.typescript.index.ts._activeUiThemeSubscribers");
 /** 🐚️ Per-root applied CSS var names — lets N co-mounted shells each carry their own theme's tokens
  * without clobbering each other's `<div>` inline overrides (only `document.documentElement` is also
  * "the page", for the single page-owning shell / `setActiveUiTheme` callers). */
-const _appliedThemeCssPropsByRoot = ephemeralMap<HTMLElement, Set<string>>("framework.modules.ui.styling.packages.typescript.index.ts._appliedThemeCssPropsByRoot");
+export const _appliedThemeCssPropsByRoot = ephemeralMap<HTMLElement, Set<string>>("framework.modules.ui.styling.packages.typescript.index.ts._appliedThemeCssPropsByRoot");
 
 /** @emoji 🎨️ The currently active theme (defaults to semio before any theme is set). */
 export function activeUiTheme(): UiTheme {

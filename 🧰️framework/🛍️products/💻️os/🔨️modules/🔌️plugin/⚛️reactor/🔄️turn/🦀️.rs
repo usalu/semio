@@ -421,7 +421,7 @@ pub async fn poll_kernel<PA: crate::app::PluginApp + 'static>(
     runtime: &crate::plugin_runtime::PluginRuntime<PA>,
     events: Vec<Event>,
     command_page: Option<(semio_framework::kernel::CommandPageCursor, semio_framework::kernel::FixedCommandPage)>,
-    cold_pair_page: Option<semio_framework::kernel::ColdArtifactPairPage>,
+    cold_pair_page: Option<semio_framework::kernel::ColdDocumentPairPage>,
     budget: semio_framework::kernel::Budget,
 ) -> Result<semio_framework::kernel::TurnResult, semio_framework::Fault> {
     poll_kernel_output(runtime, events, command_page, cold_pair_page, budget, |_| Ok(()), |result, ()| result).await
@@ -433,7 +433,7 @@ pub(super) async fn poll_kernel_output<PA: crate::app::PluginApp, T, Prepared>(
     runtime: &crate::plugin_runtime::PluginRuntime<PA>,
     events: Vec<Event>,
     command_page: Option<(semio_framework::kernel::CommandPageCursor, semio_framework::kernel::FixedCommandPage)>,
-    cold_pair_page: Option<semio_framework::kernel::ColdArtifactPairPage>,
+    cold_pair_page: Option<semio_framework::kernel::ColdDocumentPairPage>,
     budget: semio_framework::kernel::Budget,
     prepare: impl FnOnce(&semio_framework::kernel::TurnResult) -> Result<Prepared, semio_framework::Fault>,
     publish: impl FnOnce(semio_framework::kernel::TurnResult, Prepared) -> T,
@@ -459,7 +459,7 @@ async fn poll_kernel_turn<PA: crate::app::PluginApp, T, Prepared>(
     runtime: &crate::plugin_runtime::PluginRuntime<PA>,
     events: Vec<Event>,
     command_page: Option<(semio_framework::kernel::CommandPageCursor, semio_framework::kernel::FixedCommandPage)>,
-    cold_pair_page: Option<semio_framework::kernel::ColdArtifactPairPage>,
+    cold_pair_page: Option<semio_framework::kernel::ColdDocumentPairPage>,
     budget: semio_framework::kernel::Budget,
     prepare: impl FnOnce(&semio_framework::kernel::TurnResult) -> Result<Prepared, semio_framework::Fault>,
     publish: impl FnOnce(semio_framework::kernel::TurnResult, Prepared) -> T,
@@ -607,7 +607,7 @@ async fn poll_kernel_turn<PA: crate::app::PluginApp, T, Prepared>(
             Event::CommandIngressPage { .. } => {
                 return Err(semio_framework::Fault::new(semio_framework::FaultOrigin::Framework, semio_framework::FaultCode::new("plugin.command-page-event-bypass"), "command page must use poll_kernel's dedicated owner argument"));
             }
-            Event::ColdArtifactPairPage(_) => {
+            Event::ColdDocumentPairPage(_) => {
                 return Err(semio_framework::Fault::new(semio_framework::FaultOrigin::Framework, semio_framework::FaultCode::new("plugin.cold-pair-page-event-bypass"), "cold document pair page must use poll_kernel's dedicated owner argument"));
             }
             // 🎯️ M1 (ticket 26/08/17 `design-unified.md`): decodes the pack-encoded

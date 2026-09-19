@@ -18,7 +18,6 @@ export default defineConfig({
   plugins: [...semioAssetsVitePlugin(repoRoot), tailwindcss(), react()],
   resolve: {
     alias: [
-:♻️mit-bestand/🎤️präsentation/📅️33.projektetage/📦️packages/🟦️typescript/🧪️vitest.config.ts
       {
         find: "@semio-tech/mit-bestand-praesentation-projektetage-spec",
         replacement: resolve(dir, "🔖️spec.ts"),

@@ -6,6 +6,6 @@ cwd = "."
 
 [mcp_servers.semio]
 command = "bun"
-args = ["./📜️script.ts", "dev", "mcp", "stdio", "os"]
+args = ["./📜️script.ts", "dev", "mcp", "stdio", "os", "--folder", ".", "--scopes", "workspace.read,artifact.write,inference.execute,ui.observe,ui.control"]
 enabled = true
 cwd = "."

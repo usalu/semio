@@ -81,7 +81,7 @@ fn hovering_an_input_uses_the_text_cursor() {
         step: None,
         accept: None,
         on_change: ActionDescriptor { controller_id: "c".into(), action: "a".into(), args: None },
-        presence: UiPresence::default(),
+        on_submit: None, on_abort: None, on_repeat_last: None, presence: UiPresence::default(),
         menu: None,
     }));
     assert_eq!(resolve_semio_cursor_from_tree(&tree, Some(id), None), SemioCursor::Text);
@@ -125,7 +125,7 @@ fn a_disabled_node_uses_the_not_allowed_cursor_before_any_other_affordance() {
         step: None,
         accept: None,
         on_change: ActionDescriptor { controller_id: "ctrl".into(), action: "go".into(), args: None },
-        presence: UiPresence::disabled_if(true),
+        on_submit: None, on_abort: None, on_repeat_last: None, presence: UiPresence::disabled_if(true),
         menu: None,
     }));
     assert_eq!(resolve_semio_cursor_from_tree(&tree, Some(input), None), SemioCursor::NotAllowed);

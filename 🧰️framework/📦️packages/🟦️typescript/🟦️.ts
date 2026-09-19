@@ -24,6 +24,25 @@ export * from "../../🔨️modules/⏱️trace/🧮️memory/🟦️.ts";
 // so a second blanket export of the module root would collide; only its presence-broadcast leaf types,
 // which nothing else exports yet, are pulled in here for `@semio-tech/framework` consumers like the OS Shell.
 export type { PresenceDomain, PresenceInteraction } from "../../🔨️modules/🕹️interaction/🧬️schema/🟦️.ts";
+export {
+  EMPTY_GESTURE_POINTERS,
+  GESTURE_MULTI_TOUCH_POINTERS,
+  IDENTITY_PINCH_STEP,
+  PINCH_MIN_DISTANCE_PX,
+  PINCH_WHEEL_PIXELS_PER_DOUBLING,
+  applyPinchToCamera,
+  clampZoom,
+  gestureIsMultiTouch,
+  gesturePointerDown,
+  gesturePointerMove,
+  gesturePointerUp,
+  pinchFrame,
+  pinchStep,
+  pinchWheelDelta,
+  shortestAngleDelta,
+  zoomAboutPoint,
+} from "../../🔨️modules/🕹️interaction/👆️gesture/🟦️.ts";
+export type { GesturePointer, GesturePointers, PinchFrame, PinchStep, ZoomBounds } from "../../🔨️modules/🕹️interaction/👆️gesture/🟦️.ts";
 export * from "../../🔨️modules/🎠️kernel/🟦️.ts";
 export * from "../../🔨️modules/🔄️machine/🟦️.ts";
 export { NumericIndex, NumericIndexEdit, NumericIndexReader, NumericIndexRetirement } from "../../🔨️modules/🌱️value/🗂️ordered/🔢️numeric/🟦️.ts";

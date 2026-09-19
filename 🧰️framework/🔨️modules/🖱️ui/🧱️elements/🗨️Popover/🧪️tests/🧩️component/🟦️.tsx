@@ -210,7 +210,7 @@ describe("Popover", () => {
     function Effect(): React.ReactElement {
       React.useEffect(() => {
         lifecycle.push("mount");
-        return () => lifecycle.push("cleanup");
+        return () => { lifecycle.push("cleanup"); };
       }, []);
       return <span>Effect</span>;
     }

@@ -45,7 +45,7 @@ fn insert_tree_row(tree: &mut UiTree, tree_id: NodeId, item_id: &str, rect: (f32
 }
 
 fn input_ui(id: &str, value: &str) -> UiNode {
-    UiNode::Input(UiInputNode { id: id.into(), input_kind: "text".into(), value: value.into(), placeholder: None, commit: None, min: None, max: None, step: None, accept: None, on_change: action(), presence: UiPresence::default(), menu: None })
+    UiNode::Input(UiInputNode { id: id.into(), input_kind: "text".into(), value: value.into(), placeholder: None, commit: None, min: None, max: None, step: None, accept: None, on_change: action(), on_submit: None, on_abort: None, on_repeat_last: None, presence: UiPresence::default(), menu: None })
 }
 
 fn stack_ui() -> UiNode {
@@ -122,14 +122,14 @@ fn capture_routes_move_and_up_to_the_captured_node_regardless_of_pointer_positio
     let _b = leaf(&mut tree, Some(root), 2, separator_ui(), (100.0, 0.0, 100.0, 100.0));
     let mut router = EventRouter::new("main");
 
-    router.dispatch(&mut tree, root, &UiEvent::PointerDown { x: 50.0, y: 50.0, button: PointerButton::Primary });
+    router.dispatch(&mut tree, root, &UiEvent::PointerDown { x: 50.0, y: 50.0, button: PointerButton::Primary, modifiers: Default::default() });
     assert_eq!(router.capture.target.map(|(id, _)| id), Some(a));
 
     // pointer moved far outside `a`'s bounds and into `b`'s — capture must still target `a`.
-    router.dispatch(&mut tree, root, &UiEvent::PointerMove { x: 150.0, y: 50.0 });
+    router.dispatch(&mut tree, root, &UiEvent::PointerMove { x: 150.0, y: 50.0, modifiers: Default::default() });
     assert_eq!(router.hovered, Some(a));
 
-    router.dispatch(&mut tree, root, &UiEvent::PointerUp { x: 150.0, y: 50.0, button: PointerButton::Primary });
+    router.dispatch(&mut tree, root, &UiEvent::PointerUp { x: 150.0, y: 50.0, button: PointerButton::Primary, modifiers: Default::default() });
     assert_eq!(router.capture.target, None, "capture releases on PointerUp");
 }
 
@@ -181,8 +181,8 @@ fn clicking_a_button_emits_its_action_descriptor_as_a_ui_command() {
     let button = leaf(&mut tree, Some(root), 1, button_ui("go"), (0.0, 0.0, 100.0, 40.0));
     let mut router = EventRouter::new("main");
 
-    router.dispatch(&mut tree, root, &UiEvent::PointerDown { x: 10.0, y: 10.0, button: PointerButton::Primary });
-    let commands = router.dispatch(&mut tree, root, &UiEvent::PointerUp { x: 10.0, y: 10.0, button: PointerButton::Primary });
+    router.dispatch(&mut tree, root, &UiEvent::PointerDown { x: 10.0, y: 10.0, button: PointerButton::Primary, modifiers: Default::default() });
+    let commands = router.dispatch(&mut tree, root, &UiEvent::PointerUp { x: 10.0, y: 10.0, button: PointerButton::Primary, modifiers: Default::default() });
 
     let expected = action();
     assert!(commands.iter().any(|cmd| matches!(cmd, UiCommand::App { window_id, intent } if window_id == "main" && intent.descriptor() == expected)));
@@ -196,8 +196,8 @@ fn releasing_off_the_captured_button_does_not_fire_its_action() {
     leaf(&mut tree, Some(root), 1, button_ui("go"), (0.0, 0.0, 40.0, 40.0));
     let mut router = EventRouter::new("main");
 
-    router.dispatch(&mut tree, root, &UiEvent::PointerDown { x: 10.0, y: 10.0, button: PointerButton::Primary });
-    let commands = router.dispatch(&mut tree, root, &UiEvent::PointerUp { x: 90.0, y: 90.0, button: PointerButton::Primary });
+    router.dispatch(&mut tree, root, &UiEvent::PointerDown { x: 10.0, y: 10.0, button: PointerButton::Primary, modifiers: Default::default() });
+    let commands = router.dispatch(&mut tree, root, &UiEvent::PointerUp { x: 90.0, y: 90.0, button: PointerButton::Primary, modifiers: Default::default() });
 
     assert!(commands.iter().all(|cmd| !matches!(cmd, UiCommand::App { .. })), "release outside the pressed button must not fire its action");
 }
@@ -216,8 +216,8 @@ fn a_disabled_button_neither_takes_focus_nor_fires_on_click() {
     leaf(&mut tree, Some(root), 2, disabled_button_ui("disabled"), (50.0, 0.0, 50.0, 40.0));
     let mut router = EventRouter::new("main");
 
-    router.dispatch(&mut tree, root, &UiEvent::PointerDown { x: 60.0, y: 10.0, button: PointerButton::Primary });
-    let commands = router.dispatch(&mut tree, root, &UiEvent::PointerUp { x: 60.0, y: 10.0, button: PointerButton::Primary });
+    router.dispatch(&mut tree, root, &UiEvent::PointerDown { x: 60.0, y: 10.0, button: PointerButton::Primary, modifiers: Default::default() });
+    let commands = router.dispatch(&mut tree, root, &UiEvent::PointerUp { x: 60.0, y: 10.0, button: PointerButton::Primary, modifiers: Default::default() });
     assert!(commands.iter().all(|cmd| !matches!(cmd, UiCommand::App { .. } | UiCommand::FocusChanged { node: Some(_), .. })), "a disabled button is inert to the pointer: {commands:?}");
     router.focus.focus_next(&mut tree, root);
     router.focus.focus_next(&mut tree, root);
@@ -283,7 +283,7 @@ fn pointer_down_outside_a_dismissable_overlay_closes_it_and_swallows_the_press()
     let mut router = EventRouter::new("main");
     router.open_overlay(&mut tree, popup, OverlayKind::SelectPopup, OverlayAnchor::Node(root));
 
-    let commands = router.dispatch(&mut tree, root, &UiEvent::PointerDown { x: 150.0, y: 150.0, button: PointerButton::Primary });
+    let commands = router.dispatch(&mut tree, root, &UiEvent::PointerDown { x: 150.0, y: 150.0, button: PointerButton::Primary, modifiers: Default::default() });
 
     assert!(commands.iter().any(|cmd| matches!(cmd, UiCommand::OverlayClosed { .. })), "outside press must close the overlay");
     assert!(router.topmost_overlay().is_none());
@@ -299,7 +299,7 @@ fn pointer_down_inside_a_dismissable_overlay_does_not_close_it() {
     let mut router = EventRouter::new("main");
     router.open_overlay(&mut tree, popup, OverlayKind::SelectPopup, OverlayAnchor::Node(root));
 
-    let commands = router.dispatch(&mut tree, root, &UiEvent::PointerDown { x: 20.0, y: 20.0, button: PointerButton::Primary });
+    let commands = router.dispatch(&mut tree, root, &UiEvent::PointerDown { x: 20.0, y: 20.0, button: PointerButton::Primary, modifiers: Default::default() });
 
     assert!(commands.iter().all(|cmd| !matches!(cmd, UiCommand::OverlayClosed { .. })), "a press inside the overlay must not dismiss it");
     assert!(router.topmost_overlay().is_some());
@@ -358,19 +358,19 @@ fn drag_session_promotes_after_threshold_and_commits_on_an_accepting_drop_target
     payload.insert("application/x-semio-catalogue-item".into(), "{\"id\":\"abc\"}".into());
     router.set_drag_payload(source, payload.clone());
 
-    router.dispatch(&mut tree, root, &UiEvent::PointerDown { x: 5.0, y: 5.0, button: PointerButton::Primary });
+    router.dispatch(&mut tree, root, &UiEvent::PointerDown { x: 5.0, y: 5.0, button: PointerButton::Primary, modifiers: Default::default() });
     assert_eq!(router.capture(), Some((source, CaptureKind::Press)), "a plain press must not immediately start a drag");
 
     // Small move under the promotion threshold: still just a Press.
-    router.dispatch(&mut tree, root, &UiEvent::PointerMove { x: 6.0, y: 6.0 });
+    router.dispatch(&mut tree, root, &UiEvent::PointerMove { x: 6.0, y: 6.0, modifiers: Default::default() });
     assert_eq!(router.capture(), Some((source, CaptureKind::Press)));
 
     // Move past the threshold and over the drop target: promotes to Drag and finds the target.
-    router.dispatch(&mut tree, root, &UiEvent::PointerMove { x: 120.0, y: 120.0 });
+    router.dispatch(&mut tree, root, &UiEvent::PointerMove { x: 120.0, y: 120.0, modifiers: Default::default() });
     assert_eq!(router.capture(), Some((source, CaptureKind::Drag)));
     assert_eq!(router.drag_session().and_then(|drag| drag.drop_target), Some(target));
 
-    let commands = router.dispatch(&mut tree, root, &UiEvent::PointerUp { x: 120.0, y: 120.0, button: PointerButton::Primary });
+    let commands = router.dispatch(&mut tree, root, &UiEvent::PointerUp { x: 120.0, y: 120.0, button: PointerButton::Primary, modifiers: Default::default() });
     assert!(commands.iter().any(|cmd| matches!(cmd, UiCommand::DropCommitted { source: s, target: t, payload: p, .. } if *s == source && *t == target && *p == payload)));
     assert_eq!(router.capture(), None);
     assert!(router.drag_session().is_none());
@@ -384,11 +384,11 @@ fn drag_session_cancels_when_released_over_no_accepting_drop_target() {
     let mut router = EventRouter::new("main");
     router.set_drag_payload(source, DragPayload::new());
 
-    router.dispatch(&mut tree, root, &UiEvent::PointerDown { x: 5.0, y: 5.0, button: PointerButton::Primary });
-    router.dispatch(&mut tree, root, &UiEvent::PointerMove { x: 190.0, y: 190.0 });
+    router.dispatch(&mut tree, root, &UiEvent::PointerDown { x: 5.0, y: 5.0, button: PointerButton::Primary, modifiers: Default::default() });
+    router.dispatch(&mut tree, root, &UiEvent::PointerMove { x: 190.0, y: 190.0, modifiers: Default::default() });
     assert_eq!(router.capture(), Some((source, CaptureKind::Drag)));
 
-    let commands = router.dispatch(&mut tree, root, &UiEvent::PointerUp { x: 190.0, y: 190.0, button: PointerButton::Primary });
+    let commands = router.dispatch(&mut tree, root, &UiEvent::PointerUp { x: 190.0, y: 190.0, button: PointerButton::Primary, modifiers: Default::default() });
     assert!(commands.iter().any(|cmd| matches!(cmd, UiCommand::DropCancelled { source: s, .. } if *s == source)));
 }
 
@@ -404,8 +404,8 @@ fn a_drop_targets_accept_predicate_can_reject_the_active_payload() {
     router.set_drag_payload(source, DragPayload::from([("application/x-semio-tree-section-reorder".to_string(), "x".to_string())]));
     router.set_drop_accept(target, |payload| payload.contains_key("application/x-semio-catalogue-item"));
 
-    router.dispatch(&mut tree, root, &UiEvent::PointerDown { x: 5.0, y: 5.0, button: PointerButton::Primary });
-    router.dispatch(&mut tree, root, &UiEvent::PointerMove { x: 120.0, y: 120.0 });
+    router.dispatch(&mut tree, root, &UiEvent::PointerDown { x: 5.0, y: 5.0, button: PointerButton::Primary, modifiers: Default::default() });
+    router.dispatch(&mut tree, root, &UiEvent::PointerMove { x: 120.0, y: 120.0, modifiers: Default::default() });
 
     assert_eq!(router.drag_session().and_then(|drag| drag.drop_target), None, "the predicate must reject this payload's mime key");
 }
@@ -420,10 +420,10 @@ fn scroll_routes_to_the_nearest_scrollable_ancestor_and_clamps_at_zero() {
     leaf(&mut tree, Some(root), 1, text_ui("content"), (10.0, 10.0, 20.0, 20.0));
     let mut router = EventRouter::new("main");
 
-    router.dispatch(&mut tree, root, &UiEvent::Scroll { x: 15.0, y: 15.0, delta_x: 0.0, delta_y: 30.0 });
+    router.dispatch(&mut tree, root, &UiEvent::Scroll { x: 15.0, y: 15.0, delta_x: 0.0, delta_y: 30.0, modifiers: Default::default() });
     assert_eq!(tree.node(root).unwrap().state.scroll_offset, (0.0, 30.0));
 
-    router.dispatch(&mut tree, root, &UiEvent::Scroll { x: 15.0, y: 15.0, delta_x: 0.0, delta_y: -100.0 });
+    router.dispatch(&mut tree, root, &UiEvent::Scroll { x: 15.0, y: 15.0, delta_x: 0.0, delta_y: -100.0, modifiers: Default::default() });
     assert_eq!(tree.node(root).unwrap().state.scroll_offset, (0.0, 0.0), "scroll offset must clamp at zero, not go negative");
 }
 
@@ -438,13 +438,13 @@ fn scroll_thumb_capture_drags_the_scrollable_offset_along_its_registered_axis() 
     let mut router = EventRouter::new("main");
     router.register_scroll_thumb(thumb, root, ScrollAxis::Vertical);
 
-    router.dispatch(&mut tree, root, &UiEvent::PointerDown { x: 195.0, y: 5.0, button: PointerButton::Primary });
+    router.dispatch(&mut tree, root, &UiEvent::PointerDown { x: 195.0, y: 5.0, button: PointerButton::Primary, modifiers: Default::default() });
     assert_eq!(router.capture(), Some((root, CaptureKind::ScrollThumb(ScrollAxis::Vertical))));
 
-    router.dispatch(&mut tree, root, &UiEvent::PointerMove { x: 195.0, y: 25.0 });
+    router.dispatch(&mut tree, root, &UiEvent::PointerMove { x: 195.0, y: 25.0, modifiers: Default::default() });
     assert_eq!(tree.node(root).unwrap().state.scroll_offset, (0.0, 20.0));
 
-    router.dispatch(&mut tree, root, &UiEvent::PointerUp { x: 195.0, y: 25.0, button: PointerButton::Primary });
+    router.dispatch(&mut tree, root, &UiEvent::PointerUp { x: 195.0, y: 25.0, button: PointerButton::Primary, modifiers: Default::default() });
     assert_eq!(router.capture(), None);
 }
 //#endregion 🔖️ScrollTests
@@ -457,11 +457,11 @@ fn focusing_an_input_seeds_edit_state_from_its_value_and_blur_clears_it() {
     let input = leaf(&mut tree, Some(root), 1, input_ui("name", "hello"), (0.0, 0.0, 100.0, 20.0));
     let mut router = EventRouter::new("main");
 
-    router.dispatch(&mut tree, root, &UiEvent::PointerDown { x: 10.0, y: 10.0, button: PointerButton::Primary });
+    router.dispatch(&mut tree, root, &UiEvent::PointerDown { x: 10.0, y: 10.0, button: PointerButton::Primary, modifiers: Default::default() });
     assert_eq!(tree.node(input).unwrap().state.edit, Some(EditState { text: "hello".into(), caret: 5, anchor: 5, composition: None, scroll_x: 0.0 }));
 
     // clicking empty space blurs.
-    router.dispatch(&mut tree, root, &UiEvent::PointerDown { x: 190.0, y: 190.0, button: PointerButton::Primary });
+    router.dispatch(&mut tree, root, &UiEvent::PointerDown { x: 190.0, y: 190.0, button: PointerButton::Primary, modifiers: Default::default() });
     assert_eq!(tree.node(input).unwrap().state.edit, None, "blur must relinquish the buffer so the declarative value governs again");
 }
 
@@ -471,7 +471,7 @@ fn arrow_keys_move_the_caret_and_backspace_deletes_the_previous_char() {
     let root = leaf(&mut tree, None, 0, stack_ui(), (0.0, 0.0, 200.0, 200.0));
     leaf(&mut tree, Some(root), 1, input_ui("name", "abc"), (0.0, 0.0, 100.0, 20.0));
     let mut router = EventRouter::new("main");
-    router.dispatch(&mut tree, root, &UiEvent::PointerDown { x: 10.0, y: 10.0, button: PointerButton::Primary });
+    router.dispatch(&mut tree, root, &UiEvent::PointerDown { x: 10.0, y: 10.0, button: PointerButton::Primary, modifiers: Default::default() });
     let input = router.focus.focused.unwrap();
 
     router.dispatch(&mut tree, root, &UiEvent::KeyDown { key: "ArrowLeft".into(), modifiers: EventModifiers::default() });
@@ -493,7 +493,7 @@ fn character_insertion_replaces_the_selection() {
     let root = leaf(&mut tree, None, 0, stack_ui(), (0.0, 0.0, 200.0, 200.0));
     leaf(&mut tree, Some(root), 1, input_ui("name", "abc"), (0.0, 0.0, 100.0, 20.0));
     let mut router = EventRouter::new("main");
-    router.dispatch(&mut tree, root, &UiEvent::PointerDown { x: 10.0, y: 10.0, button: PointerButton::Primary });
+    router.dispatch(&mut tree, root, &UiEvent::PointerDown { x: 10.0, y: 10.0, button: PointerButton::Primary, modifiers: Default::default() });
     let input = router.focus.focused.unwrap();
 
     router.dispatch(&mut tree, root, &UiEvent::KeyDown { key: "Home".into(), modifiers: EventModifiers::default() });
@@ -511,7 +511,7 @@ fn copy_over_a_selection_emits_a_clipboard_command_without_mutating_the_buffer()
     let root = leaf(&mut tree, None, 0, stack_ui(), (0.0, 0.0, 200.0, 200.0));
     leaf(&mut tree, Some(root), 1, input_ui("name", "hello"), (0.0, 0.0, 100.0, 20.0));
     let mut router = EventRouter::new("main");
-    router.dispatch(&mut tree, root, &UiEvent::PointerDown { x: 10.0, y: 10.0, button: PointerButton::Primary });
+    router.dispatch(&mut tree, root, &UiEvent::PointerDown { x: 10.0, y: 10.0, button: PointerButton::Primary, modifiers: Default::default() });
     let input = router.focus.focused.unwrap();
 
     router.dispatch(&mut tree, root, &UiEvent::KeyDown { key: "Home".into(), modifiers: EventModifiers::default() });
@@ -528,7 +528,7 @@ fn ime_commit_inserts_the_composed_text_and_clears_composition() {
     let root = leaf(&mut tree, None, 0, stack_ui(), (0.0, 0.0, 200.0, 200.0));
     leaf(&mut tree, Some(root), 1, input_ui("name", ""), (0.0, 0.0, 100.0, 20.0));
     let mut router = EventRouter::new("main");
-    router.dispatch(&mut tree, root, &UiEvent::PointerDown { x: 10.0, y: 10.0, button: PointerButton::Primary });
+    router.dispatch(&mut tree, root, &UiEvent::PointerDown { x: 10.0, y: 10.0, button: PointerButton::Primary, modifiers: Default::default() });
     let input = router.focus.focused.unwrap();
 
     router.dispatch(&mut tree, root, &UiEvent::Ime(ImeEvent::Start));
@@ -551,12 +551,12 @@ fn hovering_a_leaf_marks_its_whole_ancestor_chain_hovered_and_clearing_hover_cle
     let label = leaf(&mut tree, Some(row), 1, text_ui("item"), (0.0, 0.0, 50.0, 20.0));
     let mut router = EventRouter::new("main");
 
-    router.dispatch(&mut tree, root, &UiEvent::PointerMove { x: 10.0, y: 10.0 });
+    router.dispatch(&mut tree, root, &UiEvent::PointerMove { x: 10.0, y: 10.0, modifiers: Default::default() });
     assert!(tree.node(label).unwrap().flags.contains(NodeFlags::HOVERED));
     assert!(tree.node(row).unwrap().flags.contains(NodeFlags::HOVERED), "an ancestor Stack row must observe hover too, for paint's reveal-on-hover");
     assert!(tree.node(root).unwrap().flags.contains(NodeFlags::HOVERED));
 
-    router.dispatch(&mut tree, root, &UiEvent::PointerMove { x: 500.0, y: 500.0 });
+    router.dispatch(&mut tree, root, &UiEvent::PointerMove { x: 500.0, y: 500.0, modifiers: Default::default() });
     assert!(!tree.node(label).unwrap().flags.contains(NodeFlags::HOVERED));
     assert!(!tree.node(row).unwrap().flags.contains(NodeFlags::HOVERED));
     assert!(!tree.node(root).unwrap().flags.contains(NodeFlags::HOVERED));
@@ -576,13 +576,13 @@ fn clicking_a_select_opens_its_popup_and_clicking_again_closes_it() {
     let select = leaf(&mut tree, Some(root), 1, select_ui("sel", "a"), (0.0, 0.0, 100.0, 30.0));
     let mut router = EventRouter::new("main");
 
-    router.dispatch(&mut tree, root, &UiEvent::PointerDown { x: 10.0, y: 10.0, button: PointerButton::Primary });
-    router.dispatch(&mut tree, root, &UiEvent::PointerUp { x: 10.0, y: 10.0, button: PointerButton::Primary });
+    router.dispatch(&mut tree, root, &UiEvent::PointerDown { x: 10.0, y: 10.0, button: PointerButton::Primary, modifiers: Default::default() });
+    router.dispatch(&mut tree, root, &UiEvent::PointerUp { x: 10.0, y: 10.0, button: PointerButton::Primary, modifiers: Default::default() });
     assert!(tree.node(select).unwrap().state.open, "clicking a closed select should open its popup");
     assert!(tree.node(select).unwrap().flags.contains(NodeFlags::OVERLAY), "an open select's popup subtree should win hit-test priority over its siblings");
 
-    router.dispatch(&mut tree, root, &UiEvent::PointerDown { x: 10.0, y: 10.0, button: PointerButton::Primary });
-    router.dispatch(&mut tree, root, &UiEvent::PointerUp { x: 10.0, y: 10.0, button: PointerButton::Primary });
+    router.dispatch(&mut tree, root, &UiEvent::PointerDown { x: 10.0, y: 10.0, button: PointerButton::Primary, modifiers: Default::default() });
+    router.dispatch(&mut tree, root, &UiEvent::PointerUp { x: 10.0, y: 10.0, button: PointerButton::Primary, modifiers: Default::default() });
     assert!(!tree.node(select).unwrap().state.open, "clicking an open select's trigger again should close its popup");
     assert!(!tree.node(select).unwrap().flags.contains(NodeFlags::OVERLAY));
 }
@@ -593,11 +593,11 @@ fn a_press_outside_an_open_selects_popup_closes_it_and_swallows_the_press() {
     let root = leaf(&mut tree, None, 0, stack_ui(), (0.0, 0.0, 200.0, 200.0));
     let select = leaf(&mut tree, Some(root), 1, select_ui("sel", "a"), (0.0, 0.0, 100.0, 30.0));
     let mut router = EventRouter::new("main");
-    router.dispatch(&mut tree, root, &UiEvent::PointerDown { x: 10.0, y: 10.0, button: PointerButton::Primary });
-    router.dispatch(&mut tree, root, &UiEvent::PointerUp { x: 10.0, y: 10.0, button: PointerButton::Primary });
+    router.dispatch(&mut tree, root, &UiEvent::PointerDown { x: 10.0, y: 10.0, button: PointerButton::Primary, modifiers: Default::default() });
+    router.dispatch(&mut tree, root, &UiEvent::PointerUp { x: 10.0, y: 10.0, button: PointerButton::Primary, modifiers: Default::default() });
     assert!(tree.node(select).unwrap().state.open);
 
-    let commands = router.dispatch(&mut tree, root, &UiEvent::PointerDown { x: 190.0, y: 190.0, button: PointerButton::Primary });
+    let commands = router.dispatch(&mut tree, root, &UiEvent::PointerDown { x: 190.0, y: 190.0, button: PointerButton::Primary, modifiers: Default::default() });
 
     assert!(!tree.node(select).unwrap().state.open, "a press well outside the select and its popup should close it");
     assert!(commands.iter().any(|cmd| matches!(cmd, UiCommand::OverlayClosed { kind: OverlayKind::SelectPopup, .. })));
@@ -610,12 +610,12 @@ fn picking_a_selects_item_row_fires_its_action_and_closes_the_popup() {
     let select = leaf(&mut tree, Some(root), 1, select_ui("sel", "a"), (0.0, 0.0, 100.0, 30.0));
     let row_b = leaf(&mut tree, Some(select), 1, button_ui("b"), (0.0, 32.0, 100.0, 24.0));
     let mut router = EventRouter::new("main");
-    router.dispatch(&mut tree, root, &UiEvent::PointerDown { x: 10.0, y: 10.0, button: PointerButton::Primary });
-    router.dispatch(&mut tree, root, &UiEvent::PointerUp { x: 10.0, y: 10.0, button: PointerButton::Primary });
+    router.dispatch(&mut tree, root, &UiEvent::PointerDown { x: 10.0, y: 10.0, button: PointerButton::Primary, modifiers: Default::default() });
+    router.dispatch(&mut tree, root, &UiEvent::PointerUp { x: 10.0, y: 10.0, button: PointerButton::Primary, modifiers: Default::default() });
     assert!(tree.node(select).unwrap().state.open);
 
-    router.dispatch(&mut tree, root, &UiEvent::PointerDown { x: 10.0, y: 40.0, button: PointerButton::Primary });
-    let commands = router.dispatch(&mut tree, root, &UiEvent::PointerUp { x: 10.0, y: 40.0, button: PointerButton::Primary });
+    router.dispatch(&mut tree, root, &UiEvent::PointerDown { x: 10.0, y: 40.0, button: PointerButton::Primary, modifiers: Default::default() });
+    let commands = router.dispatch(&mut tree, root, &UiEvent::PointerUp { x: 10.0, y: 40.0, button: PointerButton::Primary, modifiers: Default::default() });
 
     let expected = action();
     assert!(commands.iter().any(|cmd| matches!(cmd, UiCommand::App { intent, .. } if intent.descriptor().action == expected.action)), "picking a row should fire its (merged) action");
@@ -634,8 +634,8 @@ fn clicking_an_activatable_stack_fires_its_activate_action() {
     let _card = leaf(&mut tree, Some(root), 1, activatable_stack_ui(action()), (0.0, 0.0, 100.0, 40.0));
     let mut router = EventRouter::new("main");
 
-    router.dispatch(&mut tree, root, &UiEvent::PointerDown { x: 10.0, y: 10.0, button: PointerButton::Primary });
-    let commands = router.dispatch(&mut tree, root, &UiEvent::PointerUp { x: 10.0, y: 10.0, button: PointerButton::Primary });
+    router.dispatch(&mut tree, root, &UiEvent::PointerDown { x: 10.0, y: 10.0, button: PointerButton::Primary, modifiers: Default::default() });
+    let commands = router.dispatch(&mut tree, root, &UiEvent::PointerUp { x: 10.0, y: 10.0, button: PointerButton::Primary, modifiers: Default::default() });
 
     let expected = action();
     assert!(commands.iter().any(|cmd| matches!(cmd, UiCommand::App { intent, .. } if intent.descriptor() == expected)), "clicking an activatable Stack should fire its `activate` action");
@@ -665,10 +665,10 @@ fn hovering_a_tree_row_no_longer_fires_a_per_item_action() {
     insert_tree_row(&mut tree, tree_id, "row1", (0.0, 0.0, 200.0, 24.0));
     let mut router = EventRouter::new("main");
 
-    let entered = router.dispatch(&mut tree, root, &UiEvent::PointerMove { x: 10.0, y: 10.0 });
+    let entered = router.dispatch(&mut tree, root, &UiEvent::PointerMove { x: 10.0, y: 10.0, modifiers: Default::default() });
     assert!(entered.iter().all(|cmd| !matches!(cmd, UiCommand::App { .. })), "hovering a plain tree row must never fire a per-item action anymore");
 
-    let left = router.dispatch(&mut tree, root, &UiEvent::PointerMove { x: 190.0, y: 190.0 });
+    let left = router.dispatch(&mut tree, root, &UiEvent::PointerMove { x: 190.0, y: 190.0, modifiers: Default::default() });
     assert!(left.iter().all(|cmd| !matches!(cmd, UiCommand::App { .. })), "leaving a plain tree row must never fire a per-item action anymore");
 }
 
@@ -689,10 +689,10 @@ fn pressing_a_draggable_tree_row_then_moving_past_threshold_promotes_it_to_a_dra
     tree.node_mut(row_id).unwrap().flags.set(NodeFlags::DRAG_SOURCE, true);
     let mut router = EventRouter::new("main");
 
-    router.dispatch(&mut tree, root, &UiEvent::PointerDown { x: 10.0, y: 10.0, button: PointerButton::Primary });
+    router.dispatch(&mut tree, root, &UiEvent::PointerDown { x: 10.0, y: 10.0, button: PointerButton::Primary, modifiers: Default::default() });
     assert_eq!(router.capture(), Some((row_id, CaptureKind::Press)), "the row must be a real hit-test target once DRAG_SOURCE-flagged");
 
-    router.dispatch(&mut tree, root, &UiEvent::PointerMove { x: 30.0, y: 10.0 });
+    router.dispatch(&mut tree, root, &UiEvent::PointerMove { x: 30.0, y: 10.0, modifiers: Default::default() });
     let drag = router.drag_session().expect("moving past the promote threshold should start a DragSession for a draggable row");
     assert_eq!(drag.source, row_id);
     assert_eq!(drag.payload, payload);
@@ -737,7 +737,7 @@ fn pointer_down_on_a_component_scene_leaf_emits_a_scene_command() {
     let scene_id = leaf(&mut tree, Some(root), 1, component_scene_ui("s1", SurfaceKind::Canvas2d), (10.0, 10.0, 100.0, 80.0));
     let mut router = EventRouter::new("main");
 
-    let commands = router.dispatch(&mut tree, root, &UiEvent::PointerDown { x: 20.0, y: 20.0, button: PointerButton::Secondary });
+    let commands = router.dispatch(&mut tree, root, &UiEvent::PointerDown { x: 20.0, y: 20.0, button: PointerButton::Secondary, modifiers: Default::default() });
 
     let scene_cmd = commands.iter().find_map(|cmd| match cmd {
         UiCommand::Scene { window_id, node, surface_id, kind, rect, event } => Some((window_id, node, surface_id, kind, rect, event)),
@@ -749,7 +749,7 @@ fn pointer_down_on_a_component_scene_leaf_emits_a_scene_command() {
     assert_eq!(surface_id, "s1");
     assert_eq!(*kind, SurfaceKind::Canvas2d);
     assert_eq!(*rect, Rect::new(10.0, 10.0, 100.0, 80.0), "rect should be the leaf's own absolute layout rect");
-    assert_eq!(*event, UiEvent::PointerDown { x: 20.0, y: 20.0, button: PointerButton::Secondary }, "the real event should be carried through verbatim, including its button");
+    assert_eq!(*event, UiEvent::PointerDown { x: 20.0, y: 20.0, button: PointerButton::Secondary, modifiers: Default::default() }, "the real event should be carried through verbatim, including its button");
 }
 
 #[test]
@@ -759,7 +759,7 @@ fn pointer_down_outside_any_component_scene_leaf_emits_no_scene_command() {
     leaf(&mut tree, Some(root), 1, component_scene_ui("s1", SurfaceKind::Canvas2d), (10.0, 10.0, 100.0, 80.0));
     let mut router = EventRouter::new("main");
 
-    let commands = router.dispatch(&mut tree, root, &UiEvent::PointerDown { x: 150.0, y: 150.0, button: PointerButton::Primary });
+    let commands = router.dispatch(&mut tree, root, &UiEvent::PointerDown { x: 150.0, y: 150.0, button: PointerButton::Primary, modifiers: Default::default() });
 
     assert!(!commands.iter().any(|cmd| matches!(cmd, UiCommand::Scene { .. })), "a press outside the scene's own rect should not emit UiCommand::Scene");
 }
@@ -771,7 +771,7 @@ fn pointer_down_on_a_plain_button_emits_no_scene_command() {
     leaf(&mut tree, Some(root), 1, button_ui("b1"), (0.0, 0.0, 50.0, 20.0));
     let mut router = EventRouter::new("main");
 
-    let commands = router.dispatch(&mut tree, root, &UiEvent::PointerDown { x: 10.0, y: 10.0, button: PointerButton::Primary });
+    let commands = router.dispatch(&mut tree, root, &UiEvent::PointerDown { x: 10.0, y: 10.0, button: PointerButton::Primary, modifiers: Default::default() });
 
     assert!(!commands.iter().any(|cmd| matches!(cmd, UiCommand::Scene { .. })), "a plain widget leaf should never emit UiCommand::Scene");
 }
@@ -783,7 +783,7 @@ fn pointer_move_over_a_component_scene_leaf_emits_a_scene_command() {
     leaf(&mut tree, Some(root), 1, component_scene_ui("s1", SurfaceKind::InkCanvas), (0.0, 0.0, 200.0, 200.0));
     let mut router = EventRouter::new("main");
 
-    let commands = router.dispatch(&mut tree, root, &UiEvent::PointerMove { x: 50.0, y: 50.0 });
+    let commands = router.dispatch(&mut tree, root, &UiEvent::PointerMove { x: 50.0, y: 50.0, modifiers: Default::default() });
 
     assert!(commands.iter().any(|cmd| matches!(cmd, UiCommand::Scene { kind: SurfaceKind::InkCanvas, .. })), "moving over a ComponentScene leaf should emit UiCommand::Scene too, not just PointerDown/Up");
 }
@@ -795,7 +795,7 @@ fn scroll_over_a_component_scene_leaf_emits_a_scene_command_and_still_routes_con
     leaf(&mut tree, Some(root), 1, component_scene_ui("s1", SurfaceKind::Table), (0.0, 0.0, 200.0, 200.0));
     let mut router = EventRouter::new("main");
 
-    let commands = router.dispatch(&mut tree, root, &UiEvent::Scroll { x: 50.0, y: 50.0, delta_x: 0.0, delta_y: 12.0 });
+    let commands = router.dispatch(&mut tree, root, &UiEvent::Scroll { x: 50.0, y: 50.0, delta_x: 0.0, delta_y: 12.0, modifiers: Default::default() });
 
     assert!(commands.iter().any(|cmd| matches!(cmd, UiCommand::Scene { kind: SurfaceKind::Table, event: UiEvent::Scroll { .. }, .. })), "wheel input over a ComponentScene leaf should emit UiCommand::Scene carrying the Scroll event");
 }
@@ -809,7 +809,7 @@ fn a_component_scene_nested_under_a_container_resolves_its_absolute_rect() {
     let mut router = EventRouter::new("main");
 
     // Absolute position is (20+5, 30+5) = (25, 35); a point inside that rect must hit-test to the scene.
-    let commands = router.dispatch(&mut tree, root, &UiEvent::PointerDown { x: 40.0, y: 50.0, button: PointerButton::Primary });
+    let commands = router.dispatch(&mut tree, root, &UiEvent::PointerDown { x: 40.0, y: 50.0, button: PointerButton::Primary, modifiers: Default::default() });
 
     let rect = commands.iter().find_map(|cmd| match cmd {
         UiCommand::Scene { node, rect, .. } if *node == scene_id => Some(*rect),
@@ -891,7 +891,7 @@ fn a_hover_reveals_a_tooltip_only_after_the_react_dwell_elapses() {
     let control = leaf(&mut tree, Some(root), 1, button_ui("save"), (10.0, 10.0, 60.0, 20.0));
     let mut router = EventRouter::new("main");
 
-    router.dispatch(&mut tree, root, &UiEvent::PointerMove { x: 20.0, y: 15.0 });
+    router.dispatch(&mut tree, root, &UiEvent::PointerMove { x: 20.0, y: 15.0, modifiers: Default::default() });
     assert_eq!(router.advance_clock(&mut tree, TOOLTIP_DWELL_SECONDS - 0.01).0, TooltipStep::Idle, "nothing reveals before the dwell");
     assert_eq!(router.advance_clock(&mut tree, TOOLTIP_DWELL_SECONDS).0, TooltipStep::Reveal(control));
     assert_eq!(router.advance_clock(&mut tree, TOOLTIP_DWELL_SECONDS + 1.0).0, TooltipStep::Idle, "one reveal per hover, not one per frame");
@@ -905,9 +905,9 @@ fn moving_to_another_control_restarts_the_dwell() {
     let second = leaf(&mut tree, Some(root), 2, button_ui("b"), (60.0, 0.0, 50.0, 20.0));
     let mut router = EventRouter::new("main");
 
-    router.dispatch(&mut tree, root, &UiEvent::PointerMove { x: 10.0, y: 10.0 });
+    router.dispatch(&mut tree, root, &UiEvent::PointerMove { x: 10.0, y: 10.0, modifiers: Default::default() });
     assert_eq!(router.advance_clock(&mut tree, TOOLTIP_DWELL_SECONDS).0, TooltipStep::Reveal(first));
-    router.dispatch(&mut tree, root, &UiEvent::PointerMove { x: 70.0, y: 10.0 });
+    router.dispatch(&mut tree, root, &UiEvent::PointerMove { x: 70.0, y: 10.0, modifiers: Default::default() });
     assert_eq!(router.advance_clock(&mut tree, TOOLTIP_DWELL_SECONDS + 0.1).0, TooltipStep::Idle, "the second control's own dwell restarts from the move");
     assert_eq!(router.advance_clock(&mut tree, TOOLTIP_DWELL_SECONDS * 2.0).0, TooltipStep::Reveal(second));
 }
@@ -921,7 +921,7 @@ fn an_open_tooltip_dismisses_only_after_the_hover_out_delay() {
     let mut router = EventRouter::new("main");
     router.open_overlay(&mut tree, tip, OverlayKind::Tooltip, OverlayAnchor::Node(control));
 
-    router.dispatch(&mut tree, root, &UiEvent::PointerMove { x: 150.0, y: 150.0 });
+    router.dispatch(&mut tree, root, &UiEvent::PointerMove { x: 150.0, y: 150.0, modifiers: Default::default() });
     assert!(router.topmost_overlay().is_some(), "hover-out arms the countdown instead of closing immediately");
     assert_eq!(router.advance_clock(&mut tree, TOOLTIP_HOVER_OUT_SECONDS - 0.05).0, TooltipStep::Idle);
     let (step, commands) = router.advance_clock(&mut tree, TOOLTIP_HOVER_OUT_SECONDS);
@@ -939,8 +939,8 @@ fn returning_to_the_anchor_disarms_the_hover_out_countdown() {
     let mut router = EventRouter::new("main");
     router.open_overlay(&mut tree, tip, OverlayKind::Tooltip, OverlayAnchor::Node(control));
 
-    router.dispatch(&mut tree, root, &UiEvent::PointerMove { x: 150.0, y: 150.0 });
-    router.dispatch(&mut tree, root, &UiEvent::PointerMove { x: 10.0, y: 10.0 });
+    router.dispatch(&mut tree, root, &UiEvent::PointerMove { x: 150.0, y: 150.0, modifiers: Default::default() });
+    router.dispatch(&mut tree, root, &UiEvent::PointerMove { x: 10.0, y: 10.0, modifiers: Default::default() });
     assert_eq!(router.advance_clock(&mut tree, TOOLTIP_HOVER_OUT_SECONDS * 4.0).0, TooltipStep::Idle);
     assert!(router.topmost_overlay().is_some(), "the pointer came back, so the tooltip stays open");
 }
@@ -1189,7 +1189,7 @@ async fn a_pointer_press_focuses_without_the_keyboard_ring_and_a_tab_move_restor
     leaf(&mut tree, Some(root), 2, button_ui("b"), (0.0, 20.0, 50.0, 20.0));
     let mut router = EventRouter::new("w");
 
-    router.dispatch(&mut tree, root, &UiEvent::PointerDown { x: 5.0, y: 5.0, button: PointerButton::Primary });
+    router.dispatch(&mut tree, root, &UiEvent::PointerDown { x: 5.0, y: 5.0, button: PointerButton::Primary, modifiers: Default::default() });
     assert!(!router.focus_visible(), "a press clears the modality latch");
     let flags = tree.node(pressed).expect("focused node is live").flags;
     assert!(flags.contains(NodeFlags::FOCUSED), "the press still focuses the control");
@@ -1203,3 +1203,114 @@ async fn a_pointer_press_focuses_without_the_keyboard_ring_and_a_tab_move_restor
     assert!(!tree.node(pressed).expect("blurred node is live").flags.contains(NodeFlags::FOCUS_VISIBLE), "blurring clears the bit");
 }
 //#endregion ⌨️FocusVisibleTests
+
+//#region ✍️SearchLineMomentTests
+
+/// ✍️ One window-search line — React's `SearchInput` shape: `onChange` per keystroke plus the
+/// `onSubmit`/`onAbort`/`onRepeatLast` trio, each a DISTINCT verb so a dispatched intent names which
+/// moment fired it.
+fn search_line_ui(id: &str, value: &str, repeat_last: bool) -> UiNode {
+    let verb = |name: &str| ActionDescriptor { controller_id: "ctrl".into(), action: name.into(), args: None };
+    UiNode::Input(UiInputNode {
+        id: id.into(),
+        input_kind: "text".into(),
+        value: value.into(),
+        placeholder: None,
+        commit: None,
+        min: None,
+        max: None,
+        step: None,
+        accept: None,
+        on_change: verb("engagementInput"),
+        on_submit: Some(verb("engagementSubmit")),
+        on_abort: Some(verb("engagementAbort")),
+        on_repeat_last: repeat_last.then(|| verb("engagementRepeatLast")),
+        presence: UiPresence::default(),
+        menu: None,
+    })
+}
+
+fn fired_verbs(commands: &[UiCommand]) -> Vec<(String, String)> {
+    commands.iter().filter_map(|cmd| if let UiCommand::App { intent, .. } = cmd { Some((format!("{:?}", intent.trigger), intent.action_name())) } else { None }).collect()
+}
+
+/// ✍️ **LAW: one retained line fires FOUR moments, not one.** React's window search binds
+/// `onChange` on every keystroke, `onSubmit` on Enter (with the TRIMMED line), `onAbort` on Escape and
+/// `onRepeatLast` on Space over an empty idle line — all on the SAME field
+/// (`🖱️ui/🎯️targets/⚛️react/🟦️.tsx`'s `Search`, `onKeyDown`; `applySearchSpaceAction` at `:10512`).
+///
+/// 🩸️ This target produced only `Trigger::Change`/`Trigger::Commit` from an editable node, so a
+/// command line could be EITHER a typing feed or a verb runner and never both: the os shell's search
+/// pane resolved `on_submit` into the single `on_change` slot, committed it on blur, and the program
+/// never saw a keystroke (ticket 26/09/17/WGPU-RENDERER-REACT-PARITY,
+/// `📓️w13b-actions-search-pane-bodies.md` §6 gap 4).
+#[test]
+fn a_search_line_fires_change_while_typing_and_submit_on_enter() {
+    let mut tree = UiTree::new();
+    let root = leaf(&mut tree, None, 0, stack_ui(), (0.0, 0.0, 200.0, 200.0));
+    leaf(&mut tree, Some(root), 1, search_line_ui("puzzle3d-engagement", "", false), (0.0, 0.0, 100.0, 20.0));
+    let mut router = EventRouter::new("main");
+    router.dispatch(&mut tree, root, &UiEvent::PointerDown { x: 10.0, y: 10.0, button: PointerButton::Primary, modifiers: Default::default() });
+
+    let typed = router.dispatch(&mut tree, root, &UiEvent::TextInput { text: "box ".into() });
+    assert_eq!(fired_verbs(&typed), vec![("Change".to_string(), "engagementInput".to_string())], "✍️ every keystroke feeds the program's autocomplete through `onChange`");
+
+    let entered = router.dispatch(&mut tree, root, &UiEvent::KeyDown { key: "Enter".into(), modifiers: EventModifiers::default() });
+    assert_eq!(fired_verbs(&entered), vec![("Submit".to_string(), "engagementSubmit".to_string())], "⏎️ Enter confirms through `onSubmit`, and never re-fires the change");
+    let submitted = entered
+        .iter()
+        .find_map(|cmd| if let UiCommand::App { intent, .. } = cmd { intent.payload() } else { None })
+        .expect("⏎️ the submit carries the line");
+    assert_eq!(submitted, DslValue::Object(vec![("value".into(), DslValue::String("box".into()))]), "⏎️ React submits `draft.trim()`");
+}
+
+/// ⎋️🔁️ **LAW: Escape aborts and Space repeats — and only where React routes them.** Escape
+/// dispatches `onAbort` when no overlay is open (React's `Search` closes its possibles popover first);
+/// Space over an EMPTY line dispatches `onRepeatLast`, falls back to the submit the program did bind,
+/// and types an ordinary space once the line carries text.
+#[test]
+fn a_search_line_aborts_on_escape_and_repeats_last_on_space_over_an_empty_line() {
+    let mut tree = UiTree::new();
+    let root = leaf(&mut tree, None, 0, stack_ui(), (0.0, 0.0, 200.0, 200.0));
+    let line = leaf(&mut tree, Some(root), 1, search_line_ui("puzzle3d-engagement", "", true), (0.0, 0.0, 100.0, 20.0));
+    let mut router = EventRouter::new("main");
+    router.dispatch(&mut tree, root, &UiEvent::PointerDown { x: 10.0, y: 10.0, button: PointerButton::Primary, modifiers: Default::default() });
+
+    let spaced = router.dispatch(&mut tree, root, &UiEvent::TextInput { text: " ".into() });
+    assert_eq!(fired_verbs(&spaced), vec![("RepeatLast".to_string(), "engagementRepeatLast".to_string())], "🔁️ Space over an empty idle line restarts the last engagement");
+    assert_eq!(tree.node(line).unwrap().state.edit.as_ref().map(|edit| edit.text.clone()).unwrap_or_default(), "", "🔁️ and it never types the space it consumed");
+
+    router.dispatch(&mut tree, root, &UiEvent::TextInput { text: "box".into() });
+    let spaced = router.dispatch(&mut tree, root, &UiEvent::TextInput { text: " ".into() });
+    assert!(fired_verbs(&spaced).iter().all(|(_, verb)| verb != "engagementRepeatLast"), "🔁️ a line that carries text types its space: {:?}", fired_verbs(&spaced));
+    assert_eq!(tree.node(line).unwrap().state.edit.as_ref().map(|edit| edit.text.clone()).unwrap_or_default(), "box ", "🔁️ and the space lands in the buffer");
+
+    let escaped = router.dispatch(&mut tree, root, &UiEvent::KeyDown { key: "Escape".into(), modifiers: EventModifiers::default() });
+    assert_eq!(fired_verbs(&escaped), vec![("Abort".to_string(), "engagementAbort".to_string())], "⎋️ Escape cancels the session through `onAbort`");
+
+    // ⎋️ An OPEN overlay swallows the same key, exactly as React's popover does before the abort.
+    let popup = leaf(&mut tree, Some(root), 2, stack_ui(), (10.0, 10.0, 50.0, 50.0));
+    router.open_overlay(&mut tree, popup, OverlayKind::SelectPopup, OverlayAnchor::Node(root));
+    let escaped = router.dispatch(&mut tree, root, &UiEvent::KeyDown { key: "Escape".into(), modifiers: EventModifiers::default() });
+    assert!(fired_verbs(&escaped).is_empty(), "⎋️ the first Escape only closes the popover: {:?}", fired_verbs(&escaped));
+}
+
+/// ✍️ **LAW: a line that binds none of the three keeps its old behaviour.** Every other retained
+/// input in the fleet binds `on_change` alone, so Escape must stay an overlay key and Space must stay
+/// a character — the producers above are opt-in per node, never a new global key grammar.
+#[test]
+fn an_ordinary_input_keeps_escape_and_space_to_itself() {
+    let mut tree = UiTree::new();
+    let root = leaf(&mut tree, None, 0, stack_ui(), (0.0, 0.0, 200.0, 200.0));
+    let input = leaf(&mut tree, Some(root), 1, input_ui("name", ""), (0.0, 0.0, 100.0, 20.0));
+    let mut router = EventRouter::new("main");
+    router.dispatch(&mut tree, root, &UiEvent::PointerDown { x: 10.0, y: 10.0, button: PointerButton::Primary, modifiers: Default::default() });
+
+    let spaced = router.dispatch(&mut tree, root, &UiEvent::TextInput { text: " ".into() });
+    assert_eq!(tree.node(input).unwrap().state.edit.as_ref().map(|edit| edit.text.clone()).unwrap_or_default(), " ", "✍️ an ordinary field types its space");
+    assert!(fired_verbs(&spaced).iter().all(|(trigger, _)| trigger == "Change"), "✍️ and reports it as an ordinary change: {:?}", fired_verbs(&spaced));
+
+    let escaped = router.dispatch(&mut tree, root, &UiEvent::KeyDown { key: "Escape".into(), modifiers: EventModifiers::default() });
+    assert!(fired_verbs(&escaped).is_empty(), "✍️ and dispatches nothing on Escape: {:?}", fired_verbs(&escaped));
+}
+//#endregion ✍️SearchLineMomentTests

@@ -262,3 +262,152 @@ fn a_human_turn_is_echoed_under_its_own_frame_id_and_the_view_stays_bounded() {
     assert_eq!(state.conversation.len(), AGENT_CONVERSATION_MAX_ENTRIES);
     assert_eq!(state.conversation[AGENT_CONVERSATION_MAX_ENTRIES - 1], AgentConversationEntry::UserMessage { id: format!("msg_shell-1_{AGENT_CONVERSATION_MAX_ENTRIES}"), text: format!("turn-{}", AGENT_CONVERSATION_MAX_ENTRIES - 1) });
 }
+
+//#region 🔖️DialLadder
+// 🌉️ WGPU-RENDERER-REACT-PARITY packet W15e — the socket lifecycle W1j left to a future transport.
+// `AgentBridgeDialer` is that lifecycle held apart from any socket, so React's own effect (dial →
+// hello → 20 s ping → doubling backoff capped at 30 s) is provable without a gateway.
+
+#[test]
+fn a_bridge_config_is_admitted_only_as_a_websocket_url_with_a_proof() {
+    assert!(AgentBridgeConfig::admit("ws://127.0.0.1:6300/bridge", "session.v1.selector.proof").is_ok());
+    assert!(AgentBridgeConfig::admit("wss://gateway.example/bridge", "proof").is_ok());
+    assert!(AgentBridgeConfig::admit("http://127.0.0.1:6300/bridge", "proof").is_err(), "an http url is not a socket url");
+    assert!(AgentBridgeConfig::admit("", "proof").is_err());
+    assert!(AgentBridgeConfig::admit("ws://host", "").is_err());
+    assert!(AgentBridgeConfig::admit(&format!("ws://{}", "x".repeat(AGENT_BRIDGE_FIELD_MAX_BYTES)), "proof").is_err());
+}
+
+#[test]
+fn the_admission_proof_never_reaches_a_debug_line() {
+    let config = AgentBridgeConfig::admit("ws://127.0.0.1:6300/bridge", "session.v1.secret.proof").expect("admitted");
+    let printed = format!("{config:?}");
+    assert!(!printed.contains("session.v1.secret.proof"), "the proof must never be printable: {printed}");
+    assert!(printed.contains("admission_proof_len"));
+}
+
+#[test]
+fn the_protocol_offer_is_reacts_exact_ordered_pair() {
+    let config = AgentBridgeConfig::admit("ws://127.0.0.1:6300/bridge", "session.v1.selector.proof").expect("admitted");
+    assert_eq!(bridge_protocols(&config), ["semio.mcp.bridge.v1".to_string(), "session.v1.selector.proof".to_string()]);
+    assert_eq!(bridge_protocols(&config)[0], BRIDGE_SUBPROTOCOL);
+}
+
+#[test]
+fn discovery_is_disabled_exactly_as_reacts_own_is() {
+    assert!(discover_agent_bridge_config().is_none());
+}
+
+#[test]
+fn an_unconfigured_dialer_stays_disabled_and_dials_nothing() {
+    let mut state = AgentBridgeState::default();
+    let mut dialer = AgentBridgeDialer::default();
+    assert_eq!(dialer.turn(&mut state, AgentBridgeSocketState::Absent, 0.0), AgentBridgeDialTurn::Idle);
+    assert_eq!(state.status, AgentBridgeStatus::Disabled);
+    assert!(!dialer.is_armed());
+}
+
+#[test]
+fn a_config_arms_the_ladder_and_the_first_turn_dials_with_the_exact_protocols() {
+    let mut state = AgentBridgeState::default();
+    let mut dialer = AgentBridgeDialer::default();
+    let config = AgentBridgeConfig::admit("ws://127.0.0.1:6300/bridge", "proof").expect("admitted");
+    assert!(dialer.set_config(Some(config), &mut state));
+    assert_eq!(state.status, AgentBridgeStatus::Connecting);
+    match dialer.turn(&mut state, AgentBridgeSocketState::Absent, 0.0) {
+        AgentBridgeDialTurn::Dial { url, protocols } => {
+            assert_eq!(url, "ws://127.0.0.1:6300/bridge");
+            assert_eq!(protocols, ["semio.mcp.bridge.v1".to_string(), "proof".to_string()]);
+        }
+        other => panic!("expected a dial, got {other:?}"),
+    }
+}
+
+#[test]
+fn a_connecting_socket_is_waited_on_rather_than_dialled_again() {
+    let mut state = AgentBridgeState::default();
+    let mut dialer = AgentBridgeDialer::default();
+    dialer.set_config(Some(AgentBridgeConfig::admit("ws://host/bridge", "proof").expect("admitted")), &mut state);
+    assert_eq!(dialer.turn(&mut state, AgentBridgeSocketState::Connecting, 0.0), AgentBridgeDialTurn::Idle);
+    assert_eq!(state.status, AgentBridgeStatus::Connecting);
+}
+
+#[test]
+fn an_opened_socket_announces_exactly_once_and_then_pings_on_reacts_own_cadence() {
+    let mut state = AgentBridgeState::default();
+    let mut dialer = AgentBridgeDialer::default();
+    dialer.set_config(Some(AgentBridgeConfig::admit("ws://host/bridge", "proof").expect("admitted")), &mut state);
+    assert_eq!(dialer.turn(&mut state, AgentBridgeSocketState::Open, 1_000.0), AgentBridgeDialTurn::Announce);
+    assert_eq!(dialer.turn(&mut state, AgentBridgeSocketState::Open, 1_001.0), AgentBridgeDialTurn::Idle, "announce happens once, not every turn");
+    assert_eq!(dialer.turn(&mut state, AgentBridgeSocketState::Open, 1_000.0 + PING_INTERVAL_MS - 1.0), AgentBridgeDialTurn::Idle);
+    assert_eq!(dialer.turn(&mut state, AgentBridgeSocketState::Open, 1_000.0 + PING_INTERVAL_MS), AgentBridgeDialTurn::Ping);
+    assert_eq!(dialer.turn(&mut state, AgentBridgeSocketState::Open, 1_000.0 + PING_INTERVAL_MS + 1.0), AgentBridgeDialTurn::Idle);
+    assert_eq!(dialer.turn(&mut state, AgentBridgeSocketState::Open, 1_000.0 + PING_INTERVAL_MS * 2.0), AgentBridgeDialTurn::Ping);
+}
+
+#[test]
+fn a_closed_socket_is_retired_and_its_redial_waits_the_backoff_react_computes() {
+    let mut state = AgentBridgeState::default();
+    let mut dialer = AgentBridgeDialer::default();
+    dialer.set_config(Some(AgentBridgeConfig::admit("ws://host/bridge", "proof").expect("admitted")), &mut state);
+    assert_eq!(dialer.turn(&mut state, AgentBridgeSocketState::Open, 0.0), AgentBridgeDialTurn::Announce);
+    assert_eq!(dialer.turn(&mut state, AgentBridgeSocketState::Closed, 10_000.0), AgentBridgeDialTurn::Retire);
+    assert_eq!(state.reconnect_attempt, 1);
+    // ⏱️ attempt 1 → RECONNECT_BASE_MS, the first step of `scheduleReconnect`'s own ladder.
+    assert_eq!(dialer.turn(&mut state, AgentBridgeSocketState::Absent, 10_000.0), AgentBridgeDialTurn::Wait { until_ms: 10_000.0 + RECONNECT_BASE_MS });
+    assert_eq!(state.status, AgentBridgeStatus::Reconnecting);
+    assert!(matches!(dialer.turn(&mut state, AgentBridgeSocketState::Absent, 10_000.0 + RECONNECT_BASE_MS), AgentBridgeDialTurn::Dial { .. }));
+}
+
+#[test]
+fn the_backoff_doubles_per_drop_and_saturates_where_reacts_does() {
+    let mut state = AgentBridgeState::default();
+    let mut dialer = AgentBridgeDialer::default();
+    dialer.set_config(Some(AgentBridgeConfig::admit("ws://host/bridge", "proof").expect("admitted")), &mut state);
+    let mut now = 0.0;
+    let mut delays = Vec::new();
+    for _ in 0..8 {
+        assert_eq!(dialer.turn(&mut state, AgentBridgeSocketState::Closed, now), AgentBridgeDialTurn::Retire);
+        match dialer.turn(&mut state, AgentBridgeSocketState::Absent, now) {
+            AgentBridgeDialTurn::Wait { until_ms } => delays.push(until_ms - now),
+            other => panic!("expected a wait, got {other:?}"),
+        }
+        now += RECONNECT_MAX_MS;
+        assert!(matches!(dialer.turn(&mut state, AgentBridgeSocketState::Absent, now), AgentBridgeDialTurn::Dial { .. }));
+    }
+    assert_eq!(delays[0], RECONNECT_BASE_MS);
+    assert_eq!(delays[1], RECONNECT_BASE_MS * 2.0);
+    assert_eq!(delays[2], RECONNECT_BASE_MS * 4.0);
+    assert_eq!(*delays.last().expect("a delay"), RECONNECT_MAX_MS, "the ladder saturates, it does not grow forever");
+}
+
+#[test]
+fn a_welcome_frame_after_a_reconnect_resets_the_ladder_the_way_reacts_hook_does() {
+    let mut state = AgentBridgeState::default();
+    let mut dialer = AgentBridgeDialer::default();
+    dialer.set_config(Some(AgentBridgeConfig::admit("ws://host/bridge", "proof").expect("admitted")), &mut state);
+    dialer.turn(&mut state, AgentBridgeSocketState::Closed, 0.0);
+    dialer.turn(&mut state, AgentBridgeSocketState::Closed, 0.0);
+    assert_eq!(state.reconnect_attempt, 2);
+    state.apply_frame(GatewayToShell::Welcome { bridge_version: BRIDGE_VERSION, connection: "c1".into(), principal: "agent:one".into() }, 0.0);
+    assert_eq!(state.reconnect_attempt, 0);
+    assert_eq!(state.status, AgentBridgeStatus::Open);
+}
+
+#[test]
+fn a_new_config_restarts_the_ladder_from_zero_and_clearing_it_disables_the_bridge() {
+    let mut state = AgentBridgeState::default();
+    let mut dialer = AgentBridgeDialer::default();
+    dialer.set_config(Some(AgentBridgeConfig::admit("ws://host-a/bridge", "proof-a").expect("admitted")), &mut state);
+    dialer.turn(&mut state, AgentBridgeSocketState::Closed, 0.0);
+    assert_eq!(state.reconnect_attempt, 1);
+    assert!(dialer.set_config(Some(AgentBridgeConfig::admit("ws://host-b/bridge", "proof-b").expect("admitted")), &mut state));
+    assert_eq!(state.reconnect_attempt, 0);
+    assert_eq!(state.status, AgentBridgeStatus::Connecting);
+    let same = dialer.config().cloned();
+    assert!(!dialer.set_config(same, &mut state), "an identical config is not a restart");
+    assert!(dialer.set_config(None, &mut state));
+    assert_eq!(state.status, AgentBridgeStatus::Disabled);
+    assert_eq!(dialer.turn(&mut state, AgentBridgeSocketState::Absent, 0.0), AgentBridgeDialTurn::Idle);
+}
+//#endregion 🔖️DialLadder

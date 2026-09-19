@@ -115,12 +115,12 @@ export function playgroundVitestDevStubPlugin(): OwnedBuildPlugin {
 const PLAYGROUND_PLAYWRIGHT_DEV_STUB_ID = "\0playground-playwright-dev-stub";
 
 
-const PLAYGROUND_WASM_STUB_PREFIX = "\0playground-wasm-stub/";
+export const PLAYGROUND_WASM_STUB_PREFIX = "\0playground-wasm-stub/";
 
 /** 🗂️ Vite's URL form for an absolute filesystem path outside the project root. */
 const FS_URL_PREFIX = "/@fs/";
 
-function playgroundWasmStubKey(cleanId: string): string {
+export function playgroundWasmStubKey(cleanId: string): string {
   return cleanId.replace(/\//g, "__");
 }
 
@@ -1450,7 +1450,7 @@ export function createWorkspaceViteResolveConfig(repoRoot: string, extraAliases:
 }
 
 //#region 🔖️StaticDirAssetPlugin
-function contentTypeForStaticDirAsset(filePath: string): string | undefined {
+export function contentTypeForStaticDirAsset(filePath: string): string | undefined {
   if (filePath.endsWith(".js") || filePath.endsWith(".mjs")) {
     return "text/javascript";
   }

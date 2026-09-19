@@ -1,6 +1,6 @@
 type TestSource = { readonly directory: string; readonly url: string };
 
-export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: any, source: TestSource): Promise<void> {
+export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: Pick<typeof import("../../🟦️.ts"), "KernelReturnContentFraming">, source: TestSource): Promise<void> {
   const { KernelReturnContentFraming } = dependencies;
 
   const { it, expect, vi } = vitest;
@@ -148,7 +148,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
 
 }
 
-export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: any, source: TestSource): Promise<void> {
+export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: Pick<typeof import("../../🟦️.ts"), "KernelReturnUiOperationHeader">, source: TestSource): Promise<void> {
   const { KernelReturnUiOperationHeader } = dependencies;
 
   const { it, expect, vi } = vitest;

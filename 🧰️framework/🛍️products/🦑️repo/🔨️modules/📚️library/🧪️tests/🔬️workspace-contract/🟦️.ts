@@ -12,10 +12,10 @@ import { NEO4J_GRAPH_DATABASE_NAMES, getAllNeo4jGraphExportSpecs, joinNeo4jGraph
 import { playgroundStaticSiteBuildOptions } from "../../../../../../🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🟦️.ts";
 import { newScaffoldMutationTree } from "../../🏗️authoring/🧬️mutation-tree/🟦️.ts";
 import { BundleScript, DAEMON_BUDGET_MS, ORCHESTRATOR_BUDGET_MS, PLAYGROUND_LOCKED_EXAMPLE_ENV, PLAYGROUND_PORTS, ScriptRouter, allPlaygroundReservedPorts, areaOf, budgetTimeoutHint, canReuseDevPort, capturedTestFailureDiagnostics, clearDiscoveryCache, computeWorkspaces, daemonBudgetMs, daemonBudgetOpts, defineLint, dependencyBoundaryBreachesForBundleDir, dependencyBoundaryBreachesForFile, describeDevPortOccupant, devServerUrl, devToolingEnv, diffWorkspaces, discoverBurndown, discoverOwners, discoverPackageProblems, discoverPackages, dispatchSubcommand, findRepoRoot, frameworkOsPlaygroundDevEnv, getWorkspaceRoot, gitSpawnEnv, goLevelTestArgs, isAdapterBoundaryFile, isDevPortInUse, layeringBreaches, layeringCounts, layeringReferences, loadFrameworkOsPlaygroundCatalog, loadLayeringBaseline, loadTaxonomy, nextestArtifactLocation, orchestratorBudgetMs, orchestratorBudgetOpts, parseTsImportSpecs, partitionNextestExecutionFilters, playgroundDevPort, playgroundPlayViteDefine, policyDiscoveredAllowlist, readSemioMarker, resolveCargoPackageName, resolveCargoPackageNames, resolveDevPort, resolveFrameworkOsPlaygroundPlugin, resolveWorkspaceTaxonomyAuthority, resolveWorkspaceTaxonomyAuthorityFromDirectory, runCmd, runCmdStatus, runProbe, testLevelBudgetMs, validateTaxonomy, vitestLevelArgs, wgpuDevPlayUrl, type FileLinter } from "../../📦️packages/🟦️typescript/🟦️.ts";
-import { artifactFacetPathIsDeclared, buildSemanticCensus, canonicalPrimaryFilenameForKind, createRustMutationCodecOwnershipInspector, fixedDirectoryContractIdsForPath, fixedFilenameContractIdsForPath, generatorNxPreviewCommand, inspectMutationMetadataSource, inspectRustModuleGraph, inspectRustModuleGraphFacts, inspectRustMutationAggregateSpan, inspectRustMutationMetadataFacts, inspectRustStructure, inspectRustVirtualSources, leadingEmojiIdentity, loadCatalogTaxonomy, mutationDirectLeafInlinedBehaviorFacets, pathEmojiStatuteFindings, projectCargoProviderManifest, registryCompilerInputDependencies, renderRustStructuralFactsJson, renderSemanticCensusJson, resolveCargoProviderBinding, resolveRustPathAttributes, scopedFileKindIdForSourcePath, semanticPathProjectionAuthority, taxonomyCliAttemptPreparationsProblems, taxonomyCliBackupPreparationProblems, taxonomyCliBackupWritePreparationProblems, taxonomyCliEditPreparationProblems, taxonomyCliEditWritePreparationProblems, taxonomyCliJsonWritePreparationProblems, taxonomyCliLeaseDirectoryProblems, taxonomyCliRestorePreparationProblems, validateGeneratorContractsAgainstWorkspace, type RegistryCompilerInputRole, type SemanticProjectionAuthorityNode, type Taxonomy } from "../../🔍️discovery/🟦️.ts";
+import { artifactFacetPathIsDeclared, buildSemanticCensus, canonicalPrimaryFilenameForKind, createRustMutationCodecOwnershipInspector, fixedDirectoryContractIdsForPath, fixedFilenameContractIdsForPath, generatorNxPreviewCommand, inspectMutationMetadataSource, inspectRustModuleGraph, inspectRustModuleGraphFacts, inspectRustMutationAggregateSpan, inspectRustMutationMetadataFacts, inspectRustStructure, inspectRustVirtualSources, leadingEmojiIdentity, loadCatalogTaxonomy, mutationDirectLeafInlinedBehaviorFacets, pathEmojiStatuteFindings, projectCargoProviderManifest, registryCompilerInputDependencies, renderRustStructuralFactsJson, renderSemanticCensusJson, resolveCargoProviderBinding, resolveRustPathAttributes, scopedFileKindIdForSourcePath, semanticPathProjectionAuthority, taxonomyCliAttemptPreparationsProblems, taxonomyCliBackupPreparationProblems, taxonomyCliBackupWritePreparationProblems, taxonomyCliEditPreparationProblems, taxonomyCliEditWritePreparationProblems, taxonomyCliJsonWritePreparationProblems, taxonomyCliLeaseDirectoryProblems, taxonomyCliRestorePreparationProblems, validateGeneratorContractsAgainstWorkspace, type FixedDirectoryContract, type FixedFilenameContract, type PackageSourceDisposition, type RegistryCompilerInputRole, type SemanticProjectionAuthorityNode, type Taxonomy } from "../../🔍️discovery/🟦️.ts";
 import { validateJsonSchemaSubset } from "../../🧬️schema/✅️validation/🟦️.ts";
 import { taxonomyCliArtifactPath } from "../../🧹️normalization/🎮️command-contract/🟦️.ts";
-import { applyTaxonomyPlan, artifactProjectionTail, canonicalJson, generatorInputPaths, inventoryTaxonomy, noFollowTreeDigest, opaqueTreeDigest, parseGeneratorPreviewManifest, parseTaxonomyPlan, planTaxonomy, repositoryLocalSymlinkTargetPath, taxonomyPlanDigest, taxonomyPlatformPathViolationCodes, taxonomyScopedGitPathspec, verifyTaxonomy, type OpaqueTreeDigest, type TaxonomyApplyOptions, type TaxonomyApplyResult, type TaxonomyInventory, type TaxonomyInventoryOptions, type TaxonomyPlan, type TaxonomyProgress } from "../../🧹️normalization/🟦️.ts";
+import { applyTaxonomyPlan, artifactProjectionTail, canonicalJson, generatorInputPaths, inventoryTaxonomy, loadNormalizationTaxonomy, noFollowTreeDigest, opaqueTreeDigest, parseGeneratorPreviewManifest, parseTaxonomyPlan, planTaxonomy, repositoryLocalSymlinkTargetPath, taxonomyPlanDigest, taxonomyPlatformPathViolationCodes, taxonomyScopedGitPathspec, verifyTaxonomy, type OpaqueTreeDigest, type TaxonomyApplyOptions, type TaxonomyApplyResult, type TaxonomyInventory, type TaxonomyInventoryOptions, type TaxonomyPlan, type TaxonomyProgress } from "../../🧹️normalization/🟦️.ts";
 import "../../🧹️normalization/🧪️tests/📦️package-boundary-classification/🟦️";
 import "../../🧹️normalization/🧪️tests/🚪️source-admission/🟦️";
 import { mutationTaxonomySourceIndex } from "../../🧹️normalization/🧬️mutation/📇️index/🟦️.ts";
@@ -31,6 +31,55 @@ import { ownedFilePaths, ownedFilesystemEntries, ownedPathByteSort, type OwnedFi
 import "../🔏️path-emoji-statutes/🟦️.ts";
 import "../🧾️source-file-facts/🟦️.ts";
 
+/** 🧾️ `@iarna/toml` declares every document as `AnyJson`; a TOML document is always a keyed table, and each
+ * reader below states the exact table shape it asserts against. */
+function readToml<T>(text: string): T {
+  return toml.parse(text) as unknown as T;
+}
+
+/** 🦀️ The workspace root manifest, read only for the version every member inherits. */
+interface CargoWorkspaceManifest {
+  readonly workspace: { readonly package: { readonly version: string }; readonly members: string[]; readonly dependencies: Record<string, unknown> };
+}
+
+/** 🦀️ One member manifest, read only for the identity fields the installation owner projects. */
+interface CargoMemberManifest {
+  readonly package: {
+    readonly name: string;
+    readonly metadata: { readonly component: { readonly package: string }; readonly semio: { readonly extends: string; readonly contributes: unknown } };
+  };
+  readonly lib: { readonly path: string };
+}
+
+/** 🧬️ A deeply mutable projection of one frozen contract record, for the `structuredClone`-then-mutate probes below. */
+type Mutable<T> = { -readonly [Key in keyof T]: T[Key] };
+
+/** 🧬️ The frozen taxonomy with exactly the registries these probes rewrite opened for writing; every other field
+ * keeps its declared shape, so the value stays assignable wherever a `Taxonomy` is expected. */
+type ProbeTaxonomy = Omit<Taxonomy, "fixedDirectoryContracts" | "fixedFilenameContracts" | "packageSourceDispositions" | "fixedDirectoryContractSets"> & {
+  fixedDirectoryContracts: Record<string, Mutable<FixedDirectoryContract>>;
+  fixedFilenameContracts: Record<string, Mutable<FixedFilenameContract>>;
+  packageSourceDispositions: Record<string, Mutable<PackageSourceDisposition>>;
+  fixedDirectoryContractSets: Record<string, readonly string[]>;
+};
+
+/** 🧬️ A structured deep copy is a fresh object graph, so the copy is safe to mutate even where the source type is frozen. */
+function probeClone(value: Taxonomy): ProbeTaxonomy {
+  return structuredClone(value) as ProbeTaxonomy;
+}
+
+/** 🔒️ The exact-parent admission vectors driving the fixed-directory-contract-set probes. */
+interface FixedParentCases {
+  readonly parents: Readonly<Record<string, string>>;
+  readonly accepted: { readonly kind: "fixed-directory-contract-set"; readonly fixedDirectoryContractIds: readonly string[] };
+  readonly namedSets: Readonly<Record<string, readonly string[]>>;
+  readonly namedAccepted: { readonly kind: "named-fixed-directory-contract-set"; readonly fixedDirectoryContractSetId: string };
+  readonly namedRejected: readonly unknown[];
+  readonly rejected: readonly unknown[];
+  readonly invalidLiteralBasenames: readonly string[];
+  readonly matches: readonly { readonly parent: string; readonly filename: string; readonly accepted: boolean }[];
+}
+
 describe("extension Cargo installation owner", () => {
   test("preserves the authored extension directory alongside the independent TOML identity", async () => {
     const library = await import("../../📦️packages/🟦️typescript/🟦️.ts");
@@ -39,11 +88,11 @@ describe("extension Cargo installation owner", () => {
     const fixture = JSON.parse(readFileSync(join(folder, "🔣️.json"), "utf8"));
     const validate = new Ajv({ strict: true }).compile(JSON.parse(readFileSync(join(import.meta.dir, "../../🧬️schema/📦️extension-installation-owner/🔣️.json"), "utf8")));
     expect(validate(fixture)).toBe(true);
-    const workspace = toml.parse(readFileSync(join(root, "Cargo.toml"), "utf8"));
+    const workspace = readToml<CargoWorkspaceManifest>(readFileSync(join(root, "Cargo.toml"), "utf8"));
     for (const row of fixture.cases) {
       const manifestPath = join(root, row.manifest);
       const parsed = library.parseExtensionCargoManifest(manifestPath, root);
-      const reference = toml.parse(readFileSync(manifestPath, "utf8")).package;
+      const reference = readToml<CargoMemberManifest>(readFileSync(manifestPath, "utf8")).package;
       expect(parsed.directoryName).toBe(row.directoryName);
       expect(parsed.packageName).toBe(reference.name);
       expect(parsed.version).toBe(workspace.workspace.package.version);
@@ -120,7 +169,7 @@ describe("current JCO destination authority", () => {
     expect(adapters[0].path).toBe(current.adapterPath);
     expect(adapters[0].targetPaths).toEqual([current.componentPath]);
     expect(adapters[0].content).toBe(readFileSync(join(root, current.adapterPath), "utf8"));
-    const manifest = toml.parse(readFileSync(join(root, current.cargoManifestPath), "utf8"));
+    const manifest = readToml<CargoMemberManifest>(readFileSync(join(root, current.cargoManifestPath), "utf8"));
     expect(manifest.package.name).toBe("semio-jcoprobe-guest");
     expect(join(current.packageRoot, manifest.lib.path).replaceAll("\\", "/")).toBe(current.adapterPath);
   });
@@ -131,9 +180,9 @@ describe("finite exact fixed parent scope", () => {
     const discovery = await import("../../🔍️discovery/🟦️.ts");
     const ts = await import("typescript");
     const root = findRepoRoot(import.meta.dir);
-    const vector = JSON.parse(readFileSync(join(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🧫️fixtures/📦️deployment/🔒️fixed-parent-cases.json"), "utf8"));
-    const common = { authority: "fixture compiler", reason: "exact parent fixture", configurability: "unconfigurable", verification: "finite exact fixed parent scope", expires: null };
-    const parents = Object.fromEntries(Object.entries(vector.parents).map(([id, path]) => [id, { ...common, pathPattern: path, scope: { kind: "exact-path", path } }]));
+    const vector: FixedParentCases = JSON.parse(readFileSync(join(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🧫️fixtures/📦️deployment/🔒️fixed-parent-cases.json"), "utf8"));
+    const common = { authority: "fixture compiler", reason: "exact parent fixture", configurability: "unconfigurable", verification: "finite exact fixed parent scope", expires: null } as const;
+    const parents: Readonly<Record<string, FixedDirectoryContract>> = Object.fromEntries(Object.entries(vector.parents).map(([id, path]): [string, FixedDirectoryContract] => [id, { ...common, pathPattern: path, scope: { kind: "exact-path", path } }]));
     const scopeSchema = { type: "object", additionalProperties: false, required: ["kind", "fixedDirectoryContractIds"], properties: { kind: { const: "fixed-directory-contract-set" }, fixedDirectoryContractIds: { type: "array", minItems: 1, maxItems: 256, uniqueItems: true, items: { enum: Object.keys(parents) } } } };
     const validate = new Ajv({ strict: true }).compile(scopeSchema);
     for (const candidate of [vector.accepted, ...vector.rejected]) {
@@ -150,11 +199,11 @@ describe("finite exact fixed parent scope", () => {
       expect(() => discovery.parseNamedFixedDirectoryContractSetScope(candidate, parents, vector.namedSets)).toThrow();
     }
     for (const ids of [[], ["left", "left"], ["left", "unknown"]]) expect(() => discovery.parseNamedFixedDirectoryContractSetScope(vector.namedAccepted, parents, { "fixture-compilers": ids })).toThrow();
-    const taxonomy = structuredClone(loadTaxonomy());
+    const taxonomy = probeClone(loadTaxonomy());
     Object.assign(taxonomy.fixedDirectoryContracts, parents);
-    const contract = { ...common, pathPattern: "**/wasi-io-poll.d.ts", scope: vector.accepted };
+    const contract: FixedFilenameContract = { ...common, pathPattern: "**/wasi-io-poll.d.ts", scope: vector.accepted };
     taxonomy.fixedFilenameContracts["fixture-interface"] = contract;
-    taxonomy.packageSourceDispositions["fixture-interface"] = { contractKind: "fixed", disposition: "adapter-source", validator: "package-glue", authority: "fixture", verification: "fixture" };
+    taxonomy.packageSourceDispositions["fixture-interface"] = { contractKind: "fixed", disposition: "adapter-source", validator: "package-glue", authority: "fixture", verification: "fixture" } satisfies PackageSourceDisposition;
     expect(discovery.validateTaxonomy(taxonomy)).toEqual([]);
     const source = readFileSync(join(import.meta.dir, "../../🧹️normalization/🟦️.ts"), "utf8");
     const syntax = ts.createSourceFile("🟦️.ts", source, ts.ScriptTarget.Latest, true);
@@ -536,18 +585,18 @@ describe("package language semantic handoff", () => {
   test("UI-host metadata binds canonical source inputs and exact existing Cargo ownership", async () => {
     const { parse: parseJsonc } = await import("jsonc-parser"), { win32 } = await import("node:path");
     const { semanticDirectoryKindId, semanticOwnedInputFileSnapshot } = await import("../../🔍️discovery/🟦️.ts");
-    const root = resolve(import.meta.dir, "../../../../../../.."), fixtureRoot = join(inputRoot, "🖥️ui-host-package"), captured = new Map<string, Buffer>();
+    const root = resolve(import.meta.dir, "../../../../../../.."), fixtureRoot = join(inputRoot, "🖥️ui-host-package"), captured = new Map<string, Uint8Array>();
     const read = (path: string): Buffer => {
       const row = semanticOwnedInputFileSnapshot(root, path);
       expect(row?.nodeKind, path).toBe("file");
       const bytes = row!.bytes;
       captured.set(path, bytes);
-      return bytes;
+      return Buffer.from(bytes);
     };
     const neutralPath = posix.join(relative(root, fixtureRoot).split(sep).join("/"), "🔣️.json"), expected = JSON.parse(read(neutralPath).toString("utf8"));
     const validate = new Ajv({ strict: true, allErrors: true }).compile(JSON.parse(read("🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/🤝️package-language-kind-handoff/🖥️ui-host-package/🔣️.json").toString("utf8")));
     expect(validate(expected), JSON.stringify(validate.errors)).toBe(true);
-    expect(parseJsonc(captured.get(neutralPath)!.toString("utf8"))).toEqual(expected);
+    expect(parseJsonc(Buffer.from(captured.get(neutralPath)!).toString("utf8"))).toEqual(expected);
     for (const invalid of [{ ...expected, extra: true }, { ...expected, schemaVersion: 2 }, { ...expected, cargo: { ...expected.cargo, libPath: "../../🦀️.rs" } }, { ...expected, admission: { ...expected.admission, importSpecifier: "../../📥️inputs/🎟️admission/📜️script.ts" } }, { ...expected, project: { ...expected.project, targets: { ...expected.project.targets, install: {} } } }, { ...expected, checks: [...expected.checks, { command: "check-wasip2", args: ["check", "--target", "wasm32-wasip2"] }] }]) expect(validate(invalid)).toBe(false);
     try {
       const projectPath = expected.packagePath + "/📋️project.json", projectText = read(projectPath).toString("utf8"), project = JSON.parse(projectText);
@@ -565,7 +614,7 @@ describe("package language semantic handoff", () => {
       }
       const workspaceInput = semanticOwnedInputFileSnapshot(root, "Cargo.toml");
       expect(workspaceInput?.nodeKind).toBe("file");
-      const workspaceBefore = workspaceInput!.bytes, workspace = toml.parse(workspaceBefore.toString("utf8")).workspace as { members: string[]; dependencies: Record<string, unknown> };
+      const workspaceBefore = Buffer.from(workspaceInput!.bytes), workspace = readToml<CargoWorkspaceManifest>(workspaceBefore.toString("utf8")).workspace;
       expect(Bun.TOML.parse(workspaceBefore.toString("utf8")).workspace).toEqual(workspace);
       expect(workspace.members.filter((path) => path === expected.packagePath)).toEqual([expected.packagePath]);
       expect(workspace.dependencies[expected.cargo.name]).toEqual({ path: expected.packagePath });
@@ -587,7 +636,7 @@ describe("package language semantic handoff", () => {
       expect(entry).toContain('#[path = "' + expected.abi.libRelativePath + '"]');
       read(expected.abi.sourcePath);
       for (const path of [expected.admission.scriptPath, expected.admission.fixturePath, expected.admission.schemaPath, expected.packagePath + "/📜️script.ts"]) read(path);
-      for (const path of [expected.admission.fixturePath, expected.admission.schemaPath]) expect(parseJsonc(captured.get(path)!.toString("utf8"))).toEqual(JSON.parse(captured.get(path)!.toString("utf8")));
+      for (const path of [expected.admission.fixturePath, expected.admission.schemaPath]) expect(parseJsonc(Buffer.from(captured.get(path)!).toString("utf8"))).toEqual(JSON.parse(Buffer.from(captured.get(path)!).toString("utf8")));
       for (const old of ["🧪️fixture/🔣️.json", "🧪️schema/🔣️.json"]) expect(semanticOwnedInputFileSnapshot(root, posix.join(posix.dirname(expected.admission.scriptPath), old))).toBeNull();
       const toolchainText = read("rust-toolchain.toml").toString("utf8"), toolchain = toml.parse(toolchainText);
       expect(Bun.TOML.parse(toolchainText)).toEqual(toolchain);
@@ -600,7 +649,7 @@ describe("package language semantic handoff", () => {
           expect(launch.configurations.filter((entry: { presentation?: { order?: number } }) => entry.presentation?.order === row.presentation.order)).toEqual([row]);
         }
       }
-      const workspaceAfter = semanticOwnedInputFileSnapshot(root, "Cargo.toml")!.bytes, current = toml.parse(workspaceAfter.toString("utf8")).workspace as { members: string[]; dependencies: Record<string, unknown> };
+      const workspaceAfter = Buffer.from(semanticOwnedInputFileSnapshot(root, "Cargo.toml")!.bytes), current = readToml<CargoWorkspaceManifest>(workspaceAfter.toString("utf8")).workspace;
       expect(current.members.filter((path) => path === expected.packagePath)).toEqual([expected.packagePath]);
       expect(current.dependencies[expected.cargo.name]).toEqual(workspace.dependencies[expected.cargo.name]);
       console.info("[DEBUG] UI-host scoped Cargo source identity", JSON.stringify({ pid: process.pid, before: createHash("sha256").update(workspaceBefore).digest("hex"), after: createHash("sha256").update(workspaceAfter).digest("hex"), nativeExecuted: false }));
@@ -616,7 +665,7 @@ describe("package language semantic handoff", () => {
     const root = resolve(import.meta.dir, "../../../../../../.."), expected = JSON.parse(readFileSync(join(inputRoot, "🖥️ui-host-package/🔣️.json"), "utf8")), packageRoot = join(root, expected.packagePath);
     const sourcePath = expected.packagePath + "/📜️script.ts", snapshot = semanticOwnedInputFileSnapshot(root, sourcePath);
     expect(snapshot?.nodeKind, sourcePath).toBe("file");
-    const source = snapshot!.bytes.toString("utf8"), syntax = ts.createSourceFile(sourcePath, source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
+    const source = Buffer.from(snapshot!.bytes).toString("utf8"), syntax = ts.createSourceFile(sourcePath, source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
     const inputs = [sourcePath, expected.packagePath + "/Cargo.toml", expected.admission.scriptPath, expected.admission.fixturePath, expected.admission.schemaPath];
     const before = new Map(inputs.map((path: string) => {
       const row = semanticOwnedInputFileSnapshot(root, path); expect(row?.nodeKind, path).toBe("file"); return [path, row!.bytes] as const;
@@ -784,7 +833,7 @@ describe("active ticket clean protection", () => {
 //#region 🪟️WindowsCheckoutTicketPaths
 describe("Windows checkout ticket paths", () => {
   test("rejects Windows-illegal components and keeps ticket files below the legacy path limit", { timeout: 15_000 }, async () => {
-    const { cleanIsWindowsIllegalName } = await import("../../../../../../../📜️script.ts");
+    const { cleanIsWindowsIllegalName } = await import("../../🧼️workspace-cleanup/🛡️protection/🟦️.ts");
     const root = findRepoRoot(import.meta.dir);
     const fixturePath = join(import.meta.dir, "../../🧫️fixtures/🪟️windows-checkout-paths");
     const fixture = JSON.parse(readFileSync(join(fixturePath, "🔣️.json"), "utf8")) as {
@@ -1257,7 +1306,7 @@ describe("window completeness policy", () => {
     // ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET) — mirrors the on-disk shape every other
     // fixture in this file already uses for 🏅️standards/🪆️subsets.
     const window = join(root, ownerRel, "🗿️artifacts", "🧪️artifact", "🏅️standards", "🔖️1", "🪆️subsets", "✳️any", "👁️viewer", "🎭️modes", "🧪️mode", "🪟️windows", "🧪️window");
-    const crate = { shape: "taxonomy", ownerRel, pluginId: "fixture" } as const;
+    const crate = { dir: "", libRelPath: "", role: "", shape: "taxonomy", ownerRel, pluginId: "fixture" } as const;
     try {
       mkdirSync(window, { recursive: true });
       // 🔣️ The required set is taxonomy-driven, never a literal here — adding a lane to
@@ -1298,7 +1347,7 @@ describe("window completeness policy", () => {
     // 👁️✏️ Modes now live under a subset's surface, not 🎛️apps (W3 dissolution) — see the sibling
     // window-completeness test above for the same shape rationale.
     const mode = join(root, ownerRel, "🗿️artifacts", "🧪️artifact", "🏅️standards", "🔖️1", "🪆️subsets", "✳️any", "👁️viewer", "🎭️modes", "🧪️mode");
-    const crate = { shape: "taxonomy", ownerRel, pluginId: "fixture" } as const;
+    const crate = { dir: "", libRelPath: "", role: "", shape: "taxonomy", ownerRel, pluginId: "fixture" } as const;
     try {
       mkdirSync(mode, { recursive: true });
       const required = loadTaxonomy().modeRequiredChildDirs;
@@ -2752,8 +2801,8 @@ describe("loadTaxonomy", () => {
     expect(taxonomy.artifactSchemaSpecFileKinds["🧬️schema/🔺️diff"]).toBe("json");
     expect(taxonomy.artifactSpecFileKinds["🧬️schema/📸️snapshot/💾️binary"]).toBe("protocol-semio");
     expect("🎒️pack" in taxonomy.artifactSpecFileKinds).toBe(false);
-    expect(taxonomy.windowChildDirs).toEqual(["🍱️panes", "🪀️widgets", "🪛️utilities", "🎬️actions", "🎚️options", "🎚️config", "👥️presence", "🫧️transient"]);
-    expect(taxonomy.windowRequiredChildDirs).toEqual(["🎬️actions", "🪛️utilities", "🎚️options", "🎚️config", "👥️presence", "🫧️transient"]);
+    expect(taxonomy.windowChildDirs).toEqual(["🍱️panes", "🪀️widgets", "🪛️utilities", "🎬️actions", "☑️options", "🎚️config", "👥️presence", "🫧️transient"]);
+    expect(taxonomy.windowRequiredChildDirs).toEqual(["🎬️actions", "🪛️utilities", "☑️options", "🎚️config", "👥️presence", "🫧️transient"]);
     expect(taxonomy.modeChildDirs).toEqual(["🪟️windows", "🎮️commands", "🎚️config", "👥️presence", "🫧️transient"]);
     expect(taxonomy.modeRequiredChildDirs).toEqual(["🪟️windows", "🎮️commands", "🎚️config", "👥️presence", "🫧️transient"]);
     expect(taxonomy.pluginRequiredChildDirs).toEqual(["🎮️commands"]);
@@ -2807,10 +2856,10 @@ describe("loadTaxonomy", () => {
     expect(fixedFilenameContractIdsForPath(`${nxRoot}/tsconfig.json`, taxonomy, { siblingFixedFilenameContractIds: ["nx-project-manifest"] })).toEqual(["nx-owned-typescript-config"]);
     expect(fixedFilenameContractIdsForPath(`${nxRoot}/package.json`, taxonomy)).toEqual([]);
     expect(fixedFilenameContractIdsForPath(".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️05/☀️15/BOARD-REACT-RECONCILER/_tmp/package.json", taxonomy)).toEqual([]);
-    const broadCargo = structuredClone(taxonomy);
+    const broadCargo = probeClone(taxonomy);
     broadCargo.fixedDirectoryContracts["cargo-target-triple-wasm32-wasip2"]!.pathPattern = "**/wasm32-wasip2";
     expect(validateTaxonomy(broadCargo).some((problem) => problem.includes("cargo-target-triple-wasm32-wasip2") && problem.includes("exact governed ticket"))).toBe(true);
-    const unscopedNx = structuredClone(taxonomy);
+    const unscopedNx = probeClone(taxonomy);
     unscopedNx.fixedFilenameContracts["nx-owned-node-package-manifest"]!.scope = { kind: "path-pattern" };
     expect(validateTaxonomy(unscopedNx).some((problem) => problem.includes("nx-owned-node-package-manifest") && problem.includes("adjacent exact Nx"))).toBe(true);
   });
@@ -2983,7 +3032,7 @@ describe("loadTaxonomy", () => {
     mkdirSync(join(sandbox, "📤️output"), { recursive: true });
     writeFileSync(join(sandbox, "🌱️source/🟦️.ts"), "neutral input\n");
     const contract = { ownership: "owned" as const, ownerPath: "owner", target: "owner:generate", previewTarget: "owner:preview-generated", inputPatterns: ["authority.json"], outputRoots: [{ path: "📤️output", inclusion: "ignored" as const }], compilerInputManifest: { kind: "compiler-input-manifest-v1" as const, manifestOutputPath: manifestPath, manifestSchemaPath: "authority.json", staticAuthorityPath: "authority.json", maxFiles: 2 }, reason: "neutral" };
-    const taxonomy = { ...loadTaxonomy(), exclusions: [], schema: { ...loadTaxonomy().schema, generatorContracts: { neutral: contract } } };
+    const taxonomy = loadNormalizationTaxonomy({ repoRoot: findRepoRoot(import.meta.dir) });
     writeFileSync(join(sandbox, "authority.json"), "{}\n");
     writeFileSync(join(sandbox, manifestPath), JSON.stringify(fixture.compilerManifest));
     expect(generatorInputPaths({ repoRoot: sandbox }, contract, taxonomy)).toEqual(["authority.json", "🌱️source/🟦️.ts"]);
@@ -3967,7 +4016,7 @@ describe("discoverBurndown", () => {
     const problems = discoverPackageProblems(root);
     expect(problems.some((problem) => problem.kind === "packaging-violation")).toBe(true);
     expect(problems.every((problem) => problem.path.length > 0 && problem.message.includes(problem.path))).toBe(true);
-    const censusProblems = buildSemanticCensus(root).problems.filter((problem) => problem.kind === "packaging-violation");
+    const censusProblems = buildSemanticCensus(root).problems.filter((problem) => problem.code === "packaging-violation");
     expect(censusProblems.length).toBe(problems.filter((problem) => problem.kind === "packaging-violation").length);
   });
 
@@ -7702,7 +7751,7 @@ describe("schema scope catalog", () => {
     const library = await import("../../🔍️discovery/🟦️.ts");
     const taxonomy = library.loadCatalogTaxonomy();
     const casesPath = join(import.meta.dir, "../../🧫️fixtures/🧬️schema-rust-entries/🔣️.json");
-    const cases = JSON.parse(readFileSync(casesPath, "utf8")) as { contract: string; cases: { id: string; scopes: Record<string, { path: string; formats: Record<string, string>; exports: string[] }>; dump: { contractId: string; generator: string; entries: { scope: string; export: string; format: string }[] }; complete: boolean; expectedCodes: string[] }[] };
+    const cases = JSON.parse(readFileSync(casesPath, "utf8")) as { contract: string; cases: { id: string; scopes: Record<string, { path: string; formats: Record<string, string>; exports: Record<string, { file: string; facet: string }> }>; dump: { contractId: string; generator: string; entries: { scope: string; export: string; format: string }[] }; complete: boolean; expectedCodes: string[] }[] };
     const authority = JSON.parse(readFileSync(join(import.meta.dir, "../../🧬️schema/🧬️schema-rust-entries/🔣️.json"), "utf8"));
     expect(new Ajv({ strict: true }).compile(authority)(cases)).toBe(true);
     for (const row of cases.cases) {

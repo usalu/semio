@@ -15,6 +15,26 @@
     },
     "reservedActionIds": ["undo", "redo", "commitCheckpoint", "createAlternative", "switchAlternative", "checkoutCheckpoint", "copy", "cut", "paste", "revertToCommand", "setHistoryCommandFilter", "noteShellCommand", "recordTutorial", "startIntroduction", "startTutorial", "setActiveUtility", "setActiveTool"]
   },
+  "engagementControls": {
+    "_": "🎛️ React's `<Engagement/>` body, top to bottom: the session's `engagement-step` status as a heading, the primary `control`, every `controls` row, the remaining status lines, then the quick-action `ButtonGroup` (🖱️ui/🎯️targets/⚛️react/🟦️.tsx:11004-11045). `EngagementControlView` (:10648) renders each control under `control.id` when the guest names one and under the per-kind fallback below when it does not; a toggle group's and a ring's OPTION rows carry the option's own id, and a numeric control with a unit reads `Label (unit)`.",
+    "bodyOrder": ["engagement-step-heading", "control", "controls", "engagement-status", "engagement-options"],
+    "optionsGroupId": "ui.engagement.actions",
+    "fallbackControlIds": {
+      "slider": "engagement-control.slider",
+      "stepper": "engagement-control.stepper",
+      "ring": "engagement-control.ring",
+      "select": "engagement-control.select"
+    },
+    "unitLabelFormat": "{label} ({unit})",
+    "kinds": ["slider", "stepper", "ring", "toggleGroup", "select"]
+  },
+  "searchLine": {
+    "_": "✍️ React's `Search` binds four moments on ONE field: `onChange` per keystroke (`applyDraft`), `onSubmit` on Enter with the TRIMMED line, `onAbort` on Escape when no possibles popover is open, and `onRepeatLast` on Space over an empty line while no session is active (`applySearchSpaceAction`, :10512). The retained target produces `Trigger::Submit`/`Abort`/`RepeatLast` beside `Trigger::Change` — the producers this packet added to 🖱️ui/🎯️targets/🧊️wgpu/⚡️events.",
+    "triggers": { "onChange": "change", "onSubmit": "submit", "onAbort": "abort", "onRepeatLast": "repeatLast" },
+    "commitsOnBlur": false,
+    "submitTrimsTheLine": true,
+    "repeatLastOnlyWhenIdle": true
+  },
   "searchPane": {
     "bodySlot": "search",
     "_input": "React ids the line by the engagement input's own id, falling back to ui.windowSearch.action for an unnamed or internal one (measured: puzzle3d-engagement).",

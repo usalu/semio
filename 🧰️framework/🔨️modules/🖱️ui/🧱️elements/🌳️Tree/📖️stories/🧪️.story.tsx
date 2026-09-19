@@ -63,7 +63,7 @@ const treeSections = [
               {
                 id: "tree.story.kit.types.capsules.balcony",
                 label: "Balcony",
-                icon: <Folder size="XL" />,
+                icon: <Folder size={12} />,
                 items: [
                   { id: "tree.story.kit.types.capsules.balcony.j", label: "With Balcony J", icon: <File size={12} /> },
                   { id: "tree.story.kit.types.capsules.balcony.l", label: "With Balcony L", icon: <File size={12} /> },
@@ -97,7 +97,7 @@ const treeSections = [
         </TreeItem>
         <TreeItem label="Advanced">
           <TreeContent>
-            <Button>Export Kit</Button>
+            <Button icon="download">Export Kit</Button>
           </TreeContent>
         </TreeItem>
       </>

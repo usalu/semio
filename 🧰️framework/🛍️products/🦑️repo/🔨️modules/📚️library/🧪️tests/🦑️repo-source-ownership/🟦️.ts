@@ -5,6 +5,10 @@ import Ajv from "ajv";
 import ts from "typescript";
 import { classifyPackageSource, loadCatalogTaxonomy, semanticDirectoryKindId } from "../../🔍️discovery/🟦️.ts";
 
+/** 🧾️ Reads the parse diagnostics every `createSourceFile` result carries and the public `SourceFile` type omits. */
+const parsedDiagnostics = (source: ts.SourceFile): readonly ts.Diagnostic[] =>
+  (source as ts.SourceFile & { readonly parseDiagnostics: readonly ts.Diagnostic[] }).parseDiagnostics;
+
 type Entry = Readonly<{
   legacy: string;
   owner: string;
@@ -64,7 +68,7 @@ describe("repository source ownership", () => {
   });
 
   test("resolves the complete registered ancestry of both library source owners", () => {
-    const taxonomy = loadCatalogTaxonomy(repoRoot);
+    const taxonomy = loadCatalogTaxonomy();
     expect(fixture.ownerDirectoryChains).toHaveLength(2);
     for (const chain of fixture.ownerDirectoryChains) {
       expect(existsSync(resolve(repoRoot, chain.owner)), chain.owner).toBe(true);
@@ -83,7 +87,7 @@ describe("repository source ownership", () => {
         const source = readFileSync(resolve(repoRoot, path), "utf8");
         const kind = path.endsWith("x") ? ts.ScriptKind.TSX : ts.ScriptKind.TS;
         const parsed = ts.createSourceFile(path, source, ts.ScriptTarget.Latest, true, kind);
-        expect(parsed.parseDiagnostics, path).toEqual([]);
+        expect(parsedDiagnostics(parsed), path).toEqual([]);
         if (path === row.legacy) expect(parsed.statements.every((statement) => ts.isExportDeclaration(statement)), path).toBe(true);
       }
     }
@@ -102,7 +106,7 @@ describe("repository source ownership", () => {
   });
 
   test("classifies retained TypeScript package entries as declarations", () => {
-    const taxonomy = loadCatalogTaxonomy(repoRoot);
+    const taxonomy = loadCatalogTaxonomy();
     const packageEntries = fixture.entries.filter(({ boundary, kind }) => boundary === "package-reexport" && kind === "typescript");
     expect(packageEntries).toHaveLength(3);
     for (const row of packageEntries) {

@@ -13,7 +13,7 @@
 //! wait on that opaque completion, but no transport or pool turn constructs/drives a second runtime.
 
 use crate::errors::{GatewayError, GatewayErrorCode};
-use crate::protocol::{extract_meta_protocol_version, JsonRpcId, JsonRpcIncoming, JsonRpcNotification, JsonRpcRequest, JsonRpcResponse, McpServer, PARSE_ERROR, SUPPORTED_PROTOCOL_VERSIONS, UNSUPPORTED_PROTOCOL_VERSION};
+use crate::protocol::{extract_meta_protocol_version, ClientFeatures, JsonRpcId, JsonRpcIncoming, JsonRpcNotification, JsonRpcRequest, JsonRpcResponse, McpServer, PARSE_ERROR, SUPPORTED_PROTOCOL_VERSIONS, UNSUPPORTED_PROTOCOL_VERSION};
 #[cfg(test)]
 use axum::body::Body;
 #[cfg(test)]
@@ -30,7 +30,7 @@ use std::collections::VecDeque;
 use std::io::{BufRead, Read, Write};
 use std::net::{IpAddr, Ipv4Addr, Shutdown, SocketAddr, TcpListener, TcpStream};
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
-use std::sync::{Arc, Condvar, Mutex, Weak};
+use std::sync::{Arc, Condvar, Mutex, OnceLock, Weak};
 
 use semio_framework_async::{Job, Lane, ProcessKind, WorkerPool, WorkerPoolConfig, WorkerSubmitErrorKind};
 use semio_framework_os_kernel::os_directory::client::LocalHubCredential;
@@ -48,29 +48,124 @@ fn io_error(error: std::io::Error) -> GatewayError {
     GatewayError::new(GatewayErrorCode::Internal, format!("stdio transport io error: {error}"))
 }
 
-/// 📻️ Newline-delimited JSON-RPC over `input`/`output`, with a THIRD writer (`log`) for every
-/// diagnostic line — generic over the three streams so tests exercise the exact same code path a real
-/// `stdin`/`stdout`/`stderr` wiring uses, in-memory, without touching the process's real file
-/// descriptors.
-pub struct StdioTransport<R: BufRead, W: Write, L: Write> {
-    input: R,
-    output: W,
-    log: L,
+/// 📻️ The one duplex line channel a stdio connection owns. Both the serve loop AND a server-initiated
+/// request made from INSIDE a tool call (`elicitation/create`) read and write through this single
+/// owner, so exactly one component ever touches the real descriptors. A line the elicitation wait
+/// reads that is not its own response is pushed onto `deferred`, and the serve loop drains that queue
+/// before touching the stream again — the client's own ordering is preserved and nothing is dropped.
+///
+/// ⏱️ The client stream is drained by ONE owned reader thread into a channel rather than read
+/// in place. That is what makes a wait on it deadline-bounded: `BufRead::read_line` blocks with no
+/// timeout of any kind, so an elicitation waiting directly on the descriptor could never give up on
+/// a client that goes silent (`📓️m4-mcp-bridge-approval-binding.md` §5.3). Every read still yields
+/// lines in exact arrival order, and the thread ends on EOF, on an io error, or when the last
+/// `StdioLines` is dropped.
+pub struct StdioLines {
+    output: Mutex<Box<dyn Write + Send>>,
+    inbound: Mutex<std::sync::mpsc::Receiver<Result<String, String>>>,
+    deferred: Mutex<VecDeque<String>>,
 }
 
-impl<R: BufRead, W: Write, L: Write> StdioTransport<R, W, L> {
-    pub fn new(input: R, output: W, log: L) -> Self {
-        Self { input, output, log }
+/// 📥️ What one bounded read of the client stream produced.
+#[derive(Debug, PartialEq, Eq)]
+pub(crate) enum StdioRead {
+    Line(String),
+    Eof,
+    TimedOut,
+}
+
+impl StdioLines {
+    pub(crate) fn new(input: Box<dyn BufRead + Send>, output: Box<dyn Write + Send>) -> Self {
+        let (sender, receiver) = std::sync::mpsc::channel();
+        let _ = std::thread::Builder::new().name("semio-mcp-stdio-reader".to_string()).spawn(move || {
+            let mut input = input;
+            loop {
+                let mut line = String::new();
+                match input.read_line(&mut line) {
+                    Ok(0) => return,
+                    Ok(_) => {
+                        if sender.send(Ok(line)).is_err() {
+                            return;
+                        }
+                    }
+                    Err(error) => {
+                        let _ = sender.send(Err(error.to_string()));
+                        return;
+                    }
+                }
+            }
+        });
+        Self { output: Mutex::new(output), inbound: Mutex::new(receiver), deferred: Mutex::new(VecDeque::new()) }
     }
 
-    fn write_line(&mut self, line: &str) -> Result<(), GatewayError> {
-        writeln!(self.output, "{line}").map_err(io_error)?;
-        self.output.flush().map_err(io_error)
+    pub(crate) fn write_line(&self, line: &str) -> Result<(), GatewayError> {
+        let mut output = self.output.lock().expect("stdio line channel poisoned");
+        writeln!(output, "{line}").map_err(io_error)?;
+        output.flush().map_err(io_error)
+    }
+
+    /// 📥️ The next client line — a deferred one first, then a fresh one off the reader. `None` is EOF.
+    pub(crate) fn read_line(&self) -> Result<Option<String>, GatewayError> {
+        if let Some(line) = self.deferred.lock().expect("stdio deferred queue poisoned").pop_front() {
+            return Ok(Some(line));
+        }
+        match self.inbound.lock().expect("stdio inbound channel poisoned").recv() {
+            Ok(Ok(line)) => Ok(Some(line)),
+            Ok(Err(error)) => Err(GatewayError::new(GatewayErrorCode::Internal, format!("stdio transport io error: {error}"))),
+            Err(_) => Ok(None),
+        }
+    }
+
+    /// 📥️ The next line straight off the client stream within `budget`, IGNORING the deferred queue —
+    /// what an in-flight `elicitation/create` waits on. It must never re-read a line it just deferred
+    /// (the answer it is waiting for has not been written by the client yet, so anything already
+    /// queued is by construction not it), and the serve loop drains that queue afterwards in arrival
+    /// order. A `budget` that elapses answers [`StdioRead::TimedOut`] and consumes nothing.
+    pub(crate) fn read_line_direct_within(&self, budget: std::time::Duration) -> Result<StdioRead, GatewayError> {
+        match self.inbound.lock().expect("stdio inbound channel poisoned").recv_timeout(budget) {
+            Ok(Ok(line)) => Ok(StdioRead::Line(line)),
+            Ok(Err(error)) => Err(GatewayError::new(GatewayErrorCode::Internal, format!("stdio transport io error: {error}"))),
+            Err(std::sync::mpsc::RecvTimeoutError::Timeout) => Ok(StdioRead::TimedOut),
+            Err(std::sync::mpsc::RecvTimeoutError::Disconnected) => Ok(StdioRead::Eof),
+        }
+    }
+
+    pub(crate) fn defer(&self, line: String) {
+        self.deferred.lock().expect("stdio deferred queue poisoned").push_back(line);
+    }
+}
+
+/// 📻️ Newline-delimited JSON-RPC over `input`/`output`, with a THIRD writer (`log`) for every
+/// diagnostic line — generic over the log writer so tests exercise the exact same code path a real
+/// `stdin`/`stdout`/`stderr` wiring uses, in-memory, without touching the process's real file
+/// descriptors. `input`/`output` are owned by the shared [`StdioLines`] channel instead, because a
+/// server-initiated `elicitation/create` issued from inside a tool call must reach the very same
+/// descriptors while the serve loop is suspended in `dispatch`.
+pub struct StdioTransport<L: Write> {
+    lines: Arc<StdioLines>,
+    log: L,
+    elicitation: Option<ElicitationSlot>,
+}
+
+impl<L: Write> StdioTransport<L> {
+    pub fn new(input: impl BufRead + Send + 'static, output: impl Write + Send + 'static, log: L) -> Self {
+        Self { lines: Arc::new(StdioLines::new(Box::new(input), Box::new(output))), log, elicitation: None }
+    }
+
+    /// 🙋 Publishes this connection's server→client request channel into `slot`, so the approval
+    /// coordinator the tool registry already captured can ask the CLIENT's own human for a decision.
+    /// `features` is the live client-capability mirror `McpServer` fills at `initialize`: elicitation
+    /// is attempted only when the connected client advertised it.
+    #[must_use]
+    pub fn publishing_elicitation_into(mut self, slot: ElicitationSlot, features: Arc<ClientFeatures>) -> Self {
+        let _ = slot.set(Arc::new(ElicitationChannel::new(self.lines.clone(), features)));
+        self.elicitation = Some(slot);
+        self
     }
 
     fn write_response(&mut self, response: &JsonRpcResponse) -> Result<(), GatewayError> {
         let line = serde_json::to_string(response).map_err(|error| GatewayError::new(GatewayErrorCode::Internal, error.to_string()))?;
-        self.write_line(&line)
+        self.lines.write_line(&line)
     }
 
     fn log_line(&mut self, line: &str) {
@@ -78,18 +173,15 @@ impl<R: BufRead, W: Write, L: Write> StdioTransport<R, W, L> {
     }
 }
 
-impl<R: BufRead, W: Write, L: Write> McpTransport for StdioTransport<R, W, L> {
+impl<L: Write> McpTransport for StdioTransport<L> {
     /// 🔁️ One line in → zero-or-one line out, until EOF (client closed stdin) or a hard io error. A
     /// blank line is skipped silently (not an error — some clients send a trailing newline). A batch
-    /// that dispatches to zero responses (all-notification batch) writes nothing, per JSON-RPC.
+    /// that dispatches to zero responses (all-notification batch) writes nothing, per JSON-RPC. A line
+    /// that is a RESPONSE to a request this server itself issued (elicitation) never reaches here: the
+    /// waiting elicitation consumed it, and every other line it saw was deferred back onto this loop.
     fn serve(&mut self, mut server: McpServer) -> Result<(), GatewayError> {
-        let mut line = String::new();
         loop {
-            line.clear();
-            let bytes_read = self.input.read_line(&mut line).map_err(io_error)?;
-            if bytes_read == 0 {
-                return Ok(());
-            }
+            let Some(line) = self.lines.read_line()? else { return Ok(()) };
             let trimmed = line.trim();
             if trimmed.is_empty() {
                 continue;
@@ -104,7 +196,7 @@ impl<R: BufRead, W: Write, L: Write> McpTransport for StdioTransport<R, W, L> {
                     let responses = server.dispatch_batch(&requests);
                     if !responses.is_empty() {
                         let line = serde_json::to_string(&responses).map_err(|error| GatewayError::new(GatewayErrorCode::Internal, error.to_string()))?;
-                        self.write_line(&line)?;
+                        self.lines.write_line(&line)?;
                     }
                 }
                 Err(error) => {
@@ -118,6 +210,159 @@ impl<R: BufRead, W: Write, L: Write> McpTransport for StdioTransport<R, W, L> {
 }
 //#endregion 🔖️StdioTransport
 
+//#region 🔖️Elicitation
+/// 🙋 The MCP `elicitation/create` server→client request channel — the spec's own human-in-the-loop
+/// primitive, and the FIRST place a destructive capability's approval is offered when the connected
+/// client advertises `capabilities.elicitation` (`🛡️policy`'s `ApprovalCoordinator` owns the chain).
+/// Late-bound through [`ElicitationSlot`] for the same reason `🖥️ui::BridgeSlot` is: the tool
+/// registry is built before any transport exists.
+pub type ElicitationSlot = Arc<OnceLock<Arc<ElicitationChannel>>>;
+
+/// 🙅 Why an elicitation could not produce a decision — never confused with an explicit `Decline`.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum ElicitationUnavailable {
+    NoChannel,
+    ClientDoesNotSupportIt,
+    ClientClosed,
+    TimedOut,
+    Malformed(String),
+}
+
+/// ⏱️ How long an `elicitation/create` waits for the connected client's human before the lane is
+/// declared closed. Deliberately the same budget as `🛡️policy`'s `SHELL_APPROVAL_TIMEOUT_MS`: a
+/// human deciding in an MCP client and a human deciding in the OS shell get the same amount of time,
+/// and a silent one closes its lane the same way rather than wedging the agent forever.
+pub const ELICITATION_TIMEOUT_MS: u64 = 120_000;
+
+/// 🕰️ The wall clock an elicitation deadline is measured against, injected so a test can drive the
+/// deadline arithmetic without spending the deadline. `now_ms` is monotonic, in milliseconds, from
+/// an arbitrary origin — only differences are ever read.
+pub trait ElicitationClock: Send + Sync {
+    fn now_ms(&self) -> u64;
+}
+
+/// 🕰️ The real clock: `Instant` elapsed since the channel was built.
+pub struct SystemElicitationClock {
+    origin: std::time::Instant,
+}
+
+impl Default for SystemElicitationClock {
+    fn default() -> Self {
+        Self { origin: std::time::Instant::now() }
+    }
+}
+
+impl ElicitationClock for SystemElicitationClock {
+    fn now_ms(&self) -> u64 {
+        u64::try_from(self.origin.elapsed().as_millis()).unwrap_or(u64::MAX)
+    }
+}
+
+/// ⏳️ The longest a single bounded read blocks before the deadline is re-checked, so a fake clock
+/// that jumps forward is noticed promptly instead of at the end of one enormous `recv_timeout`.
+const ELICITATION_READ_SLICE_MS: u64 = 25;
+
+/// 🗳️ The three `elicitation/create` result actions, verbatim from the MCP schema.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ElicitationAction {
+    Accept,
+    Decline,
+    Cancel,
+}
+
+pub struct ElicitationChannel {
+    lines: Arc<StdioLines>,
+    features: Arc<ClientFeatures>,
+    next_id: AtomicU64,
+    timeout_ms: u64,
+    clock: Box<dyn ElicitationClock>,
+}
+
+impl ElicitationChannel {
+    pub(crate) fn new(lines: Arc<StdioLines>, features: Arc<ClientFeatures>) -> Self {
+        Self { lines, features, next_id: AtomicU64::new(1), timeout_ms: ELICITATION_TIMEOUT_MS, clock: Box::new(SystemElicitationClock::default()) }
+    }
+
+    /// ⏱️ Rebinds the wait's budget and the clock it is measured against — the seam the deadline tests
+    /// drive, and the one a future launch flag would set.
+    #[must_use]
+    pub fn with_deadline(mut self, timeout_ms: u64, clock: Box<dyn ElicitationClock>) -> Self {
+        self.timeout_ms = timeout_ms;
+        self.clock = clock;
+        self
+    }
+
+    pub fn client_supports_elicitation(&self) -> bool {
+        self.features.elicitation.load(Ordering::SeqCst)
+    }
+
+    /// 🙋 Issues one `elicitation/create` and waits on THIS connection for the client's answer.
+    /// Every other line that arrives meanwhile is deferred back onto the serve loop in arrival order,
+    /// so a client that keeps sending requests while a human decides loses nothing. The wait ends on
+    /// the matching response, on EOF, or on {@link ELICITATION_TIMEOUT_MS} of wall clock — a client
+    /// whose human walks away closes this lane exactly as a silent OS shell closes the bridge lane,
+    /// and the approval chain moves on instead of wedging the agent forever.
+    pub fn request_boolean(&self, message: &str, title: &str) -> Result<ElicitationAction, ElicitationUnavailable> {
+        if !self.client_supports_elicitation() {
+            return Err(ElicitationUnavailable::ClientDoesNotSupportIt);
+        }
+        let id = format!("semio-elicit-{}", self.next_id.fetch_add(1, Ordering::Relaxed));
+        let request = serde_json::json!({
+            "jsonrpc": "2.0",
+            "id": id,
+            "method": "elicitation/create",
+            "params": {
+                "message": message,
+                "requestedSchema": {
+                    "type": "object",
+                    "title": title,
+                    "properties": { "approve": { "type": "boolean", "title": "Approve", "description": "Approve this destructive action once." } },
+                    "required": ["approve"],
+                },
+            },
+        });
+        let line = serde_json::to_string(&request).map_err(|error| ElicitationUnavailable::Malformed(error.to_string()))?;
+        self.lines.write_line(&line).map_err(|error| ElicitationUnavailable::Malformed(error.message))?;
+        let started_ms = self.clock.now_ms();
+        loop {
+            let elapsed_ms = self.clock.now_ms().saturating_sub(started_ms);
+            if elapsed_ms >= self.timeout_ms {
+                return Err(ElicitationUnavailable::TimedOut);
+            }
+            let budget = std::time::Duration::from_millis((self.timeout_ms - elapsed_ms).min(ELICITATION_READ_SLICE_MS));
+            let inbound = match self.lines.read_line_direct_within(budget).map_err(|error| ElicitationUnavailable::Malformed(error.message))? {
+                StdioRead::Line(line) => line,
+                StdioRead::Eof => return Err(ElicitationUnavailable::ClientClosed),
+                StdioRead::TimedOut => continue,
+            };
+            let trimmed = inbound.trim();
+            if trimmed.is_empty() {
+                continue;
+            }
+            match serde_json::from_str::<serde_json::Value>(trimmed) {
+                Ok(value) if value.get("id").and_then(serde_json::Value::as_str) == Some(id.as_str()) => return Ok(elicitation_action(&value)),
+                _ => self.lines.defer(inbound),
+            }
+        }
+    }
+}
+
+/// 🗳️ Reads the action out of one `elicitation/create` response: an `error` member (the client
+/// cancelled or refused to ask) is `Cancel`, `action: "accept"` with `content.approve == true` is
+/// `Accept`, and anything else is `Decline` — never an approval by default.
+fn elicitation_action(response: &serde_json::Value) -> ElicitationAction {
+    if response.get("error").is_some() {
+        return ElicitationAction::Cancel;
+    }
+    let Some(result) = response.get("result") else { return ElicitationAction::Cancel };
+    match result.get("action").and_then(serde_json::Value::as_str) {
+        Some("accept") if result.pointer("/content/approve").and_then(serde_json::Value::as_bool) == Some(true) => ElicitationAction::Accept,
+        Some("cancel") => ElicitationAction::Cancel,
+        _ => ElicitationAction::Decline,
+    }
+}
+//#endregion 🔖️Elicitation
+
 //#region 🔖️HttpTransport
 /// 🔢️ `HeaderMismatch` (Streamable HTTP, `MCP-Protocol-Version` header vs body `_meta` mismatch) —
 /// transport-local because it is an HTTP-framing concern the stdio-only `🦀️🟪️protocol.rs` never needs.
@@ -126,6 +371,10 @@ pub const HEADER_MISMATCH: i64 = -32020;
 #[derive(Clone)]
 pub(crate) enum HttpAdmission {
     Credential(Arc<LocalHubCredential>),
+    /// 🔑️ A per-process proof minted by `🛰️rendezvous` and published ONLY through the owner-only
+    /// offer file — how a stdio gateway, which inherits no hub fd-3 credential, still admits exactly
+    /// the shell that read its offer and nothing else on loopback.
+    LocalProof(Arc<[u8]>),
     #[cfg(test)]
     Fixture(Arc<[u8]>),
 }
@@ -140,6 +389,7 @@ impl HttpAdmission {
     pub(crate) fn authorizes_capability(&self, candidate: &str) -> bool {
         match self {
             Self::Credential(credential) => credential.authorizes_capability(candidate),
+            Self::LocalProof(expected) => constant_time_eq(candidate.as_bytes(), expected),
             #[cfg(test)]
             Self::Fixture(expected) => constant_time_eq(candidate.as_bytes(), expected),
         }
@@ -157,6 +407,17 @@ pub struct HttpTransportOptions {
     pub bind_addr: SocketAddr,
     pub allowed_origins: Vec<String>,
     admission: HttpAdmission,
+}
+
+/// 🌉️ Options for a listener that serves ONLY `/bridge` — the shape `run_stdio` binds so a live os
+/// session can attach to a gateway whose MCP surface is stdin/stdout. It never carries an
+/// `McpServer`, so `/mcp` is genuinely absent (404) rather than present-but-empty.
+impl HttpTransportOptions {
+    /// 🔑️ Admission by a per-process [`crate::rendezvous::mint_admission_proof`] value instead of an
+    /// inherited hub credential.
+    pub fn with_local_proof(proof: &str) -> Self {
+        Self { bind_addr: SocketAddr::new(IpAddr::V4(Ipv4Addr::LOCALHOST), 0), allowed_origins: Vec::new(), admission: HttpAdmission::LocalProof(Arc::from(proof.as_bytes())) }
+    }
 }
 
 impl HttpTransportOptions {
@@ -223,7 +484,8 @@ impl HttpEventPublisher {
 
 #[derive(Clone)]
 struct HttpState {
-    server: Arc<Mutex<McpServer>>,
+    /// 🕳️ `None` on a bridge-only listener: that socket serves `/bridge` and answers 404 for `/mcp`.
+    server: Option<Arc<Mutex<McpServer>>>,
     admission: HttpAdmission,
     allowed_origins: Arc<Vec<String>>,
     events: Arc<Mutex<EventLog>>,
@@ -266,7 +528,7 @@ impl HttpTransport {
     #[cfg(test)]
     pub(crate) fn router(&self, server: McpServer) -> (Router, HttpEventPublisher, crate::bridge::BridgeHandle) {
         let events = Arc::new(Mutex::new(EventLog::default()));
-        let state = HttpState { server: Arc::new(Mutex::new(server)), admission: self.options.admission.clone(), allowed_origins: Arc::new(self.options.allowed_origins.clone()), events: events.clone() };
+        let state = HttpState { server: Some(Arc::new(Mutex::new(server))), admission: self.options.admission.clone(), allowed_origins: Arc::new(self.options.allowed_origins.clone()), events: events.clone() };
         let mcp_router = Router::new().route("/mcp", post(handle_post).get(handle_get)).with_state(state);
         let (bridge_router, bridge_handle) = crate::bridge::server::bridge_router(self.options.admission.clone(), self.options.allowed_origins.clone());
         let router = mcp_router.merge(bridge_router);
@@ -277,7 +539,20 @@ impl HttpTransport {
     /// returned run is the only live owner; a process entry may wait on it, cancel it, or retrieve a
     /// terminal connection without exposing a socket/runtime-specific type.
     pub fn start(&mut self, server: McpServer) -> Result<HttpTransportRun, GatewayError> {
+        self.start_with(Some(server))
+    }
+
+    /// 🌉️ Binds the SAME loopback listener, serving `/bridge` only — no `McpServer`, so `/mcp`
+    /// answers 404. `run_stdio` uses this so a live os session can attach to a gateway whose MCP
+    /// surface is stdin/stdout. The bound port is read back off the run, because the caller binds
+    /// `:0` and only then knows what to publish into its rendezvous offer.
+    pub fn start_bridge_only(&mut self) -> Result<HttpTransportRun, GatewayError> {
+        self.start_with(None)
+    }
+
+    fn start_with(&mut self, server: Option<McpServer>) -> Result<HttpTransportRun, GatewayError> {
         let listener = TcpListener::bind(self.options.bind_addr).map_err(|error| GatewayError::new(GatewayErrorCode::Internal, format!("cannot bind {}: {error}", self.options.bind_addr)))?;
+        let local_addr = listener.local_addr().map_err(|error| GatewayError::new(GatewayErrorCode::Internal, format!("cannot read the bound address of {}: {error}", self.options.bind_addr)))?;
         listener.set_nonblocking(true).map_err(|error| GatewayError::new(GatewayErrorCode::Internal, format!("cannot make {} nonblocking: {error}", self.options.bind_addr)))?;
         let cores = std::thread::available_parallelism().map_or(1, std::num::NonZeroUsize::get);
         let pool = semio_framework_async::process_worker_pool(WorkerPoolConfig::new(ProcessKind::InteractiveNative, cores));
@@ -301,7 +576,7 @@ impl HttpTransport {
             completion: (Mutex::new(None), Condvar::new()),
         });
         inner.request_schedule();
-        Ok(HttpTransportRun { inner, bridge })
+        Ok(HttpTransportRun { inner, bridge, local_addr })
     }
 }
 
@@ -373,11 +648,19 @@ impl HttpTerminalConnection {
 pub struct HttpTransportRun {
     inner: Arc<HttpTransportAuthority>,
     bridge: crate::bridge::BridgeHandle,
+    local_addr: SocketAddr,
 }
 
 impl HttpTransportRun {
     pub fn bridge(&self) -> crate::bridge::BridgeHandle {
         self.bridge.clone()
+    }
+
+    /// 📍️ The address this run actually bound — the caller that asked for an ephemeral port (`:0`,
+    /// how `run_stdio` binds its bridge-only listener) learns the real port only here, and only then
+    /// can publish a dialable `ws://` url into its rendezvous offer.
+    pub fn local_addr(&self) -> SocketAddr {
+        self.local_addr
     }
 
     pub fn cancel(&self) {
@@ -663,7 +946,7 @@ struct HttpTransportState {
 }
 
 impl HttpTransportState {
-    fn new(listener: TcpListener, server: McpServer, options: &HttpTransportOptions, events: Arc<Mutex<EventLog>>, bridge: crate::bridge::BridgeHandle) -> Self {
+    fn new(listener: TcpListener, server: Option<McpServer>, options: &HttpTransportOptions, events: Arc<Mutex<EventLog>>, bridge: crate::bridge::BridgeHandle) -> Self {
         Self {
             listener: Some(listener),
             connections: semio_framework_async::boxed_slots(HTTP_CONNECTION_CAPACITY, || None),
@@ -676,7 +959,7 @@ impl HttpTransportState {
             io_cursor: 0,
             request_credits: FixedByteCredits::new(HTTP_CONNECTION_CAPACITY * HTTP_REQUEST_BYTES),
             response_credits: FixedByteCredits::new(HTTP_CONNECTION_CAPACITY * HTTP_RESPONSE_BYTES),
-            http: HttpState { server: Arc::new(Mutex::new(server)), admission: options.admission.clone(), allowed_origins: Arc::new(options.allowed_origins.clone()), events },
+            http: HttpState { server: server.map(|server| Arc::new(Mutex::new(server))), admission: options.admission.clone(), allowed_origins: Arc::new(options.allowed_origins.clone()), events },
             bridge,
         }
     }
@@ -1129,7 +1412,10 @@ impl HttpTransportState {
             | crate::bridge::ShellToGateway::Approval { .. }
             // 💬️ A human turn typed at the agent is recorded exactly like every other shell→gateway
             // observation: onto its own connection, for `semio://ui/agent-messages` to drain.
-            | crate::bridge::ShellToGateway::AgentMessage { .. }) => {
+            | crate::bridge::ShellToGateway::AgentMessage { .. }
+            // 🛑️ A cancel for a running tool call — `BridgeHandle::record` routes it to the one
+            // process-wide job registry rather than to this connection's own state.
+            | crate::bridge::ShellToGateway::AgentCancel { .. }) => {
                 let Some(id) = connection.bridge.id else { return ConnectionTurn::Terminal(HttpTerminalReason::Malformed) };
                 self.consume_websocket_ingress(connection, consumed);
                 self.bridge.record(id, message);
@@ -1417,7 +1703,7 @@ fn dispatch_owned_http(state: &HttpState, head: &ParsedHttpHead, request: &[u8])
     if path.starts_with("/bridge") {
         return dispatch_owned_bridge_handshake(&state.admission, head);
     }
-    if path != "/mcp" {
+    if path != "/mcp" || state.server.is_none() {
         return build_http_response(404, "Not Found", Some("text/plain"), b"not found".to_vec(), &[], false);
     }
     if !owned_bearer_matches(head, &state.admission) {
@@ -1458,7 +1744,8 @@ fn dispatch_owned_post(state: &HttpState, head: &ParsedHttpHead, request: &[u8])
             );
         }
     }
-    let response = state.server.lock().expect("mcp server lock poisoned").dispatch(&request);
+    let Some(server) = state.server.as_ref() else { return build_http_response(404, "Not Found", Some("text/plain"), b"not found".to_vec(), &[], false) };
+    let response = server.lock().expect("mcp server lock poisoned").dispatch(&request);
     match response {
         None => build_http_response(202, "Accepted", None, Vec::new(), &[], false),
         Some(response) => build_http_response(200, "OK", Some("application/json"), serialize_json_capped(&response, HTTP_RESPONSE_BYTES)?, &[], false),
@@ -1817,7 +2104,8 @@ async fn handle_post(State(state): State<HttpState>, headers: HeaderMap, body: a
         }
     }
 
-    let mut server = state.server.lock().expect("mcp server lock poisoned");
+    let Some(owner) = state.server.as_ref() else { return StatusCode::NOT_FOUND.into_response() };
+    let mut server = owner.lock().expect("mcp server lock poisoned");
     match server.dispatch(&request) {
         None => StatusCode::ACCEPTED.into_response(),
         Some(response) => (StatusCode::OK, axum::Json(response)).into_response(),

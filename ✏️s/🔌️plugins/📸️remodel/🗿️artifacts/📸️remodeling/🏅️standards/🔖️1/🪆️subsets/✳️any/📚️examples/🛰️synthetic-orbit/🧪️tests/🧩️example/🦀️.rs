@@ -64,6 +64,18 @@ const MAX_TRANSLATION_RMSE_RATIO: f64 = 0.03;
 /// this fixture at the true `0.85 · width` focal instead of the engine's `fx = fy = max(w, h)` guess,
 /// and the app-level bounds are the strict engine-level ones.
 const UNCALIBRATED_GAUGE_SLACK: f64 = 1.0;
+/// 📐️ Mesh accuracy bounds, in cube half-sizes: a fused surface of the textured cube, not a shell
+/// around it. The interactive surface is capped at 512 elements, so the cube comes out as a net of
+/// ~0.4-half-size cells with rounded edges and a hole-filled underside no camera of the orbit sees:
+/// measured 0.11 median / 0.36 p90 (2026-09-19). A shell fused out of the background measured
+/// 1.09 / 2.09, the thin-band surface before the observed-only extraction 0.12 / 0.33 at 29 %
+/// completeness.
+const MAX_MESH_MEDIAN_SURFACE_ERROR: f64 = 0.15;
+const MAX_MESH_P90_SURFACE_ERROR: f64 = 0.5;
+/// 📐️ Mesh completeness: the share of truth surface points a vertex lies within this distance of.
+/// A sixth of the truth points lie on the unobserved bottom face (measured 84 %).
+const MESH_COMPLETENESS_RADIUS: f64 = 0.4;
+const MIN_MESH_COMPLETENESS: f64 = 0.75;
 //#endregion 🔖️FixtureConstants
 
 //#region 🎲️Rng
@@ -467,6 +479,23 @@ fn pose_errors(poses: &[(Quatd, [f64; 3])], truth: &GroundTruth) -> (f64, f64, V
     }
     (max_rotation, (squared / poses.len() as f64).sqrt() / scale, ledger)
 }
+
+/// 📐️ Aligned mesh vertices scored against the truth cube: `(median, p90)` of every vertex's
+/// distance to the cube's surface, in cube half-sizes, and the share of truth surface points that
+/// have a vertex within [`MESH_COMPLETENESS_RADIUS`] — accuracy and completeness, so neither a
+/// shell fused out of the background nor a patch of one face passes.
+fn mesh_surface_errors(vertices: &[[f64; 3]], truth_points: &[[f64; 3]]) -> (f64, f64, f64) {
+    let surface = |p: &[f64; 3]| {
+        let outside = norm3([(p[0].abs() - CUBE_HALF).max(0.0), (p[1].abs() - CUBE_HALF).max(0.0), (p[2].abs() - CUBE_HALF).max(0.0)]);
+        let inside = (CUBE_HALF - p[0].abs()).min(CUBE_HALF - p[1].abs()).min(CUBE_HALF - p[2].abs()).max(0.0);
+        (outside + inside) / CUBE_HALF
+    };
+    let mut distances: Vec<f64> = vertices.iter().map(surface).collect();
+    distances.sort_by(f64::total_cmp);
+    let quantile = |q: f64| distances.get(((distances.len() as f64 - 1.0) * q).round() as usize).copied().unwrap_or(f64::INFINITY);
+    let covered = truth_points.iter().filter(|point| vertices.iter().any(|vertex| norm3(sub3(*vertex, **point)) <= MESH_COMPLETENESS_RADIUS)).count();
+    (quantile(0.5), quantile(0.9), covered as f64 / truth_points.len().max(1) as f64)
+}
 //#endregion 📌️Alignment
 
 //#region 🚚️Driver
@@ -647,6 +676,14 @@ async fn reconstructs_the_synthetic_orbit_against_ground_truth() {
 
     let mesh = &scene.results.mesh;
     assert_ne!(mesh.source, crate::MeshSource::Placeholder, "a completed run must replace the seeded placeholder mesh");
+    let recovered: Vec<[f64; 3]> = poses.iter().map(|(_, center)| *center).collect();
+    let (sim, _) = align_to_truth(&recovered, &truth.centers).expect("recovered cameras must admit a Sim(3) registration onto the truth orbit");
+    let data = crate::resolve_bounded_remodeling_mesh(&scene.durable_artifacts, &mesh.mesh).expect("the finalized mesh resolves");
+    let vertices: Vec<[f64; 3]> = data.positions.chunks_exact(3).map(|p| sim.act([f64::from(p[0]), f64::from(p[1]), f64::from(p[2])])).collect();
+    let (median, p90, completeness) = mesh_surface_errors(&vertices, &truth.points);
+    println!("[mesh-truth] {} vertices: surface distance median {median:.3} / p90 {p90:.3} (cube half-sizes), truth points within {MESH_COMPLETENESS_RADIUS} of a vertex {:.1}%", vertices.len(), completeness * 100.0);
+    assert!(median < MAX_MESH_MEDIAN_SURFACE_ERROR && p90 < MAX_MESH_P90_SURFACE_ERROR, "the mesh must lie on the cube: median {median:.3}, p90 {p90:.3} half-sizes off its surface");
+    assert!(completeness >= MIN_MESH_COMPLETENESS, "the mesh must cover the cube: only {:.1}% of the truth points have a vertex within {MESH_COMPLETENESS_RADIUS}", completeness * 100.0);
     close(app);
 }
 
@@ -712,7 +749,14 @@ async fn an_unregistrable_capture_completes_without_cameras() {
     pump_run(&mut app, "finalize settles", |run| run.state.wire_name() == "finalized").await;
     settle(&mut app, "the finalize publication").await;
     let finalized = durable(&mut app).await;
-    assert!(finalized.0 == before.0 && finalized.1 == before.1, "nothing to publish leaves the document pack byte-identical");
+    let published = app.snapshot().expect("finalized snapshot");
+    assert!(
+        finalized.0 == before.0 && finalized.1 == before.1,
+        "nothing to publish leaves the document pack byte-identical; published {} cameras, sparse {}, mesh {:?}",
+        published.results.trajectory.as_ref().map_or(0, |trajectory| trajectory.poses.len()),
+        published.results.sparse.is_some(),
+        published.results.mesh.source
+    );
     close(app);
 }
 //#endregion 🧪️EndToEnd

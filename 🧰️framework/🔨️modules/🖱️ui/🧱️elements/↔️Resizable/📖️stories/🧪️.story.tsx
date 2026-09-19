@@ -30,7 +30,7 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: {
-    direction: "horizontal",
+    orientation: "horizontal",
   },
   render: (args) => (
     <ResizablePanelGroup {...args} className="w-[800px] h-[500px] border">
@@ -48,7 +48,7 @@ export const Default: Story = {
       </ResizablePanel>
       <ResizableHandle />
       <ResizablePanel defaultSize={65}>
-        <ResizablePanelGroup direction="vertical">
+        <ResizablePanelGroup orientation="vertical">
           <ResizablePanel defaultSize={70} minSize={30}>
             <div className="flex h-full items-center justify-center p-6 bg-muted/10">
               <span className="font-semibold text-muted-foreground">3D Model View</span>

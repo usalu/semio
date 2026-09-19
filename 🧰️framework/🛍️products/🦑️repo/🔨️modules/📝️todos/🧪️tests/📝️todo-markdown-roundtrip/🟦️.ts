@@ -79,7 +79,7 @@ export default defineTestAdapter({
   scenarios: {
     "rewriting-a-line-and-reading-it-back-agrees": {
       oracle: (ctx) => {
-        const schema = JSON.parse(readFileSync(ctx.fixture("asset://🧬️schema/🔣️.json"), "utf8")) as Record<string, unknown>;
+        const schema = JSON.parse(readFileSync(ctx.fixture("asset://🧬️schema/🔣️.json"), "utf8")) as { readonly $schema?: string; readonly $defs: Readonly<Record<string, unknown>> };
         const vectors = JSON.parse(readFileSync(ctx.fixture("shared://📝️line-vectors.json"), "utf8")) as Vectors;
         const ajv = new Ajv2020({ strict: false, allErrors: true });
         const validate = ajv.compile({ $schema: schema.$schema, $defs: schema.$defs, $ref: "#/$defs/LineVectors" });

@@ -236,6 +236,41 @@ mod wasm_program_exchange {
             .ok_or_else(|| format!("plugin sent no HistorySnapshot for seq {seq}"))
     }
 
+    /// ⚔️ The native twin of the React shell's `AppCommand::ReadConflicts` seed
+    /// (`🏛️ShellHost/🟦️.tsx`'s conflicts-panel bootstrap): sends the command and decodes the packed
+    /// `Vec<Conflict>` the guest replies with on `AppFrame::Conflicts`. Same shape as
+    /// {@link read_history} — one exchange, one reply frame, best-effort at the caller.
+    pub async fn read_conflicts(client: &KernelClient, instance_id: u32) -> Result<Vec<protocol::Conflict>, String> {
+        let seq = next_seq();
+        let outcome = exchange(client, instance_id, vec![AppCommand::ReadConflicts { seq }]).await?;
+        outcome
+            .frames
+            .into_iter()
+            .find_map(|frame| match frame {
+                AppFrame::Conflicts { in_reply_to, conflicts } if in_reply_to == Some(seq) => decode_wire::<Vec<protocol::Conflict>>(&conflicts).ok(),
+                _ => None,
+            })
+            .ok_or_else(|| format!("plugin sent no Conflicts for seq {seq}"))
+    }
+
+    /// ⚔️ React's `onResolve(conflictId, resolution)` (`📌️ChromePanels/🟦️.tsx`'s Accept/Discard pair):
+    /// `0` = accept, `1` = discard, matching `AppCommand::ResolveConflict`'s own wire encoding. The
+    /// guest answers with the fresh `AppFrame::Conflicts` roster, which is returned so the caller
+    /// never has to re-read to see the row leave.
+    pub async fn resolve_conflict(client: &KernelClient, instance_id: u32, conflict_id: &str, accept: bool) -> Result<Vec<protocol::Conflict>, String> {
+        let seq = next_seq();
+        let commands = vec![AppCommand::ResolveConflict { seq, conflict_id: conflict_id.to_string(), resolution: u8::from(!accept) }];
+        let outcome = exchange(client, instance_id, commands).await?;
+        Ok(outcome
+            .frames
+            .into_iter()
+            .find_map(|frame| match frame {
+                AppFrame::Conflicts { conflicts, .. } => decode_wire::<Vec<protocol::Conflict>>(&conflicts).ok(),
+                _ => None,
+            })
+            .unwrap_or_default())
+    }
+
     pub async fn handle_action(client: &KernelClient, instance_id: u32, action_json: &str, view_state: &ViewModel) -> Result<InvocationResult, String> {
         let invocation: semio_framework::manifest::ActionInvocation = dsl::json::from_json_str(action_json).map_err(|error| error.to_string())?;
         let seq = next_seq();
@@ -628,6 +663,40 @@ impl ProgramBridgeEntry {
         self.render_with_document(instance_id, body_key, body_key, view_state, None, None).await
     }
 
+    /// 🛠️ Publishes the instance's reserved `framework.section.tools` surface — the tool twin of
+    /// {@link ProgramBridgeEntry::window_measures_section}, carrying `ArtifactApp::tool_measures`
+    /// keyed by TOOL id (`🔌️plugin/🦀️.rs`'s `UiRefreshSection::Tools` arm). This is the reader React's
+    /// `toolMeasuresByToolId` ref has had all along and this renderer had not, which is why
+    /// `build_tool_panel_ui` could only render the tool's armed state. The caller owns the returned
+    /// lease and retires it through its registry after {@link tool_measures_from_section} read it.
+    pub async fn tool_measures_section(&self, instance_id: u32, view_state: &ViewModel) -> Result<UiDocumentLease, String> {
+        let body_key = semio_framework::UiRefreshSection::Tools.body_key();
+        self.render_with_document(instance_id, body_key, body_key, view_state, None, None).await
+    }
+
+    /// ⚔️ This artifact's currently open conflicts — native-only for the same reason `read_history`
+    /// is (the JS backend has no `exchange` door). React's twin is the `AppCommand::ReadConflicts`
+    /// seed `🏛️ShellHost/🟦️.tsx` fires on session start/switch.
+    #[cfg(not(target_arch = "wasm32"))]
+    pub async fn read_conflicts(&self, instance_id: u32) -> Result<Vec<protocol::Conflict>, String> {
+        match &self.backend {
+            ProgramBridgeBackend::Wasm { client, .. } => wasm_program_exchange::read_conflicts(client, instance_id).await,
+            #[cfg(target_arch = "wasm32")]
+            _ => Err("read_conflicts unavailable".into()),
+        }
+    }
+
+    /// ⚔️ Accept or discard one open conflict, answering the roster that survives it — React's
+    /// `dispatchResolveConflict`.
+    #[cfg(not(target_arch = "wasm32"))]
+    pub async fn resolve_conflict(&self, instance_id: u32, conflict_id: &str, accept: bool) -> Result<Vec<protocol::Conflict>, String> {
+        match &self.backend {
+            ProgramBridgeBackend::Wasm { client, .. } => wasm_program_exchange::resolve_conflict(client, instance_id, conflict_id, accept).await,
+            #[cfg(target_arch = "wasm32")]
+            _ => Err("resolve_conflict unavailable".into()),
+        }
+    }
+
     /// 🎠️ Kept synchronous (unlike `apply_mutations`/`read_history` below): the body never actually
     /// awaits anything — see `wasm_program_exchange::attach_backbone`'s doc for why, this stays a
     /// plain fn so its existing non-async Shell.rs call sites don't need touching at all.
@@ -687,6 +756,14 @@ impl ProgramBridgeEntry {
             _ => Err("read_history unavailable".into()),
         }
     }
+}
+
+/// 🛠️ Reads a published [`ProgramBridgeEntry::tool_measures_section`] document back into the
+/// per-TOOL measure trees the guest authored — same paged-text carrier and same canonical JSON as
+/// {@link window_measures_from_section}, keyed by tool id instead of window instance id.
+pub fn tool_measures_from_section(document: &UiDocumentLease) -> Result<HashMap<String, Vec<WindowMeasure>>, String> {
+    let payload = document.read_paged_text().map_err(|error| format!("tool measures section unreadable: {error:?}"))?;
+    serde_json::from_str(&payload).map_err(|error| format!("tool measures section parse: {error}"))
 }
 
 /// 📏️ Reads a published [`ProgramBridgeEntry::window_measures_section`] document back into the

@@ -8,7 +8,7 @@
 
 // #endregion 🧲️Header
 
-import { Button, Collapsible, CollapsibleContent, CollapsibleTrigger, Section } from "@semio-tech/ui-react";
+import { Button, Collapsible, CollapsibleContent, CollapsibleTrigger, Section, uiDataLabel } from "@semio-tech/ui-react";
 import { createIconComponent } from "@semio-tech/ui-react";
 import type { Meta, StoryObj } from "../../../🧪️tests/📚️storybook-types/🟦️.ts";
 import { useState } from "react";
@@ -41,8 +41,7 @@ export const Default: Story = {
             <h4 className="text-sm font-semibold">Capsule Variants (3)</h4>
           </div>
           <CollapsibleTrigger asChild>
-            <Button variant="ghost">
-              <ChevronDown className={`size-small transition-transform ${isOpen ? "rotate-180" : ""}`} />
+            <Button variant="ghost" icon={<ChevronDown className={`size-small transition-transform ${isOpen ? "rotate-180" : ""}`} />}>
               <span className="sr-only">Toggle</span>
             </Button>
           </CollapsibleTrigger>
@@ -66,10 +65,10 @@ export const Default: Story = {
 export const SectionDefault: Story = {
   render: () => (
     <div className="w-96">
-      <Section title="Module Types" id="module-types">
+      <Section title={uiDataLabel("Module Types")} id="module-types">
         <p className="text-sm">Capsule J, Capsule K, Base, Tambour A, Capital</p>
       </Section>
-      <Section title="Design Properties" id="design-properties">
+      <Section title={uiDataLabel("Design Properties")} id="design-properties">
         <p className="text-sm">Volume: 25.0 m³, Area: 10.0 m², Connections: 4</p>
       </Section>
     </div>

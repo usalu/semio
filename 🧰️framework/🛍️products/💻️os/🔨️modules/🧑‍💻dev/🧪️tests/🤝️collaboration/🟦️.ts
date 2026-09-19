@@ -98,7 +98,7 @@ const COLLAB_E2E_STEP_NAMES = [
   "user1 shares the space with user2 as author; user2 opens /spaces/{id}",
   "user1 creates a writer artifact; the row appears in both tables and opens an editor for user1",
   "user2 opens the same artifact; user1 types and user2 sees the text",
-  "#s-presence-peers shows 2 peers in both shells",
+  "#s-presence-peers shows 2 peers, in distinct hub-assigned session colours, in both shells",
   "user1 checks in with a message; history shows it and the space table's updated column moves for both",
   "admin: /admin/api/connections lists both connections with their surfaces; /admin returns HTML",
   "user1's keystroke reaches user2's editor within ONE ServerFrame::Commands round trip",
@@ -149,14 +149,21 @@ function collabScanPort(envVar: string, taken: Set<number>): number {
  * that share nothing with the workspace cargo cache), which costs more than the rest of the run put
  * together and measures nothing this scenario is about. Only the catalog is copied — never spaces,
  * documents, sessions or presence. `S_COLLAB_HUB_DATA` overrides the whole directory for a deliberate
- * warm-state run. */
+ * warm-state run.
+ *
+ * Both branches return a REALPATH. macOS's default `TMPDIR` lives under `/var/folders/…` and `/var` is a
+ * symlink to `private/var`; the hub's trusted-catalog loader opens its configured data root component by
+ * component with `O_NOFOLLOW`, so a symlinked ancestor made the hub exit 1 with
+ * `ArtifactAuthority(Catalog("Not a directory (os error 20)"))` before it ever bound a port. Worker H1
+ * resolved the configured root inside the loader; resolving it here too means this harness does not
+ * depend on which `os-hub` binary happens to be staged. */
 function collabHubDataDir(): string {
   const explicit = process.env.S_COLLAB_HUB_DATA;
   if (explicit) {
     mkdirSync(explicit, { recursive: true });
-    return explicit;
+    return realpathSync(explicit);
   }
-  const dir = mkdtempSync(join(tmpdir(), "semio-collab-hub-"));
+  const dir = realpathSync(mkdtempSync(join(realpathSync(tmpdir()), "semio-collab-hub-")));
   const seed = process.env.S_COLLAB_TRUSTED_CATALOG;
   if (seed && existsSync(join(seed, "trusted-catalog"))) {
     cpSync(join(seed, "trusted-catalog"), join(dir, "trusted-catalog"), { recursive: true });
@@ -249,15 +256,33 @@ async function collabPrebuildPlugins(): Promise<void> {
   }
 }
 
-/** ▶️ Spawns one user's `s` react dev server and waits for its port to accept connections. `dev` means
- * activate-then-serve, so the Nx activation chain reuses whatever `collabPrebuildPlugins` already
- * produced and only supplies the profiled browser modules and the receipt `ServeScript` demands. */
+/** 📜️ The `🧑‍💻dev` bundle script both shell steps below drive. */
+const COLLAB_E2E_DEV_SCRIPT = "./🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📜️script.ts";
+
+/** 🏗️ Stages the `s` react dev runtime ONCE for both users. Activation is keyed by
+ * variant+renderer+profile, not by user, so the two shells share one staged runtime and one activation
+ * receipt; running it per user would stage the same tree twice and, worse, let the second run swap the
+ * modules out from under the first shell's open page. It is a separate step from `collabStartUserDevServer`
+ * because the Nx `dev-…` target is a WATCH: it re-activates on any peer's source write, which under this
+ * repo's concurrent fleet means the staged tree moves mid-scenario. Activate once, serve detached. */
+function collabActivateShellRuntime(): void {
+  runCmd("bun", ["nx", "run", "@semio-tech/framework-os-dev:activate-s-react-dev"], {
+    cwd: repoRoot,
+    ...daemonBudgetOpts({ SEMIO_PLUGIN: "s", SEMIO_RENDERER: "react", SEMIO_BUILD_MODE: "dev" }),
+  });
+}
+
+/** ▶️ Spawns one user's `s` react dev server and waits for its port to accept connections. `serve`, not
+ * `dev`: the bundle script has no `dev` command at all (`prepare|activate|serve|…`), so the harness's
+ * previous `script.ts dev` spawn exited 1 with `unknown command "dev"` before a single byte was served,
+ * which is what made every step report "blocked — shells did not boot". `S_HUB_URL` is baked into this
+ * server's bundle at Vite `define`-time, so it must be in the SERVE process's env, not the activation's. */
 async function collabStartUserDevServer(opts: { readonly port: number; readonly hubUrl: string; readonly user: string; readonly dataDir: string; readonly logPath: string }): Promise<SpawnDaemonHandle> {
-  const devScript = join(repoRoot, "./🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📜️script.ts");
+  const devScript = join(repoRoot, COLLAB_E2E_DEV_SCRIPT);
   const logStream = createWriteStream(opts.logPath);
-  const daemon = spawnDaemon("bun", [devScript, "dev"], {
+  const daemon = spawnDaemon("bun", [devScript, "serve", "s", "react", "dev"], {
     cwd: join(repoRoot, "./🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript"),
-    env: { ...process.env, SEMIO_PLUGIN: "s", SEMIO_RENDERER: "react", S_OS_PORT: String(opts.port), S_HUB_URL: opts.hubUrl, S_USER: opts.user, S_DATA_DIR: opts.dataDir },
+    env: { ...process.env, SEMIO_PLUGIN: "s", SEMIO_RENDERER: "react", SEMIO_VITE_HMR: "0", S_OS_PORT: String(opts.port), S_HUB_URL: opts.hubUrl, S_USER: opts.user, S_DATA_DIR: opts.dataDir },
     stdio: "pipe",
   });
   daemon.child.stdout?.pipe(logStream);
@@ -338,6 +363,37 @@ async function collabScreenshot(page: import("playwright").Page, label: string):
   } catch {
     // 🏁️ Best-effort — a screenshot failure must never mask the real assertion failure it was taken for.
   }
+}
+
+/** 👥️ One shell's presence roster: the `peer:` rows `PresenceBar` paints inside `#s-presence-peers`,
+ * with the `peer:overflow` chip excluded — it is a "+N" count, not a peer. */
+function collabPresenceRows(page: import("playwright").Page): import("playwright").Locator {
+  return page.locator('[id="s-presence-peers"] [data-row-id^="peer:"]:not([data-row-id="peer:overflow"])');
+}
+
+/** ⏳️ Polls one shell until its presence roster holds `expected` peers, returning the count it saw.
+ * Presence is heartbeat-driven, so a single read right after the editors open races the first beat;
+ * the previous one-shot `count()` is why this step could report "1 peer" on a shell that was about to
+ * show two. Returns the LAST count on timeout so the failure names what the roster actually held. */
+async function collabWaitForPresenceRoster(page: import("playwright").Page, expected: number, deadlineMs: number): Promise<number> {
+  const deadline = Date.now() + deadlineMs;
+  let seen = -1;
+  while (Date.now() < deadline) {
+    seen = await collabPresenceRows(page).count();
+    if (seen === expected) return seen;
+    await page.waitForTimeout(500);
+  }
+  return seen;
+}
+
+/** 🎨️ The RESOLVED avatar border colour of every peer row in one shell, in DOM order. `PresenceBar`
+ * paints the hub-assigned session colour (`ServerFrame::Session.color`, stamped onto every outbound
+ * presence beat by the backbone worker's `sessionColor`) as an inline `borderColor` on each peer's
+ * `TableAvatar`, and the first twelve palette slots are CSS custom properties — so this has to read
+ * the computed colour, or two different slots would both read back as the same `var(--…)` text and the
+ * distinctness assertion would be vacuous. */
+async function collabPresenceColors(page: import("playwright").Page): Promise<readonly string[]> {
+  return await collabPresenceRows(page).evaluateAll((rows) => rows.map((row) => getComputedStyle((row.firstElementChild as HTMLElement | null) ?? (row as HTMLElement)).borderTopColor));
 }
 
 /** 🔢️ The `ServerFrame` tag byte for `Commands`, mirrored from `encode_server_frame`'s own match arm
@@ -513,11 +569,23 @@ async function collabRunScenario(
       "#s-presence-peers does not exist in the React shell (🧰️framework/…/renderer/…/ShellHost/🟦️.tsx never imports or renders PresenceBar — confirmed by grep; lane 2-D wired presence only into the wgpu Shell, 🧊️component.rs, which per the ticket brief does not compile this wave)",
     );
     spaceE2eAssert((await peers2.count()) > 0, "#s-presence-peers does not exist in user2's shell either");
-    const roster1 = await peers1.locator('[data-row-id^="peer:"]').count();
-    const roster2 = await peers2.locator('[data-row-id^="peer:"]').count();
+    const roster1 = await collabWaitForPresenceRoster(user1, 2, 30_000);
+    const roster2 = await collabWaitForPresenceRoster(user2, 2, 30_000);
     spaceE2eAssert(roster1 === 2, `user1's presence roster has ${roster1} peer(s), expected 2`);
     spaceE2eAssert(roster2 === 2, `user2's presence roster has ${roster2} peer(s), expected 2`);
-    record(5, true, "both shells show a 2-peer presence roster");
+    const colors1 = await collabPresenceColors(user1);
+    const colors2 = await collabPresenceColors(user2);
+    for (const [label, colors] of [
+      ["user1", colors1],
+      ["user2", colors2],
+    ] as const) {
+      spaceE2eAssert(colors.every((color) => color.length > 0), `${label}'s presence roster painted an empty avatar colour: ${JSON.stringify(colors)}`);
+      spaceE2eAssert(
+        new Set(colors).size === colors.length,
+        `${label}'s two presence avatars are painted the SAME colour (${JSON.stringify(colors)}) — the hub's per-session ServerFrame::Session.color never reached the roster, so the two sessions are indistinguishable on screen`,
+      );
+    }
+    record(5, true, `both shells show a 2-peer presence roster with distinct session colours (user1: ${JSON.stringify(colors1)}, user2: ${JSON.stringify(colors2)})`);
   } catch (error) {
     await collabScreenshot(user1, "step5-user1");
     await collabScreenshot(user2, "step5-user2");
@@ -786,6 +854,15 @@ async function runCollabE2eVerify(): Promise<void> {
 
     const hubBaseUrl = `http://127.0.0.1:${hubPort}`;
     try {
+      collabActivateShellRuntime();
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      console.error(`[collab-e2e] shell activation failed — every scenario step is reported FAIL: ${message}`);
+      for (let step = 1; step <= 10; step++) record(step, false, `blocked — shell activation failed: ${message}`);
+      throw error;
+    }
+
+    try {
       [user1Daemon, user2Daemon] = await Promise.all([
         collabStartUserDevServer({ port: user1Port, hubUrl: hubBaseUrl, user: COLLAB_E2E_USER1_EMAIL, dataDir: user1DataDir, logPath: join(outDir, "🧪️3-c-user1-dev.txt") }),
         collabStartUserDevServer({ port: user2Port, hubUrl: hubBaseUrl, user: COLLAB_E2E_USER2_EMAIL, dataDir: user2DataDir, logPath: join(outDir, "🧪️3-c-user2-dev.txt") }),
@@ -803,10 +880,14 @@ async function runCollabE2eVerify(): Promise<void> {
     // expects (confirmed during this lane's own iteration: the default cache had `chromium-1223`, this
     // repo's `playwright` wanted `chromium_headless_shell-1234`, which only exists under the repo-scoped path).
     process.env.PLAYWRIGHT_BROWSERS_PATH = process.env.PLAYWRIGHT_BROWSERS_PATH ?? repoCacheDirectory(repoRoot, "tools", "ms-playwright");
-    const { chromium } = await import(PLAYWRIGHT_MODULE_SPECIFIER);
-    browser = await chromium.launch({ headless: true });
-    const context1 = await browser.newContext();
-    const context2 = await browser.newContext();
+    const { chromium }: typeof import("playwright") = await import(PLAYWRIGHT_MODULE_SPECIFIER);
+    // 🖥️ `--use-angle=metal` because headless Chromium otherwise falls back to SwiftShader, whose WebGL
+    // is slow enough to turn a shell's first paint into a timeout; the explicit viewport keeps the shell
+    // out of its narrow/mobile layout, where the presence bar and the toolbar ids STEP 1/3/5 click are
+    // collapsed behind an overflow chip.
+    browser = await chromium.launch({ headless: true, args: ["--use-angle=metal"] });
+    const context1 = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+    const context2 = await browser.newContext({ viewport: { width: 1440, height: 900 } });
     const user1Page = await context1.newPage();
     const user2Page = await context2.newPage();
     const pageErrors: string[] = [];
@@ -865,4 +946,4 @@ async function runCollabE2eVerify(): Promise<void> {
   if (passed !== results.length) process.exitCode = 1;
 }
 
-export { COLLAB_E2E_ADMIN_TOKEN, COLLAB_E2E_DEV_BOOT_BUDGET_MS, COLLAB_E2E_HUB_BOOT_BUDGET_MS, COLLAB_E2E_PORT_MAX, COLLAB_E2E_PORT_MIN, COLLAB_E2E_PREBUILD_BUDGET_MS, COLLAB_E2E_REQUIRED_PLUGIN_IDS, COLLAB_E2E_STEP_NAMES, COLLAB_E2E_USER1_EMAIL, COLLAB_E2E_USER2_EMAIL, CollabCommandFrameCounter, CollabStepOutcome, collabClickToolbarButton, collabCountCommandFrames, collabHubDataDir, collabOutDir, collabPluginArtifactPath, collabPrebuildPlugins, collabRowIds, collabRunRestartStep, collabRunScenario, collabScanPort, collabScreenshot, collabSelectOption, collabStartHub, collabStartUserDevServer, collabSubmitDialog, collabWaitForDialog, collabWaitForEditorText, collabWaitForNewRow, collabWaitForRow, runCollabE2eVerify };
+export { COLLAB_E2E_ADMIN_TOKEN, COLLAB_E2E_DEV_BOOT_BUDGET_MS, COLLAB_E2E_HUB_BOOT_BUDGET_MS, COLLAB_E2E_PORT_MAX, COLLAB_E2E_PORT_MIN, COLLAB_E2E_PREBUILD_BUDGET_MS, COLLAB_E2E_REQUIRED_PLUGIN_IDS, COLLAB_E2E_STEP_NAMES, COLLAB_E2E_USER1_EMAIL, COLLAB_E2E_USER2_EMAIL, type CollabCommandFrameCounter, type CollabStepOutcome, collabClickToolbarButton, collabCountCommandFrames, collabHubDataDir, collabOutDir, collabPluginArtifactPath, collabPrebuildPlugins, collabPresenceColors, collabPresenceRows, collabRowIds, collabRunRestartStep, collabRunScenario, collabScanPort, collabActivateShellRuntime, collabScreenshot, collabSelectOption, collabStartHub, collabStartUserDevServer, collabSubmitDialog, collabWaitForDialog, collabWaitForEditorText, collabWaitForNewRow, collabWaitForPresenceRoster, collabWaitForRow, runCollabE2eVerify };

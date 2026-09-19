@@ -83,10 +83,10 @@ export function remodelActionArgs(args: ActionDescriptor["args"]): Record<string
 function remodelWorldPointsJson(scene: RemodelScene, layers: RemodelConfig["layers"], gateOnConfig: boolean): string | undefined {
   const out: Record<string, unknown>[] = [];
   if ((!gateOnConfig || layers.sparse) && scene.results.sparse && scene.results.sparse.points.length > 0) {
-    out.push({ id: "remodeling-sparse", positionsB64: scene.results.sparse.points, colorsB64: scene.results.sparse.colors, size: 3, sizeAttenuation: true });
+    out.push({ id: "remodeling-sparse", positionsB64: scene.results.sparse.points, colorsB64: scene.results.sparse.colors, size: 3, sizeAttenuation: false });
   }
   if ((!gateOnConfig || layers.dense) && scene.results.dense && scene.results.dense.positions.length > 0) {
-    out.push({ id: "remodeling-dense", positionsB64: scene.results.dense.positions, colorsB64: scene.results.dense.colors, size: 2, sizeAttenuation: true });
+    out.push({ id: "remodeling-dense", positionsB64: scene.results.dense.positions, colorsB64: scene.results.dense.colors, size: 2, sizeAttenuation: false });
   }
   if ((!gateOnConfig || layers.cameras) && scene.results.trajectory && scene.results.trajectory.poses.length > 0) {
     out.push({ id: "remodeling-camera-poses", positionsB64: packF32(scene.results.trajectory.poses.flatMap((pose) => [...pose.translation])), colorsB64: null, size: 9, sizeAttenuation: false });

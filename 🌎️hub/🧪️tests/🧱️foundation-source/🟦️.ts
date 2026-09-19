@@ -236,6 +236,7 @@ test("allocation, readiness and finish stay injectable and idempotent", async ()
     runId: "0".repeat(32),
     port: 1,
     runRoot: "/private/ticket/semio-hub-run-fixed",
+    publicSessionIssuance: false,
     output: () => "",
     removeRunRoot: () => (removals += 1),
   } as LocalHubRun;

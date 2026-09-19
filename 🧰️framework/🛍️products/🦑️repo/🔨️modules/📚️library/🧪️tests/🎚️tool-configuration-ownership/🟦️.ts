@@ -182,8 +182,8 @@ describe("Tool configuration ownership", () => {
       writeFileSync(resolve(sandbox, "🟨️.js"), 'import "./🎨️.css";\n');
       writeFileSync(resolve(sandbox, "🎨️.css"), fixture.postcss.cases.map(({ source }) => source).join("\n"));
       const compiled = await build({ configFile: false, root: sandbox, publicDir: false, logLevel: "silent", css: { postcss: { plugins: ownerModule[fixture.postcss.viteLoader.exportName]() } }, build: { write: false, cssCodeSplit: false, rollupOptions: { input: resolve(sandbox, "🟨️.js") } } });
-      const outputs = (Array.isArray(compiled) ? compiled : [compiled]).flatMap((result) => result.output);
-      const css = outputs.filter((entry) => entry.type === "asset" && entry.fileName.endsWith(".css")).map((entry) => String(entry.source)).join("\n");
+      const outputs = (Array.isArray(compiled) ? compiled : [compiled]).flatMap((result) => ("output" in result ? result.output : []));
+      const css = outputs.flatMap((entry) => (entry.type === "asset" && entry.fileName.endsWith(".css") ? [String(entry.source)] : [])).join("\n");
       for (const row of fixture.postcss.cases) for (const expected of row.expectedDeclarations) expect(css, row.id).toContain(expected.value);
       expect(css).not.toContain("@apply");
     } finally {

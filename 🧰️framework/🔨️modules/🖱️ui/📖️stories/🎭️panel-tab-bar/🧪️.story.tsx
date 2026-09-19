@@ -41,6 +41,7 @@ const meta = {
     layout: "padded",
   },
   tags: ["autodocs"],
+  args: { variant: "panel", tabs: nestedTabs, activePath: [], onActivePathChange: () => {} },
 } satisfies Meta<typeof PanelTabBar>;
 
 export default meta;

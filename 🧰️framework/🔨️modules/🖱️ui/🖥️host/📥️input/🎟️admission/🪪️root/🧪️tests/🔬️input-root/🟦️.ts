@@ -3,8 +3,51 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import Ajv from "ajv";
 
+/** 🪪️ The input-root admission ledger: root-scoped grants and their publication outcomes. */
+type InputRootFixture = {
+  version: number;
+  scope: string;
+  storage: {
+    atomicCount: number;
+    nativeAtomicBytes: number;
+    heapAllocations: number;
+    maximumCasAttempts: number;
+  };
+  cases: {
+    name: string;
+    before: string;
+    atCas: string;
+    grant: string;
+    outcome: string;
+    after: string;
+    root: null;
+    rootLeHex: null;
+  }[];
+  reuse: {
+    initial: string;
+    firstRoot: string;
+    secondRoot: string;
+    firstEpoch: string;
+    secondEpoch: string;
+    oldKeyAccepted: boolean;
+  };
+  failureAfterInstall: {
+    retainedRoot: string;
+    nextRoot: string;
+    returnedToSequence: boolean;
+  };
+  concurrent: {
+    workers: number;
+    attemptsPerWorker: number;
+    attempts: number;
+    minimumSuccesses: number;
+    maximumSuccesses: number;
+    successfulRootsUnique: boolean;
+  };
+};
+
 export function testInputRootFixture(): void {
-  const fixture = JSON.parse(readFileSync(new URL("../../🧫️fixtures/🔣️.json", import.meta.url), "utf8"));
+  const fixture: InputRootFixture = JSON.parse(readFileSync(new URL("../../🧫️fixtures/🔣️.json", import.meta.url), "utf8"));
   const schema = JSON.parse(readFileSync(new URL("../../🧬️schema/🔣️.json", import.meta.url), "utf8"));
   const value = JSON.parse(readFileSync(new URL("../../../../../../../🌱️value/🧬️schema/🔣️.json", import.meta.url), "utf8"));
   const validate = new Ajv({ strict: true, allErrors: true }).addSchema(value).compile(schema);

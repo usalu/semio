@@ -7,7 +7,7 @@ type TestSource = { readonly directory: string; readonly url: string };
  * vector in `semio-framework-os-flow`'s `flow_mesh_pack_wire` test; this decodes the SAME base64
  * bytes out of the SAME fixture, so a drift on either side fails on both.
  */
-export async function registerTests5(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: any, source: TestSource): Promise<void> {
+export async function registerTests5(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: Pick<typeof import("../../🟦️.ts"), "decodeMeshPackBody" | "decodeMeshPackChunks">, source: TestSource): Promise<void> {
   const { decodeMeshPackBody, decodeMeshPackChunks } = dependencies;
   const { describe, expect, it } = vitest;
 

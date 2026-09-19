@@ -484,7 +484,7 @@ fn every_fixture_round_trips_through_the_rust_codec() {
             other => panic!("unknown fixture direction: {other}"),
         }
     }
-    assert_eq!(shell_to_gateway_count, 12, "fixtures must cover every ShellToGateway variant instance");
+    assert_eq!(shell_to_gateway_count, 13, "fixtures must cover every ShellToGateway variant instance");
     assert_eq!(gateway_to_shell_count, 11, "fixtures must cover every GatewayToShell variant instance");
 }
 

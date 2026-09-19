@@ -1,14 +1,10 @@
+/** 🚦️ The statechart vocabulary this extracted suite builds machines against; type-only, so the runtime cycle with the module that hosts this suite stays erased. */
+import type { Command, GuardFn, Machine, MachineSpec, NodeDef, StatechartEvent, TransitionDef } from "../../🟦️.ts";
+
 type TestSource = { readonly directory: string; readonly url: string };
 
-export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: any, source: TestSource): Promise<void> {
+export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: Pick<typeof import("../../🟦️.ts"), "EventId" | "GuardId" | "NodeId" | "ROOT" | "init" | "runConformance">, source: TestSource): Promise<void> {
   const { EventId, GuardId, NodeId, ROOT, init, runConformance } = dependencies;
-  type Command = any;
-  type GuardFn = any;
-  type Machine = any;
-  type MachineSpec = any;
-  type NodeDef = any;
-  type StatechartEvent = any;
-  type TransitionDef = any;
 
   const { describe, expect, it } = vitest;
 

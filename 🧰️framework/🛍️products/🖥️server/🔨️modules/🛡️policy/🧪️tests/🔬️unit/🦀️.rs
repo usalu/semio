@@ -1,5 +1,6 @@
 
 use super::*;
+use crate::test_instance::BearerTokenResolver;
 
 fn template(name: &str, grants: &[(PolicyPoint, &str, &str)]) -> PolicyTemplate {
     PolicyTemplate { name: name.to_string(), grants: grants.iter().map(|(point, resource, action)| PolicyGrant { point: *point, resource: (*resource).to_string(), action: (*action).to_string() }).collect() }
@@ -13,8 +14,8 @@ fn request(point: PolicyPoint, principal: Principal, scope: Option<&str>, resour
     PolicyRequest { point, principal, scope: scope.map(|scope| Scope(scope.to_string())), resource: resource.to_string(), action: action.to_string() }
 }
 
-fn resolver(name: &str, bearer: &str, principal: Principal) -> PrincipalResolvers {
-    PrincipalResolvers::BearerToken(BearerTokenResolver { name: name.to_string(), bearer: bearer.to_string(), principal })
+fn resolver(name: &str, bearer: &str, principal: Principal) -> BearerTokenResolver {
+    BearerTokenResolver { name: name.to_string(), bearer: bearer.to_string(), principal }
 }
 
 //#region 🔖️ClosedByDefault
@@ -202,7 +203,7 @@ fn assignments_are_per_principal() {
 //#region 🔖️Resolver
 #[semio_framework_async_macros::async_test]
 async fn the_chain_takes_the_first_rung_that_recognizes_a_credential() {
-    let mut chain = ResolverChain::new();
+    let mut chain = ResolverChain::<BearerTokenResolver>::new();
     chain.push(resolver("session", "tok", Principal::User { id: "alice".to_string() }));
     chain.push(resolver("share", "tok", Principal::Anonymous));
     let resolved = chain.resolve(&Credential { bearer: Some("tok".to_string()), ..Default::default() }).await;
@@ -214,7 +215,7 @@ async fn the_chain_takes_the_first_rung_that_recognizes_a_credential() {
 
 #[semio_framework_async_macros::async_test]
 async fn a_later_rung_answers_what_an_earlier_one_declined() {
-    let mut chain = ResolverChain::new();
+    let mut chain = ResolverChain::<BearerTokenResolver>::new();
     chain.push(resolver("session", "session-tok", alice()));
     chain.push(resolver("share", "share-tok", Principal::Device { id: "d9".to_string() }));
     let resolved = chain.resolve(&Credential { bearer: Some("share-tok".to_string()), ..Default::default() }).await;
@@ -224,7 +225,7 @@ async fn a_later_rung_answers_what_an_earlier_one_declined() {
 
 #[semio_framework_async_macros::async_test]
 async fn an_unrecognized_credential_falls_back_to_anonymous() {
-    let mut chain = ResolverChain::new();
+    let mut chain = ResolverChain::<BearerTokenResolver>::new();
     chain.push(resolver("session", "session-tok", alice()));
     let resolved = chain.resolve(&Credential { bearer: Some("garbage".to_string()), ..Default::default() }).await;
     assert_eq!(resolved.principal, Principal::Anonymous);
@@ -235,7 +236,7 @@ async fn an_unrecognized_credential_falls_back_to_anonymous() {
 
 #[semio_framework_async_macros::async_test]
 async fn an_empty_chain_resolves_everything_to_anonymous() {
-    let resolved = ResolverChain::new().resolve(&Credential::default()).await;
+    let resolved = ResolverChain::<BearerTokenResolver>::new().resolve(&Credential::default()).await;
     assert_eq!(resolved.principal, Principal::Anonymous);
     assert_eq!(resolved.via, "anonymous");
 }
@@ -249,7 +250,7 @@ async fn rungs_report_their_own_name() {
 #[semio_framework_async_macros::async_test]
 async fn an_anonymous_fallback_is_still_subject_to_policy() {
     let engine = PolicyEngine::new();
-    let resolved = ResolverChain::new().resolve(&Credential::default()).await;
+    let resolved = ResolverChain::<BearerTokenResolver>::new().resolve(&Credential::default()).await;
     let decision = engine.evaluate(&request(PolicyPoint::QueryAccess, resolved.principal, None, "doc-1", "read"));
     assert!(!decision.is_allowed());
 }

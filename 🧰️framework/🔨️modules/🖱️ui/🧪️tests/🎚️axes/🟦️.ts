@@ -27,8 +27,8 @@ describe("UI axes source and projections", () => {
       expect(rust).toContain(JSON.stringify(value));
       expect(typescript).toContain(JSON.stringify(value));
     }
-    const parsed = ts.createSourceFile("🟦️.ts", typescript, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
-    expect(parsed.parseDiagnostics).toEqual([]);
+    const transpiled = ts.transpileModule(typescript, { compilerOptions: { target: ts.ScriptTarget.Latest }, fileName: "🟦️.ts", reportDiagnostics: true });
+    expect(transpiled.diagnostics ?? []).toEqual([]);
   });
 
   test("preview, freshness and publication share one exact two-file plan", () => {

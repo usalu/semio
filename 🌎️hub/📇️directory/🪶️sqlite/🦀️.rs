@@ -1808,6 +1808,27 @@ impl HubDirectory for SqliteDirectory {
         let rows = statement.query_map(rusqlite::params![i64::try_from(limit).map_err(backend)?, i64::try_from(offset).map_err(backend)?], auth_audit_row).map_err(backend)?;
         rows.collect::<Result<Vec<_>, _>>().map_err(backend)
     }
+
+    async fn append_credential_audit(&self, fact: &CredentialAuditFactV1) -> DirectoryResult<AuthAuditRecord> {
+        let record = auth_audit(now_ms(), &fact.event_kind, None, fact.target_user_id.as_deref(), fact.actor_user_id.as_deref(), None, &fact.outcome_code, fact.reason_code.as_deref(), &fact.correlation_id, &fact.peer_class)?;
+        let conn = self.lock()?;
+        insert_auth_audit(&conn, &record)?;
+        Ok(record)
+    }
+
+    async fn set_password_credential(&self, user_id: &str, encoded_credential: &str, actor_user_id: Option<&str>, correlation_id: &str) -> DirectoryResult<()> {
+        validate_bounded_auth_text(encoded_credential, "password credential", AUTH_TEXT_MAX_BYTES)?;
+        let record = auth_audit(now_ms(), "credential-changed", None, Some(user_id), actor_user_id, None, "success", None, correlation_id, "server")?;
+        let mut conn = self.lock()?;
+        let tx = conn.transaction().map_err(backend)?;
+        let updated = tx.execute("UPDATE hub_user SET password_hash = ?2 WHERE id = ?1", rusqlite::params![user_id, encoded_credential]).map_err(backend)?;
+        if updated == 0 {
+            return Err(DirectoryError::Conflict("password credential target user does not exist".into()));
+        }
+        insert_auth_audit(&tx, &record)?;
+        tx.commit().map_err(backend)?;
+        Ok(())
+    }
     //#endregion
 
     //#region AdminOperations

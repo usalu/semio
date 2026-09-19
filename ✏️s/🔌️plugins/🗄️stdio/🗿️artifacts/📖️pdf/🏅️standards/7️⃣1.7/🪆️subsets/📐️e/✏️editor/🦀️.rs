@@ -14,6 +14,7 @@
 use crate::editor::pdf17e::modes::edit;
 use crate::editor::pdf17e::modes::edit::windows::main;
 use crate::standards::v1_7::subsets::base::schema::mutations::AppendPageContent;
+use crate::standards::v1_7::subsets::base::schema::snapshot::{PdfOp, PdfTextString};
 use crate::{PdfMutation, PdfSnapshot, PDF_ARTIFACT_SCHEMA_ID, STDIO_PDF_DOCUMENT_SCHEMA};
 use semio_framework_plugin::{
     built_to_component_tree, ArtifactEditor, ArtifactView, ComponentTree, ConfigView, Dialect, DraftView, Editor, Emit, Fault, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation,
@@ -136,7 +137,7 @@ impl ArtifactEditor for Pdf17EEditor {
                 if doc.snapshot.pages.get(*index).is_none() {
                     return Ok(Emit::default());
                 }
-                Ok(Emit { artifact_mutations: vec![PdfMutation::AppendPageContent(AppendPageContent { index: *index, text: text.clone() })], description: Some(format!("Set page {index}")), ..Default::default() })
+                Ok(Emit { artifact_mutations: vec![PdfMutation::AppendPageContent(AppendPageContent { index: *index, content: vec![PdfOp::NextLineShowText { text: PdfTextString::text(text.clone()) }] })], description: Some(format!("Set page {index}")), ..Default::default() })
             }
         }
     }

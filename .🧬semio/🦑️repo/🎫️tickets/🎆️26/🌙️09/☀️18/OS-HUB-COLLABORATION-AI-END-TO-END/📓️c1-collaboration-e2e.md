@@ -313,3 +313,304 @@ Step 10 refuses to pass vacuously: if user 1 had no open editor at restart time 
 
 No file owned by worker H1 (`🌎️hub/**`) or worker O1 (`🏛️ShellHost/🟦️.tsx`, root `📜️script.ts`,
 wgpu `switch_to_app`, the framework vitest include list) was touched.
+
+---
+
+# C1b — the 10-step scenario, run end to end
+
+Slice C1b (Opus 5 execution worker), 2026-09-19. Continues the C1 report above. Captures under
+`🗑️generated/c1b-*.txt`.
+
+## 8. Run log — what actually happened
+
+**Headline: the scenario still has not run, and C1b found the three reasons why — two of them fixed, the
+third measured and handed off.** Everything below is observed; captures are `🗑️generated/c1b-*.txt`.
+
+C1's §4 diagnosis (the zero build budget) was correct and worker H1 fixed it, so the hub no longer exits
+before doing any work. What that uncovered is a second, longer chain, in the order C1b hit it:
+
+| # | blocker | owner | state |
+|---|---|---|---|
+| 5 | `preparePluginBuildTargets` asserts the extension install root is fresh **before** the sync that refreshes it — every plugin build in the repo refused, with a recovery instruction that routes back through the same assert | `🔌️plugin/🏗️build` (mine) | **fixed** (§10.1) |
+| 6 | the harness spawns `bun 📜️script.ts dev`, a command the `🧑‍💻dev` router does not have — both shells exited 1 before serving a byte | `🤝️collaboration` (mine) | **fixed** (§10.2) |
+| 7 | `OS_HUB_DATA` under macOS's symlinked `/var` temp root | harness + H1 | **fixed both sides** (§10.3) |
+| 8 | `semio-s-plugin-stdio`'s fresh descriptor exceeds the 4 MiB descriptor contract bound, so the trusted stdio+GIS catalog cannot be published, so `artifactAuthority` never reports ready, so `DevScript`'s own `waitForReadiness` never admits the hub | hub/plugin descriptor contract | **measured, handed off** (§10.4) |
+| 9 | the two shells have no way to authenticate: the shell's only identity path needs a `#semio-broker=` proof answered by a `LocalBrowserRelay`, and the harness starts none | hub + shell design | **diagnosed, not fixed** (§12.1) |
+
+Blockers 5-7 were real and are gone; blocker 8 is why no hub came up in this session; blocker 9 is why the
+scenario would still not have gone green if it had.
+
+**What did run, measured:**
+
+- `🐍️c1b-prebuild.ts` — the scenario's own plugin prebuild, green. `🪐️space` (the cold build C1 deferred)
+  and `✒️writer` both produce `*_component.core.wasm`. Capture `🗑️generated/c1b-prebuild.txt`.
+- the extension install root went from **26/26 stale to 5/26** after one prebuild, measured with the same
+  probe before and after (§10.1, §12.3).
+- `deployment output preservation` — **7/7 pass**, including C1b's new law. Capture
+  `🗑️generated/c1b-extension-gate-laws.txt`:
+
+```
+$ bun ./📜️script.ts test quick --testNamePattern='deployment output preservation'
+ Test Files  1 passed | 2 skipped (3)
+      Tests  7 passed | 167 skipped (174)
+```
+  Note the invocation: a bare `bunx vitest run --config ../../🧪️tests/🎚️config/🟦️.ts` **cannot load this
+  suite at all** (`Cannot bundle built-in module "bun:sqlite" imported from ⚡️caching/🔒️leases/🟦️.ts`).
+  The project's own `📜️script.ts test` verb configures the environment correctly; the raw `bunx vitest`
+  form is what makes this file look red.
+- `cargo build --bin os-hub` on **default** features — green in 8m 16s, 7 warnings. This is the first
+  default-features hub build recorded in this ticket: worker H1's §1 blocker (the `semio-s-artifact-stdio-semio`
+  PDF callers) was cleared by slice P3 while C1b was running.
+
+**Two concurrency incidents worth recording** (both cost a full build cycle):
+
+1. The first hub build failed with 10 × `E0433 cannot find module or crate 'server'` in
+   `🌎️hub/🗄️stores/🦀️.rs`. Not a real break: cargo had read `Cargo.toml` at 02:13 and a peer added
+   `semio-framework-server = { workspace = true }` at 02:19. Re-running compiled it. A repo-wide failure
+   whose manifest is newer than the cargo start time is a stale-manifest race, not a defect.
+2. The first materialization was SIGKILLed at 77 minutes by `SEMIO_BUILD_BUDGET_MS=5400000`
+   (`fresh component timeout at build (status=null, signal=SIGKILL)`). Worker H1's fix makes an **unset**
+   budget mean the 24 h fresh-component ceiling, so pinning 90 minutes — as C1's own runner script did — is
+   now strictly worse than leaving it alone. Both ticket runner scripts were corrected.
+
+## 9. Per-step results
+
+No step of the ten has been observed passing in a browser, by C1b or by anyone before it. The honest table
+is therefore about *reachability*, not about pass/fail — claiming otherwise would be inventing results.
+
+| step | what it asserts | reachable today? | blocked by |
+|---|---|---|---|
+| 1 | user1 creates a space; user2's Home shows the row | no | §10.4 (no hub) then §12.1 (no identity) |
+| 2 | share with user2 as author; user2 opens `/spaces/{id}` | no | §10.4, §12.1 |
+| 3 | create a writer artifact; row in both tables; editor opens | no | §10.4, §12.1 |
+| 4 | user1 types, user2 sees it | no | §10.4, §12.1 |
+| 5 | 2 presence peers in distinct hub session colours | no | §10.4, §12.1 |
+| 6 | check-in moves the table's updated column for both | no | §10.4, §12.1 |
+| 7 | `/admin/api/connections` names both users; `/admin` is HTML | no | §10.4; and see §12.2 — the assertion is written against an identity delivery that no longer exists |
+| 8 | one `ServerFrame::Commands` round trip per keystroke | no | §10.4, §12.1 |
+| 9 | hub restart against the same `OS_HUB_DATA` preserves space+artifact | no | §10.4, §12.1 |
+| 10 | an unacknowledged in-flight edit survives the restart | no | §10.4, §12.1 |
+
+What C1b did change is that steps 1-10 no longer fail for **harness** reasons. Before this slice the run
+reported all ten as `blocked — shells did not boot` because of §10.2, and before that `hub exited early
+(code 1)` because of C1's §4 and §10.3. Those three are closed; what is left are two genuine product gaps
+(§10.4, §12.1), each with a named owner and a concrete shape.
+
+The brief's other named behaviours — **concurrent edits converging**, **per-user undo**, and a **short
+connection loss that does not freeze the app** — are not steps of this scenario at all (§12.4). They were
+not added: writing assertions into a scenario that cannot reach step 1 would produce evidence of nothing.
+
+## 10. Root fixes made by C1b
+
+### 10.1 The extension freshness gate refused the build that repairs it — **root-fixed**
+
+`preparePluginBuildTargets` is the entry point of every plugin build in the repo (`collabPrebuildPlugins`,
+`plugin` CLI, `activate-*`, `dev`). Its order was:
+
+```ts
+assertExtensionOutputsFresh();                     // 🧰️framework/…/🔌️plugin/🏗️build/🏃️execution/🟦️.ts:148 (before)
+const targets = resolvePluginBuildTargets(catalogEntries, filterPlugin);
+syncBuiltExtensionsToInstallRoot(targets);         // the step that REFRESHES what the assert just judged
+```
+
+`assertExtensionOutputsFresh` compares each installed extension's `🟨️.js` against the current
+`hostShimSource()` and throws, retaining the bytes, with *"Rebuild its owner through
+@semio-tech/framework-os-dev:plugin"*. That instruction routes straight back through this same assert, so
+the gate had **no reachable exit**: once the host shim source changed, every plugin build in the repo was
+refused for ever.
+
+Measured state when C1b started (probe `/tmp`-scratch, census reproduced in §8): **26 of 26** installed
+extensions under `🧑‍💻dev/🧩️extension-modules/` were stale (installed 09-01, 09-06 and 09-14; the shim is
+6752 bytes today), while **54 of 54** built extension outputs under `🔌️plugin-modules/` already carried the
+current shim. The bytes to repair 21 of the 26 were already on disk, one function call away, behind the
+assert.
+
+Fix, two files:
+
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️build/📥️installation/🟦️.ts:40-57` —
+  `assertExtensionOutputsFresh(root, rebuilding)` skips an install directory whose extension is in
+  `rebuilding`, because `publishBuiltExtension` replaces that directory wholesale later in the same run.
+  The default `rebuilding = []` keeps the function's existing single-argument semantics, so its five
+  existing laws are untouched.
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️build/🏃️execution/🟦️.ts:149-151` — resolve targets,
+  **sync**, then assert with the build scope.
+
+New law: `🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🧪️ticket-owned-browser-host-staging/🟦️.ts`,
+`"does not refuse the very build that republishes the stale install"` — a directory holding both a stale
+shim and a retained worker is accepted when its extension is in scope, refused when another extension is in
+scope, refused with no scope at all, and its retained bytes are still on disk afterwards.
+
+Effect, measured: `🐍️c1b-prebuild.ts` went from
+
+```
+error: Extension stale host shim preserved: …/🧩️extension-modules/🔡️imperative-extension-text/🟨️.js
+      at assertExtensionOutputsFresh (…/🏗️build/📥️installation/🟦️.ts:51:73)
+      at preparePluginBuildTargets (…/🏗️build/🏃️execution/🟦️.ts:148:3)
+```
+
+to
+
+```
+program build scope: all (60 plugin crates)
+[c1b-prebuild] space: PRESENT …/🔌️plugin-modules/🪐️space/semio_s_plugin_space_component.core.wasm
+[c1b-prebuild] writer: PRESENT …/🔌️plugin-modules/✒️writer/semio_s_plugin_writer_component.core.wasm
+[c1b-prebuild] done
+```
+
+Captures: `🗑️generated/c1b-prebuild.txt`. This unblocked the `🪐️space` cold wasm build C1 deferred, and it
+unblocks every other slice that touches a plugin build.
+
+### 10.2 The harness spawned a command that no longer exists — **root-fixed**
+
+`collabStartUserDevServer` spawned `bun 📜️script.ts dev`. The `🧑‍💻dev` bundle router registers
+`prepare|activate|serve|…` and **no `dev`**:
+
+```
+$ bun ./📜️script.ts dev
+unknown command "dev"
+usage: bun ./📜️script.ts <prepare|activate|serve|canonical-bootstrap-folder-mirror-check|…> [args…]
+```
+
+So both shells exited 1 immediately and `runCollabE2eVerify` recorded all ten steps as
+`blocked — shells did not boot`. No collaboration step in this harness could ever have run since the
+`dev` command was split into `activate` + `serve`.
+
+Fix, `🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🤝️collaboration/🟦️.ts`:
+
+- new `collabActivateShellRuntime()` — runs `nx run @semio-tech/framework-os-dev:activate-s-react-dev`
+  **once** for both users. Activation is keyed by variant+renderer+profile, not by user: a per-user
+  activation would stage the same tree twice and let the second run swap modules out from under the first
+  shell's open page. It is deliberately not the `dev-…` nx target, which is a *watch* that re-activates on
+  any peer's source write — under this repo's concurrent fleet that moves the staged tree mid-scenario.
+- `collabStartUserDevServer` now spawns `bun 📜️script.ts serve s react dev` with `SEMIO_VITE_HMR=0` and the
+  per-user `S_OS_PORT`/`S_HUB_URL`/`S_USER`/`S_DATA_DIR`. `S_HUB_URL` is baked at Vite `define`-time
+  (`🧑‍💻dev/🏗️builder/🌐️vite/🟦️.ts:216`), so it has to be in the **serve** process's env.
+- `runCollabE2eVerify` calls the activation before the two serves, with its own
+  `blocked — shell activation failed` fan-out so a staging failure is never mistaken for a scenario result.
+
+### 10.3 `OS_HUB_DATA` under a symlinked ancestor — **hardened in the harness**
+
+`collabHubDataDir` returned `mkdtempSync(join(tmpdir(), …))`, i.e. `/var/folders/…` on macOS, and `/var` is
+a symlink. The hub's trusted-catalog loader walks its configured data root with `O_NOFOLLOW`, so the hub
+exited 1 with `ArtifactAuthority(Catalog("Not a directory (os error 20)"))` before binding a port (worker
+H1's §6.1). H1 fixed the loader; the harness now also realpaths both branches of `collabHubDataDir`
+(`🤝️collaboration/🟦️.ts:153-166`) so a run does not depend on which `os-hub` binary happens to be staged.
+
+## 11. Permanent target wiring
+
+The permanent wiring the brief asks for **already existed** and was verified, not re-added:
+
+| layer | where | value |
+|---|---|---|
+| script route | `🧑‍💻dev/🧪️tests/✅️verification/🟦️.ts:47,60` | `VerifyScript` imports `runCollabE2eVerify` and dispatches `segments[0] === "collab"` |
+| nx target | `🧑‍💻dev/📦️packages/🟦️typescript/📋️project.json:269-275` | `"collab-e2e"`, `nx:run-commands`, `cache: false`, `bun ./📜️script.ts verify collab` |
+| launch row | `.vscode/launch.json:3306-3318` | `🛠️dev🤝️os-collab-e2e`, group `3_dev`, `bun nx run @semio-tech/framework-os-dev:collab-e2e`, `SEMIO_BUILD_BUDGET_MS=5400000` |
+| project inputs | `📋️project.json:50` | the harness file is already a declared build input |
+
+Two ticket-folder runners were written so a rerun does not have to reconstruct the environment:
+
+- `📜️c1b-warm-catalog.sh` — publishes the trusted stdio+GIS catalog **once** into
+  `.🧬semio/🌐hub/c1b-warm` (`trusted-stdio-gis-bootstrap`). This is the expensive half of a hub boot:
+  a default-features `cargo build --bin os-hub` plus two `wasm-release` component builds into private
+  `--target-dir`s that share nothing with the workspace cache.
+- `📜️c1b-collab-run.sh` — one `verify collab` run seeded from that catalog, with `NX_DAEMON=false` (the
+  shared daemon re-invalidates the project graph on every peer write and never settles under this fleet)
+  and widened hub/dev/prebuild boot budgets.
+
+## 12. Honest gaps
+
+### 12.1 The two shells cannot authenticate to the hub at all — **diagnosed, not fixed**
+
+This is the deepest finding of C1b and it is upstream of every collaboration step. It is **not** a boot
+problem, so none of §10's fixes touch it.
+
+The React shell's identity comes from one place only (`🏛️ShellHost/🟦️.tsx:3392-3412`): a
+`BrowserBrokerPortClientV1` handshake against the backbone worker, which refuses every request unless a
+**local browser broker proof** was installed:
+
+```ts
+const current = localBrowserBrokerProof;
+if (!current || Date.now() > localBrowserBrokerProofExpiresAtMs) {
+  clearLocalBrowserBrokerProof();
+  throw new Error("browser broker rebootstrap required");
+}
+```
+`🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👷️worker/🟦️.ts:772-777`; the proof is a 64-hex value
+installed by `installLocalBrowserBrokerProof` (`:747-760`) with `BROWSER_BROKER_PROOF_TTL_MS = 15_000`
+(`:642`), delivered to the page as the `#semio-broker=<hex>` fragment and answered by a
+`LocalBrowserRelay` holding a hub-issued `react-relay` credential envelope.
+
+The harness starts **no relay** and navigates to a bare `http://127.0.0.1:<port>/`. So
+`broker.me()` rejects, `onUnavailable` fires, `identityOffline` is set, `verifiedSessionAuthority` stays
+`null`, and `ShellHost` renders `SessionAuthorityNotice` (`:10960`) over the shell. Every hub-authenticated
+operation the scenario needs — create space (STEP 1), share (STEP 2), create artifact (STEP 3), open a
+document socket (STEPS 4/8/10) — is refused before it reaches the hub.
+
+The only code path in the repo that wires this correctly is the hub's own
+`DevScript secure-suite` (`🌎️hub/📦️packages/🦀️rust/📜️script.ts:12100-12119`): it issues one
+`react-relay` credential with `issueLocalCredential(run, "developer", "react-relay", 4)`, starts ONE
+`startLocalBrowserRelay(hubOrigin, uiOrigin, envelope)`, spawns ONE UI, and opens it at
+`${uiOrigin}/#semio-broker=${proofHex}`. Both `issueLocalCredential` and `startLocalBrowserRelay` are
+module-private to that script, and it supports exactly **one** user.
+
+What a real two-user run needs, concretely:
+
+1. a hub entry point that boots with **two** `LocalProfile`s (distinct `subject`, both allowing
+   `react-relay`) and starts **one relay per UI origin**, reporting each user's relay url and bootstrap
+   proof on a receipt the harness can read — the hub already accepts a profile list in `startLocalHub`, so
+   this is a new command around existing parts, not new authority machinery;
+2. the harness navigating each context to `<uiOrigin>/#semio-broker=<that user's proofHex>` instead of `/`;
+3. a decision about proof lifetime across a **reload**: `relay.takeBrowserBootstrapProof()` is one-shot and
+   the worker's copy is per-worker with a 15 s TTL, so STEP 9's `user2.reload()` drops the authority as the
+   code stands. That is a product design question (does a reloaded shell re-bootstrap, and from where?),
+   not a harness bug, and it is why this was not patched from this slice.
+
+Until that lands, STEP 1-4, 6, 8, 9 and 10 cannot pass for reasons that have nothing to do with the
+transport, the ordering, the presence wire or the round-trip bound C1 verified.
+
+### 12.2 `S_USER` reaches no browser
+
+`collabStartUserDevServer` passes `S_USER=user1@semio.dev` / `user2@semio.dev`, and the vite config defines
+only `VITE_S_HUB_URL` and `VITE_S_DATA_DIR` (`🧑‍💻dev/🏗️builder/🌐️vite/🟦️.ts:216-217`). There is no
+`VITE_S_USER` anywhere in the tree outside env-sealing allowlists. The two users are therefore distinguished
+by nothing on the client; identity is meant to come from the hub session (§12.1), which is exactly the path
+that is not wired. STEP 7's `/admin/api/connections` assertion (`text.includes("user1")`) is written against
+an identity delivery mechanism that no longer exists.
+
+### 12.3 Five extension installs are still stale
+
+After §10.1's fix and one prebuild, the install root went from **26/26 stale to 5/26** (measured twice with
+the same probe). The five are `imperative-extension-{text,math,logic,effect,control}`: their crates are live
+catalog entries but have **no built output** in this tree at all, so `syncBuiltExtensionsToInstallRoot` has
+nothing to republish from. They no longer block any build (they are in scope of a full `s` build and are
+skipped by the gate), and the scenario does not load them, but a targeted build of one of those five is the
+only thing that will refresh them.
+
+### 12.4 Not verified by C1b
+
+- The presence colour path (§3) — C1 verified the wire and the wgpu row projection; no browser has rendered
+  two distinct avatar colours.
+- Undo being per-user: the scenario has no undo step at all. `COLLAB_E2E_STEP_NAMES` covers creation,
+  sharing, replication, live edit, presence, check-in, admin, round-trip bound, restart persistence and
+  in-flight recovery — per-user undo and a deliberate short connection loss (as opposed to a full hub
+  restart) are **not** among the ten. The brief asks for both; they are absent from the harness and were not
+  added, because adding steps to a scenario that cannot reach step 1 would be writing assertions nobody can
+  run.
+- Concurrent-edit convergence: STEP 4 and STEP 8 are one-writer propagation, not two simultaneous writers.
+  The event-sourced ordering is covered by the replication crate's 274 native+wasm tests (worker H2), not by
+  this browser scenario.
+
+## 13. Files changed by C1b
+
+| File | Change |
+|---|---|
+| `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️build/📥️installation/🟦️.ts` | `assertExtensionOutputsFresh(root, rebuilding)` — skip an install directory this run will republish (`:40-57`) |
+| `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️build/🏃️execution/🟦️.ts` | `preparePluginBuildTargets` resolves targets, syncs, **then** asserts with the build scope (`:149-151`) |
+| `🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🧪️ticket-owned-browser-host-staging/🟦️.ts` | new law `"does not refuse the very build that republishes the stale install"` |
+| `🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🤝️collaboration/🟦️.ts` | `collabActivateShellRuntime()` (new, exported); `collabStartUserDevServer` spawns `serve s react dev`; `runCollabE2eVerify` activates once before the two serves; `collabHubDataDir` realpaths both branches; chromium launched with `--use-angle=metal` and an explicit 1440×900 viewport |
+| `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟦️.ts` | `readStableBuildFile` names which bound failed, with the path, the size and the limit (`:63-64`) — the old `"build input: file bound"` discarded all three, which is why blocker 8 read as a mystery for a whole build cycle |
+
+Ticket folder (not product code): `🐍️c1b-prebuild.ts`, `📜️c1b-warm-catalog.sh`, rewritten
+`📜️c1b-collab-run.sh`, captures `🗑️generated/c1b-*.txt`.
+
+No file owned by `🌎️hub/**` was edited.

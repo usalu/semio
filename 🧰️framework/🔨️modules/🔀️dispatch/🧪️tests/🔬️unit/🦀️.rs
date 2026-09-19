@@ -142,10 +142,98 @@ fn build_delegate_method_awaits_only_async_methods() {
     };
     let TraitItem::Fn(async_method) = &item_trait.items[0] else { unreachable!() };
     let TraitItem::Fn(sync_method) = &item_trait.items[1] else { unreachable!() };
-    let async_tokens = build_delegate_method(async_method).expect("ok").to_string();
-    let sync_tokens = build_delegate_method(sync_method).expect("ok").to_string();
+    let async_tokens = build_delegate_method(&item_trait.ident, async_method).expect("ok").to_string();
+    let sync_tokens = build_delegate_method(&item_trait.ident, sync_method).expect("ok").to_string();
     assert!(async_tokens.contains(". await") || async_tokens.contains(".await"));
     assert!(!sync_tokens.contains("await"));
+}
+
+#[test]
+fn build_delegate_method_rewrites_a_send_future_return_to_an_async_fn() {
+    let item_trait: ItemTrait = syn::parse_quote! {
+        trait T {
+            fn f(&self, key: &str) -> impl Future<Output = Option<String>> + Send;
+        }
+    };
+    let TraitItem::Fn(method) = &item_trait.items[0] else { unreachable!() };
+    let tokens = build_delegate_method(&item_trait.ident, method).expect("ok").to_string();
+    assert!(tokens.starts_with("async fn f"), "an `impl Future` port delegates as an `async fn`: {tokens}");
+    assert!(tokens.contains("-> Option < String >") || tokens.contains("-> Option<String>"), "the delegate names the future's Output, never the opaque type: {tokens}");
+    assert!(!tokens.contains("impl Future"), "two match arms cannot unify two opaque futures, so the opaque return must be gone: {tokens}");
+    assert!(tokens.contains(". await") || tokens.contains(".await"), "every arm must await: {tokens}");
+}
+
+#[test]
+fn build_delegate_method_accepts_a_qualified_future_path() {
+    let item_trait: ItemTrait = syn::parse_quote! {
+        trait T {
+            fn f(&self) -> impl ::core::future::Future<Output = u32> + Send + 'static;
+        }
+    };
+    let TraitItem::Fn(method) = &item_trait.items[0] else { unreachable!() };
+    let tokens = build_delegate_method(&item_trait.ident, method).expect("ok").to_string();
+    assert!(tokens.starts_with("async fn f"), "`Future` is matched on the LAST path segment: {tokens}");
+    assert!(tokens.contains("-> u32"));
+}
+
+#[test]
+fn build_delegate_method_rejects_a_future_without_a_named_output() {
+    let item_trait: ItemTrait = syn::parse_quote! {
+        trait T {
+            fn f(&self) -> impl Future + Send;
+        }
+    };
+    let TraitItem::Fn(method) = &item_trait.items[0] else { unreachable!() };
+    let error = build_delegate_method(&item_trait.ident, method).expect_err("a delegate cannot name a return type the trait never named");
+    assert!(error.to_string().contains("Output"), "{error}");
+}
+
+#[test]
+fn build_delegate_method_leaves_a_non_future_impl_trait_return_alone() {
+    let item_trait: ItemTrait = syn::parse_quote! {
+        trait T {
+            fn f(&self) -> impl Iterator<Item = u32>;
+        }
+    };
+    let TraitItem::Fn(method) = &item_trait.items[0] else { unreachable!() };
+    let tokens = build_delegate_method(&item_trait.ident, method).expect("ok").to_string();
+    assert!(tokens.contains("impl Iterator"), "only a Future return is rewritten — a one-variant set still closes an `impl Trait` port verbatim: {tokens}");
+    assert!(!tokens.contains("async"), "{tokens}");
+    assert!(!tokens.contains("await"), "{tokens}");
+}
+
+#[test]
+fn build_delegate_method_keeps_an_async_fn_method_async() {
+    let item_trait: ItemTrait = syn::parse_quote! {
+        trait T {
+            async fn f(&self) -> u32;
+        }
+    };
+    let TraitItem::Fn(method) = &item_trait.items[0] else { unreachable!() };
+    let tokens = build_delegate_method(&item_trait.ident, method).expect("ok").to_string();
+    assert!(tokens.starts_with("async fn f"));
+    assert!(tokens.contains("-> u32"));
+}
+
+#[test]
+fn end_to_end_send_future_port_expansion_parses_as_valid_rust() {
+    let trait_tokens = quote! {
+        pub trait Store: Send + Sync {
+            fn read(&self, key: &str) -> impl Future<Output = Option<String>> + Send;
+            fn write(&mut self, key: &str, value: String) -> impl Future<Output = ()> + Send;
+            fn handle<P: Projections>(&self, projections: &P) -> impl Future<Output = u32> + Send;
+        }
+    };
+    let attribute_expansion = expand_dyn_enum_attribute(TokenStream::new(), trait_tokens).expect("attribute expansion");
+    parses_as_items(&attribute_expansion);
+    let text = attribute_expansion.to_string();
+    assert_eq!(text.matches("impl Future").count(), 3, "the trait itself is re-emitted UNCHANGED; only the three delegates lose the opaque return: {text}");
+    assert_eq!(text.matches("async fn").count(), 3, "one `async fn` delegate per port method: {text}");
+
+    let call_expansion = expand_dyn_enum_call(quote! { pub enum Stores: Store { Text(TextStore), Kv(KvStore) } }).expect("call expansion");
+    parses_as_items(&call_expansion);
+    let combined: TokenStream = format!("{attribute_expansion}{call_expansion}").parse().expect("combined tokens must re-lex");
+    parses_as_items(&combined);
 }
 
 #[test]
@@ -156,9 +244,9 @@ fn build_delegate_method_strips_mut_from_forwarded_params() {
         }
     };
     let TraitItem::Fn(method) = &item_trait.items[0] else { unreachable!() };
-    let tokens = build_delegate_method(method).expect("ok").to_string();
+    let tokens = build_delegate_method(&item_trait.ident, method).expect("ok").to_string();
     assert!(!tokens.contains("mut x"), "generated delegate must not warn unused_mut: {tokens}");
-    assert!(tokens.contains("inner . f (x)") || tokens.contains("inner.f(x)"));
+    assert!(tokens.contains("T :: f (inner , x)") || tokens.contains("T::f(inner, x)"), "the arm must call THROUGH the trait, never by method-call syntax: {tokens}");
 }
 
 #[test]
@@ -169,7 +257,7 @@ fn build_delegate_method_arc_self_clones_the_variant() {
         }
     };
     let TraitItem::Fn(method) = &item_trait.items[0] else { unreachable!() };
-    let tokens = build_delegate_method(method).expect("ok").to_string();
+    let tokens = build_delegate_method(&item_trait.ident, method).expect("ok").to_string();
     assert!(tokens.contains("inner . clone ()") || tokens.contains("inner.clone()"));
     assert!(tokens.contains("match * self") || tokens.contains("match *self"));
     assert!(tokens.contains("ref inner"), "Arc<Self> must bind by `ref`, not move: {tokens}");
@@ -183,7 +271,7 @@ fn build_delegate_method_preserves_generics_and_where_clause() {
         }
     };
     let TraitItem::Fn(method) = &item_trait.items[0] else { unreachable!() };
-    let tokens = build_delegate_method(method).expect("ok").to_string();
+    let tokens = build_delegate_method(&item_trait.ident, method).expect("ok").to_string();
     assert!(tokens.contains("< X >") || tokens.contains("<X>"));
     assert!(tokens.contains("where"));
 }

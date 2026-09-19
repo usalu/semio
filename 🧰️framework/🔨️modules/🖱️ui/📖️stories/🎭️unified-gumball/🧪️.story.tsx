@@ -12,6 +12,7 @@
 import { Scene, UnifiedGumball, type GumballConfig, type UnifiedGumballProps } from "@semio-tech/ui-react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
+import { Object3D } from "three";
 // #endregion 🔌️Adapters
 
 // 🎛️#region 🔖️UnifiedGumball
@@ -42,6 +43,7 @@ const meta = {
     layout: "fullscreen",
   },
   tags: ["autodocs"],
+  args: { target: new Object3D() },
 } satisfies Meta<typeof UnifiedGumball>;
 
 export default meta;

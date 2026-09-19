@@ -75,7 +75,7 @@ const groupedItems: ContextMenuItem[] = [
     icon: "eye",
     children: [
       { id: "view.fit", label: uiDataLabel("Fit to Screen"), icon: "scan" },
-      { id: "view.reset", label: uiDataLabel("Reset Camera"), icon: "refresh-ccw" },
+      { id: "view.reset", label: uiDataLabel("Reset Camera"), icon: "rotate-ccw" },
     ],
   },
   {
@@ -144,6 +144,7 @@ const ControlledContextMenuDemo = () => {
     <div className="relative flex size-40 items-center justify-center border text-sm text-muted-foreground">
       <Button
         id="context-menu-controller-story-open"
+        icon="mouse-pointer"
         text="Open at center"
         onClick={(event) => {
           const rect = event.currentTarget.closest(".relative")?.getBoundingClientRect();
@@ -181,7 +182,7 @@ const NumberedPreviewContextMenuDemo = () => {
   }));
   return (
     <div className="relative flex size-40 items-center justify-center border text-sm text-muted-foreground">
-      <Button id="context-menu-numbered-story-open" text="Open numbered menu" onClick={() => setOpen(true)} />
+      <Button id="context-menu-numbered-story-open" icon="list-ordered" text="Open numbered menu" onClick={() => setOpen(true)} />
       <ContextMenuController open={open} closeOnSelect={false} position={{ x: 120, y: 120 }} items={items} onOpenChange={setOpen} title={uiDataLabel("Suggest")} />
     </div>
   );

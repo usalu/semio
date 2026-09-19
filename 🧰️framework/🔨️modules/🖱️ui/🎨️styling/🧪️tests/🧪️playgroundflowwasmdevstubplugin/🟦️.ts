@@ -1,6 +1,6 @@
 type TestSource = { readonly directory: string; readonly url: string };
 
-export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: any, source: TestSource): Promise<void> {
+export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: Pick<typeof import("../../../../🖼️assets/🥽️mesh/🟦️.ts"), "meshAssetTransportUrl" | "resolveMeshAsset"> & Pick<typeof import("../../🏗️builder/🌐️vite/🟦️.ts"), "GIS_MAP_DEFAULT_PREFETCH_BOUNDS" | "PLAYGROUND_PLAY_BOOT_APPEARANCE_SCRIPT" | "PLAYGROUND_PLAY_BOOT_INLINE_STYLE" | "PLAYGROUND_PLAY_BOOT_REVEAL_SCRIPT" | "PLAYGROUND_PLAY_BOOT_THEME_SCRIPT" | "PLAYGROUND_WASM_STUB_PREFIX" | "SEMIO_ASSET_ROOT" | "SEMIO_FAVICON_HEAD_HTML" | "contentTypeForStaticDirAsset" | "createWorkspaceViteResolveConfig" | "findWorkspacePackages" | "isPlaygroundOptimizedDepUrl" | "listMapTilesForBounds" | "mapTileCacheRoots" | "meshCollectionVitePlugin" | "playgroundAssetVitePlugins" | "playgroundFlowWasmDevStubPlugin" | "playgroundOptimizedDepUrlPrefix" | "playgroundPlayBootHtmlPlugin" | "playgroundSceneHostOptimizeDeps" | "playgroundSceneHostResolveAliases" | "playgroundWasmStubKey" | "prefetchMapTiles" | "resolveGisMapTileServeMode" | "resolveSemioAssetRoot" | "rewriteSpaFallbackToEmojiEntry" | "semioFaviconSources" | "semioFaviconSvgMarkup" | "semioFaviconVitePlugin" | "semioHostHtmlString" | "semioHostHtmlVitePlugin" | "startAssetServer" | "staticDirVitePlugin" | "statusSurfaceHtml" | "tileProxyVitePlugin"> & Pick<typeof import("node:fs"), "existsSync" | "mkdirSync" | "mkdtempSync" | "rmSync" | "writeFileSync"> & Pick<typeof import("node:http"), "createServer"> & Pick<typeof import("node:os"), "tmpdir"> & Pick<typeof import("node:path"), "join" | "resolve"> & Pick<typeof import("node:url"), "fileURLToPath">, source: TestSource): Promise<void> {
   const { GIS_MAP_DEFAULT_PREFETCH_BOUNDS, PLAYGROUND_PLAY_BOOT_APPEARANCE_SCRIPT, PLAYGROUND_PLAY_BOOT_INLINE_STYLE, PLAYGROUND_PLAY_BOOT_REVEAL_SCRIPT, PLAYGROUND_PLAY_BOOT_THEME_SCRIPT, PLAYGROUND_WASM_STUB_PREFIX, SEMIO_ASSET_ROOT, SEMIO_FAVICON_HEAD_HTML, contentTypeForStaticDirAsset, createServer, createWorkspaceViteResolveConfig, existsSync, fileURLToPath, findWorkspacePackages, isPlaygroundOptimizedDepUrl, playgroundOptimizedDepUrlPrefix, listMapTilesForBounds, mapTileCacheRoots, meshAssetTransportUrl, meshCollectionVitePlugin, mkdirSync, mkdtempSync, playgroundAssetVitePlugins, playgroundFlowWasmDevStubPlugin, playgroundPlayBootHtmlPlugin, playgroundSceneHostOptimizeDeps, playgroundSceneHostResolveAliases, playgroundWasmStubKey, prefetchMapTiles, resolve, resolveGisMapTileServeMode, resolveMeshAsset, resolveSemioAssetRoot, rewriteSpaFallbackToEmojiEntry, rmSync, semioFaviconSources, semioFaviconSvgMarkup, semioFaviconVitePlugin, semioHostHtmlString, semioHostHtmlVitePlugin, startAssetServer, staticDirVitePlugin, statusSurfaceHtml, tileProxyVitePlugin, tmpdir, writeFileSync, join } = dependencies;
   type PlaygroundAssetSpec = any;
 
@@ -214,8 +214,12 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       expect(PLAYGROUND_PLAY_BOOT_THEME_SCRIPT).toContain("dataset.uiTheme");
     });
 
-    it("injects the theme script after the appearance script and before the stylesheet link", () => {
-      const tags = playgroundPlayBootHtmlPlugin().transformIndexHtml!.handler!({} as never).tags;
+    it("injects the theme script after the appearance script and before the stylesheet link", async () => {
+      const hook = playgroundPlayBootHtmlPlugin().transformIndexHtml;
+      if (typeof hook !== "object") throw new Error("playground play boot html hook must declare its order");
+      const injected = await hook.handler("", { path: "/🌐️.html", filename: "🌐️.html" });
+      if (typeof injected !== "object" || injected === null || Array.isArray(injected) || !("tags" in injected)) throw new Error("playground play boot html hook must return injected tags");
+      const tags = injected.tags;
       const kinds = tags.map((tag) => (tag.children === PLAYGROUND_PLAY_BOOT_APPEARANCE_SCRIPT ? "appearance" : tag.children === PLAYGROUND_PLAY_BOOT_THEME_SCRIPT ? "theme" : tag.attrs && "href" in tag.attrs ? "stylesheet" : "other"));
       expect(kinds.indexOf("appearance")).toBeLessThan(kinds.indexOf("theme"));
       expect(kinds.indexOf("theme")).toBeLessThan(kinds.indexOf("stylesheet"));

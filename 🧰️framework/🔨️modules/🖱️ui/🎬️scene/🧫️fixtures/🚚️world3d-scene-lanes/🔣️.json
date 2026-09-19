@@ -87,6 +87,12 @@
       "optional": true
     },
     {
+      "lane": "pickTargets",
+      "field": "pickTargetsJson",
+      "bodyKey": "framework.scene.world3d.pickTargets",
+      "optional": true
+    },
+    {
       "lane": "lod",
       "field": "lodJson",
       "bodyKey": "framework.scene.world3d.lod",

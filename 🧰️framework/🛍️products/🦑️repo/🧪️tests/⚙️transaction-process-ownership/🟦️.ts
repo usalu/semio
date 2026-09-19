@@ -10,6 +10,16 @@ import { join, resolve } from "node:path";
 import { SmartBuffer } from "smart-buffer";
 import ts from "typescript";
 
+/** 👁️ One reading of a process as `🧬️schema/🔣️.json`'s `TransactionProcessObservation` declares it. */
+interface TransactionProcessObservation {
+  pid: number;
+  parentPid: number;
+  groupId: number | null;
+  sessionId: number | null;
+  state: "live" | "zombie";
+  birth: Record<string, unknown>;
+}
+
 const owner = import.meta.dir, scope = resolve(owner, "../../🔨️modules/🔩️native/👁️observe"), path = join(scope, "🟦️.ts"), vectorPath = join(owner, "../../🧫️fixtures/⚙️transaction-process-ownership/🔣️.json"), vectorText = readFileSync(vectorPath, "utf8"), vector = JSON.parse(vectorText), schema = JSON.parse(readFileSync(join(scope, "🧬️schema/🔣️.json"), "utf8"));
 const require = createRequire(import.meta.url), compilers = [{ id: "bun", compile: (code: string) => new Bun.Transpiler({ loader: "ts", target: "node" }).transformSync(code) }, { id: "typescript", compile: (code: string) => ts.transpileModule(code, { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.CommonJS } }).outputText }];
 const clone = <T>(value: T): T => structuredClone(value);
@@ -38,7 +48,7 @@ class FakeChild extends EventEmitter {
   close(): void { this.emit("close", this.exitCode, this.signalCode); }
 }
 
-function changed(row: any): any {
+function changed(row: any): TransactionProcessObservation | null {
   if (row.change === "absent") return null;
   const value = clone(vector.observations[row.base]);
   if (row.change === "birth") { const key = row.base === "darwin" ? "seconds" : row.base === "linux" ? "startTicks" : "filetime"; value.birth[key] = String(BigInt(value.birth[key]) + 1n); }
@@ -108,7 +118,7 @@ test("layout agreement rejects 128, disagreement, wrong host and unsupported or 
 });
 
 test("pure decisions match independent Ajv and Lodash identity oracle without signal authority", () => {
-  const validate = new Ajv({ strict: true }).compile({ ...schema, $ref: "#/$defs/TransactionProcessObservation" });
+  const validate = new Ajv({ strict: true }).compile<TransactionProcessObservation>({ ...schema, $ref: "#/$defs/TransactionProcessObservation" });
   for (const compiler of compilers) {
     const api = compiled(compiler);
     for (const row of vector.decisionCases) {

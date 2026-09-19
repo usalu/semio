@@ -1,11 +1,9 @@
 //! 📥️ `pdf` (1.7) → `s.stdio.semio/v1/drawing` — an honestly THIN bridge, real per what
-//! `PdfSnapshot` actually carries: `PdfPage.text` is already-extracted, aggregated page text
-//! (per that snapshot's own module doc: "`text` doubles as the builder's authoring surface: the
-//! writer regenerates a fresh content stream from it on encode") — NOT a content-stream operator
-//! list. This codec never decodes `Tj`/`TJ`/path-painting operators into drawable ops (only the
-//! raw, undecoded PDF object graph retains that, in `PdfSnapshot.objects`, opaque bytes this
-//! bridge does not attempt to interpret — that would be re-implementing a PDF content-stream
-//! interpreter, explicitly out of scope: "zero codec reimplementation"). So the real, honest
+//! `PdfSnapshot` actually carries: `PdfPage::text()` is the page's own Unicode text in painting
+//! order, which the pdf crate extracts from the page's typed content-stream operators. This codec
+//! never interprets the path-painting operators into drawable ops, and never walks the raw,
+//! undecoded object graph in `PdfSnapshot.objects` — that would be re-implementing a PDF
+//! content-stream interpreter, explicitly out of scope: "zero codec reimplementation". So the real, honest
 //! bridge this leaf builds is: one `DrawLayer` per PDF page, canvas from `pages[0].media_box`,
 //! containing exactly one `DrawNode::Text` holding that page's whole extracted text — never
 //! fabricating vector paths PDF's own typed snapshot doesn't expose.
@@ -43,7 +41,7 @@ impl ArtifactDeserializer for SemioDrawingFromPdf {
                     id: format!("page{i}"),
                     name: format!("page{i}"),
                     visible: true,
-                    root: DrawNode::Group { transform: SemioTransform::identity(), children: vec![DrawNode::Text { value: page.text.clone(), at: SemioPoint2 { x: 0.0, y: height }, style: None }] },
+                    root: DrawNode::Group { transform: SemioTransform::identity(), children: vec![DrawNode::Text { value: page.text(), at: SemioPoint2 { x: 0.0, y: height }, style: None }] },
                 }
             })
             .collect();

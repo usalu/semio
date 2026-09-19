@@ -145,9 +145,9 @@ async function preparePluginBuildTargets(filterPlugin?: string): Promise<readonl
   rewriteExistingPluginShimImports();
   const stalePublicPlugins = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/public/plugin-modules");
   assertNoStalePublicPluginOutputs(stalePublicPlugins);
-  assertExtensionOutputsFresh();
   const targets = resolvePluginBuildTargets(catalogEntries, filterPlugin);
   syncBuiltExtensionsToInstallRoot(targets);
+  assertExtensionOutputsFresh(undefined, targets);
   if (filterPlugin && !isHostPlaygroundFilter(filterPlugin)) {
     console.log(`program build scope: ${targets.map((target) => target.pluginId).join(", ")}`);
   } else {

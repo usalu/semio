@@ -1123,11 +1123,20 @@ pub fn create_trinity_jack_app() -> semio_framework_plugin::AppDefinition {
                 selection: SelectionSpec { modes: vec![SelectionMode::Multiple, SelectionMode::Single], methods: vec![SelectionMethod::Pick], merges: vec![MergeMode::Replace], transitive: true, broadcast: true },
             })
             .window_kind_interactions(TRINITY_JACK_PLAY_WINDOW_GRAPH, vec![InteractionRef::new("ast")])
-            // 📝️ Staged argument forms for the panel-visible preset loaders.
+            // 📇️ Per-window action scoping. Every retained WINDOW-CONFIG verb reads the config of the
+            // window it was dispatched from, so an unowned one is a live fault: `build_definition`
+            // copies an unowned action onto EVERY window kind, the Actions pane of the graph pane then
+            // offered `formatDocument`, and the reducer refused it with "Jack query formatting requires
+            // the exact editor-window config snapshot" (`:422`). Text verbs belong to the query editor,
+            // viewport/LOD to the graph. Document verbs, selection, history and the example picker stay
+            // unscoped on purpose — they read the document, not a pane.
+            .window_kind_action_refs(TRINITY_JACK_PLAY_WINDOW_EDITOR, vec!["textEdit".into(), "textSelect".into(), "formatDocument".into()])
+            .window_kind_action_refs(TRINITY_JACK_PLAY_WINDOW_GRAPH, vec!["nodeGraphViewport".into(), "setLodMode".into()])
+            // 📝️ Staged argument forms for the panel-visible preset loaders. The option list IS the
+            // subset's registered example set — the navbar picker only ever dispatches a registered id.
             .action_args("setActiveExample", vec![
                 ActionArgDef::select("exampleId", LocalizedLabel::native("Fixture", "Fixtur"), vec![
-                    ActionArgOption::new("nakagin", LocalizedLabel::native("Nakagin — Table", "Nakagin — Tabelle")),
-                    ActionArgOption::new("branch-chain", LocalizedLabel::native("Branch — Graph", "Branch — Graph")),
+                    ActionArgOption::new(crate::examples::demo::ID, crate::examples::demo::label()),
                 ]).required(),
             ])
             .action_args("patchNodes", vec![

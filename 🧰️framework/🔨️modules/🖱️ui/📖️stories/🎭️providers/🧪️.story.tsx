@@ -46,6 +46,7 @@ const meta = {
     layout: "padded",
   },
   tags: ["autodocs"],
+  args: { children: null },
 } satisfies Meta<typeof GhostProvider>;
 
 export default meta;
@@ -130,6 +131,8 @@ function PanelDockDemo() {
       "bottom-left": [],
       "bottom-middle": [],
       "bottom-right": [],
+      "left-middle": [],
+      "right-middle": [],
     },
   });
   const onTabDockDrop = (move: PanelTabDockMove) => {

@@ -1402,6 +1402,17 @@ import { EventFeedHost } from "../../🧱️elements/📡️EventFeedHost/🟦�
 export { EventFeedHost };
 //#endregion 🔖️EventFeedHost
 
+//#region 🔖️HubConnection
+/** 🔗️ ticket 26/09/18/OS-HUB-COLLABORATION-AI-END-TO-END slice AU2 — the browser-facing hub
+ * relationship: the headless `useHubConnection` lane plus the sign-in and end-user spaces surfaces
+ * it drives. */
+import { createHubConnectionFetchPortV1, hubUiLabel, useHubConnection, type HubConnectionPortV1, type HubConnectionValueV1, type HubFetchResponseV1, type HubInviteCapabilityV1, type HubRedemptionStateV1 } from "../../🧱️elements/🔗️HubConnection/🟦️.tsx";
+import { HubSignInPane, hubSignInFormOfferedV1, hubSignInSubmittableV1, type HubSignInPaneProps } from "../../🧱️elements/🔐️HubSignIn/🟦️.tsx";
+import { SpaceBrowser, spaceBrowserPresencePeersV1, type SpaceBrowserProps } from "../../🧱️elements/🏘️SpaceBrowser/🟦️.tsx";
+export { HubSignInPane, SpaceBrowser, createHubConnectionFetchPortV1, hubSignInFormOfferedV1, hubSignInSubmittableV1, hubUiLabel, spaceBrowserPresencePeersV1, useHubConnection };
+export type { HubConnectionPortV1, HubConnectionValueV1, HubFetchResponseV1, HubInviteCapabilityV1, HubRedemptionStateV1, HubSignInPaneProps, SpaceBrowserProps };
+//#endregion 🔖️HubConnection
+
 //#region 🔖️SpacesI18n
 /** 📇️ ticket 26/08/16/HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-STUDIOS — `ui.home.*`/`ui.space.*`/
  * `ui.presence.*`/`ui.checkin.*`/`ui.identity.*` chrome vocabulary consumed by `ShellHost`'s identity
@@ -1436,7 +1447,8 @@ export type SpacesUiLabelKey =
   | "ui.sync.status.remote.connected"
   | "ui.sync.status.remote.connecting"
   | "ui.sync.status.remote.backoff"
-  | "ui.sync.status.remote.detached";
+  | "ui.sync.status.remote.detached"
+  | "ui.sync.browse";
 
 const SPACES_UI_LABELS: Readonly<Record<SpacesUiLabelKey, { readonly en: string; readonly de: string }>> = {
   "ui.home.title": { en: "Spaces", de: "Spaces" },
@@ -1463,6 +1475,7 @@ const SPACES_UI_LABELS: Readonly<Record<SpacesUiLabelKey, { readonly en: string;
   "ui.sync.status.remote.connecting": { en: "connecting", de: "verbindet" },
   "ui.sync.status.remote.backoff": { en: "backoff", de: "erneuter Versuch" },
   "ui.sync.status.remote.detached": { en: "detached", de: "getrennt" },
+  "ui.sync.browse": { en: "Browse…", de: "Durchsuchen…" },
 };
 
 /** 📇️ Resolves one of {@link SpacesUiLabelKey}'s frozen bilingual pairs — `locale` accepts any

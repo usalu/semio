@@ -3,7 +3,7 @@
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
-import { App, Mode, reactHostPort } from "@semio-tech/ui-react";
+import { App, Mode, reactHostPort, uiDataLabel } from "@semio-tech/ui-react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 // #endregion 🔌️Adapters
 
@@ -12,6 +12,7 @@ const meta = {
   component: App,
   parameters: { layout: "fullscreen" },
   tags: ["autodocs"],
+  args: { modes: [], activeModeId: "design" },
 } satisfies Meta<typeof App>;
 
 export default meta;
@@ -27,12 +28,12 @@ export const Default: Story = {
           modes={[
             {
               id: "design",
-              label: "Design",
+              label: uiDataLabel("Design"),
               children: (
                 <Mode
                   windows={[
-                    { id: "left", children: <div className="flex h-full items-center justify-center">Design Left</div> },
-                    { id: "right", children: <div className="flex h-full items-center justify-center">Design Right</div> },
+                    { id: "left", iconId: "app-window", children: <div className="flex h-full items-center justify-center">Design Left</div> },
+                    { id: "right", iconId: "app-window", children: <div className="flex h-full items-center justify-center">Design Right</div> },
                   ]}
                   activeWindowId="left"
                 />
@@ -40,8 +41,8 @@ export const Default: Story = {
             },
             {
               id: "review",
-              label: "Review",
-              children: <Mode windows={[{ id: "preview", children: <div className="flex h-full items-center justify-center">Review Preview</div> }]} activeWindowId="preview" />,
+              label: uiDataLabel("Review"),
+              children: <Mode windows={[{ id: "preview", iconId: "app-window", children: <div className="flex h-full items-center justify-center">Review Preview</div> }]} activeWindowId="preview" />,
             },
           ]}
           activeModeId={activeModeId}

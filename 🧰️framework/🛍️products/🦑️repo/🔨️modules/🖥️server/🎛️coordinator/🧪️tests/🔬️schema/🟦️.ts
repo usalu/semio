@@ -9,7 +9,7 @@ import { COORDINATOR_PARSERS, COORDINATOR_SCHEMA_ID, parseG3EventEnvelope, parse
 //#region 🧫️Fixtures
 const ownerRoot = join(import.meta.dirname, "../..");
 const schemaPath = join(ownerRoot, "🧬️schema/🔣️.json");
-const document = JSON.parse(readFileSync(schemaPath, "utf-8")) as { $id: string; $defs: Record<string, Record<string, unknown>> };
+const document = JSON.parse(readFileSync(schemaPath, "utf-8")) as { $schema: string; $id: string; $defs: Record<string, Record<string, unknown>> };
 const cases = JSON.parse(readFileSync(join(ownerRoot, "🧫️fixtures/📨️rest-cases.json"), "utf-8")) as {
   schema: string;
   accepted: { export: string; value: unknown; parsed: unknown }[];

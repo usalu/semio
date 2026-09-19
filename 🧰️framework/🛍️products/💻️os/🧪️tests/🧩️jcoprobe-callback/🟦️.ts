@@ -2,8 +2,10 @@
  * S1-S4 and prints PASS/FAIL verdict lines the report can quote verbatim. */
 import { probe } from "../../🧫️fixtures/🧩️jcoprobe/🌐️browser-bundles/📞️out-callback/jcoprobe.js";
 
-const verdicts = [];
-function record(id, ok, detail) {
+type JcoProbeVerdict = Readonly<{ id: string; ok: boolean; detail: string }>;
+
+const verdicts: JcoProbeVerdict[] = [];
+function record(id: string, ok: boolean, detail: string): void {
   verdicts.push({ id, ok, detail });
   console.log(`[jcoprobe-callback] ${id}: ${ok ? "PASS" : "FAIL"} — ${detail}`);
 }

@@ -133,7 +133,7 @@ export async function testCommandInputs(workspace: string, output: string): Prom
     const entry = join(workspace, library, "⚡️caching/🦀️cargo/📜️script.ts"), actual = cacheInternals.relativeScriptInputs([entry], workspace);
     const built = await require("esbuild").build({ entryPoints: [entry], absWorkingDir: workspace, bundle: true, write: false, platform: "node", format: "esm", packages: "external", metafile: true, logLevel: "silent" });
     const expected = Object.keys(built.metafile.inputs).map((path) => "{workspaceRoot}/" + relative(workspace, resolve(workspace, path))).sort();
-    const missing = expected.filter(path => !actual.includes(path)), extra = actual.filter(path => !expected.includes(path));
+    const missing = expected.filter((path: string) => !actual.includes(path)), extra = actual.filter((path: string) => !expected.includes(path));
     assert.deepEqual({ missing: missing.slice(0, 20), extra: extra.slice(0, 20) }, { missing: [], extra: [] }, "Command import ownership must match the runtime compiler");
     for (const [path, content] of Object.entries(cases.commandRouter.files)) { const file = join(root, path); mkdirSync(dirname(file), { recursive: true }); writeFileSync(file, String(content)); }
     assert.equal(typeof cacheInternals.nativeTargetCommandInputs, "function", "Native target normalization must inspect its executable router");
@@ -927,13 +927,13 @@ export function createCachePolicyTests(dependencies: Record<string, any>, testSo
       assert.deepEqual(target.outputs, authority.outputRoots.filter((output: any) => !output.producer || output.producer.target === authority.target).map((output: any) => `{workspaceRoot}/${output.path}`), id);
       for (const output of authority.outputRoots.filter((output: any) => output.producer && output.producer.target !== authority.target)) {
         const split = output.producer.target.lastIndexOf(":"), producer = contracts.find((project) => project.name === output.producer.target.slice(0, split));
-        assert.ok(producer.targets[output.producer.target.slice(split + 1)].outputs.includes(`{workspaceRoot}/${output.path}`));
+        assert.ok(producer!.targets[output.producer.target.slice(split + 1)].outputs.includes(`{workspaceRoot}/${output.path}`));
         assert.ok(target.dependsOn.includes(output.producer.target));
       }
       for (const path of authority.inputPatterns) assert.ok(target.inputs.includes(`{workspaceRoot}/${path}`), `${id} missing ${path}`);
       if (authority.inputDiscovery) {
         const fingerprint = policy.generatorInputs[authority.inputDiscovery.kind], separator = fingerprint.target.lastIndexOf(":"), owner = contracts.find((project) => project.name === fingerprint.target.slice(0, separator));
-        const guard = owner.targets[fingerprint.target.slice(separator + 1)];
+        const guard = owner!.targets[fingerprint.target.slice(separator + 1)];
         assert.ok(target.inputs.some((input: any) => input.dependentTasksOutputFiles === fingerprint.output), `${id} must hash the discovered input receipt`);
         assert.ok(!target.inputs.some((input: any) => input.runtime?.includes("generator-inputs")), `${id} must not repeat discovery inside the hasher`);
         assert.ok(target.dependsOn.includes(fingerprint.target)); assert.equal(guard.cache, false);
@@ -961,14 +961,14 @@ export function createCachePolicyTests(dependencies: Record<string, any>, testSo
     for (const name of ["test", "lint", "build", "generate", "verify", "test-exhaustive"]) assert.equal(workspace.targets[name]?.cache, true, name);
     assert.equal(workspace.targets.dev.cache, false);
     assert.equal(workspace.targets.dev.continuous, true);
-    assert.equal(cacheInternals.nativeTargetCommandInputs({ options: { command: "bun ./x.ts", cwd: "." } }, root).some((input) => input.env && input.env.startsWith("SEMIO_")), true, "native leaves must fingerprint SEMIO toolchain env");
+    assert.equal(cacheInternals.nativeTargetCommandInputs({ options: { command: "bun ./x.ts", cwd: "." } }, root).some((input: { readonly env?: string }) => input.env && input.env.startsWith("SEMIO_")), true, "native leaves must fingerprint SEMIO toolchain env");
     const hostProject = contracts.find((project) => project.name === vectors.platformEnvironment.project)!;
     for (const target of Object.values(hostProject.targets) as any[]) for (const key of vectors.platformEnvironment.keys) assert.equal(target.options?.env?.[key], undefined, `Shared target metadata cannot force ${key}`);
     const bootstrap = vectors.bootstrap, dotnet = contracts.find((project) => project.name === bootstrap.dotnetProject);
     assert.ok(dotnet, "The current .NET support library needs an Nx owner");
-    assert.deepEqual(dotnet.targets.build.outputs, ["{projectRoot}/dist/build"]);
-    assert.ok(dotnet.targets.build.dependsOn.includes("deps"));
-    assert.equal(dotnet.targets.deps.cache, false);
+    assert.deepEqual(dotnet!.targets.build.outputs, ["{projectRoot}/dist/build"]);
+    assert.ok(dotnet!.targets.build.dependsOn.includes("deps"));
+    assert.equal(dotnet!.targets.deps.cache, false);
     assert.ok(workspace.targets["deps-dotnet"].dependsOn.includes(`${bootstrap.dotnetProject}:deps`));
     assert.ok(readFileSync(join(root, "Monorepo.sln"), "utf8").includes(bootstrap.dotnetPath.replaceAll("/", "\\")));
     assert.ok(readFileSync(join(root, bootstrap.dotnetPath, "🧪️Semio.Repo.Test.csproj"), "utf8").includes(`Include="${bootstrap.compile}"`));
@@ -1057,9 +1057,9 @@ export function createCachePolicyTests(dependencies: Record<string, any>, testSo
     for (const row of vectors.wasm) {
       const project = contracts.find((project) => project.name === row.project);
       assert.ok(project, row.project);
-      const expectedOutput = cacheInternals.resolveOutputPath(row.output, project.root, root);
+      const expectedOutput = cacheInternals.resolveOutputPath(row.output, project!.root, root);
       assert.ok(expectedOutput, row.output);
-      assert.ok(project.targets.wasm.outputs?.some((output: string) => cacheInternals.resolveOutputPath(output, project.root, root) === expectedOutput), `${row.project}:wasm must own ${row.output}`);
+      assert.ok(project!.targets.wasm.outputs?.some((output: string) => cacheInternals.resolveOutputPath(output, project!.root, root) === expectedOutput), `${row.project}:wasm must own ${row.output}`);
       assert.notEqual(project?.targets.wasm.cache, false, `${row.project}:wasm must be cacheable`);
       assert.ok(project?.namedInputs?.default.some((input: any) => input.env === "RUSTFLAGS"), `${row.project} must preserve toolchain inputs`);
       if (row.output.startsWith("{projectRoot}/") && !row.output.includes("../")) assert.ok(project?.namedInputs?.default.includes(`!${row.output}/**/*`), `${row.project} must exclude its output in the project fileset`);
@@ -1074,7 +1074,7 @@ export function createCachePolicyTests(dependencies: Record<string, any>, testSo
     assert.deepEqual(rustInputs, vectors.rust.inputs);
     const rustOracle = Bun.spawnSync(["rustc", "--crate-type=lib", "--emit=dep-info", "-o", join(rustFixture, "oracle.d"), vectors.rust.entry], { cwd: rustFixture, stdout: "pipe", stderr: "pipe" });
     assert.equal(rustOracle.exitCode, 0, rustOracle.stderr.toString());
-    const rustDependencies = readFileSync(join(rustFixture, "oracle.d"), "utf8").split("\n")[0]!.split(": ")[1]!.trim().split(/\s+/).map((path) => slash(relative(rustFixture, resolve(rustFixture, path)))).sort();
+    const rustDependencies = readFileSync(join(rustFixture, "oracle.d"), "utf8").split("\n")[0]!.split(": ")[1]!.trim().split(/\s+/).map((path: string) => slash(relative(rustFixture, resolve(rustFixture, path)))).sort();
     assert.deepEqual(rustInputs, [...new Set(rustDependencies)]);
     const discovery = vectors.rustDiscoveryCache, sourceCache = cacheInternals.createRustSourceCache(discovery.limitBytes);
     const revisionRoot = join(fixture, "rust-revisions");
@@ -1088,7 +1088,7 @@ export function createCachePolicyTests(dependencies: Record<string, any>, testSo
       assert.deepEqual(inputs, revision.inputs);
       const oracle = Bun.spawnSync(["rustc", "--crate-type=lib", "--emit=dep-info", "-o", "oracle.d", discovery.entry], { cwd: revisionRoot, stdout: "pipe", stderr: "pipe" });
       assert.equal(oracle.exitCode, 0, oracle.stderr.toString());
-      const dependencies = readFileSync(join(revisionRoot, "oracle.d"), "utf8").split("\n")[0]!.split(": ")[1]!.trim().split(/\s+/).map((path) => slash(relative(revisionRoot, resolve(revisionRoot, path)))).sort();
+      const dependencies = readFileSync(join(revisionRoot, "oracle.d"), "utf8").split("\n")[0]!.split(": ")[1]!.trim().split(/\s+/).map((path: string) => slash(relative(revisionRoot, resolve(revisionRoot, path)))).sort();
       assert.deepEqual(inputs, [...new Set(dependencies)]);
       const hits = sourceCache.hits;
       assert.deepEqual(cacheInternals.rustSourceFiles([entry], revisionRoot, sourceCache).map((path: string) => slash(relative(revisionRoot, path))).sort(), inputs);
@@ -1141,7 +1141,7 @@ export function createCachePolicyTests(dependencies: Record<string, any>, testSo
     writeFileSync(join(fixture, graph.leaf.directory, "📜️script.ts"), graph.leaf.script);
     writeFileSync(join(fixture, "other", "📋️project.json"), JSON.stringify({ name: graph.leaf.name }));
     writeFileSync(join(fixture, "📜️script.ts"), graph.workspaceRoot.script);
-    writeFileSync(join(fixture, "📋️project.json"), JSON.stringify({ name: graph.workspaceRoot.name, targets: Object.fromEntries(graph.workspaceRoot.targets.map((name) => [name, { options: { command: `bun ./📜️script.ts ${name}` } }])) }));
+    writeFileSync(join(fixture, "📋️project.json"), JSON.stringify({ name: graph.workspaceRoot.name, targets: Object.fromEntries(graph.workspaceRoot.targets.map((name: string) => [name, { options: { command: `bun ./📜️script.ts ${name}` } }])) }));
     const goManifest = vectors.go.manifest;
     writeFileSync(join(fixture, "go.mod"), goManifest);
     const goOracle = Bun.spawnSync(["go", "mod", "edit", "-json", `-modfile=${join(fixture, "go.mod")}`], { cwd: fixture, env: { ...process.env, GOWORK: "off" }, stdout: "pipe", stderr: "pipe" });
@@ -1156,7 +1156,7 @@ export function createCachePolicyTests(dependencies: Record<string, any>, testSo
     const rooted = await plugin.createNodesV2[1](["📋️project.json"], {}, { workspaceRoot: fixture });
     const resolvedRoot = rooted[0][1].projects[graph.workspaceRoot.name].targets;
     for (const name of graph.workspaceRoot.targets) {
-      const expected = vectors.policies.find((row) => row.target === name);
+      const expected = vectors.policies.find((row: { readonly target: string }) => row.target === name);
       assert.ok(expected, `workspace-root fixture target ${name} needs a policy row`);
       assert.equal(resolvedRoot[name].cache, expected.cache, `workspace-root ${name}`);
       assert.equal(resolvedRoot[name].continuous ?? false, expected.continuous, `workspace-root ${name} continuous`);
@@ -1211,6 +1211,26 @@ export function createCachePolicyTests(dependencies: Record<string, any>, testSo
     assert.ok(!rootTest.includes("run-many"), "The root test target cannot schedule a second Nx graph");
     for (const level of ["fundamental", "quick", "long", "exhaustive"]) assert.ok(workspace.targets[`test-${level}`].dependsOn.length > 0);
     assert.equal(resolveNxInvocation(["run", "workspace:dev", "--", "s"]).args[1], "@semio-tech/framework-os-dev:dev-s-wgpu-dev");
+    for (const [renderer, plugin, expected] of [
+      ["react", "s", "@semio-tech/framework-os-dev:dev-s-react-dev"],
+      ["wgpu", "s", "@semio-tech/framework-os-dev:dev-s-wgpu-dev"],
+      ["react", "draw", "@semio-tech/framework-os-dev:dev-draw-react-dev"],
+      ["wgpu", "draw", "@semio-tech/framework-os-dev:dev-draw-wgpu-dev"],
+    ] as const) {
+      const restore = { renderer: process.env.SEMIO_RENDERER, plugin: process.env.SEMIO_PLUGIN };
+      process.env.SEMIO_RENDERER = renderer;
+      process.env.SEMIO_PLUGIN = plugin;
+      try {
+        assert.equal(resolveNxInvocation(["run", "workspace:dev", "--", plugin]).args[1], expected, `${plugin}/${renderer} must select its own renderer target`);
+        assert.equal(resolveNxInvocation(["run", "@semio-tech/framework-os-dev:dev"]).args[1], expected, `the bare dev alias must honour SEMIO_PLUGIN=${plugin} instead of defaulting to s`);
+      } finally {
+        if (restore.renderer === undefined) delete process.env.SEMIO_RENDERER; else process.env.SEMIO_RENDERER = restore.renderer;
+        if (restore.plugin === undefined) delete process.env.SEMIO_PLUGIN; else process.env.SEMIO_PLUGIN = restore.plugin;
+      }
+    }
+    const osDevProject = JSON.parse(readFileSync(join(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📋️project.json"), "utf8")) as { targets: Record<string, { dependsOn?: readonly string[]; options?: { command?: string } }> };
+    assert.ok(!(osDevProject.targets.dev?.options?.command ?? "").includes("🧊️wgpu"), "the framework-os-dev dev alias may not hard-code the wgpu browser server");
+    assert.deepEqual(osDevProject.targets.dev?.dependsOn, undefined, "the framework-os-dev dev alias may not pin one renderer's activation");
     assert.ok(invocation.getText(nxSource).includes("loadFrameworkOsPlaygroundSelections()"));
     assert.ok(!invocation.getText(nxSource).includes("loadFrameworkOsPlaygroundCatalog()"));
     assert.equal(root.length > 0, true);

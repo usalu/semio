@@ -1,11 +1,14 @@
+/** 📤️ Class types the suite annotates against; the destructured runtime values shadow these names inside the suite body. */
+import type { OwnedActorTurnOutput as OwnedActorTurnOutputHandle, OwnedActorTurnOutputs as OwnedActorTurnOutputQueue } from "../../🟦️.ts";
+
 type TestSource = { readonly directory: string; readonly url: string };
 
-export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: any, source: TestSource): Promise<void> {
+export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: Pick<typeof import("../../../../../../🌱️value/💾️resident/🟦️.ts"), "OwnedResidentLedger"> & Pick<typeof import("../../🟦️.ts"), "OwnedActorTurnOutput" | "OwnedActorTurnOutputs" | "cancelEmpty">, source: TestSource): Promise<void> {
   const { OwnedActorTurnOutput, OwnedActorTurnOutputs, OwnedResidentLedger, cancelEmpty } = dependencies;
 
   const { describe, expect, it, vi } = vitest;
   const fixtureLedger = () => new OwnedResidentLedger({ bytes: 65536, slots: 256, owners: 256, control: { bytes: 0, slots: 0, owners: 0 } });
-  async function fixtureOutput(queue: OwnedActorTurnOutputs): Promise<OwnedActorTurnOutput | null> {
+  async function fixtureOutput(queue: OwnedActorTurnOutputQueue): Promise<OwnedActorTurnOutputHandle | null> {
     const { default: fixture } = await import("../../🏘️admission/🧫️fixtures/🔣️.json");
     for (let turn = 0; turn < fixture.phases.length + 1; turn++) { const current = queue.reserve({ maxItems: 1, maxBytes: 4096 }); if (current.step.kind === "ready") return current.output; if (current.step.kind === "blocked" || current.step.kind === "rejected") return null; }
     throw new Error("Response admission exceeded declared transitions");
@@ -44,7 +47,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     it("ActorOutputEmptyRetirement unlinks multiple original empty outputs and closes stale facades", async () => {
       const { default: fixture } = await import("../../🚪️retirement/🧫️fixtures/🔣️.json");
       const owner = {}; const ledger = fixtureLedger(); const queue = new OwnedActorTurnOutputs(owner, fixture.reservedOutputs, ledger);
-      const outputs: OwnedActorTurnOutput[] = [];
+      const outputs: OwnedActorTurnOutputHandle[] = [];
       for (let index = 0; index < fixture.reservedOutputs; index++) outputs.push((await fixtureOutput(queue))!);
       outputs[0]!.cancelEmpty(); queue.beginClose();
       let complete = false;
@@ -101,7 +104,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     it("retains the exact constructed shell before a finalizer can throw", async () => {
       const { default: fixture } = await import("../../🧫️fixtures/🔣️.json"); const { produce } = await import("immer");
       for (const boundary of fixture.construction.faults) {
-        const owner = {}; const queue = new OwnedActorTurnOutputs(owner, fixture.capacity, fixtureLedger()); const original = Object.freeze; const failure = new Error(boundary); const captured: OwnedActorTurnOutput[] = [];
+        const owner = {}; const queue = new OwnedActorTurnOutputs(owner, fixture.capacity, fixtureLedger()); const original = Object.freeze; const failure = new Error(boundary); const captured: OwnedActorTurnOutputHandle[] = [];
         const finalizer = vi.spyOn(Object, "freeze").mockImplementation(value => {
           if (value instanceof OwnedActorTurnOutput) { captured.push(value); if (boundary === "after-finalize") original(value); throw failure; }
           return original(value);

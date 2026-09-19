@@ -1,10 +1,10 @@
 import * as React from "react";
-import { createMemoryStoragePort } from "@semio-tech/framework";
+import { createMemoryStoragePort, isShellLocale } from "@semio-tech/framework";
 import Ajv from "ajv";
 import { computeAccessibleDescription, computeAccessibleName } from "dom-accessibility-api";
 import { fireEvent, render } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
-import { uiI18n } from "../../../../🎯️targets/⚛️react/📦️packages/🟦️typescript/🟦️.tsx";
+import { uiI18n, type UiLocale } from "../../../../🎯️targets/⚛️react/📦️packages/🟦️typescript/🟦️.tsx";
 import { UiKeybindingsProvider } from "../../../../🔨️modules/🕹️control-keybinding-context/🟦️.tsx";
 import { UIDialog, type UIDialogProps } from "../../🟦️.tsx";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../../🔽️Select/🟦️.tsx";
@@ -12,6 +12,12 @@ import { Popover, PopoverContent, PopoverTrigger } from "../../../🗨️Popover
 import { createShellScope, ShellScopeProvider } from "../../../🐚️ShellScope/🟦️.tsx";
 import fixture from "../../🧫️fixtures/♿️modal/🔣️.json";
 import uiSchema from "../../../../🧬️schema/🔣️.json";
+
+/** 🌐️ Admits a fixture locale string into the shell's declared locale union at the test boundary. */
+const uiLocaleOf = (value: string): UiLocale => {
+  if (!isShellLocale(value)) throw new Error(`unknown shell locale ${value}`);
+  return value;
+};
 
 const localized = (key: "title" | "description" | "field" | "kind" | "submit" | "cancel") => ({ native: Object.fromEntries(fixture.cases.map(row => [row.locale, row[key]])) });
 const definition: UIDialogProps["dialog"] = {
@@ -46,7 +52,7 @@ describe("UIDialog accessibility", () => {
     scopeB.rootRef.current = rootB;
     scopeB.portalLayerRef.current = portalB;
     const cancelA = vi.fn(), cancelB = vi.fn(), siblingAction = vi.fn();
-    const scopedRenderField: UIDialogProps["renderField"] = (def, value, change, field) => def.id !== "kindChoice" ? renderField(def, value, change, field) : <Select value={String(value)} onValueChange={change}><SelectTrigger id={field.id} aria-labelledby={field.labelledBy}><SelectValue /></SelectTrigger><SelectContent><SelectItem value="map">Map</SelectItem><SelectItem value="terrain">Terrain</SelectItem></SelectContent></Select>;
+    const scopedRenderField: UIDialogProps["renderField"] = (def, value, change, field) => def.id !== "kindChoice" ? renderField(def, value, change, field) : <Select id={`${field.id}-select`} value={String(value)} onValueChange={change}><SelectTrigger id={field.id} aria-labelledby={field.labelledBy}><SelectValue /></SelectTrigger><SelectContent><SelectItem value="map">Map</SelectItem><SelectItem value="terrain">Terrain</SelectItem></SelectContent></Select>;
     const viewA = render(<ShellScopeProvider scope={scopeA}><UIDialog dialog={definition} renderField={scopedRenderField} onCancel={cancelA} onSubmit={vi.fn()} /></ShellScopeProvider>, { container: appA, baseElement: rootA });
     const viewB = render(<ShellScopeProvider scope={scopeB}><button type="button" onClick={siblingAction}>Sibling action</button></ShellScopeProvider>, { container: appB, baseElement: rootB });
     try {
@@ -133,7 +139,7 @@ describe("UIDialog accessibility", () => {
     await uiI18n.changeLanguage("en");
     const cancel = vi.fn();
     const submit = vi.fn();
-    const view = render(<UIDialog dialog={definition} seedArgs={{ name: "Map C" }} onCancel={cancel} onSubmit={submit} renderField={(def, value, change, field) => def.id !== "kindChoice" ? renderField(def, value, change, field) : <Select value={String(value)} onValueChange={change}><SelectTrigger id={field.id} aria-labelledby={field.labelledBy}><SelectValue /></SelectTrigger><SelectContent><SelectItem value="map">Map</SelectItem><SelectItem value="terrain">Terrain</SelectItem></SelectContent></Select>} />);
+    const view = render(<UIDialog dialog={definition} seedArgs={{ name: "Map C" }} onCancel={cancel} onSubmit={submit} renderField={(def, value, change, field) => def.id !== "kindChoice" ? renderField(def, value, change, field) : <Select id={`${field.id}-select`} value={String(value)} onValueChange={change}><SelectTrigger id={field.id} aria-labelledby={field.labelledBy}><SelectValue /></SelectTrigger><SelectContent><SelectItem value="map">Map</SelectItem><SelectItem value="terrain">Terrain</SelectItem></SelectContent></Select>} />);
     const picker = view.getByRole("combobox", { name: "Kind" });
     fireEvent.click(picker);
     const options = view.getByRole("listbox");
@@ -155,7 +161,7 @@ describe("UIDialog accessibility", () => {
 
   it.each(fixture.cases)("implements the neutral modal contract in $locale with an independent accessibility oracle", async row => {
     expect(new Ajv({ strict: true }).addSchema(uiSchema).getSchema(`${uiSchema.$id}#/$defs/UIDialogModalFixture`)!(fixture)).toBe(true);
-    await uiI18n.changeLanguage(row.locale);
+    await uiI18n.changeLanguage(uiLocaleOf(row.locale));
     const opener = document.createElement("button");
     opener.textContent = "Opener";
     document.body.append(opener);

@@ -1,6 +1,6 @@
 type TestSource = { readonly directory: string; readonly url: string };
 
-export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: any, source: TestSource): Promise<void> {
+export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: Pick<typeof import("../../🟦️.ts"), "BACKBONE_ENVELOPE_RETRY_WINDOW_MS" | "readBackboneEnvelope" | "writeBackboneEnvelope">, source: TestSource): Promise<void> {
   const { BACKBONE_ENVELOPE_RETRY_WINDOW_MS, readBackboneEnvelope, writeBackboneEnvelope } = dependencies;
 
   const { afterEach, describe, expect, it, vi } = vitest;
@@ -91,7 +91,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
 
 }
 
-export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: any, source: TestSource): Promise<void> {
+export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: Pick<typeof import("../../🟦️.ts"), "APP_CHANNEL_VERSION" | "AppChannelClient" | "AppChannelRequestSequence" | "INVOCATION_RESULT_PACK_MAXIMUM_BYTES" | "applyBackboneMessage" | "backboneKindFromUri" | "buildFileBackboneUri" | "buildFolderBackboneUri" | "buildFrameworkSyncUtilities" | "buildRemoteBackboneUri" | "clonePackValue" | "decodeAppCommand" | "decodeAppFrame" | "decodeBackboneMessage" | "decodeBackboneWorkerRequest" | "decodeBackboneWorkerResponse" | "decodeConflictsFromWire" | "decodeDispatchReportFromWire" | "decodeDocumentArchiveBytes" | "decodeDocumentPackBytes" | "decodeDocumentPackSnapshot" | "decodeInvocationResultPacks" | "decodeMergeReportFromWire" | "decodePackValue" | "decodeScenePackValue" | "encodeAppCommand" | "encodeAppFrame" | "encodeBackboneMessage" | "encodeBackboneWorkerRequest" | "encodeBackboneWorkerResponse" | "encodeDocumentArchiveBytes" | "encodeDocumentPackBundle" | "encodeDocumentPackBytes" | "encodePackValue" | "faultMessages" | "isPackByteVector" | "isPackInteger" | "packInt" | "packUInt" | "packValueToExactJson" | "parseRemoteBackboneUri" | "planWorkflow"> & Pick<typeof import("@semio-tech/framework"), "createTurnOutcomeBroadcast"> & Pick<typeof import("@semio-tech/framework-replication"), "decodePresencePeer" | "encodePresencePeer">, source: TestSource): Promise<void> {
   const { APP_CHANNEL_VERSION, AppChannelClient, AppChannelRequestSequence, INVOCATION_RESULT_PACK_MAXIMUM_BYTES, applyBackboneMessage, backboneKindFromUri, buildFileBackboneUri, buildFolderBackboneUri, buildFrameworkSyncUtilities, buildRemoteBackboneUri, clonePackValue, createTurnOutcomeBroadcast, decodeAppCommand, decodeAppFrame, decodeBackboneMessage, decodeBackboneWorkerRequest, decodeBackboneWorkerResponse, decodeConflictsFromWire, decodeDispatchReportFromWire, decodeDocumentArchiveBytes, decodeDocumentPackBytes, decodeDocumentPackSnapshot, decodeInvocationResultPacks, decodeMergeReportFromWire, decodePackValue, decodePresencePeer, decodeScenePackValue, encodeAppCommand, encodeAppFrame, encodeBackboneMessage, encodeBackboneWorkerRequest, encodeBackboneWorkerResponse, encodeDocumentArchiveBytes, encodeDocumentPackBundle, encodeDocumentPackBytes, encodePackValue, encodePresencePeer, faultMessages, isPackByteVector, isPackInteger, packInt, packUInt, packValueToExactJson, parseRemoteBackboneUri, planWorkflow } = dependencies;
   const documentArchive = {
     parent_pack: [1, 2],
@@ -111,23 +111,24 @@ export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, 
       },
     ],
   } as const;
-  type AppChannelHandle = any;
-  type AppCommandValue = any;
-  type AppFrameValue = any;
-  type ArtifactPresencePeer = any;
-  type BinaryBackboneMessage = any;
-  type Conflict = any;
-  type DispatchReport = any;
-  type LocalInteractionIdentity = any;
-  type LocalInteractionQueryReply = any;
-  type LocalInteractionQueryToken = any;
-  type MediaContract = any;
-  type MergeReport = any;
-  type OsWorkflow = any;
-  type OsWorkflowNode = any;
-  type PackInteger = any;
-  type PackValue = any;
-  type TurnOutcome = any;
+  type AppChannelHandle = import("../../🟦️.ts").AppChannelHandle;
+  type AppCommandValue = import("../../🟦️.ts").AppCommandValue;
+  const commandSeq = (command: AppCommandValue): number => Object.values<{ readonly seq: number }>(command)[0]!.seq;
+  type AppFrameValue = import("../../🟦️.ts").AppFrameValue;
+  type ArtifactPresencePeer = import("../../../../🔨️modules/📡️replication/🟦️.ts").ArtifactPresencePeer;
+  type BinaryBackboneMessage = import("../../🟦️.ts").BinaryBackboneMessage;
+  type Conflict = import("../../../../🔨️modules/🎠️kernel/🟦️.ts").Conflict;
+  type DispatchReport = import("../../../../🔨️modules/🎠️kernel/🟦️.ts").DispatchReport;
+  type LocalInteractionIdentity = import("../../../../🔨️modules/📡️replication/📡️wire/🏠️local-interaction/🟦️.ts").LocalInteractionIdentity;
+  type LocalInteractionQueryReply = import("../../../../🔨️modules/📡️replication/📡️wire/🏠️local-interaction/📡️transport/🟦️.ts").LocalInteractionQueryReply;
+  type LocalInteractionQueryToken = import("../../../../🔨️modules/📡️replication/📡️wire/🏠️local-interaction/🟦️.ts").LocalInteractionQueryToken;
+  type MediaContract = import("../../🟦️.ts").MediaContract;
+  type MergeReport = import("../../../../🔨️modules/🎠️kernel/🟦️.ts").MergeReport;
+  type OsWorkflow = import("../../🟦️.ts").OsWorkflow;
+  type OsWorkflowNode = import("../../🟦️.ts").OsWorkflowNode;
+  type PackInteger = import("../../🟦️.ts").PackInteger;
+  type PackValue = import("../../🟦️.ts").PackValue;
+  type TurnOutcome = import("../../../../🔨️modules/🎠️kernel/🟦️.ts").TurnOutcome;
 
   const { describe, expect, it } = vitest;
 
@@ -1071,7 +1072,7 @@ export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, 
       const handle: AppChannelHandle = { enqueue: (_instance, bytes) => {
         for (const command of bytes.map(decodeAppCommand)) {
           sent.push(command);
-          broadcast.push({ instanceId: 7, frames: [encodeAppFrame({ Done: { in_reply_to: Object.values(command)[0]!.seq } })] });
+          broadcast.push({ instanceId: 7, frames: [encodeAppFrame({ Done: { in_reply_to: commandSeq(command) } })] });
         }
       }, outcomes: broadcast.stream };
       const exhausted = new AppChannelClient(handle, new AppChannelRequestSequence(Number.MAX_SAFE_INTEGER - 1), 7, "fixture");
@@ -1222,7 +1223,7 @@ export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, 
         const command = commands[0]!;
         if ("ReadDocumentArchive" in command) return [{ DocumentArchive: { in_reply_to: command.ReadDocumentArchive.seq, archive: documentArchive } }];
         if ("PollDocumentArchiveLoad" in command) return [{ DocumentArchiveLoad: { in_reply_to: command.PollDocumentArchiveLoad.seq, status: { operation: command.PollDocumentArchiveLoad.operation, state: "ready", completed: 3, total: 3, fault: [] } } }];
-        return [{ Done: { in_reply_to: Object.values(command)[0]!.seq } }];
+        return [{ Done: { in_reply_to: commandSeq(command) } }];
       });
       const client = new AppChannelClient(handle, new AppChannelRequestSequence(), 1, "app.demo");
       await client.loadDocumentArchive(documentArchive);
@@ -1245,7 +1246,7 @@ export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, 
         if ("PollDocumentArchiveLoad" in command) {
           return [{ DocumentArchiveLoad: { in_reply_to: command.PollDocumentArchiveLoad.seq, status: { operation: command.PollDocumentArchiveLoad.operation, state: "cancelled", completed: 0, total: 3, fault: [] } } }];
         }
-        return [{ Done: { in_reply_to: Object.values(command)[0]!.seq } }];
+        return [{ Done: { in_reply_to: commandSeq(command) } }];
       });
       const client = new AppChannelClient(handle, new AppChannelRequestSequence(), 1, "app.demo");
       const controller = new AbortController();
@@ -1269,7 +1270,7 @@ export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, 
         seen.push(...commands);
         const command = commands[0]!;
         if ("ReadWindowConfigs" in command) return [{ WindowConfigs: { in_reply_to: command.ReadWindowConfigs.seq, entries: expected } }];
-        return [{ Done: { in_reply_to: Object.values(command)[0]!.seq } }];
+        return [{ Done: { in_reply_to: commandSeq(command) } }];
       });
       const client = new AppChannelClient(handle, new AppChannelRequestSequence(), 1, "app.demo");
       const source = { window_id: "graph-a", window_kind_id: "graph", envelope_pack: [1, 2] };
@@ -1685,11 +1686,11 @@ export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, 
 
 }
 
-export async function registerTests3(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: any, source: TestSource): Promise<void> {
+export async function registerTests3(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: Pick<typeof import("../../🟦️.ts"), "descriptorDigestEncodingV1" | "descriptorDigestV1" | "emptyDirectoryReadModel" | "foldAll">, source: TestSource): Promise<void> {
   const { descriptorDigestEncodingV1, descriptorDigestV1, emptyDirectoryReadModel, foldAll } = dependencies;
-  type DirectoryEvent = any;
-  type DirectoryReadModel = any;
-  type DocumentDescriptor = any;
+  type DirectoryEvent = import("../../🔨️modules/📇️directory/🧬️schema/🟦️.ts").DirectoryEvent;
+  type DirectoryReadModel = import("../../🔨️modules/📇️directory/🟦️.ts").DirectoryReadModel;
+  type DocumentDescriptor = import("../../🔨️modules/📇️directory/🧬️schema/🟦️.ts").DocumentDescriptor;
 
   const { describe, expect, it } = vitest;
 
@@ -1739,7 +1740,7 @@ export async function registerTests3(vitest: NonNullable<ImportMeta["vitest"]>, 
       const { fileURLToPath } = await import("node:url");
       const { dirname, join } = await import("node:path");
       const here = dirname(fileURLToPath(source.url));
-      const fixture = JSON.parse(readFileSync(join(here, "🧫️fixtures", "📇️directory", "🪪️document-descriptor.json"), "utf8")) as { valid: import("./🔨️modules/📇️directory/🧬️schema/🟦️.ts").DocumentDescriptor; canonical: string };
+      const fixture = JSON.parse(readFileSync(join(here, "🧫️fixtures", "📇️directory", "🪪️document-descriptor.json"), "utf8")) as { valid: import("../../🔨️modules/📇️directory/🧬️schema/🟦️.ts").DocumentDescriptor; canonical: string };
       expect(JSON.stringify(fixture.valid)).toBe(fixture.canonical);
     });
 
@@ -1765,7 +1766,7 @@ export async function registerTests3(vitest: NonNullable<ImportMeta["vitest"]>, 
       const { fileURLToPath } = await import("node:url");
       const { dirname, join } = await import("node:path");
       const here = dirname(fileURLToPath(source.url));
-      const fixture = JSON.parse(readFileSync(join(here, "🧫️fixtures", "📇️directory", "🪪️document-descriptor.json"), "utf8")) as { valid: import("./🔨️modules/📇️directory/🧬️schema/🟦️.ts").DocumentDescriptor; conflictingSchemaHash: import("./🔨️modules/📇️directory/🧬️schema/🟦️.ts").DocumentDescriptor };
+      const fixture = JSON.parse(readFileSync(join(here, "🧫️fixtures", "📇️directory", "🪪️document-descriptor.json"), "utf8")) as { valid: import("../../🔨️modules/📇️directory/🧬️schema/🟦️.ts").DocumentDescriptor; conflictingSchemaHash: import("../../🔨️modules/📇️directory/🧬️schema/🟦️.ts").DocumentDescriptor };
       const created: DirectoryEvent = { seq: 1, id: "space", hlc: { physicalMs: 1, logical: 0 }, actor: { kind: "system", id: "system:test" }, spaceId: fixture.valid.spaceId, body: { kind: "space.created", spaceId: fixture.valid.spaceId, name: "Fixture", spaceKind: "studio", visibility: "private", ownerUserId: "user-owner" }, recordedAtMs: 1 };
       const announced: DirectoryEvent = { seq: 2, id: "document", hlc: { physicalMs: 2, logical: 0 }, actor: { kind: "user", id: "user:user-owner#test" }, spaceId: fixture.valid.spaceId, body: { kind: "document.announced", descriptor: fixture.valid }, recordedAtMs: 2 };
       const conflictReplay: DirectoryEvent = { ...announced, seq: 3, id: "conflict", body: { kind: "document.announced", descriptor: fixture.conflictingSchemaHash } };
@@ -1778,15 +1779,15 @@ export async function registerTests3(vitest: NonNullable<ImportMeta["vitest"]>, 
 
 }
 
-export async function registerTests4(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: any, source: TestSource): Promise<void> {
+export async function registerTests4(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: Pick<typeof import("../../🔨️modules/🔌️plugin/🌐️browser-bundle/🩹️patch-handoff/🟦️.ts"), "parseBrowserActorUiPatchOfferV1" | "parseBrowserActorUiPatchResultV1"> & Pick<typeof import("../../🟦️.ts"), "BACKBONE_WORKER_WIRE_MAGIC" | "DIRECTORY_HTTP_TIMEOUT_MS" | "DirectoryClient" | "HUB_HEALTHY_RESET_MS" | "HUB_RECONNECT_MAX_MS" | "HUB_RECONNECT_MIN_MS" | "decodeBackboneWorkerRequest" | "decodeBackboneWorkerResponse" | "decodePackValue" | "encodeBackboneMessage" | "encodeBackboneWorkerRequest" | "encodeBackboneWorkerResponse" | "encodePackValue" | "parseDirectorySpaceAdministrationPageV1" | "parseDocumentBackboneMessage"> & Pick<typeof import("@semio-tech/framework"), "fetchWithTimeout">, source: TestSource): Promise<void> {
   const { BACKBONE_WORKER_WIRE_MAGIC, DIRECTORY_HTTP_TIMEOUT_MS, DirectoryClient, HUB_HEALTHY_RESET_MS, HUB_RECONNECT_MAX_MS, HUB_RECONNECT_MIN_MS, decodeBackboneWorkerRequest, decodeBackboneWorkerResponse, decodePackValue, encodeBackboneMessage, encodeBackboneWorkerRequest, encodeBackboneWorkerResponse, encodePackValue, fetchWithTimeout, parseBrowserActorUiPatchOfferV1, parseBrowserActorUiPatchResultV1, parseDirectorySpaceAdministrationPageV1, parseDocumentBackboneMessage } = dependencies;
-  type BackboneWorkerRequest = any;
-  type BackboneWorkerResponse = any;
-  type BrowserActorUiMountedV1 = any;
-  type DirectoryEvent = any;
-  type DirectoryStreamMessage = any;
-  type SocketGrantIssuerV1 = any;
-  type SocketGrantReceiptV1 = any;
+  type BackboneWorkerRequest = import("../../🟦️.ts").BackboneWorkerRequest;
+  type BackboneWorkerResponse = import("../../🟦️.ts").BackboneWorkerResponse;
+  type BrowserActorUiMountedV1 = import("../../🟦️.ts").BrowserActorUiMountedV1;
+  type DirectoryEvent = import("../../🔨️modules/📇️directory/🧬️schema/🟦️.ts").DirectoryEvent;
+  type DirectoryStreamMessage = import("../../🔨️modules/📇️directory/🧬️schema/🟦️.ts").DirectoryStreamMessage;
+  type SocketGrantIssuerV1 = import("../../🟦️.ts").SocketGrantIssuerV1;
+  type SocketGrantReceiptV1 = import("../../🟦️.ts").SocketGrantReceiptV1;
 
   const { describe, expect, it, vi } = vitest;
 
@@ -1832,7 +1833,7 @@ export async function registerTests4(vitest: NonNullable<ImportMeta["vitest"]>, 
     issueDirectoryScoped: async () => testSocketGrantReceipt,
     issueDocument: async () => testSocketGrantReceipt,
   };
-  const testDirectoryClient = (): DirectoryClient => new DirectoryClient("http://hub.test", { socketGrantIssuer: testSocketGrantIssuer });
+  const testDirectoryClient = (): InstanceType<typeof DirectoryClient> => new DirectoryClient("http://hub.test", { socketGrantIssuer: testSocketGrantIssuer });
 
   function sampleDirectoryEvent(seq: number): DirectoryEvent {
     return {

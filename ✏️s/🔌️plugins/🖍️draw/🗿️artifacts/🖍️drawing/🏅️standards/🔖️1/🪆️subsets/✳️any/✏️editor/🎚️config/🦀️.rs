@@ -14,3 +14,6 @@ pub fn app_schema_descriptor() -> framework_schema::AppSchemaDescriptor {
         },
     }
 }
+
+#[path = "🧬️schema/🦀️.rs"]
+pub mod schema;

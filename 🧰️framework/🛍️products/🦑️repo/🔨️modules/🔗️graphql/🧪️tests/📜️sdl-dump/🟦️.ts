@@ -45,7 +45,7 @@ export default defineTestAdapter({
   scenarios: {
     "served-schema-matches-the-committed-sdl": {
       oracle: (ctx) => {
-        const schema = buildSchema(ctx.fixtureBytes("asset://🧬️schema/🔣️schema.graphql").toString("utf8"));
+        const schema = buildSchema(Buffer.from(ctx.fixtureBytes("asset://🧬️schema/🔣️schema.graphql")).toString("utf8"));
         const named = Object.values(schema.getTypeMap())
           .filter((declared) => !declared.name.startsWith("__"))
           .filter((declared) => !(isScalarType(declared) && BUILT_IN.includes(declared.name)))

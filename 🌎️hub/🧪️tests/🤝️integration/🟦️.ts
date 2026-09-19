@@ -753,7 +753,7 @@ describe("hub harness quick contract", () => {
         chain_hash: value.baselineFrontier.chainHash,
       },
     } } };
-    const encoded = encodeServerFrame(frame, "Command");
+    const encoded = encodeServerFrame(frame, "command");
     const manual: number[] = [0, 12];
     const varint = (input: number): void => {
       let remaining = input;

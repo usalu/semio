@@ -1,6 +1,6 @@
 type TestSource = { readonly directory: string; readonly url: string };
 
-export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: any, source: TestSource): Promise<void> {
+export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: Pick<typeof import("../../🟦️.ts"), "requireMcpBinary" | "resolveBuiltMcpBinaryPath" | "resolveMcpBinaryPath"> & Pick<typeof import("node:fs"), "readFileSync">, source: TestSource): Promise<void> {
   const { readFileSync, requireMcpBinary, resolveBuiltMcpBinaryPath, resolveMcpBinaryPath } = dependencies;
 
   const { describe, expect, it } = vitest;

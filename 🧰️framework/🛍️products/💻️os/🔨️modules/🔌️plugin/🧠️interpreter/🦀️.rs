@@ -1843,12 +1843,32 @@ impl CoreInstance {
                 }
                 Err(error) => {
                     used += 1;
+                    let error = self.diagnose_fault(error);
                     self.machine = None;
                     return CoreStepOutcome::Fault { fuel_used: used, error };
                 }
             }
         }
         CoreStepOutcome::Yield { fuel_used: used }
+    }
+
+    /// 🧯️ Names a shadow-stack underflow for what it is. A `--stack-first` guest keeps its shadow
+    /// stack in `[0, __stack_pointer_init)` and grows it down, so an overrun addresses below zero and
+    /// surfaces as an ordinary out-of-bounds access at a huge unsigned address — indistinguishable,
+    /// in the bare trap text, from a wild pointer. Reported once, at the only place that still holds
+    /// the guest's call depth and globals (ticket 26/09/18 slice A2: a 1 MiB-linked component
+    /// overflowing at call depth 26 read as "runaway recursion" for a full slice).
+    fn diagnose_fault(&self, error: CoreError) -> CoreError {
+        let CoreError::Trap(message) = &error else { return error };
+        if !message.contains("is out of bounds: start=4294") {
+            return error;
+        }
+        let Some(Value::I32(pointer)) = self.globals.first().filter(|global| global.mutable).map(|global| global.value) else { return error };
+        if pointer >= 0 {
+            return error;
+        }
+        let depth = self.machine.as_ref().map_or(0, |machine| machine.frames.len());
+        CoreError::Trap(format!("{message} — the guest's shadow stack underflowed at call depth {depth} (stack pointer {pointer}); link the component with a larger `-zstack-size`"))
     }
 
     pub fn memory(&self, index: u32) -> Option<&[u8]> {

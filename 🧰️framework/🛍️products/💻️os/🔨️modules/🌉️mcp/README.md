@@ -38,8 +38,14 @@ by advertising thousands of tools:
   `inference_submit|events|cancel|approve`
 - jobs / UI — `job_get`, `job_cancel`, `ui_focus`, `ui_reveal`
 
-Resources are `semio://…` URIs (workspace, artifact + schema/snapshot/selection/validation/history/diff,
-window, ui/active-context, ui/agent-messages, capability, plugin, extension, transaction, job, audit).
+Resources are `semio://…` URIs. Listed: `capability`, `workspace`, `workspace/artifacts`, one
+`artifact/{id}` and one `artifact/{id}/inference` per open artifact, `window`, `ui/active-context`,
+`ui/agent-messages`, `ui/selection`. Templated: `capability/{id}`, `artifact/{artifactId}`,
+`artifact/{artifactId}/inference/{field}`, `window/{windowId}`, `job/{jobId}`. An artifact's readable
+sub-resources are `schema`, `validation`, `history` and `inference[/{field}]` — a hub-origin workspace
+answers the first three with a typed, retryable `PLUGIN_UNAVAILABLE` naming what is still missing,
+never a fabricated body. A hub-bound workspace additionally lists per-document `descriptor` and
+`checkpoint` scope resources.
 
 ## No model provider — the agent is the client, not a dependency
 
@@ -66,10 +72,60 @@ stored report instead of mutating twice.
 
 The agent is an ordinary OS principal, never an administrator. Its scopes map onto the kernel
 `Broker`'s `CapabilityId`s, a capability whose declared scopes exceed the principal's is refused with
-`PERMISSION_DENIED` **and** an audit row, destructive capabilities require approval (MCP elicitation
-when the client supports it, otherwise a parked request surfaced in the shell's approvals dialog), and
-`ui.raw.*` is a separate privileged scope rather than a convenience. Plugin-authored text is treated
-as untrusted data: it can influence search ranking, never policy.
+`PERMISSION_DENIED` **and** an audit row, and `ui.raw.*` is a separate privileged scope rather than a
+convenience. Plugin-authored text is treated as untrusted data: it can influence search ranking, never
+policy.
+
+### Approving a destructive capability
+
+A capability whose manifest declares `approval: whenDestructive|always` parks an `appr_` handle
+(`🛡️policy`'s `gate_approval`) and `action_invoke` then offers it, in this order, to the only three
+actors that may decide (`🛡️policy::ApprovalCoordinator`):
+
+1. **`--auto-approve never|readonly|all`** — a launch-time human decision, parsed off argv by
+   `🏗️bootstrap` for both transports. `never` is the default; `readonly` waives the gate only for a
+   capability that is neither destructive nor a writer. An auto-approved capability never parks a
+   handle at all.
+2. **MCP elicitation** — a real `elicitation/create` server→client request, sent only when the
+   connected client advertised `capabilities.elicitation` at `initialize`. `accept` with
+   `content.approve == true` approves; `decline`, `cancel`, an error response and a client that
+   closes are all refusals, never an approval by default. Client lines that arrive while the human is
+   deciding are deferred back onto the serve loop in arrival order, never dropped.
+3. **The live OS shell** — `GatewayToShell::ApprovalRequested` over `/bridge`, decided by the human in
+   the `🤖️AgentApprovals` dialog or inline in `💬️AgentChatPanel`, answered by
+   `ShellToGateway::Approval`. Bounded by `SHELL_APPROVAL_TIMEOUT_MS`; a shell that never answers
+   times out into a refusal, never into an approval.
+
+With none of the three available, `action_invoke` answers `APPROVAL_REQUIRED` whose `details` name
+every lane it tried, why each was closed, and the remedy. It is never a silent proceed and never a
+silent block.
+
+**There is deliberately no `approval_resolve`/`action_approve` MCP tool.** Every MCP tool is callable
+by the agent and by nobody else, so such a tool would let an agent approve its own destructive action —
+exactly what the gate exists to prevent. `action_invoke`'s `approvalHandle` input remains what it always
+was: a way to replay a decision one of the three actors above already made.
+
+### Binding a workspace
+
+A gateway launched with neither `--folder <dir>` nor `--hub <url> --space <id>` runs on
+`UnboundArtifactChannel`: every mutation-protocol call answers a typed, retryable `PLUGIN_UNAVAILABLE`
+naming both flags. The scripted `MockArtifactChannel` is `#[cfg(test)]` and reachable from no
+production path, so a call can never run against a stand-in that looks like a real commit. Every client
+config this repo ships (`.mcp.json`, `.cursor/`, `.vscode/`, `.windsurf/`, `.kiro/`, `.codex/`) binds
+`--folder .`.
+
+### Attaching a live shell from stdio
+
+`stdio` mode is what every client config launches, and it now offers the same loopback `/bridge` the
+`http` transport does. On start it looks for a live os session in
+`~/.semio/agent/bridge/sessions/` (`🛰️rendezvous`); finding one, it binds a **bridge-only** listener
+(no `/mcp` on that socket — this process's MCP surface is stdin/stdout) and publishes an owner-only
+(`0600`) offer in `~/.semio/agent/bridge/offers/<pid>.json` carrying the `ws://` url and a per-process
+admission proof, removed when the process exits. Admission is never the hub fd-3 credential: a stdio
+gateway inherits none and must not fabricate one. Finding no live session, no listener is bound and
+every bridge-dependent tool (`ui_focus`, `ui_reveal`, agent presence, shell approvals) answers a typed
+`PLUGIN_UNAVAILABLE` naming the sessions directory and the live-session count as of that call — never a
+silent no-op. `--no-bridge` opts out entirely.
 
 ## Layout
 
@@ -79,10 +135,16 @@ as untrusted data: it can influence search ranking, never policy.
 | `🚚️transport` | stdio + Streamable HTTP (axum), Origin + bearer checks |
 | `🗂️catalog` / `🔎️search` | `CapabilityDefinition` compilation from manifests, deterministic BM25 |
 | `🧠️context` | context broker, resource projection, token budgeting |
-| `🎬️actions` / `🛡️policy` | the mutation lifecycle; scopes, approvals, quotas |
+| `🔀️dispatch` / `🛡️policy` | the mutation lifecycle; scopes, approvals, quotas |
 | `🎫️handles` / `📒️audit` | handle table + idempotency; the append-only audit lane |
 | `🧵️bridge` | the loopback WebSocket a live shell dials, Rust SSOT + TS twin codec |
+| `🛰️rendezvous` | how a stdio gateway and a live os session find each other (`~/.semio/agent/bridge`) |
 | `🏠️workspace` | headless workspace (actor kernel + wasmtime + artifact host) |
+| `🗿️artifact` / `🖥️ui` | the `artifact_*` tools; the `ui_*`/`job_*` tools and their shell forwarding |
+| `💡️inference` | `inference_*` — a plugin's own declared service in its own guest, plus the hub job lane |
+| `📇️registry` / `💬️prompts` | live installed-plugin discovery; the protocol-teaching prompt set |
+| `🧪️conformance` / `⚠️errors` | the deterministic catalog conformance runner; the twelve frozen error codes |
+| `🏗️bootstrap` | the `semio-os-mcp stdio\|http` CLI (`--folder`/`--hub`/`--scopes`/`--auto-approve`/`--no-bridge`) |
 | `🧬️schema` | the `os.mcp` schema registry — every wire type and every tool `inputSchema`/`outputSchema` |
 
 Schema shape is enforced at one choke point (`ToolRegistry::register`): boolean sub-schemas are

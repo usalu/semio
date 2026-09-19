@@ -93,12 +93,31 @@ fn playbook_blocks_topology(spec: &PlaybookSnapshot) -> DomainTopology {
 pub struct PlaybookPlayApp;
 
 //#region 🧵️RetainedCommands
-const PLAYBOOK_RETAINED_TOOL_IDS: &[&str] = &["setContributions"];
+/// 🧵️ Every verb the shell may dispatch is a retained tool. `validate_ui_dispatch_classification`
+/// refuses anything not classified `Migrated`, and `Migrated` only survives the guest's
+/// `interactive-job.catalog-incomplete` boot check when this list, the publication contracts, the
+/// extent function and the `bounded_first_step_tool_proofs!` block below all name the same ids
+/// against ONE registered factory type. The six structural verbs were `BatchOnlyPendingRewrite`, so
+/// the Builder window's whole palette was hard dead in the shell
+/// (`UI dispatch rejected action:addStep with interactive-job classification BatchOnlyPendingRewrite`).
+/// `updatePlaybook` stays out: it emits `Emit::amend`, a lane no `ArtifactToolPublicationLane` row
+/// can state truthfully, so claiming `Migrated` for it would trip the guest's own contract check.
+const PLAYBOOK_RETAINED_TOOL_IDS: &[&str] = &["setContributions", "addStep", "removeStep", "moveStep", "addBlock", "removeBlock", "moveBlock"];
 const PLAYBOOK_RETAINED_PAYLOAD_SCHEMA: &str = "playbook.program.tool-command.v1";
 const PLAYBOOK_RETAINED_RAW_BYTES: usize = 8_192;
 const PLAYBOOK_RETAINED_WORK_ITEMS: usize = 64;
 
-const PLAYBOOK_RETAINED_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] = &[ArtifactToolPublicationContract { tool_id: "setContributions", lanes: &[ArtifactToolPublicationLane::Config] }];
+/// 🚦️ Per-tool publication lanes, read straight off the command bodies: `setContributions` writes
+/// the config store, the six structural verbs emit `artifact_mutations` only.
+const PLAYBOOK_RETAINED_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] = &[
+    ArtifactToolPublicationContract { tool_id: "setContributions", lanes: &[ArtifactToolPublicationLane::Config] },
+    ArtifactToolPublicationContract { tool_id: "addStep", lanes: &[ArtifactToolPublicationLane::Artifact] },
+    ArtifactToolPublicationContract { tool_id: "removeStep", lanes: &[ArtifactToolPublicationLane::Artifact] },
+    ArtifactToolPublicationContract { tool_id: "moveStep", lanes: &[ArtifactToolPublicationLane::Artifact] },
+    ArtifactToolPublicationContract { tool_id: "addBlock", lanes: &[ArtifactToolPublicationLane::Artifact] },
+    ArtifactToolPublicationContract { tool_id: "removeBlock", lanes: &[ArtifactToolPublicationLane::Artifact] },
+    ArtifactToolPublicationContract { tool_id: "moveBlock", lanes: &[ArtifactToolPublicationLane::Artifact] },
+];
 
 fn playbook_retained_contract() -> ToolExecutionContract {
     ToolExecutionContract::bounded_first_step(PLAYBOOK_RETAINED_RAW_BYTES, 64, PLAYBOOK_RETAINED_WORK_ITEMS as u64, 16_384, 7_500)
@@ -107,9 +126,56 @@ fn playbook_retained_contract() -> ToolExecutionContract {
 fn playbook_retained_extent(command: &PlaybookCommand, _snapshot: &PlaybookSnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
     let bytes = match command {
         PlaybookCommand::SetContributions(payload) => payload.json.len(),
-        _ => return None,
+        PlaybookCommand::UpdatePlaybook(_) => return None,
+        _ => 0,
     };
-    (bytes <= PLAYBOOK_RETAINED_RAW_BYTES).then_some(1)
+    (bytes <= PLAYBOOK_RETAINED_RAW_BYTES && PLAYBOOK_RETAINED_TOOL_IDS.contains(&command.command_id())).then_some(1)
+}
+
+/// 🌉️ Resolves the React/wgpu shells' `{action, args}` pair into the typed `PlaybookCommand` every
+/// dispatch path already speaks. `ArtifactEditor::command_from_action`'s default refuses EVERY id
+/// (`app.command.unsupported`), so without this bridge no Builder-window palette row could ever
+/// reach `PlaybookCommand::dispatch`.
+fn playbook_command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result<PlaybookCommand, Fault> {
+    let entries: &[(String, dsl::DslValue)] = match args {
+        Some(dsl::DslValue::Object(object)) => object.as_slice(),
+        _ => &[],
+    };
+    let lookup = |keys: &[&str]| keys.iter().find_map(|key| entries.iter().find(|(name, _)| name == key).map(|(_, value)| value));
+    let text = |keys: &[&str], fallback: &str| match lookup(keys) {
+        Some(dsl::DslValue::String(raw)) if !raw.is_empty() => raw.clone(),
+        Some(dsl::DslValue::String(_)) | None => fallback.to_string(),
+        Some(other) => dsl::json::to_json_string(other),
+    };
+    let index = |keys: &[&str]| match lookup(keys) {
+        Some(dsl::DslValue::Number(value)) => value.as_f64().max(0.0) as usize,
+        Some(dsl::DslValue::String(raw)) => raw.trim().parse::<usize>().unwrap_or_default(),
+        _ => 0,
+    };
+    let optional_text = |keys: &[&str]| match lookup(keys) {
+        Some(dsl::DslValue::String(raw)) if !raw.is_empty() => Some(raw.clone()),
+        _ => None,
+    };
+    match action {
+        "addStep" => Ok(PlaybookCommand::AddStep(add_step::AddStep {})),
+        "removeStep" => Ok(PlaybookCommand::RemoveStep(remove_step::RemoveStep { step_id: text(&["stepId", "step_id", "id", "value"], "") })),
+        "moveStep" => Ok(PlaybookCommand::MoveStep(move_step::MoveStep { step_id: text(&["stepId", "step_id", "id", "value"], ""), index: index(&["index"]) })),
+        "addBlock" => Ok(PlaybookCommand::AddBlock(add_block::AddBlock { kind: text(&["kind", "value"], "note"), step_id: optional_text(&["stepId", "step_id"]) })),
+        "removeBlock" => Ok(PlaybookCommand::RemoveBlock(remove_block::RemoveBlock { step_id: text(&["stepId", "step_id"], ""), block_id: text(&["blockId", "block_id", "id", "value"], "") })),
+        "moveBlock" => Ok(PlaybookCommand::MoveBlock(move_block::MoveBlock {
+            block_id: text(&["blockId", "block_id", "id"], ""),
+            from_step_id: text(&["fromStepId", "from_step_id"], ""),
+            to_step_id: text(&["toStepId", "to_step_id"], ""),
+            index: index(&["index"]),
+        })),
+        "updatePlaybook" => Ok(PlaybookCommand::UpdatePlaybook(update_playbook::UpdatePlaybook { value: text(&["value", "title"], "") })),
+        "setContributions" => Ok(PlaybookCommand::SetContributions(set_contributions::SetContributions { json: text(&["json", "value"], "{}") })),
+        other => Err(Fault::new(
+            semio_framework_plugin::FaultOrigin::App,
+            semio_framework_plugin::FaultCode::new("playbook.unhandled-action"),
+            format!("action '{other}' is not one of this app's declared verbs"),
+        )),
+    }
 }
 
 #[expect(clippy::too_many_arguments, reason = "The retained command reducer implements the framework's eight-argument callback contract.")]
@@ -383,6 +449,49 @@ impl ArtifactEditor for PlaybookPlayApp {
         Some(std::sync::Arc::new(PlaybookOneItemPreparationFactory::<Self::Config, Self::ConfigMutation>::default()))
     }
 
+    /// 📬️ The ARTIFACT lane's publication authority. Without it the six structural verbs reach the
+    /// typed operation and die there: the app owns a config-lane preparation only, and a retained
+    /// tool whose contract states `Artifact` has nowhere to stage its edit.
+    fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
+        Some(semio_framework_plugin::bounded_config_store_one_item_preparation_factory::<Self::Snapshot, Self::Mutation>("playbook-artifact-retained", PLAYBOOK_STORE_MAXIMUM_BYTES))
+    }
+
+    /// ♻️ The exact store owners and disposers every lane of this editor retires through. The app
+    /// declared none at all, so the first real document publication answered
+    /// `returned snapshot read requires its exact owned-snapshot retirement factory` and the whole
+    /// interaction chain stopped one step short of the document.
+    fn build_document_store_owners() -> Option<store::DocumentStoreOwners<Self::Snapshot, Self::Mutation>> {
+        Some(semio_framework_plugin::bounded_document_store_owners::<Self::Snapshot, Self::Mutation>())
+    }
+
+    fn build_document_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
+        Some(semio_framework_plugin::bounded_document_store_disposer::<Self::Snapshot, Self::Mutation>())
+    }
+
+    fn build_config_store_owners() -> Option<store::DocumentStoreOwners<Self::Config, Self::ConfigMutation>> {
+        Some(semio_framework_plugin::bounded_config_store_owners::<Self::Config, Self::ConfigMutation>())
+    }
+
+    fn build_config_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::Config, Self::ConfigMutation>>>> {
+        Some(semio_framework_plugin::bounded_config_store_disposer::<Self::Config, Self::ConfigMutation>())
+    }
+
+    fn build_draft_store_owners() -> Option<store::DocumentStoreOwners<Self::Draft, Self::DraftMutation>> {
+        Some(semio_framework_plugin::no_draft_store_owners())
+    }
+
+    fn build_draft_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::DraftStore<Self::Draft, Self::DraftMutation>>>> {
+        Some(semio_framework_plugin::no_draft_store_disposer())
+    }
+
+    fn build_presence_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::PresenceStore<Self::Presence, Self::PresenceMutation>>>> {
+        Some(semio_framework_plugin::no_presence_store_disposer())
+    }
+
+    fn build_transient_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::TransientStore<Self::Transient, Self::TransientMutation>>>> {
+        Some(semio_framework_plugin::no_transient_store_disposer())
+    }
+
     semio_framework_plugin::bounded_first_step_tool_proofs! {
         owner: EditorApp<PlaybookPlayApp>,
         owner_file: "✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
@@ -391,7 +500,7 @@ impl ArtifactEditor for PlaybookPlayApp {
         factory: "PlaybookRetainedCommandJobFactory",
         factory_type: PlaybookRetainedCommandJobFactory,
         contract: ToolExecutionContract::bounded_first_step(8_192, 64, 64, 16_384, 7_500),
-        tools: ["setContributions"]
+        tools: ["setContributions", "addStep", "removeStep", "moveStep", "addBlock", "removeBlock", "moveBlock"]
     }
 
     fn register_tool_job_factories(registry: &mut ArtifactToolFactoryRegistry<'_, EditorApp<Self>>) -> Result<(), Fault> {
@@ -451,6 +560,10 @@ impl ArtifactEditor for PlaybookPlayApp {
     /// `app_commands!`'s generated `command_id()`.
     fn command_id(command: &PlaybookCommand) -> &'static str {
         command.command_id()
+    }
+
+    fn command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result<PlaybookCommand, Fault> {
+        playbook_command_from_action(action, args)
     }
 
     fn handle(
@@ -527,12 +640,12 @@ pub fn create_playbook_play_app() -> semio_framework_plugin::AppDefinition {
         .mutation("removeBlock", LocalizedLabel::native("Remove Block", "Baustein entfernen"))
         .mutation("moveBlock", LocalizedLabel::native("Move Block", "Baustein verschieben"))
         .mutation("updatePlaybook", LocalizedLabel::native("Update Playbook", "Playbook aktualisieren"))
-        .action_interactive_job("addStep", InteractiveJobClassification::BatchOnlyPendingRewrite)
-        .action_interactive_job("removeStep", InteractiveJobClassification::BatchOnlyPendingRewrite)
-        .action_interactive_job("moveStep", InteractiveJobClassification::BatchOnlyPendingRewrite)
-        .action_interactive_job("addBlock", InteractiveJobClassification::BatchOnlyPendingRewrite)
-        .action_interactive_job("removeBlock", InteractiveJobClassification::BatchOnlyPendingRewrite)
-        .action_interactive_job("moveBlock", InteractiveJobClassification::BatchOnlyPendingRewrite)
+        .action_interactive_job("addStep", InteractiveJobClassification::Migrated)
+        .action_interactive_job("removeStep", InteractiveJobClassification::Migrated)
+        .action_interactive_job("moveStep", InteractiveJobClassification::Migrated)
+        .action_interactive_job("addBlock", InteractiveJobClassification::Migrated)
+        .action_interactive_job("removeBlock", InteractiveJobClassification::Migrated)
+        .action_interactive_job("moveBlock", InteractiveJobClassification::Migrated)
         .action_interactive_job("updatePlaybook", InteractiveJobClassification::BatchOnlyPendingRewrite)
         .action_interactive_job("setContributions", InteractiveJobClassification::Migrated)
         // 📝️ Staged argument form for the panel-visible create action (block kind is a choice).

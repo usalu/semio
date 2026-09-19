@@ -1,9 +1,8 @@
 use super::*;
-use semio_s_artifact_stdio_pdf::schema::snapshot::PdfPage;
 
 #[semio_framework_async_macros::async_test]
 async fn maps_page_text_and_media_box() {
-    let pdf = PdfSnapshot { pages: vec![PdfPage { media_box: [0.0, 0.0, 200.0, 100.0], text: "hello semio".into(), ..PdfPage::default() }], ..PdfSnapshot::default() };
+    let pdf = semio_s_artifact_stdio_pdf::io::text_document(&[(200.0, 100.0, "hello semio")]);
     let drawing = semio_framework_plugin::resolve_ready(SemioDrawingFromPdf::deserialize(&pdf)).expect("deserialize");
     assert_eq!(drawing.canvas.width, 200.0);
     assert_eq!(drawing.canvas.height, 100.0);

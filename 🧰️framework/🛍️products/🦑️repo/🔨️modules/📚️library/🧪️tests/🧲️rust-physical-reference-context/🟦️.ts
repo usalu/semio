@@ -174,7 +174,7 @@ test("finite manifest candidates prove complete correlated targets without edita
     const candidates = inspect(row.source).filter((candidate) => candidate.value === contract.selectedValue);
     expect(candidates.map(({ value, targets }) => ({ value, targets })), row.id).toEqual(row.expected);
     for (const candidate of candidates) expect(row.source.slice(candidate.start, candidate.end), row.id).toBe(candidate.value);
-    const files = { [contract.manifestPath]: '[package]\nname="candidate"\n[lib]\npath="lib.rs"\n', [contract.consumerPath]: row.source };
+    const files: Record<string, string> = { [contract.manifestPath]: '[package]\nname="candidate"\n[lib]\npath="lib.rs"\n', [contract.consumerPath]: row.source };
     const graph = inspectRustModuleGraph(Object.keys(files), (path) => files[path], { strictManifests: true });
     const manifests = [...new Set((graph.contexts.get(contract.consumerPath) ?? []).map((context) => context.manifestPath).filter(Boolean))];
     expect(manifests).toEqual([contract.manifestPath]);
@@ -184,7 +184,8 @@ test("finite manifest candidates prove complete correlated targets without edita
     expect(relevance, row.id).toBe(row.relevance);
     expect(inspectRustManifestPathReferences(row.source).filter((reference) => reference.value === contract.selectedValue), row.id).toEqual([]);
   }
-  const row = contract.cases[0], files = {
+  const row = contract.cases[0];
+  const files: Record<string, string> = {
     [contract.manifestPath]: '[package]\nname="one"\n[lib]\npath="lib.rs"\n',
     "second/Cargo.toml": '[package]\nname="two"\n[lib]\npath="../pkg/lib.rs"\n',
     [contract.consumerPath]: row.source,

@@ -121,6 +121,35 @@ pub fn artifact_kind() -> ArtifactKindSpec {
         import_stdio_kinds: vec!["stdio.json".into(), "stdio.obj".into(), "stdio.png".into(), "stdio.stl".into(), "stdio.txt".into(), "stdio.zip".into()],
     }
 }
+
+/// 🗂️ The ONE `kit.catalog` declaration of the `🧱️block` plugin. Every block app produces this kind
+/// on its `"catalog:out"` port, and all three used to spell the spec out by hand — which drifted on
+/// `dimension` (`"2d"`/`"3d"`/`"5d"`), so the plugin refused to assemble at all:
+/// `plugin-assembly.media-kind: artifact kind "kit.catalog" has conflicting descriptors`
+/// (`🏗️builder/🦀️.rs:648` requires every contribution of one id to be equal). The kind describes the
+/// CATALOG, not the app that emitted it — a kit catalog carries meshes whatever the producing
+/// board's dimension — so it has one spelling, kept here in the crate `🧊️3d` and `🖐️5d` already
+/// depend on. `🧩️puzzle` and `🪵️sourcing` are consumers and reference it by `kind_id` only; see
+/// `🧩️puzzle/🗿️artifacts/🧊️3d/🦀️.rs`'s own note resolving ownership of this kind to `🧱️block`.
+pub const KIT_CATALOG_ARTIFACT_ID: &str = "kit.catalog";
+
+/// 🗂️ See [`KIT_CATALOG_ARTIFACT_ID`].
+pub fn kit_catalog_artifact_kind() -> ArtifactKindSpec {
+    ArtifactKindSpec {
+        id: KIT_CATALOG_ARTIFACT_ID.into(),
+        name: "Kit Catalog".into(),
+        source_format: KIT_CATALOG_ARTIFACT_ID.into(),
+        component_kind: "kit-catalog".into(),
+        dimension: "3d".into(),
+        media_capability: OsMediaCapability::MeshOnly,
+        media_type: MediaType { class: MediaClass::Kit, form: MediaForm::Type },
+        schema: KIT_CATALOG_ARTIFACT_ID.into(),
+        export_formats: vec![],
+        import_formats: vec![],
+        export_stdio_kinds: vec![],
+        import_stdio_kinds: vec![],
+    }
+}
 //#endregion 🔖️ArtifactKind
 
 //#region 🧪️Tests
@@ -944,6 +973,16 @@ pub mod viewer {
 #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs"]
         mod component;
         pub use component::*;
+#[path = "."]
+pub mod presence {
+    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/👥️presence/🧬️schema/🦀️.rs"]
+    pub mod schema;
+}
+#[path = "."]
+pub mod config {
+    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎚️config/🧬️schema/🦀️.rs"]
+    pub mod schema;
+}
 
         #[path = "."]
         pub mod modes {

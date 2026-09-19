@@ -23,7 +23,7 @@ export default defineTestAdapter({
   scenarios: {
     "malformed-inputs-are-rejected": {
       oracle: (ctx) => {
-        const corpus = JSON.parse(ctx.fixtureBytes("local://🔣️malformed.json").toString("utf8")) as Corpus;
+        const corpus = JSON.parse(Buffer.from(ctx.fixtureBytes("local://🔣️malformed.json")).toString("utf8")) as Corpus;
         return {
           projection: {
             inputs: corpus.inputs.map((entry) => {

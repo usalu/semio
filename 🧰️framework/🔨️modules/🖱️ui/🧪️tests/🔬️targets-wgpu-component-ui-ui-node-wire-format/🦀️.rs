@@ -32,7 +32,7 @@ mod ui_node_wire_format_tests {
                     step: None,
                     accept: None,
                     on_change: act("setValue"),
-                    presence: UiPresence::default(),
+                    on_submit: None, on_abort: None, on_repeat_last: None, presence: UiPresence::default(),
                 }),
                 UiNode::Select(UiSelectNode {
                     menu: None,
@@ -109,6 +109,7 @@ mod ui_node_wire_format_tests {
                         brush_preview_json: None,
                         interaction_json: None,
                         engagement_preview_json: None,
+            pick_targets_json: None,
                         lod_json: None,
                         chunking_json: None,
                         environment_json: None,
@@ -234,7 +235,7 @@ mod ui_node_wire_format_tests {
                 step: None,
                 accept: None,
                 on_change: act("a"),
-                presence: UiPresence::default(),
+                on_submit: None, on_abort: None, on_repeat_last: None, presence: UiPresence::default(),
             }),
             "Input",
         );

@@ -122,4 +122,98 @@ pub fn push_read_only_badge(draw: &mut DrawList, icons: &IconAtlas, theme: &Them
     push_control_border(draw, Rect::new(x - margin * 0.5, y - margin * 0.5, size + margin, size + margin), theme, theme.border_normal, theme.button_hover);
     push_icon(draw, icons, "lock", x, y, size, theme.text_element);
 }
+//#region 🎙️DriverTooltips
+/// 🎙️ React's `UiDriverLabels` axis — whether chrome paints icon+label captions or icons only
+/// (`🧱️elements/🚗️UiDriver/🟦️.tsx:15`).
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub enum UiDriverLabels {
+    #[default]
+    Full,
+    Icons,
+}
+
+/// 🎙️ React's `UiDriverTooltips` axis — how rich a chrome control's hover tooltip may be
+/// (`🧱️elements/🚗️UiDriver/🟦️.tsx:23`). `None` is what `COMPACT_UI_DRIVER` ships, and it is the axis
+/// value `useControlTooltipText` reads FIRST (`🏷️Label/🟦️.tsx:188`: `if (driver.tooltips === "none")
+/// return undefined`).
+///
+/// `Full` and `Minimal` differ on React only by the manual/tutorial links a full tooltip adds; this
+/// target's tooltip surface paints a label (plus its declared shortcut) and nothing else, so the two
+/// tiers are behaviourally identical HERE and only `None` changes what the user sees. That is the
+/// whole of the axis a canvas can honour, and it was unhonoured entirely — zero `UiDriver` hits
+/// anywhere in this target — until ticket 26/09/17 packet W15a.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub enum UiDriverTooltips {
+    #[default]
+    Full,
+    Minimal,
+    None,
+}
+
+impl UiDriverTooltips {
+    /// 🎙️ `parseUiDriver`'s own allowed values (`🚗️UiDriver/🟦️.tsx:69`); an unknown string is not a
+    /// driver axis value, and React throws on it — a renderer cannot, so it keeps the default.
+    pub fn from_axis(value: &str) -> Option<Self> {
+        match value {
+            "full" => Some(UiDriverTooltips::Full),
+            "minimal" => Some(UiDriverTooltips::Minimal),
+            "none" => Some(UiDriverTooltips::None),
+            _ => None,
+        }
+    }
+}
+
+/// 🚗️ The two axes of a resolved `UiDriver` this target can act on. `resolveUiDriver`
+/// (`🚗️UiDriver/🟦️.tsx:80-84`) resolves a custom driver first, then a builtin, then
+/// `DEFAULT_UI_DRIVER` — [`UiDriverChrome::builtin`] is the builtin half of that ladder.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub struct UiDriverChrome {
+    pub labels: UiDriverLabels,
+    pub tooltips: UiDriverTooltips,
+}
+
+impl UiDriverChrome {
+    /// 🚗️ `DEFAULT_UI_DRIVER` (`🚗️UiDriver/🟦️.tsx:41`).
+    pub const DEFAULT: Self = Self { labels: UiDriverLabels::Full, tooltips: UiDriverTooltips::Full };
+    /// 🚗️ `COMPACT_UI_DRIVER` (`🚗️UiDriver/🟦️.tsx:43`) — icon-only chrome and NO tooltips.
+    pub const COMPACT: Self = Self { labels: UiDriverLabels::Icons, tooltips: UiDriverTooltips::None };
+
+    /// 🚗️ The builtin driver named by `id`, falling back to the default exactly as
+    /// `resolveUiDriver` does for an id no driver carries.
+    pub fn builtin(id: &str) -> Self {
+        match id {
+            "compact" => Self::COMPACT,
+            _ => Self::DEFAULT,
+        }
+    }
+
+    /// 🚗️ Overrides whichever axes a custom driver's own config declares, leaving the rest at the
+    /// resolved builtin. `labels`/`tooltips` are the two this target reads; the other six axes
+    /// (`labelTier`, `drag`, `chrome`, `gumball`, `hotkeys`, plus the id/label pair) are either
+    /// already honoured elsewhere in the shell or have no canvas expression yet.
+    pub fn with_axes(mut self, labels: Option<&str>, tooltips: Option<&str>) -> Self {
+        if let Some("icons") = labels {
+            self.labels = UiDriverLabels::Icons;
+        } else if let Some("full") = labels {
+            self.labels = UiDriverLabels::Full;
+        }
+        if let Some(tooltips) = tooltips.and_then(UiDriverTooltips::from_axis) {
+            self.tooltips = tooltips;
+        }
+        self
+    }
+
+    /// 💡️ Whether a chrome control with `label_visible` inline caption gets a hover tooltip at all —
+    /// the two guards `useControlTooltipText` applies before it composes any text
+    /// (`🏷️Label/🟦️.tsx:186-190`): a driver with `tooltips: "none"` never shows one, and a control
+    /// whose caption is ALREADY painted beside its icon does not repeat itself in a tooltip.
+    pub fn tooltip_shows(&self, label_visible: bool) -> bool {
+        if matches!(self.tooltips, UiDriverTooltips::None) {
+            return false;
+        }
+        !(label_visible && matches!(self.labels, UiDriverLabels::Full))
+    }
+}
+//#endregion 🎙️DriverTooltips
+
 // #endregion chrome

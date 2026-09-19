@@ -19,7 +19,7 @@ use crate::wgpu::flex::{LayoutJobStage, LayoutJobStep};
 use crate::wgpu::mounted_layout::{MountedLayoutIdentity, MountedLayoutJob, MountedLayoutResult, RetainedGlyphPreview};
 #[cfg(test)]
 use crate::wgpu::paint::paint_tree;
-use crate::wgpu::paint::{paint_node_step, sync_interactive_state_node_step, RetainedInteractiveSyncCursor, RetainedInteractiveSyncStep, RetainedNodePaintCursor, RetainedNodePaintStep};
+use crate::wgpu::paint::{paint_node_step, retained_overlay_chrome_step, sync_interactive_state_node_step, RetainedInteractiveSyncCursor, RetainedInteractiveSyncStep, RetainedNodePaintCursor, RetainedNodePaintStep};
 #[cfg(test)]
 use crate::wgpu::scene_slots::collect_scene_slots;
 use crate::wgpu::scene_slots::{scene_slot_for_node, SceneHost, ScenePaintCursor, ScenePaintStep};
@@ -137,6 +137,11 @@ struct RetainedPaintVisit {
     origin_y: f32,
     next_child: Option<crate::wgpu::arena::NodeId>,
     entered: bool,
+    /// 🪟️ The OPEN overlay root this visit sits under, inherited down the subtree — `None` for
+    /// ordinary in-flow content. The paint phase routes a visit that names one into `DrawList`'s
+    /// overlay bucket so a floating surface's content composites above every panel, on top of the
+    /// surface chrome the `Overlays` phase drew for it (ticket 26/09/17 packet W15a).
+    overlay_root: Option<crate::wgpu::arena::NodeId>,
 }
 
 struct RetainedPaintWalk {
@@ -145,7 +150,7 @@ struct RetainedPaintWalk {
 }
 
 enum RetainedPaintWalkStep {
-    Visit(crate::wgpu::arena::NodeId, f32, f32),
+    Visit(crate::wgpu::arena::NodeId, f32, f32, Option<crate::wgpu::arena::NodeId>),
     Scalar,
     Complete,
     DepthFault,
@@ -153,7 +158,7 @@ enum RetainedPaintWalkStep {
 
 impl RetainedPaintWalk {
     fn new(tree: &UiTree, root: crate::wgpu::arena::NodeId) -> Self {
-        let root_visit = RetainedPaintVisit { node: root, origin_x: 0.0, origin_y: 0.0, next_child: tree.node(root).and_then(|node| node.first_child), entered: false };
+        let root_visit = RetainedPaintVisit { node: root, origin_x: 0.0, origin_y: 0.0, next_child: tree.node(root).and_then(|node| node.first_child), entered: false, overlay_root: None };
         let mut visits = [None; RETAINED_PAINT_DEPTH_CREDITS];
         visits[0] = Some(root_visit);
         Self { visits, len: 1 }
@@ -168,7 +173,7 @@ impl RetainedPaintWalk {
         let Some(visit) = self.visits[index].as_mut() else { return RetainedPaintWalkStep::DepthFault };
         if !visit.entered {
             visit.entered = true;
-            return RetainedPaintWalkStep::Visit(visit.node, visit.origin_x, visit.origin_y);
+            return RetainedPaintWalkStep::Visit(visit.node, visit.origin_x, visit.origin_y, visit.overlay_root);
         }
         if let Some(child) = visit.next_child {
             visit.next_child = tree.node(child).and_then(|node| node.next_sibling);
@@ -181,8 +186,10 @@ impl RetainedPaintWalk {
             // phase and the hit-registry phase walk through here, so a scrolled container can never
             // paint its children at one origin and register them at another.
             let (scroll_x, scroll_y) = tree.node(visit.node).filter(|node| node.flags.contains(NodeFlags::SCROLLABLE)).map_or((0.0, 0.0), |node| node.state.scroll_offset);
-            let (child_origin_x, child_origin_y) = tree.overlay_walk_origin(child).unwrap_or((visit.origin_x + layout.x - scroll_x, visit.origin_y + layout.y - scroll_y));
-            let child_visit = RetainedPaintVisit { node: child, origin_x: child_origin_x, origin_y: child_origin_y, next_child: tree.node(child).and_then(|node| node.first_child), entered: false };
+            let overlay_origin = tree.overlay_walk_origin(child);
+            let (child_origin_x, child_origin_y) = overlay_origin.unwrap_or((visit.origin_x + layout.x - scroll_x, visit.origin_y + layout.y - scroll_y));
+            let child_overlay_root = if overlay_origin.is_some() { Some(child) } else { visit.overlay_root };
+            let child_visit = RetainedPaintVisit { node: child, origin_x: child_origin_x, origin_y: child_origin_y, next_child: tree.node(child).and_then(|node| node.first_child), entered: false, overlay_root: child_overlay_root };
             self.visits[self.len] = Some(child_visit);
             self.len += 1;
             return RetainedPaintWalkStep::Scalar;
@@ -196,6 +203,13 @@ impl RetainedPaintWalk {
 #[derive(Clone, Copy)]
 enum RetainedPaintPhase {
     Synchronize,
+    /// 🪟️ One open overlay's own chrome per step — the modal backdrop a `Dialog`/`CommandPalette`
+    /// sits behind and the glass surface every floating overlay sits on. React portals these and the
+    /// browser paints them for free; this target has to, and until ticket 26/09/17 packet W15a it
+    /// never did on the per-frame path: `paint_overlay_backdrop`/`paint_overlay_surface` existed but
+    /// were reachable only through the `🪟️OverlayApi` façade, which no host called, so an overlay
+    /// that was not hand-pumped showed its content with no surface under it at all.
+    Overlays,
     Paint,
     Scenes,
     /// 🎯️ Re-derives this window's pointer registry from the SAME walk, and therefore the same
@@ -298,6 +312,11 @@ fn register_retained_hit(tree: &UiTree, theme: &Theme, node: crate::wgpu::arena:
     }
 }
 
+/// 🪟️ How many open overlays one frame paints chrome for. A fixed array, not a `Vec`: the ladder
+/// must not grow a per-frame working set, and a surface with more than this many simultaneously open
+/// floating overlays is already outside anything React's own shell produces.
+const UI_FRAME_OVERLAY_CHROME: usize = 8;
+
 struct RetainedPaintFrame {
     phase: RetainedPaintPhase,
     walk: RetainedPaintWalk,
@@ -305,6 +324,14 @@ struct RetainedPaintFrame {
     sync_node: Option<crate::wgpu::arena::NodeId>,
     node_sync: RetainedInteractiveSyncCursor,
     paint_node: Option<(crate::wgpu::arena::NodeId, f32, f32)>,
+    /// 🪟️ Whether the node `paint_node` names paints into the overlay bucket — true exactly when it
+    /// sits under one of `overlay_chrome`'s roots.
+    paint_overlay: bool,
+    /// 🪟️ The overlays this frame owes chrome for, captured once when the frame opened so every
+    /// step of the `Overlays` phase paints against the same placements the layout published.
+    overlay_chrome: [Option<UiOverlayPlacement>; UI_FRAME_OVERLAY_CHROME],
+    /// 🪟️ How far the `Overlays` phase has walked `overlay_chrome`.
+    overlay_index: usize,
     node_paint: RetainedNodePaintCursor,
     scene_node: Option<(crate::wgpu::arena::NodeId, f32, f32)>,
     scene_paint: ScenePaintCursor,
@@ -1285,6 +1312,8 @@ impl Ui {
     pub fn frame_step<H: SceneHost>(&mut self, window_id: &str, viewport_width: f32, viewport_height: f32, atlas: &mut FontAtlas, icons: Option<&IconAtlas>, mut scene_host: Option<&mut H>) -> UiFrameStep {
         self.set_viewport(window_id, viewport_width, viewport_height);
         self.publish_overlay_origins(window_id);
+        let overlay_chrome = self.retained_overlay_chrome(window_id);
+        let viewport_rect = crate::wgpu::geometry::Rect::new(0.0, 0.0, viewport_width, viewport_height);
         let theme = self.theme;
         let Some(window) = self.windows.get_mut(window_id) else { return UiFrameStep::Missing };
         let Some(root) = window.tree.root else { return UiFrameStep::Missing };
@@ -1311,6 +1340,9 @@ impl Ui {
                 sync_node: None,
                 node_sync: RetainedInteractiveSyncCursor::default(),
                 paint_node: None,
+                paint_overlay: false,
+                overlay_chrome,
+                overlay_index: 0,
                 node_paint: RetainedNodePaintCursor::default(),
                 scene_node: None,
                 scene_paint: ScenePaintCursor::default(),
@@ -1357,7 +1389,17 @@ impl Ui {
         }
         if matches!(frame.phase, RetainedPaintPhase::Paint) {
             if let Some((node, origin_x, origin_y)) = frame.paint_node {
-                match paint_node_step(&window.tree, node, origin_x, origin_y, &theme, atlas, icons, scene_host.is_some(), &mut frame.candidate, &mut frame.node_paint) {
+                // 🪟️ An overlay's content paints into the overlay bucket, ON TOP of the surface the
+                // `Overlays` phase already drew for it and above every panel in the frame — the
+                // browser's portal + `z-menu` equivalent. Plain in-flow content is untouched.
+                if frame.paint_overlay {
+                    frame.candidate.begin_overlay_route();
+                }
+                let step = paint_node_step(&window.tree, node, origin_x, origin_y, &theme, atlas, icons, scene_host.is_some(), &mut frame.candidate, &mut frame.node_paint);
+                if frame.paint_overlay {
+                    frame.candidate.end_overlay_route();
+                }
+                match step {
                     RetainedNodePaintStep::Pending => return UiFrameStep::Pending,
                     RetainedNodePaintStep::Complete => {
                         frame.paint_node = None;
@@ -1398,14 +1440,13 @@ impl Ui {
         }
         match frame.phase {
             RetainedPaintPhase::Synchronize => match frame.walk.step(&window.tree) {
-                RetainedPaintWalkStep::Visit(node, _, _) => {
+                RetainedPaintWalkStep::Visit(node, _, _, _) => {
                     frame.sync_node = Some(node);
                     UiFrameStep::Pending
                 }
                 RetainedPaintWalkStep::Scalar => UiFrameStep::Pending,
                 RetainedPaintWalkStep::Complete => {
-                    frame.phase = RetainedPaintPhase::Paint;
-                    frame.walk = RetainedPaintWalk::new(&window.tree, root);
+                    frame.phase = RetainedPaintPhase::Overlays;
                     UiFrameStep::Pending
                 }
                 RetainedPaintWalkStep::DepthFault => {
@@ -1413,9 +1454,27 @@ impl Ui {
                     UiFrameStep::Fault
                 }
             },
+            RetainedPaintPhase::Overlays => match frame.overlay_chrome.get(frame.overlay_index).copied().flatten() {
+                Some(placement) => {
+                    frame.overlay_index = frame.overlay_index.saturating_add(1);
+                    let bounds = crate::wgpu::geometry::Rect::new(placement.x, placement.y, placement.width, placement.height);
+                    if retained_overlay_chrome_step(&mut frame.candidate, viewport_rect, bounds, placement.backdrop, &theme) {
+                        UiFrameStep::Pending
+                    } else {
+                        frame.phase = RetainedPaintPhase::Fault;
+                        UiFrameStep::Fault
+                    }
+                }
+                None => {
+                    frame.phase = RetainedPaintPhase::Paint;
+                    frame.walk = RetainedPaintWalk::new(&window.tree, root);
+                    UiFrameStep::Pending
+                }
+            },
             RetainedPaintPhase::Paint => match frame.walk.step(&window.tree) {
-                RetainedPaintWalkStep::Visit(node, origin_x, origin_y) => {
+                RetainedPaintWalkStep::Visit(node, origin_x, origin_y, overlay_root) => {
                     frame.paint_node = Some((node, origin_x, origin_y));
+                    frame.paint_overlay = overlay_root.is_some_and(|root| frame.overlay_chrome.iter().flatten().any(|placement| placement.root == root));
                     UiFrameStep::Pending
                 }
                 RetainedPaintWalkStep::Scalar => UiFrameStep::Pending,
@@ -1430,7 +1489,7 @@ impl Ui {
                 }
             },
             RetainedPaintPhase::Scenes => match frame.walk.step(&window.tree) {
-                RetainedPaintWalkStep::Visit(node, origin_x, origin_y) => {
+                RetainedPaintWalkStep::Visit(node, origin_x, origin_y, _) => {
                     if scene_host.is_some() && scene_slot_for_node(&window.tree, node, origin_x, origin_y).is_some() {
                         frame.scene_node = Some((node, origin_x, origin_y));
                     }
@@ -1449,7 +1508,7 @@ impl Ui {
                 }
             },
             RetainedPaintPhase::Hits => match frame.walk.step(&window.tree) {
-                RetainedPaintWalkStep::Visit(node, origin_x, origin_y) => {
+                RetainedPaintWalkStep::Visit(node, origin_x, origin_y, _) => {
                     register_retained_hit(&window.tree, &theme, node, origin_x, origin_y, &mut frame.hit_candidates);
                     UiFrameStep::Pending
                 }
@@ -1492,6 +1551,8 @@ impl Ui {
         let crate::wgpu::geometry::Rect { x: offset_x, y: offset_y, w: viewport_width, h: viewport_height } = viewport;
         self.set_viewport(window_id, viewport_width, viewport_height);
         self.publish_overlay_origins(window_id);
+        let overlay_chrome = self.retained_overlay_chrome(window_id);
+        let viewport_rect = viewport;
         let theme = self.theme;
         let Some(window) = self.windows.get_mut(window_id) else { return UiFrameStep::Missing };
         let Some(root) = window.tree.root else { return UiFrameStep::Missing };
@@ -1507,6 +1568,9 @@ impl Ui {
                 sync_node: None,
                 node_sync: RetainedInteractiveSyncCursor::default(),
                 paint_node: None,
+                paint_overlay: false,
+                overlay_chrome,
+                overlay_index: 0,
                 node_paint: RetainedNodePaintCursor::default(),
                 scene_node: None,
                 scene_paint: ScenePaintCursor::default(),
@@ -1554,7 +1618,15 @@ impl Ui {
         }
         if matches!(frame.phase, RetainedPaintPhase::Paint) {
             if let Some((node, origin_x, origin_y)) = frame.paint_node {
-                match paint_node_step(&window.tree, node, origin_x, origin_y, &theme, atlas, icons, scene_host.is_some(), target, &mut frame.node_paint) {
+                // 🪟️ See `frame_step`'s twin: overlay content composites above the surface chrome.
+                if frame.paint_overlay {
+                    target.begin_overlay_route();
+                }
+                let step = paint_node_step(&window.tree, node, origin_x, origin_y, &theme, atlas, icons, scene_host.is_some(), target, &mut frame.node_paint);
+                if frame.paint_overlay {
+                    target.end_overlay_route();
+                }
+                match step {
                     RetainedNodePaintStep::Pending => return UiFrameStep::Pending,
                     RetainedNodePaintStep::Complete => {
                         frame.paint_node = None;
@@ -1599,14 +1671,13 @@ impl Ui {
         }
         match frame.phase {
             RetainedPaintPhase::Synchronize => match frame.walk.step(&window.tree) {
-                RetainedPaintWalkStep::Visit(node, _, _) => {
+                RetainedPaintWalkStep::Visit(node, _, _, _) => {
                     frame.sync_node = Some(node);
                     UiFrameStep::Pending
                 }
                 RetainedPaintWalkStep::Scalar => UiFrameStep::Pending,
                 RetainedPaintWalkStep::Complete => {
-                    frame.phase = RetainedPaintPhase::Paint;
-                    frame.walk = RetainedPaintWalk::new(&window.tree, root);
+                    frame.phase = RetainedPaintPhase::Overlays;
                     UiFrameStep::Pending
                 }
                 RetainedPaintWalkStep::DepthFault => {
@@ -1615,9 +1686,28 @@ impl Ui {
                     UiFrameStep::Fault
                 }
             },
+            RetainedPaintPhase::Overlays => match frame.overlay_chrome.get(frame.overlay_index).copied().flatten() {
+                Some(placement) => {
+                    frame.overlay_index = frame.overlay_index.saturating_add(1);
+                    let bounds = crate::wgpu::geometry::Rect::new(offset_x + placement.x, offset_y + placement.y, placement.width, placement.height);
+                    if retained_overlay_chrome_step(target, viewport_rect, bounds, placement.backdrop, &theme) {
+                        UiFrameStep::Pending
+                    } else {
+                        frame.phase = RetainedPaintPhase::Fault;
+                        frame.fault_site = Some("overlay-chrome");
+                        UiFrameStep::Fault
+                    }
+                }
+                None => {
+                    frame.phase = RetainedPaintPhase::Paint;
+                    frame.walk = RetainedPaintWalk::new(&window.tree, root);
+                    UiFrameStep::Pending
+                }
+            },
             RetainedPaintPhase::Paint => match frame.walk.step(&window.tree) {
-                RetainedPaintWalkStep::Visit(node, origin_x, origin_y) => {
+                RetainedPaintWalkStep::Visit(node, origin_x, origin_y, overlay_root) => {
                     frame.paint_node = Some((node, origin_x + offset_x, origin_y + offset_y));
+                    frame.paint_overlay = overlay_root.is_some_and(|root| frame.overlay_chrome.iter().flatten().any(|placement| placement.root == root));
                     UiFrameStep::Pending
                 }
                 RetainedPaintWalkStep::Scalar => UiFrameStep::Pending,
@@ -1633,7 +1723,7 @@ impl Ui {
                 }
             },
             RetainedPaintPhase::Scenes => match frame.walk.step(&window.tree) {
-                RetainedPaintWalkStep::Visit(node, origin_x, origin_y) => {
+                RetainedPaintWalkStep::Visit(node, origin_x, origin_y, _) => {
                     let origin_x = origin_x + offset_x;
                     let origin_y = origin_y + offset_y;
                     if scene_host.is_some() && scene_slot_for_node(&window.tree, node, origin_x, origin_y).is_some() {
@@ -1655,7 +1745,7 @@ impl Ui {
                 }
             },
             RetainedPaintPhase::Hits => match frame.walk.step(&window.tree) {
-                RetainedPaintWalkStep::Visit(node, origin_x, origin_y) => {
+                RetainedPaintWalkStep::Visit(node, origin_x, origin_y, _) => {
                     register_retained_hit(&window.tree, &theme, node, origin_x + offset_x, origin_y + offset_y, &mut frame.hit_candidates);
                     UiFrameStep::Pending
                 }
@@ -1736,7 +1826,27 @@ impl Ui {
     pub fn surface_content_height(&self, window_id: &str) -> Option<f32> {
         let window = self.windows.get(window_id)?;
         let root = window.tree.root?;
-        window.tree.accepted_layout(root).map(|layout| layout.height)
+        let root_layout = window.tree.accepted_layout(root)?;
+        // 📐️ The document's OWN extent, not the box it was stretched into. A window root fills the
+        // viewport it was laid out against, so answering `root_layout.height` answers the caller's own
+        // input — which made the panel content-hug (`anchor_panel_rect`'s `content_h`) a no-op and left
+        // every floating panel at its full column band. React hugs because its panel is `height: auto`
+        // around a content-sized document; the equivalent measure here is how far the root's own
+        // children reach. Measured on 6118: the `framework.panel.toolRun` root reported 781.6 while its
+        // single run group was 233.96 tall, so the Tool-runs panel covered the whole right column and
+        // the 3D preview under it (ticket 26/09/17/WGPU-RENDERER-REACT-PARITY,
+        // `📓️w14b-generation3d-labels-preview-layout.md`).
+        let content = window
+            .tree
+            .children(root)
+            .filter_map(|child| window.tree.accepted_layout(child))
+            .map(|layout| layout.y + layout.height)
+            .fold(f32::NEG_INFINITY, f32::max);
+        if content.is_finite() {
+            Some(content.clamp(0.0, root_layout.height))
+        } else {
+            Some(root_layout.height)
+        }
     }
 
     /// 📐️ Re-arms one window's layout lane. Idempotent — a window already queued is left alone — so a
@@ -1783,6 +1893,7 @@ impl Ui {
             (Some(site), _) => site,
             _ => match frame.phase {
             RetainedPaintPhase::Synchronize => "synchronize",
+            RetainedPaintPhase::Overlays => "overlays",
             RetainedPaintPhase::Paint => "paint",
             RetainedPaintPhase::Scenes => "scenes",
             RetainedPaintPhase::Hits => "hits",
@@ -1839,6 +1950,30 @@ impl Ui {
         let commands = window.router.close_overlay(&mut window.tree, root);
         self.pending_commands.extend(commands.iter().cloned());
         commands
+    }
+
+    /// 🪟️ The open overlays whose surface chrome the RETAINED LADDER owns, in bottom-to-top order,
+    /// capped at [`UI_FRAME_OVERLAY_CHROME`].
+    ///
+    /// Three of the six kinds are here. A `Dialog`, a `CommandPalette` and a `Popover` are React
+    /// portals whose content is an ordinary document subtree: nothing in that subtree draws the
+    /// surface it sits on, so this ladder must. The other three already own their own chrome and are
+    /// deliberately excluded — a `SelectPopup`'s glass is painted by `paint_select` as part of the
+    /// `Select` node itself (whose overlay root is the TRIGGER's rect, not the popup's, so surface
+    /// chrome at that placement would paint a menu panel over the closed trigger), a `ContextMenu`'s
+    /// by `render_context_menu`, and a `Tooltip`'s by `paint_tooltip`.
+    fn retained_overlay_chrome(&self, window_id: &str) -> [Option<UiOverlayPlacement>; UI_FRAME_OVERLAY_CHROME] {
+        let mut chrome = [None; UI_FRAME_OVERLAY_CHROME];
+        let mut next = 0;
+        for placement in self.overlay_placements(window_id) {
+            if !matches!(placement.kind, OverlayKind::Dialog | OverlayKind::CommandPalette | OverlayKind::Popover) {
+                continue;
+            }
+            let Some(slot) = chrome.get_mut(next) else { break };
+            *slot = Some(placement);
+            next += 1;
+        }
+        chrome
     }
 
     /** @emoji 🪟️ Republishes every OPEN overlay's resolved placement onto the window's own tree, so

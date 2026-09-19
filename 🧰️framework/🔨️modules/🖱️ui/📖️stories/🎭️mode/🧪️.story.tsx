@@ -44,6 +44,7 @@ const meta = {
   component: Mode,
   parameters: { layout: "fullscreen" },
   tags: ["autodocs"],
+  args: { windows: [], activeWindowId: null },
 } satisfies Meta<typeof Mode>;
 
 export default meta;
@@ -57,10 +58,10 @@ export const QuadLayout: Story = {
       <div className="h-[500px] w-full p-single">
         <Mode
           windows={[
-            { id: "overview", title: "Overview", children: <Pane label="Overview" /> },
-            { id: "detail", title: "Detail", children: <Pane label="Detail" /> },
-            { id: "selection", title: "Selection", children: <Pane label="Selection" /> },
-            { id: "context", title: "Context", children: <Pane label="Context" /> },
+            { id: "overview", title: uiDataLabel("Overview"), iconId: "app-window", children: <Pane label="Overview" /> },
+            { id: "detail", title: uiDataLabel("Detail"), iconId: "app-window", children: <Pane label="Detail" /> },
+            { id: "selection", title: uiDataLabel("Selection"), iconId: "app-window", children: <Pane label="Selection" /> },
+            { id: "context", title: uiDataLabel("Context"), iconId: "app-window", children: <Pane label="Context" /> },
           ]}
           layout={{
             kind: "row",
@@ -99,9 +100,9 @@ export const TabStack: Story = {
       <div className="h-[400px] w-full p-single">
         <Mode
           windows={[
-            { id: "design", title: "Design", children: <Pane label="Design Pane" /> },
-            { id: "review", title: "Review", children: <Pane label="Review Pane" /> },
-            { id: "notes", title: "Notes", children: <Pane label="Notes Pane" /> },
+            { id: "design", title: uiDataLabel("Design"), iconId: "app-window", children: <Pane label="Design Pane" /> },
+            { id: "review", title: uiDataLabel("Review"), iconId: "app-window", children: <Pane label="Review Pane" /> },
+            { id: "notes", title: uiDataLabel("Notes"), iconId: "app-window", children: <Pane label="Notes Pane" /> },
           ]}
           layout={{
             kind: "stack",
@@ -125,8 +126,8 @@ export const MaximizeStack: Story = {
     <div className="h-[400px] w-full p-single">
       <Mode
         windows={[
-          { id: "a", title: "Alpha", children: <Pane label="Alpha" /> },
-          { id: "b", title: "Beta", children: <Pane label="Beta" /> },
+          { id: "a", title: uiDataLabel("Alpha"), iconId: "app-window", children: <Pane label="Alpha" /> },
+          { id: "b", title: uiDataLabel("Beta"), iconId: "app-window", children: <Pane label="Beta" /> },
         ]}
         layout={{
           kind: "row",
@@ -147,8 +148,8 @@ export const EvenSplit: Story = {
     <div className="h-[400px] w-full p-single">
       <Mode
         windows={[
-          { id: "a", title: "A", children: <Pane label="A" /> },
-          { id: "b", title: "B", children: <Pane label="B" /> },
+          { id: "a", title: uiDataLabel("A"), iconId: "app-window", children: <Pane label="A" /> },
+          { id: "b", title: uiDataLabel("B"), iconId: "app-window", children: <Pane label="B" /> },
         ]}
         layout={createEvenWindowLayout(["a", "b"])}
         activeWindowId="a"
@@ -173,8 +174,8 @@ export const ContentThroughGlass: Story = {
       >
         <Mode
           windows={[
-            { id: "flow", title: uiDataLabel("Flow / Fluss"), children: <SilhouetteVisualFixture /> },
-            { id: "reference", title: uiDataLabel("Reference / Referenz"), children: <Pane label="Reference / Referenz" /> },
+            { id: "flow", title: uiDataLabel("Flow / Fluss"), iconId: "flow", children: <SilhouetteVisualFixture /> },
+            { id: "reference", title: uiDataLabel("Reference / Referenz"), iconId: "app-window", children: <Pane label="Reference / Referenz" /> },
           ]}
           layout={{
             kind: "stack",

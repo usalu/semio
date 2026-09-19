@@ -2,7 +2,7 @@
 // 🧪️ 🧰️framework/🔨️modules/🖱️ui/📖️stories/🎭️engagement/🧪️.story.tsx
 // #endregion 🧲️Header
 
-import { Engagement, Search, Window } from "@semio-tech/ui-react";
+import { Engagement, Search, uiDataLabel, Window } from "@semio-tech/ui-react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import * as React from "react";
 import { searchStandalonePlay, standalonePlay, withControlPlay } from "../../🧪️tests/🎯️engagement-story-interaction/🟦️.ts";
@@ -19,7 +19,7 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const SearchStandalone: Story = {
-  render: () => <Search input={{ placeholder: "Ask or action…", onSubmit: () => {} }} />,
+  render: () => <Search input={{ placeholder: uiDataLabel("Ask or action…"), onSubmit: () => {} }} />,
   play: searchStandalonePlay,
 };
 
@@ -27,8 +27,8 @@ export const Standalone: Story = {
   render: () => (
     <Engagement
       options={[
-        { id: "snap", label: "Snap", pressed: true, onPress: () => {} },
-        { id: "grid", label: "Grid", onPress: () => {} },
+        { id: "snap", label: uiDataLabel("Snap"), icon: "magnet", pressed: true, onPress: () => {} },
+        { id: "grid", label: uiDataLabel("Grid"), icon: "grid-3x3", onPress: () => {} },
       ]}
       status={[
         { id: "ready", content: "Ready" },
@@ -47,7 +47,7 @@ export const WithControl: Story = {
       control={{
         kind: "stepper",
         id: "height",
-        label: "Height",
+        label: uiDataLabel("Height"),
         value: 3,
         min: 0,
         step: 0.1,
@@ -66,11 +66,11 @@ export const InWindow: Story = {
         id="engagement-window"
         active
         engagement={{
-          options: [{ id: "tool-a", label: "Tool A", onPress: () => {} }],
+          options: [{ id: "tool-a", label: uiDataLabel("Tool A"), icon: "wrench", onPress: () => {} }],
           status: [{ id: "status", content: "Idle" }],
         }}
         search={{
-          input: { placeholder: "Type an action" },
+          input: { placeholder: uiDataLabel("Type an action") },
         }}
       >
         {/* Interior content of the `<Window>` above — its root already fills `ui-surface` at level="window", so this stays bg-transparent. */}

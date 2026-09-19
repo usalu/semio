@@ -706,13 +706,27 @@ pub struct PostgresDirectory {
 }
 
 #[cfg(test)]
-#[derive(Default)]
 struct ArtifactGenesisTestControlV1 {
     pause_before_authority: std::sync::atomic::AtomicBool,
     reached_before_authority: tokio::sync::Semaphore,
     resume_before_authority: tokio::sync::Semaphore,
     observed_now_ms: std::sync::atomic::AtomicU64,
     fail_commit_ack: std::sync::atomic::AtomicBool,
+}
+
+/// 🚦️ `tokio::sync::Semaphore` has no `Default`, and the two rendezvous gates start closed on
+/// purpose: a genesis run only proceeds once the test explicitly adds a permit.
+#[cfg(test)]
+impl Default for ArtifactGenesisTestControlV1 {
+    fn default() -> Self {
+        Self {
+            pause_before_authority: std::sync::atomic::AtomicBool::new(false),
+            reached_before_authority: tokio::sync::Semaphore::new(0),
+            resume_before_authority: tokio::sync::Semaphore::new(0),
+            observed_now_ms: std::sync::atomic::AtomicU64::new(0),
+            fail_commit_ack: std::sync::atomic::AtomicBool::new(false),
+        }
+    }
 }
 
 impl PostgresDirectory {
@@ -1901,6 +1915,27 @@ impl HubDirectory for PostgresDirectory {
                 .await
                 .map_err(backend)?;
         Ok(rows.into_iter().map(auth_audit_from_row).collect())
+    }
+
+    async fn append_credential_audit(&self, fact: &CredentialAuditFactV1) -> DirectoryResult<AuthAuditRecord> {
+        let record = auth_audit(now_ms(), &fact.event_kind, None, fact.target_user_id.as_deref(), fact.actor_user_id.as_deref(), None, &fact.outcome_code, fact.reason_code.as_deref(), &fact.correlation_id, &fact.peer_class)?;
+        let mut tx = self.pool.begin().await.map_err(backend)?;
+        insert_auth_audit(&mut tx, &record).await?;
+        tx.commit().await.map_err(backend)?;
+        Ok(record)
+    }
+
+    async fn set_password_credential(&self, user_id: &str, encoded_credential: &str, actor_user_id: Option<&str>, correlation_id: &str) -> DirectoryResult<()> {
+        validate_bounded_auth_text(encoded_credential, "password credential", AUTH_TEXT_MAX_BYTES)?;
+        let record = auth_audit(now_ms(), "credential-changed", None, Some(user_id), actor_user_id, None, "success", None, correlation_id, "server")?;
+        let mut tx = self.pool.begin().await.map_err(backend)?;
+        let updated = sqlx_core::query::query("UPDATE hub_user SET password_hash = $2 WHERE id = $1").bind(user_id).bind(encoded_credential).execute(&mut *tx).await.map_err(backend)?;
+        if updated.rows_affected() == 0 {
+            return Err(DirectoryError::Conflict("password credential target user does not exist".into()));
+        }
+        insert_auth_audit(&mut tx, &record).await?;
+        tx.commit().await.map_err(backend)?;
+        Ok(())
     }
     //#endregion
 

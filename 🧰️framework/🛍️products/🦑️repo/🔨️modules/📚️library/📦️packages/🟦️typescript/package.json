@@ -38,7 +38,7 @@
     "test-mutation-source-roster-roles": "nx run @semio-tech/repo-lib:test-mutation-source-roster-roles",
     "test-mutation-source-file-facts": "nx run @semio-tech/repo-lib:test-mutation-source-file-facts",
     "test-typescript-declaration-facts": "nx run @semio-tech/repo-lib:test-typescript-declaration-facts",
-    "lint": "nx run @semio-tech/repo-lib:lint",
+    "typecheck": "nx run @semio-tech/repo-lib:typecheck",
     "test": "nx run @semio-tech/repo-lib:test",
     "test-rust-writable-path-authority": "nx run @semio-tech/repo-lib:test-rust-writable-path-authority",
     "test-artifact-source-commit": "nx run @semio-tech/repo-lib:test-artifact-source-commit",

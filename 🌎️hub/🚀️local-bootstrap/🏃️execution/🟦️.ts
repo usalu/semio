@@ -1,11 +1,12 @@
 import { randomBytes } from "node:crypto";
-import { spawn, type ChildProcess } from "node:child_process";
+import { spawn, spawnSync, type ChildProcess } from "node:child_process";
 import { chmodSync, existsSync, mkdtempSync, rmSync } from "node:fs";
 import { createServer } from "node:net";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import type { Duplex } from "node:stream";
 import { cargoTargetDirectory } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🟦️.ts";
+import { getWorkspaceRoot } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts";
 import { GIS_INFERENCE_CHECKPOINT_CONTROL_FRAME_MAX_BYTES } from "../../💡️inference/🧬️schema/🟦️.ts";
 import { authenticatedFrame, LOCAL_BOOTSTRAP_SCHEMA, type LocalProfile, verifyAuthenticatedFrame } from "../🛂authentication/🟦️.ts";
 import { LOCAL_BOOTSTRAP_DEADLINE_MS, LocalFrameReader, writeLocalFrame } from "../📡️framing/🟦️.ts";
@@ -39,6 +40,11 @@ export type LocalHubRun = {
   readonly runId: string;
   readonly port: number;
   readonly runRoot: string;
+  /** 🎫️ Whether this run asked the hub to also mint sessions from public credentials
+   * (`OS_HUB_CREDENTIAL_SIGN_IN`). A development hub issues through the pipe alone by default; a run
+   * that did not ask for public issuance must still see `/readyz` deny it, which is what
+   * {@link localHubReadinessAdmitted} compares against. */
+  readonly publicSessionIssuance: boolean;
   readonly output: () => string;
   readonly removeRunRoot: () => void;
   readonly inferenceCheckpointPipe?: Duplex;
@@ -78,10 +84,23 @@ export function hubBinaryPath(repoRoot: string): string {
   return join(cargoTargetDirectory(repoRoot), "debug", process.platform === "win32" ? "os-hub.exe" : "os-hub");
 }
 
-/** 📦 Reads the Nx-staged development executable instead of compiling from a launch route. */
-export function hubDevBinaryPath(root: string): string {
+/** 🎯 The single Nx target that stages the development executable every launch route reads. */
+export const HUB_DEV_BINARY_TARGET = "os-hub:build-dev";
+
+/** 🏗️ The injectable staging boundary: one attempt that returns the exit status of the Nx target. */
+export type HubDevBinaryStaging = Readonly<{ stage: () => number }>;
+
+const nativeHubDevBinaryStaging: HubDevBinaryStaging = {
+  stage: () => spawnSync("bun", ["nx", "run", HUB_DEV_BINARY_TARGET], { cwd: getWorkspaceRoot(), stdio: "inherit", shell: false }).status ?? -1,
+};
+
+/** 📦 Reads the Nx-staged development executable, staging it through its own Nx target when absent instead of
+ * failing a launch route with a missing file, and naming that target when the staging itself fails. */
+export function hubDevBinaryPath(root: string, staging: HubDevBinaryStaging = nativeHubDevBinaryStaging): string {
   const path = join(root, "dist", "build-dev", process.platform === "win32" ? "os-hub.exe" : "os-hub");
-  if (!existsSync(path)) throw new Error(`Missing Nx-staged os-hub dev binary: ${path}; run: bun nx run os-hub:build-dev`);
+  if (existsSync(path)) return path;
+  const status = staging.stage();
+  if (status !== 0 || !existsSync(path)) throw new Error(`Missing Nx-staged os-hub dev binary: ${path}; staging it through \`bun nx run ${HUB_DEV_BINARY_TARGET}\` exited with status ${status}`);
   return path;
 }
 
@@ -123,6 +142,7 @@ export async function startLocalHub(repoRoot: string, root: string, profiles: re
   }
   if (options.adminSubjects?.length) env.OS_HUB_ADMIN_SUBJECTS = options.adminSubjects.join(",");
   else delete env.OS_HUB_ADMIN_SUBJECTS;
+  const publicSessionIssuance = env.OS_HUB_CREDENTIAL_SIGN_IN === "true" || env.OS_HUB_CREDENTIAL_SIGN_IN === "1";
   const outputMode: "pipe" | "inherit" = options.capture ? "pipe" : "inherit";
   const child = spawn(options.binaryPath ?? hubBinaryPath(repoRoot), [], {
     cwd: root,
@@ -152,6 +172,7 @@ export async function startLocalHub(repoRoot: string, root: string, profiles: re
     runId,
     port,
     runRoot,
+    publicSessionIssuance,
     output: () => Buffer.concat(captured).toString("utf8"),
     removeRunRoot: allocation.remove,
     inferenceCheckpointPipe,
@@ -190,8 +211,8 @@ export async function startLocalHub(repoRoot: string, root: string, profiles: re
 }
 
 /** ✅ Classifies a readiness response against the exact local run and component boundary. */
-export function localHubReadinessAdmitted(body: Record<string, any>, status: number, runId: string, bootstrapSecuritySmoke = false): boolean {
-  if (body.schema !== "semio.hub.readiness/v1" || body.runId !== runId || body.mode !== "development" || body.bindScope !== "loopback" || body.authentication?.kind !== "local-bootstrap-pipe-v1" || body.authentication?.publicSessionIssuance !== false)
+export function localHubReadinessAdmitted(body: Record<string, any>, status: number, runId: string, bootstrapSecuritySmoke = false, publicSessionIssuance = false): boolean {
+  if (body.schema !== "semio.hub.readiness/v1" || body.runId !== runId || body.mode !== "development" || body.bindScope !== "loopback" || body.authentication?.kind !== "local-bootstrap-pipe-v1" || body.authentication?.publicSessionIssuance !== publicSessionIssuance)
     throw new Error("hub readiness binding mismatch");
   const componentsReady = body.directory?.ready === true && body.storage?.ready === true && body.adminAssets?.ready === true;
   const fullyReady = status === 200 && body.status === "ready" && body.authentication.bootstrapReady === true && componentsReady && body.artifactAuthority?.ready === true;
@@ -207,7 +228,7 @@ export async function waitForReadiness(run: LocalHubRun, bootstrapSecuritySmoke 
     try {
       const response = await fetch(`http://127.0.0.1:${run.port}/readyz`, { signal: AbortSignal.timeout(1000) });
       const body = (await response.json()) as Record<string, any>;
-      if (localHubReadinessAdmitted(body, response.status, run.runId, bootstrapSecuritySmoke)) return body;
+      if (localHubReadinessAdmitted(body, response.status, run.runId, bootstrapSecuritySmoke, run.publicSessionIssuance)) return body;
     } catch (error) {
       if (error instanceof Error && error.message === "hub readiness binding mismatch") throw error;
     }

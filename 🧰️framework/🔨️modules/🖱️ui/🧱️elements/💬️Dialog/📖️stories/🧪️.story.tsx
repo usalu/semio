@@ -32,7 +32,7 @@ export const Default: Story = {
     return (
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogTrigger asChild>
-          <Button id="dialog-trigger-default">Add Capsule to Design</Button>
+          <Button id="dialog-trigger-default" icon="plus">Add Capsule to Design</Button>
         </DialogTrigger>
         <DialogContent showCloseButton className="max-w-lg">
           <DialogHeader>
@@ -53,10 +53,10 @@ export const Default: Story = {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="default" onClick={() => setOpen(false)}>
+            <Button variant="default" icon="x" onClick={() => setOpen(false)}>
               Cancel
             </Button>
-            <Button onClick={() => setOpen(false)}>Add to Design</Button>
+            <Button icon="check" onClick={() => setOpen(false)}>Add to Design</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

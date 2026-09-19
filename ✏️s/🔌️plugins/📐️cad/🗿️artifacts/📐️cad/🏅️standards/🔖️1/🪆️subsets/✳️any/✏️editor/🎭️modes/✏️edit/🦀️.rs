@@ -114,6 +114,13 @@ pub(crate) fn world_instances_json(objects: &[CadObject], view: &CadPlayView) ->
                 ("color".to_string(), DslValue::String(resolve_typology_style(&object.typology).color)),
                 ("selected".to_string(), DslValue::Bool(selected)),
                 ("hovered".to_string(), DslValue::Bool(hovered)),
+                // 🌫️ A LOCKED object is dimmed by `WORLD_LOCKED_OPACITY_SCALE` and painted with the
+                // muted `disabled` row of `MESH_STYLE_PAINT` — React's own locked material. The
+                // instance lane had no `opacity`/`disabled` field at all until ticket 26/09/17
+                // packet W14g, so `target_style`'s locked arm could be computed and never reach a
+                // committed mesh (`📓️w2f-cad-spatial-editor-wgpu.md` §5.5).
+                ("disabled".to_string(), DslValue::Bool(object.locked)),
+                ("opacity".to_string(), DslValue::float(if object.locked { picking::WORLD_LOCKED_OPACITY_SCALE } else { 1.0 })),
             ])
         })
         .collect();
@@ -382,6 +389,86 @@ pub(crate) fn pick_target_preview_items(objects: &[CadObject], geometry: Option<
     items
 }
 
+/// 🧲️ How many pick-target rows one pane publishes on the `pickTargets` lane, and how many points
+/// one row carries. The lane is BOUNDED on the wire: a Concrete-Forest pane offers thousands of
+/// kernel targets and a sampled circle is 64 points, so both ends are capped here and the consumer
+/// caps them again (`WORLD_PICK_TARGET_CAPACITY` / `WORLD_PICK_TARGET_POINT_CAPACITY`).
+pub const CAD_PICK_TARGET_LANE_BUDGET: usize = 192;
+pub const CAD_PICK_TARGET_LANE_POINT_BUDGET: usize = 64;
+
+fn pick_target_style_color_value(color: &picking::SpatialColorRef) -> DslValue {
+    match color {
+        picking::SpatialColorRef::Token(token) => DslValue::String((*token).to_string()),
+        picking::SpatialColorRef::Hex(hex) => DslValue::String(hex.clone()),
+    }
+}
+
+/// 🧲️ The `pickTargets` lane — the HIT-TESTABLE half of the geometry pick overlay.
+///
+/// ⚖️ `engagementPreview` (packet W2f) paints the overlay; this lane is what a renderer raycasts, so
+/// a click resolves to a `vertex`/`edge`/`face`/`object` instead of to the whole instance. The set
+/// is React's own `resolveSpatialPickTargetsToRender` (so a hidden/locked target still RENDERS,
+/// dimmed) and each row carries `selectable` from its entity flags, so only React's
+/// `selectableTargets` subset is ever hit — the exact split between `SpatialPickTargetNode` and
+/// `SpatialPickHitTarget`.
+pub(crate) fn pick_target_lane_items(view: &CadPlayView, objects: &[CadObject], geometry: Option<&CadGeometry>, pane: CadPaneId) -> Vec<DslValue> {
+    let Some(geometry) = geometry else { return Vec::new() };
+    let model_definition_id = pane.model_definition_id();
+    let targets = picking::create_spatial_pick_targets(objects, Some(geometry), Some(model_definition_id));
+    let view_targets = picking::filter_spatial_pick_targets_for_active_view(targets, Some(model_definition_id));
+    let visibility = picking::spatial_scene_kind_toggles_for_model_definition(Some(model_definition_id), &picking::default_spatial_primitive_toggles());
+    let flags = |entity_id: &str| picking::resolve_spatial_entity_flags(objects, geometry, model_definition_id, entity_id);
+    let pinned: std::collections::BTreeSet<String> = view
+        .interaction
+        .ids
+        .iter()
+        .chain(view.interaction.hovered_ids.iter())
+        .flat_map(|id| picking::spatial_hover_key_aliases(Some(id.as_str())))
+        .collect();
+    let mut rendered = picking::resolve_spatial_pick_targets_to_render(&view_targets, visibility, &pinned, &flags, None);
+    rendered.sort_by_key(|target| target.kind.generality());
+    rendered.truncate(CAD_PICK_TARGET_LANE_BUDGET);
+    let typology_index = picking::build_geometry_typology_index(objects, geometry, model_definition_id);
+    let buckets = picking::geometry_buckets(geometry);
+    rendered
+        .iter()
+        .map(|target| {
+            let selected = view.interaction.ids.iter().any(|id| id == &target.id);
+            let hovered = view.interaction.hovered_ids.iter().any(|id| id == &target.id);
+            let entity_flags = flags(&target.id);
+            let typology_style = typology_index.get(&picking::spatial_pick_target_member_key(target)).map(|typology| resolve_typology_style(typology));
+            let style = picking::target_style(target, hovered, selected, typology_style.as_ref(), entity_flags.locked);
+            // 📍️ An edge's points ARE its sampled polyline now (`GeometryBuckets::edge_points`), so a
+            // curved edge publishes React's tessellation instead of its two endpoints.
+            let mut points: Vec<[f64; 3]> = match picking::pick_target_primitive_kind(target) {
+                Some(kind) => buckets.entity_points(kind, &target.id),
+                None => target.points.clone(),
+            };
+            if points.is_empty() {
+                points = target.points.clone();
+            }
+            points.truncate(CAD_PICK_TARGET_LANE_POINT_BUDGET);
+            DslValue::object([
+                ("kind".to_string(), DslValue::String(target.kind.as_str().to_string())),
+                ("id".to_string(), DslValue::String(target.id.clone())),
+                ("point".to_string(), f64_array_value(&target.point)),
+                ("points".to_string(), DslValue::Array(points.iter().map(|point| f64_array_value(point)).collect())),
+                ("typology".to_string(), target.typology_id.clone().map_or(DslValue::Null, DslValue::String)),
+                ("selectable".to_string(), DslValue::Bool(entity_flags.selectable())),
+                (
+                    "style".to_string(),
+                    DslValue::object([
+                        ("color".to_string(), pick_target_style_color_value(&style.color)),
+                        ("emissive".to_string(), pick_target_style_color_value(&style.emissive)),
+                        ("opacity".to_string(), DslValue::float(style.opacity)),
+                        ("lineWidth".to_string(), DslValue::float(style.line_width)),
+                    ]),
+                ),
+            ])
+        })
+        .collect()
+}
+
 pub fn build_world_scene_for_pane(envelope: &CadPlayView, pane: CadPaneId, surface_id: &str, active_utility: Option<&str>, options: CadDislocateOptions) -> UiAssemblyResult<BuiltNode> {
     let working_scene = cad_pane_working_scene(&envelope.document, pane);
     let empty: &[CadObject] = &[];
@@ -403,6 +490,15 @@ pub fn build_world_scene_for_pane(envelope: &CadPlayView, pane: CadPaneId, surfa
         }
         protocol::json::to_json_string(&DslValue::Array(items))
     });
+    // 🧲️ The hit-testable pick lane rides the SAME gate as the paint overlay — React's
+    // `hostSelectionEnabled` (`replHostGeometryPickingEnabled`): sub-object picking is offered while
+    // the pane's live session is waiting for a selection, and at no other time.
+    scene.pick_targets_json = envelope
+        .runtime
+        .engagement_session
+        .as_ref()
+        .filter(|session| session.pane == pane && accepts_selection(session))
+        .map(|_| protocol::json::to_json_string(&DslValue::Array(pick_target_lane_items(envelope, objects, geometry, pane))));
     scene.environment_json = Some(world3d_environment_json(&envelope.runtime.sun));
     scene.fit_json = Some(world3d_fit_json(world_fit_revision(&envelope.document, pane, objects), CAD_FIT_PADDING, None));
     // 🕹️ Bound to the framework-owned `"cad"` domain so `World3dHost` dispatches `interactionSelect`/

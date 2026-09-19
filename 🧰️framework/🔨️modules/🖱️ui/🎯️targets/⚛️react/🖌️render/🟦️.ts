@@ -8,6 +8,7 @@ export interface UiTestRenderResult {
   readonly container: HTMLElement;
   getByRole(role: string, options?: UiTestQueryOptions): HTMLElement;
   getByText(text: string | RegExp, options?: UiTestQueryOptions): HTMLElement;
+  getByTitle(title: string | RegExp, options?: UiTestQueryOptions): HTMLElement;
   rerender(node: unknown): void;
   unmount(): void;
 }
@@ -62,6 +63,7 @@ export function render(node: unknown): UiTestRenderResult {
     container: result.container,
     getByRole: (role, options) => result.getByRole(role, options as Parameters<typeof result.getByRole>[1]),
     getByText: (value, options) => result.getByText(value, options as Parameters<typeof result.getByText>[1]),
+    getByTitle: (value, options) => result.getByTitle(value, options as Parameters<typeof result.getByTitle>[1]),
     rerender: (next) => result.rerender(next as Parameters<typeof result.rerender>[0]),
     unmount: result.unmount,
   };

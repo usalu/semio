@@ -12,7 +12,7 @@ import { Footer, createIconComponent, navbarFillItem } from "@semio-tech/ui-reac
 import type { Meta, StoryObj } from "../../../🧪️tests/📚️storybook-types/🟦️.ts";
 
 // 🔷️#region 🎮️Footer
-const CheckCircle2 = createIconComponent("check-circle2");
+const CheckCircle2 = createIconComponent("check-circle-2");
 
 const meta = {
   title: "🖱️ui⚛️react/Footer",

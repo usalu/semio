@@ -115,6 +115,34 @@ impl ArtifactEditor for Din4108PlayApp {
         command.command_id()
     }
 
+    /// 🌉️ Resolves the React/wgpu shells' `{action, args}` pair into the typed `Din4108Command`.
+    /// `ArtifactEditor::command_from_action`'s default refuses EVERY id
+    /// (`app.command.unsupported: … dispatched exclusively through the typed command channel now`),
+    /// so with no bridge not one Actions-pane row of this editor could reach `Command::dispatch` —
+    /// the three verbs were already `Migrated`, retained and proven, and were still inert in the shell.
+    /// `setSnapshot` carries the whole compliance document, so its argument is that document's own
+    /// camelCase JSON projection (exactly what the Inputs window renders).
+    fn command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result<Din4108Command, Fault> {
+        match action {
+            "evaluate" => Ok(Din4108Command::Evaluate(evaluate::Evaluate {})),
+            "setSelectedCheckIndex" => Ok(Din4108Command::SetSelectedCheckIndex(selected_check::SetSelectedCheckIndex { index: crate::app_surface::selected_check_index_arg(args) })),
+            "setSnapshot" => {
+                let text = args
+                    .and_then(|value| value.get("snapshot"))
+                    .and_then(|value| if let dsl::DslValue::String(raw) = value { Some(raw.clone()) } else { Some(dsl::json::to_json_string(value)) })
+                    .ok_or_else(|| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("norm.set-snapshot-arg-missing"), "setSnapshot needs a 'snapshot' argument carrying the document's camelCase JSON"))?;
+                let snapshot = crate::standards::v1::subsets::any::schema::snapshot::decode_din4108_snapshot_json(&text)
+                    .map_err(|error| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("norm.set-snapshot-arg-invalid"), error))?;
+                Ok(Din4108Command::ReplaceSnapshot(set_snapshot::ReplaceSnapshot { snapshot }))
+            }
+            other => Err(Fault::new(
+                semio_framework_plugin::FaultOrigin::App,
+                semio_framework_plugin::FaultCode::new("norm.unhandled-action"),
+                format!("action '{other}' is not one of this app's declared verbs (setSnapshot/evaluate/setSelectedCheckIndex)"),
+            )),
+        }
+    }
+
     fn handle(
         command: &Din4108Command,
         doc: &ArtifactView<'_, Din4108Snapshot>,
@@ -212,7 +240,13 @@ pub fn create_din4108_app() -> semio_framework_plugin::AppDefinition {
             .panel_tab_def(document_panel::definition())
             .panel_tab_def(catalogue_panel::definition())
             .panel_tab_def(inspection_panel::definition())
-            .mutation("setSnapshot", LocalizedLabel::native("Set Snapshot", "Dokument setzen"))
+            // 📝️ `setSnapshot` replaces the whole compliance document, so the shells' `{action,args}`
+            // channel needs somewhere to put it: one staged text argument carrying the document's own
+            // camelCase JSON — the projection the Inputs window already renders.
+            .action_with(
+                semio_framework_plugin::ActionDefinition::new_catalog("setSnapshot", LocalizedLabel::native("Set Snapshot", "Dokument setzen"), semio_framework_plugin::ActionKind::Mutation)
+                    .with_args(vec![semio_framework_plugin::ActionArgDef::text("snapshot", LocalizedLabel::native("Document JSON", "Dokument-JSON"))]),
+            )
             .action_with(semio_framework_plugin::ActionDefinition::new("evaluate", LocalizedLabel::native("Evaluate", "Auswerten"), semio_framework_plugin::ActionKind::View, "hash"))
             .view_action("setSelectedCheckIndex", LocalizedLabel::native("Set Selected Check", "AusgewÃ¤hlte PrÃ¼fung setzen"))
             .action_interactive_job("setSnapshot", InteractiveJobClassification::Migrated)

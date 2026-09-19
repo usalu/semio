@@ -51,7 +51,7 @@ export async function testServiceReadiness(workspace: string, output: string): P
     writeFileSync(join(app, "index.html"), "<!doctype html><title>Service fixture</title>");
     writeFileSync(join(app, "⚙️vite.config.ts"), 'export default { logLevel: "silent" };');
     const { serveVite } = await import(join(directory, "../🟦️.ts"));
-    const server = serveVite({ root: app, config: join(app, "⚙️vite.config.ts"), host: "127.0.0.1", port: 0, signal: controller.signal, session: current, ready: url => api.publishServiceReady(sessionRoot, current, url) });
+    const server = serveVite({ root: app, config: join(app, "⚙️vite.config.ts"), host: "127.0.0.1", port: 0, signal: controller.signal, session: current, ready: (url: string) => api.publishServiceReady(sessionRoot, current, url) });
     try {
       const url = await Promise.race([api.waitForServiceReady(sessionRoot, current, new AbortController().signal, 10000), server.then(() => { throw new Error("Service stopped before readiness"); })]);
       const health = await fetch(new URL(fixture.endpoint, url));

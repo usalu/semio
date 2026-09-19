@@ -1,13 +1,18 @@
 pub(crate) mod context {
     use super::super::*;
-    use semio_framework_plugin::artifact_app_laws::new_app_with_registry as framework_new_app_with_registry;
+    use semio_framework_plugin::artifact_app_laws::new_app_with_registry_and_members as framework_new_app_with_registry;
     use semio_framework_plugin::{EditorApp, PluginApp, VcsArtifactApp, ViewModel};
     
-    pub type DagApp = VcsArtifactApp<EditorApp<DagPlayApp>>;
+    pub type DagApp = VcsArtifactApp<EditorApp<DagPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>;
     
-    /// 🧪️ An app instance using its declared tool catalog and concrete factories.
+    /// 🧪️ An app instance using its declared tool catalog and concrete factories, bound to the live
+    /// runtime instance `meta("local")` addresses. Binding is mandatory now that every document verb
+    /// is classified `Migrated`: an unbound wrapper answers every typed dispatch
+    /// `interactive-job.live-instance: typed command does not belong to the mounted live app instance`.
     pub async fn new_app() -> DagApp {
-        new_app_with_registry().await
+        let mut app = new_app_with_registry().await;
+        semio_framework::io::resolve_ready(app.bind_instance_id(1));
+        app
     }
     
     /// ✏️ Adapts `create_dag_app`'s `AppDefinition` (contract §2.4) into the `App { definition,
@@ -19,7 +24,7 @@ pub(crate) mod context {
     
     /// 🧪️ An app wired to the real manifest registry — enforces View/Shell kind discipline.
     pub async fn new_app_with_registry() -> DagApp {
-        framework_new_app_with_registry::<EditorApp<DagPlayApp>>(dag_app_manifest_for_tests).await
+        framework_new_app_with_registry::<EditorApp<DagPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(dag_app_manifest_for_tests).await
     }
     
     pub async fn render(app: &mut DagApp, body_key: &str) -> String {
@@ -262,3 +267,47 @@ async fn ingest_operations_is_idempotent_for_dag() {
     semio_framework_plugin::artifact_app_laws::assert_ingest_idempotent::<EditorApp<DagPlayApp>, usize>(DagCommand::AddNode(add_node::AddNode { kind: "note".into(), x: None, y: None }), |app| app.snapshot().expect("projection").nodes().len()).await;
 }
 //#endregion 🔖️CrossCutting
+
+//#region 🧵️RetainedToolCatalog
+/// 🧾️ The exact three-way join the guest's own `interactive-job.catalog-authority` check performs at
+/// boot: every retained id is declared `Migrated`, carries a publication contract, and is served by
+/// the ONE registered factory type the proofs are bound to. dag shipped two factories over one owner
+/// (`DagConfigCommandJobFactory` for `nodeGraphViewport`, a second for the document verbs) and
+/// trapped the guest with `typed_join=false` before it could paint a single window — ticket
+/// 26/09/18/OS-HUB-COLLABORATION-AI-END-TO-END slice B2b.
+#[test]
+fn every_retained_tool_id_is_migrated_contracted_and_served_by_one_factory() {
+    use semio_framework_plugin::ArtifactOwnedToolJobFactory;
+    assert_eq!(DAG_RETAINED_TOOL_IDS.len(), DAG_RETAINED_PUBLICATION_CONTRACTS.len());
+    for tool_id in DAG_RETAINED_TOOL_IDS {
+        assert!(DAG_RETAINED_PUBLICATION_CONTRACTS.iter().any(|contract| contract.tool_id == *tool_id), "{tool_id} has no publication contract");
+    }
+    assert_eq!(<DagRetainedCommandJobFactory as ArtifactOwnedToolJobFactory>::TOOL_IDS, DAG_RETAINED_TOOL_IDS, "the proofs bind one factory type, so it must serve every retained id");
+    let definition = create_dag_app();
+    for window in definition.window_kinds.iter() {
+        for action in window.actions.iter().filter(|action| DAG_RETAINED_TOOL_IDS.contains(&action.id.as_str())) {
+            assert_eq!(action.semantics.execution.interactive_job, semio_framework_plugin::InteractiveJobClassification::Migrated, "{} is retained but not Migrated", action.id);
+        }
+    }
+}
+
+/// 🌉️ The `{action,args}` bridge resolves every id a shell can express as a flat `{action, args}`
+/// pair, including the example picker's `setActiveExample`, for which dag declared no command at all
+/// until this slice. The five canvas-gesture verbs carry payloads no such pair can state
+/// (edge/port/patch structures), so the bridge faults them `dag.unhandled-action` on purpose rather
+/// than inventing a lossy decoding — they stay reachable only through the typed command channel.
+#[test]
+fn command_from_action_resolves_every_flat_verb_and_names_the_gesture_only_ones() {
+    use semio_framework_plugin::ArtifactEditor;
+    const GESTURE_ONLY: &[&str] = &["nodeGraphEdit", "connectMediaPorts", "moveMediaNode", "renameDagNode", "patchDagNodes"];
+    for tool_id in DAG_RETAINED_TOOL_IDS.iter().filter(|tool_id| !GESTURE_ONLY.contains(tool_id)) {
+        let command = DagPlayApp::command_from_action(tool_id, None).unwrap_or_else(|error| panic!("{tool_id} has no bridge: {error:?}"));
+        assert_eq!(command.command_id(), *tool_id);
+    }
+    for tool_id in GESTURE_ONLY {
+        let error = DagPlayApp::command_from_action(tool_id, None).expect_err("a gesture-only verb must not be silently mis-decoded");
+        assert_eq!(error.code, semio_framework_plugin::FaultCode::new("dag.unhandled-action"));
+    }
+    assert!(DagPlayApp::command_from_action("thereIsNoSuchVerb", None).is_err());
+}
+//#endregion 🧵️RetainedToolCatalog

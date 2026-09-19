@@ -37,12 +37,18 @@ import { pluginOutRoot } from "../📋️plan/🟦️.ts";
 
 const extensionOutRoot = defaultExtensionInstallRoot(repoRoot);
 
-/** 🔎️Reports stale extension artifacts read-only, retaining bytes for the owning producer. */
-function assertExtensionOutputsFresh(root: string = extensionOutRoot): void {
+/** 🔎️Reports stale extension artifacts read-only, retaining bytes for the owning producer. `rebuilding`
+ * names the extension crates the caller is about to produce and republish in this same run: their install
+ * directory is replaced wholesale by `publishBuiltExtension`, so reporting it as retained output would
+ * refuse the one build that repairs it — the gate would then have no reachable exit, because its own
+ * recovery instruction routes back through this check. */
+function assertExtensionOutputsFresh(root: string = extensionOutRoot, rebuilding: readonly PluginRegistryEntry[] = []): void {
   if (!existsSync(root)) return;
   const currentHostShim = hostShimSource();
+  const republished = new Set(rebuilding.filter((target) => target.role === "extension").map((target) => moduleDirectoryName(target.pluginId)));
   for (const entry of readdirSync(root, { withFileTypes: true })) {
     if (!entry.isDirectory()) continue;
+    if (republished.has(entry.name)) continue;
     const dir = join(root, entry.name);
     const retainedWorkerPath = join(dir, "🧵️plugin-worker.js");
     if (existsSync(retainedWorkerPath)) throw new Error(`Extension retained worker preserved: ${retainedWorkerPath}. Review this input before running @semio-tech/framework-os-dev:plugin for its owner.`);

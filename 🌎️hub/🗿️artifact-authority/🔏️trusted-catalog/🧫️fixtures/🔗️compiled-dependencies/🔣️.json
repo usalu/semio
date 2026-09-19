@@ -46,10 +46,10 @@
   "atomicCases": [
     { "change": "stdio-catalog", "accepted": false, "previews": [] },
     { "change": "gis-catalog", "accepted": false, "previews": ["stdio"] },
-    { "change": "gis-dependency", "accepted": false, "previews": ["stdio"] },
+    { "change": "gis-dependency", "accepted": false, "previews": [] },
     { "change": "gis-provider", "accepted": false, "previews": ["stdio"] },
-    { "change": "gis-trailing-byte", "accepted": false, "previews": ["stdio"] },
-    { "change": "gis-duplicate-field", "accepted": false, "previews": ["stdio"] },
+    { "change": "gis-trailing-byte", "accepted": false, "previews": [] },
+    { "change": "gis-duplicate-field", "accepted": false, "previews": [] },
     { "change": "exact", "accepted": true, "previews": ["stdio", "gis"] }
   ],
   "nativeCases": [

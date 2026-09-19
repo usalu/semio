@@ -19,7 +19,11 @@
         "dev",
         "mcp",
         "stdio",
-        "os"
+        "os",
+        "--folder",
+        ".",
+        "--scopes",
+        "workspace.read,artifact.write,inference.execute,ui.observe,ui.control"
       ]
     }
   }

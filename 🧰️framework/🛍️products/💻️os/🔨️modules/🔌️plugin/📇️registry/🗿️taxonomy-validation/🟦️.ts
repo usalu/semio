@@ -1,7 +1,7 @@
 import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { basename, dirname, join, relative, resolve } from "node:path";
 import { isDeepStrictEqual } from "node:util";
-import { BundleScript, discoverPackages, inspectRustModuleGraph, inspectRustModuleGraphFacts } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { BundleScript, discoverPackages, getWorkspaceRoot, inspectRustModuleGraph, inspectRustModuleGraphFacts, isDiscoverySkipDirectory, schemaFacetFormatEntries } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { registrySchemaValidator } from "../✅️catalog-verification/🟦️.ts";
 import { EXAMPLES_DIRNAME, EXAMPLE_ASSETS_DIRNAME, EXAMPLE_RUST_LEAF, EXAMPLE_TESTS_DIRNAME, EXAMPLE_TS_LEAF, FORBIDDEN_EXAMPLE_PLURAL_DIRS, PLUGIN_AREAS, RUST_LANG, TAXONOMY, isExampleSlugName, primaryFilenameForKind } from "../🔎️discovery/🟦️.ts";
 import { PlaygroundEntry } from "../🎮️playground/🔎️discovery/🟦️.ts";
@@ -100,7 +100,16 @@ export const TAXONOMY_PRESENCE_CHILD_DIRS = TAXONOMY.presenceChildDirs ?? [];
  * taxonomy declares for every `🎭️modes/<mode>/` node. */
 export const TAXONOMY_MODE_CHILDREN = TAXONOMY.modeChildDirs ?? [];
 
-export const TAXONOMY_SCHEMA_FILENAMES = Object.values(TAXONOMY.schemaFormats).map((format) => primaryFilenameForKind(format.fileKindId));
+/** @emoji 🧬️ Leaf filenames one `🧬️schema` facet must carry, resolved through the facet's **declared
+ * kind** (`🔣️taxonomy.json` `schemaFacetKinds`), never through the flat `schemaFormats` map. A
+ * `🧬️data` facet owns the five data projections; `📜️.wit` belongs to the `📜️interface` kind, which the
+ * taxonomy grants to exactly the two enumerated `facetPathIdentities` — so demanding a `📜️.wit` leaf
+ * from every `🎚️config`/`👥️presence`/artifact schema facet contradicts the taxonomy that defines them.
+ * @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts `schemaFacetFormatEntries` */
+export function taxonomySchemaFilenames(facetAbs: string): string[] {
+  const facetRel = relative(getWorkspaceRoot(), facetAbs).replaceAll("\\", "/");
+  return schemaFacetFormatEntries(facetRel, TAXONOMY).map(([, format]) => primaryFilenameForKind(format.fileKindId));
+}
 
 export const MUTATIONS_FACET_DIR = "🧬️mutations";
 
@@ -135,7 +144,24 @@ export const TAXONOMY_TS_LEAF_FILENAME = primaryFilenameForKind(TAXONOMY.ecosyst
 /** @emoji 🪟️ A window dir may only contain these children, each itself a `🦀️.rs` leaf. */
 export const TAXONOMY_WINDOW_CHILDREN = new Set(TAXONOMY.windowChildDirs);
 
+/** @emoji 🧪️ The test-ownership dirs any taxonomy owner may carry beside its facets. `🔣️taxonomy.json`
+ * `testOwnerKinds` names `🪟️windows` an owner kind, so a window owns its own `🧪️tests`/`🧫️fixtures`
+ * exactly as a subset or a surface does; they are ownership dirs, never window facets. */
+export const TAXONOMY_TEST_OWNERSHIP_DIRS: ReadonlySet<string> = new Set(TAXONOMY.testOwnerKinds.includes(TAXONOMY.windowsDirName) ? [TAXONOMY.testsDirName, TAXONOMY.testFixturesDirName] : []);
+
 export const TAXONOMY_LEAF_FILENAME = primaryFilenameForKind(TAXONOMY.ecosystems[RUST_LANG].componentFileKindId);
+
+/** 🥒️ Gherkin feature leaf that marks a directory as a repository test-platform case. */
+export const TEST_FEATURE_FILENAME = primaryFilenameForKind(TAXONOMY.testFeatureFileKindId);
+
+/** 📌️ The tracked marker that makes a lane DELIBERATELY empty rather than missing.
+ *
+ * Resolved from `semanticOwnedFileProjectionContracts["artifact-empty-facet-primary-markdown-v1"]`
+ * (`🔣️taxonomy.json:16824-16828`), never spelled here, so the marker stays one piece of vocabulary.
+ * A plugin-root lane carrying only this marker publishes nothing on purpose: 33 of the 34 plugins
+ * declare no plugin-scope command, and a stub `🦀️.rs` for each would put 33 entries into
+ * `PluginManifest::commands` that no plugin actually offers. */
+export const PLUGIN_EMPTY_LANE_FILENAME = TAXONOMY.semanticOwnedFileProjectionContracts["artifact-empty-facet-primary-markdown-v1"].sourceFilename;
 
 /** @emoji 🚪️ Rust entry filename and its Shape V2 home relative to the owner root. */
 export const RUST_LIBRARY_ENTRY_CONTRACT_ID = TAXONOMY.ecosystems[RUST_LANG].entryContractIds.find((contractId) => TAXONOMY.configurableEntryContracts[contractId]?.role === "library");
@@ -188,6 +214,60 @@ export function surfaceDirsForPlugin(pluginRoot: string): { abs: string; label: 
 }
 
 
+/** 🪃️ Whether one `#[path]` mount leaves the owner root it is declared under.
+ *
+ * `validateRustTaxonomyMounts` builds its module graph from the files under ONE owner root, so a
+ * mount that climbs out of that root (a plugin artifact mounting a shared `✏️s/🔨️modules/<m>/⚙️engine`
+ * leaf, for example) can never appear in `graph.targets` no matter how correct it is. Judging such a
+ * mount here would report a file that exists on disk as missing; its membership belongs to the audit
+ * of the area that owns it. */
+function escapesOwnerRoot(ownerRoot: string, mountingFileRel: string, pathTarget: string): boolean {
+  const resolved = relative(ownerRoot, resolve(dirname(join(ownerRoot, mountingFileRel)), pathTarget));
+  return resolved === ".." || resolved.startsWith("../") || resolved.startsWith("..\\");
+}
+
+
+/** 🥒️ The repository test platform's own case shape: a directory directly under a `🧪️tests` owner dir
+ * that carries the feature file. `discoverTestCases`
+ * (`🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🟦️.ts:545`) recognises exactly this, and the Rust
+ * adapter beside the feature is compiled by a GENERATED cache-local crate that mounts it by absolute
+ * `#[path]` (`…/🧪️test/🖥️host/🏗️materialization/🟦️.ts:132`) and links `semio-repo-test-host`. No plugin
+ * Cargo manifest owns it — by design, since the host crate must be able to link an oracle role
+ * WITHOUT the subject — so Cargo reachability is the wrong question to ask of it here. */
+function isRepositoryTestCaseAdapter(caseDir: string): boolean {
+  return basename(dirname(caseDir)) === TAXONOMY.testsDirName && existsSync(join(caseDir, TEST_FEATURE_FILENAME));
+}
+
+
+/** 📎️ Every `.rs` file textually expanded into an already-owned source by `include!`, transitively.
+ *
+ * `include!` is a compilation edge the module graph cannot carry: the expansion becomes part of the
+ * including file's module rather than a `mod` of its own, so the included leaf never appears in
+ * `graph.contexts` however correctly it compiles. Judging it as unreachable would report a file
+ * `rustc` demonstrably compiles. `rustc` resolves each literal against the directory of the file the
+ * invocation sits in, which is what `dirname(current)` reproduces here. */
+function includeClosure(pluginRoot: string, ownedSources: readonly string[], known: ReadonlySet<string>): Set<string> {
+  const reached = new Set<string>();
+  const pending = [...ownedSources];
+  for (let index = 0; index < pending.length; index++) {
+    const current = pending[index]!;
+    let facts;
+    try {
+      facts = inspectRustModuleGraphFacts(readFileSync(join(pluginRoot, current), "utf8"));
+    } catch {
+      continue;
+    }
+    for (const include of facts.includes) {
+      const target = relative(pluginRoot, resolve(join(pluginRoot, dirname(current)), include.path)).replaceAll("\\", "/");
+      if (target.startsWith("..") || !known.has(target) || reached.has(target)) continue;
+      reached.add(target);
+      pending.push(target);
+    }
+  }
+  return reached;
+}
+
+
 /** 🕸️ Verifies taxonomy components through the exact Cargo-owned recursive module graph.
  *
  * `manifestFiles` names every Cargo manifest that owns compilation under this root — the plugin's
@@ -202,17 +282,19 @@ export function validateRustTaxonomyMounts(pluginRoot: string, pluginId: string,
   const graph = inspectRustModuleGraph([...sources, ...manifests], (path) => readFileSync(join(pluginRoot, path), "utf8"), { strictManifests: true });
   if (graph.invalidManifests.has(manifest)) return [pluginId + ": invalid Cargo manifest " + manifest];
   const owned = (context: { manifestPath: string | null }): boolean => context.manifestPath !== null && manifests.includes(context.manifestPath);
+  const expanded = includeClosure(pluginRoot, [...graph.contexts].filter(([, rows]) => rows.some(owned)).map(([path]) => path), new Set(sources));
   const findings = new Set<string>();
   if (![...graph.contexts.values()].some((rows) => rows.some((context) => context.manifestPath === manifest))) findings.add(pluginId + ": missing module target for Cargo library " + manifest);
   for (const file of componentFiles) {
     const path = relative(pluginRoot, file).replaceAll("\\", "/");
-    if (!graph.contexts.get(path)?.some(owned)) findings.add(pluginId + ": " + path + " is not reachable from Cargo manifest " + manifest);
+    if (!graph.contexts.get(path)?.some(owned) && !expanded.has(path)) findings.add(pluginId + ": " + path + " is not reachable from Cargo manifest " + manifest);
   }
   for (const [path, contexts] of graph.contexts) {
     const facts = inspectRustModuleGraphFacts(readFileSync(join(pluginRoot, path), "utf8"));
     for (const context of contexts.filter(owned)) {
       for (const module of facts.modules) {
         if (module.inline || module.conditional || module.modulePath.length !== context.sourceScope.length + 1 || module.modulePath.slice(0, -1).join("::") !== context.sourceScope.join("::")) continue;
+        if (module.pathTarget !== null && escapesOwnerRoot(pluginRoot, path, module.pathTarget)) continue;
         const key = context.crateRoot + "\0" + [...context.modulePath, module.name].join("::");
         if (!graph.targets.has(key)) findings.add(pluginId + ": missing module target " + JSON.stringify(module.pathTarget ?? module.name) + " from " + path);
       }
@@ -233,9 +315,9 @@ export function validatePluginContractRoot(pluginRoot: string, pluginId: string)
     findings.push(`${pluginId}: plugin root is missing ${TAXONOMY_LEAF_FILENAME}`);
   }
   for (const child of TAXONOMY.pluginRequiredChildDirs) {
-    if (!existsSync(join(pluginRoot, child, TAXONOMY_LEAF_FILENAME))) {
-      findings.push(`${pluginId}: plugin root is missing ${child}/${TAXONOMY_LEAF_FILENAME}`);
-    }
+    const lane = join(pluginRoot, child);
+    if (existsSync(join(lane, TAXONOMY_LEAF_FILENAME)) || existsSync(join(lane, PLUGIN_EMPTY_LANE_FILENAME))) continue;
+    findings.push(`${pluginId}: plugin root is missing ${child}/${TAXONOMY_LEAF_FILENAME} or ${child}/${PLUGIN_EMPTY_LANE_FILENAME}`);
   }
 
   return findings;
@@ -317,7 +399,7 @@ export function validateTaxonomyTree(pluginRoot: string, pluginId: string): stri
         // `26/09/09/PROCEDURAL-3D-END-TO-END/📓️taxonomy-fix-2026-09-10.md` §3 for the measurement.
         const schemaDir = join(artifactsDir, artifact, SCHEMA_FACET_DIR);
         if (existsSync(schemaDir)) {
-          for (const filename of TAXONOMY_SCHEMA_FILENAMES) {
+          for (const filename of taxonomySchemaFilenames(schemaDir)) {
             if (!existsSync(join(schemaDir, filename))) {
               findings.push(`${pluginId}: ${owner} is missing ${SCHEMA_FACET_DIR}/${filename}`);
             }
@@ -497,6 +579,7 @@ export function validateTaxonomyTree(pluginRoot: string, pluginId: string): stri
       const windowsDir = join(modesDir, mode, TAXONOMY.windowsDirName);
       for (const w of listDirs(windowsDir)) {
         for (const child of listDirs(join(windowsDir, w))) {
+          if (TAXONOMY_TEST_OWNERSHIP_DIRS.has(child)) continue;
           if (!TAXONOMY_WINDOW_CHILDREN.has(child)) {
             findings.push(`${pluginId}: window "${label}/${mode}/${w}" has unexpected child "${child}" (expected one of ${[...TAXONOMY_WINDOW_CHILDREN].join(", ")})`);
           }
@@ -523,7 +606,7 @@ export function validateTaxonomyTree(pluginRoot: string, pluginId: string): stri
   ]);
   function walkPluginTree(dir: string) {
     for (const name of readdirSync(dir)) {
-      if (name.startsWith(".") || name === "target" || name === "node_modules") continue;
+      if (name.startsWith(".") || isDiscoverySkipDirectory(name)) continue;
       const path = join(dir, name);
       if (statSync(path).isDirectory()) {
         walkPluginTree(path);
@@ -533,7 +616,7 @@ export function validateTaxonomyTree(pluginRoot: string, pluginId: string): stri
       if (!name.endsWith(".rs")) continue;
       sourceFiles.push(path);
       if (name === TAXONOMY_LEAF_FILENAME || name === EXAMPLE_RUST_LEAF) {
-        componentFiles.push(path);
+        if (!isRepositoryTestCaseAdapter(dir)) componentFiles.push(path);
       } else {
         const parts = dir.replaceAll("\\", "/").split("/");
         const parent = parts[parts.length - 1] ?? "";
@@ -577,7 +660,7 @@ export function validateTaxonomyTree(pluginRoot: string, pluginId: string): stri
         continue;
       }
       if (child === SCHEMA_FACET_DIR) {
-        for (const filename of TAXONOMY_SCHEMA_FILENAMES) {
+        for (const filename of taxonomySchemaFilenames(childAbs)) {
           if (!existsSync(join(childAbs, filename))) {
             findings.push(`${pluginId}: ${ownerLabel} is missing ${CONFIG_FACET_DIR}/${child}/${filename}`);
           }
@@ -596,7 +679,7 @@ export function validateTaxonomyTree(pluginRoot: string, pluginId: string): stri
         continue;
       }
       if (child === SCHEMA_FACET_DIR) {
-        for (const filename of TAXONOMY_SCHEMA_FILENAMES) {
+        for (const filename of taxonomySchemaFilenames(childAbs)) {
           if (!existsSync(join(childAbs, filename))) {
             findings.push(`${pluginId}: ${ownerLabel} is missing ${PRESENCE_FACET_DIR}/${child}/${filename}`);
           }
@@ -628,7 +711,7 @@ export function validateTaxonomyTree(pluginRoot: string, pluginId: string): stri
 export class RustTaxonomyMountsCheckScript extends BundleScript {
   async run(): Promise<void> {
     const fixtureRoot = join(import.meta.dir, "..", "🧫️fixtures/🕸️rust-taxonomy-mounts");
-    const fixture = JSON.parse(readFileSync(join(fixtureRoot, "🔣️.json"), "utf8")) as { cases: { id: string; files: Record<string, string>; expectedCodes: string[]; expectedUnmounted: string[]; rustcSuccess: boolean }[] };
+    const fixture = JSON.parse(readFileSync(join(fixtureRoot, "🔣️.json"), "utf8")) as { cases: { id: string; files: Record<string, string>; neighbourFiles?: Record<string, string>; expectedCodes: string[]; expectedUnmounted: string[]; rustcSuccess: boolean }[] };
     const validate = await registrySchemaValidator("RustTaxonomyMountsV1");
     if (!validate(fixture)) throw new Error(JSON.stringify(validate.errors));
     const capture = join(this.root, "dist/rust-taxonomy-mounts-check");
@@ -637,7 +720,10 @@ export class RustTaxonomyMountsCheckScript extends BundleScript {
     const failures: string[] = [];
     for (const row of fixture.cases) {
       const pluginRoot = join(capture, row.id);
-      for (const [path, content] of Object.entries(row.files)) {
+      // 🪃️ `neighbourFiles` are written BESIDE the owner root, never inside it, exactly as a shared
+      // `✏️s/🔨️modules/<m>/` leaf sits beside the plugin that mounts it: `rustc` compiles them, while
+      // the registry walk — which only ever descends the owner root — never sees them.
+      for (const [path, content] of Object.entries({ ...row.files, ...Object.fromEntries(Object.entries(row.neighbourFiles ?? {}).map(([rel, body]) => [join("..", row.id + "-neighbour", rel), body])) })) {
         const destination = join(pluginRoot, path);
         mkdirSync(dirname(destination), { recursive: true });
         writeFileSync(destination, content);

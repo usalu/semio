@@ -9,8 +9,8 @@ const COLD_PAIR_ID_MAXIMUM_BYTES: usize = 512;
 #[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue, serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[value(crate = "::protocol::value", rename_all = "camelCase", deny_unknown_fields)]
-pub struct ColdArtifactPairFrontier {
-    pub artifact_id: String,
+pub struct ColdDocumentPairFrontier {
+    pub document_id: String,
     pub head_edit_ordinal: u64,
     pub head_edit_id: String,
     pub last_commit_seq: u64,
@@ -20,7 +20,7 @@ pub struct ColdArtifactPairFrontier {
 #[derive(Clone, Copy, Debug, PartialEq, Eq, ToValue, FromValue, serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[value(crate = "::protocol::value", rename_all = "camelCase", deny_unknown_fields)]
-pub struct ColdArtifactPairCursor {
+pub struct ColdDocumentPairCursor {
     pub lifetime: ActorInstanceLifetime,
     pub transfer_generation: u64,
     pub page_index: u32,
@@ -30,10 +30,10 @@ pub struct ColdArtifactPairCursor {
 #[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue, serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[value(crate = "::protocol::value", rename_all = "camelCase", deny_unknown_fields)]
-pub struct ColdArtifactPairApplied {
+pub struct ColdDocumentPairApplied {
     pub lifetime: ActorInstanceLifetime,
     pub transfer_generation: u64,
-    pub baseline_frontier: ColdArtifactPairFrontier,
+    pub baseline_frontier: ColdDocumentPairFrontier,
     pub aggregate_sha256: [u8; 32],
 }
 
@@ -43,20 +43,20 @@ pub struct ColdArtifactPairApplied {
 pub enum ColdPairIngressStatus {
     #[default]
     Idle,
-    PageAccepted(ColdArtifactPairCursor),
-    Backpressure(ColdArtifactPairCursor),
-    Loading(ColdArtifactPairCursor),
-    Applied(ColdArtifactPairApplied),
+    PageAccepted(ColdDocumentPairCursor),
+    Backpressure(ColdDocumentPairCursor),
+    Loading(ColdDocumentPairCursor),
+    Applied(ColdDocumentPairApplied),
     Fault {
-        cursor: ColdArtifactPairCursor,
+        cursor: ColdDocumentPairCursor,
         fault: Vec<u8>,
     },
 }
 
-impl ColdArtifactPairFrontier {
+impl ColdDocumentPairFrontier {
     pub fn validate(&self) -> Result<(), &'static str> {
-        if self.artifact_id.is_empty()
-            || self.artifact_id.len() > COLD_PAIR_ID_MAXIMUM_BYTES
+        if self.document_id.is_empty()
+            || self.document_id.len() > COLD_PAIR_ID_MAXIMUM_BYTES
             || self.head_edit_id.is_empty()
             || self.head_edit_id.len() > COLD_PAIR_ID_MAXIMUM_BYTES
             || self.last_commit_seq > self.head_edit_ordinal
@@ -68,7 +68,7 @@ impl ColdArtifactPairFrontier {
     }
 
     async fn pack_encode(&self, out: &mut Vec<u8>) {
-        pack::write_str(out, &self.artifact_id).await;
+        pack::write_str(out, &self.document_id).await;
         pack::write_u64(out, self.head_edit_ordinal).await;
         pack::write_str(out, &self.head_edit_id).await;
         pack::write_u64(out, self.last_commit_seq).await;
@@ -77,18 +77,18 @@ impl ColdArtifactPairFrontier {
 
     async fn pack_decode(bytes: &[u8], pos: &mut usize) -> Result<Self, pack::PackError> {
         let value = Self {
-            artifact_id: pack::read_str(bytes, pos, "ColdArtifactPairFrontier::artifact_id").await?,
-            head_edit_ordinal: pack::read_u64(bytes, pos, "ColdArtifactPairFrontier::head_edit_ordinal").await?,
-            head_edit_id: pack::read_str(bytes, pos, "ColdArtifactPairFrontier::head_edit_id").await?,
-            last_commit_seq: pack::read_u64(bytes, pos, "ColdArtifactPairFrontier::last_commit_seq").await?,
-            chain_sha256: pack::read_hash32(bytes, pos, "ColdArtifactPairFrontier::chain_sha256").await?,
+            document_id: pack::read_str(bytes, pos, "ColdDocumentPairFrontier::document_id").await?,
+            head_edit_ordinal: pack::read_u64(bytes, pos, "ColdDocumentPairFrontier::head_edit_ordinal").await?,
+            head_edit_id: pack::read_str(bytes, pos, "ColdDocumentPairFrontier::head_edit_id").await?,
+            last_commit_seq: pack::read_u64(bytes, pos, "ColdDocumentPairFrontier::last_commit_seq").await?,
+            chain_sha256: pack::read_hash32(bytes, pos, "ColdDocumentPairFrontier::chain_sha256").await?,
         };
         value.validate().map_err(pack::PackError::InvalidColdPair)?;
         Ok(value)
     }
 }
 
-impl ColdArtifactPairCursor {
+impl ColdDocumentPairCursor {
     pub fn validate(self) -> Result<(), &'static str> {
         if !self.lifetime.is_valid() || self.transfer_generation == 0 || self.page_count == 0 || self.page_count > COLD_PAIR_MAXIMUM_PAGES || self.page_index >= self.page_count {
             return Err("cold-pair.cursor");
@@ -108,20 +108,20 @@ impl ColdArtifactPairCursor {
     async fn pack_decode(bytes: &[u8], pos: &mut usize) -> Result<Self, pack::PackError> {
         let value = Self {
             lifetime: ActorInstanceLifetime {
-                activation_generation: pack::read_u64(bytes, pos, "ColdArtifactPairCursor::activation_generation").await?,
-                instance_id: pack::read_u32(bytes, pos, "ColdArtifactPairCursor::instance_id").await?,
-                guest_lifetime: pack::read_u64(bytes, pos, "ColdArtifactPairCursor::guest_lifetime").await?,
+                activation_generation: pack::read_u64(bytes, pos, "ColdDocumentPairCursor::activation_generation").await?,
+                instance_id: pack::read_u32(bytes, pos, "ColdDocumentPairCursor::instance_id").await?,
+                guest_lifetime: pack::read_u64(bytes, pos, "ColdDocumentPairCursor::guest_lifetime").await?,
             },
-            transfer_generation: pack::read_u64(bytes, pos, "ColdArtifactPairCursor::transfer_generation").await?,
-            page_index: pack::read_u32(bytes, pos, "ColdArtifactPairCursor::page_index").await?,
-            page_count: pack::read_u32(bytes, pos, "ColdArtifactPairCursor::page_count").await?,
+            transfer_generation: pack::read_u64(bytes, pos, "ColdDocumentPairCursor::transfer_generation").await?,
+            page_index: pack::read_u32(bytes, pos, "ColdDocumentPairCursor::page_index").await?,
+            page_count: pack::read_u32(bytes, pos, "ColdDocumentPairCursor::page_count").await?,
         };
         value.validate().map_err(pack::PackError::InvalidColdPair)?;
         Ok(value)
     }
 }
 
-impl ColdArtifactPairApplied {
+impl ColdDocumentPairApplied {
     pub fn validate(&self) -> Result<(), &'static str> {
         if !self.lifetime.is_valid() || self.transfer_generation == 0 || self.aggregate_sha256 == [0; 32] {
             return Err("cold-pair.applied");
@@ -141,13 +141,13 @@ impl ColdArtifactPairApplied {
     async fn pack_decode(bytes: &[u8], pos: &mut usize) -> Result<Self, pack::PackError> {
         let value = Self {
             lifetime: ActorInstanceLifetime {
-                activation_generation: pack::read_u64(bytes, pos, "ColdArtifactPairApplied::activation_generation").await?,
-                instance_id: pack::read_u32(bytes, pos, "ColdArtifactPairApplied::instance_id").await?,
-                guest_lifetime: pack::read_u64(bytes, pos, "ColdArtifactPairApplied::guest_lifetime").await?,
+                activation_generation: pack::read_u64(bytes, pos, "ColdDocumentPairApplied::activation_generation").await?,
+                instance_id: pack::read_u32(bytes, pos, "ColdDocumentPairApplied::instance_id").await?,
+                guest_lifetime: pack::read_u64(bytes, pos, "ColdDocumentPairApplied::guest_lifetime").await?,
             },
-            transfer_generation: pack::read_u64(bytes, pos, "ColdArtifactPairApplied::transfer_generation").await?,
-            baseline_frontier: ColdArtifactPairFrontier::pack_decode(bytes, pos).await?,
-            aggregate_sha256: pack::read_hash32(bytes, pos, "ColdArtifactPairApplied::aggregate_sha256").await?,
+            transfer_generation: pack::read_u64(bytes, pos, "ColdDocumentPairApplied::transfer_generation").await?,
+            baseline_frontier: ColdDocumentPairFrontier::pack_decode(bytes, pos).await?,
+            aggregate_sha256: pack::read_hash32(bytes, pos, "ColdDocumentPairApplied::aggregate_sha256").await?,
         };
         value.validate().map_err(pack::PackError::InvalidColdPair)?;
         Ok(value)
@@ -203,11 +203,11 @@ impl ColdPairIngressStatus {
         let tag = pack::read_u8(bytes, pos, "ColdPairIngressStatus").await?;
         let value = match tag {
             0 => Self::Idle,
-            1 => Self::PageAccepted(ColdArtifactPairCursor::pack_decode(bytes, pos).await?),
-            2 => Self::Backpressure(ColdArtifactPairCursor::pack_decode(bytes, pos).await?),
-            3 => Self::Loading(ColdArtifactPairCursor::pack_decode(bytes, pos).await?),
-            4 => Self::Applied(ColdArtifactPairApplied::pack_decode(bytes, pos).await?),
-            5 => Self::Fault { cursor: ColdArtifactPairCursor::pack_decode(bytes, pos).await?, fault: pack::read_bytes(bytes, pos, "ColdPairIngressStatus::fault").await? },
+            1 => Self::PageAccepted(ColdDocumentPairCursor::pack_decode(bytes, pos).await?),
+            2 => Self::Backpressure(ColdDocumentPairCursor::pack_decode(bytes, pos).await?),
+            3 => Self::Loading(ColdDocumentPairCursor::pack_decode(bytes, pos).await?),
+            4 => Self::Applied(ColdDocumentPairApplied::pack_decode(bytes, pos).await?),
+            5 => Self::Fault { cursor: ColdDocumentPairCursor::pack_decode(bytes, pos).await?, fault: pack::read_bytes(bytes, pos, "ColdPairIngressStatus::fault").await? },
             other => return Err(pack::PackError::InvalidTag { what: "ColdPairIngressStatus", tag: other, offset: *pos }),
         };
         value.validate().map_err(pack::PackError::InvalidColdPair)?;

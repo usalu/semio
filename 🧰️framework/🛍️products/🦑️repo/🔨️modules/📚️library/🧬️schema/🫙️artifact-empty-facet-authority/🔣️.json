@@ -19,7 +19,7 @@
     "window": { "enum": ["🪟️main", "🔄️workflow"] },
     "surfaceFacet": { "enum": ["🎚️config", "🎮️commands", "👥️presence", "🫧️transient"] },
     "modeFacet": { "enum": ["🎚️config", "🎮️commands", "👥️presence", "🫧️transient", "🪟️windows"] },
-    "windowFacet": { "enum": ["🎚️config", "🎚️options", "🎬️actions", "👥️presence", "🪛️utilities", "🫧️transient"] }
+    "windowFacet": { "enum": ["🎚️config", "☑️options", "🎬️actions", "👥️presence", "🪛️utilities", "🫧️transient"] }
   },
   "oneOf": [
     {

@@ -175,7 +175,7 @@ fn patchmatch_mvs_recovers_known_plane_depth() {
     let src_img1 = render_plane_image(width, height, &intr, &src_pose1, true_depth, noise_texture);
     let src_img2 = render_plane_image(width, height, &intr, &src_pose2, true_depth, noise_texture);
     let src_views = vec![(src_img1, src_pose1, intr), (src_img2, src_pose2, intr)];
-    let cfg = PatchMatchConfig { window_radius: 6, iterations: 8, depth_min: 2.0, depth_max: 10.0, seed: 7, best_k: 2 };
+    let cfg = PatchMatchConfig { window_radius: 6, iterations: 8, depth_min: 2.0, depth_max: 10.0, seed: 7, best_k: 2, confidence_floor: None };
     let dm = patchmatch_mvs(&ref_img, &(ref_pose, intr), &src_views, &cfg);
 
     let mut abs_errors = Vec::new();
@@ -208,7 +208,7 @@ fn patchmatch_mvs_recovers_known_sphere_depth() {
     let src_views = vec![(src_img1, src_pose1, intr), (src_img2, src_pose2, intr)];
     let depth_min = (center[2] - radius - 0.5) as f32;
     let depth_max = (center[2] + radius + 0.5) as f32;
-    let cfg = PatchMatchConfig { window_radius: 6, iterations: 8, depth_min, depth_max, seed: 11, best_k: 2 };
+    let cfg = PatchMatchConfig { window_radius: 6, iterations: 8, depth_min, depth_max, seed: 11, best_k: 2, confidence_floor: None };
     let dm = patchmatch_mvs(&ref_img, &(ref_pose, intr), &src_views, &cfg);
 
     let mut abs_errors = Vec::new();
@@ -251,7 +251,7 @@ fn maximum_patchmatch_allocation_and_one_pixel_step_stay_below_hard_ceiling_in_e
     preparation.output.depth.push(0.0);
     preparation.output.normal.push([0.0; 3]);
     preparation.output.confidence.push(0.0);
-    let config = PatchMatchConfig { window_radius: 4, iterations: 1, depth_min: 0.1, depth_max: 100.0, seed: u64::MAX, best_k: 4 };
+    let config = PatchMatchConfig { window_radius: 4, iterations: 1, depth_min: 0.1, depth_max: 100.0, seed: u64::MAX, best_k: 4, confidence_floor: None };
     let started = std::time::Instant::now();
     assert!(!preparation.advance(&reference, &(pose, intrinsics), &sources, &config, 1));
     assert!(started.elapsed() < std::time::Duration::from_millis(8), "maximum-source/radius PatchMatch pixel step exceeded 8 ms");

@@ -246,7 +246,7 @@ pub use component::layout::{
     build_shell_context_menu_specs, collect_window_kind_ids_from_layout, create_default_layout, create_named_layout, create_stack_layout, create_tab_stack_layout, create_window_layout, default_viewport_engagement, even_window_layout,
     framework_panel_tab_label, merge_named_layouts, organize_context_menu, partition_window_measures, ribbon_parent_label, ActionDescriptor, MeasureSelectItem, NamedLayout,
     ShellMenuAction, StyleSpec, WindowEngagement, WindowEngagementControl,
-    WindowEngagementInput, WindowEngagementOption, WindowEngagementPossible, WindowEngagementSlot, WindowEngagementStatus, WindowLayout, WindowLayoutAxisNode, WindowLayoutChild, WindowLayoutRoot, WindowLayoutStackNode, WindowLayoutWindowNode,
+    WindowEngagementInput, WindowEngagementOption, WindowEngagementPossible, WindowEngagementRingOption, WindowEngagementSelectItem, WindowEngagementSlot, WindowEngagementStatus, WindowEngagementToggleGroupOption, WindowLayout, WindowLayoutAxisNode, WindowLayoutChild, WindowLayoutRoot, WindowLayoutStackNode, WindowLayoutWindowNode,
     WindowMeasure, WindowOptions, WindowStackCorner, FRAMEWORK_HISTORY_BODY_KEY, FRAMEWORK_PANEL_TAB_ARTIFACT_ICON_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL, FRAMEWORK_PANEL_TAB_CATALOGUE_ICON_ID,
     FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_HISTORY_ICON_ID, FRAMEWORK_PANEL_TAB_HISTORY_ID, FRAMEWORK_PANEL_TAB_HISTORY_LABEL, FRAMEWORK_PANEL_TAB_TOOL_RUN_ICON_ID, FRAMEWORK_PANEL_TAB_TOOL_RUN_ID, FRAMEWORK_PANEL_TAB_TOOL_RUN_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ICON_ID,
     FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, FRAMEWORK_PANEL_TAB_PARAMETERS_ICON_ID, FRAMEWORK_PANEL_TAB_PARAMETERS_ID, FRAMEWORK_PANEL_TAB_PARAMETERS_LABEL, RIBBON_PARENT_CATEGORIES,
@@ -302,7 +302,7 @@ pub use action::{
 };
 #[cfg(feature = "wgpu-engine")]
 pub use chrome::{
-    chrome_item_bg, chrome_item_text, item_bg, item_text, measure_action_item, push_chrome_border, push_chrome_group_border, push_control_border, push_icon, push_window_cap_border, ICON_TINY, ICON_TREE_ROW, SIZE_TINY,
+    chrome_item_bg, chrome_item_text, item_bg, item_text, measure_action_item, push_chrome_border, push_chrome_group_border, push_control_border, push_icon, push_window_cap_border, UiDriverChrome, UiDriverLabels, UiDriverTooltips, ICON_TINY, ICON_TREE_ROW, SIZE_TINY,
 };
 #[cfg(feature = "wgpu-engine")]
 pub use engine::{SurfaceLane, Ui, UiFrameStep, UiLayoutStep, UiOverlayPlacement, UiSceneHit};
@@ -325,7 +325,7 @@ pub use input::{DragAxis, DragState, HitKind, HitTarget, InputState, KeyAction, 
 pub use input::RetainedHitRegistration;
 #[cfg(feature = "wgpu-engine")]
 pub use paint::{
-    admit_ui_image, close_ui_image_ledger_step, paint_overlay_backdrop, paint_overlay_surface, paint_retained_glyph_step, paint_retained_glyph_step_flowed, paint_tooltip, skeleton_blocks, skeleton_kind,
+    admit_ui_image, close_ui_image_ledger_step, paint_overlay_backdrop, paint_overlay_surface, paint_retained_glyph_step, paint_retained_glyph_step_flowed, paint_retained_glyph_step_weighted, paint_tooltip, skeleton_blocks, skeleton_kind,
     skeleton_replaces_content, take_ui_image_upload, tooltip_surface_size, ui_image_content_rect, ui_image_natural_size, RetainedGlyphCursor, RetainedGlyphStep, RetainedTextFlow, SkeletonKind, UiImageAdmission, UiImageUpload,
     OVERLAY_BACKDROP_ALPHA, RETAINED_NODE_TEXT_MAX_BYTES, SKELETON_MAX_BLOCKS, UI_IMAGE_LEDGER_ENTRIES, UI_IMAGE_MAX_BOX_HEIGHT, UI_IMAGE_MAX_DIMENSION, UI_IMAGE_SOURCE_MAX_BYTES,
 };
@@ -367,9 +367,13 @@ pub use layout::{gap_for_token, layout_horizontal, layout_vertical, padding_for_
 pub use text::{faux_bold_offset, fetch_font_bytes, FontAtlas, TextWeight};
 #[cfg(feature = "wgpu-engine")]
 pub use widgets::{
-    draw_icon, draw_text, draw_text_overlay, draw_text_wrapped, measure_widget, render_scroll_region, render_widget, wrap_text, ControlNode, InputMeta, KeyValueEntry, RingMeta, SelectItem, SliderMeta, StepperMeta, TreeItem, TreeItemAction,
-    TreeSection, WidgetContext, WidgetInteractionMaps, WidgetNode,
+    draw_icon, draw_text, draw_text_overlay, draw_text_weighted, draw_text_wrapped, measure_widget, render_scroll_region, render_widget, wrap_text, ControlNode, InputMeta, KeyValueEntry, RingMeta, SelectItem, SliderMeta,
+    StepperMeta, TreeItem, TreeItemAction, TreeSection, WidgetContext, WidgetInteractionMaps, WidgetNode,
 };
+// 🔼️ The two seams a host's own press/close handling needs to make a long `Select`'s scroll
+// chevrons work (ticket 26/09/17 packet W15a) — the arithmetic itself stays private to the element.
+#[cfg(feature = "wgpu-engine")]
+pub use select::{arm_select_scroll, clear_select_scroll};
 // #endregion re-exports
 
 // ⚖️ Structural law over the wgpu unit-test wiring itself — see the case file's own docstring. It

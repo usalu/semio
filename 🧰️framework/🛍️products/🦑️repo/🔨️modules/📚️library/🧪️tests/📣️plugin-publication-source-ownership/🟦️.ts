@@ -5,6 +5,10 @@ import Ajv from "ajv";
 import ts from "typescript";
 import { semanticDirectoryKindId } from "../../🔍️discovery/🟦️.ts";
 
+/** 🧾️ Reads the parse diagnostics every `createSourceFile` result carries and the public `SourceFile` type omits. */
+const parsedDiagnostics = (source: ts.SourceFile): readonly ts.Diagnostic[] =>
+  (source as ts.SourceFile & { readonly parseDiagnostics: readonly ts.Diagnostic[] }).parseDiagnostics;
+
 type Owner = Readonly<{ path: string; exports: readonly string[] }>;
 type Fixture = Readonly<{
   owners: readonly Owner[];
@@ -25,11 +29,11 @@ const schema = JSON.parse(readFileSync(resolve(libraryRoot, "🧬️schema/📣�
 
 function exportedNames(path: string): ReadonlySet<string> {
   const source = ts.createSourceFile(path, readFileSync(path, "utf8"), ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
-  expect(source.parseDiagnostics, path).toHaveLength(0);
+  expect(parsedDiagnostics(source), path).toHaveLength(0);
   const names = new Set<string>();
   for (const statement of source.statements) {
     if (ts.isExportDeclaration(statement) && statement.exportClause && ts.isNamedExports(statement.exportClause)) for (const element of statement.exportClause.elements) names.add(element.name.text);
-    const exported = statement.modifiers?.some(({ kind }) => kind === ts.SyntaxKind.ExportKeyword);
+    const exported = (ts.canHaveModifiers(statement) && ts.getModifiers(statement)?.some((modifier) => modifier.kind === ts.SyntaxKind.ExportKeyword));
     if (!exported) continue;
     if ((ts.isFunctionDeclaration(statement) || ts.isClassDeclaration(statement) || ts.isTypeAliasDeclaration(statement) || ts.isInterfaceDeclaration(statement) || ts.isEnumDeclaration(statement)) && statement.name) names.add(statement.name.text);
     if (ts.isVariableStatement(statement)) for (const declaration of statement.declarationList.declarations) if (ts.isIdentifier(declaration.name)) names.add(declaration.name.text);
@@ -39,7 +43,7 @@ function exportedNames(path: string): ReadonlySet<string> {
 
 function directRelativeModules(path: string): ReadonlySet<string> {
   const source = ts.createSourceFile(path, readFileSync(path, "utf8"), ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
-  expect(source.parseDiagnostics, path).toHaveLength(0);
+  expect(parsedDiagnostics(source), path).toHaveLength(0);
   const modules = new Set<string>();
   const add = (specifier: ts.Expression | undefined) => {
     if (!specifier || !ts.isStringLiteral(specifier) || !specifier.text.startsWith(".")) return;

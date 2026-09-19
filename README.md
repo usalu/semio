@@ -520,12 +520,42 @@ The recommended way to develop is using the devcontainer which provides a consis
 3. Click "Reopen in Container" when prompted (or run "Dev Containers: Reopen in Container" from command palette)
 4. Wait for container build and setup to complete
 
+Container creation runs `bun nx run workspace:setup`, which is the whole zero-touch bootstrap: every
+language environment (`deps-javascript`, `deps-python`, `deps-cargo`, `deps-go`, `deps-dotnet`,
+`deps-cpp`, `deps-browsers`, `deps-wasm` — which also installs `deps-trunk`, so both
+`rust-toolchain.toml` wasm targets land — and `deps-tools`), then `setup-git` (git symlink checkout,
+the root agent-instruction aliases, removal of legacy repo-managed hooks), `prepare` (generated
+schema, styling tokens, assets, framework graph and the plugin registry catalog every `dev` route
+resolves against) and both MCP server binaries (`repo-mcp:build`,
+`@semio-tech/framework-os-mcp-rs:build`) so `.mcp.json` works on first attach. Every step probes
+before it installs, so re-running it is cheap.
+
 The devcontainer includes:
 
-- Node.js 24 LTS, Go 1.26, Python 3.14, .NET SDK 8.0/9.0/10.0, Rust 1.92
+- Node.js 24 LTS, Go 1.26, Python 3.14, .NET SDK 8.0/9.0/10.0
+- Rust via rustup with **no** image-pinned toolchain — `rust-toolchain.toml` is the single source of
+  truth (currently `nightly-2026-07-07` with `wasm32-unknown-unknown` + `wasm32-wasip2`), installed on
+  the first `cargo` invocation inside the repo
 - All required VS Code extensions
 - Pre-configured development environment
 - Port forwarding for all dev servers (3000, 4000, 4321, 5678, 6006, 2507)
+
+### 🏁️ The four golden paths
+
+Every one of these is a `.vscode/launch.json` row — no terminal needed (AGENTS.md: devs use
+`launch.json`, never the CLI).
+
+| what | launch row(s) | nx target it resolves to |
+|---|---|---|
+| `s` React frontend | `🛠️dev🪐️space⚛️react` (6070), `🛠️dev🪐️space⚛️react📦️served` (no rebuild) | `@semio-tech/framework-os-dev:dev-s-react-dev` / `serve-s-react-dev` |
+| `s` wgpu frontend | `🛠️dev🪐️space🧊️wgpu🌐️wasm` (6071) | `…:dev-s-wgpu-dev` |
+| hub backend | `🛠️dev🗄️os-hub` (8787) | `os-hub:dev` |
+| two-user collaboration | compound `🧭️compound🖥️s👥️users🗄️os-hub` (hub + `🛠️dev🪐️space👤️1⚛️react` 6072 + `👤️2⚛️react` 6073), or `🛠️dev🤝️os-collab-e2e` for the automated scenario | `os-hub:dev` + `…:dev-s-react-dev` ×2 |
+| MCP servers | `🦑️mcp dev` (repo, stdio), `🛠️dev🌉️os-mcp🧵️stdio` / `🛠️dev🌉️os-mcp🌐️http` (os) | `workspace:dev -- mcp …` |
+
+`SEMIO_RENDERER` in a row's `env` is what picks the renderer: `bun nx` routes through the repo's Nx
+wrapper (root `package.json:"nx"`), which rewrites `workspace:dev -- <variant>` into
+`<dev\|serve>-<variant>-<react\|wgpu>-<dev\|release>`. No server script ever overrides it.
 
 ## 🪟️ Windows Setup [↑](#-development)
 
@@ -672,7 +702,7 @@ Used for small bugs and focused fixes with strong repo context 🧠️
 
 Used for simple tasks (small edits, small refactors, small doc updates) 🧩️
 
-The canonical root agent instructions live in `AGENTS.md`. Root aliases such as `CLAUDE.md` and `GEMINI.md` are recreated from that file when you run `bun ./📜️script.ts setup git` (also invoked from `npm run setup`), using symlinks when the shell supports them and a hard-link fallback on restricted Windows shells.
+The canonical root agent instructions live in `AGENTS.md`. `codex`, `cursor-chat`, `windsurf-chat`, `droid` and `kiro-cli` read that file directly; the clients that cannot are served by links recreated from it — `CLAUDE.md` (`claude-code`), `GEMINI.md` (`antigravity-chat`) and `.github/copilot-instructions.md` (`copilot-chat`). `bun ./📜️script.ts setup git` writes them, using symlinks when the shell supports them and a hard-link fallback on restricted Windows shells. It is a `dependsOn` of `workspace:setup`, so a fresh clone or devcontainer gets them without a manual step.
 
 Run `npm run setup` once after cloning for the full workspace bootstrap, or run `bun ./📜️script.ts setup git` if you only need git symlink checkout, root alias files, and removal of any legacy repo-managed git hooks on Windows, macOS, and Linux. On Windows, true symlink creation may require Developer Mode or an elevated shell.
 
@@ -711,7 +741,7 @@ The default model for agent work is the one native to the platform we use for th
 
 </details>
 
-All automation, CI runs, and agent workflows are controlled through the canonical root commands `setup`, `start`, `dev`, `generate`, `lint`, `format`, `test`, `build`, `publish`, and `purge` (see root `package.json`). Only `dev` is intended to stay live for watch mode, while the remaining commands exit so CI and agents can finish reliably.
+All automation, CI runs, and agent workflows are controlled through the canonical root commands `setup`, `start`, `dev`, `generate`, `lint`, `format`, `test`, `build`, `publish`, and `purge` (see root `package.json`). Each one also has a `.vscode/launch.json` row in the `3_dev` group next to `⚙️setup`, so devs reach them from the Run panel rather than the CLI. Only `dev` is intended to stay live for watch mode, while the remaining commands exit so CI and agents can finish reliably.
 The root `package.json` uses Nx to orchestrate the command pipeline, and delegates bundle builds, tests, and publishing to Nx targets (`bun nx run …`).
 Git hooks are not installed by this repo; run `bun run lint`, `bun run format`, and `bun run test` explicitly before pushing. `bun ./📜️script.ts setup git` removes any legacy pre-commit or post-commit hooks that would block commits, rebases, or squashes.
 

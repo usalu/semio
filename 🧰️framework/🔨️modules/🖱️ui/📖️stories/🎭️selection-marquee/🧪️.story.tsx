@@ -21,6 +21,7 @@ const meta = {
     layout: "centered",
   },
   tags: ["autodocs"],
+  args: { shape: "rect", coverage: "full", rect: { x: 40, y: 30, width: 220, height: 140 } },
 } satisfies Meta<typeof SelectionMarquee>;
 
 export default meta;
@@ -29,6 +30,7 @@ type Story = StoryObj<typeof meta>;
 
 export const RectFull: Story = {
   name: 'shape="rect", coverage="full" (drag left-to-right)',
+  args: { shape: "rect", coverage: "full", rect: { x: 40, y: 30, width: 220, height: 140 } },
   render: () => (
     <div className="relative h-64 w-96 border ui-surface" data-level="base">
       <SelectionMarquee shape="rect" coverage="full" rect={{ x: 40, y: 30, width: 220, height: 140 }} />
@@ -38,6 +40,7 @@ export const RectFull: Story = {
 
 export const RectPartial: Story = {
   name: 'shape="rect", coverage="partial" (drag right-to-left — dashed)',
+  args: { shape: "rect", coverage: "partial", rect: { x: 40, y: 30, width: 220, height: 140 } },
   render: () => (
     <div className="relative h-64 w-96 border ui-surface" data-level="base">
       <SelectionMarquee shape="rect" coverage="partial" rect={{ x: 40, y: 30, width: 220, height: 140 }} />
@@ -47,6 +50,7 @@ export const RectPartial: Story = {
 
 export const Polygon: Story = {
   name: 'shape="polygon" (lasso gesture)',
+  args: { shape: "polygon", coverage: "full", points: [{ x: 40, y: 160 }, { x: 120, y: 30 }, { x: 260, y: 50 }, { x: 300, y: 150 }] },
   render: () => (
     <div className="relative h-64 w-96 border ui-surface" data-level="base">
       <SelectionMarquee

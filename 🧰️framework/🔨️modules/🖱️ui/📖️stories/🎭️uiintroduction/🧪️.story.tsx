@@ -21,9 +21,9 @@ import { useState } from "react";
 const walkthrough: IntroductionDefinition = {
   title: "Welcome to Semio",
   steps: [
-    { id: "step.welcome", title: "Welcome", body: "This short walkthrough introduces the design workspace.", introduce: null, show: [], placement: "center", advance: { kind: "next" }, logos: [] },
-    { id: "step.canvas", title: "The Canvas", body: "Your design lives here — pan, zoom, and select pieces directly.", introduce: null, show: [], placement: "center", advance: { kind: "next" }, logos: [] },
-    { id: "step.done", title: "You're Ready", body: "That's the tour — start designing.", introduce: null, show: [], placement: "center", advance: { kind: "next" }, logos: [] },
+    { id: "step.welcome", title: "Welcome", body: "This short walkthrough introduces the design workspace.", introduce: null, show: [], placement: "center", interactions: [], ordered: false, logos: [] },
+    { id: "step.canvas", title: "The Canvas", body: "Your design lives here — pan, zoom, and select pieces directly.", introduce: null, show: [], placement: "center", interactions: [], ordered: false, logos: [] },
+    { id: "step.done", title: "You're Ready", body: "That's the tour — start designing.", introduce: null, show: [], placement: "center", interactions: [], ordered: false, logos: [] },
   ],
 };
 
@@ -34,6 +34,7 @@ const meta = {
     layout: "fullscreen",
   },
   tags: ["autodocs"],
+  args: { introduction: walkthrough, stepIndex: 0, onStepIndexChange: () => {}, onDismiss: () => {} },
 } satisfies Meta<typeof UIIntroduction>;
 
 export default meta;

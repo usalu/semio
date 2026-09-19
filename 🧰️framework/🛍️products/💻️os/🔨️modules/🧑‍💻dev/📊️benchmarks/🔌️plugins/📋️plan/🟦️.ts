@@ -126,4 +126,4 @@ function benchWebSkippedRow(budget: BenchBudgetDefinition, renderer: string, rea
   };
 }
 
-export { BENCH_BUDGETS, BenchBudgetDefinition, benchFlag, benchOutDir, benchRegistryRow, benchWebSkippedRow };
+export { BENCH_BUDGETS, type BenchBudgetDefinition, benchFlag, benchOutDir, benchRegistryRow, benchWebSkippedRow };

@@ -36,6 +36,9 @@ pub mod audit;
 #[path = "../../🧵️bridge/🦀️.rs"]
 pub mod bridge;
 
+#[path = "../../🛰️rendezvous/🦀️.rs"]
+pub mod rendezvous;
+
 #[path = "../../🗂️catalog/🦀️.rs"]
 pub mod catalog;
 

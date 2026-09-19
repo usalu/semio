@@ -72,9 +72,9 @@ export async function testTrunkLockfile(workspace: string, native = false): Prom
     assert.deepEqual(cacheInternals.nativeLockInputs(target.options.command), ["{workspaceRoot}/**/Cargo.toml", "{workspaceRoot}/Cargo.lock"], "cargo metadata --locked validates the lock against every workspace manifest");
     assert.deepEqual(cacheInternals.nativeLockInputs('bun "script.ts" native cargo check --manifest "Cargo.toml"'), []);
     for (const file of [".vscode/🧩️launch.seed.jsonc", ".vscode/launch.json"]) {
-      const editor = Bun.JSONC.parse(readFileSync(join(workspace, file), "utf8"));
-      assert.equal(editor.configurations.filter((value: any) => value.command === `bun nx run ${fixture.project}:${fixture.target}`).length, 1, file);
-      assert.equal(editor.configurations.filter((value: any) => value.command === `bun nx run workspace:${fixture.tooling.target}`).length, 1, file);
+      const editor = Bun.JSONC.parse(readFileSync(join(workspace, file), "utf8")) as { readonly configurations: readonly { readonly command?: string }[] };
+      assert.equal(editor.configurations.filter((value) => value.command === `bun nx run ${fixture.project}:${fixture.target}`).length, 1, file);
+      assert.equal(editor.configurations.filter((value) => value.command === `bun nx run workspace:${fixture.tooling.target}`).length, 1, file);
     }
     if (native) {
       const env = { ...process.env }; delete env.NO_COLOR; delete env.FORCE_COLOR;
@@ -97,7 +97,7 @@ export async function testNativeTrunkLockfile(workspace: string, generated: stri
   const args = [resolve(import.meta.dir, "../../🦀️cargo/📜️script.ts"), ...hook.command_arguments, join(root, "Cargo.toml")];
   for (const [path, contents] of Object.entries(fixture.probe.files)) writeFileSync(join(root, path), contents as string);
   writeFileSync(join(root, "Trunk.toml"), fixture.probe.files["Trunk.toml"] + `\n[[hooks]]\nstage=${JSON.stringify(hook.stage)}\ncommand=${JSON.stringify(hook.command)}\ncommand_arguments=${JSON.stringify(args)}\n`);
-  const env = { ...process.env, CARGO_TARGET_DIR: join(root, "target") }; delete env.NO_COLOR; delete env.FORCE_COLOR;
+  const env: NodeJS.ProcessEnv = { ...process.env, CARGO_TARGET_DIR: join(root, "target") }; delete env.NO_COLOR; delete env.FORCE_COLOR;
   const trunkArgs = ["--config", join(root, "Trunk.toml"), "--skip-version-check", "--log", "info", "--color", "never"];
   const result = spawnSync("trunk", ["build", ...trunkArgs], { cwd: root, env, encoding: "utf8", timeout: 15000 });
   writeFileSync(join(root, "stale-build.log"), result.stdout + result.stderr);

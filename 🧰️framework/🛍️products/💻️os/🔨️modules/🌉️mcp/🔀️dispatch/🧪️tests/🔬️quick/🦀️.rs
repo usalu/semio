@@ -500,3 +500,110 @@ fn run_inference_maps_a_stale_generation_to_a_revision_conflict() {
     assert_eq!(error.code, GatewayErrorCode::RevisionConflict);
 }
 //#endregion 💡️Inference
+
+//#region 🔖️UnboundChannelAndResolvableApproval
+// 🎫️ slice M4 (audit §6 P0.2 + P0.3). Two things that were silently wrong in the shipped binary:
+// a gateway with no `--folder`/`--hub` ran the whole mutation protocol against a scripted mock with
+// no signal to the caller, and a parked approval could never be decided by anyone.
+fn unbound_harness() -> ActionAdapter {
+    ActionAdapter::new(
+        Box::new(ArtifactChannels::Unbound(UnboundArtifactChannel)),
+        Arc::new(HandleTable::new()),
+        Arc::new(IdempotencyStore::new()),
+        Arc::new(AuditSinks::InMemory(InMemoryAuditSink::new())),
+        AutoApprovePolicy::Never,
+        ClientInfo { name: "test".into(), version: "0".into() },
+    )
+}
+
+#[test]
+fn an_unbound_gateway_answers_a_typed_retryable_error_instead_of_a_scripted_commit() {
+    let adapter = unbound_harness();
+    let catalog = single_capability_catalog(synthetic_capability("gateway.harmlessThing", &[], ApprovalMode::Never, false));
+    let session = SessionHandle::new("sess_unbound");
+    let principal = principal(&[]);
+
+    let error = adapter.prepare(&catalog, &principal, &session, "gateway.harmlessThing", serde_json::json!({}), 0, 0).unwrap_err();
+    assert_eq!(error.code, GatewayErrorCode::PluginUnavailable);
+    assert!(error.retryable, "an unbound workspace is a binding gap the caller can close, not a permanent failure");
+    assert!(error.message.contains("--folder") && error.message.contains("--hub"), "the error names both bindings: {}", error.message);
+
+    let invoked = adapter.invoke(&catalog, &principal, &session, InvokeRequest { capability_id: Some("gateway.harmlessThing".into()), ..Default::default() }, 0, 1).unwrap_err();
+    assert_eq!(invoked.code, GatewayErrorCode::PluginUnavailable);
+}
+
+#[test]
+fn the_unbound_channel_never_answers_a_frame_for_any_command() {
+    let mut channel = UnboundArtifactChannel;
+    for command in [AppCommand::ReadHistory, AppCommand::TransactionCommit { txn_id: "txn".into() }, AppCommand::TransactionUndo { group_id: "grp".into() }] {
+        let fault = channel.exchange(0, vec![command]).expect_err("an unbound channel has nothing to answer with");
+        assert_eq!(fault.code, WORKSPACE_UNBOUND_FAULT_CODE);
+    }
+}
+
+#[test]
+fn with_no_approval_coordinator_bound_the_error_says_nobody_could_be_asked() {
+    let (adapter, _channel, _handles, _audit) = harness(AutoApprovePolicy::Never);
+    let catalog = single_capability_catalog(synthetic_capability("gateway.destructiveThing", &[], ApprovalMode::Always, true));
+    let session = SessionHandle::new("sess_nochannel");
+    let principal = principal(&[]);
+    let blocked = adapter.invoke(&catalog, &principal, &session, InvokeRequest { capability_id: Some("gateway.destructiveThing".into()), ..Default::default() }, 0, 1).unwrap_err();
+    assert_eq!(blocked.code, GatewayErrorCode::ApprovalRequired);
+    assert!(blocked.details["approvalHandle"].as_str().is_some());
+    assert!(blocked.details["channels"].is_object(), "the caller is told which lanes were tried: {}", blocked.details);
+}
+
+#[test]
+fn a_bound_coordinator_whose_human_says_yes_lets_the_invocation_commit_in_one_call() {
+    let (adapter, _channel, _handles, _audit) = harness(AutoApprovePolicy::Never);
+    adapter.bind_approval_coordinator(Arc::new(ApprovalCoordinator::new(Some(accepting_elicitation_slot()), None)));
+    let catalog = single_capability_catalog(synthetic_capability("gateway.destructiveThing", &[], ApprovalMode::Always, true));
+    let session = SessionHandle::new("sess_yes");
+    let principal = principal(&[]);
+    let report = adapter
+        .invoke(&catalog, &principal, &session, InvokeRequest { capability_id: Some("gateway.destructiveThing".into()), ..Default::default() }, 0, 1)
+        .expect("a human yes resolves the gate inside the same invocation");
+    assert_eq!(report.status, InvocationStatus::Succeeded);
+}
+
+#[test]
+fn a_bound_coordinator_whose_human_says_no_denies_rather_than_asking_again() {
+    let (adapter, _channel, _handles, _audit) = harness(AutoApprovePolicy::Never);
+    adapter.bind_approval_coordinator(Arc::new(ApprovalCoordinator::new(Some(declining_elicitation_slot()), None)));
+    let catalog = single_capability_catalog(synthetic_capability("gateway.destructiveThing", &[], ApprovalMode::Always, true));
+    let session = SessionHandle::new("sess_no");
+    let principal = principal(&[]);
+    let denied = adapter.invoke(&catalog, &principal, &session, InvokeRequest { capability_id: Some("gateway.destructiveThing".into()), ..Default::default() }, 0, 1).unwrap_err();
+    assert_eq!(denied.code, GatewayErrorCode::PermissionDenied);
+    assert_eq!(denied.details["channel"], "elicitation");
+}
+
+#[test]
+fn auto_approve_all_needs_no_human_at_all() {
+    let (adapter, _channel, _handles, _audit) = harness(AutoApprovePolicy::All);
+    let catalog = single_capability_catalog(synthetic_capability("gateway.destructiveThing", &[], ApprovalMode::Always, true));
+    let session = SessionHandle::new("sess_auto");
+    let principal = principal(&[]);
+    let report = adapter
+        .invoke(&catalog, &principal, &session, InvokeRequest { capability_id: Some("gateway.destructiveThing".into()), ..Default::default() }, 0, 1)
+        .expect("--auto-approve all is the launch-time human decision");
+    assert_eq!(report.status, InvocationStatus::Succeeded);
+}
+
+fn elicitation_slot_answering(response_line: &str) -> crate::transport::ElicitationSlot {
+    let features = Arc::new(crate::protocol::ClientFeatures::default());
+    features.record(Some(&serde_json::json!({ "elicitation": {} })));
+    let lines = Arc::new(crate::transport::StdioLines::new(Box::new(std::io::Cursor::new(response_line.as_bytes().to_vec())), Box::new(Vec::new())));
+    let slot: crate::transport::ElicitationSlot = Arc::new(std::sync::OnceLock::new());
+    let _ = slot.set(Arc::new(crate::transport::ElicitationChannel::new(lines, features)));
+    slot
+}
+
+fn accepting_elicitation_slot() -> crate::transport::ElicitationSlot {
+    elicitation_slot_answering("{\"jsonrpc\":\"2.0\",\"id\":\"semio-elicit-1\",\"result\":{\"action\":\"accept\",\"content\":{\"approve\":true}}}\n")
+}
+
+fn declining_elicitation_slot() -> crate::transport::ElicitationSlot {
+    elicitation_slot_answering("{\"jsonrpc\":\"2.0\",\"id\":\"semio-elicit-1\",\"result\":{\"action\":\"decline\"}}\n")
+}
+//#endregion 🔖️UnboundChannelAndResolvableApproval

@@ -143,7 +143,7 @@ pub mod owned_abi {
     pub struct PollInput {
         pub events: Vec<semio_framework::kernel::Event>,
         pub command_page: Option<(semio_framework::kernel::CommandPageCursor, semio_framework::kernel::FixedCommandPage)>,
-        pub cold_pair_page: Option<semio_framework::kernel::ColdArtifactPairPage>,
+        pub cold_pair_page: Option<semio_framework::kernel::ColdDocumentPairPage>,
         pub budget: semio_framework::kernel::Budget,
     }
 
@@ -10420,6 +10420,31 @@ pub mod app {
     //#endregion 🔖️CommandLog
 
     //#region 🔖️HistoryPanel
+    /// 📌️ The framework-reserved controller the explicit check-in dialog funnel answers on — the
+    /// shell-owned twin of `framework.sync`: a renderer intercepts it before any app sees it
+    /// (`🐚️Shell/🎯️targets/🧊️/🦀️.rs`'s `dispatch_action`), because the check-in MESSAGE is shell state
+    /// no artifact app holds.
+    pub const FRAMEWORK_CHECKIN_CONTROLLER_ID: &str = "framework.checkin";
+
+    /// 📌️ Uncommitted-since-the-last-checkpoint count — the same fold the React shell's
+    /// `uncommittedEditCount` (`🏛️ShellHost/🟦️.tsx`) applies, walked OLDEST-first over a
+    /// newest-first command log: every applied mutation row counts, and a landed `commitCheckpoint`
+    /// resets it to zero. It is what React prints after the Check In label as ` (N)`.
+    // 🚫️async: a pure total fold over rows already in hand.
+    fn uncommitted_command_count(history: &HistoryView) -> u32 {
+        let mut pending = 0u32;
+        for entry in history.commands.iter().rev() {
+            if entry.kind == ActionKind::History && entry.action_id == "commitCheckpoint" {
+                pending = 0;
+                continue;
+            }
+            if entry.kind == ActionKind::Mutation && entry.applied {
+                pending += 1;
+            }
+        }
+        pending
+    }
+
     // 🚫️async: a pure total mapping, called inside the Commands window's synchronous row closure.
     fn history_panel_icon_id(kind: ActionKind) -> IconName {
         match kind {
@@ -10513,14 +10538,43 @@ pub mod app {
             builder.try_build().map_err(|_| ui_assembly_error("history-panel.command-build"))
         })?;
 
+        // 📌️ `#s-checkin` — React's EXPLICIT check-in row (`🏛️ShellHost/🟦️.tsx`'s
+        // `framework.history.checkin`), a separate affordance from the no-message quick Checkpoint
+        // above and absent outright for a viewer (never disabled — React's own `canCheckIn` gate,
+        // whose wgpu twin is `can_check_in`, and which `read_only` carries here). The button keeps
+        // React's bare `s-checkin` id: it is the id every battery and probe looks for, and it had no
+        // trigger anywhere on the wgpu target at all (`📓️audit-w14-shell-residual.md` C2).
+        //
+        // ⚠️ React's press OPENS a message dialog whose typed text rides the checkpoint; the message
+        // is shell-local state this assembler cannot see, so the row dispatches `submit` directly and
+        // the shell falls back to its own `"check-in"` message (React's own blank-draft fallback).
+        let checkin_item = if read_only {
+            None
+        } else {
+            let pending = uncommitted_command_count(history);
+            let text = if is_de { "Einchecken" } else { "Check In" };
+            let text = if pending > 0 { format!("{text} ({pending})") } else { text.to_string() };
+            let icon = ui_text(IconName::GitCommit.as_str(), "history-panel.checkin-icon")?;
+            let submit = ActionId::try_v1(FRAMEWORK_CHECKIN_CONTROLLER_ID, "submit").ok_or_else(|| ui_assembly_error("history-panel.checkin-action"))?;
+            let builder = button(ui_label(text.as_str(), "history-panel.checkin-label")?).icon(icon.clone());
+            let builder = builder.try_id("s-checkin").map_err(|_| ui_assembly_error("history-panel.checkin-button-id"))?;
+            let trigger = builder.try_on(Trigger::Activate, submit).map_err(|_| ui_assembly_error("history-panel.checkin-binding"))?.try_build().map_err(|_| ui_assembly_error("history-panel.checkin-button-build"))?;
+            let builder = ui::tree_item(ui_label(text.as_str(), "history-panel.checkin-item-label")?).icon(icon);
+            let builder = builder.try_id("framework.history.checkin").map_err(|_| ui_assembly_error("history-panel.checkin-item-id"))?;
+            Some(builder.try_child(trigger).map_err(|_| ui_assembly_error("history-panel.checkin-item-child"))?.try_build().map_err(|_| ui_assembly_error("history-panel.checkin-item-build"))?)
+        };
         let mut action_items = BuiltChildren::default();
         for item in [
-            action_item("framework.history.undo", IconName::Undo, "Undo", "Rückgängig", "undo", history.can_undo && !read_only)?,
-            action_item("framework.history.redo", IconName::Redo, "Redo", "Wiederholen", "redo", history.can_redo && !read_only)?,
-            action_item("framework.history.commitCheckpoint", IconName::GitCommit, "Commit Checkpoint", "Checkpoint", "commitCheckpoint", !read_only)?,
-            action_item("framework.history.createAlternative", IconName::GitBranch, "Create Alternative", "Alternative erstellen", "createAlternative", !read_only)?,
-            filter_item,
-        ] {
+            Some(action_item("framework.history.undo", IconName::Undo, "Undo", "Rückgängig", "undo", history.can_undo && !read_only)?),
+            Some(action_item("framework.history.redo", IconName::Redo, "Redo", "Wiederholen", "redo", history.can_redo && !read_only)?),
+            Some(action_item("framework.history.commitCheckpoint", IconName::GitCommit, "Commit Checkpoint", "Checkpoint", "commitCheckpoint", !read_only)?),
+            checkin_item,
+            Some(action_item("framework.history.createAlternative", IconName::GitBranch, "Create Alternative", "Alternative erstellen", "createAlternative", !read_only)?),
+            Some(filter_item),
+        ]
+        .into_iter()
+        .flatten()
+        {
             action_items.try_push(item).map_err(|_| ui_assembly_error("history-panel.actions"))?;
         }
         let actions_builder = tree_section(ui_label(if is_de { "Aktionen" } else { "Actions" }, "history-panel.actions-label")?).default_open(true);
@@ -19682,6 +19736,155 @@ pub mod app {
         Complete,
     }
 
+    /// @emoji 🧭️ Which leg of a document-archive replacement refused the candidate, and with what
+    /// evidence. An atomic replacement validates three of them in order — the owned-member set
+    /// (`members`), the recursive ownership `closure`, and the `retained-publication` guard plus the
+    /// app's own publication `authority` — and every one of them used to collapse into a single
+    /// `faulted: bool` whose only explanation was a `#[cfg(test)]` `eprintln!`. A headless host
+    /// therefore saw one opaque sentence for eleven distinct causes. This carries the cause to the
+    /// wire instead: {@link ArtifactStoreReplacementRefusal::into_fault} mints the leg-specific
+    /// {@link FaultCode} and detail that `Effect::LoadDocument` reports to the shell.
+    /// @emoji 🔖️ A bounded inline copy of a job fault's first detail page — the initializer's own
+    /// refusal slug (e.g. `bounded-store.initializer-envelope-invalid`), which the replacement used
+    /// to drop on the floor. Fixed capacity, no allocation, `Copy`: it rides the refusal record.
+    #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+    pub(crate) struct ArtifactStoreRefusalCode {
+        bytes: [u8; 96],
+        len: u8,
+    }
+
+    impl ArtifactStoreRefusalCode {
+        const EMPTY: Self = Self { bytes: [0; 96], len: 0 };
+
+        fn from_page(page: &[u8]) -> Self {
+            let mut bytes = [0u8; 96];
+            let len = page.len().min(bytes.len());
+            bytes[..len].copy_from_slice(&page[..len]);
+            Self { bytes, len: len as u8 }
+        }
+
+        fn text(&self) -> &str {
+            std::str::from_utf8(&self.bytes[..self.len as usize]).unwrap_or("<non-utf8 refusal page>")
+        }
+    }
+
+    #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+    pub(crate) enum ArtifactStoreReplacementRefusal {
+        Invariant { leg: ArtifactStoreReplacementLeg, detail: &'static str },
+        InitializerAdmissionRejected,
+        InitializerFailed(ArtifactStoreRefusalCode),
+        Cancelled,
+        MemberOpenRejected { ordinal: usize, diagnostic: store::MemberOpenDiagnostic },
+        MemberIdentityMismatch { ordinal: usize, expected: usize },
+        MemberFactoryRefused { ordinal: usize },
+        ClosureRejected { diagnostic: store::OwnedDocumentClosureDiagnostic },
+        ClosureMemberCount { members: usize, children: usize },
+        PublicationGuard(ArtifactStoreReplacementPublicationGuard),
+        PublicationAuthorityRejected,
+    }
+
+    /// @emoji 🦵️ The named leg a refusal belongs to — the same three the host message lists.
+    #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+    pub(crate) enum ArtifactStoreReplacementLeg {
+        Initializer,
+        Members,
+        Closure,
+        CandidateViews,
+        RetainedPublication,
+    }
+
+    impl ArtifactStoreReplacementLeg {
+        fn slug(self) -> &'static str {
+            match self {
+                Self::Initializer => "initializer",
+                Self::Members => "members",
+                Self::Closure => "closure",
+                Self::CandidateViews => "candidate-views",
+                Self::RetainedPublication => "retained-publication",
+            }
+        }
+    }
+
+    /// @emoji 🚦️ Every input the `CandidateReady` publication guard reads, as it read them.
+    /// A bare "guard rejected" is unactionable; which of the seven conditions tripped is the answer.
+    #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+    pub(crate) struct ArtifactStoreReplacementPublicationGuard {
+        pub(crate) closing: bool,
+        pub(crate) cancelled: bool,
+        pub(crate) parent_generation: u64,
+        pub(crate) live_generation: u64,
+        pub(crate) base_child_generation: u64,
+        pub(crate) child_generation: u64,
+        pub(crate) complete_candidate: bool,
+        pub(crate) retirement_admitted: bool,
+        pub(crate) next_generation: bool,
+    }
+
+    impl ArtifactStoreReplacementRefusal {
+        fn leg(self) -> ArtifactStoreReplacementLeg {
+            match self {
+                Self::Invariant { leg, .. } => leg,
+                Self::InitializerAdmissionRejected | Self::InitializerFailed(_) => ArtifactStoreReplacementLeg::Initializer,
+                Self::Cancelled | Self::MemberOpenRejected { .. } | Self::MemberIdentityMismatch { .. } | Self::MemberFactoryRefused { .. } => ArtifactStoreReplacementLeg::Members,
+                Self::ClosureRejected { .. } | Self::ClosureMemberCount { .. } => ArtifactStoreReplacementLeg::Closure,
+                Self::PublicationGuard(_) | Self::PublicationAuthorityRejected => ArtifactStoreReplacementLeg::RetainedPublication,
+            }
+        }
+
+        fn slug(self) -> &'static str {
+            match self {
+                Self::Invariant { .. } => "invariant",
+                Self::InitializerAdmissionRejected => "initializer-admission-rejected",
+                Self::InitializerFailed(_) => "initializer-failed",
+                Self::Cancelled => "cancelled",
+                Self::MemberOpenRejected { .. } => "member-open-rejected",
+                Self::MemberIdentityMismatch { .. } => "member-identity-mismatch",
+                Self::MemberFactoryRefused { .. } => "member-factory-refused",
+                Self::ClosureRejected { .. } => "closure-rejected",
+                Self::ClosureMemberCount { .. } => "closure-member-count",
+                Self::PublicationGuard(_) => "publication-guard",
+                Self::PublicationAuthorityRejected => "publication-authority-rejected",
+            }
+        }
+
+        fn detail(self) -> String {
+            match self {
+                Self::Invariant { detail, .. } => detail.to_string(),
+                Self::InitializerAdmissionRejected => "the app's document-store initialization job was refused admission to the interactive worker lane".to_string(),
+                Self::InitializerFailed(code) => format!("the app's document-store initialization job faulted or was cancelled before it produced a candidate, reporting `{}`; its `build_document_store_initialization_job` refused this envelope, or the envelope's schema/id/history failed that job's own validation", code.text()),
+                Self::Cancelled => "the replacement was cancelled before its member set reached candidate readiness".to_string(),
+                Self::MemberOpenRejected { ordinal, diagnostic } => format!("owned member {ordinal} was rejected by its typed open ({diagnostic:?})"),
+                Self::MemberIdentityMismatch { ordinal, expected } => format!("owned member open returned ordinal {ordinal} while the sealed set expected {expected}, or its artifact/owner reference changed across the open"),
+                Self::MemberFactoryRefused { ordinal } => format!("the app's member factory refused the admitted open request for ordinal {ordinal}"),
+                Self::ClosureRejected { diagnostic } => format!("recursive ownership closure validation rejected the candidate ({diagnostic:?})"),
+                Self::ClosureMemberCount { members, children } => format!("closure validation reached {members} members while the candidate registry owns {children}; the archive's member roster is not the parent's exact owned closure"),
+                Self::PublicationGuard(guard) => format!(
+                    "the retained publication guard refused the ready candidate: closing={} cancelled={} parent-generation={} live-generation={} base-child-generation={} child-generation={} complete-candidate={} retirement-admitted={} next-generation={}",
+                    guard.closing,
+                    guard.cancelled,
+                    guard.parent_generation,
+                    guard.live_generation,
+                    guard.base_child_generation,
+                    guard.child_generation,
+                    guard.complete_candidate,
+                    guard.retirement_admitted,
+                    guard.next_generation,
+                ),
+                Self::PublicationAuthorityRejected => "the app's `validate_document_store_publication` refused the exact candidate".to_string(),
+            }
+        }
+
+        /// @emoji 🧯️ The typed fault the host reports instead of the one-sentence collapse.
+        pub(crate) fn into_fault(self) -> Fault {
+            let leg = self.leg();
+            Fault::new(
+                FaultOrigin::Plugin,
+                FaultCode::new(format!("plugin.internal.document-archive-replacement.{}", self.slug())),
+                format!("document archive replacement failed its {} leg: {}", leg.slug(), self.detail()),
+            )
+        }
+    }
+
     pub(crate) struct ActiveArtifactStoreReplacement<P, Mutation, M>
     where
         P: Clone + protocol::ToValue + protocol::FromValue + ArtifactPack + semio_framework_schema::ArtifactCompositionFields + Send + Sync + 'static,
@@ -19718,7 +19921,7 @@ pub mod app {
         expires_at_us: u64,
         closure: Option<store::OwnedDocumentClosure>,
         pub(crate) committed: bool,
-        faulted: bool,
+        refusal: Option<ArtifactStoreReplacementRefusal>,
         pub(crate) state: ActiveArtifactStoreReplacementState,
     }
 
@@ -19773,14 +19976,27 @@ pub mod app {
                 expires_at_us: u64::MAX,
                 closure: None,
                 committed: false,
-                faulted: false,
+                refusal: None,
                 state: ActiveArtifactStoreReplacementState::Initializing,
             }
         }
 
+        /// 🧭️ Records the FIRST leg that refused and moves the replacement onto its retirement path.
+        /// The first one is kept because every later state transition is a consequence of it.
+        fn refuse(&mut self, refusal: ArtifactStoreReplacementRefusal) {
+            self.refusal.get_or_insert(refusal);
+            self.state = ActiveArtifactStoreReplacementState::RetiringRejectedMembers;
+        }
+
+        /// 🧯️ Records a broken internal invariant and hands back that site's own unchanged fault, so
+        /// the direct `Err` channel keeps its exact message while the archive's terminal report gains
+        /// the leg that produced it.
+        fn refuse_invariant(&mut self, leg: ArtifactStoreReplacementLeg, detail: &'static str) -> Fault {
+            self.refuse(ArtifactStoreReplacementRefusal::Invariant { leg, detail });
+            plugin_sdk_fault(detail)
+        }
+
         fn request_cancel(&self) {
-            #[cfg(test)]
-            eprintln!("[DEBUG] recursive replacement diagnostic: cancellation requested for operation {} generation {} in state {:?}", self.operation.0, self.generation.0, self.state);
             self.cancel.cancel_now();
             self.cancel_signal.store(true, std::sync::atomic::Ordering::Release);
         }
@@ -19814,8 +20030,7 @@ pub mod app {
             }
             let registry = self.member_ingress.as_mut().ok_or_else(|| plugin_sdk_fault("owned document member ingress registry has not been initialized"))?;
             if let Err(fault) = registry.seal() {
-                self.faulted = true;
-                self.state = ActiveArtifactStoreReplacementState::RetiringRejectedMembers;
+                self.refuse(ArtifactStoreReplacementRefusal::Invariant { leg: ArtifactStoreReplacementLeg::Members, detail: "an owned-member or candidate-view authority returned its own exact refusal" });
                 return Err(fault);
             }
             self.state = ActiveArtifactStoreReplacementState::OpeningMembers;
@@ -19828,9 +20043,7 @@ pub mod app {
             }
             if self.active_member_open.is_some() {
                 if self.active_member_ingress.as_ref().is_none_or(|ingress| !ingress.has_identity()) {
-                    self.faulted = true;
-                    self.state = ActiveArtifactStoreReplacementState::RetiringRejectedMembers;
-                    return Err(plugin_sdk_fault("active member open lost its exact retained ingress identity"));
+                    return Err(self.refuse_invariant(ArtifactStoreReplacementLeg::Members, "active member open lost its exact retained ingress identity"));
                 }
                 let mut sequence = self.member_step_sequence;
                 let fuel = maximum_items.max(maximum_bytes.min(store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES)) as u64;
@@ -19847,45 +20060,32 @@ pub mod app {
                 return match step {
                     store::MemberOpenStep::Pending(_) => Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 }),
                     store::MemberOpenStep::Rejected(diagnostic) => {
-                        #[cfg(test)]
-                        eprintln!(
-                            "[DEBUG] recursive replacement diagnostic: member open rejected {diagnostic:?} at ordinal {} cancel={}",
-                            self.next_member_ordinal,
-                            self.cancel.is_cancelled_now(),
-                        );
-                        self.faulted = true;
+                        let ordinal = self.next_member_ordinal;
+                        self.refuse(if self.cancel.is_cancelled_now() { ArtifactStoreReplacementRefusal::Cancelled } else { ArtifactStoreReplacementRefusal::MemberOpenRejected { ordinal, diagnostic } });
                         self.state = ActiveArtifactStoreReplacementState::ClosingRejectedMember;
                         Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
                     }
                     store::MemberOpenStep::Ready(member) => {
                         if !store::MemberOpenOperation::terminal_is_empty(self.active_member_open.as_ref().expect("ready member open remains retained")) {
                             *self.retiring_child = self.active_member_ingress.as_mut().and_then(OwnedDocumentMemberIngress::take_identity).map(|(_, reference, owner)| ChildMemberRetirement::new(ChildMemberEntry { reference, owner, member }));
-                            self.faulted = true;
-                            self.state = ActiveArtifactStoreReplacementState::RetiringRejectedMembers;
-                            return Err(plugin_sdk_fault("ready member open retained nonterminal ownership"));
+                            return Err(self.refuse_invariant(ArtifactStoreReplacementLeg::Members, "ready member open retained nonterminal ownership"));
                         }
                         drop(self.active_member_open.take());
                         let (ordinal, reference, owner) = self.active_member_ingress.as_mut().and_then(OwnedDocumentMemberIngress::take_identity).expect("active member identity was verified before its exact open step");
                         if ordinal != self.next_member_ordinal || member.artifact_ref().as_ref() != Some(&reference) || member.owner_ref().as_ref() != Some(&owner) {
-                            #[cfg(test)]
-                            eprintln!("[DEBUG] recursive replacement diagnostic: opened member identity differed at ordinal {ordinal}, expected {}", self.next_member_ordinal);
                             *self.retiring_child = Some(ChildMemberRetirement::new(ChildMemberEntry { reference, owner, member }));
-                            self.faulted = true;
-                            self.state = ActiveArtifactStoreReplacementState::RetiringRejectedMembers;
+                            self.refuse(ArtifactStoreReplacementRefusal::MemberIdentityMismatch { ordinal, expected: self.next_member_ordinal });
                             return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
                         }
                         let Some(candidate) = self.candidate_children.as_mut() else {
                             *self.retiring_child = Some(ChildMemberRetirement::new(ChildMemberEntry { reference, owner, member }));
-                            self.faulted = true;
-                            self.state = ActiveArtifactStoreReplacementState::RetiringRejectedMembers;
-                            return Err(plugin_sdk_fault("member candidate registry was lost before exact admission"));
+                            return Err(self.refuse_invariant(ArtifactStoreReplacementLeg::Members, "member candidate registry was lost before exact admission"));
                         };
                         let admission = match candidate.admit_identity(&owner.slot, &reference.artifact_id) {
                             Ok(admission) => admission,
                             Err(fault) => {
                                 *self.retiring_child = Some(ChildMemberRetirement::new(ChildMemberEntry { reference, owner, member }));
-                                self.faulted = true;
-                                self.state = ActiveArtifactStoreReplacementState::RetiringRejectedMembers;
+                                self.refuse(ArtifactStoreReplacementRefusal::Invariant { leg: ArtifactStoreReplacementLeg::Members, detail: "an owned-member or candidate-view authority returned its own exact refusal" });
                                 return Err(fault);
                             }
                         };
@@ -19893,9 +20093,7 @@ pub mod app {
                             let cancelled = candidate.cancel_admission(&admission);
                             debug_assert!(cancelled, "candidate admission remains exclusive until insertion");
                             *self.retiring_child = Some(ChildMemberRetirement::new(ChildMemberEntry { reference, owner, member }));
-                            self.faulted = true;
-                            self.state = ActiveArtifactStoreReplacementState::RetiringRejectedMembers;
-                            return Err(plugin_sdk_fault("owned document candidate generation exhausted"));
+                            return Err(self.refuse_invariant(ArtifactStoreReplacementLeg::Members, "owned document candidate generation exhausted"));
                         };
                         candidate.insert_admitted(admission, reference, owner, member);
                         let ingress = self.active_member_ingress.take().expect("ready member ingress remains retained");
@@ -19910,15 +20108,11 @@ pub mod app {
                 };
             }
             let Some(registry) = self.member_ingress.as_mut() else {
-                self.faulted = true;
-                self.state = ActiveArtifactStoreReplacementState::RetiringRejectedMembers;
-                return Err(plugin_sdk_fault("opening member set lost its exact ingress registry"));
+                return Err(self.refuse_invariant(ArtifactStoreReplacementLeg::Members, "opening member set lost its exact ingress registry"));
             };
             if self.next_member_ordinal == registry.expected {
                 if !registry.sealed || !registry.terminal_is_empty() {
-                    self.faulted = true;
-                    self.state = ActiveArtifactStoreReplacementState::RetiringRejectedMembers;
-                    return Err(plugin_sdk_fault("opened member set did not consume every sealed ordinal"));
+                    return Err(self.refuse_invariant(ArtifactStoreReplacementLeg::Members, "opened member set did not consume every sealed ordinal"));
                 }
                 let registry = self.member_ingress.take().expect("terminal member ingress registry remains retained");
                 drop(registry);
@@ -19927,15 +20121,11 @@ pub mod app {
                 return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
             }
             let Some(ingress) = registry.take(self.next_member_ordinal) else {
-                self.faulted = true;
-                self.state = ActiveArtifactStoreReplacementState::RetiringRejectedMembers;
-                return Err(plugin_sdk_fault("sealed member set lost an exact ordinal before open"));
+                return Err(self.refuse_invariant(ArtifactStoreReplacementLeg::Members, "sealed member set lost an exact ordinal before open"));
             };
             *self.active_member_ingress = Some(ingress);
             if self.active_member_ingress.as_ref().is_none_or(|ingress| !ingress.has_request()) {
-                self.faulted = true;
-                self.state = ActiveArtifactStoreReplacementState::RetiringRejectedMembers;
-                return Err(plugin_sdk_fault("member ingress lost its exact retained open request"));
+                return Err(self.refuse_invariant(ArtifactStoreReplacementLeg::Members, "member ingress lost its exact retained open request"));
             }
             let request = self.active_member_ingress.as_mut().and_then(OwnedDocumentMemberIngress::take_request).expect("active member request was verified before exact factory handoff");
             match M::begin_open(request) {
@@ -19944,11 +20134,9 @@ pub mod app {
                     Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
                 }
                 Err(rejected) => {
-                    #[cfg(test)]
-                    eprintln!("[DEBUG] recursive replacement diagnostic: member factory refused one admitted request");
+                    let ordinal = self.next_member_ordinal;
                     self.active_member_ingress.as_mut().expect("rejected member ingress remains retained").return_request(rejected.request);
-                    self.faulted = true;
-                    self.state = ActiveArtifactStoreReplacementState::RetiringRejectedMembers;
+                    self.refuse(ArtifactStoreReplacementRefusal::MemberFactoryRefused { ordinal });
                     Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
                 }
             }
@@ -19965,20 +20153,14 @@ pub mod app {
                 return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
             }
             let Some(candidate) = self.retained_store.as_ref() else {
-                self.faulted = true;
-                self.state = ActiveArtifactStoreReplacementState::RetiringRejectedMembers;
-                return Err(plugin_sdk_fault("closure validation lost its retained parent candidate"));
+                return Err(self.refuse_invariant(ArtifactStoreReplacementLeg::Closure, "closure validation lost its retained parent candidate"));
             };
             let Some(dialect) = candidate.envelope().dialect.clone() else {
-                self.faulted = true;
-                self.state = ActiveArtifactStoreReplacementState::RetiringRejectedMembers;
-                return Err(plugin_sdk_fault("closure validation requires the candidate parent's exact dialect"));
+                return Err(self.refuse_invariant(ArtifactStoreReplacementLeg::Closure, "closure validation requires the candidate parent's exact dialect"));
             };
             let root_reference = ArtifactRef { artifact_id: candidate.envelope().id.clone(), dialect };
             let Some(children) = self.candidate_children.as_ref() else {
-                self.faulted = true;
-                self.state = ActiveArtifactStoreReplacementState::RetiringRejectedMembers;
-                return Err(plugin_sdk_fault("closure validation lost its retained member registry"));
+                return Err(self.refuse_invariant(ArtifactStoreReplacementLeg::Closure, "closure validation lost its retained member registry"));
             };
             let source = DocumentClosureSourceView::new(self.candidate_source_generation, &root_reference, candidate.snapshot_ref(), children);
             let mut sequence = self.member_step_sequence;
@@ -19991,33 +20173,26 @@ pub mod app {
                 &mut sequence,
             );
             let Some(closure) = self.closure.as_mut() else {
-                self.faulted = true;
-                self.state = ActiveArtifactStoreReplacementState::RetiringRejectedMembers;
-                return Err(plugin_sdk_fault("closure validation lost its fixed cursor"));
+                return Err(self.refuse_invariant(ArtifactStoreReplacementLeg::Closure, "closure validation lost its fixed cursor"));
             };
             let step = closure.step(&source, &mut cx);
+            let children_len = children.len();
             self.member_step_sequence = sequence;
             match step {
                 store::OwnedDocumentClosureStep::Pending(_) => Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 }),
-                store::OwnedDocumentClosureStep::Complete { members } if members == children.len() => {
+                store::OwnedDocumentClosureStep::Complete { members } if members == children_len => {
                     self.closure = None;
                     self.state = ActiveArtifactStoreReplacementState::PreparingCandidateViews;
                     Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
                 }
                 store::OwnedDocumentClosureStep::Complete { members } => {
-                    #[cfg(test)]
-                    eprintln!("[DEBUG] recursive replacement diagnostic: closure completed with {members} members while registry owns {}", children.len());
                     self.closure = None;
-                    self.faulted = true;
-                    self.state = ActiveArtifactStoreReplacementState::RetiringRejectedMembers;
+                    self.refuse(ArtifactStoreReplacementRefusal::ClosureMemberCount { members, children: children_len });
                     Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
                 }
                 store::OwnedDocumentClosureStep::Rejected(diagnostic) => {
-                    #[cfg(test)]
-                    eprintln!("[DEBUG] recursive replacement diagnostic: closure rejected {diagnostic:?}");
                     self.closure = None;
-                    self.faulted = true;
-                    self.state = ActiveArtifactStoreReplacementState::RetiringRejectedMembers;
+                    self.refuse(ArtifactStoreReplacementRefusal::ClosureRejected { diagnostic });
                     Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
                 }
             }
@@ -20028,21 +20203,16 @@ pub mod app {
                 return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
             }
             let Some(children) = self.candidate_children.as_ref() else {
-                self.faulted = true;
-                self.state = ActiveArtifactStoreReplacementState::RetiringRejectedMembers;
-                return Err(plugin_sdk_fault("candidate view preparation lost its exact member registry"));
+                return Err(self.refuse_invariant(ArtifactStoreReplacementLeg::CandidateViews, "candidate view preparation lost its exact member registry"));
             };
             if self.candidate_source_generation != children.len() as u64 {
-                self.faulted = true;
-                self.state = ActiveArtifactStoreReplacementState::RetiringRejectedMembers;
-                return Err(plugin_sdk_fault("candidate member generation changed after closure validation"));
+                return Err(self.refuse_invariant(ArtifactStoreReplacementLeg::CandidateViews, "candidate member generation changed after closure validation"));
             }
             if self.candidate_composition.is_none() {
                 let composition = match CompositionCoordinator::try_for_owned_closure(children.len()) {
                     Ok(composition) => composition,
                     Err(error) => {
-                        self.faulted = true;
-                        self.state = ActiveArtifactStoreReplacementState::RetiringRejectedMembers;
+                        self.refuse(ArtifactStoreReplacementRefusal::Invariant { leg: ArtifactStoreReplacementLeg::CandidateViews, detail: "an app-owned candidate-view owner refused its exact step" });
                         return Err(plugin_sdk_fault(error));
                     }
                 };
@@ -20054,44 +20224,33 @@ pub mod app {
                 return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
             }
             let Some(entry) = children.entry_by_ordinal(self.view_member_ordinal) else {
-                self.faulted = true;
-                self.state = ActiveArtifactStoreReplacementState::RetiringRejectedMembers;
-                return Err(plugin_sdk_fault("candidate view preparation lost its exact member ordinal"));
+                return Err(self.refuse_invariant(ArtifactStoreReplacementLeg::CandidateViews, "candidate view preparation lost its exact member ordinal"));
             };
             if entry.member.artifact_ref().as_ref() != Some(&entry.reference) || entry.member.owner_ref().as_ref() != Some(&entry.owner) {
-                self.faulted = true;
-                self.state = ActiveArtifactStoreReplacementState::RetiringRejectedMembers;
-                return Err(plugin_sdk_fault("candidate member identity changed after closure validation"));
+                return Err(self.refuse_invariant(ArtifactStoreReplacementLeg::CandidateViews, "candidate member identity changed after closure validation"));
             }
             let Some(content) = self.candidate_content.as_ref() else {
-                self.faulted = true;
-                self.state = ActiveArtifactStoreReplacementState::RetiringRejectedMembers;
-                return Err(plugin_sdk_fault("candidate view preparation lost its immutable content root"));
+                return Err(self.refuse_invariant(ArtifactStoreReplacementLeg::CandidateViews, "candidate view preparation lost its immutable content root"));
             };
             let index = match content.admit_member(&entry.owner.slot, &entry.reference.artifact_id) {
                 Ok(index) => index,
                 Err(fault) => {
-                    self.faulted = true;
-                    self.state = ActiveArtifactStoreReplacementState::RetiringRejectedMembers;
+                    self.refuse(ArtifactStoreReplacementRefusal::Invariant { leg: ArtifactStoreReplacementLeg::CandidateViews, detail: "an owned-member or candidate-view authority returned its own exact refusal" });
                     return Err(fault);
                 }
             };
             let Some(composition) = self.candidate_composition.as_mut() else {
-                self.faulted = true;
-                self.state = ActiveArtifactStoreReplacementState::RetiringRejectedMembers;
-                return Err(plugin_sdk_fault("candidate view preparation lost its coordinator"));
+                return Err(self.refuse_invariant(ArtifactStoreReplacementLeg::CandidateViews, "candidate view preparation lost its coordinator"));
             };
             if let Err(error) = composition.insert_validated_owned(&entry.owner.parent.artifact_id, &entry.owner.slot, &entry.reference.artifact_id) {
-                self.faulted = true;
-                self.state = ActiveArtifactStoreReplacementState::RetiringRejectedMembers;
+                self.refuse(ArtifactStoreReplacementRefusal::Invariant { leg: ArtifactStoreReplacementLeg::CandidateViews, detail: "an app-owned candidate-view owner refused its exact step" });
                 return Err(plugin_sdk_fault(error));
             }
             let revision = entry.member.content_revision_now();
             let snapshot = match entry.member.snapshot_read_erased_now() {
                 Ok(snapshot) => snapshot,
                 Err(error) => {
-                    self.faulted = true;
-                    self.state = ActiveArtifactStoreReplacementState::RetiringRejectedMembers;
+                    self.refuse(ArtifactStoreReplacementRefusal::Invariant { leg: ArtifactStoreReplacementLeg::CandidateViews, detail: "an app-owned candidate-view owner refused its exact step" });
                     return Err(plugin_sdk_fault(error));
                 }
             };
@@ -20254,8 +20413,7 @@ pub mod app {
                     semio_framework_job::InteractiveJobCloseStep::Blocked => Ok(PluginCloseStep::Blocked { reason: "store initializer admission rejection is temporarily blocked" }),
                     semio_framework_job::InteractiveJobCloseStep::Complete if rejected.terminal_is_empty() => {
                         drop(self.session_rejected.take());
-                        self.faulted = true;
-                        self.state = ActiveArtifactStoreReplacementState::RetiringRejectedMembers;
+                        self.refuse(ArtifactStoreReplacementRefusal::InitializerAdmissionRejected);
                         Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
                     }
                     semio_framework_job::InteractiveJobCloseStep::Complete => {
@@ -20302,12 +20460,13 @@ pub mod app {
             let session = self.session.as_mut().ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-store.initializer-session-missing"), "store initializer lost its retained session before terminal recovery"))?;
             match session.pump_one_for_interactive_turn(pool, semio_framework_async::Lane::Interactive) {
                 Ok(semio_framework_job::WorkerJobPoll::Outcome | semio_framework_job::WorkerJobPoll::Terminal) => {
-                    let terminal_kind = session
+                    let (terminal_kind, initializer_code) = session
                         .checked_out_outcome()
                         .map(|outcome| match outcome {
-                            semio_framework_job::StepOutcome::Complete(_) => 1,
-                            semio_framework_job::StepOutcome::Cancelled | semio_framework_job::StepOutcome::Fault(_) => 2,
-                            _ => 0,
+                            semio_framework_job::StepOutcome::Complete(_) => (1, ArtifactStoreRefusalCode::EMPTY),
+                            semio_framework_job::StepOutcome::Cancelled => (2, ArtifactStoreRefusalCode::from_page(b"initializer-cancelled")),
+                            semio_framework_job::StepOutcome::Fault(fault) => (2, ArtifactStoreRefusalCode::from_page(fault.detail.page(0).unwrap_or(b"initializer-faulted-without-detail"))),
+                            _ => (0, ArtifactStoreRefusalCode::EMPTY),
                         })
                         .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-store.initializer-outcome-missing"), "store initializer checkout lost its exact outcome"))?;
                     if terminal_kind == 1 {
@@ -20322,7 +20481,7 @@ pub mod app {
                         if !released {
                             return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-store.initializer-failure-retirement"), "failed store initializer did not reach terminal-empty authority"));
                         }
-                        self.faulted = true;
+                        self.refusal.get_or_insert(ArtifactStoreReplacementRefusal::InitializerFailed(initializer_code));
                         self.terminal_target = Some(ActiveArtifactStoreReplacementState::RetiringRejectedMembers);
                     }
                     *self.retained_outcome = session.take_checked_out_outcome();
@@ -21200,6 +21359,42 @@ pub mod app {
             let identity = ArtifactRef { artifact_id: envelope.id.clone(), dialect: A::DIALECT.into() };
             let spr = resolve_ready(store::stamp_document_spr_identity(&spr, &identity.artifact_id, A::DOCUMENT_SCHEMA, &identity.dialect, envelope.owner.as_ref())).map_err(|error| plugin_sdk_fault(format!("load-document identity stamp failed: {error}")))?;
             Ok(Effect::LoadDocument { pack, spr })
+        }
+
+        /// 🚪️ EVERY effect leaving this instance passes the stamp, not just the mounted typed-operation
+        /// ladder's. An app mints its replacement log with `store::empty_document_spr`, which carries no
+        /// composition section at all, and the archive loader's parent hydration refuses such a log
+        /// outright (`MemberOpenDiagnostic::Identity`, `💧️hydration/🦀️.rs` `Phase::Begin`) before any of
+        /// the three replacement legs even runs. The stamp is therefore not an optimisation on one lane,
+        /// it is the whole contract between `Effect::LoadDocument` and `load_document_archive` — and the
+        /// plain dispatch lane and the refresh poll both used to skip it, which is why every
+        /// `setActiveExample` whose verb is not a mounted retained tool died in the browser.
+        fn stamp_load_document_effects(&self, effects: Vec<Effect>) -> Result<Vec<Effect>, Fault> {
+            if !effects.iter().any(|effect| matches!(effect, Effect::LoadDocument { .. })) {
+                return Ok(effects);
+            }
+            effects.into_iter().map(|effect| self.stamp_load_document_identity(effect)).collect()
+        }
+
+        /// 🪪️ The refresh poll's twin — that lane has no error channel, so an undecodable log rides on
+        /// unchanged and the archive loader reports its own identity refusal, rather than the effect
+        /// disappearing without a word.
+        fn stamp_polled_load_document_effects(&self, effects: Vec<Effect>) -> Vec<Effect> {
+            if !effects.iter().any(|effect| matches!(effect, Effect::LoadDocument { .. })) {
+                return effects;
+            }
+            let envelope = self.store.envelope();
+            let dialect: ArtifactDialect = A::DIALECT.into();
+            effects
+                .into_iter()
+                .map(|effect| match effect {
+                    Effect::LoadDocument { pack, spr } => {
+                        let stamped = resolve_ready(store::stamp_document_spr_identity(&spr, &envelope.id, A::DOCUMENT_SCHEMA, &dialect, envelope.owner.as_ref())).ok();
+                        Effect::LoadDocument { pack, spr: stamped.unwrap_or(spr) }
+                    }
+                    other => other,
+                })
+                .collect()
         }
     }
 
@@ -22658,10 +22853,21 @@ pub mod app {
                 | ActiveArtifactStoreReplacementState::RetiringCommittedMembers
                 | ActiveArtifactStoreReplacementState::RetiringCommittedStore
                 | ActiveArtifactStoreReplacementState::RetiringRejectedCandidate => ArtifactEnvelopeDecodeOperationPoll::Progress,
-                ActiveArtifactStoreReplacementState::Complete if active.committed && !active.faulted => ArtifactEnvelopeDecodeOperationPoll::Ready,
+                ActiveArtifactStoreReplacementState::Complete if active.committed && active.refusal.is_none() => ArtifactEnvelopeDecodeOperationPoll::Ready,
                 ActiveArtifactStoreReplacementState::Complete if active.cancel.is_cancelled_now() => ArtifactEnvelopeDecodeOperationPoll::Cancelled,
                 ActiveArtifactStoreReplacementState::Complete => ArtifactEnvelopeDecodeOperationPoll::Fault,
             })
+        }
+
+        /// 🧭️ The exact leg that refused this replacement, minted as a typed fault. Read BEFORE
+        /// {@link acknowledge_artifact_store_replacement} retires the operation — after that the
+        /// evidence is gone and only the generic collapse remains.
+        pub fn artifact_store_replacement_refusal(&self, handle: ArtifactEnvelopeDecodeOperationHandle) -> Option<Fault> {
+            self.store_replacement_jobs
+                .get(handle.operation.0)
+                .filter(|active| active.operation == handle.operation && active.generation == handle.generation)
+                .and_then(|active| active.refusal)
+                .map(ArtifactStoreReplacementRefusal::into_fault)
         }
 
         pub fn acknowledge_artifact_store_replacement(&mut self, handle: ArtifactEnvelopeDecodeOperationHandle) -> Result<bool, Fault> {
@@ -22717,8 +22923,7 @@ pub mod app {
                 && self.store_replacement_jobs.get(operation_id).is_some_and(|active| active.cancel.is_cancelled_now())
             {
                 let active = self.store_replacement_jobs.get_mut(operation_id).ok_or_else(|| plugin_sdk_fault("cancelled owned document replacement changed before retained member retirement"))?;
-                active.faulted = true;
-                active.state = ActiveArtifactStoreReplacementState::RetiringRejectedMembers;
+                active.refuse(ArtifactStoreReplacementRefusal::Cancelled);
                 return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
             }
             if state == ActiveArtifactStoreReplacementState::AwaitingMembers {
@@ -22787,28 +22992,24 @@ pub mod app {
                     || !replacement_content_retirements.allocation_admitted
                     || next_content_generation.is_none()
                 {
-                    #[cfg(test)]
-                    eprintln!(
-                        "[DEBUG] recursive replacement diagnostic: publication guard rejected closing={closing} cancelled={} parent-generation={} live-generation={} child-generation={} base-child-generation={} complete={complete_candidate} retirement-admitted={} next-generation={}",
-                        active.cancel.is_cancelled_now(),
-                        active.generation.0,
-                        live_generation.0,
-                        self.child_content_generation,
-                        active.base_child_content_generation,
-                        replacement_content_retirements.allocation_admitted,
-                        next_content_generation.is_some(),
-                    );
+                    let guard = ArtifactStoreReplacementPublicationGuard {
+                        closing,
+                        cancelled: active.cancel.is_cancelled_now(),
+                        parent_generation: active.generation.0,
+                        live_generation: live_generation.0,
+                        base_child_generation: active.base_child_content_generation,
+                        child_generation: self.child_content_generation,
+                        complete_candidate,
+                        retirement_admitted: replacement_content_retirements.allocation_admitted,
+                        next_generation: next_content_generation.is_some(),
+                    };
                     *active.retained_disposer = Some(disposer);
-                    active.faulted = true;
-                    active.state = ActiveArtifactStoreReplacementState::RetiringRejectedMembers;
+                    active.refuse(ArtifactStoreReplacementRefusal::PublicationGuard(guard));
                     return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
                 }
                 if A::validate_document_store_publication(active.operation, active.generation, live_generation).is_err() {
-                    #[cfg(test)]
-                    eprintln!("[DEBUG] recursive replacement diagnostic: app publication authority rejected the exact candidate");
                     *active.retained_disposer = Some(disposer);
-                    active.faulted = true;
-                    active.state = ActiveArtifactStoreReplacementState::RetiringRejectedMembers;
+                    active.refuse(ArtifactStoreReplacementRefusal::PublicationAuthorityRejected);
                     return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
                 }
                 let window_reset = self.prepare_document_window_reset()?;
@@ -23255,12 +23456,13 @@ pub mod app {
                         ArtifactEnvelopeDecodeOperationPoll::Cancelled => ActiveDocumentArchiveLoadState::Cancelled,
                         ArtifactEnvelopeDecodeOperationPoll::Fault => ActiveDocumentArchiveLoadState::Fault,
                     };
+                    let refusal = self.artifact_store_replacement_refusal(handle);
                     if !self.acknowledge_artifact_store_replacement(handle)? {
                         return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
                     }
                     active.replacement = None;
                     if target == ActiveDocumentArchiveLoadState::Fault {
-                        active.fault = dsl::encode_fault_bytes(&plugin_sdk_fault("document archive replacement failed closure, authority, or retained publication validation"));
+                        active.fault = dsl::encode_fault_bytes(&refusal.unwrap_or_else(|| plugin_sdk_fault("document archive replacement failed closure, authority, or retained publication validation before it recorded a leg")));
                     }
                     active.request_terminal(target);
                     self.drive_document_archive_terminal(active, maximum_items, maximum_bytes)
@@ -24434,6 +24636,7 @@ pub mod app {
                 #[cfg(test)]
                 tasks,
             } = emit;
+            let effects = self.stamp_load_document_effects(effects)?;
             debug_assert!(extension_invocations.is_empty(), "mint_extension_invocations drains the lane before destructuring");
 
             #[cfg(test)]
@@ -30381,6 +30584,7 @@ pub mod app {
             // it re-arms an already-pending chain once per refresh
             // (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
             let instance_operation_owner = self.instance_operation_owner.clone();
+            let effects = {
             let VcsArtifactApp { app: _, cache, child_content_root, tool_runs, .. } = self;
             let (_, snapshot, config, history) = cache.as_ref().expect("cache refreshed above");
             // ⏯️ The poll sees the LIVE RUN, exactly as the four render and measure passes above do.
@@ -30396,6 +30600,8 @@ pub mod app {
             let doc = ArtifactView::with_render_context(snapshot.as_ref(), history.as_ref(), ChildContentView::clone(child_content_root), render_operation, snapshot_read).await.with_tool_run(tool_runs.view_for(view.and_then(|view| view.window_id.as_deref())));
             let cfg = ConfigView { snapshot: config.as_ref(), window: None };
             A::pending_effects(&instance_operation_owner, &doc, &cfg, view).await
+            };
+            self.stamp_polled_load_document_effects(effects)
         }
 
         /// 🗂️ Every context menu is organized (D2 of the grouped-context-menu mechanism design) at this
@@ -38091,7 +38297,7 @@ pub mod plugin_runtime {
                 }
 
                 async fn stage_cold_pair_page(
-                    page: $crate::component::wasip2::exports::semio::framework::reactor::ColdArtifactPairPage,
+                    page: $crate::component::wasip2::exports::semio::framework::reactor::ColdDocumentPairPage,
                 ) -> Result<(), $crate::component::wasip2::semio::framework::types::PluginError> {
                     $ensure();
                     $crate::app::resolve_ready($crate::reactor::stage_cold_pair_page(page)).map_err(|fault| $crate::component::wasip2::plugin_error(&fault))

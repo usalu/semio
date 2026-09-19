@@ -18,6 +18,7 @@ import { type ReactElement, useEffect, useRef, useState } from "react";
 import { Button, Textarea, useLabel } from "@semio-tech/ui-react";
 import { AgentPresence, type AgentPresenceProps } from "../🚦️AgentPresence/🟦️.tsx";
 import { agentUiLabel, type AgentConversationEntry } from "../🔗️AgentBridge/🟦️.tsx";
+import { type ApprovalDecision } from "../../../../🌉️mcp/🧵️bridge/🟦️.ts";
 // #endregion 🔌️Adapters
 
 //#region 🔖️AgentChatPanel
@@ -26,6 +27,18 @@ export type AgentChatPanelProps = AgentPresenceProps & {
   readonly conversation: readonly AgentConversationEntry[];
   /** 📤️ `useAgentBridge().sendAgentMessage`; `false` means no socket was open and nothing was sent. */
   readonly onSendMessage: (text: string) => boolean;
+  /** 🛑️ `useAgentBridge().cancelToolCall` — asks the gateway to stop one still-running tool call
+   * (audit `📓️g5-ux-completeness-audit.md` ranked item 2: the backend cancel existed, this surface
+   * never offered it). Omitted means no cancel path is attached, and no row offers the control
+   * rather than offering one that does nothing. */
+  readonly onCancelToolCall?: (invocationId: string) => boolean;
+  /** ⛩️ `useAgentBridge().resolveApproval` — decides one approval the gateway parked for a
+   * destructive capability, inline in the transcript. The `🤖️AgentApprovals` dialog remains the
+   * full-detail surface (risk, change summary, capability); this is the same decision offered where
+   * the human is already reading, because the gateway BLOCKS on it (ticket 26/09/18 slice M4, audit
+   * `📓️g7-mcp-agent-and-collaboration-audit.md` §6 P0.2). Omitted means no decision path is
+   * attached, and no row offers a control that would do nothing. */
+  readonly onResolveApproval?: (approvalId: string, decision: ApprovalDecision, note?: string) => void;
 };
 
 /** 🆔️ A stable DOM id per entry, so a test (and a screen reader's virtual cursor) can address one
@@ -36,7 +49,15 @@ function entryElementId(entry: AgentConversationEntry): string {
 
 /** 💬️ One conversation row. Split out so the feed's own markup stays readable and so every row gets
  * the identical role/labelling treatment. */
-function AgentChatEntry({ entry }: { readonly entry: AgentConversationEntry }): ReactElement {
+function AgentChatEntry({
+  entry,
+  onCancelToolCall,
+  onResolveApproval,
+}: {
+  readonly entry: AgentConversationEntry;
+  readonly onCancelToolCall?: (invocationId: string) => boolean;
+  readonly onResolveApproval?: (approvalId: string, decision: ApprovalDecision, note?: string) => void;
+}): ReactElement {
   // 🏷️ Every role noun is resolved unconditionally (hooks may not run behind a branch) and the one
   // this entry needs is picked afterwards — a translated noun, never the wire's own identifier.
   const youLabel = useLabel(agentUiLabel("os.agent.chat.youRole"));
@@ -48,18 +69,53 @@ function AgentChatEntry({ entry }: { readonly entry: AgentConversationEntry }): 
   const succeededLabel = useLabel(agentUiLabel("os.agent.chat.succeeded"));
   const approvalPendingLabel = useLabel(agentUiLabel("os.agent.chat.approvalPending"));
   const resultRoleLabel = useLabel(agentUiLabel("os.agent.chat.toolResultRole"));
+  const cancellingLabel = useLabel(agentUiLabel("os.agent.chat.cancelling"));
+  const cancelLabel = useLabel(agentUiLabel("os.agent.chat.cancel"));
+  const cancelToolLabel = useLabel(agentUiLabel("os.agent.chat.cancelToolCall"), { tool: entry.kind === "toolCall" ? entry.toolName : "" });
+  const approvalActionsLabel = useLabel(agentUiLabel("os.agent.chat.approvalActionsLabel"));
+  const denyLabel = useLabel(agentUiLabel("os.agent.approvals.decisionDeny"));
+  const approveOnceLabel = useLabel(agentUiLabel("os.agent.approvals.decisionOnce"));
+  const approveSessionLabel = useLabel(agentUiLabel("os.agent.approvals.decisionSession"));
 
-  const state =
-    entry.kind === "toolCall" ? (entry.state === "running" ? runningLabel : entry.state === "failed" ? failedLabel : succeededLabel) : entry.kind === "approval" ? (entry.state === "pending" ? approvalPendingLabel : (entry.decision ?? "")) : "";
+  const toolState = entry.kind === "toolCall" ? (entry.state === "running" ? runningLabel : entry.state === "cancelling" ? cancellingLabel : entry.state === "failed" ? failedLabel : succeededLabel) : "";
+  const state = entry.kind === "toolCall" ? toolState : entry.kind === "approval" ? (entry.state === "pending" ? approvalPendingLabel : (entry.decision ?? "")) : "";
+  // 🛑️ Only a call still reported as running can be cancelled: a `cancelling` row already sent its
+  // frame, and a settled one has nothing left to stop.
+  const cancellable = entry.kind === "toolCall" && entry.state === "running" && onCancelToolCall !== undefined;
+  // ⛩️ Only a still-pending approval can be decided: a resolved row already carries its decision,
+  // and with no decision path attached no control is offered at all.
+  const decidable = entry.kind === "approval" && entry.state === "pending" && onResolveApproval !== undefined;
 
   return (
     <li id={entryElementId(entry)} data-semio-agent-chat-entry={entry.kind} data-agent-chat-state={entry.kind === "toolCall" ? entry.state : entry.kind === "approval" ? entry.state : "sent"} className="flex min-w-0 flex-col gap-single py-single">
       <div className="flex min-w-0 items-baseline justify-between gap-single">
         <span className="text-2xs font-semibold uppercase tracking-wide text-muted-foreground">{roleLabel}</span>
-        {state ? <span className="text-2xs text-muted-foreground">{state}</span> : null}
+        <span className="flex items-center gap-single">
+          {state ? <span className="text-2xs text-muted-foreground">{state}</span> : null}
+          {cancellable && entry.kind === "toolCall" ? (
+            <Button
+              type="button"
+              variant="ghost"
+              icon="square"
+              id={`framework.chat.cancel.${entry.id}`}
+              data-semio-agent-chat-cancel={entry.id}
+              aria-label={cancelToolLabel}
+              title={cancelToolLabel}
+              text={cancelLabel}
+              onClick={() => onCancelToolCall?.(entry.id)}
+            />
+          ) : null}
+        </span>
       </div>
       {entry.kind === "userMessage" ? <p className="whitespace-pre-wrap break-words text-xs text-foreground">{entry.text}</p> : null}
       {entry.kind === "approval" ? <p className="whitespace-pre-wrap break-words text-xs text-foreground">{entry.summary}</p> : null}
+      {decidable ? (
+        <div role="group" aria-label={approvalActionsLabel} data-semio-agent-chat-approval={entry.id} className="flex flex-wrap items-center gap-single">
+          <Button type="button" variant="ghost" icon="x" id={`framework.chat.approval.deny.${entry.id}`} text={denyLabel} aria-label={denyLabel} onClick={() => onResolveApproval?.(entry.id, "deny")} />
+          <Button type="button" icon="check" id={`framework.chat.approval.once.${entry.id}`} text={approveOnceLabel} aria-label={approveOnceLabel} onClick={() => onResolveApproval?.(entry.id, "once")} />
+          <Button type="button" variant="ghost" icon="check" id={`framework.chat.approval.session.${entry.id}`} text={approveSessionLabel} aria-label={approveSessionLabel} onClick={() => onResolveApproval?.(entry.id, "session")} />
+        </div>
+      ) : null}
       {entry.kind === "toolCall" ? (
         <>
           <p className="break-words font-mono text-xs text-foreground">{entry.toolName}</p>
@@ -78,7 +134,7 @@ function AgentChatEntry({ entry }: { readonly entry: AgentConversationEntry }): 
 
 /** 💬️ Chat side panel with MCP agent presence in the header, the live agent conversation as its body,
  * and a composer that sends one human turn per submit to the connected agent. */
-export function AgentChatPanel({ status, presence, conversation, onSendMessage }: AgentChatPanelProps): ReactElement {
+export function AgentChatPanel({ status, presence, conversation, onSendMessage, onCancelToolCall, onResolveApproval }: AgentChatPanelProps): ReactElement {
   const title = useLabel(agentUiLabel("os.agent.chat.panelTitle"));
   const transcriptLabel = useLabel(agentUiLabel("os.agent.chat.transcriptLabel"));
   const emptyLabel = useLabel(agentUiLabel("os.agent.chat.empty"));
@@ -109,7 +165,7 @@ export function AgentChatPanel({ status, presence, conversation, onSendMessage }
         <AgentPresence status={status} presence={presence} />
       </div>
       <ol ref={feedRef} id="framework.chat.feed" data-semio-agent-chat-feed="" aria-label={transcriptLabel} aria-live="polite" className="min-h-huge flex min-w-0 flex-col divide-y divide-border overflow-y-auto px-single">
-        {conversation.length === 0 ? <li className="py-single text-xs text-muted-foreground">{emptyLabel}</li> : conversation.map((entry) => <AgentChatEntry key={`${entry.kind}:${entry.id}`} entry={entry} />)}
+        {conversation.length === 0 ? <li className="py-single text-xs text-muted-foreground">{emptyLabel}</li> : conversation.map((entry) => <AgentChatEntry key={`${entry.kind}:${entry.id}`} entry={entry} onCancelToolCall={onCancelToolCall} onResolveApproval={onResolveApproval} />)}
       </ol>
       <div className="flex shrink-0 flex-col gap-single px-single pb-single">
         {connected ? null : <p className="text-2xs text-muted-foreground">{disconnectedLabel}</p>}

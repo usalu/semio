@@ -1141,7 +1141,18 @@ export function shellStateUnchanged(previous: ShellState, next: ShellState): boo
 }
 
 //#region selectors
-export const selectUiDevice = (state: ShellState, mobile: boolean): ElementsSurfaceDevice => (mobile ? "mobile" : state.uiPrefs.uiLayout);
+/**
+ * 📱️ The device this shell paints for: the MEASURED viewport device wins whenever it is narrower than a
+ * desktop, and only a desktop-width viewport falls through to the user's stored `uiLayout` preference.
+ *
+ * `measured` comes from `useUiDevice()` — `🖱️ui/📱️device/🟦️.ts`'s three-way policy, the same thresholds
+ * the wgpu dock compares its `screen_w` against. It used to be a bare `mobile: boolean`, so the 768-1023
+ * band painted the DESKTOP layout and `"tablet"` was a value only a user who found the settings row ever
+ * saw, contradicting AGENTS.md's explicit desktop → mobile → tablet priority. Pinning `"tablet"` in
+ * settings still works, and still only affects a desktop-width viewport (pinning a wider layout on a
+ * phone is exactly the case that has no room for it).
+ */
+export const selectUiDevice = (state: ShellState, measured: ElementsSurfaceDevice): ElementsSurfaceDevice => (measured === "desktop" ? state.uiPrefs.uiLayout : measured);
 
 /** ⚖️ Open `Quarantined` conflicts — "a peer batch is being held" (contract freeze §C6/§C9's
  * `ShellSync` quarantine indicator) is exactly "this list is non-empty", never a separately stored

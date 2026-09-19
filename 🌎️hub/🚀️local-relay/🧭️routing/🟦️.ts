@@ -49,12 +49,31 @@ export function localRelayInferencePath(method: string, path: string): boolean {
   return method === "GET" && events !== null && Number(events[1]) <= GIS_MAP_INFERENCE_PROGRESS_MAX_CURSOR;
 }
 
+/** 🎟️ Admits exactly one invite-redemption route whose capability token stays inside the hub's own
+ * bounded selector charset, so a path traversal, an encoded separator or an empty token can never
+ * reach the upstream. */
+export function localRelayInviteRedemptionPath(method: string, path: string): boolean {
+  if (method !== "POST") return false;
+  const matched = /^\/directory\/invites\/([^/]+)\/redeem$/u.exec(path);
+  if (!matched) return false;
+  try {
+    const token = decodeURIComponent(matched[1]!);
+    return /^[A-Za-z0-9][A-Za-z0-9._:-]{0,511}$/u.test(token) && encodeURIComponent(token) === matched[1];
+  } catch {
+    return false;
+  }
+}
+
 /** 🧭 Projects an admitted local-relay URL to its bounded Hub upstream path. */
 export function localRelayUpstreamPath(method: string, url: URL): string | undefined {
   if (!url.pathname.startsWith("/_semio/hub/")) return undefined;
   const upstream = url.pathname.slice("/_semio/hub".length);
   const noQuery = url.search === "";
   if (method === "GET" && upstream === "/auth/sessions/me" && noQuery) return upstream;
+  if (method === "POST" && upstream === "/auth/sessions" && noQuery) return upstream;
+  if (method === "DELETE" && upstream === "/auth/sessions/me" && noQuery) return upstream;
+  if (method === "POST" && upstream === "/auth/credentials" && noQuery) return upstream;
+  if (noQuery && localRelayInviteRedemptionPath(method, upstream)) return upstream;
   if (method === "GET" && (upstream === "/directory/spaces" || /^\/directory\/spaces\/[^/]+$/u.test(upstream)) && noQuery) return upstream;
   if (method === "GET" && upstream === "/directory/events" && [...url.searchParams].length === 1 && /^\d+$/u.test(url.searchParams.get("since") ?? "")) return `${upstream}?since=${url.searchParams.get("since")}`;
   if (method === "POST" && (upstream === "/directory/commands" || upstream === "/directory/socket-grants") && noQuery) return upstream;

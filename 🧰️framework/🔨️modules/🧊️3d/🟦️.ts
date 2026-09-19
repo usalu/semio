@@ -528,6 +528,6 @@ export function mergeMeshTransfers(meshes: readonly MeshTransfer[]): MeshTransfe
 // #region 🧪️Tests
 if (import.meta.vitest) {
   const { registerTests1 } = await import("./🧪️tests/🧪️semio-tech-geometry-brep-js/🟦️.ts");
-  await registerTests1(import.meta.vitest, { isRenderableMeshTransfer, kernelGeometry }, { directory: import.meta.dir, url: import.meta.url });
+  await registerTests1(import.meta.vitest, { isRenderableMeshTransfer }, { directory: import.meta.dir, url: import.meta.url });
 }
 // #endregion 🧪️Tests

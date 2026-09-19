@@ -96,3 +96,24 @@ fn authored_slider_labels_survive_child_content_round_trip() {
         assert_eq!(working_from_flow_content_snapshot(&content).0, [widget]);
     }
 }
+
+/// 🧾️ Every `bounded_first_step_tool_proofs!` block in the editor must declare the SAME artifact
+/// schema the app's `DOCUMENT_SCHEMA` carries. The macro takes a string LITERAL, so the constant
+/// cannot be spelled there and the two spellings can drift apart silently — and when they do, the
+/// tool-proof catalog rejects the FIRST tool it validates and the whole plugin aborts at boot
+/// (`interactive-job.catalog-authority`, `schema='flow.snapshot' expected_schema='flow.host_snapshot'`),
+/// which is what the `flow`/`generation2d`/`generation3d` playgrounds showed on 2026-09-18 on BOTH
+/// renderers. Read from the production source because that literal is the only place the drift lives.
+#[test]
+fn editor_tool_proofs_declare_the_artifact_document_schema() {
+    const EDITOR_SOURCE: &str = include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs");
+    let declared: Vec<&str> = EDITOR_SOURCE
+        .lines()
+        .filter_map(|line| line.trim().strip_prefix("artifact_schema:"))
+        .filter_map(|rest| rest.trim().trim_end_matches(',').strip_prefix('"').and_then(|rest| rest.strip_suffix('"')))
+        .collect();
+    assert!(!declared.is_empty(), "the editor must keep declaring bounded-first-step tool proofs");
+    for schema in &declared {
+        assert_eq!(*schema, FLOW_DOCUMENT_SCHEMA, "a tool proof block declares a schema the artifact never carries");
+    }
+}

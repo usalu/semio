@@ -1,3 +1,32 @@
+/** 🧹️ The wire-retirement ledger: per-step item/byte releases and the short-close backing release. */
+type WireRetirementFixture = {
+  readonly version: number;
+  readonly pageBytes: number;
+  readonly grants: readonly number[];
+  readonly zeroItemsBlocked: boolean;
+  readonly terminalBackingBytes: number;
+  readonly shortClose: {
+    readonly wireHex: string;
+    readonly logicalBytes: number;
+    readonly steps: readonly {
+      readonly items: number;
+      readonly bytes: number;
+      readonly blocked: boolean;
+      readonly releasedItems: number;
+      readonly releasedBytes: number;
+      readonly remaining: number;
+    }[];
+    readonly backingReleaseItems: number;
+    readonly backingReleaseLogicalBytes: number;
+  };
+  readonly cases: readonly {
+    readonly id: string;
+    readonly declared: number;
+    readonly admitted: number;
+    readonly sealed: boolean;
+  }[];
+};
+
 /** 🔬️ Canonical testWireRetirementFixture fixture and oracle checks. */
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
@@ -5,7 +34,7 @@ import { createHash } from "node:crypto";
 import Ajv from "ajv";
 
 export function testWireRetirementFixture():void {
-  const fixture=JSON.parse(readFileSync(new URL("../../🧫️fixtures/🔣️.json",import.meta.url),"utf8"));
+  const fixture: WireRetirementFixture=JSON.parse(readFileSync(new URL("../../🧫️fixtures/🔣️.json",import.meta.url),"utf8"));
   const validate=new Ajv({strict:true,allErrors:true}).compile(JSON.parse(readFileSync(new URL("../../🧬️schema/🔣️.json",import.meta.url),"utf8")));
   assert.ok(validate(fixture),JSON.stringify(validate.errors));assert.equal(new Set(fixture.cases.map((row:any)=>row.id)).size,5);
   const wire=Buffer.alloc(8);wire.writeBigUInt64LE(42n);assert.equal(wire.toString("hex"),fixture.shortClose.wireHex);

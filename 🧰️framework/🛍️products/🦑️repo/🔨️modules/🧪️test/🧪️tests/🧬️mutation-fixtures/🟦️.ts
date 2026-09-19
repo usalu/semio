@@ -110,10 +110,11 @@ test("HTML source pair readers declare every external Nx cache input", () => {
 });
 for (const row of vectors.cases) test(row.id, () => {
   const root = mkdtempSync(join(tmpdir(), "semio-mutation-fixture-"));
-  const files: Record<string, string> = { ...vectors.files, ...row.add };
+  const files: Record<string, string | undefined> = { ...vectors.files, ...row.add };
   for (const path of row.remove) delete files[path];
   try {
     for (const [path, source] of Object.entries(files)) {
+      if (source === undefined) continue;
       const destination = join(root, vectors.owner, path);
       mkdirSync(dirname(destination), { recursive: true });
       writeFileSync(destination, source);

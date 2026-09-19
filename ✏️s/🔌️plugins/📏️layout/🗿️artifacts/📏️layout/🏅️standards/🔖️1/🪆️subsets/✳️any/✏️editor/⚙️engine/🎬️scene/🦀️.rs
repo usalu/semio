@@ -57,6 +57,10 @@ pub struct DisplayGuide {
 pub struct DisplayTextRun {
     pub object_id: String,
     pub glyphs: Vec<DisplayGlyph>,
+    pub content: String,
+    pub origin_x: f32,
+    pub origin_y: f32,
+    pub font_size: f32,
 }
 
 #[derive(Clone, Debug)]
@@ -209,8 +213,9 @@ pub fn build_display_list_for_page(engine: &mut LayoutEngine, doc: &LayoutSnapsh
                     let base_x = (bounds.x + inset.x) as f32;
                     let base_y = (bounds.y + inset.y) as f32;
                     let font_size = paragraph.font_size as f32;
-                    let glyphs = shaped.glyphs.iter().map(|glyph| DisplayGlyph { glyph_id: glyph.glyph_id as u32, font_size, x: base_x + glyph.x, y: base_y + glyph.y, color: DisplayColor([0.0, 0.0, 0.0, 1.0]) }).collect();
-                    text_runs.push(DisplayTextRun { object_id: id.clone(), glyphs });
+                    let glyphs: Vec<DisplayGlyph> = shaped.glyphs.iter().map(|glyph| DisplayGlyph { glyph_id: glyph.glyph_id as u32, font_size, x: base_x + glyph.x, y: base_y + glyph.y, color: DisplayColor([0.0, 0.0, 0.0, 1.0]) }).collect();
+                    let (origin_x, origin_y) = glyphs.first().map(|glyph| (glyph.x, glyph.y - font_size)).unwrap_or((base_x, base_y));
+                    text_runs.push(DisplayTextRun { object_id: id.clone(), glyphs, content: story.content.clone(), origin_x, origin_y, font_size });
                 }
             }
             Frame::Image { id, bounds, link_id, .. } => {

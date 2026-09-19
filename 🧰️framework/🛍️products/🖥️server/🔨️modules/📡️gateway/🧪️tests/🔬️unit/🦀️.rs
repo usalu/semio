@@ -1,11 +1,16 @@
 
 use super::*;
-use crate::contract::{CommandId, PolicyGrant, TraceContext};
+use crate::contract::{CommandId, PolicyGrant, QueryConsistency, QueryId, TraceContext};
+use crate::test_instance::{CountingModule, SilentSaga, TestInstance, TestSagas};
 use futures::channel::mpsc::unbounded;
 use std::time::Duration;
 
-async fn state() -> ServerState {
-    Server::builder(StorageProfile::Embedded { data_dir: "/tmp/semio-gateway".to_string() }).build().await.state().clone()
+async fn state() -> ServerState<TestInstance> {
+    server().await.state().clone()
+}
+
+async fn server() -> Server<TestInstance> {
+    Server::<TestInstance>::builder(StorageProfile::Embedded { data_dir: "/tmp/semio-gateway".to_string() }).build().await.expect("the test instance opens its stores")
 }
 
 fn actor(id: &str) -> ActorKey {
@@ -16,7 +21,7 @@ fn event(stream: &ActorKey, seq: u64) -> EventRecord {
     EventRecord { stream: stream.clone(), seq, hlc: HybridLogicalClock::default(), kind: "counter.incremented".into(), payload: vec![seq as u8] }
 }
 
-fn grant(state: &ServerState, point: PolicyPoint, action: &str) {
+fn grant(state: &ServerState<TestInstance>, point: PolicyPoint, action: &str) {
     let mut engine = state.policy.write().unwrap();
     engine.register_template(PolicyTemplate { name: format!("{point:?}-{action}"), grants: vec![PolicyGrant { point, resource: "*".into(), action: action.to_string() }] });
     engine.assign("anonymous".to_string(), format!("{point:?}-{action}"));
@@ -300,13 +305,14 @@ fn a_relayed_frame_names_the_session_that_produced_it() {
 //#region 🔖️Server
 #[tokio::test]
 async fn build_collects_every_module_contribution() {
-    let server = Server::builder(StorageProfile::Embedded { data_dir: "/tmp/semio-gateway".to_string() })
+    let server = Server::<TestInstance>::builder(StorageProfile::Embedded { data_dir: "/tmp/semio-gateway".to_string() })
         .identity("hub", "0.1.0")
-        .module(ServerModules::Counting(CountingModule))
+        .module(CountingModule)
         .app("admin", "/srv/admin")
         .admin_token(Some("secret".to_string()))
         .build()
-        .await;
+        .await
+        .expect("the test instance opens its stores");
 
     assert_eq!(server.definition().modules.len(), 1);
     assert_eq!(server.definition().id, "hub");
@@ -336,6 +342,63 @@ async fn the_clock_never_goes_backwards() {
     let first = state.now();
     let second = state.now();
     assert!(second > first);
+}
+
+#[tokio::test]
+async fn the_instance_supplies_the_storage_the_builder_wires_in() {
+    let state = state().await;
+    state.projections.lock().await.put("roster", "space-1", vec![7]).await.expect("written");
+    assert_eq!(state.projections.lock().await.get("roster", "space-1").await, Some(vec![7]));
+    assert_eq!(state.projections.lock().await.checkpoint("roster").await, 0);
+    assert!(state.sessions.lock().await.get(&crate::contract::SessionId("nobody".into())).await.is_none());
+    assert_eq!(state.profile.data_dir(), Some("/tmp/semio-gateway"));
+}
+
+#[tokio::test]
+async fn an_instance_that_registers_no_query_handler_answers_not_found() {
+    let state = state().await;
+    grant(&state, PolicyPoint::QueryAccess, "read");
+    assert_eq!(state.queries.len(), 0);
+    let error = post_query(HeaderMap::new(), ConnectInfo(loopback()), State(state), Json(query())).await.expect_err("no handler is registered");
+    assert_eq!(error.status(), StatusCode::NOT_FOUND);
+}
+
+#[tokio::test]
+async fn a_module_registers_its_deciders_on_the_bus_it_was_built_into() {
+    let server = Server::<TestInstance>::builder(StorageProfile::Embedded { data_dir: "/tmp/semio-gateway".to_string() }).module(CountingModule).build().await.expect("built");
+    let state = server.state().clone();
+    state.policy.write().unwrap().assign("anonymous".to_string(), "author".to_string());
+    let outcome = post_command(HeaderMap::new(), ConnectInfo(loopback()), State(state), Json(envelope())).await.unwrap();
+    match outcome.0 {
+        CommandOutcome::Accepted { events, .. } => assert_eq!(events[0].kind, "counter.incremented"),
+        other => panic!("expected acceptance, got {other:?}"),
+    }
+}
+
+#[tokio::test]
+async fn a_committed_event_reaches_the_instance_saga_runner_exactly_once() {
+    let server = Server::<TestInstance>::builder(StorageProfile::Embedded { data_dir: "/tmp/semio-gateway".to_string() }).module(CountingModule).saga(TestSagas::Silent(SilentSaga)).build().await.expect("built");
+    let state = server.state().clone();
+    {
+        let mut engine = state.policy.write().unwrap();
+        engine.assign("anonymous".to_string(), "author".to_string());
+        engine.assign(crate::policy::principal_key(&Principal::User { id: "alice".into() }), "author".to_string());
+    }
+    assert_eq!(state.sagas.lock().await.sagas.len(), 2, "the module's workflow and the builder's are both on the one runner");
+
+    let committed = post_command(HeaderMap::new(), ConnectInfo(loopback()), State(state.clone()), Json(envelope())).await.unwrap();
+    assert!(matches!(committed.0, CommandOutcome::Accepted { .. }));
+    let reactions = state.drain_sagas(64).await;
+    assert_eq!(reactions.len(), 1, "one committed event, one follow-up turn");
+    assert!(matches!(reactions[0], CommandOutcome::Accepted { .. }));
+
+    let replayed = state.drain_sagas(64).await;
+    assert!(replayed.iter().all(|outcome| matches!(outcome, CommandOutcome::Accepted { ref events, .. } if events.is_empty())), "a re-issued follow-up is deduplicated by its idempotency key rather than committing twice");
+    assert!(state.authority.lock().await.store().pending_outbox(64).await.unwrap().is_empty(), "every drained row is acknowledged");
+}
+
+fn query() -> QueryEnvelope {
+    QueryEnvelope { query_id: QueryId("q-1".into()), kind: "counter.value".into(), version: 1, scope: Scope("space-1".into()), principal: Principal::Anonymous, arguments: Vec::new(), consistency: QueryConsistency::Local, cursor: None }
 }
 
 fn envelope() -> CommandEnvelope {

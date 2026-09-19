@@ -166,6 +166,45 @@ async fn a_scroll_button_moves_the_viewport_by_reacts_own_step_and_never_past_th
     assert_eq!(select_clamped_scroll(2, &theme, painted, 10_000.0), 0.0, "a popup that fits cannot scroll");
 }
 
+/// 🔼️ W15a item 4. The two scroll functions above were tested arithmetic with ZERO callers, so a
+/// chevron press did nothing at all. This law walks the whole production seam: a press ARMS a
+/// direction slot, the painter converts that into `select_scroll_step` pixels, clamps it with
+/// `select_clamped_scroll`, moves the visible row window, and consumes the arming so one press
+/// scrolls exactly one page. A popup that fits refuses to move, and closing the popup drops both
+/// slots so neither can outlive it.
+#[semio_framework_async_macros::async_test]
+async fn a_chevron_press_scrolls_the_popup_one_react_step_and_leaves_no_slot_behind() {
+    let theme = Theme::light();
+    let mut offsets: std::collections::HashMap<String, f32> = std::collections::HashMap::new();
+    let painted = theme.padding_standard * 2.0 + select_row_height(&theme) * 2.0;
+
+    assert!(!arm_select_scroll(&mut offsets, "sel"), "a plain control id is not a chevron");
+    assert!(!arm_select_scroll(&mut offsets, "sel.item.alpha"), "an option row is not a chevron");
+    assert!(offsets.is_empty(), "a non-chevron press must not mint a slot");
+
+    assert!(arm_select_scroll(&mut offsets, &select_scroll_control_id("sel", false)));
+    let armed = offsets.get(&select_scroll_pending_key("sel")).copied().expect("the down chevron arms a pending direction");
+    assert_eq!(armed, 1.0);
+
+    let viewport = select_scroll_viewport_height(&theme, painted);
+    let scrolled = select_scrolled_offset(8, &theme, painted, 0.0, armed);
+    assert!((scrolled - select_scroll_step(viewport)).abs() < 0.001, "one press moves exactly React's own `scrollSelectViewport` step");
+    assert!((scrolled - select_clamped_scroll(8, &theme, painted, scrolled)).abs() < 0.001, "and the result is already clamped");
+
+    let (first, last) = select_scrolled_row_window(8, &theme, painted, scrolled);
+    assert!(first > 0, "a scrolled popup starts painting past its first row");
+    assert!(last <= 8 && last > first, "the window stays inside the item list and is never empty: {first}..{last}");
+    assert!(last - first <= select_visible_rows(8, &theme, painted) + 1, "the window is bounded by what fits, plus the one partial row at the bottom edge");
+
+    assert_eq!(select_scrolled_offset(8, &theme, painted, 0.0, -1.0), 0.0, "the up chevron on a popup already at its top is inert, not negative");
+    assert_eq!(select_scrolled_offset(2, &theme, painted, 0.0, 1.0), 0.0, "a popup that fits cannot scroll however hard a chevron is pressed");
+    assert_eq!(select_scrolled_row_window(2, &theme, painted, 0.0), (0, 2), "and it still paints from its first row");
+
+    offsets.insert(select_scroll_key("sel"), scrolled);
+    clear_select_scroll(&mut offsets, "sel");
+    assert!(offsets.is_empty(), "closing the popup drops BOTH slots, so a reopened Select starts on its first page like a freshly mounted SelectContent");
+}
+
 #[semio_framework_async_macros::async_test]
 async fn a_scroll_button_is_one_tiny_chevron_between_two_single_paddings() {
     let theme = Theme::light();

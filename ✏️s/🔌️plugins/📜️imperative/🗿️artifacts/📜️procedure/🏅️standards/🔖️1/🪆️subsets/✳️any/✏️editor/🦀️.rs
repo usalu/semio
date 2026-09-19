@@ -103,6 +103,210 @@ use crate::editor::procedure::commands::set_contributions;
 use crate::editor::procedure::commands::{add_step, add_step_at, move_step, move_step_at, remove_step, remove_step_at, set_step_params, set_step_params_at};
 //#endregion 🔖️Commands
 
+//#region 🧵️RetainedCommands
+/// 🧵️ Every verb the shell may dispatch is a retained tool. `validate_ui_dispatch_classification`
+/// refuses anything not classified `Migrated`, and `Migrated` only survives the guest's
+/// `interactive-job.catalog-incomplete` boot check when this list, the publication contracts, the
+/// extent function and the `bounded_first_step_tool_proofs!` block below all name the same ids against
+/// ONE registered factory type. All ten verbs were `BatchOnlyPendingRewrite`, so every row of this
+/// app's Actions pane was refused at the dispatch gate (ticket 26/09/18 slice B2c).
+const IMPERATIVE_RETAINED_TOOL_IDS: &[&str] =
+    &["addStep", "addStepAt", "removeStep", "removeStepAt", "moveStep", "moveStepAt", "setStepParams", "setStepParamsAt", "run", "setContributions"];
+const IMPERATIVE_RETAINED_PAYLOAD_SCHEMA: &str = "imperative.procedure.tool-command.v1";
+const IMPERATIVE_RETAINED_RAW_BYTES: usize = 8_192;
+const IMPERATIVE_RETAINED_WORK_ITEMS: usize = 64;
+/// 🎒️ Real bound for one Artifact-lane edit: a single step insert/remove/reorder/params leaf.
+const IMPERATIVE_STORE_MAXIMUM_BYTES: usize = 65_536;
+
+/// 🚦️ Per-tool publication lanes, read straight off the command bodies: the eight structural step
+/// verbs emit `artifact_mutations` only, while `run` and `setContributions` write the config store.
+const IMPERATIVE_RETAINED_PUBLICATION_CONTRACTS: &[semio_framework_plugin::ArtifactToolPublicationContract] = &[
+    semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "addStep", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
+    semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "addStepAt", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
+    semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "removeStep", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
+    semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "removeStepAt", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
+    semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "moveStep", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
+    semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "moveStepAt", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
+    semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setStepParams", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
+    semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setStepParamsAt", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
+    semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "run", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Config] },
+    semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setContributions", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Config] },
+];
+
+fn imperative_retained_contract() -> semio_framework::ToolExecutionContract {
+    semio_framework::ToolExecutionContract::bounded_first_step(IMPERATIVE_RETAINED_RAW_BYTES, 64, IMPERATIVE_RETAINED_WORK_ITEMS as u64, 16_384, 7_500)
+}
+
+/// 📏️ Every imperative command is ONE bounded step: none of the ten walks a collection incrementally.
+fn imperative_retained_extent(command: &ImperativeCommand, _snapshot: &ProcedureSnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
+    let bytes = match command {
+        ImperativeCommand::SetContributions(payload) => payload.json.len(),
+        _ => 0,
+    };
+    (bytes <= IMPERATIVE_RETAINED_RAW_BYTES && IMPERATIVE_RETAINED_TOOL_IDS.contains(&command.command_id())).then_some(1)
+}
+
+/// 🧮️ One shell-supplied argument as this app's own `ValueDsl` scalar — `SetStepParams::params` is a
+/// `BTreeMap<String, ValueDsl>` whose fields are private to `crate::document_dsl`, so the conversion
+/// goes through the engine `Value` the module already converts from.
+fn imperative_value_dsl(value: &dsl::DslValue) -> crate::document_dsl::ValueDsl {
+    let engine = match value {
+        dsl::DslValue::Bool(flag) => neural_engine::Value::Atom(neural_engine::Atom::Boolean(*flag)),
+        dsl::DslValue::Number(number) => match number.as_i64() {
+            Some(integer) => neural_engine::Value::Atom(neural_engine::Atom::Integer(integer)),
+            None => neural_engine::Value::Atom(neural_engine::Atom::Decimal(number.as_f64())),
+        },
+        dsl::DslValue::String(text) => neural_engine::Value::Atom(neural_engine::Atom::String(text.clone())),
+        dsl::DslValue::Null => neural_engine::Value::Atom(neural_engine::Atom::Null),
+        other => neural_engine::Value::Atom(neural_engine::Atom::String(dsl::json::to_json_string(other))),
+    };
+    crate::document_dsl::value_to_value_dsl(&engine)
+}
+
+/// 🌉️ Resolves the React/wgpu shells' `{action, args}` pair into the typed `ImperativeCommand` every
+/// dispatch path already speaks. `ArtifactEditor::command_from_action`'s default refuses EVERY id
+/// (`app.command.unsupported`), so without this bridge no Actions-pane row could reach
+/// `ImperativeCommand::dispatch`.
+fn imperative_command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result<ImperativeCommand, Fault> {
+    let entries: &[(String, dsl::DslValue)] = match args {
+        Some(dsl::DslValue::Object(object)) => object.as_slice(),
+        _ => &[],
+    };
+    let lookup = |keys: &[&str]| keys.iter().find_map(|key| entries.iter().find(|(name, _)| name == key).map(|(_, value)| value));
+    let text = |keys: &[&str], fallback: &str| match lookup(keys) {
+        Some(dsl::DslValue::String(raw)) if !raw.is_empty() => raw.clone(),
+        Some(dsl::DslValue::String(_)) | None => fallback.to_string(),
+        Some(other) => dsl::json::to_json_string(other),
+    };
+    let optional_text = |keys: &[&str]| match lookup(keys) {
+        Some(dsl::DslValue::String(raw)) if !raw.is_empty() => Some(raw.clone()),
+        _ => None,
+    };
+    let index = |keys: &[&str]| match lookup(keys) {
+        Some(dsl::DslValue::Number(value)) => value.as_f64().max(0.0) as usize,
+        Some(dsl::DslValue::String(raw)) => raw.trim().parse::<usize>().unwrap_or_default(),
+        _ => 0,
+    };
+    let optional_index = |keys: &[&str]| match lookup(keys) {
+        Some(dsl::DslValue::Number(value)) => Some(value.as_f64().max(0.0) as usize),
+        Some(dsl::DslValue::String(raw)) => raw.trim().parse::<usize>().ok(),
+        _ => None,
+    };
+    let params = |keys: &[&str]| match lookup(keys) {
+        Some(dsl::DslValue::Object(object)) => object.iter().map(|(name, value)| (name.clone(), imperative_value_dsl(value))).collect(),
+        _ => std::collections::BTreeMap::new(),
+    };
+    match action {
+        "addStep" => Ok(ImperativeCommand::AddStep(add_step::AddStep { kind: text(&["kind", "value"], "log.print"), index: optional_index(&["index"]) })),
+        "addStepAt" => Ok(ImperativeCommand::AddStepAt(add_step_at::AddStepAt {
+            kind: text(&["kind", "value"], "log.print"),
+            index: optional_index(&["index"]),
+            owner: optional_text(&["owner", "ownerId", "owner_id"]),
+            slot: optional_text(&["slot"]),
+        })),
+        "removeStep" => Ok(ImperativeCommand::RemoveStep(remove_step::RemoveStep { id: text(&["id", "stepId", "step_id", "value"], "") })),
+        "removeStepAt" => Ok(ImperativeCommand::RemoveStepAt(remove_step_at::RemoveStepAt {
+            id: text(&["id", "stepId", "step_id", "value"], ""),
+            owner: optional_text(&["owner", "ownerId", "owner_id"]),
+            slot: optional_text(&["slot"]),
+        })),
+        "moveStep" => Ok(ImperativeCommand::MoveStep(move_step::MoveStep { id: text(&["id", "stepId", "step_id"], ""), index: index(&["index"]) })),
+        "moveStepAt" => Ok(ImperativeCommand::MoveStepAt(move_step_at::MoveStepAt {
+            id: text(&["id", "stepId", "step_id"], ""),
+            index: index(&["index"]),
+            owner: optional_text(&["owner", "ownerId", "owner_id"]),
+            slot: optional_text(&["slot"]),
+        })),
+        "setStepParams" => Ok(ImperativeCommand::SetStepParams(set_step_params::SetStepParams { id: text(&["id", "stepId", "step_id"], ""), params: params(&["params"]) })),
+        "setStepParamsAt" => Ok(ImperativeCommand::SetStepParamsAt(set_step_params_at::SetStepParamsAt {
+            id: text(&["id", "stepId", "step_id"], ""),
+            owner: optional_text(&["owner", "ownerId", "owner_id"]),
+            slot: optional_text(&["slot"]),
+            params: params(&["params"]),
+        })),
+        "run" => Ok(ImperativeCommand::Run(run::Run {})),
+        "setContributions" => Ok(ImperativeCommand::SetContributions(set_contributions::SetContributions { json: text(&["json", "value"], "{}") })),
+        other => Err(Fault::new(
+            semio_framework_plugin::FaultOrigin::App,
+            semio_framework_plugin::FaultCode::new("imperative.unhandled-action"),
+            format!("action '{other}' is not one of this app's declared verbs"),
+        )),
+    }
+}
+
+#[expect(clippy::too_many_arguments, reason = "The retained command reducer implements the framework's eight-argument callback contract.")]
+fn imperative_retained_reduce(
+    command: &ImperativeCommand,
+    snapshot: &ProcedureSnapshot,
+    config: &ImperativeConfig,
+    history: &semio_framework_plugin::HistoryView,
+    _interaction: &protocol::InteractionState,
+    _hover: &semio_framework_plugin::app::InteractionHoverState,
+    _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<semio_framework_plugin::EditorApp<ImperativePlayApp>>>,
+    operation: &semio_framework_plugin::AppOperationContext,
+) -> Result<Emit<ProcedureMutation, ImperativeConfigMutation, NoDraftMutation>, Fault> {
+    command.dispatch(&ArtifactView::with_operation(snapshot, history, operation.clone()), &ConfigView { snapshot: config, window: None })
+}
+
+/// 🏭️ The ONE registered factory serving every retained id — `bounded_first_step_tool_proofs!` binds
+/// all of them to a single `factory_type`, and the guest's catalog authority rejects a boot where a
+/// registered concrete factory for any id is a different type.
+struct ImperativeRetainedCommandJobFactory {
+    keys: Vec<semio_framework::ToolFactoryKey>,
+}
+
+impl ImperativeRetainedCommandJobFactory {
+    fn new(controller: &str) -> Self {
+        Self { keys: IMPERATIVE_RETAINED_TOOL_IDS.iter().map(|tool| semio_framework::ToolFactoryKey::new(controller, *tool)).collect() }
+    }
+}
+
+impl semio_framework::ToolJobFactory for ImperativeRetainedCommandJobFactory {
+    type Payload = semio_framework_plugin::retained_command::ArtifactRetainedCommandPayload<semio_framework_plugin::EditorApp<ImperativePlayApp>>;
+    type Job = semio_framework_plugin::retained_command::ArtifactRetainedCommandJob<semio_framework_plugin::EditorApp<ImperativePlayApp>>;
+
+    fn keys(&self) -> &[semio_framework::ToolFactoryKey] {
+        &self.keys
+    }
+
+    fn payload_schema_id(&self) -> &str {
+        IMPERATIVE_RETAINED_PAYLOAD_SCHEMA
+    }
+
+    fn classification(&self) -> InteractiveJobClassification {
+        InteractiveJobClassification::Migrated
+    }
+
+    fn execution_contract(&self) -> semio_framework::ToolExecutionContract {
+        imperative_retained_contract()
+    }
+
+    fn create_job(&mut self, _operation: semio_framework_job::Operation, payload: Self::Payload) -> Result<Self::Job, semio_framework::ToolJobFactoryError> {
+        Ok(semio_framework_plugin::retained_command::ArtifactRetainedCommandJob::new(payload))
+    }
+
+    fn create_job_from_wire_pages_with_payload(
+        &mut self,
+        _operation: semio_framework_job::Operation,
+        payload: Self::Payload,
+        input: semio_framework::action_bus::RetainedToolWireInput,
+        checkpoint: Option<semio_framework::action_bus::RetainedToolWireInput>,
+    ) -> Result<Self::Job, (semio_framework::ToolJobFactoryError, semio_framework::action_bus::RetainedToolWireInput, Option<semio_framework::action_bus::RetainedToolWireInput>)> {
+        if input.declared_bytes() > IMPERATIVE_RETAINED_RAW_BYTES || checkpoint.is_some() {
+            return Err((semio_framework::ToolJobFactoryError::new("imperative retained command rejects oversized wire or unsupported checkpoint owner"), input, checkpoint));
+        }
+        Ok(semio_framework_plugin::retained_command::ArtifactRetainedCommandJob::from_wire(payload, input))
+    }
+}
+
+impl semio_framework_plugin::ArtifactOwnedToolJobFactory for ImperativeRetainedCommandJobFactory {
+    type Owner = semio_framework_plugin::EditorApp<ImperativePlayApp>;
+    const TOOL_IDS: &'static [&'static str] = IMPERATIVE_RETAINED_TOOL_IDS;
+    const DOCUMENT_SCHEMA: &'static str = PROCEDURE_DOCUMENT_SCHEMA;
+    const PUBLICATION_CONTRACTS: &'static [semio_framework_plugin::ArtifactToolPublicationContract] = IMPERATIVE_RETAINED_PUBLICATION_CONTRACTS;
+}
+//#endregion 🧵️RetainedCommands
+
 //#region 🔖️ImperativePlayApp
 /// 🧪️ B1: unit struct — the former `ImperativePlayRuntime`/`self.runtime` field now lives in
 /// `ImperativeConfig` (see `ArtifactEditor::Config`), written via `ImperativeConfigMutation`s.
@@ -125,6 +329,110 @@ impl ArtifactEditor for ImperativePlayApp {
 
     const DIALECT: semio_framework_plugin::app::Dialect = crate::PROCEDURE_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = PROCEDURE_DOCUMENT_SCHEMA;
+
+    /// 📬️ The ARTIFACT lane's publication authority — a retained tool whose contract states `Artifact`
+    /// has nowhere to stage its edit without one, and dies after reaching the typed operation.
+    fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
+        Some(semio_framework_plugin::bounded_config_store_one_item_preparation_factory::<Self::Snapshot, Self::Mutation>("imperative-artifact-retained", IMPERATIVE_STORE_MAXIMUM_BYTES))
+    }
+
+    /// 📬️ The CONFIG lane's twin, for `run` and `setContributions`.
+    fn build_config_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Config, Self::ConfigMutation>>> {
+        Some(semio_framework_plugin::bounded_config_store_one_item_preparation_factory::<Self::Config, Self::ConfigMutation>("imperative-config-retained", IMPERATIVE_STORE_MAXIMUM_BYTES))
+    }
+
+    /// ♻️ The exact store owners and disposers every lane of this editor retires through. Declaring
+    /// none answers the first real publication `returned snapshot read requires its exact
+    /// owned-snapshot retirement factory`.
+    fn build_document_store_owners() -> Option<store::DocumentStoreOwners<Self::Snapshot, Self::Mutation>> {
+        Some(semio_framework_plugin::bounded_document_store_owners::<Self::Snapshot, Self::Mutation>())
+    }
+
+    fn build_document_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
+        Some(semio_framework_plugin::bounded_document_store_disposer::<Self::Snapshot, Self::Mutation>())
+    }
+
+    fn build_config_store_owners() -> Option<store::DocumentStoreOwners<Self::Config, Self::ConfigMutation>> {
+        Some(semio_framework_plugin::bounded_config_store_owners::<Self::Config, Self::ConfigMutation>())
+    }
+
+    fn build_config_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::Config, Self::ConfigMutation>>>> {
+        Some(semio_framework_plugin::bounded_config_store_disposer::<Self::Config, Self::ConfigMutation>())
+    }
+
+    fn build_draft_store_owners() -> Option<store::DocumentStoreOwners<Self::Draft, Self::DraftMutation>> {
+        Some(semio_framework_plugin::no_draft_store_owners())
+    }
+
+    fn build_draft_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::DraftStore<Self::Draft, Self::DraftMutation>>>> {
+        Some(semio_framework_plugin::no_draft_store_disposer())
+    }
+
+    fn build_presence_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::PresenceStore<Self::Presence, Self::PresenceMutation>>>> {
+        Some(semio_framework_plugin::no_presence_store_disposer())
+    }
+
+    fn build_transient_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::TransientStore<Self::Transient, Self::TransientMutation>>>> {
+        Some(semio_framework_plugin::no_transient_store_disposer())
+    }
+
+    semio_framework_plugin::bounded_first_step_tool_proofs! {
+        owner: semio_framework_plugin::EditorApp<ImperativePlayApp>,
+        owner_file: "✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️procedure/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+        controller: "s.imperative.procedure@1/*#editor",
+        artifact_schema: "procedure.document/v1",
+        factory: "ImperativeRetainedCommandJobFactory",
+        factory_type: ImperativeRetainedCommandJobFactory,
+        contract: semio_framework::ToolExecutionContract::bounded_first_step(8_192, 64, 64, 16_384, 7_500),
+        tools: ["addStep", "addStepAt", "removeStep", "removeStepAt", "moveStep", "moveStepAt", "setStepParams", "setStepParamsAt", "run", "setContributions"]
+    }
+
+    fn register_tool_job_factories(registry: &mut semio_framework_plugin::ArtifactToolFactoryRegistry<'_, semio_framework_plugin::EditorApp<Self>>) -> Result<(), Fault> {
+        let controller = registry.controller_id().to_string();
+        registry.register(ImperativeRetainedCommandJobFactory::new(&controller))
+    }
+
+    /// 🌉️ The `{action, args}` bridge every shell dispatch arrives as.
+    fn command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result<Self::Command, Fault> {
+        imperative_command_from_action(action, args)
+    }
+
+    fn build_tool_job(request: semio_framework_plugin::ArtifactOwnedToolJobRequest<semio_framework_plugin::EditorApp<Self>>) -> Result<Option<semio_framework::ToolOperationSpec>, Fault> {
+        if !IMPERATIVE_RETAINED_TOOL_IDS.contains(&request.tool_id.as_str()) {
+            return Ok(None);
+        }
+        if request.command.command_id() != request.tool_id || imperative_retained_extent(&request.command, &request.snapshot, &request.interaction_state) != Some(1) {
+            return Err(Fault::from("imperative-retained-command-tool-mismatch-or-capacity"));
+        }
+        let tool_id = request.command.command_id();
+        let work: Box<dyn semio_framework_plugin::retained_command::ArtifactCommandWork<semio_framework_plugin::EditorApp<Self>>> =
+            Box::new(semio_framework_plugin::retained_command::BoundedArtifactCommandWork::new(tool_id, imperative_retained_reduce, imperative_retained_extent));
+        let operation = semio_framework_plugin::AppOperationContext {
+            app_instance_id: request.app_instance_id,
+            parent_document_id: request.parent_document_id.clone(),
+            operation_id: request.operation.operation.0,
+            generation: request.operation.generation.0,
+            canonical_base_revision: request.canonical_base_revision,
+        };
+        let payload = semio_framework_plugin::retained_command::ArtifactRetainedCommandPayload::try_new(
+            semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs {
+                command: *request.command,
+                snapshot: request.snapshot,
+                config: request.config,
+                history: request.history,
+                interaction_state: request.interaction_state,
+                interaction_hover: request.interaction_hover,
+                context: Some(request.context),
+                operation,
+                completion: request.completion,
+            },
+            ImperativeCommand::command_id,
+            IMPERATIVE_RETAINED_RAW_BYTES,
+            IMPERATIVE_RETAINED_WORK_ITEMS,
+            work,
+        )?;
+        Ok(Some(semio_framework::ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
+    }
 
     fn app_schema() -> Option<::framework_schema::AppSchemaDescriptor> {
         Some(crate::editor::procedure::config::schema::app_schema_descriptor())
@@ -237,16 +545,16 @@ pub fn create_imperative_app() -> semio_framework_plugin::AppDefinition {
             // 👁️ Ephemeral view state / runtime effect — `run` evaluates into config. Step selection/
             // hover are no longer declared here: framework-owned, injected via `.interaction(...)` below.
             .action_with(semio_framework_plugin::ActionDefinition::new("run", LocalizedLabel::native("Run", "Ausführen"), ActionKind::View, "play"))
-            .action_interactive_job("setContributions", InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("addStep", InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("addStepAt", InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("removeStep", InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("removeStepAt", InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("moveStep", InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("moveStepAt", InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("setStepParams", InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("setStepParamsAt", InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("run", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("setContributions", InteractiveJobClassification::Migrated)
+            .action_interactive_job("addStep", InteractiveJobClassification::Migrated)
+            .action_interactive_job("addStepAt", InteractiveJobClassification::Migrated)
+            .action_interactive_job("removeStep", InteractiveJobClassification::Migrated)
+            .action_interactive_job("removeStepAt", InteractiveJobClassification::Migrated)
+            .action_interactive_job("moveStep", InteractiveJobClassification::Migrated)
+            .action_interactive_job("moveStepAt", InteractiveJobClassification::Migrated)
+            .action_interactive_job("setStepParams", InteractiveJobClassification::Migrated)
+            .action_interactive_job("setStepParamsAt", InteractiveJobClassification::Migrated)
+            .action_interactive_job("run", InteractiveJobClassification::Migrated)
             // 📝️ Staged argument form for the panel-visible create action (the step kind is a choice).
             .action_args("addStep", vec![
                 ActionArgDef::select("kind", LocalizedLabel::native("Kind", "Art"), vec![

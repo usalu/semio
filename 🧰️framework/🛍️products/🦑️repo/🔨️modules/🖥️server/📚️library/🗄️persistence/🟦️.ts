@@ -232,7 +232,7 @@ export async function listTickets(status?: string): Promise<Ticket[]> {
   return result.rows as Ticket[];
 }
 
-export async function insertTicketFiles(ticketId: string, files: string[]): Promise<void> {
+export async function insertTicketFiles(ticketId: string, files: readonly string[]): Promise<void> {
   const p = getPool();
   for (const filePath of files) {
     await p.query(`INSERT INTO ticket_files (ticket_id, file_path) VALUES ($1, $2) ON CONFLICT DO NOTHING`, [ticketId, filePath]);

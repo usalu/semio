@@ -72,6 +72,7 @@ pub fn build_engine_params(params: &ReconstructionParams, calibration: &Calibrat
         DenseResolution::High => 8,
     };
     engine_params.dense_source_views = params.dense.min_view_consistency.max(1) as usize;
+    engine_params.dense.confidence_floor = Some(params.dense.confidence_threshold);
     engine_params.tsdf_voxel_size = f64::from(params.mesh.tsdf_voxel_size_mm) / 1000.0;
     engine_params.tsdf_truncation = f64::from(params.mesh.tsdf_truncation_mm) / 1000.0;
     engine_params.mesh.target_triangles = if params.mesh.decimate_target_triangles == 0 { usize::MAX } else { params.mesh.decimate_target_triangles as usize };

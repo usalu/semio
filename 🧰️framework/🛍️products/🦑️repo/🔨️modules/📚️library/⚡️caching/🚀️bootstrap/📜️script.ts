@@ -269,7 +269,7 @@ export function resolveNxInvocation(segments: string[]): { args: string[]; env: 
     if (selected[0] === "multi") return { args: ["run", "@semio-tech/framework-os-dev:dev-s-react-dev", ...options, ...(selected.length > 1 ? ["--", ...selected.slice(1)] : [])], env: { S_OS_PORT: process.env.S_OS_PORT ?? "6071", SEMIO_RENDERER: "react", SEMIO_PLUGIN: "s", SEMIO_BUILD_MODE: "dev" }, ...(!options.some((argument) => /^--(?:graph|help)(?:=|$)/.test(argument)) ? { watch: "@semio-tech/framework-os-dev:activate-s-react-dev" } : {}) };
     const { loadFrameworkOsPlaygroundSelections, resolveFrameworkOsPlaygroundPlugin, frameworkOsPlaygroundDevEnv } = nxRoutingServices();
     const catalog = loadFrameworkOsPlaygroundSelections();
-    const app = resolveFrameworkOsPlaygroundPlugin(catalog, selected.length ? selected : ["s"]);
+    const app = resolveFrameworkOsPlaygroundPlugin(catalog, selected.length ? selected : process.env.SEMIO_PLUGIN ? [process.env.SEMIO_PLUGIN] : ["s"]);
     if (!app) throw new Error(`Unknown development selection: ${selected.join(" ")}`);
     const served = app.rest.includes("served"), env = frameworkOsPlaygroundDevEnv(catalog, app.plugin, served ? { SEMIO_RENDERER: "react" } : {});
     if (["react", "wgpu"].includes(env.SEMIO_RENDERER!)) {

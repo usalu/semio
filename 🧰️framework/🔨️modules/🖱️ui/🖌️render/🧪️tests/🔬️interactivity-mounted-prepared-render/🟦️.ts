@@ -1,5 +1,8 @@
 import { INTERACTIVITY_AUDIT_PREPARED_RASTER_FILE, INTERACTIVITY_AUDIT_PREPARED_RASTER_DRAW_FILE, INTERACTIVITY_AUDIT_PREPARED_RASTER_GPU_FILE, INTERACTIVITY_AUDIT_RENDERER_GLUE_FILE, policyReadRustPolicySource, interactivityMountedPreparedRenderFailures } from "../../../../../../📜️script.ts";
 
+/** 📚️ One policy source per audited file, arity-preserving so the failure checkers keep their positional parameters. */
+type PreparedRenderPolicySources = [string, string, string, string, string, string];
+
 /** 🧪️ Executes interactivity mounted prepared render policy assertions. */
 export function interactivityMountedPreparedRenderSelfTests(repoRoot: string): void {
   const files = [
@@ -9,8 +12,15 @@ export function interactivityMountedPreparedRenderSelfTests(repoRoot: string): v
     INTERACTIVITY_AUDIT_RENDERER_GLUE_FILE,
     "🧰️framework/🔨️modules/🖱️ui/🖌️render/🖼️frame/🦀️.rs",
     "🧰️framework/🔨️modules/🖱️ui/🖌️render/🎬️scene/🦀️.rs",
+  ];
+  const clean: Readonly<PreparedRenderPolicySources> = [
+    policyReadRustPolicySource(repoRoot, files[0]),
+    policyReadRustPolicySource(repoRoot, files[1]),
+    policyReadRustPolicySource(repoRoot, files[2]),
+    policyReadRustPolicySource(repoRoot, files[3]),
+    policyReadRustPolicySource(repoRoot, files[4]),
+    policyReadRustPolicySource(repoRoot, files[5]),
   ] as const;
-  const clean = files.map((file) => policyReadRustPolicySource(repoRoot, file));
   const mutations: readonly [string, number, string, string][] = [
     ["blocking-process-ledger", 0, "static PREPARED_RENDER_PROCESS_PERMITS: AtomicU64", "static PREPARED_RENDER_PROCESS_PERMITS: Mutex<u64>"],
     ["wrapping-process-generation", 0, "current_generation.checked_add(1)", "Some(current_generation.wrapping_add(1))"],
@@ -59,7 +69,7 @@ export function interactivityMountedPreparedRenderSelfTests(repoRoot: string): v
     ["missing-gpu-interruption-law", 2, "interrupted_present_cursor_hands_back_generation_and_fixed_owners", "present_interruption_smoke"],
   ];
   for (const [name, index, needle, replacement] of mutations) {
-    const mutated = [...clean];
+    const mutated: PreparedRenderPolicySources = [...clean];
     mutated[index] = mutated[index]!.replace(needle, replacement);
     if (mutated[index] === clean[index]) throw new Error(`[verify interactivity p5d] mutation ${name} did not bind live source`);
     if (interactivityMountedPreparedRenderFailures(...mutated).length === 0) throw new Error(`[verify interactivity p5d] mutation ${name} was falsely accepted`);

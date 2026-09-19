@@ -755,7 +755,7 @@
       }
     },
     "app.gis.gisterrain.window.config.mutation.set-camera": {
-      "path": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/👁️view/🪟️windows/🏔️terrain/⚙️config/🧬️schema/🧬️mutations/🎥️set-camera/🧬️schema",
+      "path": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/👁️view/🪟️windows/🏔️terrain/🎚️config/🧬️schema/🧬️mutations/🎥️set-camera/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -3706,7 +3706,7 @@
           "file": "🔣️.json",
           "facet": "schema"
         },
-        "TutorialArtifactTrackFixture": {
+        "TutorialDocumentTrackFixture": {
           "file": "🔣️.json",
           "facet": "schema"
         },
@@ -3725,7 +3725,7 @@
       ],
       "hashes": {
         "🔗️.graphql": "7276f5bbf1a39358cf15c99b3a64c31bb1c66711c032a1ed70c8e411f1461ccd",
-        "🔣️.json": "34955363e5c5ebd827d3bd4c422749ff004f3d57d379edcba47fa6a5092dd31b",
+        "🔣️.json": "ca51fcbe69279a81536ee89c92ab3d777e1030d75e318ef4ade7838fb57788c1",
         "🛰️.proto": "160a755c564b7c9fe36bc4a3ac44423efacf572b8bdaffe9b1544892b6f23ecd",
         "🟦️.ts": "d2a9d42abe13642f8577fa46c2efe4da76c606707062c18347f3c25429ecb3ef"
       }
@@ -5746,7 +5746,7 @@
       "dependsOn": [],
       "hashes": {
         "🔣️.json": "09d1329f00214e4bbd13b49a70cfbc0dc8515a716bfbc2a3521911fda255bd97",
-        "🦀️.rs": "8af8beb4b4d885183b514b78a0fe800cb5f6602f4d5a881fc0b947fb1e385d40"
+        "🦀️.rs": "11487d19270279f45a5ce706102bf5562484666e6117f60618ccb49dc94885b3"
       }
     },
     "hub.artifact-authority.native-openable-provider": {
@@ -5890,7 +5890,43 @@
           "file": "🔣️.json",
           "facet": "schema"
         },
+        "AuthClientClassV1": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "AuthDurableEventKindV1": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "AuthErrorCodeV1": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "AuthErrorV1": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
         "AuthLimitsV1": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "AuthRateLimitClassV1": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "AuthRateLimitPolicyV1": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "CredentialChangeRequestV1": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "CredentialHashV1": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "CredentialSignInRequestV1": {
           "file": "🔣️.json",
           "facet": "schema"
         },
@@ -5899,6 +5935,10 @@
           "facet": "schema"
         },
         "SessionCapabilityV1": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "SessionMintResponseV1": {
           "file": "🔣️.json",
           "facet": "schema"
         },
@@ -5917,8 +5957,8 @@
       },
       "dependsOn": [],
       "hashes": {
-        "🔣️.json": "210613aa81fc3c7f9ca1bb4895dd5048c214b936067f69526db2f5beb1eedea3",
-        "🟦️.ts": "e5e5663fdaf717c67fb69f341ab5e1d6ae0d78c8fcac0b9855aae49e1c7f6027"
+        "🔣️.json": "618900d2796f908c6f52d14149dcfed592e82f7b126bc306fb90a9b170c09291",
+        "🟦️.ts": "f5073caf01a95d21c56017061cbc629ce7eba042d038510497bae29cc1ee9513"
       }
     },
     "hub.directory": {
@@ -6272,8 +6312,8 @@
       },
       "dependsOn": [],
       "hashes": {
-        "🔣️.json": "fac86ed4f5733cf54745343ab207b09a8263723998b86fa4248fb5752a76ac25",
-        "🟦️.ts": "2a38c1ab74bbc9cae126ccc8df96324484d48ab845bdcc02a7311d794a8d32f4",
+        "🔣️.json": "5548cd0edb7d9993f9571b53a6e140bf6c23d06082328f5e930916af0a9584ad",
+        "🟦️.ts": "eb8d50028cc91b190367e65e967dc6a0faddc1af69f885f294067d68af18c069",
         "🦀️.rs": "d7cc81a471d12dca92e59b766fd5233cf9b2651770b597eda1a6a3430546a7da"
       }
     },
@@ -7620,8 +7660,8 @@
       },
       "dependsOn": [],
       "hashes": {
-        "🔣️.json": "ab43bf60060f4aec16d26f72da68bd1fc6624127b975e891a07742a6dfbf270a",
-        "🟦️.ts": "bcec1e960bd89e765b151e6719e302253c4fe8c6b4aae9d2adea3ef3e6018fb3",
+        "🔣️.json": "b3932c68437dd317d1bc9d4d4afc67ca198ad131862f4cfd42c3afb532235419",
+        "🟦️.ts": "3523d87678e9fa08aa5bacffca951f3b73cb9ce0f914fdfd11424654c9c7e04c",
         "🦀️.rs": "d8b96cabe58c3cbffdd5894b05a10501b8c25209fcfc8063af80e958352f8f1a"
       }
     },
@@ -7752,7 +7792,7 @@
       },
       "dependsOn": [],
       "hashes": {
-        "🔣️.json": "24ca42fe898cd29f68cba1e011f565d6e402b74b3654a9c75e4c6a84bb8ea49f"
+        "🔣️.json": "d99b73e3d36791cd339e6a98490abfedaf0bb262e5ba0fddfc3345f866024aa9"
       }
     },
     "os.extension": {
@@ -8699,6 +8739,22 @@
           "file": "🔣️.json",
           "facet": "component"
         },
+        "ArtifactInferenceBudgetV1": {
+          "file": "🔣️.json",
+          "facet": "component"
+        },
+        "ArtifactInferenceCacheModeV1": {
+          "file": "🔣️.json",
+          "facet": "component"
+        },
+        "ArtifactInferenceRequestV1": {
+          "file": "🔣️.json",
+          "facet": "component"
+        },
+        "ArtifactInferenceResultV1": {
+          "file": "🔣️.json",
+          "facet": "component"
+        },
         "ArtifactOpenInput": {
           "file": "🔣️.json",
           "facet": "component"
@@ -8815,6 +8871,14 @@
           "file": "🔣️.json",
           "facet": "component"
         },
+        "InferenceRunInput": {
+          "file": "🔣️.json",
+          "facet": "component"
+        },
+        "InferenceRunOutput": {
+          "file": "🔣️.json",
+          "facet": "component"
+        },
         "InferenceSubmitInput": {
           "file": "🔣️.json",
           "facet": "component"
@@ -8922,9 +8986,9 @@
       },
       "dependsOn": [],
       "hashes": {
-        "🔣️.json": "42e196b17a92e67cf33030be4c66ede54fa98eef6e8025fc25e98619c7117206",
-        "🟦️.ts": "fb7a25bc1f633d18ccbc47c4605447f08db3a40770dc89554e342b2de0a3c12a",
-        "🦀️.rs": "9184a1d9348481fc8c3e9c46fce18d089abfd5bfba20f48a5f7dbc15530f29bd"
+        "🔣️.json": "77aac1d6142fb767831d3cb59419ef5cf98ab630f8062749ee030c8f12467596",
+        "🟦️.ts": "1819ec16f6e7073dc3a62a1f7601e3946e5055e63fb10c98b4eaa9f23b8e99ae",
+        "🦀️.rs": "a635038c714c3cd1e16dd02fe27e3b2d5af5f02a2dc02a970f6abe31cadce425"
       }
     },
     "os.mcp.inference": {
@@ -9956,7 +10020,7 @@
       },
       "dependsOn": [],
       "hashes": {
-        "🔣️.json": "d7f3fe4b2368efd8e4187d75285e6400dccadc291b656f503ac8fd2487e86517"
+        "🔣️.json": "3572619d1dd8b3dcb32e299e57ff1707b5ff70af286e21b10988f54781f6a342"
       }
     },
     "os.plugin.registry.deployment": {
@@ -23401,7 +23465,7 @@
         "📸️snapshot/🔣️.json": "fb3d9e085f857e3155310456dc15bc00eded6b0069b58365f1f0bcc85f94d70c",
         "📸️snapshot/🛰️.proto": "905bf3a728a4969167437b2f8bd0d642643e7fa9bf7842c699df04936f1e3bfa",
         "📸️snapshot/🟦️.ts": "5b44505290a9b496ca6261d93c88eadd410a286a67c2e7626143cae56cf48790",
-        "📸️snapshot/🦀️.rs": "6c70431cd973b8f6571f82b081349ffd7e6ad9f77e1d3c0e094c74e7fc4d43dd",
+        "📸️snapshot/🦀️.rs": "3acfc534d52005149f86b3d3ac6731b045ca718d714d7117e0e9b04721a54b9b",
         "🔗️.graphql": "4626d44d7b56265312e18d42a294ca0585b1a14edb4999f0f3f4369b2b8a789e",
         "🔣️.json": "0dafdd5020eb6ba561a830b32c5e2c904b68269ebbd22a83bf8b90a6c51b280d",
         "🔺️diff/🔗️.graphql": "1e9186f4611326208ec508192c15ff35a72781754e01ccdb6e0012e4a1ba9a9e",
@@ -36091,7 +36155,7 @@
         "🧬️mutations/🔣️.json": "8c1e18c81f92fdccad7cd1ff19e52152150902d48e269ce2d10020b77852d029",
         "🧬️mutations/🛰️.proto": "18a800adbd3da0fedef8f38371ad273139343f7f7bb7a5593f2c8f23a101ab6c",
         "🧬️mutations/🟦️.ts": "f5ea683d3e7f5027e3f49c51767fc518a64f07afc1dbb9af38c4640dbf03d723",
-        "🧬️mutations/🦀️.rs": "be06a6769b40721117ec5dc191ab47f28154fd5098e7f155051c15651b880edf"
+        "🧬️mutations/🦀️.rs": "fc6e30741c37413f5e97cf1cdcb877dd99393e8eac57375f3b101737e893c8a6"
       }
     },
     "s.norm.din4108.mutation.change-airtightness-class": {
@@ -45867,7 +45931,7 @@
         "📸️snapshot/📝️text/🔗️.graphql": "507515db23bdef1212706d9172921446ba4f53c0f61dfd8c474e1d71ace1c2db",
         "📸️snapshot/📝️text/🔣️.json": "caf72a9bac1473c79630bf6ee631e3a3bbf0a70c422dd2e314ecc3efff9abc13",
         "📸️snapshot/📝️text/🛰️.proto": "d2ba9370372108377813ab02a2f279d3bf5574ea4cd0254746528fdf80e5fb67",
-        "📸️snapshot/📝️text/🟦️.ts": "44d08f1dd17786d074322a758ede9fb980e80934edfe6b7e12fcd1ca193269e8",
+        "📸️snapshot/📝️text/🟦️.ts": "478c5fbb69e6d03e7b11c2754baf475362d4bea50357ad09f43008ccec285afb",
         "📸️snapshot/📝️text/🦀️.rs": "81afbc9538bd1d71372dc8f243b37a48e9297af9d870c66f075c15b6e4c19b60",
         "📸️snapshot/🔗️.graphql": "324982b0133318ec12f78d879579ec87dd3017944e017ef2f5e8addfb1a58187",
         "📸️snapshot/🔣️.json": "c8a76f32344f3033240c880f251de43668a42647b40a63a5fc69f63dc1523791",
@@ -45881,12 +45945,12 @@
         "🔺️diff/📝️text/🔗️.graphql": "5c5e7e4d31fce5a0c97c36f09c3abd5d2cf84eb109635465056a26a672e9981b",
         "🔺️diff/📝️text/🔣️.json": "d0258c6f5f247991ac2b1010bcbf57c6bd7831b4be4f28890e5b0c925a6198d5",
         "🔺️diff/📝️text/🛰️.proto": "7fd0d62a58107f5ae1bf90202bc195d755250cde4e907e5fe4523dd21fb9a533",
-        "🔺️diff/📝️text/🟦️.ts": "0a92cb3e32168e6889c8db2272bc859a2c09c9616836ace1d224a88cc17cbb85",
+        "🔺️diff/📝️text/🟦️.ts": "dac8af4926f70ad4819260cdecdaf5ab77cd2ba3918c285d2919ea377fe747c0",
         "🔺️diff/📝️text/🦀️.rs": "6ee7679812af701d6d7e213fe822341df88445fa9c31f4f5868f31ebcfa31580",
         "🔺️diff/🔗️.graphql": "e7c7f09e62b6bc3eddf47160c76dd13cd64ed4bf11648499a16dec68cec06eb4",
         "🔺️diff/🔣️.json": "c020986e06064221139e24d34bd6ab81e772418632b51b045fa9eba3505bcd42",
         "🔺️diff/🛰️.proto": "eb0e9cd74a63975d14002a9a8870a9bd996e29785da5ed69198746ecf5cf3a66",
-        "🔺️diff/🟦️.ts": "2798aa651447212eb47d3517d56887443937162a3588018936954ad5507ee85f",
+        "🔺️diff/🟦️.ts": "0337caec17b13f4a061ce3a422ca5895537711a36e0acab5f540cd3a50f08788",
         "🔺️diff/🦀️.rs": "81a2fa45ababd850529008e44134c65f0c6160fa938d22cd2938bc3c143aa8a1",
         "🛰️.proto": "2463c5fd400da2ca1919688340f92ce50e438b8738c58c996a810492931b9a6e",
         "🟦️.ts": "4e1baf64fc56351568257cd9d68977183bfac1749abd37d63eb570f3cd829a57",
@@ -45896,7 +45960,7 @@
         "🧬️mutations/📝️text/🔗️.graphql": "56773d205c426b5a54bc4f2cd6a9ccfc9cfea43e77d60796afa614143533b03a",
         "🧬️mutations/📝️text/🔣️.json": "1c7652e928e6d80918c5331db9ded1277a7c3fd4886763d6c9c2ef877451d9e9",
         "🧬️mutations/📝️text/🛰️.proto": "eb48fb990542a38bab5fcae8bbce5c4a41e2ee868d9e0e74b51ba80397c2628e",
-        "🧬️mutations/📝️text/🟦️.ts": "0dde0d46acf1d2523b92e9923821067a514d67332695cfd1ea80ca37128d8f88",
+        "🧬️mutations/📝️text/🟦️.ts": "66ca6f1187f1732837a4c07005460c3c92d87dd2b68bf8b70b55934c616a85e1",
         "🧬️mutations/📝️text/🦀️.rs": "317f4d45f62cf81c2633fac8a65d6232b534e995b111150bd5ba5d59dc3fd659",
         "🧬️mutations/🔗️.graphql": "60e330402aa0e8dba58b9b19288a1104f4bf12bfa6a00768b8e207d5b48cc167",
         "🧬️mutations/🔣️.json": "d78848eeaacd9d18c50f59b5b2ab197e5ca0fbd844d05d33beeaf37ec9bd6ba7",
@@ -46607,6 +46671,14 @@
           "file": "🔺️diff/🔣️.json",
           "facet": "diff"
         },
+        "Puzzle3dAttribute": {
+          "file": "🔣️.json",
+          "facet": "artifact"
+        },
+        "Puzzle3dAuthor": {
+          "file": "🔣️.json",
+          "facet": "artifact"
+        },
         "Puzzle3dBrushSuggestionsRun": {
           "file": "🔣️.json",
           "facet": "artifact"
@@ -46791,7 +46863,7 @@
         "📸️snapshot/📝️text/🔗️.graphql": "a95d2e26ce7c7f72ca0bc10e03ad95f1016c0dd86d67f23d603ed94033b8b3b2",
         "📸️snapshot/📝️text/🔣️.json": "89ca905b25ec15ee5485d8354bc3939ebe9a926d9778d38fa4a9d847f4e82c2f",
         "📸️snapshot/📝️text/🛰️.proto": "6b095e6e23c654441bc8fc91fa0c4741854440a7d4d0f80d404022d8a2ce0421",
-        "📸️snapshot/📝️text/🟦️.ts": "4cbf768d34e2e1cca43019c49c174376ea2340320fd01ee5eae4ffebb1bd0cef",
+        "📸️snapshot/📝️text/🟦️.ts": "01281f48496d540b52965b00729cd9b061a9c3eb727ffbbf9d1af807687ae2f7",
         "📸️snapshot/📝️text/🦀️.rs": "11934f2c0d6a3f89310e9d5a99927515cc548ac87df17bdbf9ace65bcf72fc2e",
         "📸️snapshot/🔗️.graphql": "5b803295f9cd4d3dc0eeeebe6b5a155aab3f88056113e1d095b24cac3d6ed1ce",
         "📸️snapshot/🔣️.json": "7df673cf20b0cbf34e69ced48ffc3e5dfe5a725528b00718497b3c03619cefd4",
@@ -46799,28 +46871,28 @@
         "📸️snapshot/🟦️.ts": "20d07e9e3df0a6245e462afd18410ef34637245b6d1cef30b5aecddd6f512b8c",
         "📸️snapshot/🦀️.rs": "d6a9c5f9c98fb0ad29bcab037531a4fadcb43c6af48525d75e25da1590e3585e",
         "🔗️.graphql": "66465ef74980376daa563c12769d3a263cd33a078440c52388e7ea7cad5fbf9b",
-        "🔣️.json": "53d5d2d16ef7dd511890431ff6b81bb38c3095be597986fb662237bc96ecc49c",
+        "🔣️.json": "d84b54586cbadf885175206a03870b0823c1a18ddcffbfb6be715da5dae590bf",
         "🔺️diff/💾️binary/🟦️.ts": "e2dac3179d70577b741d97e13192594ab8d4c93dec67b0802b8a3a5c531268c4",
         "🔺️diff/💾️binary/🦀️.rs": "5d3619fd64fecaba8c6c8216e80578a9d3b5bf6c6f1bd043d3070045c6f82eb6",
         "🔺️diff/📝️text/🔗️.graphql": "8d7f3ddf7a9c2d54e898a89a885ad50da7eb2b6af4ea55ced42d3e92fb0ae8c4",
         "🔺️diff/📝️text/🔣️.json": "ceb49ea7ff3266e32ddf681ca2284ccd7d0ac9ae8ec5f3f7c9fe0e583c7861cc",
         "🔺️diff/📝️text/🛰️.proto": "f5535a1a2cd1469c53e54f38d83fff91b73507135b9c542c4540422deea5db56",
-        "🔺️diff/📝️text/🟦️.ts": "6384fe895453671d376979b9d7bdb983e79447c3222ae0082d8507a38e075c00",
+        "🔺️diff/📝️text/🟦️.ts": "9ae8c49d2d8a4c752038f69866bc78727aa0ca956e30b4d650252529b3505740",
         "🔺️diff/📝️text/🦀️.rs": "2a13b4c53d313ea3b669357f4616c040c25a519e9d33c2a9f85b9b23ac2fdc0b",
         "🔺️diff/🔗️.graphql": "eb15c5a54f1e8a275b5fe27b6c7cfb4480c6878060b79367f9a37682b313673b",
         "🔺️diff/🔣️.json": "fa2e4a269d1662f30160c5a395422fadf59cc8117e4d18bed147e6fc17f58041",
         "🔺️diff/🛰️.proto": "bd282b1a5f76510242b72d54f9b6431ef49ca2d1f9cb6a643f035b0ed6e1a3b8",
-        "🔺️diff/🟦️.ts": "00dd4d0ec0bb9ec9022dcd14f791addb49521afa9a5374b0377adfd14c1a0a7e",
+        "🔺️diff/🟦️.ts": "601627ffd8f563ba373a7632b0e8ce0dc51d8cbfb4909bd50b510ff64a67cabb",
         "🔺️diff/🦀️.rs": "2c1839d78cf3a2d0226af425e63ab82d29c47e1c8ae0380d6f4ab647bc9eaccc",
         "🛰️.proto": "f513bde6e1379833c1b8b505e24c00450bde1e5ea20f4003eaacac4333c1084c",
-        "🟦️.ts": "0657c784017d3e98cb3ab87eff7db2ea5c1936523490132ecba455796b53915e",
+        "🟦️.ts": "95520a7654cdfbdf217fe33bc260f1c8cc7c7dd12b51b2f14bc7f4953b879320",
         "🦀️.rs": "b5db80aed35ed4ce2dc631cbd4e72608ae7919c8c0268381dcf2d9285515dd69",
         "🧬️mutations/💾️binary/🟦️.ts": "78a1901128ea005bab998830f98c924c075e6c34eeb875ff19e560b6776adfc4",
         "🧬️mutations/💾️binary/🦀️.rs": "214f5b929c68ad3e4da7161967171c69e60446b39045ccfc5d2cf0105d3dc208",
         "🧬️mutations/📝️text/🔗️.graphql": "cbdb99f87901f1040cd46d798279a93d7b54eb95f2c556345cd63018d3d08f6c",
         "🧬️mutations/📝️text/🔣️.json": "0067df52827d308a43b980eddea79cf6663fb72bbe4732c120aee227f3decc39",
         "🧬️mutations/📝️text/🛰️.proto": "13203dee14d130d1ef15564baf612ecd3817f6446528e1dd33c7bfdc812a8b84",
-        "🧬️mutations/📝️text/🟦️.ts": "58cbbb6ded389dddcee281ad01ef61c7365ccca13a0c99664c51bc0308f3b2b3",
+        "🧬️mutations/📝️text/🟦️.ts": "d955899402f10fb9e26852763ddd683595aba9d920591752e02bdbc172427600",
         "🧬️mutations/📝️text/🦀️.rs": "48fbf751878bd0e0015a26c83fd9fe523acf9cbc338beba3906587885b64157a",
         "🧬️mutations/🔗️.graphql": "c7b07ec316e324f7fde03a3f12104a1ae5038f32efa550a72a5b3afe5aa44500",
         "🧬️mutations/🔣️.json": "031365a1c814e2b854f73189baf0c5a9f7913893163b340616fddb1a623af740",
@@ -47633,6 +47705,7 @@
         }
       },
       "dependsOn": [
+        "framework.io",
         "s.puzzle.puzzle5d.mutation.add-part-grip",
         "s.puzzle.puzzle5d.mutation.change-description",
         "s.puzzle.puzzle5d.mutation.change-domain",
@@ -47687,12 +47760,12 @@
         "📸️snapshot/📝️text/🔗️.graphql": "164a2733a2a8752ed0cc452092aa3ec774c53feba9cb54e09d46f87cc36e0bb6",
         "📸️snapshot/📝️text/🔣️.json": "c2c32182ecab86aa00f0fe975eda79c8bc82fde801d9ef585fc140b9a3da9ee0",
         "📸️snapshot/📝️text/🛰️.proto": "2cca8c149fcab4ba5c7b7ef47e93f00b41226bc17c273b0fe7b780a6a12137b0",
-        "📸️snapshot/📝️text/🟦️.ts": "17af136e103c57c3de19d205cfa949b2c55c434f979005c5e272ee44adc72070",
+        "📸️snapshot/📝️text/🟦️.ts": "c0a594d9779333267651cbf0366e5853c078378bfb0e4abe66b42f1cffc8a081",
         "📸️snapshot/📝️text/🦀️.rs": "bfac2585db35a073b769a3ceeb49e15dcb4e146dd2ba78989342a50771d542c8",
         "📸️snapshot/🔗️.graphql": "e6f1e38e149e605252515add47ae0b3b98028b69b72653ac1fc0ecbe14294c48",
-        "📸️snapshot/🔣️.json": "73881bd005608b28c872b664fe81954ef7caf6f4bf541ee7c4f4c123d1b93eee",
+        "📸️snapshot/🔣️.json": "9d86e6cd107bd466a079f476bdc919cc01fb2b57b5d0c0191d7b74afbf561d0f",
         "📸️snapshot/🛰️.proto": "0d1301c7b29f7d22b7ed2545f94498fa357140a6180c25ad57e8e9a84777762b",
-        "📸️snapshot/🟦️.ts": "b438b252944a8e0f7bae2e732ff817085d8b6aa97a7bd715ca44479f32d1343e",
+        "📸️snapshot/🟦️.ts": "0be69049e1ddba47a2dd7cb4d8336ffef36dfcc5f0392131065fd6bcbd3b69f0",
         "📸️snapshot/🦀️.rs": "deab456cdb0e4776a2f5f1fe33d8106fd8f40db1919a2c65691525d96db2e533",
         "🔗️.graphql": "57afee89da75f9466481731b477e0ffc7d13da71f15ee368a214c4b5bef550aa",
         "🔣️.json": "4ef6f76702b17273d9f968f745649610e0c83cffe31f59e030c5f2b3ab141c00",
@@ -47701,22 +47774,22 @@
         "🔺️diff/📝️text/🔗️.graphql": "8ecd250027cbe16369c0859ecd61e4744adfc4d7ba8d54e8d2185d8960092634",
         "🔺️diff/📝️text/🔣️.json": "14aefcadf38bb871edff2888d614b8d370c31fbdcde5659cdfc4ac733b5a5de1",
         "🔺️diff/📝️text/🛰️.proto": "45fa5793c3d973eedf0aeac265a409bd18fe65b1406d806621773e5725d64379",
-        "🔺️diff/📝️text/🟦️.ts": "fae74aa6c04c86bcbbbada95faea9203210e4801e936366dd953412bf2edf599",
+        "🔺️diff/📝️text/🟦️.ts": "8d9083a6493b40a0fc667d0b638dad38bb76b60ee1cb8dbae2963dde19e855f7",
         "🔺️diff/📝️text/🦀️.rs": "a71ac244da7a2927c07843216aac0d155d59c2cf20b0ca81d44a71d84b3bcd04",
         "🔺️diff/🔗️.graphql": "b3109523027df6d5cef4352e3b39162f5448866805719ab6bea52de23f722a5e",
         "🔺️diff/🔣️.json": "e02aad1b60205a3eed3fd4a754d79e3c708f011690b0ad08edbaf5ec7591cc40",
         "🔺️diff/🛰️.proto": "99165637d9e8366814fc6de1a989b10b058d967d17faa58e7e0463f1479084f5",
-        "🔺️diff/🟦️.ts": "3cda0b0cf2900026c77704a538355fe36e1c63a113ec4730798d81b793f105cc",
+        "🔺️diff/🟦️.ts": "d3d7bfec6b7fea2d84d78917fca8094140948aced6fbd59e88d6bfccab61d9a6",
         "🔺️diff/🦀️.rs": "ba3ffed5e6aae8a2a35bd6f5e78fa04a04f03be9807f76a3ed1b5e23e7735cc9",
         "🛰️.proto": "3617441bd45e5e4c558fa0b577b24461be6b9f2890351be8707d4fb33ce297eb",
-        "🟦️.ts": "7a938f45eddedac5429757a4ace61f84c8937361568e6e4c66379183442a0c13",
+        "🟦️.ts": "805bc22a7ebd449f97343560106f45cb1804328346a195786bd60516b6d63cb8",
         "🦀️.rs": "59d88905390f2cc29fc957a07f99ab06fa45056f7aa859d654ac77732418982f",
         "🧬️mutations/💾️binary/🟦️.ts": "daf95e0dec3d27b7b48bdb5d03e0aa0b9413876f93fa1c0c49ca5aad38ce1b6a",
         "🧬️mutations/💾️binary/🦀️.rs": "637fc94000f8dd40bed5791b7efceaefd124f976bf6844d6cf60c0010a3433d0",
         "🧬️mutations/📝️text/🔗️.graphql": "3a81fc6489b615cf9e6d5c0413c8a966b36a68527bdbf1dee4957a1e1c2d181f",
         "🧬️mutations/📝️text/🔣️.json": "328f3e96ce60cc6bd36b1b90a2533bba52c24f4dedbaf692974cebfb5f3f325f",
         "🧬️mutations/📝️text/🛰️.proto": "0dcbf12d910a55929773160c54ab5765128e5d0823a50c13c1bfdd5b0efdc798",
-        "🧬️mutations/📝️text/🟦️.ts": "b6323ca51715ad7200e23af352abaab87eaf07bd81090dc9150729796f2bacba",
+        "🧬️mutations/📝️text/🟦️.ts": "6c52235aaf3bbe2d650463aaaa317f8c63e5a2252bed24e655f2ab8bccf71ca2",
         "🧬️mutations/📝️text/🦀️.rs": "6cf44f57c14f398d82437131c32135c6f959ff3243e605df0471ce3bea5a2732",
         "🧬️mutations/🔗️.graphql": "d144fca1b03be3f73c29561321cc142dce104256679e1602c365ce2e4e3a89ed",
         "🧬️mutations/🔣️.json": "513f4e278cde0ee848271ad222e76b6fe3747beaced3d98fbe51f70827324bbb",
@@ -74419,6 +74492,38 @@
           "file": "💡️inferences/🔣️.json",
           "facet": "inference"
         },
+        "PdfAcroForm": {
+          "file": "📸️snapshot/🔣️.json",
+          "facet": "snapshot"
+        },
+        "PdfAction": {
+          "file": "📸️snapshot/🔣️.json",
+          "facet": "snapshot"
+        },
+        "PdfActionKind": {
+          "file": "📸️snapshot/🔣️.json",
+          "facet": "snapshot"
+        },
+        "PdfAnnotation": {
+          "file": "📸️snapshot/🔣️.json",
+          "facet": "snapshot"
+        },
+        "PdfAnnotationKind": {
+          "file": "📸️snapshot/🔣️.json",
+          "facet": "snapshot"
+        },
+        "PdfAppearance": {
+          "file": "📸️snapshot/🔣️.json",
+          "facet": "snapshot"
+        },
+        "PdfAppearanceEntry": {
+          "file": "📸️snapshot/🔣️.json",
+          "facet": "snapshot"
+        },
+        "PdfAppearanceState": {
+          "file": "📸️snapshot/🔣️.json",
+          "facet": "snapshot"
+        },
         "PdfArrayAdded": {
           "file": "🔺️diff/🔣️.json",
           "facet": "diff"
@@ -74435,7 +74540,71 @@
           "file": "🔣️.json",
           "facet": "artifact"
         },
+        "PdfBaseEncoding": {
+          "file": "📸️snapshot/🔣️.json",
+          "facet": "snapshot"
+        },
+        "PdfBorderStyle": {
+          "file": "📸️snapshot/🔣️.json",
+          "facet": "snapshot"
+        },
+        "PdfCMap": {
+          "file": "📸️snapshot/🔣️.json",
+          "facet": "snapshot"
+        },
+        "PdfCcittParameters": {
+          "file": "📸️snapshot/🔣️.json",
+          "facet": "snapshot"
+        },
+        "PdfCharProc": {
+          "file": "📸️snapshot/🔣️.json",
+          "facet": "snapshot"
+        },
+        "PdfCidFont": {
+          "file": "📸️snapshot/🔣️.json",
+          "facet": "snapshot"
+        },
+        "PdfCidMapping": {
+          "file": "📸️snapshot/🔣️.json",
+          "facet": "snapshot"
+        },
+        "PdfCidSystemInfo": {
+          "file": "📸️snapshot/🔣️.json",
+          "facet": "snapshot"
+        },
+        "PdfCidToGid": {
+          "file": "📸️snapshot/🔣️.json",
+          "facet": "snapshot"
+        },
+        "PdfCidVerticalRun": {
+          "file": "📸️snapshot/🔣️.json",
+          "facet": "snapshot"
+        },
+        "PdfCidWidthRun": {
+          "file": "📸️snapshot/🔣️.json",
+          "facet": "snapshot"
+        },
+        "PdfCodespaceRange": {
+          "file": "📸️snapshot/🔣️.json",
+          "facet": "snapshot"
+        },
+        "PdfColorSpace": {
+          "file": "📸️snapshot/🔣️.json",
+          "facet": "snapshot"
+        },
+        "PdfDate": {
+          "file": "📸️snapshot/🔣️.json",
+          "facet": "snapshot"
+        },
         "PdfDecimal": {
+          "file": "📸️snapshot/🔣️.json",
+          "facet": "snapshot"
+        },
+        "PdfDestination": {
+          "file": "📸️snapshot/🔣️.json",
+          "facet": "snapshot"
+        },
+        "PdfDestinationFit": {
           "file": "📸️snapshot/🔣️.json",
           "facet": "snapshot"
         },
@@ -74459,11 +74628,183 @@
           "file": "🔺️diff/🔣️.json",
           "facet": "diff"
         },
+        "PdfEmbeddedCMap": {
+          "file": "📸️snapshot/🔣️.json",
+          "facet": "snapshot"
+        },
+        "PdfEmbeddedFile": {
+          "file": "📸️snapshot/🔣️.json",
+          "facet": "snapshot"
+        },
+        "PdfEncodingDifference": {
+          "file": "📸️snapshot/🔣️.json",
+          "facet": "snapshot"
+        },
+        "PdfEncryption": {
+          "file": "📸️snapshot/🔣️.json",
+          "facet": "snapshot"
+        },
+        "PdfEncryptionAlgorithm": {
+          "file": "📸️snapshot/🔣️.json",
+          "facet": "snapshot"
+        },
+        "PdfExtGState": {
+          "file": "📸️snapshot/🔣️.json",
+          "facet": "snapshot"
+        },
+        "PdfFileSpecification": {
+          "file": "📸️snapshot/🔣️.json",
+          "facet": "snapshot"
+        },
+        "PdfFont": {
+          "file": "📸️snapshot/🔣️.json",
+          "facet": "snapshot"
+        },
+        "PdfFontDescriptor": {
+          "file": "📸️snapshot/🔣️.json",
+          "facet": "snapshot"
+        },
+        "PdfFontKind": {
+          "file": "📸️snapshot/🔣️.json",
+          "facet": "snapshot"
+        },
+        "PdfFontProgram": {
+          "file": "📸️snapshot/🔣️.json",
+          "facet": "snapshot"
+        },
+        "PdfFormField": {
+          "file": "📸️snapshot/🔣️.json",
+          "facet": "snapshot"
+        },
+        "PdfFormFieldKind": {
+          "file": "📸️snapshot/🔣️.json",
+          "facet": "snapshot"
+        },
+        "PdfFormXObject": {
+          "file": "📸️snapshot/🔣️.json",
+          "facet": "snapshot"
+        },
+        "PdfFunction": {
+          "file": "📸️snapshot/🔣️.json",
+          "facet": "snapshot"
+        },
+        "PdfImage": {
+          "file": "📸️snapshot/🔣️.json",
+          "facet": "snapshot"
+        },
+        "PdfImageCodec": {
+          "file": "📸️snapshot/🔣️.json",
+          "facet": "snapshot"
+        },
+        "PdfImageMask": {
+          "file": "📸️snapshot/🔣️.json",
+          "facet": "snapshot"
+        },
+        "PdfIndexedDiffPdfAnnotation": {
+          "file": "🔺️diff/🔣️.json",
+          "facet": "diff"
+        },
+        "PdfIndexedDiffPdfNamedDestination": {
+          "file": "🔺️diff/🔣️.json",
+          "facet": "diff"
+        },
+        "PdfIndexedDiffPdfOp": {
+          "file": "🔺️diff/🔣️.json",
+          "facet": "diff"
+        },
+        "PdfIndexedDiffPdfOutlineItem": {
+          "file": "🔺️diff/🔣️.json",
+          "facet": "diff"
+        },
+        "PdfIndexedDiffPdfOutputIntent": {
+          "file": "🔺️diff/🔣️.json",
+          "facet": "diff"
+        },
+        "PdfIndexedDiffPdfPageLabelRange": {
+          "file": "🔺️diff/🔣️.json",
+          "facet": "diff"
+        },
+        "PdfIndexedItemT": {
+          "file": "🔺️diff/🔣️.json",
+          "facet": "diff"
+        },
         "PdfIndirectObject": {
           "file": "📸️snapshot/🔣️.json",
           "facet": "snapshot"
         },
         "PdfInfo": {
+          "file": "📸️snapshot/🔣️.json",
+          "facet": "snapshot"
+        },
+        "PdfInlineImage": {
+          "file": "📸️snapshot/🔣️.json",
+          "facet": "snapshot"
+        },
+        "PdfKeyedDiffPdfEmbeddedFile": {
+          "file": "🔺️diff/🔣️.json",
+          "facet": "diff"
+        },
+        "PdfKeyedDiffPdfExtGState": {
+          "file": "🔺️diff/🔣️.json",
+          "facet": "diff"
+        },
+        "PdfKeyedDiffPdfFont": {
+          "file": "🔺️diff/🔣️.json",
+          "facet": "diff"
+        },
+        "PdfKeyedDiffPdfFormXObject": {
+          "file": "🔺️diff/🔣️.json",
+          "facet": "diff"
+        },
+        "PdfKeyedDiffPdfImage": {
+          "file": "🔺️diff/🔣️.json",
+          "facet": "diff"
+        },
+        "PdfKeyedDiffPdfNamedColorSpace": {
+          "file": "🔺️diff/🔣️.json",
+          "facet": "diff"
+        },
+        "PdfKeyedDiffPdfNamedProperties": {
+          "file": "🔺️diff/🔣️.json",
+          "facet": "diff"
+        },
+        "PdfKeyedDiffPdfPattern": {
+          "file": "🔺️diff/🔣️.json",
+          "facet": "diff"
+        },
+        "PdfKeyedDiffPdfShading": {
+          "file": "🔺️diff/🔣️.json",
+          "facet": "diff"
+        },
+        "PdfKeyedItemT": {
+          "file": "🔺️diff/🔣️.json",
+          "facet": "diff"
+        },
+        "PdfLineCap": {
+          "file": "📸️snapshot/🔣️.json",
+          "facet": "snapshot"
+        },
+        "PdfLineJoin": {
+          "file": "📸️snapshot/🔣️.json",
+          "facet": "snapshot"
+        },
+        "PdfMarkInfo": {
+          "file": "📸️snapshot/🔣️.json",
+          "facet": "snapshot"
+        },
+        "PdfMarkupAnnotation": {
+          "file": "📸️snapshot/🔣️.json",
+          "facet": "snapshot"
+        },
+        "PdfNamedColorSpace": {
+          "file": "📸️snapshot/🔣️.json",
+          "facet": "snapshot"
+        },
+        "PdfNamedDestination": {
+          "file": "📸️snapshot/🔣️.json",
+          "facet": "snapshot"
+        },
+        "PdfNamedProperties": {
           "file": "📸️snapshot/🔣️.json",
           "facet": "snapshot"
         },
@@ -74483,6 +74824,30 @@
           "file": "🔺️diff/🔣️.json",
           "facet": "diff"
         },
+        "PdfOp": {
+          "file": "📸️snapshot/🔣️.json",
+          "facet": "snapshot"
+        },
+        "PdfOpenAction": {
+          "file": "📸️snapshot/🔣️.json",
+          "facet": "snapshot"
+        },
+        "PdfOptionalContent": {
+          "file": "📸️snapshot/🔣️.json",
+          "facet": "snapshot"
+        },
+        "PdfOptionalContentGroup": {
+          "file": "📸️snapshot/🔣️.json",
+          "facet": "snapshot"
+        },
+        "PdfOutlineItem": {
+          "file": "📸️snapshot/🔣️.json",
+          "facet": "snapshot"
+        },
+        "PdfOutputIntent": {
+          "file": "📸️snapshot/🔣️.json",
+          "facet": "snapshot"
+        },
         "PdfPage": {
           "file": "📸️snapshot/🔣️.json",
           "facet": "snapshot"
@@ -74495,6 +74860,22 @@
           "file": "🔺️diff/🔣️.json",
           "facet": "diff"
         },
+        "PdfPageLabelRange": {
+          "file": "📸️snapshot/🔣️.json",
+          "facet": "snapshot"
+        },
+        "PdfPageLabelStyle": {
+          "file": "📸️snapshot/🔣️.json",
+          "facet": "snapshot"
+        },
+        "PdfPageLayout": {
+          "file": "📸️snapshot/🔣️.json",
+          "facet": "snapshot"
+        },
+        "PdfPageMode": {
+          "file": "📸️snapshot/🔣️.json",
+          "facet": "snapshot"
+        },
         "PdfPageModified": {
           "file": "🔺️diff/🔣️.json",
           "facet": "diff"
@@ -74503,11 +74884,83 @@
           "file": "🔺️diff/🔣️.json",
           "facet": "diff"
         },
-        "PdfPathSegment": {
+        "PdfPattern": {
+          "file": "📸️snapshot/🔣️.json",
+          "facet": "snapshot"
+        },
+        "PdfPatternKind": {
+          "file": "📸️snapshot/🔣️.json",
+          "facet": "snapshot"
+        },
+        "PdfPredictor": {
+          "file": "📸️snapshot/🔣️.json",
+          "facet": "snapshot"
+        },
+        "PdfPropertyList": {
+          "file": "📸️snapshot/🔣️.json",
+          "facet": "snapshot"
+        },
+        "PdfSetPdfAcroForm": {
           "file": "🔺️diff/🔣️.json",
           "facet": "diff"
         },
-        "PdfPredictor": {
+        "PdfSetPdfEncryption": {
+          "file": "🔺️diff/🔣️.json",
+          "facet": "diff"
+        },
+        "PdfSetPdfMarkInfo": {
+          "file": "🔺️diff/🔣️.json",
+          "facet": "diff"
+        },
+        "PdfSetPdfOpenAction": {
+          "file": "🔺️diff/🔣️.json",
+          "facet": "diff"
+        },
+        "PdfSetPdfOptionalContent": {
+          "file": "🔺️diff/🔣️.json",
+          "facet": "diff"
+        },
+        "PdfSetPdfPageLayout": {
+          "file": "🔺️diff/🔣️.json",
+          "facet": "diff"
+        },
+        "PdfSetPdfPageMode": {
+          "file": "🔺️diff/🔣️.json",
+          "facet": "diff"
+        },
+        "PdfSetPdfRect": {
+          "file": "🔺️diff/🔣️.json",
+          "facet": "diff"
+        },
+        "PdfSetPdfTransparencyGroup": {
+          "file": "🔺️diff/🔣️.json",
+          "facet": "diff"
+        },
+        "PdfSetPdfViewerPreferences": {
+          "file": "🔺️diff/🔣️.json",
+          "facet": "diff"
+        },
+        "PdfSetString": {
+          "file": "🔺️diff/🔣️.json",
+          "facet": "diff"
+        },
+        "PdfSetf64": {
+          "file": "🔺️diff/🔣️.json",
+          "facet": "diff"
+        },
+        "PdfSetu32": {
+          "file": "🔺️diff/🔣️.json",
+          "facet": "diff"
+        },
+        "PdfShading": {
+          "file": "📸️snapshot/🔣️.json",
+          "facet": "snapshot"
+        },
+        "PdfShadingKind": {
+          "file": "📸️snapshot/🔣️.json",
+          "facet": "snapshot"
+        },
+        "PdfSimpleEncoding": {
           "file": "📸️snapshot/🔣️.json",
           "facet": "snapshot"
         },
@@ -74515,32 +74968,104 @@
           "file": "📸️snapshot/🔣️.json",
           "facet": "snapshot"
         },
+        "PdfSoftMask": {
+          "file": "📸️snapshot/🔣️.json",
+          "facet": "snapshot"
+        },
         "PdfStreamFilter": {
+          "file": "📸️snapshot/🔣️.json",
+          "facet": "snapshot"
+        },
+        "PdfTextArrayItem": {
+          "file": "📸️snapshot/🔣️.json",
+          "facet": "snapshot"
+        },
+        "PdfTextString": {
+          "file": "📸️snapshot/🔣️.json",
+          "facet": "snapshot"
+        },
+        "PdfToUnicode": {
+          "file": "📸️snapshot/🔣️.json",
+          "facet": "snapshot"
+        },
+        "PdfToUnicodeMapping": {
+          "file": "📸️snapshot/🔣️.json",
+          "facet": "snapshot"
+        },
+        "PdfTransparencyGroup": {
           "file": "📸️snapshot/🔣️.json",
           "facet": "snapshot"
         },
         "PdfValueDiff": {
           "file": "🔺️diff/🔣️.json",
           "facet": "diff"
+        },
+        "PdfViewerPreferences": {
+          "file": "📸️snapshot/🔣️.json",
+          "facet": "snapshot"
         }
       },
       "dependsOn": [
         "s.stdio.pdf.1.7.base.mutation.append-page-content",
+        "s.stdio.pdf.1.7.base.mutation.insert-annotation",
+        "s.stdio.pdf.1.7.base.mutation.insert-content",
         "s.stdio.pdf.1.7.base.mutation.insert-object",
         "s.stdio.pdf.1.7.base.mutation.insert-page",
         "s.stdio.pdf.1.7.base.mutation.move-page",
+        "s.stdio.pdf.1.7.base.mutation.remove-annotation",
+        "s.stdio.pdf.1.7.base.mutation.remove-catalog-entry",
+        "s.stdio.pdf.1.7.base.mutation.remove-color-space",
+        "s.stdio.pdf.1.7.base.mutation.remove-content",
         "s.stdio.pdf.1.7.base.mutation.remove-dict-entry",
+        "s.stdio.pdf.1.7.base.mutation.remove-embedded-file",
+        "s.stdio.pdf.1.7.base.mutation.remove-ext-g-state",
+        "s.stdio.pdf.1.7.base.mutation.remove-font",
+        "s.stdio.pdf.1.7.base.mutation.remove-form",
+        "s.stdio.pdf.1.7.base.mutation.remove-image",
+        "s.stdio.pdf.1.7.base.mutation.remove-named-destination",
         "s.stdio.pdf.1.7.base.mutation.remove-object",
         "s.stdio.pdf.1.7.base.mutation.remove-page",
+        "s.stdio.pdf.1.7.base.mutation.remove-pattern",
+        "s.stdio.pdf.1.7.base.mutation.remove-properties",
+        "s.stdio.pdf.1.7.base.mutation.remove-shading",
         "s.stdio.pdf.1.7.base.mutation.remove-trailer-entry",
+        "s.stdio.pdf.1.7.base.mutation.replace-content",
+        "s.stdio.pdf.1.7.base.mutation.set-acro-form",
+        "s.stdio.pdf.1.7.base.mutation.set-annotation",
+        "s.stdio.pdf.1.7.base.mutation.set-catalog-entry",
+        "s.stdio.pdf.1.7.base.mutation.set-color-space",
         "s.stdio.pdf.1.7.base.mutation.set-dict-entry",
+        "s.stdio.pdf.1.7.base.mutation.set-document-id",
+        "s.stdio.pdf.1.7.base.mutation.set-embedded-file",
+        "s.stdio.pdf.1.7.base.mutation.set-encryption",
+        "s.stdio.pdf.1.7.base.mutation.set-ext-g-state",
+        "s.stdio.pdf.1.7.base.mutation.set-font",
+        "s.stdio.pdf.1.7.base.mutation.set-form",
+        "s.stdio.pdf.1.7.base.mutation.set-image",
         "s.stdio.pdf.1.7.base.mutation.set-info",
+        "s.stdio.pdf.1.7.base.mutation.set-language",
+        "s.stdio.pdf.1.7.base.mutation.set-mark-info",
+        "s.stdio.pdf.1.7.base.mutation.set-metadata",
+        "s.stdio.pdf.1.7.base.mutation.set-named-destination",
         "s.stdio.pdf.1.7.base.mutation.set-object-value",
+        "s.stdio.pdf.1.7.base.mutation.set-open-action",
+        "s.stdio.pdf.1.7.base.mutation.set-optional-content",
+        "s.stdio.pdf.1.7.base.mutation.set-outlines",
+        "s.stdio.pdf.1.7.base.mutation.set-output-intents",
+        "s.stdio.pdf.1.7.base.mutation.set-page-box",
         "s.stdio.pdf.1.7.base.mutation.set-page-content",
         "s.stdio.pdf.1.7.base.mutation.set-page-crop-box",
+        "s.stdio.pdf.1.7.base.mutation.set-page-labels",
+        "s.stdio.pdf.1.7.base.mutation.set-page-layout",
         "s.stdio.pdf.1.7.base.mutation.set-page-media-box",
+        "s.stdio.pdf.1.7.base.mutation.set-page-mode",
         "s.stdio.pdf.1.7.base.mutation.set-page-rotation",
-        "s.stdio.pdf.1.7.base.mutation.set-trailer-entry"
+        "s.stdio.pdf.1.7.base.mutation.set-page-user-unit",
+        "s.stdio.pdf.1.7.base.mutation.set-pattern",
+        "s.stdio.pdf.1.7.base.mutation.set-properties",
+        "s.stdio.pdf.1.7.base.mutation.set-shading",
+        "s.stdio.pdf.1.7.base.mutation.set-trailer-entry",
+        "s.stdio.pdf.1.7.base.mutation.set-viewer-preferences"
       ],
       "hashes": {
         "💡️inferences/💾️binary/🟦️.ts": "fb4834eede784f2749f6c6a5f8f9f04904f8d1462b0b8deadcce107f878e4308",
@@ -74562,11 +75087,11 @@
         "📸️snapshot/📝️text/🛰️.proto": "f232498a5e342636b9712c7f1e3fbcfedf63b22172df19874ce45c252505eba6",
         "📸️snapshot/📝️text/🟦️.ts": "54a588f1b21d2f79aab65646cde020076b0801115fc1ec4f7ebf6fcfb9aebada",
         "📸️snapshot/📝️text/🦀️.rs": "06ef317b3769cd1a69ec25849c2a2192a0295d0f2696a2d2a7462e8910e1279b",
-        "📸️snapshot/🔗️.graphql": "ce2426ca6bf14667c61a74e627df0db9a9652717e066fd783aa26aef68a2aea2",
-        "📸️snapshot/🔣️.json": "8c077aaade0591e305a695f3d415c8dbfb916e20b4d3e7902835d272c0d988b6",
-        "📸️snapshot/🛰️.proto": "0664e29438de046237a171fa280ac7fba70310a0e2a9a24c40dcd10066f16b96",
-        "📸️snapshot/🟦️.ts": "752bd56180640d4cda13322bb14e0b8064b44b379d702da06390da0b92df7185",
-        "📸️snapshot/🦀️.rs": "3e644cf4908e7da0b5d224364294d690bcb668ad29771638628ce1a8a13fedd4",
+        "📸️snapshot/🔗️.graphql": "401a1fd198e2e5b5ad6e54784b32a32773689361e30a798bc811f86498e28e4b",
+        "📸️snapshot/🔣️.json": "834613dedd303f5e74b9824d181fec6f588b04537e1f012ff2d67753067a3e8c",
+        "📸️snapshot/🛰️.proto": "95114c88b5c3c23a85ebcab264e09abbe17d1e03f9256d1abeee94b175c988b6",
+        "📸️snapshot/🟦️.ts": "446e5807e83e4087ff840785b91412914907ff308c9a80b1fd0f6b4f66d027fd",
+        "📸️snapshot/🦀️.rs": "24997e8ff81389949aaaa8b67a0b82fb71e37f6d97da95125de15292a3db8472",
         "🔗️.graphql": "5f37cee99799968d68d75f222763d597dbb27b3badd90a1d73a8185b996f3db2",
         "🔣️.json": "e4351fa6c2c695a18887c43d07e7d103e1f2c09fe7d7e709399a348b6a43f6aa",
         "🔺️diff/💾️binary/🟦️.ts": "e5f2b8b583669ec063815435c863e2903166858c954cb60fac0eac85dc2ac6ad",
@@ -74576,23 +75101,23 @@
         "🔺️diff/📝️text/🛰️.proto": "4de7f719c74839b96c31dc4b9e62a8ba7c881c787de03adcbd37038b316cff89",
         "🔺️diff/📝️text/🟦️.ts": "2c706c9e02c319cc561e9f0cc184b50ea3cbd76c9c7e7add28ed98ad01b6552c",
         "🔺️diff/📝️text/🦀️.rs": "ca44c0a8c0a3553144a93e9b99e68cfd944c72882a0426e0a2e9ab2c04f067ad",
-        "🔺️diff/🔗️.graphql": "c38c9a5545794504193a502e1665937f5ed61c7676f38bbdf5849cfe82fc44af",
-        "🔺️diff/🔣️.json": "b0975527fa18d8011f86d1d38ec64165db26d4d43620679591a3ceea500e95b0",
-        "🔺️diff/🛰️.proto": "ce4d694a053d5460233e757e05e9191800e30dffe1215de10287ef9f83ea7053",
-        "🔺️diff/🟦️.ts": "bc5bf989b3ffcbd46b7edaf181eef4dae5b0c45db3c046321793e8d7e9cc17b5",
-        "🔺️diff/🦀️.rs": "a61bbd2fd5fc8c050670182c20c393271473e26b1d493310cf10eb9008641423",
+        "🔺️diff/🔗️.graphql": "bad61d9e72274a005cfa3ebeaa18281ac2432e81a1dca48bdfc3aa15c5379192",
+        "🔺️diff/🔣️.json": "ff1d9434f68a39da0450cf9f622e9769abe5dcfd12d2dc93fea7559f620b551c",
+        "🔺️diff/🛰️.proto": "7ede10c8392bf54a293c2d3bbeed5d149e4f869f9c69e498a8c1968574b9c8ab",
+        "🔺️diff/🟦️.ts": "bb9d4d157587905fe0f674c2eb92c9bddd5745231f7510ae46f8f34577fe61db",
+        "🔺️diff/🦀️.rs": "2bc3fb3d98cb4335e5ca248b9e31e75b359fd64900b831da1f9b33331988bc8e",
         "🛰️.proto": "fab4964bf40f33168a44134a76b65efe59f08163b8176cda17a54daaeb8833c3",
         "🟦️.ts": "0190bba8fde0d4cfb75d6cf03dea0f4b275de3cecab209f5422ceb88b864cd06",
-        "🦀️.rs": "1d2cae25af3921105402670f4436757a70f3013914590c9bc1fbe1e6bd1f0e13",
+        "🦀️.rs": "ad7c8a35265db288f49fb9ae82eb06d946f2124bdd52da603068bc3564d05bc7",
         "🧬️mutations/💾️binary/🟦️.ts": "7def630386a3980fe5feb59133327be12f3a8f5842a571eb1242c908805b641c",
-        "🧬️mutations/💾️binary/🦀️.rs": "1389375b8578df7bc1550d949e8b6929eb94d5100c195723917b371466660e9a",
+        "🧬️mutations/💾️binary/🦀️.rs": "ecc6050a4046b61265c95062c2454cd4db0ecc784605563eba86940786093c89",
         "🧬️mutations/📝️text/🟦️.ts": "9f27396c1dbed7980f11434c94250834011cd7da229056308551ed5ce4d9370d",
-        "🧬️mutations/📝️text/🦀️.rs": "4953732e287cad905d176a18daed8bcccde6e08bb5b14fa18fff7ab3a8f59a70",
-        "🧬️mutations/🔗️.graphql": "d603577e21e383af8312f2a3502eed3b13990eaf85833cc1cc7199fd0372b39a",
-        "🧬️mutations/🔣️.json": "af1935d804ecbdc1200909cd4f43b79ab16de03384fb6547df5751173bbf6879",
-        "🧬️mutations/🛰️.proto": "c1ceedc878190572833125b5d930b8ffe4eb2012e323d96ab88832f394ee844a",
-        "🧬️mutations/🟦️.ts": "087fcef66d940279d59000170aa161694ecb42bf99461388138dddafcc69cf33",
-        "🧬️mutations/🦀️.rs": "5f8b19e83bc8899d0e912b25b67950e9a1f10275c0ed4f2373c99afe5291c18b"
+        "🧬️mutations/📝️text/🦀️.rs": "023244600fba1746f84f96c4c4a5624d8f45cb35b87398aa0a0346a62c70a404",
+        "🧬️mutations/🔗️.graphql": "0a668b234ec2a95db3b51fddbaee0a87f8d4e057c3509c60b7a14ae60585f1d9",
+        "🧬️mutations/🔣️.json": "69a8c9fe4909872edb72381b094fc2b114868c20db6e0ff132448a674c756328",
+        "🧬️mutations/🛰️.proto": "29831bbc371f67c86544334e3fc72a6b775b47c595444ddf73272eee8ffe2b98",
+        "🧬️mutations/🟦️.ts": "b982f36bb833b8967bf51a9aa9c21e66908d9ad22ac10b67a822b4efe57db267",
+        "🧬️mutations/🦀️.rs": "a574e594040d66f911535e37f91e532aee0f8b92989359ad0db916d56dd08ade"
       }
     },
     "s.stdio.pdf.1.7.base.mutation.append-page-content": {
@@ -74608,9 +75133,51 @@
           "facet": "schema"
         }
       },
-      "dependsOn": [],
+      "dependsOn": [
+        "s.stdio.pdf.1.7.base"
+      ],
       "hashes": {
-        "🔣️.json": "745c7213dacf751e672a21fc2bf3b2b4fa8c1cb6c12e5f2b0315c2624d501aea"
+        "🔣️.json": "f7df318f200b3845e4e972bee57d4d215d5ad5cf8ade31f2ea5dc15508fca7f4"
+      }
+    },
+    "s.stdio.pdf.1.7.base.mutation.insert-annotation": {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/📌️insert-annotation/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "InsertAnnotation": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [
+        "s.stdio.pdf.1.7.base"
+      ],
+      "hashes": {
+        "🔣️.json": "e482c1dc868a159cfc9557599e260e0a6f6c7f6f06b290d7eed7472467894d82"
+      }
+    },
+    "s.stdio.pdf.1.7.base.mutation.insert-content": {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/🖋️insert-content/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "InsertContent": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [
+        "s.stdio.pdf.1.7.base"
+      ],
+      "hashes": {
+        "🔣️.json": "ecfb7b385fa367f36e8adb84796d6e21eb6eee45fb7776351703906d2b0a467c"
       }
     },
     "s.stdio.pdf.1.7.base.mutation.insert-object": {
@@ -74624,35 +75191,13 @@
         "InsertObject": {
           "file": "🔣️.json",
           "facet": "schema"
-        },
-        "ObjRef": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "PdfDecimal": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "PdfDictEntry": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "PdfObject": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "PdfPredictor": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "PdfStreamFilter": {
-          "file": "🔣️.json",
-          "facet": "schema"
         }
       },
-      "dependsOn": [],
+      "dependsOn": [
+        "s.stdio.pdf.1.7.base"
+      ],
       "hashes": {
-        "🔣️.json": "2eeb42b5d8296689768f2fb3e8da42e4a90f4e653200c02bf83d5179e26b8a1a"
+        "🔣️.json": "b6e605735e64b16a8def76b2d405e9b534c19abd187f2616af553da73120e727"
       }
     },
     "s.stdio.pdf.1.7.base.mutation.insert-page": {
@@ -74666,15 +75211,13 @@
         "InsertPage": {
           "file": "🔣️.json",
           "facet": "schema"
-        },
-        "PdfPage": {
-          "file": "🔣️.json",
-          "facet": "schema"
         }
       },
-      "dependsOn": [],
+      "dependsOn": [
+        "s.stdio.pdf.1.7.base"
+      ],
       "hashes": {
-        "🔣️.json": "c0b028a2ee50aaa32eda2cc071da1ea4bf26bda024947c25a1480eeb0686ebe0"
+        "🔣️.json": "9bf57d96453df6881dd19afe7f28d515fe34c3617f7633157a41d4c835f6f4d2"
       }
     },
     "s.stdio.pdf.1.7.base.mutation.move-page": {
@@ -74695,6 +75238,78 @@
         "🔣️.json": "3ce73f782ed8a364fe1bab54011a15622285eb1fa4851483194ed646840401f1"
       }
     },
+    "s.stdio.pdf.1.7.base.mutation.remove-annotation": {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/📍️remove-annotation/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "RemoveAnnotation": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "ae06ba26db4b2f1cb9c0b4c8409ce29d3a35aee085d3f8ebdd4e906573574c54"
+      }
+    },
+    "s.stdio.pdf.1.7.base.mutation.remove-catalog-entry": {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/🧺️remove-catalog-entry/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "RemoveCatalogEntry": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "ce93ff4f4337e9f10ecdb779aeb958fb69cb5f2bfe8cd7220ffd9edee04f3cf2"
+      }
+    },
+    "s.stdio.pdf.1.7.base.mutation.remove-color-space": {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/🎨️remove-color-space/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "RemoveColorSpace": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "11ff235eb681f85f472d69d1d9410dd3d7cef5661565257f641afd56a93e29c8"
+      }
+    },
+    "s.stdio.pdf.1.7.base.mutation.remove-content": {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/🧻️remove-content/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "RemoveContent": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "bbca6642ba8edd28345fa6984c789b15fcb26b904f8477756105231dcd27c5da"
+      }
+    },
     "s.stdio.pdf.1.7.base.mutation.remove-dict-entry": {
       "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/🚫️remove-dict-entry/🧬️schema",
       "level": "mutation-leaf",
@@ -74703,22 +75318,124 @@
         "🔣️jsonschema": "🔣️.json"
       },
       "exports": {
-        "ObjRef": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "PdfPathSegment": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
         "RemoveDictEntry": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [
+        "s.stdio.pdf.1.7.base"
+      ],
+      "hashes": {
+        "🔣️.json": "7f681657e485389299d40ea659a2e3a7ced556ebbdc297903dd769df57d59a59"
+      }
+    },
+    "s.stdio.pdf.1.7.base.mutation.remove-embedded-file": {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/🗃️remove-embedded-file/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "RemoveEmbeddedFile": {
           "file": "🔣️.json",
           "facet": "schema"
         }
       },
       "dependsOn": [],
       "hashes": {
-        "🔣️.json": "9f31b7659d40f019b0c4799a6ad0ce4c786b8d397e0aef97c84967ccc23088ef"
+        "🔣️.json": "7727fa12f56244b42b76dafe61a0f948cc9dbf973285d327cf3cc55824a4f778"
+      }
+    },
+    "s.stdio.pdf.1.7.base.mutation.remove-ext-g-state": {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/🎚️remove-ext-g-state/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "RemoveExtGState": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "13c8a128ca5285de199d907317398cfcbdb9a8e17f9f6c36e71aca49afada0c3"
+      }
+    },
+    "s.stdio.pdf.1.7.base.mutation.remove-font": {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/🅾️remove-font/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "RemoveFont": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "53675676c1a1f313ff9ba94ed441de60b76ac7014e001e9f9bcf8466277ec031"
+      }
+    },
+    "s.stdio.pdf.1.7.base.mutation.remove-form": {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/🗞️remove-form/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "RemoveForm": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "e19857d1f513373de2527c08d5cb7fefba9f93b8fb0639577e074f21a539100b"
+      }
+    },
+    "s.stdio.pdf.1.7.base.mutation.remove-image": {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/🌫️remove-image/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "RemoveImage": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "d300679bb2288af0233e3c812aa3890edc19333b632e78a5bffec86f342122d9"
+      }
+    },
+    "s.stdio.pdf.1.7.base.mutation.remove-named-destination": {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/🎪️remove-named-destination/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "RemoveNamedDestination": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "9b783fa94af38dd80355be2a3871bd24d2277afe4a137be23d088224329cc582"
       }
     },
     "s.stdio.pdf.1.7.base.mutation.remove-object": {
@@ -74729,18 +75446,16 @@
         "🔣️jsonschema": "🔣️.json"
       },
       "exports": {
-        "ObjRef": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
         "RemoveObject": {
           "file": "🔣️.json",
           "facet": "schema"
         }
       },
-      "dependsOn": [],
+      "dependsOn": [
+        "s.stdio.pdf.1.7.base"
+      ],
       "hashes": {
-        "🔣️.json": "74f1525f9bb0ec2d4efce3cf05678ac8bde70e834dd337f9c4b1a24ed0d1c9d1"
+        "🔣️.json": "1ba00ffcc81f47178c3ff71cce02c2b91904debabfd5ccf91ca908d4c43dd84f"
       }
     },
     "s.stdio.pdf.1.7.base.mutation.remove-page": {
@@ -74761,6 +75476,60 @@
         "🔣️.json": "58f41c38de0c3d8665958815195cfd2b14277871da64631b3edc0ff3e8f6a1c6"
       }
     },
+    "s.stdio.pdf.1.7.base.mutation.remove-pattern": {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/🪡️remove-pattern/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "RemovePattern": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "c05b5e753e7266341a2294faf4a38937c780d44d5f2822103b4287663dfef3a8"
+      }
+    },
+    "s.stdio.pdf.1.7.base.mutation.remove-properties": {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/🔖️remove-properties/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "RemoveProperties": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "e7b622527d15932608d298c00852571cc563212c23a59a5644d627338ab3dd61"
+      }
+    },
+    "s.stdio.pdf.1.7.base.mutation.remove-shading": {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/🌄️remove-shading/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "RemoveShading": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "c056ceb1eea86e6eab253d91338cd801cc58a8ef4dffc52fb781c50f32a4c9da"
+      }
+    },
     "s.stdio.pdf.1.7.base.mutation.remove-trailer-entry": {
       "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/🧽️remove-trailer-entry/🧬️schema",
       "level": "mutation-leaf",
@@ -74779,6 +75548,106 @@
         "🔣️.json": "24c70f724546dbb433633ad9a82566fab32592368fe816095484c083dbc76817"
       }
     },
+    "s.stdio.pdf.1.7.base.mutation.replace-content": {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/🔁️replace-content/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "ReplaceContent": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [
+        "s.stdio.pdf.1.7.base"
+      ],
+      "hashes": {
+        "🔣️.json": "cef2a0cdc46c7d2d26c5a7e594f7af9f33e22d61180fc63cb1d62dfe9917d067"
+      }
+    },
+    "s.stdio.pdf.1.7.base.mutation.set-acro-form": {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/📋️set-acro-form/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "SetAcroForm": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [
+        "s.stdio.pdf.1.7.base"
+      ],
+      "hashes": {
+        "🔣️.json": "1135d0743376993e8f8b43169d73bf9dd48cee7940c5a6165f1de8f413373b1a"
+      }
+    },
+    "s.stdio.pdf.1.7.base.mutation.set-annotation": {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/📝️set-annotation/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "SetAnnotation": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [
+        "s.stdio.pdf.1.7.base"
+      ],
+      "hashes": {
+        "🔣️.json": "a656c3783639ef8242296dfb5826c7220f8df17ade4ca646fee5a13ab736e722"
+      }
+    },
+    "s.stdio.pdf.1.7.base.mutation.set-catalog-entry": {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/🗂️set-catalog-entry/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "SetCatalogEntry": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [
+        "s.stdio.pdf.1.7.base"
+      ],
+      "hashes": {
+        "🔣️.json": "9565059384f40cd67dbd31b155163b9c56cc156cca866c5b68f37c313dc41655"
+      }
+    },
+    "s.stdio.pdf.1.7.base.mutation.set-color-space": {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/🌈️set-color-space/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "SetColorSpace": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [
+        "s.stdio.pdf.1.7.base"
+      ],
+      "hashes": {
+        "🔣️.json": "03ff1ff4566e523b19ad5ccde729f5b4b9fe82b7db261de1178cbc36d5e5cf4d"
+      }
+    },
     "s.stdio.pdf.1.7.base.mutation.set-dict-entry": {
       "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/🔑️set-dict-entry/🧬️schema",
       "level": "mutation-leaf",
@@ -74787,42 +75656,154 @@
         "🔣️jsonschema": "🔣️.json"
       },
       "exports": {
-        "ObjRef": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "PdfDecimal": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "PdfDictEntry": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "PdfObject": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "PdfPathSegment": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "PdfPredictor": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "PdfStreamFilter": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
         "SetDictEntry": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [
+        "s.stdio.pdf.1.7.base"
+      ],
+      "hashes": {
+        "🔣️.json": "aeca7fcf7e07ff88ab8304bc9aefa0d685fd091ff4edba20a0ed40a26a5e74af"
+      }
+    },
+    "s.stdio.pdf.1.7.base.mutation.set-document-id": {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/🆔️set-document-id/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "SetDocumentId": {
           "file": "🔣️.json",
           "facet": "schema"
         }
       },
       "dependsOn": [],
       "hashes": {
-        "🔣️.json": "b17613c46bcb2dba542869aa1b0832372685285bf400809a6cbe62d8b114b64b"
+        "🔣️.json": "319c2c1f6a7c985df611b3f0d3e5ec1ff86ead8665fbc449e92484236997128a"
+      }
+    },
+    "s.stdio.pdf.1.7.base.mutation.set-embedded-file": {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/📎️set-embedded-file/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "SetEmbeddedFile": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [
+        "s.stdio.pdf.1.7.base"
+      ],
+      "hashes": {
+        "🔣️.json": "87df70e94744a903c68cebc6dae30866f37ad3e354d82b170fe8cc33a0a5dd0b"
+      }
+    },
+    "s.stdio.pdf.1.7.base.mutation.set-encryption": {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/🔐️set-encryption/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "SetEncryption": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [
+        "s.stdio.pdf.1.7.base"
+      ],
+      "hashes": {
+        "🔣️.json": "df3cd487edfa70b4530c226be7cce3f379ae70eaa0bc2485430a466d4d6a39a0"
+      }
+    },
+    "s.stdio.pdf.1.7.base.mutation.set-ext-g-state": {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/🎛️set-ext-g-state/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "SetExtGState": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [
+        "s.stdio.pdf.1.7.base"
+      ],
+      "hashes": {
+        "🔣️.json": "443fe2383981bd66aeef33a7b92d7cc9172547c8964dc82fe4bfb94b2ed1bfef"
+      }
+    },
+    "s.stdio.pdf.1.7.base.mutation.set-font": {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/🔤️set-font/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "SetFont": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [
+        "s.stdio.pdf.1.7.base"
+      ],
+      "hashes": {
+        "🔣️.json": "a117302e8822b9c17b8bc3f5bb88acb17050c5086dc9bac05f142110e18ef00e"
+      }
+    },
+    "s.stdio.pdf.1.7.base.mutation.set-form": {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/📄️set-form/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "SetForm": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [
+        "s.stdio.pdf.1.7.base"
+      ],
+      "hashes": {
+        "🔣️.json": "9deaa850d51e432acc597895cda9f159250d688e2c7ba87b7599b199dc74828b"
+      }
+    },
+    "s.stdio.pdf.1.7.base.mutation.set-image": {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/🏞️set-image/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "SetImage": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [
+        "s.stdio.pdf.1.7.base"
+      ],
+      "hashes": {
+        "🔣️.json": "3be425e6a883979f6cfe75e77c2e546ebfdf1c48c61256c3b45ea956e5b40c94"
       }
     },
     "s.stdio.pdf.1.7.base.mutation.set-info": {
@@ -74833,18 +75814,92 @@
         "🔣️jsonschema": "🔣️.json"
       },
       "exports": {
-        "PdfInfo": {
+        "SetInfo": {
           "file": "🔣️.json",
           "facet": "schema"
-        },
-        "SetInfo": {
+        }
+      },
+      "dependsOn": [
+        "s.stdio.pdf.1.7.base"
+      ],
+      "hashes": {
+        "🔣️.json": "b9018a75d19ab8c39189d6fa164d7fbd873f2c3e0e4d86c872f18d0778281f13"
+      }
+    },
+    "s.stdio.pdf.1.7.base.mutation.set-language": {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/🗣️set-language/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "SetLanguage": {
           "file": "🔣️.json",
           "facet": "schema"
         }
       },
       "dependsOn": [],
       "hashes": {
-        "🔣️.json": "f37d5c823b6d07502b397f36a20b4c127be718283bce6fcf11af057c220bfaec"
+        "🔣️.json": "15cb7304a9b6456ddef240d7f12f62c965ef3fbc7cfe80948f11b0458851902f"
+      }
+    },
+    "s.stdio.pdf.1.7.base.mutation.set-mark-info": {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/🔏️set-mark-info/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "SetMarkInfo": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [
+        "s.stdio.pdf.1.7.base"
+      ],
+      "hashes": {
+        "🔣️.json": "23c93abd58f36932cae1ac72d6ddb47745ee31ad4d87cff7e1af4d120df88b10"
+      }
+    },
+    "s.stdio.pdf.1.7.base.mutation.set-metadata": {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/🧾️set-metadata/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "SetMetadata": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "e0d06f43e2bc54acf6384c99af3a9f95193301656b6a86a6e9d3c0383a658e27"
+      }
+    },
+    "s.stdio.pdf.1.7.base.mutation.set-named-destination": {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/🎯️set-named-destination/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "SetNamedDestination": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [
+        "s.stdio.pdf.1.7.base"
+      ],
+      "hashes": {
+        "🔣️.json": "bb7b2b27b29d782ab48e758d9d721c68af984aa8695f1150d797fa24046be51e"
       }
     },
     "s.stdio.pdf.1.7.base.mutation.set-object-value": {
@@ -74855,38 +75910,116 @@
         "🔣️jsonschema": "🔣️.json"
       },
       "exports": {
-        "ObjRef": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "PdfDecimal": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "PdfDictEntry": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "PdfObject": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "PdfPredictor": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "PdfStreamFilter": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
         "SetObjectValue": {
           "file": "🔣️.json",
           "facet": "schema"
         }
       },
-      "dependsOn": [],
+      "dependsOn": [
+        "s.stdio.pdf.1.7.base"
+      ],
       "hashes": {
-        "🔣️.json": "7626e386a4a615bb176f6a2909b2e414712962fac55047e66a8f6a2624a4397f"
+        "🔣️.json": "e1d367b2de4e7fbd9643a2adbb83316c3c167e88d4631aef6e3152c94f4a42c5"
+      }
+    },
+    "s.stdio.pdf.1.7.base.mutation.set-open-action": {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/🚪️set-open-action/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "SetOpenAction": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [
+        "s.stdio.pdf.1.7.base"
+      ],
+      "hashes": {
+        "🔣️.json": "a3ab9a13fb9d9b5c0a45f0664247cf13879dda6fb3482a3293f57f1bfaee74a9"
+      }
+    },
+    "s.stdio.pdf.1.7.base.mutation.set-optional-content": {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/👁️set-optional-content/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "SetOptionalContent": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [
+        "s.stdio.pdf.1.7.base"
+      ],
+      "hashes": {
+        "🔣️.json": "1c60f4388dcc20f980b6d8b8743dbd0692b0fb21620cad754879399340b81200"
+      }
+    },
+    "s.stdio.pdf.1.7.base.mutation.set-outlines": {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/📑️set-outlines/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "SetOutlines": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [
+        "s.stdio.pdf.1.7.base"
+      ],
+      "hashes": {
+        "🔣️.json": "a6c46af8f0de023af45aafe30367cd9685541351bb2468e0d138c5857feddf9f"
+      }
+    },
+    "s.stdio.pdf.1.7.base.mutation.set-output-intents": {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/🏳️set-output-intents/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "SetOutputIntents": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [
+        "s.stdio.pdf.1.7.base"
+      ],
+      "hashes": {
+        "🔣️.json": "ed0965328ee4bf3178a61d802b958eef6bbcc6a1e0a7f6fb7413686de1796b3e"
+      }
+    },
+    "s.stdio.pdf.1.7.base.mutation.set-page-box": {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/🖼️set-page-box/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "SetPageBox": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [
+        "s.stdio.pdf.1.7.base"
+      ],
+      "hashes": {
+        "🔣️.json": "4a0c756f23ed9dc87e236cdecb881145ca9b9dcf395e9ce2c51891e744958454"
       }
     },
     "s.stdio.pdf.1.7.base.mutation.set-page-content": {
@@ -74902,9 +76035,11 @@
           "facet": "schema"
         }
       },
-      "dependsOn": [],
+      "dependsOn": [
+        "s.stdio.pdf.1.7.base"
+      ],
       "hashes": {
-        "🔣️.json": "61cdc4c4af28a57061ddb17d140eb23575be9df71f0e7b94fee65f59215b2f6f"
+        "🔣️.json": "b9f2319df5757895de5c46ddf98703b413ddb0cc3e38ea1994901e2994d4ea2d"
       }
     },
     "s.stdio.pdf.1.7.base.mutation.set-page-crop-box": {
@@ -74925,6 +76060,46 @@
         "🔣️.json": "052537ce6e12dae2f1a11de244e706441db95b90a542f076332c620ff1ea6d2d"
       }
     },
+    "s.stdio.pdf.1.7.base.mutation.set-page-labels": {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/🔢️set-page-labels/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "SetPageLabels": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [
+        "s.stdio.pdf.1.7.base"
+      ],
+      "hashes": {
+        "🔣️.json": "af0e5083b5f5b120e6fd7e34286378a00902f0dc894236ace2afdac1cc12fd38"
+      }
+    },
+    "s.stdio.pdf.1.7.base.mutation.set-page-layout": {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/📖️set-page-layout/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "SetPageLayout": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [
+        "s.stdio.pdf.1.7.base"
+      ],
+      "hashes": {
+        "🔣️.json": "7c20c8bab9516f8875d938c6e5bed2d55212dfe571e83b9830df0740a1d72fab"
+      }
+    },
     "s.stdio.pdf.1.7.base.mutation.set-page-media-box": {
       "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/📐️set-page-media-box/🧬️schema",
       "level": "mutation-leaf",
@@ -74943,6 +76118,26 @@
         "🔣️.json": "f64f851608f862263b18269fcd6c3a0f519afc2edde0052a2a102cf7979b2b61"
       }
     },
+    "s.stdio.pdf.1.7.base.mutation.set-page-mode": {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/🖥️set-page-mode/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "SetPageMode": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [
+        "s.stdio.pdf.1.7.base"
+      ],
+      "hashes": {
+        "🔣️.json": "8322cb386ecd05c5ff014fd5429811d427c2f788e99a59d916ed4bbb007d8661"
+      }
+    },
     "s.stdio.pdf.1.7.base.mutation.set-page-rotation": {
       "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/🔄️set-page-rotation/🧬️schema",
       "level": "mutation-leaf",
@@ -74958,7 +76153,85 @@
       },
       "dependsOn": [],
       "hashes": {
-        "🔣️.json": "f3d0429ce3c1ba0dab7f2664a6cbc142f3621ff6f4a5fef618dfdc79970b60b2"
+        "🔣️.json": "c7f26a3bc08249f1f3ddf65251ba073ea1938b1887dd44d606e983e625895b29"
+      }
+    },
+    "s.stdio.pdf.1.7.base.mutation.set-page-user-unit": {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/📏️set-page-user-unit/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "SetPageUserUnit": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "5c2779bde65e57edbecd10e4c96d6c8016b204a0153f6511b398f78f47f9aadd"
+      }
+    },
+    "s.stdio.pdf.1.7.base.mutation.set-pattern": {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/🧩️set-pattern/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "SetPattern": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [
+        "s.stdio.pdf.1.7.base"
+      ],
+      "hashes": {
+        "🔣️.json": "c2e736e3e3ceafe6f255037c2ebae16b7194ea5d4467a03241943e9a295fe88d"
+      }
+    },
+    "s.stdio.pdf.1.7.base.mutation.set-properties": {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/🏷️set-properties/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "SetProperties": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [
+        "s.stdio.pdf.1.7.base"
+      ],
+      "hashes": {
+        "🔣️.json": "8905788d2286e082c3a6adb7243bcb9a25d7dc4ab908af8d5986f816d94bab80"
+      }
+    },
+    "s.stdio.pdf.1.7.base.mutation.set-shading": {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/🌅️set-shading/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "SetShading": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [
+        "s.stdio.pdf.1.7.base"
+      ],
+      "hashes": {
+        "🔣️.json": "c401ee0d1a78acbfb04c20afa33ddeb999ac03ed633693cf5773eb66fd500df7"
       }
     },
     "s.stdio.pdf.1.7.base.mutation.set-trailer-entry": {
@@ -74969,38 +76242,36 @@
         "🔣️jsonschema": "🔣️.json"
       },
       "exports": {
-        "ObjRef": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "PdfDecimal": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "PdfDictEntry": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "PdfObject": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "PdfPredictor": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
-        "PdfStreamFilter": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        },
         "SetTrailerEntry": {
           "file": "🔣️.json",
           "facet": "schema"
         }
       },
-      "dependsOn": [],
+      "dependsOn": [
+        "s.stdio.pdf.1.7.base"
+      ],
       "hashes": {
-        "🔣️.json": "3e5d3f107f0ad6dccde9a3907fba6470d49463a116620ae6a20dcc3451f4b1b7"
+        "🔣️.json": "54465d79fb655aa571f4ac3c022c839e2d20450f00b6b756578e616b2c00349f"
+      }
+    },
+    "s.stdio.pdf.1.7.base.mutation.set-viewer-preferences": {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/🛠️set-viewer-preferences/🧬️schema",
+      "level": "mutation-leaf",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "SetViewerPreferences": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [
+        "s.stdio.pdf.1.7.base"
+      ],
+      "hashes": {
+        "🔣️.json": "51b344bff131921f2ed27e871814702419d3363c9d8d035c698e6572badb56ac"
       }
     },
     "s.stdio.pdf.1.7.e": {
@@ -100950,7 +102221,7 @@
       }
     },
     "window.gis.map.config.mutation.set-camera": {
-      "path": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🗺️map/⚙️config/🧬️schema/🧬️mutations/🎥️set-camera/🧬️schema",
+      "path": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🗺️map/🎚️config/🧬️schema/🧬️mutations/🎥️set-camera/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -100972,7 +102243,7 @@
       }
     },
     "window.gis.map.config.mutation.set-layer-stroke-scale": {
-      "path": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🗺️map/⚙️config/🧬️schema/🧬️mutations/📏️set-layer-stroke-scale/🧬️schema",
+      "path": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🗺️map/🎚️config/🧬️schema/🧬️mutations/📏️set-layer-stroke-scale/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -100994,7 +102265,7 @@
       }
     },
     "window.gis.map.config.mutation.set-layer-visibility": {
-      "path": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🗺️map/⚙️config/🧬️schema/🧬️mutations/👁️set-layer-visibility/🧬️schema",
+      "path": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🗺️map/🎚️config/🧬️schema/🧬️mutations/👁️set-layer-visibility/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -101016,7 +102287,7 @@
       }
     },
     "window.gis.map.config.mutation.set-lod-mode": {
-      "path": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🗺️map/⚙️config/🧬️schema/🧬️mutations/🔽️set-lod-mode/🧬️schema",
+      "path": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🗺️map/🎚️config/🧬️schema/🧬️mutations/🔽️set-lod-mode/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -101038,7 +102309,7 @@
       }
     },
     "window.gis.map.config.mutation.set-render-mode": {
-      "path": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🗺️map/⚙️config/🧬️schema/🧬️mutations/🖼️set-render-mode/🧬️schema",
+      "path": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🗺️map/🎚️config/🧬️schema/🧬️mutations/🖼️set-render-mode/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -101060,7 +102331,7 @@
       }
     },
     "window.gis.map.config.mutation.set-vector-style": {
-      "path": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🗺️map/⚙️config/🧬️schema/🧬️mutations/🎨️set-vector-style/🧬️schema",
+      "path": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🗺️map/🎚️config/🧬️schema/🧬️mutations/🎨️set-vector-style/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {

@@ -1097,9 +1097,30 @@ fn collect_stack_tab_bars(node: &DockNode, bounds: Rect, path: &[usize], theme: 
 /// font size. Without it a long window title widened the tab bar without limit.
 pub(crate) const MODE_DOCK_TAB_MAX_WIDTH_PX: f32 = 192.0;
 
-/// 📱️ React's `mobile` breakpoint — `UI_MOBILE_MEDIA_QUERY = "(max-width: 767px)"`
-/// (`🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🟦️.tsx:1648`), read in LOGICAL (CSS) pixels.
+/// 📱️ The shell's `mobile` breakpoint — `UI_MOBILE_MAX_WIDTH_PX`
+/// (`🧰️framework/🔨️modules/🖱️ui/📱️device/🟦️.ts`), read in LOGICAL (CSS) pixels. That module is the ONE
+/// owner of the policy both renderers answer; the parity of these two literals with it is asserted by
+/// `🖱️ui/📱️device/🧪️tests/🔬️unit/🟦️.ts`, which reads THIS file off disk.
 pub const MODE_DOCK_MOBILE_MAX_WIDTH_PX: f32 = 767.0;
+
+/// 📱️ The shell's `tablet` breakpoint — `UI_TABLET_MAX_WIDTH_PX`. Wide enough to carry the eight dock
+/// anchors a phone collapses, too narrow for the desktop's simultaneous multi-panel layout.
+pub const MODE_DOCK_TABLET_MAX_WIDTH_PX: f32 = 1023.0;
+
+/// 📱️ The device a logical viewport width IS — the Rust twin of `elementsSurfaceDeviceForWidth`, with
+/// the same inclusive-maximum comparisons, so the wgpu shell and the React shell can never disagree
+/// about what a width means.
+pub fn mode_dock_device_for_width(width_px: f32) -> &'static str {
+    if !width_px.is_finite() {
+        "desktop"
+    } else if width_px <= MODE_DOCK_MOBILE_MAX_WIDTH_PX {
+        "mobile"
+    } else if width_px <= MODE_DOCK_TABLET_MAX_WIDTH_PX {
+        "tablet"
+    } else {
+        "desktop"
+    }
+}
 
 /// 📑️ Everything a tab spends beside its label text: icon slot, its gap, both side paddings and the
 /// action chips.

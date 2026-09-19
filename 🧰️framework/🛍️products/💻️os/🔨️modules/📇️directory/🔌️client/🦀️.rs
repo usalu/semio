@@ -1598,6 +1598,38 @@ pub mod native {
 
     pub struct TungsteniteConnection(TungsteniteStream);
 
+    /// 📬️ One nonblocking receive that KEEPS binary frames, unlike
+    /// [`DirectoryWsConnection::try_recv_text`], which skips them because the directory endpoint's
+    /// own wire is text JSON. Ticket 26/09/17/WGPU-RENDERER-REACT-PARITY packet W15e: the MCP agent
+    /// bridge's whole wire is binary (`🌉️mcp/🧵️bridge`'s length-prefixed frames), so a consumer that
+    /// dropped `Message::Binary` would see an eternally silent socket.
+    #[derive(Clone, Debug, PartialEq, Eq)]
+    pub enum NativeWsPoll {
+        Text(String),
+        Binary(Vec<u8>),
+        Pending,
+        Closed(Option<u16>),
+    }
+
+    impl TungsteniteConnection {
+        /// 📬️ Bounded nonblocking receive: at most eight control frames are skipped before yielding,
+        /// the same ceiling `try_recv_text` uses, so malformed traffic cannot monopolize a turn.
+        pub fn try_recv_any(&mut self) -> Result<NativeWsPoll, TransportError> {
+            for _ in 0..8 {
+                match self.0.read() {
+                    Ok(Message::Text(text)) => return Ok(NativeWsPoll::Text(text.to_string())),
+                    Ok(Message::Binary(bytes)) => return Ok(NativeWsPoll::Binary(bytes.to_vec())),
+                    Ok(Message::Close(frame)) => return Ok(NativeWsPoll::Closed(frame.map(|frame| u16::from(frame.code)))),
+                    Ok(Message::Ping(_) | Message::Pong(_) | Message::Frame(_)) => {}
+                    Err(tungstenite::Error::Io(error)) if error.kind() == std::io::ErrorKind::WouldBlock => return Ok(NativeWsPoll::Pending),
+                    Err(tungstenite::Error::ConnectionClosed | tungstenite::Error::AlreadyClosed) => return Ok(NativeWsPoll::Closed(None)),
+                    Err(error) => return Err(TransportError::Io(error.to_string())),
+                }
+            }
+            Ok(NativeWsPoll::Pending)
+        }
+    }
+
     impl DirectoryWsConnection for TungsteniteConnection {
         fn send_text(&mut self, text: String) -> Result<(), TransportError> {
             self.0.send(Message::Text(text.into())).map_err(|error| TransportError::Io(error.to_string()))
@@ -1764,42 +1796,62 @@ pub mod native {
         }
 
         fn open_ws(&self, ctx: &OperationContext, url: &str, protocols: &[String], timeout_ms: u64) -> Result<Self::Ws, TransportError> {
-            if ctx.cancel.is_cancelled_now() {
-                return Err(TransportError::Cancelled);
-            }
             if protocols.len() != 2 || protocols[0] != "semio.socket.v1" || !super::valid_socket_grant(&protocols[1]) {
                 return Err(TransportError::Io("directory websocket protocol offer invalid".into()));
             }
-            let mut request = url.into_client_request().map_err(|error| TransportError::Io(error.to_string()))?;
-            request.headers_mut().insert("Sec-WebSocket-Protocol", format!("{}, {}", protocols[0], protocols[1]).parse().map_err(|_| TransportError::Io("directory websocket protocol header invalid".into()))?);
-            let host = request.uri().host().ok_or_else(|| TransportError::Io("directory websocket URL has no host".to_string()))?.to_string();
-            let port = request.uri().port_u16().unwrap_or_else(|| if request.uri().scheme_str() == Some("wss") { 443 } else { 80 });
-            let timeout = Duration::from_millis(timeout_ms.max(1));
-            let addresses = (host.as_str(), port).to_socket_addrs().map_err(|error| TransportError::Io(error.to_string()))?;
-            let mut tcp = None;
-            for address in addresses {
-                if ctx.cancel.is_cancelled_now() {
-                    return Err(TransportError::Cancelled);
-                }
-                if let Ok(stream) = TcpStream::connect_timeout(&address, timeout) {
-                    tcp = Some(stream);
-                    break;
-                }
-            }
-            let tcp = tcp.ok_or_else(|| TransportError::Io(format!("unable to connect to {host}:{port}")))?;
-            tcp.set_read_timeout(Some(timeout)).map_err(|error| TransportError::Io(error.to_string()))?;
-            tcp.set_write_timeout(Some(timeout)).map_err(|error| TransportError::Io(error.to_string()))?;
-            let (mut socket, response) = tungstenite::client_tls(request, tcp).map_err(|error| TransportError::Io(error.to_string()))?;
-            if response.headers().get("Sec-WebSocket-Protocol").and_then(|value| value.to_str().ok()) != Some("semio.socket.v1") {
-                return Err(TransportError::Io("directory websocket protocol negotiation invalid".into()));
-            }
-            match socket.get_mut() {
-                MaybeTlsStream::Plain(stream) => stream.set_nonblocking(true).map_err(|error| TransportError::Io(error.to_string()))?,
-                MaybeTlsStream::Rustls(stream) => stream.sock.set_nonblocking(true).map_err(|error| TransportError::Io(error.to_string()))?,
-                _ => return Err(TransportError::Io("nonblocking TLS directory sockets are not enabled".to_string())),
-            }
-            Ok(TungsteniteConnection(socket))
+            open_client_ws(ctx, url, protocols, timeout_ms, Some("semio.socket.v1"))
         }
+    }
+
+    /// 🔌️ ONE native websocket dial, with the directory's own grant policy lifted OUT of it (ticket
+    /// 26/09/17/WGPU-RENDERER-REACT-PARITY packet W15e). The directory transport keeps its
+    /// `semio.socket.v1` + grant assertion above and calls this; the wgpu shell's MCP agent bridge
+    /// calls it with `semio.mcp.bridge.v1` + its supervisor's admission proof.
+    ///
+    /// ⚖️ Extracted rather than duplicated: the non-blocking-socket setup, the per-address connect
+    /// timeout and the TLS-stream arms are the parts a second caller would get subtly wrong, and a
+    /// second copy of them is exactly the kind of drift the directory lane already paid for once.
+    /// `expect_protocol` is the subprotocol the server MUST have negotiated — `None` accepts whatever
+    /// it answered, for an endpoint that negotiates none.
+    pub fn open_client_ws(ctx: &OperationContext, url: &str, protocols: &[String], timeout_ms: u64, expect_protocol: Option<&str>) -> Result<TungsteniteConnection, TransportError> {
+        if ctx.cancel.is_cancelled_now() {
+            return Err(TransportError::Cancelled);
+        }
+        let mut request = url.into_client_request().map_err(|error| TransportError::Io(error.to_string()))?;
+        if !protocols.is_empty() {
+            request
+                .headers_mut()
+                .insert("Sec-WebSocket-Protocol", protocols.join(", ").parse().map_err(|_| TransportError::Io("websocket protocol header invalid".into()))?);
+        }
+        let host = request.uri().host().ok_or_else(|| TransportError::Io("websocket URL has no host".to_string()))?.to_string();
+        let port = request.uri().port_u16().unwrap_or_else(|| if request.uri().scheme_str() == Some("wss") { 443 } else { 80 });
+        let timeout = Duration::from_millis(timeout_ms.max(1));
+        let addresses = (host.as_str(), port).to_socket_addrs().map_err(|error| TransportError::Io(error.to_string()))?;
+        let mut tcp = None;
+        for address in addresses {
+            if ctx.cancel.is_cancelled_now() {
+                return Err(TransportError::Cancelled);
+            }
+            if let Ok(stream) = TcpStream::connect_timeout(&address, timeout) {
+                tcp = Some(stream);
+                break;
+            }
+        }
+        let tcp = tcp.ok_or_else(|| TransportError::Io(format!("unable to connect to {host}:{port}")))?;
+        tcp.set_read_timeout(Some(timeout)).map_err(|error| TransportError::Io(error.to_string()))?;
+        tcp.set_write_timeout(Some(timeout)).map_err(|error| TransportError::Io(error.to_string()))?;
+        let (mut socket, response) = tungstenite::client_tls(request, tcp).map_err(|error| TransportError::Io(error.to_string()))?;
+        if let Some(expected) = expect_protocol {
+            if response.headers().get("Sec-WebSocket-Protocol").and_then(|value| value.to_str().ok()) != Some(expected) {
+                return Err(TransportError::Io("websocket protocol negotiation invalid".into()));
+            }
+        }
+        match socket.get_mut() {
+            MaybeTlsStream::Plain(stream) => stream.set_nonblocking(true).map_err(|error| TransportError::Io(error.to_string()))?,
+            MaybeTlsStream::Rustls(stream) => stream.sock.set_nonblocking(true).map_err(|error| TransportError::Io(error.to_string()))?,
+            _ => return Err(TransportError::Io("nonblocking TLS sockets are not enabled".to_string())),
+        }
+        Ok(TungsteniteConnection(socket))
     }
 
     #[cfg(test)]

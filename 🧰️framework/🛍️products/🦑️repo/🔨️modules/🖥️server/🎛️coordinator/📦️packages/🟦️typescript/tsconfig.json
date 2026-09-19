@@ -18,6 +18,7 @@
     "isolatedModules": true,
     "jsx": "preserve",
     "incremental": true,
+    "tsBuildInfoFile": "../../../../../../../../node_modules/.cache/tsconfig.repo-coordinator.tsbuildinfo",
     "plugins": [
       {
         "name": "next"

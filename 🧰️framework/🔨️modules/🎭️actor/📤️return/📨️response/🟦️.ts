@@ -13,8 +13,8 @@ const MAX_U64 = 0xffffffffffffffffn;
 const MAX_REQUEST = BigInt(Number.MAX_SAFE_INTEGER);
 const bufferLength = Object.getOwnPropertyDescriptor(ArrayBuffer.prototype, "byteLength")!.get!;
 const bufferResizable = Object.getOwnPropertyDescriptor(ArrayBuffer.prototype, "resizable")?.get;
-function fault(reason: string): never { throw new Error(`actor-return-response.${reason}`); }
-function uint(value: bigint, maximum: bigint): void { if (typeof value !== "bigint" || value <= 0n || value > maximum) fault("authority"); }
+export function fault(reason: string): never { throw new Error(`actor-return-response.${reason}`); }
+export function uint(value: bigint, maximum: bigint): void { if (typeof value !== "bigint" || value <= 0n || value > maximum) fault("authority"); }
 function sameActivation(result: ActorReturnResult | ActorReturnResultProjection, activation: bigint): void {
   let generation: bigint;
   switch (result.kind) {

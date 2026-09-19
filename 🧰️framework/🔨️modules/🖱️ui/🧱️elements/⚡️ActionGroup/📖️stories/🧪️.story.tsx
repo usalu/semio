@@ -32,15 +32,9 @@ type Story = StoryObj<typeof meta>;
 
 const ActionGroupDemo = () => (
   <ActionGroup id="action-group-demo">
-    <ActionGroupItem id="action-group-demo-copy">
-      <Copy />
-    </ActionGroupItem>
-    <ActionGroupItem id="action-group-demo-download">
-      <Download />
-    </ActionGroupItem>
-    <ActionGroupItem id="action-group-demo-external">
-      <ExternalLink />
-    </ActionGroupItem>
+    <ActionGroupItem id="action-group-demo-copy" icon={<Copy />} />
+    <ActionGroupItem id="action-group-demo-download" icon={<Download />} />
+    <ActionGroupItem id="action-group-demo-external" icon={<ExternalLink />} />
   </ActionGroup>
 );
 

@@ -60,6 +60,10 @@ protocol = { path = "../../../🧰️framework/🔨️modules/📡️replication
 # 📇️ `os_directory` is hub domain vocabulary still mounted in the os kernel; Wave 3 relocates it here.
 directory = { path = "../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
 db = { path = "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust", package = "semio-framework-os-kernel-db" }
+# 🖥️ The generic server product hub is instance #1 of: `🗄️stores/🦀️.rs` defines `HubInstance`
+# and the four durable storage roles it closes the product's ports over. The crate's lib is named
+# `server`, so hub writes `use server::gateway::ServerInstance;`.
+semio-framework-server = { workspace = true }
 
 # 🔌️ Directory backend drivers — optional, enabled only by this crate's same-named feature (see
 # `[features]` above and `connect_db`/`connect_directory` in `🏗️bootstrap/🦀️.rs`).
@@ -69,6 +73,10 @@ sqlx_postgres = { package = "sqlx-postgres", version = "0.8", features = ["uuid"
 neo4rs = { version = "0.8", optional = true }
 
 [dev-dependencies]
+# 🔬️ `conformance` compiles the server product's backend-generic storage contract into the
+# library for test builds only, so hub's own stores are held against the identical assertion bodies
+# the framework's reference in-memory backends are.
+semio-framework-server = { workspace = true, features = ["conformance"] }
 blake3 = "1"
 syn = { version = "2", features = ["full", "visit"] }
 # 🧬️ Test-only: the owned draft-07 structural validator the scope-owned `🧬️schema/🔣️.json` modules are

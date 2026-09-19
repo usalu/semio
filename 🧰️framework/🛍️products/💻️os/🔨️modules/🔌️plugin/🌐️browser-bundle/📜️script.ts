@@ -651,7 +651,37 @@ async function instantiateFreshComponent(imports, control = {}) {
 `;
 }
 
-const createBrowserBundleTestsInstance = createBrowserBundleTests({ assert, browserActorAsyncImports, browserActorInterfaces, browserBundleValidator, buildBrowserCodegenModule, buildClosedBrowserActorArtifactOwned, buildClosedBrowserActorArtifactV1, captureBrowserActorRuntime, captureBrowserCodegenSources, closeBrowserCodegenModule, closedBrowserActorBundle, closedBrowserActorBundleFromRuntime, closedBrowserComponentFactory, dirname, exactExecutableFingerprint, join, lstatSync, mkdirSync, mkdtempSync, parseBrowserActorCodegenManifest, readdirSync, readFileSync, realpathSync, renameSync, runExactCargoLawProcess, sealBrowserCodegenPolicy, ts, writeFileSync }, { directory: import.meta.dir, url: import.meta.url });
+/** 🧬️ The exact bag handed to `createBrowserBundleTests` — `typeof` of the live bindings, so it cannot drift. */
+export type BrowserBundleTestDependencies = Readonly<{
+  readonly browserActorAsyncImports: typeof browserActorAsyncImports;
+  readonly browserActorInterfaces: typeof browserActorInterfaces;
+  readonly browserBundleValidator: typeof browserBundleValidator;
+  readonly buildBrowserCodegenModule: typeof buildBrowserCodegenModule;
+  readonly buildClosedBrowserActorArtifactOwned: typeof buildClosedBrowserActorArtifactOwned;
+  readonly buildClosedBrowserActorArtifactV1: typeof buildClosedBrowserActorArtifactV1;
+  readonly captureBrowserActorRuntime: typeof captureBrowserActorRuntime;
+  readonly captureBrowserCodegenSources: typeof captureBrowserCodegenSources;
+  readonly closeBrowserCodegenModule: typeof closeBrowserCodegenModule;
+  readonly closedBrowserActorBundle: typeof closedBrowserActorBundle;
+  readonly closedBrowserActorBundleFromRuntime: typeof closedBrowserActorBundleFromRuntime;
+  readonly closedBrowserComponentFactory: typeof closedBrowserComponentFactory;
+  readonly dirname: typeof dirname;
+  readonly exactExecutableFingerprint: typeof exactExecutableFingerprint;
+  readonly join: typeof join;
+  readonly lstatSync: typeof lstatSync;
+  readonly mkdirSync: typeof mkdirSync;
+  readonly mkdtempSync: typeof mkdtempSync;
+  readonly parseBrowserActorCodegenManifest: typeof parseBrowserActorCodegenManifest;
+  readonly readdirSync: typeof readdirSync;
+  readonly readFileSync: typeof readFileSync;
+  readonly realpathSync: typeof realpathSync;
+  readonly renameSync: typeof renameSync;
+  readonly runExactCargoLawProcess: typeof runExactCargoLawProcess;
+  readonly sealBrowserCodegenPolicy: typeof sealBrowserCodegenPolicy;
+  readonly ts: typeof ts;
+  readonly writeFileSync: typeof writeFileSync;
+}>;
+const createBrowserBundleTestsInstance = createBrowserBundleTests({ browserActorAsyncImports, browserActorInterfaces, browserBundleValidator, buildBrowserCodegenModule, buildClosedBrowserActorArtifactOwned, buildClosedBrowserActorArtifactV1, captureBrowserActorRuntime, captureBrowserCodegenSources, closeBrowserCodegenModule, closedBrowserActorBundle, closedBrowserActorBundleFromRuntime, closedBrowserComponentFactory, dirname, exactExecutableFingerprint, join, lstatSync, mkdirSync, mkdtempSync, parseBrowserActorCodegenManifest, readdirSync, readFileSync, realpathSync, renameSync, runExactCargoLawProcess, sealBrowserCodegenPolicy, ts, writeFileSync }, { directory: import.meta.dir, url: import.meta.url });
 export const testClosedBrowserComponentFactory = createBrowserBundleTestsInstance.testClosedBrowserComponentFactory;
 const testBrowserCodegenCapsule = createBrowserBundleTestsInstance.testBrowserCodegenCapsule;
 const testBrowserCodegenSources = createBrowserBundleTestsInstance.testBrowserCodegenSources;

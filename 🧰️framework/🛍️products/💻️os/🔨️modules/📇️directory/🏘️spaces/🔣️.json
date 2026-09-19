@@ -1,0 +1,33 @@
+{
+  "schema": "semio.directory.spaces-browser-fixtures.v1",
+  "commandsPath": "/directory/commands",
+  "spacesPath": "/directory/spaces",
+  "inviteLinkFragment": "#semio-invite=",
+  "inviteTtlChoicesSecs": [3600, 86400, 604800],
+  "commandFieldOrder": {
+    "create-space": ["kind", "name", "spaceKind", "visibility"],
+    "create-invite": ["kind", "spaceId", "role", "ttlSecs"],
+    "archive-space": ["kind", "spaceId"]
+  },
+  "accessOrder": ["author", "member", "public"],
+  "inviteTokens": [
+    { "typed": "abcDEF-012_~.", "token": "abcDEF-012_~." },
+    { "typed": "  abcDEF012  ", "token": "abcDEF012" },
+    { "typed": "https://hub.example.org/#semio-invite=abcDEF012", "token": "abcDEF012" },
+    { "typed": "https://hub.example.org/#semio-invite=", "token": null },
+    { "typed": "abc DEF", "token": null },
+    { "typed": "abc/DEF", "token": null },
+    { "typed": "", "token": null }
+  ],
+  "redemptionStatusCodes": [
+    { "status": 400, "code": "invalid-invite" },
+    { "status": 401, "code": "unauthorized" },
+    { "status": 403, "code": "unauthorized" },
+    { "status": 404, "code": "invalid-invite" },
+    { "status": 409, "code": "already-member" },
+    { "status": 410, "code": "expired-invite" },
+    { "status": 429, "code": "unreachable" },
+    { "status": 503, "code": "unreachable" },
+    { "status": 418, "code": "hub-refused" }
+  ]
+}

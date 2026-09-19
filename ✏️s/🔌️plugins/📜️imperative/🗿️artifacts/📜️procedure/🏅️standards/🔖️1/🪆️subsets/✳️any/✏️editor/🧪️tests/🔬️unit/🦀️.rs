@@ -1,7 +1,7 @@
 pub(crate) mod context {
     use super::super::*;
     use semio_framework_plugin::app::App;
-    use semio_framework_plugin::artifact_app_laws::{meta, new_app, new_app_with_registry};
+    use semio_framework_plugin::artifact_app_laws::{meta, new_app_with_registry};
     use semio_framework_plugin::{EditorApp, InvocationResult, PluginApp, VcsArtifactApp, ViewModel};
     
     pub type ImperativeApp = VcsArtifactApp<EditorApp<ImperativePlayApp>>;
@@ -10,9 +10,11 @@ pub(crate) mod context {
     /// `ArtifactApp` — `EditorApp<ImperativePlayApp>` (SDK adapter, contract §2.1) is the real
     /// `ArtifactApp` implementor `VcsArtifactApp` wraps, exactly the way
     /// `PluginBuilder::editor::<ImperativePlayApp>` builds it.
-    /// 🧪️ A bare app instance — no `AppActionRegistry`, so undeclared internal commands dispatch freely.
+    /// 🧪️ Every fixture now runs against the real registry: with the ten verbs `Migrated`, a
+    /// registry-less wrapper carries no migrated action rows at all and the guest's catalog authority
+    /// rejects EVERY proof (`interactive-job.catalog-authority`, `migrated={}`).
     pub async fn imperative_app() -> ImperativeApp {
-        new_app::<EditorApp<ImperativePlayApp>>().await
+        imperative_app_with_registry().await
     }
     
     /// 🧪️ Adapts `create_imperative_app`'s `AppDefinition` (contract §2.4) into the `App { definition,
@@ -26,11 +28,25 @@ pub(crate) mod context {
     /// 🧪️ An app wired to the real manifest registry — enforces View/Shell kind discipline and materializes
     /// declared action-arg defaults (e.g. `addStep`'s `kind`).
     pub async fn imperative_app_with_registry() -> ImperativeApp {
-        new_app_with_registry::<EditorApp<ImperativePlayApp>>(imperative_app_manifest_for_tests).await
+        let mut app = new_app_with_registry::<EditorApp<ImperativePlayApp>>(imperative_app_manifest_for_tests).await;
+        semio_framework::io::resolve_ready(app.bind_instance_id(meta("local").instance_id));
+        app
+    }
+
+    /// 🔁️ Drives one dispatched typed operation to quiescence the way the plugin host does.
+    pub async fn settle(app: &mut ImperativeApp) {
+        semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(app, meta("local").instance_id).await.expect("settle the typed operation");
+    }
+
+    /// 🧹️ Closes every store the wrapper opened — a live `ArtifactStore` asserts in `Drop` otherwise.
+    pub fn close(app: &mut ImperativeApp) {
+        semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(app);
     }
     
     pub async fn dispatch(app: &mut ImperativeApp, command: ImperativeCommand) -> InvocationResult {
-        app.dispatch_typed(command, &meta("local")).await.expect("dispatch")
+        let result = app.dispatch_typed(command, &meta("local")).await.expect("dispatch");
+        settle(app).await;
+        result
     }
     
     pub async fn render(app: &mut ImperativeApp, body_key: &str) -> String {
@@ -55,8 +71,14 @@ fn retained_route_fixture_matches_the_exact_factory_and_fail_closed_census() {
     let ids: Vec<_> = commands.iter().map(ImperativeCommand::command_id).collect();
     let recorded: Vec<_> = routes.iter().map(|route| route.get("id").and_then(serde_json::Value::as_str).expect("route id")).collect();
     assert_eq!(recorded, ids);
-    assert!(<ImperativePlayApp as ArtifactEditor>::bounded_first_step_tool_proofs().is_empty());
-    assert!(routes.iter().all(|route| route.get("disposition").and_then(serde_json::Value::as_str) == Some("BatchOnlyPendingRewrite") && route.get("lanes").and_then(serde_json::Value::as_array).is_some_and(Vec::is_empty)));
+    let proofs = <ImperativePlayApp as ArtifactEditor>::bounded_first_step_tool_proofs();
+    assert_eq!(proofs.len(), recorded.len(), "every retained route needs its own first-step proof");
+    assert!(routes.iter().all(|route| route.get("disposition").and_then(serde_json::Value::as_str) == Some("Migrated") && route.get("lanes").and_then(serde_json::Value::as_array).is_some_and(|lanes| !lanes.is_empty())));
+    for route in routes {
+        let id = route.get("id").and_then(serde_json::Value::as_str).expect("route id");
+        assert!(proofs.iter().any(|proof| proof.tool_id() == id), "{id} is a retained route with no first-step proof");
+        assert!(IMPERATIVE_RETAINED_TOOL_IDS.contains(&id), "{id} is a retained route outside the roster");
+    }
 }
 
 #[semio_framework_async_macros::async_test]
@@ -198,6 +220,7 @@ async fn interaction_topology_walks_nested_control_bodies_into_parent_links() {
     assert!(owner_node.parent.is_none(), "top-level owner step has no parent");
     let nested = steps.ordered.iter().find(|node| node.parent.as_deref() == Some(owner_row_id.as_str())).expect("nested step present under owner");
     assert_eq!(nested.granularity, "step");
+    context::close(&mut app);
 }
 
 /// 🌱️ A document with no steps has an empty `steps` topology — every stale `steps` selection id
@@ -227,6 +250,7 @@ async fn add_step_materializes_kind_default_and_run_emits_no_artifact_mutations(
     // `run` is a View-kind command: under registry enforcement it must not emit document operations.
     let result = app.dispatch_typed(ImperativeCommand::Run(run::Run {}), &meta("local")).await.expect("run");
     assert!(result.mutations.is_empty(), "run evaluates into config, never the document");
+    context::close(&mut app);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -242,6 +266,7 @@ async fn add_step_command_appends_step() {
     dispatch(&mut app, ImperativeCommand::AddStep(add_step::AddStep { kind: "log.print".into(), index: None })).await;
     let path = crate::procedure_working_scene(&app.snapshot().expect("projection")).path;
     assert!(path.steps.len() > 2);
+    context::close(&mut app);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -256,6 +281,7 @@ async fn add_step_at_owner_slot_nests_into_control_body() {
     let owner_step = path.steps.iter().find(|step| step.id == owner_id).expect("owner step");
     assert_eq!(owner_step.bodies.get("then").map(|body| body.steps.len()), Some(1));
     assert_eq!(path.steps.len(), root_len, "nested step lives in the slot, not the root path");
+    context::close(&mut app);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -266,6 +292,7 @@ async fn add_step_at_falls_back_to_root_for_unknown_owner() {
     let path = crate::procedure_working_scene(&document).path;
     let added_id = path.steps.last().expect("added").id.clone();
     assert!(path.steps.iter().any(|step| step.id == added_id));
+    context::close(&mut app);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -281,6 +308,7 @@ async fn undo_after_add_step_restores_original_document_exactly() {
     assert_eq!(app.snapshot().expect("projection"), default_snapshot());
     app.handle_action("redo", None, &meta("local")).await.expect("redo");
     assert_eq!(app.snapshot().expect("projection"), expected_after);
+    context::close(&mut app);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -291,6 +319,7 @@ async fn remove_step_command_is_exact_inverse_of_add() {
     let added_id = crate::procedure_working_scene(&app.snapshot().expect("projection")).path.steps.last().expect("added").id.clone();
     dispatch(&mut app, ImperativeCommand::RemoveStep(remove_step::RemoveStep { id: added_id })).await;
     assert_eq!(app.snapshot().expect("projection"), original);
+    context::close(&mut app);
 }
 
 /// 🧪️ The definitional regression proof: two independent instances start from the same document,
@@ -327,11 +356,29 @@ async fn ingest_operations_is_idempotent_for_imperative() {
     let once = receiver.snapshot().expect("projection");
     receiver.ingest_operations(&operations).await.expect("ingest twice");
     assert_eq!(receiver.snapshot().expect("projection"), once);
+    context::close(&mut sender);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn an_unknown_body_key_renders_a_diagnostic_instead_of_panicking() {
     let mut app = imperative_app().await;
     assert!(render(&mut app, "imperative.play.nope").await.contains("Unknown body"));
+    context::close(&mut app);
 }
 //#endregion 🔖️CrossCutting
+
+//#region 🪟️WindowActionScope
+/// 🪟️ Every action this app declares must be reachable from a window kind: the React shell's Actions
+/// pane is per-window, so an app-level action no window kind carries is invisible AND every dispatch
+/// of it is answered `undeclared-action`. Ticket 26/09/18 slice B2b measured this editor booting with
+/// `actionCount: 0` — two rendered windows and not one clickable verb.
+#[test]
+fn every_declared_action_is_carried_by_a_window_kind() {
+    let definition = create_imperative_app();
+    let declared: Vec<String> = definition.window_kinds.iter().flat_map(|window| window.actions.iter().map(|action| action.id.clone())).collect();
+    assert!(!declared.is_empty(), "no window kind declares any action: {:?}", definition.window_kinds.iter().map(|window| window.id.clone()).collect::<Vec<_>>());
+    for id in ["addStep", "removeStep", "moveStep", "setStepParams", "run"] {
+        assert!(declared.iter().any(|declared_id| declared_id == id), "{id} is declared by the app but carried by no window kind");
+    }
+}
+//#endregion 🪟️WindowActionScope

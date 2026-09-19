@@ -68,8 +68,8 @@ export class ScriptRouter {
   }
 }
 
-/** 📁️Walks parents until the monorepo root (`nx.json` + workspace `package.json`). */
-export function findRepoRoot(start: string): string {
+/** 📁️Walks parents until the monorepo root (`nx.json` + workspace `package.json`); starts from the Nx workspace root when no directory is given. */
+export function findRepoRoot(start?: string): string {
   let dir = start?.trim() ? start : getWorkspaceRoot();
   for (let i = 0; i < 32; i++) {
     if (existsSync(join(dir, "nx.json")) && existsSync(join(dir, "package.json"))) return dir;

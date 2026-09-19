@@ -49,10 +49,10 @@ fn pointer_down_and_up_on_the_same_window_cap_activates_its_tab() {
     shell.set_window_layout(single_window_layout("app.viewport"));
     run_layout(&mut shell);
 
-    let down = shell.dispatch(&UiEvent::PointerDown { x: 10.0, y: 10.0, button: crate::wgpu::events::PointerButton::Primary });
+    let down = shell.dispatch(&UiEvent::PointerDown { x: 10.0, y: 10.0, button: crate::wgpu::events::PointerButton::Primary, modifiers: Default::default() });
     assert!(down.is_empty(), "press alone must not activate a tab");
 
-    let up = shell.dispatch(&UiEvent::PointerUp { x: 10.0, y: 10.0, button: crate::wgpu::events::PointerButton::Primary });
+    let up = shell.dispatch(&UiEvent::PointerUp { x: 10.0, y: 10.0, button: crate::wgpu::events::PointerButton::Primary, modifiers: Default::default() });
     assert_eq!(up, vec![ShellEvent::TabActivated { window_id: "app.viewport".into() }]);
 }
 
@@ -62,8 +62,8 @@ fn pointer_down_then_up_outside_the_pressed_window_cap_does_not_activate_a_tab()
     shell.set_window_layout(single_window_layout("app.viewport"));
     run_layout(&mut shell);
 
-    shell.dispatch(&UiEvent::PointerDown { x: 10.0, y: 10.0, button: crate::wgpu::events::PointerButton::Primary });
-    let up = shell.dispatch(&UiEvent::PointerUp { x: -50.0, y: -50.0, button: crate::wgpu::events::PointerButton::Primary });
+    shell.dispatch(&UiEvent::PointerDown { x: 10.0, y: 10.0, button: crate::wgpu::events::PointerButton::Primary, modifiers: Default::default() });
+    let up = shell.dispatch(&UiEvent::PointerUp { x: -50.0, y: -50.0, button: crate::wgpu::events::PointerButton::Primary, modifiers: Default::default() });
     assert!(up.is_empty(), "releasing outside every hit target must not activate a tab");
 }
 

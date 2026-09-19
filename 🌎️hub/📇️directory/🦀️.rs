@@ -328,6 +328,21 @@ pub mod model {
         pub peer_class: String,
     }
 
+    /// @emoji 🧾️ One credential-lifecycle fact before the backend stamps its identity and time —
+    /// the durable record of a sign-in attempt or a credential change. `outcome_code` is
+    /// `"success"` or `"failure"`; `reason_code` carries the refusal's public error code and never
+    /// a secret, an address, or which half of the credential was wrong.
+    #[derive(Clone, Debug, PartialEq, Eq)]
+    pub struct CredentialAuditFactV1 {
+        pub event_kind: String,
+        pub target_user_id: Option<String>,
+        pub actor_user_id: Option<String>,
+        pub outcome_code: String,
+        pub reason_code: Option<String>,
+        pub correlation_id: String,
+        pub peer_class: String,
+    }
+
     /// @emoji 🧾️ One append-only administrator operation fact before backend sequence assignment.
     #[derive(Clone, Debug, PartialEq, Eq)]
     pub struct NewAdminOperationAuditRecord {
@@ -2981,6 +2996,18 @@ pub trait HubDirectory: Send + Sync + 'static {
     async fn revoke_auth_sessions_for_user_with_admin_effect(&self, user_id: &str, reason: &str, actor_user_id: Option<&str>, correlation_id: &str, effect: &NewAdminOperationEffectReceiptV1) -> AdminEffectCommitV1<Vec<RevokedAuthSession>>;
     async fn revoke_auth_sessions_for_identity(&self, provider: &str, subject_digest: [u8; 32], reason: &str, actor_user_id: Option<&str>, correlation_id: &str) -> DirectoryResult<Vec<RevokedAuthSession>>;
     async fn list_auth_audit(&self, limit: usize, offset: usize) -> DirectoryResult<Vec<AuthAuditRecord>>;
+    /// 🧾️ Appends exactly one credential-lifecycle fact (`credential-sign-in`,
+    /// `credential-changed`). Every sign-in attempt — admitted or refused — is journaled through
+    /// this, so the authentication log is the record of what happened rather than a mutable
+    /// counter beside it.
+    async fn append_credential_audit(&self, _fact: &CredentialAuditFactV1) -> DirectoryResult<AuthAuditRecord> {
+        Err(DirectoryError::Backend("credential audit is unavailable for this backend".into()))
+    }
+    /// 🔑️ Writes one user's password credential and appends the `credential-changed` fact in the
+    /// same transaction, so the projection column and the log can never disagree.
+    async fn set_password_credential(&self, _user_id: &str, _encoded_credential: &str, _actor_user_id: Option<&str>, _correlation_id: &str) -> DirectoryResult<()> {
+        Err(DirectoryError::Backend("password credentials are unavailable for this backend".into()))
+    }
     //#endregion
 
     //#region AdminOperations
@@ -3780,6 +3807,28 @@ impl HubDirectory for HubDirectories {
             Self::Postgres(inner) => inner.list_auth_audit(limit, offset).await,
             #[cfg(feature = "neo4j")]
             Self::Neo4j(inner) => inner.list_auth_audit(limit, offset).await,
+        }
+    }
+
+    async fn append_credential_audit(&self, fact: &CredentialAuditFactV1) -> DirectoryResult<AuthAuditRecord> {
+        match self {
+            #[cfg(feature = "sqlite")]
+            Self::Sqlite(inner) => inner.append_credential_audit(fact).await,
+            #[cfg(feature = "postgres")]
+            Self::Postgres(inner) => inner.append_credential_audit(fact).await,
+            #[cfg(feature = "neo4j")]
+            Self::Neo4j(inner) => inner.append_credential_audit(fact).await,
+        }
+    }
+
+    async fn set_password_credential(&self, user_id: &str, encoded_credential: &str, actor_user_id: Option<&str>, correlation_id: &str) -> DirectoryResult<()> {
+        match self {
+            #[cfg(feature = "sqlite")]
+            Self::Sqlite(inner) => inner.set_password_credential(user_id, encoded_credential, actor_user_id, correlation_id).await,
+            #[cfg(feature = "postgres")]
+            Self::Postgres(inner) => inner.set_password_credential(user_id, encoded_credential, actor_user_id, correlation_id).await,
+            #[cfg(feature = "neo4j")]
+            Self::Neo4j(inner) => inner.set_password_credential(user_id, encoded_credential, actor_user_id, correlation_id).await,
         }
     }
 

@@ -29,7 +29,7 @@ pub enum PointerButton {
     Middle,
 }
 
-/// ⌨️ Modifier keys held during a keyboard event. A minimal fresh type rather than reusing
+/// ⌨️ Modifier keys held during a keyboard OR pointer event. A minimal fresh type rather than reusing
 /// `input::PointerModifiers`, so this module stays decoupled from the region it conceptually
 /// replaces (see module doc comment).
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
@@ -41,27 +41,43 @@ pub struct EventModifiers {
 }
 
 /// 📥️ Input events the host feeds into `EventRouter::dispatch`.
+///
+/// 🖱️ The POINTER variants carry `modifiers` for the same reason the key variants do: React reads
+/// `event.shiftKey`/`ctrlKey`/`metaKey`/`altKey` off the DOM `PointerEvent` itself
+/// (`⚙️VirtualFileSystem/🟦️.tsx:520-521`'s `additiveKey`/`rangeKey`, `marqueeModeFromModifiers` in
+/// `🖱️ui/🎯️targets/⚛️react/🟦️.tsx:900`), so every merge-mode-from-modifiers decision downstream is a
+/// property of the press, not of some separately tracked keyboard state.
+///
+/// 🩸️ They used to carry none, and the whole modifier half of selection was structurally
+/// unreachable through this router: `UiCommand::Scene` handed the surface handlers an event with no
+/// modifier field at all, so `vfs_selection_for_click(…, false, false)` was the only call that could
+/// ever be written and shift-extend/ctrl-toggle could not be expressed on ANY list surface
+/// (ticket 26/09/17/WGPU-RENDERER-REACT-PARITY, `📓️audit-w14-scenes-residual.md` C1).
 #[derive(Clone, Debug, PartialEq)]
 pub enum UiEvent {
     PointerDown {
         x: f32,
         y: f32,
         button: PointerButton,
+        modifiers: EventModifiers,
     },
     PointerUp {
         x: f32,
         y: f32,
         button: PointerButton,
+        modifiers: EventModifiers,
     },
     PointerMove {
         x: f32,
         y: f32,
+        modifiers: EventModifiers,
     },
     Scroll {
         x: f32,
         y: f32,
         delta_x: f32,
         delta_y: f32,
+        modifiers: EventModifiers,
     },
     KeyDown {
         key: String,
@@ -501,6 +517,26 @@ fn edit_commit_action(node: &Node, text: &str) -> Option<FiredAction> {
             fired_action(&input.on_change, trigger, value)
         }
         UiNode::IconSelect(select) => fired_action(&select.on_change, Trigger::Change, DslValue::String(text.to_string())),
+        _ => None,
+    }
+}
+
+/// ⏎️⎋️🔁️ The three moments React's window-search line binds BESIDE `onChange` — `Trigger::Submit`
+/// (Enter, carrying the TRIMMED line, React's `input.onSubmit(draft.trim())`), `Trigger::Abort`
+/// (Escape, bare) and `Trigger::RepeatLast` (Space on an empty line, bare). Producing them here is
+/// what makes a retained command line behave like React's: `onChange` keeps firing on every
+/// keystroke — that is the guest's autocomplete feed — while Enter runs the verb, instead of the
+/// single keystroke-or-blur dispatch every `Input` used to be reduced to
+/// (`🖱️ui/🎯️targets/⚛️react/🟦️.tsx`'s `Search`, `onKeyDown`).
+///
+/// ⚖️ `None` for a node that binds nothing for this moment, which is precisely when the caller must
+/// fall through to the ordinary edit behaviour (Escape closes an overlay, Space types a space).
+fn search_line_action(node: &Node, trigger: Trigger, text: &str) -> Option<FiredAction> {
+    let UiNode::Input(input) = &node.spec.0 else { return None };
+    match trigger {
+        Trigger::Submit => fired_action(input.on_submit.as_ref()?, Trigger::Submit, DslValue::String(text.trim().to_string())),
+        Trigger::Abort => bare_action(input.on_abort.as_ref()?, Trigger::Abort),
+        Trigger::RepeatLast => bare_action(input.on_repeat_last.as_ref()?, Trigger::RepeatLast),
         _ => None,
     }
 }
@@ -1433,6 +1469,17 @@ impl EventRouter {
     fn route_text_insert(&mut self, tree: &mut UiTree, text: &str) -> Vec<UiCommand> {
         let mut out = Vec::new();
         let Some(id) = self.focus.focused else { return out };
+        // ␣️ React's `searchSpaceConfirmsLine`/`applySearchSpaceAction`: Space on an EMPTY action line
+        // CONFIRMS instead of typing — repeat-last when the program bound one, otherwise the submit
+        // it did bind. A line with neither keeps typing its space, and a non-empty line always does
+        // (`🖱️ui/🎯️targets/⚛️react/🟦️.tsx:10507`/`:10512`).
+        if text == " " {
+            let confirmed = tree.node(id).filter(|node| node.state.edit.as_ref().is_none_or(|edit| edit.text.trim().is_empty())).and_then(|node| search_line_action(node, Trigger::RepeatLast, "").or_else(|| search_line_action(node, Trigger::Submit, "")));
+            if let Some(fired) = confirmed {
+                self.push_app_command(tree, id, fired, &mut out);
+                return out;
+            }
+        }
         let Some(node) = tree.node_mut(id) else { return out };
         let Some(edit) = node.state.edit.as_mut() else { return out };
         insert_at_caret(edit, text);
@@ -1484,6 +1531,14 @@ impl EventRouter {
         // inline rename editor is built on. A change-committing node already dispatched every
         // keystroke, so Enter adds nothing there and must not double-fire.
         if matches!(key, "Enter" | "NumpadEnter") {
+            // ⏎️ A line that binds `Trigger::Submit` CONFIRMS on Enter and keeps its per-keystroke
+            // `Trigger::Change` — React's window search fires both from one field, so resolving Enter
+            // into the commit slot would have silenced one of them.
+            let submitted = tree.node(id).and_then(|node| search_line_action(node, Trigger::Submit, node.state.edit.as_ref().map_or(editable_value(&node.spec.0).unwrap_or_default(), |edit| edit.text.as_str())));
+            if let Some(fired) = submitted {
+                self.push_app_command(tree, id, fired, &mut out);
+                return out;
+            }
             let fired = tree.node(id).filter(|node| commits_on_blur(&node.spec.0)).and_then(|node| node.state.edit.as_ref().and_then(|edit| edit_commit_action(node, &edit.text)));
             if let Some(fired) = fired {
                 self.push_app_command(tree, id, fired, &mut out);
@@ -1614,7 +1669,7 @@ impl EventRouter {
         self.prune_dead_registrations(tree);
         let mut commands = Vec::new();
         match event {
-            UiEvent::PointerMove { x, y } => {
+            UiEvent::PointerMove { x, y, .. } => {
                 self.maybe_promote_to_drag(*x, *y);
                 match self.capture.target {
                     Some((_, CaptureKind::Drag)) => self.update_drag(tree, root, *x, *y),
@@ -1758,7 +1813,17 @@ impl EventRouter {
                 self.focus_visible = true;
                 let select_consumed = key != "Escape" && self.route_select_key(tree, key, *modifiers, &mut commands);
                 if key == "Escape" {
+                    // ⎋️ React's `Search` closes its possibles popover first and only aborts the
+                    // engagement when there is none open (`onKeyDown`'s Escape arm, `🖱️ui/🎯️targets/
+                    // ⚛️react/🟦️.tsx:10869`), so an overlay swallows this key exactly as it does there.
+                    let over_overlay = self.overlays.topmost().is_some();
                     commands.extend(self.close_topmost_overlay(tree));
+                    if !over_overlay {
+                        let aborted = self.focus.focused.and_then(|id| tree.node(id).and_then(|node| search_line_action(node, Trigger::Abort, "")).map(|fired| (id, fired)));
+                        if let Some((id, fired)) = aborted {
+                            self.push_app_command(tree, id, fired, &mut commands);
+                        }
+                    }
                 } else if select_consumed {
                 } else if key == "Tab" {
                     let scope = self.overlays.topmost_focus_trap_root().unwrap_or(root);
@@ -1779,7 +1844,7 @@ impl EventRouter {
             UiEvent::TextInput { text } => commands.extend(self.route_text_insert(tree, text)),
             UiEvent::Paste { text } => commands.extend(self.route_text_insert(tree, text)),
             UiEvent::Ime(ime_event) => commands.extend(self.route_ime(tree, ime_event)),
-            UiEvent::Scroll { x, y, delta_x, delta_y } => {
+            UiEvent::Scroll { x, y, delta_x, delta_y, .. } => {
                 if let Some(id) = hit_test(tree, root, *x, *y) {
                     if let Some(cmd) = self.scene_command(tree, id, event) {
                         commands.push(cmd);

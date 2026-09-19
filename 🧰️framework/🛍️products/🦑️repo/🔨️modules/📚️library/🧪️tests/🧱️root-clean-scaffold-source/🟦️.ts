@@ -1,14 +1,72 @@
 import { expect, test } from "bun:test";
 import { readFileSync } from "node:fs";
 import { dirname, relative, resolve } from "node:path";
-import Ajv from "ajv";
+import Ajv, { type AnySchema } from "ajv";
 import ts from "typescript";
 import { loadTaxonomy, semanticDirectoryKindId } from "../../📦️packages/🟦️typescript/🟦️.ts";
 
+/** 🧱️ One extracted owner module: where it lives, the semantic context that names it, and the declarations it owns. */
+interface CleanScaffoldOwner {
+  readonly path: string;
+  readonly directoryName: string;
+  readonly parentKindId: string;
+  readonly kindId: string;
+  readonly declarations: readonly string[];
+}
+
+/** 🧭️ One directory whose semantic kind the taxonomy must resolve from its parent. */
+interface CleanScaffoldContext {
+  readonly directoryName: string;
+  readonly parentKindId: string;
+  readonly kindId: string;
+}
+
+/** 🔗️ One consumer file and the owner modules it must bind to. */
+interface CleanScaffoldConsumer {
+  readonly path: string;
+  readonly owners: readonly string[];
+}
+
+/** 🚀️ The single Nx target and the launch row generated from it. */
+interface CleanScaffoldRoute {
+  readonly target: string;
+  readonly command: string;
+  readonly launchName: string;
+  readonly launchCommand: string;
+}
+
+/** 🗃️ The zero-touch artifact directory contract `repoTestArtifactEnvironment` implements. */
+interface CleanScaffoldArtifactEnvironment {
+  readonly owner: string;
+  readonly defaultRelativeRoot: string;
+  readonly explicitRelativeRoot: string;
+  readonly routes: readonly string[];
+}
+
+/** 🧹️ The whole cleanup-and-scaffold ownership fixture, mirroring `🧬️schema/🧱️root-clean-scaffold-source/🔣️.json`. */
+interface CleanScaffoldSourceFixture {
+  readonly schemaVersion: number;
+  readonly owners: readonly CleanScaffoldOwner[];
+  readonly contexts: readonly CleanScaffoldContext[];
+  readonly consumers: readonly CleanScaffoldConsumer[];
+  readonly artifactEnvironment: CleanScaffoldArtifactEnvironment;
+  readonly route: CleanScaffoldRoute;
+}
+
+/** 🧾️ An Nx project manifest, read only for the one target this contract owns. */
+interface NxProjectManifest {
+  readonly targets: Readonly<Record<string, { readonly options?: { readonly command?: string } } | undefined>>;
+}
+
+/** 📦️ A npm manifest, read only for the script mirroring the Nx target. */
+interface NpmPackageManifest {
+  readonly scripts: Readonly<Record<string, string | undefined>>;
+}
+
 const repoRoot = resolve(import.meta.dir, "../../../../../../../");
 const libraryRoot = resolve(repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library");
-const fixture = JSON.parse(readFileSync(resolve(import.meta.dir, "../../🧫️fixtures/🧱️root-clean-scaffold-source/🔣️.json"), "utf8"));
-const schema = JSON.parse(readFileSync(resolve(import.meta.dir, "../../🧬️schema/🧱️root-clean-scaffold-source/🔣️.json"), "utf8"));
+const fixture: CleanScaffoldSourceFixture = JSON.parse(readFileSync(resolve(import.meta.dir, "../../🧫️fixtures/🧱️root-clean-scaffold-source/🔣️.json"), "utf8"));
+const schema: AnySchema = JSON.parse(readFileSync(resolve(import.meta.dir, "../../🧬️schema/🧱️root-clean-scaffold-source/🔣️.json"), "utf8"));
 
 function namedDeclarations(path: string): string[] {
   const source = ts.createSourceFile(path, readFileSync(path, "utf8"), ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
@@ -31,9 +89,9 @@ test("validates the portable cleanup and scaffold ownership contract with indepe
   expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);
   expect(JSON.parse(JSON.stringify(fixture))).toEqual(fixture);
   expect(fixture.owners).toHaveLength(11);
-  expect(new Set(fixture.owners.map((owner: { path: string }) => owner.path)).size).toBe(fixture.owners.length);
+  expect(new Set(fixture.owners.map((owner) => owner.path)).size).toBe(fixture.owners.length);
   const source = JSON.stringify(fixture);
-  expect(ts.parseJsonText("fixture.json", source).parseDiagnostics).toEqual([]);
+  expect((ts.parseJsonText("fixture.json", source) as ts.JsonSourceFile & { readonly parseDiagnostics: readonly ts.Diagnostic[] }).parseDiagnostics).toEqual([]);
 });
 
 test("resolves every cleanup and scaffold owner through its exact semantic context", () => {
@@ -47,7 +105,7 @@ test("resolves every cleanup and scaffold owner through its exact semantic conte
 });
 
 test("typechecks every cleanup and scaffold owner with the installed TypeScript compiler", { timeout: 30_000 }, () => {
-  const paths = fixture.owners.map((owner: { path: string }) => resolve(repoRoot, owner.path));
+  const paths = fixture.owners.map((owner) => resolve(repoRoot, owner.path));
   const program = ts.createProgram(paths, {
     target: ts.ScriptTarget.ESNext,
     module: ts.ModuleKind.ESNext,
@@ -59,7 +117,7 @@ test("typechecks every cleanup and scaffold owner with the installed TypeScript 
     noEmit: true,
     types: ["node"],
   });
-  const diagnostics = paths.flatMap((path: string) => {
+  const diagnostics = paths.flatMap((path) => {
     const source = program.getSourceFile(path);
     expect(source).toBeDefined();
     return source ? [...program.getSyntacticDiagnostics(source), ...program.getSemanticDiagnostics(source)] : [];
@@ -73,7 +131,7 @@ test("typechecks every cleanup and scaffold owner with the installed TypeScript 
 });
 
 test("removes root implementations and binds every direct and source-text consumer", () => {
-  const moved = new Set(fixture.owners.flatMap((owner: { declarations: string[] }) => owner.declarations));
+  const moved = new Set(fixture.owners.flatMap((owner) => owner.declarations));
   expect(namedDeclarations(resolve(repoRoot, "📜️script.ts")).filter((name) => moved.has(name))).toEqual([]);
   for (const consumer of fixture.consumers) {
     const source = readFileSync(resolve(repoRoot, consumer.path), "utf8");
@@ -82,8 +140,8 @@ test("removes root implementations and binds every direct and source-text consum
 });
 
 test("keeps the extracted owner graph acyclic and free of root back imports", () => {
-  const owners = new Set(fixture.owners.map((owner: { path: string }) => resolve(repoRoot, owner.path)));
-  const edges = new Map<string, string[]>([...owners].map((owner) => [owner, []]));
+  const owners = new Set(fixture.owners.map((owner) => resolve(repoRoot, owner.path)));
+  const edges = new Map<string, string[]>([...owners].map((owner): [string, string[]] => [owner, []]));
   for (const owner of owners) {
     const syntax = ts.createSourceFile(owner, readFileSync(owner, "utf8"), ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
     for (const statement of syntax.statements) {
@@ -135,9 +193,9 @@ test("allocates a zero-touch current-ticket artifact environment and preserves e
 });
 
 test("registers one Bun Nx and seed-derived launch route", () => {
-  const project = JSON.parse(readFileSync(resolve(libraryRoot, "📦️packages/🟦️typescript/📋️project.json"), "utf8"));
-  const packageJson = JSON.parse(readFileSync(resolve(libraryRoot, "📦️packages/🟦️typescript/package.json"), "utf8"));
-  expect(project.targets[fixture.route.target]?.options.command).toBe(fixture.route.command);
+  const project: NxProjectManifest = JSON.parse(readFileSync(resolve(libraryRoot, "📦️packages/🟦️typescript/📋️project.json"), "utf8"));
+  const packageJson: NpmPackageManifest = JSON.parse(readFileSync(resolve(libraryRoot, "📦️packages/🟦️typescript/package.json"), "utf8"));
+  expect(project.targets[fixture.route.target]?.options?.command).toBe(fixture.route.command);
   expect(packageJson.scripts[fixture.route.target]).toBe(`nx run @semio-tech/repo-lib:${fixture.route.target}`);
   for (const path of [".vscode/🧩️launch.seed.jsonc", ".vscode/launch.json"]) {
     const source = readFileSync(resolve(repoRoot, path), "utf8");

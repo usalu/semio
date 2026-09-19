@@ -133,13 +133,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn pdf_round_trip_is_stable() {
-        use semio_s_artifact_stdio_pdf::standards::v1_7::subsets::base::schema::snapshot::{PdfPage, PdfSnapshot};
-
-        let mut p1 = PdfPage::new(612.0, 792.0);
-        p1.text = "Page one text.".into();
-        let mut p2 = PdfPage::new(612.0, 792.0);
-        p2.text = "Page two text.".into();
-        let pdf1 = PdfSnapshot { pages: vec![p1, p2], ..Default::default() };
+        let pdf1 = semio_s_artifact_stdio_pdf::io::text_document(&[(612.0, 792.0, "Page one text."), (612.0, 792.0, "Page two text.")]);
         let semio1 = semio_framework_plugin::resolve_ready(SemioDocumentFromPdf::deserialize(&pdf1)).expect("deserialize");
         let pdf2 = semio_framework_plugin::resolve_ready(SemioDocumentToPdf::serialize(&semio1)).expect("serialize");
         let semio2 = semio_framework_plugin::resolve_ready(SemioDocumentFromPdf::deserialize(&pdf2)).expect("deserialize round 2");

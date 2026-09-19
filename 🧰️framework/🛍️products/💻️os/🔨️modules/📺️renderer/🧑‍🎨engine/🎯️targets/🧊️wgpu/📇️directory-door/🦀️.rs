@@ -87,13 +87,16 @@ pub fn decode_directory_door_response(answer: &str) -> Result<HttpResponse, Tran
 //#endregion 🔖️Wire
 
 //#region 🔖️BrowserTransport
-/// 🌐️ The browser `DirectoryTransport`: every HTTP hop crosses the page door; no socket is opened.
+/// 🌐️ The browser `DirectoryTransport`: every HTTP hop crosses the page mailbox door, and the
+/// live-presence socket crosses the DUPLEX door beside it (`🔌️socket-door/🦀️.rs`, packet W15e).
 ///
-/// 🚧️ `open_ws`/`issue_socket_grant` refuse. The directory WebSocket (`/directory/socket/v1`) is a
-/// long-lived duplex channel and the door is a request/response mailbox, so wiring it would need a
-/// second, streaming door — real work that the administration/identity/command lanes this seam
-/// exists for do not need (they are pure REST). The refusal is honest: `DirectoryStream` surfaces it
-/// as a transport fault and the retained Home projection stays native-only until that door lands.
+/// 🚧️ `issue_socket_grant` still refuses, and that refusal is now the ONE thing between this target
+/// and a live directory stream. Two independent reasons, both real: the trait method is
+/// SYNCHRONOUS (a wasm isolate cannot block on the page's `fetch`), and `DirectoryClient`'s own
+/// `protected_post` requires a `LocalHubCredential` bearer, which a cookie-session browser shell
+/// structurally does not hold — React's TypeScript client has the same shape and takes its receipt
+/// from an INJECTED `socketGrantIssuer` rather than from the transport. Closing it is a kernel-side
+/// grant route, not a door. Until then `open_stream_ws` stops at the grant, never at the socket.
 #[cfg(target_arch = "wasm32")]
 #[derive(Clone, Copy, Debug, Default)]
 pub struct BrowserDoorDirectoryTransport;
@@ -118,32 +121,63 @@ impl semio_framework_os_kernel::os_directory::client::DirectoryTransport for Bro
         Err(TransportError::Io("the browser directory door issues no socket grant".into()))
     }
 
-    fn open_ws(&self, _ctx: &semio_framework_async::OperationContext, _url: &str, _protocols: &[String], _timeout_ms: u64) -> Result<Self::Ws, TransportError> {
-        Err(TransportError::Io("the browser directory door opens no socket".into()))
+    /// 🔌️ Dials through the DUPLEX door. The dial itself is asynchronous (the page owns the socket),
+    /// so this answers immediately with a `Connecting` connection and `try_recv_text` reports
+    /// `Pending` until the page says otherwise — which is exactly what that arm of the trait exists
+    /// for, not a stand-in for one.
+    fn open_ws(&self, ctx: &semio_framework_async::OperationContext, url: &str, protocols: &[String], _timeout_ms: u64) -> Result<Self::Ws, TransportError> {
+        if ctx.cancel.is_cancelled_now() {
+            return Err(TransportError::Cancelled);
+        }
+        crate::socket_door::browser::BrowserDoorSocket::open(url, protocols).map(BrowserDoorWsConnection::new).map_err(TransportError::Io)
     }
 }
 
-/// 🚧️ The connection type `open_ws` would return. It is never constructed — `open_ws` always
-/// refuses — and exists only because the trait's associated type must name something concrete.
+/// 🔌️ One directory socket the page owns, read through the bounded duplex door. Text frames are the
+/// directory contract's own wire (`DirectoryStreamMessage` JSON); a binary frame from this endpoint
+/// would be a protocol violation and is dropped rather than transcoded into a fake text frame.
 #[cfg(target_arch = "wasm32")]
-pub enum BrowserDoorWsConnection {}
+pub struct BrowserDoorWsConnection {
+    socket: crate::socket_door::browser::BrowserDoorSocket,
+}
+
+#[cfg(target_arch = "wasm32")]
+impl BrowserDoorWsConnection {
+    fn new(socket: crate::socket_door::browser::BrowserDoorSocket) -> Self {
+        Self { socket }
+    }
+}
 
 #[cfg(target_arch = "wasm32")]
 impl semio_framework_os_kernel::os_directory::client::DirectoryWsConnection for BrowserDoorWsConnection {
-    fn send_text(&mut self, _text: String) -> Result<(), TransportError> {
-        match *self {}
+    fn send_text(&mut self, text: String) -> Result<(), TransportError> {
+        self.socket.send(crate::socket_door::SocketMessage::Text(text)).map_err(TransportError::Io)
     }
 
-    fn send_binary(&mut self, _bytes: Vec<u8>) -> Result<(), TransportError> {
-        match *self {}
+    fn send_binary(&mut self, bytes: Vec<u8>) -> Result<(), TransportError> {
+        self.socket.send(crate::socket_door::SocketMessage::Binary(bytes)).map_err(TransportError::Io)
     }
 
     fn try_recv_text(&mut self) -> Result<semio_framework_os_kernel::os_directory::client::DirectoryWsPoll, TransportError> {
-        match *self {}
+        use semio_framework_os_kernel::os_directory::client::DirectoryWsPoll;
+        loop {
+            match self.socket.try_recv() {
+                Some(crate::socket_door::SocketMessage::Text(text)) => return Ok(DirectoryWsPoll::Text(text)),
+                // 🛟️ A binary frame on the directory endpoint is off-contract; skip it rather than
+                // fabricating text, exactly as the native transport skips a `Message::Binary`.
+                Some(crate::socket_door::SocketMessage::Binary(_)) => continue,
+                None => break,
+            }
+        }
+        let lane = self.socket.lane();
+        if lane.is_closed() {
+            return Ok(DirectoryWsPoll::Closed(lane.close_code()));
+        }
+        Ok(DirectoryWsPoll::Pending)
     }
 
     fn close(&mut self) {
-        match *self {}
+        self.socket.close();
     }
 }
 //#endregion 🔖️BrowserTransport

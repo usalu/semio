@@ -88,7 +88,7 @@ export function verifyAdminStylesheetGraph(root: string): void {
   assert.equal(existsSync(manifestPath) && inside(repositoryRoot, manifestPath), true, "Shared style manifest does not resolve inside the repository");
   const manifest = JSON.parse(readFileSync(manifestPath, "utf8")) as { readonly exports?: Readonly<Record<string, unknown>> };
   const exported = manifest.exports?.[fixture.shared.export];
-  assert.equal(typeof exported, "string", "Shared style export is missing");
+  assert.ok(typeof exported === "string", "Shared style export is missing");
   assert.equal(realpathSync(fileURLToPath(new URL(exported, pathToFileURL(manifestPath)))), canonicalPath, "Shared style export does not resolve to the canonical stylesheet");
   assert.equal(existsSync(resolve(dirname(manifestPath), fixture.shared.export.slice(2))), false, "Shared style export must not rely on a compatibility duplicate");
   const visited = new Set<string>();

@@ -3,12 +3,12 @@ use super::*;
 use crate::wgpu::Label;
 use crate::wgpu::component::layout::ActionDescriptor;
 use crate::wgpu::component::ui::{
-    SurfaceKind, UiButtonNode, UiComponentSceneNode, UiControlNode, UiExternalSlotNode, UiFieldNode, UiGroupNode, UiIconSelectNode, UiImageNode, UiInputNode, UiKeyValueEntry, UiKeyValueNode, UiNumberStepperNode, UiPresence, UiRingNode,
+    SurfaceKind, UiButtonNode, UiComponentSceneNode, UiControlNode, UiExternalSlotNode, UiFieldNode, UiGroupNode, UiIconSelectNode, UiImageNode, UiInputNode, UiKeyValueEntry, UiKeyValueNode, UiNumberStepperNode, UiPresence, UiProgressNode, UiRingNode,
     UiSectionNode, UiSelectItem, UiSelectNode, UiSeparatorNode, UiSliderNode, UiStackNode, UiState, UiTextNode, UiToggleNode, UiTreeActionPlacement, UiTreeItemAction, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ui_node_to_control,
 };
 use crate::wgpu::events::PointerButton;
 use crate::wgpu::geometry::Rect;
-use crate::wgpu::input::InputState;
+use crate::wgpu::input::{HitKind, InputState};
 use crate::wgpu::scene_slots::SceneSlot;
 use crate::wgpu::widgets::{
     ControlNode, InputMeta, KeyValueEntry, RingMeta, SelectItem, SliderMeta, StepperMeta, TreeItem, TreeItemAction, TreeSection, WidgetContext, WidgetInteractionMaps, WidgetNode, draw_text_on, draw_text_overlay_on, measure_widget,
@@ -92,7 +92,7 @@ fn retained_paint_walk_yields_one_node_or_scalar_per_step_in_tree_order() {
     let mut complete = false;
     for _ in 0..16 {
         match walk.step(&tree) {
-            RetainedPaintWalkStep::Visit(node, _, _) => {
+            RetainedPaintWalkStep::Visit(node, _, _, _) => {
                 observed[observed_len] = Some(node);
                 observed_len += 1;
             }
@@ -153,8 +153,8 @@ fn dispatch_event_emits_a_button_click_command_and_it_is_also_drainable() {
     drive_layout(&mut ui, "main", 400.0, 400.0, &mut atlas);
     ui.frame::<RecordingSceneHost>("main", 400.0, 400.0, &mut atlas, None, None);
 
-    ui.dispatch_event("main", UiEvent::PointerDown { x: 10.0, y: 10.0, button: PointerButton::Primary });
-    let commands = ui.dispatch_event("main", UiEvent::PointerUp { x: 10.0, y: 10.0, button: PointerButton::Primary });
+    ui.dispatch_event("main", UiEvent::PointerDown { x: 10.0, y: 10.0, button: PointerButton::Primary, modifiers: Default::default() });
+    let commands = ui.dispatch_event("main", UiEvent::PointerUp { x: 10.0, y: 10.0, button: PointerButton::Primary, modifiers: Default::default() });
 
     assert!(commands.iter().any(|cmd| matches!(cmd, UiCommand::App { intent, .. } if intent.descriptor() == action())));
     let drained = ui.drain_commands();
@@ -497,8 +497,8 @@ fn scene_at_is_read_only_where_a_press_is_not() {
     ui.apply_tree("w", &stack_ui(vec![component_scene_ui("surface.readonly")]));
     drive_layout(&mut ui, "w", 400.0, 400.0, &mut atlas);
     let _ = ui.scene_at("w", 200.0, 200.0);
-    assert!(ui.dispatch_event("w", UiEvent::PointerMove { x: 380.0, y: 380.0 }).iter().all(|command| !matches!(command, UiCommand::FocusChanged { .. })));
-    let pressed = ui.dispatch_event("w", UiEvent::PointerDown { x: 200.0, y: 200.0, button: PointerButton::Primary });
+    assert!(ui.dispatch_event("w", UiEvent::PointerMove { x: 380.0, y: 380.0, modifiers: Default::default() }).iter().all(|command| !matches!(command, UiCommand::FocusChanged { .. })));
+    let pressed = ui.dispatch_event("w", UiEvent::PointerDown { x: 200.0, y: 200.0, button: PointerButton::Primary, modifiers: Default::default() });
     assert!(pressed.iter().any(|command| matches!(command, UiCommand::Scene { .. })), "a real press reaches the scene lane, got {pressed:?}");
 }
 //#endregion 🖱️SceneAtTests
@@ -585,6 +585,56 @@ fn a_modal_overlays_body_is_centered_in_the_viewport() {
     assert!(placement.backdrop, "a Dialog draws a scrim");
     let placed = ui.scene_at("w", placement.x + 2.0, placement.y + 2.0).expect("the modal body resolves at its placement");
     assert_close((placed.rect.x, placed.rect.y), (placement.x, placement.y), "a centered modal body sits at its placement");
+}
+/// 🪟️ W15a item 5. `paint_overlay_backdrop`/`paint_overlay_surface` existed but were reachable
+/// only through the `🪟️OverlayApi` façade, which no host ever called — an open `Dialog`/`Popover`
+/// therefore painted its content with NO surface under it on every frame a host did not hand-pump
+/// (W1n gap 3). This law drives the production ladder (`frame_into_step`) and pins three things:
+/// the chrome is painted by the ladder itself; it lands in the OVERLAY bucket, which composites
+/// above every panel; and the overlay's own content lands there too, AFTER the chrome, so the
+/// surface can never hide the content it exists to carry.
+#[test]
+fn the_frame_ladder_paints_an_open_overlays_own_surface_chrome_under_its_content() {
+    fn settle(ui: &mut Ui, atlas: &mut FontAtlas, body: Rect) -> DrawList {
+        let mut draw = DrawList::default();
+        for _ in 0..262_144 {
+            match ui.frame_into_step::<RecordingSceneHost>("w", body, atlas, None, None, &mut draw) {
+                UiFrameStep::Pending => {}
+                UiFrameStep::Ready => return draw,
+                step => panic!("retained paint answered {step:?} (phase {:?})", ui.paint_frame_phase("w")),
+            }
+        }
+        panic!("retained paint never completed, parked in {:?}", ui.paint_frame_phase("w"));
+    }
+    let overlay_instances = |draw: &DrawList| -> usize { draw.layers.iter().map(|layer| layer.overlay_ui_instances.len()).sum() };
+    let body = Rect { x: 0.0, y: 0.0, w: 400.0, h: 400.0 };
+
+    let mut ui = Ui::new();
+    let mut atlas = FontAtlas::builtin();
+    ui.apply_tree("w", &stack_ui(vec![component_scene_ui("surface.popover")]));
+    drive_layout(&mut ui, "w", body.w, body.h, &mut atlas);
+    let closed = settle(&mut ui, &mut atlas, body);
+    assert_eq!(overlay_instances(&closed), 0, "a surface with no open overlay puts nothing in the overlay bucket");
+
+    let content = first_component_scene_node(&ui, "w");
+    ui.open_overlay("w", content, OverlayKind::Popover, OverlayAnchor::Point { x: 40.0, y: 30.0 });
+    let opened = settle(&mut ui, &mut atlas, body);
+    assert!(overlay_instances(&opened) > 0, "the ladder itself must paint the open Popover's surface chrome — no host pumps `overlay_placements`");
+    assert!(!opened.overlay_routed(), "every overlay-routed region the ladder opened is closed again by the time the frame publishes");
+
+    let placement = *ui.overlay_placements("w").first().expect("one open overlay");
+    let bucket: Vec<[f32; 4]> = opened.layers.iter().flat_map(|layer| layer.overlay_ui_instances.iter()).map(|instance| instance.rect).collect();
+    let surface_at = bucket.iter().position(|rect| (rect[0] - placement.x).abs() < 0.01 && (rect[1] - placement.y).abs() < 0.01 && (rect[2] - placement.width).abs() < 0.01);
+    let surface_at = surface_at.expect("the overlay surface is painted at the placement layout resolved");
+    assert!(bucket.len() > surface_at + 1, "the overlay's own content paints into the SAME bucket, after the chrome — otherwise the surface covers it");
+
+    // 🔽️ A `SelectPopup` paints its own glass inside `paint_select`, and its overlay ROOT is the
+    // trigger's rect, not the popup's — chrome at that placement would draw a menu panel over a
+    // closed trigger. The ladder must leave those three kinds alone.
+    let _ = ui.close_overlay("w", content);
+    ui.open_overlay("w", content, OverlayKind::SelectPopup, OverlayAnchor::Node(content));
+    let popup = settle(&mut ui, &mut atlas, body);
+    assert_eq!(overlay_instances(&popup), 0, "a SelectPopup owns its own surface — the ladder must not paint a second one over it");
 }
 //#endregion 🪟️OverlayBodyTests
 
@@ -690,7 +740,7 @@ fn to_widget_node(node: &UiNode) -> WidgetNode<ActionDescriptor> {
         UiNode::Section(section) => {
             WidgetNode::Section { id: section.id.clone(), label: section.label.clone().map(|l| l.to_string()), default_open: section.default_open.unwrap_or(true), children: section.children.iter().map(to_widget_node).collect() }
         }
-        UiNode::Group(group) => WidgetNode::Section { id: group.id.clone(), label: Some(group.label.to_string()), default_open: group.default_open.unwrap_or(true), children: group.children.iter().map(to_widget_node).collect() },
+        UiNode::Group(group) => WidgetNode::Group { id: group.id.clone(), label: group.label.to_string(), default_open: group.default_open.unwrap_or(true), children: group.children.iter().map(to_widget_node).collect() },
         UiNode::Tree(tree) => WidgetNode::Tree {
             // 🧭️ Per-item `selected`/`highlighted` (see `tree_item_to_widget`) already carry the
             // full signal from `item.presence` — the tree-level id lists are gone, not re-derived.
@@ -702,14 +752,15 @@ fn to_widget_node(node: &UiNode) -> WidgetNode<ActionDescriptor> {
             // wired into this retained-mode engine.
             selection_change: None,
         },
-        // KNOWN GAP: `WidgetNode<E>` (the immediate-mode `widgets` region's tree type) has no
-        // Image/ComponentScene/ExternalSlot/Progress variant at all — the renderer's own
-        // `ui_node_to_widget` collapses all three to an empty placeholder `Text` node, which
-        // isn't a like-for-like rendering of the same node. There is no immediate-mode output to
-        // compare the retained `paint::paint_image`/`paint_component_scene`/`paint_external_slot`
-        // against; see the golden tests below for these three, which verify the retained side
-        // alone produces sane output and skip the two-pipeline equivalence assertion.
-        UiNode::Image(_) | UiNode::ComponentScene(_) | UiNode::ExternalSlot(_) | UiNode::Progress(_) => WidgetNode::Text { value: String::new(), emphasize: false },
+        // 🧩️ CLOSED by ticket 26/09/17 packet W15a (was: "`WidgetNode<E>` has no Image/
+        // ComponentScene/ExternalSlot/Progress variant at all", so all four collapsed to an empty
+        // placeholder `Text` and no two-pipeline comparison was possible). All five kinds now have a
+        // real arm in the kit, so this mapping is like-for-like and
+        // `every_ui_node_kind_has_a_widget_kit_arm_that_paints` asserts each one paints.
+        UiNode::Progress(progress) => WidgetNode::Progress { id: progress.id.clone(), completed: progress.completed, total: progress.total },
+        UiNode::Image(image) => WidgetNode::Image { id: image.id.clone(), src: image.src.clone(), alt: image.alt.clone().map(|alt| alt.to_string()) },
+        UiNode::ComponentScene(scene) => WidgetNode::component_scene(scene),
+        UiNode::ExternalSlot(slot) => WidgetNode::ExternalSlot { body_key: slot.body_key.clone() },
     }
 }
 
@@ -918,7 +969,7 @@ fn golden_input() {
             step: None,
             accept: None,
             on_change: action(),
-            presence: UiPresence::default(),
+            on_submit: None, on_abort: None, on_repeat_last: None, presence: UiPresence::default(),
             menu: None,
         })),
     );
@@ -1075,7 +1126,7 @@ fn golden_field_known_gap() {
             step: None,
             accept: None,
             on_change: action(),
-            presence: UiPresence::default(),
+            on_submit: None, on_abort: None, on_repeat_last: None, presence: UiPresence::default(),
             menu: None,
         })),
         presence: UiPresence::default(),
@@ -1148,6 +1199,58 @@ fn golden_external_slot_known_gap() {
     let node = UiNode::ExternalSlot(UiExternalSlotNode { plugin_id: "plug".into(), app_id: "app".into(), body_key: "body".into(), params_json: "{}".into(), presence: UiPresence::default(), menu: None });
     let (instances, _, _) = retained_stats(&node);
     assert!(instances > 0, "ExternalSlot should paint its placeholder chrome plus its body_key label");
+}
+
+/// 🧩️ W15a item 2. `WidgetNode<E>` — the second, smaller paint kit a scene-embedded panel and the
+/// standalone `🌳️Tree` target draw through — was 15 arms against `UiNode`'s 20, so a panel painted
+/// through it could not show a progress bar, an image, a nested group, a scene or an extension slot
+/// AT ALL. This law pins the kit to paint SOMETHING for every one of the five, and pins a scene's
+/// hit contract to the same `retained_scene_hit` derivation the retained registry uses, so the two
+/// kits cannot answer differently for the same node.
+#[test]
+fn every_ui_node_kind_has_a_widget_kit_arm_that_paints() {
+    let bounds = Rect { x: 0.0, y: 0.0, w: 200.0, h: 60.0 };
+    let paints = |node: &UiNode| {
+        let (instances, vectors, raster) = immediate_stats(node, bounds);
+        instances + vectors + raster
+    };
+    let progress = UiNode::Progress(UiProgressNode { id: "p".into(), completed: 3.0, total: Some(4.0), value_text: Label::data("3 of 4"), presence: UiPresence::default(), menu: None });
+    assert!(paints(&progress) > 0, "a determinate Progress must paint its track and its fill");
+    let indeterminate = UiNode::Progress(UiProgressNode { id: "p".into(), completed: 0.0, total: None, value_text: Label::data("busy"), presence: UiPresence::default(), menu: None });
+    assert!(paints(&indeterminate) > 0, "an indeterminate Progress must still paint its busy band");
+
+    let image = UiNode::Image(UiImageNode { id: "img".into(), src: String::new(), alt: Some(Label::data("alt text")), presence: UiPresence::default(), menu: None });
+    assert!(paints(&image) > 0, "an Image with no decodable source must paint its placeholder plus alt text");
+
+    let group = UiNode::Group(UiGroupNode {
+        id: "grp".into(),
+        label: Label::data("Group"),
+        default_open: Some(true),
+        presence: UiPresence::default(),
+        menu: None,
+        children: vec![UiNode::Text(UiTextNode { value: Label::data("inside"), emphasize: None, data_attributes: None, presence: UiPresence::default(), menu: None })],
+    });
+    let open = paints(&group);
+    assert!(open > 0, "an open Group must paint its chevron, its label AND its children");
+    let mut collapsed_group = group.clone();
+    if let UiNode::Group(node) = &mut collapsed_group {
+        node.default_open = Some(false);
+    }
+    assert!(paints(&collapsed_group) < open, "a collapsed Group paints its header only — its children are not drawn");
+
+    let slot = UiNode::ExternalSlot(UiExternalSlotNode { plugin_id: "plug".into(), app_id: "app".into(), body_key: "body".into(), params_json: "{}".into(), presence: UiPresence::default(), menu: None });
+    assert!(paints(&slot) > 0, "an ExternalSlot must paint its placeholder chrome and its body_key");
+
+    let scene = component_scene_ui("surf");
+    assert!(paints(&scene) > 0, "a ComponentScene must paint its placeholder rect when no host fills it");
+    let widget = to_widget_node(&scene);
+    match &widget {
+        WidgetNode::ComponentScene { hit_kind, hit_control_id, .. } => {
+            assert_eq!(*hit_kind, HitKind::World3d, "a World3d surface registers under its own kind, exactly as `retained_hit_registration` does");
+            assert_eq!(hit_control_id, "surf");
+        }
+        other => panic!("a ComponentScene node must map to the kit's own arm, got {other:?}"),
+    }
 }
 //#endregion 🔖️GoldenHarness
 
@@ -1645,4 +1748,29 @@ fn ui_surface_slot_table_is_heap_first_and_fits_a_bounded_thread_stack() {
             drop(UiSurfaceRegistry::default());
         },
     );
+}
+
+/// 📐️ `surface_content_height` answers the DOCUMENT's own extent, never the viewport it was laid out
+/// against — it is the measure a floating panel hugs its content with (`anchor_panel_rect`'s
+/// `content_h`), so answering the caller's own input makes that hug a no-op and leaves every panel at
+/// its full column band. Measured live on 6118: the `framework.panel.toolRun` root reported 781.6
+/// while its one run group was 233.96 tall, and the Tool-runs panel covered the whole right column
+/// and the 3D preview under it (ticket 26/09/17/WGPU-RENDERER-REACT-PARITY,
+/// `📓️w14b-generation3d-labels-preview-layout.md`).
+#[test]
+fn surface_content_height_measures_the_document_not_the_viewport_it_was_given() {
+    let mut ui = Ui::new();
+    let mut atlas = FontAtlas::builtin();
+    ui.apply_tree("panel", &stack_ui(vec![button_ui("one", "One"), button_ui("two", "Two")]));
+    drive_layout(&mut ui, "panel", 300.0, 780.0, &mut atlas);
+
+    let short = ui.surface_content_height("panel").expect("a laid-out surface answers its content height");
+    assert!(short > 0.0, "two buttons take some height, got {short}");
+    assert!(short < 780.0, "two buttons do not take a 780 px column, got {short}");
+
+    // 📏️ …and the same document in a TALLER viewport answers the same height, which is what makes the
+    // hug converge instead of tracking the band it is clamped to.
+    drive_layout(&mut ui, "panel", 300.0, 1_400.0, &mut atlas);
+    let tall = ui.surface_content_height("panel").expect("content height");
+    assert!((tall - short).abs() <= 1.0, "the document's extent is viewport-independent, got {short} then {tall}");
 }

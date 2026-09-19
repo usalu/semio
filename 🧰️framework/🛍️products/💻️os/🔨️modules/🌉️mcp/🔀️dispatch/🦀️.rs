@@ -8,19 +8,22 @@
 //! through the real `command_from_action` bridge, hydrating the real document/config/draft packs,
 //! decoding the real `HistoryPatch`/op stream — is P7's job when it implements [`ArtifactChannel`] for
 //! real (`🌉️mcp/🏠️workspace`); see this packet's report §"what P7 must implement" for the exact
-//! contract. [`MockArtifactChannel`] is a fully-scripted in-memory artifact store this crate's own
-//! tests (and, until P7 lands, the live binary) drive against.
+//! contract. `MockArtifactChannel` is a fully-scripted in-memory artifact store THIS CRATE'S OWN
+//! TESTS drive against — it is `#[cfg(test)]` and reachable from no production construction path;
+//! a live gateway with no `--folder`/`--hub` binding runs on [`UnboundArtifactChannel`], which
+//! answers every command with the typed `workspace.unbound` fault instead of a scripted success.
 
 use crate::audit::{hash_input, redact_input, AgentAuditEvent, AuditDecision, AuditSink, AuditSinks, ClientInfo, SENSITIVE_KEYS};
 use crate::catalog::Catalog;
 use crate::errors::{GatewayError, GatewayErrorCode};
 use crate::handles::{mint_id, Attachment, HandleKind, HandleTable, IdempotencyStore, SessionHandle};
-use crate::policy::{AgentPrincipal, ApprovalGate, AutoApprovePolicy, PolicyEngine};
+use crate::policy::{AgentPrincipal, ApprovalCoordinator, ApprovalGate, ApprovalRequest, ApprovalResolution, AutoApprovePolicy, PolicyEngine};
 use crate::schema::{InvocationReport, InvocationStatus, PreparedActionReport, RevisionStamp};
 use crate::workspace::ArtifactChannels;
 use semio_framework_dispatch_macros::dyn_enum;
 use semio_framework_os_kernel::{DslValue, FromValue, ToValue, ValueError};
 use serde::{Deserialize, Serialize};
+#[cfg(test)]
 use std::collections::BTreeMap;
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{Arc, Mutex};
@@ -80,6 +83,14 @@ pub enum AppCommand {
     TransactionUndo { group_id: String },
     TransactionRedo { group_id: String },
     Infer(InferCommand),
+    /// 📤️ Export one artifact through the owning app's own media OUT port — `document`/`document_spr`
+    /// are the artifact's real pack bytes, loaded into the guest before the port is read. Mirrors the
+    /// `LoadDocument` → `MediaOut` pair `🏃️run`'s workflow executor already drives; this port adds no
+    /// export-specific wire of its own.
+    ExportMedia { port: String, document: Vec<u8>, document_spr: Vec<u8> },
+    /// 🆕️ Read the guest's own freshly-opened (genesis) document — how a plugin-typed artifact is
+    /// created without this host ever knowing that plugin's schema.
+    ReadArtifact,
 }
 
 /// 💡️ One plugin-declared inference execution — the `Infer` command's whole payload, kept as its own
@@ -118,6 +129,11 @@ pub enum AppFrame {
     /// `payload` is the result wire's `canonicalPayload` bytes and `complete` its `complete` flag.
     /// Never a host-synthesised value — a guest that refuses answers [`AppFrame::Error`] instead.
     Inferred { inference_schema: String, complete: bool, payload: Vec<u8> },
+    /// 📤️ The guest's own exported media for one OUT port, exactly as `AppFrame::Media` carried it:
+    /// `descriptor` is the guest's packed media descriptor, `data` the exported bytes.
+    Exported { port: String, descriptor: Vec<u8>, data: Vec<u8> },
+    /// 🆕️ The guest's own document pack+spr bytes, host-opaque.
+    Artifact { pack: Vec<u8>, spr: Vec<u8> },
     Error(Fault),
 }
 
@@ -173,13 +189,45 @@ fn map_fault(fault: &Fault) -> GatewayError {
         "transaction.instance-busy" => GatewayError::new(GatewayErrorCode::PreconditionFailed, fault.message.clone()).retryable(),
         "budget.exceeded" => GatewayError::new(GatewayErrorCode::BudgetExceeded, fault.message.clone()).retryable(),
         "capability.not-found" => GatewayError::new(GatewayErrorCode::NotFound, fault.message.clone()),
-        "plugin.unavailable" => GatewayError::new(GatewayErrorCode::PluginUnavailable, fault.message.clone()).retryable(),
+        "plugin.unavailable" | "workspace.unbound" => GatewayError::new(GatewayErrorCode::PluginUnavailable, fault.message.clone()).retryable(),
         _ => GatewayError::new(GatewayErrorCode::Internal, fault.message.clone()),
     }
 }
 //#endregion 🔖️Port
 
+//#region 🔖️UnboundArtifactChannel
+/// 🚫️ The channel a gateway with NO `--folder`/`--hub` binding runs on: every command answers the
+/// same typed, retryable `workspace.unbound` fault naming exactly which flag closes the gap, so a
+/// mutation-protocol call against an unbound session can never be mistaken for a real edit. It
+/// replaces the scripted [`MockArtifactChannel`] that used to occupy this slot in the live binary —
+/// a caller could not tell a mock commit from a real one from the result alone
+/// (`📓️g7-mcp-agent-and-collaboration-audit.md` §6 P0.3).
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub struct UnboundArtifactChannel;
+
+/// 🏷️ The fault code every unbound exchange carries — mapped by [`map_fault`] onto a retryable
+/// `PLUGIN_UNAVAILABLE`, the same shape `🗿️artifact`'s own tier-1 gate already answers with.
+pub const WORKSPACE_UNBOUND_FAULT_CODE: &str = "workspace.unbound";
+
+/// 📝️ The one message every unbound surface repeats verbatim — one sentence, naming both bindings.
+pub const WORKSPACE_UNBOUND_MESSAGE: &str =
+    "no workspace is bound to this session — start the gateway with --folder <dir> or --hub <url> --space <id> before invoking a capability";
+
+impl UnboundArtifactChannel {
+    pub fn fault() -> Fault {
+        Fault { code: WORKSPACE_UNBOUND_FAULT_CODE.to_string(), message: WORKSPACE_UNBOUND_MESSAGE.to_string() }
+    }
+}
+
+impl ArtifactChannel for UnboundArtifactChannel {
+    fn exchange(&mut self, _instance: u32, _commands: Vec<AppCommand>) -> Result<Vec<AppFrame>, Fault> {
+        Err(Self::fault())
+    }
+}
+//#endregion 🔖️UnboundArtifactChannel
+
 //#region 🔖️MockArtifactChannel
+#[cfg(test)]
 struct MockInstanceState {
     artifact_id: String,
     generation: u64,
@@ -191,6 +239,7 @@ struct MockInstanceState {
     force_undo_fails: bool,
 }
 
+#[cfg(test)]
 impl MockInstanceState {
     fn new(instance: u32) -> Self {
         Self { artifact_id: format!("mock-artifact-{instance}"), generation: 0, head_edit_id: 0, pending: None, prepared: BTreeMap::new(), force_budget_exceeded: false, force_commit_fault: None, force_undo_fails: false }
@@ -273,10 +322,16 @@ impl MockInstanceState {
                 }
                 AppFrame::Inferred { inference_schema: command.inference_schema, complete: true, payload: command.canonical_payload }
             }
+            // 📤️🆕️ This double owns no guest, so it can neither run a media port nor mint a plugin's
+            // genesis document. It says so with the SAME typed fault a real unreachable plugin uses,
+            // never a synthesised export or an empty pack that a caller could mistake for real bytes.
+            AppCommand::ExportMedia { port, .. } => AppFrame::Error(Fault { code: "plugin.unavailable".into(), message: format!("the scripted in-memory channel has no guest to read media port `{port}` from — bind a workspace with --folder/--hub") }),
+            AppCommand::ReadArtifact => AppFrame::Error(Fault { code: "plugin.unavailable".into(), message: "the scripted in-memory channel has no guest to read a genesis document from — bind a workspace with --folder/--hub".into() }),
         }
     }
 }
 
+#[cfg(test)]
 struct MockChannelState {
     instances: BTreeMap<u32, MockInstanceState>,
     log: Vec<(u32, AppCommand)>,
@@ -289,11 +344,13 @@ struct MockChannelState {
 /// a test keeps one handle for scripting/assertions while handing a clone to `ActionAdapter` (which
 /// takes ownership of a `Box<ArtifactChannels>` (was `Box<dyn ArtifactChannel>`, see the
 /// `dyn_enum_close!` note above the trait).
+#[cfg(test)]
 #[derive(Clone)]
 pub struct MockArtifactChannel {
     state: Arc<Mutex<MockChannelState>>,
 }
 
+#[cfg(test)]
 impl MockArtifactChannel {
     pub fn new() -> Self {
         Self { state: Arc::new(Mutex::new(MockChannelState { instances: BTreeMap::new(), log: Vec::new() })) }
@@ -331,12 +388,14 @@ impl MockArtifactChannel {
     }
 }
 
+#[cfg(test)]
 impl Default for MockArtifactChannel {
     fn default() -> Self {
         Self::new()
     }
 }
 
+#[cfg(test)]
 impl ArtifactChannel for MockArtifactChannel {
     fn exchange(&mut self, instance: u32, commands: Vec<AppCommand>) -> Result<Vec<AppFrame>, Fault> {
         let mut state = self.state.lock().expect("mock channel lock poisoned");
@@ -452,6 +511,14 @@ pub struct UndoRedoReport {
 //#endregion 🔖️PublicReports
 
 //#region 🔖️ActionAdapter
+/// 🗳️ What one parked approval settled to inside `invoke_uncached` — the adapter's own narrow view
+/// of [`ApprovalResolution`], flattened so the caller's error/audit branch stays one match.
+enum SettledApproval {
+    Approved,
+    Denied { channel: &'static str, note: Option<String> },
+    Unreachable { details: serde_json::Value },
+}
+
 struct AuditContext<'a> {
     invocation_id: &'a str,
     principal: &'a AgentPrincipal,
@@ -473,6 +540,7 @@ pub struct ActionAdapter {
     client: ClientInfo,
     invocation_counter: AtomicU64,
     history_undo_port: Mutex<Option<Arc<dyn HistoryUndoPort>>>,
+    approvals: Mutex<Option<Arc<ApprovalCoordinator>>>,
 }
 
 const INSTANCE_BUSY_MAX_ATTEMPTS: u32 = 3;
@@ -480,7 +548,7 @@ const INSTANCE_BUSY_MAX_ATTEMPTS: u32 = 3;
 impl ActionAdapter {
     pub fn new(channel: Box<ArtifactChannels>, handles: Arc<HandleTable>, idempotency: Arc<IdempotencyStore>, audit: Arc<AuditSinks>, auto_approve: AutoApprovePolicy, client: ClientInfo) -> Self {
         let policy = PolicyEngine::new(handles.clone(), auto_approve);
-        Self { channel: Mutex::new(channel), handles, idempotency, audit, policy, client, invocation_counter: AtomicU64::new(0), history_undo_port: Mutex::new(None) }
+        Self { channel: Mutex::new(channel), handles, idempotency, audit, policy, client, invocation_counter: AtomicU64::new(0), history_undo_port: Mutex::new(None), approvals: Mutex::new(None) }
     }
 
     //#region 💡️Inference
@@ -518,6 +586,18 @@ impl ActionAdapter {
     /// 🔌 Binds the sole workspace-owned remote history implementation before serving tools.
     pub fn bind_history_undo_port(&self, port: Arc<dyn HistoryUndoPort>) {
         *self.history_undo_port.lock().expect("history undo port lock poisoned") = Some(port);
+    }
+
+    /// ⛩️ Binds the human-in-the-loop resolution chain a parked approval is offered through
+    /// (`🛡️policy::ApprovalCoordinator`). Unbound, a destructive capability still parks a handle and
+    /// still answers `APPROVAL_REQUIRED` — it just says so without having asked anyone, which is the
+    /// honest headless tier, never a silent proceed.
+    pub fn bind_approval_coordinator(&self, coordinator: Arc<ApprovalCoordinator>) {
+        *self.approvals.lock().expect("approval coordinator lock poisoned") = Some(coordinator);
+    }
+
+    fn approval_coordinator(&self) -> Option<Arc<ApprovalCoordinator>> {
+        self.approvals.lock().expect("approval coordinator lock poisoned").clone()
     }
 
     /// 🪪 Mints one session-private undo token from a Hub receipt without retaining mutation bytes.
@@ -750,22 +830,47 @@ impl ActionAdapter {
         let capability = catalog.get(&record.capability_id).ok_or_else(|| GatewayError::new(GatewayErrorCode::NotFound, format!("capability {} no longer exists in the catalog", record.capability_id)))?;
 
         let diff_summary = serde_json::json!({ "capabilityId": record.capability_id, "opsCount": record.ops.op_counts() });
-        match self.policy.gate_approval(principal, capability, diff_summary, request.approval_handle.as_deref(), session, now_ms) {
-            ApprovalGate::Required { approval_handle } => {
-                let error = GatewayError::new(GatewayErrorCode::ApprovalRequired, format!("capability {} requires approval before it can be invoked", capability.id)).with_details(serde_json::json!({ "approvalHandle": approval_handle }));
+        if let ApprovalGate::Required { approval_handle } = self.policy.gate_approval(principal, capability, diff_summary.clone(), request.approval_handle.as_deref(), session, now_ms) {
+            let (error, outcome) = match self.settle_approval(principal, capability, session, &approval_handle, &diff_summary, now_ms) {
+                SettledApproval::Approved => (None, "approved"),
+                SettledApproval::Denied { channel, note } => (
+                    Some(
+                        GatewayError::new(GatewayErrorCode::PermissionDenied, format!("a human denied approval for capability {} over the {channel} channel", capability.id))
+                            .with_details(serde_json::json!({ "approvalHandle": approval_handle, "channel": channel, "note": note })),
+                    ),
+                    "approval_denied",
+                ),
+                SettledApproval::Unreachable { details } => (
+                    Some(
+                        GatewayError::new(GatewayErrorCode::ApprovalRequired, format!("capability {} requires a human approval that nothing attached to this gateway can give", capability.id))
+                            .with_details(details),
+                    ),
+                    "approval_required",
+                ),
+            };
+            if let Some(error) = error {
                 self.record_audit(
                     AuditContext { invocation_id: &invocation_id, principal, session, capability_id: &record.capability_id, raw_input: &record.input },
                     AuditDecision::Denied { code: error.code },
                     Some(record.baseline.clone()),
                     None,
-                    "approval_required",
+                    outcome,
                     Some(error.clone()),
                     None,
                     now_ms,
                 );
                 return Err(error);
             }
-            ApprovalGate::Proceed => {}
+            self.record_audit(
+                AuditContext { invocation_id: &invocation_id, principal, session, capability_id: &record.capability_id, raw_input: &record.input },
+                AuditDecision::Allowed,
+                Some(record.baseline.clone()),
+                None,
+                outcome,
+                None,
+                None,
+                now_ms,
+            );
         }
 
         let expected = request.expected_revision.clone().unwrap_or_else(|| record.baseline.clone());
@@ -856,6 +961,41 @@ impl ActionAdapter {
     //#region 🔖️ApprovalResolution
     pub fn resolve_approval(&self, session: &SessionHandle, approval_handle: &str, approve: bool, now_ms: u64) -> Result<String, GatewayError> {
         self.policy.resolve_approval(session, approval_handle, approve, now_ms)
+    }
+
+    /// ⛩️ Offers the freshly-parked `approval_handle` to the bound [`ApprovalCoordinator`] and, on a
+    /// human yes, consumes the gate for THIS invocation: the pending record is decided through the
+    /// same `PolicyEngine::resolve_approval` a replayed `approvalHandle` goes through, and the fresh
+    /// decided handle is immediately re-gated so the proceed path is the identical code a replay
+    /// takes. No coordinator bound, or nothing attached to ask, is `Unreachable` — never a proceed.
+    fn settle_approval(&self, principal: &AgentPrincipal, capability: &crate::catalog::CapabilityDefinition, session: &SessionHandle, approval_handle: &str, diff_summary: &serde_json::Value, now_ms: u64) -> SettledApproval {
+        let Some(coordinator) = self.approval_coordinator() else {
+            return SettledApproval::Unreachable {
+                details: serde_json::json!({
+                    "approvalHandle": approval_handle,
+                    "channels": { "elicitation": "no approval coordinator is bound to this gateway", "shell": "no approval coordinator is bound to this gateway" },
+                    "remedy": "this build wires the coordinator in `run_stdio`/`run_http`; a server constructed without one can never resolve an approval",
+                }),
+            };
+        };
+        let capability_id = capability.id.to_string();
+        let request = ApprovalRequest { approval_handle, capability_id: &capability_id, capability_title: &capability.title, principal_id: &principal.id, diff_summary };
+        match coordinator.resolve(&request) {
+            ApprovalResolution::Approved { channel } => match self.policy.resolve_approval(session, approval_handle, true, now_ms) {
+                Ok(decided) => match self.policy.gate_approval(principal, capability, diff_summary.clone(), Some(&decided), session, now_ms) {
+                    ApprovalGate::Proceed => SettledApproval::Approved,
+                    ApprovalGate::Required { .. } => SettledApproval::Unreachable {
+                        details: serde_json::json!({ "approvalHandle": approval_handle, "channel": channel.as_str(), "reason": "the decided approval handle did not satisfy its own gate" }),
+                    },
+                },
+                Err(error) => SettledApproval::Unreachable { details: serde_json::json!({ "approvalHandle": approval_handle, "channel": channel.as_str(), "reason": error.message }) },
+            },
+            ApprovalResolution::Denied { channel, note } => {
+                let _ = self.policy.resolve_approval(session, approval_handle, false, now_ms);
+                SettledApproval::Denied { channel: channel.as_str(), note }
+            }
+            ApprovalResolution::Unreachable { details } => SettledApproval::Unreachable { details },
+        }
     }
     //#endregion 🔖️ApprovalResolution
 

@@ -1,8 +1,8 @@
 type TestSource = { readonly directory: string; readonly url: string };
 
-export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: any, source: TestSource): Promise<void> {
+export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: Pick<typeof import("../../🟦️.ts"), "reduce">, source: TestSource): Promise<void> {
   const { reduce } = dependencies;
-  type ShellState = any;
+  type ShellState = import("../../../📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🟦️.tsx").ShellState;
 
   const { describe, expect, it } = vitest;
 

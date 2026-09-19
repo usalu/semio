@@ -270,7 +270,7 @@ impl BridgeInstanceRef {
 //#endregion 🔖️SharedTypes
 
 //#region 🔖️ShellToGateway
-/// 📨️ Shell→Gateway frames, tag 0..9 in this exact declaration order (`📋️master.md` §2.2).
+/// 📨️ Shell→Gateway frames, tag 0..10 in this exact declaration order (`📋️master.md` §2.2).
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(tag = "variant", rename_all = "camelCase", rename_all_fields = "camelCase")]
 #[value(tag = "variant", rename_all = "camelCase", rename_all_fields = "camelCase")]
@@ -289,6 +289,11 @@ pub enum ShellToGateway {
     /// `semio://ui/agent-messages` resource pages from, so the agent reads each turn exactly once
     /// and never has to guess whether it already saw one.
     AgentMessage { message_id: String, text: String },
+    /// 🛑️ The human pressed cancel on a tool call still shown as running in the shell's agent panel.
+    /// `invocation_id` is the exact id `AgentConversation::begin_tool_call` published, which is also
+    /// the id that call's `crate::ui::job_registry()` entry is keyed by — so this frame reaches the
+    /// SAME cooperative cancellation the `job_cancel` MCP tool flips, never a second mechanism.
+    AgentCancel { invocation_id: String },
 }
 
 impl ShellToGateway {
@@ -346,6 +351,10 @@ impl ShellToGateway {
                 wire::write_string(&mut buf, message_id);
                 wire::write_string(&mut buf, text);
             }
+            ShellToGateway::AgentCancel { invocation_id } => {
+                wire::write_u8(&mut buf, 10);
+                wire::write_string(&mut buf, invocation_id);
+            }
         }
         buf
     }
@@ -377,6 +386,7 @@ impl ShellToGateway {
             7 => ShellToGateway::Ping,
             8 => ShellToGateway::Bye,
             9 => ShellToGateway::AgentMessage { message_id: reader.read_string()?, text: reader.read_string()? },
+            10 => ShellToGateway::AgentCancel { invocation_id: reader.read_string()? },
             other => return Err(GatewayError::new(GatewayErrorCode::InputInvalid, format!("bridge frame: unknown ShellToGateway tag {other}"))),
         };
         reader.finish()?;
@@ -405,6 +415,7 @@ pub(crate) enum ShellFrameKind {
     Ping,
     Bye,
     AgentMessage,
+    AgentCancel,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -466,6 +477,7 @@ enum ShellDecodePhase {
     ApprovalNoteString,
     AgentMessageId,
     AgentMessageText,
+    AgentCancelInvocation,
     Finish,
     ValidateStrings { range: usize, offset: usize, utf8: Utf8Cursor },
     Copy { offset: usize },
@@ -612,6 +624,7 @@ impl ShellToGatewayDecodeCursor {
             ShellDecodePhase::ApprovalNoteString => self.read_range(&mut byte_at, ShellRangeKind::String).and_then(|granted| self.next_after_range(granted, ShellDecodePhase::Finish)),
             ShellDecodePhase::AgentMessageId => self.read_range(&mut byte_at, ShellRangeKind::String).and_then(|granted| self.next_after_range(granted, ShellDecodePhase::AgentMessageText)),
             ShellDecodePhase::AgentMessageText => self.read_range(&mut byte_at, ShellRangeKind::String).and_then(|granted| self.next_after_range(granted, ShellDecodePhase::Finish)),
+            ShellDecodePhase::AgentCancelInvocation => self.read_range(&mut byte_at, ShellRangeKind::String).and_then(|granted| self.next_after_range(granted, ShellDecodePhase::Finish)),
             ShellDecodePhase::Finish => self.finish_preflight(),
             ShellDecodePhase::ValidateStrings { range, offset, utf8 } => self.validate_string(range, offset, utf8, &mut byte_at),
             ShellDecodePhase::Copy { offset } => return self.copy_page(offset, &mut byte_at),
@@ -638,6 +651,7 @@ impl ShellToGatewayDecodeCursor {
             7 => (ShellFrameKind::Ping, ShellDecodePhase::Finish),
             8 => (ShellFrameKind::Bye, ShellDecodePhase::Finish),
             9 => (ShellFrameKind::AgentMessage, ShellDecodePhase::AgentMessageId),
+            10 => (ShellFrameKind::AgentCancel, ShellDecodePhase::AgentCancelInvocation),
             _ => return Err(ShellDecodeFault::Malformed),
         };
         self.kind = Some(kind);
@@ -969,6 +983,7 @@ enum ShellMaterializePhase {
     ApprovalNote,
     AgentMessageId,
     AgentMessageText,
+    AgentCancelInvocation,
     Finish,
 }
 
@@ -1042,6 +1057,7 @@ impl ShellToGatewayMaterializeCursor {
                     6 => ShellMaterializePhase::ApprovalId,
                     7 | 8 => ShellMaterializePhase::Finish,
                     9 => ShellMaterializePhase::AgentMessageId,
+                    10 => ShellMaterializePhase::AgentCancelInvocation,
                     _ => return Err(ShellDecodeFault::Malformed),
                 };
             }
@@ -1216,6 +1232,12 @@ impl ShellToGatewayMaterializeCursor {
                     self.phase = ShellMaterializePhase::Finish;
                 }
             }
+            ShellMaterializePhase::AgentCancelInvocation => {
+                if let Some(value) = self.step_string()? {
+                    self.text_a = Some(value);
+                    self.phase = ShellMaterializePhase::Finish;
+                }
+            }
             ShellMaterializePhase::Finish => return self.finish().map(Some),
         }
         Ok(None)
@@ -1327,6 +1349,7 @@ impl ShellToGatewayMaterializeCursor {
             ShellFrameKind::Ping => ShellToGateway::Ping,
             ShellFrameKind::Bye => ShellToGateway::Bye,
             ShellFrameKind::AgentMessage => ShellToGateway::AgentMessage { message_id: self.text_a.take().ok_or(ShellDecodeFault::Malformed)?, text: self.text_b.take().ok_or(ShellDecodeFault::Malformed)? },
+            ShellFrameKind::AgentCancel => ShellToGateway::AgentCancel { invocation_id: self.text_a.take().ok_or(ShellDecodeFault::Malformed)? },
         })
     }
 }
@@ -2456,6 +2479,15 @@ impl BridgeHandle {
     /// 📝️ Records the effect of one received [`ShellToGateway`] frame against its connection —
     /// `Hello`/`Ping`/`Bye` never reach here (the read loop handles all three inline).
     pub(crate) fn record(&self, id: ShellConnectionId, frame: ShellToGateway) {
+        // 🛑️ A cancel is connection-independent and takes no connection state: it flips the SAME
+        // cooperative flag `job_cancel` flips, on the job `AgentConversation::begin_tool_call` opened
+        // under this invocation id. Handled before the connections lock so the two locks never nest.
+        // A `NotFound`/`PreconditionFailed` means the call already finished between the human's click
+        // and this frame — the honest outcome of a cancel arriving late, not an error to report.
+        if let ShellToGateway::AgentCancel { invocation_id } = &frame {
+            let _ = crate::ui::job_registry().request_cancel(invocation_id);
+            return;
+        }
         let mut connections = self.inner.connections.lock().expect("bridge connections lock poisoned");
         let Some(entry) = connections.get_mut(&id) else { return };
         match frame {
@@ -2469,7 +2501,7 @@ impl BridgeHandle {
                 }
                 entry.agent_inbox.push_back(AgentInboxMessage { message_id, text, received_at_ms: bridge_wall_now_ms() });
             }
-            ShellToGateway::Hello { .. } | ShellToGateway::Ping | ShellToGateway::Bye | ShellToGateway::AppFrames { .. } => {}
+            ShellToGateway::Hello { .. } | ShellToGateway::Ping | ShellToGateway::Bye | ShellToGateway::AppFrames { .. } | ShellToGateway::AgentCancel { .. } => {}
         }
     }
 
@@ -2671,6 +2703,13 @@ impl AgentConversation {
     /// the `AgentPresence{active:true}` frame is what turns the existing presence dot amber.
     pub fn begin_tool_call(&self, tool_name: &str, arguments: &serde_json::Value) -> String {
         let invocation_id = format!("inv_{}", self.next_invocation.fetch_add(1, Ordering::Relaxed));
+        // 🛑️ Every tool call is a real job in the ONE process-wide registry, keyed by the invocation id
+        // the panel already renders — so the panel's cancel control, `job_cancel` and
+        // `semio://job/{id}` all act on the same record, and a handler that polls
+        // `is_cancel_requested` sees the human's stop. `report_progress` moves it off `Pending`
+        // (a `Pending` job finishes as `Cancelled` immediately; this one is genuinely running).
+        crate::ui::job_registry().begin_with_id(invocation_id.clone(), "toolCall");
+        crate::ui::job_registry().report_progress(&invocation_id, 0.0, Some(tool_name.to_string()));
         let rendered = if arguments.is_null() { String::new() } else { truncate_conversation_text(&serde_json::to_string(arguments).unwrap_or_default()) };
         self.publish(GatewayToShell::AgentToolCall { invocation_id: invocation_id.clone(), tool_name: tool_name.to_string(), arguments: rendered });
         self.publish(GatewayToShell::AgentPresence { active: true, label: self.label.clone(), invocation_id: Some(invocation_id.clone()) });
@@ -2679,6 +2718,16 @@ impl AgentConversation {
 
     /// 🧾️ Closes the invocation `begin_tool_call` opened, then returns presence to idle.
     pub fn finish_tool_call(&self, invocation_id: &str, tool_name: &str, ok: bool, summary: &str) {
+        // 🛑️ A call the human cancelled settles as `Cancelled`, not as whatever the handler happened to
+        // return; `finish` is a no-op once terminal, so a cancel that already closed the record wins.
+        let registry = crate::ui::job_registry();
+        if registry.is_cancel_requested(invocation_id) {
+            registry.mark_cancelled(invocation_id);
+        } else if ok {
+            registry.succeed(invocation_id, serde_json::json!({ "tool": tool_name }));
+        } else {
+            registry.fail(invocation_id, GatewayError::new(GatewayErrorCode::Internal, summary.to_string()));
+        }
         self.publish(GatewayToShell::AgentToolResult { invocation_id: invocation_id.to_string(), tool_name: tool_name.to_string(), ok, summary: truncate_conversation_text(summary) });
         self.publish(GatewayToShell::AgentPresence { active: false, label: self.label.clone(), invocation_id: None });
     }

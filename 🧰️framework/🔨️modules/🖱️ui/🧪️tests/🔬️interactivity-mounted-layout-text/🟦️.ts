@@ -1,5 +1,8 @@
 import { policyReadRustPolicySource, interactivityMountedLayoutTextFailures } from "../../../../../📜️script.ts";
 
+/** 📚️ One policy source per audited file, arity-preserving so the failure checkers keep their positional parameters. */
+type LayoutTextPolicySources = [string, string, string, string, string, string, string, string];
+
 /** 🧪️ Executes interactivity mounted layout text policy assertions. */
 export function interactivityMountedLayoutTextSelfTests(repoRoot: string): void {
   const paths = [
@@ -11,8 +14,17 @@ export function interactivityMountedLayoutTextSelfTests(repoRoot: string): void 
     "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/📨️scene_slots/🦀️.rs",
     "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🗣️Interpreter/🎯️targets/🧊️wgpu/🦀️.rs",
     "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/🦀️.rs",
+  ];
+  const clean: Readonly<LayoutTextPolicySources> = [
+    policyReadRustPolicySource(repoRoot, paths[0]),
+    policyReadRustPolicySource(repoRoot, paths[1]),
+    policyReadRustPolicySource(repoRoot, paths[2]),
+    policyReadRustPolicySource(repoRoot, paths[3]),
+    policyReadRustPolicySource(repoRoot, paths[4]),
+    policyReadRustPolicySource(repoRoot, paths[5]),
+    policyReadRustPolicySource(repoRoot, paths[6]),
+    policyReadRustPolicySource(repoRoot, paths[7]),
   ] as const;
-  const clean = paths.map((path) => policyReadRustPolicySource(repoRoot, path));
   const mutations: [string, number, string, string][] = [
     ["node-credit", 0, "LAYOUT_NODE_CREDITS: usize = 4_096", "LAYOUT_NODE_CREDITS: usize = 4_095"],
     ["glyph-credit", 0, "LAYOUT_GLYPH_CREDITS: usize = 16_384", "LAYOUT_GLYPH_CREDITS: usize = 16_383"],
@@ -44,7 +56,7 @@ export function interactivityMountedLayoutTextSelfTests(repoRoot: string): void 
     ["second-scheduler", 7, "process_worker_pool", "WorkerPool::new"],
   ];
   for (const [name, index, needle, replacement] of mutations) {
-    const mutated = [...clean];
+    const mutated: LayoutTextPolicySources = [...clean];
     mutated[index] = mutated[index].replace(needle, replacement);
     if (mutated[index] === clean[index]) throw new Error(`[verify interactivity] P5c mutation ${name} did not alter source.`);
     if (interactivityMountedLayoutTextFailures(...mutated).length === 0) throw new Error(`[verify interactivity] P5c mutation ${name} was falsely accepted.`);
@@ -67,7 +79,7 @@ export function interactivityMountedLayoutTextSelfTests(repoRoot: string): void 
     [1, "slice < LANE_WHEEL.len()"],
   ];
   for (const [index, needle] of lawMutations) {
-    const mutated = [...clean];
+    const mutated: LayoutTextPolicySources = [...clean];
     mutated[index] = mutated[index].replace(needle, "P5C_MUTATED_LAW_EVIDENCE");
     if (mutated[index] === clean[index]) throw new Error(`[verify interactivity] P5c law mutation ${needle} did not alter source.`);
     if (interactivityMountedLayoutTextFailures(...mutated).length === 0) throw new Error(`[verify interactivity] P5c law mutation ${needle} was falsely accepted.`);

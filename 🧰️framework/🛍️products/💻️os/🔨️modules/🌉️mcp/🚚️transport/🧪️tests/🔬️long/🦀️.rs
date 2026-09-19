@@ -36,7 +36,7 @@ fn transport() -> HttpTransport {
 fn test_driver(server: McpServer) -> (HttpTestDriver, HttpEventPublisher) {
     let transport = transport();
     let events = Arc::new(Mutex::new(EventLog::default()));
-    let state = HttpState { server: Arc::new(Mutex::new(server)), admission: transport.options.admission.clone(), allowed_origins: Arc::new(transport.options.allowed_origins.clone()), events: events.clone() };
+    let state = HttpState { server: Some(Arc::new(Mutex::new(server))), admission: transport.options.admission.clone(), allowed_origins: Arc::new(transport.options.allowed_origins.clone()), events: events.clone() };
     (HttpTestDriver { state }, HttpEventPublisher { events })
 }
 

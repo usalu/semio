@@ -143,4 +143,4 @@ async function awaitChildExit(child: SpawnDaemonHandle["child"], deadlineMs: num
   return Promise.race([exited, timeoutAfter(deadlineMs)]);
 }
 
-export { FRAMEWORK_OS_MULTI_HARNESS_PORT, PollOutcome, awaitChildExit, awaitHttpOk, awaitTcpReady };
+export { FRAMEWORK_OS_MULTI_HARNESS_PORT, type PollOutcome, awaitChildExit, awaitHttpOk, awaitTcpReady };

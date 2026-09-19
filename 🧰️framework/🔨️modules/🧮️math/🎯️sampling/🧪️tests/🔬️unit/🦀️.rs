@@ -498,9 +498,9 @@ async fn rng_snapshot_text_round_trips() {
 #[semio_framework_async_macros::async_test]
 async fn xoshiro_source_matches_underlying_rng_sequence() {
     let mut source = XoshiroSource::from_seed(4242).await;
-    let mut reference = geometry::random::Rng::from_seed(4242).await;
+    let mut reference = geometry::random::Rng::from_seed(4242);
     for _ in 0..16 {
-        assert_eq!(source.next_u64().await, reference.next_u64().await);
+        assert_eq!(source.next_u64().await, reference.next_u64());
     }
 }
 
@@ -1297,10 +1297,10 @@ async fn repetition_penalty_rollback_restores_exact_prior_state() {
     let mark_before = penalty.save().await;
     penalty.commit(&view, TokenId::new(0)).await;
     penalty.commit(&view, TokenId::new(1)).await;
-    assert_eq!(penalty.counts.count(TokenId::new(0)), 1);
+    assert_eq!(penalty.counts.count(TokenId::new(0)).await, 1);
     penalty.rollback_to(mark_before).await;
-    assert_eq!(penalty.counts.count(TokenId::new(0)), 0);
-    assert_eq!(penalty.counts.count(TokenId::new(1)), 0);
+    assert_eq!(penalty.counts.count(TokenId::new(0)).await, 0);
+    assert_eq!(penalty.counts.count(TokenId::new(1)).await, 0);
 }
 
 #[semio_framework_async_macros::async_test]

@@ -57,12 +57,12 @@ export async function exportActorTypegen(packageRoot: string, outputPath: string
   if (!existsSync(outputPath)) throw new Error(`framework-actor typegen exporter did not write ${outputPath}`);
 }
 
-async function stagedActorExport(script: BundleScript, privateCargoTarget: boolean): Promise<Buffer> {
+async function stagedActorExport(packageRoot: string, repoRoot: string, privateCargoTarget: boolean): Promise<Buffer> {
   const temp = mkdtempSync(join(tmpdir(), "semio-actor-typegen-"));
   try {
-    const output = join(temp, basename(actorTypegenTarget(script.repoRoot)));
+    const output = join(temp, basename(actorTypegenTarget(repoRoot)));
     const deadlineMs = privateCargoTarget ? buildBudgetMs() || ACTOR_TYPEGEN_PREVIEW_DEADLINE_MS : buildBudgetMs();
-    await exportActorTypegen(script.root, output, privateCargoTarget ? join(temp, "target") : undefined, deadlineMs);
+    await exportActorTypegen(packageRoot, output, privateCargoTarget ? join(temp, "target") : undefined, deadlineMs);
     return readFileSync(output);
   } finally {
     rmSync(temp, { recursive: true, force: true });
@@ -72,7 +72,7 @@ async function stagedActorExport(script: BundleScript, privateCargoTarget: boole
 export class TypegenScript extends BundleScript {
   async run(): Promise<void> {
     console.log("framework-actor typegen export started");
-    publishActorTypegen(actorTypegenTarget(this.repoRoot), await stagedActorExport(this, false), this.repoRoot);
+    publishActorTypegen(actorTypegenTarget(this.repoRoot), await stagedActorExport(this.root, this.repoRoot, false), this.repoRoot);
     console.log(`framework-actor typescript mirror refreshed -> ${actorTypegenTarget(this.repoRoot)}`);
   }
 }
@@ -80,6 +80,6 @@ export class TypegenScript extends BundleScript {
 export class PreviewGeneratedScript extends BundleScript {
   async run(): Promise<void> {
     console.error("framework-actor typegen preview export started");
-    process.stdout.write(`${JSON.stringify(actorTypegenPlan(this.repoRoot, await stagedActorExport(this, true)))}\n`);
+    process.stdout.write(`${JSON.stringify(actorTypegenPlan(this.repoRoot, await stagedActorExport(this.root, this.repoRoot, true)))}\n`);
   }
 }

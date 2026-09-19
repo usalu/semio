@@ -704,7 +704,7 @@ pub mod generation_forms {
                 max: None,
                 step: None,
                 accept: None,
-                presence: UiPresence::default(),
+                on_submit: None, on_abort: None, on_repeat_last: None, presence: UiPresence::default(),
                 menu: None,
             }),
             "number" => UiControlNode::Input(UiInputNode {
@@ -718,7 +718,7 @@ pub mod generation_forms {
                 max: None,
                 step: None,
                 accept: None,
-                presence: UiPresence::default(),
+                on_submit: None, on_abort: None, on_repeat_last: None, presence: UiPresence::default(),
                 menu: None,
             }),
             "slider" => UiControlNode::Slider(UiSliderNode {
@@ -785,7 +785,7 @@ pub mod generation_forms {
                                 max: None,
                                 step: None,
                                 accept: None,
-                                presence: UiPresence::default(),
+                                on_submit: None, on_abort: None, on_repeat_last: None, presence: UiPresence::default(),
                                 menu: None,
                             })),
                             description: None,
@@ -811,7 +811,7 @@ pub mod generation_forms {
                 max: None,
                 step: None,
                 accept: None,
-                presence: UiPresence::default(),
+                on_submit: None, on_abort: None, on_repeat_last: None, presence: UiPresence::default(),
                 menu: None,
             }),
         };

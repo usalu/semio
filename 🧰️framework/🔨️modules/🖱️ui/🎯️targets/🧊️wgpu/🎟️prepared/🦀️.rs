@@ -2483,19 +2483,8 @@ impl PreparedRenderJob {
                     *cursor = DrawMeasureCursor::PassHeader(0);
                     return Some(PreparedRenderUsage::default());
                 };
-                let next = if !value.ui_instances.is_empty() {
-                    DrawMeasureCursor::LayerUi { layer, item: 0, overlay: false }
-                } else if !value.overlay_ui_instances.is_empty() {
-                    DrawMeasureCursor::LayerUi { layer, item: 0, overlay: true }
-                } else if !value.vector_vertices.is_empty() {
-                    DrawMeasureCursor::LayerVector { layer, item: 0, overlay: false }
-                } else if !value.overlay_vector_vertices.is_empty() {
-                    DrawMeasureCursor::LayerVector { layer, item: 0, overlay: true }
-                } else if !value.raster_instances.is_empty() {
-                    DrawMeasureCursor::LayerRaster { layer, raster: 0 }
-                } else {
-                    DrawMeasureCursor::LayerHeader(layer + 1)
-                };
+                let _ = value;
+                let next = Self::layer_channel_cursor(draw, layer, 0);
                 (PreparedRenderUsage { draw_items: 1, draw_bytes: size_of::<DrawLayer>(), ..PreparedRenderUsage::default() }, next)
             }
             DrawMeasureCursor::LayerUi { layer, item, overlay } => {
@@ -2503,16 +2492,8 @@ impl PreparedRenderJob {
                 let items = if overlay { &value.overlay_ui_instances } else { &value.ui_instances };
                 let next = if item + 1 < items.len() {
                     DrawMeasureCursor::LayerUi { layer, item: item + 1, overlay }
-                } else if !overlay && !value.overlay_ui_instances.is_empty() {
-                    DrawMeasureCursor::LayerUi { layer, item: 0, overlay: true }
-                } else if !value.vector_vertices.is_empty() {
-                    DrawMeasureCursor::LayerVector { layer, item: 0, overlay: false }
-                } else if !value.overlay_vector_vertices.is_empty() {
-                    DrawMeasureCursor::LayerVector { layer, item: 0, overlay: true }
-                } else if !value.raster_instances.is_empty() {
-                    DrawMeasureCursor::LayerRaster { layer, raster: 0 }
                 } else {
-                    DrawMeasureCursor::LayerHeader(layer + 1)
+                    Self::layer_channel_cursor(draw, layer, if overlay { 4 } else { 1 })
                 };
                 (PreparedRenderUsage { draw_items: 1, draw_bytes: size_of::<crate::wgpu::draw_types::UiInstance>(), ..PreparedRenderUsage::default() }, next)
             }
@@ -2521,12 +2502,8 @@ impl PreparedRenderJob {
                 let items = if overlay { &value.overlay_vector_vertices } else { &value.vector_vertices };
                 let next = if item + 1 < items.len() {
                     DrawMeasureCursor::LayerVector { layer, item: item + 1, overlay }
-                } else if !overlay && !value.overlay_vector_vertices.is_empty() {
-                    DrawMeasureCursor::LayerVector { layer, item: 0, overlay: true }
-                } else if !value.raster_instances.is_empty() {
-                    DrawMeasureCursor::LayerRaster { layer, raster: 0 }
                 } else {
-                    DrawMeasureCursor::LayerHeader(layer + 1)
+                    Self::layer_channel_cursor(draw, layer, if overlay { 5 } else { 2 })
                 };
                 (PreparedRenderUsage { draw_items: 1, draw_bytes: size_of::<crate::wgpu::draw_types::VectorVertex>(), ..PreparedRenderUsage::default() }, next)
             }
@@ -2633,8 +2610,36 @@ impl PreparedRenderJob {
         if raster + 1 < draw.layers[layer].raster_instances.len() {
             DrawMeasureCursor::LayerRaster { layer, raster: raster + 1 }
         } else {
-            DrawMeasureCursor::LayerHeader(layer + 1)
+            Self::layer_channel_cursor(draw, layer, 3)
         }
+    }
+
+    /// 🥞️ The five channels one `DrawLayer` publishes, walked in the order the IMMEDIATE renderer
+    /// composites them (`Pipelines::render`: the ui/vector pass, then `ui_raster_pass`, then the
+    /// `overlay_pass` LAST) — opaque ui, opaque vector, rasters, overlay ui, overlay vector.
+    ///
+    /// 🩸️ This walk used to put the RASTERS last, after both overlay channels, so within one layer an
+    /// engine surface's opaque vello texture was composited ON TOP of the overlay glyphs painted over
+    /// it. The two renderers therefore disagreed about what "overlay" means, and the browser one —
+    /// which is the prepared one — lost every caption the shell paints over an engine raster: the live
+    /// generation3d flow window on 6118 drew all seven node bodies, every port, every wire and the
+    /// minimap, and not one word (ticket 26/09/17/WGPU-RENDERER-REACT-PARITY,
+    /// `📓️w14b-generation3d-labels-preview-layout.md`).
+    fn layer_channel_cursor(draw: &DrawList, layer: usize, from_channel: u8) -> DrawMeasureCursor {
+        let Some(value) = draw.layers.get(layer) else {
+            return DrawMeasureCursor::LayerHeader(layer + 1);
+        };
+        for channel in from_channel..5 {
+            match channel {
+                0 if !value.ui_instances.is_empty() => return DrawMeasureCursor::LayerUi { layer, item: 0, overlay: false },
+                1 if !value.vector_vertices.is_empty() => return DrawMeasureCursor::LayerVector { layer, item: 0, overlay: false },
+                2 if !value.raster_instances.is_empty() => return DrawMeasureCursor::LayerRaster { layer, raster: 0 },
+                3 if !value.overlay_ui_instances.is_empty() => return DrawMeasureCursor::LayerUi { layer, item: 0, overlay: true },
+                4 if !value.overlay_vector_vertices.is_empty() => return DrawMeasureCursor::LayerVector { layer, item: 0, overlay: true },
+                _ => {}
+            }
+        }
+        DrawMeasureCursor::LayerHeader(layer + 1)
     }
 
     fn next_pass_instance(draw: &DrawList, pass: usize, draw_index: usize, instance: usize, translucent: bool) -> DrawMeasureCursor {

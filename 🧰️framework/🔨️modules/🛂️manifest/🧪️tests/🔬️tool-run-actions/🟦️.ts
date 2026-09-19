@@ -9,7 +9,9 @@ import { appDeclaresToolRun } from "../../🟦️.ts";
 
 const ajv = new Ajv({ strict: true, allErrors: true }).addSchema(toolRunSchema).addSchema(schema);
 const validator = (name: string) => ajv.getSchema(`${schema.$id}#/$defs/${name}`)!;
-const toolWithRun = fixture.cases[2]!.tools[1]!;
+const toolCandidate = fixture.cases[2]!.tools[1]!;
+if (!("run" in toolCandidate)) throw new Error("⏯️ fixture case 2 must carry the tool that declares a run block");
+const toolWithRun = toolCandidate;
 
 describe("⏯️ manifest tool run declaration", () => {
   test("the fixture validates against the manifest schema", () => {

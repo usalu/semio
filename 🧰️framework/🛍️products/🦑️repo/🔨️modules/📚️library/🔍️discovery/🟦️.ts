@@ -794,11 +794,29 @@ export function validateFrozenMarkdownCoordinateEvidenceContracts(value: unknown
   return problems;
 }
 
+/** 🗄️ Why a frozen document is gone, from a closed vocabulary. `ticket-close-generated-output-removed`
+ * is AGENTS.md's own rule ("You MUST delete all tool generated output files … inside the ticket folder
+ * after you are done") catching up with evidence that was frozen while the ticket was open. */
+export type FrozenCoordinateEvidenceRetirementReason = "ticket-close-generated-output-removed";
+
+/** 🪦️ An explicit, evidenced retirement: the document these bytes were frozen from no longer exists,
+ * and this row records that fact instead of being deleted.
+ *
+ * A silent delete would make the count law pass again while destroying the only record that those
+ * bytes were ever frozen — precisely what the seal exists to prevent. Retirement is metadata ABOUT the
+ * record, never part of the evidence, so {@link frozenCoordinateEvidenceSeal} excludes it and a
+ * retirement can never move the digest that proves `path`/`sha256`/`coordinates` were not edited. */
+export interface FrozenCoordinateEvidenceRetirement {
+  readonly ticket: string;
+  readonly reason: FrozenCoordinateEvidenceRetirementReason;
+}
+
 /** 🔐️ Exact immutable JSON evidence with explicitly typed physical-coordinate value locations. */
 export interface FrozenCoordinateEvidenceContract {
   readonly path: string;
   readonly sha256: string;
   readonly schemaVersion: number | null;
+  readonly retired?: FrozenCoordinateEvidenceRetirement;
   readonly rootKind?: "array";
   readonly coordinates: readonly (Readonly<{ pointer: string; kind: "source" | "destination" }> | Readonly<{ pointer: string; kind: "source" | "destination"; representation: "recorded-repository-absolute"; recordedRepositoryRoot: string }> | Readonly<{ pointer: string; kind: "source"; representation: "recorded-package-owner-identity"; identityPrefix: "unmarked:" }> | Readonly<{ pointer: string; kind: "source"; representation: "json-escaped-source-path" }>)[];
 }
@@ -812,9 +830,18 @@ export function validateFrozenCoordinateEvidenceContracts(value: unknown): strin
     const label = `frozenCoordinateEvidenceContracts.${id}`;
     if (!/^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/u.test(id)) problems.push(`${label} has an invalid contract id.`);
     if (!object(row)) { problems.push(`${label} must be an object.`); continue; }
-    const arrayRoot = Object.hasOwn(row, "rootKind");
-    if (Object.keys(row).sort().join("\0") !== (arrayRoot ? "coordinates\0path\0rootKind\0schemaVersion\0sha256" : "coordinates\0path\0schemaVersion\0sha256")) problems.push(`${label} must contain only its exact document-root fields.`);
+    const arrayRoot = Object.hasOwn(row, "rootKind"), retired = Object.hasOwn(row, "retired");
+    const expectedFields = ["coordinates", "path", "schemaVersion", "sha256", ...(arrayRoot ? ["rootKind"] : []), ...(retired ? ["retired"] : [])].sort().join("\0");
+    if (Object.keys(row).sort().join("\0") !== expectedFields) problems.push(`${label} must contain only its exact document-root fields.`);
     if (arrayRoot && (row.rootKind !== "array" || row.schemaVersion !== null)) problems.push(`${label}.rootKind requires explicit array authority with absent schemaVersion.`);
+    if (retired) {
+      const record = row.retired;
+      if (!object(record) || Object.keys(record).sort().join("\0") !== "reason\0ticket") problems.push(`${label}.retired must contain only its exact ticket and reason fields.`);
+      else {
+        if (record.reason !== "ticket-close-generated-output-removed") problems.push(`${label}.retired.reason must name one declared retirement cause.`);
+        if (typeof record.ticket !== "string" || !/^\d{4}\/\d{2}\/\d{2}\/[A-Z0-9]+(?:-[A-Z0-9]+)*$/u.test(record.ticket)) problems.push(`${label}.retired.ticket must be one exact YYYY/MM/DD/TICKET-SLUG identifier.`);
+      }
+    }
     const path = row.path;
     if (typeof path !== "string" || !path.endsWith(".json") || /[\\:*?"<>|\u0000-\u001f]/u.test(path) || path.split("/").some((part) => !part || part === "." || part === "..") || /^(?:compose|temp\/compose)(?:\/|$)/u.test(path)) problems.push(`${label}.path must be one exact non-opaque repository-relative JSON document.`);
     else { if (paths.has(path)) problems.push(`${label}.path duplicates another evidence owner.`); paths.add(path); }
@@ -842,6 +869,21 @@ export function validateFrozenCoordinateEvidenceContracts(value: unknown): strin
     }
   }
   return problems;
+}
+
+/** 🧮️ The projection a frozen-evidence seal digests: the EVIDENCE of every contract — `path`,
+ * `sha256`, `schemaVersion`, `rootKind`, `coordinates` — and nothing else.
+ *
+ * {@link FrozenCoordinateEvidenceRetirement} is deliberately outside it. A seal exists to prove that
+ * no frozen path, digest or coordinate was quietly edited; recording that a document was deleted at
+ * ticket close changes none of those, so retiring a row must never force whoever retires it to rewrite
+ * the very digest that would have caught them editing the evidence. Anything added to a contract that
+ * is evidence belongs in here; anything added that is bookkeeping about the record does not. */
+export function frozenCoordinateEvidenceSeal(contracts: Readonly<Record<string, FrozenCoordinateEvidenceContract>>): Record<string, Omit<FrozenCoordinateEvidenceContract, "retired">> {
+  return Object.fromEntries(Object.entries(contracts).map(([id, contract]) => {
+    const { retired: _retired, ...evidence } = contract;
+    return [id, evidence];
+  }));
 }
 //#endregion 🔒️Frozen Coordinate Evidence
 
@@ -1168,6 +1210,8 @@ export interface Taxonomy {
   readonly testsDirName: string;
   /** 🧫️ Canonical test-fixture directory name (`🧫️fixtures`) — opaque input data owned by the tests beside it. */
   readonly testFixturesDirName: string;
+  /** 🏷️ The owner kinds that may carry their own `🧪️tests`/`🧫️fixtures` beside their facets. */
+  readonly testOwnerKinds: readonly string[];
   readonly testExamplesDirName: string;
   readonly testOraclesDirName: string;
   readonly testObsoleteCategoryStems: readonly string[];
@@ -1498,7 +1542,7 @@ function implementationLeafBasenameFindingResolved(
 export function taxonomyFileKindIsImplementation(fileKindId: string | null | undefined, taxonomy: Taxonomy = loadCatalogTaxonomy()): boolean {
   const scopedId = fileKindId?.startsWith("scoped:") ? fileKindId.slice("scoped:".length) : undefined;
   const fileKind = scopedId ? taxonomy.scopedFileKinds[scopedId] : fileKindId ? taxonomy.fileKinds[fileKindId] : undefined;
-  return Boolean(fileKind && (taxonomy.implementationLeafPolicy.roles.includes(fileKind.role) || taxonomy.implementationLeafPolicy.fileKindIds.includes(fileKindId!)));
+  return Boolean(fileKind && ((taxonomy.implementationLeafPolicy.roles as readonly string[]).includes(fileKind.role) || taxonomy.implementationLeafPolicy.fileKindIds.includes(fileKindId!)));
 }
 
 /** 🍂 Enforces one registered implementation leaf after deriving fixed-contract scope from its actual path. */
@@ -6250,6 +6294,15 @@ export interface RustModuleUseFact {
   readonly conditional?: true;
 }
 
+/** 📎️ One `include!("…")` expansion: the named file's tokens become part of THIS file's module, so
+ * the file compiles without ever being a `mod` of its own. `path` is the literal as written, which
+ * `rustc` resolves against the directory of the file the invocation sits in. */
+export interface RustModuleIncludeFact {
+  readonly modulePath: readonly string[];
+  readonly path: string;
+  readonly conditional?: true;
+}
+
 export interface RustEnumVariantFact {
   readonly name: string;
   readonly fieldStyle: RustStructuralFieldStyle;
@@ -8362,12 +8415,13 @@ export function inspectRustModuleGraph(files: readonly string[], readSource: (pa
   return { targets, contexts, namedCrates, dependencies, invalidManifests };
 }
 
-/** 🕸️ Extracts mounted modules and use items with lexical Rust scope, excluding decoys. */
-export function inspectRustModuleGraphFacts(source: string): { readonly modules: readonly RustModuleGraphFact[]; readonly uses: readonly RustModuleUseFact[] } {
+/** 🕸️ Extracts mounted modules, use items and `include!` expansions with lexical Rust scope, excluding decoys. */
+export function inspectRustModuleGraphFacts(source: string): { readonly modules: readonly RustModuleGraphFact[]; readonly uses: readonly RustModuleUseFact[]; readonly includes: readonly RustModuleIncludeFact[] } {
   const tokens = rustTokens(source);
   const pairs = rustTokenPairs(tokens);
   const modules: RustModuleGraphFact[] = [];
   const uses: RustModuleUseFact[] = [];
+  const includes: RustModuleIncludeFact[] = [];
   const skipItem = (start: number, end: number): number => {
     const boundary = rustFindTopLevel(tokens, pairs, start, end, new Set([";", "{"]));
     if (boundary < 0) return end;
@@ -8394,6 +8448,10 @@ export function inspectRustModuleGraphFacts(source: string): { readonly modules:
         continue;
       }
       if (keyword !== "mod") {
+        if (keyword === "include" && tokens[visibility.next + 1]?.text === "!" && (tokens[visibility.next + 2]?.text === "(" || tokens[visibility.next + 2]?.text === "[")) {
+          const literal = rustStringValue(tokens[visibility.next + 3]);
+          if (literal !== null && tokens[visibility.next + 3]?.kind === "string") includes.push({ modulePath, path: literal, ...(conditional ? { conditional: true as const } : {}) });
+        }
         index = skipItem(attributes.next, end);
         continue;
       }
@@ -8414,7 +8472,7 @@ export function inspectRustModuleGraphFacts(source: string): { readonly modules:
     }
   };
   parseScope(0, tokens.length, []);
-  return { modules, uses };
+  return { modules, uses, includes };
 }
 
 /** 🪪️ Lists top-level public Rust type declarations without comment or string decoys. */
@@ -9769,10 +9827,16 @@ export function readSemioMarkerSubTable(manifestPath: string, lang: PackageLang,
 }
 //#endregion 🏷️SemioMarkerSubTable
 
-const DISCOVERY_SKIP_DIRS = new Set(["node_modules", "target", "dist", "📤️dist", ".git", ".🧬semio", "🤖️generated", "🔌️plugin-modules", "pkg", "storybook-static", "temp", ".venv", "coverage", "__pycache__", "client", "client_bin"]);
+const DISCOVERY_SKIP_DIRS = new Set(["node_modules", "target", "dist", "📤️dist", ".git", ".🧬semio", "🤖️generated", "🗑️generated", "🔌️plugin-modules", "pkg", "storybook-static", "temp", ".venv", "coverage", "__pycache__", "client", "client_bin"]);
 const CARGO_TARGET_DIR_PATTERN = /^target(?:-[a-z0-9]+)*$/u;
 
-/** 🎯️ Cargo target roots (`target`, `target-<slug>`) are build output that concurrent lanes create and prune mid-walk; discovery never enters them. */
+/** 🎯️ Cargo target roots (`target`, `target-<slug>`) are build output that concurrent lanes create and prune mid-walk; discovery never enters them.
+ *
+ * `🗑️generated` is tool and test output by AGENTS.md's own rule and is gitignored (`.gitignore:22`), so
+ * it is untracked by construction and can never hold authored content. The same set is already
+ * declared opaque in `ignoredPathPatterns` beside `target`/`dist`/`node_modules`, and
+ * `🖨️describe/🧾️source-epoch/🟦️.ts:165` refuses it by name; omitting it here let the package-boundary
+ * walk judge one hub test run's leftovers as 595 authored package-purity breaches. */
 export function isDiscoverySkipDirectory(name: string): boolean {
   return DISCOVERY_SKIP_DIRS.has(name) || CARGO_TARGET_DIR_PATTERN.test(name);
 }
@@ -10136,14 +10200,19 @@ export function registryStaticImports(source: string, sourcePath: string): reado
 
 export type RegistryCompilerInputRole = "implementation-entry" | "static-import";
 
+/** 🔗️ Admits a caller-supplied role string, so the boundary check is expressible and the roles stay closed. */
+function isRegistryCompilerInputRole(value: string): value is RegistryCompilerInputRole {
+  return value === "implementation-entry" || value === "static-import";
+}
+
 export interface RegistryCompilerInputDependencies {
   readonly kind: "module" | "json-data";
   readonly imports: readonly string[];
 }
 
 /** 🧾️ Admits strict JSON only as imported data; compiler entries retain their exact module grammar. */
-export function registryCompilerInputDependencies(source: string, sourcePath: string, role: RegistryCompilerInputRole): RegistryCompilerInputDependencies {
-  if (role !== "implementation-entry" && role !== "static-import") throw new Error(`Registry compiler input role is not supported: ${String(role)}`);
+export function registryCompilerInputDependencies(source: string, sourcePath: string, role: string): RegistryCompilerInputDependencies {
+  if (!isRegistryCompilerInputRole(role)) throw new Error(`Registry compiler input role is not supported: ${role}`);
   if (role === "static-import" && extname(sourcePath) === ".json") {
     try { JSON.parse(source); }
     catch (error) { throw new Error(`Registry imported JSON is invalid: ${sourcePath}: ${error instanceof Error ? error.message : String(error)}`); }
@@ -11044,7 +11113,7 @@ function ecmaRouteRegistrationValue(expression: EcmaRouteExpression, scope: Ecma
     const binding = scope.resolve(value.name!);
     return binding?.kind === "class" || binding?.kind === "data" || binding?.kind === "finite" || binding?.kind === "import-value";
   }
-  if (value.kind === "member") return (typeof value.property === "string" || ecmaRouteRegistrationValue(value.property, scope)) && ecmaRouteValue(value, scope) === "data";
+  if (value.kind === "member") return (typeof value.property === "string" || ecmaRouteRegistrationValue(value.property!, scope)) && ecmaRouteValue(value, scope) === "data";
   if (value.kind === "template") return value.expressions!.every((row) => ecmaRouteRegistrationValue(row, scope));
   if (value.kind === "array") return value.elements!.every((row) => row.kind === "spread" ? ecmaRouteRegistrationValue(row.object!, scope) : ecmaRouteRegistrationValue(row, scope));
   if (value.kind === "object") return value.properties!.every((row) => (!row.computed || ecmaRouteRegistrationValue(row.key!, scope)) && ecmaRouteRegistrationValue(row.value.kind === "spread" ? row.value.object! : row.value, scope));
@@ -11082,7 +11151,7 @@ function ecmaRouteValue(expression: EcmaRouteExpression, scope: EcmaRouteScope):
     if (ecmaRouteIdentifier(value.object!) === "import" && value.property === "meta" && !scope.resolve("import")) return "data";
     const base = ecmaRouteValue(value.object!, scope);
     if (base === "invalid" || base === "module" || base === "closure" || base === "error") return "invalid";
-    if (typeof value.property !== "string" && !ecmaRouteArgument(value.property, scope)) return "invalid";
+    if (typeof value.property !== "string" && !ecmaRouteArgument(value.property!, scope)) return "invalid";
     return base === "finite" ? "finite" : "data";
   }
   if (value.kind === "new") {
@@ -11158,7 +11227,7 @@ function ecmaRouteEnvironmentGuard(expression: EcmaRouteExpression, scope: EcmaR
   const value = ecmaRouteUnwrap(expression);
   if (value.kind !== "binary" || value.operator !== "===" || value.right?.kind !== "literal") return false;
   const left = ecmaRouteUnwrap(value.left!);
-  if (left.kind !== "member" || typeof left.property === "string" || left.property.kind !== "literal") return false;
+  if (left.kind !== "member" || typeof left.property === "string" || left.property?.kind !== "literal") return false;
   const argv = ecmaRouteUnwrap(left.object!);
   return argv.kind === "member" && argv.property === "argv" && ecmaRouteIntrinsic(scope, ecmaRouteIdentifier(argv.object!) ?? "") === "process";
 }

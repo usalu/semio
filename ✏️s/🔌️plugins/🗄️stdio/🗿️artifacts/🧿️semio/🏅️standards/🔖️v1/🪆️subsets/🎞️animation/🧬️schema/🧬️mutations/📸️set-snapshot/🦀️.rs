@@ -5,6 +5,14 @@
 
 use super::*;
 
+//#region 🔖️Facets
+#[path = "🔺️diff/🦀️.rs"]
+pub mod diff;
+#[path = "↩️inverse/🦀️.rs"]
+pub mod inverse;
+#[path = "🦠️mutation/🦀️.rs"]
+pub mod mutation;
+//#endregion 🔖️Facets
 //#region 🔖️Payload
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]

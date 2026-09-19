@@ -252,3 +252,31 @@ async fn gis3d_scene_media_exports_the_terrain_descriptor() {
     assert!(json.contains("exaggeration"));
 }
 //#endregion 🔖️Media
+
+//#region 🎬️StageableActionVocabulary
+/// ⛰️ The terrain's one document mutation must be dispatchable from the Actions rail with nothing
+/// typed, AND its staged default must differ from the fixture's own exaggeration — otherwise the rail
+/// re-applies the value already in the document and the edit diffs to zero operations, which is
+/// exactly how `setExaggeration` behaved before it had an argument schema.
+#[semio_framework_async_macros::async_test]
+async fn set_exaggeration_stages_a_bounded_default_that_actually_edits() {
+    let definition = create_gis3d_app();
+    let action = definition.window_kinds.iter().flat_map(|window| &window.actions).find(|action| action.id == "setExaggeration").expect("setExaggeration is declared");
+    assert_eq!(action.kind, semio_framework_plugin::ActionKind::Mutation);
+    assert!(action.in_palette, "the rail can stage it");
+    let arg = action.args.iter().find(|arg| arg.id == "value").expect("a staged value");
+    let semio_framework_plugin::ArgSchema::Number { min, max, .. } = arg.schema else {
+        panic!("exaggeration stages as a bounded number");
+    };
+    assert_eq!((min, max), (Some(GIS3D_EXAGGERATION_MINIMUM), Some(GIS3D_EXAGGERATION_MAXIMUM)));
+    assert_eq!(arg.default.as_ref().and_then(dsl::DslValue::as_f64), Some(GIS3D_EXAGGERATION_STAGED_DEFAULT));
+
+    let mut app = context::app().await;
+    let seeded = app.snapshot().expect("projection").exaggeration;
+    assert_ne!(seeded, GIS3D_EXAGGERATION_STAGED_DEFAULT, "a staged default equal to the seeded value would dispatch a no-op");
+    let staged = semio_framework::effective_action_args(&action.args, &dsl::DslValue::Object(Vec::new()), None);
+    let command = <EditorApp<Gis3dPlayApp> as semio_framework_plugin::ArtifactApp>::command_from_action("setExaggeration", Some(&staged)).await.expect("the staged default bridges to a command");
+    semio_framework_plugin::artifact_app_laws::assert_undo_redo_round_trip(&mut app, command, |app| app.snapshot().expect("projection").exaggeration, seeded, GIS3D_EXAGGERATION_STAGED_DEFAULT).await;
+    context::close(&mut app);
+}
+//#endregion 🎬️StageableActionVocabulary

@@ -56,10 +56,46 @@ pub(crate) struct CadVertex {
     pub position: [f64; 3],
 }
 
-#[derive(Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
+/// 📐️ One edge's curve. `kind` is the family (`line`/`arc`/`circle`/`ellipse`/`nurbs`); every other
+/// field is that family's parameters, exactly as the TypeScript `EdgeCurve`
+/// (`✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🧮️preview/🟦️.ts`) carries them.
+///
+/// 🩸️ Until ticket 26/09/17 packet W14g this struct carried ONLY `kind`, so every curved edge
+/// degraded to its two boundary vertices wherever the editor tessellated one — a circle picked and
+/// drew as a single chord where React's `edgeSamplePoints` draws 64 samples
+/// (`📓️w2f-cad-spatial-editor-wgpu.md` §5.2).
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub(crate) struct CadEdgeCurve {
     pub kind: String,
+    /// ⭕️ `arc`/`circle` centre.
+    #[value(default)]
+    pub center: Option<[f64; 3]>,
+    /// ⭕️ `circle`/`ellipse` plane normal.
+    #[value(default)]
+    pub normal: Option<[f64; 3]>,
+    /// ⭕️ `circle` radius.
+    #[value(default)]
+    pub radius: Option<f64>,
+    /// 🥚️ `ellipse` major axis direction and the two radii.
+    #[value(default)]
+    pub major_axis: Option<[f64; 3]>,
+    #[value(default)]
+    pub major_radius: Option<f64>,
+    #[value(default)]
+    pub minor_radius: Option<f64>,
+    /// 📈️ `nurbs` poles (control points, or interpolation points when `through`).
+    #[value(default)]
+    pub poles: Vec<[f64; 3]>,
+    #[value(default)]
+    pub degree: Option<u32>,
+    #[value(default)]
+    pub through: bool,
+    /// 📍️ An ALREADY-SAMPLED polyline, when the producer tessellated the curve itself. It wins over
+    /// every parameter above, so an importer that has the kernel's own tessellation in hand never
+    /// has to round-trip it through the parametric families.
+    #[value(default)]
+    pub points: Vec<[f64; 3]>,
 }
 
 #[derive(Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]

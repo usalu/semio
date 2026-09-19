@@ -583,6 +583,169 @@ struct WorldEngagementPreviewRecord {
     origin: Option<[f64; 3]>,
 }
 
+//#region 🧲️PickTargets
+/// 🧲️ How many `pick_targets_json` rows one surface RETAINS. The lane is bounded on both ends —
+/// the producer caps what it publishes (`CAD_PICK_OVERLAY_ITEM_BUDGET`) and this caps what a
+/// consumer keeps — so a Concrete-Forest pane with thousands of kernel members can never grow an
+/// unbounded `Vec` behind a pointer move.
+pub const WORLD_PICK_TARGET_CAPACITY: usize = 256;
+
+/// 🧲️ How many points ONE retained pick target keeps. A sampled arc/circle/ellipse edge is 32-64
+/// samples on React's side (`edgeSamplePoints`), and the bounds this host hit-tests are unchanged
+/// by dropping the tail of a longer run.
+pub const WORLD_PICK_TARGET_POINT_CAPACITY: usize = 64;
+
+/// 🧲️ React's `targetRayScore` box padding — `box.expandByScalar(kind === "vertex" ? 0.12 : 0.08)`
+/// (`✏️editor/⚙️engine/📺️renderer/🟦️.tsx:2301`). World units, not pixels: the CAD editor's own
+/// pick proxies are world-sized spheres/boxes, so this host uses the same numbers rather than a
+/// screen-space radius that would disagree with React at every zoom.
+const WORLD_PICK_TARGET_VERTEX_PAD: f32 = 0.12;
+const WORLD_PICK_TARGET_PAD: f32 = 0.08;
+
+/// 🧲️ React's `spatialPickPriority * 1e-4` tie-break (`🟦️.tsx:2288-2302`) — at equal ray distance
+/// the FINEST kind wins (vertex 0 → edge 1 → face 2 → object 3), which is why a click on a corner
+/// of a solid selects the vertex and not the solid.
+const WORLD_PICK_TARGET_PRIORITY_EPSILON: f32 = 1e-4;
+
+/// 🎨️ One `pick_targets_json` row's resolved highlight material — the wire half of the CAD picking
+/// engine's `SpatialTargetStyle`. `color`/`emissive` are theme TOKEN ids (`--foreground`,
+/// `--color-changed-selected`, …) or a `#rrggbb` literal, never a resolved colour: the token is
+/// what survives an appearance switch.
+#[derive(Clone, Debug, Deserialize, Default, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
+#[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
+struct WorldPickTargetStyleRecord {
+    #[value(default)]
+    color: Option<String>,
+    #[value(default)]
+    emissive: Option<String>,
+    #[value(default)]
+    opacity: Option<f64>,
+    #[value(default)]
+    line_width: Option<f64>,
+}
+
+/// 🧲️ One sub-object pick target — the wire half of the CAD picking engine's `SpatialPickTarget`
+/// (`✏️editor/⚙️engine/🧲️picking/🦀️.rs:86`).
+///
+/// 🩸️ Before ticket 26/09/17 packet W14g this surface had NO pick-target lane: the overlay rode
+/// `engagementPreview`, a paint-only lane, so sub-object picking was shown and never hit-tested and
+/// every click still resolved to the whole instance through the domain's `object` granularity.
+#[derive(Clone, Debug, Deserialize, Default, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
+#[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
+struct WorldPickTargetRecord {
+    #[value(default)]
+    kind: String,
+    #[value(default)]
+    id: String,
+    #[value(default)]
+    point: Option<[f64; 3]>,
+    #[value(default)]
+    points: Vec<[f64; 3]>,
+    #[value(default)]
+    typology: Option<String>,
+    /// 👁️ `false` for a hidden or locked entity — it still PAINTS (dimmed, through `style`) and is
+    /// never hit-tested, exactly as React's `SpatialPickGeometryLayer` renders such a target through
+    /// `SpatialPickTargetNode` while `selectableTargets` leaves out its `SpatialPickHitTarget`.
+    #[value(default)]
+    selectable: Option<bool>,
+    #[value(default)]
+    style: Option<WorldPickTargetStyleRecord>,
+}
+
+impl WorldPickTargetRecord {
+    /// 🪪️ `kind:id`, the key every hover/selection comparison is made on — the twin of the CAD
+    /// engine's `spatial_pick_target_key`.
+    fn key(&self) -> String {
+        format!("{}:{}", self.kind, self.id)
+    }
+
+    /// 👁️ See [`WorldPickTargetRecord::selectable`].
+    fn is_selectable(&self) -> bool {
+        self.selectable.unwrap_or(true)
+    }
+}
+
+/// 🧲️ React's `spatialPickPriority` (`📺️renderer/🟦️.tsx:2288`). An unknown kind sorts LAST so a
+/// producer that grows a fifth kind degrades to "coarsest", never to "wins every tie".
+fn world_pick_target_priority(kind: &str) -> u8 {
+    match kind {
+        "vertex" => 0,
+        "edge" => 1,
+        "face" => 2,
+        "object" => 3,
+        _ => 4,
+    }
+}
+
+/// 🧲️ The padded world AABB React's `targetRayScore` raycasts — `points` when the row carries any,
+/// otherwise the single `point`. `None` for a row that carries neither.
+fn world_pick_target_bounds(target: &WorldPickTargetRecord) -> Option<([f32; 3], [f32; 3])> {
+    let fallback = [target.point?];
+    let points: &[[f64; 3]] = if target.points.is_empty() { &fallback } else { &target.points };
+    let mut min = [f32::MAX; 3];
+    let mut max = [f32::MIN; 3];
+    for point in points {
+        for axis in 0..3 {
+            min[axis] = min[axis].min(point[axis] as f32);
+            max[axis] = max[axis].max(point[axis] as f32);
+        }
+    }
+    let pad = if target.kind == "vertex" { WORLD_PICK_TARGET_VERTEX_PAD } else { WORLD_PICK_TARGET_PAD };
+    for axis in 0..3 {
+        min[axis] -= pad;
+        max[axis] += pad;
+    }
+    Some((min, max))
+}
+
+/// 🧲️ React's `targetRayScore` — ray distance to the padded box plus the kind's tie-break weight.
+/// Lower wins, and the same number is comparable with a mesh hit's own ray distance, which is what
+/// lets a pick target and the instance under it compete in ONE ordering (r3f raycasts both in the
+/// same scene).
+fn world_pick_target_ray_score(target: &WorldPickTargetRecord, origin: Vec3, direction: Vec3) -> Option<f32> {
+    let (min, max) = world_pick_target_bounds(target)?;
+    let distance = ray_aabb_slab(origin, direction, min, max)?;
+    Some(distance + f32::from(world_pick_target_priority(&target.kind)) * WORLD_PICK_TARGET_PRIORITY_EPSILON)
+}
+
+/// 🪪️ The CAD engine's `spatial_hover_key_aliases` as the framework sees it: a kernel member key
+/// (`solid:`/`shell:`/`wire:`/`anchor:`) and the coarser pick key that represents it
+/// (`object:`/`face:`/`edge:`/`vertex:`) name the SAME thing, so a guest that echoes one spelling
+/// must still match a host that dispatched the other.
+fn world_pick_key_alias(key: &str) -> Option<String> {
+    let (kind, id) = key.split_once(':')?;
+    let mapped = match kind {
+        "vertex" | "anchor" => "vertex",
+        "edge" | "wire" => "edge",
+        "face" | "shell" => "face",
+        "solid" => "object",
+        "object" => "solid",
+        _ => return None,
+    };
+    Some(format!("{mapped}:{id}"))
+}
+
+/// 🪪️ True when two hover/selection keys name the same pick target, aliases included.
+fn world_pick_keys_match(left: Option<&str>, right: Option<&str>) -> bool {
+    let (Some(left), Some(right)) = (left.filter(|key| !key.is_empty()), right.filter(|key| !key.is_empty())) else {
+        return false;
+    };
+    left == right || world_pick_key_alias(left).as_deref() == Some(right) || world_pick_key_alias(right).as_deref() == Some(left)
+}
+
+/// 🚚️ Parses the lane into the bounded retained set — every cap applied here, never at paint time.
+fn world_pick_targets_from_json(json: &str) -> Vec<WorldPickTargetRecord> {
+    let mut targets: Vec<WorldPickTargetRecord> = serde_json::from_str(json).unwrap_or_default();
+    targets.truncate(WORLD_PICK_TARGET_CAPACITY);
+    for target in &mut targets {
+        target.points.truncate(WORLD_PICK_TARGET_POINT_CAPACITY);
+    }
+    targets
+}
+//#endregion 🧲️PickTargets
+
 #[derive(Clone, Debug)]
 pub struct WorldCatalogueDropPreviewRecord {
     pub object_kind: String,
@@ -1387,6 +1550,13 @@ pub struct World3dState {
     target_volumes: Vec<WorldTargetVolumeRecord>,
     references: Vec<WorldReferenceRecord>,
     engagement_preview: Vec<WorldEngagementPreviewRecord>,
+    /// 🧲️ The bounded sub-object pick targets of `pick_targets_json`, retained so a pointer move or
+    /// a click can hit-test them without re-parsing the lane.
+    pick_targets: Vec<WorldPickTargetRecord>,
+    /// 🧲️ The `kind:id` of the pick target this host last published an `interactionHover` for —
+    /// the sub-object twin of `local_hover_id`, deduped through [`world_pick_keys_match`] so an
+    /// alias spelling never re-publishes the same hover.
+    pick_hover_key: Option<String>,
     brush_preview: Option<WorldBrushPreviewRecord>,
     catalogue_drop_preview: Option<WorldCatalogueDropPreviewRecord>,
     active_utility: String,
@@ -1397,6 +1567,10 @@ pub struct World3dState {
     drag_object_z: f32,
     #[cfg(test)]
     drag_last_position: Option<[f32; 3]>,
+    /// 🚚️ The live relocate drag, or `None`. Armed by a primary press under the `worldRelocate`
+    /// utility, previewed as a catalogue-drop ghost on every move, and closed by the release (commit)
+    /// or by Escape (abort) — React's `relocateSessionRef` (`🌐️World3dHost/🟦️.tsx:6845`).
+    relocate: Option<World3dRelocateSession>,
     selected_ids: Vec<String>,
     /// 📇️ The action ids the WINDOW KIND hosting this surface declares — the app manifest's
     /// `window_kind_action_refs`, republished by the shell on every engine-surface sync
@@ -1411,6 +1585,8 @@ pub struct World3dState {
     /// Empty means "no window kind has declared anything for this surface yet", which offers nothing.
     declared_action_ids: Vec<String>,
     transform_mode: String,
+    /// 🎛️ `selection_json.gumballConfig` when the producer authored one — see [`world3d_gumball_config`].
+    gumball_config: Option<World3dSceneGumballConfigRecord>,
     #[cfg(test)]
     gumball_handle: Option<GumballHandle>,
     #[cfg(test)]
@@ -1556,6 +1732,12 @@ pub struct World3dState {
     /// 🟩️ Instance ids a running tool placed provisionally; painted with the `provisional` style token.
     /// Filled from the `provisional: true` flag the scene producer stamps on `instances_json` records.
     pub provisional_instance_ids: HashSet<String>,
+    /// 🎨️ The instances whose wire rows carry `highlighted`/`disabled`/`celebrating` — the three
+    /// `MESH_STYLE_PAINT` rows that had a table entry and NO producer before ticket 26/09/17 packet
+    /// W14g (`📓️w9b-projection-pane-framing-grid-materials.md` §7.3).
+    pub highlighted_instance_ids: HashSet<String>,
+    pub disabled_instance_ids: HashSet<String>,
+    pub celebrating_instance_ids: HashSet<String>,
     /// 🪟️ The window instance whose view state echoes this layer's trace cursor as
     /// `toolRunTraceCursorByWindowId[window]`; set by the host that paints the surface into that window.
     pub tool_run_trace_window_id: Option<String>,
@@ -1715,6 +1897,8 @@ impl World3dState {
             target_volumes: Vec::new(),
             references: Vec::new(),
             engagement_preview: Vec::new(),
+            pick_targets: Vec::new(),
+            pick_hover_key: None,
             brush_preview: None,
             catalogue_drop_preview: None,
             active_utility: "select".into(),
@@ -1725,9 +1909,11 @@ impl World3dState {
             drag_object_z: 0.0,
             #[cfg(test)]
             drag_last_position: None,
+            relocate: None,
             selected_ids: Vec::new(),
             declared_action_ids: Vec::new(),
             transform_mode: "translate".into(),
+            gumball_config: None,
             #[cfg(test)]
             gumball_handle: None,
             #[cfg(test)]
@@ -1837,6 +2023,9 @@ impl World3dState {
             tool_run_trace_meshes_digest: None,
             tool_run_trace_mesh_keys: Vec::new(),
             provisional_instance_ids: HashSet::new(),
+            highlighted_instance_ids: HashSet::new(),
+            disabled_instance_ids: HashSet::new(),
+            celebrating_instance_ids: HashSet::new(),
             tool_run_trace_window_id: None,
         }
     }
@@ -3045,6 +3234,8 @@ enum WorldFlatActionKind {
     /// ahead of the settle's `setCamera` exactly as React's un-debounced `onNavigationGestures` lands
     /// ahead of its debounced `reportCamera`.
     Navigation,
+    /// 🚚️ `worldRelocate` — the ONE absolute `{objectId, position}` a finished relocate drag commits.
+    Relocate,
 }
 
 #[derive(Clone, Copy, Debug)]
@@ -4272,6 +4463,11 @@ pub struct WorldRayPickCursor {
     mesh_probe: u16,
     merge: u8,
     best: Option<WorldRayHitRef>,
+    /// 🧲️ How many of `state.pick_targets` this cursor has scored — the sub-object PRE-PASS, one
+    /// row per step, run before the first draw so the two compete in one ordering.
+    pick_target: usize,
+    /// 🧲️ `(score, index)` of the winning pick target, React's `targetRayScore` ordering.
+    best_target: Option<(f32, u16)>,
     complete: bool,
     faulted: bool,
 }
@@ -4281,7 +4477,7 @@ impl WorldRayPickCursor {
         let (local_x, local_y, viewport) = pointer_in_pick_rect(state, x, y)?;
         let camera = state.orbit.to_camera();
         let (origin, direction) = camera.ray_from_screen(local_x, local_y, viewport.w, viewport.h);
-        Some(Self { revision: state.interaction_revision, generation, purpose, origin, direction, draw: 0, instance: 0, triangle: 0, mesh: None, mesh_probe: 0, merge: 0, best: None, complete: false, faulted: false })
+        Some(Self { revision: state.interaction_revision, generation, purpose, origin, direction, draw: 0, instance: 0, triangle: 0, mesh: None, mesh_probe: 0, merge: 0, best: None, pick_target: 0, best_target: None, complete: false, faulted: false })
     }
 
     /// ⏭️ Advances past a draw the ray cannot test — one whose mesh the guest has not published yet.
@@ -4308,6 +4504,24 @@ impl WorldRayPickCursor {
         }
         if self.complete {
             return WorldInteractionStep::Complete;
+        }
+        // 🧲️ Sub-object PRE-PASS. One retained pick target per step (the set is capped at
+        // `WORLD_PICK_TARGET_CAPACITY` when the lane is parsed, so this loop is bounded by
+        // construction), scored with React's own `targetRayScore`. A `Paint`/`Surface` gesture aims
+        // at the model itself, never at a pick proxy, so it skips the pass entirely.
+        if matches!(self.purpose, WorldRayPickPurpose::Instance | WorldRayPickPurpose::Hover) && self.pick_target < state.pick_targets.len() {
+            let index = self.pick_target;
+            self.pick_target += 1;
+            let target = &state.pick_targets[index];
+            if target.is_selectable() {
+                if let (Some(score), Ok(slot)) = (world_pick_target_ray_score(target, self.origin, self.direction), u16::try_from(index)) {
+                    if self.best_target.is_none_or(|(best, _)| score < best) {
+                        self.best_target = Some((score, slot));
+                    }
+                }
+            }
+            context.consume_fuel(1);
+            return WorldInteractionStep::Pending;
         }
         let Some(draw) = state.draws.get(self.draw) else {
             self.complete = true;
@@ -4420,10 +4634,19 @@ impl WorldRayPickCursor {
         if !self.complete {
             return Err(WorldInteractionStep::Pending);
         }
+        // 🧲️ ONE ordering across the sub-object proxies and the instance meshes, exactly as r3f
+        // raycasts `SpatialPickHitTarget` and the model in the same scene: the lower score wins, and
+        // a tie goes to the pick target (React's `targetRayScore` already folded the kind's
+        // tie-break into the score, so `<=` here is that ladder's last rung).
+        if let Some((score, slot)) = self.best_target {
+            if score <= self.best.map_or(f32::INFINITY, |hit| hit.distance) {
+                return self.pick_target_plan(state, generation, slot);
+            }
+        }
         let Some(hit) = self.best else {
             return match self.purpose {
                 WorldRayPickPurpose::Hover => {
-                    if state.local_hover_id.is_none() {
+                    if state.local_hover_id.is_none() && state.pick_hover_key.is_none() {
                         return Ok(None);
                     }
                     let mut plan = WorldInteractionPlan::new(self.revision, generation);
@@ -4494,12 +4717,52 @@ impl WorldRayPickCursor {
         plan.push_action(action).then_some(plan).ok_or(WorldInteractionStep::Fault).map(Some)
     }
 
+    /// 🧲️ The `interactionSelect`/`interactionHover` one WINNING sub-object pick target dispatches —
+    /// React's own payload for a `SpatialPickHitTarget` pick, with the target's KIND as the
+    /// granularity (`vertex`/`edge`/`face`/`object`) and its kernel entity id as the target id.
+    fn pick_target_plan(&self, state: &World3dState, generation: u64, slot: u16) -> Result<Option<WorldInteractionPlan>, WorldInteractionStep> {
+        let target = state.pick_targets.get(usize::from(slot)).ok_or(WorldInteractionStep::Stale)?;
+        let key = target.key();
+        // 🪪️ Alias-aware, so a guest that echoes `solid:foo` for a host that dispatched `object:foo`
+        // does not make every move re-publish the same hover.
+        if self.purpose == WorldRayPickPurpose::Hover && world_pick_keys_match(state.pick_hover_key.as_deref(), Some(key.as_str())) {
+            return Ok(None);
+        }
+        let mut plan = WorldInteractionPlan::new(self.revision, generation);
+        let controller = plan.push_string(&state.controller_id).ok_or(WorldInteractionStep::Fault)?;
+        let surface = plan.push_string(&state.surface_id).ok_or(WorldInteractionStep::Fault)?;
+        let object = plan.push_string(&target.id).ok_or(WorldInteractionStep::Fault)?;
+        let domain = plan.push_string(resolved_domain_id(state)).ok_or(WorldInteractionStep::Fault)?;
+        let granularity = plan.push_string(&target.kind).ok_or(WorldInteractionStep::Fault)?;
+        let bare = if state.bound_domain_id.is_some() { 1.0 } else { 0.0 };
+        let action = match self.purpose {
+            WorldRayPickPurpose::Instance => {
+                let merge = plan.push_string(world_merge_wire_label(self.merge)).ok_or(WorldInteractionStep::Fault)?;
+                let method = plan.push_string(selection_method_wire_str(SelectionMethod::Pick)).ok_or(WorldInteractionStep::Fault)?;
+                WorldFlatAction {
+                    kind: WorldFlatActionKind::Select,
+                    strings: [Some(controller), Some(surface), Some(object), Some(domain), Some(granularity), Some(merge), Some(method), None],
+                    numbers: [bare, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                }
+            }
+            _ => WorldFlatAction {
+                kind: WorldFlatActionKind::Hover,
+                strings: [Some(controller), Some(surface), Some(object), Some(domain), Some(granularity), None, None, None],
+                numbers: [bare, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+            },
+        };
+        plan.push_action(action).then_some(plan).ok_or(WorldInteractionStep::Fault).map(Some)
+    }
+
     pub fn terminal_is_empty(&self) -> bool {
-        self.complete && self.best.is_none()
+        self.complete && self.best.is_none() && self.best_target.is_none()
     }
 
     pub fn close_step(&mut self) -> bool {
         if self.best.take().is_some() {
+            return false;
+        }
+        if self.best_target.take().is_some() {
             return false;
         }
         self.complete = true;
@@ -5042,6 +5305,13 @@ impl WorldGumballPickCursor {
             context.consume_fuel(1);
             return WorldInteractionStep::Pending;
         }
+        // 🎛️ ONE gate for every handle: the resolved `gumballConfig` (authored, else the mode's
+        // fallback) ∩ the drafting plane — React's `gumballHandleEnabled`. A handle the gumball does
+        // not SHOW must not be pickable either.
+        if !world3d_gumball_config(state).admits(handle) {
+            context.consume_fuel(1);
+            return WorldInteractionStep::Pending;
+        }
         let pivot = self.pivot.expect("gumball pivot resolved");
         let pick_radius = self.extent * 0.08;
         let candidate = if handle.is_translate() && handle.axis_dir().is_some() {
@@ -5061,13 +5331,13 @@ impl WorldGumballPickCursor {
                 let v = if normal.z.abs() > 0.9 { offset.y.abs() } else { offset.z.abs() };
                 (u <= self.extent * 0.35 && v <= self.extent * 0.35).then_some(self.origin.sub(hit).length())
             })
-        } else if handle.is_rotate() && matches!(state.transform_mode.as_str(), "rotate" | "rotateSelection") {
+        } else if handle.is_rotate() {
             let normal = handle.plane_normal().expect("rotation plane");
             ray_plane_point(self.origin, self.direction, pivot, normal).and_then(|hit| {
                 let distance = (hit.sub(pivot).length() - self.extent * 0.85).abs();
                 (distance <= pick_radius * 2.0).then_some(distance)
             })
-        } else if handle.is_scale() && matches!(state.transform_mode.as_str(), "scale" | "scaleSelection") {
+        } else if handle.is_scale() {
             let axis = handle.axis_dir().expect("scale axis");
             ray_segment_distance(self.origin, self.direction, pivot, pivot.add(axis.scale(self.extent * 1.1))).filter(|distance| *distance <= pick_radius)
         } else {
@@ -6056,6 +6326,15 @@ impl WorldInteractionAuthority {
             WorldInteractionPhase::Wheel => plan_world3d_wheel(state, generation, intent.delta).map(|plan| WorldInteractionActive::Plan { plan, retirement: None }),
             WorldInteractionPhase::PointerLeave => plan_world3d_pointer_leave(state, generation).map(|plan| WorldInteractionActive::Plan { plan, retirement: None }),
             WorldInteractionPhase::PointerDrag => {
+                // 🚚️ A live relocate drag owns every move it receives: it only moves its own ghost and
+                // publishes nothing until the release, so it must not also reach the camera arms below
+                // (React returns early from `onPointerMove` for the same reason).
+                if world3d_relocate_active(state) {
+                    world3d_update_relocate_drag(state, intent.x, intent.y);
+                    self.queue.retire_front(intent.generation);
+                    context.consume_fuel(1);
+                    return WorldInteractionAuthorityStep::Complete;
+                }
                 let modifiers = PointerModifiers { shift: intent.shift, ctrl: intent.ctrl, alt: intent.alt, meta: intent.meta };
                 let Some(plan) = plan_world3d_drag(state, generation, intent.dx, intent.dy, intent.button, &modifiers) else {
                     self.queue.retire_front(intent.generation);
@@ -6065,6 +6344,12 @@ impl WorldInteractionAuthority {
                 Some(WorldInteractionActive::Plan { plan, retirement: None })
             }
             WorldInteractionPhase::PointerMove => {
+                if world3d_relocate_active(state) {
+                    world3d_update_relocate_drag(state, intent.x, intent.y);
+                    self.queue.retire_front(intent.generation);
+                    context.consume_fuel(1);
+                    return WorldInteractionAuthorityStep::Complete;
+                }
                 let modifiers = PointerModifiers { shift: intent.shift, ctrl: intent.ctrl, alt: intent.alt, meta: intent.meta };
                 if intent.down {
                     if let Some(plan) = plan_world3d_drag(state, generation, intent.dx, intent.dy, intent.button, &modifiers) {
@@ -6085,6 +6370,33 @@ impl WorldInteractionAuthority {
                 }
             }
             WorldInteractionPhase::PointerButton => {
+                // 🚚️ The relocate gesture is checked FIRST, exactly as React's `handlePointerDown`
+                // opens with `if (relocateMode && beginRelocateDrag(event)) return;`
+                // (`🌐️World3dHost/🟦️.tsx:6883`). The press publishes nothing; the release publishes the
+                // ONE absolute `worldRelocate`, or nothing at all when the drag never travelled.
+                if intent.button == 0 && (world3d_relocate_active(state) || world3d_relocate_mode(state)) {
+                    if intent.down {
+                        if world3d_begin_relocate_drag(state, intent.x, intent.y) {
+                            self.queue.retire_front(intent.generation);
+                            context.consume_fuel(1);
+                            return WorldInteractionAuthorityStep::Complete;
+                        }
+                    } else if world3d_relocate_active(state) {
+                        let commit = world3d_end_relocate_drag(state, Some((intent.x, intent.y)));
+                        match commit.and_then(|(object_id, position)| plan_world3d_relocate(state, generation, &object_id, position)) {
+                            Some(plan) => {
+                                self.active = Some(WorldInteractionActive::Plan { plan, retirement: None });
+                                context.consume_fuel(1);
+                                return WorldInteractionAuthorityStep::Pending;
+                            }
+                            None => {
+                                self.queue.retire_front(intent.generation);
+                                context.consume_fuel(1);
+                                return WorldInteractionAuthorityStep::Complete;
+                            }
+                        }
+                    }
+                }
                 if let Some(plan) = plan_world3d_paint_stroke(state, generation, intent.down, intent.button) {
                     Some(WorldInteractionActive::Plan { plan, retirement: None })
                 } else if !intent.down && intent.button == 0 && state.active_utility == "surfaceBrush" {
@@ -6213,7 +6525,9 @@ impl WorldInteractionAuthority {
                         self.active = Some(WorldInteractionActive::Pick { cursor, retirement: None });
                         WorldInteractionAuthorityStep::Pending
                     }
-                    WorldInteractionStep::Complete if cursor.purpose == WorldRayPickPurpose::Hover && cursor.best.is_none() => {
+                    // 🧲️ A hover that hit NEITHER a mesh nor a sub-object pick target falls through to
+                    // the reference-plane tier; one that hit a pick target has its answer already.
+                    WorldInteractionStep::Complete if cursor.purpose == WorldRayPickPurpose::Hover && cursor.best.is_none() && cursor.best_target.is_none() => {
                         self.active = Some(WorldInteractionActive::ObjectPick { cursor: WorldObjectPickCursor::from_ray(cursor.revision, cursor.generation, WorldObjectPickPurpose::ReferenceHover, cursor.origin, cursor.direction), retirement: None });
                         context.consume_fuel(1);
                         WorldInteractionAuthorityStep::Pending
@@ -6638,7 +6952,11 @@ fn plan_world3d_pointer_leave(state: &World3dState, generation: u64) -> Option<W
         let action = WorldFlatAction { kind: WorldFlatActionKind::VortexHover, strings: [Some(controller), Some(surface), None, None, None, None, None, None], numbers: [0.0; 10] };
         return plan.push_action(action).then_some(plan);
     }
-    state.local_hover_id.as_ref()?;
+    // 🧲️ A leave clears whichever hover channel is live — the instance one OR the sub-object pick
+    // target one; the `Hover` publish arm with no target clears both.
+    if state.local_hover_id.is_none() && state.pick_hover_key.is_none() {
+        return None;
+    }
     let domain = plan.push_string(resolved_domain_id(state))?;
     let action = WorldFlatAction { kind: WorldFlatActionKind::Hover, strings: [Some(controller), None, None, Some(domain), None, None, None, None], numbers: [0.0; 10] };
     plan.push_action(action).then_some(plan)
@@ -6968,6 +7286,28 @@ pub fn publish_world3d_plan_step(
             builder.end_container()?;
             reservation.publish()?;
         }
+        WorldFlatActionKind::Relocate => {
+            let controller = plan.string(action.strings[0].expect("relocate controller span"));
+            let surface = plan.string(action.strings[1].expect("relocate surface span"));
+            let object = plan.string(action.strings[2].expect("relocate object span"));
+            let action_id = "worldRelocate";
+            // 🚚️ React sends `{objectId, position}` and nothing else (`dispatch("worldRelocate", args)`
+            // with `world3dRelocateDispatchArgsV1`'s own return); `surfaceId` rides along the way every
+            // other verb on this surface carries it.
+            let bytes = ui_wgpu::wgpu::checked_action_string_bytes(&[controller, action_id, "surfaceId", surface, "objectId", object, "position"])?;
+            let mut reservation = input.reserve_action(controller, action_id, bytes)?;
+            let builder = reservation.builder();
+            builder.begin_object(None)?;
+            builder.string(Some("surfaceId"), surface)?;
+            builder.string(Some("objectId"), object)?;
+            builder.begin_array(Some("position"))?;
+            for value in &action.numbers[..3] {
+                builder.number(None, *value)?;
+            }
+            builder.end_container()?;
+            builder.end_container()?;
+            reservation.publish()?;
+        }
         WorldFlatActionKind::Select => {
             let controller = plan.string(action.strings[0].expect("selection controller span"));
             let surface = action.strings[1].map(|span| plan.string(span));
@@ -7039,8 +7379,29 @@ pub fn publish_world3d_plan_step(
             builder.string(Some("channel"), "pointer")?;
             push_interaction_targets(builder, surface, object, granularity, action.numbers[0] != 0.0)?;
             builder.end_container()?;
+            // 🧲️ `numbers[1]` marks a SUB-OBJECT hover (`WorldRayPickCursor::pick_target_plan`): the
+            // published target is a pick target's `kind:id`, so the dedupe key it updates is
+            // `pick_hover_key`, not the instance-level `local_hover_id`. A CLEAR (no object) clears
+            // both, because a move off the model leaves neither channel hovered.
+            let sub_object = action.numbers[1] != 0.0;
+            let pick_key = match (sub_object, granularity, object) {
+                (true, Some(granularity), Some(object)) => Some(format!("{granularity}:{object}")),
+                _ => None,
+            };
             reservation.publish_with(|| {
-                state.local_hover_id = object.map(str::to_owned);
+                match (sub_object, object) {
+                    (true, Some(_)) => state.pick_hover_key = pick_key,
+                    (true, None) => {
+                        state.pick_hover_key = None;
+                        state.local_hover_id = None;
+                    }
+                    (false, _) => {
+                        state.local_hover_id = object.map(str::to_owned);
+                        if object.is_none() {
+                            state.pick_hover_key = None;
+                        }
+                    }
+                }
                 state.interaction_revision = state.interaction_revision.wrapping_add(1);
             })?;
         }
@@ -8868,6 +9229,37 @@ const VERTEX_BASE_SCALE: f32 = 0.05;
 const VERTEX_HOVER_SCALE: f32 = 0.09;
 const VERTEX_SELECT_SCALE: f32 = 0.09;
 
+/// 🔘️ React's `WORLD_VERTEX_DOT_PX` / `WORLD_VERTEX_MARK_PX` (`🌐️World3dHost/🟦️.tsx:2499`) — the
+/// plain and the hovered/selected vertex marker, in SCREEN PIXELS, drawn with
+/// `sizeAttenuation={false}`.
+///
+/// 🩸️ These markers were world-unit crosses of `VERTEX_BASE_SCALE * 0.15` = 0.0075 world units,
+/// which is sub-pixel on any scene larger than a few metres — the SAME defect React shipped and
+/// fixed on lowpoly (`pointsMaterial size` in world units → `sizeAttenuation={false}` pixels,
+/// ticket 26/08/29 round 4). The scales above stay as the RELATIVE weight of the three states.
+const WORLD_VERTEX_DOT_PX: f32 = 6.0;
+const WORLD_VERTEX_MARK_PX: f32 = 11.0;
+
+/// 📏️ World units one screen pixel spans at `distance` from the eye — the inverse of
+/// `sizeAttenuation`. Perspective opens with distance; a parallel frustum is distance-invariant and
+/// reads straight off `orthographic_half_extent`.
+fn world_units_per_pixel(camera: &Camera3d, viewport: Rect, distance: f32) -> f32 {
+    let height = viewport.h.max(1.0);
+    if camera.projection.is_parallel() {
+        let (_, half_height) = camera.orthographic_half_extent(viewport.w, height);
+        return (half_height * 2.0 / height).max(1e-6);
+    }
+    let half = (camera.fov_y * 0.5).tan() / camera.zoom.max(1e-6);
+    (2.0 * distance.abs().max(1e-3) * half / height).max(1e-6)
+}
+
+/// 🔘️ Half the world-space span of one vertex marker cross at `centre` — React's pixel size,
+/// converted through [`world_units_per_pixel`] so the marker keeps its apparent size at every zoom.
+fn vertex_marker_half_extent(camera: &Camera3d, viewport: Rect, centre: Vec3, scale: f32) -> f32 {
+    let pixels = if scale > VERTEX_BASE_SCALE { WORLD_VERTEX_MARK_PX } else { WORLD_VERTEX_DOT_PX };
+    pixels * 0.5 * world_units_per_pixel(camera, viewport, camera.position.sub(centre).length())
+}
+
 fn component_overlay_color(id: &str, selected: &HashSet<String>, preview: &HashSet<String>, hovered: &Option<String>) -> Option<([f32; 4], f32)> {
     if preview.contains(id) {
         return Some(([1.0, 0.85, 0.35, 1.0], VERTEX_HOVER_SCALE));
@@ -8933,6 +9325,57 @@ fn append_box_wireframe_lines(lines: &mut Vec<LineVertex3d>, min: Vec3, max: Vec
     }
 }
 
+/// 🎨️ Resolves one `pick_targets_json` style reference — a theme TOKEN id or a `#rrggbb` literal —
+/// against this appearance. The token set is the CAD picking engine's `SpatialScenePalette`
+/// (`✏️editor/⚙️engine/🧲️picking/🦀️.rs:1108`), resolved through the same CSS chain React does
+/// (`🎨️styling/🖌️ui/🎨️.css`): `--color-changed-selected` → `--accent`, `--active-base` and
+/// `--color-changed-hovered`/`--accent-secondary` → the primary/secondary celebrate stops, the
+/// `--hover-*` grays → the one hover fill this theme carries. An unknown token falls back rather
+/// than painting black.
+fn world_pick_style_color(theme: &ui_wgpu::wgpu::Theme, reference: Option<&str>, fallback: [f32; 4]) -> [f32; 4] {
+    let rgba = |color: ui_wgpu::wgpu::Rgba| [color.r, color.g, color.b, color.a];
+    let Some(reference) = reference.filter(|value| !value.is_empty()) else { return fallback };
+    if reference.starts_with('#') {
+        return parse_color(reference);
+    }
+    match reference {
+        "--color-changed-selected" => rgba(theme.accent),
+        "--active-base" => rgba(theme.celebrate[0]),
+        "--color-changed-hovered" | "--accent-secondary" => rgba(theme.celebrate[1]),
+        "--foreground" => rgba(theme.text),
+        "--muted-foreground" => rgba(theme.text_muted),
+        "--border-normal-color" => rgba(theme.border_normal),
+        "--hover-base" | "--hover-panel" | "--hover-window" => rgba(theme.row_hover),
+        _ => fallback,
+    }
+}
+
+/// 🧲️ Paints the HOVERED sub-object pick target in its own `target_style` colour — the wgpu twin of
+/// React's `SpatialPickTargetNode` for the one target under the pointer.
+///
+/// ⚖️ Only the hovered row, deliberately: the whole overlay is already drawn by the
+/// `engagementPreview` lane (packet W2f), and painting every pick target a second time here would
+/// double the line budget of a Concrete-Forest pane for nothing. A vertex target draws the same
+/// screen-sized cross the component markers do; every other kind draws the wireframe of the box the
+/// hit test itself uses, so what the user sees IS what was hit.
+fn append_pick_target_hover_lines(state: &World3dState, theme: &ui_wgpu::wgpu::Theme, camera: &Camera3d, viewport: Rect, lines: &mut Vec<LineVertex3d>) {
+    let Some(key) = state.pick_hover_key.as_deref() else { return };
+    let Some(target) = state.pick_targets.iter().find(|target| world_pick_keys_match(Some(target.key().as_str()), Some(key))) else { return };
+    let style = target.style.as_ref();
+    let mut color = world_pick_style_color(theme, style.and_then(|style| style.color.as_deref()), [theme.row_hover.r, theme.row_hover.g, theme.row_hover.b, 1.0]);
+    color[3] = style.and_then(|style| style.opacity).map_or(color[3], |opacity| (opacity as f32).clamp(0.0, 1.0));
+    let Some((min, max)) = world_pick_target_bounds(target) else { return };
+    if target.kind == "vertex" {
+        let centre = Vec3::new((min[0] + max[0]) * 0.5, (min[1] + max[1]) * 0.5, (min[2] + max[2]) * 0.5);
+        let d = vertex_marker_half_extent(camera, viewport, centre, VERTEX_HOVER_SCALE);
+        push_line_segment(lines, centre.sub(Vec3::new(d, 0.0, 0.0)), centre.add(Vec3::new(d, 0.0, 0.0)), color);
+        push_line_segment(lines, centre.sub(Vec3::new(0.0, d, 0.0)), centre.add(Vec3::new(0.0, d, 0.0)), color);
+        push_line_segment(lines, centre.sub(Vec3::new(0.0, 0.0, d)), centre.add(Vec3::new(0.0, 0.0, d)), color);
+        return;
+    }
+    append_box_wireframe_lines(lines, Vec3::new(min[0], min[1], min[2]), Vec3::new(max[0], max[1], max[2]), color);
+}
+
 /// 🤝️ Paints the `engagementPreview` lane as world-space lines — the wgpu twin of React's
 /// `EngagementPreviewLayer` (`🌐️World3dHost/🟦️.tsx:4027`), which draws the same four kinds with
 /// `colors.hover` (the `hover-interactive-fill` token, `theme.row_hover` here).
@@ -8982,7 +9425,7 @@ fn append_engagement_preview_lines(state: &World3dState, lines: &mut Vec<LineVer
     }
 }
 
-fn append_component_overlays(state: &World3dState, lines: &mut Vec<LineVertex3d>) {
+fn append_component_overlays(state: &World3dState, camera: &Camera3d, viewport: Rect, lines: &mut Vec<LineVertex3d>) {
     let wire_color = [0.55, 0.65, 0.8, 0.75];
     if state.interaction_mode == "paint" || component_mode_active(state) || state.show_edges || state.selection_targets.edge || (state.granularity == "mesh" && !state.component_ids.is_empty()) {
         for draw in &state.draws {
@@ -9077,7 +9520,7 @@ fn append_component_overlays(state: &World3dState, lines: &mut Vec<LineVertex3d>
                     if !state.selection_targets.vertex && component_overlay_color(&id, &selected, &preview, &hovered).is_none() {
                         continue;
                     }
-                    let d = scale * 0.15;
+                    let d = vertex_marker_half_extent(camera, viewport, center, scale);
                     push_line_segment(lines, center.sub(Vec3::new(d, 0.0, 0.0)), center.add(Vec3::new(d, 0.0, 0.0)), color);
                     push_line_segment(lines, center.sub(Vec3::new(0.0, d, 0.0)), center.add(Vec3::new(0.0, d, 0.0)), color);
                     push_line_segment(lines, center.sub(Vec3::new(0.0, 0.0, d)), center.add(Vec3::new(0.0, 0.0, d)), color);
@@ -9679,14 +10122,31 @@ fn append_gumball_geometry(
         return;
     };
     let extent = gumball_extent(camera.position.sub(pivot).length());
-    let axis_colors = [(Vec3::new(1.0, 0.0, 0.0), [0.92, 0.25, 0.25, 1.0]), (Vec3::new(0.0, 1.0, 0.0), [0.25, 0.85, 0.35, 1.0]), (Vec3::new(0.0, 0.0, 1.0), [0.35, 0.55, 0.95, 1.0])];
-    for (axis, color) in axis_colors {
+    // 🎛️ Same gate the PICK uses (`world3d_gumball_config`), so a handle can never be drawn without
+    // being pickable or picked without being drawn — React resolves both from one `gumballConfig`.
+    let config = world3d_gumball_config(state);
+    let axis_colors = [
+        (GumballHandle::MoveX, Vec3::new(1.0, 0.0, 0.0), [0.92, 0.25, 0.25, 1.0]),
+        (GumballHandle::MoveY, Vec3::new(0.0, 1.0, 0.0), [0.25, 0.85, 0.35, 1.0]),
+        (GumballHandle::MoveZ, Vec3::new(0.0, 0.0, 1.0), [0.35, 0.55, 0.95, 1.0]),
+    ];
+    for (handle, axis, color) in axis_colors {
+        if !config.admits(handle) {
+            continue;
+        }
         let end = pivot.add(axis.scale(extent));
         lines.push(LineVertex3d { position: pivot.to_array(), color });
         lines.push(LineVertex3d { position: end.to_array(), color });
     }
     let ring_segments = 48usize;
-    for (normal, color) in [(Vec3::new(1.0, 0.0, 0.0), [0.92, 0.25, 0.25, 0.85]), (Vec3::new(0.0, 1.0, 0.0), [0.25, 0.85, 0.35, 0.85]), (Vec3::new(0.0, 0.0, 1.0), [0.35, 0.55, 0.95, 0.85])] {
+    for (handle, normal, color) in [
+        (GumballHandle::RotateX, Vec3::new(1.0, 0.0, 0.0), [0.92, 0.25, 0.25, 0.85]),
+        (GumballHandle::RotateY, Vec3::new(0.0, 1.0, 0.0), [0.25, 0.85, 0.35, 0.85]),
+        (GumballHandle::RotateZ, Vec3::new(0.0, 0.0, 1.0), [0.35, 0.55, 0.95, 0.85]),
+    ] {
+        if !config.admits(handle) {
+            continue;
+        }
         let tangent_a = if normal.x.abs() > 0.9 { Vec3::new(0.0, 1.0, 0.0) } else { Vec3::new(1.0, 0.0, 0.0) };
         let tangent_b = normal.cross(tangent_a).normalize();
         let tangent_a = tangent_b.cross(normal).normalize();
@@ -9710,8 +10170,15 @@ fn append_gumball_geometry(
         // the reserved tool job that applies a selection (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
         gpu.ensure_mesh(GUMBALL_PLANE_MESH, mesh_version, *plane);
         let half = extent * 0.35;
-        let plane_specs = [(Vec3::new(0.0, 0.0, 1.0), [half, half, 1.0]), (Vec3::new(1.0, 0.0, 0.0), [1.0, half, half]), (Vec3::new(0.0, 1.0, 0.0), [half, 1.0, half])];
-        for (normal, scale) in plane_specs {
+        let plane_specs = [
+            (GumballHandle::MoveXY, Vec3::new(0.0, 0.0, 1.0), [half, half, 1.0]),
+            (GumballHandle::MoveYZ, Vec3::new(1.0, 0.0, 0.0), [1.0, half, half]),
+            (GumballHandle::MoveXZ, Vec3::new(0.0, 1.0, 0.0), [half, 1.0, half]),
+        ];
+        for (handle, normal, scale) in plane_specs {
+            if !config.admits(handle) {
+                continue;
+            }
             let tangent = if normal.z.abs() > 0.9 {
                 Vec3::new(1.0, 0.0, 0.0)
             } else if normal.x.abs() > 0.9 {
@@ -10235,11 +10702,33 @@ pub fn step_world3d_snapshot(state: &mut World3dState, context: &mut semio_frame
         return World3dSnapshotApplyStep::Fault;
     }
     if cursor.page == cursor.lease.page_count {
-        if cursor.draw_started && world3d_draw_rebuild_seal(state).is_err() {
-            state.snapshot_fault = Some(World3dSnapshotFault::Capacity);
-            cursor.faulted = true;
-            state.snapshot_apply = Some(cursor);
-            return World3dSnapshotApplyStep::Fault;
+        // 🔢️ The revision this apply INSTALLS, decided BEFORE the draw rebuild it began is sealed.
+        //
+        // 🩸️ `lease.revision` is this world's own `interaction_revision` as of the moment the bridge
+        // published the lease — `publish_world3d_scene_bridge_snapshot` is its one production writer —
+        // so adopting it verbatim moves the counter BACKWARDS whenever anything bumped the revision
+        // while the lease was in flight: a document-lane change (`sync_world3d_scene_document_lanes`),
+        // a parallel framing (`sync_world3d_projection_content_frame`), a fit, a camera report. The
+        // rollback then invalidated the very draws this apply had just built, because
+        // `step_world3d_draw_rebuild` refuses a cursor whose `descriptor.revision` no longer equals
+        // `state.interaction_revision`. Measured on 6118: generation3d's `procedural-preview` sat at
+        // `state-meshes=3 state-instances=0 state-draws=0` with three `world3d draw rebuild step=Stale`
+        // lines immediately after `world3d delivery applied`, and the tessellated column never painted
+        // (ticket 26/09/17/WGPU-RENDERER-REACT-PARITY, `📓️w14b-generation3d-labels-preview-layout.md`).
+        let revision = state.interaction_revision.max(cursor.lease.revision);
+        if cursor.draw_started {
+            // 🧱️ The draws this apply built ARE the content of the revision it installs, so they are
+            // re-stamped with it rather than left carrying whatever revision happened to be in force
+            // when the first `Mesh` page opened the rebuild.
+            if let Some(rebuild) = state.draw_rebuild.as_mut() {
+                rebuild.descriptor.revision = revision;
+            }
+            if world3d_draw_rebuild_seal(state).is_err() {
+                state.snapshot_fault = Some(World3dSnapshotFault::Capacity);
+                cursor.faulted = true;
+                state.snapshot_apply = Some(cursor);
+                return World3dSnapshotApplyStep::Fault;
+            }
         }
         if let Some(orbit) = cursor.staged_orbit.take() {
             // 📐️ A LOCALLY selected projection is view state the wire never overrides — React holds
@@ -10254,7 +10743,7 @@ pub fn step_world3d_snapshot(state: &mut World3dState, context: &mut semio_frame
             // (`📓️w9b-projection-pane-framing-grid-materials.md` §1).
             state.orbit = if state.projection_selected { OrbitController { projection: state.orbit.projection, ..orbit } } else { orbit };
         }
-        state.interaction_revision = cursor.lease.revision;
+        state.interaction_revision = revision;
         state.snapshot_lease = Some(cursor.lease);
         state.prepared_status = cursor.status;
         state.snapshot_fault = None;
@@ -10590,6 +11079,25 @@ struct World3dSceneInstanceEntry {
     /// 🟩️ The instance stands for an entity a running tool placed provisionally (`ArtifactView::tool_run()`).
     #[serde(default)]
     provisional: bool,
+    /// 🎨️ React's `WorldInstanceRecord.highlighted` — the compatible/suggested state (a catalogue
+    /// kind hovered in puzzle), which resolves to the SECONDARY `highlighted` row of
+    /// `MESH_STYLE_PAINT`.
+    #[serde(default)]
+    highlighted: bool,
+    /// 🎨️ React's `WorldInstanceRecord.disabled` — non-interactive/locked, the muted `disabled` row
+    /// at 0.45 opacity.
+    #[serde(default)]
+    disabled: bool,
+    /// 🎉️ React's `isWorldInstanceCelebrating` — the `celebrated` row (primary + the conic triad).
+    #[serde(default)]
+    celebrating: bool,
+    /// 🌫️ Per-instance opacity MULTIPLIER, applied to the authored colour's alpha before any style
+    /// row. This is how a plugin dims a LOCKED object on a committed mesh
+    /// (`WORLD_LOCKED_OPACITY_SCALE = 0.35`, `♾️infinite/🌍️world/🎨️r3f/🟦️.tsx:178`): the instance
+    /// lane had no opacity field at all, so `target_style`'s locked arm could be computed and never
+    /// reach a mesh (ticket 26/09/17 packet W2f §5.5). `None` leaves the alpha untouched.
+    #[serde(default)]
+    opacity: Option<f64>,
 }
 
 /// 🎥️ `World3dScene.camera_json` — the window's own camera measure, authored host-side.
@@ -10839,6 +11347,106 @@ struct World3dSceneSelectionRecord {
     active_object_id: Option<String>,
     #[serde(default)]
     show_edges: Option<bool>,
+    /// 🎛️ `selection_json.gumballConfig` — the PLUGIN-AUTHORED handle groups, which override the
+    /// single-mode `transformMode` and let one gumball offer several groups at once (React's
+    /// `WorldSelectionRecord.gumballConfig` / `UnifiedGumball`).
+    #[serde(default)]
+    gumball_config: Option<World3dSceneGumballConfigRecord>,
+    /// 🎛️ `selection_json.transformMode` — the single-mode fallback
+    /// (`gumballConfigForTransformMode`) when no `gumballConfig` is authored.
+    #[serde(default)]
+    transform_mode: Option<String>,
+}
+
+/// 🎛️ `selection_json.gumballConfig` — React's `GumballConfig`
+/// (`🌐️World3dHost/🟦️.tsx:236`, `gumballConfigForTransformMode`).
+///
+/// ⚖️ Every flag is `Option<bool>`, not `bool`: React's `resolveGumballConfig` reads each group as
+/// `config?.group !== false`, so an ABSENT key means ENABLED and only an explicit `false` hides a
+/// group. A plain `#[serde(default)] bool` would read every authored config as "all groups off".
+#[derive(Clone, Debug, Default, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+struct World3dSceneGumballConfigRecord {
+    #[serde(default)]
+    move_axes: Option<bool>,
+    #[serde(default)]
+    move_planes: Option<bool>,
+    #[serde(default)]
+    rotate: Option<bool>,
+    #[serde(default)]
+    scale_axes: Option<bool>,
+    #[serde(default)]
+    scale_planes: Option<bool>,
+    #[serde(default)]
+    scale_uniform: Option<bool>,
+    /// 📐️ The planar subset a window projection implies (`xy`/`xz`/`yz`), from React's
+    /// `worldGumballConfigForProjection`. `None` offers all three axes.
+    #[serde(default)]
+    plane: Option<String>,
+}
+
+impl World3dSceneGumballConfigRecord {
+    /// 🎛️ React's `gumballConfigForTransformMode` (`🌐️World3dHost/🟦️.tsx:2683`) — the single-mode
+    /// fallback when a producer authors no `gumballConfig`.
+    ///
+    /// ⚖️ React switches on three literals (`transform`/`rotate`/`scale`) and falls through to the
+    /// move config; this host's own `transform_mode` also carries the verb spellings
+    /// (`rotateSelection`/`scaleSelection`, and the default `translate`), so the arms match on the
+    /// PREFIX. Same three groups, same fall-through.
+    fn for_transform_mode(mode: &str) -> Self {
+        let flags = |move_axes, move_planes, rotate, scale_axes, scale_planes, scale_uniform| Self {
+            move_axes: Some(move_axes),
+            move_planes: Some(move_planes),
+            rotate: Some(rotate),
+            scale_axes: Some(scale_axes),
+            scale_planes: Some(scale_planes),
+            scale_uniform: Some(scale_uniform),
+            plane: None,
+        };
+        if mode.starts_with("transform") {
+            return flags(true, true, true, false, false, false);
+        }
+        if mode.starts_with("rotate") {
+            return flags(false, false, true, false, false, false);
+        }
+        if mode.starts_with("scale") {
+            return flags(false, false, false, true, true, true);
+        }
+        flags(true, true, false, false, false, false)
+    }
+
+    /// 🎛️ React's `gumballHandleEnabled` — the handle's own group flag ∩ the drafting-plane subset
+    /// (`🧱️elements/🎬️Scene/🟦️.tsx:489-506`, `GUMBALL_PLANE_HANDLES`).
+    fn admits(&self, handle: GumballHandle) -> bool {
+        let group = match handle {
+            GumballHandle::MoveX | GumballHandle::MoveY | GumballHandle::MoveZ => self.move_axes,
+            GumballHandle::MoveXY | GumballHandle::MoveYZ | GumballHandle::MoveXZ => self.move_planes,
+            GumballHandle::RotateX | GumballHandle::RotateY | GumballHandle::RotateZ => self.rotate,
+            GumballHandle::ScaleX | GumballHandle::ScaleY | GumballHandle::ScaleZ => self.scale_axes,
+        };
+        if group == Some(false) {
+            return false;
+        }
+        match self.plane.as_deref() {
+            None => true,
+            Some("xy") => matches!(handle, GumballHandle::MoveX | GumballHandle::MoveY | GumballHandle::MoveXY | GumballHandle::RotateZ | GumballHandle::ScaleX | GumballHandle::ScaleY),
+            Some("yz") => matches!(handle, GumballHandle::MoveY | GumballHandle::MoveZ | GumballHandle::MoveYZ | GumballHandle::RotateX | GumballHandle::ScaleY | GumballHandle::ScaleZ),
+            Some("xz") => matches!(handle, GumballHandle::MoveX | GumballHandle::MoveZ | GumballHandle::MoveXZ | GumballHandle::RotateY | GumballHandle::ScaleX | GumballHandle::ScaleZ),
+            Some(_) => true,
+        }
+    }
+}
+
+/// 🎛️ The gumball config THIS surface offers: the plugin-authored one when it published one,
+/// otherwise the single-mode fallback for its `transformMode`.
+///
+/// 🩸️ Before ticket 26/09/17 packet W14g nothing on this target read `selection.gumballConfig` at
+/// all, and the handle gate was a `transform_mode` string match that admitted the three MOVE axes
+/// and the three move planes UNCONDITIONALLY — so a `rotate`-mode gumball still offered translation
+/// where React offers only the rings, and a plugin that authored several groups at once (the
+/// contract puzzle3d's Move/Rotate relies on) got the single-mode set.
+fn world3d_gumball_config(state: &World3dState) -> World3dSceneGumballConfigRecord {
+    state.gumball_config.clone().unwrap_or_else(|| World3dSceneGumballConfigRecord::for_transform_mode(&state.transform_mode))
 }
 
 /// 🎯️ `selection_json.hoveredComponent` — the vertex/edge/face under the pointer, if any.
@@ -11169,6 +11777,9 @@ fn publish_world3d_scene_bridge_snapshot(state: &mut World3dState, cursor: &Worl
         state.instance_interaction_ids.insert(instance.id.clone(), instance.interaction_id.clone().expect("instance interaction id filtered above"));
     }
     state.provisional_instance_ids = cursor.instances.iter().filter(|instance| instance.provisional).map(|instance| instance.id.clone()).collect();
+    state.highlighted_instance_ids = cursor.instances.iter().filter(|instance| instance.highlighted).map(|instance| instance.id.clone()).collect();
+    state.disabled_instance_ids = cursor.instances.iter().filter(|instance| instance.disabled).map(|instance| instance.id.clone()).collect();
+    state.celebrating_instance_ids = cursor.instances.iter().filter(|instance| instance.celebrating).map(|instance| instance.id.clone()).collect();
     let mut draws: Vec<(&World3dSceneMeshEntry, Vec<&World3dSceneInstanceEntry>)> = Vec::new();
     for mesh in &cursor.meshes {
         // 🥽️ A url-declared mesh has no geometry yet and still earns its draw: the draw is what
@@ -11209,7 +11820,13 @@ fn publish_world3d_scene_bridge_snapshot(state: &mut World3dState, cursor: &Worl
                 let position = instance.position.unwrap_or([0.0; 3]);
                 let rotation = instance.rotation.unwrap_or([0.0, 0.0, 0.0, 1.0]);
                 let scale = instance.scale.unwrap_or([1.0; 3]);
-                let color = instance.color.as_deref().map_or(neutral, parse_color);
+                let mut color = instance.color.as_deref().map_or(neutral, parse_color);
+                // 🌫️ Locked dimming rides the authored colour's alpha, so it survives the snapshot
+                // page (which carries a colour, not a style) and composes with whatever
+                // `MESH_STYLE_PAINT` row the instance later resolves to.
+                if let Some(opacity) = instance.opacity {
+                    color[3] *= (opacity as f32).clamp(0.0, 1.0);
+                }
                 page.push_item(World3dSnapshotItem {
                     strings: [Some(span), None, None, None],
                     numbers: [
@@ -11345,6 +11962,11 @@ fn sync_world3d_scene_selection(state: &mut World3dState, selection_json: &str) 
     if let Some(show_edges) = record.show_edges {
         state.show_edges = show_edges;
     }
+    if let Some(transform_mode) = record.transform_mode {
+        state.transform_mode = transform_mode;
+    }
+    // 🎛️ Authored config WINS over the mode, exactly as React's `gumballConfig ?? gumballConfigForTransformMode(mode)`.
+    state.gumball_config = record.gumball_config;
 }
 
 /// 🖼️ Applies the scene's vortex/attraction/target-volume/reference JSON lanes — the same payloads
@@ -11357,6 +11979,7 @@ fn sync_world3d_scene_document_lanes(state: &mut World3dState, world: &ui_wgpu::
         world.target_volumes_json.as_deref().unwrap_or(""),
         world.references_json.as_deref().unwrap_or(""),
         world.engagement_preview_json.as_deref().unwrap_or(""),
+        world.pick_targets_json.as_deref().unwrap_or(""),
     ]);
     if state.scene_document_lanes_digest == Some(digest) {
         return;
@@ -11387,6 +12010,12 @@ fn sync_world3d_scene_document_lanes(state: &mut World3dState, world: &ui_wgpu::
         .as_deref()
         .map(|json| serde_json::from_str(json).unwrap_or_default())
         .unwrap_or_default();
+    // 🧲️ Caps applied at PARSE time (see `world_pick_targets_from_json`), so no later reader has to
+    // know the bound and the retained set can never exceed it however large the lane arrives.
+    state.pick_targets = world.pick_targets_json.as_deref().map(world_pick_targets_from_json).unwrap_or_default();
+    if state.pick_hover_key.as_deref().is_some_and(|key| !state.pick_targets.iter().any(|target| world_pick_keys_match(Some(target.key().as_str()), Some(key)))) {
+        state.pick_hover_key = None;
+    }
     state.interaction_revision = state.interaction_revision.wrapping_add(1);
 }
 //#endregion 🌉️World3dSceneBridge
@@ -11562,7 +12191,14 @@ pub fn render_world_3d(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut ui_
             .iter()
             .enumerate()
             .filter_map(|(instance_index, instance)| {
-                let style = MeshStyleState { provisional: state.provisional_instance_ids.contains(&instance.id), selected: instance.selected, hovered: instance.hovered, ..MeshStyleState::default() };
+                let style = MeshStyleState {
+                    disabled: state.disabled_instance_ids.contains(&instance.id),
+                    provisional: state.provisional_instance_ids.contains(&instance.id),
+                    celebrating: state.celebrating_instance_ids.contains(&instance.id),
+                    selected: instance.selected,
+                    highlighted: state.highlighted_instance_ids.contains(&instance.id),
+                    hovered: instance.hovered,
+                };
                 let mut instance = world3d_style_paint(theme, style, instance.clone());
                 instance.model = retained_gumball_preview_model(state, draw_index, instance_index, instance.model);
                 let position = state.instance_positions.get(&instance.id).copied().unwrap_or([0.0, 0.0, 0.0]);
@@ -11599,8 +12235,9 @@ pub fn render_world_3d(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut ui_
         let anchor = grid_placement_anchor(camera.target, datum);
         append_lod_grid_lines(&mut line_vertices, current_lod, state.lod.grid_factor, anchor, &camera, inner, [theme.text_element.r, theme.text_element.g, theme.text_element.b, theme.text_element.a]);
     }
-    append_component_overlays(state, &mut line_vertices);
+    append_component_overlays(state, &camera, inner, &mut line_vertices);
     append_engagement_preview_lines(state, &mut line_vertices, [theme.row_hover.r, theme.row_hover.g, theme.row_hover.b, 1.0]);
+    append_pick_target_hover_lines(state, theme, &camera, inner, &mut line_vertices);
     for attraction in &state.attractions {
         let Some(from) = attraction.from else { continue };
         let Some(to) = attraction.to else { continue };
@@ -13083,7 +13720,9 @@ fn pick_reference_at(state: &World3dState, x: f32, y: f32, _inner: Rect) -> Opti
     best.map(|(_, url)| url)
 }
 
-#[cfg(test)]
+/// 📍️ One instance's own world ORIGIN — the translation column of its model matrix. Production since
+/// the relocate gesture landed: `world3d_begin_relocate_drag` needs the grabbed object's origin to
+/// apply React's `origin + (to - from)` travel (`world3dRelocateDispatchArgsV1`).
 fn object_world_position(state: &World3dState, object_id: &str) -> Option<[f32; 3]> {
     for draw in &state.draws {
         for instance in &draw.instances {
@@ -13122,6 +13761,151 @@ pub fn world3d_ground_plane_pick(state: &World3dState, x: f32, y: f32, plane_z: 
     let hit = origin.add(dir.scale(t));
     Some([hit.x, hit.y, hit.z])
 }
+
+//#region WorldRelocateGesture
+/// 🚚️ One live relocate drag. `origin` is where the grabbed object sat when the press landed and
+/// `from` is the ground point under that press; the commit applies the ground-plane travel
+/// `from → to` to `origin`, never an incremental pose delta — React's `World3dRelocateSession`
+/// (`🌐️World3dHost/🟦️.tsx:4752`).
+#[derive(Clone, Debug, PartialEq)]
+pub struct World3dRelocateSession {
+    pub object_id: String,
+    pub origin: [f32; 3],
+    pub from: [f32; 3],
+}
+
+/// 📏️ `GUMBALL_TRANSFORM_EPSILON` (`🌐️World3dHost/🟦️.tsx:2496`) — a drag that lands within this of
+/// where it started writes no document edit.
+const WORLD_RELOCATE_EPSILON: f64 = 1e-6;
+
+/// 🚚️ Which object a relocate press grabs — React `world3dRelocateDragTargetV1`
+/// (`🌐️World3dHost/🟦️.tsx:4726`). A press on empty canvas relocates the first selected object; a press
+/// with no selection relocates what it landed on; a press INSIDE a selection relocates that object,
+/// and a press on something outside the selection relocates nothing (it is a selection gesture, and
+/// `clearSelection` stays the way to drop a selection).
+pub fn world3d_relocate_drag_target(pressed_id: Option<&str>, selected_ids: &[String]) -> Option<String> {
+    let Some(pressed_id) = pressed_id.filter(|id| !id.is_empty()) else {
+        return selected_ids.first().cloned();
+    };
+    if selected_ids.is_empty() {
+        return Some(pressed_id.to_string());
+    }
+    selected_ids.iter().any(|id| id == pressed_id).then(|| pressed_id.to_string())
+}
+
+/// 🚚️ The ONE `worldRelocate` payload a finished relocate drag commits — React
+/// `world3dRelocateDispatchArgsV1` (`🌐️World3dHost/🟦️.tsx:4738`). The ground travel `from → to` is
+/// added to the grabbed object's own origin and snapped exactly like a catalogue drop; a drag that
+/// lands within [`WORLD_RELOCATE_EPSILON`] of where it started answers `None`, so a click without
+/// travel never writes a document edit.
+pub fn world3d_relocate_dispatch_args(session: &World3dRelocateSession, to: [f32; 3], grid_factor: f64) -> Option<[f64; 3]> {
+    let moved = [
+        session.origin[0] + (to[0] - session.from[0]),
+        session.origin[1] + (to[1] - session.from[1]),
+        session.origin[2] + (to[2] - session.from[2]),
+    ];
+    let position = snap_world_point_to_grid(moved, grid_factor);
+    let unchanged = (0..3).all(|axis| (position[axis] - f64::from(session.origin[axis])).abs() < WORLD_RELOCATE_EPSILON);
+    (!unchanged).then_some(position)
+}
+
+/// 🚚️ Whether this surface is in React's `relocateMode` — `activeUtility === "worldRelocate"`
+/// (`🌐️World3dHost/🟦️.tsx:5656`).
+pub fn world3d_relocate_mode(state: &World3dState) -> bool {
+    state.active_utility == "worldRelocate"
+}
+
+/// 🚚️ Arms a relocate drag at a primary press. The pressed object is the one this surface's own hover
+/// authority last resolved (`local_hover_id`) — the wgpu stand-in for the r3f pointer event's own
+/// `object` target, which is the same object by construction since the hover cursor resolves every
+/// move before the press lands. Answers `false` when the press grabs nothing, which leaves the press
+/// to the ordinary selection route.
+pub fn world3d_begin_relocate_drag(state: &mut World3dState, x: f32, y: f32) -> bool {
+    if !world3d_relocate_mode(state) {
+        return false;
+    }
+    let Some(object_id) = world3d_relocate_drag_target(state.local_hover_id.as_deref(), &state.selected_ids) else {
+        return false;
+    };
+    let Some(origin) = object_world_position(state, &object_id) else {
+        return false;
+    };
+    let Some(from) = world3d_ground_plane_pick(state, x, y, origin[2]) else {
+        return false;
+    };
+    state.relocate = Some(World3dRelocateSession { object_id, origin, from });
+    true
+}
+
+/// 🚚️ Moves the relocate ghost. React previews the travel with the SAME catalogue-drop ghost a drop
+/// from the catalogue uses (`setWorldCatalogueDropPreview`, `🌐️World3dHost/🟦️.tsx:6851`) and
+/// dispatches nothing until the release.
+pub fn world3d_update_relocate_drag(state: &mut World3dState, x: f32, y: f32) -> bool {
+    let Some(session) = state.relocate.clone() else {
+        return false;
+    };
+    let origin = world3d_ground_plane_pick(state, x, y, session.origin[2])
+        .and_then(|to| world3d_relocate_dispatch_args(&session, to, state.lod.grid_factor))
+        .unwrap_or([f64::from(session.origin[0]), f64::from(session.origin[1]), f64::from(session.origin[2])]);
+    let object_kind = state.relocate.as_ref().map(|session| session.object_id.clone()).unwrap_or_default();
+    state.catalogue_drop_preview = Some(WorldCatalogueDropPreviewRecord { object_kind, mesh_url: world3d_mesh_url_for_object(state, &session.object_id), origin });
+    true
+}
+
+/// 🚚️ Closes the relocate drag and answers the position to commit, or `None` for an abort or a drag
+/// that never travelled. `to` is `None` for Escape and for a cancelled pointer — React's
+/// `endRelocateDrag(null)`, which drops the ghost and dispatches nothing.
+pub fn world3d_end_relocate_drag(state: &mut World3dState, to: Option<(f32, f32)>) -> Option<(String, [f64; 3])> {
+    let session = state.relocate.take()?;
+    state.catalogue_drop_preview = None;
+    let (x, y) = to?;
+    let point = world3d_ground_plane_pick(state, x, y, session.origin[2])?;
+    let position = world3d_relocate_dispatch_args(&session, point, state.lod.grid_factor)?;
+    Some((session.object_id, position))
+}
+
+/// ⎋️ Escape drops a live relocate drag and dispatches nothing — React binds it as a CAPTURE-phase
+/// `keydown` while `relocateMode` is on (`🌐️World3dHost/🟦️.tsx:6875`). Answers whether a drag was
+/// actually cancelled, so the caller can stop the key there exactly as React calls
+/// `event.stopPropagation()` only when `endRelocateDrag` returns true.
+pub fn world3d_cancel_relocate_drag(state: &mut World3dState) -> bool {
+    if state.relocate.is_none() {
+        return false;
+    }
+    world3d_end_relocate_drag(state, None);
+    true
+}
+
+/// 🚚️ Whether a relocate drag is live on this surface.
+pub fn world3d_relocate_active(state: &World3dState) -> bool {
+    state.relocate.is_some()
+}
+
+/// 🥽️ The mesh url the relocate ghost should draw with — the grabbed instance's own mesh, so the
+/// preview is the object being moved rather than a stand-in box.
+fn world3d_mesh_url_for_object(state: &World3dState, object_id: &str) -> Option<String> {
+    for draw in &state.draws {
+        if draw.instances.iter().any(|instance| instance.id == object_id) {
+            return state.mesh_source_urls.get(&draw.mesh_key).cloned();
+        }
+    }
+    None
+}
+
+/// 🚚️ The `worldRelocate` plan a finished relocate drag publishes.
+fn plan_world3d_relocate(state: &World3dState, generation: u64, object_id: &str, position: [f64; 3]) -> Option<WorldInteractionPlan> {
+    let mut plan = WorldInteractionPlan::new(state.interaction_revision, generation);
+    let controller = plan.push_string(&state.controller_id)?;
+    let surface = plan.push_string(&state.surface_id)?;
+    let object = plan.push_string(object_id)?;
+    let action = WorldFlatAction {
+        kind: WorldFlatActionKind::Relocate,
+        strings: [Some(controller), Some(surface), Some(object), None, None, None, None, None],
+        numbers: [position[0], position[1], position[2], 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+    };
+    plan.push_action(action).then_some(plan)
+}
+//#endregion WorldRelocateGesture
 
 fn snap_world_point_to_grid(point: [f32; 3], grid_factor: f64) -> [f64; 3] {
     if grid_factor <= 0.0 {

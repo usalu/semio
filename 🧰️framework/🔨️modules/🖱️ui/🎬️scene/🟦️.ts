@@ -288,6 +288,11 @@ export type World3dScene = {
   readonly brushPreviewJson?: string;
   readonly interactionJson?: string;
   readonly engagementPreviewJson?: string;
+  /** 🧲️ The sub-object pick targets this surface hit-tests against — a JSON array of
+   * `{kind, id, point, points, typology, selectable, style}`, the wire half of the CAD picking
+   * engine's `SpatialPickTarget`/`targetStyle`. Bounded on both ends: the producer caps what it
+   * publishes and the consumer caps what it retains. See the Rust `World3dScene::pick_targets_json`. */
+  readonly pickTargetsJson?: string;
   readonly lodJson?: string;
   readonly chunkingJson?: string;
   readonly environmentJson?: string;
@@ -470,7 +475,7 @@ export type World3dSceneLane = SceneLane<World3dScene>;
  * collide with an app-authored node id. */
 export const WORLD3D_SCENE_LANE_KEY_PREFIX = "framework.scene.world3d.";
 
-/** 🚚️ The twenty world-3d payload fields that ride OUTSIDE the fixed-capacity surface doc, each as
+/** 🚚️ The twenty-one world-3d payload fields that ride OUTSIDE the fixed-capacity surface doc, each as
  * its own retained, individually paged text carrier. `SurfaceDoc.bytes` is a hard 32 KiB
  * `UiFixedBytes` ceiling that cannot page, so a world whose payload scales with its document (a
  * measured 57 281-byte Nakagin Capsule Tower) can only publish with the payload split out; keeping the
@@ -491,6 +496,7 @@ export const WORLD3D_SCENE_LANES: readonly World3dSceneLane[] = [
   { lane: "brushPreview", field: "brushPreviewJson", bodyKey: "framework.scene.world3d.brushPreview", optional: true },
   { lane: "interaction", field: "interactionJson", bodyKey: "framework.scene.world3d.interaction", optional: true },
   { lane: "engagementPreview", field: "engagementPreviewJson", bodyKey: "framework.scene.world3d.engagementPreview", optional: true },
+  { lane: "pickTargets", field: "pickTargetsJson", bodyKey: "framework.scene.world3d.pickTargets", optional: true },
   { lane: "lod", field: "lodJson", bodyKey: "framework.scene.world3d.lod", optional: true },
   { lane: "chunking", field: "chunkingJson", bodyKey: "framework.scene.world3d.chunking", optional: true },
   { lane: "environment", field: "environmentJson", bodyKey: "framework.scene.world3d.environment", optional: true },
@@ -578,6 +584,30 @@ export function board2dSceneFromLanes(spine: Board2dScene, laneTexts: ReadonlyMa
   return sceneFromLanes(spine, laneTexts, BOARD2D_SCENE_LANES);
 }
 //#endregion 🚚️Board2dSceneLanes
+
+//#region 🚚️TiledMapSceneLanes
+/** 🚚️ Reserved carrier-key namespace of the tiled-map lanes. */
+export const TILEDMAP_SCENE_LANE_KEY_PREFIX = "framework.scene.tiledmap.";
+
+/** 🚚️ The tiled-map payload field that rides OUTSIDE the fixed-capacity surface doc — mirrors the Rust
+ * `TiledMapSceneLane` / `TILEDMAP_SCENE_LANE_*`; both pinned against
+ * `🧰️framework/🔨️modules/🖱️ui/🎬️scene/🧫️fixtures/🚚️tiledmap-scene-lanes/🔣️.json`. The map descriptor
+ * scales with the document (one opaque payload per position/route/region), so it outgrows the 32 KiB
+ * surface doc on a real map — the gis `demo` map is 59 667 bytes. */
+export const TILEDMAP_SCENE_LANES: readonly SceneLane<TiledMapScene>[] = [
+  { lane: "mapFixture", field: "mapFixtureJson", bodyKey: "framework.scene.tiledmap.mapFixture", optional: false },
+];
+
+/** 🚚️ Resolves a retained node key back to the tiled-map lane it carries. */
+export function tiledMapSceneLaneForBodyKey(bodyKey: string): SceneLane<TiledMapScene> | undefined {
+  return TILEDMAP_SCENE_LANES.find((lane) => lane.bodyKey === bodyKey);
+}
+
+/** 🚚️ {@link sceneFromLanes} over {@link TILEDMAP_SCENE_LANES}. */
+export function tiledMapSceneFromLanes(spine: TiledMapScene, laneTexts: ReadonlyMap<string, string>): TiledMapScene {
+  return sceneFromLanes(spine, laneTexts, TILEDMAP_SCENE_LANES);
+}
+//#endregion 🚚️TiledMapSceneLanes
 
 //#region 🚚️Paint2dSceneLanes
 /** 🚚️ Reserved carrier-key namespace of the paint-2d lanes. */
@@ -960,6 +990,8 @@ export type TiledMapScene = {
   readonly hoverJson: string;
   readonly selectionMethod: string;
   readonly selectionMode: string;
+  /** 🚚️ The spine's lane manifest — see {@link TILEDMAP_SCENE_LANES}. */
+  readonly lanes?: readonly SceneLaneRef[];
 };
 
 /** 💡️ One placement candidate row of a board's handle-suggestions popup. */

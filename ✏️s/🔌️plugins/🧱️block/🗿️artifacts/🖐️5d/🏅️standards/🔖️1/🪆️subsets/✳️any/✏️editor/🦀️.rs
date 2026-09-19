@@ -39,7 +39,7 @@ pub const BLOCK5D_GRANULARITY_GRIP: &str = "grip";
 pub const BLOCK5D_GRANULARITY_GRIP_KIND: &str = "gripKind";
 /// 🗂️ The `s/plugin/puzzle` 5d catalog artifact kind block5d's `"catalog:out"` port produces — see
 /// `block5d_io` and `Block5dPlayApp::export_media`.
-const KIT_CATALOG_ARTIFACT_ID: &str = "kit.catalog";
+use semio_s_artifact_block_2d::KIT_CATALOG_ARTIFACT_ID;
 
 /// 🎯️ One action binding addressed at this app — the single factory every taxonomy node's chrome
 /// (`📌️panels/*`, `🎮️commands/*`)? builds its `on_change`/item actions with.
@@ -545,20 +545,7 @@ pub fn create_block5d_app() -> semio_framework_plugin::AppDefinition {
             .artifact_kind(artifact_kind())
             // 🗂️ The puzzle5d catalog artifact this app's new `"catalog:out"` port produces — see
             // `block5d_io`/`Block5dPlayApp::export_media`.
-            .artifact_kind(ArtifactKindSpec {
-                id: KIT_CATALOG_ARTIFACT_ID.into(),
-                name: "Kit Catalog".into(),
-                source_format: KIT_CATALOG_ARTIFACT_ID.into(),
-                component_kind: "kit-catalog".into(),
-                dimension: "5d".into(),
-                media_capability: semio_framework_plugin::OsMediaCapability::MeshOnly,
-                media_type: MediaType { class: MediaClass::Kit, form: MediaForm::Type },
-                schema: KIT_CATALOG_ARTIFACT_ID.into(),
-                export_formats: vec![],
-                import_formats: vec![],
-                    export_stdio_kinds: vec![],
-        import_stdio_kinds: vec![],
-    })
+            .artifact_kind(semio_s_artifact_block_2d::kit_catalog_artifact_kind())
             .icon_id("layers")
             .mode_def(edit_mode::definition())
             .default_mode_id(edit_mode::BLOCK5D_PLAY_MODE_EDIT)

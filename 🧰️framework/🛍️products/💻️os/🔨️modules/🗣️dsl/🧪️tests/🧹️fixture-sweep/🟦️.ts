@@ -208,5 +208,5 @@ export async function testFixtureSweepExtraction(): Promise<void> {
   assert.equal(workspace.workspace.members.filter((path: string) => path === `${sourcePath}/📦️packages/🦀️rust`).length, 1);
   const inventory = exampleInventory(root);
   assert(inventory.directories.length > 0 && inventory.files.length > 0, "fixture discovery cannot be empty");
-  console.log(`[DEBUG] DSL extraction oracle: ${observed.mounts.length} mounted M5 modules, ${observed.laws.length} preserved laws, ${observed.workspaceDependencies.length} workspace edges, ${observed.pathDependencies.length} path edges, ${fixture.cases.length} hostile cases; ${inventory.directories.length} example directories, ${inventory.files.length} asset-first .semio files, discovery SHA-256 ${sha(JSON.stringify(inventory))}; native law counts pending execution`);
+  console.log(`[dsl-fixture-sweep] extraction oracle: ${observed.mounts.length} mounted M5 modules, ${observed.laws.length} preserved laws, ${observed.workspaceDependencies.length} workspace edges, ${observed.pathDependencies.length} path edges, ${fixture.cases.length} hostile cases; ${inventory.directories.length} example directories, ${inventory.files.length} asset-first .semio files, discovery SHA-256 ${sha(JSON.stringify(inventory))}; native law counts pending execution`);
 }

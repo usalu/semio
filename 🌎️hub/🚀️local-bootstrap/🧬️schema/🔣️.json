@@ -190,7 +190,10 @@
           "properties": {
             "kind": { "enum": ["local-bootstrap-pipe-v1", "identity-assertion-verifier"] },
             "bootstrapReady": { "type": "boolean" },
-            "publicSessionIssuance": { "const": false }
+            "publicSessionIssuance": {
+              "type": "boolean",
+              "description": "🎫️ Whether this hub also mints sessions from public credentials (POST /auth/sessions). A development hub issues through the pipe alone by default and reports false; an operator who sets OS_HUB_CREDENTIAL_SIGN_IN reports true, and a local run that did not ask for that must still refuse it — see localHubReadinessAdmitted, which compares this against the run's own expectation rather than against a constant."
+            }
           }
         },
         "directory": { "$ref": "#/$defs/readyComponent" },

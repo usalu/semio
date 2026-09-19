@@ -632,7 +632,13 @@ fn decode_guest_plugin_error(error: wit_types::PluginError) -> TurnFault {
     }
 }
 
-fn retryable_lifecycle_turn(fault: &TurnFault, events: &[Event]) -> bool {
+/// ♻️ A guest lifecycle turn that ran past its own strict µs authority and RETAINED its receipt —
+/// progress is kept, so the only correct host answer is another turn. `pub` because every host that
+/// opens an instance owes the guest this retry: the shard loop, and (since ticket 26/09/18 slice A2)
+/// the MCP gateway, whose `ensure_instance` used to surface it to the agent as a failed tool call.
+/// Unavoidable under the owned interpreter, which executes a lifecycle turn orders of magnitude
+/// slower than the JIT the contract was measured against.
+pub fn retryable_lifecycle_turn(fault: &TurnFault, events: &[Event]) -> bool {
     matches!(fault, TurnFault::Guest(fault) if fault.code.0 == "plugin.reactor-turn-deadline" && fault.retryable)
         && events.len() <= 1
         && events.iter().all(|event| matches!(event, Event::InstanceOpen { .. } | Event::InstanceClose(_) | Event::InstanceLifecycleAck(_)))
@@ -1120,6 +1126,11 @@ struct OwnedInstanceState {
     artifact: Arc<OwnedSemioArtifact>,
     actor: OwnedSemioInstance,
     pending: Option<OwnedPending>,
+    /// ☠️ Set by the first guest trap. A trapped guest keeps whatever linear memory, shadow-stack
+    /// pointer and allocator state the trap left behind, so every later call starts from a lower
+    /// stack pointer and traps again 112 bytes further down — ticket 26/09/18 slice A1 read that
+    /// drift as the defect itself. There is no recovery short of re-instantiation, so this refuses.
+    poisoned: bool,
     context: i32,
     next_resource: i32,
     instance_id: u32,
@@ -1134,7 +1145,7 @@ struct OwnedInstanceState {
 struct OwnedPollInput<'a> {
     events: &'a [Event],
     command_page: Option<(semio_framework::kernel::CommandPageCursor, semio_framework::kernel::FixedCommandPage)>,
-    cold_pair_page: Option<&'a semio_framework::kernel::ColdArtifactPairPage>,
+    cold_pair_page: Option<&'a semio_framework::kernel::ColdDocumentPairPage>,
     budget: Budget,
 }
 
@@ -1193,11 +1204,22 @@ impl OwnedRuntime {
             return Err(PluginHostError::Plugin("owned actor has an undriven start function".to_string()));
         }
         let instance_id = self.next_instance_id.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
-        Ok(GuestInstance { actor, state: GuestInstanceState::Owned(OwnedInstanceState { artifact: Arc::clone(artifact), actor: owned, pending: None, context: 0, next_resource: 1, instance_id }) })
+        Ok(GuestInstance { actor, state: GuestInstanceState::Owned(OwnedInstanceState { artifact: Arc::clone(artifact), actor: owned, pending: None, poisoned: false, context: 0, next_resource: 1, instance_id }) })
+    }
+
+    /// 🔁️ True while a `poll` this runtime started has not completed — the guest yielded on its fuel
+    /// or deadline and owns the host's next call. A host that wants to submit NEW events must first
+    /// resume with none until this is false; `execute_actor_turn` refuses the alternative rather than
+    /// dropping them (ticket 26/09/18 slice A2).
+    pub fn turn_in_flight(&self, inst: &GuestInstance) -> bool {
+        matches!(&inst.state, GuestInstanceState::Owned(state) if state.pending.is_some())
     }
 
     pub fn execute_actor_turn(&self, inst: &mut GuestInstance, events: &[Event], budget: Budget) -> Result<TurnResult, TurnFault> {
         let state = owned_state_mut(inst)?;
+        if state.pending.is_some() && !events.is_empty() {
+            return Err(TurnFault::Trapped(format!("owned turn is mid-flight and cannot admit {} more event(s) — resume it with no events until it settles", events.len())));
+        }
         let mut ordinary_events = Vec::with_capacity(events.len());
         let mut command_page = None;
         let mut cold_pair_page = None;
@@ -1207,7 +1229,7 @@ impl OwnedRuntime {
                     command_page = Some((cursor.clone(), bytes.clone()));
                 }
                 Event::CommandIngressPage { .. } => return Err(TurnFault::Trapped("turn carries more than one command page or an invalid page size".to_string())),
-                Event::ColdArtifactPairPage(page) => {
+                Event::ColdDocumentPairPage(page) => {
                     if cold_pair_page.is_some() {
                         return Err(TurnFault::Trapped("turn carries duplicate cold-pair page".into()));
                     }
@@ -1350,6 +1372,9 @@ fn owned_state_mut(inst: &mut GuestInstance) -> Result<&mut OwnedInstanceState, 
 }
 
 fn begin_owned_operation(state: &mut OwnedInstanceState, operation: OwnedOperation, input: Option<Vec<u8>>) -> Result<(), TurnFault> {
+    if state.poisoned {
+        return Err(TurnFault::Trapped("owned actor instance is poisoned by an earlier guest trap and must be re-instantiated".to_string()));
+    }
     if let Some(pending) = &state.pending {
         return if pending.operation == operation { Ok(()) } else { Err(TurnFault::Trapped(format!("owned operation {:?} is still active", pending.operation))) };
     }
@@ -1444,6 +1469,7 @@ fn resume_owned_operation_observed(state: &mut OwnedInstanceState, operation: Ow
             }
             CoreStepOutcome::Fault { fuel_used, error } => {
                 progress(pending.fuel_used.saturating_add(fuel_used), started.elapsed());
+                state.poisoned = true;
                 return Err(TurnFault::Trapped(error.to_string()));
             }
         }
@@ -1593,6 +1619,10 @@ impl From<crate::interpreter::CoreError> for TurnFault {
 #[cfg(test)]
 #[path = "🧪️tests/🔬️owned-runtime/🦀️.rs"]
 mod owned_runtime_tests;
+
+#[cfg(test)]
+#[path = "🧪️tests/🔬️owned-instance-open/🦀️.rs"]
+mod owned_instance_open_tests;
 
 //#endregion 🧠️OwnedRuntime
 
@@ -2610,7 +2640,7 @@ fn wit_lifecycle_receipt_to_kernel(value: wit_lifetime::Receipt) -> semio_framew
     }
 }
 
-async fn kernel_turn_inputs_to_wit(events: &[Event], instance_id: u32) -> Result<(Vec<wit_events::Event>, Option<(wit_reactor::CommandPageCursor, Vec<u8>)>, Option<wit_reactor::ColdArtifactPairPage>), TurnFault> {
+async fn kernel_turn_inputs_to_wit(events: &[Event], instance_id: u32) -> Result<(Vec<wit_events::Event>, Option<(wit_reactor::CommandPageCursor, Vec<u8>)>, Option<wit_reactor::ColdDocumentPairPage>), TurnFault> {
     let mut ordinary = Vec::with_capacity(events.len());
     let mut command = None;
     let mut cold = None;
@@ -2622,7 +2652,7 @@ async fn kernel_turn_inputs_to_wit(events: &[Event], instance_id: u32) -> Result
                 }
                 command = Some(kernel_command_page_to_wit(cursor, bytes));
             }
-            Event::ColdArtifactPairPage(page) => {
+            Event::ColdDocumentPairPage(page) => {
                 if cold.is_some() {
                     return Err(TurnFault::Trapped("turn carries duplicate cold-pair page".into()));
                 }
@@ -2661,7 +2691,7 @@ pub(crate) async fn kernel_event_to_wit(event: &Event, instance_id: u32) -> wit_
         Event::SuspendRequest => wit_events::Event::SuspendRequest(wit_events::SuspendRequestEvent { instance: instance_id }),
         Event::CapabilityChanged { change } => wit_events::Event::CapabilityChanged(wit_events::CapabilityChangedEvent { instance: instance_id, change: kernel_capability_change_to_wit(change).await }),
         Event::QuotaChanged { quotas } => wit_events::Event::QuotaChanged(wit_events::QuotaChangedEvent { instance: instance_id, quotas: encode_json(quotas).await }),
-        Event::ColdArtifactPairPage(_) => unreachable!("cold pages use the dedicated poll input"),
+        Event::ColdDocumentPairPage(_) => unreachable!("cold pages use the dedicated poll input"),
         Event::CommandIngressPage { .. } => unreachable!("command pages are lifted through reactor.poll's dedicated page argument"),
         Event::UiIntent { instance, intent } => wit_events::Event::UiIntent(wit_events::UiIntentEvent { instance: instance.0.parse().unwrap_or(instance_id), intent: intent.clone() }),
         Event::SurfaceVisible { surface, body_key, view_state } => {

@@ -129,12 +129,9 @@
       "cache": false,
       "continuous": true,
       "outputs": [],
-      "dependsOn": [
-        "@semio-tech/framework-os-dev:activate-s-wgpu-dev"
-      ],
       "options": {
-        "command": "bun ../../../📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🌐️server/📜️script.ts serve s dev",
-        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts dev",
+        "cwd": ".",
         "forwardAllArgs": true
       }
     },

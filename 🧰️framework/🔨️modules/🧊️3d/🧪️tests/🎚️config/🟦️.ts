@@ -21,7 +21,6 @@ export default defineConfig({
   test: {
     root: testRoot,
     name: "@semio-tech/s-3d-js",
-    mode: "test",
     environment: "node",
     // 🩹️ In-source (`import.meta.vitest`) suite in `../../🟦️.ts` — `include` names ACTUAL TEST FILES,
     // and no file named literally "index.ts" exists here (the real file is `../../🟦️.ts`), so this was

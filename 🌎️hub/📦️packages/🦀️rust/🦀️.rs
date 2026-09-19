@@ -13,6 +13,10 @@
 #[path = "../../📇️directory/🦀️.rs"]
 pub mod directory;
 
+// 🔐️ Credential sign-in, session minting policy and the route rate limiter — the `hub.auth` scope.
+#[path = "../../🔐️auth/🦀️.rs"]
+pub mod auth;
+
 #[path = "../../🗿️artifact-authority/🦀️.rs"]
 pub mod artifact_authority;
 
@@ -24,6 +28,11 @@ pub mod local_bootstrap;
 
 #[path = "../../💡️inference/🦀️.rs"]
 pub mod inference;
+
+// 🗄️ Hub as instance #1 of the `semio-framework-server` product: `HubInstance` plus the four
+// durable storage roles behind it.
+#[path = "../../🗄️stores/🦀️.rs"]
+pub mod stores;
 
 #[cfg(test)]
 #[path = "../../🔐️auth/🧪️tests/🧭️credential-source-order/🔮️oracles/🦀️.rs"]

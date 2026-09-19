@@ -78,6 +78,12 @@ impl Default for DagSnapshot {
 pub fn default_snapshot() -> DagSnapshot {
     crate::document_dsl::parse_dsl(crate::examples::demo::PRIMARY_TEXT).expect("bundled dag example DSL must parse")
 }
+/// 🫙️ The empty document — schema marker plus an owned `graph` child with no nodes or edges. The
+/// example picker's "no example" selection loads this, so it must satisfy `validate()` exactly the
+/// way `default_snapshot()` does.
+pub fn empty_snapshot() -> DagSnapshot {
+    DagSnapshot { schema: crate::DAG_DOCUMENT_SCHEMA.into(), content: crate::dag_content_child_with_owner(Vec::new(), Vec::new()) }
+}
 //#endregion 🔖️Snapshot
 
 //#region 🔖️FrameworkBridge

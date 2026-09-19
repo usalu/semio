@@ -69,7 +69,7 @@ function colorKeyToCssVar(key: string): string {
   return `--color-${key.replaceAll("_", "-")}`;
 }
 
-function toPascalCase(s: string): string {
+export function toPascalCase(s: string): string {
   return s
     .split(/[^a-zA-Z0-9]+/)
     .filter(Boolean)
@@ -85,7 +85,7 @@ function toScreamingSnake(s: string): string {
   return toSnakeCase(s).toUpperCase();
 }
 
-function loadTokens(): Tokens {
+export function loadTokens(): Tokens {
   const raw = readFileSync(tokensPath, "utf8");
   return JSON.parse(raw) as Tokens;
 }
@@ -101,7 +101,7 @@ function resolvePaint(colors: Record<string, string>, ref: PaintRef): Rgba8 {
 
 //#region 🌓️Levels
 
-const LEVELS_DEFAULT: StylingLevels = {
+export const LEVELS_DEFAULT: StylingLevels = {
   names: ["base", "window", "pane", "panel", "dialog", "menu"],
   shadeStepPercent: 5,
   elementStepPercent: 6,

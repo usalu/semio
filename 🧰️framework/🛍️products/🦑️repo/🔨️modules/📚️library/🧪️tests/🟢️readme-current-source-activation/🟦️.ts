@@ -10,6 +10,14 @@ import ts from "typescript";
 import * as discovery from "../../🔍️discovery/🟦️.ts";
 import * as normalization from "../../🧹️normalization/🟦️.ts";
 
+/** 👀️ The reviewed-fixture-input manifest these contracts read: its catalog anchor, the revision it belongs to and
+ * the per-role inputs with the preimage each one must still hash to. */
+interface ReviewedFixtureAuthority {
+  readonly catalog: Readonly<{ path: string; sha256: string; caseIndex: number }>;
+  readonly revision: Readonly<{ path: string; id: string }>;
+  readonly inputs: readonly Readonly<{ role: string; path: string; preimage: Readonly<{ sha256: string; size: number; mode: number }> }>[];
+}
+
 const library = resolve(import.meta.dir, "../.."), root = resolve(library, "../../../../..");
 const vector = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/🟢️readme-current-source-activation/🔣️.json"), "utf8"));
 const schema = JSON.parse(readFileSync(join(import.meta.dir, "../../🧬️schema/🟢️readme-current-source-activation/🔣️.json"), "utf8"));
@@ -52,13 +60,21 @@ const capture = (path: string) => {
 };
 const revisionInput = capture(vector.revisionInput), revisionVector = JSON.parse(revisionInput.bytes.toString("utf8"));
 const revision = revisionVector.revisions[vector.revisionId], catalogInput = capture(vector.catalogPath), catalogDocument = JSON.parse(catalogInput.bytes.toString("utf8"));
-const fixtureAuthorityInput = capture(revisionVector.fixtureInputs.path), fixtureAuthority = JSON.parse(fixtureAuthorityInput.bytes.toString("utf8"));
+const fixtureAuthorityInput = capture(revisionVector.fixtureInputs.path), fixtureAuthority: ReviewedFixtureAuthority = JSON.parse(fixtureAuthorityInput.bytes.toString("utf8"));
 const fixtureSchema = JSON.parse(capture("🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/👀️readme-reviewed-fixture-inputs/📋️manifest/🔣️.json").bytes.toString("utf8"));
-if (fixtureAuthorityInput.sha256 !== revisionVector.fixtureInputs.sha256 || !new Ajv({ allErrors: true }).compile(fixtureSchema)(fixtureAuthority) || fixtureAuthority.catalog.path !== vector.catalogPath || fixtureAuthority.catalog.sha256 !== vector.catalogSha256 || fixtureAuthority.revision.id !== vector.revisionId) throw new Error("Reviewed activation fixture authority drift");
+if (fixtureAuthorityInput.sha256 !== revisionVector.fixtureInputs.sha256 || !new Ajv({ allErrors: true }).compile<ReviewedFixtureAuthority>(fixtureSchema)(fixtureAuthority) || fixtureAuthority.catalog.path !== vector.catalogPath || fixtureAuthority.catalog.sha256 !== vector.catalogSha256 || fixtureAuthority.revision.id !== vector.revisionId) throw new Error("Reviewed activation fixture authority drift");
+
+/** 👀️ The manifest row for one reviewed role, proving the manifest declares it before it is read. */
+function reviewedInputRow(role: "source" | "expectation"): ReviewedFixtureAuthority["inputs"][number] {
+  const row = fixtureAuthority.inputs.find((input) => input.role === role);
+  if (!row) throw new Error(`reviewed fixture manifest declares no ${role} input`);
+  return row;
+}
 
 /** 🧫️ Captures only retained reviewed payloads before installing declared logical paths inside isolated repositories. */
 function reviewedInput(role: "source" | "expectation") {
-  const row = fixtureAuthority.inputs.find((input: any) => input.role === role), value = capture(row.path);
+  const row = reviewedInputRow(role);
+  const value = capture(row.path);
   if (value.sha256 !== row.preimage.sha256 || value.size !== row.preimage.size || value.mode !== row.preimage.mode) throw new Error("Reviewed activation fixture preimage drift");
   return value;
 }
@@ -219,7 +235,7 @@ test("shipped schema binds the reviewed revision and three immutable input coord
   const declared = discovery.parseSemanticOwnedCurrentSourceRevisions(revisionVector.revisions);
   const inputs = new Map<string, { path: string; value: ReturnType<typeof capture> }>([
     ["revision", { path: vector.revisionInput, value: revisionInput }],
-    ["reviewed-expectation", { path: fixtureAuthority.inputs.find((input: any) => input.role === "expectation").path, value: expectationInput }],
+    ["reviewed-expectation", { path: reviewedInputRow("expectation").path, value: expectationInput }],
   ]);
   const rows = Object.fromEntries(expected.evidence.map((row: any) => {
     const input = inputs.get(row.inputRole)!;

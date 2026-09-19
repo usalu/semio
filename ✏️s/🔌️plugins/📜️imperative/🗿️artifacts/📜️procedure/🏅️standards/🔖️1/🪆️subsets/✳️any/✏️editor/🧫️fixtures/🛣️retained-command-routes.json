@@ -1,67 +1,87 @@
 {
   "schema": "imperative.retained-command-routes.v1",
   "maximumRawBytes": 8192,
-  "maximumWorkItems": 1,
+  "maximumWorkItems": 64,
   "routes": [
     {
       "id": "addStep",
-      "disposition": "BatchOnlyPendingRewrite",
-      "lanes": [],
-      "reason": "fresh-id derivation clones and recursively scans the flow child"
+      "disposition": "Migrated",
+      "lanes": [
+        "artifact"
+      ],
+      "reason": "one bounded step: the fresh-id derivation is a single pass over the working path"
     },
     {
       "id": "addStepAt",
-      "disposition": "BatchOnlyPendingRewrite",
-      "lanes": [],
-      "reason": "fresh-id and owner resolution clone and scan the flow child"
+      "disposition": "Migrated",
+      "lanes": [
+        "artifact"
+      ],
+      "reason": "one bounded step: fresh-id plus owner/slot resolution in a single pass"
     },
     {
       "id": "removeStep",
-      "disposition": "BatchOnlyPendingRewrite",
-      "lanes": [],
-      "reason": "step resolution clones and scans the flow child"
+      "disposition": "Migrated",
+      "lanes": [
+        "artifact"
+      ],
+      "reason": "one bounded step: one root-path step resolution"
     },
     {
       "id": "removeStepAt",
-      "disposition": "BatchOnlyPendingRewrite",
-      "lanes": [],
-      "reason": "nested step resolution clones and scans the flow child"
+      "disposition": "Migrated",
+      "lanes": [
+        "artifact"
+      ],
+      "reason": "one bounded step: one owner/slot step resolution"
     },
     {
       "id": "moveStep",
-      "disposition": "BatchOnlyPendingRewrite",
-      "lanes": [],
-      "reason": "step resolution clones and scans the flow child"
+      "disposition": "Migrated",
+      "lanes": [
+        "artifact"
+      ],
+      "reason": "one bounded step: one root-path reorder"
     },
     {
       "id": "moveStepAt",
-      "disposition": "BatchOnlyPendingRewrite",
-      "lanes": [],
-      "reason": "nested step resolution clones and scans the flow child"
+      "disposition": "Migrated",
+      "lanes": [
+        "artifact"
+      ],
+      "reason": "one bounded step: one owner/slot reorder"
     },
     {
       "id": "setStepParams",
-      "disposition": "BatchOnlyPendingRewrite",
-      "lanes": [],
-      "reason": "step resolution clones and scans the flow child"
+      "disposition": "Migrated",
+      "lanes": [
+        "artifact"
+      ],
+      "reason": "one bounded step: one root-path params edit"
     },
     {
       "id": "setStepParamsAt",
-      "disposition": "BatchOnlyPendingRewrite",
-      "lanes": [],
-      "reason": "nested step resolution clones and scans the flow child"
+      "disposition": "Migrated",
+      "lanes": [
+        "artifact"
+      ],
+      "reason": "one bounded step: one owner/slot params edit"
     },
     {
       "id": "run",
-      "disposition": "BatchOnlyPendingRewrite",
-      "lanes": [],
-      "reason": "execution clones both children and has no child-job stepping seam"
+      "disposition": "Migrated",
+      "lanes": [
+        "config"
+      ],
+      "reason": "one bounded step: the run output lands as a single config mutation"
     },
     {
       "id": "setContributions",
-      "disposition": "BatchOnlyPendingRewrite",
-      "lanes": [],
-      "reason": "the mutation synchronizes a process-global imperative module registry before Store publication"
+      "disposition": "Migrated",
+      "lanes": [
+        "config"
+      ],
+      "reason": "one bounded step: the contributions json lands as a single config mutation"
     }
   ]
 }

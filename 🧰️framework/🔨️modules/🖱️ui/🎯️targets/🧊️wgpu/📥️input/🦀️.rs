@@ -687,7 +687,7 @@ fn retained_tree_row<'a>(tree: &'a crate::wgpu::tree::UiTree, id: crate::wgpu::a
 /// `ShellState::scroll_region_is_scene_surface` already reads, so a wheel over one propagates to the
 /// scene instead of scrolling the window that hosts it.
 #[cfg(feature = "wgpu-engine")]
-fn retained_scene_hit(scene: &crate::wgpu::component::ui::UiComponentSceneNode) -> (HitKind, String) {
+pub(crate) fn retained_scene_hit(scene: &crate::wgpu::component::ui::UiComponentSceneNode) -> (HitKind, String) {
     use crate::wgpu::component::ui::SurfaceKind;
     match scene.component_kind {
         SurfaceKind::World3d => (HitKind::World3d, scene.surface_id.clone()),

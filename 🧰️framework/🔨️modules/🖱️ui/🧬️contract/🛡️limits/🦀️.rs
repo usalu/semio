@@ -14,7 +14,7 @@
 // ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS.
 use semio_framework_value_derive::{FromValue, ToValue};
 use serde::{Deserialize, Serialize};
-use std::sync::{LazyLock, Mutex};
+use std::sync::Mutex;
 
 //#region 🔖️Limits
 /// 🛡️ Quotas a [`crate::UiSnapshot`]/[`crate::UiPatch`] must stay within. `max_nodes`/`max_depth` bound
@@ -497,14 +497,30 @@ struct UiPatchApplySlot {
     retirement: Option<UiPatchRetirement>,
 }
 
+impl UiPatchApplySlot {
+    const EMPTY: Self = Self { epoch: 0, generation: 0, occupied: false, retirement: None };
+}
+
 struct UiPatchApplyArena {
     slots: [UiPatchApplySlot; UI_PATCH_APPLY_SLOTS],
     close_cursor: usize,
 }
 
+/// 🧊️ `const`, not `Default` — and the static below is a `const`-initialised `Mutex`, not a
+/// `LazyLock`. One slot is ~11.7 KiB (its `UiPatchRetirement` carries the validation `seen` matrix),
+/// so the arena is ~93.5 KiB; at `opt-level = 0` the old `std::array::from_fn` initialiser
+/// materialised that array once per frame of the `from_fn → try_from_fn → try_from_fn_erased` chain
+/// plus the `LazyLock` closure's return temporary — ~654 KiB of shadow stack to zero a static, which
+/// is most of a guest's tape and overflowed the whole thing during `Event::InstanceOpen`
+/// (ticket 26/09/18 slice A2). A `const` initialiser is laid down in the image instead: zero frames,
+/// zero copies, zero first-touch cost.
+impl UiPatchApplyArena {
+    const EMPTY: Self = Self { slots: [const { UiPatchApplySlot::EMPTY }; UI_PATCH_APPLY_SLOTS], close_cursor: 0 };
+}
+
 impl Default for UiPatchApplyArena {
     fn default() -> Self {
-        Self { slots: std::array::from_fn(|_| UiPatchApplySlot::default()), close_cursor: 0 }
+        Self::EMPTY
     }
 }
 
@@ -557,7 +573,7 @@ impl UiPatchApplyArena {
     }
 }
 
-static UI_PATCH_APPLY_ARENA: LazyLock<Mutex<UiPatchApplyArena>> = LazyLock::new(|| Mutex::new(UiPatchApplyArena::default()));
+static UI_PATCH_APPLY_ARENA: Mutex<UiPatchApplyArena> = Mutex::new(UiPatchApplyArena::EMPTY);
 
 fn with_ui_patch_apply_arena<T>(f: impl FnOnce(&mut UiPatchApplyArena) -> T) -> T {
     let mut arena = UI_PATCH_APPLY_ARENA.lock().unwrap_or_else(|poisoned| poisoned.into_inner());

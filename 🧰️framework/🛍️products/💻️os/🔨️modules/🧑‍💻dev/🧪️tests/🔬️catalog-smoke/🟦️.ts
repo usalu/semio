@@ -195,7 +195,7 @@ async function closeCatalogSmokeWindow(page: import("playwright").Page, windowId
 
 async function runCatalogSmokeVerify(baseUrl: string, opts: { readonly outDir: string; readonly timeoutMs: number; readonly perProgramMs: number }): Promise<CatalogSmokeReport> {
   ensureParityPlaywrightBrowsersPath();
-  const { chromium } = await import(PLAYWRIGHT_MODULE_SPECIFIER);
+  const { chromium }: typeof import("playwright") = await import(PLAYWRIGHT_MODULE_SPECIFIER);
   const browser = await chromium.launch({ headless: true });
   const page = await browser.newPage();
   const errors: string[] = [];
@@ -302,4 +302,4 @@ async function runCatalogSmokeVerify(baseUrl: string, opts: { readonly outDir: s
   return report;
 }
 
-export { CATALOG_SMOKE_BODY_EXCERPT_CAPACITY, CATALOG_SMOKE_BOOT_ERROR_CAPACITY, CATALOG_SMOKE_DEFAULT_OUT_REL, CATALOG_SMOKE_FAILED_PLUGIN_STATUSES, CatalogSmokeBoot, CatalogSmokePluginStatus, CatalogSmokeReport, CatalogSmokeRow, CatalogSmokeStatus, catalogSmokeEvaluate, catalogSmokeExitCode, catalogSmokeMarkdown, catalogSmokeMarkdownCell, catalogSmokeWindowIds, closeCatalogSmokeWindow, readCatalogSmokeProbe, runCatalogSmokeVerify, spawnCatalogSmokeProgram, summarizeCatalogSmoke };
+export { CATALOG_SMOKE_BODY_EXCERPT_CAPACITY, CATALOG_SMOKE_BOOT_ERROR_CAPACITY, CATALOG_SMOKE_DEFAULT_OUT_REL, CATALOG_SMOKE_FAILED_PLUGIN_STATUSES, type CatalogSmokeBoot, type CatalogSmokePluginStatus, type CatalogSmokeReport, type CatalogSmokeRow, type CatalogSmokeStatus, catalogSmokeEvaluate, catalogSmokeExitCode, catalogSmokeMarkdown, catalogSmokeMarkdownCell, catalogSmokeWindowIds, closeCatalogSmokeWindow, readCatalogSmokeProbe, runCatalogSmokeVerify, spawnCatalogSmokeProgram, summarizeCatalogSmoke };

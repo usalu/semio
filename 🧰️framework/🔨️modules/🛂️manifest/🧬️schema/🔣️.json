@@ -314,15 +314,15 @@
         }
       }
     },
-    "TutorialArtifactTrackFixture": {
+    "TutorialDocumentTrackFixture": {
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "artifact",
+        "document",
         "cases"
       ],
       "properties": {
-        "artifact": {
+        "document": {
           "type": "array",
           "items": {
             "type": "object",

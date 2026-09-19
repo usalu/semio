@@ -37,3 +37,32 @@ fn the_process_entry_seal_rejects_hub_carriers_and_admits_host_harness_variables
         assert!(!protected_credential_environment_name(benign), "{benign} carries no hub credential and must not fail the process-entry seal");
     }
 }
+
+//#region 🔖️AutoApprove
+// 🎫️ slice M4 (audit §6 P0.2 item 4): `AutoApprovePolicy` existed as a type with no way to reach it
+// from the command line, so every live server hardcoded `Never` and a destructive capability was
+// permanently unapprovable. These assert the real argv surface.
+#[test]
+fn auto_approve_reaches_both_transports_from_argv() {
+    let stdio = parse_stdio_args(&mut ["--auto-approve", "readonly"].into_iter().map(str::to_string)).unwrap();
+    assert_eq!(stdio.auto_approve, AutoApprovePolicy::ReadonlyOnly);
+    let http = parse_http_args(&mut ["--auto-approve", "all"].into_iter().map(str::to_string)).unwrap();
+    assert_eq!(http.auto_approve, AutoApprovePolicy::All);
+}
+
+#[test]
+fn auto_approve_defaults_to_never_and_rejects_an_unknown_policy() {
+    assert_eq!(parse_stdio_args(&mut std::iter::empty()).unwrap().auto_approve, AutoApprovePolicy::Never);
+    assert_eq!(parse_http_args(&mut std::iter::empty()).unwrap().auto_approve, AutoApprovePolicy::Never);
+    let rejected = parse_stdio_args(&mut ["--auto-approve", "sometimes"].into_iter().map(str::to_string)).unwrap_err();
+    assert!(rejected.contains("never|readonly|all"), "an unknown policy is an argv error, never a silent downgrade: {rejected}");
+    assert!(parse_stdio_args(&mut ["--auto-approve"].into_iter().map(str::to_string)).is_err());
+}
+
+#[test]
+fn the_stdio_bridge_can_be_opted_out_of_but_is_on_by_default() {
+    assert!(!parse_stdio_args(&mut std::iter::empty()).unwrap().no_bridge);
+    assert!(parse_stdio_args(&mut ["--no-bridge"].into_iter().map(str::to_string)).unwrap().no_bridge);
+    assert!(parse_http_args(&mut ["--no-bridge"].into_iter().map(str::to_string)).is_err(), "--no-bridge is stdio-only: http always serves /bridge on its own socket");
+}
+//#endregion 🔖️AutoApprove

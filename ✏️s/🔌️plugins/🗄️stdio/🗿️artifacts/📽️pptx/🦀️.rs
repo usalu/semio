@@ -431,6 +431,16 @@ pub mod editor {
                         mod component;
                         pub use component::*;
                         #[path = "."]
+                        pub mod presence {
+                            #[path = "🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/✏️editor/👥️presence/🧬️schema/🦀️.rs"]
+                            pub mod schema;
+                        }
+                        #[path = "."]
+                        pub mod config {
+                            #[path = "🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/✏️editor/🎚️config/🧬️schema/🦀️.rs"]
+                            pub mod schema;
+                        }
+                        #[path = "."]
                         pub mod modes {
                             #[path = "."]
                             pub mod edit {
@@ -455,6 +465,16 @@ pub mod editor {
                         mod component;
                         pub use component::*;
                         #[path = "."]
+                        pub mod presence {
+                            #[path = "🏅️standards/🔖️ecma-376/🪆️subsets/🔒️strict/✏️editor/👥️presence/🧬️schema/🦀️.rs"]
+                            pub mod schema;
+                        }
+                        #[path = "."]
+                        pub mod config {
+                            #[path = "🏅️standards/🔖️ecma-376/🪆️subsets/🔒️strict/✏️editor/🎚️config/🧬️schema/🦀️.rs"]
+                            pub mod schema;
+                        }
+                        #[path = "."]
                         pub mod modes {
                             #[path = "."]
                             pub mod edit {
@@ -478,6 +498,16 @@ pub mod editor {
                         #[path = "🏅️standards/🔖️ecma-376/🪆️subsets/🌉️transitional/✏️editor/🦀️.rs"]
                         mod component;
                         pub use component::*;
+                        #[path = "."]
+                        pub mod presence {
+                            #[path = "🏅️standards/🔖️ecma-376/🪆️subsets/🌉️transitional/✏️editor/👥️presence/🧬️schema/🦀️.rs"]
+                            pub mod schema;
+                        }
+                        #[path = "."]
+                        pub mod config {
+                            #[path = "🏅️standards/🔖️ecma-376/🪆️subsets/🌉️transitional/✏️editor/🎚️config/🧬️schema/🦀️.rs"]
+                            pub mod schema;
+                        }
                         #[path = "."]
                         pub mod modes {
                             #[path = "."]
@@ -520,6 +550,16 @@ pub mod viewer {
                         mod component;
                         pub use component::*;
                         #[path = "."]
+                        pub mod presence {
+                            #[path = "🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/👁️viewer/👥️presence/🧬️schema/🦀️.rs"]
+                            pub mod schema;
+                        }
+                        #[path = "."]
+                        pub mod config {
+                            #[path = "🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/👁️viewer/🎚️config/🧬️schema/🦀️.rs"]
+                            pub mod schema;
+                        }
+                        #[path = "."]
                         pub mod modes {
                             #[path = "."]
                             pub mod view {
@@ -544,6 +584,16 @@ pub mod viewer {
                         mod component;
                         pub use component::*;
                         #[path = "."]
+                        pub mod presence {
+                            #[path = "🏅️standards/🔖️ecma-376/🪆️subsets/🔒️strict/👁️viewer/👥️presence/🧬️schema/🦀️.rs"]
+                            pub mod schema;
+                        }
+                        #[path = "."]
+                        pub mod config {
+                            #[path = "🏅️standards/🔖️ecma-376/🪆️subsets/🔒️strict/👁️viewer/🎚️config/🧬️schema/🦀️.rs"]
+                            pub mod schema;
+                        }
+                        #[path = "."]
                         pub mod modes {
                             #[path = "."]
                             pub mod view {
@@ -567,6 +617,16 @@ pub mod viewer {
                         #[path = "🏅️standards/🔖️ecma-376/🪆️subsets/🌉️transitional/👁️viewer/🦀️.rs"]
                         mod component;
                         pub use component::*;
+                        #[path = "."]
+                        pub mod presence {
+                            #[path = "🏅️standards/🔖️ecma-376/🪆️subsets/🌉️transitional/👁️viewer/👥️presence/🧬️schema/🦀️.rs"]
+                            pub mod schema;
+                        }
+                        #[path = "."]
+                        pub mod config {
+                            #[path = "🏅️standards/🔖️ecma-376/🪆️subsets/🌉️transitional/👁️viewer/🎚️config/🧬️schema/🦀️.rs"]
+                            pub mod schema;
+                        }
                         #[path = "."]
                         pub mod modes {
                             #[path = "."]

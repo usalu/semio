@@ -1,6 +1,6 @@
 type TestSource = { readonly directory: string; readonly url: string };
 
-export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: any, source: TestSource): Promise<void> {
+export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: Pick<typeof import("../../🌓️theme/🟦️.ts"), "parseUiTheme" | "resolveThemeAppearancePalettes" | "resolveThemeMetrics" | "resolveThemePaint" | "serializeUiTheme">, source: TestSource): Promise<void> {
   const { parseUiTheme, resolveThemeAppearancePalettes, resolveThemeMetrics, resolveThemePaint, serializeUiTheme } = dependencies;
   type UiTheme = any;
 
@@ -77,8 +77,8 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
 
 }
 
-export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: any, source: TestSource): Promise<void> {
-  const { SPATIAL_AXIS_COLOR_REFS, STYLING_BOARD_PALETTES, blendTokenHex, clearColorResolveCache, readableForegroundHex, relativeLuminance, resolveColorHex, resolveColorRgba, resolveSemanticColorHex, resolveSpatialAxisColors, serializeCanvasThemeJson, syncSessionCanvasTheme, tokenHex, tokenVar } = dependencies;
+export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: Pick<typeof import("../../🌓️theme/🟦️.ts"), "SPATIAL_AXIS_COLOR_REFS" | "STYLING_BOARD_PALETTES" | "blendTokenHex" | "clearColorResolveCache" | "contrastRatio" | "contrastRatioRgba" | "themePaintContrast" | "wcagContrastGrade" | "readableForegroundHex" | "relativeLuminance" | "resolveColorHex" | "resolveColorRgba" | "resolveSemanticColorHex" | "resolveSpatialAxisColors" | "serializeCanvasThemeJson" | "syncSessionCanvasTheme" | "tokenHex" | "tokenVar">, source: TestSource): Promise<void> {
+  const { SPATIAL_AXIS_COLOR_REFS, STYLING_BOARD_PALETTES, blendTokenHex, clearColorResolveCache, contrastRatio, contrastRatioRgba, themePaintContrast, wcagContrastGrade, readableForegroundHex, relativeLuminance, resolveColorHex, resolveColorRgba, resolveSemanticColorHex, resolveSpatialAxisColors, serializeCanvasThemeJson, syncSessionCanvasTheme, tokenHex, tokenVar } = dependencies;
 
   const { describe, expect, it } = vitest;
 
@@ -116,6 +116,38 @@ export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, 
 
     it("relativeLuminance orders light above dark palette tokens", () => {
       expect(relativeLuminance(tokenHex("light"))).toBeGreaterThan(relativeLuminance(tokenHex("dark")));
+    });
+
+    it("contrastRatio is symmetric, bounded by 1 and 21, and matches the WCAG extremes", () => {
+      expect(contrastRatio("#ffffff", "#000000")).toBeCloseTo(21, 6);
+      expect(contrastRatio("#000000", "#ffffff")).toBeCloseTo(21, 6);
+      expect(contrastRatio("#7b827d", "#7b827d")).toBeCloseTo(1, 10);
+      // 🔬️ WebAIM publishes 4.54:1 for #767676 on white — the canonical AA boundary example.
+      expect(contrastRatio("#767676", "#ffffff")).toBeGreaterThanOrEqual(4.5);
+      expect(contrastRatio("#777777", "#ffffff")).toBeLessThan(4.6);
+    });
+
+    it("wcagContrastGrade bands at 3 / 4.5 / 7, inclusive at each floor", () => {
+      expect(wcagContrastGrade(21)).toBe("aaa");
+      expect(wcagContrastGrade(7)).toBe("aaa");
+      expect(wcagContrastGrade(6.99)).toBe("aa");
+      expect(wcagContrastGrade(4.5)).toBe("aa");
+      expect(wcagContrastGrade(4.49)).toBe("aaLarge");
+      expect(wcagContrastGrade(3)).toBe("aaLarge");
+      expect(wcagContrastGrade(2.99)).toBe("fail");
+      expect(wcagContrastGrade(Number.NaN)).toBe("fail");
+    });
+
+    it("contrastRatioRgba ignores alpha, and themePaintContrast rounds to the 0.01 the editor prints", () => {
+      expect(contrastRatioRgba([255, 255, 255, 12], [0, 0, 0, 255])).toBeCloseTo(21, 6);
+      const verdict = themePaintContrast([255, 255, 255, 255], [0, 0, 0, 255]);
+      expect(verdict.ratio).toBe(21);
+      expect(verdict.grade).toBe("aaa");
+      expect(verdict.passesBodyText).toBe(true);
+      const bad = themePaintContrast([200, 200, 200, 255], [255, 255, 255, 255]);
+      expect(bad.passesBodyText).toBe(false);
+      expect(bad.grade).toBe("fail");
+      expect(Number.isInteger(bad.ratio * 100)).toBe(true);
     });
 
     it("readableForegroundHex picks light text on dark fills and dark text on light fills", () => {
@@ -178,7 +210,7 @@ export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, 
 
 }
 
-export async function registerTests3(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: any, source: TestSource): Promise<void> {
+export async function registerTests3(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: Pick<typeof import("../../🌓️theme/🟦️.ts"), "STYLING_BOARD_PALETTES" | "_activeUiTheme" | "_appliedThemeCssPropsByRoot" | "activeUiTheme" | "applyUiThemeToDocument" | "applyUiThemeToRoot" | "builtinUiThemes" | "clearUiThemeFromRoot" | "semioTheme" | "serializeCanvasThemeJson" | "setActiveUiTheme" | "subscribeActiveUiTheme">, source: TestSource): Promise<void> {
   const { STYLING_BOARD_PALETTES, _activeUiTheme, _appliedThemeCssPropsByRoot, activeUiTheme, applyUiThemeToDocument, applyUiThemeToRoot, builtinUiThemes, clearUiThemeFromRoot, semioTheme, serializeCanvasThemeJson, setActiveUiTheme, subscribeActiveUiTheme } = dependencies;
 
   const { afterEach, describe, expect, it } = vitest;

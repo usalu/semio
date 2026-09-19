@@ -1,7 +1,22 @@
 {
   "bun": "1.3.14",
   "node": "24.15.0",
-  "postCreateCommand": ["bun", "nx", "run", "workspace:deps-javascript"],
+  "postCreateCommand": ["bun", "nx", "run", "workspace:setup"],
+  "postCreateDependsOn": [
+    "deps-javascript",
+    "deps-python",
+    "deps-cargo",
+    "deps-go",
+    "deps-dotnet",
+    "deps-cpp",
+    "deps-browsers",
+    "deps-wasm",
+    "deps-tools",
+    "setup-git",
+    "prepare",
+    "repo-mcp:build",
+    "@semio-tech/framework-os-mcp-rs:build"
+  ],
   "retiredScripts": [".devcontainer/post-create.sh"],
   "platforms": [
     { "architecture": "amd64", "bunArchive": "x64-baseline", "bunSha256": "a063908ae08b7852ca10939bbdc6ceed3ddabce8fb9402dce83d65d73b36e6c7", "nodeArchive": "x64", "nodeSha256": "472655581fb851559730c48763e0c9d3bc25975c59d518003fc0849d3e4ba0f6" },

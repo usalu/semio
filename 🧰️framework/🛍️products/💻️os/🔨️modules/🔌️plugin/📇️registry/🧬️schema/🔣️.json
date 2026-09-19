@@ -142,8 +142,8 @@
         "version": { "type": "integer", "minimum": 1, "maximum": 65536 },
         "cases": {
           "type": "array",
-          "minItems": 9,
-          "maxItems": 9,
+          "minItems": 12,
+          "maxItems": 12,
           "items": {
             "type": "object",
             "additionalProperties": false,
@@ -153,6 +153,12 @@
               "files": {
                 "type": "object",
                 "minProperties": 3,
+                "propertyNames": { "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))[^\\\\]+$" },
+                "additionalProperties": { "type": "string" }
+              },
+              "neighbourFiles": {
+                "type": "object",
+                "minProperties": 1,
                 "propertyNames": { "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))[^\\\\]+$" },
                 "additionalProperties": { "type": "string" }
               },

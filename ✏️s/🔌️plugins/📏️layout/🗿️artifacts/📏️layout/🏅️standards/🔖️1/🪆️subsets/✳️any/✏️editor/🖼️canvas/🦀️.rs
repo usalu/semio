@@ -6,6 +6,7 @@
 
 use crate::editor::layout::modes::edit::windows::blueprint::config::LayoutWindowConfig;
 use crate::editor::layout::modes::edit::windows::blueprint::transient::LayoutWindowTransient;
+use crate::editor::layout::LayoutInteractionSnapshot;
 use crate::editor::layout::engine::scene::{build_display_list_for_page, LayoutEngine};
 use crate::{LayoutSnapshot, Page};
 use serde_json::{json, Value};
@@ -117,23 +118,19 @@ fn display_list_to_host_layers(list: &crate::editor::layout::engine::scene::Disp
     }
 
     for run in &list.text_runs {
-        if run.glyphs.is_empty() {
+        if run.content.is_empty() {
             continue;
         }
-        let mut segments = Vec::new();
-        for glyph in &run.glyphs {
-            let scale = (glyph.font_size / 16.0) as f64;
-            let width = 0.45 * scale;
-            let height = glyph.font_size as f64 * scale;
-            let x = glyph.x as f64;
-            let y = glyph.y as f64;
-            segments.push(json!({ "kind": "move", "to": [x, y - height] }));
-            segments.push(json!({ "kind": "line", "to": [x + width, y - height] }));
-            segments.push(json!({ "kind": "line", "to": [x + width, y] }));
-            segments.push(json!({ "kind": "line", "to": [x, y] }));
-            segments.push(json!({ "kind": "close" }));
-        }
-        layers.push(host_layer(format!("{}.glyphs", run.object_id), &json!(segments), Some([0.0, 0.0, 0.0, 1.0]), None));
+        layers.push(json!({
+            "id": format!("{}.text", run.object_id),
+            "kind": "text",
+            "x": run.origin_x,
+            "y": run.origin_y,
+            "width": run.font_size * run.content.chars().count() as f32 * 0.6,
+            "height": run.font_size,
+            "text": { "content": run.content, "size": run.font_size },
+            "fill": { "color": [0.0, 0.0, 0.0, 1.0] },
+        }));
     }
 
     if blueprint && !drop_preview.kind.is_empty() && drop_preview.kind != "page" {
@@ -147,18 +144,12 @@ fn display_list_to_host_layers(list: &crate::editor::layout::engine::scene::Disp
 
 /// 🖼️ Builds the host canvas-2d layer JSON for the given surface (`blueprint` or `preview`) — the
 /// single shared render path both `🎭️modes/✏️edit/🪟️windows/📐️blueprint` and `…/👁️preview` call.
-///
-/// 🕹️ Always renders with empty selection/hover now — `ArtifactApp::render` carries no
-/// `InteractionView` (a known SDK gap, same one gis2d's/rewrite's render doc comments flag), so the
-/// selected/hovered chrome strokes `display_list_to_host_layers` can still draw are simply never lit
-/// server-side; flagged, not fixed here (framework file, out of this crate's remit — ticket
-/// 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM).
-pub fn canvas_layers(engine: &mut LayoutEngine, doc: &LayoutSnapshot, config: &LayoutWindowConfig, transient: &LayoutWindowTransient, blueprint: bool) -> String {
+pub fn canvas_layers(engine: &mut LayoutEngine, doc: &LayoutSnapshot, config: &LayoutWindowConfig, transient: &LayoutWindowTransient, interaction: &LayoutInteractionSnapshot, blueprint: bool) -> String {
     let page = match active_page(doc, config) {
         Some(page) => page,
         None => return "[]".into(),
     };
-    let list = build_display_list_for_page(engine, doc, page, &page.id, &[], None, blueprint);
+    let list = build_display_list_for_page(engine, doc, page, &page.id, &interaction.ids, interaction.hovered_id(), blueprint);
     let layers = display_list_to_host_layers(&list, blueprint, &transient.drop_preview);
     serde_json::to_string(&layers).unwrap_or_else(|_| "[]".into())
 }

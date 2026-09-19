@@ -16,6 +16,13 @@ workspace = true
 name = "server"
 path = "🦀️.rs"
 
+[features]
+# 🔬️ Compiles `🧪️tests/🔬️conformance/🦀️.rs` — the four storage roles' contract as backend-generic
+# assertion functions — into the library, so an instance crate can hold its own durable backends
+# against the identical bodies the reference in-memory ones are held against. Meant for a
+# dev-dependency entry only; no default build enables it.
+conformance = []
+
 [dependencies]
 semio-framework-async = { workspace = true }
 semio-framework-replication = { workspace = true }
@@ -31,3 +38,17 @@ semio-framework-dispatch-macros = { path = "../../../../🔨️modules/🔀️di
 
 [dev-dependencies]
 semio-framework-async-macros = { path = "../../../../🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
+
+# 🔒️ The cross-crate half of the `dyn_enum_close!` recipe: an integration test links `server` the
+# way hub does, so closing a set of any of the eight `impl Future + Send` ports is gated here.
+[[test]]
+name = "closed_ports"
+path = "../../🧪️tests/🔒️closed-ports/🦀️.rs"
+
+# 🔌️ The Rust half of the cross-language wire gate: every vector of
+# `🧫️fixtures/🔌️wire/🔣️.json` round-trips through its contract type, and the fixture's route table
+# is checked against `base_router`. `🟦️.ts` runs the same document through the TypeScript twin, so a
+# serde rename fails both suites instead of silently splitting the contract in two.
+[[test]]
+name = "wire"
+path = "../../🧪️tests/🔬️wire/🦀️.rs"

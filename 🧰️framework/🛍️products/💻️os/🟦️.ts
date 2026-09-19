@@ -230,7 +230,7 @@ const BACKBONE_ENVELOPE_RETRY_MAX_MS = 5_000;
  * awaiting: a permanently unreachable backbone must eventually surface as a rejection (local-first —
  * the backbone is an enhancement, not a blocking prerequisite) rather than hang the caller alongside
  * whatever real outage is happening. */
-const BACKBONE_ENVELOPE_RETRY_WINDOW_MS = 15_000;
+export const BACKBONE_ENVELOPE_RETRY_WINDOW_MS = 15_000;
 
 /** 📨️ {@link FetchTimeoutResponse} plus the one extra accessor this module needs (binary bodies) —
  * declared locally rather than widening the shared glue type, per this module's own body accessing
@@ -575,6 +575,7 @@ export const BLOB_ENDPOINT_PATH = "/semio-blob";
  * grant, checkpoint and revalidation. A non-`react` renderer target is admitted only when the
  * worker owns a live private lease that verified those exact bytes. */
 export type { DirectoryCommandErrorCodeV1, DirectoryCommandOutcomeV1, DirectoryCommandReceiptV1, DirectoryCommandRequestV1, DirectoryCommandResultV1, DocumentExecutionTargetLeaseFieldsV1, DocumentExecutionTargetProgressV1, DocumentExecutionTargetStatusCodeV1 } from "./🔨️modules/📇️directory/🧬️schema/🟦️.ts";
+export { directoryCommandRequestJson } from "./🔨️modules/📇️directory/🧬️schema/🟦️.ts";
 export { DIRECTORY_COMMAND_RECEIPT_MAX_BYTES, DIRECTORY_COMMAND_REQUEST_MAX_BYTES, canonicalDirectoryCommandV1, directoryCommandErrorIsTransient, directoryCommandSha256, parseDirectoryCommandReceiptV1, parseDirectoryCommandRequestV1, parseDirectoryCommandV1, sealDirectoryCommandReceiptV1, sealDirectoryCommandRequestV1 } from "./🔨️modules/📇️directory/🧬️schema/🟦️.ts";
 export { DOCUMENT_EXECUTION_TARGET_COMPONENT_MAX_BYTES, DOCUMENT_EXECUTION_TARGET_DESCRIPTOR_MAX_BYTES, DOCUMENT_EXECUTION_TARGET_STATUS_TEXT_V1, documentExecutionTargetStatusRoleV1, leaseFieldsFromPlanV1, parseDocumentExecutionTargetLeaseFieldsV1, sameLeaseFieldsV1 } from "./🔨️modules/📇️directory/🧬️schema/🟦️.ts";
 /** 💡️ The host-owned ephemeral GIS Map inference port: its closed wire DTOs, its nine-phase state
@@ -720,7 +721,7 @@ export type ArtifactEvent =
 export type BackboneWorkerWireMessage = { readonly wire: Uint8Array };
 
 /** @emoji 🧵️ Worker wire magic — must match `store_sync::backbone_worker_wire::MAGIC`. */
-const BACKBONE_WORKER_WIRE_MAGIC = 0x01;
+export const BACKBONE_WORKER_WIRE_MAGIC = 0x01;
 
 function parseBackboneWorkerWire<T>(wire: Uint8Array, decode: (value: unknown) => T): T {
   if (wire.length === 0 || wire[0] !== BACKBONE_WORKER_WIRE_MAGIC) {
@@ -4876,3 +4877,95 @@ if (import.meta.vitest) {
 }
 //#endregion 🔖️HubBinding
 //#endregion 🔖️Directory
+
+//#region 🔖️HubSignIn
+/** 🔐️ ticket 26/09/18/OS-HUB-COLLABORATION-AI-END-TO-END slice AU2 — the browser-facing hub
+ * sign-in contract (`POST /auth/sessions`, per that ticket's `📓️au1-hub-auth-sessions-and-rate-limit.md`
+ * §1) and the end-user spaces surface contract, both pure and transport-free. Appended only. */
+export {
+  HUB_AUTH_ERROR_SCHEMA_V1,
+  HUB_CONNECTION_BOOK_MAX_ENTRIES,
+  HUB_CONNECTION_BOOK_SCHEMA_V1,
+  HUB_CONNECTION_BOOK_STORAGE_KEY_V1,
+  HUB_SESSION_MINT_PATH_V1,
+  HUB_SESSION_MINT_REQUEST_MAX_BYTES,
+  HUB_SESSION_MINT_RESPONSE_MAX_BYTES,
+  HUB_SESSION_ME_PATH_V1,
+  HUB_SIGN_IN_DEVICE_INSTANCE_MAX_BYTES,
+  HUB_SIGN_IN_EMAIL_MAX_BYTES,
+  HUB_SIGN_IN_EMAIL_MIN_BYTES,
+  HUB_SIGN_IN_PASSWORD_MAX_BYTES,
+  HUB_SIGN_IN_PASSWORD_MIN_BYTES,
+  HUB_SIGN_IN_RATE_LIMIT_MAX_SECONDS,
+  HUB_SIGN_IN_REQUEST_SCHEMA_V1,
+  HUB_SIGN_IN_TEXT_V1,
+  HUB_SIGN_IN_TIMEOUT_MS,
+  LOCAL_BOOTSTRAP_HUB_CONNECTION_ID_V1,
+  hubAuthErrorRetryAfterSecondsV1,
+  hubConnectionIdForOriginV1,
+  hubDeviceInstanceIdV1,
+  hubRetryAfterSecondsV1,
+  hubSessionAllowsLocalWorkV1,
+  hubSessionInitialStateV1,
+  hubSessionMintRequestJsonV1,
+  hubSessionNeedsReauthenticationV1,
+  hubSignInErrorFromStatusV1,
+  hubSignInErrorTextV1,
+  hubSignInTextV1,
+  localBootstrapHubConnectionV1,
+  parseHubConnectionBookV1,
+  parseHubOriginV1,
+  parseHubSessionMintResultV1,
+  readHubConnectionBookV1,
+  reduceHubSessionV1,
+  removeHubConnectionV1,
+  runHubSignInV1,
+  runHubSignOutV1,
+  selectHubConnectionV1,
+  selectedHubConnectionV1,
+  serializeHubConnectionBookV1,
+  upsertHubConnectionV1,
+  validHubSignInEmailV1,
+  validHubSignInPasswordV1,
+  writeHubConnectionBookV1,
+} from "./🔨️modules/📇️directory/🔐️sign-in/🟦️.ts";
+export type {
+  HubConnectionBookV1,
+  HubConnectionKindV1,
+  HubConnectionStorageV1,
+  HubConnectionV1,
+  HubSessionEventV1,
+  HubSessionMintResultV1,
+  HubSessionPhaseV1,
+  HubSessionStateV1,
+  HubSignInClientClassV1,
+  HubSignInCredentialV1,
+  HubSignInErrorCodeV1,
+  HubSignInLocaleV1,
+  HubSignInOutcomeV1,
+  HubSignInResponseV1,
+  HubSignInTransportV1,
+} from "./🔨️modules/📇️directory/🔐️sign-in/🟦️.ts";
+export {
+  DIRECTORY_COMMANDS_PATH_V1,
+  DIRECTORY_SPACES_PATH_V1,
+  INVITE_LINK_FRAGMENT_V1,
+  INVITE_TOKEN_MAX_BYTES,
+  INVITE_TTL_CHOICES_SECS_V1,
+  SPACE_NAME_MAX_BYTES,
+  archiveSpaceCommandV1,
+  createInviteCommandV1,
+  createSpaceCommandV1,
+  filterSpaceRowsV1,
+  inviteLinkV1,
+  inviteRedeemPathV1,
+  inviteRedemptionErrorFromStatusV1,
+  parseInviteTokenV1,
+  spaceBrowserRowsUsableV1,
+  spaceMemberPresenceV1,
+  spaceRowInvitableV1,
+  spaceRowWritableV1,
+  spaceRowsV1,
+} from "./🔨️modules/📇️directory/🏘️spaces/🟦️.ts";
+export type { InviteRedemptionErrorCodeV1, SpaceAccessV1, SpaceBrowserPhaseV1, SpaceMemberPresenceV1, SpaceRowV1 } from "./🔨️modules/📇️directory/🏘️spaces/🟦️.ts";
+//#endregion 🔖️HubSignIn

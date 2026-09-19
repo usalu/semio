@@ -1,4 +1,10 @@
 /** 🧬️ Puzzle5d snapshot schema — artifact-lane fields only. */
+import {
+  parsePuzzle5dAttribute,
+  parsePuzzle5dAuthor,
+  parsePuzzle5dGripTemplate,
+  parsePuzzle5dRepresentation,
+} from "../🟦️.ts";
 
 /** 🪪️ Composed-child handle — mirrors stdio's `s.stdio.semio.kit` cross-language convention. */
 export interface ArtifactDialect {
@@ -316,7 +322,7 @@ export function parseArtifactChildHandle(value: unknown, at = "$"): ArtifactChil
   const row = puzzlePuzzle5dSnapshotGuardObject(value, at);
   return {
     childId: puzzlePuzzle5dSnapshotGuardString(row["childId"], `${at}.childId`),
-    target: puzzlePuzzle5dSnapshotGuardString(row["target"], `${at}.target`),
+    target: parseArtifactRef(row["target"], `${at}.target`),
   };
 }
 
@@ -361,5 +367,41 @@ export function parsePuzzle5dCatalogRopeKindExtra(value: unknown, at = "$"): Puz
     name: row["name"] === undefined ? undefined : puzzlePuzzle5dSnapshotGuardString(row["name"], `${at}.name`),
     label: row["label"] === undefined ? undefined : puzzlePuzzle5dSnapshotGuardString(row["label"], `${at}.label`),
     defaultFastenerKind: row["defaultFastenerKind"] === undefined ? undefined : puzzlePuzzle5dSnapshotGuardString(row["defaultFastenerKind"], `${at}.defaultFastenerKind`),
+  };
+}
+
+export function parseArtifactDialect(value: unknown, at = "$"): ArtifactDialect {
+  const row = puzzlePuzzle5dSnapshotGuardObject(value, at);
+  return {
+    artifactKind: puzzlePuzzle5dSnapshotGuardString(row["artifactKind"], `${at}.artifactKind`),
+    standard: puzzlePuzzle5dSnapshotGuardString(row["standard"], `${at}.standard`),
+    subset: puzzlePuzzle5dSnapshotGuardString(row["subset"], `${at}.subset`),
+  };
+}
+
+export function parseArtifactRef(value: unknown, at = "$"): ArtifactRef {
+  const row = puzzlePuzzle5dSnapshotGuardObject(value, at);
+  return {
+    artifactId: puzzlePuzzle5dSnapshotGuardString(row["artifactId"], `${at}.artifactId`),
+    dialect: parseArtifactDialect(row["dialect"], `${at}.dialect`),
+  };
+}
+
+export function parsePuzzle5dCatalogPartKindExtra(value: unknown, at = "$"): Puzzle5dCatalogPartKindExtra {
+  const row = puzzlePuzzle5dSnapshotGuardObject(value, at);
+  return {
+    id: puzzlePuzzle5dSnapshotGuardString(row["id"], `${at}.id`),
+    name: row["name"] === undefined ? undefined : puzzlePuzzle5dSnapshotGuardString(row["name"], `${at}.name`),
+    label: row["label"] === undefined ? undefined : puzzlePuzzle5dSnapshotGuardString(row["label"], `${at}.label`),
+    description: row["description"] === undefined ? undefined : puzzlePuzzle5dSnapshotGuardString(row["description"], `${at}.description`),
+    icon: row["icon"] === undefined ? undefined : puzzlePuzzle5dSnapshotGuardString(row["icon"], `${at}.icon`),
+    image: row["image"] === undefined ? undefined : puzzlePuzzle5dSnapshotGuardString(row["image"], `${at}.image`),
+    unit: row["unit"] === undefined ? undefined : puzzlePuzzle5dSnapshotGuardString(row["unit"], `${at}.unit`),
+    abstract: row["abstract"] === undefined ? undefined : puzzlePuzzle5dSnapshotGuardBoolean(row["abstract"], `${at}.abstract`),
+    baseKinds: row["baseKinds"] === undefined ? undefined : puzzlePuzzle5dSnapshotGuardArray(row["baseKinds"], `${at}.baseKinds`).map((item, index) => puzzlePuzzle5dSnapshotGuardString(item, `${at}.baseKinds[${index}]`)),
+    representations: row["representations"] === undefined ? undefined : puzzlePuzzle5dSnapshotGuardArray(row["representations"], `${at}.representations`).map((item, index) => parsePuzzle5dRepresentation(item, `${at}.representations[${index}]`)),
+    grips: row["grips"] === undefined ? undefined : puzzlePuzzle5dSnapshotGuardArray(row["grips"], `${at}.grips`).map((item, index) => parsePuzzle5dGripTemplate(item, `${at}.grips[${index}]`)),
+    attributes: row["attributes"] === undefined ? undefined : puzzlePuzzle5dSnapshotGuardArray(row["attributes"], `${at}.attributes`).map((item, index) => parsePuzzle5dAttribute(item, `${at}.attributes[${index}]`)),
+    authors: row["authors"] === undefined ? undefined : puzzlePuzzle5dSnapshotGuardArray(row["authors"], `${at}.authors`).map((item, index) => parsePuzzle5dAuthor(item, `${at}.authors[${index}]`)),
   };
 }

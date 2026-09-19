@@ -69,7 +69,7 @@ fn instance_ray(state: &World3dState, instance_id: &str) -> (Vec3, Vec3) {
 }
 
 fn ray_cursor(state: &World3dState, purpose: WorldRayPickPurpose, origin: Vec3, direction: Vec3, merge: u8) -> WorldRayPickCursor {
-    WorldRayPickCursor { revision: state.interaction_revision, generation: 1, purpose, origin, direction, draw: 0, instance: 0, triangle: 0, mesh: None, mesh_probe: 0, merge, best: None, complete: false, faulted: false }
+    WorldRayPickCursor { revision: state.interaction_revision, generation: 1, purpose, origin, direction, draw: 0, instance: 0, triangle: 0, mesh: None, mesh_probe: 0, merge, best: None, pick_target: 0, best_target: None, complete: false, faulted: false }
 }
 
 /// 🏁️ Drives one bounded pick to completion and returns the descriptor it published, if any.
@@ -268,3 +268,61 @@ fn the_merge_vocabulary_is_not_translated() {
     assert_ne!(pre_fix(false, true).wire_label(), gesture("instance-pick-subtractive")["expect"]["merge"].as_str().expect("merge"));
     assert_ne!(pre_fix(true, true).wire_label(), gesture("instance-pick-invertive")["expect"]["merge"].as_str().expect("merge"));
 }
+
+//#region WorldRelocateGestureLaws
+/// 🚚️ React `🌐️World3dHost/🟦️.tsx` `world3dRelocateDragTargetV1`: a press on empty canvas grabs the
+/// first SELECTED object; a press with no selection grabs what it landed on; a press inside the
+/// selection grabs that object; a press on something OUTSIDE the selection grabs nothing, because
+/// that gesture is a selection change and `clearSelection` stays the way to drop a selection.
+#[test]
+fn a_relocate_press_grabs_the_object_react_grabs() {
+    let selection = vec!["a".to_string(), "b".to_string()];
+    assert_eq!(world3d_relocate_drag_target(None, &selection).as_deref(), Some("a"), "an empty-canvas press relocates the first selected object");
+    assert_eq!(world3d_relocate_drag_target(Some("c"), &[]).as_deref(), Some("c"), "with no selection the pressed object is the target");
+    assert_eq!(world3d_relocate_drag_target(Some("b"), &selection).as_deref(), Some("b"), "a press inside the selection relocates that object");
+    assert_eq!(world3d_relocate_drag_target(Some("c"), &selection), None, "a press outside the selection relocates nothing");
+    assert_eq!(world3d_relocate_drag_target(None, &[]), None, "nothing pressed and nothing selected grabs nothing");
+}
+
+/// 🚚️ React `world3dRelocateDispatchArgsV1`: the payload is the grabbed object's ORIGIN plus the
+/// ground travel `from → to`, grid-snapped — never an incremental pose delta — and a drag that lands
+/// within `GUMBALL_TRANSFORM_EPSILON` of where it started answers `null`, so a click without travel
+/// writes no document edit.
+#[test]
+fn a_relocate_commit_is_the_origin_plus_the_ground_travel_and_a_still_drag_commits_nothing() {
+    let session = World3dRelocateSession { object_id: "o1".into(), origin: [10.0, 20.0, 5.0], from: [0.0, 0.0, 5.0] };
+    let moved = world3d_relocate_dispatch_args(&session, [3.0, -4.0, 5.0], 0.0).expect("a travelled drag commits");
+    assert_eq!(moved, [13.0, 16.0, 5.0], "origin + (to - from), with the grabbed object's own z preserved");
+    assert_eq!(world3d_relocate_dispatch_args(&session, [0.0, 0.0, 5.0], 0.0), None, "a drag that never travelled commits nothing");
+    let snapped = world3d_relocate_dispatch_args(&session, [3.4, -4.4, 5.0], 1.0).expect("a travelled drag commits");
+    assert_eq!(snapped, [13.0, 16.0, 5.0], "the committed point is snapped exactly like a catalogue drop");
+}
+
+/// ⎋️ React binds Escape as a CAPTURE-phase `keydown` while `relocateMode` is on and calls
+/// `endRelocateDrag(null)`, which drops the ghost and dispatches NOTHING
+/// (`🌐️World3dHost/🟦️.tsx:6873-6881`). It answers `false` when no drag was live, so the key falls
+/// through to the chord table.
+#[test]
+fn escape_cancels_a_live_relocate_drag_and_commits_nothing() {
+    let mut state = fixture_state();
+    assert!(!world3d_cancel_relocate_drag(&mut state), "with no live drag Escape is not consumed");
+    state.relocate = Some(World3dRelocateSession { object_id: "o1".into(), origin: [0.0, 0.0, 0.0], from: [0.0, 0.0, 0.0] });
+    state.catalogue_drop_preview = Some(WorldCatalogueDropPreviewRecord { object_kind: "o1".into(), mesh_url: None, origin: [1.0, 1.0, 0.0] });
+    assert!(world3d_cancel_relocate_drag(&mut state), "a live drag consumes the key");
+    assert!(!world3d_relocate_active(&state), "the session is gone");
+    assert!(state.catalogue_drop_preview.is_none(), "the ghost is gone");
+    assert!(world3d_end_relocate_drag(&mut state, Some((0.0, 0.0))).is_none(), "a cancelled drag has nothing left to commit");
+}
+
+/// 🚚️ `activeUtility === "worldRelocate"` is React's `relocateMode`, and it is the ONLY state in
+/// which a press arms the gesture.
+#[test]
+fn only_the_world_relocate_utility_arms_the_gesture() {
+    let mut state = fixture_state();
+    state.active_utility = "select".into();
+    assert!(!world3d_relocate_mode(&state));
+    assert!(!world3d_begin_relocate_drag(&mut state, 10.0, 10.0), "the select utility never arms a relocate");
+    state.active_utility = "worldRelocate".into();
+    assert!(world3d_relocate_mode(&state));
+}
+//#endregion WorldRelocateGestureLaws

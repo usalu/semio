@@ -4,7 +4,12 @@ import { policyCanonicalScalar, policyCanonicalState, policyFindSchemaDeclaratio
 export function policyExtractGraphqlSchemaFields(text: string, expectedTypeName: string | null = null): PolicySchemaLeafExtract {
   text = text.replace(/"""[\s\S]*?"""|"(?:\\.|[^"\\])*"|#[^\n]*/g, (value) => value.replace(/[^\n]/g, " "));
   const declaration = policyFindSchemaDeclaration(text, /\btype\s+([A-Za-z_][A-Za-z0-9_]*)\s*\{/, expectedTypeName);
-  if (!declaration) return { typeName: "", fields: [] };
+  // 🈳️ GraphQL has no empty-object type: `type X {}` is a syntax error, so a schema with no fields is
+  // spelled as a braceless `type X`. Recognise it, or an empty owned schema reads as "type absent".
+  if (!declaration) {
+    const braceless = policyFindSchemaDeclaration(text, /\btype\s+([A-Za-z_][A-Za-z0-9_]*)\s*(?![\s\S]*?\{)/, expectedTypeName);
+    return braceless ? { typeName: braceless.typeName, fields: [] } : { typeName: "", fields: [] };
+  }
   const { typeName, bodyStart } = declaration;
   let depth = 1, index = bodyStart;
   for (; index < text.length; index++) {

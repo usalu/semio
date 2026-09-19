@@ -863,24 +863,9 @@ export const CodebaseDocument = { "kind": "Artifact", "definitions": [{ "kind": 
 // #endregion 🧲️Header
 
 
-export function graphql(source: string): unknown;
-export function graphql(source: "\n  query Repo {\n    repo {\n      id\n      name\n      path\n      bundles { id name root s  bundles { id name root sourceRoot projectType tags uri }\n      tickets { id year month day slug path uri prompt summary status checkpoint }\n      policies { id name description scopes }\n      contributors { id github name emails }\n    }\n  }\n"];
-export function graphql(source: "\n  query Tickets($year: Int, $month: Int, $day: Int, $status: TicketStatus) {\n    repo {\n      tickets(year: $year, month: $month, day: $day, status: $status) {\n        id year month day slug path uri prompt summary status\n        author { github name }\n        model checkpoint\n        date { created finished }\n        checkpoints { prompt model author { github name } checkpoint date { created } }\n        metrics { checkpoints files lines { added removed } }\n      }\n    }\n  }\n"): tickets(year: $year, month: $month, day: $day, status: $status) { \n        id year month day slug path uri prompt summary status\n        author { github name } \n        model checkpoint\n        date { created finished } \n        checkpoints { prompt model author { github name } checkpoint date { created } } \n        metrics { checkpoints files lines { added removed } } \n }\n    }\n  }\n"];
-/**
- *  function graphql(source: "\n  query Policies {\n    repo {\n      policies { id name description scopes statutes { id priority autofixable reason solution } }\n    }\n  }\n"): (typeof documents)["\n  query Policies {\n    repo {\n      policies { id name description scopes statutes { id priority autofixable reason solution } }\n    }\n  }\n"];
-/**
- * 🕸️The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
- */
-export function graphql(
-  source: "\n  query Contributors {\n    repo {\n      contributors {\n        id github name emails\n        links { name url }\n        icons { avatar avatarRound github }\n        metrics { checkpoints tickets bundles folders files sections definitions lines }\n      }\n    }\n  }\n",
-): (typeof documents)["\n  query Contributors {\n    repo {\n      contributors {\n        id github name emails\n        links { name url }\n        icons { avatar avatarRound github }\n        metrics { checkpoints tickets bundles folders files sections definitions lines }\n      }\n    }\n  }\n"];
-/**
- * The graphql function is used to parse GraphQL queries into a d\n    analyze(scope: $scope) {\n      breachs {\n        id summary priority autofixable scope line column excerpt\n        kind { id policy { id name } reason solution }\n        autofix { description }\n      }\n      metrics { total byPriority { high medium low } autofixable }\n    }\n  }\n"): (typeof documents)["\n  query Analyze($scope: String) {\n    analyze(scope: $scope) {\n      breachs {\n        id summary priority autofixable scope line column excerpt\n        kind{ high medium low } autofixable }\n    }\n  }\n"];
-export function graphql(source: "\n  mutation Fix($scope: String) {\n    fix(scope: $scope) {\n      fixed remaining\n      breachs { id summary priority scope }\n    }\n  }\n"): (typeof documents)["\n  mutation Fix($scope: String) {\n    fix(scope: $scope) {\n      fixed remaining\n      breachs { id summary priority scope }\n    }\n  }\n"];
-export function graphql(source: "\n  query Codebase {\n    repo {\n      id nam definitions lines breachs }\n      }\n      folders {\n        id path uri\n        metrics { files lines breachs }\n      }\n      files {\n        id path uri\n        metrics { sections definitions lines }\n        sections {\n          id name path\n          range { start { line } end { line } }\n          metrics { definitions lines breachs }\n        }\n        definitions {\n          id name kind\n          range { start { line } end { line } }\n          metrics { definitions lines breachs }\n        }\n      }\n      contributors {\n        id github name emails\n        links { name url }\n        metrics { checkpoints tickets bundles folders files sections definitions lines }\n      }\n      tickets {\n        id year month day slug path uri prompt summary status checkpoint\n        author { github name }\n        cheid name description scopes\n        statutes { id priority autofixable reason solution }\n      }\n    }\n  }\n"): (typeof documents)["\n  query Codebase {\n    repo {\n      id name path\n      bundles {\n        id name root sourceRoot projectType tags uri\n        metrics { folders files sections definitions lines breachs }\n      }\n      folders {\n        id path uri\n        metrics { files lines breachs }\n      }\n      files {\n        id path uri line } end { line } }\n          metrics { definitions lines breachs }\n        }\n        definitions {\n          id name kind\n          range { start { line } end { line } }\n          metrics { definitions lines breachs }\n        }\n      }\n      contributors {\n        id github name emails\n        links { name url }\n        metrics { checkpoints tickets bundles folders files sections definitions lines }\n      }\n      tickets {\n        id year month day slug path uri prompt summary status checkpoint\n        author { github name }\n        checkpoints { checkpoint }\n        metrics { checkpoints files lines { added removed } }\n      }\n      policies {\n        id name description scopes\n        statutes { id priority autofixable reason solution }\n      }\n    }\n  }\n"];
-
-export function graphql(source: string) {
-  return (documents as any)[source] ?? {};
+/** 🕸️ Turns one generated GraphQL operation source into the document the repo CLI accepts — its own source text, which is what `graphql --query` is given. */
+export function graphql(source: string): string {
+  return source;
 }
 
 export type DocumentType<TDocumentNode extends DocumentNode> = TDocumentNode extends DocumentNode<infer TType, unknown> ? TType : never;
@@ -1553,18 +1538,30 @@ interface GraphqlSection {
 
 // #region 🎩️Globals
 // 🔌️Globals MUST hold module-level state for output channel, diagnostics, caches, and providers.
-const outputChannel = ephemeralBox<vscode.OutputChannel>("framework.products.repo.modules.client.vscode.packages.typescript.extension.ts.outputChannel", undefined);
+const outputChannel = ephemeralBox<vscode.OutputChannel | undefined>("framework.products.repo.modules.client.vscode.packages.typescript.extension.ts.outputChannel", undefined);
 /**
  * repoDiagnosticCollection.current holds the data fields for a repoDiagnosticCollection.current record.
  **/
-const repoDiagnosticCollection = ephemeralBox<vscode.DiagnosticCollection>("framework.products.repo.modules.client.vscode.packages.typescript.extension.ts.repoDiagnosticCollection", undefined);
+const repoDiagnosticCollection = ephemeralBox<vscode.DiagnosticCollection | undefined>("framework.products.repo.modules.client.vscode.packages.typescript.extension.ts.repoDiagnosticCollection", undefined);
 /**
  * kitDiagnosticCollection.current holds the data fields for a kitDiagnosticCollection.current record.
  **/
-const kitDiagnosticCollection = ephemeralBox<vscode.DiagnosticCollection>("framework.products.repo.modules.client.vscode.packages.typescript.extension.ts.kitDiagnosticCollection", undefined);
+const kitDiagnosticCollection = ephemeralBox<vscode.DiagnosticCollection | undefined>("framework.products.repo.modules.client.vscode.packages.typescript.extension.ts.kitDiagnosticCollection", undefined);
 /**
  * fileBreachsMap holds the data fields for a fileBreachsMap record.
  **/
+/** 🩺️ The repository diagnostic collection, which `activate` creates — reading it earlier is a lifecycle bug, not an empty collection. */
+function repoDiagnostics(): vscode.DiagnosticCollection {
+  if (!repoDiagnosticCollection.current) throw new Error("repo diagnostics were read before the extension activated");
+  return repoDiagnosticCollection.current;
+}
+
+/** 🧰️ The compose-kit diagnostic collection, created by `activate` alongside [[repoDiagnostics]]. */
+function kitDiagnostics(): vscode.DiagnosticCollection {
+  if (!kitDiagnosticCollection.current) throw new Error("compose-kit diagnostics were read before the extension activated");
+  return kitDiagnosticCollection.current;
+}
+
 const fileBreachsMap = ephemeralMap<string, Breach[]>("framework.products.repo.modules.client.vscode.packages.typescript.extension.ts.fileBreachsMap");
 /**
  * BundleInfo holds the data fields for a BundleInfo record.
@@ -2406,7 +2403,7 @@ async function analyzeFile(document: vscode.TextDocument): Promise<void> {
       updateFileDiagnostics(document, breachs);
     } else {
       fileBreachsMap.delete(fileUri.toString());
-      repoDiagnosticCollection.current.delete(fileUri);
+      repoDiagnostics().delete(fileUri);
     }
   } catch (error) {
     if (!controller.signal.aborted) {
@@ -2451,7 +2448,7 @@ function updateFileDiagnostics(document: vscode.TextDocument, breachs: Breach[])
     diagnosticsByUri.get(uriKey)!.diagnostics.push(diagnostic);
   }
   for (const { uri, diagnostics } of diagnosticsByUri.values()) {
-    repoDiagnosticCollection.current.set(uri, diagnostics);
+    repoDiagnostics().set(uri, diagnostics);
   }
 }
 
@@ -2509,10 +2506,10 @@ function validateKitDocument(document: vscode.TextDocument): void {
     const diagnostics = result.problems.map((problem: Problem) => {
       return new vscode.Diagnostic(new vscode.Range(0, 0, 0, 0), problem.message);
     });
-    kitDiagnosticCollection.current.set(document.uri, diagnostics);
+    kitDiagnostics().set(document.uri, diagnostics);
   } catch (error) {
     logError("Failed to validate compose kit:", error);
-    kitDiagnosticCollection.current.delete(document.uri);
+    kitDiagnostics().delete(document.uri);
   }
 }
 
@@ -3081,7 +3078,7 @@ class ComposeCodeLensProvider implements vscode.CodeLensProvider {
 /**
  * composeGutterIcon.current holds the data fields for a composeGutterIcon.current record.
  **/
-const composeGutterIcon = ephemeralBox<vscode.TextEditorDecorationType>("framework.products.repo.modules.client.vscode.packages.typescript.extension.ts.composeGutterIcon", undefined);
+const composeGutterIcon = ephemeralBox<vscode.TextEditorDecorationType | undefined>("framework.products.repo.modules.client.vscode.packages.typescript.extension.ts.composeGutterIcon", undefined);
 
 /** updateComposeDecorations holds the data fields for a updateComposeDecorations record.
  **/

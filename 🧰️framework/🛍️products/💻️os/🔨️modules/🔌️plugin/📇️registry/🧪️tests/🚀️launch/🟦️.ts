@@ -54,23 +54,33 @@ describe("plugin registry generator preview targets", () => {
     }
   });
 
-  it("registers one react dev launcher for every playground variant", async () => {
+  it("registers one react and one wgpu dev launcher for every playground variant", async () => {
     const repoRoot = getWorkspaceRoot();
     const { generatePlaygroundRegistry } = await import("../../🎮️playground/🔎️discovery/🟦️.ts");
-    const { generateLaunchJson } = await import("../../🚀️launch/🟦️.ts");
+    const { generateLaunchJson, playgroundDevCommand } = await import("../../🚀️launch/🟦️.ts");
     const playgrounds = generatePlaygroundRegistry(repoRoot);
+    expect(playgrounds.length).toBeGreaterThan(0);
     const launch = Bun.JSONC.parse(generateLaunchJson(repoRoot, playgrounds, [])) as {
       readonly configurations: readonly { name?: string; command?: string; env?: Readonly<Record<string, string>> }[];
     };
-    for (const playground of playgrounds) {
-      const matches = launch.configurations.filter((entry) => {
-        if (!String(entry.name ?? "").endsWith("⚛️react")) return false;
-        const env = entry.env;
-        if (env?.SEMIO_PLUGIN === playground.pluginId) return true;
-        return String(entry.command ?? "").includes(`-- ${playground.variant}`);
-      });
-      expect(matches, playground.variant).toHaveLength(1);
+    const mismatches: string[] = [];
+    for (const renderer of ["react", "wgpu"] as const) {
+      const marker = renderer === "react" ? "⚛️react" : "🧊️wgpu🌐️wasm";
+      const pool = launch.configurations.filter((entry) => String(entry.name ?? "").endsWith(marker) && !/👤️\d+/u.test(String(entry.name ?? "")));
+      expect(pool.length, renderer).toBeGreaterThan(0);
+      for (const playground of playgrounds) {
+        const port = String(playground.ports[renderer]);
+        const matches = pool.filter(
+          (entry) =>
+            entry.command === playgroundDevCommand(playground.variant) &&
+            entry.env?.SEMIO_PLUGIN === playground.variant &&
+            entry.env.SEMIO_RENDERER === renderer &&
+            entry.env.S_OS_PORT === port,
+        );
+        if (matches.length !== 1) mismatches.push(`${playground.variant}:${renderer} has ${matches.length} launcher(s) on port ${port}`);
+      }
     }
+    expect(mismatches.join("\n")).toBe("");
   });
 });
 
@@ -111,7 +121,7 @@ describe("WASI codegen profile policy", () => {
     const root = getWorkspaceRoot();
     for (const path of [
       "📜️script.ts",
-      "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🎮️playground/🧭️session/🟦️.ts",
+      "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📽️projection/🟦️.ts",
       "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🗿️artifacts/🦀️.rs",
       "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🏠️workspace/🦀️.rs",
     ]) {
@@ -139,5 +149,48 @@ describe("WASI codegen profile policy", () => {
     expect(available.get(publicationWasmPath(root, "fixture.wasm"))).toBe("release-hash");
     available.delete(release);
     expect(available.get(publicationWasmPath(root, "fixture.wasm"))).toBeUndefined();
+  });
+});
+
+type RenderedLaunch = {
+  readonly configurations: readonly { name?: string; command?: string }[];
+  readonly compounds?: readonly { name: string; configurations: readonly string[] }[];
+};
+
+/** @emoji ♻️ Renders `.vscode/launch.json` once for the whole block — a playground discovery walk over
+ * the workspace costs seconds, and every assertion below reads the same output. */
+let renderedLaunch: Promise<RenderedLaunch> | undefined;
+const launchOutput = (): Promise<RenderedLaunch> => (renderedLaunch ??= (async () => {
+  const repoRoot = getWorkspaceRoot();
+  const { generatePlaygroundRegistry } = await import("../../🎮️playground/🔎️discovery/🟦️.ts");
+  const { generateLaunchJson } = await import("../../🚀️launch/🟦️.ts");
+  return Bun.JSONC.parse(generateLaunchJson(repoRoot, generatePlaygroundRegistry(repoRoot), [])) as RenderedLaunch;
+})());
+
+describe("launch configuration identity", () => {
+  it("gives every configuration a unique name and keeps the user slot out of the collapse", async () => {
+    const { devLaunchNameSuffix } = await import("../../🚀️launch/🏷️name-prefix/🟦️.ts");
+    expect(devLaunchNameSuffix("🛠️dev🖥️s👤️2⚛️react")).toBe("👤️2⚛️react");
+    expect(devLaunchNameSuffix("🛠️dev🖥️s⚛️react")).toBe("⚛️react");
+    const launch = await launchOutput();
+    const counts = new Map<string, number>();
+    for (const entry of launch.configurations) counts.set(String(entry.name), (counts.get(String(entry.name)) ?? 0) + 1);
+    expect([...counts].filter(([, count]) => count > 1).map(([name]) => name)).toEqual([]);
+  });
+
+  it("resolves every compound member to a real configuration", async () => {
+    const launch = await launchOutput();
+    const names = new Set(launch.configurations.map((entry) => String(entry.name)));
+    const broken = (launch.compounds ?? []).flatMap((compound) => compound.configurations.filter((member) => !names.has(member)).map((member) => `${compound.name} -> ${member}`));
+    expect(broken).toEqual([]);
+    expect((launch.compounds ?? []).length).toBeGreaterThan(0);
+  });
+
+  it("registers a launch row for every canonical root lifecycle command", async () => {
+    const launch = await launchOutput();
+    const commands = new Set(launch.configurations.map((entry) => String(entry.command ?? "")));
+    for (const command of ["setup", "start", "dev", "generate", "lint", "format", "test", "build", "publish", "purge"]) {
+      expect([...commands].some((row) => row === `bun nx run workspace:${command}` || row.startsWith(`bun nx run workspace:${command} `)), command).toBe(true);
+    }
   });
 });

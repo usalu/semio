@@ -1,9 +1,18 @@
 import { INTERACTIVITY_AUDIT_SURFACE_LANE_FILE, INTERACTIVITY_AUDIT_UI_ENGINE_FILE, INTERACTIVITY_AUDIT_RENDERER_HOST_FILE, INTERACTIVITY_AUDIT_WINIT_HOST_FILE, INTERACTIVITY_AUDIT_RENDERER_GLUE_FILE, policyReadRustPolicySource, interactivityMountedSurfaceLaneFailures } from "../../../../../📜️script.ts";
 
+/** 📚️ One policy source per audited file, arity-preserving so the failure checkers keep their positional parameters. */
+type SurfaceLanePolicySources = [string, string, string, string, string];
+
 /** 🧪️ Executes interactivity mounted surface lane policy assertions. */
 export function interactivityMountedSurfaceLaneSelfTests(repoRoot: string): void {
   const files = [INTERACTIVITY_AUDIT_SURFACE_LANE_FILE, INTERACTIVITY_AUDIT_UI_ENGINE_FILE, INTERACTIVITY_AUDIT_RENDERER_HOST_FILE, INTERACTIVITY_AUDIT_WINIT_HOST_FILE, INTERACTIVITY_AUDIT_RENDERER_GLUE_FILE] as const;
-  const clean = files.map((file) => policyReadRustPolicySource(repoRoot, file));
+  const clean: Readonly<SurfaceLanePolicySources> = [
+    policyReadRustPolicySource(repoRoot, files[0]),
+    policyReadRustPolicySource(repoRoot, files[1]),
+    policyReadRustPolicySource(repoRoot, files[2]),
+    policyReadRustPolicySource(repoRoot, files[3]),
+    policyReadRustPolicySource(repoRoot, files[4]),
+  ];
   const mutations: readonly [string, number, string, string][] = [
     ["dynamic-resize-registry", 0, "static SURFACE_LANE_OCCUPIED: [AtomicBool; SURFACE_RESIZE_LANE_CAPACITY]", "static SURFACE_LANE_OCCUPIED: Vec<AtomicBool>"],
     ["wrapping-resize-generation", 0, "checked_add(1)", "wrapping_add(1)"],
@@ -23,7 +32,7 @@ export function interactivityMountedSurfaceLaneSelfTests(repoRoot: string): void
     ["missing-drop-law", 0, "interrupted_lane_drop_is_rediscovered_and_incrementally_closed", "interrupted_lane_drop_smoke"],
   ];
   for (const [name, index, needle, replacement] of mutations) {
-    const mutated = [...clean];
+    const mutated: SurfaceLanePolicySources = [...clean];
     mutated[index] = mutated[index]!.replace(needle, replacement);
     if (mutated[index] === clean[index]) throw new Error(`[verify interactivity p5e] mutation ${name} did not bind live source`);
     if (interactivityMountedSurfaceLaneFailures(...mutated).length === 0) throw new Error(`[verify interactivity p5e] mutation ${name} was falsely accepted`);

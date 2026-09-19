@@ -137,8 +137,8 @@ fn window_measures_overlay_paints_and_dispatches_every_gesture_like_react() {
         if let Some(control) = gesture["press"].as_str() {
             let hit = painted.input.staged_hits().iter().find(|hit| hit.control_id.as_deref() == Some(control)).unwrap_or_else(|| panic!("{name}: `{control}` registered a pointer target")).rect;
             let (x, y) = (hit.x + hit.w * 0.5, hit.y + hit.h * 0.5);
-            crate::interpreter::dispatch_ui_event(&surface, ui_wgpu::wgpu::UiEvent::PointerDown { x, y, button: ui_wgpu::wgpu::PointerButton::Primary }, &mut painted.input);
-            crate::interpreter::dispatch_ui_event(&surface, ui_wgpu::wgpu::UiEvent::PointerUp { x, y, button: ui_wgpu::wgpu::PointerButton::Primary }, &mut painted.input);
+            crate::interpreter::dispatch_ui_event(&surface, ui_wgpu::wgpu::UiEvent::PointerDown { x, y, button: ui_wgpu::wgpu::PointerButton::Primary, modifiers: Default::default() }, &mut painted.input);
+            crate::interpreter::dispatch_ui_event(&surface, ui_wgpu::wgpu::UiEvent::PointerUp { x, y, button: ui_wgpu::wgpu::PointerButton::Primary, modifiers: Default::default() }, &mut painted.input);
         }
         let expected = &gesture["expectedAction"];
         assert_eq!(dispatched(&mut painted.input, expected["action"].as_str().expect("expected action")), *expected, "{name}");

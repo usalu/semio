@@ -14,7 +14,7 @@ use ui_wgpu::wgpu::push_chrome_group_border;
 // 🧾️ Un-gated with the shell-owned panel builders themselves: the Command dock, the five Settings
 // leaves, the Marketplace leaf, the tool leaves and the chat transcript are all production retained
 // panel bodies now, so the whole `UiNode` vocabulary they author has to compile on every target.
-use ui_wgpu::wgpu::{Label, UiButtonNode, UiFieldNode, UiInputNode, UiNode, UiPresence, UiSectionNode, UiSelectItem, UiSelectNode, UiSliderNode, UiStackNode, UiTextNode, UiToggleNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode};
+use ui_wgpu::wgpu::{Label, UiButtonNode, UiFieldNode, UiInputNode, UiNode, UiNumberStepperNode, UiPresence, UiRingNode, UiSectionNode, UiSelectItem, UiSelectNode, UiSliderNode, UiStackNode, UiTextNode, UiToggleNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode};
 
 use crate::dock::{compute_dock_drop_zone, parse_path, DockDragKind, DockDragPayload, DockDragState, DockRenderContext, DockState, WindowSilhouette};
 use crate::interpreter::{begin_ui_document_opportunity, framework_widget_context, render_ui_document_step, UiDocumentFrameCursor};
@@ -109,6 +109,14 @@ fn optional_dsl_value_as_json(value: Option<DslValue>) -> Option<Value> {
 /// but was completely unwired on this side (see `build_settings_theme_ui`/`right_tabs`).
 const FRAMEWORK_SETTINGS_THEME_TAB_ID: &str = "framework.settings.theme";
 const FRAMEWORK_CHAT_PANEL_ID: &str = "framework.chat";
+/// 💬️ Byte-identical to React's own `<ol id="framework.chat.feed">` (`💬️AgentChatPanel/🟦️.tsx`) — the
+/// transcript's container, addressed as one node by a probe and by the accessibility mirror.
+const FRAMEWORK_CHAT_FEED_ID: &str = "framework.chat.feed";
+/// 📃️ How many conversation rows the panel body PAINTS. React's feed scrolls and pins itself to the
+/// bottom on every new entry, so the human sees the newest window; this is that window's size on a
+/// target whose panel body is a fixed-credit layout tree. The bridge keeps up to
+/// `AGENT_CONVERSATION_MAX_ENTRIES` (200) behind it — nothing is discarded, only unpainted.
+const AGENT_CHAT_VISIBLE_ENTRIES: usize = 24;
 /// 🌳️ Byte-identical to React's `FRAMEWORK_CATEGORY_DISPLAY_ID` (`🛠️ShellHelpers/🟦️.tsx:224`) — the
 /// bottom-left anchor's Display branch, the one anchor whose app tabs nest under a category root.
 const FRAMEWORK_CATEGORY_DISPLAY_ID: &str = "framework.category.display";
@@ -676,6 +684,25 @@ fn bind_wgpu_document_socket_surface(host: &ArtifactHost, document_id: &str, art
 
 //#endregion 🔖️IdentityPure
 
+//#region ⚔️ConflictProjection
+/// ⚔️ One OPEN first-class conflict as this shell's chrome needs it — the target-neutral
+/// projection of `protocol::Conflict` React reads through `selectOpenConflicts` +
+/// `conflictKindLabel`/`conflictMessageText` (`🏛️ShellHost/🟦️.tsx`). Deliberately NOT the wire type:
+/// the wire type only exists on the native backend (the JS program bridge has no `exchange` door,
+/// exactly as `read_history` already documents), and the panel builder must compile and be
+/// unit-testable on both targets.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct ShellConflictRow {
+    pub id: String,
+    /// ⚔️ `ConflictKind::Quarantined` — React's `ui.conflict.quarantined` vs `ui.conflict.degraded`
+    /// label gate, read off the kind's own tag and never parsed from message prose.
+    pub quarantined: bool,
+    /// 📨️ The WORST message's fault code and text (`conflict.messages[0]`, React's own pick).
+    pub code: String,
+    pub message: String,
+}
+//#endregion ⚔️ConflictProjection
+
 //#region 🔖️CheckInPure
 /// 📌️ ticket 26/08/17/FINISH-HUB-SPACES-COLLABORATION-END-TO-END §C5 — auto check-in policy
 /// constants, byte-identical to the React shell's `AUTO_CHECKIN_IDLE_MS`/`AUTO_CHECKIN_EDIT_THRESHOLD`
@@ -1044,6 +1071,19 @@ pub struct ShellSyncChannel {
 }
 //#endregion 🔖️NativeSyncChannel
 
+/// 🚗️ React's `resolveUiDriver` (`🧱️elements/🚗️UiDriver/🟦️.tsx:80-84`): a custom driver by id first,
+/// then a builtin, then `DEFAULT_UI_DRIVER`. A custom driver's `config` is the same JSON object
+/// `parseUiDriver` validates, so its `labels`/`tooltips` axes override the builtin they resolved to;
+/// an axis the config omits or spells wrong keeps the builtin value rather than throwing, because a
+/// renderer has no way to surface the exception React raises.
+fn resolve_ui_driver_chrome(driver_id: &str, custom: &HashMap<String, OsUiDriver>) -> ui_wgpu::wgpu::UiDriverChrome {
+    let builtin = ui_wgpu::wgpu::UiDriverChrome::builtin(driver_id);
+    let Some(config) = custom.get(driver_id).map(|driver| &driver.config) else { return builtin };
+    let axis = |key: &str| config.get(key).and_then(Value::as_str).map(str::to_string);
+    let (labels, tooltips) = (axis("labels"), axis("tooltips"));
+    builtin.with_axes(labels.as_deref(), tooltips.as_deref())
+}
+
 //#region 🔖️ChromeThreadBoundary
 /// 🏗️ Send-capable inputs, scratch state, and outputs consumed by chrome construction.
 #[derive(Default)]
@@ -1056,6 +1096,13 @@ struct ShellChromeBuildState {
     /// (ticket 26/09/17 packet W2k).
     content_focus: HashMap<String, Option<ui_wgpu::wgpu::NodeId>>,
     tooltip_titles: HashMap<String, String>,
+    /// 🚗️ The resolved `UiDriver` axes this chrome presents under — React's `UiDriverProvider` value
+    /// (`🧱️elements/🚗️UiDriver/🟦️.tsx`), re-resolved from `driver_id` + `custom_drivers` every time
+    /// preferences load or change. It is what makes `tooltips: "none"` (the shipped `compact`
+    /// driver) actually suppress a hover tooltip on this target; before ticket 26/09/17 packet W15a
+    /// the whole `UiDriver` vocabulary had zero readers anywhere in the wgpu tree, so every chrome
+    /// control fired its tooltip under every driver.
+    driver: ui_wgpu::wgpu::UiDriverChrome,
     tooltip_hover: Option<ChromeTooltipHover>,
     dialog_stack: Vec<ChromeDialogRequest>,
     tour_state: Option<ChromeTourState>,
@@ -2894,6 +2941,48 @@ pub struct ShellState {
     /// @emoji 👁️✏️ Pinned default app per `"<dialectCoordinate>/<role>"` — the projection React reads
     /// off `OpeningPreferences`, each value `"<pluginId> <appId>"` or `"none"`.
     pub default_app_pins: HashMap<String, String>,
+    /// @emoji 🎨️ The unsaved theme document this session is editing — React's `uiThemeDraft`
+    /// (`SET_UI_THEME_DRAFT`). `Some` is exactly React's `themeDirty`.
+    pub theme_draft: Option<ThemeDocument>,
+    /// @emoji 🎨️ Which theme-editor section (React's own section id, nested for
+    /// `…metrics.<section>` / `…appearances.<appearance>.<group>`) is expanded. React keeps this in
+    /// each `TreeDataSection`'s own collapsed state; a retained `Section` container registers no hit
+    /// on this target, so the shell owns it.
+    pub theme_editor_open_section: Option<String>,
+    /// @emoji 📄️ Which page of the open theme section is shown — the wgpu-only bound the 128-record
+    /// document ceiling forces (see [`SHELL_THEME_EDITOR_PAGE_ROWS`]).
+    pub theme_editor_page: usize,
+    /// @emoji 🎨️ The theme `Save` box — React's `themeSaveLabel`, session-local exactly as its
+    /// `useState` is.
+    pub theme_save_label: String,
+    /// @emoji ⚖️ This session's merge policy — React's `shellState.merge.mergePolicy`, the value the
+    /// `framework.settings.mergePolicy` selector writes. `"LaissezFaire" | "Normal" | "Vigilant"`,
+    /// React's own option values.
+    pub merge_policy: String,
+    /// @emoji 📤️ Whether a theme IMPORT picker is parked for the gesture lane — a picker is gated on
+    /// user activation, so it rides the same narrow door `pending_file_opens` does.
+    pub pending_theme_import: bool,
+    /// @emoji 🖥️ The `framework.display.layout` leaf's save-name box — React's `layoutSaveLabel`
+    /// (`📌️ChromePanels/🟦️.tsx`'s `DisplayHostApi`). Session-local, exactly as React's `useState` is.
+    pub layout_save_label: String,
+    /// @emoji 🖥️ Layouts this session saved through `framework.display.save` — React's `userLayouts`,
+    /// the `origin: "user"` half of its `namedLayouts` roster, round-tripped through
+    /// [`ShellState::load_persisted_named_layouts`]/[`ShellState::persist_named_layouts`] (the
+    /// `NamedLayoutStore` twin). The app's own `named_layouts` supply the `origin: "builtin"` half.
+    pub user_layouts: Vec<ui_wgpu::wgpu::NamedLayout>,
+    /// @emoji ⚔️ This session's open first-class conflicts — React's `selectOpenConflicts(shellState)`
+    /// over `🐚️Shell`'s `merge.conflicts`. Seeded once per session from
+    /// `ProgramBridgeEntry::read_conflicts` and replaced by every `resolve_conflict` reply, which is
+    /// React's own `AppCommand::ReadConflicts` seed plus reply-carried roster.
+    pub open_conflicts: Vec<ShellConflictRow>,
+    /// @emoji ⚔️ The conflict row whose diff preview is expanded — React's `selectedConflictId`.
+    pub selected_conflict_id: Option<String>,
+    /// @emoji ⚔️ Whether this session already asked the guest for its conflict roster, so the seed
+    /// costs one exchange per session rather than one per frame.
+    pub conflicts_seeded: bool,
+    /// @emoji 🛠️ Live tool measures keyed by TOOL id — React's `toolMeasuresByToolId` ref, read off
+    /// [`ProgramBridgeEntry::tool_measures_section`] on the same refresh pass window measures ride.
+    pub tool_measures: HashMap<String, Vec<WindowMeasure>>,
     /// @emoji 💬️ The `framework.chat` composer's unsent text. The transcript itself is NOT held here:
     /// it is [`crate::agent_bridge::AgentBridgeState::conversation`], the live bridge conversation
     /// (`GatewayToShell::AgentToolCall`/`AgentToolResult`/`ApprovalRequested` in,
@@ -2946,6 +3035,11 @@ pub struct ShellState {
     /// 📇️ The hub directory client used to issue `os.directory.*` commands (§C6) — constructed once
     /// identity resolves, holding the session token.
     pub directory_client: Option<std::sync::Arc<ShellDirectoryClient>>,
+    /// 🌉️ The MCP agent bridge's TRANSPORT (packet W15e). Holds the socket and the dial ladder; the
+    /// consumer it feeds is `chrome_build.agent`, which stays transport-free. Disarmed — and therefore
+    /// inert — until a supervisor hands over a config, exactly as React's own `discoverAgentBridgeConfig`
+    /// answering `null` leaves its hook `disabled`.
+    pub agent_bridge: crate::agent_bridge_door::AgentBridgeTransport,
     /// 💡️ The one retained host-owned inference port, live only while its document's execution
     /// target is verified. It is never a document command and nothing it holds is persisted.
     #[cfg(not(target_arch = "wasm32"))]
@@ -3204,6 +3298,29 @@ impl PanelAnchor {
     }
 
     /// 🧭️ Mirrors `PanelGroup::anchor()`'s corner mapping exactly; a group never maps to a middle anchor.
+    /// 🧭️ This anchor as the shared `ui_contract::Anchor` vocabulary React's `flowFromAnchor` reads.
+    /// `Left`/`Right` are the physical edges this target names its anchors by; `Start`/`End` are the
+    /// logical ones the contract names them by, and in an LTR shell they coincide — which is exactly
+    /// the mapping `🖼️Panel/🟦️.tsx`'s own `anchorHorizontal` makes.
+    pub fn contract_anchor(&self) -> ui_contract::Anchor {
+        match self {
+            PanelAnchor::TopLeft => ui_contract::Anchor::TopStart,
+            PanelAnchor::TopMiddle => ui_contract::Anchor::Top,
+            PanelAnchor::TopRight => ui_contract::Anchor::TopEnd,
+            PanelAnchor::RightMiddle => ui_contract::Anchor::End,
+            PanelAnchor::BottomRight => ui_contract::Anchor::BottomEnd,
+            PanelAnchor::BottomMiddle => ui_contract::Anchor::Bottom,
+            PanelAnchor::BottomLeft => ui_contract::Anchor::BottomStart,
+            PanelAnchor::LeftMiddle => ui_contract::Anchor::Start,
+        }
+    }
+
+    /// 🧭️ The logical flow a panel docked here presents its content in — React's
+    /// `flowFromAnchor(anchor)`, fed to the `FlowProvider` that wraps every `Panel`.
+    pub fn flow(&self) -> ui_contract::UiFlow {
+        ui_contract::UiFlow::for_anchor(self.contract_anchor())
+    }
+
     pub fn from_group(group: PanelGroup) -> PanelAnchor {
         PanelAnchor::from_str(group.anchor()).unwrap_or(PanelAnchor::TopLeft)
     }
@@ -3685,6 +3802,52 @@ fn load_dock_ui_from_store(app_id: Option<&str>) -> Option<DockUiState> {
     os_shell_config_layer::<DockUiState>("dockUi", app_id).filter(|state| state.version == DOCK_SKELETON_VERSION)
 }
 
+/// 🖥️ The key React's `NamedLayoutStore` files a saved layout under: `session?.app.id ?? "framework-os"`
+/// (`🏛️ShellHost/🟦️.tsx:3507`). `namedLayouts` is a FLAT `Record<appId, NamedLayout[]>`, not the
+/// `{os, apps}` layer shape `dockLayouts`/`dockUi`/`windowPanes` use, so it has its own reader.
+pub(crate) const NAMED_LAYOUT_STORE_FALLBACK_APP_ID: &str = "framework-os";
+
+fn named_layout_store_app_id(app_id: Option<&str>) -> String {
+    app_id.filter(|id| !id.is_empty()).unwrap_or(NAMED_LAYOUT_STORE_FALLBACK_APP_ID).to_string()
+}
+
+/// 🖥️ Reads this app's persisted USER layouts out of an `semio.os.config` document — React's
+/// `NamedLayoutStore::readPersisted`, including its filter: only `origin: "user"` rows survive, so a
+/// builtin layout accidentally written into the document can never shadow the app's own declared one.
+/// Pure over the document, like every other layer reader here.
+fn read_named_layouts(config: &Value, app_id: Option<&str>) -> Vec<ui_wgpu::wgpu::NamedLayout> {
+    config
+        .get("namedLayouts")
+        .and_then(|layouts| layouts.get(named_layout_store_app_id(app_id)))
+        .and_then(Value::as_array)
+        .map(|rows| rows.iter().filter_map(|row| serde_json::from_value::<ui_wgpu::wgpu::NamedLayout>(row.clone()).ok()).filter(|layout| layout.origin == "user").collect())
+        .unwrap_or_default()
+}
+
+/// 🖥️ Writes this app's USER layouts back into an `semio.os.config` document — React's
+/// `NamedLayoutStore::persist`, which rewrites the whole per-app array.
+fn write_named_layouts_in(config: &mut Value, app_id: Option<&str>, layouts: &[ui_wgpu::wgpu::NamedLayout]) {
+    if !config.get("namedLayouts").is_some_and(Value::is_object) {
+        config["namedLayouts"] = serde_json::json!({});
+    }
+    if let Ok(encoded) = serde_json::to_value(layouts) {
+        config["namedLayouts"][named_layout_store_app_id(app_id)] = encoded;
+    }
+}
+
+/// 🖥️ The persisted user layouts for `app_id` — the wgpu twin of `NamedLayoutStore::getSnapshot`.
+fn load_named_layouts_from_store(app_id: Option<&str>) -> Vec<ui_wgpu::wgpu::NamedLayout> {
+    read_named_layouts(&os_shell_config_document(), app_id)
+}
+
+/// 🖥️ Persists `layouts` as this app's user layouts — `NamedLayoutStore::save`/`remove`, which both
+/// end in the same whole-array rewrite.
+fn save_named_layouts_to_store(app_id: Option<&str>, layouts: &[ui_wgpu::wgpu::NamedLayout]) {
+    let mut config = os_shell_config_document();
+    write_named_layouts_in(&mut config, app_id, layouts);
+    write_os_shell_config_document(&config);
+}
+
 fn save_dock_ui_to_store(app_id: Option<&str>, state: Option<&DockUiState>) {
     write_os_shell_config_layer("dockUi", app_id, state);
 }
@@ -3875,7 +4038,7 @@ fn measure_activity(loading: Option<bool>, waiting: Option<bool>) -> ui_contract
 
 /// 🔗️ A measure's `on_change` as the record's one binding: the authored args, plus `extra` merged over
 /// them. The gesture's own scalar is merged over these again by the retained router.
-fn measure_bindings(trigger: ui_contract::Trigger, action: &ActionDescriptor, extra: Option<(&str, DslValue)>) -> Result<ui_contract::UiNodeBindings, String> {
+fn measure_binding(trigger: ui_contract::Trigger, action: &ActionDescriptor, extra: Option<(&str, DslValue)>) -> Result<ui_contract::ActionBinding, String> {
     let mut entries = match action.args.as_ref() {
         Some(DslValue::Object(entries)) => entries.clone(),
         _ => Vec::new(),
@@ -3886,8 +4049,12 @@ fn measure_bindings(trigger: ui_contract::Trigger, action: &ActionDescriptor, ex
     }
     let args = if entries.is_empty() { None } else { Some(serde_json::from_value::<ui_contract::UiValue>(dsl_value_as_json(&DslValue::Object(entries))).map_err(|error| format!("measure action '{}' args exceed the retained contract: {error}", action.action))?) };
     let action_id = ui_contract::ActionId::try_v1(&action.controller_id, &action.action).ok_or_else(|| format!("measure action '{}' exceeds the retained contract", action.action))?;
+    Ok(ui_contract::ActionBinding { trigger, action: action_id, args, capability: None })
+}
+
+fn measure_bindings(trigger: ui_contract::Trigger, action: &ActionDescriptor, extra: Option<(&str, DslValue)>) -> Result<ui_contract::UiNodeBindings, String> {
     let mut bindings = ui_contract::UiNodeBindings::default();
-    bindings.try_push(ui_contract::ActionBinding { trigger, action: action_id, args, capability: None }).map_err(|_| "measure binding admits one action".to_string())?;
+    bindings.try_push(measure_binding(trigger, action, extra)?).map_err(|_| "measure binding admits one action".to_string())?;
     Ok(bindings)
 }
 
@@ -3924,6 +4091,27 @@ impl ShellState {
                 Ok(None) => {}
                 Err(error) => faults.push((surface, body_key.to_string(), error)),
             }
+        }
+        Ok(())
+    }
+
+    /// 🛠️ Reads the instance's reserved TOOLS section once per refresh into
+    /// [`ShellState::tool_measures`] — the wgpu twin of React's `toolMeasuresByToolId` ref, which its
+    /// `buildToolTabs` `resolveTree` reads fresh at render time. A read failure reports a surface
+    /// fault and leaves the previous roster rather than blanking every armed tool's options.
+    async fn refresh_tool_measures(&mut self, program: &ProgramBridgeEntry, instance_id: u32, view_state: &ViewModel, faults: &mut Vec<(String, String, String)>) -> Result<(), String> {
+        let body_key = semio_framework::UiRefreshSection::Tools.body_key();
+        let measures = match program.tool_measures_section(instance_id, view_state).await {
+            Ok(document) => {
+                let measures = crate::program_bridge::tool_measures_from_section(&document);
+                self.retire_one_surface_document(Some(document))?;
+                measures
+            }
+            Err(error) => Err(error),
+        };
+        match measures {
+            Ok(measures) => self.tool_measures = measures,
+            Err(error) => faults.push((body_key.to_string(), body_key.to_string(), error)),
         }
         Ok(())
     }
@@ -4218,7 +4406,16 @@ impl PanelProjection<'_> {
                     accept: input.accept.as_deref().map(UiText::clipped),
                 };
                 let trigger = if input.commit.is_some() { ui_contract::Trigger::Commit } else { ui_contract::Trigger::Change };
-                let bindings = measure_bindings(trigger, &input.on_change, None)?;
+                let mut bindings = measure_bindings(trigger, &input.on_change, None)?;
+                // ⏎️⎋️🔁️ React's window-search line binds `onSubmit`/`onAbort`/`onRepeatLast` BESIDE
+                // `onChange`, all on one field — so this record carries one binding per moment rather
+                // than resolving them into the single commit slot (`🖥️ui/🎯️targets/⚛️react/🟦️.tsx`'s
+                // `Search`; `reconcile::input_node` reads them back and `events::search_line_action`
+                // fires them).
+                for (trigger, action) in [(ui_contract::Trigger::Submit, input.on_submit.as_ref()), (ui_contract::Trigger::Abort, input.on_abort.as_ref()), (ui_contract::Trigger::RepeatLast, input.on_repeat_last.as_ref())] {
+                    let Some(action) = action else { continue };
+                    bindings.try_push(measure_binding(trigger, action, None)?).map_err(|_| format!("panel input '{}' binds more moments than one record admits", input.id))?;
+                }
                 self.place(id, key, ui_contract::Component::Input(props), Self::stack_layout(ui_contract::Axis::Horizontal, ui_contract::SpaceToken::None), PanelRecord { bindings, activity, disabled, ..PanelRecord::default() })
             }
             UiNode::KeyValue(list) => {
@@ -4241,6 +4438,25 @@ impl PanelProjection<'_> {
                 let id = self.reserve();
                 let bindings = measure_bindings(ui_contract::Trigger::Change, &slider.on_change, None)?;
                 self.place(id, key, measure_slider(slider.value, slider.min, slider.max, Some(slider.step)), Self::stack_layout(ui_contract::Axis::Horizontal, ui_contract::SpaceToken::None), PanelRecord { bindings, activity, disabled, ..PanelRecord::default() })
+            }
+            // 🔢️💍️ React's `<Engagement/>` renders a `stepper` and a `ring` control beside the slider,
+            // toggle group and select (`EngagementControlView`, `🖥️ui/🎯️targets/⚛️react/🟦️.tsx:10648`),
+            // and both already have a retained `Component` and a `retained_hit_registration` arm — only
+            // this assembler refused them, so an engagement carrying one published a hole.
+            UiNode::NumberStepper(stepper) => {
+                let key = self.key(Some(stepper.id.as_str()));
+                let id = self.reserve();
+                let props = ui_contract::NumberStepperProps { value: stepper.value, step: stepper.step, uniform: stepper.uniform };
+                let mut bindings = measure_bindings(ui_contract::Trigger::Change, &stepper.on_absolute, None)?;
+                bindings.try_push(measure_binding(ui_contract::Trigger::Delta, &stepper.on_delta, None)?).map_err(|_| format!("panel stepper '{}' binds more moments than one record admits", stepper.id))?;
+                self.place(id, key, ui_contract::Component::NumberStepper(props), Self::stack_layout(ui_contract::Axis::Horizontal, ui_contract::SpaceToken::None), PanelRecord { bindings, activity, disabled, ..PanelRecord::default() })
+            }
+            UiNode::Ring(ring) => {
+                let key = self.key(Some(ring.id.as_str()));
+                let id = self.reserve();
+                let props = ui_contract::RingProps { orb_id: UiText::clipped(&ring.orb_id), t: ring.t };
+                let bindings = measure_bindings(ui_contract::Trigger::Change, &ring.on_change, None)?;
+                self.place(id, key, ui_contract::Component::Ring(props), Self::stack_layout(ui_contract::Axis::Horizontal, ui_contract::SpaceToken::None), PanelRecord { bindings, activity, disabled, ..PanelRecord::default() })
             }
             UiNode::Tree(tree) => {
                 let key = self.key(None);
@@ -4285,6 +4501,13 @@ impl PanelProjection<'_> {
         let key = self.key(Some(item.id.as_str()));
         let id = self.reserve();
         let mut children = ui_contract::UiNodeChildren::default();
+        // 🎛️ React's `TreeDataItem.control` is an inline property row rendered INSIDE the item
+        // (`🌳️Tree/🟦️.tsx`), which is how the staged-argument form's fields live under their own
+        // `action.<id>.arg.<argId>` row. Dropping it published a labelled row with no editor at all.
+        if let Some(control) = item.control.as_ref() {
+            let control = self.node(&control_ui_node(control))?;
+            children.try_push(control).map_err(|_| format!("panel '{}' tree row '{}' admits its control", self.surface_id, item.id))?;
+        }
         for child in item.items.iter().flatten() {
             let child = self.tree_item(child)?;
             children.try_push(child).map_err(|_| format!("panel '{}' tree row '{}' packs more children than one record admits", self.surface_id, item.id))?;
@@ -4318,6 +4541,248 @@ impl PanelProjection<'_> {
 /// 👁️✏️ Byte-identical to React's `DEFAULT_APP_NONE_VALUE` (`📌️ChromePanels/🟦️.tsx`) — the
 /// default-apps `Select` value that clears a pin rather than naming an app.
 const DEFAULT_APP_NONE_VALUE: &str = "none";
+
+/// 🎛️ One [`UiControlNode`] as the [`UiNode`] it IS — the enum is a narrowed projection of the
+/// same variants, so a tree row's inline control projects through the one assembler every other node
+/// takes rather than a second, parallel arm table.
+fn control_ui_node(control: &ui_wgpu::wgpu::component::ui::UiControlNode) -> UiNode {
+    use ui_wgpu::wgpu::component::ui::UiControlNode;
+    match control.clone() {
+        UiControlNode::Input(node) => UiNode::Input(node),
+        UiControlNode::Select(node) => UiNode::Select(node),
+        UiControlNode::Toggle(node) => UiNode::Toggle(node),
+        UiControlNode::Button(node) => UiNode::Button(node),
+        UiControlNode::KeyValue(node) => UiNode::KeyValue(node),
+        UiControlNode::Slider(node) => UiNode::Slider(node),
+        UiControlNode::NumberStepper(node) => UiNode::NumberStepper(node),
+        UiControlNode::Ring(node) => UiNode::Ring(node),
+        UiControlNode::IconSelect(node) => UiNode::IconSelect(node),
+    }
+}
+
+/// 🖥️ One Display leaf's body: a single `Tree` under a stack the panel can address — the shape
+/// every other shell-owned leaf publishes, so the two Display leaves need no new paint path.
+fn display_panel_body(panel_id: &str, sections: Vec<UiTreeSectionNode>) -> UiNode {
+    UiNode::Stack(UiStackNode {
+        direction: "column".into(),
+        gap: None,
+        padding: None,
+        id: Some(panel_id.to_string()),
+        children: vec![UiNode::Tree(UiTreeNode { sections, presence: UiPresence::default(), drop_action: None, menu: None, interaction_domain: None })],
+        presence: UiPresence::default(),
+        activate: None,
+        drop_action: None,
+        drop_overlay: None,
+        menu: None,
+    })
+}
+
+/// 🖥️ React's own empty/unavailable section for a Display leaf with nothing to show
+/// (`buildDisplayWindowsTree`'s `framework.display.windows.empty` and the host-less
+/// `{ sections: [{ id: "unavailable", … }] }` fallback, folded into one row here because this
+/// renderer never has a "no host" state distinct from "no window kinds").
+fn display_unavailable_section(id: &str, is_de: bool) -> UiTreeSectionNode {
+    UiTreeSectionNode {
+        id: id.to_string(),
+        label: None,
+        default_open: Some(true),
+        presence: UiPresence::default(),
+        items: vec![UiTreeItemNode::base(format!("{id}.row"), Label::data(shell_chrome_string("display.unavailable", is_de)))],
+        window: None,
+    }
+}
+
+/// 🔄️ The `createWorldProjectionTemplates` taxonomy as nested Display rows, reconstructed from
+/// [`WORLD_PROJECTION_TEMPLATES`]' own `depth` column: a row's id is its parent's id plus its
+/// template id, which is byte-identical to React's growing `idPrefix`
+/// (`framework.display.windows.<kind>.projection.parallel.axonometric.axonometric-isometric`).
+/// `cursor` walks the flat table once; `depth` is the level this call materialises.
+fn world_projection_template_rows(prefix: &str, window_kind_id: &str, depth: u8, cursor: &mut usize) -> Vec<UiTreeItemNode> {
+    let mut rows = Vec::new();
+    while let Some(template) = WORLD_PROJECTION_TEMPLATES.get(*cursor) {
+        if template.depth < depth {
+            break;
+        }
+        if template.depth > depth {
+            // 🛡️ Unreachable for the declared table (a child always follows its own parent), and a
+            // skip rather than a panic so a future row ordering cannot wedge the panel.
+            *cursor += 1;
+            continue;
+        }
+        let id = format!("{prefix}.{}", template.id);
+        *cursor += 1;
+        let children = world_projection_template_rows(&id, window_kind_id, depth + 1, cursor);
+        rows.push(UiTreeItemNode {
+            id: id.clone(),
+            label: Label::data(template.label),
+            icon_id: IconName::from_str(template.icon_id),
+            default_open: Some(false),
+            action: Some(ActionDescriptor {
+                controller_id: "framework".into(),
+                action: "openDisplayWindow".into(),
+                args: crate::action_args_json!({ "windowKindId": window_kind_id.to_string(), "templateId": template.id.to_string() }),
+            }),
+            items: (!children.is_empty()).then_some(children),
+            ..UiTreeItemNode::base(String::new(), Label::data(String::new()))
+        });
+    }
+    rows
+}
+
+/// 🖥️ React's `groupNamedLayoutsToTreeItems`: a layout with no `groupPath` is a root row, one with
+/// a path folds into `framework.display.layout.group.<a/b>` folders minted on first use. A user
+/// layout additionally carries React's `framework.display.delete.<id>` action — a row CONTROL here,
+/// because this renderer's panel tree projects a row's control and not its `actions` menu.
+fn named_layout_rows(layouts: &[ui_wgpu::wgpu::NamedLayout], deletable: bool, is_de: bool) -> Vec<UiTreeItemNode> {
+    let mut root: Vec<UiTreeItemNode> = Vec::new();
+    for entry in layouts {
+        let leaf = UiTreeItemNode {
+            id: format!("framework.display.layout.{}", entry.id),
+            label: Label::data(entry.label.clone()),
+            action: Some(ActionDescriptor { controller_id: "framework".into(), action: "applyNamedLayout".into(), args: crate::action_args_json!({ "layoutId": entry.id.clone() }) }),
+            control: deletable.then(|| {
+                ui_wgpu::wgpu::component::ui::UiControlNode::Button(UiButtonNode {
+                    id: Some(format!("framework.display.delete.{}", entry.id)),
+                    icon_id: IconName::Trash2,
+                    label: Label::data(shell_chrome_string("display.deleteLayout", is_de)),
+                    action: ActionDescriptor { controller_id: "framework".into(), action: "deleteUserLayout".into(), args: crate::action_args_json!({ "layoutId": entry.id.clone() }) },
+                    style: None,
+                    presence: UiPresence::default(),
+                    menu: None,
+                })
+            }),
+            ..UiTreeItemNode::base(String::new(), Label::data(String::new()))
+        };
+        let path = entry.group_path.clone().unwrap_or_default();
+        place_named_layout_row(&mut root, &path, &mut String::new(), leaf);
+    }
+    root
+}
+
+/// 🖥️ One layout row into its folder chain, minting a `framework.display.layout.group.<a/b>`
+/// folder on first use — the recursive half of {@link named_layout_rows}, kept separate so the
+/// walk owns one `&mut Vec` at a time.
+fn place_named_layout_row(rows: &mut Vec<UiTreeItemNode>, path: &[String], path_key: &mut String, leaf: UiTreeItemNode) {
+    let Some((segment, rest)) = path.split_first() else {
+        rows.push(leaf);
+        return;
+    };
+    if !path_key.is_empty() {
+        path_key.push('/');
+    }
+    path_key.push_str(segment);
+    let folder_id = format!("framework.display.layout.group.{path_key}");
+    if !rows.iter().any(|row| row.id == folder_id) {
+        rows.push(UiTreeItemNode { id: folder_id.clone(), label: Label::data(segment.clone()), default_open: Some(false), items: Some(Vec::new()), ..UiTreeItemNode::base(String::new(), Label::data(String::new())) });
+    }
+    let folder = rows.iter_mut().find(|row| row.id == folder_id).expect("the folder row was just ensured");
+    place_named_layout_row(folder.items.get_or_insert_with(Vec::new), rest, path_key, leaf);
+}
+
+/// 🛠️ React's `windowMeasuresToTreeItems` (`🛠️ShellHelpers/🟦️.tsx`): one tree row per measure,
+/// the row's id the measure's OWN id and the row's control the measure's own editor. Declaration
+/// order is written straight through — React reverses only to cancel its bottom-anchored `Tree`'s
+/// own per-level reversal (`reverseForUpPanel`), which this renderer's panel tree does not do.
+fn window_measure_tree_rows(measures: &[WindowMeasure]) -> Vec<UiTreeItemNode> {
+    use ui_wgpu::wgpu::component::ui::{UiControlNode, UiState, UiStatus};
+    let activity = |loading: Option<bool>, waiting: Option<bool>| {
+        if loading.unwrap_or(false) {
+            UiStatus::Loading
+        } else if waiting.unwrap_or(false) {
+            UiStatus::Waiting
+        } else {
+            UiStatus::Idle
+        }
+    };
+    let state = |disabled: Option<bool>| if disabled.unwrap_or(false) { UiState::Disabled } else { UiState::Normal };
+    measures
+        .iter()
+        .map(|measure| match measure {
+            WindowMeasure::Group { id, label, default_open, children, .. } => UiTreeItemNode {
+                id: id.clone(),
+                label: Label::data(label.clone()),
+                default_open: *default_open,
+                items: (!children.is_empty()).then(|| window_measure_tree_rows(children)),
+                ..UiTreeItemNode::base(String::new(), Label::data(String::new()))
+            },
+            WindowMeasure::Select { id, label, value, items, on_change } => UiTreeItemNode {
+                id: id.clone(),
+                label: Label::data(label.clone().unwrap_or_default()),
+                control: Some(UiControlNode::Select(UiSelectNode {
+                    presence: UiPresence::default(),
+                    id: id.clone(),
+                    value: value.clone(),
+                    items: items.iter().map(|item| UiSelectItem { value: item.value.clone(), label: Label::data(item.label.clone()) }).collect(),
+                    placeholder: None,
+                    on_change: on_change.clone(),
+                    menu: None,
+                })),
+                ..UiTreeItemNode::base(String::new(), Label::data(String::new()))
+            },
+            WindowMeasure::Slider { id, label, value, min, max, step, loading, waiting, disabled, on_change, .. } => UiTreeItemNode {
+                id: id.clone(),
+                label: Label::data(label.clone().unwrap_or_default()),
+                presence: UiPresence { status: activity(*loading, *waiting), state: state(*disabled), ..UiPresence::default() },
+                control: Some(UiControlNode::Slider(UiSliderNode {
+                    id: id.clone(),
+                    value: *value,
+                    min: *min,
+                    max: *max,
+                    step: step.unwrap_or(1.0),
+                    unit: None,
+                    on_change: on_change.clone(),
+                    presence: UiPresence { state: state(*disabled), ..UiPresence::default() },
+                    menu: None,
+                })),
+                ..UiTreeItemNode::base(String::new(), Label::data(String::new()))
+            },
+            WindowMeasure::Number { id, label, value, min, max, step, loading, waiting, disabled, on_change, .. } => UiTreeItemNode {
+                id: id.clone(),
+                label: Label::data(label.clone().unwrap_or_default()),
+                presence: UiPresence { status: activity(*loading, *waiting), state: state(*disabled), ..UiPresence::default() },
+                control: Some(UiControlNode::Input(UiInputNode {
+                    id: id.clone(),
+                    input_kind: "number".into(),
+                    value: format_measure_number(*value),
+                    placeholder: None,
+                    commit: Some("enterOrBlur".into()),
+                    min: *min,
+                    max: *max,
+                    step: *step,
+                    accept: None,
+                    on_change: on_change.clone(),
+                    on_submit: None, on_abort: None, on_repeat_last: None, presence: UiPresence { state: state(*disabled), ..UiPresence::default() },
+                    menu: None,
+                })),
+                ..UiTreeItemNode::base(String::new(), Label::data(String::new()))
+            },
+            WindowMeasure::Toggle { id, icon_id, label, pressed, text, on_change } => UiTreeItemNode {
+                id: id.clone(),
+                label: Label::data(label.clone().or_else(|| text.clone()).unwrap_or_default()),
+                icon_id: Some(icon_id.clone()),
+                control: Some(UiControlNode::Toggle(UiToggleNode {
+                    id: id.clone(),
+                    icon_id: icon_id.clone(),
+                    text: text.clone().map(Label::data),
+                    on_change: on_change.clone(),
+                    presence: UiPresence { selected: *pressed, ..UiPresence::default() },
+                    menu: None,
+                })),
+                ..UiTreeItemNode::base(String::new(), Label::data(String::new()))
+            },
+        })
+        .collect()
+}
+
+/// 🔢️ A measure's numeric value as the text its entry shows — an integral value prints without a
+/// fractional tail, which is what React's `String(value)` does for the same number.
+fn format_measure_number(value: f64) -> String {
+    if value.fract() == 0.0 && value.abs() < 1e15 {
+        format!("{}", value as i64)
+    } else {
+        format!("{value}")
+    }
+}
 
 /// ⚙️ One collapsible settings section — React's `TreeDataSection` with `defaultOpen: true`.
 fn settings_section(id: &str, label: &str, children: Vec<UiNode>) -> UiNode {
@@ -4375,12 +4840,47 @@ fn agent_chat_state_label(entry: &crate::agent_bridge::AgentConversationEntry, i
     }
 }
 
+/// 🏷️ The row's own `kind` attribute — React's `data-semio-agent-chat-entry`, whose vocabulary is
+/// `AgentConversationEntry`'s own discriminant spelled in camelCase.
+pub(crate) fn agent_chat_entry_kind(entry: &crate::agent_bridge::AgentConversationEntry) -> &'static str {
+    use crate::agent_bridge::AgentConversationEntry;
+    match entry {
+        AgentConversationEntry::UserMessage { .. } => "userMessage",
+        AgentConversationEntry::ToolCall { .. } => "toolCall",
+        AgentConversationEntry::Approval { .. } => "approval",
+    }
+}
+
+/// 🚥️ The row's own `state` attribute — React's `data-agent-chat-state`: a tool call's or approval's
+/// live state, and the literal `"sent"` for a human turn, which has none.
+pub(crate) fn agent_chat_entry_state_attribute(entry: &crate::agent_bridge::AgentConversationEntry) -> &'static str {
+    use crate::agent_bridge::{AgentApprovalState, AgentConversationEntry, AgentToolCallState};
+    match entry {
+        AgentConversationEntry::UserMessage { .. } => "sent",
+        AgentConversationEntry::ToolCall { state, .. } => match state {
+            AgentToolCallState::Running => "running",
+            AgentToolCallState::Ok => "ok",
+            AgentToolCallState::Failed => "failed",
+        },
+        AgentConversationEntry::Approval { state, .. } => match state {
+            AgentApprovalState::Pending => "pending",
+            AgentApprovalState::Resolved => "resolved",
+        },
+    }
+}
+
 /// 💬️ One conversation row — the wgpu twin of React's `AgentChatEntry`: role noun, state chip, then
 /// the body this kind carries (the human's text, the approval's summary, or the tool's name, its real
 /// arguments and — once the result frame lands — its summary behind the `Result` noun).
+///
+/// 🏷️ The leading role line carries React's own two row attributes, so a probe (and the accessibility
+/// mirror `dumpAccessibility` publishes) can tell a tool call from an approval, and a running call
+/// from a failed one, WITHOUT reading the translated noun — which is what React's `li` does.
 fn agent_chat_entry_node(entry: &crate::agent_bridge::AgentConversationEntry, is_de: bool, locale: Locale) -> UiNode {
     use crate::agent_bridge::AgentConversationEntry;
-    let mut rows = vec![settings_text_row(agent_chat_role_label(entry, is_de))];
+    let mut role = UiTextNode { presence: UiPresence::default(), value: Label::data(agent_chat_role_label(entry, is_de)), emphasize: Some(false), data_attributes: None, menu: None };
+    role.data_attributes = Some(HashMap::from([("data-semio-agent-chat-entry".to_string(), agent_chat_entry_kind(entry).to_string()), ("data-agent-chat-state".to_string(), agent_chat_entry_state_attribute(entry).to_string())]));
+    let mut rows = vec![UiNode::Text(role)];
     if let Some(state) = agent_chat_state_label(entry, is_de, locale) {
         rows.push(settings_text_row(&state));
     }
@@ -4488,7 +4988,7 @@ fn staged_command_arg_row(command_key: &str, arg: &semio_framework::ActionArgDef
             step,
             accept: None,
             on_change: on_change.clone(),
-            presence: UiPresence::default(),
+            on_submit: None, on_abort: None, on_repeat_last: None, presence: UiPresence::default(),
             menu: None,
         }),
         _ => UiNode::Input(UiInputNode {
@@ -4502,7 +5002,7 @@ fn staged_command_arg_row(command_key: &str, arg: &semio_framework::ActionArgDef
             step: None,
             accept: None,
             on_change: on_change.clone(),
-            presence: UiPresence::default(),
+            on_submit: None, on_abort: None, on_repeat_last: None, presence: UiPresence::default(),
             menu: None,
         }),
     };
@@ -4830,6 +5330,12 @@ impl ShellState {
             staged_command_args: HashMap::new(),
             keybinding_capture_control_id: None,
             default_app_pins: HashMap::new(),
+            theme_draft: None,
+            theme_editor_open_section: None,
+            theme_editor_page: 0,
+            theme_save_label: String::new(),
+            merge_policy: SHELL_DEFAULT_MERGE_POLICY.to_string(),
+            pending_theme_import: false,
             agent_chat_draft: String::new(),
             mobile_panel_visible: false,
             mobile_panel_path: Vec::new(),
@@ -4857,6 +5363,7 @@ impl ShellState {
             #[cfg(not(target_arch = "wasm32"))]
             identity_bootstrap_task: None,
             directory_client: None,
+            agent_bridge: crate::agent_bridge_door::AgentBridgeTransport::new(),
             #[cfg(not(target_arch = "wasm32"))]
             inference_port: None,
             #[cfg(not(target_arch = "wasm32"))]
@@ -4882,6 +5389,12 @@ impl ShellState {
             auto_checkin_pending: false,
             checkpoint_dispatched: false,
             checkin_dialog_draft: None,
+            layout_save_label: String::new(),
+            user_layouts: Vec::new(),
+            open_conflicts: Vec::new(),
+            selected_conflict_id: None,
+            conflicts_seeded: false,
+            tool_measures: HashMap::new(),
             window_engagements: HashMap::new(),
             window_actions_documents: HashMap::new(),
             window_search_documents: HashMap::new(),
@@ -5848,6 +6361,12 @@ impl ShellState {
             visited.extend(measure_windows.iter().map(|window_id| window_measures_surface_id(window_id)));
             self.refresh_window_measures(&program, session.instance_id, &view_state, &measure_windows, &mut faults).await?;
         }
+        // 🛠️ The TOOL half of the same reader — React's `toolMeasuresByToolId` ref, refreshed on the
+        // scope that names tools so a slider tick inside an armed tool's options repaints its leaf.
+        if scope.wants_section(UiDirtySection::Tools) && !self.tool_panel_tabs().is_empty() {
+            visited.push(semio_framework::UiRefreshSection::Tools.body_key().to_string());
+            self.refresh_tool_measures(&program, session.instance_id, &view_state, &mut faults).await?;
+        }
         if self.space_mode {
             if let Some(panel) = Self::panel_state_from_view(&session.view_state)? {
                 if let Some(spawned) = panel.active_spawned_id.as_ref().and_then(|id| panel.spawned_apps.iter().find(|app| &app.id == id)) {
@@ -6348,15 +6867,21 @@ impl ShellState {
 
 
 
-    /// 🎨️ The wgpu mirror of React's `buildSettingsThemeTree`'s theme-selector section (`ui/js/react/
-    /// index.tsx:9424-9498`) — deliberately scoped to picking/resetting/deleting a theme, same
-    /// proportion as this crate's `build_settings_general_ui`'s "driver" row having no axis editor.
-    /// `w3-prefs-i18n-themes`'s draft-color-editor primitives (`begin_custom_theme_draft`/
-    /// `set_draft_theme_color`/`save_draft_theme`/`discard_draft_theme`) stay unwired here on purpose —
-    /// that report already scoped the token editor itself down to 5 color slots and called porting
-    /// React's full multi-hundred-token editor "out of proportion to this ticket"; this wave only closes
-    /// the *reachability* gap (the registry/resolver was already live in `frame()`'s `resolve_theme_for_ids`
-    /// call, just invisible — no UI could ever select "mono" or a saved custom theme before this).
+    /// 🎨️ The wgpu mirror of React's `buildSettingsThemeTree` (`📌️ChromePanels/🟦️.tsx:693-828`) —
+    /// the selector section (pick / name+save / reset / export / import / delete) and then all EIGHT
+    /// editable sections (colors, spacing, fonts, strokes, radii, opacities, metrics, per-appearance
+    /// paints), each row carrying React's own control id and writing the same
+    /// [`ThemeDocument`] React writes.
+    ///
+    /// 🩸️ Until ticket 26/09/17 packet W15d this was select/reset/delete only, and the target's own
+    /// theme model was a five-slot `CustomChromeTheme` override record React cannot read at all: a
+    /// theme saved here did not open there and vice versa (audit W14 §B8/§B3). The editor now mutates
+    /// the authored token document itself, and `resolve_theme_for_ids` re-tokenises the whole `Theme`
+    /// from it per frame, which is what makes an edit visible without a reload.
+    ///
+    /// 📄️ One difference from React, and it is a ceiling not a choice: the document is ~450 rows and
+    /// a retained panel admits 128 records, so the OPEN section is paged (see
+    /// [`SHELL_THEME_EDITOR_PAGE_ROWS`]) where React's DOM tree renders every row at once.
     ///
     /// 🧾️ Published as the `framework.settings.theme` leaf's retained document through
     /// {@link panel_ui_records} — it was `#[cfg(test)]` (a builder with no reader) until this packet.
@@ -6389,6 +6914,43 @@ impl ShellState {
                 menu: None,
             }),
         ];
+        // 💾️ React's save pair: the name box, then the button its trimmed text arms
+        // (`framework.settings.theme.saveLabel` / `framework.settings.theme.save`). Without these the
+        // whole editor below could mutate a draft nothing could ever keep.
+        children.push(theme_editor_row("framework.settings.theme.saveLabel", shell_chrome_string("common.name", is_de), &self.theme_save_label, "setThemeSaveLabel", None));
+        children.push(UiNode::Button(UiButtonNode {
+            id: Some("framework.settings.theme.save".into()),
+            icon_id: IconName::Save,
+            label: Label::data(shell_chrome_string("settings.theme.save", is_de)),
+            action: ActionDescriptor { controller_id: "framework".into(), action: "saveTheme".into(), args: None },
+            style: None,
+            presence: UiPresence {
+                state: if self.theme_save_label.trim().is_empty() { ui_wgpu::wgpu::component::ui::UiState::Disabled } else { ui_wgpu::wgpu::component::ui::UiState::Normal },
+                ..UiPresence::default()
+            },
+            menu: None,
+        }));
+        // ⬇️⬆️ React's export/import pair (`📌️ChromePanels/🟦️.tsx:801,806`). Export leaves through the
+        // SAME `DownloadMediaExport` door every plugin export uses; import through the same
+        // user-activation-gated picker `RequestFileOpen` rides.
+        children.push(UiNode::Button(UiButtonNode {
+            id: Some("framework.settings.theme.export".into()),
+            icon_id: IconName::Export,
+            label: Label::data(shell_chrome_string("settings.theme.export", is_de)),
+            action: ActionDescriptor { controller_id: "framework".into(), action: "exportTheme".into(), args: None },
+            style: None,
+            presence: UiPresence::default(),
+            menu: None,
+        }));
+        children.push(UiNode::Button(UiButtonNode {
+            id: Some("framework.settings.theme.import".into()),
+            icon_id: IconName::Import,
+            label: Label::data(shell_chrome_string("settings.theme.import", is_de)),
+            action: ActionDescriptor { controller_id: "framework".into(), action: "importTheme".into(), args: None },
+            style: None,
+            presence: UiPresence::default(),
+            menu: None,
+        }));
         if active_id.starts_with("custom.") {
             children.push(UiNode::Button(UiButtonNode {
                 id: Some("framework.settings.theme.delete".into()),
@@ -6400,6 +6962,9 @@ impl ShellState {
                 menu: None,
             }));
         }
+        // 🎨️ …and the eight editable sections React carries below its selector.
+        let document = self.theme_document();
+        children.extend(self.build_settings_theme_editor_sections(&document, is_de));
         UiNode::Stack(UiStackNode { direction: "column".into(), gap: None, padding: None, id: None, children, presence: UiPresence::default(), activate: None, drop_action: None, drop_overlay: None, menu: None })
     }
 
@@ -6479,6 +7044,16 @@ impl ShellState {
                 "setTerminology",
             ));
         }
+        // ⚖️ React's `framework.settings.mergePolicy` row (`📌️ChromePanels/🟦️.tsx:467-486`) — the one
+        // General-leaf control with no wgpu twin (audit W14 §B2). Option VALUES are React's
+        // `MERGE_POLICY_OPTIONS` verbatim, which are `protocol::MergePolicy`'s own variant names.
+        general.push(settings_select_row(
+            "framework.settings.mergePolicy",
+            shell_chrome_string("settings.mergePolicy", is_de),
+            &self.merge_policy,
+            SHELL_MERGE_POLICY_OPTIONS.iter().map(|(value, label_key)| ((*value).to_string(), shell_chrome_string(*label_key, is_de).to_string())).collect(),
+            "setMergePolicy",
+        ));
         general.push(UiNode::Button(UiButtonNode {
             id: Some("framework.settings.resetDock".into()),
             icon_id: IconName::RotateCcw,
@@ -6653,57 +7228,281 @@ impl ShellState {
         rows
     }
 
-    /// ⚖️ The `framework.settings.conflicts` leaf's body — the wgpu twin of React's `buildConflictsTree`:
-    /// one row per open conflict with accept/discard controls. The wgpu shell has no conflict projection
-    /// reader yet (React's `selectOpenConflicts` over `🐚️Shell`'s store), so this resolves to React's own
-    /// unavailable row until that lane lands — the leaf exists, is addressable and never paints blank.
+    /// 🖥️ The `framework.display.windows` leaf's body — the wgpu twin of React's
+    /// `buildDisplayWindowsTree` (`📌️ChromePanels/🟦️.tsx`): one section per window KIND the app
+    /// declares, whose rows are that kind's plain leaf plus — for a `world-3d` surface — the whole
+    /// `createWorldProjectionTemplates` taxonomy, each row carrying React's own control id.
+    ///
+    /// 🔃️ React pre-reverses every template level to cancel the bottom-anchored `Tree`'s own
+    /// per-level reversal, so what it RENDERS is: the plain kind leaf, then Parallel, then
+    /// Perspective. This renderer's panel tree does not reverse, so the same reading order is written
+    /// directly — kind leaf first, templates in declaration order.
+    ///
+    /// 🖱️ React's rows are drag SOURCES (`COMPOSE_WINDOW_TEMPLATE_MIME`) with no click handler;
+    /// this renderer has no panel-to-dock drag lane, so each row is pressable instead and opens the
+    /// window it names through `openDisplayWindow`. The ids are React's either way, so a probe that
+    /// addresses `framework.display.windows.<kind>.kind` finds the same control on both.
+    pub(crate) fn build_display_windows_ui(&self) -> UiNode {
+        let is_de = self.locale_id == "de";
+        let Some(session) = self.session.as_ref() else {
+            return display_panel_body("framework.display.windows.panel", vec![display_unavailable_section("framework.display.windows.empty", is_de)]);
+        };
+        let terminology = self.active_terminology();
+        let locale = self.active_locale();
+        if session.app.window_kinds.iter().next().is_none() {
+            return display_panel_body("framework.display.windows.panel", vec![display_unavailable_section("framework.display.windows.empty", is_de)]);
+        }
+        let mut sections: Vec<UiTreeSectionNode> = Vec::new();
+        for kind in session.app.window_kinds.iter() {
+            let label = kind.label.resolve(terminology, locale).to_string();
+            let mut items = vec![UiTreeItemNode {
+                id: format!("framework.display.windows.{}.kind", kind.id),
+                label: Label::data(label.clone()),
+                icon_id: Some(kind.icon_id.clone()),
+                action: Some(ActionDescriptor { controller_id: "framework".into(), action: "openDisplayWindow".into(), args: crate::action_args_json!({ "windowKindId": kind.id.clone() }) }),
+                ..UiTreeItemNode::base(String::new(), Label::data(String::new()))
+            }];
+            if kind.surface_kind == ui_wgpu::wgpu::SurfaceKind::World3d {
+                items.extend(world_projection_template_rows(&format!("framework.display.windows.{}.projection", kind.id), &kind.id, 0, &mut 0));
+            }
+            sections.push(UiTreeSectionNode {
+                id: format!("framework.display.windows.{}", kind.id),
+                label: Some(Label::data(label)),
+                default_open: Some(false),
+                presence: UiPresence::default(),
+                items,
+                window: None,
+            });
+        }
+        display_panel_body("framework.display.windows.panel", sections)
+    }
+
+    /// 🖥️ The `framework.display.layout` leaf's body — the wgpu twin of React's
+    /// `buildDisplayLayoutTree`: a `framework.display.layout.save` section carrying the name box and
+    /// the Save button (disabled on a blank name, React's own `!host.layoutSaveLabel.trim()` gate),
+    /// then a `framework.display.layout.list` section carrying the app's builtin layouts folded by
+    /// their `groupPath` and, when this session saved any, a `Saved` folder whose rows each offer
+    /// React's `framework.display.delete.<id>` action.
+    pub(crate) fn build_display_layout_ui(&self) -> UiNode {
+        let is_de = self.locale_id == "de";
+        let builtin: Vec<ui_wgpu::wgpu::NamedLayout> = self.session.as_ref().map(|session| session.app.named_layouts.iter().filter(|entry| entry.origin == "builtin").cloned().collect()).unwrap_or_default();
+        let save_section = UiTreeSectionNode {
+            id: "framework.display.layout.save".into(),
+            label: Some(Label::data(shell_chrome_string("display.saveLayout", is_de))),
+            default_open: Some(false),
+            presence: UiPresence::default(),
+            items: vec![
+                UiTreeItemNode {
+                    id: "framework.display.layout.save.label".into(),
+                    label: Label::data(shell_chrome_string("common.name", is_de)),
+                    control: Some(ui_wgpu::wgpu::component::ui::UiControlNode::Input(UiInputNode {
+                        id: "framework.display.saveLabel".into(),
+                        input_kind: "text".into(),
+                        value: self.layout_save_label.clone(),
+                        placeholder: Some(Label::data(shell_chrome_string("display.saveLayoutPlaceholder", is_de))),
+                        commit: None,
+                        min: None,
+                        max: None,
+                        step: None,
+                        accept: None,
+                        on_change: ActionDescriptor { controller_id: "framework".into(), action: "setLayoutSaveLabel".into(), args: None },
+                        on_submit: None, on_abort: None, on_repeat_last: None, presence: UiPresence::default(),
+                        menu: None,
+                    })),
+                    ..UiTreeItemNode::base(String::new(), Label::data(String::new()))
+                },
+                UiTreeItemNode {
+                    id: "framework.display.layout.save.action".into(),
+                    label: Label::data(shell_chrome_string("common.save", is_de)),
+                    control: Some(ui_wgpu::wgpu::component::ui::UiControlNode::Button(UiButtonNode {
+                        id: Some("framework.display.save".into()),
+                        icon_id: IconName::Save,
+                        label: Label::data(shell_chrome_string("display.saveCurrentLayout", is_de)),
+                        action: ActionDescriptor { controller_id: "framework".into(), action: "saveCurrentLayout".into(), args: None },
+                        style: None,
+                        presence: UiPresence { state: if self.layout_save_label.trim().is_empty() { ui_wgpu::wgpu::component::ui::UiState::Disabled } else { ui_wgpu::wgpu::component::ui::UiState::Normal }, ..UiPresence::default() },
+                        menu: None,
+                    })),
+                    ..UiTreeItemNode::base(String::new(), Label::data(String::new()))
+                },
+            ],
+            window: None,
+        };
+        let mut items = named_layout_rows(&builtin, false, is_de);
+        if !self.user_layouts.is_empty() {
+            items.push(UiTreeItemNode {
+                id: "framework.display.layout.group.saved".into(),
+                label: Label::data(shell_chrome_string("display.saved", is_de)),
+                default_open: Some(false),
+                items: Some(named_layout_rows(&self.user_layouts, true, is_de)),
+                ..UiTreeItemNode::base(String::new(), Label::data(String::new()))
+            });
+        }
+        let list_section = UiTreeSectionNode {
+            id: "framework.display.layout.list".into(),
+            label: Some(Label::data(shell_chrome_string("display.layouts", is_de))),
+            default_open: Some(true),
+            presence: UiPresence::default(),
+            items,
+            window: None,
+        };
+        display_panel_body("framework.display.layout.panel", vec![save_section, list_section])
+    }
+
+    /// ⚖️ The `framework.settings.conflicts` leaf's body — the wgpu twin of React's
+    /// `buildConflictsTree` (`📌️ChromePanels/🟦️.tsx`), now over a REAL projection: one row per OPEN
+    /// conflict in [`ShellState::open_conflicts`], labelled `<kind> — <code> — <message>` off the
+    /// conflict's own `ConflictKind` tag and worst `MutationMessage` (never parsed from prose), and
+    /// React's own unavailable row only when there genuinely is no open conflict.
+    ///
+    /// ⚖️ React nests Accept/Discard as two inline buttons in the row's single control slot plus a
+    /// `ConflictDiffPreview` behind `🔺️DiffViewHost`. A row here carries ONE control, so each verb is
+    /// its own addressable child row under React's own `….accept`/`….discard` id, expanded for the
+    /// selected conflict exactly as React expands its diff for the selected one. No diff preview:
+    /// React's own `currentDocumentText` is `""` on this lease too ("no local snapshot"), so neither
+    /// renderer has a second side to diff against.
     pub(crate) fn build_settings_conflicts_ui(&self) -> UiNode {
         let is_de = self.locale_id == "de";
-        UiNode::Stack(UiStackNode {
-            direction: "column".into(),
-            gap: None,
-            padding: None,
-            id: Some("framework.settings.conflicts.panel".into()),
-            children: vec![settings_section("framework.settings.conflicts.empty", shell_chrome_string("conflict.panel", is_de), vec![settings_text_row(shell_chrome_string("settings.unavailable", is_de))])],
-            presence: UiPresence::default(),
-            activate: None,
-            drop_action: None,
-            drop_overlay: None,
-            menu: None,
-        })
+        if self.open_conflicts.is_empty() {
+            return display_panel_body(
+                "framework.settings.conflicts.panel",
+                vec![UiTreeSectionNode {
+                    id: "framework.settings.conflicts.empty".into(),
+                    label: Some(Label::data(shell_chrome_string("conflict.panel", is_de))),
+                    default_open: Some(true),
+                    presence: UiPresence::default(),
+                    items: vec![UiTreeItemNode::base("framework.settings.conflicts.empty.row", Label::data(shell_chrome_string("settings.unavailable", is_de)))],
+                    window: None,
+                }],
+            );
+        }
+        let items: Vec<UiTreeItemNode> = self
+            .open_conflicts
+            .iter()
+            .map(|conflict| {
+                let row_id = format!("framework.settings.conflicts.{}", conflict.id);
+                let kind = shell_chrome_string(if conflict.quarantined { "conflict.quarantined" } else { "conflict.degraded" }, is_de);
+                let selected = self.selected_conflict_id.as_deref() == Some(conflict.id.as_str());
+                let verb = |suffix: &str, label_key: &'static str, icon: IconName, accept: bool| UiTreeItemNode {
+                    id: format!("{row_id}.{suffix}"),
+                    label: Label::data(shell_chrome_string(label_key, is_de)),
+                    icon_id: Some(icon),
+                    action: Some(ActionDescriptor { controller_id: "framework".into(), action: "resolveConflict".into(), args: crate::action_args_json!({ "conflictId": conflict.id.clone(), "accept": accept }) }),
+                    ..UiTreeItemNode::base(String::new(), Label::data(String::new()))
+                };
+                UiTreeItemNode {
+                    id: row_id.clone(),
+                    label: Label::data(format!("{kind} \u{2014} {} \u{2014} {}", conflict.code, conflict.message)),
+                    icon_id: Some(IconName::TriangleAlert),
+                    default_open: Some(selected),
+                    action: Some(ActionDescriptor { controller_id: "framework".into(), action: "selectConflict".into(), args: crate::action_args_json!({ "conflictId": conflict.id.clone() }) }),
+                    items: Some(vec![verb("accept", "conflict.accept", IconName::Check, true), verb("discard", "conflict.discard", IconName::X, false)]),
+                    ..UiTreeItemNode::base(String::new(), Label::data(String::new()))
+                }
+            })
+            .collect();
+        display_panel_body(
+            "framework.settings.conflicts.panel",
+            vec![UiTreeSectionNode {
+                id: "framework.settings.conflicts.table".into(),
+                label: Some(Label::data(shell_chrome_string("conflict.panel", is_de))),
+                default_open: Some(true),
+                presence: UiPresence::default(),
+                items,
+                window: None,
+            }],
+        )
     }
 
     /// 🛍️ The `framework.marketplace` leaf's body — the wgpu twin of React's `buildMarketplaceTree`:
-    /// one section per plugin SOURCE, a row per plugin carrying `label · version · status`, and a
-    /// reload/uninstall pair per loaded plugin. The wgpu shell's only plugin source is the bridges it
-    /// booted with, so every row reports `loaded` and the install-from-URL/file section is omitted —
-    /// this renderer has no installer lane (React's `installPlugin`/`installExtensionFromUrl`).
+    /// one section per plugin SOURCE, a `label · version · status` row per plugin, and this renderer's
+    /// own install/reload/uninstall lane.
+    ///
+    /// 🔌️ The roster is the union of the plugins this shell HOLDS (`loaded`) and every plugin id the
+    /// generated activation catalogue claims (`available`) — the same table
+    /// [`ShellState::install_plugin`]'s lazy install already reads, which is what makes `Install` a
+    /// real verb here rather than a decoration. React's `canUninstall` is the session's own plugin:
+    /// a shell may not uninstall the program it is running. Extensions are NOT listed (no extension
+    /// ledger exists on this target), and neither is React's install-from-URL/file section.
     pub(crate) fn build_marketplace_ui(&self) -> UiNode {
         let is_de = self.locale_id == "de";
-        let mut rows = Vec::new();
-        let mut ids: Vec<&ProgramBridgeEntry> = self.plugins.iter().collect();
-        ids.sort_by(|left, right| left.plugin_id.cmp(&right.plugin_id));
-        for entry in ids {
-            let status = shell_chrome_string("plugins.status.loaded", is_de);
-            rows.push(settings_text_row(&format!("{} · {} · {status}", entry.manifest.label, entry.manifest.version)));
+        let session_plugin = self.session.as_ref().map(|session| session.plugin_id.clone());
+        let mut ids: Vec<String> = self.plugins.iter().map(|entry| entry.plugin_id.clone()).collect();
+        for (_, plugin_id) in crate::program_bridge::PLUGIN_ARTIFACT_KIND_ACTIVATIONS.iter() {
+            if !ids.iter().any(|id| id.as_str() == *plugin_id) {
+                ids.push((*plugin_id).to_string());
+            }
         }
-        let children = if rows.is_empty() {
-            vec![settings_text_row(shell_chrome_string("marketplace.unavailable", is_de))]
-        } else {
-            vec![settings_section("framework.marketplace.source.local", shell_chrome_string("plugins.source", is_de), rows)]
-        };
-        UiNode::Stack(UiStackNode {
-            direction: "column".into(),
-            gap: None,
-            padding: None,
-            id: Some("framework.marketplace.panel".into()),
-            children,
-            presence: UiPresence::default(),
-            activate: None,
-            drop_action: None,
-            drop_overlay: None,
-            menu: None,
-        })
+        ids.sort();
+        ids.dedup();
+        let installing = self.plugin_install.as_ref().map(|install| install.plugin_id.clone());
+        let items: Vec<UiTreeItemNode> = ids
+            .into_iter()
+            .map(|plugin_id| {
+                let resident = self.plugins.iter().find(|entry| entry.plugin_id == plugin_id);
+                let in_flight = installing.as_deref() == Some(plugin_id.as_str());
+                let status_key = if in_flight {
+                    "plugins.status.installing"
+                } else if resident.is_some() {
+                    "plugins.status.loaded"
+                } else {
+                    "plugins.status.available"
+                };
+                let label = resident.map(|entry| entry.manifest.label.clone()).unwrap_or_else(|| plugin_id.clone());
+                let version = resident.map(|entry| entry.manifest.version.clone()).unwrap_or_default();
+                let head = if version.is_empty() { format!("{label} \u{b7} {}", shell_chrome_string(status_key, is_de)) } else { format!("{label} \u{b7} {version} \u{b7} {}", shell_chrome_string(status_key, is_de)) };
+                let row_id = format!("framework.marketplace.plugin.{plugin_id}");
+                let verb = |suffix: &str, label_key: &'static str, icon: IconName, action: &str, enabled: bool| UiTreeItemNode {
+                    id: format!("{row_id}.{suffix}"),
+                    label: Label::data(shell_chrome_string(label_key, is_de)),
+                    icon_id: Some(icon),
+                    presence: UiPresence { state: if enabled { ui_wgpu::wgpu::component::ui::UiState::Normal } else { ui_wgpu::wgpu::component::ui::UiState::Disabled }, ..UiPresence::default() },
+                    action: enabled.then(|| ActionDescriptor { controller_id: "framework".into(), action: action.into(), args: crate::action_args_json!({ "pluginId": plugin_id.clone() }) }),
+                    ..UiTreeItemNode::base(String::new(), Label::data(String::new()))
+                };
+                let can_uninstall = resident.is_some() && session_plugin.as_deref() != Some(plugin_id.as_str());
+                let verbs = if resident.is_some() {
+                    vec![
+                        verb("reload", "plugins.action.reload", IconName::RotateCcw, "reloadPlugin", !in_flight),
+                        verb("uninstall", "plugins.action.uninstall", IconName::Trash2, "uninstallPlugin", can_uninstall && !in_flight),
+                    ]
+                } else {
+                    vec![verb("install", "plugins.action.install", IconName::Download, "installPlugin", !in_flight)]
+                };
+                UiTreeItemNode {
+                    id: row_id.clone(),
+                    label: Label::data(head),
+                    default_open: Some(resident.is_some()),
+                    presence: UiPresence { status: if in_flight { ui_wgpu::wgpu::component::ui::UiStatus::Loading } else { ui_wgpu::wgpu::component::ui::UiStatus::Idle }, ..UiPresence::default() },
+                    items: Some(verbs),
+                    ..UiTreeItemNode::base(String::new(), Label::data(String::new()))
+                }
+            })
+            .collect();
+        if items.is_empty() {
+            return display_panel_body(
+                "framework.marketplace.panel",
+                vec![UiTreeSectionNode {
+                    id: "framework.marketplace.source.local".into(),
+                    label: Some(Label::data(shell_chrome_string("plugins.source", is_de))),
+                    default_open: Some(true),
+                    presence: UiPresence::default(),
+                    items: vec![UiTreeItemNode::base("framework.marketplace.empty", Label::data(shell_chrome_string("marketplace.unavailable", is_de)))],
+                    window: None,
+                }],
+            );
+        }
+        display_panel_body(
+            "framework.marketplace.panel",
+            vec![UiTreeSectionNode {
+                id: "framework.marketplace.source.local".into(),
+                label: Some(Label::data(format!("{}: local", shell_chrome_string("plugins.source", is_de)))),
+                default_open: Some(true),
+                presence: UiPresence::default(),
+                items,
+                window: None,
+            }],
+        )
     }
 
     /// 💬️ Sends the draft to the connected agent — React's `sendAgentMessage`: one
@@ -6738,12 +7537,36 @@ impl ShellState {
         let locale = self.active_locale();
         let connected = matches!(self.chrome_build.agent.status, crate::agent_bridge::AgentBridgeStatus::Open);
         let mut children = Vec::new();
+        // 💬️ The FEED is its own node, under React's own id, rather than rows loose in the panel:
+        // that is what lets the transcript be addressed, labelled and paged as one thing — React's
+        // `<ol id="framework.chat.feed" aria-label={transcriptLabel} aria-live="polite">`.
+        let mut feed = Vec::new();
         if self.chrome_build.agent.conversation.is_empty() {
-            children.push(settings_text_row(shell_chrome_string("chat.empty", is_de)));
+            feed.push(settings_text_row(shell_chrome_string("chat.empty", is_de)));
         }
-        for entry in &self.chrome_build.agent.conversation {
-            children.push(agent_chat_entry_node(entry, is_de, locale));
+        // 📃️ React's feed SCROLLS and its effect pins it to the bottom on every new entry, so what
+        // the human sees is the newest window of the conversation. The wgpu panel body is a
+        // fixed-credit `MountedLayout` tree with no scroll of its own here, so the same window is
+        // produced by emitting the LAST `AGENT_CHAT_VISIBLE_ENTRIES` rows — the newest ones, in
+        // order. The bridge retains up to `AGENT_CONVERSATION_MAX_ENTRIES` (200) behind them, exactly
+        // as React's array does; nothing is discarded, only unpainted.
+        let conversation = &self.chrome_build.agent.conversation;
+        let window = conversation.len().saturating_sub(AGENT_CHAT_VISIBLE_ENTRIES);
+        for entry in conversation.iter().skip(window) {
+            feed.push(agent_chat_entry_node(entry, is_de, locale));
         }
+        children.push(UiNode::Stack(UiStackNode {
+            direction: "column".into(),
+            gap: None,
+            padding: None,
+            id: Some(FRAMEWORK_CHAT_FEED_ID.into()),
+            children: feed,
+            presence: UiPresence::default(),
+            activate: None,
+            drop_action: None,
+            drop_overlay: None,
+            menu: None,
+        }));
         if !connected {
             children.push(settings_text_row(shell_chrome_string("chat.disconnected", is_de)));
         }
@@ -6752,13 +7575,17 @@ impl ShellState {
             input_kind: "longText".into(),
             value: self.agent_chat_draft.clone(),
             placeholder: Some(Label::data(shell_chrome_string("chat.placeholder", is_de))),
-            commit: Some("blur".into()),
+            // ⌨️ React's composer submits on a bare Enter (Shift+Enter keeps the newline), which the
+            // retained input expresses as `commit: "enter"` plus an `on_submit` verb — the same
+            // `sendChatDraft` the Send button dispatches, so both routes are one code path.
+            commit: Some("enter".into()),
             min: None,
             max: None,
             step: None,
             accept: None,
             on_change: ActionDescriptor { controller_id: "framework".into(), action: "setChatDraft".into(), args: None },
-            presence: UiPresence {
+            on_submit: Some(ActionDescriptor { controller_id: "framework".into(), action: "sendChatDraft".into(), args: None }),
+            on_abort: None, on_repeat_last: None, presence: UiPresence {
                 state: if connected { ui_wgpu::wgpu::component::ui::UiState::Normal } else { ui_wgpu::wgpu::component::ui::UiState::Disabled },
                 ..UiPresence::default()
             },
@@ -6787,22 +7614,18 @@ impl ShellState {
     pub(crate) fn build_tool_panel_ui(&self, tool_id: &str) -> UiNode {
         let is_de = self.locale_id == "de";
         let armed = self.session.as_ref().and_then(|session| session.view_state.active_tool_id.as_deref()) == Some(tool_id);
-        UiNode::Stack(UiStackNode {
-            direction: "column".into(),
-            gap: None,
-            padding: None,
-            id: Some(format!("{FRAMEWORK_TOOL_PANEL_TAB_PREFIX}{tool_id}.panel")),
-            children: vec![settings_section(
-                &format!("{FRAMEWORK_TOOL_PANEL_TAB_PREFIX}{tool_id}.options"),
-                shell_chrome_string(if armed { "tool.armed" } else { "tool.idle" }, is_de),
-                Vec::new(),
-            )],
-            presence: UiPresence::default(),
-            activate: None,
-            drop_action: None,
-            drop_overlay: None,
-            menu: None,
-        })
+        let items = self.tool_measures.get(tool_id).map(|measures| window_measure_tree_rows(measures)).unwrap_or_default();
+        display_panel_body(
+            &format!("{FRAMEWORK_TOOL_PANEL_TAB_PREFIX}{tool_id}.panel"),
+            vec![UiTreeSectionNode {
+                id: format!("{FRAMEWORK_TOOL_PANEL_TAB_PREFIX}{tool_id}.options"),
+                label: Some(Label::data(shell_chrome_string(if armed { "tool.armed" } else { "tool.idle" }, is_de))),
+                default_open: Some(true),
+                presence: UiPresence::default(),
+                items,
+                window: None,
+            }],
+        )
     }
 
     fn active_terminologies(&self) -> Vec<String> {
@@ -7150,6 +7973,159 @@ impl ShellState {
         }
         self.chrome_present.last_persisted_dock_ui = Some(self.dock_ui_snapshot());
         self.chrome_present.last_persisted_dock_skeleton = Some(self.dock_override.clone());
+        self.load_persisted_named_layouts();
+    }
+
+    /// 🖥️ Restores this app's SAVED layouts from the shared `semio.os.config` document — React's
+    /// `NamedLayoutStore` constructor, which reads its persisted rows the moment the store is built
+    /// (`🏛️ShellHost/🟦️.tsx:3507`, re-memoized on every `session.app.id` change, exactly as this is
+    /// re-run from [`Self::load_persisted_dock`] on every app change).
+    ///
+    /// 🩸️ What this replaces: NOTHING read `namedLayouts`. W5a made the whole `semio.os.config`
+    /// document round-trip through the storage door — a layout saved in the React shell survived a
+    /// switch to wgpu on disk — but no wgpu lane consumed the projection, so a saved layout was
+    /// preserved and ignored (`📓️w5a-browser-prefs-persistence.md` §7.2).
+    pub fn load_persisted_named_layouts(&mut self) {
+        let app_id = self.dock_store_app_id();
+        self.user_layouts = load_named_layouts_from_store(app_id.as_deref());
+    }
+
+    /// 🖥️ Writes this app's saved layouts back — `NamedLayoutStore::save`/`remove`, both of which end
+    /// in one whole-array rewrite. Called by whatever mutates [`ShellState::user_layouts`].
+    pub fn persist_named_layouts(&self) {
+        let app_id = self.dock_store_app_id();
+        save_named_layouts_to_store(app_id.as_deref(), &self.user_layouts);
+    }
+
+    /// 🖥️ The CURRENT dock as a saveable user layout — React's
+    /// `createNamedLayout("user-" + Date.now(), label, currentLayout, "user")`
+    /// (`📌️ChromePanels/🟦️.tsx`'s `saveCurrentLayout`), with the same `user-<millis>` id grammar so a
+    /// layout saved on either renderer reads as a user layout on the other. `None` with no session,
+    /// which is React's own `if (!options.currentLayout) return` gate.
+    pub(crate) fn current_named_layout(&self, label: &str) -> Option<ui_wgpu::wgpu::NamedLayout> {
+        self.session.as_ref()?;
+        let stamp = Self::instant_now_ms().max(0.0) as u64;
+        Some(ui_wgpu::wgpu::NamedLayout { id: format!("user-{stamp}"), label: label.to_string(), icon_id: None, layout: self.dock.to_window_layout(), origin: "user".into(), group_path: None })
+    }
+
+    /// 🖥️ Applies a builtin or saved layout by id — React's `applyNamedLayout`, which searches
+    /// `[...builtinLayouts, ...userLayouts]` and calls `onApplyLayout` with what it finds. `false`
+    /// when no layout carries that id, so the caller journals nothing for a stale row.
+    pub(crate) fn apply_named_layout(&mut self, layout_id: &str) -> bool {
+        let Some(layout) = self.named_layout_by_id(layout_id) else { return false };
+        self.layout_override = Some(layout);
+        self.sync_dock();
+        self.active_window_id = self.dock.active_window_id.clone();
+        true
+    }
+
+    /// 🖥️ Opens one more instance of `window_kind_id`, split right of the active stack — the same
+    /// placement [`ShellState::open_active_window_in_new_window`] uses for `mod+shift+n`, which is
+    /// React's `onWindowOpenInNewWindow`. A `template_id` seeds that instance's projection exactly as
+    /// React's dropped `{windowKindId, templateId}` payload does.
+    pub(crate) fn open_display_window(&mut self, window_kind_id: &str, template_id: Option<&str>) -> bool {
+        let Some(session) = self.session.as_ref() else { return false };
+        if !session.app.window_kinds.iter().any(|kind| kind.id == window_kind_id) {
+            return false;
+        }
+        let taken: Vec<String> = self.dock.window_instances().into_iter().map(|(id, _)| id).collect();
+        let instance_id = (2..)
+            .map(|index| format!("{window_kind_id}-{index}"))
+            .find(|candidate| !taken.contains(candidate))
+            .expect("an unbounded counter always clears a finite dock roster");
+        let anchor = self.active_window_id.clone().or_else(|| taken.first().cloned());
+        let Some(path) = anchor.as_deref().and_then(|window_id| self.dock_stack_path_for(window_id)) else { return false };
+        if !self.dock.split_stack_with_instance(&path, &instance_id, window_kind_id, crate::dock::DockSide::Right) {
+            return false;
+        }
+        if let Some(template_id) = template_id {
+            self.world_projection_template.insert(instance_id.clone(), template_id.to_string());
+        }
+        self.active_window_id = Some(instance_id);
+        self.persist_dock_layout();
+        true
+    }
+
+    /// 🔌️ Drops a resident plugin — React's `uninstallPlugin`. The session's OWN program is never
+    /// dropped (React's `canUninstall`), because a shell may not unload the program it is running.
+    pub(crate) fn uninstall_plugin(&mut self, plugin_id: &str) -> bool {
+        if self.session.as_ref().is_some_and(|session| session.plugin_id == plugin_id) {
+            return false;
+        }
+        let before = self.plugins.len();
+        self.plugins.retain(|entry| entry.plugin_id != plugin_id);
+        self.plugins.len() != before
+    }
+
+    /// ⚔️ React's `conflictKindLabel`/`conflictMessageText` reduction of one wire conflict into the
+    /// row the Conflicts leaf paints — the kind's own tag, and the WORST message's code and text
+    /// (`conflict.messages[0]`, React's own pick), never prose-parsed.
+    #[cfg(not(target_arch = "wasm32"))]
+    pub(crate) fn conflict_rows(conflicts: &[protocol::Conflict]) -> Vec<ShellConflictRow> {
+        conflicts
+            .iter()
+            .filter(|conflict| conflict.status == protocol::ConflictStatus::Open)
+            .map(|conflict| {
+                let worst = conflict.messages.first();
+                ShellConflictRow {
+                    id: conflict.id.0.clone(),
+                    quarantined: matches!(conflict.kind, protocol::ConflictKind::Quarantined { .. }),
+                    code: worst.map(|message| message.code.0.clone()).unwrap_or_default(),
+                    message: worst.map(|message| message.message.clone()).unwrap_or_default(),
+                }
+            })
+            .collect()
+    }
+
+    /// ⚔️ Seeds the Conflicts leaf's roster once per session — React's `AppCommand::ReadConflicts`
+    /// bootstrap (`🏛️ShellHost/🟦️.tsx`: "otherwise the panel would only ever show conflicts a later
+    /// reply happened to carry"). Best-effort and native-only, the same posture — and the same
+    /// backend limit — [`ShellState::refresh_history_snapshot`] already takes.
+    #[cfg(not(target_arch = "wasm32"))]
+    pub(crate) async fn seed_open_conflicts(&mut self) {
+        if self.conflicts_seeded {
+            return;
+        }
+        let Some(session) = self.session.as_ref() else { return };
+        let Some(plugin) = self.plugins.iter().find(|entry| entry.plugin_id == session.plugin_id).cloned() else { return };
+        let instance_id = session.instance_id;
+        self.conflicts_seeded = true;
+        match plugin.read_conflicts(instance_id).await {
+            Ok(conflicts) => self.open_conflicts = Self::conflict_rows(&conflicts),
+            Err(error) => Self::debug_log(&format!("[DEBUG] wgpu shell read_conflicts failed: {error}")),
+        }
+    }
+
+    /// ⚔️ Accept/discard one conflict and adopt the roster the guest answers with — React's
+    /// `dispatchResolveConflict`, whose reply carries the surviving conflicts so the row leaves
+    /// without a second read.
+    pub(crate) async fn resolve_open_conflict(&mut self, conflict_id: &str, accept: bool) {
+        #[cfg(not(target_arch = "wasm32"))]
+        {
+            if let Some((plugin, instance_id)) = self.session.as_ref().and_then(|session| self.plugins.iter().find(|entry| entry.plugin_id == session.plugin_id).cloned().map(|plugin| (plugin, session.instance_id))) {
+                match plugin.resolve_conflict(instance_id, conflict_id, accept).await {
+                    Ok(conflicts) => self.open_conflicts = Self::conflict_rows(&conflicts),
+                    Err(error) => Self::debug_log(&format!("[DEBUG] wgpu shell resolve_conflict failed: {error}")),
+                }
+            }
+        }
+        #[cfg(target_arch = "wasm32")]
+        {
+            let _ = accept;
+            self.open_conflicts.retain(|row| row.id != conflict_id);
+        }
+        if self.selected_conflict_id.as_deref() == Some(conflict_id) {
+            self.selected_conflict_id = None;
+        }
+    }
+
+    /// 🖥️ The layout `layout_id` names, searching the app's declared layouts and then this app's saved
+    /// ones — React's `[...builtinLayouts, ...userLayouts].find(…)`.
+    pub(crate) fn named_layout_by_id(&self, layout_id: &str) -> Option<ui_wgpu::wgpu::WindowLayout> {
+        if let Some(named) = self.session.as_ref().and_then(|session| session.app.named_layouts.iter().find(|entry| entry.id == layout_id)) {
+            return Some(named.layout.clone());
+        }
+        self.user_layouts.iter().find(|entry| entry.id == layout_id).map(|entry| entry.layout.clone())
     }
     //#endregion 🧭️PanelAnchorAccessors
 }
@@ -7157,6 +8133,10 @@ impl ShellState {
 #[cfg(test)]
 #[path = "../../🧪️tests/🔬️wgpu-panel-anchor-model/🦀️.rs"]
 mod panel_anchor_model_tests;
+
+#[cfg(all(test, not(target_arch = "wasm32")))]
+#[path = "../../🧪️tests/🖥️wgpu-display-conflicts-marketplace/🦀️.rs"]
+mod display_conflicts_marketplace_tests;
 //#endregion ShellLifecycle
 
 //#region ShellActions
@@ -7413,6 +8393,12 @@ impl ShellState {
             }
             Err(error) => Self::debug_log(&format!("[DEBUG] wgpu shell read_history failed: {error}")),
         }
+        // ⚔️ A freshly attached document brings its own open conflicts with it — React seeds the
+        // Conflicts panel on the same session-start/switch edge.
+        self.conflicts_seeded = false;
+        self.open_conflicts.clear();
+        self.selected_conflict_id = None;
+        self.seed_open_conflicts().await;
     }
 
     /// 🧾️ ticket §C5 — folds an `InvocationResult.history_patch` (present on every `handleAction`/
@@ -7735,16 +8721,67 @@ impl ShellState {
         (bindings, surface)
     }
 
+    #[cfg(not(target_arch = "wasm32"))]
+    fn schedule_sync_path_pick(&mut self, pick: impl std::future::Future<Output = Option<String>> + Send + 'static) {
+        self.submit_shell_io_future(async move {
+            let Some(path) = pick.await else { return ShellIoCompletion::Finished };
+            ShellIoCompletion::Actions(vec![ActionDescriptor {
+                controller_id: "framework.sync".into(),
+                action: "setSyncDraft".into(),
+                args: semio_framework::optional_json_to_dsl(Some(serde_json::json!({ "path": path }))),
+            }])
+        });
+    }
+
     async fn handle_sync_action(&mut self, action: ActionDescriptor) -> Result<(), String> {
         match action.action.as_str() {
             "selectFile" => {
                 self.sync_card_kind = Some("file".into());
                 self.sync_card_draft = self.sync_backbone_uri.as_deref().filter(|uri| uri.starts_with("file://")).map(|uri| uri.trim_start_matches("file://").to_string()).unwrap_or_default();
+                #[cfg(not(target_arch = "wasm32"))]
+                self.schedule_sync_path_pick(pick_file_path());
+                #[cfg(target_arch = "wasm32")]
+                if let Some(path) = pick_file_path().await {
+                    self.sync_card_draft = path;
+                }
                 Ok(())
             }
             "selectFolder" => {
                 self.sync_card_kind = Some("folder".into());
                 self.sync_card_draft = self.sync_backbone_uri.as_deref().filter(|uri| uri.starts_with("folder://")).map(|uri| uri.trim_start_matches("folder://").to_string()).unwrap_or_default();
+                #[cfg(not(target_arch = "wasm32"))]
+                self.schedule_sync_path_pick(pick_folder());
+                #[cfg(target_arch = "wasm32")]
+                if let Some(path) = pick_folder().await {
+                    self.sync_card_draft = path;
+                }
+                Ok(())
+            }
+            "browse" => match self.sync_card_kind.as_deref() {
+                Some("folder") => {
+                    #[cfg(not(target_arch = "wasm32"))]
+                    self.schedule_sync_path_pick(pick_folder());
+                    #[cfg(target_arch = "wasm32")]
+                    if let Some(path) = pick_folder().await {
+                        self.sync_card_draft = path;
+                    }
+                    Ok(())
+                }
+                Some("file") => {
+                    #[cfg(not(target_arch = "wasm32"))]
+                    self.schedule_sync_path_pick(pick_file_path());
+                    #[cfg(target_arch = "wasm32")]
+                    if let Some(path) = pick_file_path().await {
+                        self.sync_card_draft = path;
+                    }
+                    Ok(())
+                }
+                _ => Ok(()),
+            },
+            "setSyncDraft" => {
+                if let Some(path) = action.args.as_ref().and_then(|args| args.get("path")).and_then(|value| value.as_str()) {
+                    self.sync_card_draft = path.to_string();
+                }
                 Ok(())
             }
             "selectRemote" => {
@@ -7853,6 +8890,7 @@ impl ShellState {
                 "setDriver" => {
                     if let Some(value) = action.args.as_ref().and_then(|args| args.get("value")).and_then(|v| v.as_str()) {
                         self.driver_id = value.to_string();
+                        self.chrome_build.driver = resolve_ui_driver_chrome(&self.driver_id, &self.chrome_build.preferences.custom_drivers);
                         self.note_shell_setting_command("os.setDriver", Some(value)).await?;
                     }
                     return Ok(());
@@ -7880,6 +8918,10 @@ impl ShellState {
                 "setThemeId" => {
                     if let Some(value) = action.args.as_ref().and_then(|args| args.get("value")).and_then(|v| v.as_str()) {
                         set_active_theme_id(value);
+                        // 🎨️ React drops the draft on every selection change (`setThemeId` dispatches
+                        // `SET_UI_THEME_DRAFT: null` first) — otherwise the previous theme's unsaved
+                        // edits would follow the user onto the newly picked one.
+                        self.clear_theme_draft();
                         self.chrome_build.preferences.theme_id = value.to_string();
                         self.note_shell_setting_command("os.setThemeId", Some(value)).await?;
                     }
@@ -8036,6 +9078,94 @@ impl ShellState {
                 }
                 // 💬️ The chat panel's own two verbs — React's composer `setDraft`/`submit`. There is no
                 // clear verb: the feed is live bridge state, not a local buffer a shell may discard.
+                // 🖥️ The two Display leaves' own verbs — React's `DisplayHostApi`
+                // (`📌️ChromePanels/🟦️.tsx`): the save-name box, Save current layout, apply and delete.
+                "setLayoutSaveLabel" => {
+                    if let Some(value) = action.args.as_ref().and_then(|args| args.get("value")).and_then(|v| v.as_str()) {
+                        self.layout_save_label = value.to_string();
+                    }
+                    return Ok(());
+                }
+                "saveCurrentLayout" => {
+                    let label = self.layout_save_label.trim().to_string();
+                    if label.is_empty() {
+                        return Ok(());
+                    }
+                    if let Some(layout) = self.current_named_layout(&label) {
+                        let id = layout.id.clone();
+                        self.user_layouts.retain(|entry| entry.id != id);
+                        self.user_layouts.push(layout);
+                        self.layout_save_label.clear();
+                        // 🖥️ React's `NamedLayoutStore::save` persists on the same call that mutates its
+                        // roster — a layout saved and not written would be gone on the next boot.
+                        self.persist_named_layouts();
+                        self.note_shell_setting_command("os.saveNamedLayout", Some(&id)).await?;
+                    }
+                    return Ok(());
+                }
+                "applyNamedLayout" => {
+                    if let Some(layout_id) = action.args.as_ref().and_then(|args| args.get("layoutId")).and_then(|v| v.as_str()).map(ToOwned::to_owned) {
+                        if self.apply_named_layout(&layout_id) {
+                            self.note_shell_setting_command("os.applyNamedLayout", Some(&layout_id)).await?;
+                        }
+                    }
+                    return Ok(());
+                }
+                "deleteUserLayout" => {
+                    if let Some(layout_id) = action.args.as_ref().and_then(|args| args.get("layoutId")).and_then(|v| v.as_str()).map(ToOwned::to_owned) {
+                        self.user_layouts.retain(|entry| entry.id != layout_id);
+                        // 🖥️ React's `NamedLayoutStore::remove` persists the shortened roster too.
+                        self.persist_named_layouts();
+                        self.note_shell_setting_command("os.deleteNamedLayout", Some(&layout_id)).await?;
+                    }
+                    return Ok(());
+                }
+                // 🖥️ One Display "Windows" row — React drags this payload onto the dock; with no panel
+                // drag lane here the press opens the window directly, carrying the same
+                // `{windowKindId, templateId}` the drag would have.
+                "openDisplayWindow" => {
+                    let window_kind_id = action.args.as_ref().and_then(|args| args.get("windowKindId")).and_then(|v| v.as_str()).map(ToOwned::to_owned);
+                    let template_id = action.args.as_ref().and_then(|args| args.get("templateId")).and_then(|v| v.as_str()).map(ToOwned::to_owned);
+                    if let Some(window_kind_id) = window_kind_id {
+                        self.open_display_window(&window_kind_id, template_id.as_deref());
+                    }
+                    return Ok(());
+                }
+                // ⚔️ The Conflicts leaf's two verbs — React's `onSelect`/`onResolve`.
+                "selectConflict" => {
+                    if let Some(conflict_id) = action.args.as_ref().and_then(|args| args.get("conflictId")).and_then(|v| v.as_str()) {
+                        self.selected_conflict_id = (self.selected_conflict_id.as_deref() != Some(conflict_id)).then(|| conflict_id.to_string());
+                    }
+                    return Ok(());
+                }
+                "resolveConflict" => {
+                    let conflict_id = action.args.as_ref().and_then(|args| args.get("conflictId")).and_then(|v| v.as_str()).map(ToOwned::to_owned);
+                    let accept = action.args.as_ref().and_then(|args| args.get("accept")).and_then(DslValue::as_bool).unwrap_or(true);
+                    if let Some(conflict_id) = conflict_id {
+                        self.resolve_open_conflict(&conflict_id, accept).await;
+                    }
+                    return Ok(());
+                }
+                // 🛍️ The Marketplace leaf's three verbs — React's
+                // `installPlugin`/`reloadPlugin`/`uninstallPlugin`.
+                "installPlugin" | "reloadPlugin" => {
+                    if let Some(plugin_id) = action.args.as_ref().and_then(|args| args.get("pluginId")).and_then(|v| v.as_str()).map(ToOwned::to_owned) {
+                        if action.action == "reloadPlugin" {
+                            self.uninstall_plugin(&plugin_id);
+                        }
+                        let _ = self.install_plugin(&plugin_id).await;
+                        self.note_shell_setting_command(if action.action == "reloadPlugin" { "os.reloadPlugin" } else { "os.installPlugin" }, Some(&plugin_id)).await?;
+                    }
+                    return Ok(());
+                }
+                "uninstallPlugin" => {
+                    if let Some(plugin_id) = action.args.as_ref().and_then(|args| args.get("pluginId")).and_then(|v| v.as_str()).map(ToOwned::to_owned) {
+                        if self.uninstall_plugin(&plugin_id) {
+                            self.note_shell_setting_command("os.uninstallPlugin", Some(&plugin_id)).await?;
+                        }
+                    }
+                    return Ok(());
+                }
                 "setChatDraft" => {
                     if let Some(value) = action.args.as_ref().and_then(|args| args.get("value")).and_then(|v| v.as_str()) {
                         self.agent_chat_draft = value.to_string();
@@ -8046,8 +9176,117 @@ impl ShellState {
                     self.send_agent_chat_draft();
                     return Ok(());
                 }
+                // ⚖️ React's `setMergePolicy` — local authority state, never wire-carried, so it moves
+                // no document and notes no history entry beyond the shell setting itself.
+                "setMergePolicy" => {
+                    if let Some(value) = action.args.as_ref().and_then(|args| args.get("value")).and_then(|v| v.as_str()) {
+                        if SHELL_MERGE_POLICY_OPTIONS.iter().any(|(option, _)| *option == value) {
+                            self.merge_policy = value.to_string();
+                            self.note_shell_setting_command("os.setMergePolicy", Some(value)).await?;
+                        }
+                    }
+                    return Ok(());
+                }
+                // 🎨️ The eight theme-editor verbs — React's `setThemeColor`/`setThemeSpacing`/
+                // `setThemeFontStack`/`setThemeStroke`/`setThemeRadius`/`setThemeOpacity`/
+                // `setThemeMetric`/`setThemeAppearancePaint`, each a `draftThemePatch` over the SAME
+                // document. The key rides the row's authored args (merged with the committed value by
+                // `merge_committed_args`), where React's closure captured it.
+                "setThemeColor" | "setThemeSpacing" | "setThemeFontStack" | "setThemeStroke" | "setThemeRadius" | "setThemeOpacity" | "setThemeMetric" | "setThemeAppearancePaint" => {
+                    let args = action.args.as_ref().map(dsl_value_as_json).unwrap_or(Value::Null);
+                    let verb = action.action.clone();
+                    self.apply_theme_editor_commit(&verb, &args);
+                    return Ok(());
+                }
+                // 🎨️ Which section the editor shows expanded, and which page of it.
+                "toggleThemeSection" => {
+                    if let Some(value) = action.args.as_ref().and_then(|args| args.get("value")).and_then(|v| v.as_str()) {
+                        let already = self.theme_editor_open_section.as_deref() == Some(value);
+                        self.theme_editor_open_section = (!already).then(|| value.to_string());
+                        self.theme_editor_page = 0;
+                    }
+                    return Ok(());
+                }
+                "stepThemePage" => {
+                    let step = action.args.as_ref().and_then(|args| args.get("value")).and_then(|value| dsl_value_as_json(value).as_i64()).unwrap_or(0);
+                    self.theme_editor_page = self.theme_editor_page.saturating_add_signed(step as isize);
+                    return Ok(());
+                }
+                "setThemeSaveLabel" => {
+                    self.theme_save_label = action.args.as_ref().and_then(|args| args.get("value")).and_then(|v| v.as_str()).unwrap_or_default().to_string();
+                    return Ok(());
+                }
+                // 💾️ React's `saveTheme(label)`: slug the trimmed name, store the canonical document
+                // under `custom.<slug>`, select it, and drop the draft.
+                "saveTheme" => {
+                    let label = self.theme_save_label.trim().to_string();
+                    if let Some(id) = custom_theme_id_for_label(&label) {
+                        let mut document = self.theme_document();
+                        document.id = id.clone();
+                        document.label = label;
+                        if let Some(raw) = save_custom_theme_document(&id, &document) {
+                            self.chrome_build.preferences.custom_themes.insert(id.clone(), raw);
+                            self.chrome_build.preferences.theme_id = id.clone();
+                            self.theme_draft = None;
+                            self.theme_save_label.clear();
+                            self.note_shell_setting_command("os.setThemeId", Some(id.as_str())).await?;
+                        }
+                    }
+                    return Ok(());
+                }
+                // ⬇️ React's `exportTheme`: `downloadMediaExport(`${id}.theme.dsl`, "text/plain",
+                // serializeUiTheme(theme))` — the same filename, mime and canonical 2-space JSON.
+                "exportTheme" => {
+                    let document = self.theme_document();
+                    if let Ok(text) = serde_json::to_string_pretty(&document) {
+                        download_media_export(&format!("{}.theme.dsl", document.id), "text/plain", &text, None);
+                    }
+                    return Ok(());
+                }
+                // ⬆️ React's `importTheme`: `requestFileOpen(".theme.dsl,.dsl,text/plain")`, parse,
+                // then save under the parsed label. The picker is user-activation gated, so it parks
+                // for the gesture lane rather than opening from this async funnel.
+                "importTheme" => {
+                    #[cfg(target_arch = "wasm32")]
+                    {
+                        self.pending_theme_import = true;
+                    }
+                    #[cfg(not(target_arch = "wasm32"))]
+                    self.submit_shell_io_future(async move {
+                        let opened = request_file_open(SHELL_THEME_IMPORT_ACCEPT, Some("text"), false).await;
+                        ShellIoCompletion::Actions(
+                            opened
+                                .into_iter()
+                                .take(1)
+                                .map(|file| ActionDescriptor { controller_id: "framework".into(), action: "applyImportedTheme".into(), args: crate::action_args_json!({ "value": file.contents }) })
+                                .collect(),
+                        )
+                    });
+                    return Ok(());
+                }
+                // ⬆️ The picked file's text, parsed and saved — React's
+                // `saveTheme(parsed.label || parsed.id)`. An invalid file is ignored, exactly as
+                // React's `catch {}` ignores it.
+                "applyImportedTheme" => {
+                    if let Some(text) = action.args.as_ref().and_then(|args| args.get("value")).and_then(|v| v.as_str()) {
+                        if let Some(document) = serde_json::from_str::<ThemeDocument>(text).ok().filter(ThemeDocument::is_document) {
+                            let label = if document.label.is_empty() { document.id.clone() } else { document.label.clone() };
+                            if let Some(id) = custom_theme_id_for_label(&label) {
+                                let saved = ThemeDocument { id: id.clone(), label, ..document };
+                                if let Some(raw) = save_custom_theme_document(&id, &saved) {
+                                    self.chrome_build.preferences.custom_themes.insert(id.clone(), raw);
+                                    self.chrome_build.preferences.theme_id = id.clone();
+                                    self.theme_draft = None;
+                                    self.note_shell_setting_command("os.setThemeId", Some(id.as_str())).await?;
+                                }
+                            }
+                        }
+                    }
+                    return Ok(());
+                }
                 "resetThemeId" => {
                     set_active_theme_id("semio");
+                    self.clear_theme_draft();
                     self.chrome_build.preferences.theme_id = "semio".to_string();
                     self.note_shell_setting_command("os.resetThemeId", Some("semio")).await?;
                     return Ok(());
@@ -8415,7 +9654,10 @@ impl ShellState {
         let administration_changed = self.pump_space_administration().await;
         self.poll_auto_checkin().await;
         self.flush_pending_directory_commands().await;
-        identity_changed || administration_changed
+        // 🌉️ Packet W15e: the agent bridge's socket rides the SAME 100 ms slot rather than a timer of
+        // its own — one pump cadence for every out-of-process conversation this shell holds.
+        let bridge_changed = self.pump_agent_bridge();
+        identity_changed || administration_changed || bridge_changed
     }
 
     //#endregion 📇️DirectoryLane
@@ -8746,9 +9988,11 @@ impl ShellState {
     async fn pump_directory_events(&mut self) -> bool {
         self.poll_identity_bootstrap();
         let inference_changed = self.pump_inference_port();
+        // 🌉️ Packet W15e: the agent bridge's socket rides the SAME frame pump as the directory lane.
+        let bridge_changed = self.pump_agent_bridge();
         // 🏛️ One bounded administration turn per frame: the retained operation never spins, because
         // `pump_space_administration` answers `false` the moment it reaches `Idle` or a terminal phase.
-        let mut changed = self.pump_space_administration().await || inference_changed;
+        let mut changed = self.pump_space_administration().await || inference_changed || bridge_changed;
         let runner = self.directory_home.as_ref().and_then(|home| home.stream.clone());
         if let Some(runner) = runner {
             if runner.take_terminal() {
@@ -9879,6 +11123,10 @@ impl ShellState {
     fn publish_retained_hit_registry(&mut self, input: &mut InputState<ActionDescriptor>) {
         std::mem::swap(&mut self.retained_hit_windows, &mut self.retained_hit_windows_staging);
         input.publish_hits();
+        // ♿️ The chrome's accessible names ride the SAME promotion as its hit registry (packet W15d)
+        // — a production path, not a diagnostics one, so an assistive technology reads the chrome
+        // whether or not `SEMIO_RUNTIME_DIAGNOSTICS` is armed.
+        crate::interpreter::note_chrome_accessibility(self.chrome_accessibility_nodes(input.hits()));
         crate::interpreter::note_chrome_hit_registry(input.hits(), &self.retained_hit_windows);
         crate::interpreter::note_chrome_surfaces(&self.chrome_surface_census());
     }
@@ -9899,6 +11147,16 @@ impl ShellState {
             rows.push((UI_INTRODUCTION_DIALOG_ELEMENT_ID.to_string(), "dialog", UI_INTRODUCTION_DIALOG_ELEMENT_ID.to_string()));
         }
         rows
+    }
+
+    /// ⌨️🖱️ The live modifier set the retained router's POINTER events carry — the aggregate
+    /// `InputState::modifiers` the ingress refreshes on every pointer and key event, projected onto
+    /// `events`' own type. React reads the very same four flags straight off the DOM `PointerEvent`
+    /// (`⚙️VirtualFileSystem/🟦️.tsx:520-521`), so a retained press that dropped them could never
+    /// express shift-extend or ctrl-toggle on any list surface
+    /// (ticket 26/09/17/WGPU-RENDERER-REACT-PARITY, `📓️audit-w14-scenes-residual.md` C1).
+    fn retained_event_modifiers(input: &InputState<ActionDescriptor>) -> ui_wgpu::wgpu::EventModifiers {
+        ui_wgpu::wgpu::EventModifiers { shift: input.modifiers.shift, ctrl: input.modifiers.ctrl, alt: input.modifiers.alt, meta: input.modifiers.meta }
     }
 
     /// 🖱️ DOM-standard `MouseEvent.button` code onto the retained event's own button identity.
@@ -9932,13 +11190,13 @@ impl ShellState {
         if let Some(previous) = self.retained_hover_window.clone() {
             if current.as_ref().map(|(window_id, _)| window_id.as_str()) != Some(previous.as_str()) {
                 if let Some(body) = self.retained_window_body_rect(&previous) {
-                    let _ = crate::interpreter::dispatch_ui_event(&previous, ui_wgpu::wgpu::UiEvent::PointerMove { x: x - body.x, y: y - body.y }, input);
+                    let _ = crate::interpreter::dispatch_ui_event(&previous, ui_wgpu::wgpu::UiEvent::PointerMove { x: x - body.x, y: y - body.y, modifiers: Self::retained_event_modifiers(input) }, input);
                 }
             }
         }
         self.retained_hover_window = current.as_ref().map(|(window_id, _)| window_id.clone());
         let Some((window_id, body)) = current else { return };
-        let _ = crate::interpreter::dispatch_ui_event(&window_id, ui_wgpu::wgpu::UiEvent::PointerMove { x: x - body.x, y: y - body.y }, input);
+        let _ = crate::interpreter::dispatch_ui_event(&window_id, ui_wgpu::wgpu::UiEvent::PointerMove { x: x - body.x, y: y - body.y, modifiers: Self::retained_event_modifiers(input) }, input);
     }
 
     /// 👆️ A press on a retained body target. A control the retained router itself owns (a text
@@ -9977,9 +11235,9 @@ impl ShellState {
         }
         if matches!(kind, HitKind::Input | HitKind::Select | HitKind::Toggle | HitKind::Slider | HitKind::NumberStepper | HitKind::Ring | HitKind::IconSelect) {
             let event = if down {
-                ui_wgpu::wgpu::UiEvent::PointerDown { x: x - body.x, y: y - body.y, button: Self::retained_pointer_button(button) }
+                ui_wgpu::wgpu::UiEvent::PointerDown { x: x - body.x, y: y - body.y, button: Self::retained_pointer_button(button), modifiers: Self::retained_event_modifiers(input) }
             } else {
-                ui_wgpu::wgpu::UiEvent::PointerUp { x: x - body.x, y: y - body.y, button: Self::retained_pointer_button(button) }
+                ui_wgpu::wgpu::UiEvent::PointerUp { x: x - body.x, y: y - body.y, button: Self::retained_pointer_button(button), modifiers: Self::retained_event_modifiers(input) }
             };
             let commands = crate::interpreter::dispatch_ui_event(window_id, event, input);
             self.chrome_build.note_content_focus_commands(&commands);
@@ -10263,6 +11521,15 @@ impl ShellState {
             self.toggle_window_pane_chip(&window_id, chip);
             return Ok(true);
         }
+        // 🔼️ A `Select` popup's scroll chevron (`{select}.scroll.up`/`.down`). Answered BEFORE the
+        // `match` for the same reason the pane chips are: the id is decoded, not prefixed, and the
+        // press handler cannot clamp — it only arms a direction that the popup's own painter prices
+        // in `select_scroll_step` pixels and clamps with `select_clamped_scroll`, because only the
+        // painter holds the item count and the collision-resolved popup height
+        // (ticket 26/09/17 packet W15a; the chevrons painted and did nothing before it).
+        if ui_wgpu::wgpu::arm_select_scroll(&mut self.scroll_offsets, id) {
+            return Ok(true);
+        }
         match id {
             "ui.nav.back" => {
                 if self.uri_index > 0 {
@@ -10470,13 +11737,15 @@ impl ShellState {
             }
             id if id.starts_with("shell.layout.") => {
                 let layout_id = id.trim_start_matches("shell.layout.");
-                if let Some(session) = &self.session {
-                    if let Some(named) = session.app.named_layouts.iter().find(|entry| entry.id == layout_id) {
-                        self.layout_override = Some(named.layout.clone());
-                        self.sync_dock();
-                        self.active_window_id = self.dock.active_window_id.clone();
-                        self.note_control_command(id, Some(serde_json::json!({ "layoutId": layout_id }))).await?;
-                    }
+                // 🖥️ React's `applyNamedLayout` searches `[...builtinLayouts, ...userLayouts]`
+                // (`📌️ChromePanels/🟦️.tsx`'s `useNamedLayoutHost`), so a layout the user SAVED resolves
+                // exactly like one the app declared. This arm used to search the app's declarations
+                // alone, which is why a restored `namedLayouts` entry was inert.
+                if let Some(layout) = self.named_layout_by_id(layout_id) {
+                    self.layout_override = Some(layout);
+                    self.sync_dock();
+                    self.active_window_id = self.dock.active_window_id.clone();
+                    self.note_control_command(id, Some(serde_json::json!({ "layoutId": layout_id }))).await?;
                 }
                 return Ok(true);
             }
@@ -10494,8 +11763,8 @@ impl ShellState {
             // elements, and routing them through the one press funnel is what makes the veil able to
             // swallow a press instead of letting it through to the surface below.
             UI_INTRODUCTION_VEIL_CONTROL_ID | UI_INTRODUCTION_SKIP_CONTROL_ID => {
-                match self.session.as_ref().map(|session| session.app.id.clone()) {
-                    Some(app_id) => self.chrome_build.dismiss_introduction(&app_id),
+                match self.introduction_seen_key() {
+                    Some(seen_key) => self.chrome_build.dismiss_introduction(&seen_key),
                     None => self.chrome_build.skip_introduction(),
                 }
                 return Ok(true);
@@ -10593,17 +11862,19 @@ impl ShellState {
             }
             id if self.widget_maps.select_metas.contains_key(id) => {
                 let opening = !self.open_selects.get(id).copied().unwrap_or(false);
-                for key in self.open_selects.keys().cloned().collect::<Vec<_>>() {
-                    self.open_selects.insert(key, false);
-                }
+                self.close_open_selects();
                 self.open_selects.insert(id.to_string(), opening);
                 return Ok(true);
             }
             id if id.contains(".item.") => {
                 if let Some((select_id, value)) = id.rsplit_once(".item.") {
                     if let Some(action) = self.widget_maps.select_metas.get(select_id).cloned() {
+                        ui_wgpu::wgpu::clear_select_scroll(&mut self.scroll_offsets, select_id);
                         self.open_selects.insert(select_id.to_string(), false);
-                        self.dispatch_action(ActionDescriptor { controller_id: action.controller_id, action: action.action, args: crate::action_args_json!({ "value": value }) }).await?;
+                        // 🔀️ The picked value is MERGED into whatever the node authored, never
+                        // substituted for it — see `merge_committed_args` (packet W15d).
+                        let args = merge_committed_args(action.args.as_ref(), DslValue::String(value.to_string()));
+                        self.dispatch_action(ActionDescriptor { controller_id: action.controller_id, action: action.action, args }).await?;
                         return Ok(true);
                     }
                 }
@@ -10787,6 +12058,11 @@ impl ShellState {
     /// gesture, and still bounded (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
     #[cfg(target_arch = "wasm32")]
     async fn drain_gesture_bound_work(&mut self) {
+        // 🎨️ The theme IMPORT picker is the second gesture-bound door (packet W15d) and obeys the same
+        // rule: opened from the gesture that armed it, never from a later settle step.
+        if std::mem::take(&mut self.pending_theme_import) {
+            self.run_theme_import_request().await;
+        }
         for _ in 0..SHELL_DEFERRED_CHAIN_ROUNDS {
             let file_opens = std::mem::take(&mut self.pending_file_opens);
             if file_opens.is_empty() {
@@ -11035,8 +12311,20 @@ impl ShellState {
             }
         }
         if let Some(meta) = self.widget_maps.input_metas.get(&id).cloned() {
-            self.dispatch_action(ActionDescriptor { controller_id: meta.on_change.controller_id, action: meta.on_change.action, args: crate::action_args_json!({ "value": input.text_view() }) }).await?;
+            // 🔢️ The chrome shell's own commit goes through `InputMeta::commit_value`, which is the
+            // one place the field's `min`/`max`/`step` are applied — React's `<input type="number">`
+            // refuses an out-of-range or off-step value outright, and this path used to dispatch the
+            // raw buffer text instead, so a numeric shell field could commit what React never would
+            // (ticket 26/09/17 packet W15a, W1m gap G6). `None` means a `number` buffer that does not
+            // parse at all: the guest sees NO commit rather than an invented number, exactly as the
+            // primitive's own doc comment specifies. The caret still blurs either way, because the
+            // gesture is over whichever answer the constraint gave.
+            let committed = meta.commit_value(input.text_view());
             input.blur_input();
+            if let Some(value) = committed {
+                let args = merge_committed_args(meta.on_change.args.as_ref(), value);
+                self.dispatch_action(ActionDescriptor { controller_id: meta.on_change.controller_id, action: meta.on_change.action, args }).await?;
+            }
         }
         Ok(())
     }
@@ -11205,13 +12493,23 @@ impl ShellState {
         Ok(())
     }
 
+    /// 🔽️ Closes every open `Select` popup and drops the two `scroll_offsets` slots each one owned —
+    /// a reopened popup starts at its first page, like a freshly mounted `SelectContent`, and neither
+    /// slot outlives the popup that minted it (ticket 26/09/17 packet W15a). The ONE close path, so
+    /// the outside-press, item-commit, Escape and toggle routes cannot disagree about the state they
+    /// leave behind.
+    fn close_open_selects(&mut self) {
+        for key in self.open_selects.keys().cloned().collect::<Vec<_>>() {
+            ui_wgpu::wgpu::clear_select_scroll(&mut self.scroll_offsets, &key);
+            self.open_selects.insert(key, false);
+        }
+    }
+
     fn dismiss_overlays(&mut self, x: f32, y: f32, input: &InputState<ActionDescriptor>) -> bool {
         let hit = input.hit_at(x, y);
         let on_overlay = hit.is_some_and(|h| matches!(h.kind, HitKind::ContextMenu | HitKind::DropdownItem | HitKind::NavbarItem | HitKind::Select));
         if self.open_selects.values().any(|open| *open) && !on_overlay {
-            for key in self.open_selects.keys().cloned().collect::<Vec<_>>() {
-                self.open_selects.insert(key, false);
-            }
+            self.close_open_selects();
             return true;
         }
         if self.context_menu.is_some() && !on_overlay {
@@ -11709,9 +13007,7 @@ impl ShellState {
     fn dismiss_dismissable_layers(&mut self) -> bool {
         let mut dismissed = false;
         if self.open_selects.values().any(|open| *open) {
-            for key in self.open_selects.keys().cloned().collect::<Vec<_>>() {
-                self.open_selects.insert(key, false);
-            }
+            self.close_open_selects();
             dismissed = true;
         }
         if matches!(self.overlay_state, OverlayState::Dropdown(_)) {
@@ -11752,8 +13048,8 @@ impl ShellState {
             if let Some(step) = self.chrome_tour_active_step() {
                 match action {
                     ui_wgpu::wgpu::KeyAction::Escape => {
-                        if let Some(session) = self.session.as_ref() {
-                            self.chrome_build.dismiss_introduction(&session.app.id);
+                        if let Some(seen_key) = self.introduction_seen_key() {
+                            self.chrome_build.dismiss_introduction(&seen_key);
                         } else {
                             self.chrome_build.skip_introduction();
                         }
@@ -12781,6 +14077,7 @@ fn render_retained_chrome_group_item_step(
         }
         7 => {
             if register_hit && !item.disabled {
+                note_chrome_control_name(item.control_id, item.label);
                 input.register_hit(HitTarget { rect, event: None, control_id: Some(item.control_id.into()), kind: item.kind.clone(), drag_axis: None, drag_data: None });
             }
             *group_phase = 8;
@@ -12920,6 +14217,7 @@ fn render_chrome_group(draw: &mut DrawList, atlas: &mut FontAtlas, icons: &IconA
             }
         }
         if register_hits && !item.disabled {
+            note_chrome_control_name(item.control_id, item.label);
             input.register_hit(HitTarget { rect: item_rect, event: None, control_id: Some(item.control_id.into()), kind: item.kind.clone(), drag_axis: None, drag_data: None });
         }
         x += item_w;
@@ -14184,7 +15482,16 @@ impl ShellState {
                 WindowPaneChip::WindowOptions => Some((chip, self.measures_rail_folded(window_id), !self.window_measures_documents.contains_key(window_id))),
                 WindowPaneChip::Utilities => Some((chip, self.utility_bar_folded(window_id), !has_utilities)),
                 WindowPaneChip::Projection => self.world3d_states.contains_key(window_id).then_some((chip, self.projection_pane_folded(window_id), false)),
-                WindowPaneChip::Actions | WindowPaneChip::Search => Some((chip, self.window_actions_folded(window_id), false)),
+                // 🎬️ React mounts the Actions `Pane` only for `engagementVisible = !!(engagement || actionPane)`
+                // and the Search `Pane` only for a `search` spec (`🪟️Window/🟦️.tsx:205`/`:214`/`:379`/`:401`),
+                // and BOTH specs are `undefined` when their payload is empty (`windowEngagementToSpec`/
+                // `windowEngagementToSearchSpec` answer `undefined` for `!hasContent`,
+                // `🛠️ShellHelpers/🟦️.tsx:1852`/`:1874`; `windowActionPaneNode` answers `undefined` for a kind
+                // with no panel-eligible action, `:4260`). A chip with no body behind it is not React's
+                // disabled-toggle case — that case is the Utilities/Measures rail, which React mounts
+                // unconditionally — so these two do not mount at all.
+                WindowPaneChip::Actions => (self.window_has_engagement_spec(window_id) || self.window_has_action_pane(window_id)).then_some((chip, self.window_actions_folded(window_id), false)),
+                WindowPaneChip::Search => self.window_has_search_spec(window_id).then_some((chip, self.window_actions_folded(window_id), false)),
             })
             .collect()
     }
@@ -14597,12 +15904,171 @@ fn filter_search_possibles<'a>(query: &str, possibles: &'a [ui_wgpu::wgpu::Windo
     scored.into_iter().map(|(_, _, possible)| possible).collect()
 }
 
+/// 🆔️ React's `ButtonGroup id={UI_ENGAGEMENT.actions}` — the one id the engagement's quick-action
+/// row carries (`🖥️ui/🎯️targets/⚛️react/🟦️.tsx:10198`/`:11032`).
+const ENGAGEMENT_OPTIONS_CONTROL_ID: &str = "ui.engagement.actions";
+
+/// 🏷️ React's `engagementControlLabel` — a numeric control with a unit reads `Label (unit)`; a
+/// ring, toggle group or select never appends one (`🖥️ui/🎯️targets/⚛️react/🟦️.tsx:10638`).
+fn engagement_control_label(control: &ui_wgpu::wgpu::WindowEngagementControl) -> Option<String> {
+    use ui_wgpu::wgpu::WindowEngagementControl as Control;
+    let (label, unit) = match control {
+        Control::Slider { label, unit, .. } | Control::Stepper { label, unit, .. } => (label.as_ref()?, unit.as_deref()),
+        Control::Ring { label, .. } | Control::ToggleGroup { label, .. } | Control::Select { label, .. } => (label.as_ref()?, None),
+    };
+    Some(match unit.filter(|unit| !unit.is_empty()) {
+        Some(unit) => format!("{label} ({unit})"),
+        None => label.clone(),
+    })
+}
+
+/// 🎛️ ONE engagement control as React's `EngagementControlView` renders it
+/// (`🖥️ui/🎯️targets/⚛️react/🟦️.tsx:10648`-`:10751`): an optional label row, then the control under
+/// React's OWN id — `control.id` when the guest names one, else the `engagement-control.<kind>`
+/// fallback React writes for each kind. Empty-option rings, toggle groups and selects render NOTHING,
+/// which is React's `if (!control.options.length) return null`.
+///
+/// ⚖️ A toggle group is React's `ButtonGroup`, whose items carry the OPTION's own id and dispatch
+/// `onSelect(option.id)`; this renderer's `Toggle` is the row that can also read PRESSED, which is
+/// what React paints the selected option with (`interactiveActiveFillClass`).
+///
+/// 💍️ `RingProps` carries ONE orb per record (`🧬️contract/🧩️component/🦀️.rs`), where React's `<Ring/>`
+/// takes the whole orb list on one element — so the ring projects as a container under React's ring
+/// id holding one orb node per option, each carrying the orb id React exposes as `data-orb-id` and
+/// each dispatching the same `onOrbSelect` verb with its own `id`.
+fn engagement_control_rows(control: &ui_wgpu::wgpu::WindowEngagementControl, is_de: bool) -> Vec<UiNode> {
+    use ui_wgpu::wgpu::WindowEngagementControl as Control;
+    let inert = || ActionDescriptor { controller_id: "framework".into(), action: String::new(), args: None };
+    let with_id = |action: &Option<ActionDescriptor>, option_id: &str| -> Option<ActionDescriptor> {
+        action.clone().map(|mut action| {
+            let mut entries = match action.args.take() {
+                Some(DslValue::Object(entries)) => entries,
+                _ => Vec::new(),
+            };
+            entries.retain(|(key, _)| key != "id");
+            entries.push(("id".to_string(), DslValue::String(option_id.to_string())));
+            action.args = Some(DslValue::Object(entries));
+            action
+        })
+    };
+    let state = |disabled: bool| if disabled { ui_wgpu::wgpu::component::ui::UiState::Disabled } else { ui_wgpu::wgpu::component::ui::UiState::Normal };
+    let mut rows: Vec<UiNode> = Vec::new();
+    if let Some(label) = engagement_control_label(control) {
+        rows.push(UiNode::Text(UiTextNode { presence: UiPresence::default(), value: Label::data(label), emphasize: Some(false), data_attributes: None, menu: None }));
+    }
+    let body = match control {
+        Control::Slider { id, value, min, max, step, disabled, on_change, .. } => vec![UiNode::Slider(UiSliderNode {
+            id: id.clone().unwrap_or_else(|| "engagement-control.slider".to_string()),
+            value: *value,
+            min: *min,
+            max: *max,
+            step: step.unwrap_or(1.0),
+            unit: None,
+            on_change: on_change.clone().unwrap_or_else(inert),
+            presence: UiPresence { state: state(disabled.unwrap_or(false)), ..UiPresence::default() },
+            menu: None,
+        })],
+        Control::Stepper { id, value, step, disabled, on_change, .. } => vec![UiNode::NumberStepper(UiNumberStepperNode {
+            id: id.clone().unwrap_or_else(|| "engagement-control.stepper".to_string()),
+            value: *value,
+            step: step.unwrap_or(1.0),
+            uniform: false,
+            on_absolute: on_change.clone().unwrap_or_else(inert),
+            on_delta: on_change.clone().unwrap_or_else(inert),
+            presence: UiPresence { state: state(disabled.unwrap_or(false)), ..UiPresence::default() },
+            menu: None,
+        })],
+        Control::ToggleGroup { id, value, options, disabled, on_select, .. } => {
+            if options.is_empty() {
+                Vec::new()
+            } else {
+                vec![UiNode::Stack(UiStackNode {
+                    direction: "horizontal".into(),
+                    gap: None,
+                    padding: None,
+                    id: id.clone(),
+                    children: options
+                        .iter()
+                        .map(|option| {
+                            UiNode::Toggle(UiToggleNode {
+                                id: option.id.clone(),
+                                icon_id: IconName::CircleDot,
+                                text: Some(Label::data(option.label.clone())),
+                                on_change: with_id(on_select, &option.id).unwrap_or_else(inert),
+                                presence: UiPresence { selected: value.as_deref() == Some(option.id.as_str()), state: state(option.disabled.unwrap_or(false) || disabled.unwrap_or(false)), ..UiPresence::default() },
+                                menu: None,
+                            })
+                        })
+                        .collect(),
+                    presence: UiPresence::default(),
+                    activate: None,
+                    drop_action: None,
+                    drop_overlay: None,
+                    menu: None,
+                })]
+            }
+        }
+        Control::Select { id, value, placeholder, items, disabled, on_change, .. } => {
+            if items.is_empty() {
+                Vec::new()
+            } else {
+                vec![UiNode::Select(UiSelectNode {
+                    presence: UiPresence { state: state(disabled.unwrap_or(false)), ..UiPresence::default() },
+                    id: id.clone().unwrap_or_else(|| "engagement-control.select".to_string()),
+                    value: value.clone().unwrap_or_default(),
+                    items: items.iter().map(|item| UiSelectItem { value: item.value.clone(), label: Label::data(item.label.clone()) }).collect(),
+                    placeholder: Some(Label::data(placeholder.clone().unwrap_or_else(|| shell_chrome_string("common.select", is_de).to_string()))),
+                    on_change: on_change.clone().unwrap_or_else(inert),
+                    menu: None,
+                })]
+            }
+        }
+        Control::Ring { id, value, options, disabled, on_select, .. } => {
+            if options.is_empty() {
+                Vec::new()
+            } else {
+                let count = options.len() as f64;
+                vec![UiNode::Stack(UiStackNode {
+                    direction: "horizontal".into(),
+                    gap: None,
+                    padding: None,
+                    id: Some(id.clone().unwrap_or_else(|| "engagement-control.ring".to_string())),
+                    children: options
+                        .iter()
+                        .enumerate()
+                        .map(|(index, option)| {
+                            UiNode::Ring(UiRingNode {
+                                id: option.id.clone(),
+                                orb_id: option.id.clone(),
+                                t: if options.len() > 1 { index as f64 / count } else { 0.0 },
+                                on_change: with_id(on_select, &option.id).unwrap_or_else(inert),
+                                presence: UiPresence { selected: value.as_deref() == Some(option.id.as_str()), state: state(option.disabled.unwrap_or(false) || disabled.unwrap_or(false)), ..UiPresence::default() },
+                                menu: None,
+                            })
+                        })
+                        .collect(),
+                    presence: UiPresence::default(),
+                    activate: None,
+                    drop_action: None,
+                    drop_overlay: None,
+                    menu: None,
+                })]
+            }
+        }
+    };
+    if body.is_empty() {
+        return Vec::new();
+    }
+    rows.extend(body);
+    rows
+}
+
 /// 📝️ One staged ACTION argument as a labelled control — React's `renderStagedArgControl`
 /// (`🛠️ShellHelpers/🟦️.tsx:3839`) with React's own row id (`action.<actionId>.arg.<argId>`).
 /// Dispatching `stageActionArg` on change means the value buffers in
 /// [`ShellState::staged_action_args`] and NOTHING fires until Execute (P2).
-fn staged_action_arg_row(window_id: &str, action_id: &str, arg: &semio_framework::ActionArgDef, value: &str, terminology: Terminology, locale: Locale) -> UiNode {
-    let id = format!("action.{action_id}.arg.{}", arg.id);
+fn staged_action_arg_row(window_id: &str, action_id: &str, arg: &semio_framework::ActionArgDef, value: &str, terminology: Terminology, locale: Locale) -> UiTreeItemNode {
+    let id = arg.id.clone();
     let label = arg.label.resolve(terminology, locale).to_string();
     let args = crate::action_args_json!({ "window": window_id.to_string(), "action": action_id.to_string(), "arg": arg.id.clone() });
     let on_change = ActionDescriptor { controller_id: "framework".into(), action: "stageActionArg".into(), args };
@@ -14626,11 +16092,22 @@ fn staged_action_arg_row(window_id: &str, action_id: &str, arg: &semio_framework
         }),
         semio_framework::ActionArgControl::Slider { min, max, step, unit } => UiNode::Slider(UiSliderNode { id: id.clone(), value: value.parse::<f64>().unwrap_or(min), min, max, step: step.unwrap_or(1.0), unit, on_change, presence: UiPresence::default(), menu: None }),
         semio_framework::ActionArgControl::Number { min, max, step } => {
-            UiNode::Input(UiInputNode { id: id.clone(), input_kind: "number".into(), value: value.to_string(), placeholder: Some(Label::data(label.clone())), commit: Some("blur".into()), min, max, step, accept: None, on_change, presence: UiPresence::default(), menu: None })
+            UiNode::Input(UiInputNode { id: id.clone(), input_kind: "number".into(), value: value.to_string(), placeholder: Some(Label::data(label.clone())), commit: Some("blur".into()), min, max, step, accept: None, on_change, on_submit: None, on_abort: None, on_repeat_last: None, presence: UiPresence::default(), menu: None })
         }
-        _ => UiNode::Input(UiInputNode { id: id.clone(), input_kind: "text".into(), value: value.to_string(), placeholder: Some(Label::data(label.clone())), commit: Some("blur".into()), min: None, max: None, step: None, accept: None, on_change, presence: UiPresence::default(), menu: None }),
+        _ => UiNode::Input(UiInputNode { id: id.clone(), input_kind: "text".into(), value: value.to_string(), placeholder: Some(Label::data(label.clone())), commit: Some("blur".into()), min: None, max: None, step: None, accept: None, on_change, on_submit: None, on_abort: None, on_repeat_last: None, presence: UiPresence::default(), menu: None }),
     };
-    UiNode::Field(UiFieldNode { id: format!("{id}.field"), label: Label::data(label), description: arg.description.clone(), required: Some(arg.required), error: None, child: Box::new(child), presence: UiPresence::default(), menu: None })
+    // 🌳️ React's form row IS a `TreeDataItem` whose `control` is the editor: the ROW carries
+    // `action.<actionId>.arg.<argId>` and the editor inside it carries the bare `def.id`
+    // (`renderStagedArgControl`'s `fieldId = field?.id ?? def.id`, `🛠️ShellHelpers/🟦️.tsx:3869`), which
+    // is also why the two never collide on one published surface key.
+    let control = match child {
+        UiNode::Select(node) => ui_wgpu::wgpu::component::ui::UiControlNode::Select(node),
+        UiNode::Toggle(node) => ui_wgpu::wgpu::component::ui::UiControlNode::Toggle(node),
+        UiNode::Slider(node) => ui_wgpu::wgpu::component::ui::UiControlNode::Slider(node),
+        UiNode::Input(node) => ui_wgpu::wgpu::component::ui::UiControlNode::Input(node),
+        other => return UiTreeItemNode { id: format!("action.{action_id}.arg.{}", arg.id), label: Label::data(format!("{label}: {}", panel_ui_node_tag(&other))), ..UiTreeItemNode::base(String::new(), Label::data(String::new())) },
+    };
+    UiTreeItemNode { id: format!("action.{action_id}.arg.{}", arg.id), label: Label::data(label), description: arg.description.clone(), control: Some(control), ..UiTreeItemNode::base(String::new(), Label::data(String::new())) }
 }
 
 impl ShellState {
@@ -14639,6 +16116,38 @@ impl ShellState {
     fn window_kind_of<'a>(&self, session: &'a ActiveSession, window_id: &str) -> Option<&'a semio_framework::WindowKindDefinition> {
         let kind_id = self.live_window_kind_id(session, window_id).unwrap_or(window_id).to_string();
         session.app.window_kinds.iter().find(|kind| kind.id == kind_id)
+    }
+
+    /// 🎬️ Whether this window carries React's `engagement` PROP — `windowEngagementToSpec`'s own
+    /// `hasContent`: at least one option, a `control`, a `controls` row or a status line
+    /// (`🛠️ShellHelpers/🟦️.tsx:1852`). An engagement carrying only an INPUT is a search spec and no
+    /// engagement spec at all, which is why the two panes mount independently.
+    pub(crate) fn window_has_engagement_spec(&self, window_id: &str) -> bool {
+        self.window_engagements.get(window_id).is_some_and(|engagement| {
+            engagement.options.as_ref().is_some_and(|options| !options.is_empty())
+                || engagement.control.is_some()
+                || engagement.controls.as_ref().is_some_and(|controls| !controls.is_empty())
+                || engagement.status.as_ref().is_some_and(|status| !status.is_empty())
+        })
+    }
+
+    /// 🧰️ Whether this window carries React's `actionPane` PROP — `windowActionPaneNode` answers
+    /// `undefined` for a kind whose `resolveWindowActions(...).filter(inPalette)` is empty, "so the
+    /// rail chip never renders" (`🛠️ShellHelpers/🟦️.tsx:4260`).
+    pub(crate) fn window_has_action_pane(&self, window_id: &str) -> bool {
+        let Some(session) = self.session.as_ref() else { return false };
+        let Some(kind) = self.window_kind_of(session, window_id) else { return false };
+        semio_framework::resolve_window_actions(&session.app, kind).into_iter().any(|action| action.in_palette)
+    }
+
+    /// 🔎️ Whether this window carries React's `search` PROP — `windowEngagementToSearchSpec`'s own
+    /// `hasContent`: a typed input OR at least one autocomplete possible (`🛠️ShellHelpers/🟦️.tsx:1874`).
+    /// The BODY still needs the input (React's `Search` returns `null` without one); the PANE mounts
+    /// either way, which is why this is a separate question from [`Self::build_window_search_ui`].
+    pub(crate) fn window_has_search_spec(&self, window_id: &str) -> bool {
+        self.window_engagements
+            .get(window_id)
+            .is_some_and(|engagement| engagement.input.is_some() || engagement.possible_engagements.as_ref().is_some_and(|possibles| !possibles.is_empty()))
     }
 
     /// 🎬️ ONE window's Actions pane body — React's top-left `Pane` content, in its own order:
@@ -14660,17 +16169,49 @@ impl ShellState {
         let locale = self.active_locale();
         let mut children: Vec<UiNode> = Vec::new();
         if let Some(engagement) = self.window_engagements.get(window_id) {
-            for status in engagement.status.iter().flatten() {
+            // 🗣️ React's `<Engagement/>` body order, top to bottom: the session's own step heading, the
+            // primary `control`, the `controls` row, the remaining status lines, then the quick-action
+            // options (`🖱️ui/🎯️targets/⚛️react/🟦️.tsx:11004`-`:11045`). Only a LIVE session promotes the
+            // `engagement-step` row into the heading; outside one every status row is a secondary line.
+            let session_active = engagement.session_active.unwrap_or(false);
+            if session_active {
+                if let Some(step) = engagement.status.iter().flatten().find(|row| row.id == "engagement-step") {
+                    children.push(UiNode::Text(UiTextNode { presence: UiPresence::default(), value: Label::data(step.text.clone()), emphasize: Some(true), data_attributes: None, menu: None }));
+                }
+            }
+            for control in engagement.control.iter().chain(engagement.controls.iter().flatten()) {
+                children.extend(engagement_control_rows(control, is_de));
+            }
+            for status in engagement.status.iter().flatten().filter(|row| !(session_active && row.id == "engagement-step")) {
                 children.push(UiNode::Text(UiTextNode { presence: UiPresence::default(), value: Label::data(status.text.clone()), emphasize: Some(false), data_attributes: None, menu: None }));
             }
-            for option in engagement.options.iter().flatten() {
-                let Some(action) = option.action.clone() else { continue };
-                children.push(UiNode::Toggle(UiToggleNode {
-                    id: option.id.clone(),
-                    icon_id: option.icon_id.clone().unwrap_or(IconName::CircleDot),
-                    text: option.label.clone().map(Label::data),
-                    on_change: action,
-                    presence: UiPresence { selected: option.pressed.unwrap_or(false), state: if option.disabled.unwrap_or(false) { ui_wgpu::wgpu::component::ui::UiState::Disabled } else { ui_wgpu::wgpu::component::ui::UiState::Normal }, ..UiPresence::default() },
+            let options: Vec<UiNode> = engagement
+                .options
+                .iter()
+                .flatten()
+                .filter_map(|option| {
+                    let action = option.action.clone()?;
+                    Some(UiNode::Toggle(UiToggleNode {
+                        id: option.id.clone(),
+                        icon_id: option.icon_id.clone().unwrap_or(IconName::CircleDot),
+                        text: option.label.clone().map(Label::data),
+                        on_change: action,
+                        presence: UiPresence { selected: option.pressed.unwrap_or(false), state: if option.disabled.unwrap_or(false) { ui_wgpu::wgpu::component::ui::UiState::Disabled } else { ui_wgpu::wgpu::component::ui::UiState::Normal }, ..UiPresence::default() },
+                        menu: None,
+                    }))
+                })
+                .collect();
+            if !options.is_empty() {
+                children.push(UiNode::Stack(UiStackNode {
+                    direction: "horizontal".into(),
+                    gap: None,
+                    padding: None,
+                    id: Some(ENGAGEMENT_OPTIONS_CONTROL_ID.to_string()),
+                    children: options,
+                    presence: UiPresence::default(),
+                    activate: None,
+                    drop_action: None,
+                    drop_overlay: None,
                     menu: None,
                 }));
             }
@@ -14729,15 +16270,30 @@ impl ShellState {
         }
         if let Some(action) = expanded.as_deref().and_then(|id| actions.iter().find(|action| action.id == id)) {
             let staged = self.staged_map_for(window_id, &action.id);
-            let mut rows: Vec<UiNode> = Vec::new();
+            let mut items: Vec<UiTreeItemNode> = Vec::new();
             for arg in &action.args {
                 if matches!(arg.presentation, Some(semio_framework::ArgPresentation::Hidden)) {
                     continue;
                 }
                 let value = self.effective_arg_value(window_id, &action.id, arg).map(|value| value.as_str().map(ToOwned::to_owned).unwrap_or_else(|| value.to_string())).unwrap_or_default();
-                rows.push(staged_action_arg_row(window_id, &action.id, arg, &value, terminology, locale));
+                items.push(staged_action_arg_row(window_id, &action.id, arg, &value, terminology, locale));
             }
+            // 🌳️ The staged form is a `TreeDataSection` on React's side, labelled with the expanded
+            // action's own name and collapsible from its own header (`buildActionCategoryTree`,
+            // `🛠️ShellHelpers/🟦️.tsx:4155`). It used to project as a `UiNode::Section`, and a `Section`
+            // CONTAINER registers no hit (`retained_hit_registration`), so React's
+            // `action.category.<id>.form` header had no pressable twin here at all
+            // (`📓️w13b-actions-search-pane-bodies.md` §6 gap 5).
+            let category = action_category_id(action);
+            children.push(UiNode::Tree(UiTreeNode {
+                sections: vec![UiTreeSectionNode { id: format!("action.category.{category}.form"), label: Some(Label::data(action.label.resolve(terminology, locale).to_string())), default_open: Some(true), presence: UiPresence::default(), items, window: None }],
+                presence: UiPresence::default(),
+                drop_action: None,
+                menu: None,
+                interaction_domain: None,
+            }));
             let missing = Self::resolved_execute_args(&action.args, &staged).is_none();
+            let mut rows: Vec<UiNode> = Vec::new();
             rows.push(UiNode::Button(UiButtonNode {
                 id: Some(semio_framework::child_element_id(WINDOW_PANE_CHIP_PARENT, &[window_id, "action", action.id.as_str(), "execute"])),
                 icon_id: IconName::Check,
@@ -14756,8 +16312,10 @@ impl ShellState {
                 presence: UiPresence { state: if gated { ui_wgpu::wgpu::component::ui::UiState::Disabled } else { ui_wgpu::wgpu::component::ui::UiState::Normal }, ..UiPresence::default() },
                 menu: None,
             }));
-            let category = action_category_id(action);
-            children.push(settings_section(&format!("action.category.{category}.form"), &action.label.resolve(terminology, locale).to_string(), rows));
+            // ⚡️ React renders that section's own `actions` — Execute and Reset — in the form header's
+            // action row; a `TreeSection` carries no action row on this renderer, so the pair follows
+            // the form as its own band, keeping React's two ids and their order.
+            children.extend(rows);
         }
         Some(UiNode::Stack(UiStackNode { direction: "column".into(), gap: None, padding: None, id: Some("window-action-pane".into()), children, presence: UiPresence::default(), activate: None, drop_action: None, drop_overlay: None, menu: None }))
     }
@@ -14773,18 +16331,34 @@ impl ShellState {
         let draft = self.engagement_inputs.get(window_id).cloned().or_else(|| input.value.clone()).unwrap_or_default();
         let placeholder = input.placeholder.clone().unwrap_or_else(|| shell_chrome_string(if engagement.session_active.unwrap_or(false) { "windowSearch.actionActive" } else { "windowSearch.action" }, is_de).to_string());
         let control_id = input.id.clone().filter(|id| !id.is_empty() && id != "search-input").unwrap_or_else(|| WINDOW_SEARCH_ACTION_CONTROL_ID.to_string());
-        let submit = input.on_submit.clone().or_else(|| input.on_change.clone());
+        let session_active = engagement.session_active.unwrap_or(false);
+        // ✍️ React's line binds FOUR moments at once and this one binds the same four (the retained
+        // producers landed with this packet, `🖱️ui/🎯️targets/🧊️/⚡️events`'s `search_line_action`):
+        //
+        // * `onChange` on every keystroke — `commit` is deliberately UNSET so the node fires
+        //   `Trigger::Change` per keystroke, which is what feeds the guest's autocomplete. The line
+        //   used to commit on blur and dispatch `on_submit` there, i.e. the program saw the verb and
+        //   never the typing (`📓️w13b-actions-search-pane-bodies.md` §6 gap 4).
+        // * `onSubmit` on Enter, `onAbort` on Escape — the guest's own descriptors, unaltered.
+        // * `onRepeatLast` on Space over an EMPTY line, bound only OUTSIDE a live session because
+        //   that is React's own branch: `applySearchSpaceAction` routes an empty line to
+        //   `onRepeatLast` when idle and to `onSubmit` during a session
+        //   (`🖱️ui/🎯️targets/⚛️react/🟦️.tsx:10512`), and the retained line falls through to the
+        //   submit it did bind when no repeat is offered.
         let mut children: Vec<UiNode> = vec![UiNode::Input(UiInputNode {
             id: control_id,
             input_kind: "text".into(),
             value: draft.clone(),
             placeholder: Some(Label::data(placeholder)),
-            commit: Some("blur".into()),
+            commit: None,
             min: None,
             max: None,
             step: None,
             accept: None,
-            on_change: submit.unwrap_or_else(|| ActionDescriptor { controller_id: "framework".into(), action: "setEngagementInput".into(), args: crate::action_args_json!({ "window": window_id.to_string() }) }),
+            on_change: input.on_change.clone().unwrap_or_else(|| ActionDescriptor { controller_id: "framework".into(), action: "setEngagementInput".into(), args: crate::action_args_json!({ "window": window_id.to_string() }) }),
+            on_submit: input.on_submit.clone(),
+            on_abort: input.on_abort.clone(),
+            on_repeat_last: (!session_active).then(|| input.on_repeat_last.clone()).flatten(),
             presence: UiPresence { state: if input.disabled.unwrap_or(false) { ui_wgpu::wgpu::component::ui::UiState::Disabled } else { ui_wgpu::wgpu::component::ui::UiState::Normal }, ..UiPresence::default() },
             menu: None,
         })];
@@ -14942,31 +16516,22 @@ impl ShellState {
 mod window_actions_search_pane_tests;
 //#endregion 🎬️WindowActionsAndSearchPanes
 
+/// ⌨️ The platform every `PlatformKeybinding.platform` filter is answered against — ONE door, the same
+/// `⌨️HostPlatform` region (`🧊️renderer/🦀️.rs`) `format_keybinding_shortcut` reads through
+/// [`crate::host_platform_uses_meta`]. Natively the door's cell IS `cfg!(target_os = …)`; in the
+/// browser the page resolves `userAgentData.platform`/`navigator.platform` and publishes it with the
+/// boot message.
+///
+/// 🩸️ What this replaces: the `wasm32` arm re-derived the platform from `web_sys::window()`. The wgpu
+/// shell runs inside the frame Worker, whose realm owns NO `window`, so the read was always `None`,
+/// `unwrap_or_default()` always `""`, and the answer always `Linux` — on every machine. A macOS
+/// browser user therefore matched and was shown the `Platform::Windows`/`Linux` chord of every
+/// platform-scoped keybinding (`os.toggleFullscreen`'s `f11` instead of `control+meta+f`, and the same
+/// for every app-declared Mac-scoped binding), while `format_keybinding_shortcut` — fixed by W7a at
+/// the same file — painted `⌘️`. Two functions, one question, two answers
+/// (ticket 26/09/17/WGPU-RENDERER-REACT-PARITY, `📓️audit-w14-transport-residual.md` §3).
 fn command_host_platform() -> semio_framework::manifest::Platform {
-    #[cfg(target_os = "macos")]
-    {
-        semio_framework::manifest::Platform::MacOs
-    }
-    #[cfg(target_os = "windows")]
-    {
-        semio_framework::manifest::Platform::Windows
-    }
-    #[cfg(all(not(target_os = "macos"), not(target_os = "windows"), not(target_arch = "wasm32")))]
-    {
-        semio_framework::manifest::Platform::Linux
-    }
-    #[cfg(target_arch = "wasm32")]
-    {
-        let platform =
-            web_sys::window().and_then(|window| js_sys::Reflect::get(window.as_ref(), &"navigator".into()).ok()).and_then(|navigator| js_sys::Reflect::get(&navigator, &"platform".into()).ok()).and_then(|value| value.as_string()).unwrap_or_default();
-        if platform.to_ascii_lowercase().contains("mac") {
-            semio_framework::manifest::Platform::MacOs
-        } else if platform.to_ascii_lowercase().contains("win") {
-            semio_framework::manifest::Platform::Windows
-        } else {
-            semio_framework::manifest::Platform::Linux
-        }
-    }
+    crate::host_platform()
 }
 
 //#region ⌨️WindowScope
@@ -15912,6 +17477,8 @@ impl ShellState {
     /// a body or carry a body without being dockable.
     fn shell_owned_panel_leaves(&self) -> Vec<String> {
         let mut leaves: Vec<String> = self.command_category_tabs().into_iter().map(|tab| tab.id).collect();
+        leaves.push(FRAMEWORK_DISPLAY_WINDOWS_TAB_ID.to_string());
+        leaves.push(FRAMEWORK_DISPLAY_LAYOUT_TAB_ID.to_string());
         leaves.extend(self.framework_settings_tabs().into_iter().map(|tab| tab.id));
         leaves.push(FRAMEWORK_MARKETPLACE_TAB_ID.to_string());
         leaves.push(FRAMEWORK_CHAT_PANEL_ID.to_string());
@@ -15928,6 +17495,8 @@ impl ShellState {
             return self.publish_command_panel_document(tab_id, &category);
         }
         let node = match tab_id {
+            FRAMEWORK_DISPLAY_WINDOWS_TAB_ID => self.build_display_windows_ui(),
+            FRAMEWORK_DISPLAY_LAYOUT_TAB_ID => self.build_display_layout_ui(),
             FRAMEWORK_SETTINGS_GENERAL_TAB_ID => self.build_settings_general_ui(),
             FRAMEWORK_SETTINGS_THEME_TAB_ID => self.build_settings_theme_ui(),
             FRAMEWORK_SETTINGS_KEYBINDINGS_TAB_ID => self.build_settings_keybindings_ui(),
@@ -16614,6 +18183,34 @@ impl ShellState {
     pub fn agent_presence_tone(&self) -> crate::agent_presence::AgentPresenceTone {
         crate::agent_presence::agent_presence_tone(self.chrome_build.agent.status, &self.chrome_build.agent.presence)
     }
+
+    /// 🔗️ Installs (or clears) the gateway config the local supervisor hands over — packet W15e.
+    /// This is the ONLY way a bridge socket is ever dialled: `discover_agent_bridge_config()` answers
+    /// `None` on both targets, deliberately, exactly as React's does, so a shell nobody supervises
+    /// stays `Disabled` instead of guessing a url.
+    pub fn set_agent_bridge_config(&mut self, config: Option<crate::agent_bridge::AgentBridgeConfig>) -> bool {
+        self.agent_bridge.set_config(config, &mut self.chrome_build.agent)
+    }
+
+    /// 🎬️ One bounded agent-bridge turn, folded into the same 100 ms `PumpSync` slot the directory
+    /// lane already rides. Answers whether the chrome must repaint.
+    ///
+    /// 🧾️ `principal_actor` is React's own value for a shell with no signed-in identity
+    /// (`"agent:unknown"`); a signed-in shell announces its hub user id, which is the `{userId}` half
+    /// of the same actor grammar `shell_actor` already uses.
+    pub fn pump_agent_bridge(&mut self) -> bool {
+        let mut changed = false;
+        if let Some(config) = take_pending_agent_bridge_config() {
+            changed = self.set_agent_bridge_config(config);
+        }
+        if !self.agent_bridge.is_armed() {
+            return changed;
+        }
+        let session = self.shell_session_id.clone();
+        let principal = self.identity.as_ref().map(|identity| identity.user_id.clone()).unwrap_or_else(|| "agent:unknown".to_string());
+        let now = chrome_now_ms();
+        changed | self.agent_bridge.pump(&mut self.chrome_build.agent, &session, &principal, now)
+    }
 }
 //#endregion 🧯️TransientNoticeAndAgentOverlays
 
@@ -16648,6 +18245,14 @@ impl ShellChromeBuildState {
         if !title.is_empty() {
             self.tooltip_titles.insert(control_id.into(), title);
         }
+    }
+
+    /// 💡️ Whether the ACTIVE driver lets a chrome control show a hover tooltip at all —
+    /// `useControlTooltipText`'s own first two guards (`🏷️Label/🟦️.tsx:186-190`). `label_visible`
+    /// says whether the control already paints its caption beside its icon, which React reads off
+    /// `useControlInlineText` and never repeats in a tooltip.
+    fn tooltip_shows(&self, label_visible: bool) -> bool {
+        self.driver.tooltip_shows(label_visible)
     }
 
     fn compute_click_edge(&mut self, pointer_down: bool) {
@@ -16726,15 +18331,19 @@ impl ShellChromeBuildState {
 /// every refresh, plugin hot-swap and re-established session, so the arming site re-runs many times
 /// per boot and a tour whose veil owns every pointer must never come back once answered.
 ///
-/// Two of React's seven terms have no wgpu counterpart and are deliberately absent rather than
-/// stubbed: `suppressed` belongs to embedded multi-shell hosts (the demonstrator grid), and this
-/// renderer mounts exactly one shell per surface; `replayOnLoad` is a BRAND property, and the wgpu
-/// shell has no brand registry yet (`📓️w1d-boot-axis-parity.md`'s remaining gap 1). React's
-/// `dismissedAppIds` session set and its `seenOnDevice` storage read collapse into `seen` here,
-/// because [`ShellChromeBuildState::introduction_seen`] IS the in-memory projection of that storage
-/// key and [`ShellChromeBuildState::mark_introduction_seen`] writes it before the store does.
-fn should_auto_start_introduction(app_id: &str, has_introduction: bool, tutorial_active: bool, seen: bool) -> bool {
-    !app_id.is_empty() && has_introduction && !tutorial_active && !seen
+/// One of React's seven terms has no wgpu counterpart and is deliberately absent rather than stubbed:
+/// `suppressed` belongs to embedded multi-shell hosts (the demonstrator grid), and this renderer
+/// mounts exactly one shell per surface. `replayOnLoad` IS carried now — the brand row
+/// (`WgpuBootBrand::replays_introduction`) travels with the boot descriptor, closing
+/// `📓️w1d-boot-axis-parity.md`'s gap 1 for this term. React's `dismissedAppIds` session set and its
+/// `seenOnDevice` storage read collapse into `seen` here, because
+/// [`ShellChromeBuildState::introduction_seen`] IS the in-memory projection of that storage key and
+/// [`ShellChromeBuildState::mark_introduction_seen`] writes it before the store does.
+///
+/// `seen_key` is React's `introductionSeenKey` (brand-scoped), never the bare app id — the emptiness
+/// test is the same "there is no session yet" guard either way.
+fn should_auto_start_introduction(seen_key: &str, has_introduction: bool, tutorial_active: bool, seen: bool, replay_on_load: bool) -> bool {
+    !seen_key.is_empty() && has_introduction && !tutorial_active && (replay_on_load || !seen)
 }
 
 
@@ -17597,12 +19206,12 @@ fn tutorial_save_recording(tutorial_id: &str, json: &str) {
 //#endregion 📅️Provenance
 
 //#region ✂️PendingDocOps
-/// ✂️ One `TutorialArtifactEvent` → the pending op(s) needed to apply it in `direction` — `forward` uses
+/// ✂️ One `TutorialDocumentEvent` → the pending op(s) needed to apply it in `direction` — `forward` uses
 /// `Edit::forwards`/dispatches the named history action as-is; backward uses `Edit::backwards`/inverts
-/// the history action (undo↔redo) per `TutorialArtifactEventKind::Edit`'s own doc comment on exact
+/// the history action (undo↔redo) per `TutorialDocumentEventKind::Edit`'s own doc comment on exact
 /// bidirectional scrubbing.
-fn tutorial_pending_op_for_edit(entry: &semio_framework::TutorialArtifactEvent, forward: bool) -> TutorialPendingDocOp {
-    use semio_framework::TutorialArtifactEventKind as K;
+fn tutorial_pending_op_for_edit(entry: &semio_framework::TutorialDocumentEvent, forward: bool) -> TutorialPendingDocOp {
+    use semio_framework::TutorialDocumentEventKind as K;
     match &entry.kind {
         K::Edit { forwards, backwards, .. } => {
             let ops = if forward { forwards } else { backwards };
@@ -17776,7 +19385,7 @@ impl ShellState {
                 let ui_state = semio_framework::compose_tutorial_ui(&runtime.definition, target_ms);
                 tutorial_apply_ui_snapshot(self, &ui_state);
                 let slice = semio_framework::tutorial_slice(&runtime.definition, runtime.applied_ms, target_ms);
-                for entry in &slice.artifact {
+                for entry in &slice.document {
                     self.tutorial_pending_document_ops.push(tutorial_pending_op_for_edit(entry, slice.forward));
                 }
                 let now = chrome_now_ms();
@@ -17813,7 +19422,7 @@ impl ShellState {
         let ui_state = semio_framework::compose_tutorial_ui(&runtime.definition, target_ms);
         tutorial_apply_ui_snapshot(self, &ui_state);
         let slice = semio_framework::tutorial_slice(&runtime.definition, runtime.applied_ms, target_ms);
-        for entry in &slice.artifact {
+        for entry in &slice.document {
             self.tutorial_pending_document_ops.push(tutorial_pending_op_for_edit(entry, slice.forward));
         }
         for window_id in tutorial_camera_window_ids(&runtime.definition) {
@@ -17862,7 +19471,7 @@ impl ShellState {
             for change in &slice.ui_changes {
                 tutorial_apply_ui_change_to_shell(self, change);
             }
-            for entry in &slice.artifact {
+            for entry in &slice.document {
                 self.tutorial_pending_document_ops.push(tutorial_pending_op_for_edit(entry, slice.forward));
             }
             runtime.applied_ms = to_ms;
@@ -18009,6 +19618,16 @@ pub(crate) struct ShellChromeFrameCursor {
     phase: ShellChromeFramePhase,
     setup: u8,
     child: ShellChromeChildCursor,
+    /// 🩺️ Opportunities spent inside [`Self::phase`] without leaving it. `FrameBuildPhase::Chrome`
+    /// holds the whole frame until this walk answers `true`, so a phase that can never finish
+    /// presents NOTHING — no navbar, no window, no footer — and says nothing either: every
+    /// per-document lane has its own `SHELL_WINDOW_PAINT_OPPORTUNITIES` escape hatch, but the
+    /// immediate-mode chrome phases between them had none. gis2d on wgpu booted `ready`, laid its
+    /// document out at the full viewport and painted a uniformly empty canvas for seven minutes
+    /// because of exactly that (ticket 26/09/17/WGPU-RENDERER-REACT-PARITY, `📓️w14a-*`).
+    parked_opportunities: u64,
+    parked_reports: u8,
+    parked_phase: ShellChromeFramePhase,
 }
 
 /// 🧭️ Fixed 64-deep footer-utility tree cursor path. A newtype rather than a bare `[u16; 64]`
@@ -18041,7 +19660,7 @@ struct ShellChromeChildCursor {
     glyph: RetainedGlyphCursor,
 }
 
-#[derive(Clone, Copy, Default)]
+#[derive(Clone, Copy, Default, PartialEq, Eq)]
 enum ShellChromeFramePhase {
     #[default]
     CloseDocument,
@@ -18063,6 +19682,10 @@ enum ShellChromeFramePhase {
     TutorialBar,
     Footer,
     Overlay,
+    /// 🛂️ The Space Administration sheet (packet W15e) — React mounts it in the same absolutely
+    /// positioned overlay band as the inference port and the directory bootstrap notice, below the
+    /// approvals dialog and the notice banner.
+    SpaceAdministration,
     /// ✅️ The agent approvals modal (packet W1j) — above every other overlay, like React's
     /// unconditionally mounted `<AgentApprovals>` dialog.
     AgentApprovals,
@@ -18081,9 +19704,18 @@ enum ShellChromeFramePhase {
 
 impl Default for ShellChromeFrameCursor {
     fn default() -> Self {
-        Self { phase: ShellChromeFramePhase::default(), setup: 0, child: ShellChromeChildCursor::default() }
+        Self { phase: ShellChromeFramePhase::default(), setup: 0, child: ShellChromeChildCursor::default(), parked_opportunities: 0, parked_reports: 0, parked_phase: ShellChromeFramePhase::default() }
     }
 }
+
+/// 🩺️ Opportunities one chrome phase may spend before the walk reports itself parked. A complete
+/// walk of a busy shell spends far fewer than this in ANY single phase — every phase is bounded by
+/// its own content (a glyph run, a dock tab, one document's `SHELL_WINDOW_PAINT_OPPORTUNITIES`) —
+/// so crossing it means the phase's own cursor is not advancing at all.
+const SHELL_CHROME_PHASE_OPPORTUNITIES: u64 = 1 << 18;
+/// 🩺️ How many times one parked phase reports itself before it goes quiet: enough to prove the walk
+/// is still parked rather than merely slow, bounded so a wedged shell cannot flood the console.
+const SHELL_CHROME_PARKED_REPORTS: u8 = 4;
 
 impl ShellChromeFrameCursor {
     pub(crate) fn terminal_is_complete(&self) -> bool {
@@ -18094,11 +19726,82 @@ impl ShellChromeFrameCursor {
         self.phase = phase;
         self.child = ShellChromeChildCursor::default();
     }
+
+    /// 🩺️ Counts this opportunity against the current phase and answers the census line to publish
+    /// when the phase has overstayed [`SHELL_CHROME_PHASE_OPPORTUNITIES`]. Keyed on the phase itself
+    /// rather than on [`Self::advance`], because several phases move the cursor by assignment.
+    /// Pure, so a law can own it.
+    fn note_opportunity(&mut self) -> Option<String> {
+        if self.parked_phase != self.phase {
+            self.parked_phase = self.phase;
+            self.parked_opportunities = 0;
+            self.parked_reports = 0;
+        }
+        self.parked_opportunities = self.parked_opportunities.saturating_add(1);
+        if self.parked_opportunities % SHELL_CHROME_PHASE_OPPORTUNITIES != 0 || self.parked_reports >= SHELL_CHROME_PARKED_REPORTS {
+            return None;
+        }
+        self.parked_reports = self.parked_reports.saturating_add(1);
+        Some(format!(
+            "phase={} opportunities={} setup={} child-phase={} child-item={} child-scalar={} child-group={} child-depth={} child-flag={} child-fault={} document={}",
+            self.phase.name(),
+            self.parked_opportunities,
+            self.setup,
+            self.child.phase,
+            self.child.item,
+            self.child.scalar,
+            self.child.group_phase,
+            self.child.depth,
+            self.child.flag,
+            self.child.fault,
+            self.child.document.phase_name(),
+        ))
+    }
+}
+
+impl ShellChromeFramePhase {
+    /// 🩺️ The phase's own name, for the parked-walk census. A `Debug` derive would do, but this
+    /// enum is `Copy` in a hot cursor and the census is the only reader.
+    fn name(self) -> &'static str {
+        match self {
+            Self::CloseDocument => "CloseDocument",
+            Self::LoadPreferences => "LoadPreferences",
+            Self::IntroductionRead => "IntroductionRead",
+            Self::Presence => "Presence",
+            Self::PersistLayout => "PersistLayout",
+            Self::FrameSetup => "FrameSetup",
+            Self::MainWindow => "MainWindow",
+            Self::PaneOverlayHits => "PaneOverlayHits",
+            Self::Panels => "Panels",
+            Self::AgentChatHeader => "AgentChatHeader",
+            Self::Navbar => "Navbar",
+            Self::TutorialBar => "TutorialBar",
+            Self::Footer => "Footer",
+            Self::Overlay => "Overlay",
+            Self::SpaceAdministration => "SpaceAdministration",
+            Self::AgentApprovals => "AgentApprovals",
+            Self::TransientNotice => "TransientNotice",
+            Self::PluginInstall => "PluginInstall",
+            Self::TreeDrag => "TreeDrag",
+            Self::TutorialGesture => "TutorialGesture",
+            Self::Error => "Error",
+            Self::IntroductionWrite => "IntroductionWrite",
+            Self::PersistPreferences => "PersistPreferences",
+            Self::Complete => "Complete",
+        }
+    }
 }
 
 impl ShellState {
     /// 🎭️ Advances one retained chrome child per worker opportunity.
     pub(crate) fn render_chrome_step(&mut self, cursor: &mut ShellChromeFrameCursor, draw: &mut DrawList, overlay: &mut DrawList, atlas: &mut FontAtlas, icons: &IconAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme, world_resources: &mut infinite_world::world::World3dBuildContext) -> bool {
+        // 🩺️ `FrameBuildPhase::Chrome` holds the whole frame until this walk completes, so a phase
+        // that cannot advance presents nothing at all. Say so — on the console and on the chrome
+        // ledger `dumpChrome` reads — instead of going quiet behind an empty canvas.
+        if let Some(census) = cursor.note_opportunity() {
+            Self::debug_log(&format!("[DEBUG] wgpu-shell chrome walk parked {census} windows={}", self.dock_window_plan.len()));
+            crate::interpreter::note_chrome_walk_parked(&census);
+        }
         let w = self.screen_w;
         let h = self.screen_h;
         let body = self.body_rect(theme);
@@ -18319,6 +20022,12 @@ impl ShellState {
                 if !self.render_overlay_step(&mut cursor.child, overlay, atlas, icons, input, theme, w, h) {
                     return false;
                 }
+                cursor.advance(ShellChromeFramePhase::SpaceAdministration);
+            }
+            ShellChromeFramePhase::SpaceAdministration => {
+                if !self.render_space_administration_step(&mut cursor.child, overlay, atlas, input, theme, w, h) {
+                    return false;
+                }
                 cursor.advance(ShellChromeFramePhase::AgentApprovals);
             }
             ShellChromeFramePhase::AgentApprovals => {
@@ -18387,15 +20096,32 @@ impl ShellState {
         }
     }
 
-    /// 🎓️ Coalesces one bounded introduction lookup for the shared I/O lane.
+    /// 🎓️ Coalesces one bounded introduction lookup for the shared I/O lane, against the BRAND-SCOPED
+    /// key (see [`Self::introduction_seen_key`]).
     fn request_introduction_read(&mut self) {
         if self.chrome_present.maintenance.introduction_read.is_some() {
             return;
         }
-        let Some(app_id) = self.session.as_ref().map(|session| session.app.id.as_str()) else { return };
-        if app_id.len() <= SHELL_CHROME_IO_FIELD_BYTES && !self.chrome_build.introduction_seen.contains_key(app_id) {
-            self.chrome_present.maintenance.introduction_read = Some(app_id.to_string());
+        let Some(seen_key) = self.introduction_seen_key() else { return };
+        if seen_key.len() <= SHELL_CHROME_IO_FIELD_BYTES && !self.chrome_build.introduction_seen.contains_key(&seen_key) {
+            self.chrome_present.maintenance.introduction_read = Some(seen_key);
         }
+    }
+
+    /// 🎓️🏷️ The key this boot's introduction-seen flag is filed under — React's `introductionSeenKey`
+    /// (`🏛️ShellHost/🟦️.tsx:4159`): `"<brandId>:<appId>"` on a branded shell, the bare app id otherwise,
+    /// so the BRANDED tour still plays on a device that already saw the unbranded one.
+    ///
+    /// 🩸️ What this replaces: the bare `session.app.id`, every time. The wgpu shell carried a brand ID
+    /// and nothing else (`📓️w1d` gap 1), so on `aggregator` (6023/6123) it wrote
+    /// `ui.introduction.seen.<appId>` where React writes `ui.introduction.seen.<brandId>:<appId>` — the
+    /// one concretely demonstrated brand divergence (`📓️w5a-browser-prefs-persistence.md` §7.1).
+    pub(crate) fn introduction_seen_key(&self) -> Option<String> {
+        let app_id = self.session.as_ref().map(|session| session.app.id.clone())?;
+        Some(match crate::boot_brand_id() {
+            Some(brand_id) => format!("{brand_id}:{app_id}"),
+            None => app_id,
+        })
     }
 
     /// 🎓️ Arms the open app's introduction the first time it launches on this device, the wgpu twin of
@@ -18408,9 +20134,12 @@ impl ShellState {
     /// `🔖️ChromeOverlaysAndTour` tour — veil, info box, advance-by-doing, reveal, keyboard — was
     /// reachable only from its own unit tests, and every wgpu boot painted no tour at all where React
     /// painted `Welcome to Puzzle 3D`.
-    fn auto_start_introduction(&mut self, app_id: &str, seen: bool) {
+    fn auto_start_introduction(&mut self, seen_key: &str, seen: bool) {
         let has_introduction = self.session.as_ref().is_some_and(|session| session.app.introduction.is_some());
-        if !should_auto_start_introduction(app_id, has_introduction, self.tutorial.is_some(), seen) {
+        // 🏷️ React's `replayIntroductionOnLoad` brand flag ignores the device-local seen flag entirely,
+        // which is exactly what a kiosk brand needs. Carried by the brand ROW since this packet.
+        let replay_on_load = crate::boot_brand().replays_introduction();
+        if !should_auto_start_introduction(seen_key, has_introduction, self.tutorial.is_some(), seen, replay_on_load) {
             return;
         }
         self.chrome_build.start_introduction();
@@ -18467,14 +20196,20 @@ impl ShellState {
     pub(crate) fn advance_chrome_maintenance_step(&mut self) -> bool {
         if self.chrome_present.maintenance.load_requested {
             self.advance_chrome_preferences_load_step();
-        } else if let Some(app_id) = self.chrome_present.maintenance.introduction_read.take() {
-            let key = format!("{UI_INTRODUCTION_SEEN_STORAGE_KEY_PREFIX}{app_id}");
+        } else if let Some(seen_key) = self.chrome_present.maintenance.introduction_read.take() {
+            let key = format!("{UI_INTRODUCTION_SEEN_STORAGE_KEY_PREFIX}{seen_key}");
             let seen = stored_field_get(&key).as_deref() == Some("true");
-            self.chrome_build.introduction_seen.insert(app_id.clone(), seen);
-            self.auto_start_introduction(&app_id, seen);
-        } else if let Some(app_id) = self.chrome_present.maintenance.introduction_write.take() {
-            let key = format!("{UI_INTRODUCTION_SEEN_STORAGE_KEY_PREFIX}{app_id}");
-            stored_field_set(&key, "true");
+            self.chrome_build.introduction_seen.insert(seen_key.clone(), seen);
+            self.auto_start_introduction(&seen_key, seen);
+        } else if let Some(seen_key) = self.chrome_present.maintenance.introduction_write.take() {
+            // 🏷️ React's `shouldPersistIntroductionSeen(brand)`: a `replayIntroductionOnLoad` or
+            // `ephemeral` brand answers its tour without ever writing a device-local flag, so the next
+            // load replays it. The in-memory answer still stands for THIS session (the tour does not
+            // come back on a republication) — that is React's `dismissedIntroductionAppIds` half.
+            if crate::boot_brand().persists_introduction_seen() {
+                let key = format!("{UI_INTRODUCTION_SEEN_STORAGE_KEY_PREFIX}{seen_key}");
+                stored_field_set(&key, "true");
+            }
         } else if self.chrome_present.maintenance.layout_requested {
             self.advance_panel_layout_persist_step();
         } else if self.chrome_present.maintenance.presence_requested {
@@ -18496,6 +20231,7 @@ impl ShellState {
                 self.terminology_id = env_lock("SEMIO_LOCKED_TERMINOLOGY").or(preferences.terminology).unwrap_or_else(|| UI_TERMINOLOGY_NATIVE.to_string());
                 self.driver_id = preferences.driver_id.unwrap_or_else(|| "default".to_string());
                 self.chrome_build.preferences.custom_drivers = preferences.custom_drivers;
+                self.chrome_build.driver = resolve_ui_driver_chrome(&self.driver_id, &self.chrome_build.preferences.custom_drivers);
                 self.chrome_build.preferences.ui_layout = match preferences.layout { Some(OsUiChromeLayout::Tablet) => "tablet", _ => "desktop" }.to_string();
                 self.chrome_build.preferences.theme_id = env_lock("SEMIO_LOCKED_THEME").or(preferences.theme_id).unwrap_or_else(|| "semio".to_string());
                 self.chrome_build.preferences.custom_themes = custom_themes;
@@ -18716,29 +20452,47 @@ impl ShellState {
     /// other — and the anchor's MEASURED content height, so the panel hugs its content exactly as
     /// React's `<Panel>` does instead of filling its band.
     fn anchor_rect(&self, anchor: PanelAnchor, body: Rect, theme: &Theme) -> Rect {
-        let body = self.panel_band(body);
+        let body = Self::panel_band(anchor, body, theme);
         let column: Vec<PanelAnchor> = ANCHOR_COLUMN_ORDER.into_iter().filter(|candidate| candidate.horizontal() == anchor.horizontal() && self.anchor_open(*candidate)).collect();
         let index = column.iter().position(|candidate| *candidate == anchor).unwrap_or(0);
         anchor_panel_rect(anchor, self.anchor_state(anchor).size, self.anchor_content_height(anchor, theme), column.len().max(1), index, body, theme)
     }
 
-    /// 🧭️ The band an anchored panel may occupy: the body MINUS the dock's own stack tab bar, read off
-    /// this frame's plan (the topmost planned window body) rather than re-derived from the theme, so a
-    /// mobile stack, a maximized pane and a spawned studio surface all state it once.
+    /// 📐️ Extra vertical space a CHROME-HOSTED open panel overhangs its band by, the Rust twin of
+    /// React's `chromeHostedOpenPanelPositionStyle` (`🖱️ui/🎯️targets/⚛️react/🟦️.tsx:6894`):
+    /// `calc(-1 * (var(--size-large) + var(--size-medium)) / 2)` — from the body's edge back to the
+    /// centred `h-medium` row inside the `h-large` navbar/footer band, where `PanelChromeTabBar`
+    /// parked the folded toggle. So an open panel's own cap sits IN the chrome band, not below it.
+    fn chrome_hosted_panel_overhang(theme: &Theme) -> f32 {
+        (theme.navbar_height + theme.control_height) * 0.5
+    }
+
+    /// 🧭️ The band an anchored panel may occupy: React's mode body, with the anchored vertical edge
+    /// pulled `chrome_hosted_panel_overhang` INTO the navbar (a top anchor) or the footer (a bottom
+    /// anchor) and its height grown by exactly that overhang — React's `maxHeight:
+    /// calc(100% + (var(--size-large) + var(--size-medium)) / 2)`. Measured on React's own DOM
+    /// (`🗑️generated/w14d-cap-occlusion.json`, 1600×1000): mode body `y=29`, open Catalogue panel
+    /// `y=3 h=168`, its `panel-body-stack` from `y=26`.
     ///
-    /// 🩸️ A panel used to open at `body.y`, which is exactly where the dock paints its window caps —
-    /// so the top-left panel's tab row and the dock's tab row shared one 22 px strip and their hit
-    /// rects overlapped. Pressing a window's FOCUS cap switched the panel tab underneath it instead
-    /// (`shell.panelTab` journalled where React journals nothing), and its CLOSE cap won only by a
-    /// four-hundredth of a pixel (ticket 26/09/17/WGPU-RENDERER-REACT-PARITY,
-    /// `📓️w9c-behaviour-parity-run-2.md` steps 16–17). React's panels are laid out inside the mode
-    /// body for the same reason.
-    fn panel_band(&self, body: Rect) -> Rect {
-        let Some(top) = self.dock_window_plan.iter().map(|(_, rect)| rect.y).reduce(f32::min) else {
-            return body;
-        };
-        let inset = (top - body.y).clamp(0.0, body.h);
-        Rect::new(body.x, body.y + inset, body.w, body.h - inset)
+    /// 🩸️ This renderer used to open a panel at `body.y` and then, when that put the panel's own tab
+    /// row on the dock's cap strip, to push the whole panel BELOW the dock's stack tab bar
+    /// (`📓️w9c-behaviour-parity-run-2.md` steps 16–17). Both are divergences: React solves the same
+    /// collision by pulling the panel UP, so its cap lands in the navbar band (`y=3..26`) and only its
+    /// BODY covers the dock caps (`y=32..61`) — which is why React's window-cap steps journal nothing
+    /// at all, they press the panel's body (ticket 26/09/17/WGPU-RENDERER-REACT-PARITY, `📓️w13a`§4).
+    /// Pushing the panel down instead made the two renderers lay out two different applications and
+    /// the cap steps compare them.
+    fn panel_band(anchor: PanelAnchor, body: Rect, theme: &Theme) -> Rect {
+        let overhang = Self::chrome_hosted_panel_overhang(theme);
+        let inset = theme.panel_inset;
+        // 📐️ `anchor_panel_rect` re-applies `inset` inside this band, so the band carries `-inset` on
+        // the grown edge to land the panel on React's exact `-overhang` and `available_h` on its exact
+        // `100% + overhang`. A middle anchor has no bonded edge and keeps the body it centres on.
+        match anchor.vertical() {
+            "top" => Rect::new(body.x, body.y - overhang - inset, body.w, body.h + overhang + inset * 2.0),
+            "bottom" => Rect::new(body.x, body.y - inset, body.w, body.h + overhang + inset * 2.0),
+            _ => body,
+        }
     }
 
     /// 📐️ The height one anchor's panel WANTS: its tab bar plus the active leaf's measured document,
@@ -19290,6 +21044,12 @@ impl ShellState {
                     return false;
                 };
                 let content = self.anchor_content_rect(anchor, panel, theme);
+                // 🧭️ React wraps every anchored `Panel` in a `FlowProvider` keyed by its anchor
+                // (`🖼️Panel/🟦️.tsx:516`); this is that provider. An `End`-anchored panel therefore
+                // mirrors its overlays, its Select inline edge and its inline arrow keys, exactly as
+                // React's does — the seam `Ui::set_window_flow` was built for and never given
+                // (ticket 26/09/17 packet W15a).
+                crate::interpreter::set_ui_document_flow(window.as_str(), anchor.flow());
                 let complete = {
                     let scroll_offsets = &mut self.scroll_offsets;
                     let collapsed_sections = &mut self.collapsed_sections;
@@ -19778,7 +21538,12 @@ impl ShellState {
             cursor.rect = None;
             return true;
         };
-        let item = ChromeGroupItem { control_id: control.control_id.as_str(), icon_id: control.icon_id, label: Some(control.label.as_str()), active: control.active, disabled: false, kind: HitKind::NavbarItem };
+        // ⌨️ The inline hotkey badge belongs to EVERY bound chrome control, not only to the two role
+        // chips that used to append it themselves (audit W14 §B14) — and it has to be appended here,
+        // before `retained_chrome_group_item_width` measures the label, or the chip would lay out
+        // narrower than the text it paints.
+        let label = self.chrome_control_label(&control.control_id, &control.label);
+        let item = ChromeGroupItem { control_id: control.control_id.as_str(), icon_id: control.icon_id, label: Some(label.as_str()), active: control.active, disabled: false, kind: HitKind::NavbarItem };
         if cursor.rect.is_none() {
             let Some(item_w) = retained_chrome_group_item_width(atlas, theme, &item) else {
                 self.error = Some("Shell navbar cluster item exceeded the retained chrome boundary".to_string());
@@ -20198,7 +21963,8 @@ impl ShellState {
                     cursor.phase = 9;
                     return false;
                 };
-                let item = ChromeGroupItem { control_id: control.control_id.as_str(), icon_id: control.icon_id, label: Some(control.label.as_str()), active: control.active, disabled: false, kind: HitKind::NavbarItem };
+                let label = self.chrome_control_label(&control.control_id, &control.label);
+                let item = ChromeGroupItem { control_id: control.control_id.as_str(), icon_id: control.icon_id, label: Some(label.as_str()), active: control.active, disabled: false, kind: HitKind::NavbarItem };
                 let Some(item_w) = retained_chrome_group_item_width(atlas, theme, &item) else {
                     self.error = Some("Shell surface control exceeded the retained chrome boundary".to_string());
                     cursor.item += 1;
@@ -20301,6 +22067,15 @@ impl ShellState {
 
     fn render_chrome_tooltip_step(&mut self, cursor: &mut ShellChromeChildCursor, overlay: &mut DrawList, atlas: &mut FontAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme, width: f32, height: f32) -> bool {
         if self.chrome_build.dialog_open() {
+            close_chrome_overlay_glass_content(cursor, overlay);
+            return true;
+        }
+        // 💡️ `tooltips: "none"` (the shipped `compact` driver) shows no hover tooltip at all —
+        // React's `useControlTooltipText` returns `undefined` before it composes any text, so the
+        // hint never mounts. The armed hover is dropped too, so flipping the driver back does not
+        // reveal a tooltip whose dwell ran while it was suppressed.
+        if !self.chrome_build.tooltip_shows(false) {
+            self.chrome_build.tooltip_hover = None;
             close_chrome_overlay_glass_content(cursor, overlay);
             return true;
         }
@@ -20518,6 +22293,116 @@ impl ShellState {
         }
         cursor.scalar += 1;
         false
+    }
+
+    /// 🛂️ Resolves this frame's administration sheet from the retained operation alone — packet
+    /// W15e. `None` means no operation is live, which is exactly when React mounts nothing.
+    ///
+    /// ⚖️ Every row comes from [`shell_space_administration_controls`], the SAME builder the native
+    /// shell already renders from and the one whose `enabled` flags are derived solely from the hub's
+    /// own capability answer. The chrome adds no authority of its own.
+    pub(crate) fn space_administration_plan(&self) -> Option<crate::space_administration::SpaceAdministrationPlan> {
+        use crate::space_administration as pane;
+        let operation = self.space_administration.as_ref()?;
+        let german = self.locale_id == "de";
+        let locale = self.active_locale();
+        let controls = shell_space_administration_controls(operation, german);
+        let notice = match operation.page() {
+            Some(DirectorySpaceAdministrationPageV1::Public { .. }) => Some(pane::space_administration_public_notice(locale).to_string()),
+            Some(DirectorySpaceAdministrationPageV1::Member { .. }) => Some(pane::space_administration_spectator_notice(locale).to_string()),
+            _ => None,
+        };
+        // 🧾️ The status row is the sheet's own status LINE, not a roster row — React paints it as the
+        // `role="status"` paragraph above the rosters, so it is lifted out of the control list here.
+        let mut rows = Vec::new();
+        let mut status = shell_space_administration_status(operation.phase(), german).to_string();
+        for control in controls {
+            if control.control_id == "os.space-administration.status" {
+                status = control.label.to_string();
+                continue;
+            }
+            // 📋️ The invite-link control is deliberately WITHHELD by this packet, on both targets.
+            // Acknowledging the one-shot capability ERASES it in the same turn, so a control that
+            // acknowledges without delivering destroys the invitation outright — and neither target
+            // can deliver it yet: the frame Worker owns no `navigator.clipboard` (`web_sys::window()`
+            // is `None` there, the defect the file and preference doors exist for), and the native
+            // clipboard is an `InteractiveJob` (`ui_host::ClipboardIoJob`) with no shell-side runner.
+            // Offering a control that silently loses an invitation is strictly worse than not
+            // offering it; the clipboard door is named as a hand-off in this packet's report.
+            if control.control_id == "os.space-administration.invite.copy" {
+                continue;
+            }
+            rows.push(pane::SpaceAdministrationRow { control_id: control.control_id, enabled: control.enabled, label: control.label.to_string(), value: control.value });
+        }
+        Some(pane::SpaceAdministrationPlan { notice, rows, space_id: operation.space_id().to_string(), status, title: shell_space_administration_label("title", german).to_string() })
+    }
+
+    /// 🛂️ Paints the Space Administration sheet — packet W15e, the chrome half of the lane W1e made
+    /// transport-complete on both targets and nothing ever rendered.
+    fn render_space_administration_step(&mut self, cursor: &mut ShellChromeChildCursor, overlay: &mut DrawList, atlas: &mut FontAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme, width: f32, height: f32) -> bool {
+        use crate::space_administration::SpaceAdministrationPaintOp as Op;
+        let Some(plan) = self.space_administration_plan() else {
+            close_chrome_overlay_glass_content(cursor, overlay);
+            return true;
+        };
+        let ops = crate::space_administration::space_administration_paint_ops(&plan, width, height, theme, self.active_locale());
+        let Some(op) = ops.get(cursor.scalar) else {
+            close_chrome_overlay_glass_content(cursor, overlay);
+            return true;
+        };
+        match op {
+            Op::Sheet(rect) => open_chrome_overlay_glass_content(cursor, overlay, *rect, theme.border_radius, theme.glass(Level::Dialog)),
+            Op::Fill { rect, color } => overlay.push_rounded([rect.x, rect.y, rect.w, rect.h], *color, theme.border_radius),
+            Op::Text { value, x, y, max_w, size, color } => match chrome_text_complete_step(overlay, atlas, value, *x, *y, *max_w, *size, *color, &mut cursor.glyph) {
+                Ok(false) => return false,
+                Ok(true) => {}
+                Err(()) => {
+                    self.error = Some("Shell space-administration text exceeded the retained glyph boundary".to_string());
+                    cursor.glyph.reset();
+                }
+            },
+            Op::Hit { rect, control_id } => input.register_hit(HitTarget { rect: *rect, event: None, control_id: Some(control_id.clone()), kind: HitKind::Button, drag_axis: None, drag_data: None }),
+            Op::Clicks => {
+                if self.chrome_build.clicked_this_frame {
+                    let (x, y) = (input.pointer_x, input.pointer_y);
+                    let hit = ops.iter().find_map(|op| match op {
+                        Op::Hit { rect, control_id } if rect.contains(x, y) => Some(control_id.clone()),
+                        _ => None,
+                    });
+                    if let Some(control_id) = hit {
+                        self.resolve_space_administration_control(&control_id);
+                    }
+                }
+            }
+        }
+        cursor.scalar += 1;
+        false
+    }
+
+    /// 🛂️ Applies one click on an administration control. The two affordances the CHROME owns land
+    /// here; every mutating control (`role`, `remove`, `issue`, `revoke`) still has to seal a
+    /// `DirectoryCommand`, which is the operation's own funnel, and is left to the funnel rather than
+    /// re-derived here — see the packet report's hand-offs.
+    fn resolve_space_administration_control(&mut self, control_id: &str) {
+        use crate::space_administration::SPACE_ADMINISTRATION_CLOSE_CONTROL_ID;
+        if control_id == SPACE_ADMINISTRATION_CLOSE_CONTROL_ID {
+            self.close_space_administration();
+            return;
+        }
+        // 📄️ The two paging controls carry their own cursor as the control's VALUE, so the page they
+        // advance is exactly the window the hub issued it for.
+        if control_id == "os.space-administration.members.more" || control_id == "os.space-administration.invites.more" {
+            let german = self.locale_id == "de";
+            let cursor = self
+                .space_administration
+                .as_ref()
+                .map(|operation| shell_space_administration_controls(operation, german))
+                .and_then(|controls| controls.into_iter().find(|control| control.control_id == control_id).map(|control| control.value));
+            if let (Some(cursor), Some(operation)) = (cursor.filter(|cursor| !cursor.is_empty()), self.space_administration.as_mut()) {
+                operation.request_page(Some(cursor));
+            }
+            return;
+        }
     }
 
     /// ✅️ Paints the agent approvals modal — opened purely by a non-empty queue, listing every
@@ -20936,7 +22821,7 @@ impl ShellState {
             }
             hover.clone()
         };
-        if self.chrome_build.dialog_open() {
+        if self.chrome_build.dialog_open() || !self.chrome_build.tooltip_shows(false) {
             return;
         }
         let Some(hover) = armed else { return };
@@ -21851,6 +23736,55 @@ pub fn semio_wgpu_set_host_storage(snapshot_json: String) {
 }
 //#endregion 🚪️StorageDoor
 
+//#region 🌉️AgentBridgeConfigDoor
+/// 🔗️ The one config slot a supervisor may fill before (or after) the shell exists — packet W15e.
+///
+/// ⚖️ Why a slot and not a boot-descriptor axis: bridge admission is a PROTECTED in-memory value the
+/// local supervisor hands over, never a url/`<meta>`/env carrier — React makes exactly that call in
+/// `discoverAgentBridgeConfig`'s own docstring and returns `null` unconditionally rather than reading
+/// `VITE_SEMIO_BRIDGE_*`. Putting it on the boot descriptor would put it in the address bar and in
+/// every referrer; putting it here keeps it where React keeps it.
+#[cfg(target_arch = "wasm32")]
+thread_local! {
+    static PENDING_AGENT_BRIDGE_CONFIG: std::cell::RefCell<Option<Option<crate::agent_bridge::AgentBridgeConfig>>> = const { std::cell::RefCell::new(None) };
+}
+
+/// 🌉️ wasm bridge-config hook. An empty url CLEARS the config (React's `config: null`), which retires
+/// the socket and parks the bridge back in `Disabled`.
+#[cfg(target_arch = "wasm32")]
+#[wasm_bindgen::prelude::wasm_bindgen(js_name = semioWgpuSetAgentBridgeConfig)]
+pub fn semio_wgpu_set_agent_bridge_config(url: String, admission_proof: String) {
+    let config = if url.trim().is_empty() {
+        None
+    } else {
+        match crate::agent_bridge::AgentBridgeConfig::admit(&url, &admission_proof) {
+            Ok(config) => Some(config),
+            Err(error) => {
+                // 🔒️ The refusal names the FAULT, never the proof.
+                ShellState::debug_log(&format!("[DEBUG] wgpu-shell agent bridge config refused: {error}"));
+                return;
+            }
+        }
+    };
+    let armed = config.is_some();
+    PENDING_AGENT_BRIDGE_CONFIG.with(|slot| *slot.borrow_mut() = Some(config));
+    ShellState::debug_log(&format!("[DEBUG] wgpu-shell agent bridge config armed={armed}"));
+}
+
+/// 🌉️ Takes whatever the hook left, exactly once.
+#[cfg(target_arch = "wasm32")]
+fn take_pending_agent_bridge_config() -> Option<Option<crate::agent_bridge::AgentBridgeConfig>> {
+    PENDING_AGENT_BRIDGE_CONFIG.with(|slot| slot.borrow_mut().take())
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+fn take_pending_agent_bridge_config() -> Option<Option<crate::agent_bridge::AgentBridgeConfig>> {
+    // 🖥️ Native has no equivalent hook and deliberately no environment discovery either: a native
+    // embedder holds the shell directly and calls `ShellState::set_agent_bridge_config`.
+    None
+}
+//#endregion 🌉️AgentBridgeConfigDoor
+
 //#region 🔒️PrefLocks
 /// 🔒️ `SEMIO_LOCKED_*` env-driven pref locks — mirrors `os-shell.tsx`'s `FrameworkOsLocks`
 /// (`:372-378`, read via `VITE_SEMIO_LOCKED_*` in `framework/product/os/dev/js/index.ts:19-23`):
@@ -21935,6 +23869,15 @@ struct ChromePrefsState {
     // exercised today only by `ui_prefs_themes_i18n_tests`, hence the matching `cfg` here.
     #[cfg(all(test, not(target_arch = "wasm32")))]
     draft_theme: Option<String>,
+    /// 🎨️ The UNSAVED theme document the settings panel is editing, mirrored here so the present
+    /// side's `resolve_theme_for_ids` re-tokenises from it — React's `uiThemeDraft` reaching
+    /// `applyUiThemeToRoot`.
+    theme_document_draft: Option<ThemeDocument>,
+    /// 🎨️ Bumped on every draft/registry write, so the cache below can never answer a stale theme.
+    theme_document_generation: u64,
+    /// 🧊️ `(theme id, dark, generation) -> resolved Theme` — one document walk per change, not one
+    /// per frame.
+    theme_document_resolved: Option<((String, bool, u64), Theme)>,
     worker_count: u32,
 }
 
@@ -21948,6 +23891,9 @@ impl Default for ChromePrefsState {
             keybinding_overrides: HashMap::new(),
             #[cfg(all(test, not(target_arch = "wasm32")))]
             draft_theme: None,
+            theme_document_draft: None,
+            theme_document_generation: 0,
+            theme_document_resolved: None,
             worker_count: default_compute_worker_count(),
         }
     }
@@ -21979,6 +23925,9 @@ fn project_chrome_prefs(preferences: UiPreferences, worker_count: u32) -> Chrome
         keybinding_overrides,
         #[cfg(all(test, not(target_arch = "wasm32")))]
         draft_theme: None,
+        theme_document_draft: None,
+        theme_document_generation: 0,
+        theme_document_resolved: None,
         worker_count,
     }
 }
@@ -22136,6 +24085,13 @@ fn custom_theme_definition(custom_id: &str) -> Option<CustomChromeTheme> {
 /// declared `base`). The `frame()` loop's single `resolve_theme(...)` call site now goes through
 /// this instead, keyed by `active_theme_id()`.
 pub fn resolve_theme_for_ids(theme_id: &str, appearance_id: &str) -> Theme {
+    // 🎨️ A live editor draft, or a custom theme stored as a React-shaped `UiTheme` document, is
+    // re-tokenised field by field (`theme_from_document`) rather than layered as five colour
+    // overrides — which is what makes the settings panel's ~450 rows mean something on this target
+    // (packet W15d). Everything else falls through to the built-ins below, unchanged.
+    if let Some(theme) = document_theme_for_ids(theme_id, crate::appearance_is_dark(appearance_id)) {
+        return theme;
+    }
     match theme_id {
         "" | "semio" => crate::resolve_theme(appearance_id),
         "mono" => Theme::mono(crate::appearance_is_dark(appearance_id)),
@@ -22159,6 +24115,45 @@ pub fn resolve_theme_for_ids(theme_id: &str, appearance_id: &str) -> Theme {
 /// `ui.display.tab.windows`). Unknown keys fall back to the key itself rather than inventing text.
 fn shell_chrome_string(key: &'static str, is_de: bool) -> &'static str {
     match (key, is_de) {
+        // 🖥️ React's `ui.display.*` block (`🖱️ui/🎯️targets/⚛️react/🟦️.tsx`), verbatim on both sides.
+        ("display.saveLayout", false) => "Save layout",
+        ("display.saveLayout", true) => "Layout speichern",
+        ("display.saveLayoutPlaceholder", false) => "Layout name",
+        ("display.saveLayoutPlaceholder", true) => "Layoutname",
+        ("display.saveCurrentLayout", false) => "Save current layout",
+        ("display.saveCurrentLayout", true) => "Aktuelles Layout speichern",
+        ("display.deleteLayout", false) => "Delete",
+        ("display.deleteLayout", true) => "Löschen",
+        ("display.layouts", false) => "Layouts",
+        ("display.layouts", true) => "Layouts",
+        ("display.saved", false) => "Saved",
+        ("display.saved", true) => "Gespeichert",
+        ("display.unavailable", false) => "Display unavailable",
+        ("display.unavailable", true) => "Anzeige nicht verfügbar",
+        ("common.name", false) => "Name",
+        ("common.name", true) => "Name",
+        ("common.save", false) => "Save",
+        ("common.save", true) => "Speichern",
+        // ⚔️ React's `ui.conflict.*` block.
+        ("conflict.accept", false) => "Accept",
+        ("conflict.accept", true) => "Übernehmen",
+        ("conflict.discard", false) => "Discard",
+        ("conflict.discard", true) => "Verwerfen",
+        ("conflict.quarantined", false) => "Held back",
+        ("conflict.quarantined", true) => "Zurückgehalten",
+        ("conflict.degraded", false) => "Degraded",
+        ("conflict.degraded", true) => "Beeinträchtigt",
+        // 🔌️ React's `ui.plugins.status.*` / `ui.plugins.action.*` blocks.
+        ("plugins.status.available", false) => "Available",
+        ("plugins.status.available", true) => "Verfügbar",
+        ("plugins.status.installing", false) => "Installing…",
+        ("plugins.status.installing", true) => "Wird installiert…",
+        ("plugins.action.install", false) => "Install",
+        ("plugins.action.install", true) => "Installieren",
+        ("plugins.action.uninstall", false) => "Uninstall",
+        ("plugins.action.uninstall", true) => "Deinstallieren",
+        ("plugins.action.reload", false) => "Reload",
+        ("plugins.action.reload", true) => "Neu laden",
         ("display.tab.windows", false) => "Windows",
         ("display.tab.windows", true) => "Fenster",
         ("display.tab.layout", false) => "Layout",
@@ -22185,6 +24180,58 @@ fn shell_chrome_string(key: &'static str, is_de: bool) -> &'static str {
         ("surface.faulted", true) => "Fläche nicht verfügbar",
         ("settings.tab.theme", false) => "Theme",
         ("settings.tab.theme", true) => "Design",
+        // 🎨️ The theme EDITOR's own vocabulary (packet W15d) — React reads these from
+        // `ui.settings.theme.*`/`ui.mutation.policy.*` in the external i18next bundle this repo does
+        // not vendor, so these are EN/DE pairs in the same terse register as the wgpu-only additions
+        // above, not a byte-identical trace.
+        ("settings.theme.colors", false) => "Colors",
+        ("settings.theme.colors", true) => "Farben",
+        ("settings.theme.spacing", false) => "Spacing",
+        ("settings.theme.spacing", true) => "Abstände",
+        ("settings.theme.fonts", false) => "Fonts",
+        ("settings.theme.fonts", true) => "Schriften",
+        ("settings.theme.strokes", false) => "Strokes",
+        ("settings.theme.strokes", true) => "Striche",
+        ("settings.theme.radii", false) => "Radii",
+        ("settings.theme.radii", true) => "Radien",
+        ("settings.theme.opacities", false) => "Opacities",
+        ("settings.theme.opacities", true) => "Deckkraft",
+        ("settings.theme.metrics", false) => "Metrics",
+        ("settings.theme.metrics", true) => "Maße",
+        ("settings.theme.appearances", false) => "Appearances",
+        ("settings.theme.appearances", true) => "Darstellungen",
+        ("settings.theme.appearance.light", false) => "Light",
+        ("settings.theme.appearance.light", true) => "Hell",
+        ("settings.theme.appearance.dark", false) => "Dark",
+        ("settings.theme.appearance.dark", true) => "Dunkel",
+        ("settings.theme.group.board", false) => "Board",
+        ("settings.theme.group.board", true) => "Board",
+        ("settings.theme.group.map", false) => "Map",
+        ("settings.theme.group.map", true) => "Karte",
+        ("settings.theme.group.canvas", false) => "Canvas",
+        ("settings.theme.group.canvas", true) => "Leinwand",
+        ("settings.theme.group.chrome", false) => "Chrome",
+        ("settings.theme.group.chrome", true) => "Rahmen",
+        ("settings.theme.save", false) => "Save theme",
+        ("settings.theme.save", true) => "Design speichern",
+        ("settings.theme.export", false) => "Export theme",
+        ("settings.theme.export", true) => "Design exportieren",
+        ("settings.theme.import", false) => "Import theme",
+        ("settings.theme.import", true) => "Design importieren",
+        ("settings.theme.page", false) => "Page",
+        ("settings.theme.page", true) => "Seite",
+        ("settings.theme.pagePrevious", false) => "Previous",
+        ("settings.theme.pagePrevious", true) => "Zurück",
+        ("settings.theme.pageNext", false) => "Next",
+        ("settings.theme.pageNext", true) => "Weiter",
+        ("settings.mergePolicy", false) => "Merge policy",
+        ("settings.mergePolicy", true) => "Zusammenführung",
+        ("settings.mergePolicy.laissezFaire", false) => "Laissez-faire",
+        ("settings.mergePolicy.laissezFaire", true) => "Laissez-faire",
+        ("settings.mergePolicy.normal", false) => "Normal",
+        ("settings.mergePolicy.normal", true) => "Normal",
+        ("settings.mergePolicy.vigilant", false) => "Vigilant",
+        ("settings.mergePolicy.vigilant", true) => "Wachsam",
         ("settings.tab.app", false) => "App",
         ("settings.tab.app", true) => "App",
         ("settings.app.name", false) => "Name",
@@ -22333,6 +24380,8 @@ fn shell_chrome_string(key: &'static str, is_de: bool) -> &'static str {
         ("common.focus", true) => "Fokussieren",
         ("common.unfocus", false) => "Unfocus",
         ("common.unfocus", true) => "Fokus aufheben",
+        ("common.select", false) => "Select",
+        ("common.select", true) => "Auswählen",
         ("common.execute", false) => "Execute",
         ("common.execute", true) => "Ausführen",
         ("common.reset", false) => "Reset",
@@ -22640,6 +24689,7 @@ impl ShellState {
         self.terminology_id = locks.terminology.clone().or(preferences.terminology).unwrap_or_else(|| UI_TERMINOLOGY_NATIVE.to_string());
         self.driver_id = preferences.driver_id.unwrap_or_else(|| "default".to_string());
         self.chrome_build.preferences = with_chrome_prefs(|preferences| preferences.clone());
+        self.chrome_build.driver = resolve_ui_driver_chrome(&self.driver_id, &self.chrome_build.preferences.custom_drivers);
         if let Some(locked_theme) = &locks.theme_id {
             set_active_theme_id(locked_theme);
             self.chrome_build.preferences.theme_id = locked_theme.clone();
@@ -22683,6 +24733,16 @@ mod browser_prefs_persistence_tests;
 #[path = "../../🧪️tests/🌓️appearance-tour-and-footer-pills/🦀️.rs"]
 mod appearance_tour_and_footer_pill_tests;
 //#endregion 🌓️AppearanceTourAndFooterPillTests
+
+//#region 🚪️HostDoorRemainderTests
+/// 🧪️ WGPU-RENDERER-REACT-PARITY packet W15f — the host/boot-door remainder: the platform door behind
+/// `command_host_platform`, the undo/redo chord gate, OS file-drop parity (by absence on both
+/// renderers), `namedLayouts`/`windowPanes` persistence, the brand-scoped introduction key, and the
+/// palette's arg-carrying command routes.
+#[cfg(all(test, not(target_arch = "wasm32")))]
+#[path = "../../🧪️tests/🚪️wgpu-host-door-remainder/🦀️.rs"]
+mod host_door_remainder_tests;
+//#endregion 🚪️HostDoorRemainderTests
 
 //#region 🎓️TourOverlayAndChordGlyphTests
 #[cfg(all(test, not(target_arch = "wasm32")))]
@@ -22763,6 +24823,27 @@ async fn request_file_save(filename: &str) -> Option<std::path::PathBuf> {
 #[cfg(not(target_arch = "wasm32"))]
 async fn pick_folder() -> Option<String> {
     ui_host::select_native_paths(ui_host::NativeFileDialogRequest::folder()).await.into_iter().next().map(|path| path.display().to_string())
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+async fn pick_file_path() -> Option<String> {
+    ui_host::select_native_paths(ui_host::NativeFileDialogRequest::open(["json"], false)).await.into_iter().next().map(|path| path.display().to_string())
+}
+
+#[cfg(target_arch = "wasm32")]
+async fn pick_file_path() -> Option<String> {
+    pick_native_path_from_host(serde_json::json!({ "op": "request-native-file-path", "accept": ".json,application/json" })).await
+}
+
+#[cfg(target_arch = "wasm32")]
+async fn pick_folder() -> Option<String> {
+    pick_native_path_from_host(serde_json::json!({ "op": "request-native-folder-path" })).await
+}
+
+#[cfg(target_arch = "wasm32")]
+async fn pick_native_path_from_host(request: serde_json::Value) -> Option<String> {
+    let answer = host_io_call(&request.to_string(), None).await.ok()?;
+    serde_json::from_str::<Option<String>>(&answer).ok().flatten()
 }
 
 
@@ -23073,3 +25154,867 @@ mod chrome_maintenance_pressure_tests;
 #[cfg(test)]
 #[path = "../../🧪️tests/🎬️wgpu-plugin-install/🦀️.rs"]
 mod plugin_install_tests;
+
+//#region 🎨️ThemeDocumentModel
+/// 🎨️ The AUTHORED design-token document — the very `🔣️.json` the styling codegen turns into
+/// React's `STYLING_SEMIO_THEME` and into this target's compile-time `ui_styling` constants. Embedded
+/// so the wgpu theme EDITOR can enumerate exactly the keys React's editor enumerates
+/// (`host.theme.colors`/`spacing`/`fontStacks`/`strokes`/`radii`/`opacities`/`metrics`/`appearances`),
+/// rather than a hand-kept second key list that would drift on the next regeneration.
+///
+/// ⚖️ The generated `STYLING_SEMIO_THEME` is this document minus `version`/`fontFaces`/`levels`/
+/// `presence` plus `id`/`label`, which is exactly what [`ThemeDocument`]'s `#[serde(default)]` fields
+/// keep and what [`shell_theme_document_base`] stamps back on.
+const SHELL_THEME_DOCUMENT_JSON: &str = include_str!("../../../../../../../../../🔨️modules/🖱️ui/🎨️styling/🔣️.json");
+
+/// 🎨️ React's `UiTheme["strokes"][k]` — `number | number[]` (a dash pattern is a list).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(untagged)]
+pub(crate) enum ThemeNumber {
+    Scalar(f64),
+    List(Vec<f64>),
+}
+
+impl ThemeNumber {
+    /// 🔢️ React's `Array.isArray(value) ? value.join(", ") : String(value)` — the text
+    /// `themeNumberInputRow` puts in the box.
+    fn as_text(&self) -> String {
+        match self {
+            ThemeNumber::Scalar(value) => format_theme_scalar(*value),
+            ThemeNumber::List(values) => values.iter().map(|value| format_theme_scalar(*value)).collect::<Vec<_>>().join(", "),
+        }
+    }
+
+    /// 🔢️ React's `onBlur` parse: a comma anywhere makes it a list, otherwise one float; an
+    /// unparseable buffer commits NOTHING (React returns without calling `onCommit`).
+    fn parse(raw: &str) -> Option<Self> {
+        let raw = raw.trim();
+        if raw.contains(',') {
+            let parts: Vec<f64> = raw.split(',').filter_map(|part| part.trim().parse::<f64>().ok()).collect();
+            return (!parts.is_empty()).then_some(ThemeNumber::List(parts));
+        }
+        raw.parse::<f64>().ok().map(ThemeNumber::Scalar)
+    }
+
+    /// 🔢️ The scalar a `Theme` field wants — a list answers its first entry, exactly as React's
+    /// `setThemeRadius`/`setThemeOpacity` narrow `typeof value === "number" ? value : value[0]!`.
+    fn scalar(&self) -> Option<f64> {
+        match self {
+            ThemeNumber::Scalar(value) => Some(*value),
+            ThemeNumber::List(values) => values.first().copied(),
+        }
+    }
+}
+
+/// 🔢️ `String(n)` in JavaScript never prints a trailing `.0`, and these strings are compared against
+/// React's boxes byte for byte in the parity probe.
+fn format_theme_scalar(value: f64) -> String {
+    if value.fract() == 0.0 && value.abs() < 1e15 { format!("{}", value as i64) } else { format!("{value}") }
+}
+
+/// 🖌️ React's `ThemePaintRef` (`🖱️ui/🎨️styling/🌓️theme/🟦️.ts:33`) — a primitive token, a literal hex,
+/// or an oklab-free channel blend of two tokens.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub(crate) struct ThemePaintRef {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub token: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub hex: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub alpha: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub mix: Option<(String, String, f64)>,
+}
+
+/// 🎨️ The wgpu twin of React's `UiTheme` (`🖱️ui/🎨️styling/🌓️theme/🟦️.ts:63`) — the document BOTH
+/// renderers' theme editors mutate and BOTH persist into `os.config.ui-preferences`'
+/// `customThemes[id].config`. Every map is a `BTreeMap`, so a section's rows enumerate in the same
+/// ascending key order React's `Object.keys(...).sort()` produces and a saved document is byte-stable.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub(crate) struct ThemeDocument {
+    #[serde(default)]
+    pub id: String,
+    #[serde(default)]
+    pub label: String,
+    #[serde(default)]
+    pub colors: BTreeMap<String, String>,
+    #[serde(default)]
+    pub spacing: BTreeMap<String, String>,
+    #[serde(default)]
+    pub font_stacks: BTreeMap<String, String>,
+    #[serde(default)]
+    pub canvas_fonts: BTreeMap<String, String>,
+    #[serde(default)]
+    pub strokes: BTreeMap<String, ThemeNumber>,
+    #[serde(default)]
+    pub radii: BTreeMap<String, ThemeNumber>,
+    #[serde(default)]
+    pub opacities: BTreeMap<String, ThemeNumber>,
+    #[serde(default)]
+    pub metrics: BTreeMap<String, BTreeMap<String, ThemeNumber>>,
+    #[serde(default)]
+    pub appearances: BTreeMap<String, BTreeMap<String, BTreeMap<String, ThemePaintRef>>>,
+}
+
+impl ThemeDocument {
+    /// 🎨️ Whether this parsed as a REAL theme document rather than as an empty shell — the predicate
+    /// that tells a React-shaped `customThemes[id].config` from this target's older five-slot
+    /// `CustomChromeTheme` override record (which carries no `colors` at all).
+    fn is_document(&self) -> bool {
+        !self.colors.is_empty() && !self.appearances.is_empty()
+    }
+}
+
+/// 🎨️ The authored base document, parsed once. `id`/`label` are stamped the way the styling codegen
+/// stamps them onto `STYLING_SEMIO_THEME`.
+pub(crate) fn shell_theme_document_base() -> &'static ThemeDocument {
+    static BASE: std::sync::OnceLock<ThemeDocument> = std::sync::OnceLock::new();
+    BASE.get_or_init(|| {
+        let mut document: ThemeDocument = serde_json::from_str(SHELL_THEME_DOCUMENT_JSON).unwrap_or_else(|_| ThemeDocument {
+            id: String::new(),
+            label: String::new(),
+            colors: BTreeMap::new(),
+            spacing: BTreeMap::new(),
+            font_stacks: BTreeMap::new(),
+            canvas_fonts: BTreeMap::new(),
+            strokes: BTreeMap::new(),
+            radii: BTreeMap::new(),
+            opacities: BTreeMap::new(),
+            metrics: BTreeMap::new(),
+            appearances: BTreeMap::new(),
+        });
+        document.id = "semio".to_string();
+        document.label = "semio".to_string();
+        document
+    })
+}
+
+/// 🖌️ `parseHex6` — React accepts `#rgb` and `#rrggbb` alike.
+fn theme_parse_hex6(hex: &str) -> [u8; 3] {
+    let raw = hex.trim().trim_start_matches('#');
+    if raw.len() == 3 {
+        let expand = |index: usize| u8::from_str_radix(&raw[index..index + 1].repeat(2), 16).unwrap_or(0);
+        return [expand(0), expand(1), expand(2)];
+    }
+    let value = u32::from_str_radix(raw, 16).unwrap_or(0);
+    [((value >> 16) & 0xff) as u8, ((value >> 8) & 0xff) as u8, (value & 0xff) as u8]
+}
+
+/// 🖌️ `blendHex` — a straight sRGB channel lerp, NOT an oklab mix: React's paint refs blend in the
+/// authored space and only the LEVEL ramp below is oklab.
+fn theme_blend_hex(a: &str, b: &str, ratio_a: f64) -> [u8; 3] {
+    let left = theme_parse_hex6(a);
+    let right = theme_parse_hex6(b);
+    let t = ratio_a.clamp(0.0, 1.0);
+    std::array::from_fn(|channel| (f64::from(left[channel]) * t + f64::from(right[channel]) * (1.0 - t)).round() as u8)
+}
+
+/// 🖌️ The Rust twin of `resolveThemePaint` (`🖱️ui/🎨️styling/🌓️theme/🟦️.ts:109`), including its
+/// `"transparent"` mix special case (a mix against transparent carries `1 - ratio` as its alpha
+/// unless the ref states one). An unresolvable ref answers `None` rather than inventing a colour.
+fn theme_resolve_paint(colors: &BTreeMap<String, String>, paint: &ThemePaintRef) -> Option<[u8; 4]> {
+    let mut alpha = paint.alpha.unwrap_or(1.0);
+    let rgb = if let Some((left, right, ratio)) = paint.mix.as_ref() {
+        let left_hex = colors.get(left)?;
+        let right_hex = if right == "transparent" { "#000000".to_string() } else { colors.get(right)?.clone() };
+        if right == "transparent" && paint.alpha.is_none() {
+            alpha = 1.0 - ratio;
+        }
+        theme_blend_hex(left_hex, &right_hex, *ratio)
+    } else if let Some(hex) = paint.hex.as_ref() {
+        theme_parse_hex6(hex)
+    } else {
+        theme_parse_hex6(colors.get(paint.token.as_deref()?)?)
+    };
+    Some([rgb[0], rgb[1], rgb[2], (alpha.clamp(0.0, 1.0) * 255.0).round() as u8])
+}
+
+/// 🖌️ One resolved paint as this target's linear-float [`Rgba`], through the same
+/// `ui_styling::color::rgba8_to_linear` decode every generated palette constant went through.
+fn theme_paint_rgba(colors: &BTreeMap<String, String>, group: &BTreeMap<String, ThemePaintRef>, key: &str, fallback: Rgba) -> Rgba {
+    group.get(key).and_then(|paint| theme_resolve_paint(colors, paint)).map(|[r, g, b, a]| Rgba::from_srgb8(r, g, b, a)).unwrap_or(fallback)
+}
+
+/// 🎨️ Re-tokenises one appearance of a `Theme` FROM a live document — the runtime twin of the ui
+/// crate's compile-time `from_chrome`, field for field, so an edit in the settings panel repaints the
+/// shell on the next frame exactly as React's `SET_UI_THEME_DRAFT` + `applyUiThemeToRoot` repaints
+/// its DOM.
+///
+/// 🪜️ The six `level*` surfaces are NOT authored paints: the styling projection injects them as
+/// `oklabMix(base, foreground, k · shadeStepPercent/100)` (`🖱️ui/🎨️styling/📽️projection/🟦️.ts:129`),
+/// so they are recomputed here through `ui_styling::color::oklab_mix` — which is what makes editing
+/// `chrome.base` move the navbar, the panels and the menu surface and not just the page background.
+///
+/// ⚖️ A key the document does not carry keeps the built-in value it had: this layers onto the
+/// appearance's own generated `Theme`, it does not replace it, so a partial custom document can never
+/// blank a surface.
+pub(crate) fn theme_from_document(document: &ThemeDocument, dark: bool) -> Theme {
+    let mut theme = if dark { Theme::dark() } else { Theme::light() };
+    let colors = &document.colors;
+    let appearance = document.appearances.get(if dark { "dark" } else { "light" });
+    if let Some(chrome) = appearance.and_then(|groups| groups.get("chrome")) {
+        let paint = |key: &str, fallback: Rgba| theme_paint_rgba(colors, chrome, key, fallback);
+        let base = paint("base", theme.background);
+        let foreground = paint("foreground", theme.text);
+        theme.background = base;
+        theme.input_bg = base;
+        theme.canvas_clear = base;
+        theme.text = foreground;
+        theme.muted = paint("muted", theme.muted);
+        theme.text_muted = paint("mutedForeground", theme.text_muted);
+        theme.accent = paint("accent", theme.accent);
+        theme.accent_hover = paint("activeHover", theme.accent_hover);
+        theme.active_foreground = paint("activeForeground", theme.active_foreground);
+        theme.selected = paint("activeBase", theme.selected);
+        theme.button_hover = paint("hoverInteractiveFill", theme.button_hover);
+        theme.row_hover = theme.button_hover;
+        theme.separator = paint("borderNormal", theme.separator);
+        theme.panel_border = theme.separator;
+        theme.border_normal = theme.separator;
+        theme.border_emphasized = paint("borderEmphasized", theme.border_emphasized);
+        theme.text_element = paint("borderElement", theme.text_element);
+        let focus_alpha = document.opacities.get("chromeFocusRingAlpha").and_then(ThemeNumber::scalar).unwrap_or(f64::from(theme.focus_ring.a));
+        theme.focus_ring = theme.accent.with_alpha(focus_alpha as f32);
+        // 🪜️ The formula-derived ramp, recomputed off the two paints it is a function of.
+        let shade_step = ui_styling::levels::SHADE_STEP_PERCENT as f32 / 100.0;
+        let base_linear = [base.r, base.g, base.b, base.a];
+        let foreground_linear = [foreground.r, foreground.g, foreground.b, foreground.a];
+        theme.level_bg = std::array::from_fn(|index| {
+            let mixed = ui_styling::color::oklab_mix(base_linear, foreground_linear, index as f32 * shade_step);
+            Rgba::new(mixed[0], mixed[1], mixed[2], mixed[3])
+        });
+        theme.navbar = theme.level_bg[1];
+        theme.button = theme.level_bg[1];
+        theme.panel = theme.level_bg[3];
+        theme.temporary = theme.level_bg[5];
+    }
+    if let Some(outcome) = appearance.and_then(|groups| groups.get("outcome")) {
+        theme.error = theme_paint_rgba(colors, outcome, "error", theme.error);
+        theme.warning = theme_paint_rgba(colors, outcome, "warning", theme.warning);
+        theme.success = theme_paint_rgba(colors, outcome, "success", theme.success);
+        theme.progress = theme_paint_rgba(colors, outcome, "progress", theme.progress);
+    }
+    if let Some(diagram) = appearance.and_then(|groups| groups.get("diagram")) {
+        theme.checker_light = theme_paint_rgba(colors, diagram, "checkerLight", theme.checker_light);
+        theme.checker_dark = theme_paint_rgba(colors, diagram, "checkerDark", theme.checker_dark);
+        theme.diagram_stroke = theme_paint_rgba(colors, diagram, "stroke", theme.diagram_stroke);
+        theme.diagram_seam = theme_paint_rgba(colors, diagram, "seam", theme.diagram_seam);
+        theme.diagram_accent = theme_paint_rgba(colors, diagram, "accent", theme.diagram_accent);
+        theme.diagram_accent_fill = theme_paint_rgba(colors, diagram, "accentFill", theme.diagram_accent_fill);
+        theme.diagram_shape_outline = theme_paint_rgba(colors, diagram, "shapeOutline", theme.diagram_shape_outline);
+        theme.diagram_field_residual = theme_paint_rgba(colors, diagram, "fieldResidual", theme.diagram_field_residual);
+        theme.diagram_field_reaction = theme_paint_rgba(colors, diagram, "fieldReaction", theme.diagram_field_reaction);
+        theme.diagram_field_displacement = theme_paint_rgba(colors, diagram, "fieldDisplacement", theme.diagram_field_displacement);
+    }
+    theme.border_radius = document.radii.get("chrome").and_then(ThemeNumber::scalar).map_or(theme.border_radius, |value| value as f32);
+    theme.stroke_hairline = document.strokes.get("chromeBorderHairline").and_then(ThemeNumber::scalar).map_or(theme.stroke_hairline, |value| value as f32);
+    theme.stroke_focus = document.strokes.get("chromeBorderFocus").and_then(ThemeNumber::scalar).map_or(theme.stroke_focus, |value| value as f32);
+    apply_theme_document_metrics(&mut theme, document);
+    theme
+}
+
+/// 📐️ Every `Theme` scalar that is a `metrics.*` entry, re-read from the document. `chrome`/`dom`
+/// entries are `--ui-spacing` MULTIPLES (`chrome_px` in the ui crate multiplies by
+/// `uiSpacingCompactPx`); `typography` entries are already px.
+fn apply_theme_document_metrics(theme: &mut Theme, document: &ThemeDocument) {
+    let scalar = |section: &str, key: &str| document.metrics.get(section).and_then(|rows| rows.get(key)).and_then(ThemeNumber::scalar);
+    let spacing_px = scalar("chrome", "uiSpacingCompactPx").unwrap_or(f64::from(ui_styling::metrics::chrome::UI_SPACING_COMPACT_PX as f32));
+    let mut chrome_px = |key: &str, field: &mut f32| {
+        if let Some(value) = scalar("chrome", key) {
+            *field = (spacing_px * value) as f32;
+        }
+    };
+    chrome_px("gapStandardUiSpacing", &mut theme.gap_standard);
+    chrome_px("paddingStandardUiSpacing", &mut theme.padding_standard);
+    chrome_px("navbarHeightUiSpacing", &mut theme.navbar_height);
+    chrome_px("footerHeightUiSpacing", &mut theme.footer_height);
+    chrome_px("panelHeaderHeightUiSpacing", &mut theme.panel_header_height);
+    chrome_px("controlHeightUiSpacing", &mut theme.control_height);
+    chrome_px("controlHeightSmallUiSpacing", &mut theme.control_height_small);
+    chrome_px("panelInsetUiSpacing", &mut theme.panel_inset);
+    if let Some(value) = scalar("chrome", "celebrateBorderDurationSeconds") {
+        theme.celebrate_duration_seconds = value as f32;
+    }
+    let mut dom_px = |key: &str, field: &mut f32| {
+        if let Some(value) = scalar("dom", key) {
+            *field = (spacing_px * value) as f32;
+        }
+    };
+    dom_px("treeRowUiSpacing", &mut theme.tree_row_height);
+    dom_px("treeIndentPerLevelUiSpacing", &mut theme.tree_indent_per_level);
+    dom_px("treeToggleUiSpacing", &mut theme.tree_toggle_width);
+    dom_px("layoutPanelMinUiSpacing", &mut theme.panel_min_width);
+    dom_px("layoutPanelMaxUiSpacing", &mut theme.panel_max_width);
+    dom_px("layoutPanelRailUiSpacing", &mut theme.window_measures_default_width);
+    dom_px("layoutEngagementMaxUiSpacing", &mut theme.window_engagement_max_width);
+    let mut typography_px = |key: &str, field: &mut f32| {
+        if let Some(value) = scalar("typography", key) {
+            *field = value as f32;
+        }
+    };
+    typography_px("textSmPx", &mut theme.font_size_body);
+    typography_px("textXsPx", &mut theme.font_size_small);
+    typography_px("textBasePx", &mut theme.font_size_emphasized);
+}
+//#endregion 🎨️ThemeDocumentModel
+
+//#region 🎨️ThemeEditorPanel
+/// 🎨️ The eight editable sections React's `buildSettingsThemeTree` carries beside its selector
+/// (`📌️ChromePanels/🟦️.tsx:820-827`), in React's own order, each `(section id suffix, label key)`.
+const SHELL_THEME_EDITOR_SECTIONS: &[(&str, &str)] = &[
+    ("colors", "settings.theme.colors"),
+    ("spacing", "settings.theme.spacing"),
+    ("fonts", "settings.theme.fonts"),
+    ("strokes", "settings.theme.strokes"),
+    ("radii", "settings.theme.radii"),
+    ("opacities", "settings.theme.opacities"),
+    ("metrics", "settings.theme.metrics"),
+    ("appearances", "settings.theme.appearances"),
+];
+
+/// 🎨️ The four palette groups React's theme editor exposes per appearance — `board`/`map`/`canvas`/
+/// `chrome` (`appearanceGroups`, `📌️ChromePanels/🟦️.tsx:727`). `outcome`/`diagram` exist in the
+/// document and are re-tokenised, but React's editor does not list them, so neither does this.
+const SHELL_THEME_APPEARANCE_GROUPS: &[(&str, &str)] =
+    &[("board", "settings.theme.group.board"), ("map", "settings.theme.group.map"), ("canvas", "settings.theme.group.canvas"), ("chrome", "settings.theme.group.chrome")];
+
+/// 📄️ Rows per page of one open theme section.
+///
+/// ⚖️ React's tree renders all ~450 rows at once because the DOM has no ceiling; a retained panel
+/// document does — `ui_contract::UI_DOCUMENT_NODES` is 128 records, and a labelled row costs two
+/// (`Field` + control). So a wgpu-only pager bounds the open section instead of failing publication:
+/// exactly the `paged_panel_section` shape the shell's other unbounded lists already use, with the
+/// same ascending key order React's `Object.keys(...).sort()` produces.
+const SHELL_THEME_EDITOR_PAGE_ROWS: usize = 16;
+
+/// 🎨️ One labelled text row of the theme editor — React's `themeColorInputRow`/`themeTextInputRow`/
+/// `themeNumberInputRow`, which are all one `<Input>` (or `<input type="color">`, whose value is the
+/// same `#rrggbb` text) committing on blur. `id` is React's OWN row id, byte for byte, and the
+/// authored args name WHICH key the commit writes — this target merges the committed value into them
+/// (see `merge_committed_args`), where React's closure captured the key.
+fn theme_editor_row(id: &str, label: &str, value: &str, action: &str, args: Option<DslValue>) -> UiNode {
+    UiNode::Field(UiFieldNode {
+        id: format!("{id}.field"),
+        label: Label::data(label),
+        description: None,
+        required: None,
+        error: None,
+        child: Box::new(UiNode::Input(UiInputNode {
+            id: id.to_string(),
+            input_kind: "text".into(),
+            value: value.to_string(),
+            placeholder: None,
+            commit: Some("blur".into()),
+            min: None,
+            max: None,
+            step: None,
+            accept: None,
+            on_change: ActionDescriptor { controller_id: "framework".into(), action: action.into(), args },
+            on_submit: None,
+            on_abort: None,
+            on_repeat_last: None,
+            presence: UiPresence::default(),
+            menu: None,
+        })),
+        presence: UiPresence::default(),
+        menu: None,
+    })
+}
+
+/// 🎨️ One section header. React's is a collapsible `TreeDataSection`; a `Section` container registers
+/// NO hit on this target (audit W14 §F3), so the header is a real `Button` carrying React's section
+/// id, which is the one shape whose press both renderers resolve to "open this section".
+fn theme_editor_section_toggle(id: &str, label: &str, open: bool) -> UiNode {
+    UiNode::Button(UiButtonNode {
+        id: Some(id.to_string()),
+        icon_id: if open { IconName::ChevronDown } else { IconName::ChevronRight },
+        label: Label::data(label),
+        action: ActionDescriptor { controller_id: "framework".into(), action: "toggleThemeSection".into(), args: crate::action_args_json!({ "value": id }) },
+        style: None,
+        presence: UiPresence::default(),
+        menu: None,
+    })
+}
+
+impl ShellState {
+    /// 🎨️ The theme document this session is editing — the live draft, else the selected custom
+    /// theme's own persisted document, else the authored base. React's
+    /// `uiThemeBase = uiThemeDraft ?? activeUiTheme()`, verbatim.
+    pub(crate) fn theme_document(&self) -> ThemeDocument {
+        if let Some(draft) = self.theme_draft.as_ref() {
+            return draft.clone();
+        }
+        if let Some(document) = self
+            .chrome_build
+            .preferences
+            .custom_themes
+            .get(&self.chrome_build.preferences.theme_id)
+            .and_then(|raw| serde_json::from_str::<ThemeDocument>(raw).ok())
+            .filter(ThemeDocument::is_document)
+        {
+            return document;
+        }
+        shell_theme_document_base().clone()
+    }
+
+    /// 🎨️ The draft, seeded from the active document on first write — React's `draftThemePatch`,
+    /// which `structuredClone`s `uiThemeBase` before every patch.
+    fn theme_draft_patch(&mut self, patch: impl FnOnce(&mut ThemeDocument)) {
+        let mut draft = self.theme_draft.take().unwrap_or_else(|| self.theme_document());
+        patch(&mut draft);
+        set_active_theme_document(Some(draft.clone()));
+        self.theme_draft = Some(draft);
+    }
+
+    /// 🎨️ Drops the draft and the present-side re-tokenisation with it — React's
+    /// `dispatch({ type: "SET_UI_THEME_DRAFT", value: null })`.
+    fn clear_theme_draft(&mut self) {
+        self.theme_draft = None;
+        set_active_theme_document(None);
+    }
+
+    /// 📄️ The page of rows an open section shows, plus its pager — the wgpu bound described on
+    /// [`SHELL_THEME_EDITOR_PAGE_ROWS`]. A section with one page shows no pager at all.
+    fn theme_editor_page_rows(&self, rows: Vec<UiNode>, is_de: bool) -> Vec<UiNode> {
+        let pages = rows.len().div_ceil(SHELL_THEME_EDITOR_PAGE_ROWS).max(1);
+        let page = self.theme_editor_page.min(pages - 1);
+        let mut paged: Vec<UiNode> = rows.into_iter().skip(page * SHELL_THEME_EDITOR_PAGE_ROWS).take(SHELL_THEME_EDITOR_PAGE_ROWS).collect();
+        if pages > 1 {
+            paged.push(settings_text_row(&format!("{} {}/{}", shell_chrome_string("settings.theme.page", is_de), page + 1, pages)));
+            paged.push(UiNode::Button(UiButtonNode {
+                id: Some("framework.settings.theme.page.previous".into()),
+                icon_id: IconName::ChevronLeft,
+                label: Label::data(shell_chrome_string("settings.theme.pagePrevious", is_de)),
+                action: ActionDescriptor { controller_id: "framework".into(), action: "stepThemePage".into(), args: crate::action_args_json!({ "value": -1 }) },
+                style: None,
+                presence: UiPresence { state: if page == 0 { ui_wgpu::wgpu::component::ui::UiState::Disabled } else { ui_wgpu::wgpu::component::ui::UiState::Normal }, ..UiPresence::default() },
+                menu: None,
+            }));
+            paged.push(UiNode::Button(UiButtonNode {
+                id: Some("framework.settings.theme.page.next".into()),
+                icon_id: IconName::ChevronRight,
+                label: Label::data(shell_chrome_string("settings.theme.pageNext", is_de)),
+                action: ActionDescriptor { controller_id: "framework".into(), action: "stepThemePage".into(), args: crate::action_args_json!({ "value": 1 }) },
+                style: None,
+                presence: UiPresence {
+                    state: if page + 1 >= pages { ui_wgpu::wgpu::component::ui::UiState::Disabled } else { ui_wgpu::wgpu::component::ui::UiState::Normal },
+                    ..UiPresence::default()
+                },
+                menu: None,
+            }));
+        }
+        paged
+    }
+
+    /// 🎨️ The eight editable sections, with whichever one is open expanded to its current page —
+    /// the wgpu twin of `buildSettingsThemeTree`'s `colorItems`/`spacingItems`/`fontItems`/
+    /// `strokeItems`/`radiusItems`/`opacityItems`/`metricSections`/`appearanceItems`.
+    fn build_settings_theme_editor_sections(&self, document: &ThemeDocument, is_de: bool) -> Vec<UiNode> {
+        let open = self.theme_editor_open_section.as_deref().unwrap_or_default();
+        let mut nodes = Vec::new();
+        for (suffix, label_key) in SHELL_THEME_EDITOR_SECTIONS {
+            let id = format!("framework.settings.theme.{suffix}");
+            let expanded = open == id || open.starts_with(&format!("{id}."));
+            nodes.push(theme_editor_section_toggle(&id, shell_chrome_string(*label_key, is_de), expanded));
+            if !expanded {
+                continue;
+            }
+            let rows = match *suffix {
+                "colors" => document.colors.iter().map(|(key, value)| theme_editor_row(&format!("{id}.{key}"), key, value, "setThemeColor", crate::action_args_json!({ "key": key }))).collect(),
+                "spacing" => document.spacing.iter().map(|(key, value)| theme_editor_row(&format!("{id}.{key}"), key, value, "setThemeSpacing", crate::action_args_json!({ "key": key }))).collect(),
+                "fonts" => document.font_stacks.iter().map(|(key, value)| theme_editor_row(&format!("{id}.{key}"), key, value, "setThemeFontStack", crate::action_args_json!({ "key": key }))).collect(),
+                "strokes" => document.strokes.iter().map(|(key, value)| theme_editor_row(&format!("{id}.{key}"), key, &value.as_text(), "setThemeStroke", crate::action_args_json!({ "key": key }))).collect(),
+                "radii" => document.radii.iter().map(|(key, value)| theme_editor_row(&format!("{id}.{key}"), key, &value.as_text(), "setThemeRadius", crate::action_args_json!({ "key": key }))).collect(),
+                "opacities" => document.opacities.iter().map(|(key, value)| theme_editor_row(&format!("{id}.{key}"), key, &value.as_text(), "setThemeOpacity", crate::action_args_json!({ "key": key }))).collect(),
+                "metrics" => {
+                    let mut rows = Vec::new();
+                    for (section, entries) in &document.metrics {
+                        let section_id = format!("{id}.{section}");
+                        let section_open = open == section_id;
+                        rows.push(theme_editor_section_toggle(&section_id, section, section_open));
+                        if section_open {
+                            let entry_rows: Vec<UiNode> = entries
+                                .iter()
+                                .map(|(key, value)| theme_editor_row(&format!("{section_id}.{key}"), key, &value.as_text(), "setThemeMetric", crate::action_args_json!({ "section": section, "key": key })))
+                                .collect();
+                            rows.extend(self.theme_editor_page_rows(entry_rows, is_de));
+                        }
+                    }
+                    rows
+                }
+                "appearances" => {
+                    let mut rows = Vec::new();
+                    for appearance in ["light", "dark"] {
+                        let appearance_id = format!("{id}.{appearance}");
+                        let appearance_open = open == appearance_id || open.starts_with(&format!("{appearance_id}."));
+                        let label = shell_chrome_string(if appearance == "light" { "settings.theme.appearance.light" } else { "settings.theme.appearance.dark" }, is_de);
+                        rows.push(theme_editor_section_toggle(&appearance_id, label, appearance_open));
+                        if !appearance_open {
+                            continue;
+                        }
+                        for (group, group_label_key) in SHELL_THEME_APPEARANCE_GROUPS {
+                            let group_id = format!("{appearance_id}.{group}");
+                            let group_open = open == group_id;
+                            rows.push(theme_editor_section_toggle(&group_id, shell_chrome_string(*group_label_key, is_de), group_open));
+                            if !group_open {
+                                continue;
+                            }
+                            let paints = document.appearances.get(appearance).and_then(|groups| groups.get(*group)).cloned().unwrap_or_default();
+                            let mut paint_rows = Vec::new();
+                            for (paint, reference) in &paints {
+                                let (hex, alpha) = theme_paint_editor_values(&document.colors, reference);
+                                paint_rows.push(theme_editor_row(
+                                    &format!("{group_id}.{paint}"),
+                                    paint,
+                                    &hex,
+                                    "setThemeAppearancePaint",
+                                    crate::action_args_json!({ "appearance": appearance, "group": group, "paint": paint, "channel": "hex" }),
+                                ));
+                                paint_rows.push(theme_editor_row(
+                                    &format!("{group_id}.{paint}.alpha"),
+                                    paint,
+                                    &format!("{alpha:.2}"),
+                                    "setThemeAppearancePaint",
+                                    crate::action_args_json!({ "appearance": appearance, "group": group, "paint": paint, "channel": "alpha" }),
+                                ));
+                            }
+                            rows.extend(self.theme_editor_page_rows(paint_rows, is_de));
+                        }
+                    }
+                    rows
+                }
+                _ => Vec::new(),
+            };
+            if !matches!(*suffix, "metrics" | "appearances") {
+                nodes.extend(self.theme_editor_page_rows(rows, is_de));
+            } else {
+                nodes.extend(rows);
+            }
+        }
+        nodes
+    }
+}
+
+/// 🖌️ What React's appearance-paint row shows: the resolved `#rrggbb` from `rgba8ToHex` and the
+/// resolved alpha as `rgba[3] / 255` (`buildThemeAppearanceGroupItems`), so the boxes read the same
+/// on both renderers even for a `mix`/`token` ref that carries neither literally.
+fn theme_paint_editor_values(colors: &BTreeMap<String, String>, reference: &ThemePaintRef) -> (String, f64) {
+    let [r, g, b, a] = theme_resolve_paint(colors, reference).unwrap_or([0, 0, 0, 255]);
+    (format!("#{r:02x}{g:02x}{b:02x}"), f64::from(a) / 255.0)
+}
+//#endregion 🎨️ThemeEditorPanel
+
+//#region 🎨️ThemeDocumentDoors
+/// 🎨️ Publishes (or clears) the DRAFT document the present side re-tokenises from. The draft lives
+/// beside `theme_id` in the same owned preference snapshot `frame()`'s `resolve_theme_for_ids` reads,
+/// which is what makes an edit in the Settings panel repaint the chrome on the very next frame —
+/// React's `applyUiThemeToRoot(uiThemeDraft)`.
+pub(crate) fn set_active_theme_document(document: Option<ThemeDocument>) {
+    with_chrome_prefs(|prefs| {
+        prefs.theme_document_draft = document;
+        prefs.theme_document_generation = prefs.theme_document_generation.wrapping_add(1);
+        prefs.theme_document_resolved = None;
+    });
+}
+
+/// 🎨️ Commits one document into the custom-theme registry under `id` and activates it — the present
+/// side of React's `saveTheme`, which writes `canonicalUiTheme(saved)` into
+/// `customThemes[id]` and then selects it. The stored text is the SAME canonical JSON React stores,
+/// so a theme saved on either renderer opens on the other.
+pub(crate) fn save_custom_theme_document(id: &str, document: &ThemeDocument) -> Option<String> {
+    let raw = serde_json::to_string_pretty(document).ok()?;
+    with_chrome_prefs(|prefs| {
+        prefs.custom_themes.insert(id.to_string(), raw.clone());
+        prefs.theme_id = id.to_string();
+        prefs.theme_document_draft = None;
+        prefs.theme_document_generation = prefs.theme_document_generation.wrapping_add(1);
+        prefs.theme_document_resolved = None;
+    });
+    Some(raw)
+}
+
+/// 🎨️ The resolved theme for a DOCUMENT-backed selection (the live draft, or a custom theme whose
+/// stored config is a React-shaped `UiTheme`), or `None` when this selection is a built-in or one of
+/// this target's older five-slot override records.
+///
+/// 🧊️ Cached on `(theme id, appearance, draft generation)`: `resolve_theme_for_ids` runs once per
+/// frame per appearance, and re-resolving ~450 document entries there would put a JSON walk in the
+/// frame loop.
+fn document_theme_for_ids(theme_id: &str, dark: bool) -> Option<Theme> {
+    with_chrome_prefs(|prefs| {
+        let key = (theme_id.to_string(), dark, prefs.theme_document_generation);
+        if let Some((cached, theme)) = prefs.theme_document_resolved.as_ref() {
+            if cached == &key {
+                return Some(*theme);
+            }
+        }
+        let document = match prefs.theme_document_draft.clone() {
+            Some(draft) => draft,
+            None => prefs.custom_themes.get(theme_id).and_then(|raw| serde_json::from_str::<ThemeDocument>(raw).ok()).filter(ThemeDocument::is_document)?,
+        };
+        let theme = theme_from_document(&document, dark);
+        prefs.theme_document_resolved = Some((key, theme));
+        Some(theme)
+    })
+}
+
+/// 🆔️ React's `saveTheme` slug: lowercase, non-alphanumerics collapsed to `-`, trimmed, under
+/// `custom.`.
+fn custom_theme_id_for_label(label: &str) -> Option<String> {
+    let mut slug = String::new();
+    let mut pending_dash = false;
+    for character in label.trim().to_lowercase().chars() {
+        if character.is_ascii_alphanumeric() {
+            if pending_dash && !slug.is_empty() {
+                slug.push('-');
+            }
+            pending_dash = false;
+            slug.push(character);
+        } else {
+            pending_dash = true;
+        }
+    }
+    (!slug.is_empty()).then(|| format!("custom.{slug}"))
+}
+
+/// 🔀️ Merges the value a retained control committed INTO the args its node authored, instead of
+/// replacing them.
+///
+/// 🩸️ Every retained commit on this target used to dispatch `{ value }` alone, so an authored arg was
+/// silently dropped: the Default Apps leaf authored `{ row: "<dialect>/<role>" }` on its `Select` and
+/// its own handler read `args.row`, which therefore never arrived, and the whole theme editor (one
+/// verb, ~450 rows, the key in the args) would have been unable to say WHICH key it wrote. React's
+/// handlers are closures that captured those coordinates, which is what this restores. Keys stay
+/// ascending so the projected argument object is stable.
+fn merge_committed_args(authored: Option<&DslValue>, value: DslValue) -> Option<DslValue> {
+    let mut fields: Vec<(String, DslValue)> = match authored {
+        Some(DslValue::Object(existing)) => existing.iter().filter(|(key, _)| key != "value").cloned().collect(),
+        _ => Vec::new(),
+    };
+    fields.push(("value".to_string(), value));
+    fields.sort_by(|left, right| left.0.cmp(&right.0));
+    Some(DslValue::Object(fields))
+}
+//#endregion 🎨️ThemeDocumentDoors
+
+//#region ⚖️MergePolicyAndThemeCommits
+/// ⚖️ React's `MERGE_POLICY_OPTIONS` (`📌️ChromePanels/🟦️.tsx:339`) with each option's label key —
+/// the variant names `protocol::MergePolicy` serializes to, so the value a user picks here is the
+/// value an authority reads.
+const SHELL_MERGE_POLICY_OPTIONS: &[(&str, &str)] =
+    &[("LaissezFaire", "settings.mergePolicy.laissezFaire"), ("Normal", "settings.mergePolicy.normal"), ("Vigilant", "settings.mergePolicy.vigilant")];
+
+/// ⚖️ `protocol::MergePolicy::default()` — "the least-surprising choice for a fresh authority that
+/// has never been configured", and React's `DEFAULT_MERGE_POLICY`.
+const SHELL_DEFAULT_MERGE_POLICY: &str = "Normal";
+
+/// ⬆️ React's `requestFileOpen(".theme.dsl,.dsl,text/plain")` accept list, verbatim.
+const SHELL_THEME_IMPORT_ACCEPT: &str = ".theme.dsl,.dsl,text/plain";
+
+impl ShellState {
+    /// 🎨️ One theme-editor commit — the eight `draftThemePatch` mutators of React's `ShellHost`
+    /// (`🏛️ShellHost/🟦️.tsx:8248-8301`), dispatched by verb over the row's own coordinates. A value
+    /// that does not parse commits NOTHING, exactly as React's `onBlur` returns without calling
+    /// `onCommit`.
+    fn apply_theme_editor_commit(&mut self, verb: &str, args: &Value) {
+        let text = args.get("value").and_then(Value::as_str).unwrap_or_default().to_string();
+        let key = args.get("key").and_then(Value::as_str).unwrap_or_default().to_string();
+        match verb {
+            "setThemeColor" => self.theme_draft_patch(move |document| {
+                document.colors.insert(key, text);
+            }),
+            "setThemeSpacing" => self.theme_draft_patch(move |document| {
+                document.spacing.insert(key, text);
+            }),
+            "setThemeFontStack" => self.theme_draft_patch(move |document| {
+                document.font_stacks.insert(key, text);
+            }),
+            "setThemeStroke" => {
+                if let Some(number) = ThemeNumber::parse(&text) {
+                    self.theme_draft_patch(move |document| {
+                        document.strokes.insert(key, number);
+                    });
+                }
+            }
+            "setThemeRadius" => {
+                if let Some(number) = ThemeNumber::parse(&text) {
+                    self.theme_draft_patch(move |document| {
+                        document.radii.insert(key, number);
+                    });
+                }
+            }
+            "setThemeOpacity" => {
+                if let Some(number) = ThemeNumber::parse(&text) {
+                    self.theme_draft_patch(move |document| {
+                        document.opacities.insert(key, number);
+                    });
+                }
+            }
+            "setThemeMetric" => {
+                let section = args.get("section").and_then(Value::as_str).unwrap_or_default().to_string();
+                if let Some(number) = ThemeNumber::parse(&text) {
+                    self.theme_draft_patch(move |document| {
+                        document.metrics.entry(section).or_default().insert(key, number);
+                    });
+                }
+            }
+            // 🖌️ React edits a paint through ONE call carrying both channels: the colour input sends
+            // the new hex with the row's current alpha, the alpha box sends the row's current hex with
+            // the new alpha. Either way the ref becomes a literal `{ hex, alpha }` — a token/mix ref
+            // the user has overridden is no longer that token, exactly as React's
+            // `next.appearances[a][g][k] = { hex, alpha }` replaces it outright.
+            "setThemeAppearancePaint" => {
+                let appearance = args.get("appearance").and_then(Value::as_str).unwrap_or_default().to_string();
+                let group = args.get("group").and_then(Value::as_str).unwrap_or_default().to_string();
+                let paint = args.get("paint").and_then(Value::as_str).unwrap_or_default().to_string();
+                let channel = args.get("channel").and_then(Value::as_str).unwrap_or("hex").to_string();
+                let document = self.theme_document();
+                let current = document.appearances.get(&appearance).and_then(|groups| groups.get(&group)).and_then(|paints| paints.get(&paint)).cloned().unwrap_or_default();
+                let (current_hex, current_alpha) = theme_paint_editor_values(&document.colors, &current);
+                let reference = if channel == "alpha" {
+                    let Some(alpha) = text.trim().parse::<f64>().ok() else { return };
+                    ThemePaintRef { hex: Some(current_hex), alpha: Some(alpha.clamp(0.0, 1.0)), ..ThemePaintRef::default() }
+                } else {
+                    ThemePaintRef { hex: Some(text), alpha: Some(current_alpha), ..ThemePaintRef::default() }
+                };
+                self.theme_draft_patch(move |document| {
+                    document.appearances.entry(appearance).or_default().entry(group).or_default().insert(paint, reference);
+                });
+            }
+            _ => {}
+        }
+    }
+
+    /// ⬆️ The parked theme-import picker, opened inside the gesture that asked for it — the same
+    /// user-activation rule `drain_gesture_bound_work` already honours for `pending_file_opens`.
+    #[cfg(target_arch = "wasm32")]
+    async fn run_theme_import_request(&mut self) {
+        let opened = request_file_open(SHELL_THEME_IMPORT_ACCEPT, Some("text"), false).await;
+        let Some(file) = opened.into_iter().next() else { return };
+        let action = ActionDescriptor { controller_id: "framework".into(), action: "applyImportedTheme".into(), args: crate::action_args_json!({ "value": file.contents }) };
+        if let Err(error) = self.dispatch_action(action).await {
+            Self::debug_log(&format!("[DEBUG] wgpu-shell theme import failed: {error}"));
+        }
+    }
+}
+//#endregion ⚖️MergePolicyAndThemeCommits
+
+//#region ♿️ChromeAccessibleNames
+/// ♿️ The accessible NAME each chrome control painted this walk, keyed by control id.
+///
+/// 🩸️ A GPU canvas has no elements, so the only accessible names this target ever published came out
+/// of the retained DOCUMENT projection (`dumpAccessibility` over `UI_ENGINE`) — the scene trees. Every
+/// navbar chip, footer pill, panel tab, pane chip and surface control was invisible to a reader
+/// (audit W14 §C4), even though React gives each of them an `sr-only` label for free. The two central
+/// chrome item painters record the label they are ABOUT to paint here, so the published name is
+/// always the text on screen rather than a second, drifting table.
+///
+/// ⛓️ Staged per walk and promoted by `publish_retained_hit_registry` together with the hit registry,
+/// so names and targets can never describe different frames — the same double-buffer discipline
+/// `retained_hit_windows` follows. Bounded by [`SHELL_CHROME_ACCESSIBLE_NAME_CAPACITY`].
+const SHELL_CHROME_ACCESSIBLE_NAME_CAPACITY: usize = 512;
+
+#[cfg(target_arch = "wasm32")]
+thread_local! {
+    static CHROME_CONTROL_NAMES: std::cell::RefCell<BTreeMap<String, String>> = std::cell::RefCell::new(BTreeMap::new());
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+static CHROME_CONTROL_NAMES: crate::interpreter::WorkerCell<BTreeMap<String, String>> = crate::interpreter::WorkerCell::new();
+
+fn with_chrome_control_names<R>(f: impl FnOnce(&mut BTreeMap<String, String>) -> R) -> R {
+    #[cfg(target_arch = "wasm32")]
+    {
+        CHROME_CONTROL_NAMES.with(|cell| f(&mut cell.borrow_mut()))
+    }
+    #[cfg(not(target_arch = "wasm32"))]
+    {
+        f(&mut CHROME_CONTROL_NAMES.borrow_mut())
+    }
+}
+
+/// ♿️ Records one chrome control's painted label. Called from the two painters every chrome chip goes
+/// through, so a new chip is announced without its author doing anything.
+fn note_chrome_control_name(control_id: &str, label: Option<&str>) {
+    let (Some(label), false) = (label, control_id.is_empty()) else { return };
+    with_chrome_control_names(|names| {
+        if names.len() < SHELL_CHROME_ACCESSIBLE_NAME_CAPACITY || names.contains_key(control_id) {
+            names.insert(control_id.to_string(), label.to_string());
+        }
+    });
+}
+
+/// ♿️ The ARIA role a chrome hit announces — React's own element choice per control kind.
+fn chrome_accessibility_role(kind: &HitKind) -> &'static str {
+    match kind {
+        HitKind::Toggle => "switch",
+        HitKind::Select => "combobox",
+        HitKind::DropdownItem => "option",
+        HitKind::PanelTab => "tab",
+        HitKind::Slider => "slider",
+        HitKind::Input => "textbox",
+        HitKind::ContextMenu => "menuitem",
+        _ => "button",
+    }
+}
+
+impl ShellState {
+    /// ⌨️ One chrome control's visible label WITH its inline hotkey badge — React's `ButtonGroupItem`
+    /// paints a `ControlHotkeyBadge` beside the label of ANY bound control while the driver's
+    /// `hotkeys` axis is `"inline"` (the default driver's), not only beside the two role chips
+    /// (audit W14 §B14). Idempotent: a builder that already appended the badge (the role chips do,
+    /// for their own measured layout) is left alone rather than double-badged.
+    pub(crate) fn chrome_control_label(&self, control_id: &str, label: &str) -> String {
+        match shell_control_hotkey_badge(&self.shortcut_table(), control_id) {
+            Some(badge) if !label.ends_with(&badge) => format!("{label} {badge}"),
+            _ => label.to_string(),
+        }
+    }
+
+    /// ♿️ This frame's chrome controls as accessibility projection nodes — the SAME wire shape the
+    /// retained document publishes, so `🚀️browser-boot/🟦️.ts`'s mirror gives them elements with no
+    /// new code: `aria-label` from the painted text, `aria-keyshortcuts` from this session's own
+    /// remappable chord table (React's `aria-keyshortcuts` twin, audit W14 §B14), `aria-disabled`
+    /// from the registry.
+    fn chrome_accessibility_nodes(&self, hits: &[HitTarget<ActionDescriptor>]) -> Vec<ui_contract::AccessibilityProjectionNode> {
+        let shortcuts = self.shortcut_table();
+        with_chrome_control_names(|names| {
+            hits.iter()
+                .filter_map(|hit| hit.control_id.as_deref().filter(|id| !id.is_empty()).map(|id| (id, hit)))
+                // 🪟️ A retained BODY's own rows already reach the reader through the document
+                // projection; this window announces the chrome around them exactly once.
+                .filter(|(id, _)| !self.retained_hit_windows.contains_key(*id))
+                .take(SHELL_CHROME_ACCESSIBLE_NAME_CAPACITY)
+                .enumerate()
+                .map(|(index, (id, hit))| ui_contract::AccessibilityProjectionNode {
+                    node_id: index as u64 + 1,
+                    key: id.to_string(),
+                    role: chrome_accessibility_role(&hit.kind).to_string(),
+                    depth: 0,
+                    label: Some(names.get(id).cloned().unwrap_or_else(|| humanize_control_id(id))),
+                    description: None,
+                    live: ui_contract::liveness_name(ui_contract::Liveness::Off).to_string(),
+                    shortcut: shell_control_hotkey_badge(&shortcuts, id),
+                    hidden: false,
+                    disabled: false,
+                    focusable: true,
+                    actionable: true,
+                    focused: false,
+                    rect: Some([hit.rect.x, hit.rect.y, hit.rect.w, hit.rect.h]),
+                    value_min: None,
+                    value_max: None,
+                    value_now: None,
+                    value_text: None,
+                    busy: false,
+                })
+                .collect()
+        })
+    }
+}
+//#endregion ♿️ChromeAccessibleNames
+
+#[cfg(test)]
+#[path = "../../🧪️tests/🎨️wgpu-theme-editor-and-accessibility/🦀️.rs"]
+mod theme_editor_and_accessibility_tests;

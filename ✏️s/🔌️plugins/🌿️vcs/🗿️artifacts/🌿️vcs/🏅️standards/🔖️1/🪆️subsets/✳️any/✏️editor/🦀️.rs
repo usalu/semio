@@ -812,6 +812,28 @@ impl ArtifactEditor for VcsPlayApp {
     const DIALECT: Dialect = crate::VCS_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = VCS_DOCUMENT_SCHEMA;
 
+    /// 🧺️ Without these owners the document store holds no `initial_snapshot_retirement_factory`, so
+    /// the FIRST verb that returns a snapshot read fails validation with `returned snapshot read
+    /// requires its exact owned-snapshot retirement factory` — and because that poisons the
+    /// instance, every later dispatch fails with `plugin.internal.prior-outcome`. Measured against
+    /// the live React playground: all nine of this app's Actions-pane verbs were refused, the first
+    /// on the missing factory and the other eight on the prior outcome.
+    fn build_document_store_owners() -> Option<store::DocumentStoreOwners<Self::Snapshot, Self::Mutation>> {
+        Some(semio_framework_plugin::bounded_document_store_owners::<Self::Snapshot, Self::Mutation>())
+    }
+
+    fn build_document_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
+        Some(semio_framework_plugin::bounded_document_store_disposer::<Self::Snapshot, Self::Mutation>())
+    }
+
+    fn build_config_store_owners() -> Option<store::DocumentStoreOwners<Self::Config, Self::ConfigMutation>> {
+        Some(semio_framework_plugin::bounded_config_store_owners::<Self::Config, Self::ConfigMutation>())
+    }
+
+    fn build_config_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::Config, Self::ConfigMutation>>>> {
+        Some(semio_framework_plugin::bounded_config_store_disposer::<Self::Config, Self::ConfigMutation>())
+    }
+
     fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
         Some(std::sync::Arc::new(VcsOneItemPreparationFactory::new(store::HistoryLane::Document)))
     }

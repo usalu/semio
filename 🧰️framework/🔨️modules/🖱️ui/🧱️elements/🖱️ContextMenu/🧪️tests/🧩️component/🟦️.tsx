@@ -3,25 +3,26 @@ import * as React from "react";
 import { fireEvent, render } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { ContextMenuController, contextMenuPathKey, contextMenuSubmenuPlacement, copyDomTextSelection, readDomTextSelection, type ContextMenuItem } from "../../🟦️.tsx";
+import { uiDataLabel } from "../../../🎗️UiLabel/🟦️.tsx";
 // #endregion 🔌️Adapters
 
 // #region 🖱️SubmenuReachability
 /** 🧾 A group row with two children — the shape `editor.rs` gives `menu.group.transfer`. */
 const items: ContextMenuItem[] = [
-  { id: "reorganize", label: "Reorganize", action: "reorganize" },
+  { id: "reorganize", label: uiDataLabel("Reorganize"), action: "reorganize" },
   {
     id: "menu.group.transfer",
-    label: "Transfer",
+    label: uiDataLabel("Transfer"),
     action: "menu.group.transfer",
     children: [
-      { id: "importDocumentRequest", label: "Import Artifact…", action: "importDocumentRequest" },
-      { id: "exportDocument", label: "Export Artifact", action: "exportDocument" },
+      { id: "importDocumentRequest", label: uiDataLabel("Import Artifact…"), action: "importDocumentRequest" },
+      { id: "exportDocument", label: uiDataLabel("Export Artifact"), action: "exportDocument" },
     ],
   },
 ];
 
 const renderMenu = () =>
-  render(<ContextMenuController open position={{ x: 40, y: 40 }} items={items} onOpenChange={() => undefined} title="Actions" />);
+  render(<ContextMenuController open position={{ x: 40, y: 40 }} items={items} onOpenChange={() => undefined} title={uiDataLabel("Actions")} />);
 
 describe("🖱️ context menu submenu reachability", () => {
   it("places a submenu beside its anchor row and flips only when the end side overflows", () => {
@@ -106,7 +107,7 @@ describe("🖱️ context menu outside dismiss", () => {
       },
       true,
     );
-    render(<ContextMenuController open position={{ x: 8, y: 8 }} items={[{ id: "a", label: "Alpha" }]} onOpenChange={onOpenChange} title="Actions" />);
+    render(<ContextMenuController open position={{ x: 8, y: 8 }} items={[{ id: "a", label: uiDataLabel("Alpha") }]} onOpenChange={onOpenChange} title={uiDataLabel("Actions")} />);
     await new Promise((resolve) => setTimeout(resolve, 0));
     canvas.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true, cancelable: true, button: 0, clientX: 4, clientY: 4 }));
     expect(onOpenChange).toHaveBeenCalledWith(false);

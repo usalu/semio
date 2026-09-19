@@ -34,8 +34,8 @@ function canonical(value: unknown): string {
   return JSON.stringify(portable(value));
 }
 
-function projectionHash(config: Record<string, any>, expectedRoot: string): string {
-  const projection = {
+function behavioralProjection(config: Record<string, any>, expectedRoot: string): Record<string, unknown> {
+  return {
     aliases: config.resolve?.alias ?? null,
     cacheDir: config.cacheDir ?? null,
     coverageInclude: config.test?.coverage?.include ?? null,
@@ -48,7 +48,14 @@ function projectionHash(config: Record<string, any>, expectedRoot: string): stri
     projects: config.test?.projects ?? null,
     setupFiles: config.test?.setupFiles ?? null,
   };
-  return createHash("sha256").update(canonical(projection)).digest("hex");
+}
+
+/** 🌍️ A quoted value that opens with a POSIX root or a Windows drive: the only way an environment-derived
+ * path can survive `portable()` and pin `projectionSha256` to the machine that wrote the fixture. */
+const ABSOLUTE_PATH_IN_PROJECTION = /"(?:\/|[A-Za-z]:[\\/])[^"]*"/u;
+
+function projectionHash(config: Record<string, any>, expectedRoot: string): string {
+  return createHash("sha256").update(canonical(behavioralProjection(config, expectedRoot))).digest("hex");
 }
 
 function walkProductFiles(visit: (path: string) => void): void {
@@ -65,10 +72,19 @@ function walkProductFiles(visit: (path: string) => void): void {
   }
 }
 
+/** 🧭️ The `this.root` a `BundleScript` in `path` runs with. A router lives in a `📜️script.ts`, but its
+ * `*Script` classes are routinely extracted into sibling semantic owners (`…/🏃️execution/🟦️.ts`), which
+ * have no `📜️script.ts` above them — the bundle that imports them is the `📦️packages/🟦️typescript` of the
+ * nearest semantic ancestor. */
 function routerRoot(path: string): string {
   let candidate = dirname(path);
-  while (candidate !== repoRoot && !existsSync(join(candidate, "📜️script.ts"))) candidate = dirname(candidate);
-  return candidate;
+  while (candidate !== repoRoot) {
+    if (existsSync(join(candidate, "📜️script.ts"))) return candidate;
+    const bundle = join(candidate, "📦️packages", "🟦️typescript");
+    if (existsSync(join(bundle, "📜️script.ts"))) return bundle;
+    candidate = dirname(candidate);
+  }
+  return repoRoot;
 }
 
 describe("Vitest configuration ownership", () => {
@@ -76,8 +92,8 @@ describe("Vitest configuration ownership", () => {
     const validate = new Ajv({ strict: true, allErrors: true }).compile(schema);
     expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);
     expect(validate({ ...fixture, extra: true })).toBe(false);
-    expect(fixture.owners).toHaveLength(43);
-    expect(new Set(fixture.owners.map(({ ownerPath }) => ownerPath)).size).toBe(43);
+    expect(fixture.owners).toHaveLength(46);
+    expect(new Set(fixture.owners.map(({ ownerPath }) => ownerPath)).size).toBe(46);
     const taxonomy = loadCatalogTaxonomy();
     for (const row of fixture.directoryContexts) expect(semanticDirectoryKindId(row.name, taxonomy, { parentKindId: row.parentKind }), `${row.parentKind}/${row.name}`).toBe(row.kind);
   });
@@ -101,6 +117,8 @@ describe("Vitest configuration ownership", () => {
       expect(config.root, owner.ownerPath).toBe(expectedRoot);
       expect(config.test?.root, owner.ownerPath).toBe(expectedRoot);
       expect(config.test?.name ?? null, owner.ownerPath).toBe(owner.expectedName);
+      const serialized = canonical(behavioralProjection(config, owner.configurationRoot));
+      expect(ABSOLUTE_PATH_IN_PROJECTION.exec(serialized)?.[0] ?? null, owner.ownerPath).toBeNull();
       expect(projectionHash(config, owner.configurationRoot), owner.ownerPath).toBe(owner.projectionSha256);
     }));
   }, 120_000);

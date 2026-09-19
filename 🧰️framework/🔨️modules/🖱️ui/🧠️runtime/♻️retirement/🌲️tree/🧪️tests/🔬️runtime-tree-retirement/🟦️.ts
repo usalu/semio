@@ -1,3 +1,28 @@
+/** 🌲️ The runtime-tree retirement ledger: the owner-handback trace and every ownership claim it proves. */
+type RuntimeTreeRetirementFixture = {
+  readonly version: number;
+  readonly grants: readonly number[];
+  readonly pages: number;
+  readonly foreign: {
+    readonly foreign: readonly string[];
+  };
+  readonly ownership: {
+    readonly occupiedTransfer: boolean;
+    readonly zeroGrantAdvances: boolean;
+    readonly rejectedChildrenRetired: boolean;
+    readonly typedFieldsRetired: boolean;
+    readonly globalQueueAdvances: boolean;
+    readonly handbackTransfersWholeOwner: boolean;
+    readonly terminalBeforeReadmission: boolean;
+  };
+  readonly trace: readonly {
+    readonly event: string;
+    readonly active: string | null;
+    readonly source: null | string;
+    readonly handback?: string | null;
+  }[];
+};
+
 /** 🔬️ Canonical testRuntimeTreeRetirement fixture and oracle checks. */
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
@@ -6,7 +31,7 @@ import { testBuiltTreeRetirementFixture } from "../../../../../🧬️contract/�
 
 export function testRuntimeTreeRetirement(): void {
   const read = (path: string) => readFileSync(new URL(path, new URL("../../", import.meta.url)), "utf8");
-  const fixture = JSON.parse(read("./🧫️fixtures/🔣️.json"));
+  const fixture: RuntimeTreeRetirementFixture = JSON.parse(read("./🧫️fixtures/🔣️.json"));
   const validate = new Ajv({ strict: true, allErrors: true }).compile(JSON.parse(read("./🧬️schema/🔣️.json")));
   assert(validate(fixture), JSON.stringify(validate.errors));
   let active: Uint8Array | undefined;

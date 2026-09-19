@@ -2,7 +2,7 @@
  * `🧫️fixtures/📨️effect-wire-routes/🔣️.json`. */
 type TestSource = { readonly url: string };
 
-export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: any, source: TestSource): Promise<void> {
+export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: Pick<typeof import("../../🖼️wire-turn/🟦️.ts"), "WIRE_SEND_MESSAGE_ROUTED_TARGETS" | "isRoutedWireSendMessage" | "shellFrameBytes" | "wireEffectToFriendly" | "wireSendMessageTargetTag">, source: TestSource): Promise<void> {
   const { shellFrameBytes, wireEffectToFriendly, isRoutedWireSendMessage, wireSendMessageTargetTag, WIRE_SEND_MESSAGE_ROUTED_TARGETS } = dependencies;
   const { afterEach, describe, expect, it, vi } = vitest;
   const { readFileSync } = await import("node:fs");

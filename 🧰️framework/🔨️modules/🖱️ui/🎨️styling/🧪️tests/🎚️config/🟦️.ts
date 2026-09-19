@@ -18,7 +18,6 @@ export default {
   test: {
     root: testRoot,
     name: "@semio-tech/ui-styling",
-    mode: "test",
     environment: "node",
     include: ["📽️projection/🟦️.ts"],
     coverage: { include: ["📽️projection/🟦️.ts"] },

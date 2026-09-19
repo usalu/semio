@@ -1,8 +1,8 @@
 type TestSource = { readonly directory: string; readonly url: string };
 
-export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: any, source: TestSource): Promise<void> {
+export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: Pick<typeof import("../../../../🧩️extension/🟦️.ts"), "installationDirectoryCollision" | "installationDirectoryEmoji"> & Pick<typeof import("../../../📇️registry/📦️deployment/🟦️.ts"), "MODULE_EXTENSION_ROUTE"> & Pick<typeof import("../../📥️installation/🟦️.ts"), "EXTENSION_COMPONENT_FILE" | "EXTENSION_MANIFEST_ZIP_ENTRY_EMOJI" | "EXTENSION_PACKAGE_ENVELOPE_TOKEN" | "createExtensionStore" | "extensionPackageContentHash" | "packExtensionPackage" | "unpackExtensionPackage" | "wrapExtensionPackageEnvelope"> & Pick<typeof import("../../🟦️.ts"), "decodeOwnedZip"> & Pick<typeof import("@semio-tech/framework-os"), "decodePackValue"> & Pick<typeof import("node:fs"), "existsSync" | "mkdtempSync" | "readFileSync" | "rmSync"> & Pick<typeof import("node:os"), "tmpdir"> & Pick<typeof import("node:path"), "join">, source: TestSource): Promise<void> {
   const { EXTENSION_COMPONENT_FILE, EXTENSION_MANIFEST_ZIP_ENTRY_EMOJI, EXTENSION_PACKAGE_ENVELOPE_TOKEN, MODULE_EXTENSION_ROUTE, createExtensionStore, decodeOwnedZip, decodePackValue, existsSync, extensionPackageContentHash, installationDirectoryCollision, installationDirectoryEmoji, join, mkdtempSync, packExtensionPackage, readFileSync, rmSync, tmpdir, unpackExtensionPackage, wrapExtensionPackageEnvelope } = dependencies;
-  type ExtensionPackageManifestRecord = any;
+  type ExtensionPackageManifestRecord = import("../../📥️installation/🟦️.ts").ExtensionPackageManifestRecord;
 
   const { describe, expect, it } = vitest;
   const legacyFflateZip = Uint8Array.from(

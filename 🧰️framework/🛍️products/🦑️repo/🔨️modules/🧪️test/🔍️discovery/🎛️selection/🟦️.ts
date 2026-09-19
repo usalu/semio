@@ -70,7 +70,7 @@ export function readSelectors(segments: readonly string[]): Selectors {
   };
 }
 
-export function matchesTarget(manifest: MutationManifest, selectors: Selectors): boolean {
+export function matchesTarget(manifest: Pick<MutationManifest, "artifact" | "standard" | "subset"> & { readonly mutations: readonly Pick<MutationManifest["mutations"][number], "id" | "subset">[] }, selectors: Selectors): boolean {
   return (
     (selectors.artifact === null || manifest.artifact === selectors.artifact || manifest.artifact.endsWith(`.${selectors.artifact}`)) &&
     (selectors.standard === null || manifest.standard === selectors.standard) &&
@@ -79,7 +79,7 @@ export function matchesTarget(manifest: MutationManifest, selectors: Selectors):
   );
 }
 
-export function matchesFixture(fixture: FixtureManifest, selectors: Selectors): boolean {
+export function matchesFixture(fixture: Pick<FixtureManifest, "mutation" | "outcome" | "class" | "family"> & { readonly target: Pick<FixtureManifest["target"], "artifact" | "standard" | "subset"> }, selectors: Selectors): boolean {
   return (
     (selectors.artifact === null || fixture.target.artifact === selectors.artifact || fixture.target.artifact.endsWith(`.${selectors.artifact}`)) &&
     (selectors.standard === null || fixture.target.standard === selectors.standard) &&
@@ -91,7 +91,7 @@ export function matchesFixture(fixture: FixtureManifest, selectors: Selectors): 
   );
 }
 
-export function matchesRow(row: CoverageRow, selectors: Selectors): boolean {
+export function matchesRow(row: Pick<CoverageRow, "artifact" | "standard" | "subset"> & Partial<Pick<CoverageRow, "mutation" | "outcome" | "oracle" | "implementation" | "platform" | "fixtureClass" | "status">>, selectors: Selectors): boolean {
   return (
     (selectors.artifact === null || row.artifact === selectors.artifact || row.artifact.endsWith(`.${selectors.artifact}`)) &&
     (selectors.standard === null || row.standard === selectors.standard) &&

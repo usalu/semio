@@ -71,7 +71,7 @@ fn control_node(case: &Value) -> UiNode {
             step: None,
             accept: None,
             on_change,
-            presence,
+            on_submit: None, on_abort: None, on_repeat_last: None, presence,
             menu: None,
         }),
         "toggle" => {
@@ -144,16 +144,16 @@ fn dispatched(case: &Value) -> Vec<ActionDescriptor> {
     let x = rect.0 + rect.2 * at[0].as_f64().expect("gesture x") as f32;
     let y = rect.1 + rect.3 * at[1].as_f64().expect("gesture y") as f32;
     let mut commands = Vec::new();
-    commands.extend(router.dispatch(&mut tree, root, &UiEvent::PointerDown { x, y, button: PointerButton::Primary }));
+    commands.extend(router.dispatch(&mut tree, root, &UiEvent::PointerDown { x, y, button: PointerButton::Primary, modifiers: Default::default() }));
     // 🎚️ A drag keeps the press's capture while the pointer leaves the control, exactly as a browser
     // does — the release still belongs to the node the gesture started on.
     if let Some(to) = gesture["to"].as_array() {
         let to_x = rect.0 + rect.2 * to[0].as_f64().expect("drag x") as f32;
         let to_y = rect.1 + rect.3 * to[1].as_f64().expect("drag y") as f32;
-        commands.extend(router.dispatch(&mut tree, root, &UiEvent::PointerMove { x: to_x, y: to_y }));
-        commands.extend(router.dispatch(&mut tree, root, &UiEvent::PointerUp { x: to_x, y: to_y, button: PointerButton::Primary }));
+        commands.extend(router.dispatch(&mut tree, root, &UiEvent::PointerMove { x: to_x, y: to_y, modifiers: Default::default() }));
+        commands.extend(router.dispatch(&mut tree, root, &UiEvent::PointerUp { x: to_x, y: to_y, button: PointerButton::Primary, modifiers: Default::default() }));
     } else {
-        commands.extend(router.dispatch(&mut tree, root, &UiEvent::PointerUp { x, y, button: PointerButton::Primary }));
+        commands.extend(router.dispatch(&mut tree, root, &UiEvent::PointerUp { x, y, button: PointerButton::Primary, modifiers: Default::default() }));
     }
     match gesture["kind"].as_str().expect("fixture gesture kind") {
         "press" | "drag" => {}
@@ -166,7 +166,7 @@ fn dispatched(case: &Value) -> Vec<ActionDescriptor> {
                 "typeThenBlur" => {
                     let away_x = rect.0 + rect.2 + 200.0;
                     let away_y = rect.1 + rect.3 + 200.0;
-                    commands.extend(router.dispatch(&mut tree, root, &UiEvent::PointerDown { x: away_x, y: away_y, button: PointerButton::Primary }));
+                    commands.extend(router.dispatch(&mut tree, root, &UiEvent::PointerDown { x: away_x, y: away_y, button: PointerButton::Primary, modifiers: Default::default() }));
                 }
                 other => panic!("fixture gesture kind {other}"),
             }
@@ -232,8 +232,8 @@ fn a_dragged_slider_reports_every_intermediate_value() {
     let control = place(&mut tree, Some(root), 1, control_node(case), (20.0, 0.0, 100.0, 24.0));
     let mut router = EventRouter::new("main");
 
-    router.dispatch(&mut tree, root, &UiEvent::PointerDown { x: 20.0, y: 12.0, button: PointerButton::Primary });
-    let moved = router.dispatch(&mut tree, root, &UiEvent::PointerMove { x: 70.0, y: 12.0 });
+    router.dispatch(&mut tree, root, &UiEvent::PointerDown { x: 20.0, y: 12.0, button: PointerButton::Primary, modifiers: Default::default() });
+    let moved = router.dispatch(&mut tree, root, &UiEvent::PointerMove { x: 70.0, y: 12.0, modifiers: Default::default() });
 
     let value = moved
         .iter()
@@ -280,7 +280,7 @@ fn number_input(id: &str, value: &str, min: Option<f64>, max: Option<f64>, step:
         step,
         accept: None,
         on_change: ActionDescriptor { controller_id: "ctrl".into(), action: "setValue".into(), args: None },
-        presence: UiPresence::default(),
+        on_submit: None, on_abort: None, on_repeat_last: None, presence: UiPresence::default(),
         menu: None,
     })
 }
@@ -288,8 +288,8 @@ fn number_input(id: &str, value: &str, min: Option<f64>, max: Option<f64>, step:
 /// ⌨️ Types `text` into `control` and commits it with `Enter`, returning every dispatched intent.
 fn type_and_commit(tree: &mut UiTree, router: &mut EventRouter, root: NodeId, text: &str) -> Vec<UiCommand> {
     let mut commands = Vec::new();
-    commands.extend(router.dispatch(tree, root, &UiEvent::PointerDown { x: 10.0, y: 10.0, button: PointerButton::Primary }));
-    commands.extend(router.dispatch(tree, root, &UiEvent::PointerUp { x: 10.0, y: 10.0, button: PointerButton::Primary }));
+    commands.extend(router.dispatch(tree, root, &UiEvent::PointerDown { x: 10.0, y: 10.0, button: PointerButton::Primary, modifiers: Default::default() }));
+    commands.extend(router.dispatch(tree, root, &UiEvent::PointerUp { x: 10.0, y: 10.0, button: PointerButton::Primary, modifiers: Default::default() }));
     commands.extend(router.dispatch(tree, root, &UiEvent::TextInput { text: text.to_string() }));
     commands.extend(router.dispatch(tree, root, &UiEvent::KeyDown { key: "Enter".into(), modifiers: EventModifiers::default() }));
     commands
@@ -408,8 +408,8 @@ fn a_stepper_takes_the_relative_path_only_when_it_declares_a_delta_binding() {
         let control = place(&mut tree, Some(root), 1, node, (0.0, 0.0, 90.0, 24.0));
         stamp(&mut tree, control, 0, bindings);
         let mut router = EventRouter::new("main");
-        router.dispatch(&mut tree, root, &UiEvent::PointerDown { x: 80.0, y: 12.0, button: PointerButton::Primary });
-        let commands = router.dispatch(&mut tree, root, &UiEvent::PointerUp { x: 80.0, y: 12.0, button: PointerButton::Primary });
+        router.dispatch(&mut tree, root, &UiEvent::PointerDown { x: 80.0, y: 12.0, button: PointerButton::Primary, modifiers: Default::default() });
+        let commands = router.dispatch(&mut tree, root, &UiEvent::PointerUp { x: 80.0, y: 12.0, button: PointerButton::Primary, modifiers: Default::default() });
         commands
             .iter()
             .find_map(|command| match command {

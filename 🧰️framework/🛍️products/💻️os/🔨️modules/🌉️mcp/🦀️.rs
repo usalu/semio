@@ -41,7 +41,7 @@ pub use crate::source_builders::*;
 // the one real ambiguity this crate now has (P1a's `schema::SearchHit` vs this packet's own BM25
 // ranking type) is resolved by naming the latter `RankedHit`, not by qualifying paths.
 // 🎬️ packet P6-actions-policy: `actions`/`policy` add no further name collisions (`ActionAdapter`/
-// `ArtifactChannel`/`MockArtifactChannel`/`InvokeRequest`/`SagaReport`/`UndoRedoReport` and
+// `ArtifactChannel`/`UnboundArtifactChannel`/`InvokeRequest`/`SagaReport`/`UndoRedoReport` and
 // `AgentPrincipal`/`PolicyEngine`/`AutoApprovePolicy`/`ApprovalGate` are all novel names crate-wide).
 //#endregion 🔖️Facets
 
@@ -298,13 +298,29 @@ fn parse_revision_stamp(value: &serde_json::Value) -> Option<RevisionStamp> {
     serde_json::from_value(value.clone()).ok()
 }
 
+/// 🎯️ The `instance` slot the mutation-protocol adapter must address for `capability_id` — the
+/// SAME derivation `RoutingArtifactChannel` decodes an instance back with, so `prepare`'s leading
+/// capability-less `ReadHistory` lands on the capability's own plugin instead of whichever plugin
+/// sorts first in the catalog. `None`/unknown keeps the historical `0`, which is exactly the
+/// single-plugin case where the first slot IS the right one.
+#[cfg(not(target_arch = "wasm32"))]
+fn action_instance_slot(catalog: &Catalog, capability_id: Option<&str>) -> u32 {
+    capability_id.and_then(|id| capability_instance_slot(catalog, id)).unwrap_or(0)
+}
+
+#[cfg(target_arch = "wasm32")]
+fn action_instance_slot(_catalog: &Catalog, _capability_id: Option<&str>) -> u32 {
+    0
+}
+
 fn action_prepare_handler(catalog: &Catalog, actions: &ActionAdapter, principal: &AgentPrincipal, arguments: serde_json::Value) -> CallToolResult {
     let capability_id = match arguments.get("capabilityId").and_then(serde_json::Value::as_str) {
         Some(id) => id,
         None => return CallToolResult::tool_error(&GatewayError::new(GatewayErrorCode::InputInvalid, "capabilityId is required")),
     };
     let input = arguments.get("input").cloned().unwrap_or_else(|| serde_json::json!({}));
-    match actions.prepare(catalog, principal, &default_session(), capability_id, input, 0, now_ms()) {
+    let instance = action_instance_slot(catalog, Some(capability_id));
+    match actions.prepare(catalog, principal, &default_session(), capability_id, input, instance, now_ms()) {
         Ok(report) => CallToolResult::ok(vec![ContentBlock::Text { text: format!("prepared {}", report.prepared_handle) }], Some(serde_json::to_value(&report).unwrap_or(serde_json::Value::Null))),
         Err(error) => CallToolResult::tool_error(&error),
     }
@@ -319,7 +335,8 @@ fn action_invoke_handler(catalog: &Catalog, actions: &ActionAdapter, principal: 
         idempotency_key: arguments.get("idempotencyKey").and_then(serde_json::Value::as_str).map(str::to_string),
         approval_handle: arguments.get("approvalHandle").and_then(serde_json::Value::as_str).map(str::to_string),
     };
-    match actions.invoke(catalog, principal, &default_session(), request, 0, now_ms()) {
+    let instance = action_instance_slot(catalog, request.capability_id.as_deref());
+    match actions.invoke(catalog, principal, &default_session(), request, instance, now_ms()) {
         Ok(report) => CallToolResult::ok(vec![ContentBlock::Text { text: format!("invocation {} {:?}", report.invocation_id, report.status) }], Some(serde_json::to_value(&report).unwrap_or(serde_json::Value::Null))),
         Err(error) => CallToolResult::tool_error(&error),
     }
@@ -481,31 +498,55 @@ pub fn build_tool_registry(
     registry
 }
 
+//#region 🔖️GatewayRuntime
+/// 🔌️ Everything a live gateway binds LATE, after the tool registry already exists: the `/bridge`
+/// slot a shell attaches through, the server→client request channel an `elicitation`-capable client
+/// is asked through, and the launch-time `--auto-approve` policy. One struct rather than three more
+/// positional parameters, because all three travel together through every constructor and every one
+/// of them is absent in the ordinary test tier (`GatewayRuntime::default()`).
+#[derive(Clone, Default)]
+pub struct GatewayRuntime {
+    pub bridge: Option<BridgeSlot>,
+    pub elicitation: Option<ElicitationSlot>,
+    pub auto_approve: AutoApprovePolicy,
+}
+
+impl GatewayRuntime {
+    /// ⛩️ The approval resolution chain this runtime can offer a parked approval — always built,
+    /// even with both lanes empty, so `ActionAdapter` answers "nobody could be asked, here is why"
+    /// rather than the older "APPROVAL_REQUIRED" with no explanation at all.
+    fn approval_coordinator(&self) -> std::sync::Arc<ApprovalCoordinator> {
+        std::sync::Arc::new(ApprovalCoordinator::new(self.elicitation.clone(), self.bridge.clone()))
+    }
+}
+//#endregion 🔖️GatewayRuntime
+
 /// 🏗️ Assembles the real `McpServer`: the catalog-backed + action-adapter-backed tool registry, the
 /// catalog-backed resource registry, an empty prompt registry (unowned by this packet), and
 /// `NullBackend` (`GatewayBackend` itself — the resource/context seam — still has no real
 /// implementation; P7's headless workspace is that, `ArtifactChannel` here is a narrower, disjoint
 /// port scoped to the mutation protocol only). `channel` is boxed so the live binary and every test
-/// can supply either `MockArtifactChannel` (today) or P7's real implementation (tomorrow) with zero
-/// change to this function's body beyond the argument passed in.
-pub fn build_server_with_principal(principal: AgentPrincipal, audit: std::sync::Arc<AuditSinks>, channel: Box<ArtifactChannels>, bridge: Option<BridgeSlot>) -> McpServer {
-    build_server_from_catalog(std::sync::Arc::new(build_catalog()), principal, audit, channel, bridge)
+/// can supply either `UnboundArtifactChannel` (no `--folder`/`--hub`) or the real routing channel
+/// with zero change to this function's body beyond the argument passed in.
+pub fn build_server_with_principal(principal: AgentPrincipal, audit: std::sync::Arc<AuditSinks>, channel: Box<ArtifactChannels>, runtime: GatewayRuntime) -> McpServer {
+    build_server_from_catalog(std::sync::Arc::new(build_catalog()), principal, audit, channel, runtime)
 }
 
 /// 🗂️ [`build_server_with_principal`] with the catalog injected rather than discovered. The live
 /// binary always discovers (`build_catalog`); a test that asserts against a KNOWN capability census
 /// injects `🧫️note_and_cad_source()`'s compiled catalog instead, so its assertions never depend on
 /// which plugins happen to be installed in the tree it runs from.
-pub fn build_server_from_catalog(catalog: std::sync::Arc<Catalog>, principal: AgentPrincipal, audit: std::sync::Arc<AuditSinks>, channel: Box<ArtifactChannels>, bridge: Option<BridgeSlot>) -> McpServer {
+pub fn build_server_from_catalog(catalog: std::sync::Arc<Catalog>, principal: AgentPrincipal, audit: std::sync::Arc<AuditSinks>, channel: Box<ArtifactChannels>, runtime: GatewayRuntime) -> McpServer {
     let handles = std::sync::Arc::new(HandleTable::new());
     let idempotency = std::sync::Arc::new(IdempotencyStore::new());
     let client = ClientInfo { name: "semio-os-mcp".to_string(), version: env!("CARGO_PKG_VERSION").to_string() };
-    let actions = std::sync::Arc::new(ActionAdapter::new(channel, handles, idempotency, audit, AutoApprovePolicy::Never, client));
+    let actions = std::sync::Arc::new(ActionAdapter::new(channel, handles, idempotency, audit, runtime.auto_approve, client));
+    actions.bind_approval_coordinator(runtime.approval_coordinator());
     let label = principal.label.clone();
-    let tools = build_tool_registry(catalog.clone(), actions, principal, None, bridge.clone());
-    let resources = WorkspaceResourceRegistry::new(catalog).with_bridge(bridge.clone());
+    let tools = build_tool_registry(catalog.clone(), actions, principal, None, runtime.bridge.clone());
+    let resources = WorkspaceResourceRegistry::new(catalog).with_bridge(runtime.bridge.clone());
     let server = McpServer::new(Box::new(tools), Box::new(resources), Box::new(build_prompt_registry()), Box::new(GatewayBackends::Null(NullBackend)));
-    publishing_agent_conversation(server, bridge, &label)
+    publishing_agent_conversation(server, runtime.bridge, &label)
 }
 
 /// 💬️ Publishes this server's real `tools/call` traffic onto the shell bridge, when there IS a
@@ -513,18 +554,9 @@ pub fn build_server_from_catalog(catalog: std::sync::Arc<Catalog>, principal: Ag
 /// "no bridge slot" must stay a silent, ordinary tier rather than a branch each caller re-invents.
 fn publishing_agent_conversation(server: McpServer, bridge: Option<BridgeSlot>, label: &str) -> McpServer {
     match bridge {
-        Some(slot) => server.publishing_conversation_to(std::sync::Arc::new(crate::bridge::AgentConversation::new(slot, label))),
+        Some(slot) => server.publishing_conversation_to(std::sync::Arc::new(AgentConversation::new(slot, label))),
         None => server,
     }
-}
-
-/// 🏗️ Convenience default used by every pre-existing P1a/P1b/P2 test and by anywhere a live backend
-/// isn't the point — an unscoped `agent:local` principal (zero granted scopes, the SAFE default — no
-/// capability requiring any policy scope can be invoked without explicitly granting one),
-/// `InMemoryAuditSink` (no disk I/O from unit tests), and a fresh `MockArtifactChannel`.
-pub fn build_server() -> McpServer {
-    let principal = AgentPrincipal::from_scope_names("agent:local", "local agent", &[], None);
-    build_server_with_principal(principal, std::sync::Arc::new(AuditSinks::InMemory(InMemoryAuditSink::new())), Box::new(ArtifactChannels::Mock(MockArtifactChannel::new())), None)
 }
 
 /// 🏠️ ticket 26/08/17/LLM-FIRST-OS-VIA-THE-SEMIO-OS-MCP-GATEWAY packet P7-headless-workspace:
@@ -537,18 +569,19 @@ pub fn build_server() -> McpServer {
 /// parameter on `build_server_with_principal` itself: that function's 3-argument shape has live
 /// callers in this same in-flight packet's own tests (`P6-actions-policy`) this packet must not
 /// disturb mid-flight.
-pub fn build_server_with_workspace(principal: AgentPrincipal, audit: std::sync::Arc<AuditSinks>, workspace: std::sync::Arc<HeadlessWorkspace>, channel: Box<ArtifactChannels>, bridge: Option<BridgeSlot>) -> McpServer {
+pub fn build_server_with_workspace(principal: AgentPrincipal, audit: std::sync::Arc<AuditSinks>, workspace: std::sync::Arc<HeadlessWorkspace>, channel: Box<ArtifactChannels>, runtime: GatewayRuntime) -> McpServer {
     let catalog = workspace.discovery_catalog().unwrap_or_else(|_| gateway_only_catalog());
     let handles = std::sync::Arc::new(HandleTable::new());
     let idempotency = std::sync::Arc::new(IdempotencyStore::new());
     let client = ClientInfo { name: "semio-os-mcp".to_string(), version: env!("CARGO_PKG_VERSION").to_string() };
-    let actions = std::sync::Arc::new(ActionAdapter::new(channel, handles, idempotency, audit, AutoApprovePolicy::Never, client));
+    let actions = std::sync::Arc::new(ActionAdapter::new(channel, handles, idempotency, audit, runtime.auto_approve, client));
     actions.bind_history_undo_port(workspace.clone());
+    actions.bind_approval_coordinator(runtime.approval_coordinator());
     let label = principal.label.clone();
-    let tools = WorkspaceToolRegistry { workspace: workspace.clone(), actions, principal, bridge: bridge.clone() };
-    let resources = WorkspaceResourceRegistry::with_workspace(catalog, workspace.clone()).with_bridge(bridge.clone());
+    let tools = WorkspaceToolRegistry { workspace: workspace.clone(), actions, principal, bridge: runtime.bridge.clone() };
+    let resources = WorkspaceResourceRegistry::with_workspace(catalog, workspace.clone()).with_bridge(runtime.bridge.clone());
     let server = McpServer::new(Box::new(tools), Box::new(resources), Box::new(build_prompt_registry()), Box::new(GatewayBackends::WorkspaceArc(workspace)));
-    publishing_agent_conversation(server, bridge, &label)
+    publishing_agent_conversation(server, runtime.bridge, &label)
 }
 
 /// 🔄 Rebuilds the discovery projection for every list/call observation. A Hub binding that is
@@ -654,11 +687,11 @@ impl std::fmt::Debug for HubOptions {
 /// per capability from the compiled catalog and lazily opens one `PluginArtifactChannel` per plugin
 /// (ticket 26/08/29/AI-MCP-END-TO-END packet W8 — the predecessor pinned the single plugin `note`,
 /// then a single-plugin-only `resolve_default_plugin_id`, both of which break the moment more than
-/// one plugin is installed). Falls back to `MockArtifactChannel` with a clear stderr diagnostic when
-/// the registry/wasm are not resolvable — never a silent downgrade. `folder`/`hub` are mutually
-/// exclusive; neither given falls back to [`build_server_with_principal`] (`NullBackend` +
-/// `MockArtifactChannel`), which is the honest "bare" tier, not a failure.
-fn server_for_workspace_options(principal: AgentPrincipal, audit: std::sync::Arc<AuditSinks>, folder: Option<&str>, hub: Option<&HubOptions>, bridge: Option<BridgeSlot>) -> Result<McpServer, GatewayError> {
+/// one plugin is installed). `folder`/`hub` are mutually exclusive; with NEITHER given the server is
+/// built on [`UnboundArtifactChannel`] — every mutation-protocol call then answers the typed,
+/// retryable `PLUGIN_UNAVAILABLE` naming both flags, the same answer the `🗿️artifact` tools' own
+/// tier-1 gate gives. There is no scripted stand-in on any production path any more.
+fn server_for_workspace_options(principal: AgentPrincipal, audit: std::sync::Arc<AuditSinks>, folder: Option<&str>, hub: Option<&HubOptions>, runtime: GatewayRuntime) -> Result<McpServer, GatewayError> {
     let origin_label;
     let workspace = if let Some(folder) = folder {
         origin_label = format!("folder {folder}");
@@ -670,23 +703,90 @@ fn server_for_workspace_options(principal: AgentPrincipal, audit: std::sync::Arc
             .ok_or_else(|| GatewayError::new(GatewayErrorCode::PermissionDenied, "hub workspace requires a protected process-entry MCP credential"))?;
         std::sync::Arc::new(HeadlessWorkspace::open_hub(hub.base_url.clone(), hub.space_id.clone(), credential, principal.id.clone(), principal.scopes.iter().map(|scope| scope.0.clone()).collect())?)
     } else {
-        return Ok(build_server_with_principal(principal, audit, Box::new(ArtifactChannels::Mock(MockArtifactChannel::new())), bridge));
+        return Ok(build_server_with_principal(principal, audit, Box::new(ArtifactChannels::Unbound(UnboundArtifactChannel)), runtime));
     };
     eprintln!("[semio-os-mcp] real per-capability ArtifactChannel routing bound for {origin_label}");
     let channel: Box<ArtifactChannels> = Box::new(ArtifactChannels::Routing(workspace.open_routing_channel()));
-    Ok(build_server_with_workspace(principal, audit, workspace, channel, bridge))
+    Ok(build_server_with_workspace(principal, audit, workspace, channel, runtime))
 }
 //#endregion 🔖️WorkspaceOptions
 
 //#region 🔖️StdioEntrypoint
 /// ⚙️ Options `🏗️bootstrap/🦀️.rs`'s `stdio` subcommand parses off argv (`semio-os-mcp stdio [--folder <dir>]
-/// [--hub <url> --space <id>] [--principal <id>] [--scopes a,b]`).
+/// [--hub <url> --space <id>] [--principal <id>] [--scopes a,b] [--auto-approve never|readonly|all]
+/// [--no-bridge]`).
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct StdioOptions {
     pub folder: Option<String>,
     pub hub: Option<HubOptions>,
     pub principal: Option<String>,
     pub scopes: Vec<String>,
+    pub auto_approve: AutoApprovePolicy,
+    /// 🚫️ Opts out of the loopback `/bridge` listener entirely — for a client that wants a pure,
+    /// socket-free stdio process. Without it, stdio serving attaches to a live os session exactly
+    /// like `http` mode does (`🛰️rendezvous`).
+    pub no_bridge: bool,
+}
+
+/// 🌉️ Starts the loopback `/bridge` listener a stdio gateway attaches a live os session through, and
+/// publishes its address as a `🛰️rendezvous` offer. Returns `None` — never an error, never a silent
+/// no-op — when the user opted out, when nothing can be published, or when no os session is live:
+/// every bridge-dependent tool then answers the typed `bridge_not_running_error`, whose details now
+/// name exactly which of those three states this process is in.
+///
+/// The listener is bridge-ONLY: this process's MCP surface is stdin/stdout, so `/mcp` on that socket
+/// is genuinely absent (404). Admission is a per-process proof published only through the owner-only
+/// offer file — a stdio gateway inherits no hub fd-3 credential and must never fabricate one.
+fn attach_stdio_bridge(options: &StdioOptions, principal: &AgentPrincipal, bridge_slot: &BridgeSlot) -> Option<StdioBridgeAttachment> {
+    if options.no_bridge {
+        return None;
+    }
+    let sessions = crate::rendezvous::live_os_sessions();
+    if sessions.is_empty() {
+        eprintln!("[semio-os-mcp] no live os session found in {} — `ui_focus`/`ui_reveal`, agent presence and shell approvals stay unavailable until a `dev s` session publishes one", crate::rendezvous::sessions_dir().display());
+        return None;
+    }
+    let proof = crate::rendezvous::mint_admission_proof();
+    let mut transport = HttpTransport::new(HttpTransportOptions::with_local_proof(&proof)).publishing_bridge_into(bridge_slot.clone());
+    let run = match transport.start_bridge_only() {
+        Ok(run) => run,
+        Err(error) => {
+            eprintln!("[semio-os-mcp] the loopback bridge listener could not bind ({}) — continuing over stdio with no live-shell surface", error.message);
+            return None;
+        }
+    };
+    let offer = crate::rendezvous::BridgeOffer {
+        schema_version: crate::rendezvous::RENDEZVOUS_SCHEMA_VERSION,
+        url: format!("ws://{}/bridge", run.local_addr()),
+        admission_proof: proof,
+        principal: principal.id.clone(),
+        pid: std::process::id(),
+        published_at_ms: now_ms(),
+    };
+    match crate::rendezvous::publish_offer(offer) {
+        Ok(published) => {
+            eprintln!("[semio-os-mcp] bridge listening on ws://{}/bridge — offered to {} live os session(s) via {}", run.local_addr(), sessions.len(), published.path().display());
+            Some(StdioBridgeAttachment { run, _offer: published })
+        }
+        Err(error) => {
+            eprintln!("[semio-os-mcp] the bridge offer could not be published ({}) — cancelling the listener rather than leaving an unreachable socket open", error.message);
+            run.cancel();
+            None
+        }
+    }
+}
+
+/// 🧷️ Keeps the bridge-only listener and its published offer alive for exactly as long as stdio
+/// serving runs — dropping it removes the offer file and cancels the listener.
+struct StdioBridgeAttachment {
+    run: HttpTransportRun,
+    _offer: crate::rendezvous::PublishedBridgeOffer,
+}
+
+impl Drop for StdioBridgeAttachment {
+    fn drop(&mut self) {
+        self.run.cancel();
+    }
 }
 
 /// 🚪️ Boots the real [`McpServer`] and serves it over the REAL process stdin/stdout/stderr until the
@@ -694,18 +794,29 @@ pub struct StdioOptions {
 /// call — all logic lives here, in the lib, per P1a's brief §2.5. `options.principal`/`options.scopes`
 /// (packet `P6-actions-policy`) build the real `AgentPrincipal` the mutation-protocol tools enforce;
 /// `options.folder`/`options.hub` (packet `P7-headless-workspace`) open a real workspace instead of
-/// `NullBackend`/`MockArtifactChannel` — the audit lane writes to `~/.semio/agent/audit` (D7: local
-/// folder lane from day one). `--auto-approve` has no CLI flag yet, so the server always runs with
-/// the safe `AutoApprovePolicy::Never` until a later packet leases `bin.rs` to add the flag.
+/// `NullBackend`/`UnboundArtifactChannel` — the audit lane writes to `~/.semio/agent/audit` (D7:
+/// local folder lane from day one). `options.auto_approve` carries the parsed `--auto-approve
+/// never|readonly|all` policy; `Never` stays the default.
 pub fn run_stdio(options: StdioOptions) -> Result<(), GatewayError> {
     let principal = AgentPrincipal::from_scope_names(options.principal.clone().unwrap_or_else(|| "agent:local".to_string()), "stdio agent", &options.scopes, None);
+    if principal.scopes.is_empty() {
+        eprintln!(
+            "[semio-os-mcp] principal `{}` was launched with no --scopes: every policy-gated tool (action_prepare, action_invoke, inference_run, …) will answer PERMISSION_DENIED. Pass e.g. `--scopes workspace.read,artifact.write,inference.execute`.",
+            principal.id
+        );
+    }
     let audit: std::sync::Arc<AuditSinks> = std::sync::Arc::new(AuditSinks::File(FileAuditSink::new(default_audit_dir())?));
-    let server = server_for_workspace_options(principal, audit, options.folder.as_deref(), options.hub.as_ref(), None)?;
-    let stdin = std::io::stdin();
-    let stdout = std::io::stdout();
+    let bridge_slot: BridgeSlot = std::sync::Arc::new(std::sync::OnceLock::new());
+    let elicitation: ElicitationSlot = std::sync::Arc::new(std::sync::OnceLock::new());
+    let attachment = attach_stdio_bridge(&options, &principal, &bridge_slot);
+    let runtime = GatewayRuntime { bridge: attachment.as_ref().map(|_| bridge_slot.clone()), elicitation: Some(elicitation.clone()), auto_approve: options.auto_approve };
+    let server = server_for_workspace_options(principal, audit, options.folder.as_deref(), options.hub.as_ref(), runtime)?;
+    let features = server.client_features();
     let stderr = std::io::stderr();
-    let mut transport = StdioTransport::new(stdin.lock(), stdout.lock(), stderr.lock());
-    transport.serve(server)
+    let mut transport = StdioTransport::new(std::io::BufReader::new(std::io::stdin()), std::io::stdout(), stderr.lock()).publishing_elicitation_into(elicitation, features);
+    let result = transport.serve(server);
+    drop(attachment);
+    result
 }
 //#endregion 🔖️StdioEntrypoint
 
@@ -724,6 +835,7 @@ pub struct HttpOptions {
     pub scopes: Vec<String>,
     pub audit_dir: Option<String>,
     pub allow_origin: Vec<String>,
+    pub auto_approve: AutoApprovePolicy,
 }
 
 /// 🚪️ Boots the retained nonblocking [`HttpTransport`] (Streamable HTTP, dual-era, `/mcp` +
@@ -737,7 +849,8 @@ pub fn run_http(options: HttpOptions) -> Result<(), GatewayError> {
     let audit: std::sync::Arc<AuditSinks> = std::sync::Arc::new(AuditSinks::File(FileAuditSink::new(audit_dir)?));
     let principal = AgentPrincipal::from_scope_names(options.principal.clone().unwrap_or_else(|| "agent:local".to_string()), "http agent", &options.scopes, None);
     let bridge_slot: BridgeSlot = std::sync::Arc::new(std::sync::OnceLock::new());
-    let server = server_for_workspace_options(principal, audit, options.folder.as_deref(), options.hub.as_ref(), Some(bridge_slot.clone()))?;
+    let runtime = GatewayRuntime { bridge: Some(bridge_slot.clone()), elicitation: None, auto_approve: options.auto_approve };
+    let server = server_for_workspace_options(principal, audit, options.folder.as_deref(), options.hub.as_ref(), runtime)?;
     let bind_ip: std::net::IpAddr = options.bind.parse().map_err(|error| GatewayError::new(GatewayErrorCode::InputInvalid, format!("invalid --bind address `{}`: {error}", options.bind)))?;
     let credential = semio_framework_os_kernel::os_directory::identity::claimed_local_hub_credential("mcp")
         .ok_or_else(|| GatewayError::new(GatewayErrorCode::PermissionDenied, "HTTP mode requires a protected process-entry MCP credential"))?;

@@ -9,15 +9,15 @@
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
-import { ActionDropdown, type ActionDropdownOption } from "@semio-tech/ui-react";
+import { ActionDropdown, type ActionDropdownOption, uiDataLabel } from "@semio-tech/ui-react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
 // #endregion 🔌️Adapters
 
 // 🌩️#region 🌩️ActionDropdown
 const projectionOptions: ActionDropdownOption[] = [
-  { value: "camera", icon: "camera", label: "Perspective" },
-  { value: "orthographic", icon: "square", label: "Orthographic" },
+  { value: "camera", icon: "camera", label: uiDataLabel("Perspective") },
+  { value: "orthographic", icon: "square", label: uiDataLabel("Orthographic") },
 ];
 
 const meta = {
@@ -27,6 +27,7 @@ const meta = {
     layout: "centered",
   },
   tags: ["autodocs"],
+  args: { id: "action-dropdown", options: projectionOptions, value: "camera" },
 } satisfies Meta<typeof ActionDropdown>;
 
 export default meta;

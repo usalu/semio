@@ -972,6 +972,12 @@ function playgroundSessionTargets(configFiles, workspaceRoot) {
 /** 🎮️ Declares completed runtime prerequisites, cacheable validation and profile-specific browser producers.
  * React activation owns its restorable runtime directory. WGPU activation publishes live extensions,
  * fonts and reload notifications, so it must execute after every cacheable preparation. */
+/** 🎯️ Generated Nx targets for every playground preparation, activation, install and serve command.
+ * @param {readonly string[]} configFiles
+ * @param {string} workspaceRoot
+ * @param {string} projectRoot
+ * @returns {Record<string, { cache: boolean, continuous?: boolean, dependsOn: string[], outputs: string[], inputs?: unknown[], options: { command: string, forwardAllArgs?: boolean } }>}
+ */
 function playgroundPreparationTargets(configFiles, workspaceRoot, projectRoot) {
   const components = new Map(), playgrounds = [];
   const projectAt = (root) => {
@@ -1266,9 +1272,19 @@ function invokeCurrentImplementation(kind, args) {
 
 export function createDependencies(...args) { return invokeCurrentImplementation("dependencies", args); }
 
+/**
+ * 🧩️ One Nx project configuration this plugin generates, as its consumers read it.
+ * @typedef {{ targets: Record<string, { cache?: boolean, continuous?: boolean, dependsOn?: string[], outputs?: string[], inputs?: unknown[], namedInputs?: Record<string, unknown[]>, options?: Record<string, unknown>, metadata?: Record<string, unknown> }>, root?: string, name?: string, projectType?: string, tags?: string[], sourceRoot?: string }} GeneratedProject
+ */
+
+/**
+ * 🧩️ The `createNodesV2` result: one entry per matched file, each carrying the projects it contributes.
+ * @typedef {[string, { projects: Record<string, GeneratedProject> }][]} GeneratedNodes
+ */
+
 export default {
   name: "@repo/emoji-project-json",
-  createNodesV2: [`**/{${PROJECT_BASENAME},Cargo.toml,bun.lock,*.patch}`, (...args) => invokeCurrentImplementation("nodes", args)],
+  createNodesV2: /** @type {[string, (files: readonly string[], options: unknown, context: { workspaceRoot: string }) => Promise<GeneratedNodes>]} */ ([`**/{${PROJECT_BASENAME},Cargo.toml,bun.lock,*.patch}`, (...args) => invokeCurrentImplementation("nodes", args)]),
   createDependencies,
 };
 

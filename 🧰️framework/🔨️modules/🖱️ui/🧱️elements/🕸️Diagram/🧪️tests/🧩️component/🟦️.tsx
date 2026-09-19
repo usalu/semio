@@ -3,8 +3,8 @@ import * as React from "react";
 import { act, render } from "@testing-library/react";
 import { renderToString } from "react-dom/server";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { Diagram, createDiagramForceSimulation, useDiagramLayout, type DiagramForceConfig, type DiagramForceNode, type DiagramHandoffStatus } from "../../🟦️.tsx";
-import { DIAGRAM_LAYOUT_CODEC_KIND, DIAGRAM_LAYOUT_INGRESS_BYTES, DIAGRAM_LAYOUT_MAX_EDGE_BYTES, DIAGRAM_LAYOUT_MAX_NODE_BYTES, calculateDiagramLayoutForBatchTest, createDiagramLayoutBatchTestJob, createDiagramLayoutPublication, createDiagramLayoutWorkerJob, diagramLayoutCredits, diagramLayoutEdgeWireBytes, diagramLayoutNodeWireBytes, diagramLayoutUtf8Bytes, type DiagramLayoutDirection, type DiagramLayoutEdgeWire, type DiagramLayoutNodeWire } from "../../📐️layout/🟦️.ts";
+import { DIAGRAM_ARROW_KEYS, Diagram, createDiagramForceSimulation, diagramActivateSelection, diagramArrowNavigationTarget, useDiagramLayout, type DiagramForceConfig, type DiagramForceNode, type DiagramHandoffStatus, type Node } from "../../🟦️.tsx";
+import { DIAGRAM_LAYOUT_CODEC_KIND, DIAGRAM_LAYOUT_INGRESS_BYTES, DIAGRAM_LAYOUT_MAX_EDGE_BYTES, DIAGRAM_LAYOUT_MAX_NODE_BYTES, calculateDiagramLayoutForBatchTest, createDiagramLayoutBatchTestJob, createDiagramLayoutPublication, createDiagramLayoutWorkerJob, diagramLayoutCredits, diagramLayoutEdgeWireBytes, diagramLayoutNodeWireBytes, diagramLayoutUtf8Bytes, type DiagramLayoutDescriptor, type DiagramLayoutDirection, type DiagramLayoutEdgeWire, type DiagramLayoutNodeWire } from "../../📐️layout/🟦️.ts";
 import { setInteractiveJobPort, type InteractiveJobPort } from "../../../🔌️Ports/📡️interactive-jobs/🟦️.ts";
 // #endregion 🔌️Adapters
 
@@ -81,7 +81,7 @@ function installHandoffs(): () => void {
     });
 }
 
-function largeDiagramNodes(count: number): Array<{ id: string; position: { x: number; y: number }; data: Record<string, never>; selected?: boolean }> {
+function largeDiagramNodes(count: number): Node[] {
   return Array.from({ length: count }, (_, index) => ({ id: `node-${index.toString().padStart(5, "0")}`, position: { x: index + 1, y: index % 31 }, data: {} }));
 }
 
@@ -768,11 +768,12 @@ describe("owned Diagram layout wire codec", () => {
   });
 
   it("owns malformed numeric and identity faults without throwing after partial ingress", () => {
-    for (const descriptor of [
+    const malformed: DiagramLayoutDescriptor[] = [
       { edgeCount: 0, generation: Number.NaN, kind: DIAGRAM_LAYOUT_CODEC_KIND, nodeCount: 0, options: {} },
       { edgeCount: 0, generation: 1, kind: DIAGRAM_LAYOUT_CODEC_KIND, nodeCount: 0.5, options: {} },
       { edgeCount: Number.POSITIVE_INFINITY, generation: 1, kind: DIAGRAM_LAYOUT_CODEC_KIND, nodeCount: 0, options: {} },
-    ])
+    ];
+    for (const descriptor of malformed)
       expect(createDiagramLayoutWorkerJob(descriptor).status).toBe("fault");
 
     const generation = 42;
@@ -1134,7 +1135,7 @@ describe("owned Diagram force", () => {
     expect(Math.max(...elapsed)).toBeLessThanOrEqual(6.1);
     expect(onNodesChange).toHaveBeenCalledTimes(1);
     expect(onNodesChange.mock.calls[0]![0]).toHaveLength(20_000);
-    expect(onNodesChange.mock.calls[0]![0].at(-1).id).toBe(rawNodes.at(-1)!.id);
+    expect(onNodesChange.mock.calls[0]![0].at(-1)!.id).toBe(rawNodes.at(-1)!.id);
     expect(subscriberReads).toBe(20_000);
     expect(rawNodes.at(-1)!.position).toEqual(originalLastPosition);
     expect(edges.read()).toBeGreaterThan(0);
@@ -1355,8 +1356,14 @@ describe("owned Diagram force", () => {
     const ids = [`xA${tail}`, `xB${tail}`, "target"];
     let identityReads = 0;
     const nodes = ids.map((id, index) => {
-      const node: DiagramForceNode = { x: index === 0 ? -100 : index === 1 ? 100 : 0, y: index === 2 ? 100 : 0 };
-      Object.defineProperty(node, "id", { configurable: true, get: () => ((identityReads += 1), id) });
+      const node: DiagramForceNode = {
+        get id() {
+          identityReads += 1;
+          return id;
+        },
+        x: index === 0 ? -100 : index === 1 ? 100 : 0,
+        y: index === 2 ? 100 : 0,
+      };
       return node;
     });
     installBudgetClock(0.0001);
@@ -1405,3 +1412,124 @@ describe("owned Diagram force", () => {
   });
 });
 // #endregion 🧪️OwnedDiagramForce
+
+// #region ♿️DiagramAccessibility
+describe("♿️ diagram keyboard and ARIA affordances", () => {
+  const grid = [
+    { id: "a", position: { x: 0, y: 0 }, data: {} },
+    { id: "b", position: { x: 200, y: 0 }, data: {} },
+    { id: "c", position: { x: 0, y: 200 }, data: {} },
+    { id: "d", position: { x: 200, y: 200 }, data: {} },
+  ];
+
+  const surfaceOf = (container: HTMLElement) => container.querySelector('[role="application"]') as HTMLElement;
+
+  const press = (element: HTMLElement, key: string, init: KeyboardEventInit = {}) =>
+    act(() => {
+      element.dispatchEvent(new KeyboardEvent("keydown", { key, bubbles: true, cancelable: true, ...init }));
+    });
+
+  it("exposes an application-role canvas that is a real tab stop, labelled and self-describing", () => {
+    const view = render(<Diagram nodeTypes={{}} initialNodes={grid} initialEdges={[{ id: "a-b", source: "a", target: "b" }]} forceConfig={{ enabled: false }} />);
+    const surface = surfaceOf(view.container);
+    expect(surface).toBeTruthy();
+    expect(surface.getAttribute("tabindex")).toBe("0");
+    expect(surface.getAttribute("aria-roledescription")).toBeTruthy();
+    // ♿️ The label counts what is actually on the canvas, so a reader hears the graph's size.
+    expect(surface.getAttribute("aria-label")).toContain("4");
+    expect(surface.getAttribute("aria-label")).toContain("1");
+    const describedBy = surface.getAttribute("aria-describedby");
+    expect(describedBy).toBeTruthy();
+    const help = [...view.container.querySelectorAll("[id]")].find((element) => element.id === describedBy);
+    expect(help?.textContent ?? "").toMatch(/Arrow keys|Pfeiltasten/u);
+  });
+
+  it("walks nodes with the arrow keys and publishes the cursor as aria-activedescendant", () => {
+    const view = render(<Diagram nodeTypes={{}} initialNodes={grid} initialEdges={[]} forceConfig={{ enabled: false }} />);
+    const surface = surfaceOf(view.container);
+    expect(surface.getAttribute("aria-activedescendant")).toBeNull();
+    press(surface, "ArrowRight");
+    // 🚪️ The first arrow enters at the extreme node OPPOSITE the direction — leftmost for ArrowRight.
+    expect(surface.getAttribute("aria-activedescendant")).toBe("a");
+    press(surface, "ArrowRight");
+    expect(surface.getAttribute("aria-activedescendant")).toBe("b");
+    press(surface, "ArrowDown");
+    expect(surface.getAttribute("aria-activedescendant")).toBe("d");
+    press(surface, "ArrowLeft");
+    expect(surface.getAttribute("aria-activedescendant")).toBe("c");
+    press(surface, "ArrowUp");
+    expect(surface.getAttribute("aria-activedescendant")).toBe("a");
+  });
+
+  it("selects through the SAME node-change lane a mouse pick uses, and Shift+Enter accumulates", () => {
+    const changes: any[][] = [];
+    const view = render(<Diagram nodeTypes={{}} initialNodes={grid} initialEdges={[]} forceConfig={{ enabled: false }} onNodesChangeReactFlow={(batch) => changes.push(batch)} />);
+    const surface = surfaceOf(view.container);
+    press(surface, "ArrowRight");
+    press(surface, "Enter");
+    expect(changes.at(-1)).toEqual([{ id: "a", type: "select", selected: true }]);
+    press(surface, "ArrowRight");
+    press(surface, "Enter", { shiftKey: true });
+    expect(changes.at(-1)).toEqual([{ id: "b", type: "select", selected: true }]);
+    press(surface, "Escape");
+    expect(changes.at(-1)!.every((change: any) => change.selected === false)).toBe(true);
+    expect(surface.getAttribute("aria-activedescendant")).toBeNull();
+  });
+
+  it("stays out of the way of text entry inside the canvas", () => {
+    const changes: any[][] = [];
+    const view = render(<Diagram nodeTypes={{}} initialNodes={grid} initialEdges={[]} forceConfig={{ enabled: false }} onNodesChangeReactFlow={(batch) => changes.push(batch)} />);
+    const surface = surfaceOf(view.container);
+    const input = document.createElement("input");
+    surface.appendChild(input);
+    const before = changes.length;
+    act(() => {
+      input.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowRight", bubbles: true, cancelable: true }));
+      input.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true, cancelable: true }));
+    });
+    expect(changes.length).toBe(before);
+    expect(surface.getAttribute("aria-activedescendant")).toBeNull();
+  });
+});
+
+describe("♿️ diagram arrow navigation math", () => {
+  const nodes = [
+    { id: "a", position: { x: 0, y: 0 } },
+    { id: "b", position: { x: 200, y: 0 } },
+    { id: "c", position: { x: 0, y: 200 } },
+  ];
+
+  it("enters at the extreme node opposite the direction when nothing is focused", () => {
+    expect(diagramArrowNavigationTarget(nodes, null, "right")).toBe("a");
+    expect(diagramArrowNavigationTarget(nodes, null, "left")).toBe("b");
+    expect(diagramArrowNavigationTarget(nodes, undefined, "down")).toBe("a");
+  });
+
+  it("prefers the node in the pressed half-plane over a merely closer diagonal one", () => {
+    const skewed = [
+      { id: "origin", position: { x: 0, y: 0 } },
+      { id: "right", position: { x: 120, y: 0 } },
+      { id: "diagonal", position: { x: 40, y: 90 } },
+    ];
+    expect(diagramArrowNavigationTarget(skewed, "origin", "right")).toBe("right");
+    expect(diagramArrowNavigationTarget(skewed, "origin", "down")).toBe("diagonal");
+  });
+
+  it("answers null at the edge of the graph and for an empty graph", () => {
+    expect(diagramArrowNavigationTarget(nodes, "b", "right")).toBeNull();
+    expect(diagramArrowNavigationTarget(nodes, "a", "up")).toBeNull();
+    expect(diagramArrowNavigationTarget([], null, "right")).toBeNull();
+  });
+
+  it("maps exactly the four arrow keys and nothing else", () => {
+    expect(DIAGRAM_ARROW_KEYS).toEqual({ ArrowUp: "up", ArrowDown: "down", ArrowLeft: "left", ArrowRight: "right" });
+    expect(DIAGRAM_ARROW_KEYS.Tab).toBeUndefined();
+  });
+
+  it("Enter replaces the selection and Shift+Enter toggles membership", () => {
+    expect(diagramActivateSelection(["x", "y"], "z", false)).toEqual(["z"]);
+    expect(diagramActivateSelection(["x", "y"], "z", true)).toEqual(["x", "y", "z"]);
+    expect(diagramActivateSelection(["x", "y"], "y", true)).toEqual(["x"]);
+  });
+});
+// #endregion ♿️DiagramAccessibility

@@ -16,8 +16,8 @@
     },
     "owners": {
       "type": "array",
-      "minItems": 43,
-      "maxItems": 43,
+      "minItems": 46,
+      "maxItems": 46,
       "uniqueItems": true,
       "items": {
         "type": "object",

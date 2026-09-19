@@ -264,6 +264,12 @@ function resolvePlaygroundDevApp(segments: string[]): { readonly app: string; re
  * It is a command segment rather than an env var so it stays reachable from `launch.json`, which is
  * how every dev here starts things and which carries no `env` field.
  *
+ * The renderer is selected by the *target*, never forced by a server script: `@semio-tech/framework-
+ * os-dev:dev` is an alias that `resolveNxInvocation` (root `package.json`'s `nx` wrapper) rewrites to
+ * `<dev|serve>-<variant>-<react|wgpu>-<dev|release>` from `SEMIO_PLUGIN`/`SEMIO_RENDERER`/
+ * `SEMIO_BUILD_MODE`. Only the resolved wgpu target reaches the wgpu browser server, so its
+ * `SEMIO_RENDERER = "wgpu"` assignment can never overrule a react launch row.
+ *
  * `dev s` IS the all-plugins hub: `space` declares `[package.metadata.semio].host`, and every layer
  * keys off that one declaration — `runtimeComponentClosure` fans the Nx closure out to every
  * registered component, `buildPlaygroundSession`/`expandPluginRegistry` return the whole registry
@@ -309,6 +315,13 @@ export class NativeOsScript extends Script {
 //#endregion 🔖️NativeOsScript
 
 //#region 🔖️SetupScript
+/** @emoji 🔗️ Repo-relative instruction files `setup git` recreates as links to `AGENTS.md`, one per
+ * client that cannot read `AGENTS.md` itself. `codex`, `cursor-chat`, `windsurf-chat`, `droid` and
+ * `kiro-cli` read the canonical file directly and need no alias; `claude-code` reads `CLAUDE.md`,
+ * `antigravity-chat` reads `GEMINI.md`, and `copilot-chat` reads only `.github/copilot-instructions.md`.
+ * @see AGENTS.md */
+export const AGENT_INSTRUCTION_ALIASES = ["CLAUDE.md", "GEMINI.md", ".github/copilot-instructions.md"] as const;
+
 export class SetupScript extends Script {
   async run(segments: string[]): Promise<void> {
     if (!segments[0]) {
@@ -320,7 +333,7 @@ export class SetupScript extends Script {
       {
         postinstall: () => this.runPostinstall(),
         git: () => this.runGit(),
-        native: (rest) => new NativeOsScript(this.root).run(rest),
+        native: (rest) => new NativeOsScript(this.root, this.repoRoot).run(rest),
         deps: (rest) => new NativeDependenciesScript(this.root, this.repoRoot).run(rest),
         prepare: () => console.log("[prepare] Nx prerequisites completed"),
       },
@@ -355,11 +368,13 @@ export class SetupScript extends Script {
     runCmd("git", ["config", "--local", "core.symlinks", "true"], { cwd: this.root });
     installMicroCommitGitHooks(this.root);
     const source = "AGENTS.md";
-    for (const alias of ["CLAUDE.md", "GEMINI.md"]) {
-      const aliasPath = join(this.root, alias);
+    for (const alias of AGENT_INSTRUCTION_ALIASES) {
+      const aliasPath = join(this.root, ...alias.split("/"));
+      mkdirSync(dirname(aliasPath), { recursive: true });
       if (existsSync(aliasPath)) rmSync(aliasPath, { force: true });
+      const target = relative(dirname(aliasPath), join(this.root, source)).replaceAll("\\", "/");
       try {
-        symlinkSync(source, aliasPath, "file");
+        symlinkSync(target, aliasPath, "file");
       } catch (error) {
         if (process.platform !== "win32") throw error;
         linkSync(join(this.root, source), aliasPath);
@@ -395,7 +410,7 @@ export class StartScript extends Script {
     }
 
     if (process.platform === "win32" || process.platform === "darwin" || process.platform === "linux") {
-      new NativeOsScript(this.root).run(["start"]);
+      new NativeOsScript(this.root, this.repoRoot).run(["start"]);
     } else {
       console.log(`[start] Unsupported platform ${process.platform}.`);
     }
@@ -761,7 +776,7 @@ export class LintScript extends Script {
 //#region 🔖️VerifyScript
 /** 🦀️ Shipping plugins, extensions, and their artifact libraries from the repository's package catalog. */
 function pluginCrateNames(root: string, includeSupport = false): string[] {
-  const workspace = Bun.TOML.parse(readFileSync(join(root, "Cargo.toml"), "utf8")).workspace as { members: string[]; exclude?: string[] };
+  const workspace = (Bun.TOML.parse(readFileSync(join(root, "Cargo.toml"), "utf8")) as { workspace: { members: string[]; exclude?: string[] } }).workspace;
   const excluded = (workspace.exclude ?? []).map((pattern) => new Bun.Glob(pattern));
   const manifests = workspace.members.flatMap((member) => {
     const paths = [...new Bun.Glob(`${member}/Cargo.toml`).scanSync({ cwd: root, onlyFiles: true })];
@@ -770,7 +785,7 @@ function pluginCrateNames(root: string, includeSupport = false): string[] {
   });
   const names = manifests.flatMap((path) => {
     const manifest = Bun.TOML.parse(readFileSync(join(root, path), "utf8"));
-    const pkg = manifest.package as { name?: string; metadata?: { semio?: { role?: string } } } | undefined;
+    const pkg = (manifest as { package?: { name?: string; metadata?: { semio?: { role?: string } } } }).package;
     const name = pkg?.name;
     if (!name) throw new Error(`[verify rust-warnings] package name missing in ${path}.`);
     return ["plugin", "extension"].includes(pkg?.metadata?.semio?.role ?? "") || name.startsWith("semio-s-artifact-") || name.startsWith("semio-framework-artifact-") || (includeSupport && name.startsWith("semio-s-plugin-")) ? [name] : [];
@@ -1190,7 +1205,7 @@ function toolJobAppOwnedRows(files: ReadonlyMap<string, string>): ToolJobAppOwne
       const registered = new RegExp(`registry\\.register\\(\\s*(?:[A-Za-z_][A-Za-z0-9_]*::)*${factory}::new\\(`).test(production);
       const concrete = new RegExp(`impl\\s+(?:semio_framework::)?ToolJobFactory\\s+for\\s+${factory}\\s*\\{`).test(source) && source.includes("fn create_job") && source.includes("fn execution_contract");
       const builder = !!owner && /fn\s+build_tool_job\s*\([^)]*request/s.test(owner.body) && owner.body.includes("request");
-      if (!owner || !registered || !concrete || !builder || !toolExpression) continue;
+      if (!owner || !ownerTypeName || !registered || !concrete || !builder || !toolExpression) continue;
       const localStrings = stringConstants.get(factoryFile) ?? new Map<string, string>();
       const localLists = listConstants.get(factoryFile) ?? new Map<string, string[]>();
       const ids = toolExpression.startsWith("&[")
@@ -6871,6 +6886,165 @@ const POLICY_BREACH_GATES: Record<string, (repoRoot: string) => BreachRecord[]> 
   "contribution-target": policyContributionTargetBreaches,
 };
 
+//#region 🔖️GeneratedCorruptionCensus
+/** 🚫️Directories the corruption census never walks: caches, vendored trees and build scratch own no repo source. */
+const GENERATED_CORRUPTION_SKIP_DIRS = new Set(["node_modules", ".git", "target", "🎯️target", "⚡️cache", ".venv", ".nx", ".turbo", ".git-rewrite"]);
+
+/** 🧩️The extensions `tsc` parses — the only files where a spliced emoji becomes a TS1127/TS1434 parse error. */
+const GENERATED_CORRUPTION_EXTENSIONS = new Set([".ts", ".tsx", ".mts", ".cts", ".js", ".jsx", ".mjs", ".cjs"]);
+
+/** 🏷️jco stamps every world-level binding file with this first line; it selects generator output without guessing file names. */
+const JCO_WORLD_HEADER = "// world ";
+
+/** 📥️`export type * as <Alias> from './interfaces/<x>.js'; // import <wit-id>` — one imported interface of a jco world. */
+const JCO_IMPORT_ALIAS_LINE = /^export type \* as (\S+) from '[^']+'; \/\/ import (\S+)\s*$/;
+
+/** 📤️`export * as <alias> from './interfaces/<x>.js'; // export <wit-id>` — one exported interface of a jco world. */
+const JCO_EXPORT_ALIAS_LINE = /^export \* as (\S+) from '[^']+'; \/\/ export (\S+)\s*$/;
+
+/** 🔬️An emoji (with its optional VS16 / ZWJ / skin-tone tail) wedged between two ASCII identifier characters. */
+const SPLICED_EMOJI_IDENTIFIER = /[A-Za-z0-9_$](\p{Extended_Pictographic}(?:️|︎|‍\p{Extended_Pictographic}|[\u{1F3FB}-\u{1F3FF}])*)[A-Za-z0-9_$]/gu;
+
+/** 🔎️One spliced-emoji identifier, located precisely enough to be fixed without re-running the census. */
+type GeneratedCorruptionFinding = {
+  readonly kind: "jco-alias" | "code-position";
+  readonly file: string;
+  readonly line: number;
+  readonly detail: string;
+};
+
+/** 📊️The whole census: what was looked at, what validated the jco naming rule, and every surviving finding. */
+type GeneratedCorruptionCensus = {
+  readonly filesScanned: number;
+  readonly jcoFilesScanned: number;
+  readonly jcoAliasesValidated: number;
+  readonly findings: readonly GeneratedCorruptionFinding[];
+};
+
+/** 🐫️jco's identifier casing for one kebab/snake WIT segment. */
+function jcoPascalSegment(segment: string): string {
+  return segment
+    .split(/[-_]/)
+    .filter((part) => part.length > 0)
+    .map((part) => part[0]!.toUpperCase() + part.slice(1))
+    .join("");
+}
+
+/**
+ * 🧬️Re-derives the world-level namespace alias jco emits for one WIT interface id, from the id alone:
+ * `wasi:cli/environment@0.2.9` → `WasiCliEnvironment029` for an import, and the bare camelCase interface
+ * name (`plugin`) for an export. This is the source of truth the corruption census checks bindings against.
+ */
+function jcoWorldAlias(witId: string, direction: "import" | "export"): string {
+  const [head, version = ""] = witId.split("@");
+  const segments = head!.split(/[:/]/).filter((segment) => segment.length > 0);
+  if (direction === "export") {
+    const last = jcoPascalSegment(segments[segments.length - 1] ?? "");
+    return last.slice(0, 1).toLowerCase() + last.slice(1);
+  }
+  return segments.map(jcoPascalSegment).join("") + version.replace(/[.\-]/g, "");
+}
+
+/** 🧾️`ScriptKind` per extension, so JSX and TypeScript syntax are parsed by the rules their file actually uses. */
+function typescriptScriptKindFor(fileName: string, ts: TypeScriptParserApi): number {
+  if (fileName.endsWith(".tsx")) return ts.ScriptKind.TSX;
+  if (fileName.endsWith(".jsx")) return ts.ScriptKind.JSX;
+  if (/\.(js|mjs|cjs)$/.test(fileName)) return ts.ScriptKind.JS;
+  return ts.ScriptKind.TS;
+}
+
+/** 🧰️The sliver of the TypeScript compiler this census uses: a parse, and the errors that parse produced. */
+type TypeScriptParserApi = {
+  readonly version: string;
+  readonly ScriptTarget: { readonly Latest: number };
+  readonly ScriptKind: { readonly TS: number; readonly TSX: number; readonly JS: number; readonly JSX: number };
+  createSourceFile(fileName: string, text: string, target: number, setParentNodes: boolean, scriptKind: number): { readonly parseDiagnostics?: readonly { readonly start: number }[] };
+};
+
+/**
+ * 🔬️Walks every TS/JS file the repo owns and reports emoji spliced into ASCII identifiers — the signature of
+ * the 2026-09-03 rename-plan codemod incident. Two independent checks, neither of them a heuristic: jco
+ * world bindings are validated against {@link jcoWorldAlias}, and every other candidate file is handed to
+ * the repo's own TypeScript parser, so an emoji counts as spliced only where the parser reports an error at
+ * that exact offset. That is what separates corruption from this repo's legitimate emoji-in-path/label
+ * idiom, which parses cleanly inside strings, comments, regex literals and JSX text. Generated output is
+ * walked deliberately: it is what the incident corrupted.
+ */
+function censusGeneratedCorruption(root: string): GeneratedCorruptionCensus {
+  const findings: GeneratedCorruptionFinding[] = [];
+  const ts = createRequire(join(root, "package.json"))("typescript") as TypeScriptParserApi;
+  let filesScanned = 0;
+  let jcoFilesScanned = 0;
+  let jcoAliasesValidated = 0;
+
+  const walk = (directory: string): void => {
+    let entries: Dirent[];
+    try {
+      entries = readdirSync(directory, { withFileTypes: true });
+    } catch {
+      return;
+    }
+    for (const entry of entries) {
+      const absolute = join(directory, entry.name);
+      if (entry.isDirectory()) {
+        if (!GENERATED_CORRUPTION_SKIP_DIRS.has(entry.name)) walk(absolute);
+        continue;
+      }
+      if (!entry.isFile() || !GENERATED_CORRUPTION_EXTENSIONS.has(extname(entry.name))) continue;
+      let source: string;
+      try {
+        source = readFileSync(absolute, "utf8");
+      } catch {
+        continue;
+      }
+      filesScanned += 1;
+      const file = relative(root, absolute);
+      if (source.startsWith(JCO_WORLD_HEADER)) {
+        jcoFilesScanned += 1;
+        source.split("\n").forEach((text, offset) => {
+          const asImport = JCO_IMPORT_ALIAS_LINE.exec(text);
+          const asExport = asImport ? null : JCO_EXPORT_ALIAS_LINE.exec(text);
+          const match = asImport ?? asExport;
+          if (!match) return;
+          const expected = jcoWorldAlias(match[2]!, asImport ? "import" : "export");
+          if (match[1] === expected) {
+            jcoAliasesValidated += 1;
+            return;
+          }
+          findings.push({ kind: "jco-alias", file, line: offset + 1, detail: `alias ${JSON.stringify(match[1])} ≠ ${JSON.stringify(expected)} derived from ${match[2]}` });
+        });
+        continue;
+      }
+      SPLICED_EMOJI_IDENTIFIER.lastIndex = 0;
+      if (!SPLICED_EMOJI_IDENTIFIER.test(source)) continue;
+      const parsed = ts.createSourceFile(absolute, source, ts.ScriptTarget.Latest, false, typescriptScriptKindFor(entry.name, ts));
+      const errorOffsets = (parsed.parseDiagnostics ?? []).map((diagnostic) => diagnostic.start);
+      if (errorOffsets.length === 0) continue;
+      const lineStarts = [0];
+      for (let at = source.indexOf("\n"); at >= 0; at = source.indexOf("\n", at + 1)) lineStarts.push(at + 1);
+      SPLICED_EMOJI_IDENTIFIER.lastIndex = 0;
+      let match: RegExpExecArray | null;
+      while ((match = SPLICED_EMOJI_IDENTIFIER.exec(source)) !== null) {
+        const from = match.index;
+        const to = SPLICED_EMOJI_IDENTIFIER.lastIndex;
+        if (SPLICED_EMOJI_IDENTIFIER.lastIndex === match.index) SPLICED_EMOJI_IDENTIFIER.lastIndex += 1;
+        if (!errorOffsets.some((offset) => offset >= from && offset <= to)) continue;
+        let start = from;
+        while (start > 0 && /[A-Za-z0-9_$]/.test(source[start - 1]!)) start -= 1;
+        let end = to;
+        while (end < source.length && /[A-Za-z0-9_$]/.test(source[end]!)) end += 1;
+        let line = 1;
+        while (line < lineStarts.length && lineStarts[line]! <= from) line += 1;
+        findings.push({ kind: "code-position", file, line, detail: `spliced ${match[1]} in identifier ${JSON.stringify(source.slice(start, end))} (TypeScript cannot parse it)` });
+      }
+    }
+  };
+
+  walk(root);
+  return { filesScanned, jcoFilesScanned, jcoAliasesValidated, findings };
+}
+//#endregion 🔖️GeneratedCorruptionCensus
+
 /** 🧪️Aggregates lint + generated-catalog freshness + region/host-contract script lints (`gate`, the cheap pre-`ticket_close` step every refactor session runs), plus the full test suite for the top-level `verify` verb. */
 export class VerifyScript extends Script {
   async run(segments: string[]): Promise<void> {
@@ -6888,6 +7062,10 @@ export class VerifyScript extends Script {
     }
     if (segments[0] === "package-purity") {
       this.runPackagePurity();
+      return;
+    }
+    if (segments[0] === "generated-corruption") {
+      this.runGeneratedCorruption(segments.slice(1));
       return;
     }
     if (segments[0] === "rust-warnings") {
@@ -7260,7 +7438,7 @@ export class VerifyScript extends Script {
       return;
     }
     if (segments[0] === "gis-map-window-ownership") {
-      const schemaRoot = join(this.root, "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🗺️map/⚙️config");
+      const schemaRoot = join(this.root, "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🗺️map/🎚️config");
       const { testGisMapWindowOwnershipOracle } = await import(`${schemaRoot}/🧪️tests/🔬️window-ownership/🟦️.ts`);
       testGisMapWindowOwnershipOracle();
       runCmd("bun", [join(this.root, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--resolveJsonModule", "--allowImportingTsExtensions", "--esModuleInterop", "--skipLibCheck", join(schemaRoot, "🧬️schema/🟦️.ts"), join(schemaRoot, "🧪️tests/🔬️window-ownership/🟦️.ts")], { cwd: this.root });
@@ -7892,7 +8070,7 @@ export class VerifyScript extends Script {
       return;
     }
     if (segments[0] === "gis-terrain-window-config") {
-      const testRoot = join(this.root, "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/👁️view/🪟️windows/🏔️terrain/⚙️config");
+      const testRoot = join(this.root, "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/👁️view/🪟️windows/🏔️terrain/🎚️config");
       const { testGisTerrainWindowConfigContract } = await import(`${testRoot}/🧪️tests/🔬️contract/🟦️.ts`);
       testGisTerrainWindowConfigContract();
       runCmd("bun", [join(this.root, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--allowImportingTsExtensions", "--skipLibCheck", `${testRoot}/🧬️schema/🟦️.ts`, `${testRoot}/🧪️tests/🔬️contract/🟦️.ts`], { cwd: this.root });
@@ -8028,7 +8206,19 @@ export class VerifyScript extends Script {
     const mode = args[0];
     if (mode !== "report" && mode !== "enforce") throw new Error(`[verify taxonomy] expected report or enforce, got ${JSON.stringify(mode)}.`);
     const scope = taxonomyOption(args, "--scope");
-    const verification = verifyTaxonomy({ repoRoot: this.root, ...(scope ? { scope } : {}) });
+    let previousPhase = "";
+    let previousReportAt = 0;
+    const verification = verifyTaxonomy({
+      repoRoot: this.root,
+      ...(scope ? { scope } : {}),
+      progress: (progress) => {
+        const now = Date.now();
+        if (progress.phase === previousPhase && now - previousReportAt < 5000) return;
+        previousPhase = progress.phase;
+        previousReportAt = now;
+        console.error(`[verify taxonomy progress] ${progress.operation}/${progress.phase} ${progress.current}/${progress.total}${progress.path ? ` ${progress.path}` : ""}`);
+      },
+    });
     const errors = verification.violations.filter((violation) => violation.severity === "error");
     const warnings = verification.violations.filter((violation) => violation.severity === "warning");
     console.log(`[verify taxonomy ${mode}] clean=${verification.clean} errors=${errors.length} warnings=${warnings.length}${scope ? ` scope=${scope}` : ""}`);
@@ -8075,6 +8265,28 @@ export class VerifyScript extends Script {
     for (const b of breaches) console.error(`[verify package-purity] ${b.kind}: ${b.summary}`);
     if (breaches.length > 0) throw new Error(`[verify package-purity] ${breaches.length} package language purity breach(es)`);
     console.log("[verify package-purity] passed.");
+  }
+
+  /**
+   * 🔬️Standalone entry point for the generated-code corruption census — the permanent gate against the
+   * 2026-09-03 rename-plan codemod incident, where an emoji+VS16 was spliced INTO ASCII identifiers of
+   * jco/wit-bindgen output (`WasiCliEnvironmen🔬️t029`). Two independent checks run: every jco world
+   * binding's alias is re-derived from the WIT id jco prints beside it and must match byte-for-byte,
+   * and every parsed TS/JS file must carry no emoji in code position once comments, string/template
+   * literals and regex literals are blanked. `--json` prints the machine-readable census instead.
+   */
+  private runGeneratedCorruption(segments: string[]): void {
+    const census = censusGeneratedCorruption(this.root);
+    if (segments.includes("--json")) {
+      console.log(JSON.stringify(census, null, 2));
+    } else {
+      console.log(`[verify generated-corruption] scanned=${census.filesScanned} jco-bindings=${census.jcoFilesScanned} jco-aliases-validated=${census.jcoAliasesValidated}`);
+      for (const finding of census.findings) console.error(`[verify generated-corruption] ${finding.kind} ${finding.file}:${finding.line} ${finding.detail}`);
+    }
+    if (census.findings.length > 0) {
+      throw new Error(`[verify generated-corruption] ${census.findings.length} spliced-emoji identifier(s) in ${new Set(census.findings.map((f) => f.file)).size} file(s)`);
+    }
+    console.log("[verify generated-corruption] passed.");
   }
 
   /**
@@ -8785,10 +8997,44 @@ const INTERACTIVITY_ALL_APP_APPS_PER_DESCRIPTOR_CAPACITY = 64;
 const INTERACTIVITY_ALL_APP_ACTIONS_PER_APP_CAPACITY = 512;
 const INTERACTIVITY_ALL_APP_LAUNCH_CAPACITY = 512;
 const INTERACTIVITY_ALL_APP_DESCRIPTOR_NAME = "🔣️.json";
+/** 🧩️ The one child dir under a plugin root whose own `🔣️.json` is also a descriptor. */
+const INTERACTIVITY_ALL_APP_EXTENSIONS_DIR = "🧩️extensions";
+/** 🧫️ Taxonomy ownership dirs (`testOwnerKinds`) that sit BESIDE an owner's real children and are
+ * therefore never themselves an extension — `🌊️flow/🧩️extensions/🧫️fixtures/🔣️.json` is the flow
+ * extensions' shared fixture table, not a fourteenth extension. */
+const INTERACTIVITY_ALL_APP_OWNERSHIP_DIRS: ReadonlySet<string> = new Set(["🧫️fixtures", "🧪️tests"]);
+/** 🚀️ The browser dev command every generated playground launcher carries. The plugin registry is its
+ * author — `📇️registry/🚀️launch/🟦️.ts` `playgroundDevCommand()` — and this gate reads `launch.json` as
+ * text, so the shape is restated here rather than imported; `🧪️tests/🚀️launch/🟦️.ts` in the registry
+ * asserts the generated rows against the registry's own function, which keeps the two honest. */
+const INTERACTIVITY_ALL_APP_BROWSER_DEV_COMMAND = (variant: string): string => `bun nx run workspace:dev -- ${variant}`;
+/** 🖥️ The wgpu native dev command. Authored in the seed skeleton, not generated, so the seed is its
+ * authority; all 46 `…🧊️wgpu🖥️native` rows in `.vscode/launch.json` carry exactly this shape. */
+const INTERACTIVITY_ALL_APP_NATIVE_DEV_COMMAND = (variant: string): string => `bun nx run @semio-tech/framework-renderer-wgpu:native -- ${variant}`;
 const INTERACTIVITY_ALL_APP_LAUNCH_FILE = ".vscode/launch.json";
 const INTERACTIVITY_ALL_APP_LAUNCH_SEED_FILE = ".vscode/🧩️launch.seed.jsonc";
 const INTERACTIVITY_ALL_APP_PLAYGROUND_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🎮️playgrounds/🟦️.ts";
-const INTERACTIVITY_ALL_APP_REQUIRED_GATES = [] as const;
+/** ⚖️ Launch rows every `.vscode/launch.json` must register exactly once, in the `4_gate` group.
+ *
+ * AGENTS.md: "All devs are using `launch.json` and never use the cli" — a verification verb that no
+ * launch row runs is a verb no dev can run. These six are the interactivity and dependency gates
+ * themselves, so the law is self-referential on purpose: the gate that checks launch registration is
+ * itself one of the rows it requires.
+ *
+ * The commands are the `bun nx run workspace:verify -- …` form — what the seed's six rows carried
+ * before `6f33e313da` emptied this list, and what every neighbouring `4_gate` row uses. The list this
+ * replaces named the same six gates in the `bun ./📜️script.ts verify …` form, so the law and the data
+ * could never agree, which is the likeliest reason it was emptied rather than repaired. AGENTS.md
+ * makes `📜️script.ts` the implementation and `nx` the entry point, so the nx form is the one a dev's
+ * launch row may carry. */
+const INTERACTIVITY_ALL_APP_REQUIRED_GATES: readonly { readonly name: string; readonly command: string }[] = [
+  { name: "⚖️gate⚡️interactivity", command: "bun nx run workspace:verify -- interactivity" },
+  { name: "⚖️gate⚡️interactivity🎯️tool-jobs", command: "bun nx run workspace:verify -- interactivity tool-jobs" },
+  { name: "⚖️gate⚡️interactivity🧭️apps", command: "bun nx run workspace:verify -- interactivity apps" },
+  { name: "⚖️gate⚡️interactivity🧭️apps🎛️actions", command: "bun nx run workspace:verify -- interactivity apps --actions" },
+  { name: "⚖️gate📦️dependencies", command: "bun nx run workspace:verify -- dependencies" },
+  { name: "⚖️gate📦️dependencies0️⃣", command: "bun nx run workspace:verify -- dependencies literal-external" },
+];
 
 type InteractivityAllAppAction = { appId: string; windowId: string; actionId: string; disposition?: string };
 type InteractivityAllAppDescriptor = { file: string; kind: "app" | "extension"; pluginId: string; parentPluginId?: string; appIds: string[]; actions: InteractivityAllAppAction[] };
@@ -8818,6 +9064,21 @@ function interactivityAllAppLocalizedLabelExact(value: unknown): boolean {
   return localized.length > 0 && localized.every((entry) => typeof entry.en === "string" && entry.en.length > 0 && typeof entry.de === "string" && entry.de.length > 0 && !Object.hasOwn(entry, "default"));
 }
 
+/** 🪢️ The plugin id an extension registers — the FIRST argument of `ExtensionBundle::new(…)`, either a
+ * string literal or a `const … : &str` resolved in the same source.
+ *
+ * Not `EXTENSION_ID`. That constant is the extension's short TOPIC id (`"bim"`, `"draw"`), passed to
+ * `flow_extension_topic_contribution`; the bundle registers `"flow-extension-bim"` /
+ * `"flow-extension-draw"` — the spelling `🌊️flow/🧩️extensions/🧫️fixtures/🔣️.json` maps each slug to.
+ * Reading `EXTENSION_ID` as the plugin id made `🖍️draw`'s extension collide with the real `🖍️draw`
+ * plugin under this verb's own ambiguity law. */
+function interactivityAllAppExtensionBundleId(source: string): string {
+  const argument = source.match(/ExtensionBundle::new\(\s*([A-Za-z_][A-Za-z0-9_]*|"[^"]*")/u)?.[1];
+  if (argument === undefined) return "";
+  if (argument.startsWith('"')) return argument.slice(1, -1).trim();
+  return source.match(new RegExp(`const\\s+${argument}\\s*:\\s*&str\\s*=\\s*"([^"]+)"`, "u"))?.[1]?.trim() ?? "";
+}
+
 /** 🧩️Parses one schema-first descriptor through an owned primitive-only discovery boundary. */
 function interactivityAllAppDescriptorFromSource(file: string, source: string, extensionSource = ""): { row?: InteractivityAllAppDescriptor; failures: string[] } {
   const failures: string[] = [];
@@ -8827,18 +9088,19 @@ function interactivityAllAppDescriptorFromSource(file: string, source: string, e
   } catch {
     return { failures: [`${file}: descriptor is not valid JSON`] };
   }
+  const isExtension = file.includes(`/${INTERACTIVITY_ALL_APP_EXTENSIONS_DIR}/`);
+  const expectedRole = isExtension ? "extension" : "plugin";
   if (descriptor.descriptorVersion !== 1) failures.push(`${file}: descriptorVersion must be 1`);
-  if (descriptor.role !== "plugin") failures.push(`${file}: role must be plugin`);
+  if (descriptor.role !== expectedRole) failures.push(`${file}: role must be ${expectedRole}`);
   const manifest = descriptor.manifest && typeof descriptor.manifest === "object" ? descriptor.manifest as Record<string, unknown> : undefined;
   if (!manifest) return { failures: [...failures, `${file}: manifest is missing`] };
   const apps = Array.isArray(manifest.apps) ? manifest.apps : undefined;
   if (!apps) return { failures: [...failures, `${file}: manifest.apps is missing`] };
-  if (file.includes("/🧩️extensions/")) {
-    const pluginId = extensionSource.match(/const\s+EXTENSION_ID\s*:\s*&str\s*=\s*"([^"]+)"/)?.[1] ?? "";
+  if (isExtension) {
+    const pluginId = interactivityAllAppExtensionBundleId(extensionSource);
     const parentPluginId = extensionSource.match(/\.extends\(\s*"([^"]+)"\s*\)/)?.[1] ?? "";
-    if (pluginId === "") failures.push(`${file}: extension source has no owned EXTENSION_ID`);
+    if (pluginId === "") failures.push(`${file}: extension source declares no resolvable ExtensionBundle::new(<pluginId>, …)`);
     if (parentPluginId === "") failures.push(`${file}: extension source has no parent .extends(...) activation`);
-    if (!extensionSource.includes("ExtensionBundle::new(EXTENSION_ID")) failures.push(`${file}: extension source does not construct its declared EXTENSION_ID`);
     if (apps.length !== 0) failures.push(`${file}: extension descriptor must delegate app activation to its parent instead of duplicating apps`);
     return { row: { file, kind: "extension", pluginId, ...(parentPluginId ? { parentPluginId } : {}), appIds: [], actions: [] }, failures };
   }
@@ -8965,8 +9227,8 @@ function interactivityAllAppLaunchCoverageFailures(descriptors: readonly Interac
     const value = launchers[playground.variant];
     const launcher = value && typeof value === "object" ? value as Record<string, unknown> : undefined;
     const prefix = typeof launcher?.namePrefix === "string" ? launcher.namePrefix : `🧩️${playground.variant}`;
-    const browserCommand = typeof launcher?.command === "string" ? launcher.command : `bun ./📜️script.ts dev ${playground.variant}`;
-    const nativeCommand = `bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/📜️script.ts native ${playground.variant}`;
+    const browserCommand = INTERACTIVITY_ALL_APP_BROWSER_DEV_COMMAND(playground.variant);
+    const nativeCommand = INTERACTIVITY_ALL_APP_NATIVE_DEV_COMMAND(playground.variant);
     const expected = [
       { name: `🛠️dev${prefix}⚛️react`, command: browserCommand, renderer: "react" },
       { name: `🛠️dev${prefix}🧊️wgpu🌐️wasm`, command: browserCommand, renderer: "wgpu" },
@@ -9005,6 +9267,10 @@ function interactivityAllAppLaunchesFromSource(source: string): { rows: Interact
     names.set(name, (names.get(name) ?? 0) + 1);
   }
   for (const [name, count] of names) if (name !== "" && count > 1) failures.push(`${INTERACTIVITY_ALL_APP_LAUNCH_FILE}: duplicate configuration name ${JSON.stringify(name)}`);
+  for (const gate of INTERACTIVITY_ALL_APP_REQUIRED_GATES) {
+    const matches = records.filter((configuration) => configuration.name === gate.name && configuration.command === gate.command && configuration.cwd === "${workspaceFolder}" && (configuration.presentation as Record<string, unknown> | undefined)?.group === "4_gate");
+    if (matches.length !== 1) failures.push(`${INTERACTIVITY_ALL_APP_LAUNCH_FILE}: expected one exact ${gate.name} registration, found ${matches.length}`);
+  }
   const rows: InteractivityAllAppLaunch[] = [];
   for (const configuration of records) {
     const name = typeof configuration.name === "string" ? configuration.name : "";
@@ -9020,17 +9286,32 @@ function interactivityAllAppLaunchesFromSource(source: string): { rows: Interact
   return { rows: rows.sort((left, right) => left.name.localeCompare(right.name)), failures };
 }
 
+/** 🪪️ Whether a repo-relative path is a plugin-descriptor COORDINATE rather than merely a file that
+ * shares the taxonomy's generic JSON leaf name.
+ *
+ * `🔣️.json` is the taxonomy's JSON component filename everywhere — schemas, fixtures, mutation
+ * descriptors, oracle tables. Matching it by name alone claims **20 368** files under `✏️s/🔌️plugins`
+ * as plugin descriptors, of which 46 are: one per plugin root and one per `🧩️extensions/<id>`. The
+ * other 20 322 were then rejected one by one with `manifest is missing` / `role must be plugin`, which
+ * is how this verb reached 776 failures while reporting `descriptors=3` — the fixed capacity truncated
+ * the walk to the first 256 paths in sort order, so real descriptors never got read at all. */
+function interactivityAllAppIsDescriptorCoordinate(relPath: string): boolean {
+  const parts = relPath.split("/");
+  if (parts.length === 4) return true;
+  return parts.length === 6 && parts[3] === INTERACTIVITY_ALL_APP_EXTENSIONS_DIR && !INTERACTIVITY_ALL_APP_OWNERSHIP_DIRS.has(parts[4]!);
+}
+
 /** 🧭️Discovers every plugin descriptor and every launch-derived product without a maintained product allowlist. */
 function interactivityAllAppDiscovery(repoRoot: string): InteractivityAllAppDiscovery {
   const failures: string[] = [];
-  const files = policyWalkRelFiles(repoRoot, ["✏️s/🔌️plugins"], (_path, name) => name === INTERACTIVITY_ALL_APP_DESCRIPTOR_NAME);
+  const files = policyWalkRelFiles(repoRoot, ["✏️s/🔌️plugins"], (path, name) => name === INTERACTIVITY_ALL_APP_DESCRIPTOR_NAME && interactivityAllAppIsDescriptorCoordinate(path));
   if (files.length === 0) failures.push("no plugin descriptors discovered");
   if (files.length > INTERACTIVITY_ALL_APP_DESCRIPTOR_CAPACITY) failures.push(`${files.length} descriptors exceed fixed capacity ${INTERACTIVITY_ALL_APP_DESCRIPTOR_CAPACITY}`);
   const descriptors: InteractivityAllAppDescriptor[] = [];
   const pluginOwners = new Map<string, string[]>();
   const appOwners = new Map<string, string[]>();
   for (const file of files.slice(0, INTERACTIVITY_ALL_APP_DESCRIPTOR_CAPACITY)) {
-    const extensionSource = file.includes("/🧩️extensions/") ? policyReadFileSafe(repoRoot, `${dirname(file)}/🦀️.rs`) : "";
+    const extensionSource = file.includes(`/${INTERACTIVITY_ALL_APP_EXTENSIONS_DIR}/`) ? policyReadFileSafe(repoRoot, `${dirname(file)}/🦀️.rs`) : "";
     const parsed = interactivityAllAppDescriptorFromSource(file, policyReadFileSafe(repoRoot, file), extensionSource);
     failures.push(...parsed.failures);
     if (!parsed.row) continue;
@@ -13968,6 +14249,16 @@ function stdioString(value: unknown, label: string): string {
   return value;
 }
 
+const STDIO_RUNTIME_CLAIM_NAMESPACES = ["schema", "codec", "extension", "mime", "dialect", "grammar"] as const;
+
+/** 🎟️ Admits exactly one member of a closed vocabulary, keeping the literal type the caller declares. */
+function stdioMember<T extends string>(value: unknown, label: string, members: readonly T[]): T {
+  const text = stdioString(value, label);
+  const member = members.find((candidate) => candidate === text);
+  if (member === undefined) throw new Error(`[stdio] ${label} must be one of ${members.join(", ")}.`);
+  return member;
+}
+
 function stdioStringArray(value: unknown, label: string): readonly string[] {
   if (!Array.isArray(value) || !value.every((item) => typeof item === "string" && item)) throw new Error(`[stdio] ${label} must be a string array.`);
   return value;
@@ -14140,8 +14431,7 @@ function stdioAssertDefinition(value: unknown): asserts value is StdioSchemaDefi
     const descriptor = stdioString(record.descriptor, `${artifactId}.runtime_capabilities[${index}].descriptor`);
     const claims = stdioArray(record.claims, `${artifactId}.runtime_capabilities[${index}].claims`).map((claim, claimIndex) => {
       const claimRecord = stdioExactFields(claim, `${artifactId}.runtime_capabilities[${index}].claims[${claimIndex}]`, ["namespace", "value"]);
-      const namespace = stdioString(claimRecord.namespace, `${artifactId}.runtime_capabilities[${index}].claims[${claimIndex}].namespace`);
-      if (!["schema", "codec", "extension", "mime", "dialect", "grammar"].includes(namespace)) throw new Error(`[stdio] invalid runtime claim namespace ${namespace}.`);
+      const namespace = stdioMember(claimRecord.namespace, `${artifactId}.runtime_capabilities[${index}].claims[${claimIndex}].namespace`, STDIO_RUNTIME_CLAIM_NAMESPACES);
       return { namespace, value: stdioString(claimRecord.value, `${artifactId}.runtime_capabilities[${index}].claims[${claimIndex}].value`) };
     });
     if (claims.length === 0) throw new Error(`[stdio] runtime capability ${capabilityId} has no claims.`);
@@ -14182,14 +14472,17 @@ function stdioAssertDefinition(value: unknown): asserts value is StdioSchemaDefi
   });
   if (resources.length === 0 || suites.length === 0) throw new Error(`[stdio] ${artifactId} must own resources and conformance suites.`);
   const ledger = stdioExactFields(definition.support_ledger, `${artifactId}.support_ledger`, ["normative_source", "publication_date", "source_checksum", "redistribution_status", "clauses_or_features", "profiles", "registered_code_points", "read", "write", "lossless", "canonical", "validators", "mutations", "inferences", "fixtures"]);
-  stdioNullableString(ledger.normative_source, `${artifactId}.support_ledger.normative_source`);
-  stdioNullableString(ledger.publication_date, `${artifactId}.support_ledger.publication_date`);
-  stdioNullableString(ledger.source_checksum, `${artifactId}.support_ledger.source_checksum`);
-  stdioString(ledger.redistribution_status, `${artifactId}.support_ledger.redistribution_status`);
-  for (const field of ["clauses_or_features", "profiles", "registered_code_points", "validators", "mutations", "inferences", "fixtures"] as const) stdioStringArray(ledger[field], `${artifactId}.support_ledger.${field}`);
-  if (!ledger || !["unimplemented", "opaque", "implemented"].includes(ledger.read) || !["unimplemented", "opaque", "implemented"].includes(ledger.write) || !["unimplemented", "opaque", "implemented"].includes(ledger.lossless) || !["unimplemented", "opaque", "implemented"].includes(ledger.canonical)) throw new Error(`[stdio] ${definition.id} has an invalid support ledger.`);
-  const implemented = [ledger.read, ledger.write, ledger.lossless, ledger.canonical].includes("implemented");
-  if (implemented && (!ledger.normative_source || !ledger.publication_date || !ledger.source_checksum || ledger.redistribution_status === "unknown" || ledger.clauses_or_features.length === 0 || ledger.validators.length === 0 || ledger.fixtures.length === 0)) throw new Error(`[stdio] ${artifactId} claims implemented support without normative, validator, and fixture evidence.`);
+  const ledgerNormativeSource = stdioNullableString(ledger.normative_source, `${artifactId}.support_ledger.normative_source`);
+  const ledgerPublicationDate = stdioNullableString(ledger.publication_date, `${artifactId}.support_ledger.publication_date`);
+  const ledgerSourceChecksum = stdioNullableString(ledger.source_checksum, `${artifactId}.support_ledger.source_checksum`);
+  const ledgerRedistributionStatus = stdioString(ledger.redistribution_status, `${artifactId}.support_ledger.redistribution_status`);
+  const ledgerLists = Object.fromEntries(
+    (["clauses_or_features", "profiles", "registered_code_points", "validators", "mutations", "inferences", "fixtures"] as const).map((field) => [field, stdioStringArray(ledger[field], `${artifactId}.support_ledger.${field}`)]),
+  ) as Readonly<Record<"clauses_or_features" | "profiles" | "registered_code_points" | "validators" | "mutations" | "inferences" | "fixtures", readonly string[]>>;
+  const ledgerStates = (["read", "write", "lossless", "canonical"] as const).map((field) => stdioString(ledger[field], `${artifactId}.support_ledger.${field}`));
+  if (ledgerStates.some((state) => !["unimplemented", "opaque", "implemented"].includes(state))) throw new Error(`[stdio] ${definition.id} has an invalid support ledger.`);
+  const implemented = ledgerStates.includes("implemented");
+  if (implemented && (!ledgerNormativeSource || !ledgerPublicationDate || !ledgerSourceChecksum || ledgerRedistributionStatus === "unknown" || ledgerLists.clauses_or_features.length === 0 || ledgerLists.validators.length === 0 || ledgerLists.fixtures.length === 0)) throw new Error(`[stdio] ${artifactId} claims implemented support without normative, validator, and fixture evidence.`);
   const IDs = [
     id, ...standards.map((item) => item.id), ...profiles.map((item) => item.id), ...dialects.map((item) => item.id), ...representations.map((item) => item.id), ...codecs.map((item) => item.id), ...mutations.map((item) => item.id), ...inferences.map((item) => item.id), ...resources.map((item) => item.id), ...descriptors.map((item) => item.id), ...suites.map((item) => item.id), ...runtimeCapabilities.map((item) => item.id),
   ];
@@ -17593,11 +17886,11 @@ function policyTaxonomyDirsBreaches(repoRoot: string, crates: readonly PolicyCra
     const scopeId = crate.pluginId || policyStripEmoji(ownerRoot.split("/").pop() ?? "");
 
     const artifactsRoot = `${ownerRoot}/${taxonomy.artifactsDirName}`;
-    const schemaChildDirs = (taxonomy as { schemaChildDirs?: string[] }).schemaChildDirs ?? ["📸️snapshot", "🔺️diff", "🧬️mutations"];
-    const representationDirs = (taxonomy as { representationDirs?: string[] }).representationDirs ?? ["📝️text", "💾️binary"];
-    const ioDirectionDirs = (taxonomy as { ioDirectionDirs?: string[] }).ioDirectionDirs ?? ["📥️import", "📤️export"];
-    const ioDirectionChildDirs = (taxonomy as { ioDirectionChildDirs?: Record<string, string> }).ioDirectionChildDirs ?? {"📥️import": "🧩️deserializers", "📤️export": "🧵️serializers"};
-    const recognizedArtifactChildDirs = [...taxonomy.artifactChildDirs, ...((taxonomy as { newArtifactChildDirs?: string[] }).newArtifactChildDirs ?? [])];
+    const schemaChildDirs = taxonomy.schemaChildDirs;
+    const representationDirs = taxonomy.representationDirs;
+    const ioDirectionDirs = taxonomy.ioDirectionDirs;
+    const ioDirectionChildDirs = taxonomy.ioDirectionChildDirs;
+    const recognizedArtifactChildDirs = [...taxonomy.artifactChildDirs, ...taxonomy.newArtifactChildDirs];
 
     //#region NestedFacetWalk
     const validateSchemaFacet = (nestedRoot: string, breachScope: string): void => {
@@ -17775,6 +18068,9 @@ function policyTaxonomyDirsBreaches(repoRoot: string, crates: readonly PolicyCra
             const windowDir = `${childRel}/${w.name}`;
             for (const child of policyReaddirSafe(repoRoot, windowDir).filter((e) => e.isDirectory)) {
               if (taxonomy.windowChildDirs.includes(child.name)) continue;
+              // 🧪️ `testOwnerKinds` names 🪟️windows an owner kind, so a window carries its own
+              // tests/fixtures beside its facets — ownership dirs, never window facet vocabulary.
+              if (taxonomy.testOwnerKinds.includes(taxonomy.windowsDirName) && (child.name === taxonomy.testsDirName || child.name === taxonomy.testFixturesDirName)) continue;
               breaches.push({
                 id: `taxonomy-dirs-window-${windowDir}-${child.name}`,
                 summary: `"${windowDir}/${child.name}" is not a recognized window child dir`,
@@ -21828,7 +22124,7 @@ type PolicyStandardManifestGroup = {
 
 function policyGroupDialectsByStandard(repoRoot: string): PolicyStandardManifestGroup[] {
   const taxonomy = loadTaxonomy();
-  const subsetsDirName = (taxonomy as any).subsetsDirName ?? POLICY_SUBSETS_DIR;
+  const subsetsDirName = taxonomy.subsetsDirName;
   if (!taxonomy.subsetsManifestFileKindId) throw new Error("[taxonomy] subsets manifest file kind is not declared.");
   const manifestFilename = canonicalFilenameForKind(taxonomy.subsetsManifestFileKindId, taxonomy);
   const groups = new Map<string, PolicyStandardManifestGroup>();
@@ -21944,7 +22240,7 @@ export function policyStandardSubsetVocabularyBreaches(repoRoot: string): Breach
         });
       }
     }
-    const subsetsRel = `${group.standardRel}/${subsetsDirName}`;
+    const subsetsRel = `${group.standardRel}/${taxonomy.subsetsDirName}`;
     const declaredDirs = new Set(declaredIds.map((id) => subsetDirectoryNameForId(subsetsRel, id, taxonomy)).filter((name): name is string => name !== null));
     for (const id of declaredIds) if (subsetDirectoryNameForId(subsetsRel, id, taxonomy) === null) breaches.push({
       id: `standards-subset-vocabulary-unmapped-id-${group.standardRel}-${id}`,
@@ -22465,7 +22761,7 @@ function policyDialectLiteralPathBreaches(repoRoot: string): BreachRecord[] {
   const table = policyLoadStdioOwnerTable(repoRoot);
   if (!table) return breaches; // owner-table-missing is already flagged by policyStdioCatalogBreaches
   const taxonomy = loadTaxonomy();
-  const subsetsDirName = (taxonomy as any).subsetsDirName ?? POLICY_SUBSETS_DIR;
+  const subsetsDirName = taxonomy.subsetsDirName;
   const dirToKey = new Map<string, string>();
   for (const [key, entry] of Object.entries(table.artifacts)) {
     dirToKey.set(entry.dir, key);
@@ -25614,6 +25910,7 @@ export {
   toolJobArtifactRetainedCommandExact,
   toolJobArtifactRetainedCommandRuntimeLawExact,
   INTERACTIVITY_ALL_APP_REQUIRED_GATES,
+  type InteractivityAllAppLaunch,
   interactivityAllAppDescriptorFromSource,
   interactivityAllAppOracleJson,
   INTERACTIVITY_ALL_APP_APPS_PER_DESCRIPTOR_CAPACITY,

@@ -42,7 +42,7 @@ export async function testWgpuWasmOutputs(workspace: string, output: string): Pr
   put("project.json", JSON.stringify({ name: "renderer", targets }));
   put("📜️script.ts", `import { appendFileSync } from "node:fs";\nimport { buildTrunkRenderer } from ${JSON.stringify(compiler)};\nawait buildTrunkRenderer({ rustPackageRoot: process.cwd(), workspace: process.cwd(), toolWorkspace: ${JSON.stringify(workspace)}, profile: process.argv[3], stateRoot: "state" });\nappendFileSync(".runs", process.argv[3] + "\\n");\n`);
   symlinkSync(join(workspace, "node_modules"), join(root, "node_modules"), process.platform === "win32" ? "junction" : "dir");
-  const env = { ...process.env, NX_DAEMON: "false", NX_WORKSPACE_ROOT: root, NX_WORKSPACE_ROOT_PATH: root, NX_WORKSPACE_DATA_DIRECTORY: join(root, ".nx/data"), NX_CACHE_DIRECTORY: join(root, ".nx/cache"), SEMIO_REPO_ROOT: root, CARGO_TARGET_DIR: join(root, "state/target"), CARGO_BUILD_BUILD_DIR: join(root, "state/build"), TRUNK_BUILD_DIST: join(root, "forbidden"), TRUNK_BUILD_RELEASE: "true", TRUNK_TOOLS_WASM_BINDGEN: "0.0.0" };
+  const env: NodeJS.ProcessEnv = { ...process.env, NX_DAEMON: "false", NX_WORKSPACE_ROOT: root, NX_WORKSPACE_ROOT_PATH: root, NX_WORKSPACE_DATA_DIRECTORY: join(root, ".nx/data"), NX_CACHE_DIRECTORY: join(root, ".nx/cache"), SEMIO_REPO_ROOT: root, CARGO_TARGET_DIR: join(root, "state/target"), CARGO_BUILD_BUILD_DIR: join(root, "state/build"), TRUNK_BUILD_DIST: join(root, "forbidden"), TRUNK_BUILD_RELEASE: "true", TRUNK_TOOLS_WASM_BINDGEN: "0.0.0" };
   const execute = async (args: string[], environment = env) => {
     const child = Bun.spawn(args, { cwd: root, env: environment, stdout: "pipe", stderr: "pipe" });
     const [stdout, stderr, code] = await Promise.all([new Response(child.stdout).text(), new Response(child.stderr).text(), child.exited]);
@@ -54,7 +54,7 @@ export async function testWgpuWasmOutputs(workspace: string, output: string): Pr
   const files = (directory: string): Map<string, Buffer> => new Map(readdirSync(directory, { recursive: true, withFileTypes: true }).filter(row => row.isFile()).map(row => [join(row.parentPath, row.name).slice(directory.length + 1), readFileSync(join(row.parentPath, row.name))]));
   const value = async (path: string) => JSON.parse(await execute(["node", "--input-type=module", "-e", `import { readFileSync } from "node:fs"; import { pathToFileURL } from "node:url"; const module = await import(pathToFileURL(process.argv[1].replace(/_bg.wasm$/, ".js")).href); await module.default({ module_or_path: readFileSync(process.argv[1]) }); console.log(JSON.stringify({ value: module.answer() }));`, path])).value;
   const { preparedBinaryen } = await import("../../🚀️bootstrap/🛠️tools/🕸️wasm/📜️script.ts");
-  const oracleEnv = { ...env, PATH: `${dirname(preparedBinaryen(workspace))}${delimiter}${env.PATH}`, CARGO_TARGET_DIR: join(root, "state/oracle-target") };
+  const oracleEnv: NodeJS.ProcessEnv = { ...env, PATH: `${dirname(preparedBinaryen(workspace))}${delimiter}${env.PATH}`, CARGO_TARGET_DIR: join(root, "state/oracle-target") };
   for (const key of Object.keys(oracleEnv)) if (key.startsWith("TRUNK_") || ["NO_COLOR", "FORCE_COLOR"].includes(key)) delete oracleEnv[key];
   const oracle = async (profile: string, expected: number) => {
     put("oracle/index.html", '<!doctype html><html><head><link data-trunk rel="rust" href="../Cargo.toml" data-wasm-opt="z" data-type="worker" data-bindgen-target="web" /></head><body></body></html>\n');

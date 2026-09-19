@@ -1,4 +1,4 @@
-import { INTERACTIVITY_ALL_APP_REQUIRED_GATES, interactivityAllAppDescriptorFromSource, interactivityAllAppOracleJson, INTERACTIVITY_ALL_APP_APPS_PER_DESCRIPTOR_CAPACITY, interactivityAllAppActionDispositionFailures, interactivityAllAppActionProductionFailures, INTERACTIVITY_ALL_APP_ACTIONS_PER_APP_CAPACITY, interactivityAllAppLaunchesFromSource, INTERACTIVITY_ALL_APP_LAUNCH_CAPACITY, interactivityAllAppLaunchCoverageFailures, interactivityAllAppPlaygroundLaunchNames } from "../../../../../../../../📜️script.ts";
+import { INTERACTIVITY_ALL_APP_REQUIRED_GATES, type InteractivityAllAppLaunch, interactivityAllAppDescriptorFromSource, interactivityAllAppOracleJson, INTERACTIVITY_ALL_APP_APPS_PER_DESCRIPTOR_CAPACITY, interactivityAllAppActionDispositionFailures, interactivityAllAppActionProductionFailures, INTERACTIVITY_ALL_APP_ACTIONS_PER_APP_CAPACITY, interactivityAllAppLaunchesFromSource, INTERACTIVITY_ALL_APP_LAUNCH_CAPACITY, interactivityAllAppLaunchCoverageFailures, interactivityAllAppPlaygroundLaunchNames } from "../../../../../../../../📜️script.ts";
 
 /** 🧪️Runs empty/single/max/max-plus-one, mutation, JSONC, and third-party-oracle discovery laws. */
 export async function interactivityAllAppDiscoverySelfTests(): Promise<number> {
@@ -11,8 +11,17 @@ export async function interactivityAllAppDiscoverySelfTests(): Promise<number> {
   if ((interactivityAllAppDescriptorFromSource("single.json", single).failures.length) !== 0) throw new Error("[verify interactivity apps] single descriptor self-test was falsely rejected");
   if (JSON.stringify(JSON.parse(single)) !== await interactivityAllAppOracleJson(single)) throw new Error("[verify interactivity apps] owned descriptor parse disagrees with the TypeScript oracle");
   if (!interactivityAllAppDescriptorFromSource("empty.json", descriptor([])).failures.some((failure) => failure.includes("manifest.apps is empty"))) throw new Error("[verify interactivity apps] empty descriptor self-test was falsely accepted");
+  const extensionDescriptor = (apps: unknown[]) => JSON.stringify({ descriptorVersion: 1, role: "extension", manifest: { pluginId: "fixture", apps } });
   const extensionSource = `const EXTENSION_ID: &str = "fixture-extension"; fn bundle() { ExtensionBundle::new(EXTENSION_ID, "Fixture", "1.0.0").extends("fixture"); }`;
-  if (interactivityAllAppDescriptorFromSource("fixture/🧩️extensions/one/🔣️.json", descriptor([]), extensionSource).failures.length !== 0) throw new Error("[verify interactivity apps] parent-activated extension self-test was falsely rejected");
+  const constantBundle = interactivityAllAppDescriptorFromSource("fixture/🧩️extensions/one/🔣️.json", extensionDescriptor([]), extensionSource);
+  if (constantBundle.failures.length !== 0) throw new Error("[verify interactivity apps] parent-activated extension self-test was falsely rejected");
+  if (constantBundle.row?.pluginId !== "fixture-extension") throw new Error("[verify interactivity apps] extension bundle id was not resolved through its declared constant");
+  if (!interactivityAllAppDescriptorFromSource("fixture/🧩️extensions/one/🔣️.json", descriptor([]), extensionSource).failures.some((failure) => failure.includes("role must be extension"))) throw new Error("[verify interactivity apps] plugin-role extension descriptor self-test was falsely accepted");
+  const literalBundleSource = `const EXTENSION_ID: &str = "draw"; fn bundle() { ExtensionBundle::new("flow-extension-draw", "Draw", "0.1.0").extends("flow"); }`;
+  const literalBundle = interactivityAllAppDescriptorFromSource("fixture/🧩️extensions/two/🔣️.json", extensionDescriptor([]), literalBundleSource);
+  if (literalBundle.failures.length !== 0) throw new Error("[verify interactivity apps] literal-bundle extension self-test was falsely rejected");
+  if (literalBundle.row?.pluginId !== "flow-extension-draw") throw new Error("[verify interactivity apps] extension bundle id was read from EXTENSION_ID instead of ExtensionBundle::new");
+  if (!interactivityAllAppDescriptorFromSource("fixture/🧩️extensions/three/🔣️.json", extensionDescriptor([]), `fn bundle() { }`).failures.some((failure) => failure.includes("no resolvable ExtensionBundle::new"))) throw new Error("[verify interactivity apps] bundle-less extension self-test was falsely accepted");
   const maximum = Array.from({ length: INTERACTIVITY_ALL_APP_APPS_PER_DESCRIPTOR_CAPACITY }, (_, index) => app(`s.fixture.${index}@1/*#editor`));
   if (interactivityAllAppDescriptorFromSource("maximum.json", descriptor(maximum)).failures.length !== 0) throw new Error("[verify interactivity apps] maximum descriptor self-test was falsely rejected");
   if (!interactivityAllAppDescriptorFromSource("plus-one.json", descriptor([...maximum, app("s.fixture.plus-one@1/*#editor")])).failures.some((failure) => failure.includes("exceed fixed capacity"))) throw new Error("[verify interactivity apps] maximum-plus-one descriptor self-test was falsely accepted");
@@ -31,16 +40,20 @@ export async function interactivityAllAppDiscoverySelfTests(): Promise<number> {
   const validLaunch = launch([...gates, { name: "🛠️dev fixture", command: "bun ./📜️script.ts dev fixture", cwd: "${workspaceFolder}" }]);
   if (interactivityAllAppLaunchesFromSource(validLaunch).failures.length !== 0) throw new Error("[verify interactivity apps] valid launch self-test was falsely rejected");
   if (JSON.stringify(Bun.JSONC.parse(validLaunch)) !== await interactivityAllAppOracleJson(validLaunch)) throw new Error("[verify interactivity apps] owned launch parse disagrees with the TypeScript oracle");
-  if (!interactivityAllAppLaunchesFromSource(launch([...gates.slice(1), { name: "🛠️dev fixture", command: "true", cwd: "${workspaceFolder}" }])).failures.some((failure) => failure.includes(INTERACTIVITY_ALL_APP_REQUIRED_GATES[0].name))) throw new Error("[verify interactivity apps] missing gate self-test was falsely accepted");
+  const firstGate = INTERACTIVITY_ALL_APP_REQUIRED_GATES[0];
+  const withoutFirstGate = launch([...gates.slice(1), { name: "🛠️dev fixture", command: "true", cwd: "${workspaceFolder}" }]);
+  if (firstGate) {
+    if (!interactivityAllAppLaunchesFromSource(withoutFirstGate).failures.some((failure) => failure.includes(firstGate.name))) throw new Error("[verify interactivity apps] missing gate self-test was falsely accepted");
+  } else if (interactivityAllAppLaunchesFromSource(withoutFirstGate).failures.length !== 0) throw new Error("[verify interactivity apps] no required gate is declared, yet a gateless launch file was rejected");
   const overCapacity = [...gates, ...Array.from({ length: INTERACTIVITY_ALL_APP_LAUNCH_CAPACITY + 1 - gates.length }, (_, index) => ({ name: `fixture-${index}`, command: "true", cwd: "${workspaceFolder}" }))];
   if (!interactivityAllAppLaunchesFromSource(launch(overCapacity)).failures.some((failure) => failure.includes("exceed fixed capacity"))) throw new Error("[verify interactivity apps] maximum-plus-one launch self-test was falsely accepted");
   const fixtureDescriptor = { ...interactivityAllAppDescriptorFromSource("fixture.json", descriptor([app("s.fixture.fixture@1/*#editor")])).row!, file: "✏️s/🔌️plugins/fixture/🔣️.json" };
   const fixturePlayground = [{ variant: "fixture", pluginId: "fixture", appId: "s.fixture.fixture@1/*#editor" }];
   const fixtureSeed = JSON.stringify({ devLaunchers: { fixture: { namePrefix: "🧪️fixture" } } });
-  const fixtureLaunches = [
-    { name: "🛠️dev🧪️fixture⚛️react", command: "bun ./📜️script.ts dev fixture", cwd: "${workspaceFolder}", env: { SEMIO_RENDERER: "react" } },
-    { name: "🛠️dev🧪️fixture🧊️wgpu🌐️wasm", command: "bun ./📜️script.ts dev fixture", cwd: "${workspaceFolder}", env: { SEMIO_RENDERER: "wgpu" } },
-    { name: "🛠️dev🧪️fixture🧊️wgpu🖥️native", command: "bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/📜️script.ts native fixture", cwd: "${workspaceFolder}", env: {} },
+  const fixtureLaunches: InteractivityAllAppLaunch[] = [
+    { name: "🛠️dev🧪️fixture⚛️react", command: "bun nx run workspace:dev -- fixture", cwd: "${workspaceFolder}", env: { SEMIO_RENDERER: "react" } },
+    { name: "🛠️dev🧪️fixture🧊️wgpu🌐️wasm", command: "bun nx run workspace:dev -- fixture", cwd: "${workspaceFolder}", env: { SEMIO_RENDERER: "wgpu" } },
+    { name: "🛠️dev🧪️fixture🧊️wgpu🖥️native", command: "bun nx run @semio-tech/framework-renderer-wgpu:native -- fixture", cwd: "${workspaceFolder}", env: {} },
   ];
   if (interactivityAllAppLaunchCoverageFailures([fixtureDescriptor], fixturePlayground, fixtureSeed, fixtureLaunches).length !== 0) throw new Error("[verify interactivity apps] complete owner-qualified launch self-test was falsely rejected");
   if (!interactivityAllAppLaunchCoverageFailures([fixtureDescriptor], fixturePlayground, fixtureSeed, fixtureLaunches.slice(0, 2)).some((failure) => failure.includes("WGPU native"))) throw new Error("[verify interactivity apps] missing native launch self-test was falsely accepted");
@@ -52,5 +65,5 @@ export async function interactivityAllAppDiscoverySelfTests(): Promise<number> {
   const fixtureLaunchNames = interactivityAllAppPlaygroundLaunchNames(fixturePlayground, fixtureSeed);
   if (fixtureLaunchNames.size !== 3 || fixtureLaunches.some((row) => !fixtureLaunchNames.has(row.name))) throw new Error("[verify interactivity apps] generated playground launches were falsely classified as launch-only products");
   if (fixtureLaunchNames.has("🛠️dev🧪️launch-only-product")) throw new Error("[verify interactivity apps] launch-only product was falsely classified as a generated playground launch");
-  return 25;
+  return 29;
 }

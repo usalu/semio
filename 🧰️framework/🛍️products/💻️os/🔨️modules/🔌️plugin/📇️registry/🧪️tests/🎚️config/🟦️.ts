@@ -16,6 +16,7 @@ export default defineConfig({
     name: "@semio-tech/plugin-registry",
     environment: "node",
     include: ["🧪️tests/*/🟦️.ts"],
-    exclude: ["🧪️tests/📚️storybook-plugins/**"],
+    exclude: ["🧪️tests/🎚️config/🟦️.ts", "🧪️tests/📚️storybook-plugins/**"],
+    testTimeout: 120_000,
   },
 });

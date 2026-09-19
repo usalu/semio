@@ -105,10 +105,10 @@ describe("framework source topology", () => {
       const source = ts.createSourceFile(path, readFileSync(path, "utf8"), ts.ScriptTarget.Latest, true);
       const names = new Set<string>();
       for (const statement of source.statements) {
-        if (!statement.modifiers?.some(({ kind }) => kind === ts.SyntaxKind.ExportKeyword)) continue;
+        if (!(ts.canHaveModifiers(statement) && ts.getModifiers(statement)?.some((modifier) => modifier.kind === ts.SyntaxKind.ExportKeyword))) continue;
         if (ts.isVariableStatement(statement)) {
           for (const declaration of statement.declarationList.declarations) if (ts.isIdentifier(declaration.name)) names.add(declaration.name.text);
-        } else if ("name" in statement && statement.name && ts.isIdentifier(statement.name)) {
+        } else if ((ts.isFunctionDeclaration(statement) || ts.isClassDeclaration(statement) || ts.isInterfaceDeclaration(statement) || ts.isTypeAliasDeclaration(statement) || ts.isEnumDeclaration(statement)) && statement.name && ts.isIdentifier(statement.name)) {
           names.add(statement.name.text);
         }
       }

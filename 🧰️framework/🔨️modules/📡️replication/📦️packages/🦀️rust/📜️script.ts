@@ -1,5 +1,6 @@
 #!/usr/bin/env bun
 /** 🖥️ `semio-framework-replication` task router: `bun ./📜️script.ts test [quick|long|exhaustive] [args…]`. */
+import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { BundleScript, ScriptRouter, resolveTestLevel, runBundleScriptMain, runCargo, runExactCargoLaws } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
@@ -86,16 +87,104 @@ export function inspectRetainedSprNeutral(input: Buffer, checksum: (bytes: Uint8
   return { end: committed, sequence, frames: committedFrames, tail: input.length - committed };
 }
 
+/** 🔎️ The retained-verification fixture: header, commit frames, resume cuts and every hostile denial. */
+type RetainedVerificationFixture = {
+  readonly schema: string;
+  readonly profile: {
+    readonly major: number;
+    readonly minor: number;
+    readonly requiredFlags: number;
+    readonly canonicalVarints: boolean;
+    readonly signed: boolean;
+    readonly encrypted: boolean;
+  };
+  readonly limits: {
+    readonly fileBytes: number;
+    readonly frameBodyBytes: number;
+    readonly records: number;
+  };
+  readonly headerHex: string;
+  readonly commits: readonly {
+    readonly sequence: number;
+    readonly previousOffset: number;
+    readonly offset: number;
+    readonly end: number;
+    readonly records: readonly {
+      readonly kind: number;
+      readonly flags: number;
+      readonly payloadHex: string;
+    }[];
+    readonly coveredBytes: number;
+    readonly recoveredFrames: number;
+  }[];
+  readonly fuelGrants: readonly number[];
+  readonly resume: {
+    readonly cuts: readonly number[];
+    readonly record: {
+      readonly kind: number;
+      readonly flags: number;
+      readonly payloadHex: string;
+    };
+    readonly addedBytes: number;
+    readonly wrongSinkOffsets: readonly number[];
+    readonly exhaustedSequence: string;
+  };
+  readonly negative: readonly (
+    | { readonly id: string; readonly operation: "replace-first-length"; readonly hex: string; readonly error: string }
+    | { readonly id: string; readonly operation: "record-limit"; readonly value: number; readonly error: string }
+    | { readonly id: string; readonly operation: "file-limit"; readonly value: number; readonly error: string }
+    | {
+        readonly id: string;
+        readonly operation: "header-xor" | "frame-xor" | "commit-xor" | "second-commit-xor";
+        readonly offset: number;
+        readonly value: number;
+        readonly repairCrc: boolean;
+        readonly error: string;
+      }
+  )[];
+  readonly compressed: readonly (
+    | { readonly id: string; readonly kind: number; readonly flags: number; readonly rawLengthHex: string; readonly storedHex: string; readonly rawHex: string; readonly error: null }
+    | { readonly id: string; readonly kind: number; readonly flags: number; readonly rawLengthHex: string; readonly storedHex: string; readonly error: string }
+  )[];
+};
+
+/** 🧾️ The retained-record fixture: one observation window per framed record, with its corruption outcome. */
+type RetainedRecordFixture = {
+  readonly schema: string;
+  readonly grants: readonly number[];
+  readonly headerHex: string;
+  readonly cases: readonly {
+    readonly id: string;
+    readonly kind: number;
+    readonly flags: number;
+    readonly rawHex: string;
+    readonly payloadHex: string;
+    readonly repeat: number;
+    readonly at: number;
+    readonly cancel: boolean;
+    readonly corruptCrc: boolean;
+    readonly error: null | string;
+    readonly observation: {
+      readonly frameStart: number;
+      readonly payloadStart: number;
+      readonly payloadEnd: number;
+      readonly frameEnd: number;
+      readonly kind: number;
+      readonly flags: number;
+      readonly rawBytes: null | number;
+    };
+  }[];
+};
+
 export class RetainedVerificationScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.some(segment => segment !== "--oracle-only")) throw new Error("retained-verification-check accepts only --oracle-only");
-    const { default: assert } = await import("node:assert/strict");
     const { default: Ajv } = await import("ajv/dist/2020.js");
     const { default: crc } = await import("crc-32/crc32c.js");
     const { inflateRawSync } = await import("node:zlib");
     const leb = await import("@webassemblyjs/leb128");
     const owner = join(this.root, "../../📐️format/🔎️verification");
-    const fixture = JSON.parse(readFileSync(join(owner, "🧫️fixtures/🔣️.json"), "utf8"));
+    const fixture: RetainedVerificationFixture = JSON.parse(readFileSync(join(owner, "🧫️fixtures/🔣️.json"), "utf8"));
     const schema = JSON.parse(readFileSync(join(owner, "🧬️schema/🔣️.json"), "utf8"));
     const ajv = new Ajv({ strict: true }); const validate = ajv.compile(schema);
     assert(validate(fixture), ajv.errorsText(validate.errors));
@@ -113,7 +202,7 @@ export class RetainedVerificationScript extends BundleScript {
       tail.writeUInt32LE(checksum(body)); tail.writeUInt32LE(size.length + body.length + 8, 4);
       return Buffer.concat([size, body, tail]);
     };
-    const parts = [header]; let chain = hash(header); let offset = 32; let previous = 0; let recovered = 0;
+    const parts: Buffer[] = [header]; let chain = hash(header); let offset = 32; let previous = 0; let recovered = 0;
     for (const commit of fixture.commits) {
       const records = commit.records.map((record: { kind: number; flags: number; payloadHex: string }) => frame(record.kind, record.flags, Buffer.from(record.payloadHex, "hex")));
       const covered = records.reduce((count: number, record: Buffer) => count + record.length, 0);
@@ -165,7 +254,9 @@ export class RetainedVerificationScript extends BundleScript {
       }
       assert.throws(() => inspect(mutated, limits), new RegExp(`^Error: ${row.error}$`), row.id);
     }
-    const extra = structuredClone(fixture); extra.commits[0].records[0].unowned = true; assert(!validate(extra));
+    const extra = JSON.parse(JSON.stringify(fixture)) as { readonly commits: readonly { readonly records: readonly Record<string, unknown>[] }[] };
+    extra.commits[0]!.records[0]!.unowned = true;
+    assert(!validate(extra));
     for (const row of fixture.compressed) {
       assert(!ids.has(row.id)); ids.add(row.id);
       const rawLength = Buffer.from(row.rawLengthHex, "hex"); const stored = Buffer.from(row.storedHex, "hex");
@@ -198,12 +289,11 @@ export class RetainedVerificationScript extends BundleScript {
 class RetainedRecordObservationScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.some(segment => segment !== "--oracle-only")) throw new Error("retained-record-observation-check accepts only --oracle-only");
-    const { default: assert } = await import("node:assert/strict");
     const { default: Ajv } = await import("ajv/dist/2020.js");
     const { default: crc } = await import("crc-32/crc32c.js");
     const leb = await import("@webassemblyjs/leb128");
     const owner = join(this.root, "../../📐️format/🔎️verification/🧾️record");
-    const fixture = JSON.parse(readFileSync(join(owner, "🧫️fixtures/🔣️.json"), "utf8"));
+    const fixture: RetainedRecordFixture = JSON.parse(readFileSync(join(owner, "🧫️fixtures/🔣️.json"), "utf8"));
     const ajv = new Ajv({ strict: true }); const validate = ajv.compile(JSON.parse(readFileSync(join(owner, "🧬️schema/🔣️.json"), "utf8")));
     assert(validate(fixture), ajv.errorsText(validate.errors)); const ids = new Set<string>(); let observed = 0;
     const checksum = (bytes: Uint8Array): number => crc.buf(bytes) >>> 0;
@@ -230,7 +320,9 @@ class RetainedRecordObservationScript extends BundleScript {
         ? { frameStart: 32, payloadStart: readyAt, payloadEnd, frameEnd: bytes.length, kind: row.kind, flags: row.flags, rawBytes } : null;
       assert.equal(error, row.error, row.id); assert.deepEqual(observation, row.observation, row.id); if (observation) observed++;
     }
-    const extra = structuredClone(fixture); extra.cases[0].authority = true; assert(!validate(extra));
+    const extra = JSON.parse(JSON.stringify(fixture)) as { readonly cases: readonly Record<string, unknown>[] };
+    extra.cases[0]!.authority = true;
+    assert(!validate(extra));
     console.log(`[DEBUG] retained SPR observation oracle: ${fixture.cases.length} exact rows, ${observed} scalar observations; compressed raw-length/empty payload/clear/error/cancel; zero commit or input authority`);
     const source = readFileSync(join(owner, "🦀️.rs"), "utf8");
     const law = "retained_record_observation_uses_the_existing_framing_state_without_authority";
@@ -247,7 +339,6 @@ class RetainedRecordObservationScript extends BundleScript {
 class PresencePeerCodecScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.some(segment => segment !== "--oracle-only")) throw new Error("presence-peer-codec-check accepts only --oracle-only");
-    const { default: assert } = await import("node:assert/strict");
     const { default: Ajv } = await import("ajv");
     const owner = join(this.root, "../../🧫️fixtures/👥️presence-peer-codec-v1");
     const fixture = JSON.parse(readFileSync(join(owner, "🔣️.json"), "utf8"));
@@ -270,11 +361,13 @@ class PresencePeerCodecScript extends BundleScript {
         if (peer.interaction !== undefined) { semantic.interaction.appId = peer.interaction.app_id; delete semantic.interaction.app_id; }
         assert.deepEqual(semantic, row.expected, row.id);
       } else {
-        assert.throws(() => codec.decodePresencePeer(bytes, position), undefined, row.id);
+        assert.throws(() => codec.decodePresencePeer(bytes, position), Error, row.id);
         assert.equal(position[0], 0, `${row.id} advanced the caller cursor`);
       }
     }
-    const extra = structuredClone(fixture); extra.cases[0].authority = true; assert(!validate(extra));
+    const extra = JSON.parse(JSON.stringify(fixture)) as { readonly cases: readonly Record<string, unknown>[] };
+    extra.cases[0]!.authority = true;
+    assert(!validate(extra));
     const source = readFileSync(join(this.root, "../../📡️wire/🦀️.rs"), "utf8");
     const tests = readFileSync(join(this.root, "../../📡️wire/🧪️tests/🔬️presence-codec/🦀️.rs"), "utf8");
     const laws = ["presence_peer_decoder_matches_neutral_bounded_exact_corpus", "presence_peer_decoder_rejects_hostile_counts_before_allocation"];

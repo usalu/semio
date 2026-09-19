@@ -9,7 +9,7 @@
     { "id": "surface-facet", "owner": "🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎚️config", "form": "artifact-surface" },
     { "id": "mode-facet", "owner": "🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/👥️presence", "form": "artifact-mode" },
     { "id": "empty-window-collection", "owner": "🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/📊️report/🪟️windows", "form": "artifact-mode" },
-    { "id": "window-facet", "owner": "🗄️stdio/🗿️artifacts/💾️binary/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🎚️options", "form": "artifact-window" },
+    { "id": "window-facet", "owner": "🗄️stdio/🗿️artifacts/💾️binary/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/☑️options", "form": "artifact-window" },
     { "id": "engine-mode-facet", "owner": "🪐️space/⚙️engine/🪐️space/🎭️modes/🌐️main/🎮️commands", "form": "engine-mode" },
     { "id": "engine-window-facet", "owner": "🪐️space/⚙️engine/🪐️space/🎭️modes/🌐️main/🪟️windows/🔄️workflow/🪛️utilities", "form": "engine-window" },
     { "id": "extension-window-facet", "owner": "🪐️space/🧩️extensions/🪟️windows/🎬️actions", "form": "extension-window" },

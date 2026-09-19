@@ -38,8 +38,7 @@ describe("exampleArtifactSources", () => {
 });
 
 describe("scopeContributionsJson", () => {
-  const manifest = (topic: string, payload: unknown) =>
-    ({ topicContributions: [{ topic, payload }], apps: [], workflows: [] }) as PluginManifest;
+  const manifest = (topic: string, payload: unknown): Pick<PluginManifest, "topicContributions"> => ({ topicContributions: [{ topic, payload }] });
   const loaded = [
     { pluginId: "procedural", manifest: manifest("flow.extension", { operators: [{ kind: "procedural.example" }] }) },
     { pluginId: "flow-extension-brep", manifest: manifest("flow.extension", { operators: [{ kind: "brep.solid.extrude" }, { kind: "brep.curve.polygon" }] }) },

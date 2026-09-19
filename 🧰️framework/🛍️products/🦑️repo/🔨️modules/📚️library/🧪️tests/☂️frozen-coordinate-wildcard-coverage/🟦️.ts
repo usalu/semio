@@ -75,7 +75,7 @@ test("the live registration resolves every observed offset without widening owne
 });
 
 test("a full wildcard on column 10 would be unsound — one row's destinationPath is null", () => {
-  const unsound = { ...registered, coordinates: [{ pointer: "/mappings/*/10", kind: "destination" }] };
+  const unsound = { ...registered, coordinates: [{ pointer: "/mappings/*/10", kind: "destination" as const }] };
   expect(() => frozenCoordinateEvidenceCoordinates(unsound.path, goldenBytes, { [contractId]: unsound })).toThrow(/must be a physical repository-relative path string/u);
 });
 //#endregion Tests

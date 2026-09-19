@@ -168,6 +168,7 @@ export type UiTranslationSchema = {
       readonly settings: UiLabelValue;
       readonly chat: UiLabelValue;
       readonly plugins: UiLabelValue;
+      readonly taskManager: UiLabelValue;
     };
     readonly display: {
       readonly tab: {
@@ -241,6 +242,17 @@ export type UiTranslationSchema = {
           readonly canvas: UiLabelValue;
           readonly chrome: UiLabelValue;
         };
+        /** ♿️ Live WCAG 2.2 contrast verdict for a USER-customized appearance paint, measured against
+         * that appearance's own foreground. The generated default palette is asserted ≥ AA by
+         * `🎨️styling/🧪️tests/🧪️levels-oklabmix/🟦️.ts`; an arbitrary custom theme has no such gate, so the
+         * editor says the ratio out loud instead of letting a sub-AA pair be saved silently. */
+        readonly contrast: {
+          readonly label: UiLabelValue;
+          readonly aaa: UiLabelValue;
+          readonly aa: UiLabelValue;
+          readonly aaLarge: UiLabelValue;
+          readonly fail: UiLabelValue;
+        };
       };
       readonly unavailable: UiLabelValue;
       readonly resetDock: UiLabelValue;
@@ -274,6 +286,8 @@ export type UiTranslationSchema = {
       readonly setLocale: UiLabelValue;
       readonly setTerminology: UiLabelValue;
       readonly setDriver: UiLabelValue;
+      readonly openTaskManager: UiLabelValue;
+      readonly openHub: UiLabelValue;
     };
     /** @emoji 🧭️ Labels for `noteShellCommand`'s shell-chrome commandIds (dock drag, window resize/rearrange/
      * activate/close/split/open-in-new-window, panel toggle/tab) — logged into the plugin's session-only command-history panel. */
@@ -401,6 +415,19 @@ export type UiTranslationSchema = {
       readonly lock: UiLabelValue;
       readonly unlock: UiLabelValue;
     };
+    /** ♿️ The node-graph editor's own assistive-technology vocabulary. `🕸️Diagram` renders an
+     * `application`-role canvas, which by ARIA contract means the widget handles its OWN arrow/Enter
+     * keys — so it has to be able to SAY what those keys do, in every locale. */
+    readonly diagram: {
+      readonly label: UiLabelValue;
+      readonly roleDescription: UiLabelValue;
+      readonly keyboardHelp: UiLabelValue;
+      readonly nodes: UiLabelValue;
+      readonly edges: UiLabelValue;
+      readonly empty: UiLabelValue;
+      readonly focusedNode: UiLabelValue;
+      readonly selectedNode: UiLabelValue;
+    };
     readonly host: {
       readonly emptyScene: UiLabelValue;
       readonly preview: UiLabelValue;
@@ -422,14 +449,6 @@ export type UiTranslationSchema = {
       readonly frameVisible: UiLabelValue;
       readonly perspective: UiLabelValue;
       readonly orthographic: UiLabelValue;
-    };
-    readonly chat: {
-      readonly readyFor: UiLabelValue;
-      readonly localOnly: UiLabelValue;
-      readonly instructions: UiLabelValue;
-      readonly placeholder: UiLabelValue;
-      readonly savedLocally: UiLabelValue;
-      readonly send: UiLabelValue;
     };
     readonly docs: {
       readonly navigation: {
@@ -490,6 +509,20 @@ export type UiTranslationSchema = {
     readonly sync: {
       readonly attach: UiLabelValue;
       readonly detach: UiLabelValue;
+      readonly browse: UiLabelValue;
+      readonly statusLabel: UiLabelValue;
+      readonly live: UiLabelValue;
+      readonly connecting: UiLabelValue;
+      readonly reconnecting: UiLabelValue;
+      readonly offline: UiLabelValue;
+      readonly signedOut: UiLabelValue;
+      readonly peerOne: UiLabelValue;
+      readonly peerMany: UiLabelValue;
+      readonly saved: UiLabelValue;
+      readonly unsaved: UiLabelValue;
+      readonly pending: UiLabelValue;
+      readonly hubLabel: UiLabelValue;
+      readonly hubSignIn: UiLabelValue;
     };
     readonly ink: {
       readonly link: UiLabelValue;

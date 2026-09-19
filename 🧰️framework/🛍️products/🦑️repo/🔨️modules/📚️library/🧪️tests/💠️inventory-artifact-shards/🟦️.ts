@@ -8,8 +8,12 @@ import fastGlob from "fast-glob";
 import { parse as parseJsonc } from "jsonc-parser";
 import { inventoryTaxonomy } from "../../🧹️normalization/🟦️.ts";
 import { publishTaxonomyInventoryArtifactShards } from "../../🧹️normalization/📇️inventory/📦️publication/🟦️.ts";
-import { buildTaxonomyInventoryArtifactShards, validateTaxonomyInventoryArtifactShards } from "../../🧹️normalization/📇️inventory/🧩️shards/🟦️.ts";
+import { buildTaxonomyInventoryArtifactShards, validateTaxonomyInventoryArtifactShards, type TaxonomyInventoryArtifactShards } from "../../🧹️normalization/📇️inventory/🧩️shards/🟦️.ts";
 import { taxonomyInventoryCanonicalChunks, taxonomyInventoryIncrementalCanonicalDigest } from "../../🧹️normalization/📇️inventory/🧾️serialization/🟦️.ts";
+
+/** 🧬️ A deeply mutable projection of a published shard set: `structuredClone` hands back a fresh graph, so the
+ * rejection probes below may rewrite any field the validator is meant to catch. */
+type DeepMutable<T> = T extends readonly (infer Element)[] ? DeepMutable<Element>[] : T extends object ? { -readonly [Key in keyof T]: DeepMutable<T[Key]> } : T;
 
 const repoRoot = resolve(import.meta.dir, "../../../../../../../");
 const ticketRoot = process.env.SEMIO_TEST_ARTIFACT_DIR ?? join(repoRoot, ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️01/KIND-ONLY-BASENAMES-ACROSS-THE-TAXONOMY-TREE/🗑️generated/sol-root-taxonomy-workflow-extraction/inventory-artifact-shards");
@@ -115,17 +119,17 @@ test("canonical artifact validation rejects every language-neutral preimage corr
       expect(() => buildTaxonomyInventoryArtifactShards({ ...source, entries: [...source.entries, source.entries[0]] }), kind).toThrow("Duplicate inventory sourcePath");
       continue;
     }
-    const changed = structuredClone(built) as { manifest: Record<string, any>; manifestContent: string; shards: { descriptor: Record<string, any>; content: string }[] };
+    const changed = structuredClone(built) as DeepMutable<TaxonomyInventoryArtifactShards>;
     let available = changed.shards.map((shard) => shard.descriptor.path);
     if (kind === "missing-payload") available = [];
     else if (kind === "extra-payload") available.push("📊️shards/extra/🔣️.json");
     else if (kind === "changed-entry") changed.shards[0].content = changed.shards[0].content.replace('"size":37', '"size":38');
-    else if (kind === "changed-metadata") changed.manifest.inventoryMetadata.captureAuthority.bytePreimage = "changed";
+    else if (kind === "changed-metadata") (changed.manifest.inventoryMetadata.captureAuthority as Record<string, unknown>).bytePreimage = "changed";
     else if (kind === "duplicate-descriptor") { changed.manifest.shards.push(structuredClone(changed.manifest.shards[0])); changed.shards.push(structuredClone(changed.shards[0])); }
     else if (kind === "wrong-count") changed.manifest.entryCount += 1;
     else if (kind === "wrong-ledger") changed.manifest.shardLedgerDigest = "0".repeat(64);
     changed.manifestContent = `${stringify(changed.manifest)}${kind === "noncanonical-manifest" ? " " : ""}\n`;
-    expect(() => validateTaxonomyInventoryArtifactShards(changed as typeof built, available), kind).toThrow();
+    expect(() => validateTaxonomyInventoryArtifactShards(changed, available), kind).toThrow();
   }
 });
 

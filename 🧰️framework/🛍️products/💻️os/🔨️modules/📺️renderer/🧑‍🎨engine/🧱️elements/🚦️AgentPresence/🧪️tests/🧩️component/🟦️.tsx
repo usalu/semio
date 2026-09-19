@@ -11,7 +11,7 @@
 // #region 🔌️Adapters
 import { cleanup, render, screen } from "@semio-tech/ui-react/test";
 import { afterEach, describe, expect, it } from "vitest";
-import { AgentPresence, agentPresenceTone } from "./🟦️.tsx";
+import { AgentPresence, agentPresenceTone } from "../../🟦️.tsx";
 import { type AgentBridgePresence } from "../../../🔗️AgentBridge/🟦️.tsx";
 // #endregion 🔌️Adapters
 

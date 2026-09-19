@@ -614,6 +614,9 @@ pub struct TsdfExtractionPreparation {
     triangles: Vec<[u32; 3]>,
     complete: bool,
     exceeded: bool,
+    /// 👁️ Emit only the observed surface: a crossing counts only when both of its samples were
+    /// integrated, so the carved field never contributes geometry (see [`Self::observed_only`]).
+    observed_only: bool,
 }
 
 /// 🧊️ Local corner offsets of a voxel cube, the order the edge and face tables index.
@@ -682,13 +685,26 @@ impl TsdfExtractionPreparation {
             triangles: Vec::new(),
             complete: cells == 0,
             exceeded: false,
+            observed_only: false,
         }
+    }
+
+    /// 👁️ The same extraction emitting only crossings between two OBSERVED samples: the measured
+    /// surface as an open sheet, its rim wherever observation ends, for the pipeline's hole fill to
+    /// cap. The carved total field still decides the manifold clustering, but it adds no faces:
+    /// under a capture that never saw the object's underside, the carving floods the unobserved
+    /// core through the open bottom and the total field's surface is a hat one truncation band
+    /// thick — its inner wall sits a truncation inside the object and, on a coarse lattice, the
+    /// thin band aliases into fragments.
+    pub fn observed_only(mut self) -> Self {
+        self.observed_only = true;
+        self
     }
 
     /// 🔁 The same extraction restarted one stride coarser, or `None` once the coarsest admitted
     /// lattice has been tried.
     pub fn coarsened(&self) -> Option<Self> {
-        (self.stride < MAXIMUM_SURFACE_NET_STRIDE).then(|| Self::new_strided(self.iso, self.bounds_min, self.bounds_max, self.stride.saturating_mul(2)))
+        (self.stride < MAXIMUM_SURFACE_NET_STRIDE).then(|| Self { observed_only: self.observed_only, ..Self::new_strided(self.iso, self.bounds_min, self.bounds_max, self.stride.saturating_mul(2)) })
     }
 
     /// 🔢️ Domain index of a lattice point, or `None` when it lies off the strided domain.
@@ -802,7 +818,8 @@ impl TsdfExtractionPreparation {
             Corner { key: lattice, pos: [(lattice.0 as f64 + 0.5) * volume.voxel_size, (lattice.1 as f64 + 0.5) * volume.voxel_size, (lattice.2 as f64 + 0.5) * volume.voxel_size], val: self.field(volume, lattice) }
         });
         let inside: [bool; 8] = std::array::from_fn(|slot| corners[slot].val < self.iso);
-        let crossing: [bool; 12] = std::array::from_fn(|edge| inside[CUBE_EDGES[edge].0] != inside[CUBE_EDGES[edge].1]);
+        let known: [bool; 8] = std::array::from_fn(|slot| !self.observed_only || self.observed(volume, corners[slot].key).is_some());
+        let crossing: [bool; 12] = std::array::from_fn(|edge| inside[CUBE_EDGES[edge].0] != inside[CUBE_EDGES[edge].1] && known[CUBE_EDGES[edge].0] && known[CUBE_EDGES[edge].1]);
         // 🧵️ Union-find over the twelve edges: consecutive crossings on a face join one cluster.
         let mut parent: [usize; 12] = std::array::from_fn(|edge| edge);
         fn find(parent: &mut [usize; 12], edge: usize) -> usize {
@@ -915,6 +932,9 @@ impl TsdfExtractionPreparation {
                 if inside == (there < self.iso) {
                     continue;
                 }
+                if self.observed_only && (self.observed(volume, p).is_none() || self.observed(volume, next).is_none()) {
+                    continue;
+                }
                 let (eb, ec) = (unit(b), unit(c));
                 let minus = |q: Lattice, d: (i32, i32, i32)| (q.0 - d.0, q.1 - d.1, q.2 - d.2);
                 // Each cube with the local (0/1) offset of `p` inside it, which names the local edge.
@@ -944,7 +964,10 @@ impl TsdfExtractionPreparation {
                 self.triangles.push([quad[0], quad[1], quad[2]]);
                 self.triangles.push([quad[0], quad[2], quad[3]]);
             }
-            if self.positions.len() > SURFACE_NET_ELEMENT_CEILING || self.triangles.len() > SURFACE_NET_ELEMENT_CEILING {
+            // 👁️ An observed-only sheet still has its rim and holes to cap: a quarter of the envelope
+            // stays free for the hole fill's triangles.
+            let ceiling = if self.observed_only { SURFACE_NET_ELEMENT_CEILING * 3 / 4 } else { SURFACE_NET_ELEMENT_CEILING };
+            if self.positions.len() > ceiling || self.triangles.len() > ceiling {
                 self.exceeded = true;
                 self.complete = true;
                 break;
@@ -956,6 +979,11 @@ impl TsdfExtractionPreparation {
 
     pub fn exceeded(&self) -> bool {
         self.exceeded
+    }
+
+    /// 👁️ Whether this extraction emits only the observed surface.
+    pub fn is_observed_only(&self) -> bool {
+        self.observed_only
     }
 
     pub fn finish(self) -> Option<TriMesh> {
@@ -1521,14 +1549,19 @@ struct BoundedHoleFillPreparation {
     current_loop: Vec<u32>,
     start: Option<u32>,
     current: Option<u32>,
-    fill_cursor: usize,
+    /// 🔁️ Closed boundary loops waiting to be filled: a walk that revisits a vertex (two holes
+    /// pinching at it) splits off the loop it just closed, so no loop repeats a vertex.
+    pending: Vec<Vec<u32>>,
+    /// 🩹️ Undirected edges the fill added, so no two fill triangles and no fill triangle and mesh
+    /// face share an edge more than a manifold allows.
+    added: BTreeSet<(u32, u32)>,
     max_boundary_verts: usize,
     exceeded: bool,
 }
 
 impl BoundedHoleFillPreparation {
     fn new(max_boundary_verts: usize) -> Self {
-        Self { phase: BoundedHoleFillPhase::Edges, edges: BoundedEdgePreparation::new(), boundary_key: None, remaining: BTreeSet::new(), current_loop: Vec::new(), start: None, current: None, fill_cursor: 1, max_boundary_verts, exceeded: false }
+        Self { phase: BoundedHoleFillPhase::Edges, edges: BoundedEdgePreparation::new(), boundary_key: None, remaining: BTreeSet::new(), current_loop: Vec::new(), start: None, current: None, pending: Vec::new(), added: BTreeSet::new(), max_boundary_verts, exceeded: false }
     }
 
     fn advance(&mut self, mesh: &mut TriMesh, item_budget: usize) -> bool {
@@ -1554,7 +1587,7 @@ impl BoundedHoleFillPreparation {
                 BoundedHoleFillPhase::Walk => {
                     if self.current.is_none() {
                         let Some((from, to)) = self.remaining.pop_first() else {
-                            self.phase = BoundedHoleFillPhase::Done;
+                            self.phase = if self.pending.is_empty() { BoundedHoleFillPhase::Done } else { BoundedHoleFillPhase::Fill };
                             continue;
                         };
                         self.current_loop = vec![from, to];
@@ -1573,12 +1606,21 @@ impl BoundedHoleFillPreparation {
                     let next = edge.1;
                     if Some(next) == self.start {
                         self.current = None;
-                        if self.current_loop.len() >= 3 && self.current_loop.len() <= self.max_boundary_verts {
-                            self.fill_cursor = 1;
+                        let closed = std::mem::take(&mut self.current_loop);
+                        if closed.len() >= 3 && closed.len() <= self.max_boundary_verts {
+                            self.pending.push(closed);
                             self.phase = BoundedHoleFillPhase::Fill;
-                        } else {
-                            self.current_loop.clear();
                         }
+                    } else if let Some(position) = self.current_loop.iter().position(|&vertex| vertex == next) {
+                        // 📌️ A pinch: the walk came back to a vertex it already passed, closing the
+                        // loop `next … current`; it is filled on its own and the walk continues.
+                        let closed = self.current_loop.split_off(position + 1);
+                        let mut closed_loop = vec![next];
+                        closed_loop.extend(closed);
+                        if closed_loop.len() >= 3 {
+                            self.pending.push(closed_loop);
+                        }
+                        self.current = Some(next);
                     } else if self.current_loop.len() < self.max_boundary_verts {
                         self.current_loop.push(next);
                         self.current = Some(next);
@@ -1588,18 +1630,47 @@ impl BoundedHoleFillPreparation {
                     }
                 }
                 BoundedHoleFillPhase::Fill => {
-                    if self.fill_cursor + 1 < self.current_loop.len() {
-                        if mesh.triangles.len() >= 512 {
-                            self.exceeded = true;
-                            self.phase = BoundedHoleFillPhase::Done;
+                    // ✂️ One ear per unit: the ear whose closing diagonal is shortest among those
+                    // that add no edge the mesh (or an earlier fill triangle) already has — a fan
+                    // from one vertex re-used existing edges and left non-manifold caps. Faces run
+                    // against the loop's direction, which is the boundary faces' own winding.
+                    let Some(polygon) = self.pending.last_mut() else {
+                        self.phase = if self.current.is_none() && self.remaining.is_empty() { BoundedHoleFillPhase::Done } else { BoundedHoleFillPhase::Walk };
+                        continue;
+                    };
+                    if mesh.triangles.len() >= 512 {
+                        self.exceeded = true;
+                        self.phase = BoundedHoleFillPhase::Done;
+                        continue;
+                    }
+                    let n = polygon.len();
+                    if n == 3 {
+                        mesh.triangles.push([polygon[2], polygon[1], polygon[0]]);
+                        self.pending.pop();
+                        continue;
+                    }
+                    let taken = |a: u32, b: u32, records: &BTreeMap<(u32, u32), BoundedEdgeRecord>, added: &BTreeSet<(u32, u32)>| records.contains_key(&sorted_edge(a, b)) || added.contains(&sorted_edge(a, b));
+                    let mut best: Option<(f64, usize)> = None;
+                    for i in 0..n {
+                        let (previous, next) = (polygon[(i + n - 1) % n], polygon[(i + 1) % n]);
+                        if taken(previous, next, &self.edges.records, &self.added) {
                             continue;
                         }
-                        mesh.triangles.push([self.current_loop[0], self.current_loop[self.fill_cursor + 1], self.current_loop[self.fill_cursor]]);
-                        self.fill_cursor += 1;
-                    } else {
-                        self.current_loop.clear();
-                        self.phase = BoundedHoleFillPhase::Walk;
+                        let length = norm3(sub3(mesh.positions[previous as usize], mesh.positions[next as usize]));
+                        if best.is_none_or(|(shortest, _)| length < shortest) {
+                            best = Some((length, i));
+                        }
                     }
+                    let Some((_, ear)) = best else {
+                        // No ear closes without duplicating an edge: leave this hole open rather
+                        // than make the mesh non-manifold; validation reports it.
+                        self.pending.pop();
+                        continue;
+                    };
+                    let (previous, vertex, next) = (polygon[(ear + n - 1) % n], polygon[ear], polygon[(ear + 1) % n]);
+                    mesh.triangles.push([next, vertex, previous]);
+                    self.added.insert(sorted_edge(previous, next));
+                    polygon.remove(ear);
                 }
                 BoundedHoleFillPhase::Done => return true,
             }
@@ -4651,6 +4722,13 @@ impl MeshPipeline {
             unwrapping: None,
             texturing: None,
         }
+    }
+
+    /// 👁️ Extract only the observed surface and let the hole fill cap it; see
+    /// [`TsdfExtractionPreparation::observed_only`].
+    pub fn with_observed_only_surface(mut self) -> Self {
+        self.extraction = self.extraction.map(TsdfExtractionPreparation::observed_only);
+        self
     }
 
     pub fn with_views(mut self, views: Vec<TextureView>) -> Self {

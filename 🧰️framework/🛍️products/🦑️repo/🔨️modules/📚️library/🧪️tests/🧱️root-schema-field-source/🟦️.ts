@@ -1,14 +1,54 @@
 import { expect, test } from "bun:test";
 import { readFileSync } from "node:fs";
 import { dirname, relative, resolve } from "node:path";
-import Ajv from "ajv";
+import Ajv, { type AnySchema } from "ajv";
 import ts from "typescript";
 import { loadTaxonomy, semanticDirectoryKindId } from "../../📦️packages/🟦️typescript/🟦️.ts";
 
+/** 🧱️ One extracted owner module: its path, the semantic context that names it, and the declarations it owns. */
+interface SourceOwner {
+  readonly path: string;
+  readonly directoryName: string;
+  readonly parentKindId: string;
+  readonly kindId: string;
+  readonly declarations: readonly string[];
+}
+
+/** 🧭️ One directory whose semantic kind the taxonomy must resolve from its parent. */
+interface SourceContext {
+  readonly directoryName: string;
+  readonly parentKindId: string;
+  readonly kindId: string;
+}
+
+/** 🔗️ One consumer file and the owner modules it must bind to. */
+interface SourceConsumer {
+  readonly path: string;
+  readonly owners: readonly string[];
+}
+
+/** 🚀️ One Nx target and the launch row generated from it. */
+interface SourceRoute {
+  readonly target: string;
+  readonly command: string;
+  readonly launchName: string;
+  readonly launchCommand: string;
+  readonly inputs?: readonly string[];
+}
+
+/** 🧬️ The schema-field ownership fixture, mirroring `🧬️schema/🧱️root-schema-field-source/🔣️.json`. */
+interface SourceOwnershipFixture {
+  readonly schemaVersion: number;
+  readonly owners: readonly SourceOwner[];
+  readonly contexts: readonly SourceContext[];
+  readonly consumers: readonly SourceConsumer[];
+  readonly route: SourceRoute;
+}
+
 const repoRoot = resolve(import.meta.dir, "../../../../../../../");
 const libraryRoot = resolve(repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library");
-const fixture = JSON.parse(readFileSync(resolve(import.meta.dir, "../../🧫️fixtures/🧱️root-schema-field-source/🔣️.json"), "utf8"));
-const schema = JSON.parse(readFileSync(resolve(import.meta.dir, "../../🧬️schema/🧱️root-schema-field-source/🔣️.json"), "utf8"));
+const fixture: SourceOwnershipFixture = JSON.parse(readFileSync(resolve(import.meta.dir, "../../🧫️fixtures/🧱️root-schema-field-source/🔣️.json"), "utf8"));
+const schema: AnySchema = JSON.parse(readFileSync(resolve(import.meta.dir, "../../🧬️schema/🧱️root-schema-field-source/🔣️.json"), "utf8"));
 const namedDeclarations = (path: string): string[] => {
   const source = ts.createSourceFile(path, readFileSync(path, "utf8"), ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
   return source.statements.flatMap((statement) => (ts.isFunctionDeclaration(statement) || ts.isTypeAliasDeclaration(statement) || ts.isInterfaceDeclaration(statement)) && statement.name ? [statement.name.text] : []);
@@ -22,8 +62,8 @@ test("validates the portable schema-field ownership contract", () => {
   const validate = new Ajv({ strict: true, allErrors: true }).compile(schema);
   expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);
   expect(fixture.owners).toHaveLength(8);
-  expect(fixture.owners.flatMap((owner: { declarations: string[] }) => owner.declarations)).toHaveLength(19);
-  expect(new Set(fixture.owners.map((owner: { path: string }) => owner.path)).size).toBe(fixture.owners.length);
+  expect(fixture.owners.flatMap((owner) => owner.declarations)).toHaveLength(19);
+  expect(new Set(fixture.owners.map((owner) => owner.path)).size).toBe(fixture.owners.length);
 });
 
 test("resolves every schema-field owner through its exact semantic context", () => {
@@ -37,14 +77,14 @@ test("resolves every schema-field owner through its exact semantic context", () 
 });
 
 test("removes root field implementations and binds every direct consumer", () => {
-  const moved = new Set(fixture.owners.flatMap((owner: { declarations: string[] }) => owner.declarations));
+  const moved = new Set(fixture.owners.flatMap((owner) => owner.declarations));
   expect(namedDeclarations(resolve(repoRoot, "📜️script.ts")).filter((name) => moved.has(name))).toEqual([]);
   for (const consumer of fixture.consumers) {
     const source = readFileSync(resolve(repoRoot, consumer.path), "utf8");
     for (const owner of consumer.owners) expect(source.includes(relativeSpecifier(consumer.path, owner)) || source.includes(owner), `${consumer.path} -> ${owner}`).toBe(true);
   }
-  const owners = new Set(fixture.owners.map((owner: { path: string }) => resolve(repoRoot, owner.path)));
-  const edges = new Map<string, string[]>([...owners].map((owner) => [owner, []]));
+  const owners = new Set(fixture.owners.map((owner) => resolve(repoRoot, owner.path)));
+  const edges = new Map<string, string[]>([...owners].map((owner): [string, string[]] => [owner, []]));
   for (const owner of owners) {
     const syntax = ts.createSourceFile(owner, readFileSync(owner, "utf8"), ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
     for (const statement of syntax.statements) {
@@ -71,7 +111,7 @@ test("removes root field implementations and binds every direct consumer", () =>
 test("registers one Bun Nx and launch route", () => {
   const project = JSON.parse(readFileSync(resolve(libraryRoot, "📦️packages/🟦️typescript/📋️project.json"), "utf8"));
   const packageJson = JSON.parse(readFileSync(resolve(libraryRoot, "📦️packages/🟦️typescript/package.json"), "utf8"));
-  expect(project.targets[fixture.route.target]?.options.command).toBe(fixture.route.command);
+  expect(project.targets[fixture.route.target]?.options?.command).toBe(fixture.route.command);
   expect(packageJson.scripts[fixture.route.target]).toBe(`nx run @semio-tech/repo-lib:${fixture.route.target}`);
   for (const path of [".vscode/🧩️launch.seed.jsonc", ".vscode/launch.json"]) {
     const source = readFileSync(resolve(repoRoot, path), "utf8");

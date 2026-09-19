@@ -1,15 +1,57 @@
 import { expect, test } from "bun:test";
 import { chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { dirname, relative, resolve } from "node:path";
-import Ajv from "ajv";
+import Ajv, { type AnySchema } from "ajv";
 import ts from "typescript";
 import { canonicalPrimaryFilenameForKind, loadTaxonomy, schemaFacetFormatEntries, semanticDirectoryKindId } from "../../📦️packages/🟦️typescript/🟦️.ts";
 import type { PolicySourceOperations } from "../../🔍️discovery/📖️source-access/🟦️.ts";
 
+/** 🧱️ One extracted owner module: its path, the semantic context that names it, and the declarations it owns. */
+interface SourceOwner {
+  readonly path: string;
+  readonly directoryName: string;
+  readonly parentKindId: string;
+  readonly kindId: string;
+  readonly declarations: readonly string[];
+}
+
+/** 🧭️ One directory whose semantic kind the taxonomy must resolve from its parent. */
+interface SourceContext {
+  readonly directoryName: string;
+  readonly parentKindId: string;
+  readonly kindId: string;
+}
+
+/** 🔗️ One consumer file and the owner modules it must bind to. */
+interface SourceConsumer {
+  readonly path: string;
+  readonly owners: readonly string[];
+}
+
+/** 🚀️ One Nx target and the launch row generated from it. */
+interface SourceRoute {
+  readonly target: string;
+  readonly command: string;
+  readonly launchName: string;
+  readonly launchCommand: string;
+  readonly inputs?: readonly string[];
+}
+
+/** 🔮️ The inference law ownership fixture, mirroring `🧬️schema/🧱️root-inference-law-source/🔣️.json`. */
+interface SourceOwnershipFixture {
+  readonly schemaVersion: number;
+  readonly owners: readonly SourceOwner[];
+  readonly contexts: readonly SourceContext[];
+  readonly consumers: readonly SourceConsumer[];
+  readonly sourceData: readonly string[];
+  readonly lawKinds: readonly string[];
+  readonly route: SourceRoute;
+}
+
 const repoRoot = resolve(import.meta.dir, "../../../../../../../");
 const libraryRoot = resolve(repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library");
-const fixture = JSON.parse(readFileSync(resolve(import.meta.dir, "../../🧫️fixtures/🧱️root-inference-law-source/🔣️.json"), "utf8"));
-const schema = JSON.parse(readFileSync(resolve(import.meta.dir, "../../🧬️schema/🧱️root-inference-law-source/🔣️.json"), "utf8"));
+const fixture: SourceOwnershipFixture = JSON.parse(readFileSync(resolve(import.meta.dir, "../../🧫️fixtures/🧱️root-inference-law-source/🔣️.json"), "utf8"));
+const schema: AnySchema = JSON.parse(readFileSync(resolve(import.meta.dir, "../../🧬️schema/🧱️root-inference-law-source/🔣️.json"), "utf8"));
 const familyRel = "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences";
 
 type VirtualNode = { kind: "directory" | "file" | "symlink"; text?: string; unreadable?: boolean };
@@ -82,13 +124,13 @@ test("validates the portable inference-law ownership contract", () => {
   const validate = new Ajv({ strict: true, allErrors: true }).compile(schema);
   expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);
   expect(fixture.owners).toHaveLength(12);
-  expect(new Set(fixture.owners.map((owner: { path: string }) => owner.path)).size).toBe(12);
+  expect(new Set(fixture.owners.map((owner) => owner.path)).size).toBe(12);
 });
 
 test("resolves and typechecks every anonymous owner", { timeout: 30_000 }, () => {
   const taxonomy = loadTaxonomy();
   for (const context of fixture.contexts) expect(semanticDirectoryKindId(context.directoryName, taxonomy, { parentKindId: context.parentKindId }), JSON.stringify(context)).toBe(context.kindId);
-  const paths = fixture.owners.map((owner: { path: string }) => resolve(repoRoot, owner.path));
+  const paths = fixture.owners.map((owner) => resolve(repoRoot, owner.path));
   for (const [index, owner] of fixture.owners.entries()) {
     expect(owner.path.split("/").at(-1)).toBe("🟦️.ts");
     expect(namedDeclarations(paths[index])).toEqual([...owner.declarations].sort());
@@ -110,14 +152,14 @@ test("resolves and typechecks every anonymous owner", { timeout: 30_000 }, () =>
 });
 
 test("removes root bodies, binds consumers, and keeps an acyclic owner graph", () => {
-  const moved = new Set(fixture.owners.flatMap((owner: { declarations: string[] }) => owner.declarations));
+  const moved = new Set(fixture.owners.flatMap((owner) => owner.declarations));
   expect(namedDeclarations(resolve(repoRoot, "📜️script.ts")).filter((name) => moved.has(name))).toEqual([]);
   for (const consumer of fixture.consumers) {
     const source = readFileSync(resolve(repoRoot, consumer.path), "utf8");
     for (const owner of consumer.owners) expect(source.includes(relativeSpecifier(consumer.path, owner)) || source.includes(owner), `${consumer.path} -> ${owner}`).toBe(true);
   }
-  const owners = new Set(fixture.owners.map((owner: { path: string }) => resolve(repoRoot, owner.path))),
-    edges = new Map<string, string[]>([...owners].map((owner) => [owner, []]));
+  const owners = new Set(fixture.owners.map((owner) => resolve(repoRoot, owner.path))),
+    edges = new Map<string, string[]>([...owners].map((owner): [string, string[]] => [owner, []]));
   for (const owner of owners) {
     const syntax = ts.createSourceFile(owner, readFileSync(owner, "utf8"), ts.ScriptTarget.Latest, true);
     for (const statement of syntax.statements) {
@@ -235,7 +277,7 @@ test("retains native source data and registers one Bun Nx launch route", () => {
   expect(sources[1]).toContain("flat_position_bfs_walks_from_root");
   const project = JSON.parse(readFileSync(resolve(libraryRoot, "📦️packages/🟦️typescript/📋️project.json"), "utf8"));
   const packageJson = JSON.parse(readFileSync(resolve(libraryRoot, "📦️packages/🟦️typescript/package.json"), "utf8"));
-  expect(project.targets[fixture.route.target]?.options.command).toBe(fixture.route.command);
+  expect(project.targets[fixture.route.target]?.options?.command).toBe(fixture.route.command);
   expect(packageJson.scripts[fixture.route.target]).toBe(`nx run @semio-tech/repo-lib:${fixture.route.target}`);
   for (const path of [".vscode/🧩️launch.seed.jsonc", ".vscode/launch.json"]) {
     const source = readFileSync(resolve(repoRoot, path), "utf8");

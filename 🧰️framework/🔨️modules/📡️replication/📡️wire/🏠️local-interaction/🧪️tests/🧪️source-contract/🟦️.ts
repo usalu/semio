@@ -75,7 +75,105 @@ console.log(`[DEBUG] Local-interaction source cases=${fixture.cases.length} host
 //#endregion 🧬️Contract
 
 //#region 🌳️RetainedRootContract
-const rootFixture = await Bun.file(new URL("../../🌳️root/🧫️fixtures/🔣️.json", import.meta.url)).json();
+/** 🧫️ Shape of `../../🌳️root/🧫️fixtures/🔣️.json`, the document its JSON Schema validates at load. */
+type RetainedRootFixture = {
+  readonly version: number;
+  readonly sourceCase: string;
+  readonly grants: readonly number[];
+  readonly wireFields: readonly string[];
+  readonly rootClonePayloadBytes: number;
+  readonly sharedOwnerRetiredBytes: number;
+  readonly finalOwnerRetiredBytes: number;
+  readonly largeSourceCase: string;
+  readonly largeFinalOwnerRetiredBytes: number;
+  readonly hoverIsCaptured: boolean;
+  readonly privateDomainIsCaptured: boolean;
+  readonly anchorIsCaptured: boolean;
+  readonly commaIdIsSplit: boolean;
+  readonly zeroGrantChangesOwner: boolean;
+  readonly coldDecodeEarnsInteractiveCredit: boolean;
+};
+/** 🧫️ Shape of `../../🌳️root/🩹️update/🧫️fixtures/🔣️.json`, the document its JSON Schema validates at load. */
+type RetainedUpdateFixture = {
+  readonly version: number;
+  readonly cases: readonly string[];
+  readonly grants: readonly number[];
+  readonly cancelSourceCase: string;
+  readonly cancelOwnedStringBytes: number;
+  readonly largeSourceCase: string;
+  readonly domainKeyCopies: number;
+  readonly partialCandidateReadable: boolean;
+  readonly cancelPublishesCandidate: boolean;
+  readonly comparisonBytesAreRetiredBytes: boolean;
+  readonly zeroGrantMutates: boolean;
+  readonly absentFieldsRemoveOnlyTargetDomain: boolean;
+  readonly publishedCandidateUsesOriginalPayloadPointers: boolean;
+};
+/** 🧫️ Shape of `../../🧫️fixtures/♻️retirement/🔣️.json`, the document its JSON Schema validates at load. */
+type RetirementFixture = {
+  readonly version: number;
+  readonly grants: readonly number[];
+  readonly cases: readonly {
+    readonly id: string;
+    readonly sourceCase: string;
+    readonly sourceField: string;
+    readonly expectedReleasedBytes: number;
+  }[];
+  readonly zeroItemMutates: boolean;
+  readonly terminalOwners: number;
+};
+/** 🧫️ Shape of `../../🧫️fixtures/📃️query/🔣️.json`, the document its JSON Schema validates at load. */
+type QueryFixture = {
+  readonly version: number;
+  readonly pageBytes: number;
+  readonly grants: readonly number[];
+  readonly sourceCases: readonly string[];
+  readonly cancelAfterBytes: readonly number[];
+  readonly wrongAcknowledgements: readonly string[];
+  readonly zeroItemMutates: boolean;
+  readonly unacknowledgedPageAdvances: boolean;
+  readonly duplicateAcknowledgementAccepted: boolean;
+  readonly cancelledPageReadable: boolean;
+  readonly terminalRequiresReadReturn: boolean;
+  readonly partialError: {
+    readonly first: string;
+    readonly expectedPrefix: string;
+    readonly error: string;
+  };
+};
+/** 🧫️ Shape of `../../🧫️fixtures/🔐️topology-authority/🔣️.json`, the document its JSON Schema validates at load. */
+type TopologyAuthorityFixture = {
+  readonly version: number;
+  readonly domain: string;
+  readonly generationEncoding: string;
+  readonly cases: readonly {
+    readonly id: string;
+    readonly documentByte: number;
+    readonly configByte: number;
+    readonly uiGeneration: string;
+    readonly expected: string;
+  }[];
+  readonly overflowMutatesCache: boolean;
+  readonly closedAuthorityReadable: boolean;
+  readonly canonicalTopologyHash: boolean;
+};
+/** 🧫️ Shape of `../../📡️transport/🧫️fixtures/🔣️.json`, the document its JSON Schema validates at load. */
+type TransportFixture = {
+  readonly version: number;
+  readonly appCommandTag: number;
+  readonly appFrameTag: number;
+  readonly unsigned: readonly {
+    readonly decimal: string;
+    readonly hex: string;
+  }[];
+  readonly malformedUnsigned: readonly string[];
+  readonly commandKinds: readonly string[];
+  readonly replyKinds: readonly string[];
+  readonly maximumPageBytes: number;
+  readonly requestReuseNeedsNewGeneration: boolean;
+  readonly lateAcknowledgementAfterCloseAccepted: boolean;
+};
+const rootFixture: RetainedRootFixture = await Bun.file(new URL("../../🌳️root/🧫️fixtures/🔣️.json", import.meta.url)).json();
 const rootSchema = await Bun.file(new URL("../../🌳️root/🧬️schema/🔣️.json", import.meta.url)).json();
 const validateRoot = ajv.compile(rootSchema);
 assert(validateRoot(rootFixture), JSON.stringify(validateRoot.errors));
@@ -101,7 +199,7 @@ console.log(`[DEBUG] Local-interaction retained-root oracle=lodash+immer bytes=$
 //#endregion 🌳️RetainedRootContract
 
 //#region 🩹️RetainedUpdateContract
-const updateFixture = await Bun.file(new URL("../../🌳️root/🩹️update/🧫️fixtures/🔣️.json", import.meta.url)).json();
+const updateFixture: RetainedUpdateFixture = await Bun.file(new URL("../../🌳️root/🩹️update/🧫️fixtures/🔣️.json", import.meta.url)).json();
 const updateSchema = await Bun.file(new URL("../../🌳️root/🩹️update/🧬️schema/🔣️.json", import.meta.url)).json();
 const validateUpdate = ajv.compile(updateSchema);
 assert(validateUpdate(updateFixture), JSON.stringify(validateUpdate.errors));
@@ -128,7 +226,13 @@ console.log(`[DEBUG] Local-interaction retained-update cases=${updateFixture.cas
 const mutationLeaf = new URL("../../../../../../🛍️products/💻️os/🔨️modules/🔌️plugin/🕹️interaction/🧬️mutations/🔁️set-state/", import.meta.url);
 const mutationDescriptor = await Bun.file(new URL("🔣️.json", mutationLeaf)).json();
 const mutationSchema = await Bun.file(new URL("🧬️schema/🔣️.json", mutationLeaf)).json();
-const mutationFixture = await Bun.file(new URL("🧫️fixtures/🔣️.json", mutationLeaf)).json();
+type InteractionSetStateFixture = {
+  readonly selection: Readonly<Record<string, { readonly granularity: string; readonly ids: readonly string[]; readonly anchorId: string }>>;
+  readonly hover: Readonly<Record<string, { readonly granularity: string; readonly id: string }>>;
+  readonly activeMode: Readonly<Record<string, string>>;
+  readonly activeGranularity: Readonly<Record<string, string>>;
+};
+const mutationFixture: InteractionSetStateFixture = await Bun.file(new URL("🧫️fixtures/🔣️.json", mutationLeaf)).json();
 const validateMutation = ajv.compile(mutationSchema);
 assert(validateMutation(mutationFixture), JSON.stringify(validateMutation.errors));
 assert.equal(Object.keys(mutationDescriptor).length, 14);
@@ -141,7 +245,7 @@ console.log("[DEBUG] Interaction mutation leaf schema=actual-four-field-stored-s
 //#endregion 🔁️InteractionMutationLeaf
 
 //#region ♻️RetirementContract
-const retirement = await Bun.file(new URL("../../🧫️fixtures/♻️retirement/🔣️.json", import.meta.url)).json();
+const retirement: RetirementFixture = await Bun.file(new URL("../../🧫️fixtures/♻️retirement/🔣️.json", import.meta.url)).json();
 const retirementSchema = await Bun.file(new URL("../../🧬️schema/🔣️.json", import.meta.url)).json();
 const validateRetirement = ajv.addSchema(retirementSchema).getSchema(`${retirementSchema.$id}#/$defs/RetirementFixture`)!;
 assert(validateRetirement(retirement), JSON.stringify(validateRetirement.errors));
@@ -164,7 +268,7 @@ console.log(`[DEBUG] Local-interaction retirement source cases=${retirement.case
 //#endregion ♻️RetirementContract
 
 //#region 📃️QueryContract
-const query = await Bun.file(new URL("../../🧫️fixtures/📃️query/🔣️.json", import.meta.url)).json();
+const query: QueryFixture = await Bun.file(new URL("../../🧫️fixtures/📃️query/🔣️.json", import.meta.url)).json();
 const validateQuery = ajv.getSchema(`${retirementSchema.$id}#/$defs/QueryFixture`)!;
 assert(validateQuery(query), JSON.stringify(validateQuery.errors));
 assert.equal(`{"first":${JSON.stringify(query.partialError.first)},"second":`, query.partialError.expectedPrefix);
@@ -195,7 +299,7 @@ console.log(`[DEBUG] Local-interaction query source cases=${query.sourceCases.le
 //#endregion 📃️QueryContract
 
 //#region 🔐️TopologyInputAuthority
-const topologyAuthority = await Bun.file(new URL("../../🧫️fixtures/🔐️topology-authority/🔣️.json", import.meta.url)).json();
+const topologyAuthority: TopologyAuthorityFixture = await Bun.file(new URL("../../🧫️fixtures/🔐️topology-authority/🔣️.json", import.meta.url)).json();
 const topologyAuthoritySchema = await Bun.file(new URL("../../🧬️schema/🔣️.json", import.meta.url)).json();
 const validateTopologyAuthority = ajv.addSchema(topologyAuthoritySchema).getSchema(`${topologyAuthoritySchema.$id}#/$defs/TopologyAuthorityFixture`)!;
 assert(validateTopologyAuthority(topologyAuthority), JSON.stringify(validateTopologyAuthority.errors));
@@ -210,7 +314,7 @@ console.log(`[DEBUG] Local-interaction topology input-authority source cases=${t
 //#endregion 🔐️TopologyInputAuthority
 
 //#region 📡️TransportCodec
-const transport = await Bun.file(new URL("../../📡️transport/🧫️fixtures/🔣️.json", import.meta.url)).json();
+const transport: TransportFixture = await Bun.file(new URL("../../📡️transport/🧫️fixtures/🔣️.json", import.meta.url)).json();
 const transportFixtureSchema = await Bun.file(new URL("../../📡️transport/🧬️schema/🔣️.json", import.meta.url)).json();
 const validateTransportFixture = ajv.addSchema(transportFixtureSchema).getSchema(`${transportFixtureSchema.$id}#/$defs/TransportFixture`)!;
 const validateTransport = ajv.getSchema(`${transportFixtureSchema.$id}#/$defs/Transport`)!;

@@ -155,6 +155,16 @@ fn no_mutation_payload_reader_shadows_the_effect_funnel() {
     assert!(!WGPU_SHELL_SOURCE.contains(r#"Some("downloadMediaExport")"#), "a mutation-payload export reader has no producer");
 }
 
+/// 🔗️ Backbone sync attach: file mode must reach a file picker, folder mode a folder picker.
+#[test]
+fn sync_backbone_selection_opens_matching_path_pickers() {
+    assert!(WGPU_SHELL_SOURCE.contains("schedule_sync_path_pick(pick_file_path())"), "file sync must open a file picker on native");
+    assert!(WGPU_SHELL_SOURCE.contains("schedule_sync_path_pick(pick_folder())"), "folder sync must open a folder picker on native");
+    assert!(WGPU_SHELL_SOURCE.contains(r#""op": "request-native-file-path""#), "wasm file sync must ask the page door for a file path");
+    assert!(WGPU_SHELL_SOURCE.contains(r#""op": "request-native-folder-path""#), "wasm folder sync must ask the page door for a folder path");
+    assert!(WGPU_SHELL_SOURCE.contains(r#""setSyncDraft""#), "picker answers must land in the sync draft field");
+}
+
 /// 🧾️ ONE host-effect funnel for both dispatch paths. `dispatch_action`'s own partial fold ending in
 /// `_ => {}` is the defect that silently swallowed every `DownloadMediaExport` an ACTION produced.
 #[test]

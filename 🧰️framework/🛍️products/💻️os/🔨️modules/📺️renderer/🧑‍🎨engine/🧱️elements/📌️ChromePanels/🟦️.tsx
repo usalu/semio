@@ -45,6 +45,7 @@ import {
   uiDataLabel,
   windowTemplatePaletteTreeDragController,
 } from "@semio-tech/ui-react";
+import { themePaintContrast, type Rgba8, type WcagContrastGrade } from "@semio-tech/ui-styling";
 import { type AppRef, type AppRole, type ArtifactDialect, dialectCoordinate, type Conflict, type ConflictResolution, type MergePolicy, type NamedLayout, type WindowLayout, createNamedLayout } from "@semio-tech/framework";
 import { createWorldProjectionTemplates, encodeWorldProjectionTemplateId, type WorldProjectionTemplateDescriptor } from "@semio-tech/infinite-world-r3f";
 import { type PluginPanelStatus, type ResolvedShellLocks } from "../🐚️Shell/🟦️.tsx";
@@ -81,6 +82,11 @@ export const FRAMEWORK_SETTINGS_DEFAULT_APPS_TAB_ID = "framework.settings.defaul
 export const FRAMEWORK_SETTINGS_CONFLICTS_TAB_ID = "framework.settings.conflicts";
 /** 💬 MCP agent chat — flat leaf on the `top-right` (Details) dock anchor beside app inspection tabs. */
 export const FRAMEWORK_CHAT_PANEL_ID = "framework.chat";
+/** 🧵️ The actor task manager (`🧵️TaskManager/🟦️.tsx`) — the one central progress + cancel surface for
+ * actor-level work. Its id is the `os.task-manager` controller id that element's row actions already
+ * address, so the window a human opens and the window an action names are the same thing. Ticket
+ * `26/09/18/OS-HUB-COLLABORATION-AI-END-TO-END` slice U1, audit ranked item 1. */
+export const FRAMEWORK_TASK_MANAGER_PANEL_ID = "os.task-manager";
 
 function groupNamedLayoutsToTreeItems(layouts: readonly NamedLayout[], onApply: (layoutId: string) => void, onDeleteUser?: (layoutId: string) => void): TreeDataItem[] {
   const root: TreeDataItem[] = [];
@@ -660,15 +666,33 @@ const THEME_PALETTE_GROUP_LABEL_KEYS = {
   chrome: "ui.settings.theme.group.chrome",
 } as const satisfies Record<ThemePaletteGroup, UiTranslationKey>;
 
+const THEME_CONTRAST_GRADE_LABEL_KEYS = {
+  aaa: "ui.settings.theme.contrast.aaa",
+  aa: "ui.settings.theme.contrast.aa",
+  aaLarge: "ui.settings.theme.contrast.aaLarge",
+  fail: "ui.settings.theme.contrast.fail",
+} as const satisfies Record<WcagContrastGrade, UiTranslationKey>;
+
+/** @emoji ♿️ Live WCAG 2.2 verdict for ONE user-customized appearance paint against its own appearance
+ * foreground. The generated default palette is gated ≥ AA by `🎨️styling/🧪️tests/🧪️levels-oklabmix/🟦️.ts`;
+ * a theme a user builds by hand has no such gate, so the editor prints the ratio beside the swatch and
+ * marks anything under AA. Pure — the whole law is `themePaintContrast`, exported for its own test. */
+export function themeContrastBadgeText(paint: Rgba8, foreground: Rgba8, gradeLabel: (grade: WcagContrastGrade) => string): { readonly text: string; readonly grade: WcagContrastGrade; readonly passesBodyText: boolean } {
+  const verdict = themePaintContrast(paint, foreground);
+  return { text: `${verdict.ratio.toFixed(2)}:1 · ${gradeLabel(verdict.grade)}`, grade: verdict.grade, passesBodyText: verdict.passesBodyText };
+}
+
 function buildThemeAppearanceGroupItems(host: SettingsHostApi, appearance: ThemeAppearanceName, group: ThemePaletteGroup): TreeDataItem[] {
   const refs = host.theme.appearances[appearance][group];
   const resolved = resolveThemeAppearancePalettes(host.theme, appearance)[group];
+  const foreground = resolved.foreground;
   return Object.keys(refs)
     .sort()
     .map((paintKey) => {
       const rgba = resolved[paintKey] ?? [0, 0, 0, 255];
       const hex = rgba8ToHex(rgba);
       const alpha = rgba[3] / 255;
+      const contrast = foreground && paintKey !== "foreground" ? themeContrastBadgeText(rgba, foreground, (grade) => shellLabel(THEME_CONTRAST_GRADE_LABEL_KEYS[grade])) : null;
       return {
         id: `framework.settings.theme.appearances.${appearance}.${group}.${paintKey}`,
         label: paintKey,
@@ -684,6 +708,18 @@ function buildThemeAppearanceGroupItems(host: SettingsHostApi, appearance: Theme
               }}
               className="h-small w-14 shrink-0"
             />
+            {contrast ? (
+              <span
+                id={`framework.settings.theme.appearances.${appearance}.${group}.${paintKey}.contrast`}
+                data-contrast-grade={contrast.grade}
+                className={cn("shrink-0 text-xs tabular-nums", contrast.passesBodyText ? "text-muted-foreground" : "text-destructive")}
+                title={`${shellLabel("ui.settings.theme.contrast.label")}: ${contrast.text}`}
+                aria-label={`${shellLabel("ui.settings.theme.contrast.label")}: ${contrast.text}`}
+                role={contrast.passesBodyText ? undefined : "status"}
+              >
+                {contrast.text}
+              </span>
+            ) : null}
           </div>
         ),
       } satisfies TreeDataItem;
@@ -1379,6 +1415,27 @@ export function createFrameworkChatPanelTab(renderPanel: () => ReactElement): Pa
     icon: shellTabIcon("message-square"),
     name: shellLabel("ui.panelToggle.chat"),
     order: 100,
+    tree: {
+      resolveTree: () => ({
+        sections: [],
+        emptyState: renderPanel(),
+        className: "min-h-0 min-w-0 w-full",
+        sortableSections: false,
+      }),
+    },
+  });
+}
+
+/** 🧵️ The `os.task-manager` window: one row per actor with suspend/resume/cancel. Built exactly like
+ * the chat leaf above (an `emptyState`-hosted panel inside a `singleTreeLeaf`) so it docks, drags,
+ * folds and reaches the mobile stack with every other chrome tab rather than inventing a second
+ * window system. */
+export function createFrameworkTaskManagerPanelTab(renderPanel: () => ReactElement): PanelTabNode {
+  return singleTreeLeaf({
+    id: FRAMEWORK_TASK_MANAGER_PANEL_ID,
+    icon: shellTabIcon("cpu"),
+    name: shellLabel("ui.panelToggle.taskManager"),
+    order: 2,
     tree: {
       resolveTree: () => ({
         sections: [],

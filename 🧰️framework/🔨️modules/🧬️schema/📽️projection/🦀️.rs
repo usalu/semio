@@ -1283,27 +1283,6 @@ export type ToolRunVerdict = "testing" | "success" | "warning" | "danger";"####,
 export type TreeWindowRequest = { bodyKey: string, nodeKey: string, open?: boolean, offset: number, rows: number, };"####,
         },
         SchemaMetadata {
-            name: "TutorialArtifactEvent",
-            version: 1,
-            typescript: r####"/**
- * @emoji 🖋️ One document-track entry — mirrors `store::ArtifactCommand` with `Mutation =
- * serde_json::Value` (opaque per-app mutation JSON, already the wire shape of every `KernelMutation`
- * diff). This is the SOLE source of document mutation during playback: recorded `TutorialEvent`s are
- * annotational only, never re-dispatched, because re-dispatching a plugin action is non-deterministic
- * (fresh ids/timestamps) and would double-apply against this track.
- */
-export type TutorialArtifactEvent = { at: bigint, kind: TutorialArtifactEventKind, };"####,
-        },
-        SchemaMetadata {
-            name: "TutorialArtifactEventKind",
-            version: 1,
-            typescript: r####"/**
- * @emoji 🖋️ See `TutorialArtifactEvent`. `Edit` carries both `forwards` and `backwards` operations
- * verbatim from the vcs edit that produced it — the source of exact bidirectional scrubbing.
- */
-export type TutorialArtifactEventKind = { "kind": "edit", forwards: unknown[], backwards: unknown[], description?: string, coalesceKey?: string, } | { "kind": "undo" } | { "kind": "redo" } | { "kind": "checkpoint", message?: string, } | { "kind": "checkoutCheckpoint", checkpointId: string, } | { "kind": "switchAlternative", alternativeId: string, } | { "kind": "load", documentDsl: string, previousDsl: string, };"####,
-        },
-        SchemaMetadata {
             name: "TutorialAssetSrc",
             version: 1,
             typescript: r####"/**
@@ -1418,6 +1397,27 @@ base: TutorialBase, tracks: TutorialTracks,
 recordedAt?: string, };"####,
         },
         SchemaMetadata {
+            name: "TutorialDocumentEvent",
+            version: 1,
+            typescript: r####"/**
+ * @emoji 🖋️ One document-track entry — mirrors `store::ArtifactCommand` with `Mutation =
+ * serde_json::Value` (opaque per-app mutation JSON, already the wire shape of every `KernelMutation`
+ * diff). This is the SOLE source of document mutation during playback: recorded `TutorialEvent`s are
+ * annotational only, never re-dispatched, because re-dispatching a plugin action is non-deterministic
+ * (fresh ids/timestamps) and would double-apply against this track.
+ */
+export type TutorialDocumentEvent = { at: bigint, kind: TutorialDocumentEventKind, };"####,
+        },
+        SchemaMetadata {
+            name: "TutorialDocumentEventKind",
+            version: 1,
+            typescript: r####"/**
+ * @emoji 🖋️ See `TutorialDocumentEvent`. `Edit` carries both `forwards` and `backwards` operations
+ * verbatim from the vcs edit that produced it — the source of exact bidirectional scrubbing.
+ */
+export type TutorialDocumentEventKind = { "kind": "edit", forwards: unknown[], backwards: unknown[], description?: string, coalesceKey?: string, } | { "kind": "undo" } | { "kind": "redo" } | { "kind": "checkpoint", message?: string, } | { "kind": "checkoutCheckpoint", checkpointId: string, } | { "kind": "switchAlternative", alternativeId: string, } | { "kind": "load", documentDsl: string, previousDsl: string, };"####,
+        },
+        SchemaMetadata {
             name: "TutorialEasing",
             version: 1,
             typescript: r####"/**
@@ -1506,9 +1506,9 @@ export type TutorialTracks = { narration: Array<TutorialNarrationCue>, video: Ar
  */
 events: Array<TutorialEvent>, ui: Array<TutorialUiKeyframe>,
 /**
- * 🖋️ The sole source of artifact mutation during playback — see `TutorialArtifactEventKind`.
+ * 🖋️ The sole source of document mutation during playback — see `TutorialDocumentEventKind`.
  */
-artifact: Array<TutorialArtifactEvent>, camera: Array<TutorialCameraKeyframe>, gestures: Array<TutorialGestureCue>, };"####,
+document: Array<TutorialDocumentEvent>, camera: Array<TutorialCameraKeyframe>, gestures: Array<TutorialGestureCue>, };"####,
         },
         SchemaMetadata {
             name: "TutorialUiChange",

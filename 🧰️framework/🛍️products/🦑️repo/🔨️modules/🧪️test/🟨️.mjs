@@ -275,10 +275,20 @@ async function invokeCurrentImplementation(kind, args) {
 
 export function createDependencies(...args) { return invokeCurrentImplementation("dependencies", args); }
 
+/**
+ * 🧩️ One Nx project configuration this plugin generates, as its consumers read it.
+ * @typedef {{ targets: Record<string, { cache?: boolean, continuous?: boolean, dependsOn?: string[], outputs?: string[], inputs?: unknown[], namedInputs?: Record<string, unknown[]>, options?: Record<string, unknown>, metadata?: Record<string, unknown> }>, root?: string, name?: string, projectType?: string, tags?: string[], sourceRoot?: string }} GeneratedProject
+ */
+
+/**
+ * 🧩️ The `createNodesV2` result: one entry per matched file, each carrying the projects it contributes.
+ * @typedef {[string, { projects: Record<string, GeneratedProject> }][]} GeneratedNodes
+ */
+
 const plugin = {
   createDependencies,
   name: "@repo/test-cases",
-  createNodesV2: ["**/*.feature", (...args) => invokeCurrentImplementation("nodes", args)],
+  createNodesV2: /** @type {[string, (files: readonly string[], options: unknown, context: { workspaceRoot: string }) => Promise<GeneratedNodes>]} */ (["**/*.feature", (...args) => invokeCurrentImplementation("nodes", args)]),
 };
 
 export default plugin;

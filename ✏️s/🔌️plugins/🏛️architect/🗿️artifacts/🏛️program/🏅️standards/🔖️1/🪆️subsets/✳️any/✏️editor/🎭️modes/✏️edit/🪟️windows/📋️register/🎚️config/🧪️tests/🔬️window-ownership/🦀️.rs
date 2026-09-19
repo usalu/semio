@@ -76,33 +76,18 @@ fn architect_window_ownership_matches_the_neutral_fixture_and_codecs() {
 
 #[test]
 fn architect_window_ownership_interactive_classification_matches_retained_owners() {
-    use crate::editor::architect::{create_architect_app, ArchitectPlayApp, ArchitectWindowCommandJobFactory, ARCHITECT_WINDOW_TOOL_IDS};
+    use crate::editor::architect::{create_architect_app, ArchitectPlayApp, ArchitectWindowCommandJobFactory, ARCHITECT_RETAINED_TOOL_IDS};
     use semio_framework_plugin::{ArtifactEditor, ArtifactOwnedToolJobFactory, InteractiveJobClassification};
 
     let definition = create_architect_app();
     let actions = definition.window_kinds.iter().flat_map(|window| window.actions.iter()).collect::<Vec<_>>();
-    let batch_expected = [
-        "addElement",
-        "addRegisterItem",
-        "applyTemplate",
-        "exportProgram",
-        "exportRegistersCsv",
-        "importProgram",
-        "importRegistersCsv",
-        "nodeGraphEdit",
-        "patchRegisterItem",
-        "removeElement",
-        "removeRegisterItem",
-        "runAnalysis",
-        "runReport",
-        "runValidation",
-        "search",
-        "setAdjacencyField",
-        "setAdjacencyKind",
-    ]
+    // 🧵️ What is left on the batch path after the nine document verbs were promoted to retained
+    // tools: the four exchange verbs (host effects, no bounded reducer), the three analysis verbs
+    // (they publish three lanes at once) and `search`.
+    let batch_expected = ["exportProgram", "exportRegistersCsv", "importProgram", "importRegistersCsv", "runAnalysis", "runReport", "runValidation", "search"]
     .into_iter()
     .collect::<std::collections::BTreeSet<_>>();
-    let retained = ARCHITECT_WINDOW_TOOL_IDS.iter().copied().collect::<std::collections::BTreeSet<_>>();
+    let retained = ARCHITECT_RETAINED_TOOL_IDS.iter().copied().collect::<std::collections::BTreeSet<_>>();
     let declared = retained.union(&batch_expected).copied().collect::<std::collections::BTreeSet<_>>();
     let domain_actions = actions.iter().filter(|action| declared.contains(action.id.as_str())).collect::<Vec<_>>();
     assert_eq!(domain_actions.iter().map(|action| action.id.as_str()).collect::<std::collections::BTreeSet<_>>(), declared);

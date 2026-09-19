@@ -8,6 +8,17 @@
     , "{workspaceRoot}/🌎️hub/🧪️tests/🎚️config/🟦️.ts"]
   },
   "targets": {
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "dependsOn": [],
+      "cache": true,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts typecheck",
+        "forwardAllArgs": true
+      },
+      "outputs": []
+    },
     "test": {
       "executor": "nx:run-commands",
       "dependsOn": [],

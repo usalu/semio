@@ -21,8 +21,22 @@ import {
   CATALOGUE_DRAG_MIME,
   getActiveCatalogueDragPayload,
 } from "@semio-tech/ui-react";
-import { syncSessionCanvasTheme } from "@semio-tech/ui-styling";
-import { type ComponentSceneHostProps, type Board2dScene, type ContextMenuItemSpec } from "@semio-tech/framework";
+import { STYLING_METRICS, syncSessionCanvasTheme } from "@semio-tech/ui-styling";
+import {
+  EMPTY_GESTURE_POINTERS,
+  applyPinchToCamera,
+  gestureIsMultiTouch,
+  gesturePointerDown,
+  gesturePointerMove,
+  gesturePointerUp,
+  pinchFrame,
+  pinchStep,
+  type ComponentSceneHostProps,
+  type Board2dScene,
+  type ContextMenuItemSpec,
+  type GesturePointers,
+  type PinchFrame,
+} from "@semio-tech/framework";
 import { type Board2dWasmSession, type Board2dPeer, type BoardPeerScope, BoardSessionFactoryContext, createBoardPeerScope } from "../🪪️WasmSessionLoader/🟦️.tsx";
 import { useMapContextMenuSpecs } from "../🏛️ShellHost/🟦️.tsx";
 import { createCoalescingActionDispatcher } from "../🛠️ShellHelpers/🟦️.tsx";
@@ -437,6 +451,21 @@ export function puzzle2dWorldToScreen(cameraJson: string, containerSize: { reado
     y: (world.y - camera.y) * zoom + containerSize.h / 2,
   };
 }
+
+/** @emoji 🤏️ The zoom bounds a board camera may never leave — the SAME `ZOOM_MIN`/`ZOOM_MAX` the Rust
+ * engine's `clamp_zoom` applies (`♾️infinite/🖼️canvas/🦀️.rs`), read from the generated styling token
+ * table so a pinch and a wheel can never disagree about the ceiling. */
+export const BOARD_2D_ZOOM_BOUNDS = { min: STYLING_METRICS.camera.zoomMin, max: STYLING_METRICS.camera.zoomMax } as const;
+
+/** @emoji 🤏️ Applies one two-finger step to the board camera carried by `cameraJson`, returning the pose
+ * the host writes back silently. Pure: the whole pinch law is `🕹️interaction/👆️gesture`'s
+ * {@link applyPinchToCamera} plus this surface's own bounds — nothing here is board-specific except
+ * where the camera is read from. `null` when the camera JSON is unreadable. */
+export function board2dPinchCamera(cameraJson: string, step: Parameters<typeof applyPinchToCamera>[1], containerSize: { readonly w: number; readonly h: number }): BoardCamera | null {
+  const camera = parseBoardCamera(cameraJson);
+  if (!camera) return null;
+  return applyPinchToCamera(camera, step, containerSize, BOARD_2D_ZOOM_BOUNDS);
+}
 //#endregion FixtureDrop
 
 //#region Sync
@@ -577,6 +606,8 @@ export function Board2dHost({ node, onAction, requestContextMenu }: ComponentSce
   const cameraSettleTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const renderScheduledRef = useRef(false);
   const pendingCameraDispatchRef = useRef<{ readonly camera: BoardCamera } | null>(null);
+  const gesturePointersRef = useRef<GesturePointers>(EMPTY_GESTURE_POINTERS);
+  const pinchFrameRef = useRef<PinchFrame | null>(null);
   const pendingSelectionJsonRef = useRef<string | null>(null);
   const onPeerGestureEndedRef = useRef<(flushed: boolean) => void>(() => {});
   const boardStatusRef = useRef<Board2dStatus>({ fixtureParsed: null, fixtureChars: 0, refusalReason: "", pendingEvents: 0, guestRevision: 0 });
@@ -1198,11 +1229,29 @@ export function Board2dHost({ node, onAction, requestContextMenu }: ComponentSce
       return { x: clientX - rect.left, y: clientY - rect.top };
     };
 
+    /** @emoji 🤏️ Abandons the single-pointer lane the moment a SECOND contact lands: the marquee/pick
+     * gesture the first finger started must not keep growing under a pinch, and its pointer capture must
+     * not swallow the second finger's moves. */
+    const yieldToPinch = (session: Board2dWasmSession, point: { x: number; y: number }): void => {
+      session.cancelAreaSelect?.();
+      session.pointerUpScreen(point.x, point.y, false, false, false);
+      for (const tracked of gesturePointersRef.current.pointers) {
+        if (canvas.hasPointerCapture?.(tracked.pointerId)) canvas.releasePointerCapture(tracked.pointerId);
+      }
+    };
+
     const onPointerDown = (event: PointerEvent): void => {
       event.stopPropagation();
       const session = sessionRef.current;
       if (!session) return;
       const point = clientToLocal(event.clientX, event.clientY);
+      gesturePointersRef.current = gesturePointerDown(gesturePointersRef.current, { pointerId: event.pointerId, x: point.x, y: point.y });
+      if (gestureIsMultiTouch(gesturePointersRef.current)) {
+        yieldToPinch(session, point);
+        pinchFrameRef.current = pinchFrame(gesturePointersRef.current);
+        beginCameraInteraction();
+        return;
+      }
       if (event.button === 0 || event.button === 1) {
         canvas.setPointerCapture?.(event.pointerId);
       }
@@ -1215,6 +1264,21 @@ export function Board2dHost({ node, onAction, requestContextMenu }: ComponentSce
       const session = sessionRef.current;
       if (!session) return;
       const point = clientToLocal(event.clientX, event.clientY);
+      gesturePointersRef.current = gesturePointerMove(gesturePointersRef.current, { pointerId: event.pointerId, x: point.x, y: point.y });
+      if (gestureIsMultiTouch(gesturePointersRef.current)) {
+        const next = pinchFrame(gesturePointersRef.current);
+        const previous = pinchFrameRef.current;
+        pinchFrameRef.current = next;
+        if (!next || !previous) return;
+        beginCameraInteraction();
+        const camera = board2dPinchCamera(session.cameraJson(), pinchStep(previous, next), readContainerSize());
+        if (!camera) return;
+        if (session.setCameraSilent) session.setCameraSilent(camera.x, camera.y, camera.zoom);
+        else session.setCamera(camera.x, camera.y, camera.zoom);
+        pendingCameraDispatchRef.current = { camera };
+        scheduleRender();
+        return;
+      }
       session.pointerMoveScreen(point.x, point.y, event.shiftKey, event.metaKey || event.ctrlKey, event.altKey);
       scheduleRender();
       drainAndMaybeFlush();
@@ -1223,14 +1287,26 @@ export function Board2dHost({ node, onAction, requestContextMenu }: ComponentSce
     const onPointerUp = (event: PointerEvent): void => {
       const session = sessionRef.current;
       if (!session) return;
+      const wasMultiTouch = gestureIsMultiTouch(gesturePointersRef.current);
+      gesturePointersRef.current = gesturePointerUp(gesturePointersRef.current, event.pointerId);
+      // 🤏️ Re-seed from the contacts that REMAIN: a pinch ending one finger at a time must not diff the
+      // next frame against a frame the lifted finger was still in, which would snap the camera.
+      pinchFrameRef.current = pinchFrame(gesturePointersRef.current);
+      if (canvas.hasPointerCapture?.(event.pointerId)) canvas.releasePointerCapture(event.pointerId);
+      if (wasMultiTouch) return;
       const point = clientToLocal(event.clientX, event.clientY);
       session.pointerUpScreen(point.x, point.y, event.shiftKey, event.metaKey || event.ctrlKey, event.altKey);
-      if (canvas.hasPointerCapture?.(event.pointerId)) canvas.releasePointerCapture(event.pointerId);
       endPuzzle2dPeerGesture(peerScope, node.controllerId, node.surfaceId, peerRef.current);
       const flushed = settleGestureEnd(session);
       scheduleRender();
       dispatchBufferedEvents();
       notifyPuzzle2dPeersGestureEnded(peerScope, node.controllerId, node.surfaceId, flushed);
+    };
+
+    const onPointerCancel = (event: PointerEvent): void => {
+      gesturePointersRef.current = gesturePointerUp(gesturePointersRef.current, event.pointerId);
+      pinchFrameRef.current = pinchFrame(gesturePointersRef.current);
+      if (canvas.hasPointerCapture?.(event.pointerId)) canvas.releasePointerCapture(event.pointerId);
     };
 
     const onPointerEnter = (): void => {
@@ -1270,6 +1346,7 @@ export function Board2dHost({ node, onAction, requestContextMenu }: ComponentSce
     canvas.addEventListener("pointerleave", onPointerLeave);
     window.addEventListener("pointermove", onPointerMove);
     window.addEventListener("pointerup", onPointerUp);
+    window.addEventListener("pointercancel", onPointerCancel);
     container.addEventListener("wheel", onWheel, { passive: false });
     return () => {
       canvas.removeEventListener("pointerdown", onPointerDown);
@@ -1277,6 +1354,7 @@ export function Board2dHost({ node, onAction, requestContextMenu }: ComponentSce
       canvas.removeEventListener("pointerleave", onPointerLeave);
       window.removeEventListener("pointermove", onPointerMove);
       window.removeEventListener("pointerup", onPointerUp);
+      window.removeEventListener("pointercancel", onPointerCancel);
       container.removeEventListener("wheel", onWheel);
     };
   }, [peerScope, beginCameraInteraction, dispatch, dispatchBufferedEvents, drainAndMaybeFlush, drainIntoBuffer, node.controllerId, node.surfaceId, readContainerSize, scheduleRender, scene?.activeUtility, scene?.interactive, settleGestureEnd]);

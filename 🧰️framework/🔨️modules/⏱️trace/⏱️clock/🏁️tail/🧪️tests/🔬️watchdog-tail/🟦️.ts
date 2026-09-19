@@ -3,15 +3,40 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import Ajv from "ajv";
 
+/** ⏱️ One same-window vector: the four sampled clock readings and the publication they must produce. */
+type WatchdogTailCase = {
+  readonly name: string;
+  readonly clock: readonly (number | null)[];
+  readonly admissionFault: boolean;
+  readonly terminalFault: boolean;
+  readonly terminalElapsed: number | null;
+  readonly publication: "allowed" | "refused" | "already-committed-fault";
+};
+
+/** ⏱️ The canonical watchdog-tail fixture: the exclusive microsecond ceiling, the sampled clock order and the scope claims. */
+type WatchdogTailFixture = {
+  readonly version: number;
+  readonly exclusiveCeilingUs: number;
+  readonly clockOrder: readonly string[];
+  readonly cases: readonly WatchdogTailCase[];
+  readonly scope: {
+    readonly guards: number;
+    readonly terminalAfterTelemetry: boolean;
+    readonly rollbackClaim: boolean;
+    readonly globalTelemetryAuthority: boolean;
+    readonly actualWgpuPublicationTested: boolean;
+  };
+};
+
 export function testWatchdogTailFixture(): void {
-  const fixture = JSON.parse(readFileSync(new URL("../../🧫️fixtures/🔣️.json", import.meta.url), "utf8"));
+  const fixture: WatchdogTailFixture = JSON.parse(readFileSync(new URL("../../🧫️fixtures/🔣️.json", import.meta.url), "utf8"));
   const schema = JSON.parse(readFileSync(new URL("../../🧬️schema/🔣️.json", import.meta.url), "utf8"));
-  const validate = new Ajv({ strict: true, allErrors: true }).compile(schema);
+  const validate = new Ajv({ strict: true, allErrors: true }).compile<WatchdogTailFixture>(schema);
   assert(validate(fixture), JSON.stringify(validate.errors));
   const elapsed = (start: number | null, end: number | null): bigint | null => start === null || end === null || end < start ? null : BigInt(end) - BigInt(start);
   for (const row of fixture.cases) {
     const first = elapsed(row.clock[0], row.clock[1]);
-    const monotonic = row.clock.every((value: number | null, index: number, clock: Array<number | null>) => value !== null && (index === 0 || clock[index - 1] !== null && value >= clock[index - 1]!));
+    const monotonic = row.clock.every((value: number | null, index: number, clock: readonly (number | null)[]) => value !== null && (index === 0 || clock[index - 1] !== null && value >= clock[index - 1]!));
     const last = monotonic ? elapsed(row.clock[0], row.clock[3]) : null;
     const refused = first === null || first >= BigInt(fixture.exclusiveCeilingUs);
     const fault = last === null || last >= BigInt(fixture.exclusiveCeilingUs);

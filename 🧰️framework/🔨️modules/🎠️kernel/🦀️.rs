@@ -1431,7 +1431,7 @@ pub use semio_framework_actor::instance_lifetime::{ActorInstanceCloseRequest, Ac
 
 #[path = "📥️cold-pair/🦀️.rs"]
 mod cold_pair;
-pub use cold_pair::{ColdArtifactPairApplied, ColdArtifactPairCursor, ColdArtifactPairFrontier, ColdArtifactPairHeader, ColdArtifactPairPage, ColdPairIngressStatus, COLD_PAIR_MAXIMUM_BYTES, COLD_PAIR_MAXIMUM_PAGES, COLD_PAIR_PAGE_MAXIMUM_BYTES};
+pub use cold_pair::{ColdDocumentPairApplied, ColdDocumentPairCursor, ColdDocumentPairFrontier, ColdDocumentPairHeader, ColdDocumentPairPage, ColdPairIngressStatus, COLD_PAIR_MAXIMUM_BYTES, COLD_PAIR_MAXIMUM_PAGES, COLD_PAIR_PAGE_MAXIMUM_BYTES};
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", rename_all_fields = "camelCase")]
@@ -1468,7 +1468,7 @@ pub enum Event {
         bytes: FixedCommandPage,
     },
 
-    ColdArtifactPairPage(ColdArtifactPairPage),
+    ColdDocumentPairPage(ColdDocumentPairPage),
 
     /// 🎬️ `wit-flip` (26/08/20) — a user action against a UI node, `pack`-encoded
     /// `semio_framework_ui_contract::UiIntent`. Separate from paged command ingress so the host can

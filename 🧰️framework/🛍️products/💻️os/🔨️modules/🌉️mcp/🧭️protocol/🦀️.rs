@@ -832,6 +832,30 @@ pub fn compute_catalog_hash(tools: &[Tool]) -> String {
 }
 //#endregion 🔖️CatalogHash
 
+//#region 🔖️ClientFeatures
+/// 🧭️ What the CONNECTED client advertised in `initialize.params.capabilities` — the only part of
+/// the handshake a later turn needs to branch on. Shared (`Arc`) with whatever transport owns the
+/// server→client request channel, because the decision "may I ask this client's human?" is made deep
+/// inside a tool call, long after `initialize` returned.
+#[derive(Debug, Default)]
+pub struct ClientFeatures {
+    pub elicitation: std::sync::atomic::AtomicBool,
+    pub sampling: std::sync::atomic::AtomicBool,
+    pub roots: std::sync::atomic::AtomicBool,
+}
+
+impl ClientFeatures {
+    /// 📝️ Records one `initialize`/`server.discover` capability object, verbatim — presence of the
+    /// member is the advertisement, exactly as the MCP schema defines it.
+    pub fn record(&self, capabilities: Option<&serde_json::Value>) {
+        let has = |name: &str| capabilities.and_then(|value| value.get(name)).is_some();
+        self.elicitation.store(has("elicitation"), std::sync::atomic::Ordering::SeqCst);
+        self.sampling.store(has("sampling"), std::sync::atomic::Ordering::SeqCst);
+        self.roots.store(has("roots"), std::sync::atomic::Ordering::SeqCst);
+    }
+}
+//#endregion 🔖️ClientFeatures
+
 //#region 🔖️Server
 fn server_capabilities() -> serde_json::Value {
     serde_json::json!({
@@ -879,11 +903,32 @@ pub struct McpServer {
     /// `None` is the ordinary case for a gateway with no `/bridge` (stdio) and for every test that
     /// does not care; it is never an error, and a tool call behaves identically either way.
     conversation: Option<Arc<crate::bridge::AgentConversation>>,
+    /// 🧭️ The live mirror of what the connected client advertised, shared with the transport that
+    /// owns the server→client request channel. Always present; empty until `initialize` lands.
+    client_features: Arc<ClientFeatures>,
 }
 
 impl McpServer {
     pub fn new(tools: Box<dyn ToolRegistry>, resources: Box<dyn ResourceRegistry>, prompts: Box<dyn PromptRegistry>, backend: Box<GatewayBackends>) -> Self {
-        Self { tools, resources, prompts, backend, server_name: "semio-os-mcp".to_string(), server_version: env!("CARGO_PKG_VERSION").to_string(), era: None, negotiated_version: None, initialized: false, conversation: None }
+        Self {
+            tools,
+            resources,
+            prompts,
+            backend,
+            server_name: "semio-os-mcp".to_string(),
+            server_version: env!("CARGO_PKG_VERSION").to_string(),
+            era: None,
+            negotiated_version: None,
+            initialized: false,
+            conversation: None,
+            client_features: Arc::new(ClientFeatures::default()),
+        }
+    }
+
+    /// 🧭️ The client-capability mirror this server fills at `initialize` — handed to the transport
+    /// so an elicitation is attempted only against a client that advertised it.
+    pub fn client_features(&self) -> Arc<ClientFeatures> {
+        self.client_features.clone()
     }
 
     /// 💬️ Publishes this server's `tools/call` traffic onto the shell bridge as
@@ -983,6 +1028,7 @@ impl McpServer {
     }
 
     fn handle_server_discover(&mut self, request: &JsonRpcRequest) -> DispatchOutcome {
+        self.client_features.record(request.params.as_ref().and_then(|params| params.get("capabilities")));
         let negotiated = match extract_meta_protocol_version(request.params.as_ref()) {
             Some(requested) => {
                 if let Some(outcome) = self.reject_unsupported_version(&requested) {
@@ -1003,6 +1049,7 @@ impl McpServer {
     }
 
     fn handle_initialize(&mut self, request: &JsonRpcRequest) -> DispatchOutcome {
+        self.client_features.record(request.params.as_ref().and_then(|params| params.get("capabilities")));
         let requested = request.params.as_ref().and_then(|params| params.get("protocolVersion")).and_then(|value| value.as_str()).unwrap_or("");
         let negotiated = if SUPPORTED_PROTOCOL_VERSIONS.contains(&requested) { requested.to_string() } else { SUPPORTED_PROTOCOL_VERSIONS[0].to_string() };
         self.era = Some(ProtocolEra::Legacy);

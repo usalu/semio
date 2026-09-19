@@ -91,7 +91,7 @@ async function spawnStudioE2eDrawFromPalette(page: import("playwright").Page): P
 }
 
 async function runStudioE2eVerify(baseUrl: string, timeoutMs: number): Promise<void> {
-  const { chromium } = await import(PLAYWRIGHT_MODULE_SPECIFIER);
+  const { chromium }: typeof import("playwright") = await import(PLAYWRIGHT_MODULE_SPECIFIER);
   const browser = await chromium.launch({ headless: true });
   const page = await browser.newPage();
   const pageErrors: string[] = [];

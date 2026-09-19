@@ -39,6 +39,7 @@
         "allocateLocalHubRunRoot",
         "freeLoopbackPort",
         "hubBinaryPath",
+        "HUB_DEV_BINARY_TARGET",
         "hubDevBinaryPath",
         "startLocalHub",
         "localHubReadinessAdmitted",
@@ -47,7 +48,7 @@
         "finishLocalHub"
       ],
       "imports": ["🌎️hub/🚀️local-bootstrap/📡️framing/🟦️.ts", "🌎️hub/🚀️local-bootstrap/🛂authentication/🟦️.ts"],
-      "rootImports": ["finishLocalHub", "freeLoopbackPort", "hubBinaryPath", "hubDevBinaryPath", "LOCAL_READINESS_DEADLINE_MS", "LocalHubRun", "startLocalHub", "waitForChildExit", "waitForReadiness"],
+      "rootImports": ["finishLocalHub", "freeLoopbackPort", "HUB_DEV_BINARY_TARGET", "hubBinaryPath", "hubDevBinaryPath", "LOCAL_READINESS_DEADLINE_MS", "LocalHubRun", "startLocalHub", "waitForChildExit", "waitForReadiness"],
       "contextChain": ["hub-local-bootstrap", "hub-local-bootstrap-execution"]
     },
     {

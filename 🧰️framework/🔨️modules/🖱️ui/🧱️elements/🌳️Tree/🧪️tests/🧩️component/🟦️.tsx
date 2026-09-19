@@ -3,6 +3,7 @@ import { fireEvent, render } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { TREE_WINDOW_BODY_NODE_BUDGET, TREE_WINDOW_OVERSCAN_ROWS, TREE_WINDOW_PATH_SEPARATOR, TREE_WINDOW_ROWS_MAX, Tree, TreeCheckbox, TreeItem, TreeSection, capTreeWindowRequests, treeRowHeightPx, treeWindowPathOf, treeWindowRequestsForViewport, treeWindowVisibleRowsForViewport, type TreeDataSection, type TreeWindowContainerMeasure, type TreeWindowVisibleRows } from "../../🟦️.tsx";
+import { uiDataLabel } from "../../../🎗️UiLabel/🟦️.tsx";
 // #endregion 🔌️Adapters
 
 // #region 🌳️BranchDisclosure
@@ -108,7 +109,7 @@ describe("TreeSection branch disclosure", () => {
 // #region ☑️CheckboxActivation
 describe("TreeCheckbox activation", () => {
   const renderControlled = (onCheckedChange: (checked: boolean) => void) =>
-    render(<TreeCheckbox id="tree-checkbox-activation" checked={false} title="Grid visible" onCheckedChange={onCheckedChange} />);
+    render(<TreeCheckbox id="tree-checkbox-activation" checked={false} title={uiDataLabel("Grid visible")} onCheckedChange={onCheckedChange} />);
 
   it("reports exactly one activation for a pointer click on the input", () => {
     const onCheckedChange = vi.fn();
@@ -150,8 +151,8 @@ describe("TreeCheckbox activation", () => {
     const onRowClick = vi.fn();
     const { container } = render(
       <div onClick={onRowClick}>
-        <TreeCheckbox id="tree-checkbox-disabled" checked disabled title="Grid snap" onCheckedChange={onCheckedChange} />
-        <TreeCheckbox id="tree-checkbox-enabled" checked={false} title="Grid visible" onCheckedChange={onCheckedChange} />
+        <TreeCheckbox id="tree-checkbox-disabled" checked disabled title={uiDataLabel("Grid snap")} onCheckedChange={onCheckedChange} />
+        <TreeCheckbox id="tree-checkbox-enabled" checked={false} title={uiDataLabel("Grid visible")} onCheckedChange={onCheckedChange} />
       </div>,
     );
     const disabled = container.querySelector("#tree-checkbox-disabled") as HTMLInputElement;
@@ -166,7 +167,7 @@ describe("TreeCheckbox activation", () => {
   });
 
   it("names the control for assistive technology from its explicit label", () => {
-    const { container } = render(<TreeCheckbox id="tree-checkbox-named" checked={false} title="Rasteranzeige" onCheckedChange={vi.fn()} />);
+    const { container } = render(<TreeCheckbox id="tree-checkbox-named" checked={false} title={uiDataLabel("Rasteranzeige")} onCheckedChange={vi.fn()} />);
     const input = container.querySelector("#tree-checkbox-named") as HTMLInputElement;
 
     expect(input.getAttribute("aria-label")).toBe("Rasteranzeige");

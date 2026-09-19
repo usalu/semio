@@ -98,7 +98,7 @@ import {
   type TutorialCameraState,
   type TutorialEasing,
   type TutorialEvent,
-  type TutorialArtifactEvent,
+  type TutorialDocumentEvent,
   type TutorialGestureCue,
   type TutorialOverlayRect,
   type WindowLayout,
@@ -113,7 +113,7 @@ import * as THREE from "three";
 // 🚧️W8-interim: explicit re-export of the raw React/react-dom/three runtime values and types that
 // s plugins previously imported straight from those packages — plugins depend on this package
 // already, so they no longer need "react"/"react-dom"/"three" in their own `dependencies`.
-export { Fragment, createContext, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState, act } from "react";
+export { Fragment, createContext, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 export type { CSSProperties, FC, KeyboardEvent, MouseEvent as ReactMouseEvent, ReactNode, RefObject } from "react";
 export { createRoot } from "react-dom/client";
 export type { Root } from "react-dom/client";
@@ -125,6 +125,7 @@ import { CSS } from "@dnd-kit/utilities";
 import { Clone, Edges, GizmoHelper, GizmoViewport, Grid, Line as DreiLine, OrbitControls, OrthographicCamera, Outlines, PerspectiveCamera, Text as DreiText, TransformControls, useGLTF } from "@react-three/drei";
 import { Canvas as ThreeCanvas, createPortal as r3fCreatePortal, ThreeEvent, useFrame, useStore, useThree } from "@react-three/fiber";
 import { rankFuzzyItems, type FuzzySearchField, type FuzzySearchOptions, type FuzzySearchResult } from "../../🔨️modules/🔎️fuzzy-ranking/🟦️.ts";
+import { UI_MOBILE_MEDIA_QUERY, UI_TABLET_MEDIA_QUERY, elementsSurfaceDeviceForMatches, elementsSurfaceDeviceIsMobile, type ElementsSurfaceDevice } from "../../📱️device/🟦️.ts";
 import {
   applyNodeChanges,
   Background,
@@ -985,6 +986,7 @@ export type CanvasPickMenuProps = {
 export { CANVAS_HOVER_SOURCE_CANVAS, CANVAS_HOVER_SOURCE_PICK_MENU, canvasHoverFocusFromTarget, canvasPickTargetKey, pickMostSpecificCanvasTarget, sortCanvasPickTargetsGeneralFirst } from "@semio-tech/framework";
 export { windowElementId, panelTabElementId, panelTabFirstDraggableElementId } from "@semio-tech/framework";
 export type { CanvasHoverFocus, CanvasPickRequest, CanvasPickTarget } from "@semio-tech/framework";
+export type { DockSkeleton, DockTabSkeleton, IntroductionStepDefinition, TutorialCameraKeyframe, TutorialDefinition } from "@semio-tech/framework";
 
 /** @emoji 🎯️ Fixed DOM pick list for overlapping canvas targets (not painted on the infinite canvas). */
 export function CanvasPickMenu({ request, hoveredKey, onHoverKey, onPick, onDismiss, renderRow, title }: CanvasPickMenuProps): React.ReactNode {
@@ -1642,10 +1644,21 @@ export const SHELL_PANEL_ANCHOR_KEY_IDS: Readonly<Record<Anchor, keyof typeof SH
 // #region 🌈️SurfaceChrome
 /** @emoji 🌈️ Document-level UI chrome shared by Elements shells: appearance (system/light/dark), device (desktop/tablet/mobile), and driver — mirrors sketchpad `Appearance` / `Device` behavior on `documentElement`. */
 export type ElementsSurfaceAppearance = "system" | "light" | "dark";
-export type ElementsSurfaceDevice = "desktop" | "tablet" | "mobile";
 
-/** @emoji 📱️ Shared viewport breakpoint below which shells switch to the automatic mobile device. */
-export const UI_MOBILE_MEDIA_QUERY = "(max-width: 767px)";
+// 📱️ The device vocabulary and the breakpoint policy are NOT declared here: `📱️device/🟦️.ts` owns them
+// once for both renderer targets (the wgpu dock compares the same thresholds against its own `screen_w`),
+// so React cannot drift from wgpu about what width is a phone, a tablet or a desktop.
+export {
+  UI_MOBILE_MAX_WIDTH_PX,
+  UI_MOBILE_MEDIA_QUERY,
+  UI_TABLET_MAX_WIDTH_PX,
+  UI_TABLET_MEDIA_QUERY,
+  elementsSurfaceDeviceForMatches,
+  elementsSurfaceDeviceForWidth,
+  elementsSurfaceDeviceIsMobile,
+  elementsSurfaceDeviceSupportsTabDrag,
+} from "../../📱️device/🟦️.ts";
+export type { ElementsSurfaceDevice } from "../../📱️device/🟦️.ts";
 
 export interface ElementsSurfaceChromeInput {
   appearance: ElementsSurfaceAppearance;
@@ -1782,7 +1795,7 @@ function chromeRevealRegionRevealed(region: HTMLElement, x: number, y: number): 
   return false;
 }
 
-function applyChromeRevealAtPoint(root: HTMLElement, x: number, y: number): void {
+export function applyChromeRevealAtPoint(root: HTMLElement, x: number, y: number): void {
   root.querySelectorAll<HTMLElement>("[data-ui-reveal-region]").forEach((region) => {
     if (chromeRevealRegionRevealed(region, x, y)) region.dataset.uiRevealed = "true";
     else delete region.dataset.uiRevealed;
@@ -2639,6 +2652,12 @@ export const uiChromeTranslationBundles = {
               beginner: "Plugins",
             },
           },
+          taskManager: {
+            label: {
+              normal: "Aufgaben",
+              beginner: "Aufgaben",
+            },
+          },
         },
         display: {
           tab: {
@@ -2717,6 +2736,13 @@ export const uiChromeTranslationBundles = {
               canvas: { label: { normal: "Leinwand", beginner: "Leinwand" } },
               chrome: { label: { normal: "Oberfläche", beginner: "Oberfläche" } },
             },
+            contrast: {
+              label: { label: { normal: "Kontrast", beginner: "Lesbarkeit des Textes" } },
+              aaa: { label: { normal: "AAA", beginner: "Sehr gut lesbar" } },
+              aa: { label: { normal: "AA", beginner: "Gut lesbar" } },
+              aaLarge: { label: { normal: "AA nur für grossen Text", beginner: "Nur für grosse Schrift lesbar" } },
+              fail: { label: { normal: "Unter AA — zu geringer Kontrast", beginner: "Zu schwacher Kontrast, schwer lesbar" } },
+            },
           },
           unavailable: { label: { normal: "Einstellungen nicht verfügbar", beginner: "Einstellungen nicht verfügbar" } },
           resetDock: { label: { normal: "Panels zurücksetzen", beginner: "Panels zurücksetzen" } },
@@ -2748,6 +2774,8 @@ export const uiChromeTranslationBundles = {
           setLocale: { label: { normal: "Sprache festlegen", beginner: "Sprache festlegen" } },
           setTerminology: { label: { normal: "Terminologie festlegen", beginner: "Terminologie festlegen" } },
           setDriver: { label: { normal: "Treiber festlegen", beginner: "Treiber festlegen" } },
+          openTaskManager: { label: { normal: "Aufgaben öffnen", beginner: "Aufgaben öffnen" } },
+          openHub: { label: { normal: "Hub und Bereiche öffnen", beginner: "Mit anderen arbeiten" } },
         },
         shellCommand: {
           dockMove: { label: { normal: "Panel-Tab verschieben", beginner: "Panel-Tab verschieben" } },
@@ -2875,6 +2903,21 @@ export const uiChromeTranslationBundles = {
           lock: { label: { normal: "Sperren", beginner: "Sperren" } },
           unlock: { label: { normal: "Entsperren", beginner: "Entsperren" } },
         },
+        diagram: {
+          label: { label: { normal: "Knotengraph", beginner: "Diagramm aus Knoten und Verbindungen" } },
+          roleDescription: { label: { normal: "Knotengraph-Editor", beginner: "Editor für Knoten und Verbindungen" } },
+          keyboardHelp: {
+            label: {
+              normal: "Pfeiltasten: Knoten wechseln · Eingabe: auswählen · Umschalt+Eingabe: zur Auswahl hinzufügen · Esc: Auswahl aufheben",
+              beginner: "Mit den Pfeiltasten von Knoten zu Knoten springen, mit der Eingabetaste auswählen, mit Esc die Auswahl aufheben",
+            },
+          },
+          nodes: { label: { normal: "Knoten", beginner: "Knoten" } },
+          edges: { label: { normal: "Verbindungen", beginner: "Verbindungen" } },
+          empty: { label: { normal: "Leerer Graph", beginner: "Noch keine Knoten vorhanden" } },
+          focusedNode: { label: { normal: "Fokussierter Knoten", beginner: "Aktuell angesteuerter Knoten" } },
+          selectedNode: { label: { normal: "Ausgewählter Knoten", beginner: "Ausgewählter Knoten" } },
+        },
         host: {
           emptyScene: { label: { normal: "Keine Szene", beginner: "Keine Szene" } },
           preview: { label: { normal: "Vorschau", beginner: "Vorschau" } },
@@ -2896,16 +2939,6 @@ export const uiChromeTranslationBundles = {
           frameVisible: { label: { normal: "Sichtbares einpassen", beginner: "Sichtbares einpassen" } },
           perspective: { label: { normal: "Perspektivisch", beginner: "Perspektivisch" } },
           orthographic: { label: { normal: "Orthografisch", beginner: "Orthografisch" } },
-        },
-        chat: {
-          readyFor: { label: { normal: "Chat ist bereit für {{title}}.", beginner: "Chat ist bereit für {{title}}." } },
-          localOnly: { label: { normal: "Nachrichten bleiben lokal in diesem Panel, bis ein verbundener Assistent hinzugefügt wird.", beginner: "Nachrichten bleiben lokal in diesem Panel, bis ein verbundener Assistent hinzugefügt wird." } },
-          instructions: {
-            label: { normal: "Lokaler Chat für {{title}}. Eingabetaste zum Senden, Umschalt+Eingabetaste für eine neue Zeile.", beginner: "Lokaler Chat für {{title}}. Eingabetaste zum Senden, Umschalt+Eingabetaste für eine neue Zeile." },
-          },
-          placeholder: { label: { normal: "Nachricht für {{title}} schreiben…", beginner: "Nachricht für {{title}} schreiben…" } },
-          savedLocally: { label: { normal: "Lokal gespeichert: „{{preview}}“", beginner: "Lokal gespeichert: „{{preview}}“" } },
-          send: { label: { normal: "Senden", beginner: "Senden" } },
         },
         blockList: {
           steps: { label: { normal: "Schritte", beginner: "Schritte" } },
@@ -3021,6 +3054,20 @@ export const uiChromeTranslationBundles = {
         sync: {
           attach: { label: { normal: "Verbinden", beginner: "Verbinden" } },
           detach: { label: { normal: "Trennen", beginner: "Trennen" } },
+          browse: { label: { normal: "Durchsuchen", beginner: "Ordner wählen" } },
+          statusLabel: { label: { normal: "Synchronisierungsstatus", beginner: "Synchronisierungsstatus" } },
+          live: { label: { normal: "verbunden", beginner: "verbunden" } },
+          connecting: { label: { normal: "verbinde…", beginner: "verbinde…" } },
+          reconnecting: { label: { normal: "verbinde erneut…", beginner: "verbinde erneut…" } },
+          offline: { label: { normal: "offline", beginner: "nicht verbunden" } },
+          signedOut: { label: { normal: "abgemeldet", beginner: "nicht angemeldet" } },
+          peerOne: { label: { normal: "{{count}} Mitwirkender", beginner: "{{count}} Mitwirkender" } },
+          peerMany: { label: { normal: "{{count}} Mitwirkende", beginner: "{{count}} Mitwirkende" } },
+          saved: { label: { normal: "gespeichert", beginner: "gespeichert" } },
+          unsaved: { label: { normal: "ungespeichert", beginner: "nicht gespeichert" } },
+          pending: { label: { normal: "{{count}} ausstehend", beginner: "{{count}} ausstehend" } },
+          hubLabel: { label: { normal: "Hub-Verbindung", beginner: "Hub-Verbindung" } },
+          hubSignIn: { label: { normal: "Anmelden", beginner: "Anmelden" } },
         },
         ink: {
           link: { label: { normal: "Link", beginner: "Link" } },
@@ -3481,6 +3528,12 @@ export const uiChromeTranslationBundles = {
               beginner: "Plugins",
             },
           },
+          taskManager: {
+            label: {
+              normal: "Tasks",
+              beginner: "Tasks",
+            },
+          },
         },
         display: {
           tab: {
@@ -3559,6 +3612,13 @@ export const uiChromeTranslationBundles = {
               canvas: { label: { normal: "Canvas", beginner: "Canvas" } },
               chrome: { label: { normal: "Chrome", beginner: "Chrome" } },
             },
+            contrast: {
+              label: { label: { normal: "Contrast", beginner: "How readable the text is" } },
+              aaa: { label: { normal: "AAA", beginner: "Very easy to read" } },
+              aa: { label: { normal: "AA", beginner: "Easy to read" } },
+              aaLarge: { label: { normal: "AA for large text only", beginner: "Readable at large sizes only" } },
+              fail: { label: { normal: "Below AA — contrast too low", beginner: "Contrast too low, hard to read" } },
+            },
           },
           unavailable: { label: { normal: "Settings unavailable", beginner: "Settings unavailable" } },
           resetDock: { label: { normal: "Reset panels", beginner: "Reset panels" } },
@@ -3590,6 +3650,8 @@ export const uiChromeTranslationBundles = {
           setLocale: { label: { normal: "Set Locale", beginner: "Set Locale" } },
           setTerminology: { label: { normal: "Set Terminology", beginner: "Set Terminology" } },
           setDriver: { label: { normal: "Set Driver", beginner: "Set Driver" } },
+          openTaskManager: { label: { normal: "Open Tasks", beginner: "Open Tasks" } },
+          openHub: { label: { normal: "Open Hub and Spaces", beginner: "Work With Others" } },
         },
         shellCommand: {
           dockMove: { label: { normal: "Move Panel Tab", beginner: "Move Panel Tab" } },
@@ -3717,6 +3779,21 @@ export const uiChromeTranslationBundles = {
           lock: { label: { normal: "Lock", beginner: "Lock" } },
           unlock: { label: { normal: "Unlock", beginner: "Unlock" } },
         },
+        diagram: {
+          label: { label: { normal: "Node graph", beginner: "Diagram of nodes and connections" } },
+          roleDescription: { label: { normal: "Node graph editor", beginner: "Editor for nodes and connections" } },
+          keyboardHelp: {
+            label: {
+              normal: "Arrow keys: move between nodes · Enter: select · Shift+Enter: add to selection · Esc: clear selection",
+              beginner: "Use the arrow keys to move from node to node, Enter to select one, Esc to clear the selection",
+            },
+          },
+          nodes: { label: { normal: "Nodes", beginner: "Nodes" } },
+          edges: { label: { normal: "Connections", beginner: "Connections" } },
+          empty: { label: { normal: "Empty graph", beginner: "No nodes yet" } },
+          focusedNode: { label: { normal: "Focused node", beginner: "The node you are on" } },
+          selectedNode: { label: { normal: "Selected node", beginner: "Selected node" } },
+        },
         host: {
           emptyScene: { label: { normal: "No scene", beginner: "No scene" } },
           preview: { label: { normal: "Preview", beginner: "Preview" } },
@@ -3738,14 +3815,6 @@ export const uiChromeTranslationBundles = {
           frameVisible: { label: { normal: "Frame visible", beginner: "Frame visible" } },
           perspective: { label: { normal: "Perspective", beginner: "Perspective" } },
           orthographic: { label: { normal: "Orthographic", beginner: "Orthographic" } },
-        },
-        chat: {
-          readyFor: { label: { normal: "Chat is ready for {{title}}.", beginner: "Chat is ready for {{title}}." } },
-          localOnly: { label: { normal: "Messages stay local in this panel until a connected assistant is added.", beginner: "Messages stay local in this panel until a connected assistant is added." } },
-          instructions: { label: { normal: "Local chat for {{title}}. Use Enter to send and Shift+Enter for a new line.", beginner: "Local chat for {{title}}. Use Enter to send and Shift+Enter for a new line." } },
-          placeholder: { label: { normal: "Write a message for {{title}}…", beginner: "Write a message for {{title}}…" } },
-          savedLocally: { label: { normal: 'Saved locally: "{{preview}}"', beginner: 'Saved locally: "{{preview}}"' } },
-          send: { label: { normal: "Send", beginner: "Send" } },
         },
         blockList: {
           steps: { label: { normal: "Steps", beginner: "Steps" } },
@@ -3861,6 +3930,20 @@ export const uiChromeTranslationBundles = {
         sync: {
           attach: { label: { normal: "Attach", beginner: "Attach" } },
           detach: { label: { normal: "Detach", beginner: "Detach" } },
+          browse: { label: { normal: "Browse", beginner: "Pick a folder" } },
+          statusLabel: { label: { normal: "Sync status", beginner: "Sync status" } },
+          live: { label: { normal: "live", beginner: "live" } },
+          connecting: { label: { normal: "connecting…", beginner: "connecting…" } },
+          reconnecting: { label: { normal: "reconnecting…", beginner: "reconnecting…" } },
+          offline: { label: { normal: "offline", beginner: "not connected" } },
+          signedOut: { label: { normal: "signed out", beginner: "not signed in" } },
+          peerOne: { label: { normal: "{{count}} peer", beginner: "{{count}} collaborator" } },
+          peerMany: { label: { normal: "{{count}} peers", beginner: "{{count}} collaborators" } },
+          saved: { label: { normal: "saved", beginner: "saved" } },
+          unsaved: { label: { normal: "unsaved", beginner: "not saved" } },
+          pending: { label: { normal: "{{count}} pending", beginner: "{{count}} pending" } },
+          hubLabel: { label: { normal: "Hub connection", beginner: "Hub connection" } },
+          hubSignIn: { label: { normal: "Sign in", beginner: "Sign in" } },
         },
         ink: {
           link: { label: { normal: "Link", beginner: "Link" } },
@@ -4393,6 +4476,39 @@ export const UiMobileProvider: React.FC<{
   readonly children: React.ReactNode;
 }> = ({ mobile, children }) => <UiMobileContext.Provider value={mobile}>{children}</UiMobileContext.Provider>;
 
+const UiDeviceContext = reactHostPort.createContext<ElementsSurfaceDevice | undefined>(undefined);
+
+/** @emoji 📱️ Broadcasts the shell's authoritative device to descendants — the three-way twin of
+ * {@link UiMobileProvider}, used when a shell pins a device from settings instead of measuring one. */
+export const UiDeviceProvider: React.FC<{
+  readonly device: ElementsSurfaceDevice;
+  readonly children: React.ReactNode;
+}> = ({ device, children }) => (
+  <UiDeviceContext.Provider value={device}>
+    <UiMobileProvider mobile={elementsSurfaceDeviceIsMobile(device)}>{children}</UiMobileProvider>
+  </UiDeviceContext.Provider>
+);
+
+/**
+ * @emoji 📱️ The device this subtree paints for: the nearest {@link UiDeviceProvider}, else the viewport
+ * measured through the ONE policy `📱️device/🟦️.ts` shares with the wgpu dock.
+ *
+ * `AGENTS.md` orders the devices desktop → mobile → tablet and the settings surface has always offered
+ * all three; before this hook the automatic detection was binary ({@link useUiMobile}), so `tablet` was
+ * a value a user could only reach by hand. An ancestor {@link UiMobileProvider} that says "mobile" still
+ * wins, so a shell that already pinned the binary flag cannot be widened out from under itself.
+ */
+export function useUiDevice(): ElementsSurfaceDevice {
+  const mobileMedia = useMediaQuery(UI_MOBILE_MEDIA_QUERY);
+  const tabletMedia = useMediaQuery(UI_TABLET_MEDIA_QUERY);
+  const deviceCtx = reactHostPort.useContext(UiDeviceContext);
+  const mobileCtx = reactHostPort.useContext(UiMobileContext);
+  if (deviceCtx !== undefined) return deviceCtx;
+  if (mobileCtx === true) return "mobile";
+  if (mobileCtx === false) return tabletMedia ? "tablet" : "desktop";
+  return elementsSurfaceDeviceForMatches({ mobile: mobileMedia, tablet: tabletMedia });
+}
+
 /** @emoji 📱️ Returns the nearest {@link UiMobileProvider} flag, falling back to {@link UI_MOBILE_MEDIA_QUERY} for standalone usage (Storybook, tests). */
 export function useUiMobile(): boolean {
   const media = useMediaQuery(UI_MOBILE_MEDIA_QUERY);
@@ -4520,7 +4636,7 @@ function isChromeResizeHandleTarget(target: EventTarget | null): boolean {
 }
 
 /** @emoji 👻️ Keeps automatic ghosting on interaction surfaces and direct tree rows, not nested UI controls. */
-function shouldBeginAutomaticGhostInteraction(target: EventTarget | null): boolean {
+export function shouldBeginAutomaticGhostInteraction(target: EventTarget | null): boolean {
   if (!(target instanceof Element)) return false;
   if (isChromeResizeHandleTarget(target)) return false;
   const region = findGhostRegionAncestor(target);
@@ -4893,7 +5009,7 @@ function useIntroductionElevation(ids: readonly string[]): ReadonlySet<string> {
 
 type IntroductionInfoBoxPosition = { readonly top: number; readonly left: number };
 
-const INTRODUCTION_INFO_BOX_GAP_PX = 16;
+export const INTRODUCTION_INFO_BOX_GAP_PX = 16;
 
 /** @emoji 📝️ Splits an introduction step body into visual paragraphs on blank lines so each
  * paragraph can emphasize independently on hover. */
@@ -5170,7 +5286,7 @@ export function resolveIntroductionPoint(point: IntroductionPoint, root: ParentN
 //#endregion 🎬️DemonstrationResolve
 
 //#region 🎬️DemonstrationIdle
-const INTRODUCTION_DEMO_IDLE_THRESHOLD_MS = 1600;
+export const INTRODUCTION_DEMO_IDLE_THRESHOLD_MS = 1600;
 
 type IntroductionPointerPosition = { readonly x: number; readonly y: number };
 
@@ -5190,7 +5306,7 @@ type IntroductionPointerIdleState = {
  * event handler so the visual disappears before React commits the idle-state update. Starts not-idle:
  * a demonstration should only appear once the user has first settled, not the instant a step mounts
  * mid-motion. */
-function useIntroductionPointerIdle(enabled: boolean, thresholdMs: number = INTRODUCTION_DEMO_IDLE_THRESHOLD_MS, onActivity?: () => void): IntroductionPointerIdleState {
+export function useIntroductionPointerIdle(enabled: boolean, thresholdMs: number = INTRODUCTION_DEMO_IDLE_THRESHOLD_MS, onActivity?: () => void): IntroductionPointerIdleState {
   const [idle, setIdle] = reactHostPort.useState(false);
   const lastPositionRef = reactHostPort.useRef<IntroductionPointerPosition | null>(null);
   const onActivityRef = reactHostPort.useRef(onActivity);
@@ -5262,7 +5378,7 @@ type IntroductionDemoVisual = {
 };
 
 /** @emoji 🖱️ Resolves the mini-mouse highlight, modifier chips, and press/trail family for a gesture. */
-function introductionDemoResolveVisual(gesture: IntroductionGesture): IntroductionDemoVisual {
+export function introductionDemoResolveVisual(gesture: IntroductionGesture): IntroductionDemoVisual {
   switch (gesture.kind) {
     case "leftClick":
       return { button: "left", modifiers: [], feedback: "leftClick", showDoubleChip: false };
@@ -5296,7 +5412,7 @@ function introductionDemoRippleClass(feedback: IntroductionDemoFeedbackKind, dou
 /** @emoji 🌐️ A point along the quadratic-bezier arc from `from` to `to`, bulged perpendicular to the
  * straight line between them — an `orbit` gesture reads as a curved rotation around a pivot, visually
  * distinct from `drag`'s straight-line pan/reposition. */
-function introductionDemoArcPoint(from: IntroductionResolvedPoint, to: IntroductionResolvedPoint, t: number): IntroductionResolvedPoint {
+export function introductionDemoArcPoint(from: IntroductionResolvedPoint, to: IntroductionResolvedPoint, t: number): IntroductionResolvedPoint {
   const dx = to.x - from.x;
   const dy = to.y - from.y;
   const distance = Math.hypot(dx, dy) || 1;
@@ -6191,7 +6307,7 @@ export function composeTutorialUi(def: TutorialDefinition, atMs: number): Tutori
 export type TutorialSlice = {
   readonly forward: boolean;
   readonly events: readonly TutorialEvent[];
-  readonly document: readonly TutorialArtifactEvent[];
+  readonly document: readonly TutorialDocumentEvent[];
   readonly uiChanges: readonly TutorialUiChange[];
 };
 
@@ -7228,7 +7344,7 @@ export interface PanelDockContextValue {
   readonly onTreeUnitDockDrop: (move: PanelTreeUnitDockMove) => void;
 }
 
-const PanelDockContext = reactHostPort.createContext<PanelDockContextValue | null>(null);
+export const PanelDockContext = reactHostPort.createContext<PanelDockContextValue | null>(null);
 
 /** @emoji 🎛️ The enclosing {@link PanelDockProvider} contract, or `null` outside one, including Layout's private mobile panel. */
 export function usePanelDockContext(): PanelDockContextValue | null {
@@ -8495,7 +8611,7 @@ export const Spinner: React.FC<SpinnerProps> = ({ size = "medium", className = "
 type OwnedRouteTarget = { kind: "internal"; href: string };
 
 /** @emoji 🧭️ Parses the closed same-document route grammar without normalizing its path, query, or fragment. */
-function parseOwnedRouteTarget(href: unknown): OwnedRouteTarget | null {
+export function parseOwnedRouteTarget(href: unknown): OwnedRouteTarget | null {
   if (typeof href !== "string" || href.length === 0 || /[\s\u0000-\u001f\u007f\\]/u.test(href)) return null;
   if (/^[a-z][a-z0-9+.-]*:/i.test(href) || href.startsWith("//")) return null;
   try {
@@ -8507,7 +8623,7 @@ function parseOwnedRouteTarget(href: unknown): OwnedRouteTarget | null {
 }
 
 /** @emoji 🚦️ Performs the one owned browser-history command and publishes one matching navigation signal. */
-function navigateOwnedRoute(target: OwnedRouteTarget): { navigated: boolean } {
+export function navigateOwnedRoute(target: OwnedRouteTarget): { navigated: boolean } {
   if (typeof window === "undefined" || typeof window.history?.pushState !== "function" || typeof window.PopStateEvent !== "function") return { navigated: false };
   let event: PopStateEvent;
   try {
@@ -9083,10 +9199,10 @@ export function useDocumentFullscreen(root?: Element): { isFullscreen: boolean; 
 
 // 🐚️ Keyed by shell root (falling back to `document.documentElement` outside any shell) so two navbars
 // of different widths — one per shell — never overwrite each other's measured reserve.
-const shellNavbarTrailingEndWidthByRoot = ephemeralMap<HTMLElement, number>("framework.modules.ui.packages.typescript.targets.react.index.tsx.shellNavbarTrailingEndWidthByRoot");
+export const shellNavbarTrailingEndWidthByRoot = ephemeralMap<HTMLElement, number>("framework.modules.ui.packages.typescript.targets.react.index.tsx.shellNavbarTrailingEndWidthByRoot");
 const shellNavbarTrailingEndWidthListenersByRoot = ephemeralMap<HTMLElement, Set<() => void>>("framework.modules.ui.packages.typescript.targets.react.index.tsx.shellNavbarTrailingEndWidthListenersByRoot");
 
-function publishShellNavbarTrailingEndWidthPx(root: HTMLElement | undefined, width: number): void {
+export function publishShellNavbarTrailingEndWidthPx(root: HTMLElement | undefined, width: number): void {
   const key = resolveElementsSurfaceChromeRoot(root);
   if (!key || width < 0 || width === shellNavbarTrailingEndWidthByRoot.get(key)) return;
   shellNavbarTrailingEndWidthByRoot.set(key, width);
@@ -11437,7 +11553,7 @@ if (import.meta.vitest) {
   });
   describe("iconRenderCameraPose", () => {
     it("builds an orthographic camera for orthographic shots", () => {
-      const request = {
+      const request: IconRenderRequest = {
         assetUrl: "mesh://x",
         width: 256,
         height: 256,
@@ -11451,7 +11567,7 @@ if (import.meta.vitest) {
     });
     it("recomputes orthographic zoom when fit is enabled", () => {
       const mesh = new THREE.Mesh(new THREE.BoxGeometry(4, 4, 4));
-      const request = {
+      const request: IconRenderRequest = {
         assetUrl: "mesh://x",
         width: 256,
         height: 256,

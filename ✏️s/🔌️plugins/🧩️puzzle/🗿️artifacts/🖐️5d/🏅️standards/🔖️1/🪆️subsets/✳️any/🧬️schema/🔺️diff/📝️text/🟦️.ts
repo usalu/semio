@@ -49,5 +49,5 @@ export const puzzlePuzzle5dDiffTextGuardConstant = <T extends string | number | 
 //#endregion 🚪️Parsers
 
 export function parsePuzzle5dDiffText(value: unknown, at = "$"): Puzzle5dDiffText {
-  return puzzlePuzzle5dDiffTextGuardObject(value, `${at}`);
+  return puzzlePuzzle5dDiffTextGuardString(value, `${at}`);
 }

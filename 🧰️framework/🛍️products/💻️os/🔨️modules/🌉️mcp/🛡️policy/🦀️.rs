@@ -1,11 +1,11 @@
 //! 🛡️ Policy engine — packet `P6-actions-policy`, `📋️master.md` §3.4. `AgentPrincipal` carries the
 //! effective, ALREADY-EXPANDED `kernel::CapabilityId` scope set a session was granted (from the CLI
 //! flags P1a's `StdioOptions`/`HttpOptions` already parse); [`PolicyEngine`] is the pure decision
-//! layer `🎬️actions`' `ActionAdapter` calls for scope enforcement and the approval gate. Depends on
+//! layer `🔀️dispatch`' `ActionAdapter` calls for scope enforcement and the approval gate. Depends on
 //! `semio_framework::manifest::{kernel, ApprovalMode}` only — the SAME one hop `🗂️catalog` already
 //! takes (D8: no plugin/channel/actor dependency), and on `crate::handles` (P1b) for `HandleTable`/
 //! `Attachment`/`HandleKind`/`SessionHandle`. Zero dependency on `crate::audit` — every decision this
-//! facet makes is reported by ITS CALLER (`🎬️actions`, which owns the `AuditSink`), so this facet
+//! facet makes is reported by ITS CALLER (`🔀️dispatch`, which owns the `AuditSink`), so this facet
 //! stays testable without an audit sink at all.
 
 use crate::catalog::CapabilityDefinition;
@@ -190,7 +190,7 @@ pub enum ApprovalGate {
 
 //#region 🔖️PolicyEngine
 /// ⚖️ The pure decision layer — scope subset checks and the approval gate. Holds the SAME
-/// `Arc<HandleTable>` `🎬️actions`' `ActionAdapter` holds (never a private copy), so an `appr_` handle
+/// `Arc<HandleTable>` `🔀️dispatch`' `ActionAdapter` holds (never a private copy), so an `appr_` handle
 /// minted here is resolvable by `ActionAdapter::invoke`'s own handle lookups and vice versa.
 pub struct PolicyEngine {
     handles: Arc<HandleTable>,
@@ -269,6 +269,159 @@ impl PolicyEngine {
     }
 }
 //#endregion 🔖️PolicyEngine
+
+//#region 🔖️ApprovalCoordinator
+/// ⏱️ How long the shell lane waits for a human to press a button in the OS approval dialog before
+/// giving up. Long enough for a real decision, short enough that an agent is never wedged forever on
+/// a shell whose human walked away; the agent may simply invoke again.
+pub const SHELL_APPROVAL_TIMEOUT_MS: u64 = 120_000;
+const SHELL_APPROVAL_POLL_INTERVAL_MS: u64 = 25;
+
+/// 🛤️ Which lane produced (or failed to produce) a decision — carried into the audit row and into
+/// the `ApprovalRequired` error's `details` so a caller learns WHY nobody could be asked.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum ApprovalChannel {
+    Elicitation,
+    Shell,
+}
+
+impl ApprovalChannel {
+    pub fn as_str(self) -> &'static str {
+        match self {
+            ApprovalChannel::Elicitation => "elicitation",
+            ApprovalChannel::Shell => "shell",
+        }
+    }
+}
+
+/// 🗳️ What [`ApprovalCoordinator::resolve`] concluded. `Unreachable` carries one `details` object
+/// naming every lane it tried and why each was unusable — the shipped binary never answers
+/// `APPROVAL_REQUIRED` without saying what would have to change.
+#[derive(Clone, Debug, PartialEq)]
+pub enum ApprovalResolution {
+    Approved { channel: ApprovalChannel },
+    Denied { channel: ApprovalChannel, note: Option<String> },
+    Unreachable { details: serde_json::Value },
+}
+
+/// 🧾️ Everything a human needs shown to decide one parked approval.
+pub struct ApprovalRequest<'a> {
+    pub approval_handle: &'a str,
+    pub capability_id: &'a str,
+    pub capability_title: &'a str,
+    pub principal_id: &'a str,
+    pub diff_summary: &'a serde_json::Value,
+}
+
+impl ApprovalRequest<'_> {
+    /// 📨️ The bridge's single `ApprovalRequested.summary` string, JSON-encoded in exactly the
+    /// `{capabilityId, diffSummary, risk, requestedBy}` shape `🤖️AgentApprovals`'
+    /// `parseApprovalSummary` already reads (`📓️terra-P10-report.md` anticipated this producer).
+    fn shell_summary(&self) -> String {
+        serde_json::json!({
+            "capabilityId": self.capability_id,
+            "diffSummary": format!("{} — {}", self.capability_title, self.diff_summary),
+            "risk": "high",
+            "requestedBy": self.principal_id,
+        })
+        .to_string()
+    }
+
+    fn elicitation_message(&self) -> String {
+        format!("{} ({}) is a destructive action requested by {}. Change summary: {}", self.capability_title, self.capability_id, self.principal_id, self.diff_summary)
+    }
+}
+
+/// ⛩️ The real resolution chain for a parked approval, in priority order:
+/// 1. **MCP elicitation** — the spec's own human-in-the-loop primitive, asked of the CONNECTED client
+///    (Claude Code, Codex, …), used only when that client advertised `capabilities.elicitation`.
+/// 2. **The live OS shell** — `GatewayToShell::ApprovalRequested` over `/bridge`, decided by the human
+///    in `🤖️AgentApprovals`/`💬️AgentChatPanel`, answered by `ShellToGateway::Approval`.
+/// 3. **Neither** — a typed, non-retryable `APPROVAL_REQUIRED` naming both closed lanes.
+///
+/// 🔐️ There is deliberately **no `approval_resolve` MCP tool**. Every MCP tool is callable by the
+/// agent and by nothing else, so such a tool would let the agent approve its own destructive action,
+/// which is the entire thing the gate exists to prevent. The only actors that may decide are the
+/// client's human (lane 1), the shell's human (lane 2), and the human who typed `--auto-approve` at
+/// launch (`AutoApprovePolicy`, applied one layer up in [`PolicyEngine::requires_approval`] so an
+/// auto-approved capability never parks a handle at all). `action_invoke`'s existing `approvalHandle`
+/// input stays what it always was: a way to REPLAY a decision one of those three already made.
+pub struct ApprovalCoordinator {
+    elicitation: Option<crate::transport::ElicitationSlot>,
+    bridge: Option<crate::ui::BridgeSlot>,
+    shell_timeout_ms: u64,
+}
+
+impl ApprovalCoordinator {
+    pub fn new(elicitation: Option<crate::transport::ElicitationSlot>, bridge: Option<crate::ui::BridgeSlot>) -> Self {
+        Self { elicitation, bridge, shell_timeout_ms: SHELL_APPROVAL_TIMEOUT_MS }
+    }
+
+    #[must_use]
+    pub fn with_shell_timeout_ms(mut self, timeout_ms: u64) -> Self {
+        self.shell_timeout_ms = timeout_ms;
+        self
+    }
+
+    pub fn resolve(&self, request: &ApprovalRequest<'_>) -> ApprovalResolution {
+        let elicitation_state = match self.resolve_by_elicitation(request) {
+            Ok(resolution) => return resolution,
+            Err(state) => state,
+        };
+        let shell_state = match self.resolve_by_shell(request) {
+            Ok(resolution) => return resolution,
+            Err(state) => state,
+        };
+        ApprovalResolution::Unreachable {
+            details: serde_json::json!({
+                "approvalHandle": request.approval_handle,
+                "channels": { "elicitation": elicitation_state, "shell": shell_state },
+                "remedy": "connect an MCP client that advertises `elicitation`, attach an OS shell to the gateway bridge, or relaunch with --auto-approve readonly|all",
+            }),
+        }
+    }
+
+    fn resolve_by_elicitation(&self, request: &ApprovalRequest<'_>) -> Result<ApprovalResolution, &'static str> {
+        let Some(channel) = self.elicitation.as_ref().and_then(|slot| slot.get()) else { return Err("no server-initiated request channel on this transport") };
+        match channel.request_boolean(&request.elicitation_message(), request.capability_title) {
+            Ok(crate::transport::ElicitationAction::Accept) => Ok(ApprovalResolution::Approved { channel: ApprovalChannel::Elicitation }),
+            Ok(crate::transport::ElicitationAction::Decline) => Ok(ApprovalResolution::Denied { channel: ApprovalChannel::Elicitation, note: Some("the client's human declined".to_string()) }),
+            Ok(crate::transport::ElicitationAction::Cancel) => Ok(ApprovalResolution::Denied { channel: ApprovalChannel::Elicitation, note: Some("the client cancelled the elicitation".to_string()) }),
+            Err(crate::transport::ElicitationUnavailable::ClientDoesNotSupportIt) => Err("the connected client did not advertise capabilities.elicitation"),
+            Err(crate::transport::ElicitationUnavailable::NoChannel) => Err("no server-initiated request channel on this transport"),
+            Err(crate::transport::ElicitationUnavailable::ClientClosed) => Err("the client closed the connection while the elicitation was pending"),
+            Err(crate::transport::ElicitationUnavailable::TimedOut) => Err("the connected client did not answer the elicitation in time"),
+            Err(crate::transport::ElicitationUnavailable::Malformed(_)) => Err("the elicitation round trip failed at the transport"),
+        }
+    }
+
+    fn resolve_by_shell(&self, request: &ApprovalRequest<'_>) -> Result<ApprovalResolution, &'static str> {
+        let Some(bridge) = self.bridge.as_ref().and_then(|slot| slot.get()) else { return Err("this gateway is serving no /bridge — no OS shell can be asked") };
+        let Some(connection) = crate::ui::active_shell_connection(bridge) else { return Err("a /bridge is running but no OS shell is attached to it") };
+        let frame = crate::bridge::GatewayToShell::ApprovalRequested { approval_id: request.approval_handle.to_string(), summary: request.shell_summary() };
+        if !bridge.send_to(connection, frame) {
+            return Err("the attached shell's connection closed while the approval was being published");
+        }
+        let deadline = std::time::Instant::now() + std::time::Duration::from_millis(self.shell_timeout_ms);
+        loop {
+            if let Some((approval_id, decision, note)) = bridge.last_approval(connection) {
+                if approval_id == request.approval_handle {
+                    let resolved = crate::bridge::GatewayToShell::ApprovalResolved { approval_id, decision };
+                    let _ = bridge.send_to(connection, resolved);
+                    return Ok(match decision {
+                        crate::bridge::ApprovalDecision::Deny => ApprovalResolution::Denied { channel: ApprovalChannel::Shell, note },
+                        crate::bridge::ApprovalDecision::Once | crate::bridge::ApprovalDecision::Session => ApprovalResolution::Approved { channel: ApprovalChannel::Shell },
+                    });
+                }
+            }
+            if std::time::Instant::now() >= deadline {
+                return Err("the attached OS shell did not answer the approval request in time");
+            }
+            std::thread::sleep(std::time::Duration::from_millis(SHELL_APPROVAL_POLL_INTERVAL_MS));
+        }
+    }
+}
+//#endregion 🔖️ApprovalCoordinator
 
 //#region 🧪️Tests
 #[cfg(test)]

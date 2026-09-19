@@ -64,10 +64,23 @@ fn next_shell_command_seq() -> u64 {
     SHELL_COMMAND_SEQ.fetch_add(1, Ordering::Relaxed)
 }
 
-/// 🕳️ No `BridgeHandle` at all — this gateway is not serving `/bridge` (e.g. `stdio` transport, or
-/// `http` before a shell has ever been expected). The bare tier for every UI tool/resource.
+/// 🕳️ No `BridgeHandle` at all — this gateway is serving no `/bridge`. In `stdio` mode (every client
+/// config in this repo) that happens for exactly one reason the caller can act on: no os session had
+/// published a live record in `🛰️rendezvous`'s sessions directory when this process started, so there
+/// was nobody to offer a bridge to. The details name that directory and the live-session count as of
+/// NOW, so an agent can tell "start `dev s`" apart from "the session started after I did".
 fn bridge_not_running_error() -> GatewayError {
-    GatewayError::new(GatewayErrorCode::PluginUnavailable, "no `/bridge` is running on this gateway — start it with the `http` transport so a shell can dial `/bridge`").with_details(serde_json::json!({ "bindWith": ["http"] })).retryable()
+    let sessions = crate::rendezvous::live_os_sessions();
+    GatewayError::new(
+        GatewayErrorCode::PluginUnavailable,
+        "no `/bridge` is running on this gateway — a stdio gateway offers one only when a live os session was already published at launch; start `bun ./📜️script.ts dev s` and reconnect this MCP server",
+    )
+    .with_details(serde_json::json!({
+        "liveOsSessionsNow": sessions.len(),
+        "sessionsDirectory": crate::rendezvous::sessions_dir().to_string_lossy(),
+        "bindWith": ["stdio (a live os session must exist at launch)", "http"],
+    }))
+    .retryable()
 }
 
 /// 🕳️ A `BridgeHandle` exists but no shell connection is live — the normal headless state, not a
@@ -80,7 +93,7 @@ fn no_shell_attached_error() -> GatewayError {
 /// highest (most recently registered) `ShellConnectionId`, i.e. the most-recently-connected shell.
 /// `🧵️bridge` carries no notion of "the" primary shell yet; a later packet that needs explicit
 /// multi-shell targeting adds a `shellId` argument to these tools without touching this fallback.
-fn active_shell_connection(bridge: &BridgeHandle) -> Option<ShellConnectionId> {
+pub(crate) fn active_shell_connection(bridge: &BridgeHandle) -> Option<ShellConnectionId> {
     bridge.connections().into_iter().max()
 }
 

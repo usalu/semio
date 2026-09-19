@@ -227,6 +227,10 @@ export const puzzlePuzzle5dArtifactGuardInteger = (value: unknown, at: string, b
   Number.isSafeInteger(value) ? puzzlePuzzle5dArtifactGuardNumber(value, at, bounds) : puzzlePuzzle5dArtifactGuardReject(at, "value is not an integer");
 export const puzzlePuzzle5dArtifactGuardMember = <T extends string>(value: unknown, at: string, members: readonly T[]): T =>
   members.includes(value as T) ? (value as T) : puzzlePuzzle5dArtifactGuardReject(at, `value is not one of ${members.join(", ")}`);
+export const puzzlePuzzle5dArtifactGuardVector3 = (value: unknown, at: string): [number, number, number] => {
+  const items = puzzlePuzzle5dArtifactGuardArray(value, at, { minItems: 3, maxItems: 3 }).map((item, index) => puzzlePuzzle5dArtifactGuardNumber(item, `${at}[${index}]`));
+  return [items[0]!, items[1]!, items[2]!];
+};
 export const puzzlePuzzle5dArtifactGuardConstant = <T extends string | number | boolean>(value: unknown, at: string, expected: T): T =>
   value === expected ? expected : puzzlePuzzle5dArtifactGuardReject(at, `value is not ${String(expected)}`);
 //#endregion 🚪️Parsers
@@ -370,8 +374,8 @@ export function parsePuzzle5dGripTemplate(value: unknown, at = "$"): Puzzle5dGri
     description: row["description"] === undefined ? undefined : puzzlePuzzle5dArtifactGuardString(row["description"], `${at}.description`),
     icon: row["icon"] === undefined ? undefined : puzzlePuzzle5dArtifactGuardString(row["icon"], `${at}.icon`),
     gripKind: row["gripKind"] === undefined ? undefined : puzzlePuzzle5dArtifactGuardString(row["gripKind"], `${at}.gripKind`),
-    point: row["point"] === undefined ? undefined : puzzlePuzzle5dArtifactGuardArray(row["point"], `${at}.point`, {"minItems": 3, "maxItems": 3}).map((item, index) => puzzlePuzzle5dArtifactGuardNumber(item, `${at}.point[${index}]`)),
-    direction: row["direction"] === undefined ? undefined : puzzlePuzzle5dArtifactGuardArray(row["direction"], `${at}.direction`, {"minItems": 3, "maxItems": 3}).map((item, index) => puzzlePuzzle5dArtifactGuardNumber(item, `${at}.direction[${index}]`)),
+    point: row["point"] === undefined ? undefined : puzzlePuzzle5dArtifactGuardVector3(row["point"], `${at}.point`),
+    direction: row["direction"] === undefined ? undefined : puzzlePuzzle5dArtifactGuardVector3(row["direction"], `${at}.direction`),
     t: row["t"] === undefined ? undefined : puzzlePuzzle5dArtifactGuardNumber(row["t"], `${at}.t`),
     mandatory: row["mandatory"] === undefined ? undefined : puzzlePuzzle5dArtifactGuardBoolean(row["mandatory"], `${at}.mandatory`),
     radius: row["radius"] === undefined ? undefined : puzzlePuzzle5dArtifactGuardNumber(row["radius"], `${at}.radius`),

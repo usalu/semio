@@ -78,7 +78,8 @@
       "title": "Puzzle3dObject",
       "additionalProperties": false,
       "required": [
-        "id"
+        "id",
+        "origin"
       ],
       "properties": {
         "id": {
@@ -192,6 +193,9 @@
     "Puzzle3dTargetVolume": {
       "type": "object",
       "additionalProperties": true,
+      "required": [
+        "id"
+      ],
       "properties": {
         "id": {
           "type": "string"
@@ -202,6 +206,9 @@
     "Puzzle3dReference": {
       "type": "object",
       "additionalProperties": true,
+      "required": [
+        "id"
+      ],
       "properties": {
         "id": {
           "type": "string"
@@ -431,13 +438,13 @@
         "attributes": {
           "type": "array",
           "items": {
-            "type": "object"
+            "$ref": "#/$defs/Puzzle3dAttribute"
           }
         },
         "authors": {
           "type": "array",
           "items": {
-            "type": "object"
+            "$ref": "#/$defs/Puzzle3dAuthor"
           }
         }
       }
@@ -852,6 +859,54 @@
         "free",
         "collisions"
       ]
+    },
+    "Puzzle3dAttribute": {
+      "type": "object",
+      "title": "Puzzle3dAttribute",
+      "additionalProperties": false,
+      "required": [
+        "key",
+        "value"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "key": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string"
+        },
+        "definition": {
+          "type": "string"
+        }
+      }
+    },
+    "Puzzle3dAuthor": {
+      "type": "object",
+      "title": "Puzzle3dAuthor",
+      "additionalProperties": false,
+      "required": [
+        "name"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "email": {
+          "type": "string"
+        },
+        "role": {
+          "type": "string"
+        },
+        "rank": {
+          "type": "number"
+        }
+      }
     }
   }
 }

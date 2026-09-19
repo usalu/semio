@@ -16,12 +16,12 @@ export function testResolvedHostContext(): void {
   assert.equal(schema.$defs.Identifier.maxLength, fixture.identityCapacityChars);
   for (const row of fixture.invalid) {
     const value: Record<string, unknown> = structuredClone(fixture.valid);
-    if ("remove" in row) for (const key of row.remove) delete value[key];
+    for (const key of row.remove ?? []) delete value[key];
     if ("set" in row) Object.assign(value, row.set);
     const repeat = "repeat" in row ? row.repeat : undefined;
     if (repeat) value[repeat.field] = repeat.character.repeat(repeat.count);
     assert.equal(validate(value), false, row.name);
-    assert.throws(() => parseResolvedPluginViewState(value), undefined, row.name);
+    assert.throws(() => parseResolvedPluginViewState(value), Error, row.name);
   }
   // 🧩️ LAW: contributions are not a view-state field. The host publisher installs them into the
   // guest through the paged `setContributions` run (`🛠️ShellHelpers/🧩️contributions/🟦️.ts`), which
@@ -47,9 +47,10 @@ export function testResolvedHostContext(): void {
   for (const row of fixture.guestDecode) {
     const invalid = fixture.invalid.find((candidate) => candidate.name === row.name);
     assert(invalid !== undefined, `guestDecode row ${row.name} must also be an invalid row`);
-    assert("remove" in invalid && invalid.remove.length === 1, `guestDecode row ${row.name} must remove exactly the field it names`);
-    assert.equal(row.fault, `missing field \`${invalid.remove[0]}\``, row.name);
-    assert.throws(() => parseResolvedPluginViewState({ ...fixture.valid, [invalid.remove[0]!]: undefined }), undefined, row.name);
+    const removed = invalid.remove ?? [];
+    assert(removed.length === 1, `guestDecode row ${row.name} must remove exactly the field it names`);
+    assert.equal(row.fault, `missing field \`${removed[0]}\``, row.name);
+    assert.throws(() => parseResolvedPluginViewState({ ...fixture.valid, [removed[0]!]: undefined }), Error, row.name);
   }
   console.log(`resolved-host-context cases=${fixture.invalid.length + 1} guest-rejections=${fixture.guestDecode.length} schema=valid explicit-preferences=required long-fields=${Object.values(schema.properties).filter((field) => "maxLength" in field && field.maxLength === capacity).length} contributions-in-view-state=refused`);
 }

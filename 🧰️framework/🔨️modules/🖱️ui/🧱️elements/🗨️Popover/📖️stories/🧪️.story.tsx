@@ -32,8 +32,7 @@ export const Default: Story = {
   render: () => (
     <Popover>
       <PopoverTrigger asChild>
-        <Button variant="default" id="popover-trigger-default">
-          <Settings />
+        <Button variant="default" id="popover-trigger-default" icon={<Settings />}>
           Connection Settings
         </Button>
       </PopoverTrigger>
@@ -48,8 +47,8 @@ export const Default: Story = {
             <Input id="rotation-input" showLabel defaultValue="0" type="number" min={0} max={360} />
           </div>
           <div className="flex justify-end gap-double">
-            <Button variant="default">Cancel</Button>
-            <Button>Save</Button>
+            <Button variant="default" icon="x">Cancel</Button>
+            <Button icon="save">Save</Button>
           </div>
         </div>
       </PopoverContent>

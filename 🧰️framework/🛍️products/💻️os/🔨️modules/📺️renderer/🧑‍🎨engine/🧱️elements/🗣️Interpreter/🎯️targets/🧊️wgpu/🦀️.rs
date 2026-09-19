@@ -129,6 +129,7 @@ pub fn validate_component_scene(scene: &UiComponentSceneNode, limits: &RenderPla
         check_optional_json_payload(&format!("{scene_label} world3d.brushPreview"), &world.brush_preview_json, limits)?;
         check_optional_json_payload(&format!("{scene_label} world3d.interaction"), &world.interaction_json, limits)?;
         check_optional_json_payload(&format!("{scene_label} world3d.engagementPreview"), &world.engagement_preview_json, limits)?;
+        check_optional_json_payload(&format!("{scene_label} world3d.pickTargets"), &world.pick_targets_json, limits)?;
         check_optional_json_payload(&format!("{scene_label} world3d.lod"), &world.lod_json, limits)?;
         check_optional_json_payload(&format!("{scene_label} world3d.chunking"), &world.chunking_json, limits)?;
         // ☁️ `points_json` payload-size validation only — the point-sprite GPU pipeline itself lives in
@@ -289,12 +290,16 @@ static UI_ENGINE: WorkerCell<ui_wgpu::wgpu::Ui> = WorkerCell::new();
 const SCENE_INTENT_CAPACITY: usize = 256;
 const SCENE_INTENT_ID_BYTES: usize = 256;
 
+/// 🖱️ One queued scene pointer/wheel event. `modifiers` rides all four variants because React's own
+/// surface handlers read `shiftKey`/`ctrlKey`/`metaKey`/`altKey` off the DOM pointer event itself —
+/// the merge mode a press selects is a property of THAT press, not of a separately sampled keyboard
+/// state (`marqueeModeFromModifiers`, `🖱️ui/🎯️targets/⚛️react/🟦️.tsx:900`).
 #[derive(Clone, Copy)]
 enum SceneIntentEvent {
-    PointerDown { x: f32, y: f32, button: i16 },
-    PointerUp { x: f32, y: f32, button: i16 },
-    PointerMove { x: f32, y: f32 },
-    Scroll { x: f32, y: f32, delta_y: f32 },
+    PointerDown { x: f32, y: f32, button: i16, modifiers: ui_wgpu::wgpu::EventModifiers },
+    PointerUp { x: f32, y: f32, button: i16, modifiers: ui_wgpu::wgpu::EventModifiers },
+    PointerMove { x: f32, y: f32, modifiers: ui_wgpu::wgpu::EventModifiers },
+    Scroll { x: f32, y: f32, delta_y: f32, modifiers: ui_wgpu::wgpu::EventModifiers },
 }
 
 struct SceneInteractionIntent {
@@ -866,17 +871,16 @@ fn pointer_button_code(button: ui_wgpu::wgpu::PointerButton) -> i16 {
 /// already receive real OS-event-driven input through their own `dock`/`engine_canvas` host and must
 /// not be double-dispatched here.
 ///
-/// 🕳️ Known gap: `UiEvent::PointerDown`/`PointerUp`/`Scroll` carry no modifier-key fields (only
-/// `KeyDown`/`KeyUp` do), so shift-extend/ctrl-zoom always see `false` through this path — the same
-/// limitation `events::UiEvent`'s public shape has everywhere else today, not something this fn can
-/// fix without a breaking `UiEvent` field addition across ~30 downstream plugins (see
-/// `dispatch_event`'s own `#[allow(clippy::needless_pass_by_value...)]` doc comment on that cost).
+/// ⌨️ `UiEvent`'s four pointer variants carry `EventModifiers`, so shift-extend and ctrl-toggle reach
+/// the surface handlers through this path exactly as React's DOM pointer event delivers them (ticket
+/// 26/09/17/WGPU-RENDERER-REACT-PARITY, `📓️audit-w14-scenes-residual.md` C1 — this used to be a
+/// documented dead end, with `false` hardcoded at every merge-mode call downstream).
 fn apply_scene_ui_command(window_id: &str, node: NodeId, kind: ui_wgpu::wgpu::SurfaceKind, rect: Rect, event: &ui_wgpu::wgpu::UiEvent, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) {
     let event = match event {
-        ui_wgpu::wgpu::UiEvent::PointerDown { x, y, button } => SceneIntentEvent::PointerDown { x: *x, y: *y, button: pointer_button_code(*button) },
-        ui_wgpu::wgpu::UiEvent::PointerUp { x, y, button } => SceneIntentEvent::PointerUp { x: *x, y: *y, button: pointer_button_code(*button) },
-        ui_wgpu::wgpu::UiEvent::PointerMove { x, y } => SceneIntentEvent::PointerMove { x: *x, y: *y },
-        ui_wgpu::wgpu::UiEvent::Scroll { x, y, delta_y, .. } => SceneIntentEvent::Scroll { x: *x, y: *y, delta_y: *delta_y },
+        ui_wgpu::wgpu::UiEvent::PointerDown { x, y, button, modifiers } => SceneIntentEvent::PointerDown { x: *x, y: *y, button: pointer_button_code(*button), modifiers: *modifiers },
+        ui_wgpu::wgpu::UiEvent::PointerUp { x, y, button, modifiers } => SceneIntentEvent::PointerUp { x: *x, y: *y, button: pointer_button_code(*button), modifiers: *modifiers },
+        ui_wgpu::wgpu::UiEvent::PointerMove { x, y, modifiers } => SceneIntentEvent::PointerMove { x: *x, y: *y, modifiers: *modifiers },
+        ui_wgpu::wgpu::UiEvent::Scroll { x, y, delta_y, modifiers, .. } => SceneIntentEvent::Scroll { x: *x, y: *y, delta_y: *delta_y, modifiers: *modifiers },
         _ => return,
     };
     let witness = UI_ENGINE.with(|cell| {
@@ -1102,7 +1106,7 @@ fn process_scene_interaction(intent: &mut SceneInteractionIntent, input: &mut ui
                 return Ok(SceneIntentProgress::Complete);
             };
             let result = match intent.event {
-                SceneIntentEvent::PointerDown { x, y, button } => {
+                SceneIntentEvent::PointerDown { x, y, button, .. } => {
                     focus_text_editor(window_id, node, &scene.surface_id);
                     match crate::scenes::text_editor_popup_pointer(scene, rect, x, y, false, input) {
                         Ok(true) => return Ok(SceneIntentProgress::Complete),
@@ -1111,8 +1115,8 @@ fn process_scene_interaction(intent: &mut SceneInteractionIntent, input: &mut ui
                     }
                     crate::engine_canvas::text_editor_pointer_button_into(scene, rect, x, y, button, true, input)
                 }
-                SceneIntentEvent::PointerUp { x, y, button } => crate::engine_canvas::text_editor_pointer_button_into(scene, rect, x, y, button, false, input),
-                SceneIntentEvent::PointerMove { x, y } => crate::engine_canvas::text_editor_pointer_move_into(scene, rect, x, y, input),
+                SceneIntentEvent::PointerUp { x, y, button, .. } => crate::engine_canvas::text_editor_pointer_button_into(scene, rect, x, y, button, false, input),
+                SceneIntentEvent::PointerMove { x, y, .. } => crate::engine_canvas::text_editor_pointer_move_into(scene, rect, x, y, input),
                 SceneIntentEvent::Scroll { delta_y, .. } => Ok(crate::engine_canvas::text_editor_wheel_into(scene, delta_y)),
             };
             result.map(|_| SceneIntentProgress::Complete)
@@ -1131,10 +1135,14 @@ fn process_scene_interaction(intent: &mut SceneInteractionIntent, input: &mut ui
                 return Ok(SceneIntentProgress::Complete);
             };
             let result = match intent.event {
-                SceneIntentEvent::PointerDown { x, y, button } => crate::engine_canvas::paint2d_pointer_button_into(scene, rect, x, y, true, button, false, false, input),
-                SceneIntentEvent::PointerUp { x, y, button } => crate::engine_canvas::paint2d_pointer_button_into(scene, rect, x, y, false, button, false, false, input),
-                SceneIntentEvent::PointerMove { x, y } => crate::engine_canvas::paint2d_pointer_move_into(scene, rect, x, y, input),
-                SceneIntentEvent::Scroll { x, y, delta_y } if delta_y.abs() >= 0.01 => crate::engine_canvas::paint2d_wheel_into(scene, rect, x, y, delta_y, input),
+                // 🖱️ The two modifier flags were literal `false` here — `paint2d_pointer_button_into`
+                // has asked for shift/ctrl since it was written, and this, its only production caller,
+                // could not answer. React reads them off the pointer event
+                // (`🖌️Paint2dHost/🟦️.tsx:503`'s `marqueeModeFromModifiers`).
+                SceneIntentEvent::PointerDown { x, y, button, modifiers } => crate::engine_canvas::paint2d_pointer_button_into(scene, rect, x, y, true, button, modifiers.shift, modifiers.ctrl || modifiers.meta, input),
+                SceneIntentEvent::PointerUp { x, y, button, modifiers } => crate::engine_canvas::paint2d_pointer_button_into(scene, rect, x, y, false, button, modifiers.shift, modifiers.ctrl || modifiers.meta, input),
+                SceneIntentEvent::PointerMove { x, y, .. } => crate::engine_canvas::paint2d_pointer_move_into(scene, rect, x, y, input),
+                SceneIntentEvent::Scroll { x, y, delta_y, .. } if delta_y.abs() >= 0.01 => crate::engine_canvas::paint2d_wheel_into(scene, rect, x, y, delta_y, input),
                 SceneIntentEvent::Scroll { .. } => Ok(false),
             };
             result.map(|_| SceneIntentProgress::Complete)
@@ -1153,9 +1161,9 @@ fn process_scene_interaction(intent: &mut SceneInteractionIntent, input: &mut ui
                 return Ok(SceneIntentProgress::Complete);
             };
             let result = match intent.event {
-                SceneIntentEvent::PointerDown { x, y, button } => crate::scenes::canvas_pointer_button_into(scene, rect, x, y, true, button, false, input),
-                SceneIntentEvent::PointerUp { x, y, button } => crate::scenes::canvas_pointer_button_into(scene, rect, x, y, false, button, false, input),
-                SceneIntentEvent::PointerMove { x, y } => {
+                SceneIntentEvent::PointerDown { x, y, button, modifiers } => crate::scenes::canvas_pointer_button_into(scene, rect, x, y, true, button, modifiers.shift, input),
+                SceneIntentEvent::PointerUp { x, y, button, modifiers } => crate::scenes::canvas_pointer_button_into(scene, rect, x, y, false, button, modifiers.shift, input),
+                SceneIntentEvent::PointerMove { x, y, .. } => {
                     let (down, last_x, last_y) = crate::scenes::scene_pointer_edge_state(&scene.surface_id);
                     let result = crate::scenes::canvas_pointer_move_into(scene, rect, x, y, down, x - last_x, y - last_y, input);
                     if result.is_ok() {
@@ -1163,7 +1171,7 @@ fn process_scene_interaction(intent: &mut SceneInteractionIntent, input: &mut ui
                     }
                     result
                 }
-                SceneIntentEvent::Scroll { x, y, delta_y } => Ok(crate::scenes::canvas_wheel_into(scene, rect, x, y, delta_y)),
+                SceneIntentEvent::Scroll { x, y, delta_y, .. } => Ok(crate::scenes::canvas_wheel_into(scene, rect, x, y, delta_y)),
             };
             result.map(|_| SceneIntentProgress::Complete)
         });
@@ -1181,14 +1189,14 @@ fn process_scene_interaction(intent: &mut SceneInteractionIntent, input: &mut ui
                 return Ok(SceneIntentProgress::Complete);
             };
             match intent.event {
-                SceneIntentEvent::Scroll { x, y, delta_y } if delta_y.abs() >= 0.01 => crate::scenes::ink_wheel_into(scene, rect, x, y, delta_y, input).map(|_| SceneIntentProgress::Complete),
+                SceneIntentEvent::Scroll { x, y, delta_y, .. } if delta_y.abs() >= 0.01 => crate::scenes::ink_wheel_into(scene, rect, x, y, delta_y, input).map(|_| SceneIntentProgress::Complete),
                 SceneIntentEvent::Scroll { .. } => Ok(SceneIntentProgress::Complete),
                 event => {
                     if intent.ink_job.is_none() {
                         let event = match event {
-                            SceneIntentEvent::PointerDown { x, y, button } => crate::scenes::InkInteractionEvent::PointerDown { x, y, button, shift: false },
+                            SceneIntentEvent::PointerDown { x, y, button, modifiers } => crate::scenes::InkInteractionEvent::PointerDown { x, y, button, shift: modifiers.shift },
                             SceneIntentEvent::PointerUp { x, y, .. } => crate::scenes::InkInteractionEvent::PointerUp { x, y },
-                            SceneIntentEvent::PointerMove { x, y } => crate::scenes::InkInteractionEvent::PointerMove { x, y },
+                            SceneIntentEvent::PointerMove { x, y, .. } => crate::scenes::InkInteractionEvent::PointerMove { x, y },
                             SceneIntentEvent::Scroll { .. } => unreachable!(),
                         };
                         intent.ink_job = crate::scenes::InkInteractionJob::new(operation_generation, scene, event)?;
@@ -1220,16 +1228,16 @@ fn process_scene_interaction(intent: &mut SceneInteractionIntent, input: &mut ui
             return Ok(SceneIntentProgress::Complete);
         };
         match intent.event {
-            SceneIntentEvent::PointerDown { x, y, button } => {
-                crate::scenes::passive_scene_pointer_button(scene, rect, x, y, true, button, input)?;
+            SceneIntentEvent::PointerDown { x, y, button, modifiers } => {
+                crate::scenes::passive_scene_pointer_button(scene, rect, x, y, true, button, crate::scenes::SceneModifiers::from(modifiers), input)?;
             }
-            SceneIntentEvent::PointerUp { x, y, button } => {
-                crate::scenes::passive_scene_pointer_button(scene, rect, x, y, false, button, input)?;
+            SceneIntentEvent::PointerUp { x, y, button, modifiers } => {
+                crate::scenes::passive_scene_pointer_button(scene, rect, x, y, false, button, crate::scenes::SceneModifiers::from(modifiers), input)?;
             }
-            SceneIntentEvent::PointerMove { x, y } => {
+            SceneIntentEvent::PointerMove { x, y, .. } => {
                 crate::scenes::passive_scene_pointer_move(scene, rect, x, y);
             }
-            SceneIntentEvent::Scroll { x, y, delta_y } => {
+            SceneIntentEvent::Scroll { x, y, delta_y, .. } => {
                 if delta_y.abs() >= 0.01 {
                     crate::scenes::passive_scene_wheel(scene, rect, x, y, delta_y);
                 }
@@ -1380,6 +1388,20 @@ impl UiDocumentFrameCursor {
             UiDocumentFramePhase::Fault => "fault",
         }
     }
+}
+
+/// 🧭️ Sets one retained surface's logical flow — the wgpu twin of React's `FlowProvider`, which
+/// `🖼️Panel/🟦️.tsx:516` wraps every anchored panel in with `flowFromAnchor(anchor)`. A surface with
+/// no anchor (a window body, a dialog) gets no provider on React either and stays at
+/// `UiFlow::DEFAULT`, so only the anchored-panel painters call this.
+///
+/// `Ui::set_window_flow` existed with ZERO production callers until ticket 26/09/17 packet W15a:
+/// every surface sat at the default flow, so the RTL vocabulary W2k built (mirrored overlay
+/// placement, mirrored Select inline edge, mirrored inline arrow keys) could never fire. It is
+/// latent rather than visible today — both shipped locales are LTR, and an `End`-anchored panel is
+/// the only thing that turns it on — but the seam is now real instead of dead.
+pub(crate) fn set_ui_document_flow(window_id: &str, flow: ui_contract::UiFlow) {
+    UI_ENGINE.with(|cell| cell.borrow_mut().set_window_flow(window_id, flow));
 }
 
 pub fn begin_ui_document_opportunity(consumed: bool) {
@@ -2393,13 +2415,20 @@ fn build_accessibility_dump(engine: &ui_wgpu::wgpu::Ui, requested: Option<&str>)
         Some(id) => window_ids.iter().filter(|live| live.as_str() == id).cloned().collect(),
         None => window_ids.clone(),
     };
-    let windows = announced
+    let mut windows: Vec<DumpAccessibilityWindow> = announced
         .into_iter()
         .map(|window_id| {
             let nodes = engine.tree(&window_id).map(ui_wgpu::wgpu::accessibility::accessibility_projection).unwrap_or_default();
             DumpAccessibilityWindow { window_id, nodes }
         })
         .collect();
+    // ♿️ …and the chrome around those windows, which owns no retained tree of its own. Announced
+    // only when the caller named no single window (or named the chrome itself), the same rule the
+    // per-window filter above follows.
+    let chrome = CHROME_ACCESSIBILITY.borrow().clone();
+    if !chrome.is_empty() && requested.filter(|id| !id.is_empty()).is_none_or(|id| id == SHELL_CHROME_ACCESSIBILITY_WINDOW_ID) {
+        windows.push(DumpAccessibilityWindow { window_id: SHELL_CHROME_ACCESSIBILITY_WINDOW_ID.to_string(), nodes: chrome });
+    }
     DumpAccessibility { window_id: requested.filter(|id| !id.is_empty()).map(str::to_string), window_ids, windows }
 }
 
@@ -2669,6 +2698,11 @@ struct ChromeLedger {
     generation: u64,
     actions: std::collections::VecDeque<DumpDispatchedAction>,
     next_seq: u64,
+    /// 🩺️ The last census a PARKED chrome walk published. `generation: 0` says only "no walk ever
+    /// completed"; this says WHICH phase is holding the frame, which is the whole difference
+    /// between "the map paints nothing" and "the shell presents nothing"
+    /// (ticket 26/09/17/WGPU-RENDERER-REACT-PARITY, `📓️w14a-*`).
+    parked: Option<String>,
 }
 
 static CHROME_LEDGER: WorkerCell<ChromeLedger> = WorkerCell::new();
@@ -2739,6 +2773,24 @@ fn chrome_hit_row(hit: &ui_wgpu::wgpu::HitTarget<ActionDescriptor>, owners: &std
  * `🐚️Shell/🎯️targets/🧊️wgpu`'s `publish_retained_hit_registry`, right after `InputState::publish_hits`
  * promotes the staged rows. An abandoned walk publishes nothing and therefore records nothing, so the
  * snapshot and the pointer's own authority can never disagree. */
+/// ♿️ The shell CHROME's accessible names, published once per complete chrome walk by
+/// `🐚️Shell/🎯️targets/🧊️wgpu`'s `publish_retained_hit_registry`.
+///
+/// 🩸️ Unlike [`CHROME_LEDGER`] beside it this is NOT diagnostics-gated: it is the production
+/// accessibility path for everything outside a retained document. `build_accessibility_dump`
+/// announces it as the `shell.chrome` window, so `🚀️browser-boot/🟦️.ts`'s mirror gives every navbar
+/// chip, footer pill, panel tab and pane chip a real ARIA element — which is the gap a DOM renderer
+/// never has, because React writes `aria-label` onto the element it renders
+/// (ticket 26/09/17/WGPU-RENDERER-REACT-PARITY, packet W15d; audit W14 §C4/§B14).
+pub fn note_chrome_accessibility(nodes: Vec<ui_contract::AccessibilityProjectionNode>) {
+    *CHROME_ACCESSIBILITY.borrow_mut() = nodes;
+}
+
+/// ♿️ The window id the chrome announces under — a shell-owned surface, never one of the app's.
+pub(crate) const SHELL_CHROME_ACCESSIBILITY_WINDOW_ID: &str = "shell.chrome";
+
+static CHROME_ACCESSIBILITY: WorkerCell<Vec<ui_contract::AccessibilityProjectionNode>> = WorkerCell::new();
+
 pub fn note_chrome_hit_registry(hits: &[ui_wgpu::wgpu::HitTarget<ActionDescriptor>], owners: &std::collections::HashMap<String, (String, Rect)>) {
     if !semio_framework_trace::runtime_diagnostics_enabled() {
         return;
@@ -2808,6 +2860,8 @@ struct DumpChrome {
     generation: u64,
     #[serde(skip_serializing_if = "Option::is_none")]
     window_id: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    parked: Option<String>,
     hits: Vec<DumpHitTarget>,
     surfaces: Vec<DumpSurface>,
     actions: Vec<DumpDispatchedAction>,
@@ -2826,7 +2880,20 @@ fn project_chrome_dump(ledger: &ChromeLedger, requested: Option<&str>, armed: bo
         Some(id) => ledger.surfaces.iter().filter(|surface| &surface.id == id).cloned().collect(),
         None => ledger.surfaces.clone(),
     };
-    DumpChrome { armed, generation: ledger.generation, window_id: named, hits, surfaces, actions: ledger.actions.iter().cloned().collect() }
+    DumpChrome { armed, generation: ledger.generation, window_id: named, parked: ledger.parked.clone(), hits, surfaces, actions: ledger.actions.iter().cloned().collect() }
+}
+
+/** 🩺️ Records the census of a chrome walk that has overstayed one phase. Published by
+ * `🐚️Shell/🎯️targets/🧊️wgpu`'s `render_chrome_step`, which is the ONLY caller, and read back through
+ * `dumpChrome`'s `parked` field — the one machine-readable answer to "the canvas is empty and the
+ * console is quiet". Unlike the rest of this ledger it is NOT diagnostics-gated: a walk that cannot
+ * finish presents no frame at all, and a probe must be able to see that without re-booting the shell
+ * with diagnostics armed. */
+pub fn note_chrome_walk_parked(census: &str) {
+    let mut ledger = CHROME_LEDGER.borrow_mut();
+    if census.len() <= CHROME_ACTION_ARGS_BYTES {
+        ledger.parked = Some(census.to_string());
+    }
 }
 //#endregion 🎯️ChromeLedger
 

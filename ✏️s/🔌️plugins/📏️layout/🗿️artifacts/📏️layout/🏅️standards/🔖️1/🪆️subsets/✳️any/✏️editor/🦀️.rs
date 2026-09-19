@@ -14,6 +14,8 @@ use crate::editor::layout::modes::edit::windows::{blueprint, preview};
 use crate::editor::layout::modes::edit::windows::blueprint::config::LayoutWindowConfig;
 use crate::editor::layout::modes::edit::windows::blueprint::transient::LayoutWindowTransient;
 use crate::editor::layout::panels::{catalogue as catalogue_panel, document as document_panel, inspection as inspection_panel, preflight as preflight_panel};
+use crate::editor::layout::panels::preflight::{run_layout_preflight, PreflightIssue};
+use crate::Frame;
 use crate::editor::layout::terminology::{layout_labels, LayoutLabels};
 use crate::mutations::change_data_fields::ChangeDataFields;
 use crate::mutations::LayoutMutation;
@@ -25,7 +27,7 @@ use semio_framework_plugin::app::{ArtifactMediaExportJobRequest, ArtifactOwnedTo
 #[cfg(test)]
 use semio_framework_plugin::App;
 use semio_framework_plugin::{
-    ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, ArtifactEditor, ArtifactKindSpec, ArtifactView, ConfigView, DraftView, DslValue, Editor, EditorApp, Emit, Fault, GranularityDefinition, HierarchyProvider, HoverSpec,
+    ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, AppActionRegistry, ArtifactEditor, ArtifactKindSpec, ArtifactView, ConfigView, ContextMenuItemSpec, ContextMenuRequest, ContextMenuSurfaceTarget, DraftView, DslValue, Editor, EditorApp, Emit, Fault, GranularityDefinition, HierarchyProvider, HoverSpec,
     InteractionDefinition, InteractionRef, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, MergeMode, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, OsMediaCapability, SelectionMethod, SelectionMode, SelectionSpec,
     WindowEngagement, WindowEngagementInput, WindowEngagementPossible, WindowEngagementStatus, CLEAR_SELECTION_ACTION_ID, INTERACTION_HOVER_ACTION_ID, INTERACTION_SELECT_ACTION_ID,
 };
@@ -99,6 +101,30 @@ pub fn ui_value_map<const N: usize>(mut values: [(&'static str, semio_framework_
 pub const LAYOUT_INTERACTION_ELEMENTS: &str = "elements";
 pub const LAYOUT_GRANULARITY_ELEMENT: &str = "element";
 
+/// 🕹️ Owned snapshot of the framework `"elements"` domain — selection plus `"pointer"` hover — read
+/// once per render by `LayoutPlayApp::render_with_request_context` and threaded into the Blueprint
+/// canvas chrome and the inspection panel (mirrors `Gis2dInteractionSnapshot`).
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct LayoutInteractionSnapshot {
+    pub ids: Vec<String>,
+    pub hovered_ids: Vec<String>,
+}
+
+impl LayoutInteractionSnapshot {
+    pub const POINTER_CHANNEL: &'static str = "pointer";
+
+    pub fn from_interaction(interaction: &InteractionView<'_>) -> Self {
+        Self {
+            ids: interaction.selection(LAYOUT_INTERACTION_ELEMENTS).ids.clone(),
+            hovered_ids: interaction.hover(LAYOUT_INTERACTION_ELEMENTS, Self::POINTER_CHANNEL).ids.clone(),
+        }
+    }
+
+    pub fn hovered_id(&self) -> Option<&str> {
+        self.hovered_ids.first().map(String::as_str)
+    }
+}
+
 /// 🕹️ Builds `interactionSelect`'s JSON args for one merge over `ids` (all granularity `"element"`) —
 /// shared by the canvas pointer commands (wrapped into a `Effect::DispatchAction`) and any
 /// document-tree row whose click should select a real canvas element (wrapped into an `ActionDescriptor`).
@@ -132,6 +158,180 @@ pub fn layout_clear_selection_effect() -> Effect {
     Effect::DispatchAction { req: semio_framework_plugin::RequestId(113), action: CLEAR_SELECTION_ACTION_ID.into(), args: None, delay_ms: 0 }
 }
 //#endregion 🔖️Interaction
+
+//#region 🔖️ContextMenu
+fn layout_element_ids(surface: Option<&ContextMenuSurfaceTarget>, fallback: &[String]) -> Vec<String> {
+    let groups = surface.map_or(&[][..], |target| target.selection.as_slice());
+    let mut ids: Vec<String> = groups.iter().filter(|group| group.domain == LAYOUT_GRANULARITY_ELEMENT).flat_map(|group| group.ids.iter().cloned()).collect();
+    if ids.is_empty() {
+        ids = fallback.to_vec();
+    }
+    ids
+}
+
+fn layout_preflight_issue_for_row(doc: &LayoutSnapshot, labels: &LayoutLabels, row_id: &str) -> Option<PreflightIssue> {
+    run_layout_preflight(doc, labels).into_iter().find(|issue| {
+        let object = issue.object_id.clone().unwrap_or_else(|| issue.message.clone());
+        format!("layout-preflight.{}.{}", issue.code, object) == row_id
+    })
+}
+
+fn layout_frame_kind<'a>(doc: &'a LayoutSnapshot, frame_id: &str) -> Option<&'a str> {
+    doc.pages.iter().flat_map(|page| page.frames.iter()).find(|frame| frame.id() == frame_id).map(|frame| frame.kind_str())
+}
+
+fn layout_link_referencing_frame_ids(doc: &LayoutSnapshot, link_id: &str) -> Vec<String> {
+    doc.pages
+        .iter()
+        .flat_map(|page| page.frames.iter())
+        .filter(|frame| matches!(frame, Frame::Image { link_id: id, .. } if id == link_id))
+        .map(|frame| frame.id().to_string())
+        .collect()
+}
+
+fn layout_authoring_surface(surface: Option<&ContextMenuSurfaceTarget>) -> bool {
+    surface.map_or(true, |target| target.surface_id != LAYOUT_PLAY_SURFACE_PREVIEW)
+}
+
+fn layout_context_menu_item(id: &str, label: &str, icon: &str, action: &str, args: Option<Value>, destructive: bool, disabled: bool) -> ContextMenuItemSpec {
+    ContextMenuItemSpec {
+        id: id.into(),
+        label: Some(label.into()),
+        icon: Some(icon.into()),
+        action: Some(action.into()),
+        args: semio_framework_plugin::optional_json_to_dsl(args),
+        destructive: destructive.then_some(true),
+        disabled: disabled.then_some(true),
+        ..Default::default()
+    }
+}
+
+fn layout_add_frame_items<'a>(menu: semio_framework_plugin::Menu<'a>, labels: &'a LayoutLabels, kind: &'a str) -> semio_framework_plugin::Menu<'a> {
+    let (id, label, icon) = match kind {
+        "text" => ("add-text-frame", labels.kind_text.as_str(), "type"),
+        "image" => ("add-image-frame", labels.kind_image.as_str(), "image"),
+        _ => ("add-rect-frame", labels.kind_rect.as_str(), "square"),
+    };
+    menu.item(layout_context_menu_item(id, label, icon, "addFrame", Some(json!({ "kind": kind })), false, false))
+}
+
+/// 🖱️ On-demand layout context menu — canvas, document tree, and preflight surfaces each carry
+/// different hit/selection shapes; `organize_context_menu` runs automatically at the host funnel.
+fn layout_context_menu_items(
+    registry: &AppActionRegistry,
+    doc: &LayoutSnapshot,
+    labels: &LayoutLabels,
+    is_de: bool,
+    surface: Option<&ContextMenuSurfaceTarget>,
+    fallback_selected: &[String],
+) -> Vec<ContextMenuItemSpec> {
+    use semio_framework_plugin::{selection_count_phrase, Menu};
+
+    let hits = surface.map_or(&[][..], |target| target.hits.as_slice());
+    let authoring = layout_authoring_surface(surface);
+    let preview = surface.is_some_and(|target| target.surface_id == LAYOUT_PLAY_SURFACE_PREVIEW);
+
+    if let Some(hit) = hits.first().filter(|hit| hit.id.starts_with("layout-document.page.")) {
+        if let Some(page_id) = hit.id.strip_prefix("layout-document.page.") {
+            return Menu::of(registry).item(layout_context_menu_item("set-active-page", labels.active_page.as_str(), "file", "setActivePage", Some(json!({ "pageId": page_id })), false, false)).build();
+        }
+    }
+
+    if let Some(hit) = hits.first().filter(|hit| hit.id.starts_with("layout-document.link.")) {
+        if let Some(link_id) = hit.id.strip_prefix("layout-document.link.") {
+            let ids = layout_link_referencing_frame_ids(doc, link_id);
+            let disabled = ids.is_empty();
+            return Menu::of(registry)
+                .item(layout_context_menu_item(
+                    "select-link-frames",
+                    if is_de { "Verknüpfte Rahmen auswählen" } else { "Select linked frames" },
+                    "image",
+                    INTERACTION_SELECT_ACTION_ID,
+                    Some(layout_select_action_args(&ids, "replace")),
+                    false,
+                    disabled,
+                ))
+                .build();
+        }
+    }
+
+    if let Some(hit) = hits.first().filter(|hit| hit.id.starts_with("layout-preflight.")) {
+        if let Some(issue) = layout_preflight_issue_for_row(doc, labels, &hit.id) {
+            let issue_value = json!({
+                "severity": issue.severity,
+                "code": issue.code,
+                "message": issue.message,
+                "objectId": issue.object_id,
+                "pageId": issue.page_id,
+            });
+            return Menu::of(registry).item(layout_context_menu_item("focus-preflight-issue", labels.preflight.as_str(), "alert-triangle", "focusPreflightIssue", Some(json!({ "issue": issue_value })), false, false)).build();
+        }
+    }
+
+    let selected = layout_element_ids(surface, fallback_selected);
+    let element_hit = hits.iter().find(|hit| hit.domain == LAYOUT_GRANULARITY_ELEMENT);
+
+    if selected.is_empty() {
+        if preview {
+            return Menu::of(registry).action("selectAll").build();
+        }
+        let mut menu = Menu::of(registry);
+        if let Some(hit) = element_hit {
+            menu = menu.item(layout_context_menu_item(
+                "select-hit",
+                if is_de { "Auswählen" } else { "Select" },
+                "mouse-pointer",
+                INTERACTION_SELECT_ACTION_ID,
+                Some(layout_select_action_args(std::slice::from_ref(&hit.id), "replace")),
+                false,
+                false,
+            ));
+        }
+        menu = menu.group("create", |group| layout_add_frame_items(layout_add_frame_items(layout_add_frame_items(group, labels, "rect"), labels, "text"), labels, "image"));
+        let mut items = menu.action("addPage").action("selectAll").action("paste").destructive("clearSelection").build();
+        if let Some(clear) = items.iter_mut().find(|entry| entry.id == "clearSelection") {
+            clear.disabled = Some(true);
+        }
+        return items;
+    }
+
+    let phrase = selection_count_phrase(is_de, &[(selected.len(), if is_de { "Rahmen" } else { "frame" }, if is_de { "Rahmen" } else { "frames" })]);
+    let mut menu = Menu::of(registry);
+    if let Some(hit) = element_hit.filter(|hit| !selected.contains(&hit.id)) {
+        menu = menu.item(layout_context_menu_item(
+            "select-hit",
+            if is_de { "Auswählen" } else { "Select" },
+            "mouse-pointer",
+            INTERACTION_SELECT_ACTION_ID,
+            Some(layout_select_action_args(std::slice::from_ref(&hit.id), "replace")),
+            false,
+            false,
+        ));
+    }
+    if selected.len() == 1 {
+        if let Some(kind) = layout_frame_kind(doc, &selected[0]) {
+            menu = layout_add_frame_items(menu.group("create", |group| group), labels, kind);
+        }
+    }
+    menu = menu.action("copy").action("cut").action("paste");
+    if authoring {
+        menu = menu.item(layout_context_menu_item(
+            "delete-selection",
+            &format!("{} ({phrase})", if is_de { "Löschen" } else { "Delete" }),
+            "trash",
+            "deleteSelection",
+            None,
+            true,
+            false,
+        ));
+    }
+    let mut items = menu.destructive("clearSelection").build();
+    if let Some(clear) = items.iter_mut().find(|entry| entry.id == "clearSelection") {
+        clear.disabled = None;
+    }
+    items
+}
+//#endregion 🔖️ContextMenu
 
 /// 🙈️ An internal (non-palette) action declaration — the pointer/inspector/DnD/engagement-bound
 /// vocabulary dispatched by the canvas and panels, never surfaced as a standalone palette command.
@@ -167,13 +367,14 @@ semio_framework_plugin::app_commands! {
         "exportPdf" as "export-pdf" => export_pdf::ExportPdf,
         "exportPackage" as "export-package" => export_package::ExportPackage,
         "engagementSubmit" as "engagement-submit" => engagement_submit::EngagementSubmit,
+        "deleteSelection" as "delete-selection" => delete_selection::DeleteSelection,
     }
 }
 
 // 🧷️ `app_commands!` addresses each payload module by a single identifier, so every `🎮️commands/*`
 // payload module is imported here under its own flat name.
 use crate::editor::layout::commands::{
-    add_frame, add_page, canvas_drag_leave, canvas_drag_over, canvas_drop, canvas_pointer_down, canvas_pointer_move, canvas_pointer_up, engagement_input, engagement_submit, export_package, export_pdf, export_png, export_svg, focus_preflight_issue,
+    add_frame, add_page, canvas_drag_leave, canvas_drag_over, canvas_drop, canvas_pointer_down, canvas_pointer_move, canvas_pointer_up, delete_selection, engagement_input, engagement_submit, export_package, export_pdf, export_png, export_svg, focus_preflight_issue,
     patch_frame, patch_page, set_active_page, set_camera,
 };
 //#endregion 🔖️Commands
@@ -304,6 +505,7 @@ mod args_bridge {
             "exportPdf" => LayoutCommand::ExportPdf(decode(action, fold(args, PAGE, &[]))?),
             "exportPackage" => LayoutCommand::ExportPackage(decode(action, plain())?),
             "engagementSubmit" => LayoutCommand::EngagementSubmit(decode(action, with_text_value(fold(args, TEXT, &[("value", text(""))])))?),
+            "deleteSelection" => LayoutCommand::DeleteSelection(decode(action, plain())?),
             _ => return Err(Fault::new(FaultOrigin::App, FaultCode::new("app.command.unsupported"), format!("the layout editor has no command for action '{action}'"))),
         })
     }
@@ -316,7 +518,7 @@ mod args_bridge {
 /// that stayed `BatchOnlyPendingRewrite` (`addFrame`/`addPage`/`patchPage`/`patchFrame` and the pointer
 /// down/move gestures) were dead in the running app. Exports keep their own resumable factory.
 const LAYOUT_RETAINED_TOOL_IDS: &[&str] = &[
-    "setActivePage", "focusPreflightIssue", "engagementInput", "canvasPointerDown", "canvasPointerMove", "canvasPointerUp", "canvasDragOver", "canvasDragLeave", "setCamera", "addFrame", "addPage", "patchPage", "patchFrame", "engagementSubmit", "canvasDrop",
+    "setActivePage", "focusPreflightIssue", "engagementInput", "canvasPointerDown", "canvasPointerMove", "canvasPointerUp", "canvasDragOver", "canvasDragLeave", "setCamera", "addFrame", "addPage", "patchPage", "patchFrame", "deleteSelection", "engagementSubmit", "canvasDrop",
 ];
 const LAYOUT_RETAINED_PAYLOAD_SCHEMA: &str = "layout.layout.tool-command.v1";
 const LAYOUT_ARTIFACT_MUTATION_MAXIMUM_BYTES: usize = 16_384;
@@ -367,7 +569,13 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Lay
         let mut transient = blueprint::transient::from_snapshot(input.context.and_then(|context| context.window_transient.as_ref()));
         let config_view = ConfigView { snapshot: input.config, window: window_config_snapshot };
         let doc = ArtifactView::with_operation(input.snapshot, input.history, input.operation.clone());
-        let mut emit = input.command.dispatch(&doc, &config_view)?;
+        let mut emit = match input.command {
+            LayoutCommand::DeleteSelection(_) => {
+                let selected = input.interaction.selection.get(LAYOUT_INTERACTION_ELEMENTS).map(|selection| selection.ids.as_slice()).unwrap_or(&[]);
+                delete_selection::apply_frame_ids(&doc, selected)?
+            }
+            _ => input.command.dispatch(&doc, &config_view)?,
+        };
         let mut window_config = None;
         let mut window_transient = None;
         match input.command {
@@ -417,7 +625,7 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Lay
                     }
                 }
             }
-            LayoutCommand::AddFrame(_) | LayoutCommand::PatchPage(_) | LayoutCommand::PatchFrame(_) | LayoutCommand::CanvasPointerDown(_) | LayoutCommand::CanvasPointerMove(_) | LayoutCommand::CanvasPointerUp(_) | LayoutCommand::EngagementSubmit(_) => {}
+            LayoutCommand::AddFrame(_) | LayoutCommand::PatchPage(_) | LayoutCommand::PatchFrame(_) | LayoutCommand::DeleteSelection(_) | LayoutCommand::CanvasPointerDown(_) | LayoutCommand::CanvasPointerMove(_) | LayoutCommand::CanvasPointerUp(_) | LayoutCommand::EngagementSubmit(_) => {}
             _ => return Err(Fault::from("layout-window-work-route-rejected")),
         }
         if let Some(mutation) = window_config { emit.window_config_mutations.push(mutation); }
@@ -498,6 +706,7 @@ impl semio_framework_plugin::ArtifactOwnedToolJobFactory for LayoutRetainedComma
         ArtifactToolPublicationContract { tool_id: "addPage", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::WindowConfig] },
         ArtifactToolPublicationContract { tool_id: "patchPage", lanes: &[ArtifactToolPublicationLane::Artifact] },
         ArtifactToolPublicationContract { tool_id: "patchFrame", lanes: &[ArtifactToolPublicationLane::Artifact] },
+        ArtifactToolPublicationContract { tool_id: "deleteSelection", lanes: &[ArtifactToolPublicationLane::Artifact] },
         ArtifactToolPublicationContract { tool_id: "engagementSubmit", lanes: &[ArtifactToolPublicationLane::HostOnly] },
         ArtifactToolPublicationContract { tool_id: "canvasDrop", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::WindowConfig, ArtifactToolPublicationLane::WindowTransient] },
     ];
@@ -513,7 +722,7 @@ impl LayoutRetainedProofs {
         factory: "LayoutRetainedCommandJobFactory",
         factory_type: LayoutRetainedCommandJobFactory,
         contract: ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
-        tools: ["setActivePage", "focusPreflightIssue", "engagementInput", "canvasPointerDown", "canvasPointerMove", "canvasPointerUp", "canvasDragOver", "canvasDragLeave", "setCamera", "addFrame", "addPage", "patchPage", "patchFrame", "engagementSubmit", "canvasDrop"]
+        tools: ["setActivePage", "focusPreflightIssue", "engagementInput", "canvasPointerDown", "canvasPointerMove", "canvasPointerUp", "canvasDragOver", "canvasDragLeave", "setCamera", "addFrame", "addPage", "patchPage", "patchFrame", "deleteSelection", "engagementSubmit", "canvasDrop"]
     }
 }
 
@@ -595,6 +804,32 @@ fn layout_window_engagement(config: &LayoutWindowConfig, transient: &LayoutWindo
 /// 🧪️ Stateless app shell; exact window owners hold persisted view preferences and ephemeral input.
 #[derive(Default)]
 pub struct LayoutPlayApp;
+
+impl LayoutPlayApp {
+    fn render_body(
+        body_key: &str,
+        doc: &ArtifactView<'_, LayoutSnapshot>,
+        cfg: &ConfigView<'_, NoConfig>,
+        view_state: &semio_framework_plugin::ViewModel,
+        transient: &LayoutWindowTransient,
+        interaction: &LayoutInteractionSnapshot,
+    ) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+        let document = doc.snapshot;
+        let config = blueprint::config::current(cfg);
+        let labels = layout_labels(view_state);
+        let mut engine = LayoutEngine::new();
+        match body_key {
+            LAYOUT_PLAY_BODY_BLUEPRINT => blueprint::render(&mut engine, document, &config, transient, interaction),
+            LAYOUT_PLAY_BODY_PREVIEW => preview::render(&mut engine, document, &config, transient, interaction),
+            LAYOUT_PLAY_BODY_ARTIFACT => document_panel::render(document, &config, labels, &semio_framework_plugin::TreeWindows::for_body(view_state, LAYOUT_PLAY_BODY_ARTIFACT)),
+            LAYOUT_PLAY_BODY_CATALOGUE => catalogue_panel::render(labels, &semio_framework_plugin::TreeWindows::for_body(view_state, LAYOUT_PLAY_BODY_CATALOGUE)),
+            LAYOUT_PLAY_BODY_INSPECTION => inspection_panel::render(document, &config, interaction, labels),
+            LAYOUT_PLAY_BODY_PREFLIGHT => preflight_panel::render(document, labels, &semio_framework_plugin::TreeWindows::for_body(view_state, LAYOUT_PLAY_BODY_PREFLIGHT)),
+            _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "layout error text admission failed")),
+        }
+        .map(semio_framework_plugin::built_to_component_tree)
+    }
+}
 
 impl ArtifactEditor for LayoutPlayApp {
     type Snapshot = LayoutSnapshot;
@@ -758,12 +993,15 @@ impl ArtifactEditor for LayoutPlayApp {
         command: &LayoutCommand,
         doc: &ArtifactView<'_, LayoutSnapshot>,
         cfg: &ConfigView<'_, NoConfig>,
-        _interaction: &InteractionView<'_>,
+        interaction: &InteractionView<'_>,
         _view_state: Option<&semio_framework_plugin::ViewModel>,
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
     ) -> Result<Emit<LayoutMutation, NoConfigMutation, Self::DraftMutation>, Fault> {
-        let mut emit = command.dispatch(doc, cfg)?;
+        let mut emit = match command {
+            LayoutCommand::DeleteSelection(payload) => delete_selection::apply(payload, doc, cfg, interaction)?,
+            _ => command.dispatch(doc, cfg)?,
+        };
         if let (LayoutCommand::AddPage(_), Some(view)) = (command, _view_state) {
             let mut config = blueprint::config::current(cfg);
             config.active_page_id = format!("page-{}", doc.snapshot.pages.len() + 1);
@@ -806,21 +1044,7 @@ impl ArtifactEditor for LayoutPlayApp {
     //#endregion 🔖️Media
 
     fn render(body_key: &str, doc: &ArtifactView<'_, LayoutSnapshot>, cfg: &ConfigView<'_, NoConfig>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
-        let document = doc.snapshot;
-        let config = blueprint::config::current(cfg);
-        let transient = LayoutWindowTransient::default();
-        let labels = layout_labels(view_state);
-        let mut engine = LayoutEngine::new();
-        match body_key {
-            LAYOUT_PLAY_BODY_BLUEPRINT => blueprint::render(&mut engine, document, &config, &transient),
-            LAYOUT_PLAY_BODY_PREVIEW => preview::render(&mut engine, document, &config, &transient),
-            LAYOUT_PLAY_BODY_ARTIFACT => document_panel::render(document, &config, labels, &semio_framework_plugin::TreeWindows::for_body(view_state, LAYOUT_PLAY_BODY_ARTIFACT)),
-            LAYOUT_PLAY_BODY_CATALOGUE => catalogue_panel::render(labels, &semio_framework_plugin::TreeWindows::for_body(view_state, LAYOUT_PLAY_BODY_CATALOGUE)),
-            LAYOUT_PLAY_BODY_INSPECTION => inspection_panel::render(document, &config, labels),
-            LAYOUT_PLAY_BODY_PREFLIGHT => preflight_panel::render(document, labels, &semio_framework_plugin::TreeWindows::for_body(view_state, LAYOUT_PLAY_BODY_PREFLIGHT)),
-            _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "layout error text admission failed")),
-        }
-        .map(semio_framework_plugin::built_to_component_tree)
+        Self::render_body(body_key, doc, cfg, view_state, &LayoutWindowTransient::default(), &LayoutInteractionSnapshot::default())
     }
 
     fn window_engagements(_doc: &ArtifactView<'_, LayoutSnapshot>, cfg: &ConfigView<'_, NoConfig>, view_state: &semio_framework_plugin::ViewModel) -> HashMap<String, WindowEngagement> {
@@ -837,22 +1061,9 @@ impl ArtifactEditor for LayoutPlayApp {
         cfg: &ConfigView<'_, NoConfig>,
         view_state: &semio_framework_plugin::ViewModel,
         transient: &semio_framework_plugin::TransientView<'_, semio_framework_plugin::NoTransient>,
-        _interaction: &InteractionView<'_>,
+        interaction: &InteractionView<'_>,
     ) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
-        let document = doc.snapshot;
-        let config = blueprint::config::current(cfg);
-        let transient = blueprint::transient::current(transient);
-        let labels = layout_labels(view_state);
-        let mut engine = LayoutEngine::new();
-        match body_key {
-            LAYOUT_PLAY_BODY_BLUEPRINT => blueprint::render(&mut engine, document, &config, &transient),
-            LAYOUT_PLAY_BODY_PREVIEW => preview::render(&mut engine, document, &config, &transient),
-            LAYOUT_PLAY_BODY_ARTIFACT => document_panel::render(document, &config, labels, &semio_framework_plugin::TreeWindows::for_body(view_state, LAYOUT_PLAY_BODY_ARTIFACT)),
-            LAYOUT_PLAY_BODY_CATALOGUE => catalogue_panel::render(labels, &semio_framework_plugin::TreeWindows::for_body(view_state, LAYOUT_PLAY_BODY_CATALOGUE)),
-            LAYOUT_PLAY_BODY_INSPECTION => inspection_panel::render(document, &config, labels),
-            LAYOUT_PLAY_BODY_PREFLIGHT => preflight_panel::render(document, labels, &semio_framework_plugin::TreeWindows::for_body(view_state, LAYOUT_PLAY_BODY_PREFLIGHT)),
-            _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "layout error text admission failed")),
-        }.map(semio_framework_plugin::built_to_component_tree)
+        Self::render_body(body_key, doc, cfg, view_state, &blueprint::transient::current(transient), &LayoutInteractionSnapshot::from_interaction(interaction))
     }
 
     fn window_engagements_with_request_context(
@@ -868,6 +1079,30 @@ impl ArtifactEditor for LayoutPlayApp {
             *engagement = layout_window_engagement(&blueprint::config::current(cfg), &blueprint::transient::current(transient), "window", layout_labels(view_state));
         }
         engagements
+    }
+
+    fn context_menu(
+        request: &ContextMenuRequest,
+        doc: &ArtifactView<'_, LayoutSnapshot>,
+        _cfg: &ConfigView<'_, NoConfig>,
+        view_state: &semio_framework_plugin::ViewModel,
+        registry: &AppActionRegistry,
+    ) -> Vec<ContextMenuItemSpec> {
+        let is_de = view_state.locale == semio_framework_plugin::Locale::De;
+        layout_context_menu_items(registry, doc.snapshot, layout_labels(view_state), is_de, request.surface.as_ref(), &[])
+    }
+
+    fn context_menu_with_request_context(
+        request: &ContextMenuRequest,
+        doc: &ArtifactView<'_, LayoutSnapshot>,
+        _cfg: &ConfigView<'_, NoConfig>,
+        view_state: &semio_framework_plugin::ViewModel,
+        interaction: &InteractionView<'_>,
+        registry: &AppActionRegistry,
+    ) -> Vec<ContextMenuItemSpec> {
+        let is_de = view_state.locale == semio_framework_plugin::Locale::De;
+        let fallback = LayoutInteractionSnapshot::from_interaction(interaction).ids;
+        layout_context_menu_items(registry, doc.snapshot, layout_labels(view_state), is_de, request.surface.as_ref(), &fallback)
     }
 }
 //#endregion 🔖️LayoutPlayApp
@@ -923,6 +1158,7 @@ pub fn create_layout_app() -> semio_framework_plugin::AppDefinition {
             // 🔧️ Internal document operations — inspector/DnD-bound, not palette commands.
             .action_with(layout_internal_action("patchPage", LocalizedLabel::native("Patch Page", "Seite aktualisieren"), ActionKind::Mutation))
             .action_with(layout_internal_action("patchFrame", LocalizedLabel::native("Patch Frame", "Rahmen aktualisieren"), ActionKind::Mutation))
+            .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::bounded_catalog("deleteSelection", LocalizedLabel::native("Delete Selection", "Auswahl löschen"), ActionKind::Mutation).with_category("selection") })
             .action_with(layout_internal_action("canvasDrop", LocalizedLabel::native("Canvas Drop", "Ablegen auf Leinwand"), ActionKind::Mutation))
             // 👁️ Ephemeral view state — active page, drop ghost, pointer, camera, engagement draft.
             // Selection/hover are framework-owned now (domain "elements") — no app-declared verbs;
@@ -954,6 +1190,7 @@ pub fn create_layout_app() -> semio_framework_plugin::AppDefinition {
             .action_interactive_job("addPage", InteractiveJobClassification::Migrated)
             .action_interactive_job("patchPage", InteractiveJobClassification::Migrated)
             .action_interactive_job("patchFrame", InteractiveJobClassification::Migrated)
+            .action_interactive_job("deleteSelection", InteractiveJobClassification::Migrated)
             .action_interactive_job("canvasDrop", InteractiveJobClassification::Migrated)
             .action_interactive_job("canvasPointerDown", InteractiveJobClassification::Migrated)
             .action_interactive_job("canvasPointerMove", InteractiveJobClassification::Migrated)
