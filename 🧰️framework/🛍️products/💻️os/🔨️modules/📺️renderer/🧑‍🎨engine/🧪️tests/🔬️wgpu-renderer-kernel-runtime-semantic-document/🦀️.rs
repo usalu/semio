@@ -1047,7 +1047,23 @@ mod semantic_document_tests {
     #[test]
     fn fixed_kernel_request_queue_shutdown_releases_surface_and_rejected_events_in_fifo_units() {
         let queue = KernelRequestQueue::default();
-        queue.try_push(KernelRequest::Exchange { instance: 1, event: QueuedKernelEvent { surface_visible: Some("surface".to_string()), surface_body_key: None, surface_view_state: None } }, Arc::new(ResponseSlot::default()), None).unwrap_or_else(|_| panic!("fixture request queue admission"));
+        queue
+            .try_push(
+                KernelRequest::Exchange {
+                    instance: 1,
+                    event: QueuedKernelEvent {
+                        kind: Some(QueuedKernelEventKind::SurfaceVisible),
+                        surface_visible: Some("surface".to_string()),
+                        surface_body_key: None,
+                        surface_view_state: None,
+                        message_endpoint: None,
+                        message_payload: None,
+                    },
+                },
+                Arc::new(ResponseSlot::default()),
+                None,
+            )
+            .unwrap_or_else(|_| panic!("fixture request queue admission"));
         queue
             .try_push(KernelRequest::CloseRejectedEvents { owner: RejectedKernelEvents { events: std::collections::VecDeque::from([Event::Wake, Event::Wake]) } }, Arc::new(ResponseSlot::default()), None)
             .unwrap_or_else(|_| panic!("fixture request queue admission"));
@@ -1094,4 +1110,127 @@ fn kernel_runtime_slot_tables_are_heap_first_and_fit_a_bounded_thread_stack() {
             drop(MountedTypedOperationResultExchange::new());
         },
     );
+}
+
+#[test]
+fn kernel_pool_future_releases_its_owner_lock_before_polling_and_resumes_every_wake() {
+    fn trace_future(pending_wakes: usize, output: std::sync::mpsc::SyncSender<Vec<&'static str>>) -> impl Future<Output = ()> + Send {
+        let mut trace = Vec::with_capacity(pending_wakes + 1);
+        std::future::poll_fn(move |context| {
+            if trace.len() < pending_wakes {
+                trace.push("pending-wake");
+                context.waker().wake_by_ref();
+                Poll::Pending
+            } else {
+                trace.push("ready");
+                output.send(std::mem::take(&mut trace)).expect("trace receiver remains live");
+                Poll::Ready(())
+            }
+        })
+    }
+
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧵️kernel-pool-future/🔣️.json")).expect("neutral kernel future trace");
+    let runtime = tokio::runtime::Builder::new_current_thread().build().expect("third-party future oracle");
+    for case in fixture["cases"].as_array().expect("trace cases") {
+        let pending = case["pendingWakes"].as_u64().expect("pending wake count") as usize;
+        let expected = case["expectedPolls"].as_array().expect("expected trace").iter().map(|value| value.as_str().expect("poll outcome")).collect::<Vec<_>>();
+        let (oracle_output, oracle_input) = std::sync::mpsc::sync_channel(1);
+        runtime.block_on(trace_future(pending, oracle_output));
+        let oracle = oracle_input.recv().expect("oracle trace");
+        assert_eq!(oracle, expected, "neutral trace {}", case["id"]);
+        let (output, input) = std::sync::mpsc::sync_channel(1);
+        let task = KernelPoolFuture::spawn(crate::renderer_worker_pool(), semio_framework_async::Lane::Interactive, trace_future(pending, output));
+        let actual = input.recv_timeout(std::time::Duration::from_secs(2)).expect("a pending future must release its lock and resume its admitted wake");
+        assert_eq!(actual, oracle, "kernel trace {}", case["id"]);
+        eprintln!("[DEBUG] kernel-pool-future case={} polls={:?}", case["id"], actual);
+        drop(task);
+    }
+}
+
+#[test]
+fn kernel_response_delivery_never_parks_without_a_wake() {
+    use std::sync::atomic::{AtomicUsize, Ordering};
+    use std::task::{RawWaker, RawWakerVTable};
+
+    struct DeliveryWake {
+        on_clone: Mutex<Option<Box<dyn FnOnce() + Send>>>,
+        wakes: AtomicUsize,
+    }
+
+    unsafe fn clone_wake(pointer: *const ()) -> RawWaker {
+        let owner = std::mem::ManuallyDrop::new(unsafe { Arc::from_raw(pointer.cast::<DeliveryWake>()) });
+        let deliver = owner.on_clone.lock().unwrap().take();
+        if let Some(deliver) = deliver {
+            deliver();
+        }
+        RawWaker::new(Arc::into_raw(Arc::clone(&owner)).cast(), &VTABLE)
+    }
+
+    unsafe fn wake(pointer: *const ()) {
+        let owner = unsafe { Arc::from_raw(pointer.cast::<DeliveryWake>()) };
+        owner.wakes.fetch_add(1, Ordering::SeqCst);
+    }
+
+    unsafe fn wake_ref(pointer: *const ()) {
+        let owner = std::mem::ManuallyDrop::new(unsafe { Arc::from_raw(pointer.cast::<DeliveryWake>()) });
+        owner.wakes.fetch_add(1, Ordering::SeqCst);
+    }
+
+    unsafe fn drop_wake(pointer: *const ()) {
+        drop(unsafe { Arc::from_raw(pointer.cast::<DeliveryWake>()) });
+    }
+
+    static VTABLE: RawWakerVTable = RawWakerVTable::new(clone_wake, wake, wake_ref, drop_wake);
+
+    fn observe(future: impl Future<Output = u32>, delivery: Box<dyn FnOnce() + Send>, boundary: &str) -> (u32, usize) {
+        let state = Arc::new(DeliveryWake { on_clone: Mutex::new(None), wakes: AtomicUsize::new(0) });
+        let mut deliver = Some(delivery);
+        match boundary {
+            "before-poll" => deliver.take().unwrap()(),
+            "register-waker" => *state.on_clone.lock().unwrap() = deliver.take(),
+            "after-pending" => {}
+            _ => panic!("unknown neutral delivery boundary"),
+        }
+        let waker = unsafe { Waker::from_raw(RawWaker::new(Arc::into_raw(state.clone()).cast(), &VTABLE)) };
+        let mut context = Context::from_waker(&waker);
+        let mut future = std::pin::pin!(future);
+        let first = future.as_mut().poll(&mut context);
+        if boundary == "after-pending" {
+            assert!(first.is_pending(), "delivery has not occurred");
+            deliver.take().unwrap()();
+        }
+        let actual = match first {
+            Poll::Ready(value) => value,
+            Poll::Pending => {
+                assert!(state.wakes.load(Ordering::SeqCst) > 0, "{boundary}: a delivered response must wake its pending consumer");
+                let Poll::Ready(value) = future.as_mut().poll(&mut context) else { panic!("{boundary}: delivered response must be ready") };
+                value
+            }
+        };
+        (actual, state.wakes.load(Ordering::SeqCst))
+    }
+
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧵️kernel-pool-future/🔣️.json")).expect("neutral kernel response traces");
+    for case in fixture["responses"].as_array().expect("response cases") {
+        let boundary = case["delivery"].as_str().unwrap();
+        let expected = case["value"].as_u64().unwrap() as u32;
+        let (sender, receiver) = tokio::sync::oneshot::channel();
+        let oracle = observe(async move { receiver.await.expect("third-party response") }, Box::new(move || sender.send(expected).expect("oracle receiver remains live")), boundary);
+        assert_eq!(oracle.0, expected);
+        let slot = Arc::new(ResponseSlot::default());
+        let producer = slot.clone();
+        let future = KernelFuture { slot, request: None, queue: Arc::new(KernelRequestQueue::default()) };
+        let actual = observe(
+            async move {
+                match future.await {
+                    KernelOutcome::Created(Ok(value)) => value,
+                    _ => panic!("neutral response outcome"),
+                }
+            },
+            Box::new(move || producer.deliver(KernelOutcome::Created(Ok(expected)))),
+            boundary,
+        );
+        assert_eq!(actual.0, oracle.0, "delivery {boundary}");
+        eprintln!("[DEBUG] kernel-response boundary={boundary} value={} wakes={}", actual.0, actual.1);
+    }
 }

@@ -1,14 +1,7 @@
-//! 📜️ 📜️ Trinity Rewriting app command — `delete-rule-clause`.
+//! 📜️ Trinity Rewriting app command — `delete-rule-clause`.
 
-use semio_s_artifact_trinity_jack::JackWorkingScene;
-use semio_framework_plugin::NoConfigMutation;
-use semio_framework_graph::manifest::PropertyValue;
-use semio_s_artifact_trinity_jack::{Graph, JackSnapshot};
-use crate::standards::v1::subsets::any::schema::{ParameterKind, Rhs};
-use crate::rewriting_snapshot_mutations;
-use crate::standards::v1::subsets::any::schema::mutations::text::RewriteRuleMutation;
+use crate::standards::v1::subsets::any::schema::{self, Rhs};
 use crate::RewritingSnapshot;
-use semio_framework_plugin::{Emit, Fault};
 
 /// 🧭️ One addressable rule-clause node in the LHS/RHS semantic graphs (`lhs-where`, `rhs-create-N`,
 /// `rhs-merge-N`, `rhs-set-N`, `rhs-delete-N`, `rhs-parameter-N`) — parsed back from its synthetic
@@ -22,27 +15,6 @@ enum RuleClauseRef {
     RhsParameter(usize),
 }
 
-fn parse_fixture_json(json: &str) -> Option<JackSnapshot> {
-    JackSnapshot::from_json(json).ok()
-}
-fn apply_semantic_layout_edit(rule_layout: &mut std::collections::BTreeMap<String, crate::LayoutPoint>, current_fixture_json: &str, edited_fixture_json: &str) -> bool {
-    let (Some(current), Some(edited)) = (parse_fixture_json(current_fixture_json), parse_fixture_json(edited_fixture_json)) else {
-        return false;
-    };
-    let mut changed = false;
-    let edited_nodes = edited.nodes();
-    let current_nodes = current.nodes();
-    for node in &edited_nodes {
-        let Some(prev) = current_nodes.iter().find(|entry| entry.id == node.id) else {
-            continue;
-        };
-        if (prev.x - node.x).abs() > 1e-6 || (prev.y - node.y).abs() > 1e-6 {
-            rule_layout.insert(node.id.clone(), crate::LayoutPoint { x: node.x, y: node.y });
-            changed = true;
-        }
-    }
-    changed
-}
 fn parse_clause_ref(node_id: &str) -> Option<RuleClauseRef> {
     if node_id == "lhs-where" {
         return Some(RuleClauseRef::LhsWhere);
@@ -66,132 +38,14 @@ fn remove_at<T>(items: &mut Vec<T>, index: usize) -> bool {
         false
     }
 }
-fn add_rule_clause(state: &mut RewritingSnapshot, clause_kind: &str) -> bool {
-    let Ok(mut lhs) = pack::from_json_str::<crate::standards::v1::subsets::any::schema::Lhs>(&state.lhs_json) else {
-        return false;
-    };
-    let Ok(mut rhs) = pack::from_json_str::<Rhs>(&state.rhs_json) else {
-        return false;
-    };
-    let left_var = lhs.pattern.left_var.clone();
-    let changed = match clause_kind {
-        "where" => {
-            if lhs.where_clause.is_some() {
-                false
-            } else {
-                lhs.where_clause = Some(format!("{left_var}.name = 'value'"));
-                true
-            }
-        }
-        "create" => {
-            rhs.create.push(crate::standards::v1::subsets::any::schema::PatternJson { left_var: "n".into(), left_kind: "Piece".into(), edge_var: None, edge_kind: None, right_var: None, right_kind: None });
-            true
-        }
-        "merge" => {
-            rhs.merge.push(crate::standards::v1::subsets::any::schema::PatternJson { left_var: "n".into(), left_kind: "Piece".into(), edge_var: None, edge_kind: None, right_var: None, right_kind: None });
-            true
-        }
-        "set" => {
-            rhs.set.push(crate::standards::v1::subsets::any::schema::AssignmentJson { var: left_var, prop: "label".into(), value: PropertyValue::String(String::new()) });
-            true
-        }
-        "delete" => {
-            rhs.delete.push(left_var);
-            true
-        }
-        "parameter" => {
-            let name = format!("param{}", rhs.parameters.len());
-            state.parameter_bindings.insert(name.clone(), PropertyValue::String(String::new()));
-            rhs.parameters.push(crate::standards::v1::subsets::any::schema::ParameterSpec { name, kind: ParameterKind::String, default: PropertyValue::String(String::new()) });
-            true
-        }
-        _ => false,
-    };
-    if changed {
-        state.lhs_json = pack::to_json_string(&lhs).unwrap_or_default();
-        state.rhs_json = pack::to_json_string(&rhs).unwrap_or_default();
-    }
-    changed
-}
-fn apply_rewriting_node_graph_edit_operations(state: &mut RewritingSnapshot, selected_node_ids: &[String], surface_id: &str, operations: &[Value]) -> bool {
-    let mut changed = false;
-    for operation in operations {
-        match operation.get("operation").and_then(|value| value.as_str()).unwrap_or("") {
-            "setHostSnapshot" => {
-                let Some(host_snapshot_json) = operation.get("hostSnapshotJson").and_then(|value| value.as_str()) else {
-                    continue;
-                };
-                if parse_fixture_json(host_snapshot_json).is_none() {
-                    continue;
-                }
-                if surface_id == crate::editor::rewriting::TRINITY_REWRITING_PLAY_SURFACE_BEFORE {
-                    state.before_fixture_json = host_snapshot_json.into();
-                    changed = true;
-                } else if surface_id == crate::editor::rewriting::TRINITY_REWRITING_PLAY_SURFACE_LHS {
-                    let current = crate::editor::rewriting::lhs_graph_fixture_json(&state.lhs_json, &state.rule_layout);
-                    changed |= apply_semantic_layout_edit(&mut state.rule_layout, &current, host_snapshot_json);
-                } else if surface_id == crate::editor::rewriting::TRINITY_REWRITING_PLAY_SURFACE_RHS {
-                    let current = crate::editor::rewriting::rhs_graph_fixture_json(&state.rhs_json, &state.rule_layout);
-                    changed |= apply_semantic_layout_edit(&mut state.rule_layout, &current, host_snapshot_json);
-                }
-            }
-            "deleteSelection" => {
-                if selected_node_ids.is_empty() {
-                    continue;
-                }
-                if surface_id == crate::editor::rewriting::TRINITY_REWRITING_PLAY_SURFACE_BEFORE {
-                    if let Some(fixture) = parse_fixture_json(&state.before_fixture_json) {
-                        let mut nodes = fixture.nodes();
-                        nodes.retain(|node| !selected_node_ids.contains(&node.id));
-                        let mut edges = fixture.edges();
-                        edges.retain(|edge| {
-                            let from = semio_s_artifact_trinity_jack::port_node_id(&edge.source).unwrap_or(&edge.source);
-                            let to = semio_s_artifact_trinity_jack::port_node_id(&edge.target).unwrap_or(&edge.target);
-                            !selected_node_ids.iter().any(|id| id == from || id == to)
-                        });
-                        let fixture = JackSnapshot::with_content(fixture.schema.clone(), fixture.name.clone(), fixture.manifest_id.clone(), fixture.manifest.clone(), fixture.camera.clone(), JackWorkingScene { nodes: nodes, edges: edges }, fixture.root_node_id.clone());
-                        if let Ok(json) = Graph::from_snapshot(fixture).and_then(|graph| graph.host_snapshot_json()) {
-                            state.before_fixture_json = json;
-                            changed = true;
-                        }
-                    }
-                } else if surface_id == crate::editor::rewriting::TRINITY_REWRITING_PLAY_SURFACE_LHS || surface_id == crate::editor::rewriting::TRINITY_REWRITING_PLAY_SURFACE_RHS {
-                    let mut deleted = false;
-                    for id in selected_node_ids {
-                        deleted |= delete_rule_clause(state, id);
-                    }
-                    if deleted {
-                        changed = true;
-                    }
-                }
-            }
-            _ => {}
-        }
-    }
-    changed
-}
-fn patch_fixture_nodes(fixture_json: &str, node_ids: &[String], field: &str, value: &str) -> Option<String> {
-    let fixture = JackSnapshot::from_json(fixture_json).ok()?;
-    let mut nodes = fixture.nodes();
-    for node in nodes.iter_mut() {
-        if !node_ids.iter().any(|id| id == &node.id) {
-            continue;
-        }
-        match field {
-            "name" => node.name = value.into(),
-            "kind" => node.kind = value.into(),
-            _ => {}
-        }
-    }
-    let fixture = JackSnapshot::with_content(fixture.schema.clone(), fixture.name.clone(), fixture.manifest_id.clone(), fixture.manifest.clone(), fixture.camera.clone(), JackWorkingScene { nodes: nodes, edges: fixture.edges() }, fixture.root_node_id.clone());
-    Graph::from_snapshot(fixture).ok()?.host_snapshot_json().ok()
-}
 
+/// 🗑️ Drops the rule clause addressed by `node_id` from the LHS/RHS JSON carried by `state`,
+/// together with its layout point and — for a parameter clause — its binding.
 pub(crate) fn delete_rule_clause(state: &mut RewritingSnapshot, node_id: &str) -> bool {
     let Some(clause_ref) = parse_clause_ref(node_id) else {
         return false;
     };
-    let Ok(mut lhs) = pack::from_json_str::<crate::standards::v1::subsets::any::schema::Lhs>(&state.lhs_json) else {
+    let Ok(mut lhs) = pack::from_json_str::<schema::Lhs>(&state.lhs_json) else {
         return false;
     };
     let Ok(mut rhs) = pack::from_json_str::<Rhs>(&state.rhs_json) else {
@@ -218,8 +72,8 @@ pub(crate) fn delete_rule_clause(state: &mut RewritingSnapshot, node_id: &str) -
         }
     };
     if changed {
-        state.lhs_json = pack::to_json_string(&lhs).unwrap_or_default();
-        state.rhs_json = pack::to_json_string(&rhs).unwrap_or_default();
+        state.lhs_json = pack::to_json_string(&lhs);
+        state.rhs_json = pack::to_json_string(&rhs);
         state.rule_layout.remove(node_id);
     }
     changed

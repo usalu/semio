@@ -8,24 +8,28 @@
     "rawBytes": 131072,
     "checkpointBytes": 512,
     "scalarBytes": 4096,
-    "configBaseBytes": 4194304,
-    "commandStepBytes": 16777216,
-    "storeStepBytes": 16777216,
+    "configBaseBytes": 1048576,
+    "commandStepBytes": 1048576,
+    "storeStepBytes": 1048576,
     "workItems": 1,
     "preparationPhases": 3
   },
   "routes": [
     {
       "id": "applyDirectoryEventPage",
-      "disposition": "BatchOnlyPendingRewrite",
-      "lanes": [],
-      "blocker": "directory page decode, event fold, and projection replacement still execute in one direct handler"
+      "disposition": "Migrated",
+      "lanes": [
+        "Config"
+      ],
+      "blocker": ""
     },
     {
       "id": "createStudio",
-      "disposition": "BatchOnlyPendingRewrite",
-      "lanes": [],
-      "blocker": "filesystem or draft allocation and authored document creation still execute in one direct handler"
+      "disposition": "Migrated",
+      "lanes": [
+        "Artifact"
+      ],
+      "blocker": ""
     },
     {
       "id": "bindSpaceFile",

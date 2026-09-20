@@ -291,3 +291,59 @@ async fn create_layer_outcome_obeys_the_policy_matrix() {
     protocol::os_spr::protocol_laws::assert_outcome_policy_matrix(&base, &mutation).await;
 }
 //#endregion 🧪️OutcomeLaws
+
+//#region 🧪️ColdRetirementLaws
+/// 🎨️ Builds the demo carrier's own shape: one pixel layer plus an adjustment layer whose `params`
+/// is a POPULATED `RasterOwnedMap`, the exact owner whose `Drop` is fail-closed.
+fn adjustment_layer_with_params(id: &str) -> RasterLayerNode {
+    let mut params = RasterOwnedMap::new();
+    params.insert("brightness".into(), dsl::DslValue::float(0.12)).expect("first law parameter fits the owned map");
+    params.insert("contrast".into(), dsl::DslValue::float(0.08)).expect("second law parameter fits the owned map");
+    RasterLayerNode::Adjustment { id: id.into(), name: "Brighten".into(), visible: true, opacity: 1.0, blend_mode: "normal".into(), transform: RasterTransform::default(), adjustment_kind: "brightnessContrast".into(), params }
+}
+
+/// 🧊️ A displaced replay projection MUST be retired, never dropped. The framework's history fold
+/// walks `base → mid₁ → … → head` and throws every intermediate away through
+/// `MutationDiff::retire_projection`, whose default is a bare drop; raster took that default, so the
+/// first `undo` on any document carrying a populated `RasterOwnedMap` aborted the guest with
+/// `unreachable` at `RasterOwnedMap`'s fail-closed destructor and every later dispatch in the whole
+/// shell was refused (measured live 2026-09-20 on 🖨️raster's own bar, slice B3e).
+#[test]
+fn retire_projection_closes_every_owned_map_in_a_displaced_projection() {
+    let mut projection = empty_raster_snapshot();
+    projection.layers.push(pixel_layer("l1", "Backdrop"));
+    projection.layers.push(adjustment_layer_with_params("brighten"));
+    projection.layers.push(RasterLayerNode::Group {
+        id: "grp".into(),
+        name: "Nested".into(),
+        visible: true,
+        opacity: 1.0,
+        blend_mode: "normal".into(),
+        transform: RasterTransform::default(),
+        mask: None,
+        children: vec![adjustment_layer_with_params("nested-brighten")],
+    });
+    projection.assets.insert("seed".into(), crate::mint_raster_asset_child("seed", &RasterImageAsset { mime: "image/png".into(), data: SEED_ASSET_PNG.to_vec() })).expect("law asset fits the owned map");
+    <crate::diff::RasterDiff as protocol::MutationDiff<RasterSnapshot>>::retire_projection(projection);
+}
+
+/// 🧊️ The same law one level up: a cold diff nobody will apply again owns both a whole replacement
+/// artifact and the layers its `added` insertions carry, each of which can hide a populated map.
+#[test]
+fn retire_cold_closes_every_owned_map_in_a_displaced_diff() {
+    let mut replacement = empty_raster_snapshot();
+    replacement.layers.push(adjustment_layer_with_params("replacement-brighten"));
+    let whole = crate::diff::text::diff_from_snapshot(replacement);
+    <crate::diff::RasterDiff as protocol::MutationDiff<RasterSnapshot>>::retire_cold(whole);
+    let sparse = crate::diff::text::diff_add_layer(None, 0, adjustment_layer_with_params("added-brighten"));
+    <crate::diff::RasterDiff as protocol::MutationDiff<RasterSnapshot>>::retire_cold(sparse);
+}
+
+/// 🧊️ And one level below: the store cold-retires decoded arrivals, replay clones and rebased
+/// inverses through `Mutation::retire_cold`, and `create-layer` is the one leaf carrying a subtree.
+#[test]
+fn retire_cold_closes_the_layer_a_create_layer_operation_owns() {
+    let mutation = RasterMutation::CreateLayer(create_layer::CreateLayer { parent_id: None, index: 0, layer: Box::new(adjustment_layer_with_params("created-brighten")) });
+    protocol::Mutation::retire_cold(mutation);
+}
+//#endregion 🧪️ColdRetirementLaws

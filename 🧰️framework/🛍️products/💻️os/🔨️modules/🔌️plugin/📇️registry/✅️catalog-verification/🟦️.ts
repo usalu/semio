@@ -9,7 +9,7 @@ import type { PackValue } from "../../../../🟦️.ts";
 import { CATALOG_ID, COMPONENT_PACKAGE_ID, DESCRIPTOR_JSON_REL_PATH, PluginDescriptorHashes, PluginRegistryEntry, findPluginCargoFiles, parsePluginCargo } from "../🔎️discovery/🟦️.ts";
 import { tomlBlocksAfterHeader } from "../🔎️discovery/🟦️.ts";
 import { dialectCoordinate } from "../../../../../../🔨️modules/🚪️io/🧬️schema/🟦️.ts";
-import { examplesForApp, normalizeManifestExamples, type PluginManifest } from "../../../../../../🔨️modules/🛂️manifest/🟦️.ts";
+import { exampleBodyAssetName, examplesForApp, normalizeManifestExamples, type PluginManifest } from "../../../../../../🔨️modules/🛂️manifest/🟦️.ts";
 
 /** 🎛️ Playground owners that legitimately ship without a navbar example picker (library shells, aggregators, flow hosts). */
 export const NAVBAR_EXAMPLE_PICKER_EXEMPT_PLUGIN_IDS = new Set(["demonstrator", "flow", "norm", "stdio"]);
@@ -29,17 +29,21 @@ export function auditNavbarExamplePickerCoverage(manifest: PluginManifest): read
   return problems;
 }
 
-/** 📦️ Every manifest example row the navbar picker can load must ship non-empty `artifactJson`. */
-export function auditNavbarExampleArtifactPayload(manifest: PluginManifest): readonly string[] {
+/** 📦️ Every manifest example row the navbar picker can load must ship a body: inline `artifactJson`,
+ * or — once the body is over `DESCRIPTOR_INLINE_EXAMPLE_MAX_BYTES` (256 KiB) and the descriptor
+ * therefore externalizes it — a matching `AssetDeclaration` in the descriptor's own `assets`
+ * ({@link exampleBodyAssetName}). A row with neither is a dead picker entry. */
+export function auditNavbarExampleArtifactPayload(manifest: PluginManifest, assets: readonly { readonly name?: string }[] = []): readonly string[] {
   if (NAVBAR_EXAMPLE_PICKER_EXEMPT_PLUGIN_IDS.has(manifest.pluginId)) return [];
   const admitted = normalizeManifestExamples(manifest);
+  const declared = new Set(assets.map((asset) => asset.name).filter((name): name is string => typeof name === "string"));
   const problems: string[] = [];
   for (const example of admitted.examples ?? []) {
-    const row = example as { readonly id?: string; readonly artifactJson?: string };
+    const row = example as { readonly id?: string; readonly artifactJson?: string; readonly dialect?: { readonly artifactKind: string; readonly standard: string; readonly subset: string } };
     const payload = row.artifactJson;
-    if (typeof payload !== "string" || payload.trim().length === 0) {
-      problems.push(`${manifest.pluginId}: example ${String(row.id ?? "?")} is missing artifactJson`);
-    }
+    if (typeof payload === "string" && payload.trim().length > 0) continue;
+    if (row.id && row.dialect && declared.has(exampleBodyAssetName({ id: row.id, dialect: row.dialect }))) continue;
+    problems.push(`${manifest.pluginId}: example ${String(row.id ?? "?")} has neither inline artifactJson nor a declared example-body asset`);
   }
   return problems;
 }

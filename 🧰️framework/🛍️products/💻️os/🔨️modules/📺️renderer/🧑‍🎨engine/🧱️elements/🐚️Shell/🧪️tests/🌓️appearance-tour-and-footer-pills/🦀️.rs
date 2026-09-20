@@ -140,6 +140,7 @@ pub(crate) fn tour_app(introduction: Option<semio_framework::IntroductionDefinit
         .expect("non-empty"),
         panel_tabs: vec![],
         keybindings: vec![],
+        actions: vec![],
         utilities: vec![],
         tools: vec![],
         commands: vec![],
@@ -174,6 +175,24 @@ pub(crate) fn tour_shell(introduction: Option<semio_framework::IntroductionDefin
     let mut shell = ShellState::new(Vec::new(), String::new());
     shell.session = Some(ActiveSession { plugin_id: "tour".into(), instance_id: 1, app: tour_app(introduction), view_state: ViewModel::default() });
     shell
+}
+
+#[test]
+fn tutorial_dialog_restoration_uses_declared_dialog_construction() {
+    let mut shell = tour_shell(None);
+    shell.session.as_mut().unwrap().app.dialogs.push(semio_framework::DialogDefinition::new("confirm.reset", LocalizedLabel::native("Reset?", "Zurücksetzen?"), semio_framework::ActionRef::new("resetTheme")));
+    let snapshot = semio_framework::TutorialUiSnapshot { open_dialog_id: Some("confirm.reset".into()), ..Default::default() };
+    tutorial_apply_ui_snapshot(&mut shell, &snapshot);
+    let restored = shell.chrome_build.dialog_stack.last().expect("known dialog is restored");
+    assert_eq!(restored.id, "confirm.reset");
+    assert_eq!(restored.confirm_action.action, "resetTheme");
+    tutorial_apply_ui_snapshot(&mut shell, &semio_framework::TutorialUiSnapshot::default());
+    assert!(shell.chrome_build.dialog_stack.is_empty(), "an absent dialog closes the restored request");
+    shell.queue_host_effects(
+        "tour-controller",
+        vec![semio_framework::kernel::Effect::OpenDialog { req: semio_framework::kernel::RequestId(1), dialog_id: "confirm.reset".into(), args: None }],
+    );
+    assert_eq!(shell.chrome_build.dialog_stack.last().map(|dialog| dialog.id.as_str()), Some("confirm.reset"), "normal effects and tutorial restoration share the constructor");
 }
 
 /// 🧪️ The mounting condition, mirroring `🧱️elements/🐚️Shell/🟦️.tsx`'s `shouldAutoStartIntroduction`:
@@ -233,7 +252,7 @@ fn the_introduction_read_arms_the_tour() {
     assert!(!source.contains("#[cfg(test)]\n    fn start_introduction"), "`start_introduction` is production code, not a test-only helper");
     let arm = source.split("introduction_read.take()").nth(1).expect("the introduction-seen read arm exists");
     let arm = &arm[..arm.find("introduction_write").unwrap_or(arm.len())];
-    assert!(arm.contains("self.auto_start_introduction(&app_id, seen)"), "the landing read arms the tour");
+    assert!(arm.contains("self.auto_start_introduction(&seen_key, seen)"), "the landing read arms the tour");
 }
 
 /// 🧪️ The card's own chrome, against `UIIntroduction` (`🖱️ui/🎯️targets/⚛️react/🟦️.tsx`): Skip in the
@@ -310,19 +329,16 @@ fn the_presence_pill_shares_the_elements_own_copy() {
 #[test]
 fn the_footer_pills_are_not_gated_off_the_browser_build() {
     let source = wgpu_shell_source();
-    assert!(!source.contains("#[cfg(not(target_arch = \"wasm32\"))]\nfn render_footer_pills_step"), "the pill renderer compiles on both targets");
-    let phase = source.split("fn render_footer_step").nth(1).expect("the footer renderer exists");
-    let phase = phase.split("render_footer_pills_step(cursor").nth(0).expect("the footer calls the pill renderer");
-    let phase = &phase[phase.rfind("            3 => {").expect("the footer's sync phase")..];
-    assert!(!phase.contains("cfg(not(target_arch"), "the footer's sync phase is no longer native-only");
+    let dock = source.split("pub fn default_dock(&self)").nth(1).expect("the default dock exists");
+    let dock = &dock[..dock.find("\n    pub ").unwrap_or(dock.len())];
+    assert!(dock.contains("FRAMEWORK_SYNC_PANEL_TAB_ID"), "the footer's bottom-left sync leaf is always declared");
+    assert!(!dock.contains("cfg(not(target_arch"), "the footer's sync leaf is no longer native-only");
     let pill = source.split("fn sync_pill(&self)").nth(1).expect("the pill projection exists");
     let pill = &pill[..pill.find("\n    /// ").unwrap_or(pill.len())];
     assert!(pill.contains("#[cfg(target_arch = \"wasm32\")]\n        ShellSyncPill::Remote(ShellSyncRemote::Detached)"), "the browser build resolves the state React's browser shell resolves");
-    let renderer = source.split("fn render_footer_pills_step").nth(1).expect("the pill renderer exists");
-    let renderer = &renderer[..renderer.find("\n/// ").unwrap_or(renderer.len())];
-    for needle in ["\"s-sync-status\"", "\"s-presence-peers\""] {
-        assert!(renderer.contains(needle), "the footer paints {needle}");
-    }
+    let renderer = source.split("fn render_footer_step").nth(1).expect("the footer renderer exists");
+    let renderer = &renderer[..renderer.find("\n    fn render_overlay_step").unwrap_or(renderer.len())];
+    assert!(renderer.contains("\"s-presence-peers\""), "the footer paints the ambient presence badge");
     assert!(!renderer.contains("\"s-checkin\""), "and paints no check-in chip, because React's footer has none");
 }
 //#endregion 🚦️FooterPills

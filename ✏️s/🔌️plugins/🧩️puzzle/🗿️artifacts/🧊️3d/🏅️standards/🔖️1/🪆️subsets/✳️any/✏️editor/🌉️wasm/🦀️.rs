@@ -54,9 +54,15 @@ pub struct Puzzle3dArtifactVcs {
 
 #[wasm_bindgen]
 impl Puzzle3dArtifactVcs {
+    /// 🧬️ Registry-backed, because there is no other kind: `EditorApp<Puzzle3dPlayApp>` publishes a
+    /// `bounded_first_step_tool_proofs!` roster, and `with_registry_on_bus` joins it against the
+    /// registry's `Migrated` tool ids — the registry-LESS `VcsArtifactApp::new` panics at construction
+    /// with `interactive-job.catalog-authority … generated_migrated=false, migrated={}`, and could
+    /// never have admitted a typed command anyway (`admit_command_wire_with_proof`).
     pub fn create() -> Promise {
         semio_framework_async::future_to_promise(async {
-            let app = VcsArtifactApp::new(EditorApp::<Puzzle3dPlayApp>::default()).await;
+            let registry = semio_framework_plugin::AppActionRegistry::from_definition(&crate::editor::puzzle3d::create_puzzle3d_app());
+            let app = VcsArtifactApp::with_registry(EditorApp::<Puzzle3dPlayApp>::default(), registry).await;
             Ok(Self { app: RefCell::new(app) }.into())
         })
     }

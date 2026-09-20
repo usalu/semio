@@ -570,7 +570,7 @@ export function semioBackboneVitePlugin() {
 //#endregion BackboneVitePlugin
 
 //#region 🔌️PluginHotSwapVitePlugin
-type PluginHotSwapMarker = { readonly pluginId: string; readonly rebuiltAt: number };
+export type PluginHotSwapMarker = { readonly pluginId: string; readonly rebuiltAt: number };
 
 /** @emoji 🔌️ Every plugin dir under `root` that has a completed build right now (a `.core*.wasm`
  * present — same convention `collectPluginWasmSizeRows` walks), newest core-wasm mtime as `rebuiltAt`.
@@ -909,7 +909,7 @@ export function semioPlaygroundReactRefreshCoherenceVitePlugin() {
   return {
     name: "semio-playground-react-refresh-coherence",
     enforce: "post" as const,
-    config(userConfig, { command }) {
+    config(userConfig: { readonly server?: { readonly hmr?: unknown } }, { command }: { readonly command: string }) {
       if (command !== "serve" || userConfig.server?.hmr !== false) return;
       return {
         esbuild: { jsxDev: false },
@@ -919,7 +919,7 @@ export function semioPlaygroundReactRefreshCoherenceVitePlugin() {
     },
     transformIndexHtml: {
       order: "post" as const,
-      handler(html, ctx) {
+      handler(html: string, ctx: { readonly server?: { readonly config: { readonly base?: string; readonly server: { readonly hmr?: unknown } } } }) {
         if (ctx.server?.config.server.hmr === false) return;
         if (html.includes("injectIntoGlobalHook")) return;
         const base = ctx.server?.config.base ?? "/";
@@ -986,7 +986,7 @@ type FreshnessServer = {
   readonly httpServer: { once(event: "close", listener: () => void): void } | null;
   readonly environments?: Record<string, { readonly moduleGraph: { onFileChange(file: string): void } }>;
   readonly middlewares?: { use(handler: (request: { url?: string; headers: Record<string, string | string[] | undefined> }, response: unknown, next: () => void) => void): void };
-  readonly config?: { readonly root: string; readonly server: { readonly hmr: unknown } };
+  readonly config?: { readonly root: string; readonly server: { readonly hmr?: unknown } };
 };
 
 /** @emoji ♻️ Retires every cached transform of one file, synchronously for the request in flight and then
@@ -998,7 +998,7 @@ function retireStaleModule(server: FreshnessServer, file: string): void {
   server.watcher.emit("change", file);
 }
 
-export function semioSourceWatchVitePlugin(options: { readonly repoRoot: string; readonly freshness?: SourceFreshnessRegistry }) {
+export function semioSourceWatchVitePlugin(options: { readonly repoRoot: string; readonly freshness?: Pick<SourceFreshnessRegistry, "movedInDirectory"> }) {
   return {
     name: "semio-source-watch",
     apply: "serve" as const,
@@ -1014,12 +1014,13 @@ export function semioSourceWatchVitePlugin(options: { readonly repoRoot: string;
           for (const moved of freshness?.movedInDirectory(directory) ?? []) if (moved !== path) server.watcher.emit("change", moved);
           return;
         }
-        if (!existsSync(path)) {
+        const entry = statSync(path, { throwIfNoEntry: false });
+        if (!entry) {
           server.watcher.emit("unlink", path);
           for (const moved of freshness?.movedInDirectory(directory) ?? []) server.watcher.emit("change", moved);
           return;
         }
-        if (statSync(path).isDirectory()) {
+        if (entry.isDirectory()) {
           server.watcher.emit("addDir", path);
           for (const moved of freshness?.movedInDirectory(path) ?? []) server.watcher.emit("change", moved);
           return;

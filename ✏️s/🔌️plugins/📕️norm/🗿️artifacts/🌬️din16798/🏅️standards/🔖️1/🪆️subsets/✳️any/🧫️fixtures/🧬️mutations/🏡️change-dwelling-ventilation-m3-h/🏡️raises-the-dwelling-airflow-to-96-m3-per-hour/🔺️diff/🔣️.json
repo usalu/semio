@@ -15,7 +15,7 @@
   "ventilationM3H": null,
   "floorAreaM2": null,
   "bedrooms": null,
-  "dwellingVentilationM3H": 96,
+  "dwellingVentilationM3H": 96.0,
   "occupants": null,
   "residentialVentilationM3H": null,
   "sfpWM3S": null,

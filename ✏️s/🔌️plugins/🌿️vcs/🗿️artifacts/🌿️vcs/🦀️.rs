@@ -504,6 +504,8 @@ pub mod editor {
             pub mod canvas_wheel;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🩹️edit/🦀️.rs"]
             pub mod edit;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📚️example/🦀️.rs"]
+            pub mod example;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📈️increment-counter/🦀️.rs"]
             pub mod increment_counter;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/⏸️no-operation/🦀️.rs"]

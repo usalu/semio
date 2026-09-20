@@ -1,5 +1,17 @@
 /** 🧩️ Semantic activation readiness owner. */
 
+import { existsSync } from "node:fs";
+
+import { join } from "node:path";
+
+import { pathToFileURL } from "node:url";
+
+import { ACTIVATION_RECEIPT_FILE, developmentRuntimeRoot, healthyPreparedComponents, pluginModulesRoot, preparedComponentVerdict, readActivationReceipt } from "../🟦️.ts";
+
+import { stagedComponentFacts } from "../🔍️freshness/🟦️.ts";
+
+import { playgroundCatalog } from "../../../🔌️plugin/🏗️build/📋️plan/🟦️.ts";
+
 import {
   BundleScript,
   ScriptRouter,
@@ -143,4 +155,37 @@ async function awaitChildExit(child: SpawnDaemonHandle["child"], deadlineMs: num
   return Promise.race([exited, timeoutAfter(deadlineMs)]);
 }
 
-export { FRAMEWORK_OS_MULTI_HARNESS_PORT, type PollOutcome, awaitChildExit, awaitHttpOk, awaitTcpReady };
+//#region 🩺️ColdBootReceipt
+/** 🩺️ The offline half of "did this product cold-boot": one line per component the variant's own
+ * playground session names, saying whether its module is staged and whether the activation receipt
+ * accepted it. Pure reporting over the SAME healthy-set rule `prepare`/`activate` obey, so a green
+ * line here and a green line there cannot disagree.
+ *
+ * The live half is `verify catalog` (`🧪️tests/🔬️catalog-smoke/🟦️.ts`), which drives the served page.
+ * They are separate commands because this one needs no browser and no server — which is exactly what
+ * makes it runnable straight after a 3-hour activation to say what that activation actually produced. */
+class ColdBootCheckScript extends BundleScript {
+  async run(args: string[]): Promise<void> {
+    const [variant, renderer, profile] = args as [string, "react" | "wgpu", "dev" | "release"];
+    if (args.length !== 3 || !["react", "wgpu"].includes(renderer) || !["dev", "release"].includes(profile)) throw new Error("cold-boot-check <variant> react|wgpu <dev|release>");
+    const playground = playgroundCatalog.find((row) => row.variant === variant);
+    if (!playground) throw new Error(`Missing generated playground ${variant}`);
+    const repoRoot = getWorkspaceRoot();
+    const moduleRoot = pluginModulesRoot(profile);
+    const sessionPath = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/dist/sessions", variant, "🎮️playground-session", "🟦️.ts");
+    const session = (await import(pathToFileURL(sessionPath).href)).PLAYGROUND_SESSION;
+    const receiptRoot = join(developmentRuntimeRoot(this.root, variant, profile, renderer), "activation");
+    if (!existsSync(join(receiptRoot, ACTIVATION_RECEIPT_FILE))) throw new Error(`No activation receipt at ${receiptRoot} — run: bun nx run @semio-tech/framework-os-dev:activate-${variant}-${renderer}-${profile}`);
+    const activated = new Set(readActivationReceipt(receiptRoot).plugins.map((row) => row.pluginId));
+    const verdicts = session.plugins.map((plugin: { readonly pluginId: string }) => preparedComponentVerdict(stagedComponentFacts(moduleRoot, plugin.pluginId)));
+    const healthy = healthyPreparedComponents(verdicts, playground.pluginId);
+    for (const row of verdicts) console.log(`${row.kind === "prepared" && activated.has(row.pluginId) ? "[staged]  " : "[missing] "}${row.pluginId}: ${row.kind}${activated.has(row.pluginId) ? ", in receipt" : ", absent from receipt"}${row.detail ? ` — ${row.detail}` : ""}`);
+    const drift = healthy.prepared.filter((pluginId) => !activated.has(pluginId));
+    if (healthy.refusal) throw new Error(healthy.refusal);
+    if (drift.length > 0) throw new Error(`Activation receipt is behind the staged tree for ${drift.length} component(s): ${drift.join(", ")}`);
+    console.log(`Cold boot ${variant} ${renderer} ${profile}: ${healthy.prepared.length} of ${session.plugins.length} components staged and activated, ${healthy.excluded.length} excluded`);
+  }
+}
+//#endregion 🩺️ColdBootReceipt
+
+export { ColdBootCheckScript, FRAMEWORK_OS_MULTI_HARNESS_PORT, type PollOutcome, awaitChildExit, awaitHttpOk, awaitTcpReady };

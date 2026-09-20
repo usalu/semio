@@ -1,5 +1,4 @@
 {
-  "ChangeT1S": {
-    "newT1S": 0.75
-  }
+  "mutation": "changeT1S",
+  "newT1S": 0.75
 }

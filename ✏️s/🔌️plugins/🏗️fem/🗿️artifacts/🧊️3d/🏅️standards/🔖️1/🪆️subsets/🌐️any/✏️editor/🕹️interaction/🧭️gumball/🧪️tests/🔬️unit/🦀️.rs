@@ -2,7 +2,7 @@ use super::*;
 use crate::FemAxis;
 
 fn demo() -> Fem3dSnapshot {
-    crate::standards::v1::subsets::any::schema::snapshot::text::fem3d_boot_snapshot()
+    crate::standards::v1::subsets::any::schema::snapshot::text::fem3d_demo_snapshot()
 }
 
 fn node(doc: &Fem3dSnapshot, mutations: &[Fem3dMutation], id: &str) -> [f64; 3] {

@@ -30,7 +30,14 @@ pixels-tok = "pixels" "=" hex
 ifds-diff-body = "[" removed-list? "]" ";" "[" ifd-modified-list? "]" ";" "[" ifd-added-list? "]"
 removed-list = INT {"," INT}*
 ifd-modified-list = ifd-modified-item {"," ifd-modified-item}*
-ifd-modified-item = INT ":" tags-diff-body
+# `enc_ifd_diff` -- `[<tags-diff-body>];<pixels-slot>`: one modified directory is its bracketed
+# tag-level triple followed by its OWN raw-strip slot (`TiffIfdDiff::pixels`, the per-IFD strip
+# bytes `TiffIfd::pixels` carries). `-` is "this directory's strips are unchanged"; a present value
+# is the `#`-sigilled hex run, same `"-" | <sigil> <value>` optional-slot shape the sibling
+# `🧿️semio`/`📋️forms` grammars use.
+ifd-modified-item = INT ":" ifd-diff-body
+ifd-diff-body = "[" tags-diff-body "]" ";" ifd-pixels-slot
+ifd-pixels-slot = "-" | "#" hex
 ifd-added-list = ifd-added-item {"," ifd-added-item}*
 ifd-added-item = INT ":" ifd-lit
 
@@ -48,7 +55,8 @@ tag-added-item = INT ":" INT ":" tiff-values
 # ../../📸️snapshot's real tag/type/value model) so this leaf grammar is self-contained, matching
 # the repo's existing per-facet convention. `enc_list`'s uniform bracketed-comma-list shape
 # (`📖️grammar-recipe.md`'s own `hex` macro companion pattern).
-ifd-lit = "[" ifd-entry-list? "]"
+ifd-lit = "[" ifd-entries "," hex "]"
+ifd-entries = "[" ifd-entry-list? "]"
 ifd-entry-list = tag-lit {"," tag-lit}*
 tag-lit = "[" INT "," INT "," tiff-values "]"
 

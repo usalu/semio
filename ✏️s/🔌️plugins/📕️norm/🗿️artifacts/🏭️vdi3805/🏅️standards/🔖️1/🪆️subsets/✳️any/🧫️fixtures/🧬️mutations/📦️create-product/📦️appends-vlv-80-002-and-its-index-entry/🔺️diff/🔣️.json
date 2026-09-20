@@ -64,7 +64,7 @@
                 "symbol": "m3/h",
                 "kind": "Volume",
                 "delta": false,
-                "si_factor": 1
+                "si_factor": 1.0
               }
             }
           },

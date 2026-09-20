@@ -30,8 +30,10 @@ async fn is_geometry_handle(geometry: &Dictionary) -> bool {
     handle.len() == 64 && handle.chars().all(|c| c.is_ascii_hexdigit() && !c.is_ascii_uppercase())
 }
 
-async fn channel_payload(out: &Dictionary, channel: &str) -> Dictionary {
-    out.get(channel).and_then(|v| v.as_dictionary()).cloned().expect("channel payload")
+/// 🧊️ One channel payload, cloned straight into a cold boundary: the clone outlives the OUT
+/// dictionary it came from, so it becomes the FINAL owner of its own pairs and must be retired.
+async fn channel_payload(out: &Dictionary, channel: &str) -> neural_engine::ColdOwner<Dictionary> {
+    neural_engine::ColdOwner::new(out.get(channel).and_then(|v| v.as_dictionary()).cloned().expect("channel payload"))
 }
 
 async fn reset_test_kernel() {
@@ -49,8 +51,9 @@ async fn box_emits_geometry_handle() {
     reset_test_kernel().await;
     let mut reg = Registry::new();
     register(&mut reg).await;
+    let reg = neural_engine::ColdOwner::new(reg);
     let input = Dictionary::new().insert("width", Value::Dictionary(number_dictionary(2.0))).insert("depth", Value::Dictionary(number_dictionary(3.0))).insert("height", Value::Dictionary(number_dictionary(4.0)));
-    let out = reg.dispatch("brep.prim3d.box", &input).unwrap();
+    let out = reg.dispatch_cold("brep.prim3d.box", input).unwrap();
     let solid = channel_payload(&out, "solid").await;
     assert_eq!(solid.schema(), Some("geometry"));
     assert!(is_geometry_handle(&solid).await);
@@ -63,7 +66,8 @@ async fn line_curve_emits_curve_handle() {
     reset_test_kernel().await;
     let mut reg = Registry::new();
     register(&mut reg).await;
-    let out = reg.dispatch("brep.curve.line", &Dictionary::new().insert("start", Value::Dictionary(point(0.0, 0.0, 0.0).await)).insert("end", Value::Dictionary(point(1.0, 0.0, 0.0).await))).unwrap();
+    let reg = neural_engine::ColdOwner::new(reg);
+    let out = reg.dispatch_cold("brep.curve.line", Dictionary::new().insert("start", Value::Dictionary(point(0.0, 0.0, 0.0).await)).insert("end", Value::Dictionary(point(1.0, 0.0, 0.0).await))).unwrap();
     let curve = channel_payload(&out, "curve").await;
     assert_eq!(curve.schema(), Some("geometry"));
     assert!(is_geometry_handle(&curve).await);
@@ -76,23 +80,24 @@ async fn dwg_export_import_round_trips_a_box() {
     reset_test_kernel().await;
     let mut reg = Registry::new();
     register(&mut reg).await;
+    let reg = neural_engine::ColdOwner::new(reg);
     let solid = channel_payload(
-        &reg.dispatch("brep.prim3d.box", &Dictionary::new().insert("width", Value::Dictionary(number_dictionary(2.0))).insert("depth", Value::Dictionary(number_dictionary(3.0))).insert("height", Value::Dictionary(number_dictionary(4.0)))).unwrap(),
+        &reg.dispatch_cold("brep.prim3d.box", Dictionary::new().insert("width", Value::Dictionary(number_dictionary(2.0))).insert("depth", Value::Dictionary(number_dictionary(3.0))).insert("height", Value::Dictionary(number_dictionary(4.0)))).unwrap(),
         "solid",
     )
     .await;
-    let dwg = channel_payload(&reg.dispatch("brep.io.exportDwg", &Dictionary::new().insert("geometry", Value::Dictionary(solid)).insert("deflection", Value::Dictionary(number_dictionary(0.1)))).unwrap(), "dwg").await;
+    let dwg = channel_payload(&reg.dispatch_cold("brep.io.exportDwg", Dictionary::new().insert("geometry", Value::Dictionary(solid.into_inner())).insert("deflection", Value::Dictionary(number_dictionary(0.1)))).unwrap(), "dwg").await;
     let data = dwg.get("value").and_then(|v| v.as_atom()).and_then(|a| a.as_str()).expect("dwg base64").to_string();
     assert!(!data.is_empty());
 
-    let imported = channel_payload(&reg.dispatch("brep.io.importDwg", &Dictionary::new().insert("data", Value::Dictionary(text_dictionary(data))).insert("tolerance", Value::Dictionary(number_dictionary(0.1)))).unwrap(), "geometry").await;
+    let imported = channel_payload(&reg.dispatch_cold("brep.io.importDwg", Dictionary::new().insert("data", Value::Dictionary(text_dictionary(data))).insert("tolerance", Value::Dictionary(number_dictionary(0.1)))).unwrap(), "geometry").await;
     assert_eq!(imported.schema(), Some("geometry"));
     assert!(imported.get("handle").and_then(|v| v.as_atom()).and_then(|a| a.as_str()).is_some());
 }
 
-async fn box_handle(reg: &mut Registry) -> String {
+async fn box_handle(reg: &Registry) -> String {
     let solid = channel_payload(
-        &reg.dispatch("brep.prim3d.box", &Dictionary::new().insert("width", Value::Dictionary(number_dictionary(2.0))).insert("depth", Value::Dictionary(number_dictionary(3.0))).insert("height", Value::Dictionary(number_dictionary(4.0)))).unwrap(),
+        &reg.dispatch_cold("brep.prim3d.box", Dictionary::new().insert("width", Value::Dictionary(number_dictionary(2.0))).insert("depth", Value::Dictionary(number_dictionary(3.0))).insert("height", Value::Dictionary(number_dictionary(4.0)))).unwrap(),
         "solid",
     )
     .await;
@@ -105,7 +110,8 @@ async fn step_export_import_round_trips_a_box() {
     reset_test_kernel().await;
     let mut reg = Registry::new();
     register(&mut reg).await;
-    let handle = box_handle(&mut reg).await;
+    let reg = neural_engine::ColdOwner::new(reg);
+    let handle = box_handle(&reg).await;
     let exported = pack::json::parse(&export_solid_json(&[handle], "step", 0.1)).unwrap();
     assert!(exported.get("error").is_none(), "{exported:?}");
     assert_eq!(exported.get("binary").and_then(|value| value.as_bool()), Some(false));
@@ -122,7 +128,8 @@ async fn obj_export_import_round_trips_a_box() {
     reset_test_kernel().await;
     let mut reg = Registry::new();
     register(&mut reg).await;
-    let handle = box_handle(&mut reg).await;
+    let reg = neural_engine::ColdOwner::new(reg);
+    let handle = box_handle(&reg).await;
     let exported = pack::json::parse(&export_solid_json(&[handle], "obj", 0.1)).unwrap();
     assert!(exported.get("error").is_none(), "{exported:?}");
     let data = exported.get("data").and_then(|value| value.as_str()).expect("obj text").to_string();
@@ -138,7 +145,8 @@ async fn stl_export_import_round_trips_a_box() {
     reset_test_kernel().await;
     let mut reg = Registry::new();
     register(&mut reg).await;
-    let handle = box_handle(&mut reg).await;
+    let reg = neural_engine::ColdOwner::new(reg);
+    let handle = box_handle(&reg).await;
     let exported = pack::json::parse(&export_solid_json(&[handle], "stl", 0.1)).unwrap();
     assert!(exported.get("error").is_none(), "{exported:?}");
     assert_eq!(exported.get("binary").and_then(|value| value.as_bool()), Some(true));
@@ -155,7 +163,8 @@ async fn glb_export_import_round_trips_a_box_through_the_mesh_bridge() {
     reset_test_kernel().await;
     let mut reg = Registry::new();
     register(&mut reg).await;
-    let handle = box_handle(&mut reg).await;
+    let reg = neural_engine::ColdOwner::new(reg);
+    let handle = box_handle(&reg).await;
     let exported = pack::json::parse(&export_solid_json(&[handle], "glb", 0.1)).unwrap();
     assert!(exported.get("error").is_none(), "{exported:?}");
     assert_eq!(exported.get("binary").and_then(|value| value.as_bool()), Some(true));
@@ -172,7 +181,8 @@ async fn export_solid_json_rejects_unsupported_format() {
     reset_test_kernel().await;
     let mut reg = Registry::new();
     register(&mut reg).await;
-    let handle = box_handle(&mut reg).await;
+    let reg = neural_engine::ColdOwner::new(reg);
+    let handle = box_handle(&reg).await;
     let exported = pack::json::parse(&export_solid_json(&[handle], "fbx", 0.1)).unwrap();
     assert!(exported.get("error").is_some());
 }
@@ -183,11 +193,12 @@ async fn extrude_and_area() {
     reset_test_kernel().await;
     let mut reg = Registry::new();
     register(&mut reg).await;
-    let wire = channel_payload(&reg.dispatch("brep.curve.rectangle", &Dictionary::new().insert("width", Value::Dictionary(number_dictionary(2.0))).insert("height", Value::Dictionary(number_dictionary(2.0)))).unwrap(), "wire").await;
-    let face = channel_payload(&reg.dispatch("brep.surf.planarFaceWire", &Dictionary::new().insert("wire", Value::Dictionary(wire))).unwrap(), "face").await;
-    let solid = channel_payload(&reg.dispatch("brep.sweep.extrude", &Dictionary::new().insert("face", Value::Dictionary(face)).insert("vector", Value::Dictionary(vector(0.0, 0.0, 3.0).await))).unwrap(), "solid").await;
+    let reg = neural_engine::ColdOwner::new(reg);
+    let wire = channel_payload(&reg.dispatch_cold("brep.curve.rectangle", Dictionary::new().insert("width", Value::Dictionary(number_dictionary(2.0))).insert("height", Value::Dictionary(number_dictionary(2.0)))).unwrap(), "wire").await;
+    let face = channel_payload(&reg.dispatch_cold("brep.surf.planarFaceWire", Dictionary::new().insert("wire", Value::Dictionary(wire.into_inner()))).unwrap(), "face").await;
+    let solid = channel_payload(&reg.dispatch_cold("brep.sweep.extrude", Dictionary::new().insert("face", Value::Dictionary(face.into_inner())).insert("vector", Value::Dictionary(vector(0.0, 0.0, 3.0).await))).unwrap(), "solid").await;
     assert_eq!(solid.get("kind").and_then(|v| v.as_atom()).and_then(|a| a.as_str()), Some("solid"));
-    let area = channel_payload(&reg.dispatch("brep.measure.area", &Dictionary::new().insert("geometry", Value::Dictionary(solid))).unwrap(), "area").await;
+    let area = channel_payload(&reg.dispatch_cold("brep.measure.area", Dictionary::new().insert("geometry", Value::Dictionary(solid.into_inner()))).unwrap(), "area").await;
     assert_eq!(area.schema(), Some("number"));
     let value = area.get("value").and_then(|v| v.as_atom()).and_then(|a| a.as_f64()).unwrap();
     assert!(value > 0.0);
@@ -199,10 +210,11 @@ async fn extrude_curve_wire_uses_vector_magnitude() {
     reset_test_kernel().await;
     let mut reg = Registry::new();
     register(&mut reg).await;
-    let wire = channel_payload(&reg.dispatch("brep.curve.rectangle", &Dictionary::new().insert("width", Value::Dictionary(number_dictionary(2.0))).insert("height", Value::Dictionary(number_dictionary(2.0)))).unwrap(), "wire").await;
-    let solid = channel_payload(&reg.dispatch("brep.solid.extrude", &Dictionary::new().insert("wire", Value::Dictionary(wire)).insert("vector", Value::Dictionary(vector(0.0, 0.0, 4.0).await))).unwrap(), "solid").await;
+    let reg = neural_engine::ColdOwner::new(reg);
+    let wire = channel_payload(&reg.dispatch_cold("brep.curve.rectangle", Dictionary::new().insert("width", Value::Dictionary(number_dictionary(2.0))).insert("height", Value::Dictionary(number_dictionary(2.0)))).unwrap(), "wire").await;
+    let solid = channel_payload(&reg.dispatch_cold("brep.solid.extrude", Dictionary::new().insert("wire", Value::Dictionary(wire.into_inner())).insert("vector", Value::Dictionary(vector(0.0, 0.0, 4.0).await))).unwrap(), "solid").await;
     assert_eq!(solid.get("kind").and_then(|v| v.as_atom()).and_then(|a| a.as_str()), Some("solid"));
-    let volume = channel_payload(&reg.dispatch("brep.measure.volume", &Dictionary::new().insert("geometry", Value::Dictionary(solid))).unwrap(), "volume").await;
+    let volume = channel_payload(&reg.dispatch_cold("brep.measure.volume", Dictionary::new().insert("geometry", Value::Dictionary(solid.into_inner()))).unwrap(), "volume").await;
     let value = volume.get("value").and_then(|v| v.as_atom()).and_then(|a| a.as_f64()).unwrap();
     assert!((value - 16.0).abs() < 1e-3);
 }
@@ -213,13 +225,14 @@ async fn fillet_translate_chain() {
     reset_test_kernel().await;
     let mut reg = Registry::new();
     register(&mut reg).await;
+    let reg = neural_engine::ColdOwner::new(reg);
     let box_out = channel_payload(
-        &reg.dispatch("brep.prim3d.box", &Dictionary::new().insert("width", Value::Dictionary(number_dictionary(2.0))).insert("depth", Value::Dictionary(number_dictionary(2.0))).insert("height", Value::Dictionary(number_dictionary(2.0)))).unwrap(),
+        &reg.dispatch_cold("brep.prim3d.box", Dictionary::new().insert("width", Value::Dictionary(number_dictionary(2.0))).insert("depth", Value::Dictionary(number_dictionary(2.0))).insert("height", Value::Dictionary(number_dictionary(2.0)))).unwrap(),
         "solid",
     )
     .await;
-    let fillet_out = channel_payload(&reg.dispatch("brep.solid.fillet", &Dictionary::new().insert("geometry", Value::Dictionary(box_out)).insert("radius", Value::Dictionary(number_dictionary(0.1)))).unwrap(), "solid").await;
-    let moved = channel_payload(&reg.dispatch("brep.xform.translate", &Dictionary::new().insert("geometry", Value::Dictionary(fillet_out)).insert("offset", Value::Dictionary(vector(1.0, 0.0, 0.0).await))).unwrap(), "geometry").await;
+    let fillet_out = channel_payload(&reg.dispatch_cold("brep.solid.fillet", Dictionary::new().insert("geometry", Value::Dictionary(box_out.into_inner())).insert("radius", Value::Dictionary(number_dictionary(0.1)))).unwrap(), "solid").await;
+    let moved = channel_payload(&reg.dispatch_cold("brep.xform.translate", Dictionary::new().insert("geometry", Value::Dictionary(fillet_out.into_inner())).insert("offset", Value::Dictionary(vector(1.0, 0.0, 0.0).await))).unwrap(), "geometry").await;
     assert_eq!(moved.schema(), Some("geometry"));
 }
 
@@ -244,7 +257,7 @@ async fn manifest_lists_brep_operators() {
 async fn evaluate_json_box() {
     let _serial = test_serial().await;
     reset_test_kernel().await;
-    let reg = module_registry().await;
+    let reg = neural_engine::ColdOwner::new(module_registry().await);
     let json_number = |value: f64| pack::json::object([("$schema".to_string(), pack::json::Value::from("number")), ("value".to_string(), pack::json::Value::from(value))]);
     let input_json = pack::json::to_string(&pack::json::object([("width".to_string(), json_number(1.0)), ("depth".to_string(), json_number(1.0)), ("height".to_string(), json_number(1.0))]));
     let out_json = evaluate_json(&reg, "brep.prim3d.box", &input_json);
@@ -258,13 +271,14 @@ async fn retain_geometry_handles_sweeps_orphaned_shapes() {
     reset_test_kernel().await;
     let mut reg = Registry::new();
     register(&mut reg).await;
+    let reg = neural_engine::ColdOwner::new(reg);
     let box_out = channel_payload(
-        &reg.dispatch("brep.prim3d.box", &Dictionary::new().insert("width", Value::Dictionary(number_dictionary(1.0))).insert("depth", Value::Dictionary(number_dictionary(1.0))).insert("height", Value::Dictionary(number_dictionary(1.0)))).unwrap(),
+        &reg.dispatch_cold("brep.prim3d.box", Dictionary::new().insert("width", Value::Dictionary(number_dictionary(1.0))).insert("depth", Value::Dictionary(number_dictionary(1.0))).insert("height", Value::Dictionary(number_dictionary(1.0)))).unwrap(),
         "solid",
     )
     .await;
     let orphan = channel_payload(
-        &reg.dispatch("brep.prim3d.box", &Dictionary::new().insert("width", Value::Dictionary(number_dictionary(2.0))).insert("depth", Value::Dictionary(number_dictionary(2.0))).insert("height", Value::Dictionary(number_dictionary(2.0)))).unwrap(),
+        &reg.dispatch_cold("brep.prim3d.box", Dictionary::new().insert("width", Value::Dictionary(number_dictionary(2.0))).insert("depth", Value::Dictionary(number_dictionary(2.0))).insert("height", Value::Dictionary(number_dictionary(2.0)))).unwrap(),
         "solid",
     )
     .await;
@@ -282,8 +296,9 @@ async fn tessellate_geometry_is_memoized() {
     reset_test_kernel().await;
     let mut reg = Registry::new();
     register(&mut reg).await;
+    let reg = neural_engine::ColdOwner::new(reg);
     let box_out = channel_payload(
-        &reg.dispatch("brep.prim3d.box", &Dictionary::new().insert("width", Value::Dictionary(number_dictionary(1.0))).insert("depth", Value::Dictionary(number_dictionary(1.0))).insert("height", Value::Dictionary(number_dictionary(1.0)))).unwrap(),
+        &reg.dispatch_cold("brep.prim3d.box", Dictionary::new().insert("width", Value::Dictionary(number_dictionary(1.0))).insert("depth", Value::Dictionary(number_dictionary(1.0))).insert("height", Value::Dictionary(number_dictionary(1.0)))).unwrap(),
         "solid",
     )
     .await;
@@ -300,12 +315,13 @@ async fn brep_component_deconstructs_solid_topology() {
     reset_test_kernel().await;
     let mut reg = Registry::new();
     register(&mut reg).await;
+    let reg = neural_engine::ColdOwner::new(reg);
     let solid = channel_payload(
-        &reg.dispatch("brep.prim3d.box", &Dictionary::new().insert("width", Value::Dictionary(number_dictionary(1.0))).insert("depth", Value::Dictionary(number_dictionary(1.0))).insert("height", Value::Dictionary(number_dictionary(1.0)))).unwrap(),
+        &reg.dispatch_cold("brep.prim3d.box", Dictionary::new().insert("width", Value::Dictionary(number_dictionary(1.0))).insert("depth", Value::Dictionary(number_dictionary(1.0))).insert("height", Value::Dictionary(number_dictionary(1.0)))).unwrap(),
         "solid",
     )
     .await;
-    let deconstructed = reg.dispatch("brep.brep", &Dictionary::new().insert("brep", Value::Dictionary(solid))).unwrap();
+    let deconstructed = reg.dispatch_cold("brep.brep", Dictionary::new().insert("brep", Value::Dictionary(solid.into_inner()))).unwrap();
     let vertices = deconstructed.get("vertex").and_then(Value::as_dictionary).expect("vertex list");
     let edges = deconstructed.get("edge").and_then(Value::as_dictionary).expect("edge list");
     let faces = deconstructed.get("face").and_then(Value::as_dictionary).expect("face list");
@@ -318,8 +334,9 @@ async fn brep_component_deconstructs_solid_topology() {
 async fn schema_component_deconstructs_geometry() {
     let mut reg = Registry::new();
     register(&mut reg).await;
-    let geometry = Dictionary::with_schema("geometry").insert("handle", Value::Atom(Atom::String("solid-1".into()))).insert("kind", Value::Atom(Atom::String("solid".into())));
-    let out = reg.dispatch("brep.geometry", &Dictionary::new().insert("geometry", Value::Dictionary(geometry.clone()))).unwrap();
+    let reg = neural_engine::ColdOwner::new(reg);
+    let geometry = neural_engine::ColdOwner::new(Dictionary::with_schema("geometry").insert("handle", Value::Atom(Atom::String("solid-1".into()))).insert("kind", Value::Atom(Atom::String("solid".into()))));
+    let out = reg.dispatch_cold("brep.geometry", Dictionary::new().insert("geometry", Value::Dictionary(geometry.clone()))).unwrap();
     assert_eq!(out.get("handleOut").and_then(|value| value.as_dictionary()).and_then(|dictionary| dictionary.get("value")).and_then(|value| value.as_atom()).and_then(|atom| atom.as_str()), Some("solid-1"));
     assert_eq!(out.get("kindOut").and_then(|value| value.as_dictionary()).and_then(|dictionary| dictionary.get("value")).and_then(|value| value.as_atom()).and_then(|atom| atom.as_str()), Some("solid"));
 }
@@ -359,9 +376,9 @@ fn number_value(dict: &Dictionary) -> f64 {
     dict.get("value").and_then(|v| v.as_atom()).and_then(|a| a.as_f64()).expect("number channel value")
 }
 
-async fn box_of(reg: &mut Registry, size: f64) -> Dictionary {
+async fn box_of(reg: &Registry, size: f64) -> neural_engine::ColdOwner<Dictionary> {
     channel_payload(
-        &reg.dispatch("brep.prim3d.box", &Dictionary::new().insert("width", Value::Dictionary(number_dictionary(size))).insert("depth", Value::Dictionary(number_dictionary(size))).insert("height", Value::Dictionary(number_dictionary(size))))
+        &reg.dispatch_cold("brep.prim3d.box", Dictionary::new().insert("width", Value::Dictionary(number_dictionary(size))).insert("depth", Value::Dictionary(number_dictionary(size))).insert("height", Value::Dictionary(number_dictionary(size))))
             .unwrap(),
         "solid",
     )
@@ -376,16 +393,17 @@ async fn surface_family_plane_point_stays_in_plane_and_normal_matches() {
     reset_test_kernel().await;
     let mut reg = Registry::new();
     register(&mut reg).await;
-    let surface = channel_payload(&reg.dispatch("brep.surf.plane", &Dictionary::new().insert("origin", Value::Dictionary(point(0.0, 0.0, 0.0).await)).insert("normal", Value::Dictionary(vector(0.0, 0.0, 1.0).await))).unwrap(), "surface").await;
+    let reg = neural_engine::ColdOwner::new(reg);
+    let surface = channel_payload(&reg.dispatch_cold("brep.surf.plane", Dictionary::new().insert("origin", Value::Dictionary(point(0.0, 0.0, 0.0).await)).insert("normal", Value::Dictionary(vector(0.0, 0.0, 1.0).await))).unwrap(), "surface").await;
     let evaluated = channel_payload(
-        &reg.dispatch("brep.eval.surfPoint", &Dictionary::new().insert("surface", Value::Dictionary(surface.clone())).insert("u", Value::Dictionary(number_dictionary(1.0))).insert("v", Value::Dictionary(number_dictionary(-2.0)))).unwrap(),
+        &reg.dispatch_cold("brep.eval.surfPoint", Dictionary::new().insert("surface", Value::Dictionary(surface.clone())).insert("u", Value::Dictionary(number_dictionary(1.0))).insert("v", Value::Dictionary(number_dictionary(-2.0)))).unwrap(),
         "point",
     )
     .await;
     let z = evaluated.get("z").and_then(|v| v.as_atom()).and_then(|a| a.as_f64()).unwrap();
     assert!(z.abs() < 1e-9, "a point on the z=0 plane must have z=0 regardless of (u, v), got z={z}");
     let normal = channel_payload(
-        &reg.dispatch("brep.eval.surfNormal", &Dictionary::new().insert("surface", Value::Dictionary(surface)).insert("u", Value::Dictionary(number_dictionary(0.0))).insert("v", Value::Dictionary(number_dictionary(0.0)))).unwrap(),
+        &reg.dispatch_cold("brep.eval.surfNormal", Dictionary::new().insert("surface", Value::Dictionary(surface.into_inner())).insert("u", Value::Dictionary(number_dictionary(0.0))).insert("v", Value::Dictionary(number_dictionary(0.0)))).unwrap(),
         "normal",
     )
     .await;
@@ -402,20 +420,21 @@ async fn boolean_family_fuse_cut_intersect_report_plausible_volumes() {
     reset_test_kernel().await;
     let mut reg = Registry::new();
     register(&mut reg).await;
-    let a = box_of(&mut reg, 2.0).await;
-    let b_raw = box_of(&mut reg, 2.0).await;
-    let b = channel_payload(&reg.dispatch("brep.xform.translate", &Dictionary::new().insert("geometry", Value::Dictionary(b_raw)).insert("offset", Value::Dictionary(vector(1.0, 0.0, 0.0).await))).unwrap(), "geometry").await;
+    let reg = neural_engine::ColdOwner::new(reg);
+    let a = box_of(&reg, 2.0).await;
+    let b_raw = box_of(&reg, 2.0).await;
+    let b = channel_payload(&reg.dispatch_cold("brep.xform.translate", Dictionary::new().insert("geometry", Value::Dictionary(b_raw.into_inner())).insert("offset", Value::Dictionary(vector(1.0, 0.0, 0.0).await))).unwrap(), "geometry").await;
 
-    let fused = channel_payload(&reg.dispatch("brep.bool.fuse", &Dictionary::new().insert("a", Value::Dictionary(a.clone())).insert("b", Value::Dictionary(b.clone()))).unwrap(), "solid").await;
-    let fused_volume = number_value(&channel_payload(&reg.dispatch("brep.measure.volume", &Dictionary::new().insert("geometry", Value::Dictionary(fused))).unwrap(), "volume").await);
+    let fused = channel_payload(&reg.dispatch_cold("brep.bool.fuse", Dictionary::new().insert("a", Value::Dictionary(a.clone())).insert("b", Value::Dictionary(b.clone()))).unwrap(), "solid").await;
+    let fused_volume = number_value(&*channel_payload(&reg.dispatch_cold("brep.measure.volume", Dictionary::new().insert("geometry", Value::Dictionary(fused.into_inner()))).unwrap(), "volume").await);
     assert!((8.0..16.0).contains(&fused_volume), "fused volume {fused_volume} should exceed either box's own 8.0 but stay below the disjoint sum 16.0");
 
-    let cut = channel_payload(&reg.dispatch("brep.bool.cut", &Dictionary::new().insert("a", Value::Dictionary(a.clone())).insert("b", Value::Dictionary(b.clone()))).unwrap(), "solid").await;
-    let cut_volume = number_value(&channel_payload(&reg.dispatch("brep.measure.volume", &Dictionary::new().insert("geometry", Value::Dictionary(cut))).unwrap(), "volume").await);
+    let cut = channel_payload(&reg.dispatch_cold("brep.bool.cut", Dictionary::new().insert("a", Value::Dictionary(a.clone())).insert("b", Value::Dictionary(b.clone()))).unwrap(), "solid").await;
+    let cut_volume = number_value(&*channel_payload(&reg.dispatch_cold("brep.measure.volume", Dictionary::new().insert("geometry", Value::Dictionary(cut.into_inner()))).unwrap(), "volume").await);
     assert!((0.0..8.0).contains(&cut_volume), "cut volume {cut_volume} should be less than the untouched box's 8.0");
 
-    let intersected = channel_payload(&reg.dispatch("brep.bool.intersect", &Dictionary::new().insert("a", Value::Dictionary(a)).insert("b", Value::Dictionary(b))).unwrap(), "solid").await;
-    let intersect_volume = number_value(&channel_payload(&reg.dispatch("brep.measure.volume", &Dictionary::new().insert("geometry", Value::Dictionary(intersected))).unwrap(), "volume").await);
+    let intersected = channel_payload(&reg.dispatch_cold("brep.bool.intersect", Dictionary::new().insert("a", Value::Dictionary(a.into_inner())).insert("b", Value::Dictionary(b.into_inner()))).unwrap(), "solid").await;
+    let intersect_volume = number_value(&*channel_payload(&reg.dispatch_cold("brep.measure.volume", Dictionary::new().insert("geometry", Value::Dictionary(intersected.into_inner()))).unwrap(), "volume").await);
     assert!((0.0..8.0).contains(&intersect_volume), "intersection volume {intersect_volume} should be less than either box's own 8.0");
 }
 
@@ -428,12 +447,13 @@ async fn rotate_about_rotates_around_the_given_origin_not_the_world_origin() {
     reset_test_kernel().await;
     let mut reg = Registry::new();
     register(&mut reg).await;
-    let solid = box_of(&mut reg, 1.0).await;
+    let reg = neural_engine::ColdOwner::new(reg);
+    let solid = box_of(&reg, 1.0).await;
     let rotated = channel_payload(
-        &reg.dispatch(
+        &reg.dispatch_cold(
             "brep.xform.rotateAbout",
-            &Dictionary::new()
-                .insert("geometry", Value::Dictionary(solid))
+            Dictionary::new()
+                .insert("geometry", Value::Dictionary(solid.into_inner()))
                 .insert("origin", Value::Dictionary(point(5.0, 0.0, 0.0).await))
                 .insert("axis", Value::Dictionary(vector(0.0, 0.0, 1.0).await))
                 .insert("angle", Value::Dictionary(number_dictionary(std::f64::consts::PI))),
@@ -442,7 +462,7 @@ async fn rotate_about_rotates_around_the_given_origin_not_the_world_origin() {
         "geometry",
     )
     .await;
-    let center = channel_payload(&reg.dispatch("brep.measure.centerOfMass", &Dictionary::new().insert("geometry", Value::Dictionary(rotated))).unwrap(), "center").await;
+    let center = channel_payload(&reg.dispatch_cold("brep.measure.centerOfMass", Dictionary::new().insert("geometry", Value::Dictionary(rotated.into_inner()))).unwrap(), "center").await;
     let x = center.get("x").and_then(|v| v.as_atom()).and_then(|a| a.as_f64()).unwrap();
     assert!((x - 9.5).abs() < 1e-6, "180° about origin (5,0,0) should move the unit box's center from x=0.5 to x=9.5, got x={x}");
 }
@@ -455,16 +475,17 @@ async fn evaluation_family_closest_parameter_and_closest_uv_report_certified_dis
     reset_test_kernel().await;
     let mut reg = Registry::new();
     register(&mut reg).await;
-    let curve = channel_payload(&reg.dispatch("brep.curve.line", &Dictionary::new().insert("start", Value::Dictionary(point(0.0, 0.0, 0.0).await)).insert("end", Value::Dictionary(point(10.0, 0.0, 0.0).await))).unwrap(), "curve").await;
-    let out = reg.dispatch("brep.eval.curveClosestParameter", &Dictionary::new().insert("curve", Value::Dictionary(curve)).insert("point", Value::Dictionary(point(4.0, 3.0, 0.0).await))).unwrap();
-    let distance = number_value(&channel_payload(&out, "distance").await);
+    let reg = neural_engine::ColdOwner::new(reg);
+    let curve = channel_payload(&reg.dispatch_cold("brep.curve.line", Dictionary::new().insert("start", Value::Dictionary(point(0.0, 0.0, 0.0).await)).insert("end", Value::Dictionary(point(10.0, 0.0, 0.0).await))).unwrap(), "curve").await;
+    let out = reg.dispatch_cold("brep.eval.curveClosestParameter", Dictionary::new().insert("curve", Value::Dictionary(curve.into_inner())).insert("point", Value::Dictionary(point(4.0, 3.0, 0.0).await))).unwrap();
+    let distance = number_value(&*channel_payload(&out, "distance").await);
     assert!((distance - 3.0).abs() < 1e-9, "closest distance from (4,3,0) to the segment along the x axis should be 3, got {distance}");
     let closest = channel_payload(&out, "point").await;
     assert!((closest.get("x").and_then(|v| v.as_atom()).and_then(|a| a.as_f64()).unwrap() - 4.0).abs() < 1e-9);
 
-    let surface = channel_payload(&reg.dispatch("brep.surf.plane", &Dictionary::new().insert("origin", Value::Dictionary(point(0.0, 0.0, 0.0).await)).insert("normal", Value::Dictionary(vector(0.0, 0.0, 1.0).await))).unwrap(), "surface").await;
-    let uv_out = reg.dispatch("brep.eval.surfaceClosestUv", &Dictionary::new().insert("surface", Value::Dictionary(surface)).insert("point", Value::Dictionary(point(1.0, 1.0, 5.0).await))).unwrap();
-    let uv_distance = number_value(&channel_payload(&uv_out, "distance").await);
+    let surface = channel_payload(&reg.dispatch_cold("brep.surf.plane", Dictionary::new().insert("origin", Value::Dictionary(point(0.0, 0.0, 0.0).await)).insert("normal", Value::Dictionary(vector(0.0, 0.0, 1.0).await))).unwrap(), "surface").await;
+    let uv_out = reg.dispatch_cold("brep.eval.surfaceClosestUv", Dictionary::new().insert("surface", Value::Dictionary(surface.into_inner())).insert("point", Value::Dictionary(point(1.0, 1.0, 5.0).await))).unwrap();
+    let uv_distance = number_value(&*channel_payload(&uv_out, "distance").await);
     assert!((uv_distance - 5.0).abs() < 1e-6, "closest distance from (1,1,5) to the z=0 plane should be 5, got {uv_distance}");
 }
 
@@ -476,26 +497,27 @@ async fn topology_family_shells_compound_explode_and_label() {
     reset_test_kernel().await;
     let mut reg = Registry::new();
     register(&mut reg).await;
-    let box_a = box_of(&mut reg, 1.0).await;
-    let box_b = box_of(&mut reg, 2.0).await;
+    let reg = neural_engine::ColdOwner::new(reg);
+    let box_a = box_of(&reg, 1.0).await;
+    let box_b = box_of(&reg, 2.0).await;
     let handle_a = box_a.get("handle").and_then(|v| v.as_atom()).and_then(|a| a.as_str()).expect("box a handle").to_string();
     let handle_b = box_b.get("handle").and_then(|v| v.as_atom()).and_then(|a| a.as_str()).expect("box b handle").to_string();
 
-    let shells_out = reg.dispatch("brep.topology.shells", &Dictionary::new().insert("solid", Value::Dictionary(box_a.clone()))).unwrap();
+    let shells_out = reg.dispatch_cold("brep.topology.shells", Dictionary::new().insert("solid", Value::Dictionary(box_a.clone()))).unwrap();
     let shells = shells_out.get("shells").and_then(Value::as_dictionary).expect("shells list");
     assert_eq!(list_indices(shells).len(), 1, "a simple box has exactly one outer shell");
 
     let solids_in = topology_list("geometry", vec![GeometryHandle(handle_a), GeometryHandle(handle_b)]);
-    let compound_out = reg.dispatch("brep.topology.compound", &Dictionary::new().insert("solids", Value::Dictionary(solids_in))).unwrap();
+    let compound_out = reg.dispatch_cold("brep.topology.compound", Dictionary::new().insert("solids", Value::Dictionary(solids_in))).unwrap();
     let compound = channel_payload(&compound_out, "compound").await;
     assert_eq!(compound.get("kind").and_then(|v| v.as_atom()).and_then(|a| a.as_str()), Some("compound"));
 
-    let exploded_out = reg.dispatch("brep.topology.explode", &Dictionary::new().insert("compound", Value::Dictionary(compound))).unwrap();
+    let exploded_out = reg.dispatch_cold("brep.topology.explode", Dictionary::new().insert("compound", Value::Dictionary(compound.into_inner()))).unwrap();
     let solids_out = exploded_out.get("solids").and_then(Value::as_dictionary).expect("solids list");
     assert_eq!(list_indices(solids_out).len(), 2, "exploding must recover both original solids");
 
-    let label_out = reg.dispatch("brep.topology.label", &Dictionary::new().insert("geometry", Value::Dictionary(box_a))).unwrap();
-    let label = number_value(&channel_payload(&label_out, "label").await);
+    let label_out = reg.dispatch_cold("brep.topology.label", Dictionary::new().insert("geometry", Value::Dictionary(box_a.into_inner()))).unwrap();
+    let label = number_value(&*channel_payload(&label_out, "label").await);
     assert!(label >= 0.0);
 }
 
@@ -503,7 +525,7 @@ async fn topology_family_shells_compound_explode_and_label() {
 /// stays the single source of truth: nothing here hardcodes an `OpQuality` a second time.
 #[semio_framework_async_macros::async_test]
 async fn operation_quality_tags_match_the_kernel_contract() {
-    let reg = module_registry().await;
+    let reg = neural_engine::ColdOwner::new(module_registry().await);
     for (id, method) in NODE_KERNEL_METHOD.iter().copied() {
         let info = reg.operator_info(id).unwrap_or_else(|| panic!("node {id:?} is registered in NODE_KERNEL_METHOD but not in the live Registry"));
         let expected = format!("[quality:{:?}]", operation_quality(method));

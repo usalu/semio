@@ -61,11 +61,13 @@ pub enum HitKind {
     Ring,
     IconSelect,
     TreeItem,
+    TreeDragHandle,
     TreeDropTarget,
     PanelTab,
     NavbarItem,
     Window,
     World3d,
+    ComponentScene,
     PanelResize,
     DockSplit,
     DockJoinCorner,
@@ -386,6 +388,13 @@ impl<E: Clone> InputState<E> {
         Ok(self.pending_actions.pop_front())
     }
 
+    pub fn take_action_batch_len_step(&mut self) -> Result<Option<usize>, BoundedActionFault> {
+        if let Some(fault) = self.action_fault.take() {
+            return Err(fault);
+        }
+        self.pending_actions.front_batch_len()
+    }
+
     #[cfg(test)]
     pub fn drain_events(&mut self) -> Vec<ActionDescriptor> {
         let mut events = Vec::new();
@@ -503,7 +512,6 @@ impl<E: Clone> InputState<E> {
     fn reset_text_view(&mut self) {
         self.text_view.clear();
         self.text_view_start = 0;
-        self.text_projection_pending = false;
         self.cursor_pos = 0;
     }
 
@@ -632,7 +640,6 @@ pub struct PointerCallbacks {
     pub on_context_menu: Rc<dyn Fn(f32, f32)>,
 }
 
-
 //#region 🎯️RetainedHitRegistry
 /// 🎯️ One interactive retained node, projected onto this region's flat pointer registry.
 ///
@@ -648,6 +655,7 @@ pub struct PointerCallbacks {
 pub struct RetainedHitRegistration {
     pub node: crate::wgpu::arena::NodeId,
     pub rect: Rect,
+    pub overlay: bool,
     pub kind: HitKind,
     pub control_id: String,
     pub action: Option<ActionDescriptor>,
@@ -682,6 +690,11 @@ fn retained_tree_row<'a>(tree: &'a crate::wgpu::tree::UiTree, id: crate::wgpu::a
     owner.sections.iter().find_map(|section| crate::wgpu::mounted_layout::find_tree_item(&section.items, key, 0)).map(RetainedTreeRow::Item)
 }
 
+#[cfg(feature = "wgpu-engine")]
+pub(crate) fn retained_tree_section_header_band(rect: Rect, header_height: f32, reversed: bool) -> Rect {
+    crate::wgpu::layout::tree_section_header_band(rect, header_height, reversed)
+}
+
 /// 🖱️ The `HitKind`/control id an engine surface canvas registers under. `World3d` is its own kind;
 /// every other bespoke-dispatch surface reuses the `ScrollRegion` + `.pane`/`.map` convention
 /// `ShellState::scroll_region_is_scene_surface` already reads, so a wheel over one propagates to the
@@ -693,17 +706,20 @@ pub(crate) fn retained_scene_hit(scene: &crate::wgpu::component::ui::UiComponent
         SurfaceKind::World3d => (HitKind::World3d, scene.surface_id.clone()),
         SurfaceKind::NodeGraph | SurfaceKind::Board2d => (HitKind::ScrollRegion, format!("{}.pane", scene.surface_id)),
         SurfaceKind::TiledMap => (HitKind::ScrollRegion, format!("{}.map", scene.surface_id)),
-        _ => (HitKind::Generic, scene.surface_id.clone()),
+        _ => (HitKind::ComponentScene, scene.surface_id.clone()),
     }
 }
 
-/// 🎯️ Projects ONE laid-out retained node onto a registry entry, or `None` for a node with no
-/// interaction semantics of its own (plain containers, text, separators, a `Tree`'s own frame —
-/// the rows carry that one). `rect` is the node's absolute painted rect; a tree row's entry is
-/// clipped to its OWN band (`metrics.row_height`) because a row's published height also covers the
-/// nested rows it reveals, and those register entries of their own.
+/// 🎯️ Projects one laid-out retained node onto the registry at the same band paint owns.
 #[cfg(feature = "wgpu-engine")]
-pub fn retained_hit_registration(tree: &crate::wgpu::tree::UiTree, id: crate::wgpu::arena::NodeId, rect: Rect, metrics: &crate::wgpu::layout::TreeRowMetrics) -> Option<RetainedHitRegistration> {
+pub fn retained_hit_registration(
+    tree: &crate::wgpu::tree::UiTree,
+    id: crate::wgpu::arena::NodeId,
+    rect: Rect,
+    metrics: &crate::wgpu::layout::TreeRowMetrics,
+    driver_drag: crate::wgpu::chrome::UiDriverDrag,
+    reversed: bool,
+) -> Option<RetainedHitRegistration> {
     use crate::wgpu::component::ui::UiNode;
     let node = tree.node(id)?;
     // 🕳️ A mounted-but-unplaced node (a collapsed branch's row, a `Tree` item action that the row
@@ -712,33 +728,32 @@ pub fn retained_hit_registration(tree: &crate::wgpu::tree::UiTree, id: crate::wg
     if !node.spec.0.presence().visible() || rect.w <= 0.0 || rect.h <= 0.0 {
         return None;
     }
-    let entry = |kind: HitKind, control_id: String, action: Option<ActionDescriptor>, rect: Rect| {
-        Some(RetainedHitRegistration { node: id, rect, kind, control_id, action, drag_axis: None, drag_data: None })
-    };
+    let entry = |kind: HitKind, control_id: String, action: Option<ActionDescriptor>, rect: Rect| Some(RetainedHitRegistration { node: id, rect, overlay: false, kind, control_id, action, drag_axis: None, drag_data: None });
     match &node.spec.0 {
         UiNode::Stack(stack) => match retained_tree_row(tree, id) {
             Some(RetainedTreeRow::Section(section)) => {
-                let band = Rect::new(rect.x, rect.y, rect.w, crate::wgpu::layout::tree_section_header_height(section, metrics).min(rect.h));
+                let band = retained_tree_section_header_band(rect, crate::wgpu::layout::tree_section_header_height(section, metrics), reversed);
                 if band.h <= 0.0 {
                     return None;
                 }
                 entry(HitKind::TreeItem, format!("section.chevron.{}", section.id), stack.activate.clone(), band)
             }
             Some(RetainedTreeRow::Item(item)) => {
-                let band = Rect::new(rect.x, rect.y, rect.w, metrics.row_height.min(rect.h));
+                let band = retained_tree_section_header_band(rect, metrics.row_height, reversed);
                 if band.h <= 0.0 {
                     return None;
                 }
                 let draggable = item.draggable.unwrap_or(false);
-                let drag_data = item.drag_data.clone().filter(|data| draggable && !data.is_empty());
+                let surface_drag = draggable && driver_drag == crate::wgpu::chrome::UiDriverDrag::Surface;
                 Some(RetainedHitRegistration {
                     node: id,
                     rect: band,
+                    overlay: false,
                     kind: HitKind::TreeItem,
                     control_id: format!("tree.label.{}", item.id),
                     action: stack.activate.clone().or_else(|| item.action.clone()),
-                    drag_axis: draggable.then_some(DragAxis::Both),
-                    drag_data,
+                    drag_axis: surface_drag.then_some(DragAxis::Both),
+                    drag_data: surface_drag.then(|| item.drag_data.clone().unwrap_or_default()),
                 })
             }
             None => {
@@ -747,17 +762,21 @@ pub fn retained_hit_registration(tree: &crate::wgpu::tree::UiTree, id: crate::wg
                 entry(HitKind::Button, control_id, Some(activate), rect)
             }
         },
+        UiNode::Section(section) if section.label.is_some() => {
+            let band = Rect::new(rect.x, rect.y, rect.w, crate::wgpu::flex::SECTION_HEADER_HEIGHT.min(rect.h));
+            (band.h > 0.0).then(|| RetainedHitRegistration { node: id, rect: band, overlay: false, kind: HitKind::Toggle, control_id: section.id.clone(), action: None, drag_axis: None, drag_data: None })
+        }
         UiNode::Button(button) => entry(HitKind::Button, button.id.clone().unwrap_or_else(|| button.action.action.clone()), Some(button.action.clone()), rect),
         UiNode::Input(input) => entry(HitKind::Input, input.id.clone(), None, rect),
         UiNode::Select(select) => entry(HitKind::Select, select.id.clone(), None, rect),
         UiNode::Toggle(toggle) => entry(HitKind::Toggle, toggle.id.clone(), None, rect),
-        UiNode::Slider(slider) => Some(RetainedHitRegistration { node: id, rect, kind: HitKind::Slider, control_id: slider.id.clone(), action: None, drag_axis: Some(DragAxis::Horizontal), drag_data: None }),
+        UiNode::Slider(slider) => Some(RetainedHitRegistration { node: id, rect, overlay: false, kind: HitKind::Slider, control_id: slider.id.clone(), action: None, drag_axis: Some(DragAxis::Horizontal), drag_data: None }),
         // 🎛️ The three kinds a retained body used to register NOTHING for — so a press on a
         // generation's stepper, ring or icon field resolved the WINDOW beneath it and the retained
         // router never saw the gesture at all, which is half of why those kinds could not commit
         // (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️audit-wgpu-parity-2026-09-13.md` gap #6).
         UiNode::NumberStepper(stepper) => entry(HitKind::NumberStepper, stepper.id.clone(), None, rect),
-        UiNode::Ring(ring) => Some(RetainedHitRegistration { node: id, rect, kind: HitKind::Ring, control_id: ring.id.clone(), action: None, drag_axis: Some(DragAxis::Both), drag_data: None }),
+        UiNode::Ring(ring) => Some(RetainedHitRegistration { node: id, rect, overlay: false, kind: HitKind::Ring, control_id: ring.id.clone(), action: None, drag_axis: Some(DragAxis::Both), drag_data: None }),
         UiNode::IconSelect(select) => entry(HitKind::IconSelect, select.id.clone(), None, rect),
         UiNode::ComponentScene(scene) => {
             let (kind, control_id) = retained_scene_hit(scene);
@@ -765,6 +784,67 @@ pub fn retained_hit_registration(tree: &crate::wgpu::tree::UiTree, id: crate::wg
         }
         _ => None,
     }
+}
+
+#[cfg(feature = "wgpu-engine")]
+pub fn retained_tree_chevron_registration(
+    tree: &crate::wgpu::tree::UiTree,
+    id: crate::wgpu::arena::NodeId,
+    rect: Rect,
+    metrics: &crate::wgpu::layout::TreeRowMetrics,
+    reversed: bool,
+) -> Option<RetainedHitRegistration> {
+    let RetainedTreeRow::Item(item) = retained_tree_row(tree, id)? else { return None };
+    item.items.as_deref().filter(|items| !items.is_empty())?;
+    let depth = tree.tree_item_depth(id)?;
+    let rect = crate::wgpu::layout::tree_item_chevron_rect(rect, depth, metrics, reversed);
+    (rect.w > 0.0 && rect.h > 0.0).then(|| RetainedHitRegistration {
+        node: id,
+        rect,
+        overlay: false,
+        kind: HitKind::TreeItem,
+        control_id: format!("tree.chevron.{}", item.id),
+        action: None,
+        drag_axis: None,
+        drag_data: None,
+    })
+}
+
+#[cfg(feature = "wgpu-engine")]
+pub fn retained_tree_drag_handle_registration(
+    tree: &crate::wgpu::tree::UiTree,
+    id: crate::wgpu::arena::NodeId,
+    rect: Rect,
+    metrics: &crate::wgpu::layout::TreeRowMetrics,
+    driver_drag: crate::wgpu::chrome::UiDriverDrag,
+) -> Option<RetainedHitRegistration> {
+    use crate::wgpu::component::ui::UiNode;
+    use crate::wgpu::layout::{tree_drag_handle_rect, tree_drag_role, TreeDragRole};
+    if driver_drag != crate::wgpu::chrome::UiDriverDrag::Handle || rect.w <= 0.0 || rect.h <= 0.0 {
+        return None;
+    }
+    let node = tree.node(id)?;
+    if !node.spec.0.presence().visible() {
+        return None;
+    }
+    let UiNode::Stack(_) = &node.spec.0 else { return None };
+    let RetainedTreeRow::Item(item) = retained_tree_row(tree, id)? else { return None };
+    let role = tree_drag_role(item)?;
+    let relative = tree_drag_handle_rect(rect.w, metrics);
+    let handle = Rect::new(rect.x + relative.x, rect.y + relative.y, relative.w.min(rect.w), relative.h.min(metrics.row_height.min(rect.h)));
+    if handle.w <= 0.0 || handle.h <= 0.0 {
+        return None;
+    }
+    Some(RetainedHitRegistration {
+        node: id,
+        rect: handle,
+        overlay: false,
+        kind: HitKind::TreeDragHandle,
+        control_id: format!("tree.drag.{}.{}", if role == TreeDragRole::Transfer { "transfer" } else { "sort" }, item.id),
+        action: None,
+        drag_axis: Some(DragAxis::Both),
+        drag_data: Some(item.drag_data.clone().unwrap_or_default()),
+    })
 }
 //#endregion 🎯️RetainedHitRegistry
 

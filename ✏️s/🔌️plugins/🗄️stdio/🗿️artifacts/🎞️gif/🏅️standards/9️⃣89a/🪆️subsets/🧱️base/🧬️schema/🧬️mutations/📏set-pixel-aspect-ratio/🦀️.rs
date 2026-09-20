@@ -7,6 +7,7 @@ use super::*;
 //#region 🔖️Payload
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
+#[dsl(keyword = "set-pixel-aspect-ratio")]
 pub struct SetPixelAspectRatio {
     pub(crate) ratio: u8,
 }

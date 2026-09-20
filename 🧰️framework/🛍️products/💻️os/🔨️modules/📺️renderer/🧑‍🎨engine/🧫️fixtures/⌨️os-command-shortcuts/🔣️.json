@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "commandId": "os.toggleFullscreen",
+  "bindings": [
+    { "platform": "windows", "chord": "f11" },
+    { "platform": "linux", "chord": "f11" },
+    { "platform": "macOs", "chord": "control+meta+f" }
+  ],
+  "collision": {
+    "event": { "key": "f", "ctrl": true, "meta": true, "shift": false, "alt": false },
+    "matches": "control+meta+f",
+    "refuses": "mod+f"
+  },
+  "retiredChord": "mod+shift+f",
+  "route": {
+    "owner": "os",
+    "argless": "applyOsCommand",
+    "withArguments": "openCommandDialog"
+  }
+}

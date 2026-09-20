@@ -1,3 +1,4 @@
+// @vitest-environment node
 // #region 🧲️Header
 /** 🌐️ Vite plugins serving the asset-owned `/🖼️assets/*` namespace. */
 // #endregion 🧲️Header
@@ -5,7 +6,7 @@
 // #region 🔌️Adapters
 import { ephemeralBox, ephemeralMap } from "@semio-tech/framework";
 import { createServer, type Server } from "node:http";
-import { cpSync, createReadStream, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
+import { cpSync, createReadStream, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, statSync, symlinkSync, writeFileSync } from "node:fs";
 import { mkdir, writeFile } from "node:fs/promises";
 import { dirname, isAbsolute, join, relative, resolve } from "node:path";
 import { tmpdir } from "node:os";
@@ -1563,34 +1564,60 @@ export const PLAYGROUND_PLAY_STATIC_ASSETS: readonly Extract<PlaygroundAssetSpec
 ];
 //#endregion 🔖️StaticDirAssetPlugin
 
+/** @emoji 🚫️ Directory names [[findWorkspacePackages]] never descends into: installed dependencies and
+ * build output, none of which may contribute a workspace package name. */
+const WORKSPACE_PACKAGE_SCAN_SKIP: ReadonlySet<string> = new Set(["node_modules", "dist", "target", "storybook-static", "🗑️generated", "🤖️generated"]);
+
+/** @emoji 🧠️ Memo for [[findWorkspacePackages]], keyed by repo root.
+ *
+ * 🩸️ The scan costs 14–27 s on this tree and every vite config that calls
+ * [[createWorkspaceViteResolveConfig]] runs it at module load, so a process loading several configs paid
+ * it several times over. The workspace set cannot change under a running dev server — its vite config is
+ * evaluated once at boot — so one walk per process is the whole truth. The declared `workspaces` array in
+ * the root `package.json` is NOT a substitute: it is missing `@semio-tech/framework-graph-layout-run-rs`,
+ * `@semio-tech/framework-tool-run-rs` and `@semio-tech/print-viz-kernel`, which must stay out of
+ * `optimizeDeps`. */
+const workspacePackagesByRoot = new Map<string, string[]>();
+
+/** @emoji 📦️ Every `@semio-tech/*` package name in the workspace tree, for `optimizeDeps.exclude`.
+ *
+ * 🩸️ Directory entries are classified from `readdirSync`'s own `Dirent`, which never follows a link.
+ * The previous `statSync(full).isDirectory()` did follow, and a hub test leaves a **self-referential**
+ * link behind (`🌎️hub/📦️packages/🦀️rust/🗑️generated/test-artifacts/linked-ancestor-publication-owner-*
+ * → …/test-artifacts`), so the walk recursed into the same directory forever. Every caller of
+ * [[createWorkspaceViteResolveConfig]] evaluates this at config-module load, so a single leftover link
+ * hung the `📐️cad` and `🌍️world/🎨️r3f` vitest owners — and any dev server sharing that config — with
+ * no error and no timeout. Build output carries no workspace package and is skipped outright. */
 export function findWorkspacePackages(repoRoot: string): string[] {
+  const memoized = workspacePackagesByRoot.get(repoRoot);
+  if (memoized !== undefined) return memoized;
   const packages: string[] = [];
   const scan = (dir: string) => {
-    let entries: string[];
+    let entries;
     try {
-      entries = readdirSync(dir);
+      entries = readdirSync(dir, { withFileTypes: true });
     } catch {
       return;
     }
     for (const entry of entries) {
-      if (entry === "node_modules" || entry === "dist" || entry === "target" || entry === "storybook-static" || entry.startsWith(".")) continue;
-      const full = resolve(dir, entry);
+      if (entry.isSymbolicLink()) continue;
+      if (WORKSPACE_PACKAGE_SCAN_SKIP.has(entry.name) || entry.name.startsWith(".")) continue;
+      const full = resolve(dir, entry.name);
+      if (entry.isDirectory()) {
+        scan(full);
+        continue;
+      }
+      if (entry.name !== "package.json" || full === resolve(repoRoot, "package.json")) continue;
       try {
-        const stat = statSync(full);
-        if (stat.isDirectory()) {
-          scan(full);
-        } else if (entry === "package.json" && full !== resolve(repoRoot, "package.json")) {
-          const pkg = JSON.parse(readFileSync(full, "utf8"));
-          if (pkg.name && typeof pkg.name === "string" && pkg.name.startsWith("@semio-tech/")) {
-            packages.push(pkg.name);
-          }
-        }
+        const pkg = JSON.parse(readFileSync(full, "utf8"));
+        if (pkg.name && typeof pkg.name === "string" && pkg.name.startsWith("@semio-tech/")) packages.push(pkg.name);
       } catch {
-        /* ignore statSync or readFileSync errors (e.g. broken symlinks or unreadable files) */
+        /* an unreadable or malformed manifest declares no workspace package */
       }
     }
   };
   scan(repoRoot);
+  workspacePackagesByRoot.set(repoRoot, packages);
   return packages;
 }
 
@@ -1654,6 +1681,6 @@ export function createPlaygroundPlayViteConfig(options: PlaygroundPlayViteOption
 
 if (import.meta.vitest) {
   const { registerTests1 } = await import("../../🧪️tests/🧪️playgroundflowwasmdevstubplugin/🟦️.ts");
-  await registerTests1(import.meta.vitest, { GIS_MAP_DEFAULT_PREFETCH_BOUNDS, PLAYGROUND_PLAY_BOOT_APPEARANCE_SCRIPT, PLAYGROUND_PLAY_BOOT_INLINE_STYLE, PLAYGROUND_PLAY_BOOT_REVEAL_SCRIPT, PLAYGROUND_PLAY_BOOT_THEME_SCRIPT, PLAYGROUND_WASM_STUB_PREFIX, SEMIO_ASSET_ROOT, SEMIO_FAVICON_HEAD_HTML, contentTypeForStaticDirAsset, createServer, createWorkspaceViteResolveConfig, existsSync, fileURLToPath, findWorkspacePackages, isPlaygroundOptimizedDepUrl, playgroundOptimizedDepUrlPrefix, join, listMapTilesForBounds, mapTileCacheRoots, meshAssetTransportUrl, meshCollectionVitePlugin, mkdirSync, mkdtempSync, playgroundAssetVitePlugins, playgroundFlowWasmDevStubPlugin, playgroundPlayBootHtmlPlugin, playgroundSceneHostOptimizeDeps, playgroundSceneHostResolveAliases, playgroundWasmStubKey, prefetchMapTiles, resolve, resolveGisMapTileServeMode, resolveMeshAsset, resolveSemioAssetRoot, rewriteSpaFallbackToEmojiEntry, rmSync, semioFaviconSources, semioFaviconSvgMarkup, semioFaviconVitePlugin, semioHostHtmlString, semioHostHtmlVitePlugin, startAssetServer, staticDirVitePlugin, statusSurfaceHtml, tileProxyVitePlugin, tmpdir, writeFileSync }, { directory: import.meta.dir, url: import.meta.url });
+  await registerTests1(import.meta.vitest, { GIS_MAP_DEFAULT_PREFETCH_BOUNDS, PLAYGROUND_PLAY_BOOT_APPEARANCE_SCRIPT, PLAYGROUND_PLAY_BOOT_INLINE_STYLE, PLAYGROUND_PLAY_BOOT_REVEAL_SCRIPT, PLAYGROUND_PLAY_BOOT_THEME_SCRIPT, PLAYGROUND_WASM_STUB_PREFIX, SEMIO_ASSET_ROOT, SEMIO_FAVICON_HEAD_HTML, contentTypeForStaticDirAsset, createServer, createWorkspaceViteResolveConfig, existsSync, fileURLToPath, findWorkspacePackages, isPlaygroundOptimizedDepUrl, playgroundOptimizedDepUrlPrefix, join, listMapTilesForBounds, mapTileCacheRoots, meshAssetTransportUrl, meshCollectionVitePlugin, mkdirSync, mkdtempSync, playgroundAssetVitePlugins, playgroundFlowWasmDevStubPlugin, playgroundPlayBootHtmlPlugin, playgroundSceneHostOptimizeDeps, playgroundSceneHostResolveAliases, playgroundWasmStubKey, prefetchMapTiles, resolve, resolveGisMapTileServeMode, resolveMeshAsset, resolveSemioAssetRoot, rewriteSpaFallbackToEmojiEntry, rmSync, semioFaviconSources, semioFaviconSvgMarkup, semioFaviconVitePlugin, semioHostHtmlString, semioHostHtmlVitePlugin, startAssetServer, staticDirVitePlugin, statusSurfaceHtml, symlinkSync, tileProxyVitePlugin, tmpdir, writeFileSync }, { directory: import.meta.dir, url: import.meta.url });
 }
 //#endregion 🔖️ViteElementsAssets

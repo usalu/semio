@@ -892,9 +892,14 @@ fn raster_populated_snapshot_output_max_plus_one_nested_cancel_fault_panic_and_c
 
     let layer = RasterLayerNode::Adjustment { id: "retained-output".into(), name: "Retained Output".into(), visible: true, opacity: 1.0, blend_mode: "normal".into(), transform: RasterTransform::default(), adjustment_kind: "deep".into(), params };
     let snapshot = RasterSnapshot { schema: String::new(), id: String::new(), title: None, layers: vec![layer], assets };
-    assert_eq!(snapshot.require_empty_output_shell(), Err(crate::standards::v1::subsets::any::schema::snapshot::RASTER_POPULATED_OUTPUT_ERROR));
-    let panic = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| snapshot.require_empty_output_shell().expect(crate::standards::v1::subsets::any::schema::snapshot::RASTER_POPULATED_OUTPUT_ERROR)));
-    assert!(panic.is_err(), "public DSL panic path contains the fail-closed populated output before allocation");
+    // 🗜️ The whole-document pack codec READS the populated forest and asset pool (it used to refuse
+    // them outright) and must not consume, move or reallocate a single owner while doing so — the
+    // pointer identities asserted below are what prove it.
+    let packed = <RasterSnapshot as store::ArtifactPack>::encode_pack(&snapshot);
+    let decoded = <RasterSnapshot as store::ArtifactPack>::decode_pack(&packed).expect("a populated Raster snapshot packs and decodes whole");
+    assert_eq!(decoded.assets.len(), snapshot.assets.len(), "the whole-document pack carries every asset handle");
+    assert_eq!(decoded.layers.len(), snapshot.layers.len(), "the whole-document pack carries every layer");
+    retirement::retire_raster_snapshot(decoded);
     let params = match &snapshot.layers[0] {
         RasterLayerNode::Adjustment { params, .. } => params,
         _ => unreachable!("output fixture remains an adjustment"),

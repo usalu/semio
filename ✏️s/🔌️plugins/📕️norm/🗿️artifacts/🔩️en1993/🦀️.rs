@@ -542,3 +542,11 @@ pub mod viewer {
         }
     }
 }
+
+//#region 🪢️TaxonomyMounts
+#[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🔩️high-strength-connection/🦀️.rs"]
+pub mod high_strength_connection;
+#[cfg(test)]
+#[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🔩️high-strength-connection/🧪️tests/🧩️example/🦀️.rs"]
+mod example;
+//#endregion 🪢️TaxonomyMounts

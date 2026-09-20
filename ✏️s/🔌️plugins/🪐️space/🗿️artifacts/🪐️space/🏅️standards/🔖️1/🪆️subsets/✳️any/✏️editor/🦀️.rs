@@ -376,6 +376,7 @@ pub fn create_space_index_editor() -> semio_framework_plugin::AppDefinition {
         // 🌱 Document mutations — palette-visible.
         .mutation("createArtifact", LocalizedLabel::native("Create Artifact", "Artefakt erstellen"))
         .mutation("deleteArtifact", LocalizedLabel::native("Delete Artifact", "Artefakt löschen"))
+        .action_destructive("deleteArtifact")
         .mutation("renameArtifact", LocalizedLabel::native("Rename Artifact", "Artefakt umbenennen"))
         .mutation("touchArtifact", LocalizedLabel::native("Touch Artifact", "Artefakt aktualisieren"))
         // 🐚 Shell-effect relays — no document mutation of their own (contract §C6).

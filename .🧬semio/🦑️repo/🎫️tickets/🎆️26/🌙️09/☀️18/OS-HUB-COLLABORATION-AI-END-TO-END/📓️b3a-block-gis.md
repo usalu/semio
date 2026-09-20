@@ -287,14 +287,16 @@ empty-facet golden, (1) gis real mutations, (2) block boot + bar.
 
 | plugin / variant | compiles | assembles + descriptor | boots + renders | mutation reaches document | undo / redo | console clean |
 |---|---|---|---|---|---|---|
-| 🌍️gis `gis2d` (`s.gis.gismap@1`) | ✅ | ✅ | ✅ | ✅ **live** (§10) | ✅ **live** (§10) | ✅ (§10.2) |
-| 🌍️gis `gisterrain` (`s.gis.gisterrain@1`) | ✅ | ✅ | — | — | — | — |
-| 🧱️block `block2d` | ✅ | ✅ | — | — | — | — |
-| 🧱️block `block3d` | ✅ | ✅ | — | — | — | — |
-| 🧱️block `block5d` | ✅ | ✅ | — | — | — | — |
+| 🌍️gis `gis2d` (`s.gis.gismap@1`) | ✅ | ✅ | ✅ | ✅ **live**, 4 verbs (§10, §12) | ✅ **live**, 4× round trip (§12) | ✅ 0 faults (§12) |
+| 🌍️gis `gisterrain` (`s.gis.gisterrain@1`) | ✅ | ✅ | ✅ **live** (§17.3) | ✅ **live**, `change-exaggeration` (§17.3) | ✅ **live** (§17.3) | ✅ 0 faults |
+| 🧱️block `block2d` | ✅ | ✅ | ✅ **live** (§16) | ✅ **live**, `create-handle-kind` (§16) | ✅ **live**, board text round-trips (§16) | ✅ 0 faults |
+| 🧱️block `block3d` | ✅ | ✅ | ✅ **live** (§16.0) | ✅ **live**, `create-vortex-kind` (§16.0) | ✅ **live** (§16.0) | ✅ 0 faults |
+| 🧱️block `block5d` | ✅ | ✅ | ✅ **live** (§16.2) | ✅ **live**, `create-grip-kind` (§16.2) | ✅ **live**, panel round-trips (§16.2) | ✅ 0 faults |
 
 Legend: ✅ measured green, ❌ measured red, — not reached yet in this slice. Updated as sections land.
 "live" = observed in a real React shell in headless chromium, not only by a native test.
+**Session 5: every row above is green — all three 🧱️block variants and both 🌍️gis artifacts clear the
+full interaction bar live, with zero console fault lines.**
 
 ## 7. §5.5 — the three `semio-framework-ui-scene` failures (FIXED, 141/141 green)
 
@@ -512,6 +514,10 @@ localisation surface is introduced:
   `the_inspector_summary_projects_each_document_collection_extent`: the three rows exist, print the
   document's own extents, and appending one position changes the projected tree.
 
+Verified: `cargo test -p semio-s-artifact-gis-gismap --features component-app-assembly --lib inspector`
+→ **3 passed / 0 failed** (`🗑️generated/b3a2-gismap-inspector-test.txt`) — the new test plus both
+pre-existing inspector tests, which the six-row summary leaves green.
+
 ### 10.4 Probe improvements (shared with every B3 slice)
 
 `🐍️b3a-interaction-probe.mjs`:
@@ -525,3 +531,622 @@ localisation surface is introduced:
   (override with `config.panels`) before the witness is taken.
 - **`setup` steps now press `…​.action.<id>.execute`** too — an argument-carrying setup verb only
   folded its form open before, so `setup` silently dispatched nothing.
+
+## 11. 🌍️gis inference — the `AppCommand::Infer` chain, confirmed, and how another plugin wires its own
+
+### 11.1 The chain, link by link (read from the code, file + line)
+
+| # | link | file |
+|---|---|---|
+| 1 | MCP tool `inference_run` (`ToolExposure::Direct`) | `🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/💡️inference/🦀️.rs:1227` `inference_run_capability`, handler `:1485` |
+| 2 | dispatch builds ONE `AppCommand::Infer` and exchanges it on the named instance | `…/🌉️mcp/🔀️dispatch/🦀️.rs:576` |
+| 3 | routing picks the plugin **from the command, not the instance slot** — `AppCommand::Infer(infer) if !infer.plugin_id.is_empty() => infer.plugin_id` | `…/🌉️mcp/🏠️workspace/🦀️.rs:1452` |
+| 4 | the workspace arm calls `infer_real` and answers `AppFrame::Inferred { inference_schema, complete, payload }` | `…/🏠️workspace/🦀️.rs:1297` |
+| 5 | `infer_real` looks the row up in the **committed descriptor**, builds an `ArtifactInferenceRequestV1` (owner, kinds, schema versions, algorithm/policy version, `source_dialect = "<schema>@<version>/*"`, budgets, cancellation id, canonical payload) and hands it to the router | `…/🏠️workspace/🦀️.rs:881-923` |
+| 6 | `ensure_inference_route` lazily instantiates a SECOND guest on `INFERENCE_ACTOR_ORDINAL` and registers the roster with `ArtifactInferenceRouter::register_plugin` | `…/🏠️workspace/🦀️.rs:847-874` |
+| 7 | the router toposorts `dependsOn`, drives the guest's `semio.infer` cold job and validates the guest's echo field-for-field | `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🦀️.rs:5543` |
+| 8 | inside the guest, the registered service executes | `✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🦀️.rs:162` `gis_map_inference_service()` → `infer_gis_map` `:250` |
+
+**It still runs end to end.** Link 5's lookup is against `descriptor.contributions.inference_services` — and gis's **committed** `✏️s/🔌️plugins/🌍️gis/🔣️.json` carries exactly that row:
+
+```json
+{"owner":"gis","artifactKind":"s.gis.gismap","artifactSchema":"s.gis.gismap","artifactSchemaVersion":1,
+ "inferenceSchema":"s.gis.gismap.inference","inferenceSchemaVersion":1,"algorithmVersion":1,
+ "policyVersion":1,"contributor":"gis"}
+```
+
+so `inference_list` finds it, `inference_get` on it answers "declared and executable, call `inference_run` with `payload`" (`💡️inference/🦀️.rs:180`), and `inference_run` reaches `infer_gis_map`, which decodes the map pack and returns `{positionCount, routeCount, regionCount, bounds}`. Nothing in this chain is gis-specific: links 1–7 are entirely generic, and link 8 is the plugin's own closure.
+
+Note: gis's `declaration()` also passes `.inferences([gismap_artifact_inference_descriptor()])` (the schema-family leaves), but the committed descriptor's `contributions` object carries only `composerEntries / ioEntries / panels / topicContributions / inferenceServices` — **no `artifactContributions` key at all**. So `infer_real`'s second lookup source (`artifact_contributions[].inferences`) is empty for gis and the executable row is the one that matters.
+
+### 11.2 Census — who actually has one (this corrects "not-wired except GIS")
+
+Committed plugin descriptors under `✏️s/🔌️plugins/*/🔣️.json`, counting `contributions.inferenceServices` (camelCase — a snake_case scan reports zero everywhere and is how the "GIS only" reading arises):
+
+| plugin | services | schemas |
+|---|---|---|
+| 🀄️wfc | **5** | `s.wfc.{bitmap,grid2d,grid3d,wfc2d,wfc3d}.solve` |
+| 🌍️gis | 1 | `s.gis.gismap.inference` |
+| every other plugin (30) | 0 | — |
+
+Two more facts worth having: `🗄️stdio` *does* build five gltf inference services in source
+(`🗿️artifacts/🧊️gltf/🦀️.rs:96,105`) but has **no committed descriptor at all**, so link 5 can never find
+them — that is DS1's 4 MiB descriptor blocker, not an inference gap. And `🏔️gisterrain` has a full
+`🧬️schema/💡️inferences/` family but never calls `.inference_services(..)`, so it declares a shape with
+no executable behind it.
+
+### 11.3 How to wire an inference in another plugin (five steps, all in the plugin)
+
+Nothing in the host needs to change. Copy the gis shape:
+
+1. **Declare the schema family.** A `🧬️schema/💡️inferences/` directory beside `📸️snapshot`/`🔺️diff`/
+   `🧬️mutations`, with the family-root `🦀️.rs` holding the `#[derive(ArtifactSchema, ToValue, FromValue)]`
+   result struct under its own `#[artifact_schema(id = "<artifactKind>.inference")]`, every field
+   `#[derived]`. Pattern: `🌍️gis/…/🧬️schema/💡️inferences/🦀️.rs:22` (`GisMapInference`).
+2. **Publish the descriptor leaves.** `fn <x>_artifact_inference_descriptor() -> ArtifactInferenceDescriptor`
+   with `include_str!` of all five facet leaves (`🦀️.rs 🟦️.ts 🔗️.graphql 🔣️.json 🛰️.proto`) — the language-neutral
+   half. Pattern: same file `:199`.
+3. **Write the executable.** `fn <x>_inference_service() -> ArtifactInferenceService::new(ArtifactInferenceServiceMetadata { owner, artifact_kind, artifact_schema, artifact_schema_version, inference_schema, inference_schema_version, algorithm_version, policy_version }, infer_fn)`.
+   `infer_fn(&ArtifactInferenceExecutionRequest) -> Result<ArtifactInferenceExecution, ArtifactInferenceExecutionError>`
+   MUST: reject an empty `cancellation_id`, reject any zero budget, reject
+   `WireArtifactInferenceCacheMode::Incremental` unless it really has an incremental algorithm, check
+   `policy + canonical_payload + previous_state + dependencies` against `budgets.allocation_bytes`
+   BEFORE decoding, count work units against `budgets.work_units` and depth against
+   `budgets.recursion_depth` inside the fold, and check the encoded result against the allocation
+   budget too. Pattern: `🗺️gismap/🦀️.rs:179` (`admit_…`) + `:212` (`infer_…_controlled`).
+   `metadata.artifact_schema` / `artifact_schema_version` must be the values the artifact kind really
+   publishes — the router validates the guest's echo field-for-field and a drifted pair fails there,
+   not at compile time.
+4. **Hang both off the artifact declaration** — the step every plugin except gis and wfc is missing:
+   ```rust
+   ArtifactDeclaration::builder(definition()?)
+       .schema(…)
+       .inferences([<x>_artifact_inference_descriptor()])
+       .inference_services([<x>_inference_service()])
+   ```
+   (`🗺️gismap/🦀️.rs:328-331`, under `#[cfg(feature = "component-app-assembly")]`). Also add an
+   `ArtifactCapabilityKind::inference()` capability claiming the `<kind>.inference` schema namespace
+   in `definition()` (`🗺️gismap/🦀️.rs:275`).
+5. **Regenerate the committed descriptor** — `bun nx run @semio-tech/<plugin>-plugin:describe`. Until
+   `🔣️.json`'s `contributions.inferenceServices` carries the row, `infer_real` answers
+   `capability.not-found: plugin \`<id>\` declares no inference \`<schema>\` on artifact kind \`<kind>\``
+   (`🏠️workspace/🦀️.rs:890`) and `ensure_inference_route` answers `…declares no inference service in
+   its committed descriptor` (`:859`). **A source-only wiring is invisible to MCP.**
+
+Optional sixth step, only if the plugin wants a *reviewable proposal* rather than a read: add a
+`ActionKind::Shell` verb emitting `Effect::RequestInferenceProposal { kind }`, the way
+`proposeBoundsRegion` does (`🌍️gis/…/🎮️commands/💡️inference/🦀️.rs:26`). That is a different lifecycle —
+the host owns the scope, idempotency key, lease, progress cursor, proposal hash and Approve/Cancel,
+and the proposal only reaches the document through the hub's server-stamped approval command. It is
+**not** required for `inference_run` to work; steps 1–5 are.
+
+## 12. All four gis verbs live, chained, in ONE shell session — zero faults
+
+`🐍️b3a2-gis-verb-sweep.mjs` (new) walks the whole per-feature algebra against the SAME live document
+and takes an undo/redo round trip on each step, which the one-verb-per-run probe cannot show. Captures:
+`🗑️generated/b3a2-gis-verb-sweep.json` + `-console.txt`.
+
+```
+boot   ready=gis2d  verbsPresent=["addFeature","moveFeature","renameFeature","deleteFeature"]
+SUMMARY {"verbs":["addFeature:MUR","moveFeature:MUR","renameFeature:MUR","deleteFeature:MUR"],
+         "faultLines":0}
+```
+
+`M` = the ledger grew AND `#s-checkin`'s uncommitted-edit count rose · `U` = undo lowered it ·
+`R` = redo restored it. Edit counts across the run: 0→1→2→3→4, each step undone to the previous value
+and redone back. The ledger rows are the authored mutation leaves, verbatim:
+
+| step | ledger row the click produced |
+|---|---|
+| `addFeature` | `create-position index=152 item { position-1 data={ id="position-1" kind=…` |
+| `moveFeature` | `replace-position-data id=position-1 new-data={ id="position-1" kind="mar…` |
+| `renameFeature` | `replace-position-data id=position-1 new-data={ id="position-1" kind="mar…` |
+| `deleteFeature` | `delete-position id=position-1↶` |
+
+So §9.2's two load-bearing design decisions are confirmed at runtime, not just in unit tests:
+the id is **minted** (`position-1` is the lowest free slot in a 152-position document), and an empty
+`featureId` **addresses the newest entry** — move, rename and delete all landed on `position-1`
+with nothing typed. **Zero fault lines** in the whole run.
+
+One honest correction to §9.2's "four-click live sequence with nothing typed": `moveFeature`'s
+`lon`/`lat` defaults are `0.0`/`0.0` and so are `addFeature`'s, so an **all-defaults** move re-seats the
+minted position onto its own coordinate and correctly diffs to nothing (measured: first sweep,
+`moveFeature` produced no ledger row and no edit). That is right, not broken — the sweep therefore
+stages a real destination (`lon=11.25, lat=48.5`), which is what a user does. Three clicks are
+argument-free; the move needs a destination.
+
+**Live inspector reading confirms §10.3.** `inspectorAtEnd` on the currently-served wasm is exactly
+`["Schema gis.map", "Layers visible 11/11", "Selected 0"]` — the three static rows, unchanged after
+four document mutations. The fix in §10.3 is in the source and has not yet been re-activated into the
+served component, so the panel half is **fixed but not yet live-witnessed** (see §14).
+
+## 13. 🧱️block — the §3.3 blocker is stale; the bar is blocked on the machine, not on block
+
+### 13.1 Descriptor generation is DONE and current (B3a §3.3's "blocked by a peer" is out of date)
+
+`✏️s/🔌️plugins/🧱️block/🔣️.json` (399 445 B) and `🛂️.descriptor.semio` (98 289 B) exist, generated
+2026-09-19 03:58 — the `describe` retry B3a §3.3 asked for already ran and succeeded (capture
+`🗑️generated/b3a-block-describe.txt`). Checked for staleness rather than assumed: the only `🦀️.rs`
+under `🧱️block` newer than the descriptor is
+`🗿️artifacts/🧊️3d/…/👁️viewer/🧪️tests/🔬️unit/🦀️.rs`, a test file, which is not a descriptor input.
+**No regeneration is needed.** Nothing in this slice had to re-run it.
+
+### 13.2 Every block app's dispatch chain is complete — verified by reading all five places
+
+§9.3's five-place law is the thing that silently kills a rail verb. All three block editors satisfy it
+for every verb they declare (`…/✏️editor/🦀️.rs`):
+
+| app | `app_commands!` | retained ids | publication contracts | `command_from_action` | `bounded_first_step_tool_proofs!` |
+|---|---|---|---|---|---|
+| block2d | :138, 9 rows | :164 | :169-179, all `Artifact` | :524 | :460, same 9 ids |
+| block3d | ✓ | :207 | ✓ | :873 | :777, same ids |
+| block5d | ✓ | :142 | ✓ | :502 | :432, same 7 ids |
+
+The interaction-bar verb each probe targets is **argument-free**, so it dispatches one-click from the
+rail with nothing staged — this is now read from `command_from_action`, not guessed as B3a §3.4 warned:
+
+- `block2d` `addHandleKind` → `AddHandleKind {}` (`◻️2d/…/✏️editor/🦀️.rs:530`)
+- `block3d` `addVortexKind` → `AddVortexKind {}` (`🧊️3d/…/✏️editor/🦀️.rs:875`)
+- `block5d` `addGripKind` → `AddGripKind {}` (`🖐️5d/…/✏️editor/🦀️.rs:502`)
+
+All three are `.mutation(..)` (so `ActionKind::Mutation`), all three carry
+`InteractiveJobClassification::Migrated`, and all three publish on the `Artifact` lane. So
+`🐍️b3a-block{2,3,5}d-probe.mjs`'s action targets are correct as written; no probe change was needed.
+block2d additionally has a SECOND real document mutation reachable from the rail that gis never had:
+`setActiveExample` is `ActionKind::Mutation` over a **two-example** catalogue
+(`hexagonal-cut-concrete-forest-left`/`-right`), so unlike gis (§2.4, one example) the staged default
+can actually diff to a non-empty op set.
+
+### 13.3 Why block is still not on the bar — honest
+
+block2d/3d/5d were **not activated and not probed** in this slice either. Not for a code reason:
+
+1. `activate-block2d-react-dev` needs a wasm component build, and the shared cargo build-dir was
+   saturated for this whole session — **30+ queued `cargo` processes**, my own
+   `cargo test -p semio-s-artifact-gis-gismap` (pid 6516) sat in
+   `Blocking waiting for file lock on artifact directory` for **50+ minutes** without ever reaching a
+   compile (preamble rule 14/17). Starting a second cargo of mine would have violated the one-cargo
+   rule and made the queue worse.
+2. The React shell was additionally down repo-wide for part of the session (§14.2).
+
+Everything block needs is in place; it is a machine-time item, not an engineering item. The recipe is
+exactly gis's: `📜️b3a-activate.sh block2d 6024` once, then
+`nohup 📜️b3a-serve.sh block2d 6024 & disown`, then `bun 🐍️b3a-block2d-probe.mjs`
+(6025/6026 for 3d/5d). The probes now carry the redo step, the app-panel opening and the
+`setup`-execute fix from §10.4.
+
+## 14. B3a2 — honest gaps, and what §5's handoffs became
+
+### 14.1 §5 handoffs, closed or moved
+
+| B3a §5 | state after B3a2 |
+|---|---|
+| 1. gis2d does not clear the interaction bar; `cut` over `selectAll` produces no ledger row | **CLOSED, differently.** Not by fixing `cut` — by giving gis the per-feature editing verbs it never had (§9.2) and proving all four live, mutate/undo/redo, zero faults (§10, §12). `cut` was never the right route; it is a framework clipboard verb, not the app's algebra. `cut` itself is still untested and belongs to whoever owns the clipboard. |
+| 2. `shell.panelTab` refused mid-session | **Not reproduced.** Both B3a2 live runs (one-verb probe + four-verb sweep) contain zero `dropped action` lines. Either a peer's dispatch-scoping fix landed or B3a's run hit a transient. Not re-opened, not claimed fixed. |
+| 3. lane arrival in React inferred, not witnessed | **Still open.** Unchanged — the map paints to a canvas with no data attributes. §10.3's inspector rows now give gis a *textual* projection, which is the hook a future run can assert the merged fixture through. |
+| 4. wgpu untouched / `SceneDoc::merge_lane` has no production Rust caller | **Still open**, unchanged. Owner needed. |
+| 5. three `semio-framework-ui-scene` failures | **CLOSED** (§7, 141/141). |
+| 6. empty-facet-authority golden | **CLOSED** (§8, 5/5). |
+| 7. 🧱️block never booted or probed | **Still open** (§13.3) — but re-diagnosed: the descriptor blocker is gone, all five dispatch places are complete in all three apps, and what is missing is machine time, not code. |
+| 8. `cargo check -p semio-hub --all-features` | **Still open**, not run. |
+| 9. peer's `PURE_COMMAND_FIELDS` break | Resolved by its owner; `describe` completed (§13.1). |
+
+### 14.2 New gaps this session opened or hit
+
+1. **The gis2d inspector fix (§10.3) is green natively but not yet live-witnessed.**
+   `cargo test -p semio-s-artifact-gis-gismap --features component-app-assembly --lib inspector` →
+   **3 passed / 0 failed** (`🗑️generated/b3a2-gismap-inspector-test.txt`), including the new
+   `the_inspector_summary_projects_each_document_collection_extent` and both pre-existing inspector
+   tests untouched. It took 80 min wall clock to get there: pid 6516 sat in `Blocking waiting for
+   file lock on artifact directory` for ~65 minutes behind 30+ peer cargos before it got a compile
+   slot (preamble rule 14/17 — recorded, not worked around). What is still missing is the LIVE half:
+   the served `component-dev` wasm predates the fix. Re-activate gis2d and re-run
+   `🐍️b3a2-gis-verb-sweep.mjs`: `inspectorAtEnd` should read
+   `["Schema gis.map", "Positions 152", "Routes 149", "Regions 0", "Layers visible 11/11", "Selected 0"]`
+   instead of the three static rows it reads today.
+2. **`moveFeature` all-defaults is a no-op** (§12) — correct behaviour, but it means §9.2's "four-click
+   sequence with nothing typed" is really three clicks plus a typed destination. Documented, not "fixed".
+3. **A peer's half-landed rename took every React shell down mid-session.**
+   `📇️directory/🪪️session-refresh/🌐️broker-port/` was renamed to `🪪️session-port/` and the symbol
+   `BrowserBrokerPortClientV1` renamed with it, while
+   `📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🟦️.tsx:16` still imported the old path — vite answered
+   **500 Internal Server Error** on the shell entry, so `ready` was `null` and every probe scored
+   false-negative. Not touched (the peer was actively in that file); it resolved on its own ~20 min
+   later. **Any B3 slice that measured a shell between roughly 23:43 and 00:05 should re-run.**
+4. **The gis2d vite serve died on its own** during the session and was restarted on the same port
+   (pid 61056, log `🗑️generated/b3a2-gis2d-serve2.txt`). No activation was needed — the staged
+   component was still current.
+5. **`🏔️gisterrain` declares an inference schema family with no executable service** (§11.2) and was
+   never booted. **`🗄️stdio` has five gltf inference services that can never be reached** because it
+   has no committed descriptor (DS1's blocker).
+
+### 14.3 Files changed by B3a2 (this session)
+
+**Repo code**
+- `✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🦀️.rs:26-27,37-39`
+  — the inspector summary projects `positions`/`routes`/`regions` extents; docstring updated (§10.3).
+- `…/📌️panels/🔍️inspection/🧪️tests/🔬️unit/🦀️.rs` — new
+  `the_inspector_summary_projects_each_document_collection_extent`; `--lib inspector` → **3 passed /
+  0 failed** (`🗑️generated/b3a2-gismap-inspector-test.txt`).
+
+(Earlier B3a2 sections' files — §7 `🚚️board2d-scene-lanes/🔣️.json` + `🧾️typed-scene/🔣️.json`, §8 the
+empty-facet golden + oracle enum, §9 the four gis verbs + eleven tests — are listed in those sections
+and are already committed.)
+
+**Ticket scratch**
+- `🐍️b3a2-gis-verb-sweep.mjs` — **new**: the four-verb chained live sweep (§12).
+- `🐍️b3a-gis2d-probe.mjs` — retargeted from the `selectAll`→`cut` clipboard route to `addFeature`,
+  with `SEMIO_PROBE_ACTION` to swap the measured verb.
+- `🐍️b3a-interaction-probe.mjs` — redo step, `panelRows`/`panelRoundTrip`, `open-app-panels`,
+  `setup`-execute fix, bridge-WS noise filter (§10.4). **Shared — B3b/B2c/B3c/B3d inherit all of it.**
+- Captures: `🗑️generated/b3a2-gis2d-addfeature.txt`, `b3a-gis2d-addFeature/report.json`,
+  `b3a-gis2d-addFeature-console.txt`, `b3a2-gis-verb-sweep.json`, `b3a2-gis-verb-sweep-console.txt`,
+  `b3a2-gis2d-serve2.txt`, `b3a2-gismap-inspector-test.txt` (the blocked cargo).
+
+No `.vscode/launch.json` row was added — unchanged from B3a §4's reasoning.
+
+# Session 5 — B3a2 (RESUME, 2026-09-20)
+
+Worker: Opus 5, slice **B3a2**, session 5. Captures keep the `🗑️generated/b3a2-*` / `b3a-<plugin>-*`
+families. Order: (13) 🧱️block staged module + full bar, (14.2.1) gis2d inspector live re-witness,
+(2b) a second gis artifact, (3) ui-scene + facet-authority re-verify.
+
+## 15. 🧱️block — the staged module exists; the `s` cold-activation blocker is GONE (**S2 unblocked**)
+
+**For sibling S2, at the top: 🧱️block's component builds and its staged module is on disk.** The
+`dev s` cold activation no longer has a missing-`🧱️block`-module reason to abort.
+
+Measured, not inferred. `📜️b3a-activate.sh block2d 6024` was already in flight when session 4 was
+cut and it **completed** (capture `🗑️generated/b3a2-block2d-activate.txt`, run duration 9 m 07 s):
+
+```
+✔  nx run @semio-tech/block-plugin:component-dev      (7m 18s — the real wasm build, not a cache hit)
+✔  nx run @semio-tech/block-plugin:materialize-dev
+Prepared block2d react dev: 1 components, session, browser support and 17 fonts
+Activated block2d react dev: 1 completed components (changed)
+```
+
+**Which block components are staged (the state S2 needs), re-checked at the end of session 5:**
+
+| artefact | size | mtime |
+|---|---|---|
+| `✏️s/🔌️plugins/🧱️block/📦️packages/🦀️rust/dist/component-dev/semio_s_plugin_block.wasm` | 85 847 824 B | 2026-09-20 **07:12** |
+| `🧰️framework/…/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🧱️block/semio_s_plugin_block_component.core.wasm` | 85 797 798 B | 2026-09-20 **07:12** |
+| the same folder's `semio_s_plugin_block_component.js` / `.d.ts` / `🌉️bridge.js` / `🔣️.json` / `interfaces/` | 406 792 B / 3 280 B / 10 996 B / 377 017 B / 29 entries | 2026-09-20 **07:12** |
+
+There is **one** `🧱️block` component for all three variants (`block2d`/`block3d`/`block5d` differ only
+in the session and the activation receipt), and it has been rebuilt and re-staged four times in this
+slice — 01:12, 02:36 (block3d), 07:12 (block5d) — so it is current against the block sources at every
+point a serve checked it. For comparison, `🌍️gis`'s staged component is 214 066 553 B at 06:52.
+
+`🧱️block` is one of the 64 entries under `🔌️plugin-modules/`, and a second serve confirmed the
+staging is *current*, not merely present — starting the serve printed
+`[fresh] 1 staged components match their sources and the activation receipt`
+(`🗑️generated/b3a-block2d-serve.txt`). The same serve's stale list names a DIFFERENT plugin —
+`[stale] sourcing-module-windows: unactivated — staged 2026-09-19T14:58:27.361Z but absent from the
+activation receipt` — so whatever still stops a cold `s`, it is not 🧱️block. **One cargo, mine, ran
+in this slice** (the block wasm build above, inherited already-finished).
+
+## 16. 🧱️block — the full interaction bar: **block2d CLEARS IT**
+
+`http://127.0.0.1:6024/?plugin=block2d`, headless chromium 1600×1000 `--use-angle=metal`, serve pid
+67520 (detached, `🗑️generated/b3a-block2d-serve.txt`). Probe `🐍️b3a-block2d-probe.mjs` →
+`🗑️generated/b3a-block2d/report.json` + `b3a-block2d-console.txt`.
+
+```
+SUMMARY {"ready":"block2d","error":null,"exampleRendered":true,"actionCount":22,
+         "mutated":true,"undone":true,"redone":true,"panelRoundTrip":true,
+         "faultLines":0,"interactionBar":true}
+```
+
+Every rung, with the witness it was scored on:
+
+| rung | witness |
+|---|---|
+| boots | `data-semio-os-ready="block2d"`, window `block2d-board`, zero window faults |
+| example loads | the example combobox reads `Hexagonal Cut Concrete Forest Left`; the board prints `Node kind: Hexagonal Cut Concrete Forest Left` / `6 Handle Kinds, 11 Handles` |
+| rail | 22 action rows incl. `action.addHandleKind` (§13.2's five-place registration confirmed live) |
+| mutation | ledger row `create-handle-kind handle-kind { id=handle-kind-6 name=handle-kind-6 …}`, `Check In` → `Check In (1)` |
+| observed | the board text moves `6 Handle Kinds` → **`7 Handle Kinds`** — the app's own projection, not the ledger |
+| undo | edits 1 → 0, ledger `Undo`, board back to **`6 Handle Kinds`** |
+| redo | edits 0 → 1, ledger `Redo`, board back to **`7 Handle Kinds`** |
+| console | **0 fault lines**; the only console error in the whole run is one `404 (Not Found)` resource |
+
+So block2d is the first app in this slice to witness undo/redo on a **textual projection of its own
+document**, which the canvas-painting gis map could never show (§14.1 handoff 3).
+
+### 16.0 block3d clears it too
+
+`📜️b3a-activate.sh block3d 6025` → `exit=0`, run duration **34 m 33 s**, of which
+`@semio-tech/block-plugin:component-dev` was **31 m 43 s** (a real rebuild, not a cache hit, at load
+average ≈ 110–123 — the same target took 7 m 18 s at 01:01). Serve detached on :6025
+(`🗑️generated/b3a-block3d-serve.txt`, `VITE ready in 34 411 ms`), probe `🐍️b3a-block3d-probe.mjs`.
+
+```
+SUMMARY {"ready":"block3d","error":null,"exampleRendered":true,"actionCount":34,
+         "mutated":true,"undone":true,"redone":true,"panelRoundTrip":false,
+         "faultLines":0,"interactionBar":true}
+```
+
+| rung | witness |
+|---|---|
+| boots | `data-semio-os-ready="block3d"`, window `block3d-world`, pane `window:block3d-world` with 1 canvas, zero window faults |
+| example loads | combobox `Hexagonal Cut Concrete Forest Left` |
+| rail | **34** action rows incl. `action.addVortexKind` |
+| mutation | ledger `create-vortex-kind vortex-kind { id=vortex-kind-6 name=vortex-kind-6 …}`, edits 0 → 1 |
+| undo / redo | 1 → 0 (`Undo`), 0 → 1 (`Redo`) |
+| console | **0 fault lines** |
+
+`panelRoundTrip` is `false` and that is honest, not a defect: block3d's surface is a `world-3d`
+**canvas** (`paneChars: [0]`, `uiNodes: ["block3d.play.world|"]` — an empty body key), so it publishes
+no textual projection for a round trip to move, exactly like gis's map. block2d is the variant that
+proves the projection half (§16), block3d the canvas half.
+
+### 16.2 block5d clears it too — and it is the second app to round-trip a panel
+
+`📜️b3a-activate.sh block5d 6026` → `exit=0` (`component-dev` 8 m 27 s on the calm machine; the run
+before it had been killed at 205 m by the coordinator's 06:12 deadlock sweep — see §18.2). Serve on
+:6026, probe `🐍️b3a-block5d-probe.mjs`.
+
+```
+SUMMARY {"ready":"block5d","error":null,"exampleRendered":true,"actionCount":20,
+         "mutated":true,"undone":true,"redone":true,"panelRoundTrip":true,
+         "faultLines":0,"interactionBar":true}
+```
+
+block5d is the only block variant with **two** windows (`block5d-board` + `block5d-world`, tabs
+`Board`/`World`) and both project text:
+
+```
+block5d-play-board.body | Part kind: Hexagonal Cut Concrete Forest Left  2d grips: 1
+block5d-play-world.body | Part kind: Hexagonal Cut Concrete Forest Left  mesh: /mesh/🧊️hexagonal-cut-concrete-forest-left.glb
+```
+
+Mutation `action.addGripKind` → ledger `create-grip-kind grip-kind { id=grip-kind-1 name=grip-kind-1 …}`,
+edits 0 → 1 → 0 (`Undo`) → 1 (`Redo`), `panelRoundTrip: true`, **0 fault lines**. Both engagement
+toggles were pressed and no panel retirement was needed here — its rail is not covered.
+
+### 16.1 Three shared-probe defects this found — all of them scored working apps as broken
+
+The first three runs reported `interactionBar: false` on an app that in fact works. None of the three
+faults was in block; all three were in `🐍️b3a-interaction-probe.mjs`, which **B3b / B2c / B3c / B3d
+inherit**, so every "did not clear the bar" verdict taken with the old probe on an app that renders
+UiNodes (rather than a canvas pane) is suspect and should be re-run.
+
+1. **The render witness could not see a UiNode surface.** `panes` only collected `[data-surface-id]`
+   elements. block2d publishes no pane at all — its document goes straight into the window body as
+   `[data-ui-node-key]` nodes (`window:block2d-board/block2d-play-board.body`, `🪟️windows/📋️board/🦀️.rs:48`)
+   — so `exampleRendered` was `false` and the render witness was the constant `{"panes":[],"rows":[]}`.
+   Fixed: a `uiNodes` field collecting the root `[data-ui-node-key]` elements inside
+   `[data-slot="window-body"]`, excluding the engagement overlay (framework chrome, not the document),
+   folded into `rendered` and into the `render` witness.
+2. **The app's own panels were excluded from `panelRows`.** The filter dropped every panel whose id
+   starts with `framework.panelTab.framework.panel.` — but the **artifact** and **inspection** trees
+   the app contributes live in exactly that id space, so the field that exists to read the app's
+   projection always read 0. Measured: block2d's artifact panel carries 22 rows
+   (`panel:block2d-play-document/handleKind:b-l-m` …) and `panelRows` reported `0`. Fixed to exclude
+   only the framework's own panels by id (history, chat, settings, marketplace, task manager).
+3. **A docked panel covered the engagement rail, silently.** The artifact panel occupies (3,3)–(303,483)
+   and the rail toggle sits at (10,64,75,22), so `elementFromPoint` at the toggle centre answers
+   `panel:block2d-play-document/handleKind:b-l-m`. The forced click still **reports `ok`**, the overlay
+   stays `data-folded="true"`, and the only symptom is `actionCount: 0` on an app with 22 rows
+   (`🗑️generated/b3a2-block2d-diagnose.txt`). Fixed: when no row mounts, compute which open panels
+   geometrically intersect the toggle and retire exactly those before pressing again — the history
+   panel docks bottom-right (1297,924) and never intersects, so the ledger and `#s-checkin` witness
+   survive. Panel order also changed: app panels first, history **last**, because the two share a dock
+   and opening history after the app panels was what made `#s-checkin` vanish and every edit count
+   read `-1`.
+
+Plus one race, which is the interesting one:
+
+4. **The witness was read one guest turn too early.** `until(...)` returned the instant the edit count
+   moved, but the app's UI is re-published ~500 ms later. `🐍️b3a2-block-undo-refresh.mjs` polls the
+   board for a full budget after each step and shows the lag on all three
+   (`🗑️generated/b3a2-block2d-undo-refresh.txt`):
+
+   ```
+   after mutation  40376ms  "6 Handle Kinds"  Check In (1)   ← edit count already moved
+                   40888ms  "7 Handle Kinds"  Check In (1)   ← projection lands 512 ms later
+   after undo      53254ms  "7 Handle Kinds"  Check In       ← stale for 505 ms
+                   53759ms  "6 Handle Kinds"  Check In
+   after redo      73445ms  "6 Handle Kinds"  Check In (1)
+                   73955ms  "7 Handle Kinds"  Check In (1)
+   ```
+
+   So block2d's board **does** round-trip; the probe was sampling the stale frame and scoring
+   `panelRoundTrip: false`. Fixed with a 2 500 ms settle grace after the predicate fires, before the
+   witness is taken. With it, block2d reads `panelRoundTrip: true`. **This is a probe bug, not a
+   framework bug** — recorded explicitly because the stale-frame reading looks exactly like the
+   "stale-transient undo no-op" class of real defect and would have been reported as one.
+
+## 17. 🌍️gis — session-5 re-verification, the tiled-map lane, and the second artifact
+
+### 17.1 The four-verb live sweep still holds after the restart (re-measured, not inherited)
+
+The gis2d serve was dead after the 01:15 desktop-app restart. Restarted detached on the same port
+(`📜️b3a-serve.sh gis2d 6040`, log `🗑️generated/b3a-gis2d-serve.txt`, `VITE ready in 47 621 ms`) over
+the **same staged component as session 4** (16:57 Sep 19 — see 17.3 for what that costs), and
+`🐍️b3a2-gis-verb-sweep.mjs` re-run end to end:
+
+```
+SUMMARY {"ready":"gis2d","verbs":["addFeature:MUR","moveFeature:MUR","renameFeature:MUR",
+                                  "deleteFeature:MUR"],"faultLines":0}
+```
+
+Edit counts 0→1→2→3→4, each step undone to the previous value and redone back, ledger rows the
+authored leaves (`create-position index=152`, `replace-position-data id=position-1` ×2,
+`delete-position id=position-1`). **Zero fault lines.** §12 reproduces exactly.
+
+One operational note for every slice: the FIRST `page.goto` against a freshly started vite serve
+exceeded playwright's 30 s default under load ≈ 110 and the sweep died on `TimeoutError: goto`. One
+`curl` of `/?plugin=<variant>` warms the transform graph (0.32 s on the second hit) and the probe
+then runs normally. Warm with curl before probing; it is not a plugin fault.
+
+### 17.2 The tiled-map lane is rendering — measured at the pixel and the network
+
+`🐍️b3a2-gis-tile-lane.mjs` (new). Capture `🗑️generated/b3a2-gis2d-tile-lane.txt` + `-tile-lane.png`.
+
+| witness | value |
+|---|---|
+| tile-proxy responses | `200 http://127.0.0.1:6040/osm/0/0/0.png` — the `/osm` upstream proxy declared in the playground registry answers, statuses `["200"]` |
+| surface | `window:gis2d-main` (the `tiled-map` surface kind), 1587 × 907 |
+| canvas | 1587 × 907, matching the surface exactly |
+| screenshot | a full world basemap with **all 152 demo positions painted as markers with labels** (Europe cluster, Boulder/Big Dig House/Saxum Vineyard in North America, Kamikatsu in Japan) |
+
+So the lane is not merely mounted: it fetches through the proxy and paints the document's own
+features. `tileImgs: 0` in `🐍️b3a-gis2d-diagnose.mjs` is not a defect — tiles are composited into
+the canvas rather than mounted as `<img>` elements. `webgl.readPixels` returns nothing because the
+canvas is not a WebGL context, which is why the screenshot is the witness here.
+
+This narrows B3a §5 handoff 3 ("lane arrival in React inferred, not witnessed"): the **tile** lane
+and the **feature** lane both demonstrably arrive and paint. What is still unwitnessed is a
+per-feature assertion *through the DOM* — the canvas exposes no data attributes, so a machine check
+still has to go through the inspector rows (§10.3) rather than the map.
+
+### 17.3 The second gis artifact — 🏔️gisterrain (`gis3d`)
+
+Inventory done from the registry and the committed manifest rather than guessed:
+
+- variant **`gis3d`**, plugin `gis`, app `s.gis.gisterrain@1/*#editor`, react port **6083**,
+  examples `🎬️demo` / `🎬️demo-session`, and its own tile-proxy asset
+  (`/dem` → terrarium DEM) — `📇️registry/🤖️generated/🎮️playgrounds/🟦️.ts:58`.
+- window `gis3d-main`, surface kind **`world-3d`** (not `tiled-map`), so it exercises a different
+  lane from gismap.
+- **one** `ActionKind::Mutation` verb: `setExaggeration` — vertical exaggeration is the terrain's
+  single editable document property, emitted as `ChangeExaggeration` under `Emit::amend` with the
+  coalesce key `gis3d-exaggeration`, so a whole slider drag folds into ONE undoable edit
+  (`🎮️commands/🏔️exaggeration/🦀️.rs`).
+
+Crucially it is **not** the dead "Mutation with no `action_args`" shape §9.1 found on gismap: the
+editor already declares `ActionArgDef::slider("value", 0.5 ..= 5.0).default_value(2.5)`
+(`🏔️gisterrain/…/✏️editor/🦀️.rs:690`) and the **staged** manifest carries it verbatim
+(`{"id":"value","presentation":{"kind":"slider"},"schema":{"kind":"number","min":0.5,"max":5}}`).
+The committed `✏️s/🔌️plugins/🌍️gis/🔣️.json` (Sep 17 13:33) still shows `"args": []` for it — that
+file is two days stale against the editor source (Sep 19 11:35) and is a `describe` regeneration
+item, not a wiring gap.
+
+Probe `🐍️b3a2-gis3d-probe.mjs` (new) stages `value = 4.0` so the dispatch has something to diff
+against the example's own exaggeration. It needed one shared-probe fix: a slider renders as
+`input[type=range]`, which Playwright's `fill` refuses outright, so the probe now drives range args
+through React's own value setter plus `input`/`change` events.
+
+**Measured — `gis3d` CLEARS THE BAR.** `📜️b3a-activate.sh gis2d 6040` → `exit=0`
+(`@semio-tech/gis-plugin:component-dev` **13 m 20 s**, the rebuild that carries the §10.3 inspector
+fix), then `📜️b3a-activate.sh gis3d 6083` → `exit=0` (**4 m 02 s**, same wasm re-materialised for the
+second variant). Both served detached; `🐍️b3a2-gis3d-probe.mjs`:
+
+```
+SUMMARY {"ready":"gis3d","error":null,"exampleRendered":true,"actionCount":15,
+         "mutated":true,"undone":true,"redone":true,"panelRoundTrip":false,
+         "faultLines":0,"interactionBar":true}
+```
+
+| rung | witness |
+|---|---|
+| boots | `data-semio-os-ready="gis3d"`, window `gis3d-main`, pane `window:gis3d-main` with 1 canvas, tab `Terrain`, zero window faults |
+| rail | 15 rows incl. `action.setExaggeration` |
+| staged argument | the slider was driven from `2.5` to **`4.5`** before dispatch (`filled: ["value=4.5(asked 4)"]` — the keyboard step overshoots 4.0 by one notch, which is the control's granularity, not a fault) |
+| mutation | ledger `change-exaggeration new-exaggeration=4.5`, edits 0 → 1 — the **authored `ChangeExaggeration` leaf**, carrying the value the rail staged, not the default |
+| undo / redo | 1 → 0 (`Undo`), 0 → 1 (`Redo`) |
+| console | **0 fault lines** |
+
+The staged value is the point: a first run with the old selector staged nothing (`value:absent`) and
+the verb still dispatched — but with the declaration's default `2.5`. Staging `4.5` proves the rail
+carries an arbitrary destination into the document, which is exactly what §9.1 found gismap could
+not do before the four per-feature verbs landed.
+
+This needed a fourth shared-probe fix (§16.1's list): **an `ActionArgDef::slider` is not an
+`input[type=range]`.** It renders as a Radix thumb — `<span role="slider" aria-valuenow="2.5">` with
+**no id at all** — so every id-keyed selector in the arg-staging loop missed it and the argument was
+silently skipped. The probe now falls back to the visible `[role="slider"]`, focuses it and walks it
+with ArrowLeft/ArrowRight until `aria-valuenow` reaches the target. (The `input[type=range]` branch
+added earlier is kept: Playwright's `fill` refuses range inputs outright, so any app that renders a
+native range still needs it.)
+
+### 17.4 §14.2.1 CLOSED — the inspector fix is live
+
+After the re-activation, `🐍️b3a2-gis-verb-sweep.mjs` re-run on the fresh component reports
+
+```
+inspectorAtEnd = ["Schema gis.map", "Positions 152", "Routes 149", "Regions 0",
+                  "Layers visible 11/11", "Selected 0"]
+```
+
+which is **exactly** the six rows §14.2.1 predicted, against the three static rows the old staged
+component printed. gis2d now publishes a textual projection of its own document, so a canvas-only app
+finally has a DOM witness a machine can assert through. The four verbs are green on the new component
+too: `["addFeature:MUR","moveFeature:MUR","renameFeature:MUR","deleteFeature:MUR"]`, edits
+0→1→2→3→4 with every step undone and redone, **0 fault lines**.
+
+## 18. Session 5 — files changed, honest gaps
+
+### 18.1 Files changed by B3a2 in session 5
+
+**No repo source file was changed in session 5.** Every plugin-side fix this slice needed had already
+landed in sessions 3–4 (§7–§10); session 5's job was to build it, stage it, serve it and measure it.
+The only code that changed is ticket-local probe machinery:
+
+- `🐍️b3a-interaction-probe.mjs` — **shared by B3b / B2c / B3c / B3d**. Five changes, each with the
+  measurement that motivated it: (1) a `uiNodes` witness so an app that renders UiNodes into the
+  window body instead of a `[data-surface-id]` pane is no longer scored as "nothing rendered";
+  (2) `panelRows` no longer excludes the app's own artifact/inspection trees; (3) app panels are
+  opened before the history panel, and panels that geometrically cover the engagement toggle are
+  retired before the rail is pressed; (4) a 2 500 ms settle grace so the witness is not read one
+  guest turn stale; (5) slider arguments are staged, both `input[type=range]` (via React's own value
+  setter) and the Radix `[role="slider"]` thumb (via the keyboard). See §16.1 and §17.3.
+- `🐍️b3a2-block-diagnose.mjs` — **new**: the DOM/geometry dump that named the panel-over-rail fault.
+- `🐍️b3a2-block-undo-refresh.mjs` — **new**: the per-step board-text sampler that proved the ~500 ms
+  projection lag is a probe race and not a stale-UI defect.
+- `🐍️b3a2-gis-tile-lane.mjs` — **new**: tile-proxy responses + surface/canvas geometry + screenshot.
+- `🐍️b3a2-gis3d-probe.mjs` — **new**: the gisterrain bar probe.
+- Captures: `🗑️generated/b3a-block{2,3,5}d/report.json` + `-console.txt`, `b3a-gis3d/report.json`,
+  `b3a2-block2d-diagnose.txt`, `b3a2-block2d-undo-refresh.txt`, `b3a2-gis2d-tile-lane.txt` + `.png`,
+  `b3a2-gis-verb-sweep.json`, `b3a2-s5-empty-facet.txt`, `b3a2-s5-scene-test.txt`, and the
+  activate/serve logs `b3a-{block2d,block3d,block5d,gis2d,gis3d}-{activate,serve}.txt`.
+
+No `.vscode/launch.json` row was added — unchanged from B3a §4's reasoning.
+
+### 18.2 Machine notes worth carrying to the next slice
+
+- `@semio-tech/block-plugin:component-dev` took **7 m 18 s** at load ≈ 20, **31 m 43 s** at load
+  ≈ 110, and one run reached **205 m** before the coordinator's 06:12 sweep killed it — the same
+  target, the same inputs. Build time here is a function of the fleet, not of the code.
+- The nx cache missed `component-dev` on *every* block variant even though the wasm was already
+  current and no block source had changed, so each variant paid a full rebuild. Worth an owner:
+  three variants of one plugin should share one component build.
+- A freshly started vite serve loses the first `page.goto` to playwright's 30 s default under load.
+  `curl` the variant URL once first (0.03–6 s warm), then probe.
+- `cargo test -p semio-framework-ui-scene --lib` (§18.3) sat in `Blocking waiting for file lock on
+  artifact directory` while 21 peer rustc processes ran — healthy contention, not the 06:12 deadlock
+  shape (rule 23a: rustc processes exist, so no `prebuild_lock` check was warranted).
+
+### 18.3 Open, honestly
+
+1. **`cargo test -p semio-framework-ui-scene --lib` never got a compile slot.** Started at ~07:16 as
+   the one cargo I held; at 08:00 it was still printing nothing but `Blocking waiting for file lock
+   on artifact directory` — **45 min with no output** (pid 62393, capture
+   `🗑️generated/b3a2-s5-scene-test.txt`, left running so it writes its result for whoever reads it
+   next). Rule 23a was applied twice and says this is NOT the 06:12 deadlock: 13 → 32 rustc processes
+   were running machine-wide throughout and `sample 62393 1` matched **zero** `prebuild_lock`/`flock`
+   frames — it is ordinary queue contention at load ≈ 65–85. §7 measured this suite at **141 passed /
+   0 failed** in session 4 and no file under `🎬️scene/` has changed since, so the expectation is
+   unchanged — but this session did **not** re-witness it. The facet-authority half of the same item **was** re-verified:
+   `bun test …/🫙️artifact-empty-facet-authority/🟦️.ts` → **5 pass / 0 fail, 169 expect() calls**
+   (`🗑️generated/b3a2-s5-empty-facet.txt`).
+2. **`✏️s/🔌️plugins/🌍️gis/🔣️.json` is two days stale** (Sep 17 13:33) against the gis editor sources
+   (Sep 19 11:35+). It still publishes `"args": []` for `setExaggeration` while the editor declares
+   the slider and the **staged** manifest carries it. Nothing in this slice depends on the committed
+   descriptor, but MCP catalog consumers read exactly that file, so `bun nx run
+   @semio-tech/gis-plugin:describe` is owed. Same class as §11.3 step 5.
+3. **`🏔️gisterrain` still declares an inference schema family with no executable service** (§11.2,
+   unchanged) — it now boots and mutates, but `inference_run` against it would still find no row.
+4. **`gis_map_live_envelope_submit_pump_swap_displaced_store_and_exact_ack_succeed` is still red**
+   (§9.4) — the artifact-envelope path, slice F1's blocker, untouched here and not re-run.
+5. **A per-feature DOM assertion on the map is still not possible** (B3a §5 handoff 3, narrowed in
+   §17.2): the tile lane and the feature lane demonstrably paint, but only as canvas pixels. The
+   inspector rows (§17.4) are now the machine-readable substitute.
+6. **Nothing was measured in the `s` host.** Everything here is per-variant playgrounds. Whether
+   `dev s` itself now completes a cold activation is S2's measurement — this slice only removes the
+   🧱️block reason for it not to (§15). The same serve logs still list
+   `[stale] sourcing-module-windows: unactivated` as an unrelated staleness, which S2 should expect.
+7. **wgpu untouched** for both plugins (B3a §5 handoff 4), unchanged.

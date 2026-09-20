@@ -42,6 +42,21 @@ fn writer_edit_source(bytes: &[u8]) -> store::OwnedSchemaRecordCursor {
     store::OwnedSchemaRecordCursor::try_new(store::OwnedSchemaRecordSpec { fields: FIELDS }, tokens).unwrap_or_else(|_| panic!("valid Writer edit wrapper schema"))
 }
 
+/// 🧹️ Retires one entry authority (and the mutation array beneath it) to its exact terminal-empty
+/// witness. Both assert in `Drop` unless they got there, and a Drop panic raised while the test is
+/// already unwinding is a `panic in a destructor during cleanup` → SIGABRT that kills the whole test
+/// binary — which is why every exit path of `drive_writer_edit` below goes through here, including
+/// the refusal paths a malformed fixture takes.
+fn retire_writer_edit_authority(authority: &mut dyn store::ArtifactOwnedHistoryEntryAuthority<protocol::Edit<WriterMutation>>) {
+    for _ in 0..100_000 {
+        if authority.terminal_is_empty() {
+            return;
+        }
+        authority.close_step(1, WRITER_ENVELOPE_FIELD_BYTES).expect("a Writer edit authority retires through bounded close steps");
+    }
+    panic!("Writer edit authority did not reach its terminal-empty witness within its bounded close ladder")
+}
+
 fn drive_writer_edit(bytes: &[u8], cancel: semio_framework_job::CancelToken) -> Result<protocol::Edit<WriterMutation>, store::OwnedSchemaDecodeDiagnostic> {
     let mut source = writer_edit_source(bytes);
     let catalog: std::sync::Arc<dyn store::ArtifactEnvelopeOwnedFieldCatalog<WriterSnapshot, WriterMutation>> = std::sync::Arc::new(WriterEnvelopeOwnedFieldCatalog);
@@ -53,6 +68,16 @@ fn drive_writer_edit(bytes: &[u8], cancel: semio_framework_job::CancelToken) -> 
         store::OwnedSchemaPath::field("value").expect("bounded Writer test path"),
         std::sync::Arc::new(UnusedWriterEditRetirementFactory),
     );
+    let outcome = drive_writer_edit_tokens(&mut source, authority.as_mut(), cancel);
+    retire_writer_edit_authority(authority.as_mut());
+    outcome
+}
+
+fn drive_writer_edit_tokens(
+    source: &mut store::OwnedSchemaRecordCursor,
+    authority: &mut dyn store::ArtifactOwnedHistoryEntryAuthority<protocol::Edit<WriterMutation>>,
+    cancel: semio_framework_job::CancelToken,
+) -> Result<protocol::Edit<WriterMutation>, store::OwnedSchemaDecodeDiagnostic> {
     let mut pending = None;
     let mut preview_sequence = 0;
     for _ in 0..100_000 {
@@ -69,19 +94,14 @@ fn drive_writer_edit(bytes: &[u8], cancel: semio_framework_job::CancelToken) -> 
                 store::OwnedSchemaRecordStep::FieldToken { .. } => unreachable!("single Writer wrapper field"),
             },
         };
-        match authority.accept_token(field.0, field.1, &source, &mut context) {
+        match authority.accept_token(field.0, field.1, source, &mut context) {
             Ok(store::ArtifactEnvelopeFieldDecodeStep::Pending) => pending = Some(field),
             Ok(store::ArtifactEnvelopeFieldDecodeStep::TokenComplete) => {}
             Ok(store::ArtifactEnvelopeFieldDecodeStep::FieldComplete) => {
                 return authority.take_value().ok_or(store::OwnedSchemaDecodeDiagnostic { code: "writer-envelope.test-value-missing", offset: 0, line: 0, column: 0, path: store::OwnedSchemaPath::ROOT });
             }
             Ok(store::ArtifactEnvelopeFieldDecodeStep::RecordComplete) => unreachable!("entry authority never owns the wrapper record"),
-            Err(diagnostic) => {
-                while !authority.terminal_is_empty() {
-                    authority.close_step(1, WRITER_ENVELOPE_FIELD_BYTES)?;
-                }
-                return Err(diagnostic);
-            }
+            Err(diagnostic) => return Err(diagnostic),
         }
     }
     Err(store::OwnedSchemaDecodeDiagnostic { code: "writer-envelope.test-did-not-complete", offset: 0, line: 0, column: 0, path: store::OwnedSchemaPath::ROOT })

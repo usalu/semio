@@ -15,6 +15,214 @@ bun ./📜️script.ts dev mcp stdio os -- --folder <space> --scopes artifact.re
 
 `.mcp.json` exposes exactly two servers: `repo` (this codebase's own tooling) and `semio` (this).
 
+## Using it from your own MCP client
+
+This section is for someone who wants their AI assistant to drive semio, rather than for someone
+working on this crate.
+
+### What you get
+
+Point an MCP client at this server and your assistant can work inside semio the way you do: it opens
+or creates a document, asks what it is allowed to do to it, proposes a change, you see it land in
+your running window, and you can undo it. It is not a chatbot bolted onto a file format — every
+write goes down the same action → mutation → VCS → backbone path your own clicks do, so a live shell
+shows an agent's edit exactly as it shows a human collaborator's.
+
+Concretely, the working loop is:
+
+| you ask for | the assistant uses | what happens |
+|---|---|---|
+| "what can you do here?" | `capabilities_search`, `capabilities_describe`, `context_resolve` | It searches the live catalog of your installed plugins instead of guessing. |
+| "open my site plan" / "start a new one" | `artifact_open`, `artifact_create` | The document becomes the working subject. |
+| "widen that wall to 300" | `action_prepare` → `action_invoke` | `prepare` is a true dry run: you see the proposed change before anything is written. `invoke` commits it. |
+| "do these five things as one change" | `transaction_begin` → … → `transaction_commit` | One undo step, all-or-nothing. `transaction_rollback` abandons it. |
+| "save this state so I can come back" | `artifact_snapshot` | A named point you can return to. |
+| "no, undo that" | `history_undo`, `history_redo` | The same undo stack your own edits use. |
+| "run the solver on this" | `inference_run`, or `inference_submit`/`inference_events`/`inference_cancel` | A plugin's own computation (GIS geometry, a WFC solve), locally or as a hub job. |
+| "export it" | `artifact_export`, `artifact_validate` | |
+
+**Approvals.** A capability whose manifest marks it destructive parks the call and asks a human
+before it proceeds — through your client's own approval prompt if it supports MCP elicitation,
+otherwise through a dialog in your running semio window. If neither can be asked, the call is
+refused with `APPROVAL_REQUIRED` naming why; it is never a silent proceed. You can waive the gate at
+launch with `--auto-approve readonly` (read-only capabilities only) or `--auto-approve all`; the
+default is `never`. There is deliberately no MCP tool that approves a call, because every MCP tool is
+callable by the agent — a tool like that would let the agent approve itself.
+
+> **Honest limit as of today:** no plugin descriptor in this repo actually declares
+> `destructive: true` yet, so the approval gate — although fully built and unit-tested — has nothing
+> to fire on. Treat `--auto-approve` as the control that matters right now, and assume an agent's
+> writes are **not** individually gated.
+
+### Which binary exists today
+
+One binary, `semio-os-mcp`, in two profiles:
+
+```bash
+bun nx run @semio-tech/framework-os-mcp-rs:build
+# → …/🌉️mcp/📦️packages/🦀️rust/dist/build/semio-os-mcp          (debug — the dev loop)
+
+bun nx run @semio-tech/framework-os-mcp-rs:build-release
+# → …/🌉️mcp/📦️packages/🦀️rust/dist/build-release/semio-os-mcp  (release — use this one)
+```
+
+Use the release build for a client you actually work in; the debug build is what this repo's own
+`.mcp.json` runs through `bun`. `SEMIO_OS_MCP_BIN` overrides where tooling looks for the binary.
+
+`semio-os-mcp <stdio|http|audit|schemas>` is the whole surface.
+
+What still does not exist: **no npm package, no Homebrew formula, no signed download, no GitHub
+release.** Installing this server means clone this repository, install `bun`, and build. A macOS user
+should expect an unsigned binary — nothing in this codebase codesigns or notarizes anything, so
+Gatekeeper will need to be told to allow it.
+
+### Binding it to your work: `--folder` vs `--hub`
+
+A gateway with neither flag refuses every mutation call with a typed `PLUGIN_UNAVAILABLE` naming
+both. Pick one; they are mutually exclusive.
+
+**`--folder <dir>` — a local folder as the workspace.** This is the mode that works today. The
+directory you name becomes the space the assistant reads and writes. Every client config this repo
+ships passes `--folder .`, which binds the workspace to the repo checkout itself — that is a
+self-test binding for developing this crate, not what you want. Point it at your own work instead.
+
+**`--hub <url> --space <id>` — a space on a running hub.** The remote path: your assistant works in
+that shared space alongside the people already in it, instead of in a folder on your disk. It needs a
+credential, and there are three ways to give it one:
+
+| how | when |
+|---|---|
+| `--credential-file <path>` | **what a client config uses.** A delegated credential your shell wrote to a file; the server reads it at start-up. |
+| `--credential-fd <n>` | A launcher that already holds a session passes it on an inherited descriptor. `0`/`1`/`2` are refused — those carry this process's own stdio framing. |
+| inherited fd 3 | What `os-hub:dev-secure-suite` does for its own MCP child. |
+
+Use `--credential-file` from Claude Desktop or Claude Code: those clients spawn the server with
+ordinary stdio and no spare descriptors, so the file is the only path that reaches them. Keep the
+file `0600` — it is a bearer credential scoped to one space, and anything that can read it can act as
+your agent in that space.
+
+```json
+"args": ["stdio", "--hub", "https://hub.example.com", "--space", "spc_studio",
+         "--credential-file", "/Users/you/.semio/agent-credential.json",
+         "--scopes", "workspace.read,artifact.open,artifact.write"]
+```
+
+`--folder` and `--hub` are mutually exclusive, and `--hub` requires `--space`.
+
+**Where the credential file comes from.** Open the space in the hub workspace, create a delegation
+(name it, pick `read` or `edit`, pick how long it lives) and save the one-time download. You get a
+principal of its own — `agent:<delegation id>` — so everything your assistant edits is attributed to
+*it* in other people's rosters and in their undo history, never to you. Revoke it from the same
+screen: the hub kills the delegation and every session minted from it in one transaction, and the
+agent's next frame is closed.
+
+The file is what `POST /auth/agent-delegations` returned:
+
+```json
+{
+  "schema": "semio.hub.agent-credential/v1",
+  "hubOrigin": "https://hub.example.com",
+  "spaceId": "spc_studio",
+  "audience": "edit",
+  "token": "delegation.v1.<32 hex>.<64 hex>"
+}
+```
+
+The server checks all of it at start-up — mode (`0600`; group- or world-readable is refused with the
+`chmod 600` remedy in the message), size (≤ 16 KiB), schema, audience, token shape, and that
+`hubOrigin`/`spaceId` match the `--hub`/`--space` you passed. It exchanges the token once at
+`POST /auth/agent-sessions` and wipes it; the delegation never reaches argv, the environment, a URL,
+a log line, or any `Debug` output.
+
+`--scopes` narrows what the agent may do, as a comma-separated list (`workspace.read`,
+`artifact.open`, `artifact.create`, `artifact.write`, `artifact.export`, `artifact.snapshot`,
+`inference.run`, `inference.submit`, `job.get`, `ui.focus`, `ui.reveal`, …). A capability whose
+declared scopes exceed what you granted is refused *and* audited. Grant the narrowest set that lets
+the assistant do the job.
+
+### Meeting your running semio window
+
+You do not connect the two by hand. When `semio-os-mcp stdio` starts, it looks for a live semio
+session in `~/.semio/agent/bridge/sessions/`. Finding one, it binds a loopback bridge and publishes
+an owner-only (`0600`) offer in `~/.semio/agent/bridge/offers/<pid>.json`, which the running shell
+picks up — from then on the agent's edits appear in your window, `ui_focus`/`ui_reveal` move your
+real dock and windows, the agent shows up in the presence list, and approval dialogs can reach you.
+The offer is removed when the process exits.
+
+Finding no live session, it binds nothing and every shell-dependent tool answers a typed
+`PLUGIN_UNAVAILABLE` naming the sessions directory and the live-session count at that moment — never
+a silent no-op. So: **start semio first, then your MCP client**, or restart the client after semio
+comes up. `--no-bridge` opts out entirely.
+
+Both sides must run as the same user on the same machine; the rendezvous is a per-user directory,
+not a network protocol.
+
+### Worked client configs
+
+Both examples assume you cloned this repository to `~/src/semio` and want the assistant to work in
+`~/Documents/my-semio-space`. Adjust both paths.
+
+**Claude Code** — a `.mcp.json` in the project you want the server available from:
+
+```json
+{
+  "mcpServers": {
+    "semio": {
+      "type": "stdio",
+      "command": "bun",
+      "args": [
+        "./📜️script.ts", "dev", "mcp", "stdio", "os",
+        "--folder", "/Users/you/Documents/my-semio-space",
+        "--scopes", "workspace.read,artifact.open,artifact.create,artifact.write,inference.run,ui.observe,ui.control"
+      ],
+      "cwd": "/Users/you/src/semio"
+    }
+  }
+}
+```
+
+`cwd` matters: `bun ./📜️script.ts` resolves against the repo root.
+
+**Claude Desktop** — `claude_desktop_config.json`
+(macOS: `~/Library/Application Support/Claude/claude_desktop_config.json`;
+Windows: `%APPDATA%\Claude\claude_desktop_config.json`). Claude Desktop does not take a `cwd`, so
+invoke the built binary by absolute path instead of going through `bun`:
+
+```json
+{
+  "mcpServers": {
+    "semio": {
+      "command": "/Users/you/src/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust/dist/build-release/semio-os-mcp",
+      "args": [
+        "stdio",
+        "--folder", "/Users/you/Documents/my-semio-space",
+        "--scopes", "workspace.read,artifact.open,artifact.create,artifact.write,inference.run,ui.observe,ui.control"
+      ]
+    }
+  }
+}
+```
+
+Run `bun nx run @semio-tech/framework-os-mcp-rs:build-release` first so that path exists, and restart
+Claude Desktop after editing the file. If your `semio-os-mcp` lives elsewhere, use that path — the emoji
+directory names are literal and must be copied exactly.
+
+Other clients (Cursor, VS Code, Windsurf, Kiro, Codex) take the same two shapes; this repo's own
+`.cursor/mcp.json`, `.vscode/mcp.json`, `.windsurf/mcp.json`, `.kiro/settings/mcp.json` and
+`.codex/config.toml` are working examples of the `bun`-plus-`cwd` form.
+
+### Checking it works
+
+```bash
+semio-os-mcp                       # no arguments prints the full usage line
+semio-os-mcp audit --folder <dir>  # reads committed descriptors; opens no workspace, needs no shell
+```
+
+In the client, ask it to list semio's capabilities. A healthy server answers from your installed
+plugin catalog. If mutation tools come back with `PLUGIN_UNAVAILABLE` naming `--folder`/`--hub`, the
+workspace never bound; if `ui_focus` comes back naming the sessions directory, semio was not running
+when the server started.
+
 ## Dual-era protocol — deliberate, not legacy baggage
 
 MCP `2026-07-28` is **stateless**: no `initialize`, a per-request `_meta` protocol version, and a
@@ -35,7 +243,10 @@ by advertising thousands of tools:
 - artifacts — `artifact_create|open|validate|export|snapshot`
 - inference — `inference_list`, `inference_get`, `inference_run` (any plugin-declared inference
   service, executed in that plugin's own guest), plus the hub-backed job quartet
-  `inference_submit|events|cancel|approve`
+  `inference_submit|events|cancel|approve` — routed by the submitted document's **own descriptor
+  kind** through the declared `HUB_INFERENCE_ROUTES` table, so an artifact kind with no hub-backed
+  service is refused locally, naming that kind's declared services and `inference_run`, instead of
+  being submitted to the wrong service and refused by the hub a round trip later
 - jobs / UI — `job_get`, `job_cancel`, `ui_focus`, `ui_reveal`
 
 Resources are `semio://…` URIs. Listed: `capability`, `workspace`, `workspace/artifacts`, one
@@ -45,7 +256,43 @@ Resources are `semio://…` URIs. Listed: `capability`, `workspace`, `workspace/
 sub-resources are `schema`, `validation`, `history` and `inference[/{field}]` — a hub-origin workspace
 answers the first three with a typed, retryable `PLUGIN_UNAVAILABLE` naming what is still missing,
 never a fabricated body. A hub-bound workspace additionally lists per-document `descriptor` and
-`checkpoint` scope resources.
+`checkpoint` scope resources. Every listed URI is unique: the registry de-duplicates by URI, so a
+client keying off resource identity never double-counts.
+
+## Notifications — pushed, not polled
+
+The advertised capabilities are all real. `"resources": {"subscribe": true}` means
+`resources/subscribe` records the URI against **this** connection and every later change to it is
+pushed as `notifications/resources/updated`; `resources/unsubscribe` stops it, and a URI this server
+cannot serve is refused with `NOT_FOUND` at subscribe time rather than accepted into a silent
+forever-wait. An artifact change fans out to `semio://artifact/{id}` and its `history`, `validation`
+and `inference` sub-resources; creating or opening an artifact additionally emits
+`notifications/resources/list_changed` and updates the two `semio://workspace…` projections. Which
+tool changes which resource is a **declared table** (`📣️notify/🦀️.rs`, `TOOL_RESOURCE_EFFECTS`), not
+an inference from result shapes — a new mutation tool adds a row there or it stays silent.
+
+`tools/call` honours `_meta.progressToken`: every job the call mints while it runs is bound to that
+token, and each `JobRegistry` progress report is pushed as `notifications/progress`
+(`{progressToken, progress, total: 1.0, message?}`), ending with one final row at `1.0` on success.
+`job_get`/`job_cancel` polling still works and is unchanged — the push is additive. An incoming
+`notifications/cancelled` naming an in-flight request id is mapped onto the same
+`job_registry().request_cancel` path `job_cancel` uses, for every job minted under that request.
+
+Both transports carry them: stdio writes through the single-owner `StdioLines` channel (so a
+notification emitted from inside a tool call reaches the client mid-call), and HTTP pushes onto the
+same resumable event log the `GET` stream replays with `Last-Event-ID`. **Honest limit:** the stdio
+serve loop dispatches one request at a time, so a `notifications/cancelled` sent *while* a blocking
+tool call runs is buffered by the reader thread and acted on when that call returns; concurrent
+cancellation of a blocking call is live only on HTTP.
+
+## Pagination
+
+`tools/list`, `resources/list`, `resources/templates/list` and `prompts/list` are cursor-paginated.
+Ordering is stable (tools by name; the others in registry declaration order), the cursor is opaque
+(`semio.page.<offset>`), `nextCursor` is present only when a next page exists, a cursor this server
+did not mint is `INVALID_PARAMS`, and a cursor past the end is a legal empty final page so a walk
+always terminates. The default page is 100 entries, so today's twenty-seven tools and the current
+resource roster are still one page for every existing client.
 
 ## No model provider — the agent is the client, not a dependency
 

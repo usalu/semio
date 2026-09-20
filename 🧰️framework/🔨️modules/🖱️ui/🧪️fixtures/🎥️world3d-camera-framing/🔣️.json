@@ -1,0 +1,320 @@
+{
+  "schema": "framework.world3d.camera-framing/v1",
+  "fit": {
+    "enabled": true,
+    "revision": 19,
+    "padding": 1.12
+  },
+  "viewport": [
+    478,
+    814
+  ],
+  "renderedOutlineScale": 1.001,
+  "mesh": {
+    "id": "neutral-box",
+    "data": {
+      "positions": [
+        -1,
+        -0.5,
+        -0.25,
+        1,
+        -0.5,
+        -0.25,
+        1,
+        0.5,
+        -0.25,
+        -1,
+        0.5,
+        -0.25,
+        -1,
+        -0.5,
+        0.75,
+        1,
+        -0.5,
+        0.75,
+        1,
+        0.5,
+        0.75,
+        -1,
+        0.5,
+        0.75
+      ],
+      "normals": [
+        0,
+        0,
+        1,
+        0,
+        0,
+        1,
+        0,
+        0,
+        1,
+        0,
+        0,
+        1,
+        0,
+        0,
+        1,
+        0,
+        0,
+        1,
+        0,
+        0,
+        1,
+        0,
+        0,
+        1
+      ],
+      "indices": [
+        0,
+        1,
+        2,
+        0,
+        2,
+        3,
+        4,
+        6,
+        5,
+        4,
+        7,
+        6,
+        0,
+        4,
+        5,
+        0,
+        5,
+        1,
+        1,
+        5,
+        6,
+        1,
+        6,
+        2,
+        2,
+        6,
+        7,
+        2,
+        7,
+        3,
+        3,
+        7,
+        4,
+        3,
+        4,
+        0
+      ]
+    }
+  },
+  "instances": [
+    {
+      "id": "neutral-box:a",
+      "meshId": "neutral-box",
+      "position": [
+        4,
+        2,
+        1
+      ],
+      "rotation": [
+        0,
+        0,
+        0,
+        1
+      ],
+      "scale": [
+        2,
+        1,
+        1
+      ]
+    },
+    {
+      "id": "neutral-box:b",
+      "meshId": "neutral-box",
+      "position": [
+        8,
+        3,
+        2
+      ],
+      "rotation": [
+        0,
+        0,
+        0.7071067811865476,
+        0.7071067811865476
+      ],
+      "scale": [
+        1,
+        2,
+        0.5
+      ]
+    }
+  ],
+  "cameras": {
+    "perspective": {
+      "position": [
+        10,
+        -8,
+        7
+      ],
+      "target": [
+        3.5,
+        0,
+        0.005
+      ],
+      "up": [
+        0,
+        0,
+        1
+      ],
+      "fov": 50,
+      "zoom": 1,
+      "projection": {
+        "mode": {
+          "kind": "perspective",
+          "fov": 50
+        },
+        "orientation": {
+          "type": "free"
+        }
+      }
+    },
+    "orthographicTop": {
+      "position": [
+        7,
+        0,
+        9.46
+      ],
+      "target": [
+        7,
+        0,
+        0.01
+      ],
+      "up": [
+        0,
+        1,
+        0
+      ],
+      "fov": 50,
+      "zoom": 7.7595,
+      "projection": {
+        "mode": {
+          "kind": "orthographic",
+          "fov": 50
+        },
+        "orientation": {
+          "type": "cardinal",
+          "view": "top"
+        }
+      }
+    },
+    "perspectiveThreePoint": {
+      "position": [
+        0.75,
+        -0.75,
+        0.55
+      ],
+      "target": [
+        0,
+        0,
+        0
+      ],
+      "up": [
+        0,
+        0,
+        1
+      ],
+      "fov": 50,
+      "zoom": 1,
+      "projection": {
+        "mode": {
+          "kind": "threePoint",
+          "fov": 50
+        },
+        "orientation": {
+          "type": "free"
+        }
+      }
+    }
+  },
+  "expect": {
+    "boundsMin": [
+      1.998,
+      1.4995,
+      0.74975
+    ],
+    "boundsMax": [
+      9.001,
+      4.001,
+      2.375375
+    ],
+    "center": [
+      5.4995,
+      2.75025,
+      1.5625625
+    ],
+    "radius": 3.805987647465012,
+    "perspective": {
+      "position": [
+        13.92130592513583,
+        -7.6150496001671755,
+        10.625721337896174
+      ],
+      "target": [
+        5.4995,
+        2.75025,
+        1.5625625
+      ],
+      "zoom": 1,
+      "distance": 16.140232308204684
+    },
+    "perspectiveThreePoint": {
+      "position": [
+        15.631215499402298,
+        -7.381465499402298,
+        8.992487199561685
+      ],
+      "target": [
+        5.4995,
+        2.75025,
+        1.5625625
+      ],
+      "zoom": 1,
+      "distance": 16.140232308204684
+    },
+    "orthographicTop": {
+      "position": [
+        5.4995,
+        2.75025,
+        11.648984576517433
+      ],
+      "target": [
+        5.4995,
+        2.75025,
+        1.5625625
+      ],
+      "zoom": 7.7595,
+      "distance": 10.086422076517433
+    },
+    "orthographicTopAfterRawContent": {
+      "position": [
+        5.4995,
+        2.75025,
+        11.648984576517433
+      ],
+      "target": [
+        5.4995,
+        2.75025,
+        1.5625625
+      ],
+      "zoom": 88.5185185185185,
+      "distance": 10.086422076517433
+    }
+  },
+  "laws": {
+    "emptyGeometry": "owed-unapplied",
+    "delayedGeometry": "applies-on-residency",
+    "sameOwnerUserOrbit": "preserved",
+    "newRevisionOrCameraSeed": "reframes",
+    "residentGenerationWake": "owed-until-measured",
+    "initialProjectionTemplate": "applied-before-fit",
+    "parallelAutoFitAspect": "camera-aspect-or-one"
+  }
+}

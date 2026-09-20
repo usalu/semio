@@ -14,6 +14,7 @@
 import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import Ajv2020 from "ajv/dist/2020";
 import { describe, expect, it } from "vitest";
 import { domSizePx, STYLING_METRICS } from "@semio-tech/ui-styling";
 
@@ -29,6 +30,17 @@ type FixtureCase = { readonly name: string; readonly treeWidth: number; readonly
 const law = JSON.parse(readFileSync(resolve(uiRoot, "🧫️fixtures/🌳️tree-row-rects/🔣️.json"), "utf8")) as {
   readonly metrics: { readonly rowHeightPx: number; readonly uiSpacingCompactPx: number; readonly treeRowUiSpacing: number };
   readonly cases: readonly FixtureCase[];
+};
+
+const densitySchema = JSON.parse(readFileSync(resolve(uiRoot, "🧬️schema/🌳️tree-row-density/🔣️.json"), "utf8"));
+const density = JSON.parse(readFileSync(resolve(uiRoot, "🧫️fixtures/🌳️tree-row-density/🔣️.json"), "utf8")) as {
+  readonly rowHeightPx: number;
+  readonly rowIconPx: number;
+  readonly intrinsicContentHeightPx: number;
+  readonly categoryCount: number;
+  readonly actionCount: number;
+  readonly firstRows: readonly [string, string];
+  readonly terminalRowId: string;
 };
 
 /** 📏️ The React row metric, read the way `🧱️elements/🌳️Tree/🟦️.tsx` reads it. */
@@ -121,6 +133,37 @@ describe("🧊️ the wgpu side takes the same metric from the same token", () =
     expect(paint).toContain("let metrics = TreeRowMetrics::from_theme(theme);");
     const mounted = readFileSync(resolve(wgpuRoot, "📌️mounted_layout/🦀️.rs"), "utf8");
     expect(mounted).toContain("let height = tree_item_height(item, metrics);");
-    expect(mounted).toContain("LayoutNodeKind::TreeRow { row: if expanded { metrics.row_height } else { 0.0 }, height, expanded }");
+    expect(mounted).toContain("LayoutNodeKind::TreeRow { row: if expanded { metrics.row_height } else { 0.0 }, height, expanded, reversed }");
+  });
+});
+
+describe("🌳️ the Actions tree keeps React's intrinsic row density", () => {
+  it("validates the language-neutral density contract", () => {
+    const validate = new Ajv2020({ allErrors: true, strict: true }).compile(densitySchema);
+    expect(validate(density), JSON.stringify(validate.errors)).toBe(true);
+    expect(density.firstRows).toEqual(["action.clearSelection", "action.selectAll"]);
+    expect(density.terminalRowId).toBe("action.engagementAbort");
+  });
+
+  it("matches the real React browser capture and its fixed row shell", () => {
+    const capturePath = resolve(repoRoot, ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️17/WGPU-RENDERER-REACT-PARITY/🗑️generated/astra-runtime/tree-style-checkpoint-15/tree-style.json");
+    const capture = JSON.parse(readFileSync(capturePath, "utf8")) as {
+      readonly treeStyle: readonly { readonly id: string; readonly rect: readonly [number, number, number, number]; readonly minHeight: string; readonly icons: readonly (readonly [number, number, number, number])[]; readonly ancestors: readonly { readonly height: string; readonly scrollHeight: number }[] }[];
+    };
+    const first = capture.treeStyle.slice(0, 2);
+    expect(first.map((row) => row.id)).toEqual(density.firstRows);
+    expect(first.map((row) => row.rect[3])).toEqual([density.rowHeightPx, density.rowHeightPx]);
+    expect(first[1]!.rect[1] - first[0]!.rect[1]).toBe(density.rowHeightPx);
+    expect(first.every((row) => row.minHeight === `${density.rowHeightPx}px`)).toBe(true);
+    expect(first.every((row) => row.icons.some((icon) => icon[2] === density.rowIconPx && icon[3] === density.rowIconPx))).toBe(true);
+    expect(first.every((row) => row.ancestors[0]?.scrollHeight === density.intrinsicContentHeightPx)).toBe(true);
+
+    const tree = readFileSync(resolve(uiRoot, "🧱️elements/🌳️Tree/🟦️.tsx"), "utf8");
+    expect(tree).toContain('"relative h-workbench min-h-workbench max-h-workbench w-full min-w-0 select-none overflow-hidden"');
+    expect(tree).toContain('const treeItemLabelSlotClassName = "flex h-full min-w-0 flex-1 items-center overflow-hidden text-xs font-normal leading-none select-text";');
+  });
+
+  it("derives React's captured intrinsic extent from fixed bands", () => {
+    expect((density.categoryCount + density.actionCount) * density.rowHeightPx).toBe(density.intrinsicContentHeightPx);
   });
 });

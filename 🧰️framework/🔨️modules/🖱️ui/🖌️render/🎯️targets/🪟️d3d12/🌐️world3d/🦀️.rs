@@ -47,7 +47,7 @@ pub fn upload_world_passes(device: &Device, frame_buffers: &mut FrameBuffers, pa
     }
     let mut globals_bytes = vec![0u8; passes.len() * WORLD_GLOBALS_SLOT_SIZE as usize];
     for (index, pass) in passes.iter().enumerate() {
-        let globals = crate::types::WorldGlobalsGpu { view_proj: pass.view_proj, light_dir: [pass.light_dir[0], pass.light_dir[1], pass.light_dir[2], 0.0] };
+        let globals = crate::types::WorldGlobalsGpu::from_pass(pass);
         let source: &[u8] = bytemuck::bytes_of(&globals);
         let start = index * WORLD_GLOBALS_SLOT_SIZE as usize;
         globals_bytes[start..start + source.len()].copy_from_slice(source);

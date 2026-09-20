@@ -207,7 +207,7 @@ async fn absorb_law() {
     assert_eq!(composed.apply(&base).expect("valid absorbed diff"), after, "Modify+Remove absorb mismatch");
 
     // 🧩 Name-keyed: Add layer + remove-of-added annihilates the add.
-    let d1 = DxfMutation::InsertLayer(insert_layer::InsertLayer { index: 2, layer: DxfLayer { name: "Fresh".into(), color: 1, linetype: "CONTINUOUS".into(), flags: 0, unknown_group_codes: vec![] } }).diff(&base);
+    let d1 = DxfMutation::InsertLayer(insert_layer::InsertLayer { index: 1, layer: DxfLayer { name: "Fresh".into(), color: 1, linetype: "CONTINUOUS".into(), flags: 0, unknown_group_codes: vec![] } }).diff(&base);
     let mid = d1.diff().apply(&base).expect("valid first diff");
     let d2 = DxfMutation::RemoveLayer(remove_layer::RemoveLayer { name: "Fresh".into() }).diff(&mid);
     let after = d2.diff().apply(&mid).expect("valid second diff");

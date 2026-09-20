@@ -539,6 +539,17 @@ pub fn decode_zip(data: &[u8]) -> Result<ZipSnapshot, ZipError> {
         let _ = l_flags; // local flags kept implicitly consistent via `flags` (central is authoritative)
     }
 
+    // 🔤️ Canonical member order, the SAME `name`-ascending order `encode_zip` below writes (its own
+    // doc comment: "member order ... [is] fixed writer policy rather than imported snapshot state").
+    // The writer discards the container's physical member order, so a decoder that KEPT it would put
+    // information into the logical snapshot that nothing can round-trip: `parse_dsl(print_dsl(x))`
+    // and `decode_zip(encode_zip(x))` would both silently reorder, which is exactly what
+    // `deterministic_logical_round_trip` (🚪️io/🧪️tests/🔬️codec) and `fixture_honesty_law`
+    // (🧬️schema/💡️inferences/🧪️tests) measure. Canonicalizing HERE too makes both directions
+    // fixpoints without changing a single encoded byte, and it matches this vocabulary, which owns
+    // member names, payloads and the archive comment — and no ordering kind at all
+    // (🧬️schema/🧬️mutations' `KINDS`), the mutate case comparing members as a set.
+    entries.sort_by(|left, right| left.name.cmp(&right.name));
     Ok(ZipSnapshot { schema: STDIO_ZIP_DOCUMENT_SCHEMA.into(), entries, comment: loc.comment })
 }
 //#endregion Decode

@@ -1,0 +1,57 @@
+{
+  "descriptorVersion": 1,
+  "packageId": "semio:process-extension-robotic",
+  "role": "extension",
+  "manifest": {
+    "pluginId": "process-extension-robotic",
+    "label": "Process Robotic Machines",
+    "version": "0.1.0",
+    "apps": [],
+    "examples": [],
+    "capabilities": [],
+    "topicContributions": [
+      {
+        "topic": "process.machines",
+        "payload": {
+          "appId": "process3d-play",
+          "iconId": "cpu",
+          "label": "Robotic",
+          "machinesJson": "[{\"id\":\"sixAxisMill\",\"label\":\"6-Axis Robotic Mill\",\"iconId\":\"cpu\",\"capabilities\":[{\"id\":\"mill\",\"label\":\"Mill\",\"iconId\":\"cpu\",\"recipe\":{\"recipe\":\"pocketCut\",\"diameter\":\"endmillDiameter\",\"depth\":\"millDepth\"},\"parameters\":[{\"id\":\"endmillDiameter\",\"label\":\"Endmill Diameter\",\"value\":0.02},{\"id\":\"millDepth\",\"label\":\"Mill Depth\",\"value\":0.1},{\"id\":\"reach\",\"label\":\"Reach\",\"value\":2.8}],\"rules\":[{\"kind\":\"max\",\"quantity\":\"maxDimension\",\"parameter\":\"reach\",\"margin\":0.0}]},{\"id\":\"bore\",\"label\":\"Bore\",\"iconId\":\"cpu\",\"recipe\":{\"recipe\":\"boreDrill\",\"radius\":\"bitRadius\",\"depth\":\"boreDepth\"},\"parameters\":[{\"id\":\"bitRadius\",\"label\":\"Bit Radius\",\"value\":0.01},{\"id\":\"boreDepth\",\"label\":\"Bore Depth\",\"value\":0.15},{\"id\":\"reach\",\"label\":\"Reach\",\"value\":2.8}],\"rules\":[{\"kind\":\"max\",\"quantity\":\"maxDimension\",\"parameter\":\"reach\",\"margin\":0.0}]}]},{\"id\":\"gantryCnc\",\"label\":\"5-Axis Gantry CNC\",\"iconId\":\"grid-3x3\",\"capabilities\":[{\"id\":\"mill\",\"label\":\"Mill\",\"iconId\":\"grid-3x3\",\"recipe\":{\"recipe\":\"pocketCut\",\"diameter\":\"endmillDiameter\",\"depth\":\"millDepth\"},\"parameters\":[{\"id\":\"endmillDiameter\",\"label\":\"Endmill Diameter\",\"value\":0.025},{\"id\":\"millDepth\",\"label\":\"Mill Depth\",\"value\":0.2},{\"id\":\"bedWidth\",\"label\":\"Bed Width\",\"value\":3.5},{\"id\":\"bedDepth\",\"label\":\"Bed Depth\",\"value\":12.0}],\"rules\":[{\"kind\":\"max\",\"quantity\":\"width\",\"parameter\":\"bedWidth\",\"margin\":0.0},{\"kind\":\"max\",\"quantity\":\"depth\",\"parameter\":\"bedDepth\",\"margin\":0.0}]},{\"id\":\"saw\",\"label\":\"Saw\",\"iconId\":\"grid-3x3\",\"recipe\":{\"recipe\":\"discCut\",\"diameter\":\"bladeDiameter\",\"kerf\":\"sawDepth\"},\"parameters\":[{\"id\":\"bladeDiameter\",\"label\":\"Blade Diameter\",\"value\":0.5},{\"id\":\"kerf\",\"label\":\"Kerf\",\"value\":0.005},{\"id\":\"sawDepth\",\"label\":\"Saw Depth\",\"value\":0.2},{\"id\":\"bedWidth\",\"label\":\"Bed Width\",\"value\":3.5},{\"id\":\"bedDepth\",\"label\":\"Bed Depth\",\"value\":12.0}],\"rules\":[{\"kind\":\"max\",\"quantity\":\"width\",\"parameter\":\"bedWidth\",\"margin\":0.0},{\"kind\":\"max\",\"quantity\":\"depth\",\"parameter\":\"bedDepth\",\"margin\":0.0}]}]},{\"id\":\"waterjet\",\"label\":\"Waterjet\",\"iconId\":\"pen-tool\",\"capabilities\":[{\"id\":\"jetCut\",\"label\":\"Jet Cut\",\"iconId\":\"pen-tool\",\"recipe\":{\"recipe\":\"bladeCut\",\"kerf\":\"kerf\",\"length\":\"cutLength\",\"depth\":\"maxCutThickness\"},\"parameters\":[{\"id\":\"kerf\",\"label\":\"Kerf\",\"value\":0.001},{\"id\":\"cutLength\",\"label\":\"Cut Length\",\"value\":1.5},{\"id\":\"maxCutThickness\",\"label\":\"Max Cut Thickness\",\"value\":0.2},{\"id\":\"bedWidth\",\"label\":\"Bed Width\",\"value\":3.0},{\"id\":\"bedDepth\",\"label\":\"Bed Depth\",\"value\":1.5}],\"rules\":[{\"kind\":\"max\",\"quantity\":\"height\",\"parameter\":\"maxCutThickness\",\"margin\":0.0},{\"kind\":\"max\",\"quantity\":\"width\",\"parameter\":\"bedWidth\",\"margin\":0.0},{\"kind\":\"max\",\"quantity\":\"depth\",\"parameter\":\"bedDepth\",\"margin\":0.0}]}]},{\"id\":\"laserCutter\",\"label\":\"Laser Cutter\",\"iconId\":\"scan-line\",\"capabilities\":[{\"id\":\"laserCut\",\"label\":\"Laser Cut\",\"iconId\":\"scan-line\",\"recipe\":{\"recipe\":\"bladeCut\",\"kerf\":\"kerf\",\"length\":\"cutLength\",\"depth\":\"maxCutThickness\"},\"parameters\":[{\"id\":\"kerf\",\"label\":\"Kerf\",\"value\":0.0002},{\"id\":\"cutLength\",\"label\":\"Cut Length\",\"value\":1.5},{\"id\":\"maxCutThickness\",\"label\":\"Max Cut Thickness\",\"value\":0.025},{\"id\":\"bedWidth\",\"label\":\"Bed Width\",\"value\":1.5},{\"id\":\"bedDepth\",\"label\":\"Bed Depth\",\"value\":3.0}],\"rules\":[{\"kind\":\"max\",\"quantity\":\"height\",\"parameter\":\"maxCutThickness\",\"margin\":0.0},{\"kind\":\"max\",\"quantity\":\"width\",\"parameter\":\"bedWidth\",\"margin\":0.0},{\"kind\":\"max\",\"quantity\":\"depth\",\"parameter\":\"bedDepth\",\"margin\":0.0}]}]},{\"id\":\"assembler\",\"label\":\"Robotic Assembler\",\"iconId\":\"component\",\"capabilities\":[{\"id\":\"place\",\"label\":\"Place\",\"iconId\":\"component\",\"recipe\":{\"recipe\":\"boxAttach\",\"width\":\"componentWidth\",\"depth\":\"componentDepth\",\"height\":\"componentHeight\"},\"parameters\":[{\"id\":\"componentWidth\",\"label\":\"Component Width\",\"value\":0.1},{\"id\":\"componentDepth\",\"label\":\"Component Depth\",\"value\":0.1},{\"id\":\"componentHeight\",\"label\":\"Component Height\",\"value\":0.1},{\"id\":\"reach\",\"label\":\"Reach\",\"value\":2.8}],\"rules\":[{\"kind\":\"max\",\"quantity\":\"maxDimension\",\"parameter\":\"reach\",\"margin\":0.0}]}]}]",
+          "moduleId": "robotic"
+        }
+      }
+    ],
+    "commands": [],
+    "artifactKinds": [],
+    "dependencies": [
+      {
+        "pluginId": "process",
+        "version": "*"
+      }
+    ]
+  },
+  "execution": "declarative",
+  "executionProtocol": {
+    "appChannelVersion": 17
+  },
+  "quotas": {},
+  "contributions": {
+    "topicContributions": [
+      {
+        "topic": "process.machines",
+        "payload": {
+          "appId": "process3d-play",
+          "iconId": "cpu",
+          "label": "Robotic",
+          "machinesJson": "[{\"id\":\"sixAxisMill\",\"label\":\"6-Axis Robotic Mill\",\"iconId\":\"cpu\",\"capabilities\":[{\"id\":\"mill\",\"label\":\"Mill\",\"iconId\":\"cpu\",\"recipe\":{\"recipe\":\"pocketCut\",\"diameter\":\"endmillDiameter\",\"depth\":\"millDepth\"},\"parameters\":[{\"id\":\"endmillDiameter\",\"label\":\"Endmill Diameter\",\"value\":0.02},{\"id\":\"millDepth\",\"label\":\"Mill Depth\",\"value\":0.1},{\"id\":\"reach\",\"label\":\"Reach\",\"value\":2.8}],\"rules\":[{\"kind\":\"max\",\"quantity\":\"maxDimension\",\"parameter\":\"reach\",\"margin\":0.0}]},{\"id\":\"bore\",\"label\":\"Bore\",\"iconId\":\"cpu\",\"recipe\":{\"recipe\":\"boreDrill\",\"radius\":\"bitRadius\",\"depth\":\"boreDepth\"},\"parameters\":[{\"id\":\"bitRadius\",\"label\":\"Bit Radius\",\"value\":0.01},{\"id\":\"boreDepth\",\"label\":\"Bore Depth\",\"value\":0.15},{\"id\":\"reach\",\"label\":\"Reach\",\"value\":2.8}],\"rules\":[{\"kind\":\"max\",\"quantity\":\"maxDimension\",\"parameter\":\"reach\",\"margin\":0.0}]}]},{\"id\":\"gantryCnc\",\"label\":\"5-Axis Gantry CNC\",\"iconId\":\"grid-3x3\",\"capabilities\":[{\"id\":\"mill\",\"label\":\"Mill\",\"iconId\":\"grid-3x3\",\"recipe\":{\"recipe\":\"pocketCut\",\"diameter\":\"endmillDiameter\",\"depth\":\"millDepth\"},\"parameters\":[{\"id\":\"endmillDiameter\",\"label\":\"Endmill Diameter\",\"value\":0.025},{\"id\":\"millDepth\",\"label\":\"Mill Depth\",\"value\":0.2},{\"id\":\"bedWidth\",\"label\":\"Bed Width\",\"value\":3.5},{\"id\":\"bedDepth\",\"label\":\"Bed Depth\",\"value\":12.0}],\"rules\":[{\"kind\":\"max\",\"quantity\":\"width\",\"parameter\":\"bedWidth\",\"margin\":0.0},{\"kind\":\"max\",\"quantity\":\"depth\",\"parameter\":\"bedDepth\",\"margin\":0.0}]},{\"id\":\"saw\",\"label\":\"Saw\",\"iconId\":\"grid-3x3\",\"recipe\":{\"recipe\":\"discCut\",\"diameter\":\"bladeDiameter\",\"kerf\":\"sawDepth\"},\"parameters\":[{\"id\":\"bladeDiameter\",\"label\":\"Blade Diameter\",\"value\":0.5},{\"id\":\"kerf\",\"label\":\"Kerf\",\"value\":0.005},{\"id\":\"sawDepth\",\"label\":\"Saw Depth\",\"value\":0.2},{\"id\":\"bedWidth\",\"label\":\"Bed Width\",\"value\":3.5},{\"id\":\"bedDepth\",\"label\":\"Bed Depth\",\"value\":12.0}],\"rules\":[{\"kind\":\"max\",\"quantity\":\"width\",\"parameter\":\"bedWidth\",\"margin\":0.0},{\"kind\":\"max\",\"quantity\":\"depth\",\"parameter\":\"bedDepth\",\"margin\":0.0}]}]},{\"id\":\"waterjet\",\"label\":\"Waterjet\",\"iconId\":\"pen-tool\",\"capabilities\":[{\"id\":\"jetCut\",\"label\":\"Jet Cut\",\"iconId\":\"pen-tool\",\"recipe\":{\"recipe\":\"bladeCut\",\"kerf\":\"kerf\",\"length\":\"cutLength\",\"depth\":\"maxCutThickness\"},\"parameters\":[{\"id\":\"kerf\",\"label\":\"Kerf\",\"value\":0.001},{\"id\":\"cutLength\",\"label\":\"Cut Length\",\"value\":1.5},{\"id\":\"maxCutThickness\",\"label\":\"Max Cut Thickness\",\"value\":0.2},{\"id\":\"bedWidth\",\"label\":\"Bed Width\",\"value\":3.0},{\"id\":\"bedDepth\",\"label\":\"Bed Depth\",\"value\":1.5}],\"rules\":[{\"kind\":\"max\",\"quantity\":\"height\",\"parameter\":\"maxCutThickness\",\"margin\":0.0},{\"kind\":\"max\",\"quantity\":\"width\",\"parameter\":\"bedWidth\",\"margin\":0.0},{\"kind\":\"max\",\"quantity\":\"depth\",\"parameter\":\"bedDepth\",\"margin\":0.0}]}]},{\"id\":\"laserCutter\",\"label\":\"Laser Cutter\",\"iconId\":\"scan-line\",\"capabilities\":[{\"id\":\"laserCut\",\"label\":\"Laser Cut\",\"iconId\":\"scan-line\",\"recipe\":{\"recipe\":\"bladeCut\",\"kerf\":\"kerf\",\"length\":\"cutLength\",\"depth\":\"maxCutThickness\"},\"parameters\":[{\"id\":\"kerf\",\"label\":\"Kerf\",\"value\":0.0002},{\"id\":\"cutLength\",\"label\":\"Cut Length\",\"value\":1.5},{\"id\":\"maxCutThickness\",\"label\":\"Max Cut Thickness\",\"value\":0.025},{\"id\":\"bedWidth\",\"label\":\"Bed Width\",\"value\":1.5},{\"id\":\"bedDepth\",\"label\":\"Bed Depth\",\"value\":3.0}],\"rules\":[{\"kind\":\"max\",\"quantity\":\"height\",\"parameter\":\"maxCutThickness\",\"margin\":0.0},{\"kind\":\"max\",\"quantity\":\"width\",\"parameter\":\"bedWidth\",\"margin\":0.0},{\"kind\":\"max\",\"quantity\":\"depth\",\"parameter\":\"bedDepth\",\"margin\":0.0}]}]},{\"id\":\"assembler\",\"label\":\"Robotic Assembler\",\"iconId\":\"component\",\"capabilities\":[{\"id\":\"place\",\"label\":\"Place\",\"iconId\":\"component\",\"recipe\":{\"recipe\":\"boxAttach\",\"width\":\"componentWidth\",\"depth\":\"componentDepth\",\"height\":\"componentHeight\"},\"parameters\":[{\"id\":\"componentWidth\",\"label\":\"Component Width\",\"value\":0.1},{\"id\":\"componentDepth\",\"label\":\"Component Depth\",\"value\":0.1},{\"id\":\"componentHeight\",\"label\":\"Component Height\",\"value\":0.1},{\"id\":\"reach\",\"label\":\"Reach\",\"value\":2.8}],\"rules\":[{\"kind\":\"max\",\"quantity\":\"maxDimension\",\"parameter\":\"reach\",\"margin\":0.0}]}]}]",
+          "moduleId": "robotic"
+        }
+      }
+    ]
+  },
+  "hashes": {
+    "wasmSha256": "05e4c9f248d988fad21e33d1a5833575e1841acc18060109d56e54a3355e450f",
+    "coreWasmSha256": "7f9f12de640b6679fd12d1952f59aa24388286bea766428f2e3999b29410c212",
+    "descriptorSha256": "fa24e679370e11bd23afb54315080baa8f58a52330c86e182af0304e3d68d62a"
+  }
+}

@@ -5,6 +5,6 @@ use crate::standards::v1::subsets::image::schema::mutations::insert_frame;
 
 /// ▶️ Applies an insert-frame mutation.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn apply(snapshot: &mut SemioImageSnapshot, index: usize, frame: SemioImageFrame) -> SemioImageDiff {
+pub fn apply(snapshot: &mut SemioImageSnapshot, index: usize, frame: SemioImageFrame) -> protocol::MutationOutcome<SemioImageDiff> {
     apply_semio_image_mutation(snapshot, &SemioImageMutation::InsertFrame(insert_frame::InsertFrame { index, frame }))
 }

@@ -31,7 +31,7 @@
   "fanEnergyReferenceKwh": null,
   "nightSetbackK": null,
   "hrMDotKgS": null,
-  "hrCpJKgk": 1010,
+  "hrCpJKgk": 1010.0,
   "hrDeltaTC": null,
   "hrTH": null,
   "hrSavingsReferenceKwh": null,

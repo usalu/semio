@@ -8,7 +8,7 @@ fn round_trip(base: &Din4108Snapshot, operation: &Din4108Mutation) -> Din4108Sna
     let backwards = operation.inverse(base);
     let mut restored = forward.clone();
     for back in &backwards {
-        restored = back.diff(base).diff().apply(&restored).expect("valid mutation diff");
+        restored = back.diff(&restored).diff().apply(&restored).expect("valid mutation diff");
     }
     assert_eq!(&restored, base, "inverse must exactly restore the pre-operation fixture");
     forward

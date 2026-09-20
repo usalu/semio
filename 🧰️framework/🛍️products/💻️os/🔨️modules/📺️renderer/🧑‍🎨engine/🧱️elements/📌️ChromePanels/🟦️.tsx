@@ -623,15 +623,15 @@ function themeColorInputRow(id: string, label: string, hex: string, onChange: (h
   };
 }
 
-function themeTextInputRow(id: string, label: string, value: string, onCommit: (value: string) => void): TreeDataItem {
+export function themeTextInputRow(id: string, label: string, value: string, onCommit: (value: string) => void): TreeDataItem {
   return {
     id,
     label,
-    control: <Input id={id} defaultValue={value} onBlur={(event) => onCommit(event.target.value)} className="h-small w-32" />,
+    control: <Input id={id} lazy value={value} onLazyChange={onCommit} className="h-small w-32" />,
   };
 }
 
-function themeNumberInputRow(id: string, label: string, value: number | number[], onCommit: (value: number | number[]) => void): TreeDataItem {
+export function themeNumberInputRow(id: string, label: string, value: number | number[], onCommit: (value: number | number[]) => void): TreeDataItem {
   const text = Array.isArray(value) ? value.join(", ") : String(value);
   return {
     id,
@@ -639,9 +639,10 @@ function themeNumberInputRow(id: string, label: string, value: number | number[]
     control: (
       <Input
         id={id}
-        defaultValue={text}
-        onBlur={(event) => {
-          const raw = event.target.value.trim();
+        lazy
+        value={text}
+        onLazyChange={(value) => {
+          const raw = value.trim();
           if (raw.includes(",")) {
             const parts = raw
               .split(",")
@@ -659,11 +660,28 @@ function themeNumberInputRow(id: string, label: string, value: number | number[]
   };
 }
 
+export function themeAlphaInput(id: string, alpha: number, onCommit: (alpha: number) => void): ReactElement {
+  return (
+    <Input
+      id={id}
+      lazy
+      value={alpha.toFixed(2)}
+      onLazyChange={(value) => {
+        const nextAlpha = Number.parseFloat(value);
+        if (!Number.isNaN(nextAlpha)) onCommit(Math.min(1, Math.max(0, nextAlpha)));
+      }}
+      className="h-small w-14 shrink-0"
+    />
+  );
+}
+
 const THEME_PALETTE_GROUP_LABEL_KEYS = {
   board: "ui.settings.theme.group.board",
   map: "ui.settings.theme.group.map",
   canvas: "ui.settings.theme.group.canvas",
   chrome: "ui.settings.theme.group.chrome",
+  outcome: "ui.settings.theme.group.outcome",
+  diagram: "ui.settings.theme.group.diagram",
 } as const satisfies Record<ThemePaletteGroup, UiTranslationKey>;
 
 const THEME_CONTRAST_GRADE_LABEL_KEYS = {
@@ -699,15 +717,7 @@ function buildThemeAppearanceGroupItems(host: SettingsHostApi, appearance: Theme
         control: (
           <div className="flex w-full items-center gap-single">
             <input type="color" className={cn(borderElementClass, "h-small w-10 shrink-0 rounded border bg-background")} value={hex} onChange={(event) => host.setThemeAppearancePaint(appearance, group, paintKey, event.target.value, alpha)} />
-            <Input
-              id={`framework.settings.theme.appearances.${appearance}.${group}.${paintKey}.alpha`}
-              defaultValue={alpha.toFixed(2)}
-              onBlur={(event) => {
-                const nextAlpha = Number.parseFloat(event.target.value);
-                if (!Number.isNaN(nextAlpha)) host.setThemeAppearancePaint(appearance, group, paintKey, hex, Math.min(1, Math.max(0, nextAlpha)));
-              }}
-              className="h-small w-14 shrink-0"
-            />
+            {themeAlphaInput(`framework.settings.theme.appearances.${appearance}.${group}.${paintKey}.alpha`, alpha, (nextAlpha) => host.setThemeAppearancePaint(appearance, group, paintKey, hex, nextAlpha))}
             {contrast ? (
               <span
                 id={`framework.settings.theme.appearances.${appearance}.${group}.${paintKey}.contrast`}
@@ -764,7 +774,7 @@ function buildSettingsThemeTree(host: SettingsHostApi): TreePanelConfig {
       }),
     );
 
-  const appearanceGroups: readonly ThemePaletteGroup[] = ["board", "map", "canvas", "chrome"];
+  const appearanceGroups: readonly ThemePaletteGroup[] = ["board", "map", "canvas", "chrome", "outcome", "diagram"];
   const appearanceItems: TreeDataItem[] = (["light", "dark"] as const).map((appearance) => ({
     id: `framework.settings.theme.appearances.${appearance}`,
     label: shellLabel(appearance === "light" ? "ui.settings.theme.appearance.light" : "ui.settings.theme.appearance.dark"),

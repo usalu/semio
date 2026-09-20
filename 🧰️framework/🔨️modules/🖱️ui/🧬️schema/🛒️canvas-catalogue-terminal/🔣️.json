@@ -1,0 +1,67 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio.tech/schema/ui/canvas-catalogue-terminal.json",
+  "title": "Canvas catalogue terminal fixture",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "mime", "surface", "frameOwner", "cases"],
+  "properties": {
+    "version": { "const": 1 },
+    "mime": { "type": "string", "minLength": 1 },
+    "surface": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "controllerId", "width", "height"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "controllerId": { "type": "string", "minLength": 1 },
+        "width": { "type": "number", "exclusiveMinimum": 0 },
+        "height": { "type": "number", "exclusiveMinimum": 0 }
+      }
+    },
+    "frameOwner": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["capacity", "occupiedBeforePair", "expectedPairAdmission"],
+      "properties": {
+        "capacity": { "const": 256 },
+        "occupiedBeforePair": { "const": 255 },
+        "expectedPairAdmission": { "const": "refusedWhole" }
+      }
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 4,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "terminal", "types", "rawPayload", "point", "leaveOutcome", "expectedActions"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "terminal": { "enum": ["valid", "malformed", "empty", "nonCatalogue"] },
+          "types": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": { "type": "string", "minLength": 1 }
+          },
+          "rawPayload": { "type": "string" },
+          "point": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["x", "y"],
+            "properties": {
+              "x": { "type": "number" },
+              "y": { "type": "number" }
+            }
+          },
+          "leaveOutcome": { "enum": ["resolve", "reject"] },
+          "expectedActions": {
+            "type": "array",
+            "maxItems": 2,
+            "items": { "enum": ["canvasDragLeave", "canvasDrop"] }
+          }
+        }
+      }
+    }
+  }
+}

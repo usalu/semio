@@ -5,6 +5,6 @@ use crate::standards::v1::subsets::image::schema::mutations::remove_frame;
 
 /// ▶️ Applies a remove-frame mutation.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn apply(snapshot: &mut SemioImageSnapshot, index: usize) -> SemioImageDiff {
+pub fn apply(snapshot: &mut SemioImageSnapshot, index: usize) -> protocol::MutationOutcome<SemioImageDiff> {
     apply_semio_image_mutation(snapshot, &SemioImageMutation::RemoveFrame(remove_frame::RemoveFrame { index }))
 }

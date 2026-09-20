@@ -68,6 +68,7 @@ import * as External11 from "../../../🔌️plugin/🌐️browser-bundle/🏗�
 import * as External12 from "../../../🔌️plugin/🏪️store/📥️installation/🟦️.ts";
 import * as External13 from "../../../🔌️plugin/📇️registry/📦️deployment/🟦️.ts";
 import * as External14 from "../../🚚️distribution/🟦️.ts";
+import * as External15 from "../../../../🟦️.ts";
 
 type TestSource = { readonly directory: string; readonly url: string };
 
@@ -78,6 +79,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
   type ParityDump = import("../⚖️parity/🏗️structure/🟦️.ts").ParityDump;
   type ParityNode = import("../⚖️parity/🏗️structure/🟦️.ts").ParityNode;
   type PluginRegistryEntry = import("../../../🔌️plugin/📇️registry/🔎️discovery/🟦️.ts").PluginRegistryEntry;
+  type PluginHotSwapMarker = import("../../🔌️vite-plugins/🟦️.ts").PluginHotSwapMarker;
   type PluginSourceEvent = import("../../../../../../🔨️modules/🎠️kernel/🟦️.ts").PluginSourceEvent;
   type SpawnDaemonHandle = import("../../../../../🦑️repo/🔨️modules/📚️library/🟦️.ts").SpawnDaemonHandle;
 
@@ -631,6 +633,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       try {
         const target = {
           pluginId: "demo",
+          packageId: "semio-s-plugin-demo",
           cratePath: "owner/demo/📦️packages/🦀️rust",
           packageName: "demo",
           wasmOut: "demo.wasm",
@@ -1191,7 +1194,7 @@ const module1 = fetchCompile(new URL('./plugin_component.core2.wasm', source.url
       mkdirSync(destination, { recursive: true });
       mkdirSync(recovery);
       writeFileSync(join(destination, "📌️retained.bin"), fixture.text);
-      const plan = { manifest: fixture.manifest, files: new Map(fixture.manifest.outputs.map((row: { path: string }) => [row.path, Buffer.from(fixture.text)])) };
+      const plan = { manifest: fixture.manifest, files: new Map<string, Uint8Array>(fixture.manifest.outputs.map((row: { path: string }): readonly [string, Uint8Array] => [row.path, Buffer.from(fixture.text)])) };
       const before = () => Object.fromEntries(ownedRelativeFiles(destination).map(path => [path, createHash("sha256").update(readFileSync(join(destination, path))).digest("hex")]));
       await publishDistributionBundle(plan, layout, destination, recovery);
       expect(await checkDistributionBundle(plan, layout, destination)).toEqual([]);
@@ -1203,7 +1206,7 @@ const module1 = fetchCompile(new URL('./plugin_component.core2.wasm', source.url
       expect(before()).toEqual(withUnknown);
       unlinkSync(unknown);
       const current = plan.manifest.outputs[1]!, oldPath = current.path, newPath = oldPath.replace("AbCd1234", "EfGh5678");
-      const next = { manifest: { ...plan.manifest, outputs: [plan.manifest.outputs[0], { ...current, path: newPath }] }, files: new Map([[layout.entry.output, Buffer.from(fixture.text)], [newPath, Buffer.from(fixture.text)]]) };
+      const next = { manifest: { ...plan.manifest, outputs: [plan.manifest.outputs[0], { ...current, path: newPath }] }, files: new Map<string, Uint8Array>([[layout.entry.output, Buffer.from(fixture.text)], [newPath, Buffer.from(fixture.text)]]) };
       writeFileSync(join(destination, oldPath), "external edit");
       const divergent = before();
       await expect(publishDistributionBundle(next, layout, destination, recovery)).rejects.toThrow("Divergent distribution bytes");
@@ -1511,7 +1514,7 @@ const module1 = fetchCompile(new URL('./plugin_component.core2.wasm', source.url
         });
         const actual = await body, expected = readFileSync(file);
         expect(actual.equals(expected), url).toBe(true);
-        expect(Buffer.from(await crypto.subtle.digest("SHA-256", actual)).toString("hex")).toBe(createHash("sha256").update(expected).digest("hex"));
+        expect(Buffer.from(await crypto.subtle.digest("SHA-256", new Uint8Array(actual))).toString("hex")).toBe(createHash("sha256").update(expected).digest("hex"));
       }
       console.log(`[DEBUG] verified ${urls.size} live static assets and 345 component vendor imports`);
     }, 20_000);
@@ -1598,6 +1601,7 @@ const module1 = fetchCompile(new URL('./plugin_component.core2.wasm', source.url
 
     const fakeTarget = (pluginId: string): PluginRegistryEntry => ({
       pluginId,
+      packageId: `semio-s-plugin-${pluginId}`,
       cratePath: "",
       packageName: pluginId,
       wasmOut: `${pluginId}.wasm`,
@@ -1993,5 +1997,12 @@ const module1 = fetchCompile(new URL('./plugin_component.core2.wasm', source.url
 }
 
 const testPackageDirectory = Path.resolve(Path.dirname(Url.fileURLToPath(import.meta.url)), "../../📦️packages/🟦️typescript");
-const testDependencies = Object.assign({}, Fs, Crypto, Events, Os, Path, Url, Owner01, Owner02, Owner03, Owner04, Owner05, Owner06, Owner07, Owner08, Owner09, Owner10, Owner11, Owner12, Owner13, Owner14, Owner15, Owner16, Owner17, Owner18, Owner19, Owner20, Owner21, Owner22, Owner23, Owner24, Owner25, Owner26, Owner27, Owner28, Owner29, Owner30, Owner31, Owner32, Owner33, Owner34, Owner35, Owner36, Owner37, Owner38, Owner39, Owner40, Owner41, Owner42, Owner43, Owner44, Owner45, Owner46, Owner47, Owner48, Owner49, External01, External02, External03, External04, External05, External06, External07, External08, External09, External10, External11, External12, External13, External14, { repoRoot: External01.getWorkspaceRoot() });
+/** 🧰️ One namespace bag, typed by an object literal rather than `Object.assign`: past three sources
+ * `Object.assign` falls back to its `...sources: any[]` overload and the whole bag degrades to `any`,
+ * which silently untyped every case below. `node:url` is spread BEFORE `node:path` because both export
+ * `resolve`, and every call site here means the variadic path one, not `url.resolve(from, to)`.
+ * `buildPluginCatalog` is pinned for the same reason: `📇️registry/🟦️.ts` exports a zero-argument
+ * projection builder under that same name and spreads later, so only the pin reaches the
+ * `📇️registry/🔄️refresh` catalog BUILD these cases drive. */
+const testDependencies = { ...Fs, ...Crypto, ...Events, ...Os, ...Url, ...Path, ...Owner01, ...Owner02, ...Owner03, ...Owner04, ...Owner05, ...Owner06, ...Owner07, ...Owner08, ...Owner09, ...Owner10, ...Owner11, ...Owner12, ...Owner13, ...Owner14, ...Owner15, ...Owner16, ...Owner17, ...Owner18, ...Owner19, ...Owner20, ...Owner21, ...Owner22, ...Owner23, ...Owner24, ...Owner25, ...Owner26, ...Owner27, ...Owner28, ...Owner29, ...Owner30, ...Owner31, ...Owner32, ...Owner33, ...Owner34, ...Owner35, ...Owner36, ...Owner37, ...Owner38, ...Owner39, ...Owner40, ...Owner41, ...Owner42, ...Owner43, ...Owner44, ...Owner45, ...Owner46, ...Owner47, ...Owner48, ...Owner49, ...External01, ...External02, ...External03, ...External04, ...External05, ...External06, ...External07, ...External08, ...External09, ...External10, ...External11, ...External12, ...External13, ...External14, ...External15, buildPluginCatalog: Owner02.buildPluginCatalog, repoRoot: External01.getWorkspaceRoot() };
 await registerTests1(Vitest as unknown as NonNullable<ImportMeta["vitest"]>, testDependencies, { directory: testPackageDirectory, url: Url.pathToFileURL(Path.resolve(testPackageDirectory, "📜️script.ts")).href });

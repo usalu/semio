@@ -1326,9 +1326,17 @@ impl store::ArtifactDsl for SvgSnapshot {
         "stdio.svg"
     }
 
+    /// 📥️ Two real inputs, told apart by the envelope: text that CARRIES a semio preamble is this
+    /// artifact's own snapshot DSL (`encode_snapshot`'s structured body), and text that does not is
+    /// the document's own `.svg` markup, which [`SvgSnapshot::import_utf8`] parses losslessly. Same
+    /// two-branch shape the sibling `📰️xml` artifact's `parse_dsl` uses, and for the same reason:
+    /// `from_text` (this subset's `DerivedConstruction`, and `📚️examples`' own raw markup) hands raw
+    /// SVG straight in, and refusing it made every such caller fail on the preamble check alone.
     fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
-        let (_, body) = store::semio_format::split_text_preamble(text).map_err(|error| store::TextError::new(format!("svg state envelope: {error}"), dsl::TextSpan::at(1, 1)))?;
-        crate::schema::mutation_support::decode_snapshot(body.trim()).map_err(|e| store::TextError::new(format!("svg state parse: {e}"), dsl::TextSpan::at(1, 1)))
+        match store::semio_format::split_text_preamble(text) {
+            Ok((_, body)) => crate::schema::mutation_support::decode_snapshot(body.trim()).map_err(|e| store::TextError::new(format!("svg state parse: {e}"), dsl::TextSpan::at(1, 1))),
+            Err(_) => Self::import_utf8(text.as_bytes()).map_err(|e| store::TextError::new(format!("svg parse: {e}"), dsl::TextSpan::at(1, 1))),
+        }
     }
     fn print_dsl(&self) -> String {
         let body = crate::schema::mutation_support::encode_snapshot(self);

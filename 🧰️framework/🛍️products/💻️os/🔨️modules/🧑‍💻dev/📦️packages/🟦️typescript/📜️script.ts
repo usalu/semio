@@ -5,6 +5,7 @@ import { PlaygroundSessionGenerateScript, PlaygroundSessionPreviewScript } from 
 import { PreparationScript } from "../../♻️activation/🧰️preparation/🟦️.ts";
 import { ActivationScript } from "../../♻️activation/🏃️execution/🟦️.ts";
 import { ServeScript } from "../../♻️activation/🌐️serve/🟦️.ts";
+import { ColdBootCheckScript } from "../../♻️activation/🩺️readiness/🟦️.ts";
 import { CanonicalBootstrapFolderMirrorCheckScript } from "../../🧪️tests/📇️canonical-bootstrap-folder-mirror/🟦️.ts";
 import { TestScript } from "../../🧪️tests/🏃️execution/🟦️.ts";
 import { VerifyScript } from "../../🧪️tests/✅️verification/🟦️.ts";
@@ -24,6 +25,7 @@ const router = new ScriptRouter(import.meta.dir)
   .register("prepare", PreparationScript)
   .register("activate", ActivationScript)
   .register("serve", ServeScript)
+  .register("cold-boot-check", ColdBootCheckScript)
   .register("canonical-bootstrap-folder-mirror-check", CanonicalBootstrapFolderMirrorCheckScript)
   .register("closed-browser-component-factory-check", class extends BundleScript {
     async run(segments: string[]): Promise<void> {
@@ -49,7 +51,7 @@ const router = new ScriptRouter(import.meta.dir)
   })
   .register("scale-fixture", class extends BundleScript {
     run(segments: string[]): void {
-      if (segments[0] === "check") return new ScaleFixtureCheckScript(this.root, this.repoRoot).run(segments.slice(1));
+      if (segments[0] === "check") return new ScaleFixtureCheckScript(this.root, this.repoRoot).run();
       throw new Error(`unknown scale-fixture subcommand: ${segments[0]} (expected check)`);
     }
   })
@@ -74,7 +76,7 @@ const router = new ScriptRouter(import.meta.dir)
   .register("plugin", class extends BundleScript {
     async run(segments: string[]): Promise<void> {
       if (segments[0] === "watch") return new PluginWatchScript(this.root).run(segments.slice(1));
-      if (segments[0] === "lint") { await new PluginCapabilityLintScript(this.root).run(segments.slice(1)); return new CapabilityLayeringLintScript(this.root).run(); }
+      if (segments[0] === "lint") { await new PluginCapabilityLintScript(this.root).run(); return new CapabilityLayeringLintScript(this.root).run(); }
       if (segments[0] === "registry") return ensurePluginRegistry(segments[1] || process.env.SEMIO_PLUGIN || process.env.PLAYGROUND_APP_KIND);
       if (segments[0] === "size") return new PluginSizeScript(this.root).run(segments.slice(1));
       return new PluginBuildScript(this.root).run(segments);

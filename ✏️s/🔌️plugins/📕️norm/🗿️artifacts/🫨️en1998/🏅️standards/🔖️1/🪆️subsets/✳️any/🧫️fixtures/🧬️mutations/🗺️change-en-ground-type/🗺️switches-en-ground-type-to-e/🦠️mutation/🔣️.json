@@ -1,5 +1,4 @@
 {
-  "ChangeEnGroundType": {
-    "newEnGroundType": "e"
-  }
+  "mutation": "changeEnGroundType",
+  "newEnGroundType": "e"
 }

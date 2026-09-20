@@ -7,6 +7,7 @@ use super::*;
 //#region 🔖️Payload
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
+#[dsl(keyword = "set-frame-geometry")]
 pub struct SetFrameGeometry {
     pub(crate) index: usize,
     pub(crate) left: u32,

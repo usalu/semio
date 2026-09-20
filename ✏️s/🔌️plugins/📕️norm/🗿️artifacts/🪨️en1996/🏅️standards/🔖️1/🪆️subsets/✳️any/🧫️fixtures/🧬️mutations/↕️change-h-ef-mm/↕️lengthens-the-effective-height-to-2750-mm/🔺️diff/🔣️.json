@@ -20,6 +20,6 @@
   "mortar": null,
   "bedJointThicknessMm": null,
   "storeys": null,
-  "hEfMm": 2750,
+  "hEfMm": 2750.0,
   "tEfMm": null
 }

@@ -149,7 +149,7 @@ async fn the_manifest_stitches_every_taxonomy_node() {
     let definition = create_gis3d_app();
     assert_eq!(definition.modes.len(), 1);
     assert_eq!(definition.window_kinds.len(), 1);
-    assert!(definition.window_kinds.iter().flat_map(|window| &window.actions).all(|action| action.semantics.execution.interactive_job == InteractiveJobClassification::Migrated));
+    assert!(definition.window_kinds.iter().flat_map(|window| semio_framework::window_kind_actions(&definition, window)).all(|action| action.semantics.execution.interactive_job == InteractiveJobClassification::Migrated));
     // 🧷️ gis3d declares no app panel tabs of its own; whatever is present comes from the framework.
     assert!(!definition.panel_tabs.iter().any(|tab| tab.body_key.as_deref().is_some_and(|key| key.starts_with("gis3d.play."))), "gis3d declares no app panels");
     assert!(definition.artifact_kinds.iter().any(|kind| kind.id == semio_s_artifact_gis_gismap::GISMAP_DIALECT.artifact_kind));
@@ -264,7 +264,7 @@ async fn gis3d_scene_media_exports_the_terrain_descriptor() {
 #[semio_framework_async_macros::async_test]
 async fn set_exaggeration_stages_a_bounded_default_that_actually_edits() {
     let definition = create_gis3d_app();
-    let action = definition.window_kinds.iter().flat_map(|window| &window.actions).find(|action| action.id == "setExaggeration").expect("setExaggeration is declared");
+    let action = definition.window_kinds.iter().flat_map(|window| semio_framework::window_kind_actions(&definition, window)).find(|action| action.id == "setExaggeration").expect("setExaggeration is declared");
     assert_eq!(action.kind, semio_framework_plugin::ActionKind::Mutation);
     assert!(action.in_palette, "the rail can stage it");
     let arg = action.args.iter().find(|arg| arg.id == "value").expect("a staged value");

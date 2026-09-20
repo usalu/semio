@@ -28,9 +28,8 @@ use crate::wgpu::component::layout::ActionDescriptor;
 #[cfg(any(test, feature = "testkit"))]
 use crate::wgpu::component::ui::ui_control_to_node;
 use crate::wgpu::component::ui::{
-    SurfaceKind, UiButtonNode, UiComponentSceneNode, UiControlNode, UiDropOverlaySpec, UiFieldNode, UiGroupNode, UiIconSelectNode, UiImageNode, UiInputNode, UiKeyValueEntry, UiKeyValueNode, UiMenuRef, UiNode,
-    UiNumberStepperNode, UiPresence, UiProgressNode, UiRingNode, UiSectionNode, UiSelectItem, UiSelectNode, UiSeparatorNode, UiSliderNode, UiStackNode, UiState, UiStatus, UiTextNode, UiToggleNode, UiTreeItemAction, UiTreeItemNode, UiTreeNode,
-    UiTreeSectionNode, UiTreeWindow,
+    SurfaceKind, UiButtonNode, UiComponentSceneNode, UiControlNode, UiDropOverlaySpec, UiFieldNode, UiGroupNode, UiIconSelectNode, UiImageNode, UiInputNode, UiKeyValueEntry, UiKeyValueNode, UiMenuRef, UiNode, UiNumberStepperNode, UiPresence,
+    UiProgressNode, UiRingNode, UiSectionNode, UiSelectItem, UiSelectNode, UiSeparatorNode, UiSliderNode, UiStackNode, UiState, UiStatus, UiTextNode, UiToggleNode, UiTreeItemAction, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, UiTreeWindow,
 };
 use crate::wgpu::tree::{Node, NodeFlags, NodeKey, UiDocumentPageRejection, UiDocumentTree, UiDocumentTreeFault, UiTree, WidgetSpec};
 use crate::wgpu::{IconName, UiIntentAddress, UiIntentBindings};
@@ -304,18 +303,16 @@ fn record_presence(record: &UiNodeRecord) -> UiPresence {
 }
 
 /// 🎬️ The record's binding for `trigger`, as the `ActionDescriptor` the retained spec carries for
-/// paint and for the immediate-mode widget path. This is the DESCRIPTOR half only: the dispatchable
-/// half is [`record_intent_bindings`], stamped onto the arena node itself, and `events` builds a
-/// `UiIntentCommand` from that — the descriptor here never reaches the host on its own for a
-/// published node. `controller_id` is the OWNING APP's controller — the same value
-/// `ShellState::queue_host_effects` stamps on every effect-borne descriptor — because a descriptor's
-/// controller is who answers it, and the contract moved that identity off the node onto the session.
-fn record_action(record: &UiNodeRecord, trigger: ui_contract::Trigger, controller: &str) -> Option<ActionDescriptor> {
-    record
-        .bindings
-        .iter()
-        .find(|binding| binding.trigger == trigger)
-        .map(|binding| ActionDescriptor { controller_id: controller.to_string(), action: binding.action.name.as_str().to_string(), args: binding.args.as_ref().and_then(ui_value_to_dsl) })
+/// paint and for the immediate-mode widget path. The published node normally dispatches through the
+/// whole [`record_intent_bindings`] action id; synthesized children such as Select option rows have
+/// no record of their own and dispatch this descriptor instead. It therefore keeps the binding's
+/// authored scope rather than substituting the live document controller.
+fn record_action(record: &UiNodeRecord, trigger: ui_contract::Trigger, _controller: &str) -> Option<ActionDescriptor> {
+    record.bindings.iter().find(|binding| binding.trigger == trigger).map(|binding| ActionDescriptor {
+        controller_id: binding.action.scope.as_str().to_string(),
+        action: if binding.action.version == 1 { binding.action.name.as_str().to_string() } else { format!("{}@{}", binding.action.name.as_str(), binding.action.version) },
+        args: binding.args.as_ref().and_then(ui_value_to_dsl),
+    })
 }
 
 fn record_action_or_inert(record: &UiNodeRecord, trigger: ui_contract::Trigger, controller: &str) -> ActionDescriptor {
@@ -524,11 +521,7 @@ fn row_action(action: &ui_contract::RowAction, controller: &str) -> UiTreeItemAc
     UiTreeItemAction {
         icon_id: icon_name(&action.icon),
         label: optional_contract_label(action.label.as_ref()),
-        action: ActionDescriptor {
-            controller_id: controller.to_string(),
-            action: action.action.action.name.as_str().to_string(),
-            args: action.action.args.as_ref().and_then(ui_value_to_dsl),
-        },
+        action: ActionDescriptor { controller_id: controller.to_string(), action: action.action.action.name.as_str().to_string(), args: action.action.args.as_ref().and_then(ui_value_to_dsl) },
         placement: Some(match action.placement {
             ui_contract::RowActionPlacement::Row => UiTreeActionPlacement::Row,
             ui_contract::RowActionPlacement::Menu => UiTreeActionPlacement::Menu,
@@ -548,7 +541,9 @@ fn tree_window(window: Option<&ui_contract::TreeWindow>) -> Option<UiTreeWindow>
 /// row's `control`; every other child recurses as a nested item.
 fn tree_item(document: &UiDocumentTree, record: &UiNodeRecord, surface: &str, controller: &str, depth: usize) -> UiTreeItemNode {
     let ui_contract::Component::TreeItem(props) = &record.component else {
-        return UiTreeItemNode { window: None, granularity: None,
+        return UiTreeItemNode {
+            window: None,
+            granularity: None,
             id: record.key.as_str().to_string(),
             label: Label::data(record.key.as_str()),
             description: None,
@@ -718,11 +713,7 @@ fn button_node(record: &UiNodeRecord, controller: &str) -> UiNode {
 
 fn key_value_node(record: &UiNodeRecord) -> UiNode {
     let ui_contract::Component::KeyValueList(props) = &record.component else { return UiNode::Separator(UiSeparatorNode { presence: record_presence(record), menu: menu_ref(record) }) };
-    UiNode::KeyValue(UiKeyValueNode {
-        entries: props.entries.iter().map(|entry| UiKeyValueEntry { label: contract_label(&entry.label), value: entry.value.as_str().to_string() }).collect(),
-        presence: record_presence(record),
-        menu: menu_ref(record),
-    })
+    UiNode::KeyValue(UiKeyValueNode { entries: props.entries.iter().map(|entry| UiKeyValueEntry { label: contract_label(&entry.label), value: entry.value.as_str().to_string() }).collect(), presence: record_presence(record), menu: menu_ref(record) })
 }
 
 fn slider_node(record: &UiNodeRecord, controller: &str) -> UiNode {
@@ -797,22 +788,10 @@ pub fn ui_node_from_record(document: &UiDocumentTree, record: &UiNodeRecord, sur
     let menu = menu_ref(record);
     match &record.component {
         ui_contract::Component::Container(props) => match props.role {
-            ui_contract::ContainerRole::Section => UiNode::Section(UiSectionNode {
-                id: record.key.as_str().to_string(),
-                label: optional_contract_label(props.label.as_ref()),
-                default_open: props.default_open,
-                presence,
-                menu,
-                children: Vec::new(),
-            }),
-            ui_contract::ContainerRole::Group => UiNode::Group(UiGroupNode {
-                id: record.key.as_str().to_string(),
-                label: optional_contract_label(props.label.as_ref()).unwrap_or_else(|| Label::data("")),
-                default_open: props.default_open,
-                presence,
-                menu,
-                children: Vec::new(),
-            }),
+            ui_contract::ContainerRole::Section => UiNode::Section(UiSectionNode { id: record.key.as_str().to_string(), label: optional_contract_label(props.label.as_ref()), default_open: props.default_open, presence, menu, children: Vec::new() }),
+            ui_contract::ContainerRole::Group => {
+                UiNode::Group(UiGroupNode { id: record.key.as_str().to_string(), label: optional_contract_label(props.label.as_ref()).unwrap_or_else(|| Label::data("")), default_open: props.default_open, presence, menu, children: Vec::new() })
+            }
             ui_contract::ContainerRole::Field => UiNode::Field(UiFieldNode {
                 id: record.key.as_str().to_string(),
                 label: optional_contract_label(props.label.as_ref()).unwrap_or_else(|| Label::data("")),
@@ -925,6 +904,19 @@ impl UiTree {
     /// own this bit at runtime for popups the document knows nothing about, so a
     /// re-mount must not drop an open Select's hit-test priority.
     pub fn step_document_reconcile(&mut self, cursor: &mut UiDocumentReconcileCursor, surface: &str, controller: &str) -> UiDocumentReconcileStep {
+        self.step_document_reconcile_preserving(cursor, surface, controller, None)
+    }
+
+    /// 🔒️ Reconciles while preserving the synthesized rows owned by the Select whose option has
+    /// pointer capture. The owner record itself keeps its arena identity, and its rows are relinked
+    /// after the document links so the matching release still reaches the exact pressed row.
+    pub(crate) fn step_document_reconcile_preserving(
+        &mut self,
+        cursor: &mut UiDocumentReconcileCursor,
+        surface: &str,
+        controller: &str,
+        preserved_composite_owner: Option<NodeId>,
+    ) -> UiDocumentReconcileStep {
         match cursor.phase {
             UiDocumentReconcilePhase::Complete => return UiDocumentReconcileStep::Complete,
             UiDocumentReconcilePhase::Fault => return UiDocumentReconcileStep::Fault(cursor.fault.unwrap_or(UiDocumentReconcileFault::MissingRecord)),
@@ -933,7 +925,7 @@ impl UiTree {
         let Some(root_id) = self.document().map(UiDocumentTree::root_id) else { return cursor.refuse(UiDocumentReconcileFault::MissingRecord) };
         match cursor.phase {
             UiDocumentReconcilePhase::Compose => {
-                if !self.retire_composite_row_step() {
+                if !self.retire_composite_row_except_step(preserved_composite_owner) {
                     return UiDocumentReconcileStep::Pending;
                 }
                 cursor.phase = UiDocumentReconcilePhase::Adopt;
@@ -963,7 +955,11 @@ impl UiTree {
                 let children: Vec<UiNodeId> = {
                     let Some(document) = self.document() else { return cursor.refuse(UiDocumentReconcileFault::MissingRecord) };
                     let Some(record) = document.record(id) else { return cursor.refuse(UiDocumentReconcileFault::MissingRecord) };
-                    if record_consumes_subtree(record) { Vec::new() } else { record.children.iter().rev().copied().collect() }
+                    if record_consumes_subtree(record) {
+                        Vec::new()
+                    } else {
+                        record.children.iter().rev().copied().collect()
+                    }
                 };
                 let index = cursor.plan.len();
                 cursor.plan.push(PlannedNode { id, parent, node: None });
@@ -992,12 +988,7 @@ impl UiTree {
                 let (key, spec, layout_spec, intent) = {
                     let Some(document) = self.document() else { return cursor.refuse(UiDocumentReconcileFault::MissingRecord) };
                     let Some(record) = document.record(planned.id) else { return cursor.refuse(UiDocumentReconcileFault::MissingRecord) };
-                    (
-                        NodeKey::Explicit(record.key.as_str().to_string()),
-                        WidgetSpec(ui_node_from_record(document, record, surface, controller)),
-                        record.layout.clone(),
-                        record_intent_bindings(record, surface, document.revision().0),
-                    )
+                    (NodeKey::Explicit(record.key.as_str().to_string()), WidgetSpec(ui_node_from_record(document, record, surface, controller)), record.layout.clone(), record_intent_bindings(record, surface, document.revision().0))
                 };
                 let routing = layout_routing_flags(&layout_spec);
                 let node = match self.document_node(planned.id).filter(|node| self.contains(*node)) {
@@ -1039,6 +1030,9 @@ impl UiTree {
                         let Some(parent_node) = cursor.plan.get(parent).and_then(|entry| entry.node) else { return cursor.refuse(UiDocumentReconcileFault::Detached) };
                         self.attach_child(parent_node, node);
                     }
+                }
+                if Some(node) == preserved_composite_owner {
+                    self.reattach_composite_rows(node);
                 }
                 cursor.mount += 1;
                 UiDocumentReconcileStep::Pending

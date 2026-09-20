@@ -8,10 +8,13 @@ use store::{create_document_envelope, ArtifactCommand};
 async fn leaf_detection_preserves_language_neutral_plan_vectors() {
     let suite: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).expect("detection fixture JSON");
     for case in suite["cases"].as_array().expect("detection cases") {
-        let before: SequenceHostSnapshot = dsl::os_pack::from_json_str(&case["before"].to_string()).expect("before fixture");
-        let after: SequenceHostSnapshot = dsl::os_pack::from_json_str(&case["after"].to_string()).expect("after fixture");
-        let expected: Vec<SequenceMutation> = dsl::os_pack::from_json_str(&case["expected"].to_string()).expect("expected mutations");
-        assert_eq!(sequence_snapshot_mutations(&before, &after), expected, "{}", case["id"]);
+        // 🧊️ Every decoded fixture owns its own `StepParams` pair roots, so each one is the FINAL
+        // owner of a non-empty dictionary and must leave through a cold boundary, never a bare drop.
+        let before = neural_engine::ColdOwner::new(dsl::os_pack::from_json_str::<SequenceHostSnapshot>(&case["before"].to_string()).expect("before fixture"));
+        let after = neural_engine::ColdOwner::new(dsl::os_pack::from_json_str::<SequenceHostSnapshot>(&case["after"].to_string()).expect("after fixture"));
+        let expected = neural_engine::ColdOwner::new(dsl::os_pack::from_json_str::<Vec<SequenceMutation>>(&case["expected"].to_string()).expect("expected mutations"));
+        let produced = neural_engine::ColdOwner::new(sequence_snapshot_mutations(&before, &after));
+        assert_eq!(*produced, *expected, "{}", case["id"]);
     }
 }
 
@@ -30,7 +33,7 @@ fn round_trip(snapshot: &SequenceSnapshot, mutation: &SequenceMutation) -> Seque
 
 #[semio_framework_async_macros::async_test]
 async fn create_edit_delete_step_round_trip() {
-    let snapshot = default_snapshot();
+    let snapshot = neural_engine::ColdOwner::new(default_snapshot());
     let step = SequenceStep { id: "step-99".into(), kind: "log.print".into(), params: StepParams::new(), x: 5.0, y: 6.0, slot: None, collapsed: false };
     let added = round_trip(&snapshot, &create_step(step));
     assert_eq!(added.to_host_snapshot().steps.len(), 3);
@@ -42,7 +45,7 @@ async fn create_edit_delete_step_round_trip() {
 
 #[semio_framework_async_macros::async_test]
 async fn delete_step_severs_and_reconnects_edges() {
-    let snapshot = default_snapshot();
+    let snapshot = neural_engine::ColdOwner::new(default_snapshot());
     assert!(snapshot.to_host_snapshot().edges.iter().any(|edge| edge.from == "step-1" && edge.to == "step-2"));
     round_trip(&snapshot, &delete_step("step-1".into()));
 }
@@ -52,7 +55,8 @@ async fn snapshot_mutations_capture_move_and_connect() {
     // 🧭️ Built by hand rather than via `SequenceHost` (that editing host now lives in
     // `the sibling editor module` — an artifact must never depend on an app): a step add is enough
     // to exercise `sequence_snapshot_mutations`'s before/after diff directly.
-    let before = default_snapshot().to_host_snapshot();
+    let seed = neural_engine::ColdOwner::new(default_snapshot());
+    let before = seed.to_host_snapshot();
     let id = "step-99".to_string();
     let mut after = before.clone();
     after.steps.push(SequenceStep { id: id.clone(), kind: "math.add".into(), params: StepParams::new(), x: 40.0, y: 40.0, slot: None, collapsed: false });
@@ -62,7 +66,7 @@ async fn snapshot_mutations_capture_move_and_connect() {
 
 #[semio_framework_async_macros::async_test]
 async fn store_applies_and_undoes_step_create() {
-    let mut store = SequenceStore::new(create_document_envelope(SEQUENCE_DOCUMENT_SCHEMA, "sequence", default_snapshot(), None)).await.expect("valid artifact store fixture");
+    let mut store = new_sequence_store(create_document_envelope(SEQUENCE_DOCUMENT_SCHEMA, "sequence", default_snapshot(), None)).await.expect("valid artifact store fixture");
     store
         .dispatch(ArtifactCommand::Apply { mutations: vec![create_step(SequenceStep { id: "step-7".into(), kind: "log.print".into(), params: StepParams::new(), x: 0.0, y: 0.0, slot: None, collapsed: false })], description: None })
         .await
@@ -74,9 +78,9 @@ async fn store_applies_and_undoes_step_create() {
 
 #[semio_framework_async_macros::async_test]
 async fn connect_disconnect_steps_inverse_law() {
-    let base = default_snapshot();
-    assert_mutation_inverse_law(&base, &connect_steps("edge-99".into(), "step-1".into(), "step-2".into())).await;
-    assert_mutation_inverse_law(&base, &disconnect_steps("edge-1".into())).await;
+    let base = neural_engine::ColdOwner::new(default_snapshot());
+    assert_mutation_inverse_law(&*base, &connect_steps("edge-99".into(), "step-1".into(), "step-2".into())).await;
+    assert_mutation_inverse_law(&*base, &disconnect_steps("edge-1".into())).await;
 }
 
 #[semio_framework_async_macros::async_test]

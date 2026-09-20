@@ -1,9 +1,9 @@
 use super::*;
-use crate::editor::fem3d::unit_tests::context::{dispatch, fem3d_app};
+use crate::editor::fem3d::unit_tests::context::{dispatch, fem3d_demo_app};
 use crate::editor::fem3d::Fem3dCommand;
 
 fn demo() -> Fem3dSnapshot {
-    crate::standards::v1::subsets::any::schema::snapshot::text::fem3d_boot_snapshot()
+    crate::standards::v1::subsets::any::schema::snapshot::text::fem3d_demo_snapshot()
 }
 
 fn emit(snapshot: &Fem3dSnapshot, payload: PatchElement) -> Result<Emit<Fem3dMutation, NoConfigMutation>, Fault> {
@@ -15,7 +15,7 @@ fn emit(snapshot: &Fem3dSnapshot, payload: PatchElement) -> Result<Emit<Fem3dMut
 
 #[semio_framework_async_macros::async_test]
 async fn patch_element_re_spells_kind_references_and_roll_3d() {
-    let mut app = fem3d_app();
+    let mut app = fem3d_demo_app().await;
     dispatch(&mut app, Fem3dCommand::PatchElement(PatchElement { id: "e1".into(), field: "roll".into(), value: "0.25".into() })).await;
     dispatch(&mut app, Fem3dCommand::PatchElement(PatchElement { id: "fb1_0".into(), field: "kind".into(), value: "bar".into() })).await;
     let snapshot = app.snapshot().expect("snapshot");

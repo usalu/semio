@@ -3,8 +3,9 @@
 use crate::program_bridge::{filter_plugins, parse_plugin_entries, ProgramBridgeEntry};
 use crate::shell::ShellState;
 use crate::{AppInteractionState, AppPresenter, AppRuntime, RendererAssetFetchOwner, RuntimeMailbox};
-use infinite_world::world::{WorldAssetResponsePage, WORLD_ASSET_RESPONSE_BYTE_CAPACITY, WORLD_ASSET_RESPONSE_PAGE_BYTES};
+use infinite_world::world::{WorldAssetRequestKind, WorldAssetResponsePage, WORLD_ASSET_RESPONSE_BYTE_CAPACITY, WORLD_ASSET_RESPONSE_PAGE_BYTES};
 use serde::{Deserialize, Serialize};
+use std::collections::VecDeque;
 use std::rc::Rc;
 use ui_host::{WindowDelegate, WindowMetrics};
 use ui_render::{CursorRequest, DispatchEvent, EventModifiers, ImeEvent, InvalidationReason, PhysicalSize, PointerButton, PointerId, PointerInfo, PointerKind};
@@ -15,6 +16,7 @@ const MESSAGE_BYTE_CAPACITY: usize = 4 * 1024;
 const TEXT_STREAM_CAPACITY: usize = 64;
 const TEXT_BYTE_CAPACITY: usize = 256 * 1024;
 const ICON_SOURCE_CAPACITY: usize = 512;
+const HUB_STATUS_EVENT_CAPACITY: usize = 64;
 
 //#region 📥️Wire
 /// 📥️ The wire vocabulary itself lives in `../🎮️input-wire/🦀️.rs` — platform-neutral declarations
@@ -28,6 +30,19 @@ struct PendingText {
     target: TextTarget,
     declared_bytes: usize,
     bytes: usize,
+}
+
+enum PendingHubDocumentEvent {
+    Status(String, crate::shell::ShellHubRemoteV1),
+    Close(String),
+}
+
+impl PendingHubDocumentEvent {
+    fn document_key(&self) -> &str {
+        match self {
+            Self::Status(document_key, _) | Self::Close(document_key) => document_key,
+        }
+    }
 }
 
 #[derive(Serialize)]
@@ -105,6 +120,7 @@ pub struct BrowserRendererWorker {
     asset_fetch: Option<RendererAssetFetchOwner>,
     asset_blocked: Option<RendererAssetFetchOwner>,
     asset_blocked_page: Option<WorldAssetResponsePage>,
+    hub_status_events: VecDeque<PendingHubDocumentEvent>,
 }
 
 #[wasm_bindgen]
@@ -118,8 +134,43 @@ impl BrowserRendererWorker {
         let Some(owner) = self.asset_fetch.as_ref() else {
             return Ok("{\"available\":false}".to_string());
         };
-        serde_json::to_string(&serde_json::json!({ "available": true, "url": owner.url(), "responseByteCapacity": WORLD_ASSET_RESPONSE_BYTE_CAPACITY, "pageByteCapacity": WORLD_ASSET_RESPONSE_PAGE_BYTES }))
+        serde_json::to_string(&serde_json::json!({
+            "available": true,
+            "url": owner.url(),
+            "referenceImage": matches!(owner.kind(), WorldAssetRequestKind::ReferenceImage),
+            "responseByteCapacity": WORLD_ASSET_RESPONSE_BYTE_CAPACITY,
+            "pageByteCapacity": WORLD_ASSET_RESPONSE_PAGE_BYTES
+        }))
             .map_err(|error| js_error("asset-request-encode", &error.to_string()))
+    }
+
+    #[wasm_bindgen(js_name = assetResponseCurrent)]
+    pub fn asset_response_current(&self) -> bool {
+        self.asset_fetch.as_ref().is_some_and(|owner| self.host.as_ref().is_some_and(|host| host.runtime.browser_renderer_asset_current(owner)))
+    }
+
+    #[wasm_bindgen(js_name = beginReferenceImage)]
+    #[cfg(not(target_env = "p2"))]
+    pub fn begin_reference_image(&self, width: u32, height: u32, digest: &str) -> Result<u8, JsValue> {
+        let owner = self.asset_fetch.as_ref().ok_or_else(|| js_error("asset-request-state", "reference pixels arrived without an active request"))?;
+        let host = self.host.as_ref().ok_or_else(|| js_error("worker-closed", "renderer host is unavailable"))?;
+        host.runtime.begin_renderer_reference_image(owner, width, height, digest).map_err(|detail| js_error("reference-image-credits", detail))
+    }
+
+    #[wasm_bindgen(js_name = pushReferenceImageRows)]
+    #[cfg(not(target_env = "p2"))]
+    pub fn push_reference_image_rows(&self, offset: usize, pixels: &[u8]) -> Result<bool, JsValue> {
+        let owner = self.asset_fetch.as_ref().ok_or_else(|| js_error("asset-request-state", "reference pixels arrived without an active request"))?;
+        let host = self.host.as_ref().ok_or_else(|| js_error("worker-closed", "renderer host is unavailable"))?;
+        host.runtime.push_renderer_reference_image_rows(owner, offset, pixels).map_err(|detail| js_error("reference-image-credits", detail))
+    }
+
+    #[wasm_bindgen(js_name = sealReferenceImage)]
+    #[cfg(not(target_env = "p2"))]
+    pub fn seal_reference_image(&self) -> Result<bool, JsValue> {
+        let owner = self.asset_fetch.as_ref().ok_or_else(|| js_error("asset-request-state", "reference pixels arrived without an active request"))?;
+        let host = self.host.as_ref().ok_or_else(|| js_error("worker-closed", "renderer host is unavailable"))?;
+        host.runtime.seal_renderer_reference_image(owner).map_err(|detail| js_error("reference-image-credits", detail))
     }
 
     /// 📡️ Admits the declared response bytes. Answers `false` while the renderer is BUSY (its
@@ -198,6 +249,10 @@ impl BrowserRendererWorker {
     #[wasm_bindgen(js_name = abortAssetResponse)]
     pub fn abort_asset_response(&mut self) -> Result<(), JsValue> {
         let Some(mut owner) = self.asset_fetch.take() else { return Ok(()) };
+        #[cfg(not(target_env = "p2"))]
+        if let Some(host) = self.host.as_ref() {
+            host.runtime.discard_staged_reference_image(owner.owner().token());
+        }
         owner.begin_close();
         let Some(host) = self.host.as_ref() else {
             self.asset_blocked = Some(owner);
@@ -212,6 +267,31 @@ impl BrowserRendererWorker {
         }
     }
 
+    #[wasm_bindgen(js_name = rejectAssetResponse)]
+    pub fn reject_asset_response(&mut self) -> Result<bool, JsValue> {
+        let Some(owner) = self.asset_fetch.as_ref() else { return Ok(true) };
+        let Some(host) = self.host.as_ref() else {
+            let mut owner = self.asset_fetch.take().expect("checked reference owner");
+            owner.begin_close();
+            self.asset_blocked = Some(owner);
+            return Err(js_error("worker-closed", "renderer host is unavailable"));
+        };
+        if !host.runtime.reject_renderer_reference_image(owner) {
+            return Ok(false);
+        }
+        let mut owner = self.asset_fetch.take().expect("checked reference owner");
+        #[cfg(not(target_env = "p2"))]
+        host.runtime.discard_staged_reference_image(owner.owner().token());
+        owner.begin_close();
+        match host.runtime.return_renderer_asset_owner(owner) {
+            Ok(()) => Ok(true),
+            Err(owner) => {
+                self.asset_blocked = Some(owner);
+                Ok(true)
+            }
+        }
+    }
+
     #[wasm_bindgen(js_name = enqueueBatch)]
     pub fn enqueue_batch(&mut self, events_json: &str, generation: u64) -> Result<(), JsValue> {
         self.ensure_live()?;
@@ -222,7 +302,13 @@ impl BrowserRendererWorker {
             return Ok(());
         }
         self.latest_generation = generation;
+        let mut latency = crate::frame_latency::FrameLatencyTimer::start(
+            crate::frame_latency::FrameLatencyAuthority::browser_input_batch(generation),
+            crate::frame_latency::FrameLatencyStage::WireApply,
+            1,
+        );
         let batch: BrowserBatch = serde_json::from_str(events_json).map_err(|error| js_error("message-decode", &error.to_string()))?;
+        latency.set_work_items(batch.replaceable.len().saturating_add(batch.lossless.len()));
         if batch.replaceable.len() > 18 || batch.lossless.len() > 16 {
             return Err(js_error("message-items", "frame message exceeds hard item credits"));
         }
@@ -252,13 +338,20 @@ impl BrowserRendererWorker {
     }
 
     pub fn tick(&mut self, _timestamp_ms: f64, _sequence: u64, generation: u64) -> Result<String, JsValue> {
+        let _latency = crate::frame_latency::FrameLatencyTimer::start(
+            crate::frame_latency::FrameLatencyAuthority::browser_input_batch(generation),
+            crate::frame_latency::FrameLatencyStage::WorkerTick,
+            1,
+        );
         let _ = crate::os_host::OsHostRetirement::close_abandoned_step();
         self.ensure_live()?;
+        self.flush_hub_document_event();
+        let hub_status_pending = !self.hub_status_events.is_empty();
         if generation != self.latest_generation {
             return Err(js_error("generation-mismatch", "frame tick generation does not match admitted input"));
         }
         if let Some(detail) = self.quarantined.clone() {
-            return encode_tick(BrowserTickOutput { cursor: "default", fullscreen: None, request_frame: false, progress: 1.0, quarantined: true, fault_code: Some("present-failed"), fault_detail: Some(detail) });
+            return encode_tick_timed(generation, BrowserTickOutput { cursor: "default", fullscreen: None, request_frame: false, progress: 1.0, quarantined: true, fault_code: Some("present-failed"), fault_detail: Some(detail) });
         }
         let host = self.host.as_mut().ok_or_else(|| js_error("worker-closed", "renderer host is unavailable"))?;
         let outcome = host.redraw_offscreen_worker();
@@ -275,7 +368,7 @@ impl BrowserRendererWorker {
         if let Some(detail) = present_fault.clone() {
             self.quarantined = Some(detail);
         }
-        encode_tick(BrowserTickOutput {
+        encode_tick_timed(generation, BrowserTickOutput {
             cursor: cursor_name(outcome.cursor),
             fullscreen: host.platform_fullscreen.take(),
             // 🎞️ A live frame build and an unapplied runtime completion each owe the shell another
@@ -290,7 +383,8 @@ impl BrowserRendererWorker {
                 || host.runtime.has_pending_settle()
                 || host.runtime.has_pending_applies()
                 || host.frame_build.has_live_session()
-                || host.presenter.has_pending_presentation(),
+                || host.presenter.has_pending_presentation()
+                || hub_status_pending,
             progress: 1.0,
             quarantined: present_fault.is_some(),
             fault_code: present_fault.as_ref().map(|_| fault_code),
@@ -408,6 +502,8 @@ impl BrowserRendererWorker {
             BrowserWireEvent::Resize { width, height, dpr } => {
                 self.host.as_mut().ok_or_else(|| js_error("worker-closed", "renderer host is unavailable"))?.handle_metrics(WindowMetrics { physical: PhysicalSize::new(width, height), scale_factor: dpr })
             }
+            BrowserWireEvent::HubDocumentStatus { document_key, remote } => self.admit_hub_document_event(PendingHubDocumentEvent::Status(document_key, remote))?,
+            BrowserWireEvent::HubDocumentClose { document_key } => self.admit_hub_document_event(PendingHubDocumentEvent::Close(document_key))?,
             BrowserWireEvent::TextChunk { stream_id, target, text, total_bytes, final_, cursor } => {
                 if text.len() > 4 * 1024 {
                     return Err(js_error("text-chunk-credits", "text chunk exceeds the Worker hard cap"));
@@ -417,8 +513,14 @@ impl BrowserRendererWorker {
                 } else {
                     let slot = self.text_streams.iter().position(Option::is_none).ok_or_else(|| js_error("text-stream-credits", "too many incomplete text streams"))?;
                     self.text_streams[slot] = Some(PendingText { stream_id, target, declared_bytes: total_bytes, bytes: 0 });
-                    if matches!(target, TextTarget::Text | TextTarget::Paste) {
-                        self.dispatch(DispatchEvent::TextEditStart { stream: stream_id, target: if target == TextTarget::Text { ui_render::TextEditTarget::Text } else { ui_render::TextEditTarget::Paste }, declared_bytes: total_bytes })?;
+                    if matches!(target, TextTarget::Text | TextTarget::Paste | TextTarget::PasteImageDataUrl) {
+                        let target = match target {
+                            TextTarget::Text => ui_render::TextEditTarget::Text,
+                            TextTarget::Paste => ui_render::TextEditTarget::Paste,
+                            TextTarget::PasteImageDataUrl => ui_render::TextEditTarget::PasteImageDataUrl,
+                            TextTarget::ImeUpdate | TextTarget::ImeCommit => unreachable!(),
+                        };
+                        self.dispatch(DispatchEvent::TextEditStart { stream: stream_id, target, declared_bytes: total_bytes })?;
                     }
                     slot
                 };
@@ -451,7 +553,7 @@ impl BrowserRendererWorker {
                     return Err(js_error("text-stream-bytes", "segmented text operation exceeded its declared byte credits"));
                 }
                 match target {
-                    TextTarget::Text | TextTarget::Paste => self.dispatch(DispatchEvent::TextEditChunk { stream: stream_id, text })?,
+                    TextTarget::Text | TextTarget::Paste | TextTarget::PasteImageDataUrl => self.dispatch(DispatchEvent::TextEditChunk { stream: stream_id, text })?,
                     TextTarget::ImeUpdate => {
                         if final_ {
                             self.dispatch(DispatchEvent::Ime(ImeEvent::Update { text, cursor: cursor.unwrap_or(0) }))?;
@@ -466,7 +568,7 @@ impl BrowserRendererWorker {
                 if final_ {
                     let stream = self.text_streams[slot].take().expect("fixed stream slot is occupied");
                     self.text_bytes = self.text_bytes.saturating_sub(stream.bytes);
-                    if matches!(stream.target, TextTarget::Text | TextTarget::Paste) {
+                    if matches!(stream.target, TextTarget::Text | TextTarget::Paste | TextTarget::PasteImageDataUrl) {
                         self.dispatch(DispatchEvent::TextEditCommit { stream: stream_id })?;
                     }
                 }
@@ -474,6 +576,32 @@ impl BrowserRendererWorker {
             _ => {}
         }
         Ok(())
+    }
+
+    fn admit_hub_document_event(&mut self, event: PendingHubDocumentEvent) -> Result<(), JsValue> {
+        let document_key = event.document_key();
+        if document_key.is_empty() || document_key.len() > 512 || document_key.chars().any(char::is_control) {
+            return Err(js_error("hub-status-key", "hub document status key is invalid"));
+        }
+        self.hub_status_events.retain(|pending| pending.document_key() != document_key);
+        if self.hub_status_events.len() < HUB_STATUS_EVENT_CAPACITY {
+            self.hub_status_events.push_back(event);
+        }
+        self.flush_hub_document_event();
+        Ok(())
+    }
+
+    fn flush_hub_document_event(&mut self) {
+        let Some(event) = self.hub_status_events.front() else { return };
+        let Some(host) = self.host.as_mut() else { return };
+        let admitted = match event {
+            PendingHubDocumentEvent::Status(document_key, remote) => host.runtime.publish_hub_document_status(document_key.clone(), remote.clone()),
+            PendingHubDocumentEvent::Close(document_key) => host.runtime.retire_hub_document_status(document_key),
+        };
+        if admitted {
+            self.hub_status_events.pop_front();
+            host.scheduler.invalidate(InvalidationReason::INPUT_STATE);
+        }
     }
 
     fn dispatch(&mut self, event: DispatchEvent) -> Result<(), JsValue> {
@@ -484,7 +612,7 @@ impl BrowserRendererWorker {
     fn abort_text_stream(&mut self, slot: usize, stream_id: u64) -> Result<(), JsValue> {
         if let Some(stream) = self.text_streams[slot].take() {
             self.text_bytes = self.text_bytes.saturating_sub(stream.bytes);
-            if matches!(stream.target, TextTarget::Text | TextTarget::Paste) {
+            if matches!(stream.target, TextTarget::Text | TextTarget::Paste | TextTarget::PasteImageDataUrl) {
                 self.dispatch(DispatchEvent::TextEditAbort { stream: stream_id })?;
             }
         }
@@ -498,7 +626,11 @@ impl BrowserRendererWorker {
         let mut count = 0usize;
         for event in events {
             match event {
-                BrowserWireEvent::PointerMove { .. } | BrowserWireEvent::Wheel { .. } | BrowserWireEvent::Resize { .. } => {}
+                BrowserWireEvent::PointerMove { .. }
+                | BrowserWireEvent::Wheel { .. }
+                | BrowserWireEvent::Resize { .. }
+                | BrowserWireEvent::HubDocumentStatus { .. }
+                | BrowserWireEvent::HubDocumentClose { .. } => {}
                 BrowserWireEvent::TextChunk { stream_id, target, text, total_bytes, final_, .. } => {
                     if text.len() > 4 * 1024 {
                         return Err(js_error("text-chunk-credits", "text chunk exceeds the Worker hard cap"));
@@ -515,7 +647,7 @@ impl BrowserRendererWorker {
                                 return Err(js_error("text-stream-bytes", "segmented text operations exceeded Worker byte credits"));
                             }
                             streams[slot] = Some(PendingText { stream_id: *stream_id, target: *target, declared_bytes: *total_bytes, bytes: 0 });
-                            if matches!(target, TextTarget::Text | TextTarget::Paste) {
+                            if matches!(target, TextTarget::Text | TextTarget::Paste | TextTarget::PasteImageDataUrl) {
                                 count += 1;
                             }
                             slot
@@ -533,16 +665,34 @@ impl BrowserRendererWorker {
                     if *final_ {
                         reserved_bytes = reserved_bytes.saturating_sub(stream.declared_bytes);
                         streams[slot] = None;
-                        if matches!(target, TextTarget::Text | TextTarget::Paste) {
+                        if matches!(target, TextTarget::Text | TextTarget::Paste | TextTarget::PasteImageDataUrl) {
                             count += 1;
                         }
                     }
+                }
+                BrowserWireEvent::AccessibilityFocus { window_id, window_generation, node_id, node_key }
+                | BrowserWireEvent::AccessibilityBlur { window_id, window_generation, node_id, node_key }
+                | BrowserWireEvent::AccessibilityActivate { window_id, window_generation, node_id, node_key } => {
+                    if invalid_accessibility_id(window_id) || invalid_accessibility_id(node_key) || *window_generation == 0 || *node_id == 0 {
+                        return Err(js_error("accessibility-address", "accessibility address is outside fixed identity credits"));
+                    }
+                    count += 1;
+                }
+                BrowserWireEvent::AccessibilityValue { window_id, window_generation, node_id, node_key, value } => {
+                    if invalid_accessibility_id(window_id) || invalid_accessibility_id(node_key) || *window_generation == 0 || *node_id == 0 || value.encode_utf16().count() > 1024 {
+                        return Err(js_error("accessibility-address", "accessibility value or address is outside fixed credits"));
+                    }
+                    count += 1;
                 }
                 _ => count += 1,
             }
         }
         Ok(count)
     }
+}
+
+fn invalid_accessibility_id(value: &str) -> bool {
+    value.is_empty() || value.len() > 512 || value.bytes().any(|byte| byte <= 0x1f || byte == 0x7f)
 }
 //#endregion 🧵️Runtime
 
@@ -702,6 +852,7 @@ impl BrowserRendererBootstrap {
             asset_fetch: None,
             asset_blocked: None,
             asset_blocked_page: None,
+            hub_status_events: VecDeque::with_capacity(HUB_STATUS_EVENT_CAPACITY),
         })
     }
 }
@@ -767,6 +918,15 @@ fn cursor_name(cursor: CursorRequest) -> &'static str {
 
 fn encode_tick(output: BrowserTickOutput) -> Result<String, JsValue> {
     serde_json::to_string(&output).map_err(|error| js_error("tick-encode", &error.to_string()))
+}
+
+fn encode_tick_timed(generation: u64, output: BrowserTickOutput) -> Result<String, JsValue> {
+    let _latency = crate::frame_latency::FrameLatencyTimer::start(
+        crate::frame_latency::FrameLatencyAuthority::browser_input_batch(generation),
+        crate::frame_latency::FrameLatencyStage::WorkerReplyEncode,
+        1,
+    );
+    encode_tick(output)
 }
 
 fn js_error(code: &str, detail: &str) -> JsValue {

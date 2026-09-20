@@ -1236,6 +1236,10 @@ where
         self.phase
     }
 
+    /// 🛑️ Records the first failure and enters the three-publication close sequence. A repeated
+    /// failure — every `cancel()` a maintenance driver issues before its bounded turn — must never
+    /// rewind that sequence, or the close cursor restarts at the value publication on every turn and
+    /// the parent publication is never reached.
     fn fail(&mut self, failure: DurableOwnedThreeStoreMapAssemblyFailureV1) {
         if self.failure.is_none() {
             self.failure = Some(failure);
@@ -1252,7 +1256,12 @@ where
         if let Some(publication) = self.value_publication.as_mut() {
             publication.begin_close();
         }
-        self.phase = DurableOwnedThreeStoreMapAssemblyPhaseV1::ClosingValue;
+        if !matches!(
+            self.phase,
+            DurableOwnedThreeStoreMapAssemblyPhaseV1::ClosingValue | DurableOwnedThreeStoreMapAssemblyPhaseV1::ClosingDrawing | DurableOwnedThreeStoreMapAssemblyPhaseV1::ClosingParent
+        ) {
+            self.phase = DurableOwnedThreeStoreMapAssemblyPhaseV1::ClosingValue;
+        }
     }
 
     pub fn cancel(&mut self) -> bool {
@@ -1435,6 +1444,29 @@ where
             DurableOwnedThreeStoreMapAssemblyPhaseV1::Terminal => DurableOwnedThreeStoreMapAssemblyAdvanceV1::Terminal,
             phase => DurableOwnedThreeStoreMapAssemblyAdvanceV1::Progress(phase),
         })
+    }
+
+    /// 🔬️ What each of the three publications still owns while the assembly sits in a `Closing*`
+    /// phase. `close_assembly_publication` answers only `true`/`false`, so a cancelled assembly that
+    /// never reaches `Terminal` reports the same `Progress(<phase>)` every turn with no way to say
+    /// WHICH owner refuses to retire. This names it.
+    pub fn closing_witness(&self) -> String {
+        fn owner<P, Mutation>(publication: &Option<super::ArtifactStoreBatchPublication<P, Mutation>>) -> String {
+            publication.as_ref().map_or_else(
+                || "retired".to_string(),
+                |publication| format!("{:?}/terminal_is_empty={}/admitted={}/staged={}/closing_owner={}", publication.phase(), publication.terminal_is_empty(), publication.admitted_items(), publication.staged_items(), publication.closing_owner_witness()),
+            )
+        }
+        format!(
+            "phase={:?} failure={} prepared={} host={} parent={} drawing={} value={}",
+            self.phase,
+            self.failure.is_some(),
+            self.prepared.is_some(),
+            self.host.is_some(),
+            owner(&self.parent_publication),
+            owner(&self.drawing_publication),
+            owner(&self.value_publication),
+        )
     }
 
     pub fn take_mounted_host(&mut self) -> Option<DurableOwnedMapCommitHostV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>> {
@@ -2312,6 +2344,7 @@ impl DurableStorePreparedOutcomeV1 {
             next_clock,
             actor: outcome.actor,
             group_id: None,
+            stamped_edit_id: None,
         });
         authority.validate_semantic_edit(&edit).map_err(|_| DurableOwnedGroupDecisionError::InvalidOutcome)?;
         Ok(DurableStoreVerifiedOutcomeV1 { authority, edit: Box::new(edit), post_snapshot: Arc::new(post_snapshot) })
@@ -2435,6 +2468,7 @@ where
         next_clock,
         actor: outcome.actor,
         group_id: Some(decision_sha256.into()),
+        stamped_edit_id: None,
     };
     authority.validate_semantic_edit(&edit).map_err(|_| DurableOwnedGroupDecisionError::InvalidOutcome)?;
     let snapshot = P::decode_pack_with(
@@ -2516,6 +2550,7 @@ where
             next_clock: base_authority.next_clock,
             actor: base_authority.actor.clone(),
             group_id: Some(group_id.into()),
+            stamped_edit_id: base_authority.stamped_edit_id.clone(),
         });
         let edit_digest = authority.prepared_edit_digest(edit.as_ref()).map_err(|_| DurableOwnedGroupDecisionError::InvalidOutcome)?;
         let post_revision = store_post_revision(store, &authority, edit_digest)?;
@@ -2687,6 +2722,7 @@ where
             next_clock,
             actor: outcome.actor,
             group_id: Some(group_id.into()),
+            stamped_edit_id: None,
         });
         authority.validate_semantic_edit(&edit).map_err(|_| DurableOwnedGroupDecisionError::InvalidOutcome)?;
         if store_post_revision(store, &authority, outcome.edit_digest)? != outcome.post_revision || outcome.post_generation != outcome.base_generation.checked_add(1).ok_or(DurableOwnedGroupDecisionError::InvalidFrontier)? {
@@ -3318,6 +3354,7 @@ where
         next_clock: meta.timestamp,
         actor,
         group_id: meta.group_id.clone(),
+        stamped_edit_id: None,
     });
     let prepared = authority.prepare_one_item(edit, Arc::new(post_snapshot)).map_err(DurableOwnedGroupDecisionError::Codec)?;
     DurableStorePreparedOutcomeV1::from_prepared(recovery_schema, &prepared)

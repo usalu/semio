@@ -40,7 +40,7 @@
   "infiltrationAllowanceM3H": null,
   "cellarAreaM2": null,
   "cellarVentilationM3H": null,
-  "hTrWK": 175,
+  "hTrWK": 175.0,
   "hVeWK": null,
   "thetaEC": null,
   "thetaSetC": null,

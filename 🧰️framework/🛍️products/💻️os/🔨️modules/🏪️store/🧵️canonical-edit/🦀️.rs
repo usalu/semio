@@ -595,7 +595,7 @@ impl ErasedSnapshotRetirement for ArtifactStoreOneItemAuthorityRetirement {
 
 impl Drop for ArtifactStoreOneItemAuthorityRetirement {
     fn drop(&mut self) {
-        assert!(self.terminal_is_empty(), "Store live authority dropped before bounded string retirement completed");
+        assert!(std::thread::panicking() || self.terminal_is_empty(), "Store live authority dropped before bounded string retirement completed");
     }
 }
 

@@ -67,7 +67,7 @@ async fn change_wall_soil_gamma_kn_m3_committed_json_is_canonical() {
     }
     let reencoded = serde_json::to_value(mutation()).expect("change-wall-soil-gamma-kn-m3 mutation encodes");
     let original: serde_json::Value = serde_json::from_str(MUTATION).expect("change-wall-soil-gamma-kn-m3 mutation reparses");
-    assert_eq!(reencoded, original, "change-wall-soil-gamma-kn-m3/raises-wall-soil-gamma-kn-m3-to-20-5: committed mutation JSON is not the canonical externally-tagged ChangeWallSoilGammaKnM3 form carrying newWallSoilGammaKnM3");
+    assert_eq!(reencoded, original, "change-wall-soil-gamma-kn-m3/raises-wall-soil-gamma-kn-m3-to-20-5: committed mutation JSON is not the canonical internally-tagged ChangeWallSoilGammaKnM3 form carrying mutation and newWallSoilGammaKnM3");
 }
 
 /// 🎯️ The declared outcome holds: `change-wall-soil-gamma-kn-m3` at 20.5 is applied, not rejected, and carries no

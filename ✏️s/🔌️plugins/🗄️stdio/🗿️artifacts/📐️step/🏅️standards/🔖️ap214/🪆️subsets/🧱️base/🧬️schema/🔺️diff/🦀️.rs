@@ -869,6 +869,24 @@ pub(crate) fn dec_entity(s: &str) -> Result<StepEntity, String> {
     })
 }
 
+
+/// 📜️ One `LIST[1:?] OF STRING` header slot (`description`, `author`, `organization`, `schemas`).
+/// ISO 10303-21 §8.2's lower bound of one is a POPULATION constraint (see `📸️snapshot`'s own
+/// `unpopulated_string_list`): `()` is not a legal spelling of "nothing to say", `('')` is. The
+/// wire spells both the empty list and the single empty string `[]` — `enc_str("")` IS the empty
+/// hex run — so this decoder reads that one spelling as the standard's own conformant minimum
+/// rather than as a list the exchange structure cannot carry. Without it, printing a header whose
+/// `description` is `[""]` (which is what `StepFileDescription::default()` builds) and parsing it
+/// back yielded `[]`, and `op_text_binary_roundtrip_law` measured the loss.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub(crate) fn dec_populated_str_list(s: &str) -> Result<Vec<String>, String> {
+    let inner = strip_brackets(s)?;
+    if inner.is_empty() {
+        return Ok(crate::schema::snapshot::unpopulated_string_list());
+    }
+    split_top_level(inner, ',').into_iter().map(dec_str).collect()
+}
+
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn enc_file_description(d: &StepFileDescription) -> String {
     format!("[[{}],{}]", d.description.iter().map(|s| enc_str(s)).collect::<Vec<_>>().join(","), enc_str(&d.implementation_level))
@@ -877,7 +895,7 @@ pub(crate) fn enc_file_description(d: &StepFileDescription) -> String {
 pub(crate) fn dec_file_description(s: &str) -> Result<StepFileDescription, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [description, implementation_level] = parts.as_slice() else { return Err(format!("file description: expected 2 fields, got {}", parts.len())) };
-    Ok(StepFileDescription { description: split_top_level(strip_brackets(description)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_str).collect::<Result<Vec<_>, String>>()?, implementation_level: dec_str(implementation_level)? })
+    Ok(StepFileDescription { description: dec_populated_str_list(description)?, implementation_level: dec_str(implementation_level)? })
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -902,8 +920,8 @@ pub(crate) fn dec_file_name(s: &str) -> Result<StepFileName, String> {
     Ok(StepFileName {
         name: dec_str(name)?,
         timestamp: dec_str(timestamp)?,
-        author: split_top_level(strip_brackets(author)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_str).collect::<Result<Vec<_>, String>>()?,
-        organization: split_top_level(strip_brackets(organization)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_str).collect::<Result<Vec<_>, String>>()?,
+        author: dec_populated_str_list(author)?,
+        organization: dec_populated_str_list(organization)?,
         preprocessor_version: dec_str(preprocessor_version)?,
         originating_system: dec_str(originating_system)?,
         authorization: dec_str(authorization)?,
@@ -916,7 +934,7 @@ pub(crate) fn enc_file_schema(s: &StepFileSchema) -> String {
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn dec_file_schema(s: &str) -> Result<StepFileSchema, String> {
-    let schemas = split_top_level(strip_brackets(s)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_str).collect::<Result<Vec<_>, String>>()?;
+    let schemas = dec_populated_str_list(s)?;
     Ok(StepFileSchema { schemas })
 }
 

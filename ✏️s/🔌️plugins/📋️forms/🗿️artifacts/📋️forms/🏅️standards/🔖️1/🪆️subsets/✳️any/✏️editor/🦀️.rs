@@ -1280,6 +1280,7 @@ pub fn create_forms_app() -> AppDefinition {
             .mutation("patchStep", LocalizedLabel::native("Patch Step", "Schritt aktualisieren"))
             .mutation("updateForm", LocalizedLabel::native("Update Form", "Formular aktualisieren"))
             .mutation("dropQuestionKind", LocalizedLabel::native("Drop Question Kind", "Frageart ablegen"))
+            .action_audience("dropQuestionKind", semio_framework_plugin::CapabilityAudience::Agent)
             .action_with(ActionDefinition::new("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"), ActionKind::Mutation, "panel-left"))
             // 🛠️ Dev-only whole-spec import — kept out of the command palette, staged JSON form.
             .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::bounded_catalog("setSpecJson", LocalizedLabel::native("Set Spec JSON", "Spezifikations-JSON festlegen"), ActionKind::Mutation) })
@@ -1293,6 +1294,41 @@ pub fn create_forms_app() -> AppDefinition {
             .view_action("nextStep", LocalizedLabel::native("Next Step", "Nächster Schritt"))
             .view_action("submit", LocalizedLabel::native("Submit", "Absenden"))
             .shell_action("exportFixture", LocalizedLabel::native("Export Fixture", "Fixture exportieren"))
+            // 💬️ Agent-facing descriptions (ticket 26/09/18 slice M5a) — EN first, DE second.
+            .action_describe("addStep", LocalizedLabel::native("Appends a new step (a page of questions) to the form.", "Fügt dem Formular einen neuen Schritt (eine Seite mit Fragen) hinzu."))
+            .action_use_when("addStep", vec!["add a page to the form".into(), "new step".into()])
+            .action_describe("patchStep", LocalizedLabel::native("Sets one named property of one step — its title, description or visibility condition.", "Setzt eine benannte Eigenschaft eines Schritts — Titel, Beschreibung oder Sichtbarkeitsbedingung."))
+            .action_describe("removeStep", LocalizedLabel::native("Removes one step and every question on it from the form.", "Entfernt einen Schritt samt allen darauf liegenden Fragen aus dem Formular."))
+            .action_describe("moveStep", LocalizedLabel::native("Reorders one step within the form.", "Ordnet einen Schritt im Formular um."))
+            .action_describe("addQuestion", LocalizedLabel::native("Adds a new question of the given kind to a step of the form.", "Fügt einem Schritt des Formulars eine neue Frage der angegebenen Art hinzu."))
+            .action_use_when("addQuestion", vec!["add a question".into(), "add a multiple choice field".into(), "add a text input to the form".into()])
+            .action_describe("removeQuestion", LocalizedLabel::native("Removes one question from the form by id.", "Entfernt eine Frage anhand ihrer Id aus dem Formular."))
+            .action_describe("patchQuestions", LocalizedLabel::native("Sets one named property on one or more questions — label, help text, required flag, kind or validation.", "Setzt eine benannte Eigenschaft auf einer oder mehreren Fragen — Beschriftung, Hilfetext, Pflichtfeld, Art oder Validierung."))
+            .action_use_when("patchQuestions", vec!["rename a question".into(), "make this question required".into()])
+            .action_describe("moveQuestion", LocalizedLabel::native("Reorders one question, within its step or onto another one.", "Ordnet eine Frage um — innerhalb ihres Schritts oder auf einen anderen."))
+            .action_describe("dropQuestionKind", LocalizedLabel::native("Creates a question of the given kind at a drop target in the form outline.", "Erzeugt eine Frage der angegebenen Art an einer Ablagestelle in der Formularübersicht."))
+            .action_describe("addQuestionOption", LocalizedLabel::native("Adds one selectable option to a choice question.", "Fügt einer Auswahlfrage eine auswählbare Option hinzu."))
+            .action_describe("removeQuestionOption", LocalizedLabel::native("Removes one selectable option from a choice question.", "Entfernt eine auswählbare Option aus einer Auswahlfrage."))
+            .action_describe("patchQuestionOptions", LocalizedLabel::native("Sets one named property on a choice question's options.", "Setzt eine benannte Eigenschaft auf den Optionen einer Auswahlfrage."))
+            .action_describe("addVectorField", LocalizedLabel::native("Adds one component field to a vector-valued question.", "Fügt einer vektorwertigen Frage ein Komponentenfeld hinzu."))
+            .action_describe("removeVectorField", LocalizedLabel::native("Removes one component field from a vector-valued question.", "Entfernt ein Komponentenfeld aus einer vektorwertigen Frage."))
+            .action_describe("patchVectorField", LocalizedLabel::native("Sets one named property of a vector-valued question's component field.", "Setzt eine benannte Eigenschaft eines Komponentenfelds einer vektorwertigen Frage."))
+            .action_describe("updateForm", LocalizedLabel::native("Sets the form's own top-level properties — its title, description and submission settings.", "Setzt die Eigenschaften des Formulars selbst — Titel, Beschreibung und Absendeeinstellungen."))
+            .action_describe("setActiveExample", LocalizedLabel::native("Replaces the whole form with one of the plugin's declared playground examples.", "Ersetzt das gesamte Formular durch eines der deklarierten Beispiele des Plugins."))
+            .action_describe("setSpecJson", LocalizedLabel::native("Loads a whole form specification from JSON text.", "Lädt eine vollständige Formularspezifikation aus JSON-Text."))
+            .action_describe("exportFixture", LocalizedLabel::native("Hands the form specification to the host as a downloadable JSON fixture.", "Übergibt die Formularspezifikation dem Host als herunterladbares JSON-Fixture."))
+            .action_describe("submit", LocalizedLabel::native("Submits the answers currently entered in the form preview.", "Sendet die aktuell in der Formularvorschau eingegebenen Antworten ab."))
+            // ⚠️ Discards content no later verb reconstructs — the gateway asks a human first.
+            .action_destructive("removeQuestion")
+            .action_destructive("removeQuestionOption")
+            .action_destructive("removeStep")
+            .action_destructive("removeVectorField")
+            .action_destructive("setActiveExample")
+            .action_destructive("setSpecJson")
+            // 🖱️ Preview-runner input plumbing — the form preview feeds these, agents never do.
+            .action_audience("setTryValue", semio_framework_plugin::CapabilityAudience::Input)
+            .action_audience(set_try_value::SET_TRY_VALUE_STEP_ACTION_ID, semio_framework_plugin::CapabilityAudience::Input)
+            .action_audience("setTryValues", semio_framework_plugin::CapabilityAudience::Input)
             .action_interactive_job("setTryValues", InteractiveJobClassification::Migrated)
             .action_interactive_job("resetTry", InteractiveJobClassification::Migrated)
             .action_interactive_job("previousStep", InteractiveJobClassification::Migrated)
@@ -1377,3 +1413,11 @@ pub fn create_forms_app() -> AppDefinition {
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 pub(crate) mod unit_tests;
 //#endregion 🧪️UnitTests
+
+//#region 🪢️TaxonomyMounts
+#[path = "📚️examples/🎬️demo-session/🦀️.rs"]
+pub mod demo_session;
+#[cfg(test)]
+#[path = "📚️examples/🎬️demo-session/🧪️tests/🧩️example/🦀️.rs"]
+mod example;
+//#endregion 🪢️TaxonomyMounts

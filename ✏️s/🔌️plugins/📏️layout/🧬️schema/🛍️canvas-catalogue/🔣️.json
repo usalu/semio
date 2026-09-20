@@ -1,0 +1,96 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio.tech/schema/layout-canvas-catalogue",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mime",
+    "kindMimePrefix",
+    "cases"
+  ],
+  "properties": {
+    "mime": {
+      "const": "application/x-semio-catalogue-item"
+    },
+    "kindMimePrefix": {
+      "const": "application/x-semio-catalogue-kind."
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 15,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "action",
+          "args",
+          "kind"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "action": {
+            "enum": [
+              "canvasDragOver",
+              "canvasDrop"
+            ]
+          },
+          "kind": {
+            "enum": [
+              "page",
+              "rect",
+              "text",
+              "image",
+              null
+            ]
+          },
+          "args": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "surfaceId",
+              "x",
+              "y",
+              "width",
+              "height"
+            ],
+            "properties": {
+              "surfaceId": {
+                "const": "layout.play.blueprint"
+              },
+              "x": {
+                "type": "number"
+              },
+              "y": {
+                "type": "number"
+              },
+              "width": {
+                "type": "number",
+                "exclusiveMinimum": 0
+              },
+              "height": {
+                "type": "number",
+                "exclusiveMinimum": 0
+              },
+              "types": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "dragData": {
+                "type": "string"
+              },
+              "kind": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

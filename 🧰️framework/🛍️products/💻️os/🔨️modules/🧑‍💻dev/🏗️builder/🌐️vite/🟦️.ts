@@ -150,15 +150,35 @@ return {
     port: Number(process.env.S_OS_PORT ?? 6066),
     strictPort: true,
     ...(process.env.SEMIO_VITE_HMR === "0" ? { hmr: false } : {}),
-    ...(process.env.S_LOCAL_RELAY_URL ? {
-      proxy: {
-        "/_semio": {
-          target: process.env.S_LOCAL_RELAY_URL,
-          changeOrigin: false,
-          headers: process.env.S_LOCAL_RELAY_SECRET ? { "x-semio-local-relay": process.env.S_LOCAL_RELAY_SECRET } : undefined,
-        },
-      },
-    } : {}),
+    // 🌐️ `/_semio/hub/*` is the shell's own same-origin route to its hub — the ONE lane the
+    // credential-owning backbone worker uses, carrying the signed-in human's `Authorization: Bearer`
+    // (`🏪️store/👷️worker/🟦️.ts`'s `HUB_REQUEST_ROUTE_PREFIX`). In development this server is what
+    // mounts it: `S_HUB_URL` is forwarded verbatim, headers included, with the prefix rewritten away,
+    // so the browser never pays a cross-origin preflight for a request it must authenticate. A
+    // configured `S_LOCAL_RELAY_URL` takes precedence and keeps the operator relay lane intact for
+    // the hub's own launcher, which proxies the whole `/_semio` namespace rather than just the hub.
+    ...(process.env.S_LOCAL_RELAY_URL
+      ? {
+          proxy: {
+            "/_semio": {
+              target: process.env.S_LOCAL_RELAY_URL,
+              changeOrigin: false,
+              headers: process.env.S_LOCAL_RELAY_SECRET ? { "x-semio-local-relay": process.env.S_LOCAL_RELAY_SECRET } : undefined,
+            },
+          },
+        }
+      : process.env.S_HUB_URL
+        ? {
+            proxy: {
+              "/_semio/hub": {
+                target: process.env.S_HUB_URL,
+                changeOrigin: false,
+                ws: true,
+                rewrite: (requestPath: string) => requestPath.replace(/^\/_semio\/hub/u, ""),
+              },
+            },
+          }
+        : {}),
     fs: { allow: [repoRoot, pluginModulesDir, installedExtensionsDir, rendererModulesDir] },
     // 👁️ `semioSourceFreshnessVitePlugins` owns file watching (see its docstring): Vite's own chokidar
     // watcher watches `root` plus every module-graph file outside it, which on macOS consolidates into

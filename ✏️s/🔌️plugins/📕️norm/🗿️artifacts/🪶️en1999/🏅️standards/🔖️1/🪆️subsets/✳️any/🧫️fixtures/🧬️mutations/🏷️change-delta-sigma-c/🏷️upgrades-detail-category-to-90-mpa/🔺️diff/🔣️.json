@@ -10,7 +10,7 @@
   "lCrMm": null,
   "thetaC": null,
   "deltaSigmaEd": null,
-  "deltaSigmaC": 90,
+  "deltaSigmaC": 90.0,
   "fatigueM": null,
   "nCycles": null,
   "vWeldEdKn": null,

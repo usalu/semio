@@ -3,6 +3,7 @@
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
+import { treeDataActivation } from "@semio-tech/ui-react";
 import { describe, expect, it } from "vitest";
 import {
   createSegmentedDownloadSink,
@@ -172,16 +173,16 @@ describe("actions pane utility gate", () => {
     const gated = rows(true);
     expect(gated.byId.get("action.deleteSelection")?.className).toContain("pointer-events-none");
     expect(gated.byId.get("action.undo")?.className).toBeUndefined();
-    gated.byId.get("action.deleteSelection")?.onClick?.();
-    gated.byId.get("action.undo")?.onClick?.();
+    gated.byId.get("action.deleteSelection")?.onClick?.(...treeDataActivation());
+    gated.byId.get("action.undo")?.onClick?.(...treeDataActivation());
     expect(gated.executed).toEqual(["undo"]);
   });
 
   /** ✅️ With no utility armed nothing is gated at all — the fix narrows the gate, it does not remove it. */
   it("presses every row when no utility is armed", () => {
     const open = rows(false);
-    open.byId.get("action.deleteSelection")?.onClick?.();
-    open.byId.get("action.undo")?.onClick?.();
+    open.byId.get("action.deleteSelection")?.onClick?.(...treeDataActivation());
+    open.byId.get("action.undo")?.onClick?.(...treeDataActivation());
     expect(open.executed).toEqual(["deleteSelection", "undo"]);
   });
 });

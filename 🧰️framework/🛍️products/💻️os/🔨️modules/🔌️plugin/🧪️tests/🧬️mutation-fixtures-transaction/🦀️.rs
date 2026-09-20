@@ -8,14 +8,14 @@ mod command_close_tests;
 
 // 🧪️ Proves the `🧫️fixtures` transaction helpers and the underlying transaction machinery
 // against a minimal `ArtifactApp` fixture whose notify mutation carries a real foreign step.
-use crate::app::artifact_app_laws::{assert_proposes_transaction, assert_transaction_commits_as_one_edit, assert_transaction_rollback_leaves_state_untouched, meta, new_registered_app};
+use crate::app::artifact_app_laws::{assert_proposes_transaction, assert_transaction_commits_as_one_edit, assert_transaction_rollback_leaves_state_untouched, meta, new_registered_app, settle_registered_typed_operation};
 use crate::app::{
     built_text_to_component_tree, ArtifactApp, ArtifactOwnedToolJobFactory, ArtifactOwnedToolJobRequest, ArtifactToolCompletion, ArtifactToolFactoryRegistry, ArtifactToolPublicationContract, ArtifactToolPublicationLane, ArtifactView, ConfigView,
     DraftView, Emit, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, PluginApp, UiAssemblyResult, VcsArtifactApp,
 };
 use crate::ViewModel;
 use protocol::MutationDiff;
-use semio_framework::{ActionKind, Fault, IconName, ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolOperationSpec};
+use semio_framework::{action_bus, ActionKind, Fault, IconName, ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolOperationSpec};
 use semio_framework_value_derive::{FromValue, ToValue};
 use serde::{Deserialize, Serialize};
 use store::{Backbone, BackboneMessage, EngineHandles, MemoryBackbone};
@@ -129,6 +129,12 @@ struct TxnFixtureJob {
     command: Option<Box<TxnCommand>>,
     completion: Option<ArtifactToolCompletion<TxnApp>>,
     count: i32,
+    /// 📄️ The admitted retained wire pages this job owns. `admit_exact_wire` hands every typed
+    /// dispatch its own paged raw input, and a factory that declines to take it is refused with
+    /// `interactive-job.dispatch` ("tool factory does not own retained wire pages alongside its
+    /// typed payload") before the reducer runs.
+    raw: Option<action_bus::RetainedToolWireInput>,
+    page: usize,
     closing: bool,
 }
 
@@ -138,6 +144,10 @@ impl semio_framework_job::InteractiveJob for TxnFixtureJob {
             return semio_framework_job::StepOutcome::Cancelled;
         }
         if cx.should_yield() {
+            return semio_framework_job::StepOutcome::Yield;
+        }
+        if self.raw.as_ref().is_some_and(|raw| self.page < raw.page_count()) {
+            self.page += 1;
             return semio_framework_job::StepOutcome::Yield;
         }
         let Some(command) = self.command.as_deref() else {
@@ -164,6 +174,13 @@ impl semio_framework_job::InteractiveJob for TxnFixtureJob {
         if !self.closing || maximum_items == 0 {
             return semio_framework_job::InteractiveJobCloseStep::Blocked;
         }
+        if let Some(raw) = self.raw.as_mut() {
+            if raw.terminal_is_empty() {
+                self.raw = None;
+                return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+            }
+            return raw.close_step(1, maximum_bytes);
+        }
         if let Some(command) = self.command.as_deref() {
             let released_bytes = size_of_val(command);
             if maximum_bytes < released_bytes {
@@ -179,7 +196,7 @@ impl semio_framework_job::InteractiveJob for TxnFixtureJob {
     }
 
     fn terminal_is_empty(&self) -> bool {
-        self.closing && self.command.is_none() && self.completion.is_none()
+        self.closing && self.raw.is_none() && self.command.is_none() && self.completion.is_none()
     }
 }
 
@@ -203,6 +220,19 @@ impl ToolJobFactory for TxnFixtureFactory {
         ToolExecutionContract::resumable(4_096, 1, 1, 4_096, 500, 1, 1)
     }
     fn create_job(&mut self, _operation: semio_framework_job::Operation, payload: Self::Payload) -> Result<Self::Job, semio_framework::ToolJobFactoryError> {
+        Ok(payload)
+    }
+    fn create_job_from_wire_pages_with_payload(
+        &mut self,
+        _operation: semio_framework_job::Operation,
+        mut payload: Self::Payload,
+        input: action_bus::RetainedToolWireInput,
+        checkpoint: Option<action_bus::RetainedToolWireInput>,
+    ) -> Result<Self::Job, (semio_framework::ToolJobFactoryError, action_bus::RetainedToolWireInput, Option<action_bus::RetainedToolWireInput>)> {
+        if checkpoint.is_some() {
+            return Err((semio_framework::ToolJobFactoryError::new("transaction fixture resume starts a fresh command owner"), input, checkpoint));
+        }
+        payload.raw = Some(input);
         Ok(payload)
     }
 }
@@ -244,7 +274,7 @@ struct TxnApp;
 
 impl ArtifactApp for TxnApp {
     const DIALECT: crate::Dialect = crate::Dialect { artifact_kind: "s.test.transaction", standard: crate::StandardId("1"), subset: crate::SubsetId::ANY };
-    const APP_ID: &'static str = "testkit-txn";
+    const APP_ID: &'static str = "s.test.transaction@1/*#editor";
     const DOCUMENT_SCHEMA: &'static str = "semio.testkit-txn/v1";
     type Snapshot = TxnSnapshot;
     type Mutation = TxnMutation;
@@ -259,7 +289,7 @@ impl ArtifactApp for TxnApp {
     type Command = TxnCommand;
 
     crate::bounded_first_step_tool_proofs! {
-        owner: TxnApp, owner_file: "plugin/🧪️tests/🧬️mutation-fixtures-transaction/🦀️.rs", controller: "testkit-txn", artifact_schema: "semio.testkit-txn/v1",
+        owner: TxnApp, owner_file: "plugin/🧪️tests/🧬️mutation-fixtures-transaction/🦀️.rs", controller: "s.test.transaction@1/*#editor", artifact_schema: "semio.testkit-txn/v1",
         factory: "TxnFixtureFactory", factory_type: TxnFixtureFactory,
         contract: ToolExecutionContract::resumable(4_096, 1, 1, 4_096, 500, 1, 1), tools: ["increment", "coalesced-increment", "increment-and-notify"]
     }
@@ -269,8 +299,19 @@ impl ArtifactApp for TxnApp {
     }
 
     async fn build_tool_job(request: ArtifactOwnedToolJobRequest<Self>) -> Result<Option<ToolOperationSpec>, Fault> {
-        let job = TxnFixtureJob { command: Some(request.command), completion: Some(request.completion), count: request.snapshot.count, closing: false };
+        let job = TxnFixtureJob { command: Some(request.command), completion: Some(request.completion), count: request.snapshot.count, raw: None, page: 0, closing: false };
         Ok(Some(ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, job, request.operation)))
+    }
+
+    /// 🪪️ The tool id each variant dispatches under. Without it the `ArtifactApp` default answers
+    /// `"typed-command"` for every variant, which matches no registered factory key and makes every
+    /// `dispatch_typed` on this fixture `interactive-job.missing-factory`.
+    async fn command_id(command: &TxnCommand) -> &'static str {
+        match command {
+            TxnCommand::Increment => TXN_TOOL_IDS[0],
+            TxnCommand::CoalescedIncrement => TXN_TOOL_IDS[1],
+            TxnCommand::IncrementAndNotify => TXN_TOOL_IDS[2],
+        }
     }
 
     async fn initial_snapshot() -> TxnSnapshot {
@@ -297,6 +338,10 @@ impl ArtifactApp for TxnApp {
 
     async fn render(_body_key: &str, doc: &ArtifactView<'_, TxnSnapshot>, _cfg: &ConfigView<'_, NoConfig>, _view_state: &ViewModel) -> UiAssemblyResult<semio_framework_ui_runtime::ComponentTree> {
         built_text_to_component_tree(ui_wgpu::wgpu::Label::data(format!("count={}", doc.snapshot.count)))
+    }
+
+    fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
+        Some(crate::app::bounded_config_store_one_item_preparation_factory::<Self::Snapshot, Self::Mutation>("testkit-txn-artifact-retained", 4_096))
     }
 
     fn build_document_store_owners() -> Option<store::DocumentStoreOwners<Self::Snapshot, Self::Mutation>> {
@@ -337,7 +382,7 @@ impl ArtifactApp for TxnApp {
 }
 
 fn close_transaction_store_roots(app: &mut VcsArtifactApp<TxnApp>) {
-    for _ in 0..64 {
+    for _ in 0..100_000 {
         if app.close_terminal_is_empty() {
             return;
         }
@@ -361,10 +406,20 @@ async fn dispatching_a_mutation_with_foreign_steps_proposes_instead_of_applying(
     close_transaction_store_roots(&mut app);
 }
 
+/// 🔁️ One dispatch as the host drives it: a mounted app answers with an ADMISSION receipt and hands
+/// the reducer to a worker, so the store only advances once the operation settles. Every law below
+/// reads `snapshot()`/the history right after its dispatch, which is only true after this.
+async fn dispatch_settled(app: &mut VcsArtifactApp<TxnApp>, command: TxnCommand, actor: &str) -> Result<semio_framework::InvocationResult, Fault> {
+    let action_meta = meta(actor);
+    let admitted = app.dispatch_typed(command, &action_meta).await?;
+    settle_registered_typed_operation(app, action_meta.instance_id).await?;
+    Ok(admitted)
+}
+
 #[semio_framework_async_macros::async_test]
 async fn plain_command_still_applies_normally() {
     let mut app = new_registered_app::<TxnApp, _>(transaction_manifest()).await;
-    app.dispatch_typed(TxnCommand::Increment, &meta("local")).await.expect("increment");
+    dispatch_settled(&mut app, TxnCommand::Increment, "local").await.expect("increment");
     assert_eq!(app.snapshot().unwrap().count, 1);
     assert!(app.take_pending_transaction_proposal().await.is_none(), "a plain command must not stash a proposal");
     close_transaction_store_roots(&mut app);
@@ -385,9 +440,9 @@ async fn command_cache_inputs_share_immutable_arcs() {
 #[semio_framework_async_macros::async_test]
 async fn amended_edit_extends_cached_history_in_place() {
     let mut app = new_registered_app::<TxnApp, _>(transaction_manifest()).await;
-    app.dispatch_typed(TxnCommand::CoalescedIncrement, &meta("local")).await.expect("first increment");
+    dispatch_settled(&mut app, TxnCommand::CoalescedIncrement, "local").await.expect("first increment");
     let history_ptr = std::sync::Arc::as_ptr(&app.cache.as_ref().expect("first history cache").3);
-    app.dispatch_typed(TxnCommand::CoalescedIncrement, &meta("local")).await.expect("second increment");
+    dispatch_settled(&mut app, TxnCommand::CoalescedIncrement, "local").await.expect("second increment");
     app.refresh_cache().await.expect("extend history cache");
     let history = &app.cache.as_ref().expect("extended history cache").3;
     assert_eq!(std::sync::Arc::as_ptr(history), history_ptr, "an amend must update the uniquely-owned history allocation in place");
@@ -411,7 +466,7 @@ async fn commit_produces_exactly_one_edit_with_group_id_and_origin() {
 #[semio_framework_async_macros::async_test]
 async fn rollback_leaves_state_untouched() {
     let mut app = new_registered_app::<TxnApp, _>(transaction_manifest()).await;
-    app.dispatch_typed(TxnCommand::Increment, &meta("local")).await.expect("increment");
+    dispatch_settled(&mut app, TxnCommand::Increment, "local").await.expect("increment");
     assert_transaction_rollback_leaves_state_untouched(&mut app, "txn-2", vec![SetTransactionCount { value: 99 }.into()], "peer-write").await;
     assert_eq!(app.snapshot().unwrap().count, 1, "rollback must leave the earlier state exactly as it was");
     close_transaction_store_roots(&mut app);
@@ -429,7 +484,7 @@ async fn generation_mismatch_is_rejected_with_the_frozen_code() {
     let mut sender = new_registered_app::<TxnApp, _>(transaction_manifest()).await;
     let (near, mut far) = MemoryBackbone::pair("mem://txn", "mem://txn").await;
     sender.attach_backbone(store::Backbones::Memory(near)).await.expect("attach");
-    sender.dispatch_typed(TxnCommand::Increment, &meta("remote")).await.expect("the peer edits its own copy");
+    dispatch_settled(&mut sender, TxnCommand::Increment, "remote").await.expect("the peer edits its own copy");
     let mut envelopes = Vec::new();
     for message in far.receive().await.expect("receive") {
         if let BackboneMessage::Mutations { envelopes: operations } = message {
@@ -465,7 +520,7 @@ async fn a_mutating_command_while_pending_is_rejected_but_reads_still_work() {
     let mut app = new_registered_app::<TxnApp, _>(transaction_manifest()).await;
     let prepared = app.transaction_prepare("txn-5", "", &[], &[::protocol::OpBinary::encode_op(&TxnMutation::from(SetTransactionCount { value: 1 })).expect("encode")], "peer-write", Some(protocol::MutationOrigin::Owner)).await;
     assert!(prepared.rejection.is_none());
-    let blocked = app.dispatch_typed(TxnCommand::Increment, &meta("local")).await;
+    let blocked = dispatch_settled(&mut app, TxnCommand::Increment, "local").await;
     assert!(blocked.is_err(), "a command emitting artifact mutations must be rejected while a transaction is pending");
     assert_eq!(blocked.unwrap_err().code.0, "transaction.instance-busy");
     // 🔖️ Read-only surfaces stay unaffected — `render`/`snapshot` never go through

@@ -19,7 +19,7 @@ async fn propose_bounds_region_emits_one_intent_and_no_document_state() {
 #[semio_framework_async_macros::async_test]
 async fn propose_bounds_region_is_a_shell_action_that_emits_no_operations() {
     let definition = crate::editor::gis2d::create_gis2d_app();
-    let action = definition.window_kinds.iter().flat_map(|window| window.actions.iter()).find(|action| action.id == "proposeBoundsRegion").expect("proposeBoundsRegion declared");
+    let action = definition.window_kinds.iter().flat_map(|window| semio_framework::window_kind_actions(&definition, window)).find(|action| action.id == "proposeBoundsRegion").expect("proposeBoundsRegion declared");
     assert!(matches!(action.kind, semio_framework_plugin::ActionKind::Shell));
     let mut app = app().await;
     assert_eq!(dispatch(&mut app, Gis2dCommand::ProposeBoundsRegion(propose_bounds_region::ProposeBoundsRegion {})).await.artifact_publication_count(), 0);

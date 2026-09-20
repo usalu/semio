@@ -3179,9 +3179,14 @@ export type PluginHostConfig = {
   readonly hostAppId: string;
 };
 
-/** 🎯️ Resolves a playground filter/alias to its plugin's host config, or `undefined` when that program doesn't offer a host-style multi-app experience. */
+/** 🎯️ Resolves a playground filter/alias to its plugin's host config, or `undefined` when that program
+ * doesn't offer a host-style multi-app experience. A playground row that names one `app` boots THAT app
+ * standalone — the host crate's own artifact apps (`🪐️space`'s Home and Space) each have such a row, and
+ * booting one of them is a single-app session, never the launcher. */
 export function resolvePluginHostConfig(catalog: PluginCatalog, playgroundPluginId: string): PluginHostConfig | undefined {
-  const registryId = resolvePluginRegistryId(catalog, playgroundPluginId);
+  const variant = findPlaygroundVariant(catalog, playgroundPluginId);
+  if (variant?.app !== undefined) return undefined;
+  const registryId = variant?.pluginId ?? playgroundPluginId;
   return catalog.hosts.find((entry) => entry.pluginId === registryId);
 }
 //#endregion 🏠️🧳️PluginHostConfig

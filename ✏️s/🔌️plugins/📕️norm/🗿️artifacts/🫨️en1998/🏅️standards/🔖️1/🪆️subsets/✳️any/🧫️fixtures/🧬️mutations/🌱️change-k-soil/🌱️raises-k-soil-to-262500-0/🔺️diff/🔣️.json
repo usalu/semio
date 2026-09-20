@@ -43,7 +43,7 @@
   "foundationHEdKn": null,
   "foundationHRdKn": null,
   "kFoundation": null,
-  "kSoil": 262500,
+  "kSoil": 262500.0,
   "wallHeightM": null,
   "wallPhiDeg": null,
   "wallSoilGammaKnM3": null,

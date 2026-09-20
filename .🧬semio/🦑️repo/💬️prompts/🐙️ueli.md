@@ -585,7 +585,7 @@ TODO: Start new project `elements` that offers domain-agnostic primitives (such 
 ---
 
 Examples are an integral part of artifacts. The code for it shouldnt be
-e.g. violations
+e.g. violations/
 In semio-tech play and mit-bestand demonstrator and the dev servers, all
 ✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧬️set-active-example/🦀️.rs
 
@@ -622,6 +622,8 @@ Make sure that versioned code appears through folder taxonomy design. it must no
 violations e.g.
 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔌️PluginRuntime/🟦️.tsx
 SettleOutcomeV1
+🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🪟️spawned-program/🟦️.ts
+programHistoryProjectionsAfterPatchV1
 
 ---
 

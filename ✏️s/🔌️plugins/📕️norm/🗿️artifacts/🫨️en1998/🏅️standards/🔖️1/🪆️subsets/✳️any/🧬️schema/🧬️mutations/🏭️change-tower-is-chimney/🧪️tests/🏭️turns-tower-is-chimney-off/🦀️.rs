@@ -67,7 +67,7 @@ async fn change_tower_is_chimney_committed_json_is_canonical() {
     }
     let reencoded = serde_json::to_value(mutation()).expect("change-tower-is-chimney mutation encodes");
     let original: serde_json::Value = serde_json::from_str(MUTATION).expect("change-tower-is-chimney mutation reparses");
-    assert_eq!(reencoded, original, "change-tower-is-chimney/turns-tower-is-chimney-off: committed mutation JSON is not the canonical externally-tagged ChangeTowerIsChimney form carrying newTowerIsChimney");
+    assert_eq!(reencoded, original, "change-tower-is-chimney/turns-tower-is-chimney-off: committed mutation JSON is not the canonical internally-tagged ChangeTowerIsChimney form carrying mutation and newTowerIsChimney");
 }
 
 /// 🎯️ The declared outcome holds: `change-tower-is-chimney` at false is applied, not rejected, and carries no

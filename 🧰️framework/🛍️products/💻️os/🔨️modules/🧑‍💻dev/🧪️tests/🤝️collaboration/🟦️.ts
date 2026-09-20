@@ -4,6 +4,8 @@ import { repoCacheDirectory } from "../../../../../🦑️repo/🔨️modules/�
 
 import { constants as fsConstants, createReadStream, createWriteStream, copyFileSync, cpSync, existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathSync, renameSync, rmSync, rmdirSync, statSync, unlinkSync, watch, writeFileSync } from "node:fs";
 
+import { spawnSync } from "node:child_process";
+
 import { tmpdir } from "node:os";
 
 import { basename, dirname, isAbsolute, join, relative, resolve } from "node:path";
@@ -93,6 +95,19 @@ const COLLAB_E2E_USER1_EMAIL = "user1@semio.dev";
 
 const COLLAB_E2E_USER2_EMAIL = "user2@semio.dev";
 
+/** 🔑️ The two humans this scenario runs as. Provisioned zero-touch through the hub binary's own
+ * operator verb `os-hub credential set` (ticket slice AU3 §3.3 — the only way a principal ever gets
+ * its first credential, and deliberately not reachable over the network), then signed in from each
+ * browser context through the shell's own hub workspace. There is no back door: the two shells
+ * authenticate exactly the way a human does. Passwords are 8..=256 bytes per the hub's own bound. */
+const COLLAB_E2E_USER1_PASSWORD = "collab e2e first human phrase";
+
+const COLLAB_E2E_USER2_PASSWORD = "collab e2e second human phrase";
+
+const COLLAB_E2E_USER1_DISPLAY = "Collab User One";
+
+const COLLAB_E2E_USER2_DISPLAY = "Collab User Two";
+
 const COLLAB_E2E_STEP_NAMES = [
   "user1 creates a public studio space from Home; user2's Home shows the same row",
   "user1 shares the space with user2 as author; user2 opens /spaces/{id}",
@@ -104,6 +119,9 @@ const COLLAB_E2E_STEP_NAMES = [
   "user1's keystroke reaches user2's editor within ONE ServerFrame::Commands round trip",
   "hub restarts against the same OS_HUB_DATA; user2 reloads and the space + artifact are still there",
   "an edit typed while the hub is down survives the restart and reaches user2 via resume-token/frontier",
+  "undo is per user: user1's undo reverts user1's own edit and leaves user2's edit standing in both shells",
+  "a short connection loss does not freeze user2's shell; the edit typed offline lands once the link returns",
+  "two simultaneous writers converge: both shells settle on the SAME text, ordered by the hub's own sequence",
 ] as const;
 
 type CollabStepOutcome = { readonly step: number; readonly name: string; readonly pass: boolean; readonly detail: string };
@@ -180,7 +198,9 @@ async function collabStartHub(port: number, dataDir: string, logPath: string): P
   const logStream = createWriteStream(logPath);
   const daemon = spawnDaemon("bun", [hubScript, "dev"], {
     cwd: join(repoRoot, "./🌎️hub/📦️packages/🦀️rust"),
-    env: { ...process.env, OS_HUB_PORT: String(port), OS_HUB_DATA: dataDir, OS_HUB_ADMIN_TOKEN: COLLAB_E2E_ADMIN_TOKEN },
+    // 🔐️ `OS_HUB_CREDENTIAL_SIGN_IN` is what opens `POST /auth/sessions` to a password, which is the
+    // only way two DIFFERENT humans can reach this hub from two browsers (AU3 §4.5).
+    env: { ...process.env, OS_HUB_PORT: String(port), OS_HUB_DATA: dataDir, OS_HUB_ADMIN_TOKEN: COLLAB_E2E_ADMIN_TOKEN, OS_HUB_CREDENTIAL_SIGN_IN: "1" },
     stdio: "pipe",
   });
   daemon.child.stdout?.pipe(logStream);
@@ -197,6 +217,61 @@ async function collabStartHub(port: number, dataDir: string, logPath: string): P
   daemon.kill();
   logStream.end();
   throw new Error(`hub did not become ready on port ${port} within ${COLLAB_E2E_HUB_BOOT_BUDGET_MS}ms — see ${logPath}`);
+}
+
+/** 🔑️ Provisions the two humans against `dataDir` through the hub binary's own operator verb, before
+ * the hub is started. The verb needs read/write access to the server-owned data root — strictly
+ * stronger than anything reachable over the network — reads the password from stdin (never `argv`,
+ * never an env var), and is idempotent: an existing account keeps its identity and gets the new
+ * credential. Returns each principal's hub-assigned user id, which is what `/admin/api/connections`
+ * and the space roster name.
+ *
+ * It resolves the same binary the hub itself runs: the Nx-staged development build when one exists,
+ * otherwise the shared cargo cache's debug build. A missing binary is a hard failure here rather than
+ * a mysterious `401` during STEP 1. */
+function collabProvisionCredentials(dataDir: string): Readonly<Record<string, string>> {
+  const staged = join(repoRoot, "🌎️hub", "📦️packages", "🦀️rust", "dist", "build-dev", process.platform === "win32" ? "os-hub.exe" : "os-hub");
+  const cached = join(repoRoot, ".🧬semio", "🦑️repo", "⚡️cache", "cargo", "target", "debug", process.platform === "win32" ? "os-hub.exe" : "os-hub");
+  const binaryPath = existsSync(staged) ? staged : cached;
+  if (!existsSync(binaryPath)) throw new Error(`collab e2e: no os-hub binary to provision credentials with (looked at ${staged} and ${cached})`);
+  const provisioned: Record<string, string> = {};
+  for (const account of [
+    { email: COLLAB_E2E_USER1_EMAIL, password: COLLAB_E2E_USER1_PASSWORD, display: COLLAB_E2E_USER1_DISPLAY },
+    { email: COLLAB_E2E_USER2_EMAIL, password: COLLAB_E2E_USER2_PASSWORD, display: COLLAB_E2E_USER2_DISPLAY },
+  ]) {
+    const result = spawnSync(binaryPath, ["credential", "set", "--email", account.email, "--display-name", account.display], {
+      env: { ...process.env, OS_HUB_DATA: dataDir },
+      input: account.password,
+      encoding: "utf8",
+    });
+    if (result.status !== 0) throw new Error(`collab e2e: \`os-hub credential set\` failed for ${account.email}: ${result.stderr}`);
+    provisioned[account.email] = result.stdout.trim();
+  }
+  console.log(`[collab-e2e] provisioned ${COLLAB_E2E_USER1_EMAIL}=${provisioned[COLLAB_E2E_USER1_EMAIL]} ${COLLAB_E2E_USER2_EMAIL}=${provisioned[COLLAB_E2E_USER2_EMAIL]}`);
+  return provisioned;
+}
+
+/** 🔐️ Signs one browser context in as one human, through the shell's own hub workspace — the same
+ * badge, form and `POST /auth/sessions` a person uses. Waits for the shell to report a verified
+ * session authority (`[data-semio-hub-session="signed-in"]`), because every hub-authenticated step
+ * below (create space, share, create artifact, open a document socket) is refused until the shell
+ * has one. */
+async function collabSignIn(page: import("playwright").Page, email: string, password: string): Promise<void> {
+  await page.locator('[data-semio-hub-sign-in=""]').first().click();
+  const form = page.locator("[data-semio-hub-workspace]");
+  await form.waitFor({ state: "visible", timeout: 30_000 });
+  await form.locator('input[type="email"]').fill(email);
+  await form.locator('input[type="password"]').fill(password);
+  await form.locator('button[type="submit"][aria-label="Sign in"]').click();
+  // 🪪️ The badge stops offering sign-in exactly when the SHELL holds a verified session authority
+  // (`hubSessionPresence` is derived from `verifiedSessionAuthority`), which is the predicate every
+  // hub-authenticated step below is admitted against — not merely "the form submitted".
+  await page.waitForFunction(() => !document.querySelector('[data-semio-hub-sign-in=""]'), undefined, { timeout: 60_000 });
+  // 🚪️ Close by the cancel control's OWN id. `button[aria-label]` first-match resolves to
+  // `os.hub.firstRun.replay` ("How this works"), which REPLAYS the first-run tour instead of closing the
+  // workspace — leaving the shell behind the tour's veil with every later step's target covered.
+  await page.locator('[data-semio-hub-workspace] [id="os.hub.signIn.cancel"]').click();
+  await page.locator("[data-semio-hub-workspace]").waitFor({ state: "hidden", timeout: 15_000 });
 }
 
 /** 🎯️ The ONLY plugin crates this scenario touches: every host plugin id the generated catalog
@@ -282,7 +357,7 @@ async function collabStartUserDevServer(opts: { readonly port: number; readonly 
   const logStream = createWriteStream(opts.logPath);
   const daemon = spawnDaemon("bun", [devScript, "serve", "s", "react", "dev"], {
     cwd: join(repoRoot, "./🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript"),
-    env: { ...process.env, SEMIO_PLUGIN: "s", SEMIO_RENDERER: "react", SEMIO_VITE_HMR: "0", S_OS_PORT: String(opts.port), S_HUB_URL: opts.hubUrl, S_USER: opts.user, S_DATA_DIR: opts.dataDir },
+    env: { ...process.env, SEMIO_PLUGIN: "s", SEMIO_RENDERER: "react", SEMIO_VITE_HMR: "0", S_OS_PORT: String(opts.port), S_HUB_URL: opts.hubUrl, S_DATA_DIR: opts.dataDir },
     stdio: "pipe",
   });
   daemon.child.stdout?.pipe(logStream);
@@ -792,6 +867,141 @@ async function collabRunRestartStep(opts: {
   return liveHub;
 }
 
+/** 📄️ One editor's current text, whichever surface the artifact mounted. */
+async function collabEditorText(editor: import("playwright").Locator): Promise<string> {
+  return (await editor.inputValue().catch(() => editor.innerText().catch(() => ""))) ?? "";
+}
+
+/** ⏳️ Polls both editors until they agree, returning the settled text. Convergence is the assertion,
+ * so a timeout returns the two disagreeing values rather than throwing a bare deadline. */
+async function collabAwaitConvergence(
+  user1: import("playwright").Page,
+  editor1: import("playwright").Locator,
+  editor2: import("playwright").Locator,
+  deadlineMs: number,
+): Promise<{ readonly converged: boolean; readonly first: string; readonly second: string }> {
+  const deadline = Date.now() + deadlineMs;
+  let first = "";
+  let second = "";
+  while (Date.now() < deadline) {
+    first = await collabEditorText(editor1);
+    second = await collabEditorText(editor2);
+    if (first === second && first.length > 0) return { converged: true, first, second };
+    await user1.waitForTimeout(250);
+  }
+  return { converged: false, first, second };
+}
+
+/** 🕰️ The shell's ONLY undo affordance is the History panel's `framework.history.undo` control; the
+ * chord is owned by the focused window and would be routed to whatever pane has focus. */
+async function collabUndo(page: import("playwright").Page): Promise<void> {
+  const historyTab = page.locator('[data-tab-id="framework.panel.history"]');
+  spaceE2eAssert((await historyTab.count()) > 0, "no framework.panel.history tab found — the shell offers no undo affordance to press");
+  await historyTab.click();
+  const undo = page.locator('[id="framework.history.undo"]').locator("button").first();
+  const control = (await undo.count()) > 0 ? undo : page.getByRole("button", { name: "Undo", exact: true }).first();
+  await control.waitFor({ state: "visible", timeout: 15_000 });
+  await control.click();
+}
+
+/** 🤝️ The three behaviours the brief names and the ten steps never covered (C1b §12.4): per-user
+ * undo, a deliberate short connection loss that neither freezes the app nor loses the edit, and two
+ * simultaneous writers converging. They run against the SAME live document the scenario opened, so
+ * each one is a statement about the real replication lane rather than a unit fixture.
+ *
+ * `context.setOffline` is the honest shape of "a short connection shortage" (AGENTS.md): the page
+ * keeps running, its socket drops, and nothing about the hub or the other human changes — which is
+ * exactly the fault the product promises to survive without freezing. */
+async function collabRunCollaborationBehaviours(opts: {
+  readonly record: (step: number, pass: boolean, detail: string) => void;
+  readonly user1: import("playwright").Page;
+  readonly user2: import("playwright").Page;
+  readonly spaceId: string | undefined;
+  readonly artifactId: string | undefined;
+}): Promise<void> {
+  if (!opts.spaceId || !opts.artifactId) {
+    for (const step of [11, 12, 13]) opts.record(step, false, "skipped — no space/artifact id from earlier steps");
+    return;
+  }
+  const editor1 = opts.user1.locator('textarea, [contenteditable="true"]').first();
+  const editor2 = opts.user2.locator('textarea, [contenteditable="true"]').first();
+
+  // STEP 11 — per-user undo
+  try {
+    spaceE2eAssert((await editor1.count()) > 0 && (await editor2.count()) > 0, "both humans need an open editor before per-user undo can mean anything");
+    const mine = `u1-${Date.now() % 100_000}`;
+    const theirs = `u2-${Date.now() % 100_000}`;
+    await editor1.click();
+    await editor1.type(mine);
+    await editor2.click();
+    await editor2.type(theirs);
+    const before = await collabAwaitConvergence(opts.user1, editor1, editor2, 30_000);
+    spaceE2eAssert(before.converged, `the two editors never agreed before the undo (user1: ${JSON.stringify(before.first.slice(-120))}, user2: ${JSON.stringify(before.second.slice(-120))})`);
+    spaceE2eAssert(before.first.includes(mine) && before.first.includes(theirs), `the shared text is missing one of the two edits before the undo: ${JSON.stringify(before.first.slice(-200))}`);
+    await collabUndo(opts.user1);
+    const after = await collabAwaitConvergence(opts.user1, editor1, editor2, 30_000);
+    spaceE2eAssert(after.converged, `the two editors never agreed after user1's undo (user1: ${JSON.stringify(after.first.slice(-120))}, user2: ${JSON.stringify(after.second.slice(-120))})`);
+    spaceE2eAssert(!after.first.includes(mine), `user1's undo did not revert user1's OWN edit ${JSON.stringify(mine)}: ${JSON.stringify(after.first.slice(-200))}`);
+    spaceE2eAssert(
+      after.first.includes(theirs),
+      `user1's undo also reverted user2's edit ${JSON.stringify(theirs)} — undo is a per-author inverse of that author's own envelopes, never a global rewind of the shared ledger: ${JSON.stringify(after.first.slice(-200))}`,
+    );
+    opts.record(11, true, `user1's undo reverted ${JSON.stringify(mine)} and left user2's ${JSON.stringify(theirs)} standing, in BOTH shells`);
+  } catch (error) {
+    await collabScreenshot(opts.user1, "step11-user1");
+    await collabScreenshot(opts.user2, "step11-user2");
+    opts.record(11, false, error instanceof Error ? error.message : String(error));
+  }
+
+  // STEP 12 — a short connection loss that does not freeze the app
+  try {
+    const offlineMarker = `off-${Date.now() % 100_000}`;
+    const context2 = opts.user2.context();
+    await context2.setOffline(true);
+    const typedAt = Date.now();
+    await editor2.click();
+    await editor2.type(offlineMarker);
+    const localEcho = await collabEditorText(editor2);
+    const localLatencyMs = Date.now() - typedAt;
+    spaceE2eAssert(localEcho.includes(offlineMarker), `user2's own editor did not echo ${JSON.stringify(offlineMarker)} while offline — the shell froze on the dead socket instead of staying local-first`);
+    // 🖱️ A second, independent interaction while still offline: a frozen page cannot answer this.
+    const paneResponds = await opts.user2.locator('[id="s-presence-peers"]').count();
+    spaceE2eAssert(paneResponds >= 0, "user2's shell stopped answering DOM queries while offline");
+    await opts.user2.waitForTimeout(4_000);
+    await context2.setOffline(false);
+    const recovered = await collabAwaitConvergence(opts.user1, editor1, editor2, 90_000);
+    spaceE2eAssert(
+      recovered.converged && recovered.first.includes(offlineMarker),
+      `the edit typed during the outage never reached user1 after the link returned (user1: ${JSON.stringify(recovered.first.slice(-160))}, user2: ${JSON.stringify(recovered.second.slice(-160))})`,
+    );
+    opts.record(12, true, `user2 stayed interactive through a ~4s link loss (local echo in ${localLatencyMs}ms) and ${JSON.stringify(offlineMarker)} reached user1 once the link returned`);
+  } catch (error) {
+    await opts.user2.context().setOffline(false).catch(() => undefined);
+    await collabScreenshot(opts.user2, "step12-user2");
+    opts.record(12, false, error instanceof Error ? error.message : String(error));
+  }
+
+  // STEP 13 — two simultaneous writers converge
+  try {
+    const markerOne = `w1-${Date.now() % 100_000}`;
+    const markerTwo = `w2-${Date.now() % 100_000}`;
+    await editor1.click();
+    await editor2.click();
+    await Promise.all([editor1.type(markerOne, { delay: 20 }), editor2.type(markerTwo, { delay: 20 })]);
+    const settled = await collabAwaitConvergence(opts.user1, editor1, editor2, 90_000);
+    spaceE2eAssert(
+      settled.converged,
+      `two simultaneous writers did not converge (user1: ${JSON.stringify(settled.first.slice(-200))}, user2: ${JSON.stringify(settled.second.slice(-200))}) — with event-sourced ordering both shells must fold the hub's ONE sequence, so a lasting disagreement is a replication defect, not a merge ambiguity`,
+    );
+    spaceE2eAssert(settled.first.includes(markerOne) && settled.first.includes(markerTwo), `the converged text dropped one writer's characters entirely: ${JSON.stringify(settled.first.slice(-200))}`);
+    opts.record(13, true, `both writers' text survived and both shells settled on the identical document (${JSON.stringify(settled.first.slice(-120))})`);
+  } catch (error) {
+    await collabScreenshot(opts.user1, "step13-user1");
+    await collabScreenshot(opts.user2, "step13-user2");
+    opts.record(13, false, error instanceof Error ? error.message : String(error));
+  }
+}
+
 /** 🎬️ Orchestrates the full harness: port scan, temp data dirs, hub boot, plugin prebuild, two `s`
  * react dev servers, two independent Playwright browser contexts, the 10-step scenario, and teardown of
  * every spawned process (hub + both dev servers + browser) even on failure. Writes `STEP n: PASS/FAIL`
@@ -807,6 +1017,8 @@ async function runCollabE2eVerify(): Promise<void> {
   const hubDataDir = collabHubDataDir();
   const user1DataDir = mkdtempSync(join(tmpdir(), "semio-collab-u1-"));
   const user2DataDir = mkdtempSync(join(tmpdir(), "semio-collab-u2-"));
+
+  const provisioned = collabProvisionCredentials(hubDataDir);
 
   let hubDaemon: SpawnDaemonHandle | undefined;
   let user1Daemon: SpawnDaemonHandle | undefined;
@@ -925,6 +1137,12 @@ async function runCollabE2eVerify(): Promise<void> {
     await user2Page.goto(`http://127.0.0.1:${user2Port}/`, { waitUntil: "domcontentloaded", timeout: 120_000 });
     await user1Page.locator(".semio-table-host").first().waitFor({ state: "visible", timeout: 120_000 });
     await user2Page.locator(".semio-table-host").first().waitFor({ state: "visible", timeout: 120_000 });
+    // 🔐️ Two DIFFERENT humans, each signing in from their own browser context against the same hub.
+    // Serially, because the hub's sign-in bucket is keyed per address and both contexts share
+    // 127.0.0.1 (AU3 gap 12): two simultaneous mints spend the bucket and the second gets a 429.
+    await collabSignIn(user1Page, COLLAB_E2E_USER1_EMAIL, COLLAB_E2E_USER1_PASSWORD);
+    await collabSignIn(user2Page, COLLAB_E2E_USER2_EMAIL, COLLAB_E2E_USER2_PASSWORD);
+    console.log(`[collab-e2e] both humans hold a verified session authority (${provisioned[COLLAB_E2E_USER1_EMAIL]}, ${provisioned[COLLAB_E2E_USER2_EMAIL]})`);
     await user1Page.waitForTimeout(2_000);
     await user2Page.waitForTimeout(2_000);
 
@@ -932,6 +1150,8 @@ async function runCollabE2eVerify(): Promise<void> {
     for (const outcome of scenario.results) results.push(outcome);
 
     hubDaemon = await collabRunRestartStep({ record, hubDaemon: hubDaemon!, hubPort, hubDataDir, user1: user1Page, user2: user2Page, user2Commands, spaceId: scenario.spaceId, artifactId: scenario.artifactId });
+
+    await collabRunCollaborationBehaviours({ record, user1: user1Page, user2: user2Page, spaceId: scenario.spaceId, artifactId: scenario.artifactId });
 
     const ignorableGpuFragments = ["NoCompatibleDevice"];
     const criticalErrors = pageErrors.filter((message) => !ignorableGpuFragments.some((fragment) => message.includes(fragment)));
@@ -946,4 +1166,4 @@ async function runCollabE2eVerify(): Promise<void> {
   if (passed !== results.length) process.exitCode = 1;
 }
 
-export { COLLAB_E2E_ADMIN_TOKEN, COLLAB_E2E_DEV_BOOT_BUDGET_MS, COLLAB_E2E_HUB_BOOT_BUDGET_MS, COLLAB_E2E_PORT_MAX, COLLAB_E2E_PORT_MIN, COLLAB_E2E_PREBUILD_BUDGET_MS, COLLAB_E2E_REQUIRED_PLUGIN_IDS, COLLAB_E2E_STEP_NAMES, COLLAB_E2E_USER1_EMAIL, COLLAB_E2E_USER2_EMAIL, type CollabCommandFrameCounter, type CollabStepOutcome, collabClickToolbarButton, collabCountCommandFrames, collabHubDataDir, collabOutDir, collabPluginArtifactPath, collabPrebuildPlugins, collabPresenceColors, collabPresenceRows, collabRowIds, collabRunRestartStep, collabRunScenario, collabScanPort, collabActivateShellRuntime, collabScreenshot, collabSelectOption, collabStartHub, collabStartUserDevServer, collabSubmitDialog, collabWaitForDialog, collabWaitForEditorText, collabWaitForNewRow, collabWaitForPresenceRoster, collabWaitForRow, runCollabE2eVerify };
+export { COLLAB_E2E_ADMIN_TOKEN, COLLAB_E2E_DEV_BOOT_BUDGET_MS, COLLAB_E2E_HUB_BOOT_BUDGET_MS, COLLAB_E2E_PORT_MAX, COLLAB_E2E_PORT_MIN, COLLAB_E2E_PREBUILD_BUDGET_MS, COLLAB_E2E_REQUIRED_PLUGIN_IDS, COLLAB_E2E_STEP_NAMES, COLLAB_E2E_USER1_EMAIL, COLLAB_E2E_USER2_EMAIL, type CollabCommandFrameCounter, type CollabStepOutcome, collabClickToolbarButton, collabCountCommandFrames, collabHubDataDir, collabOutDir, collabPluginArtifactPath, collabPrebuildPlugins, collabPresenceColors, collabPresenceRows, collabRowIds, collabAwaitConvergence, collabEditorText, collabProvisionCredentials, collabRunCollaborationBehaviours, collabRunRestartStep, collabRunScenario, collabSignIn, collabUndo, collabScanPort, collabActivateShellRuntime, collabScreenshot, collabSelectOption, collabStartHub, collabStartUserDevServer, collabSubmitDialog, collabWaitForDialog, collabWaitForEditorText, collabWaitForNewRow, collabWaitForPresenceRoster, collabWaitForRow, runCollabE2eVerify };

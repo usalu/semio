@@ -388,6 +388,23 @@ pub enum ImeEvent {
 pub enum TextEditTarget {
     Text,
     Paste,
+    PasteImageDataUrl,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct AccessibilityTarget {
+    pub window_id: String,
+    pub window_generation: u64,
+    pub node_id: u64,
+    pub node_key: String,
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub enum AccessibilityEvent {
+    Focus,
+    Blur,
+    Activate,
+    Value(String),
 }
 
 /// 📥️ Input events a host feeds into [`Dispatcher::dispatch`] — the same shape as
@@ -395,10 +412,11 @@ pub enum TextEditTarget {
 /// pointer capable, never a winit type).
 #[derive(Clone, Debug, PartialEq)]
 pub enum DispatchEvent {
-    PointerDown { pointer: PointerInfo, x: f32, y: f32, button: PointerButton },
-    PointerUp { pointer: PointerInfo, x: f32, y: f32, button: PointerButton },
-    PointerMove { pointer: PointerInfo, x: f32, y: f32 },
-    Scroll { x: f32, y: f32, delta_x: f32, delta_y: f32 },
+    PointerCancel { pointer: PointerInfo },
+    PointerDown { pointer: PointerInfo, x: f32, y: f32, button: PointerButton, modifiers: EventModifiers },
+    PointerUp { pointer: PointerInfo, x: f32, y: f32, button: PointerButton, modifiers: EventModifiers },
+    PointerMove { pointer: PointerInfo, x: f32, y: f32, modifiers: EventModifiers },
+    Scroll { x: f32, y: f32, delta_x: f32, delta_y: f32, modifiers: EventModifiers },
     KeyDown { key: String, modifiers: EventModifiers },
     KeyUp { key: String, modifiers: EventModifiers },
     TextInput { text: String },
@@ -408,12 +426,13 @@ pub enum DispatchEvent {
     TextEditCommit { stream: u64 },
     TextEditAbort { stream: u64 },
     Ime(ImeEvent),
+    Accessibility { target: AccessibilityTarget, event: AccessibilityEvent },
 }
 
 // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
 fn event_pointer(event: &DispatchEvent) -> Option<PointerId> {
     match event {
-        DispatchEvent::PointerDown { pointer, .. } | DispatchEvent::PointerUp { pointer, .. } | DispatchEvent::PointerMove { pointer, .. } => Some(pointer.id),
+        DispatchEvent::PointerDown { pointer, .. } | DispatchEvent::PointerUp { pointer, .. } | DispatchEvent::PointerMove { pointer, .. } | DispatchEvent::PointerCancel { pointer } => Some(pointer.id),
         _ => None,
     }
 }
@@ -1328,7 +1347,21 @@ impl Dispatcher {
         let mut outcome = DispatchOutcome::default();
 
         match event {
-            DispatchEvent::PointerMove { pointer, x, y } => {
+            DispatchEvent::PointerCancel { pointer } => {
+                self.press_origin.remove(&pointer.id);
+                self.thumb_start.remove(&pointer.id);
+                if let Some(entry) = self.capture.remove(&pointer.id) {
+                    if entry.kind == CaptureKind::Drag {
+                        self.drag = None;
+                    }
+                    outcome.handled = true;
+                    outcome.invalidation.insert(InvalidationReason::PAINT);
+                }
+                if self.update_hover(tree, None) {
+                    outcome.invalidation.insert(InvalidationReason::PAINT);
+                }
+            }
+            DispatchEvent::PointerMove { pointer, x, y, .. } => {
                 self.maybe_promote_to_drag(pointer.id, *x, *y);
                 match self.capture.get(&pointer.id).copied() {
                     Some(entry) if entry.kind == CaptureKind::Drag => self.update_drag(tree, root, *x, *y),
@@ -1487,12 +1520,13 @@ impl Dispatcher {
                     outcome.invalidation.insert(InvalidationReason::PAINT);
                 }
             }
-            DispatchEvent::Scroll { x, y, delta_x, delta_y } => {
+            DispatchEvent::Scroll { x, y, delta_x, delta_y, .. } => {
                 outcome.handled = self.route_scroll(tree, root, *x, *y, *delta_x, *delta_y);
                 if outcome.handled {
                     outcome.invalidation.insert(InvalidationReason::LAYOUT);
                 }
             }
+            DispatchEvent::Accessibility { .. } => {}
         }
 
         if let Some(pointer) = event_pointer(event) {

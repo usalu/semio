@@ -23,10 +23,21 @@ async fn definition_binds_the_framework_document_tab_to_this_body_key() {
 // tree root carries exactly one `interactionSelect`.
 use crate::editor::sequence::terminology::sequence_play_labels;
 use crate::{SequenceHostSnapshot, SequenceStep, SlotRef};
-use semio_framework_plugin::{BuiltNode, Component, TreeWindowRequest, ViewModel, INTERACTION_SELECT_ACTION_ID};
+use semio_framework_plugin::{BuiltNode, Component, TreeWindowRequest, ViewModel, INTERACTION_SELECT_ACTION_ID, TREE_WINDOW_PATH_SEPARATOR};
 
 const STEPS_SECTION: &str = "sequence-play-document.steps";
+const THEN_SLOT: &str = "sequence-play-document.slot.root-if.then";
+const BODY_SLOT: &str = "sequence-play-document.slot.then-000.body";
 const OVERSIZED: usize = 200;
+
+/// 🪟️ A nested container is addressed by its WINDOW PATH — every enclosing windowed
+/// container's node key, separated by `TREE_WINDOW_PATH_SEPARATOR` (`TreeWindows::path_of`, and the
+/// React host's own `treeWindowPathOf` on the other side of the wire). A bare child key matches no
+/// seat, and the container silently falls back to the first-paint default instead of the slice asked
+/// for.
+fn window_law_path(keys: &[&str]) -> String {
+    keys.join(TREE_WINDOW_PATH_SEPARATOR)
+}
 
 fn step(id: String, kind: &str, slot: Option<SlotRef>) -> SequenceStep {
     SequenceStep { id, kind: kind.to_string(), params: Default::default(), x: 0.0, y: 0.0, slot, collapsed: false }
@@ -99,17 +110,17 @@ async fn an_oversized_document_stamps_the_full_total_at_every_slot_level() {
     let live = oversized_sequence_document(OVERSIZED);
     let view = window_law_view(vec![
         window_law_request(STEPS_SECTION, Some(true), 0, 8),
-        window_law_request("sequence-play-document.slot.root-if.then", Some(true), 0, 4),
-        window_law_request("sequence-play-document.slot.then-000.body", Some(true), 0, 3),
+        window_law_request(&window_law_path(&[STEPS_SECTION, THEN_SLOT]), Some(true), 0, 4),
+        window_law_request(&window_law_path(&[STEPS_SECTION, THEN_SLOT, BODY_SLOT]), Some(true), 0, 3),
     ]);
     let tree = render(&live, sequence_play_labels(&ViewModel::default()), &TreeWindows::for_body(&view, SEQUENCE_PLAY_BODY_ARTIFACT)).expect("the document tree builds");
     let steps = window_law_node(&tree, STEPS_SECTION);
     assert_eq!(window_law_extent(steps), (OVERSIZED as u32, 0));
     assert_eq!(steps.children.len(), 8);
-    let then_slot = window_law_node(&tree, "sequence-play-document.slot.root-if.then");
+    let then_slot = window_law_node(&tree, THEN_SLOT);
     assert_eq!(window_law_extent(then_slot), (OVERSIZED as u32, 0));
     assert_eq!(then_slot.children.len(), 4);
-    let body_slot = window_law_node(&tree, "sequence-play-document.slot.then-000.body");
+    let body_slot = window_law_node(&tree, BODY_SLOT);
     assert_eq!(window_law_extent(body_slot), (OVERSIZED as u32, 0));
     assert_eq!(body_slot.children.len(), 3);
     window_law_no_continuation(&tree);
@@ -122,15 +133,15 @@ async fn a_control_step_keeps_its_collapse_toggle_beside_its_slot_rows() {
     let live = oversized_sequence_document(4);
     let tree = render(&live, sequence_play_labels(&ViewModel::default()), &TreeWindows::unhosted()).expect("the document tree builds");
     let control = window_law_node(&tree, "root-if");
-    assert_eq!(window_law_keys(control), vec!["sequence-play-document.collapse.root-if".to_string(), "sequence-play-document.slot.root-if.then".to_string(), "sequence-play-document.slot.root-if.else".to_string()]);
+    assert_eq!(window_law_keys(control), vec!["sequence-play-document.collapse.root-if".to_string(), THEN_SLOT.to_string(), "sequence-play-document.slot.root-if.else".to_string()]);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn a_closed_slot_stamps_its_total_and_builds_no_children() {
     let live = oversized_sequence_document(OVERSIZED);
-    let view = window_law_view(vec![window_law_request("sequence-play-document.slot.root-if.then", Some(false), 0, 32)]);
+    let view = window_law_view(vec![window_law_request(STEPS_SECTION, Some(true), 0, 8), window_law_request(&window_law_path(&[STEPS_SECTION, THEN_SLOT]), Some(false), 0, 32)]);
     let tree = render(&live, sequence_play_labels(&ViewModel::default()), &TreeWindows::for_body(&view, SEQUENCE_PLAY_BODY_ARTIFACT)).expect("the document tree builds");
-    let then_slot = window_law_node(&tree, "sequence-play-document.slot.root-if.then");
+    let then_slot = window_law_node(&tree, THEN_SLOT);
     assert_eq!(window_law_extent(then_slot), (OVERSIZED as u32, 0));
     assert_eq!(then_slot.children.len(), 0);
 }

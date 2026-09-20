@@ -5,8 +5,42 @@ use super::*;
 use crate::agent_bridge::{AgentBridgeState, GatewayToShell};
 use ui_wgpu::wgpu::Theme;
 
+/// 🧾️ The shared summary corpus — the same file the React `parseApprovalSummary` asserts against,
+/// read at compile time so a moved fixture is a build error, not a skipped test.
+const SUMMARY_FIXTURE: &str = include_str!("../../🧫️fixtures/🛡️summary/🔣️.json");
+
 fn parked(id: &str, summary: &str) -> PendingAgentApproval {
     PendingAgentApproval { approval_id: id.into(), summary: summary.into(), requested_at_ms: 0.0 }
+}
+
+/// 🧾️ Every row of the shared fixture, parsed on THIS bank exactly as the React bank parses it.
+#[test]
+fn the_shared_summary_fixture_parses_identically_on_this_bank() {
+    let fixture: serde_json::Value = serde_json::from_str(SUMMARY_FIXTURE).expect("the shared summary fixture is JSON");
+    for row in ["rich", "plainText", "legacyWithoutTheNewFields"] {
+        let case = &fixture[row];
+        let parsed = parse_approval_summary(case["summary"].as_str().expect("every row carries a wire summary"));
+        let expected = &case["parsed"];
+        let text = |field: &str| expected[field].as_str().map(str::to_string);
+        assert_eq!(parsed.capability_id, text("capabilityId"), "{row}: capabilityId");
+        assert_eq!(parsed.capability_title, text("capabilityTitle"), "{row}: capabilityTitle");
+        assert_eq!(parsed.description, text("description"), "{row}: description");
+        assert_eq!(parsed.artifact_kind, text("artifactKind"), "{row}: artifactKind");
+        assert_eq!(Some(parsed.diff_summary.clone()), text("diffSummary"), "{row}: diffSummary");
+        assert_eq!(parsed.risk.map(|risk| risk.as_str().to_string()), text("risk"), "{row}: risk");
+        assert_eq!(parsed.requested_by, text("requestedBy"), "{row}: requestedBy");
+        assert_eq!(parsed.timeout_ms, expected["timeoutMs"].as_u64(), "{row}: timeoutMs");
+    }
+    assert_eq!(parse_approval_summary(fixture["unusableTimeout"]["summary"].as_str().expect("row")).timeout_ms, None, "a non-positive timeout is nothing to count down");
+}
+
+/// ⏱️ The countdown is a duration from arrival, never a wall clock, and it floors at zero.
+#[test]
+fn the_countdown_counts_from_arrival_and_never_goes_negative() {
+    assert_eq!(approval_seconds_remaining(Some(120_000), 1_000.0, 1_000.0), Some(120));
+    assert_eq!(approval_seconds_remaining(Some(120_000), 1_000.0, 61_000.0), Some(60));
+    assert_eq!(approval_seconds_remaining(Some(120_000), 1_000.0, 999_000.0), Some(0));
+    assert_eq!(approval_seconds_remaining(None, 1_000.0, 1_000.0), None);
 }
 
 #[test]

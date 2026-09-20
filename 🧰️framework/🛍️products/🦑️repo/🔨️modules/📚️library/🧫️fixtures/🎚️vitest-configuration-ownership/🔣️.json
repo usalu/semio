@@ -132,7 +132,7 @@
       "previousPath": "🧰️framework/📦️packages/🟦️typescript/vitest.config.ts",
       "ownerPath": "🧰️framework/🧪️tests/🎚️config/🟦️.ts",
       "expectedName": "@semio-tech/framework",
-      "projectionSha256": "ca1a9fa6980740c6a6b9be2993b970d98044ab3b27cc56ed0a87ca1e568940c6"
+      "projectionSha256": "9f9103cbd7f2ad6c4a9fbb9c0b8e0b1024c1ec5b24a7ca72d1383d80c491cc8a"
     },
     {
       "configurationRoot": "🧰️framework/🔨️modules/⏳️async/📦️packages/🟦️typescript",
@@ -181,7 +181,7 @@
       "previousPath": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust/vitest.config.ts",
       "ownerPath": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🧪️tests/🎚️config/🟦️.ts",
       "expectedName": "@semio-tech/ui-styling",
-      "projectionSha256": "e7d750b23fced58678b54e229e3305d775b4c72be659a7633d4ad8cba3f7f4ff"
+      "projectionSha256": "6dc4970b17e6b0a21fb56a5808cb78b3f4ec296cf8cf267a5e3361f82b7a40f6"
     },
     {
       "configurationRoot": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript",
@@ -258,7 +258,7 @@
       "previousPath": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript/vitest.config.ts",
       "ownerPath": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧪️tests/🎚️config/🟦️.ts",
       "expectedName": "@semio-tech/framework-renderer-wgpu",
-      "projectionSha256": "74c0b3144e6109c5d211c6fdc331f313dabf1fb0fde1f43366c66b2568fa782a"
+      "projectionSha256": "283043f921e5048844d1365eade66e63d328098edb68e0b4466942af2d7f3359"
     },
     {
       "configurationRoot": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏪️store",

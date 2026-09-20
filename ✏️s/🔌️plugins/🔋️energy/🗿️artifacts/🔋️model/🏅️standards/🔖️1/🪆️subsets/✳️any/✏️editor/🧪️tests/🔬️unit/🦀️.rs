@@ -44,13 +44,14 @@ async fn retained_roster_is_exact_and_exhaustive() {
     assert_eq!(roster, <EnergyModelCommandJobFactory as ArtifactOwnedToolJobFactory>::PUBLICATION_CONTRACTS.iter().map(|contract| contract.tool_id).collect::<BTreeSet<_>>());
     assert_eq!(roster, <EnergyModelEditor as ArtifactEditor>::bounded_first_step_tool_proofs().iter().map(|proof| proof.tool_id()).collect::<BTreeSet<_>>());
     let def = definition();
-    let migrated = def.window_kinds.iter().flat_map(|window| window.actions.iter()).filter(|action| action.semantics.execution.interactive_job == InteractiveJobClassification::Migrated).map(|action| action.id.as_str()).collect::<BTreeSet<_>>();
+    let migrated = def.window_kinds.iter().flat_map(|window| semio_framework::window_kind_actions(&def, window)).filter(|action| action.semantics.execution.interactive_job == InteractiveJobClassification::Migrated).map(|action| action.id.as_str()).collect::<BTreeSet<_>>();
     assert!(roster.is_subset(&migrated), "unclassified retained tools: {:?}", roster.difference(&migrated).collect::<Vec<_>>());
 }
 
 #[semio_framework_async_macros::async_test]
 async fn every_declared_action_is_classified_and_resolves_to_a_command() {
-    for action in definition().window_kinds.iter().flat_map(|window| window.actions.iter()) {
+    let def = definition();
+    for action in def.window_kinds.iter().flat_map(|window| semio_framework::window_kind_actions(&def, window)) {
         assert_ne!(action.semantics.execution.interactive_job, InteractiveJobClassification::Unclassified, "action {} is unclassified", action.id);
     }
     for tool_id in ENERGY_MODEL_RETAINED_TOOL_IDS {
@@ -90,7 +91,7 @@ async fn examples_are_registered_for_the_shell_picker() {
     let options = example_options().into_iter().map(|option| option.value).collect::<Vec<_>>();
     assert_eq!(options, sources.iter().map(|source| source.id().to_string()).collect::<Vec<_>>(), "the picker's option list must be the example list");
     let definition = create_energy_model_editor();
-    let picker = definition.window_kinds.iter().flat_map(|window| window.actions.iter()).find(|action| action.id == SET_ACTIVE_EXAMPLE_ACTION_ID).expect("the shell dispatches setActiveExample, so the app must declare it on a window");
+    let picker = definition.window_kinds.iter().flat_map(|window| semio_framework::window_kind_actions(&definition, window)).find(|action| action.id == SET_ACTIVE_EXAMPLE_ACTION_ID).expect("the shell dispatches setActiveExample, so the app must declare it on a window");
     assert_eq!(picker.args.len(), 1);
     assert_eq!(picker.args[0].id, "exampleId");
 }
@@ -319,7 +320,7 @@ async fn every_declared_verb_dispatches_without_an_interactive_job_fault() {
     let mut app = dispatchable_app().await;
     let mut reached = 0;
     for tool_id in ENERGY_MODEL_RETAINED_TOOL_IDS {
-        let action = definition.window_kinds.iter().flat_map(|window| window.actions.iter()).find(|action| action.id == *tool_id).unwrap_or_else(|| panic!("action {tool_id} is declared on no window kind"));
+        let action = definition.window_kinds.iter().flat_map(|window| semio_framework::window_kind_actions(&definition, window)).find(|action| action.id == *tool_id).unwrap_or_else(|| panic!("action {tool_id} is declared on no window kind"));
         let staged = effective_action_args(&action.args, &DslValue::Object(Vec::new()), None);
         match app.handle_action(tool_id, Some(&staged), &semio_framework_plugin::artifact_app_laws::meta("local")).await {
             Ok(_) => reached += 1,
@@ -485,7 +486,7 @@ async fn the_simulation_is_driven_by_the_framework_tool_run_actions_and_chords_o
     }
     for removed in fixture["lifecycle"]["removedActions"].as_array().unwrap().iter().map(|id| id.as_str().unwrap()) {
         assert!(!ENERGY_MODEL_RETAINED_TOOL_IDS.contains(&removed), "{removed} is still a retained tool");
-        assert!(def.window_kinds.iter().flat_map(|window| window.actions.iter()).all(|action| action.id != removed), "{removed} is still declared");
+        assert!(def.window_kinds.iter().flat_map(|window| semio_framework::window_kind_actions(&def, window)).all(|action| action.id != removed), "{removed} is still declared");
         assert!(<EnergyModelEditor as ArtifactEditor>::command_from_action(removed, None).is_err(), "{removed} still resolves to a command");
     }
 }
@@ -871,7 +872,7 @@ async fn every_inspector_verb_is_owned_by_every_window_kind() {
     assert!(def.window_kinds.len() >= 3, "the editor declares its windows");
     for action in inspector_action_definitions() {
         for window in &def.window_kinds {
-            assert!(window.actions.iter().any(|declared| declared.id == action.id), "window kind {} does not own inspector action {}", window.id, action.id);
+            assert!(semio_framework::window_kind_actions(&def, window).iter().any(|declared| declared.id == action.id), "window kind {} does not own inspector action {}", window.id, action.id);
         }
     }
 }
@@ -898,7 +899,7 @@ async fn every_inspector_verb_stays_a_classified_retained_tool() {
     let def = definition();
     for action in inspector_action_definitions() {
         assert!(ENERGY_MODEL_RETAINED_TOOL_IDS.contains(&action.id.as_str()), "{} left the retained roster", action.id);
-        let declared = def.window_kinds.iter().flat_map(|window| window.actions.iter()).find(|declared| declared.id == action.id).expect("declared on a window");
+        let declared = def.window_kinds.iter().flat_map(|window| semio_framework::window_kind_actions(&def, window)).find(|declared| declared.id == action.id).expect("declared on a window");
         assert_eq!(declared.semantics.execution.interactive_job, InteractiveJobClassification::Migrated, "{} is not Migrated", action.id);
         assert!(!declared.args.is_empty(), "{} lost its argument declarations", action.id);
     }
@@ -1150,13 +1151,13 @@ async fn every_app_level_verb_is_owned_by_every_window_kind() {
     assert!(def.window_kinds.len() >= 4, "the editor declares its four windows");
     for action in app_level_action_definitions() {
         for window in &def.window_kinds {
-            assert!(window.actions.iter().any(|declared| declared.id == action.id), "window kind {} does not own app-level action {}", window.id, action.id);
+            assert!(semio_framework::window_kind_actions(&def, window).iter().any(|declared| declared.id == action.id), "window kind {} does not own app-level action {}", window.id, action.id);
         }
     }
     // 📚️ `setActiveExample` is app-level through `.mutation(…)` rather than the roster above, and the
     // shell dispatches it from whatever window has focus, so it is held to the same law.
     for window in &def.window_kinds {
-        assert!(window.actions.iter().any(|declared| declared.id == SET_ACTIVE_EXAMPLE_ACTION_ID), "window kind {} does not own {SET_ACTIVE_EXAMPLE_ACTION_ID}", window.id);
+        assert!(semio_framework::window_kind_actions(&def, window).iter().any(|declared| declared.id == SET_ACTIVE_EXAMPLE_ACTION_ID), "window kind {} does not own {SET_ACTIVE_EXAMPLE_ACTION_ID}", window.id);
     }
 }
 
@@ -1177,7 +1178,7 @@ async fn every_bound_chord_reaches_a_verb_every_window_kind_owns() {
     assert!(bound.len() >= 3, "the editor's own chords are bound: {:?}", def.keybindings.iter().map(|binding| (&binding.keys, &binding.action.action)).collect::<Vec<_>>());
     for (keys, action) in bound {
         for window in &def.window_kinds {
-            assert!(window.actions.iter().any(|declared| declared.id == action), "chord {keys} is bound to {action}, which window kind {} does not own", window.id);
+            assert!(semio_framework::window_kind_actions(&def, window).iter().any(|declared| declared.id == action), "chord {keys} is bound to {action}, which window kind {} does not own", window.id);
         }
     }
 }

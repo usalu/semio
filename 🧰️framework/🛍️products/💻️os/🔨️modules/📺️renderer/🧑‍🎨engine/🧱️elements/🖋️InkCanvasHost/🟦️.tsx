@@ -1298,6 +1298,16 @@ export function InkCanvasHost({ node, onAction, requestContextMenu }: ComponentS
     setMarqueePoints([]);
   }, [commitGesture, dispatch, doc, dragState, flushPendingLive, marqueePoints]);
 
+  const handlePointerCancel = useCallback(() => {
+    if (rafRef.current != null) cancelAnimationFrame(rafRef.current);
+    rafRef.current = null;
+    pendingLiveEventsRef.current = null;
+    gestureActiveRef.current = false;
+    setDraftDoc(null);
+    setDragState(null);
+    setMarqueePoints([]);
+  }, []);
+
   const handleWheel = useCallback(
     (event: React.WheelEvent<HTMLDivElement>) => {
       if (!rootRef.current || !doc || isNavigator) return;
@@ -1537,7 +1547,7 @@ export function InkCanvasHost({ node, onAction, requestContextMenu }: ComponentS
       onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}
-      onPointerLeave={handlePointerUp}
+      onPointerCancel={handlePointerCancel}
       onWheel={handleWheel}
       onDoubleClick={handleDoubleClick}
       onContextMenu={handleContextMenu}
@@ -1576,6 +1586,7 @@ export function InkCanvasHost({ node, onAction, requestContextMenu }: ComponentS
             const screen = worldToScreen(camera, cellX, cellY);
             return (
               <InkTableCellEditorOverlay
+                key={`${editingTableBlock.id}:${tableEdit.row}:${tableEdit.col}`}
                 block={editingTableBlock}
                 row={tableEdit.row}
                 col={tableEdit.col}

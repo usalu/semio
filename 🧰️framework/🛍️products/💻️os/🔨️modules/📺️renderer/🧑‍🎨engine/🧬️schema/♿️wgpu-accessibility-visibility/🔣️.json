@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "semio.renderer.wgpu.accessibility-visibility.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "liveWindows", "visibleWindows", "unnamedPublished", "requestedDiagnostic", "hiddenEvent"],
+  "properties": {
+    "schema": { "const": "semio.renderer.wgpu.accessibility-visibility.v1" },
+    "liveWindows": { "type": "array", "items": { "type": "string", "minLength": 1 }, "uniqueItems": true },
+    "visibleWindows": { "type": "array", "items": { "type": "string", "minLength": 1 }, "uniqueItems": true },
+    "unnamedPublished": { "type": "array", "items": { "type": "string", "minLength": 1 }, "uniqueItems": true },
+    "requestedDiagnostic": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["requested", "published"],
+      "properties": { "requested": { "type": "string", "minLength": 1 }, "published": { "type": "array", "items": { "type": "string" } } }
+    },
+    "hiddenEvent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["windowId", "accepted"],
+      "properties": { "windowId": { "type": "string", "minLength": 1 }, "accepted": { "const": false } }
+    }
+  }
+}

@@ -5,7 +5,7 @@ use crate::wgpu::arena::NodeId;
 use crate::wgpu::component::ui::{UiNode, UiTreeItemNode, UiTreeNode};
 use crate::wgpu::engine::UiSurfaceToken;
 use crate::wgpu::flex::{FlexRect, FlexTree, LayoutJobStage, LayoutJobStep, LayoutNodeKind, MeasureConstraint};
-use crate::wgpu::layout::{gap_for_token, padding_for_token, tree_item_height, tree_node_height, tree_section_header_height, tree_section_height, TreeRowMetrics, TREE_ROW_MAX_DEPTH};
+use crate::wgpu::layout::{gap_for_token, padding_for_token, tree_section_header_height, TreeRowMetrics, TREE_ROW_MAX_DEPTH};
 use crate::wgpu::text::{is_wrap_space, may_break_between};
 use crate::wgpu::theme::Theme;
 use crate::wgpu::tree::{AcceptedLayout, NodeFlags, NodeKey, UiTree};
@@ -95,20 +95,64 @@ fn tree_row_kind(tree: &UiTree, id: NodeId, parent_kind: Option<LayoutNodeKind>,
     let NodeKey::Explicit(key) = &tree.node(id)?.key else { return None };
     let owner = owning_tree_spec(tree, id)?;
     match parent_kind {
-        LayoutNodeKind::Tree { .. } => {
+        LayoutNodeKind::Tree { reversed, .. } => {
             let section = owner.sections.iter().find(|section| &section.id == key)?;
-            Some(LayoutNodeKind::TreeSection { header: tree_section_header_height(section, metrics), height: tree_section_height(section, metrics) })
+            let expanded = tree.disclosure_open(id).unwrap_or(section.default_open.unwrap_or(true));
+            let header = tree_section_header_height(section, metrics);
+            let height = live_tree_section_height(tree, id, section, metrics);
+            Some(LayoutNodeKind::TreeSection { header, height, expanded, reversed })
         }
         parent_kind => {
             let item = owner.sections.iter().find_map(|section| find_tree_item(&section.items, key, 0))?;
+            let reversed = match parent_kind {
+                LayoutNodeKind::TreeSection { reversed, .. } | LayoutNodeKind::TreeRow { reversed, .. } => reversed,
+                _ => false,
+            };
             if matches!(parent_kind, LayoutNodeKind::TreeRow { expanded: false, .. }) {
-                return Some(LayoutNodeKind::TreeRow { row: 0.0, height: 0.0, expanded: false });
+                return Some(LayoutNodeKind::TreeRow { row: 0.0, height: 0.0, expanded: false, reversed });
             }
-            let height = tree_item_height(item, metrics);
-            let expanded = height > 0.0 && item.default_open.unwrap_or(false) && item.items.as_deref().is_some_and(|items| !items.is_empty());
-            Some(LayoutNodeKind::TreeRow { row: if expanded { metrics.row_height } else { 0.0 }, height, expanded })
+            let height = live_tree_item_height(tree, id, item, metrics, 0);
+            let expanded = height > 0.0 && tree.disclosure_open(id).unwrap_or(item.default_open.unwrap_or(false)) && item.items.as_deref().is_some_and(|items| !items.is_empty());
+            Some(LayoutNodeKind::TreeRow { row: if expanded { metrics.row_height } else { 0.0 }, height, expanded, reversed })
         }
     }
+}
+
+pub(crate) fn live_tree_item_height(tree: &UiTree, id: NodeId, item: &UiTreeItemNode, metrics: &TreeRowMetrics, depth: usize) -> f32 {
+    if !item.presence.visible() {
+        return 0.0;
+    }
+    let mut height = metrics.row_height;
+    if depth >= TREE_ROW_MAX_DEPTH || !tree.disclosure_open(id).unwrap_or(item.default_open.unwrap_or(false)) {
+        return height;
+    }
+    for child in item.items.iter().flatten() {
+        let Some(child_id) = tree.explicit_child(id, &child.id) else { continue };
+        height += live_tree_item_height(tree, child_id, child, metrics, depth + 1);
+    }
+    height
+}
+
+pub(crate) fn live_tree_section_height(tree: &UiTree, id: NodeId, section: &crate::wgpu::component::ui::UiTreeSectionNode, metrics: &TreeRowMetrics) -> f32 {
+    if !section.presence.visible() {
+        return 0.0;
+    }
+    let header = tree_section_header_height(section, metrics);
+    if !tree.disclosure_open(id).unwrap_or(section.default_open.unwrap_or(true)) {
+        return header;
+    }
+    header + section.items.iter().filter_map(|item| tree.explicit_child(id, &item.id).map(|item_id| live_tree_item_height(tree, item_id, item, metrics, 0))).sum::<f32>()
+}
+
+pub(crate) fn retained_tree_height(tree: &UiTree, id: NodeId, node: &UiTreeNode, metrics: &TreeRowMetrics) -> f32 {
+    node.sections
+        .iter()
+        .filter(|section| section.presence.visible())
+        .map(|section| {
+            let Some(section_id) = tree.explicit_child(id, &section.id) else { return tree_section_header_height(section, metrics) };
+            live_tree_section_height(tree, section_id, section, metrics)
+        })
+        .sum()
 }
 
 /// 🧩️ One admitted node's layout identity: where it sits in the arena, which flex box it became,
@@ -233,7 +277,13 @@ impl RetainedAtlasCandidate {
 /// opportunities — the SAME predicate the atlas wrap and the retained painter use, so a flex item
 /// sized here and a paragraph painted there can no longer disagree about where a line ends. A
 /// trailing space hangs and never pushes a line over the edge.
-fn measure_text(nodes: &ui_contract::UiFixedList<LayoutInputNode, LAYOUT_NODE_CREDITS>, glyphs: &ui_contract::UiFixedList<RetainedGlyphInput, LAYOUT_GLYPH_CREDITS>, previews: &ui_contract::UiFixedList<RetainedGlyphPreview, LAYOUT_GLYPH_CREDITS>, index: usize, constraint: MeasureConstraint) -> (f32, f32) {
+fn measure_text(
+    nodes: &ui_contract::UiFixedList<LayoutInputNode, LAYOUT_NODE_CREDITS>,
+    glyphs: &ui_contract::UiFixedList<RetainedGlyphInput, LAYOUT_GLYPH_CREDITS>,
+    previews: &ui_contract::UiFixedList<RetainedGlyphPreview, LAYOUT_GLYPH_CREDITS>,
+    index: usize,
+    constraint: MeasureConstraint,
+) -> (f32, f32) {
     let Some(node) = nodes.get(index) else { return (0.0, 0.0) };
     let (start, end) = (node.glyph_start, node.glyph_end);
     if end <= start {
@@ -307,6 +357,7 @@ pub(crate) struct MountedLayoutResult {
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum AdmissionPhase {
     Visit,
+    VisitReversed,
     Text,
     Unwind,
     Ready,
@@ -379,7 +430,7 @@ pub(crate) struct MountedLayoutIdentity {
 }
 
 impl MountedLayoutJob {
-    pub(crate) fn try_new(tree: &UiTree, root: NodeId, identity: MountedLayoutIdentity, theme: Theme, width: f32, height: f32) -> Result<Self, MountedLayoutFault> {
+    pub(crate) fn try_new(tree: &UiTree, root: NodeId, identity: MountedLayoutIdentity, theme: Theme, width: f32, height: f32, block_reversed: bool) -> Result<Self, MountedLayoutFault> {
         let MountedLayoutIdentity { surface, generation, revision, theme_revision, viewport_revision } = identity;
         let root_node = tree.node(root).ok_or(MountedLayoutFault::Stale)?;
         if !root_node.flags.contains(NodeFlags::DIRTY_LAYOUT) && !root_node.flags.contains(NodeFlags::SUBTREE_DIRTY) {
@@ -397,7 +448,7 @@ impl MountedLayoutJob {
             theme,
             width,
             height,
-            admission: AdmissionPhase::Visit,
+            admission: if block_reversed { AdmissionPhase::VisitReversed } else { AdmissionPhase::Visit },
             pending_node: Some((root, None)),
             walk: Box::new(ui_contract::UiFixedList::default()),
             nodes: Box::new(ui_contract::UiFixedList::default()),
@@ -457,7 +508,8 @@ impl MountedLayoutJob {
         }
         cx.set_stage("Layout.AdmitOne");
         let progress = match self.admission {
-            AdmissionPhase::Visit => self.admit_node_one(tree),
+            AdmissionPhase::Visit => self.admit_node_one(tree, false),
+            AdmissionPhase::VisitReversed => self.admit_node_one(tree, true),
             AdmissionPhase::Text => self.admit_text_one(tree),
             AdmissionPhase::Unwind => self.unwind_one(tree),
             AdmissionPhase::Ready => {
@@ -480,7 +532,7 @@ impl MountedLayoutJob {
     /// box at all. The host declares its band in the slot's own `params_json`
     /// (`{"hostContentHeight": <px>}`), so the reservation costs one node and no measurement,
     /// and every other panel's node credit is untouched.
-    fn admit_node_one(&mut self, tree: &UiTree) -> (usize, usize) {
+    fn admit_node_one(&mut self, tree: &UiTree, root_reversed: bool) -> (usize, usize) {
         let Some((id, parent)) = self.pending_node.take() else {
             self.admission = AdmissionPhase::Unwind;
             return (0, 0);
@@ -489,33 +541,41 @@ impl MountedLayoutJob {
             self.fault = Some(MountedLayoutFault::Stale);
             return (0, 0);
         };
-        let kind = match &node.spec.0 {
-            UiNode::Text(_) => LayoutNodeKind::Text,
-            UiNode::Tree(tree_node) => LayoutNodeKind::Tree { height: tree_node_height(tree_node, &self.row_metrics) },
-            UiNode::Stack(stack) => tree_row_kind(tree, id, parent.and_then(|index| self.nodes.get(index)).map(|input| input.kind), &self.row_metrics).unwrap_or(LayoutNodeKind::Stack {
-                horizontal: stack.direction == "horizontal",
-                gap: gap_for_token(&self.theme, stack.gap.as_deref()),
-                padding: padding_for_token(&self.theme, stack.padding.as_deref()),
-            }),
-            UiNode::Field(_) => LayoutNodeKind::Field { top: self.theme.font_size_small + gap_for_token(&self.theme, Some("standard")) },
-            UiNode::Section(_) => LayoutNodeKind::Section { gap: self.theme.gap_standard },
-            UiNode::Button(_) => LayoutNodeKind::Control { height: self.theme.control_height, label_padding: Some(self.theme.padding_standard) },
-            UiNode::Input(_) | UiNode::Select(_) | UiNode::Toggle(_) | UiNode::Slider(_) | UiNode::NumberStepper(_) | UiNode::Ring(_) | UiNode::IconSelect(_) => {
-                LayoutNodeKind::Control { height: self.theme.control_height, label_padding: None }
+        let parent_kind = parent.and_then(|index| self.nodes.get(index)).map(|input| input.kind);
+        let tree_inline_control = matches!(parent_kind, Some(LayoutNodeKind::TreeRow { .. }));
+        let popup_overlay_row = tree.is_open_select_popup_row(id);
+        let kind = if popup_overlay_row {
+            LayoutNodeKind::OverlayRow { rect: FlexRect { x: node.layout.x, y: node.layout.y, width: node.layout.width, height: node.layout.height } }
+        } else {
+            match &node.spec.0 {
+                UiNode::Text(_) => LayoutNodeKind::Text,
+                UiNode::Tree(tree_node) => LayoutNodeKind::Tree { height: retained_tree_height(tree, id, tree_node, &self.row_metrics), reversed: root_reversed },
+                UiNode::Stack(stack) => tree_row_kind(tree, id, parent_kind, &self.row_metrics).unwrap_or(LayoutNodeKind::Stack {
+                    horizontal: stack.direction == "horizontal",
+                    gap: gap_for_token(&self.theme, stack.gap.as_deref()),
+                    padding: padding_for_token(&self.theme, stack.padding.as_deref()),
+                }),
+                UiNode::Field(_) => LayoutNodeKind::Field { top: self.theme.font_size_small + gap_for_token(&self.theme, Some("standard")) },
+                UiNode::Section(_) => LayoutNodeKind::Section { gap: self.theme.gap_standard },
+                UiNode::Button(_) => LayoutNodeKind::Control { height: self.theme.control_height, label_padding: Some(self.theme.padding_standard) },
+                UiNode::Input(_) | UiNode::Select(_) => LayoutNodeKind::Control {
+                    height: if tree_inline_control { self.theme.control_height_small } else { self.theme.control_height },
+                    label_padding: None,
+                },
+                UiNode::Toggle(_) | UiNode::Slider(_) | UiNode::NumberStepper(_) | UiNode::Ring(_) | UiNode::IconSelect(_) => LayoutNodeKind::Control { height: self.theme.control_height, label_padding: None },
+                UiNode::ExternalSlot(slot) => LayoutNodeKind::HostContent { height: host_content_height(&slot.params_json, &self.theme) },
+                UiNode::ComponentScene(_) => LayoutNodeKind::EngineSurface,
+                // 📶️ React's bar is `h-tiny w-full` (`🗣️Interpreter/🟦️.tsx`). As a plain `Leaf` it measured
+                // from arena children — a progress node has none — so it solved to height ZERO and
+                // `progress_bar_rects`' `SIZE_TINY.min(bounds.h)` painted nothing at all: the live
+                // generation3d Tool-runs panel showed the run title and an empty gap where React shows the
+                // filled bar (ticket 26/09/17/WGPU-RENDERER-REACT-PARITY,
+                // `📓️w14b-generation3d-labels-preview-layout.md`).
+                UiNode::Progress(_) => LayoutNodeKind::Control { height: crate::wgpu::chrome::SIZE_TINY, label_padding: None },
+                _ => LayoutNodeKind::Leaf,
             }
-            UiNode::ExternalSlot(slot) => LayoutNodeKind::HostContent { height: host_content_height(&slot.params_json, &self.theme) },
-            UiNode::ComponentScene(_) => LayoutNodeKind::EngineSurface,
-            // 📶️ React's bar is `h-tiny w-full` (`🗣️Interpreter/🟦️.tsx`). As a plain `Leaf` it measured
-            // from arena children — a progress node has none — so it solved to height ZERO and
-            // `progress_bar_rects`' `SIZE_TINY.min(bounds.h)` painted nothing at all: the live
-            // generation3d Tool-runs panel showed the run title and an empty gap where React shows the
-            // filled bar (ticket 26/09/17/WGPU-RENDERER-REACT-PARITY,
-            // `📓️w14b-generation3d-labels-preview-layout.md`).
-            UiNode::Progress(_) => LayoutNodeKind::Control { height: crate::wgpu::chrome::SIZE_TINY, label_padding: None },
-            _ => LayoutNodeKind::Leaf,
         };
         let index = self.nodes.len();
-        let parent_kind = parent.and_then(|index| self.nodes.get(index)).map(|input| input.kind);
         let input = LayoutInputNode { id, parent, first_child: None, last_child: None, next_sibling: None, kind, intrinsic: IntrinsicSize::default(), glyph_start: 0, glyph_end: 0 };
         if let Err(owner) = self.nodes.try_push(input) {
             self.rejected_node = Some(owner);
@@ -545,12 +605,13 @@ impl MountedLayoutJob {
                 owner.last_child = Some(index);
             }
         }
-        if let Err(owner) = self.walk.try_push(WalkFrame { next_child: node.first_child, node: index }) {
+        let expanded = matches!(kind, LayoutNodeKind::TreeRow { .. }) || tree.disclosure_open(id).unwrap_or(true) && !matches!(kind, LayoutNodeKind::TreeSection { expanded: false, .. });
+        if let Err(owner) = self.walk.try_push(WalkFrame { next_child: expanded.then_some(node.first_child).flatten(), node: index }) {
             self.rejected_walk = Some(owner);
             self.fault = Some(MountedLayoutFault::DepthCredits);
             return (0, 0);
         }
-        if matches!(kind, LayoutNodeKind::Text | LayoutNodeKind::Control { label_padding: Some(_), .. }) {
+        if popup_overlay_row || matches!(kind, LayoutNodeKind::Text | LayoutNodeKind::Control { label_padding: Some(_), .. }) {
             self.text_node = Some(index);
             self.text_byte = 0;
             self.text_glyph_start = self.glyphs.len();
@@ -620,7 +681,9 @@ impl MountedLayoutJob {
 
     fn worker_one(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> semio_framework_job::StepOutcome {
         #[cfg(test)]
-        { self.worker_thread_observed = std::thread::current().name().is_some_and(|name| name.starts_with("semio-pool-worker-")); }
+        {
+            self.worker_thread_observed = std::thread::current().name().is_some_and(|name| name.starts_with("semio-pool-worker-"));
+        }
         if self.close_requested || cx.is_cancelled() {
             return semio_framework_job::StepOutcome::Cancelled;
         }
@@ -770,7 +833,7 @@ impl MountedLayoutJob {
         };
         let index = self.collect_cursor;
         self.collect_cursor += 1;
-        if matches!(input.kind, LayoutNodeKind::Text | LayoutNodeKind::Control { label_padding: Some(_), .. }) {
+        if matches!(input.kind, LayoutNodeKind::Text | LayoutNodeKind::Control { label_padding: Some(_), .. } | LayoutNodeKind::OverlayRow { .. }) {
             if let Err(owner) = self.lines.try_push(RetainedLine { node: index, width: rect.width, height: rect.height }) {
                 self.rejected_line = Some(owner);
                 self.fault = Some(MountedLayoutFault::NodeCredits);
@@ -794,6 +857,13 @@ impl MountedLayoutJob {
 
     pub(crate) fn latest_glyph_preview(&self) -> Option<RetainedGlyphPreview> {
         self.glyph_previews.get(self.glyph_cursor.saturating_sub(1)).copied()
+    }
+
+    pub(crate) fn root_intrinsic_height(&self) -> Option<f32> {
+        if matches!(self.stage, LayoutJobStage::CollectNodes | LayoutJobStage::ShapeText | LayoutJobStage::MeasureLayout) {
+            return None;
+        }
+        self.flex.intrinsic(0).map(|(_, height)| height)
     }
 
     #[cfg(test)]
@@ -918,7 +988,7 @@ impl MountedLayoutJob {
 #[cfg(any(test, feature = "testkit"))]
 pub(crate) fn layout_tree_now(tree: &mut UiTree, root: NodeId, theme: Theme, width: f32, height: f32) -> bool {
     let identity = MountedLayoutIdentity { surface: UiSurfaceToken::new(0, 1), generation: 1, revision: 0, theme_revision: 0, viewport_revision: 0 };
-    let Ok(mut job) = MountedLayoutJob::try_new(tree, root, identity, theme, width, height) else { return false };
+    let Ok(mut job) = MountedLayoutJob::try_new(tree, root, identity, theme, width, height, false) else { return false };
     let cancel = semio_framework_job::CancelToken::root_now();
     let mut preview = 0;
     while !job.is_admitted() {

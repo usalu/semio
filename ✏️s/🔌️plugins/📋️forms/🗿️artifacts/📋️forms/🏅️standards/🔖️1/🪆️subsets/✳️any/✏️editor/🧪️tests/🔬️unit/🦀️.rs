@@ -5,9 +5,14 @@ pub(crate) mod context {
     
     pub type FormsApp = VcsArtifactApp<EditorApp<FormsPlayApp>>;
     
-    /// 🧪️ An app instance with its concrete command registry and retained job proofs.
+    /// 🧪️ An app instance with its concrete command registry and retained job proofs, bound to the
+    /// live runtime instance `meta("local")` addresses — without the binding every `dispatch_typed`
+    /// is refused with `interactive-job.live-instance` ("typed command … does not belong to the live
+    /// instance").
     pub async fn forms_app() -> FormsApp {
-        new_app_with_registry::<EditorApp<FormsPlayApp>>(forms_manifest_for_tests).await
+        let mut app = new_app_with_registry::<EditorApp<FormsPlayApp>>(forms_manifest_for_tests).await;
+        app.bind_instance_id(meta("local").instance_id).await;
+        app
     }
     
     /// 🚧️ SDK GAP (w0-f-report Gap 3): `new_app_with_registry`/`assert_declared_actions_bridge_to_commands`
@@ -21,7 +26,20 @@ pub(crate) mod context {
     /// 🧪️ An app wired to the real manifest registry — enforces View/Shell kind discipline, and the
     /// `kind` default declared on `addQuestion` materializes host-side.
     pub async fn forms_app_with_registry() -> FormsApp {
-        new_app_with_registry::<EditorApp<FormsPlayApp>>(forms_manifest_for_tests).await
+        forms_app().await
+    }
+
+    /// 🔁️ Drives one dispatched typed operation to quiescence the way the plugin host does, draining
+    /// EVERY result page — on a mounted app `dispatch_typed` only QUEUES the operation, so a test
+    /// reading `app.snapshot()` straight afterwards observes the pre-dispatch document.
+    pub async fn settle(app: &mut FormsApp) {
+        semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(app, meta("local").instance_id).await.expect("settle the typed operation");
+    }
+
+    /// 🧹️ Closes every store the wrapper opened. A live `ArtifactStore` asserts in `Drop` unless it
+    /// was driven to its terminal-empty shallow shell, so every fixture that mounts an app must end here.
+    pub fn close(app: &mut FormsApp) {
+        semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(app);
     }
     
     pub async fn config(app: &FormsApp) -> FormsConfig {
@@ -34,7 +52,9 @@ pub(crate) mod context {
     }
     
     pub async fn dispatch(app: &mut FormsApp, command: FormsCommand) -> InvocationResult {
-        app.dispatch_typed(command, &meta("local")).await.expect("dispatch")
+        let result = app.dispatch_typed(command, &meta("local")).await.expect("dispatch");
+        settle(app).await;
+        result
     }
     
     pub async fn render(app: &mut FormsApp, body_key: &str) -> String {

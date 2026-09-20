@@ -31,7 +31,7 @@ pub type BridgeSlot = Arc<OnceLock<Arc<BridgeHandle>>>;
 fn resolve_bridge(slot: Option<&BridgeSlot>) -> Option<&Arc<BridgeHandle>> {
     slot.and_then(|slot| slot.get())
 }
-use crate::catalog::{CapabilityDefinition, CapabilityKind, CapabilityOwner, CapabilityPresentation, CapabilityRef, CapabilitySource, ToolExposure};
+use crate::catalog::{CapabilityAudience, CapabilityDefinition, CapabilityKind, CapabilityOwner, CapabilityPresentation, CapabilityRef, CapabilitySource, ToolExposure};
 use crate::errors::{GatewayError, GatewayErrorCode};
 use crate::handles::{mint_id, HandleKind};
 use crate::protocol::{CallToolResult, ContentBlock, InMemoryToolRegistry, Resource, ResourceContent, ResourceTemplate, Tool};
@@ -232,28 +232,37 @@ impl JobRegistry {
         let job_id = job_id.into();
         let record = JobRecord { kind: kind.to_string(), status: JobStatus::Pending, progress: None, message: None, result: None, error: None, cancel_requested: false };
         self.jobs.lock().expect("job registry lock poisoned").insert(job_id.clone(), record);
+        // 📈️ Every producer in this crate mints through here, so binding the job to the `tools/call`
+        // progress token currently active on this thread covers all of them by construction — no
+        // producer has to opt in, and none can silently forget to.
+        crate::notify::bind_job_to_active_scope(&job_id);
         job_id
     }
 
     /// 📈️ Real progress from the job's own producer — a no-op (`false`) once the job is terminal.
     pub fn report_progress(&self, job_id: &str, progress: f64, message: Option<String>) -> bool {
         let mut jobs = self.jobs.lock().expect("job registry lock poisoned");
-        match jobs.get_mut(job_id) {
+        let accepted = match jobs.get_mut(job_id) {
             Some(record) if !record.status.is_terminal() => {
                 record.status = JobStatus::Running;
                 record.progress = Some(progress.clamp(0.0, 1.0));
                 if message.is_some() {
-                    record.message = message;
+                    record.message = message.clone();
                 }
                 true
             }
             _ => false,
+        };
+        drop(jobs);
+        if accepted {
+            crate::notify::job_progress_changed(job_id, progress, message.as_deref());
         }
+        accepted
     }
 
     fn finish(&self, job_id: &str, status: JobStatus, result: Option<serde_json::Value>, error: Option<GatewayError>) -> bool {
         let mut jobs = self.jobs.lock().expect("job registry lock poisoned");
-        match jobs.get_mut(job_id) {
+        let accepted = match jobs.get_mut(job_id) {
             Some(record) if !record.status.is_terminal() => {
                 record.status = status;
                 record.result = result;
@@ -264,7 +273,18 @@ impl JobRegistry {
                 true
             }
             _ => false,
+        };
+        drop(jobs);
+        if accepted {
+            // 📈️ A terminal transition is the client's LAST progress row (1.0 for a success), then
+            // the binding is released so a long-lived stdio process never accumulates one entry per
+            // job it ever ran.
+            if status == JobStatus::Succeeded {
+                crate::notify::job_progress_changed(job_id, 1.0, Some("succeeded"));
+            }
+            crate::notify::release_job_binding(job_id);
         }
+        accepted
     }
 
     pub fn succeed(&self, job_id: &str, result: serde_json::Value) -> bool {
@@ -336,6 +356,7 @@ fn ui_focus_capability() -> CapabilityDefinition {
         version: 1,
         owner: CapabilityOwner::Gateway,
         kind: CapabilityKind::Ui,
+        audience: CapabilityAudience::Agent,
         title: "Focus Window".to_string(),
         description: "Focuses a window on the attached shell (omit windowId to clear focus).".to_string(),
         artifact_kind: None,
@@ -358,6 +379,7 @@ fn ui_reveal_capability() -> CapabilityDefinition {
         version: 1,
         owner: CapabilityOwner::Gateway,
         kind: CapabilityKind::Ui,
+        audience: CapabilityAudience::Agent,
         title: "Reveal In Panel".to_string(),
         description: "Makes a panel visible and navigates it to the given path on the attached shell.".to_string(),
         artifact_kind: None,
@@ -380,6 +402,7 @@ fn job_get_capability() -> CapabilityDefinition {
         version: 1,
         owner: CapabilityOwner::Gateway,
         kind: CapabilityKind::Job,
+        audience: CapabilityAudience::Agent,
         title: "Get Job".to_string(),
         description: "Reads the status/progress/result of one plugin-agnostic job by id.".to_string(),
         artifact_kind: None,
@@ -402,6 +425,7 @@ fn job_cancel_capability() -> CapabilityDefinition {
         version: 1,
         owner: CapabilityOwner::Gateway,
         kind: CapabilityKind::Job,
+        audience: CapabilityAudience::Agent,
         title: "Cancel Job".to_string(),
         description: "Requests cooperative cancellation of one running or pending job by id.".to_string(),
         artifact_kind: None,

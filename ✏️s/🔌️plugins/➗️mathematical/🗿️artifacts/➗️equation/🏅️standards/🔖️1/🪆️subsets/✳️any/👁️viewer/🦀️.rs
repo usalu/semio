@@ -41,6 +41,8 @@ impl protocol::OpBinary for EquationViewCommand {
 pub struct EquationViewer;
 
 impl ArtifactViewer for EquationViewer {
+    /// 🧩️ Same composed-child roster as the editor — the contract is declared on BOTH surfaces.
+    type Members = semio_s_artifact_stdio_semio::SemioMembers;
     type Snapshot = EquationSnapshot;
     type Mutation = crate::op::EquationMutation;
     type Config = NoConfig;
@@ -53,6 +55,12 @@ impl ArtifactViewer for EquationViewer {
 
     const DIALECT: Dialect = EQUATION_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = MATH_DOCUMENT_SCHEMA;
+
+    /// 🌱️ The derivable `notation`/`results`/`computed` members — see
+    /// `crate::genesis_equation_child_pack`.
+    fn genesis_child_pack(snapshot: &Self::Snapshot, slot: &str, child_id: &str) -> Option<Vec<u8>> {
+        crate::genesis_equation_child_pack(snapshot, slot, child_id)
+    }
 
     fn initial_snapshot() -> EquationSnapshot {
         EquationSnapshot::default()

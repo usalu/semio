@@ -47,7 +47,7 @@
   "coolingDeltaTH": null,
   "coolingGainsKwh": null,
   "coolingUtilizationFactor": null,
-  "coolingReferenceKwh": 25,
+  "coolingReferenceKwh": 25.0,
   "chillerType": null,
   "eerActual": null,
   "qCKwh": null,

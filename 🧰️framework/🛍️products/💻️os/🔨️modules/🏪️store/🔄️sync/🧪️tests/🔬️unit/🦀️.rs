@@ -146,6 +146,7 @@ async fn artifact_mailbox_nested_identifier_bytes_and_backbone_one_pop_preserve_
         views: Vec::new(),
         ui: None,
         tool_run: None,
+        principal_kind: None,
     };
     let nested_bytes = artifact_actor_message_bytes(&ArtifactActorMsg::PresenceHeartbeat { peer: Box::new(nested) }).expect("nested message fits");
     let bare_bytes = artifact_actor_message_bytes(&ArtifactActorMsg::PresenceHeartbeat { peer: Box::new(bare) }).expect("bare message fits");
@@ -892,6 +893,7 @@ async fn actor_stamps_session_color_and_surface_on_outbound_heartbeat() {
         views: Vec::new(),
         ui: None,
         tool_run: None,
+        principal_kind: None,
     };
     stamp_session(&mut peer, Some(7), Some("s.space.home@1/*#editor")).await;
     assert_eq!(peer.color, Some(7));
@@ -1063,6 +1065,7 @@ async fn sample_presence_peer_with_interaction() -> PresencePeer {
         ],
         ui: Some(crate::os_spr::PresenceUi { hovered_path: Some("row[2]#t1".to_string()), focused_path: None, pressed_path: None }),
         tool_run: None,
+        principal_kind: None,
     }
 }
 //#endregion 🧪️WireBridge

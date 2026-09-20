@@ -151,7 +151,7 @@ export function useUiDriver(): UiDriver {
 }
 
 /** @emoji 🚗️ Supplies driver state to a subtree, overriding the ambient/stored driver. */
-export function UiDriverProvider({ driver, children }: { readonly driver: UiDriver; readonly children: React.ReactNode }): React.ReactElement {
+export function UiDriverProvider({ driver, children }: { readonly driver: UiDriver; readonly children?: React.ReactNode }): React.ReactElement {
   reactHostPort.useEffect(() => {
     setUiDriverProvider(() => driver);
     return () => setUiDriverProvider(() => readStoredUiDriver(createBrowserStoragePort()));

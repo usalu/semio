@@ -107,7 +107,7 @@ pub(crate) fn class_diff(base: &StepSnapshot, edit: &ClassEdit) -> protocol::Mut
 /// representation puts back a state CC1 forbids, so no in-class verb can express it.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn class_inverse(base: &StepSnapshot, edit: &ClassEdit) -> Vec<StepCc1Mutation> {
-    match ladder::invert_class_edit(&base.to_part21_document(), MAX_RUNG, edit) {
+    match ladder::invert_class_edit_restoring(&base.to_part21_document(), CLASS, MAX_RUNG, edit) {
         Some(ClassEdit::FileSchema { schemas }) => vec![StepCc1Mutation::SetFileSchema(set_file_schema::SetFileSchema { schemas })],
         Some(ClassEdit::ProductIdentity { identity }) => vec![StepCc1Mutation::SetProductIdentity(set_product_identity::SetProductIdentity { identity })],
         Some(ClassEdit::Representation { id, row: None }) => vec![StepCc1Mutation::RemoveShapeRepresentation(remove_shape_representation::RemoveShapeRepresentation { id })],

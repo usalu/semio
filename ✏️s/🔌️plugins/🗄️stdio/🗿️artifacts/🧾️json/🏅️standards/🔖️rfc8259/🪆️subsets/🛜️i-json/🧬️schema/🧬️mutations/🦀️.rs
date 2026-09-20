@@ -295,11 +295,18 @@ pub(crate) fn agg_diff(this: &JsonIJsonMutation, base: &JsonSnapshot) -> protoco
 
 // 🚫️async: E1 pure codec/computation helper — lifted verbatim from the former `impl Mutation`.
 ///
-/// ↩️ Handcrafted, clause-aware and exact: every verb's undo is spelled in THIS vocabulary, never
-/// by falling back to `SetSnapshot`. `SetSafeNumber`/`SetString` are total because they refuse a
-/// target of the wrong kind up front, so the prior value is always a lexeme/string they can write
+/// ↩️ Handcrafted, clause-aware and exact. `SetSafeNumber`/`SetString` are total because they refuse
+/// a target of the wrong kind up front, so the prior value is always a lexeme/string they can write
 /// back; `RenameMember` inverts to itself with the two names swapped, which is why it had to be
 /// one atomic verb rather than a remove/insert pair.
+///
+/// ⚠️ `RemoveMember` is the one verb whose minimal undo is not always spellable here. Member ORDER
+/// is state in this model (`JsonValue::Object` carries a `Vec<JsonMember>`, and the I-JSON profile
+/// exists precisely to surface member order), while `UpsertMember` on an absent key APPENDS — so it
+/// re-creates a member that was not last in the WRONG position. The vocabulary has no positional
+/// member insert (adding one would change the wire and the cross-language catalog), so the undo of a
+/// non-last member degrades to the whole-snapshot restore, which is exact. The `🐍️.py` oracle of
+/// `🔀️mutate-json-rfc8259-i-json` carries the same rule, for the same reason.
 pub(crate) fn agg_inverse(this: &JsonIJsonMutation, base: &JsonSnapshot) -> Vec<JsonIJsonMutation> {
     match this {
         JsonIJsonMutation::SetSnapshot(_) => vec![JsonIJsonMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() })],
@@ -315,8 +322,9 @@ pub(crate) fn agg_inverse(this: &JsonIJsonMutation, base: &JsonSnapshot) -> Vec<
             _ => Vec::new(),
         },
         JsonIJsonMutation::RemoveMember(remove_member::RemoveMember { path, key }) => match resolve(&base.value, path) {
-            Some(JsonValue::Object { members }) => match members.iter().find(|member| &member.key == key) {
-                Some(existing) => vec![JsonIJsonMutation::UpsertMember(upsert_member::UpsertMember { path: path.clone(), key: key.clone(), value: existing.value.clone() })],
+            Some(JsonValue::Object { members }) => match members.iter().position(|member| &member.key == key) {
+                Some(position) if position + 1 == members.len() => vec![JsonIJsonMutation::UpsertMember(upsert_member::UpsertMember { path: path.clone(), key: key.clone(), value: members[position].value.clone() })],
+                Some(_) => vec![JsonIJsonMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() })],
                 None => Vec::new(),
             },
             _ => Vec::new(),

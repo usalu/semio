@@ -10,10 +10,11 @@
 use std::collections::HashMap;
 
 use crate::wgpu::arena::NodeId;
+use crate::wgpu::chrome::UiDriverDrag;
 use crate::wgpu::component::layout::ActionDescriptor;
 use crate::wgpu::component::ui::{SurfaceKind, UiNode, UiNumberStepperNode, UiSliderNode, UiState, UiTreeItemNode, UiTreeSectionNode};
 use crate::wgpu::geometry::Rect;
-use crate::wgpu::layout::{number_stepper_segments, ring_t_at, slider_value_at};
+use crate::wgpu::layout::{number_stepper_segments, ring_t_at, slider_value_at, tree_drag_handle_rect, tree_drag_role, tree_item_chevron_rect, tree_section_header_band, tree_section_header_height, TreeRowMetrics};
 use crate::wgpu::select;
 use crate::wgpu::tree::{EditState, Node, NodeFlags, NodeKey, UiTree};
 use crate::wgpu::{intent_is_stale, UiIntentAddress, UiIntentCommand, UiIntentSequencer};
@@ -55,6 +56,7 @@ pub struct EventModifiers {
 /// (ticket 26/09/17/WGPU-RENDERER-REACT-PARITY, `📓️audit-w14-scenes-residual.md` C1).
 #[derive(Clone, Debug, PartialEq)]
 pub enum UiEvent {
+    PointerCancel,
     PointerDown {
         x: f32,
         y: f32,
@@ -103,6 +105,14 @@ pub enum UiEvent {
     Ime(ImeEvent),
 }
 
+#[derive(Clone, Debug, PartialEq)]
+pub enum AccessibilityUiEvent {
+    Focus,
+    Blur,
+    Activate,
+    Value(String),
+}
+
 /// 🈶️ One IME composition step — see `UiEvent::Ime`.
 #[derive(Clone, Debug, PartialEq)]
 pub enum ImeEvent {
@@ -133,12 +143,12 @@ pub enum ImeEvent {
 /// skipped for the match itself (their children are still tested — pass-through). Returns the
 /// deepest/topmost matching node.
 pub(crate) fn hit_test(tree: &UiTree, root: NodeId, x: f32, y: f32) -> Option<NodeId> {
-    hit_test_node(tree, root, 0.0, 0.0, x, y)
+    hit_test_node(tree, root, 0.0, 0.0, x, y, false, None)
 }
 
 /// 🪟️ An OPEN floating overlay is tested at the placement it was painted at, never at its in-flow
 /// position — one origin rule shared with the retained paint/hit walk (`UiTree::overlay_origins`).
-fn hit_test_node(tree: &UiTree, id: NodeId, origin_x: f32, origin_y: f32, x: f32, y: f32) -> Option<NodeId> {
+fn hit_test_node(tree: &UiTree, id: NodeId, origin_x: f32, origin_y: f32, x: f32, y: f32, reversed: bool, tree_metrics: Option<&TreeRowMetrics>) -> Option<NodeId> {
     let node = tree.node(id)?;
     let layout = tree.accepted_layout(id)?;
     let (origin_x, origin_y) = tree.overlay_walk_origin(id).unwrap_or((origin_x, origin_y));
@@ -150,14 +160,17 @@ fn hit_test_node(tree: &UiTree, id: NodeId, origin_x: f32, origin_y: f32, x: f32
     }
     let mut overlays: Vec<NodeId> = Vec::new();
     let mut normal: Vec<NodeId> = Vec::new();
-    for child in tree.children(id) {
-        match tree.node(child) {
-            Some(child_node) if child_node.flags.contains(NodeFlags::OVERLAY) => overlays.push(child),
-            _ => normal.push(child),
+    if tree.disclosure_open(id).unwrap_or(true) {
+        for child in tree.children(id) {
+            match tree.node(child) {
+                Some(child_node) if child_node.flags.contains(NodeFlags::OVERLAY) => overlays.push(child),
+                _ => normal.push(child),
+            }
         }
     }
+    let (child_x, child_y) = tree.child_walk_origin(id, (origin_x, origin_y))?;
     for child in overlays.into_iter().rev().chain(normal.into_iter().rev()) {
-        if let Some(hit) = hit_test_node(tree, child, abs_x, abs_y, x, y) {
+        if let Some(hit) = hit_test_node(tree, child, child_x, child_y, x, y, reversed, tree_metrics) {
             return Some(hit);
         }
     }
@@ -166,11 +179,31 @@ fn hit_test_node(tree: &UiTree, id: NodeId, origin_x: f32, origin_y: f32, x: f32
     // `HIT_TRANSPARENT`, just implicit for this variant instead of flag-driven) — *unless* W2
     // wiring (`is_plain_stack_container`) finds it actually carries `activate`/`drop_action`, or is
     // a registered drag source — any of those make it a real interaction target.
-    let is_plain_container = is_plain_stack_container(node);
-    if inside && !node.flags.contains(NodeFlags::HIT_TRANSPARENT) && !is_plain_container {
+    let inside_self = if tree.disclosure_is_interactive(id) {
+        disclosure_header_band(tree, id, Rect::new(abs_x, abs_y, layout.width, layout.height), reversed, tree_metrics).contains(x, y)
+    } else {
+        inside
+    };
+    let is_plain_container = is_plain_stack_container(tree, id, node);
+    if inside_self && !node.flags.contains(NodeFlags::HIT_TRANSPARENT) && !is_plain_container {
         Some(id)
     } else {
         None
+    }
+}
+
+fn disclosure_header_band(tree: &UiTree, id: NodeId, rect: Rect, reversed: bool, tree_metrics: Option<&TreeRowMetrics>) -> Rect {
+    let tree_section = tree
+        .node(id)
+        .and_then(|node| Some((tree.node(node.parent?)?, &node.key)))
+        .and_then(|(parent, key)| match (&parent.spec.0, key) {
+            (UiNode::Tree(owner), NodeKey::Explicit(key)) => owner.sections.iter().find(|section| &section.id == key),
+            _ => None,
+        });
+    match (tree_section, tree_metrics) {
+        (Some(section), Some(metrics)) => tree_section_header_band(rect, tree_section_header_height(section, metrics), reversed),
+        (None, Some(metrics)) if tree.authored_tree_item(id).is_some() => tree_section_header_band(rect, metrics.row_height, reversed),
+        _ => Rect::new(rect.x, rect.y, rect.w, crate::wgpu::flex::SECTION_HEADER_HEIGHT.min(rect.h)),
     }
 }
 
@@ -183,9 +216,9 @@ fn hit_test_node(tree: &UiTree, id: NodeId, origin_x: f32, origin_y: f32, x: f32
 /// row's per-item `hover_action`/`unhover_action` exception is deleted — hover on a tree row is now
 /// dispatched through the row's `UiTreeNode.interaction_domain` binding (`interactionHover`),
 /// never an ad hoc per-item action.
-fn is_plain_stack_container(node: &Node) -> bool {
+fn is_plain_stack_container(tree: &UiTree, id: NodeId, node: &Node) -> bool {
     let UiNode::Stack(stack) = &node.spec.0 else { return false };
-    stack.activate.is_none() && stack.drop_action.is_none() && !node.flags.contains(NodeFlags::DRAG_SOURCE)
+    stack.activate.is_none() && stack.drop_action.is_none() && !node.flags.contains(NodeFlags::DRAG_SOURCE) && !tree.disclosure_is_interactive(id)
 }
 
 //#region 🔖️TreeItemLookup
@@ -229,45 +262,16 @@ fn find_item_in_items<'a>(items: &'a [UiTreeItemNode], id: &str) -> Option<&'a U
 }
 //#endregion 🔖️TreeItemLookup
 
-/// 📐️ A node's absolute (window-space) origin: `LayoutBucket`'s own doc comment fixes `x`/`y` as
-/// **parent-relative**, so this walks the parent chain to `root` (whose own origin is `(0.0, 0.0)`)
-/// summing offsets. Used by the overlay placement/dismissal machinery, which needs a node's real
-/// on-screen bounds rather than its parent-relative layout rect.
-fn node_abs_origin(tree: &UiTree, id: NodeId) -> (f32, f32) {
-    match tree.node(id) {
-        Some(node) => {
-            let layout = tree.accepted_layout(id).unwrap_or_default();
-            let (parent_x, parent_y) = match node.parent {
-                Some(parent) => node_abs_origin(tree, parent),
-                None => (0.0, 0.0),
-            };
-            (parent_x + layout.x, parent_y + layout.y)
-        }
-        None => (0.0, 0.0),
-    }
-}
-
-/// 📐️ `node_abs_origin` plus the node's own size, as a `Rect` — `None` if `id` isn't in `tree`.
+/// 📐️ Uses the same scroll and overlay placement as the retained paint walk.
 pub(crate) fn node_abs_rect(tree: &UiTree, id: NodeId) -> Option<Rect> {
-    tree.node(id)?;
-    let layout = tree.accepted_layout(id)?;
-    let (x, y) = node_abs_origin(tree, id);
-    Some(Rect::new(x, y, layout.width, layout.height))
+    tree.absolute_rect(id)
 }
 
-/// 🎯️ `hit_test`, but `subtree_root` need not be the window's true tree root (an overlay root
-/// virtually never is — it's some descendant node). `hit_test` walks from its `root` argument
-/// treating that node's own `layout.x`/`layout.y` as relative to origin `(0.0, 0.0)`, which is only
-/// correct window-absolute-coordinate behavior when `root` itself has no parent; this instead
-/// resolves `subtree_root`'s *parent's* absolute origin (`(0.0, 0.0)` if it has none) and translates
-/// `(x, y)` into that frame first, so overlay dismissal/hover-out checks against a non-root overlay
-/// subtree stay correct regardless of how deep it's nested.
+/// 🎯️ Tests a placed subtree in window coordinates, including open overlays outside ancestor clips.
 pub(crate) fn hit_test_subtree(tree: &UiTree, subtree_root: NodeId, x: f32, y: f32) -> Option<NodeId> {
-    let (parent_x, parent_y) = match tree.node(subtree_root).and_then(|node| node.parent) {
-        Some(parent) => node_abs_origin(tree, parent),
-        None => (0.0, 0.0),
-    };
-    hit_test(tree, subtree_root, x - parent_x, y - parent_y)
+    let rect = tree.absolute_rect(subtree_root)?;
+    let layout = tree.accepted_layout(subtree_root)?;
+    hit_test_node(tree, subtree_root, rect.x - layout.x, rect.y - layout.y, x, y, false, None)
 }
 //#endregion 🔖️HitTest
 
@@ -312,11 +316,18 @@ fn is_focusable(node: &UiNode) -> bool {
     matches!(node, UiNode::Input(_) | UiNode::Button(_) | UiNode::Select(_) | UiNode::Toggle(_) | UiNode::Slider(_) | UiNode::NumberStepper(_) | UiNode::Ring(_) | UiNode::IconSelect(_)) && node.presence().state != UiState::Disabled
 }
 
+fn node_is_focusable(tree: &UiTree, id: NodeId) -> bool {
+    tree.node(id).is_some_and(|node| (is_focusable(&node.spec.0) || tree.disclosure_is_interactive(id)) && node.spec.0.presence().state != UiState::Disabled)
+}
+
 fn collect_focusable(tree: &UiTree, id: NodeId, out: &mut Vec<NodeId>) {
     if let Some(node) = tree.node(id) {
-        if is_focusable(&node.spec.0) {
+        if node_is_focusable(tree, id) {
             out.push(id);
         }
+    }
+    if !tree.disclosure_open(id).unwrap_or(true) {
+        return;
     }
     for child in tree.children(id) {
         collect_focusable(tree, child, out);
@@ -508,11 +519,7 @@ fn commits_on_blur(node: &UiNode) -> bool {
 fn edit_commit_action(node: &Node, text: &str) -> Option<FiredAction> {
     match &node.spec.0 {
         UiNode::Input(input) => {
-            let value = if input.input_kind == "number" {
-                DslValue::float(constrain_number_input(text.parse::<f64>().unwrap_or(f64::NAN), input.min, input.max, input.step))
-            } else {
-                DslValue::String(text.to_string())
-            };
+            let value = if input.input_kind == "number" { DslValue::float(constrain_number_input(text.parse::<f64>().unwrap_or(f64::NAN), input.min, input.max, input.step)) } else { DslValue::String(text.to_string()) };
             let trigger = if commits_on_blur(&node.spec.0) { Trigger::Commit } else { Trigger::Change };
             fired_action(&input.on_change, trigger, value)
         }
@@ -696,8 +703,7 @@ pub enum OverlayAnchor {
 /// target's: `ui_contract::🪟️overlay` owns the one port of React's `resolvePopoverPlacement` so this
 /// module and `🖌️render/🖱️dispatch` cannot drift apart again (ticket 26/09/17 packet W2k).
 pub use ui_contract::{
-    resolve_centered_placement, resolve_select_inline_left, AnchoredPlacement, DismissPolicy, OverlayAlign, OverlayKind, OverlayPlacement, OverlayRect, OverlaySide,
-    ResolvedOverlayPlacement, TOOLTIP_DWELL_SECONDS, TOOLTIP_HOVER_OUT_SECONDS,
+    resolve_centered_placement, resolve_select_inline_left, AnchoredPlacement, DismissPolicy, OverlayAlign, OverlayKind, OverlayPlacement, OverlayRect, OverlaySide, ResolvedOverlayPlacement, TOOLTIP_DWELL_SECONDS, TOOLTIP_HOVER_OUT_SECONDS,
 };
 
 /// 🪟️ One currently-open overlay's lifecycle state.
@@ -793,7 +799,6 @@ pub fn overlay_rect(rect: Rect) -> OverlayRect {
 pub fn resolve_anchored_placement(anchor: Rect, content_size: (f32, f32), viewport: (f32, f32), placement: AnchoredPlacement, flow: FlowInline) -> ResolvedOverlayPlacement {
     ui_contract::resolve_anchored_placement(overlay_rect(anchor), content_size, viewport, placement, flow)
 }
-
 
 //#endregion 🔖️Overlay
 
@@ -996,6 +1001,9 @@ pub(crate) struct EventRouter {
     press_origin: Option<(f32, f32)>,
     overlays: OverlayStack,
     drag: Option<DragSession>,
+    tree_drag_driver: UiDriverDrag,
+    tree_drag_metrics: TreeRowMetrics,
+    tree_drag_handle_press: Option<NodeId>,
     /// 🫳️ Per-node `DragPayload` a `Press` capture on that node may promote into, set via
     /// `set_drag_payload`.
     drag_payloads: HashMap<NodeId, DragPayload>,
@@ -1050,6 +1058,9 @@ impl EventRouter {
             press_origin: None,
             overlays: OverlayStack::new(),
             drag: None,
+            tree_drag_driver: UiDriverDrag::Handle,
+            tree_drag_metrics: TreeRowMetrics::from_theme(&crate::wgpu::theme::Theme::default()),
+            tree_drag_handle_press: None,
             drag_payloads: HashMap::new(),
             drop_accept: HashMap::new(),
             scroll_thumbs: HashMap::new(),
@@ -1063,6 +1074,21 @@ impl EventRouter {
             flow: UiFlow::DEFAULT,
             focus_visible: false,
         }
+    }
+
+    fn toggle_disclosure(&mut self, tree: &mut UiTree, id: NodeId) -> bool {
+        tree.toggle_disclosure(id).is_some()
+    }
+
+    fn pointer_toggle_disclosure(&mut self, tree: &mut UiTree, id: NodeId, x: f32, y: f32) -> bool {
+        if tree.authored_tree_item(id).is_some() {
+            let Some(rect) = tree.absolute_rect(id) else { return false };
+            let Some(depth) = tree.tree_item_depth(id) else { return false };
+            if !tree_item_chevron_rect(rect, depth, &self.tree_drag_metrics, self.flow.block.is_reversed()).contains(x, y) {
+                return false;
+            }
+        }
+        self.toggle_disclosure(tree, id)
     }
 
     /// 🧭️ This window's logical flow.
@@ -1089,6 +1115,49 @@ impl EventRouter {
     /// activated focus; any pointer press clears it.
     pub(crate) fn focus_visible(&self) -> bool {
         self.focus_visible
+    }
+
+    pub(crate) fn set_tree_drag_policy(&mut self, tree: &mut UiTree, driver: UiDriverDrag, metrics: TreeRowMetrics) -> Vec<UiCommand> {
+        self.tree_drag_metrics = metrics;
+        if self.tree_drag_driver == driver {
+            return Vec::new();
+        }
+        self.tree_drag_driver = driver;
+        self.cancel_tree_drag(tree).into_iter().collect()
+    }
+
+    fn cancel_tree_drag(&mut self, tree: &mut UiTree) -> Option<UiCommand> {
+        let (source, kind) = self.capture.target?;
+        if find_tree_item_spec(tree, source).and_then(tree_drag_role).is_none() {
+            return None;
+        }
+        let _ = self.capture.release();
+        self.press_origin = None;
+        self.tree_drag_handle_press = None;
+        self.drag_payloads.remove(&source);
+        if let Some(node) = tree.node_mut(source) {
+            node.flags.set(NodeFlags::ACTIVE, false);
+        }
+        tree.mark_dirty(source, NodeFlags::DIRTY_PAINT);
+        if kind != CaptureKind::Drag {
+            self.drag = None;
+            return None;
+        }
+        let drag = self.drag.take()?;
+        Some(UiCommand::DropCancelled { window_id: self.window_id.clone(), source: drag.source })
+    }
+
+    fn tree_drag_press_arms(&self, tree: &UiTree, row: NodeId, x: f32, y: f32) -> bool {
+        let Some(item) = find_tree_item_spec(tree, row) else { return false };
+        if item.presence.state == UiState::Disabled || tree_drag_role(item).is_none() {
+            return false;
+        }
+        if self.tree_drag_driver == UiDriverDrag::Surface {
+            return true;
+        }
+        let Some(row_rect) = node_abs_rect(tree, row) else { return false };
+        let relative = tree_drag_handle_rect(row_rect.w, &self.tree_drag_metrics);
+        Rect::new(row_rect.x + relative.x, row_rect.y + relative.y, relative.w, relative.h).contains(x, y)
     }
 
     //#region 🎬️IntentApi
@@ -1139,8 +1208,18 @@ impl EventRouter {
     fn resolve_target(&self, tree: &UiTree, root: NodeId, x: f32, y: f32) -> Option<NodeId> {
         match self.capture.target {
             Some((id, _)) => Some(id),
-            None => hit_test(tree, root, x, y),
+            None => self.overlays.topmost().and_then(|overlay| self.hit_test_subtree(tree, overlay.root, x, y)).or_else(|| self.hit_test(tree, root, x, y)),
         }
+    }
+
+    fn hit_test(&self, tree: &UiTree, root: NodeId, x: f32, y: f32) -> Option<NodeId> {
+        hit_test_node(tree, root, 0.0, 0.0, x, y, self.flow.block.is_reversed(), Some(&self.tree_drag_metrics))
+    }
+
+    fn hit_test_subtree(&self, tree: &UiTree, subtree_root: NodeId, x: f32, y: f32) -> Option<NodeId> {
+        let rect = tree.absolute_rect(subtree_root)?;
+        let layout = tree.accepted_layout(subtree_root)?;
+        hit_test_node(tree, subtree_root, rect.x - layout.x, rect.y - layout.y, x, y, self.flow.block.is_reversed(), Some(&self.tree_drag_metrics))
     }
 
     /// 👆️ Flips `NodeFlags::HOVERED` off every node in the old hover bubble chain that isn't in the
@@ -1285,6 +1364,8 @@ impl EventRouter {
             if overlay.kind == OverlayKind::SelectPopup {
                 node.state.open = false;
                 node.state.highlighted = None;
+                node.state.scroll_offset = (0.0, 0.0);
+                node.state.select_popup = None;
             }
         }
         if overlay.kind == OverlayKind::Tooltip {
@@ -1294,10 +1375,19 @@ impl EventRouter {
         let mut out = vec![UiCommand::OverlayClosed { window_id: self.window_id.clone(), root: overlay.root, kind: overlay.kind }];
         if let Some(focused) = self.focus.focused {
             if is_descendant(tree, focused, overlay.root) {
-                if let Some((blurred, fired)) = self.focus.clear_focus(tree) {
-                    self.push_app_command(tree, blurred, fired, &mut out);
+                if overlay.kind == OverlayKind::SelectPopup {
+                    if focused != overlay.root {
+                        if let Some((blurred, fired)) = self.focus.set_focus(tree, Some(overlay.root), true) {
+                            self.push_app_command(tree, blurred, fired, &mut out);
+                        }
+                        out.push(UiCommand::FocusChanged { window_id: self.window_id.clone(), node: Some(overlay.root) });
+                    }
+                } else {
+                    if let Some((blurred, fired)) = self.focus.clear_focus(tree) {
+                        self.push_app_command(tree, blurred, fired, &mut out);
+                    }
+                    out.push(UiCommand::FocusChanged { window_id: self.window_id.clone(), node: None });
                 }
-                out.push(UiCommand::FocusChanged { window_id: self.window_id.clone(), node: None });
             }
         }
         out
@@ -1312,7 +1402,7 @@ impl EventRouter {
             return None;
         }
         let overlay_root = top.root;
-        if hit_test_subtree(tree, overlay_root, x, y).is_some() {
+        if self.hit_test_subtree(tree, overlay_root, x, y).is_some() {
             return None;
         }
         Some(self.close_topmost_overlay(tree))
@@ -1388,7 +1478,7 @@ impl EventRouter {
             drag.pointer_x = x;
             drag.pointer_y = y;
         }
-        let target = hit_test(tree, root, x, y).and_then(|hit| self.nearest_accepting_drop_target(tree, hit));
+        let target = self.hit_test(tree, root, x, y).and_then(|hit| self.nearest_accepting_drop_target(tree, hit));
         if let Some(drag) = self.drag.as_mut() {
             drag.drop_target = target;
         }
@@ -1424,11 +1514,17 @@ impl EventRouter {
     }
 
     fn route_scroll(&mut self, tree: &mut UiTree, root: NodeId, x: f32, y: f32, delta_x: f32, delta_y: f32) {
-        let Some(hit) = hit_test(tree, root, x, y) else { return };
+        let Some(hit) = self.hit_test(tree, root, x, y) else { return };
         let Some(scrollable) = nearest_scrollable_ancestor(tree, hit) else { return };
+        let Some(viewport) = tree.accepted_layout(scrollable) else { return };
+        let (content_width, content_height) = tree.children(scrollable).filter_map(|child| tree.accepted_layout(child)).fold((0.0_f32, 0.0_f32), |(width, height), child| {
+            (width.max(child.x + child.width), height.max(child.y + child.height))
+        });
+        let max_x = (content_width - viewport.width).max(0.0);
+        let max_y = (content_height - viewport.height).max(0.0);
         if let Some(node) = tree.node_mut(scrollable) {
             let (offset_x, offset_y) = node.state.scroll_offset;
-            node.state.scroll_offset = ((offset_x + delta_x).max(0.0), (offset_y + delta_y).max(0.0));
+            node.state.scroll_offset = ((offset_x + delta_x).clamp(0.0, max_x), (offset_y + delta_y).clamp(0.0, max_y));
         }
         tree.mark_dirty(scrollable, NodeFlags::DIRTY_PAINT);
     }
@@ -1474,7 +1570,8 @@ impl EventRouter {
         // it did bind. A line with neither keeps typing its space, and a non-empty line always does
         // (`🖱️ui/🎯️targets/⚛️react/🟦️.tsx:10507`/`:10512`).
         if text == " " {
-            let confirmed = tree.node(id).filter(|node| node.state.edit.as_ref().is_none_or(|edit| edit.text.trim().is_empty())).and_then(|node| search_line_action(node, Trigger::RepeatLast, "").or_else(|| search_line_action(node, Trigger::Submit, "")));
+            let confirmed =
+                tree.node(id).filter(|node| node.state.edit.as_ref().is_none_or(|edit| edit.text.trim().is_empty())).and_then(|node| search_line_action(node, Trigger::RepeatLast, "").or_else(|| search_line_action(node, Trigger::Submit, "")));
             if let Some(fired) = confirmed {
                 self.push_app_command(tree, id, fired, &mut out);
                 return out;
@@ -1665,10 +1762,121 @@ impl EventRouter {
     /// claim them ahead of the browser's own default (`🧱️elements/🔽️Select/🟦️.tsx`).
     /// `Escape` stays with the overlay stack and `Tab` still moves focus after the popup
     /// this closes, so neither of those two is ever reported as consumed.
+    pub(crate) fn dispatch_accessibility(&mut self, tree: &mut UiTree, target: NodeId, event: &AccessibilityUiEvent) -> Vec<UiCommand> {
+        self.prune_dead_registrations(tree);
+        let mut commands = Vec::new();
+        let enabled = tree.node(target).is_some_and(|node| node.spec.0.presence().state != UiState::Disabled);
+        if !enabled {
+            return commands;
+        }
+        if !matches!(event, AccessibilityUiEvent::Blur) && node_is_focusable(tree, target) {
+            if let Some((blurred, fired)) = self.focus.set_focus(tree, Some(target), true) {
+                self.push_app_command(tree, blurred, fired, &mut commands);
+            }
+            commands.push(UiCommand::FocusChanged { window_id: self.window_id.clone(), node: Some(target) });
+            self.focus_visible = true;
+        }
+        match event {
+            AccessibilityUiEvent::Focus => {}
+            AccessibilityUiEvent::Blur => {
+                if self.focus.focused == Some(target) {
+                    if let Some((blurred, fired)) = self.focus.clear_focus(tree) {
+                        self.push_app_command(tree, blurred, fired, &mut commands);
+                    }
+                    commands.push(UiCommand::FocusChanged { window_id: self.window_id.clone(), node: None });
+                }
+            }
+            AccessibilityUiEvent::Activate => {
+                let kind = tree.node(target).map(|node| node.spec.0.clone());
+                match kind {
+                    _ if self.toggle_disclosure(tree, target) => {}
+                    Some(UiNode::Select(_)) => commands.extend(self.toggle_select_popup(tree, target)),
+                    Some(UiNode::Button(button)) => {
+                        if let Some(fired) = bare_action(&button.action, Trigger::Activate) {
+                            self.push_app_command(tree, target, fired, &mut commands);
+                        }
+                    }
+                    Some(UiNode::Stack(stack)) => {
+                        if let Some(fired) = stack.activate.as_ref().and_then(|action| bare_action(action, Trigger::Activate)) {
+                            self.push_app_command(tree, target, fired, &mut commands);
+                        }
+                    }
+                    Some(UiNode::Toggle(toggle)) => {
+                        if let Some(fired) = fired_action(&toggle.on_change, Trigger::Change, DslValue::Bool(!toggle.presence.selected)) {
+                            self.push_app_command(tree, target, fired, &mut commands);
+                        }
+                    }
+                    _ => {}
+                }
+            }
+            AccessibilityUiEvent::Value(value) => {
+                let fired = match tree.node(target).map(|node| &node.spec.0) {
+                    Some(UiNode::Input(input)) => {
+                        let commit_now = input.commit.as_deref() != Some("blur");
+                        if let Some(node) = tree.node_mut(target) {
+                            let caret = value.len();
+                            node.state.edit = Some(EditState { text: value.clone(), caret, anchor: caret, composition: None, scroll_x: 0.0 });
+                        }
+                        tree.mark_dirty(target, NodeFlags::DIRTY_PAINT);
+                        commit_now.then(|| tree.node(target).and_then(|node| edit_commit_action(node, value))).flatten()
+                    }
+                    Some(UiNode::IconSelect(_)) => {
+                        if let Some(node) = tree.node_mut(target) {
+                            let caret = value.len();
+                            node.state.edit = Some(EditState { text: value.clone(), caret, anchor: caret, composition: None, scroll_x: 0.0 });
+                        }
+                        tree.mark_dirty(target, NodeFlags::DIRTY_PAINT);
+                        tree.node(target).and_then(|node| edit_commit_action(node, value))
+                    }
+                    Some(UiNode::Select(select)) => fired_action(&select.on_change, Trigger::Change, DslValue::String(value.clone())),
+                    Some(UiNode::Toggle(toggle)) => value.parse::<bool>().ok().and_then(|value| fired_action(&toggle.on_change, Trigger::Change, DslValue::Bool(value))),
+                    Some(UiNode::Slider(slider)) => value.parse::<f64>().ok().map(|value| constrain_number_input(value, Some(slider.min), Some(slider.max), Some(slider.step))).and_then(|value| fired_action(&slider.on_change, Trigger::Change, DslValue::float(value))),
+                    Some(UiNode::NumberStepper(stepper)) => value.parse::<f64>().ok().and_then(|value| fired_action(&stepper.on_absolute, Trigger::Change, DslValue::float(value))),
+                    Some(UiNode::Ring(ring)) => value.parse::<f64>().ok().map(|value| value.clamp(0.0, 1.0)).and_then(|value| fired_action(&ring.on_change, Trigger::Change, DslValue::float(value))),
+                    _ => None,
+                };
+                if let Some(fired) = fired {
+                    self.push_app_command(tree, target, fired, &mut commands);
+                }
+            }
+        }
+        commands
+    }
+
+    pub(crate) fn dispatch_accessibility_select_option(&mut self, tree: &mut UiTree, target: NodeId, value: &str, event: &AccessibilityUiEvent) -> Vec<UiCommand> {
+        let Some(node) = tree.node(target) else { return Vec::new() };
+        let UiNode::Select(select) = &node.spec.0 else { return Vec::new() };
+        if select.presence.state == UiState::Disabled || !node.state.open || !select.items.iter().any(|item| item.value == value) || !matches!(event, AccessibilityUiEvent::Activate) {
+            return Vec::new();
+        }
+        let on_change = select.on_change.clone();
+        let mut commands = Vec::new();
+        if let Some(fired) = fired_action(&on_change, Trigger::Change, DslValue::String(value.to_string())) {
+            self.push_app_command(tree, target, fired, &mut commands);
+        }
+        commands.extend(self.close_overlay(tree, target));
+        commands
+    }
+
     pub(crate) fn dispatch(&mut self, tree: &mut UiTree, root: NodeId, event: &UiEvent) -> Vec<UiCommand> {
         self.prune_dead_registrations(tree);
         let mut commands = Vec::new();
         match event {
+            UiEvent::PointerCancel => {
+                if let Some((id, _)) = self.capture.release() {
+                    if let Some(node) = tree.node_mut(id) {
+                        node.flags.set(NodeFlags::ACTIVE, false);
+                    }
+                    tree.mark_dirty(id, NodeFlags::DIRTY_PAINT);
+                }
+                if let Some(drag) = self.drag.take() {
+                    commands.push(UiCommand::DropCancelled { window_id: self.window_id.clone(), source: drag.source });
+                }
+                self.press_origin = None;
+                self.thumb_start = None;
+                self.tree_drag_handle_press = None;
+                commands.extend(self.update_hover(tree, None));
+            }
             UiEvent::PointerMove { x, y, .. } => {
                 self.maybe_promote_to_drag(*x, *y);
                 match self.capture.target {
@@ -1692,13 +1900,21 @@ impl EventRouter {
                 commands.extend(self.update_hover(tree, target));
                 commands.extend(self.maybe_dismiss_tooltip_on_hover_out(tree, *x, *y));
             }
-            UiEvent::PointerDown { x, y, .. } => {
+            UiEvent::PointerDown { x, y, button, .. } => {
                 self.focus_visible = false;
+                self.tree_drag_handle_press = None;
                 if let Some(dismissed) = self.dismiss_topmost_if_outside_press(tree, *x, *y) {
                     return dismissed;
                 }
                 self.press_origin = Some((*x, *y));
-                let target = hit_test(tree, root, *x, *y);
+                let scroll_target = self
+                    .overlays
+                    .topmost()
+                    .filter(|overlay| overlay.kind == OverlayKind::SelectPopup)
+                    .and_then(|overlay| tree.node(overlay.root).and_then(|node| node.state.select_popup).and_then(|popup| select::select_scroll_direction_at(popup, *x, *y)).map(|_| overlay.root));
+                let target = scroll_target
+                    .or_else(|| self.overlays.topmost().and_then(|overlay| self.hit_test_subtree(tree, overlay.root, *x, *y)))
+                    .or_else(|| self.hit_test(tree, root, *x, *y));
                 commands.extend(self.update_hover(tree, target));
                 if let Some(id) = target {
                     if let Some(cmd) = self.scene_command(tree, id, event) {
@@ -1714,7 +1930,7 @@ impl EventRouter {
                         }
                         tree.mark_dirty(id, NodeFlags::DIRTY_PAINT);
                         self.capture.target = Some((id, CaptureKind::Press));
-                        let focusable = tree.node(id).is_some_and(|node| is_focusable(&node.spec.0));
+                        let focusable = node_is_focusable(tree, id);
                         if focusable {
                             if let Some((blurred, fired)) = self.focus.set_focus(tree, Some(id), false) {
                                 self.push_app_command(tree, blurred, fired, &mut commands);
@@ -1726,11 +1942,18 @@ impl EventRouter {
                         // source, exactly like a widget spec would call `set_drag_payload` itself if
                         // `UiStackNode` had room for the field (it doesn't — see that fn's own doc).
                         if let Some(item) = find_tree_item_spec(tree, id) {
-                            if item.draggable.unwrap_or(false) {
-                                self.set_drag_payload(id, item.drag_data.clone().unwrap_or_default());
+                            let arms = self.tree_drag_press_arms(tree, id, *x, *y);
+                            let payload = arms.then(|| item.drag_data.clone().unwrap_or_default());
+                            if let Some(payload) = payload {
+                                self.set_drag_payload(id, payload);
+                                if self.tree_drag_driver == UiDriverDrag::Handle {
+                                    self.tree_drag_handle_press = Some(id);
+                                }
+                            } else {
+                                self.drag_payloads.remove(&id);
                             }
                         }
-                        if tree.node(id).is_some_and(|node| commits_while_dragging(&node.spec.0) && node.spec.0.presence().state != UiState::Disabled) {
+                        if tree.node(id).is_some_and(|node| (commits_while_dragging(&node.spec.0) || (*button == PointerButton::Primary && matches!(node.spec.0, UiNode::NumberStepper(_)))) && node.spec.0.presence().state != UiState::Disabled) {
                             commands.extend(self.pointer_commit(tree, id, *x, *y));
                         }
                     }
@@ -1742,14 +1965,18 @@ impl EventRouter {
                 }
             }
             UiEvent::PointerUp { x, y, .. } => {
+                let captured_scene = self.capture.target.and_then(|(id, _)| self.scene_command(tree, id, event).map(|command| (id, command)));
                 if let Some((active_id, kind)) = self.capture.release() {
                     match kind {
                         CaptureKind::Press => {
+                            let suppress_tree_handle_click = self.tree_drag_handle_press.take() == Some(active_id);
                             if let Some(node) = tree.node_mut(active_id) {
                                 node.flags.set(NodeFlags::ACTIVE, false);
                             }
                             tree.mark_dirty(active_id, NodeFlags::DIRTY_PAINT);
-                            if hit_test(tree, root, *x, *y) == Some(active_id) && tree.node(active_id).is_some_and(|node| node.spec.0.presence().state != UiState::Disabled) {
+                            let select_scroll_release =
+                                tree.node(active_id).filter(|node| matches!(node.spec.0, UiNode::Select(_))).and_then(|node| node.state.select_popup).and_then(|popup| select::select_scroll_direction_at(popup, *x, *y)).is_some();
+                            if !suppress_tree_handle_click && (select_scroll_release || self.resolve_target(tree, root, *x, *y) == Some(active_id)) && tree.node(active_id).is_some_and(|node| node.spec.0.presence().state != UiState::Disabled) {
                                 // 🔽️🎴️ W2 wiring: `Select` toggles its popup (`toggle_select_popup`);
                                 // a `Button` (this covers `Select`'s own synthesized item rows too —
                                 // see `reconcile::children_of`'s `Select` arm — since they're plain
@@ -1759,7 +1986,10 @@ impl EventRouter {
                                 // a `Stack` with `activate` set fires that action (see
                                 // `paint::paint_stack_frame`'s matching visual for the same field).
                                 let is_select = tree.node(active_id).is_some_and(|node| matches!(node.spec.0, UiNode::Select(_)));
-                                if is_select {
+                                if self.pointer_toggle_disclosure(tree, active_id, *x, *y) {
+                                } else if is_select && select_scroll_release {
+                                    let _ = select::arm_retained_select_scroll_at(tree, active_id, *x, *y);
+                                } else if is_select {
                                     commands.extend(self.toggle_select_popup(tree, active_id));
                                 } else {
                                     let fired = tree.node(active_id).and_then(|node| match &node.spec.0 {
@@ -1775,7 +2005,7 @@ impl EventRouter {
                                                 commands.extend(self.close_topmost_overlay(tree));
                                             }
                                         }
-                                    } else {
+                                    } else if !tree.node(active_id).is_some_and(|node| matches!(node.spec.0, UiNode::NumberStepper(_))) {
                                         // 🎬️ Every other value-carrying kind — `Toggle`, `Slider`,
                                         // `NumberStepper`, `Ring` — commits its own gesture here, through
                                         // the same one authority (see 🔖️Commit).
@@ -1785,6 +2015,7 @@ impl EventRouter {
                             }
                         }
                         CaptureKind::Drag => {
+                            self.tree_drag_handle_press = None;
                             if let Some(node) = tree.node_mut(active_id) {
                                 node.flags.set(NodeFlags::ACTIVE, false);
                             }
@@ -1805,6 +2036,11 @@ impl EventRouter {
                 if let Some(id) = target {
                     if let Some(cmd) = self.scene_command(tree, id, event) {
                         commands.push(cmd);
+                    }
+                }
+                if let Some((captured_id, command)) = captured_scene {
+                    if target != Some(captured_id) {
+                        commands.push(command);
                     }
                 }
                 commands.extend(self.update_hover(tree, target));
@@ -1832,6 +2068,7 @@ impl EventRouter {
                         self.push_app_command(tree, blurred, fired, &mut commands);
                     }
                     commands.push(UiCommand::FocusChanged { window_id: self.window_id.clone(), node: self.focus.focused });
+                } else if self.focused_disclosure_activation(tree, key) {
                 } else if let Some((activated, fired)) = self.focused_button_activation(tree, key) {
                     self.push_app_command(tree, activated, fired, &mut commands);
                 } else if let Some((changed, fired)) = self.focused_value_key_activation(tree, self.mirrored_inline_key(key), *modifiers) {
@@ -1845,7 +2082,7 @@ impl EventRouter {
             UiEvent::Paste { text } => commands.extend(self.route_text_insert(tree, text)),
             UiEvent::Ime(ime_event) => commands.extend(self.route_ime(tree, ime_event)),
             UiEvent::Scroll { x, y, delta_x, delta_y, .. } => {
-                if let Some(id) = hit_test(tree, root, *x, *y) {
+                if let Some(id) = self.hit_test(tree, root, *x, *y) {
                     if let Some(cmd) = self.scene_command(tree, id, event) {
                         commands.push(cmd);
                     }
@@ -1896,6 +2133,13 @@ impl EventRouter {
             UiNode::Button(button) if button.presence.state != UiState::Disabled => bare_action(&button.action, Trigger::Activate).map(|fired| (id, fired)),
             _ => None,
         }
+    }
+
+    fn focused_disclosure_activation(&mut self, tree: &mut UiTree, key: &str) -> bool {
+        if !matches!(key, "Enter" | "NumpadEnter" | " ") {
+            return false;
+        }
+        self.focus.focused.is_some_and(|id| self.toggle_disclosure(tree, id))
     }
 
     //#region 🔖️WidgetKeyboard

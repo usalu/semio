@@ -1,0 +1,59 @@
+{
+  "descriptorVersion": 1,
+  "packageId": "semio:sourcing-module-slabs",
+  "role": "extension",
+  "manifest": {
+    "pluginId": "sourcing-module-slabs",
+    "label": "Sourcing Module Slabs",
+    "version": "0.1.0",
+    "apps": [],
+    "examples": [],
+    "capabilities": [],
+    "topicContributions": [
+      {
+        "topic": "sourcing.module",
+        "payload": {
+          "appId": "sourcing-curation",
+          "iconId": "slab",
+          "kindsJson": "[{\"id\":\"slab-concrete-240\",\"name\":\"Concrete Slab 240mm\",\"moduleId\":\"slabs\",\"typologyPath\":[\"slabs\",\"concrete\"],\"availability\":30,\"geometry\":{\"kind\":\"slab\",\"width\":2.4,\"depth\":1.2,\"thickness\":0.24}},{\"id\":\"slab-clt-160\",\"name\":\"CLT Slab 160mm\",\"moduleId\":\"slabs\",\"typologyPath\":[\"slabs\",\"clt\"],\"availability\":20,\"geometry\":{\"kind\":\"slab\",\"width\":2.95,\"depth\":1.25,\"thickness\":0.16}},{\"id\":\"slab-hollow-core-265\",\"name\":\"Hollow Core Slab 265mm\",\"moduleId\":\"slabs\",\"typologyPath\":[\"slabs\",\"hollow-core\"],\"availability\":16,\"geometry\":{\"kind\":\"slab\",\"width\":1.2,\"depth\":6.0,\"thickness\":0.265}}]",
+          "label": "Slabs",
+          "moduleId": "slabs",
+          "typologyJson": "{\"id\":\"slabs\",\"label\":\"Slabs\",\"children\":[{\"id\":\"concrete\",\"label\":\"Concrete\"},{\"id\":\"clt\",\"label\":\"CLT\"},{\"id\":\"hollow-core\",\"label\":\"Hollow Core\"}]}"
+        }
+      }
+    ],
+    "commands": [],
+    "artifactKinds": [],
+    "dependencies": [
+      {
+        "pluginId": "sourcing",
+        "version": "*"
+      }
+    ]
+  },
+  "execution": "declarative",
+  "executionProtocol": {
+    "appChannelVersion": 17
+  },
+  "quotas": {},
+  "contributions": {
+    "topicContributions": [
+      {
+        "topic": "sourcing.module",
+        "payload": {
+          "appId": "sourcing-curation",
+          "iconId": "slab",
+          "kindsJson": "[{\"id\":\"slab-concrete-240\",\"name\":\"Concrete Slab 240mm\",\"moduleId\":\"slabs\",\"typologyPath\":[\"slabs\",\"concrete\"],\"availability\":30,\"geometry\":{\"kind\":\"slab\",\"width\":2.4,\"depth\":1.2,\"thickness\":0.24}},{\"id\":\"slab-clt-160\",\"name\":\"CLT Slab 160mm\",\"moduleId\":\"slabs\",\"typologyPath\":[\"slabs\",\"clt\"],\"availability\":20,\"geometry\":{\"kind\":\"slab\",\"width\":2.95,\"depth\":1.25,\"thickness\":0.16}},{\"id\":\"slab-hollow-core-265\",\"name\":\"Hollow Core Slab 265mm\",\"moduleId\":\"slabs\",\"typologyPath\":[\"slabs\",\"hollow-core\"],\"availability\":16,\"geometry\":{\"kind\":\"slab\",\"width\":1.2,\"depth\":6.0,\"thickness\":0.265}}]",
+          "label": "Slabs",
+          "moduleId": "slabs",
+          "typologyJson": "{\"id\":\"slabs\",\"label\":\"Slabs\",\"children\":[{\"id\":\"concrete\",\"label\":\"Concrete\"},{\"id\":\"clt\",\"label\":\"CLT\"},{\"id\":\"hollow-core\",\"label\":\"Hollow Core\"}]}"
+        }
+      }
+    ]
+  },
+  "hashes": {
+    "wasmSha256": "597e8748eab02f36872c9c8709d2e888736f8b3dcbd3459d8ece846b8a2e7bc1",
+    "coreWasmSha256": "316a7e23d628f6546a0af0c57d443ec2317f8c7fbe337c5f85114f32c055c5e5",
+    "descriptorSha256": "1307698a8d9b5a2691b657e6f45f97fed2f0af48225dfa34e4e0a0da54c80a5a"
+  }
+}

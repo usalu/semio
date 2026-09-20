@@ -60,6 +60,6 @@
   "storageAllowanceKwh": null,
   "dhwDeliveryC": null,
   "ductClass": null,
-  "ductTestPressurePa": 500,
+  "ductTestPressurePa": 500.0,
   "ductLeakageM3SM2": null
 }

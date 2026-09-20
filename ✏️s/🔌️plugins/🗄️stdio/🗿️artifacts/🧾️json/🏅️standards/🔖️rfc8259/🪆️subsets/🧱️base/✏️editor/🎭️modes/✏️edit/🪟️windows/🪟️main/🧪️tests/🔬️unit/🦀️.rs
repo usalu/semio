@@ -99,9 +99,18 @@ fn json_tree_binds_no_interaction_domain() {
 fn deep_document(depth: usize, items: usize) -> JsonSnapshot {
     let mut value = JsonValue::Array { items: (0..items).map(|index| JsonValue::Number { lexeme: index.to_string() }).collect() };
     for level in (0..depth).rev() {
-        value = JsonValue::Object { members: vec![JsonMember { key: format!("configuration-level-{level}"), value }] };
+        value = JsonValue::Object { members: vec![JsonMember { key: deep_member_name(level), value }] };
     }
     JsonSnapshot { schema: "stdio.json".into(), value }
+}
+
+/// 🪟️ The member name each nesting level carries. Short on purpose: the view-context bound is spent
+/// by the WHOLE path — the body's own section root, the document root and every ancestor's key — so a
+/// document's depth and its member names trade against each other. Ten levels of a `level-<n>` member
+/// spend 128 of the 256 code points; the ancestry keying this law replaced spent them all before
+/// level eight, whatever the names were.
+fn deep_member_name(level: usize) -> String {
+    format!("level-{level}")
 }
 
 /// 🪟️ Like [`window_body`] with a viewport wide enough to walk ten nesting levels before it spends
@@ -119,8 +128,10 @@ fn deep_window_body(document: &JsonSnapshot, requests: Vec<TreeWindowRequest>) -
 #[test]
 fn a_deep_containers_window_path_stays_a_view_context_identifier_and_still_streams() {
     let document = deep_document(10, 300);
-    let segments: Vec<String> = (0..10).map(|level| member_segment(&format!("configuration-level-{level}"))).collect();
-    let path = encode_path_id(&segments);
+    let segments: Vec<String> = (0..10).map(|level| member_segment(&deep_member_name(level))).collect();
+    let mut keys: Vec<&str> = vec![JSON_ROOT_NODE_ID];
+    keys.extend(segments.iter().map(String::as_str));
+    let path = window_path(&keys);
     assert!(path.chars().count() <= 256, "a depth-10 container path stays inside the view-context bound, was {}: {path:?}", path.chars().count());
     assert!(!path.chars().any(|character| character.is_control()), "a container path carries no control code point: {path:?}");
     let json = deep_window_body(&document, vec![TreeWindowRequest { body_key: BODY_KEY.into(), node_key: path, open: Some(true), offset: 40, rows: 4 }]);

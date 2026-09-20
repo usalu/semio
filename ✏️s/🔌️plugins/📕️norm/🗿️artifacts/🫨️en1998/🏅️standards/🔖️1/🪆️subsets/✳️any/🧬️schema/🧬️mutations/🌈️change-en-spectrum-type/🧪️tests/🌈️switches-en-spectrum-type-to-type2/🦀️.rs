@@ -67,7 +67,7 @@ async fn change_en_spectrum_type_committed_json_is_canonical() {
     }
     let reencoded = serde_json::to_value(mutation()).expect("change-en-spectrum-type mutation encodes");
     let original: serde_json::Value = serde_json::from_str(MUTATION).expect("change-en-spectrum-type mutation reparses");
-    assert_eq!(reencoded, original, "change-en-spectrum-type/switches-en-spectrum-type-to-type2: committed mutation JSON is not the canonical externally-tagged ChangeEnSpectrumType form carrying newEnSpectrumType");
+    assert_eq!(reencoded, original, "change-en-spectrum-type/switches-en-spectrum-type-to-type2: committed mutation JSON is not the canonical internally-tagged ChangeEnSpectrumType form carrying mutation and newEnSpectrumType");
 }
 
 /// 🎯️ The declared outcome holds: `change-en-spectrum-type` at type2 is applied, not rejected, and carries no

@@ -1,0 +1,60 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/framework/ui/raster-capacity-followup-v1.json",
+  "title": "Raster content identity and capacity fixture",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "identity", "capacity", "scenarios"],
+  "properties": {
+    "schema": { "const": "semio.ui.raster-capacity-followup.v1" },
+    "identity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["pageBytes", "digestLanes", "dimensionsIncluded"],
+      "properties": {
+        "pageBytes": { "const": 16384 },
+        "digestLanes": { "const": 2 },
+        "dimensionsIncluded": { "const": true }
+      }
+    },
+    "capacity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["items", "bytes", "changedFullPolicy"],
+      "properties": {
+        "items": { "const": 256 },
+        "bytes": { "const": 268435456 },
+        "changedFullPolicy": { "const": "backpressureUntilHeadroom" }
+      }
+    },
+    "scenarios": {
+      "type": "array",
+      "minItems": 6,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "initial", "offer", "expected"],
+        "properties": {
+          "name": { "type": "string", "minLength": 1 },
+          "initial": { "type": "string", "minLength": 1 },
+          "offer": { "type": "string", "minLength": 1 },
+          "expected": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["liveItems", "stagedItems", "allocations", "paintable"],
+            "properties": {
+              "liveItems": { "type": "integer", "minimum": 0, "maximum": 256 },
+              "stagedItems": { "type": "integer", "minimum": 0, "maximum": 256 },
+              "allocations": { "type": "integer", "minimum": 0, "maximum": 256 },
+              "paintable": { "type": "string", "minLength": 1 },
+              "reused": { "type": "integer", "minimum": 0, "maximum": 256 },
+              "admission": { "enum": ["ready", "backpressure"] },
+              "presenterTargets": { "type": "integer", "minimum": 0, "maximum": 1 },
+              "tableTargets": { "type": "integer", "minimum": 0, "maximum": 1 }
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -105480,6 +105480,10 @@
         "🔣️jsonschema": "🔣️.json"
       },
       "exports": {
+        "PlayExampleId": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
         "PlayGroup": {
           "file": "🔣️.json",
           "facet": "schema"
@@ -105499,7 +105503,7 @@
       },
       "dependsOn": [],
       "hashes": {
-        "🔣️.json": "6144cdcf1b595cc963a206345b8cbf46c0006b2000c042f7657490cc576becb5"
+        "🔣️.json": "0e1723e2b5ddd2477a41b5aa2b80234e177c471276607b1da7d516b3efaeb2bb"
       }
     },
     "window.gis.map.config.mutation.set-camera": {

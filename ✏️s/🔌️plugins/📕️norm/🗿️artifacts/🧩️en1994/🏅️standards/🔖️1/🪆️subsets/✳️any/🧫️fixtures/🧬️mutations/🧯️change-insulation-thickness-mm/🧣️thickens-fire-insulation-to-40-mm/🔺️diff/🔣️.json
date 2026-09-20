@@ -7,7 +7,7 @@
   "mPlRd": null,
   "eta": null,
   "vLRd": null,
-  "insulationThicknessMm": 40,
+  "insulationThicknessMm": 40.0,
   "fireRating": null,
   "deckType": null,
   "deltaSigmaMpa": null,

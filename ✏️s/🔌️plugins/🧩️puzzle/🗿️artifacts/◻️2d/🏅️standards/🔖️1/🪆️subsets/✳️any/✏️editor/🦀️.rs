@@ -5299,11 +5299,13 @@ pub fn create_puzzle2d_app() -> semio_framework_plugin::AppDefinition {
             // ✏️ Palette-visible content operations.
             .mutation("addNode", LocalizedLabel::native("Add Node", "Knoten hinzufügen"))
             .action_with(ActionDefinition::new("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"), ActionKind::Mutation, "panel-left"))
+            .action_destructive("setActiveExample")
             // 🗣️ Locale and terminology are real user-facing settings verbs (mirrors puzzle3d's own
             // `.view_action` pair); the labels stay inline `LocalizedLabel::native` like every other
             // action here, since `puzzle2d_localized` resolves a `Puzzle2dLabels` field, not a phrase.
             // 🗂️ Referenced by `puzzle2d_context_menu_items` — categorized for grouped-context-menu disclosure.
             .action_with(ActionDefinition::bounded_catalog("deleteSelection", LocalizedLabel::native("Delete Selection", "Auswahl löschen"), ActionKind::Mutation).with_category("selection"))
+            .action_destructive("deleteSelection")
             .keybinding("delete,backspace", "deleteSelection")
             .action_with(ActionDefinition::bounded_catalog("duplicateSelection", LocalizedLabel::native("Duplicate Selection", "Auswahl duplizieren"), ActionKind::Mutation).with_category("create"))
             .mutation("forceLayout", LocalizedLabel::native("Force Layout", "Kraftbasiertes Layout"))
@@ -5361,6 +5363,7 @@ pub fn create_puzzle2d_app() -> semio_framework_plugin::AppDefinition {
             .keybinding("shift+tab", "cycleBrushCandidateBack")
             .action_with(puzzle2d_internal_action("targetBrushSuggestions", puzzle2d_localized(|l| l.target_suggestions), ActionKind::View))
             .action_with(puzzle2d_internal_action("hoverSuggestion", puzzle2d_localized(|l| l.hover_suggestion), ActionKind::View))
+            .action_audience("hoverSuggestion", semio_framework_plugin::CapabilityAudience::Input)
             .action_with(puzzle2d_internal_action("openHandleSuggestions", puzzle2d_localized(|l| l.suggest_nodes), ActionKind::View))
             .action_with(puzzle2d_internal_action("closeHandleSuggestions", puzzle2d_localized(|l| l.close_suggestions), ActionKind::View))
             .action_with(puzzle2d_internal_action("lodScaleJson", LocalizedLabel::native("LOD Scale Json", "LOD-Skalierung-Json"), ActionKind::View))

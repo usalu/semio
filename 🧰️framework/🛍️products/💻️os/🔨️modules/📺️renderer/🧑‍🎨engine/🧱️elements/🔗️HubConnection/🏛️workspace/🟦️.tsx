@@ -1,18 +1,23 @@
 // #region 🧲️Header
 // 🎨️ framework/products/os/modules/renderer/engine/elements/🔗️HubConnection/🏛️workspace/component.tsx
 /** @emoji 🏛️ `HubWorkspace` — the one composed surface a shell mounts: `🔐️HubSignIn` above
- * `🏘️SpaceBrowser`, both driven by a single `useHubConnection` lane. It lives in its own leaf rather
- * than beside the hook because both panes import that file's label bundle, and a composition placed
- * there would close an import cycle around `registerUiTranslationBundles`.
- * Ticket `26/09/18/OS-HUB-COLLABORATION-AI-END-TO-END` slice AU2. */
+ * `🏘️SpaceBrowser` above `🤖️AgentDelegations`, all driven by a single `useHubConnection` lane. It
+ * lives in its own leaf rather than beside the hook because every pane imports that file's label
+ * bundle, and a composition placed there would close an import cycle around
+ * `registerUiTranslationBundles`.
+ * Ticket `26/09/18/OS-HUB-COLLABORATION-AI-END-TO-END` slices AU2 and M6b. */
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
-import { useEffect, type ReactElement } from "react";
+import { useEffect, useState, type ReactElement } from "react";
 import { Button, useLabel } from "@semio-tech/ui-react";
 import { hubUiLabel, useHubConnection, type HubConnectionPortV1 } from "../🟦️.tsx";
 import { HubSignInPane } from "../../🔐️HubSignIn/🟦️.tsx";
 import { SpaceBrowser } from "../../🏘️SpaceBrowser/🟦️.tsx";
+import { HubFirstRun } from "../../🎓️HubFirstRun/🟦️.tsx";
+import { AgentDelegations } from "../../🤖️AgentDelegations/🟦️.tsx";
+import { hubFirstRunSeenV1, hubFirstRunStateFromV1, markHubFirstRunSeenV1 } from "../../../../../📇️directory/🎓️first-run/🟦️.ts";
+import { spaceRowInvitableV1 } from "../../../../../📇️directory/🏘️spaces/🟦️.ts";
 // #endregion 🔌️Adapters
 
 // #region 🏛️HubWorkspace
@@ -25,27 +30,36 @@ export interface HubWorkspaceProps {
    * inside the hook, so a peer with no hub identity never invents a member row. */
   readonly onlineUserIds: readonly string[];
   readonly onOpenSpace: (spaceId: string) => void;
-  /** 🔐️ Reports the session phase up to the shell's persistent hub badge. The workspace unmounts
-   * when the overlay closes while the port keeps the capability, so the shell — not this element —
-   * is where "am I signed in" has to live. */
-  readonly onSessionChange?: (presence: "signedIn" | "signedOut") => void;
   readonly onClose: () => void;
 }
 
 /** 🏛️ Mounts one hub relationship as a single dialog-shaped surface. Opening a space closes the
  * surface first, so the shell never navigates behind an overlay that still owns focus. */
-export function HubWorkspace({ port, locale, activeSpaceId, onlineUserIds, onSessionChange, onOpenSpace, onClose }: HubWorkspaceProps): ReactElement {
+export function HubWorkspace({ port, locale, activeSpaceId, onlineUserIds, onOpenSpace, onClose }: HubWorkspaceProps): ReactElement {
   const hub = useHubConnection(port, onlineUserIds);
   const { watchSpaceMembers } = hub;
-  const sessionPhase = hub.session.phase;
   useEffect(() => watchSpaceMembers(activeSpaceId), [activeSpaceId, watchSpaceMembers]);
-  useEffect(() => onSessionChange?.(sessionPhase === "signed-in" ? "signedIn" : "signedOut"), [onSessionChange, sessionPhase]);
   const title = useLabel(hubUiLabel("os.hub.signIn.title"));
   const closeLabel = useLabel(hubUiLabel("os.hub.signIn.cancel"));
+  const replayLabel = useLabel(hubUiLabel("os.hub.firstRun.replay"));
+  const firstRunState = hubFirstRunStateFromV1(hub.session.phase, hub.rows, activeSpaceId);
+  // 🎓️ Auto-start is decided ONCE, when this surface first mounts, and never re-derived: reading the
+  // seen flag in a later render would reopen the tour the moment `markHubFirstRunSeenV1` had not yet
+  // been observed, and re-deriving `signedIn` would reopen it the instant a session expired. `replay`
+  // is the explicit re-open, which ignores the flag by design.
+  const [tour, setTour] = useState<"auto" | "replay" | null>(() => (hubFirstRunSeenV1(port.storage) ? null : "auto"));
+  const dismissTour = (): void => {
+    markHubFirstRunSeenV1(port.storage);
+    setTour(null);
+  };
   return (
     <section aria-label={title} data-semio-hub-workspace={hub.connection.id} className="flex w-full min-w-0 flex-col">
-      <div className="flex justify-end p-2">
-        <Button icon="x" type="button" variant="outline" aria-label={closeLabel} onClick={onClose}>
+      {tour === null ? null : <HubFirstRun locale={locale} state={firstRunState} onDismiss={dismissTour} {...(tour === "replay" ? { initialStepIndex: 0 } : {})} />}
+      <div className="flex flex-wrap justify-end gap-2 p-2">
+        <Button id="os.hub.firstRun.replay" icon="graduation-cap" type="button" variant="ghost" aria-label={replayLabel} onClick={() => setTour("replay")}>
+          {replayLabel}
+        </Button>
+        <Button id="os.hub.signIn.cancel" icon="x" type="button" variant="outline" aria-label={closeLabel} onClick={onClose}>
           {closeLabel}
         </Button>
       </div>
@@ -81,6 +95,20 @@ export function HubWorkspace({ port, locale, activeSpaceId, onlineUserIds, onSes
         onCopyInvite={hub.copyInvite}
         onDismissInvite={hub.dismissInvite}
         onRedeemInvite={hub.redeemInvite}
+      />
+      <AgentDelegations
+        spaceId={activeSpaceId}
+        rows={hub.delegations}
+        phase={hub.delegationPhase}
+        error={hub.delegationError}
+        credential={hub.agentCredential}
+        signedIn={hub.session.phase === "signed-in"}
+        canDelegate={hub.rows.some((row) => row.id === activeSpaceId && spaceRowInvitableV1(row))}
+        onRefresh={hub.refreshDelegations}
+        onCreate={hub.createDelegation}
+        onDownloadCredential={hub.downloadAgentCredential}
+        onDismissCredential={hub.dismissAgentCredential}
+        onRevoke={hub.revokeDelegation}
       />
     </section>
   );

@@ -4798,6 +4798,7 @@ pub mod registry {
             modes,
             default_mode_id,
             window_kinds,
+            actions: Vec::new(),
             panel_tabs: Vec::new(),
             keybindings: Vec::new(),
             utilities: Vec::new(),

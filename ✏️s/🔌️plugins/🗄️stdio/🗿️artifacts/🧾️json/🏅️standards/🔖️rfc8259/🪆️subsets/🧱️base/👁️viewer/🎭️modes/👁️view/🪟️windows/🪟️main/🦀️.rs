@@ -64,9 +64,12 @@ pub fn strip_sibling_ordinal(segment: &str) -> &str {
     }
 }
 
-/// 🧭️ The window PATH of the node reached by `segments` (sibling segments, outermost first) — the
-/// root key, then each segment, joined by `TREE_WINDOW_PATH_SEPARATOR`. This is the id `set-node`
-/// addresses and the `node_key` a `TreeWindowRequest` names.
+/// 🧭️ The `set-node` id of the node reached by `segments` (sibling segments, outermost first) — the
+/// document root key, then each segment, joined by `TREE_WINDOW_PATH_SEPARATOR`.
+///
+/// ⚠️ NOT the `node_key` a `TreeWindowRequest` names: a window path is composed by the SDK from the
+/// body's own section root outwards (`<TreeWindowKit::KIND_ID>-root`, then this id's segments), so it
+/// carries one segment more than an action id does. Both share the 256-code-point view-context bound.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn encode_path_id(segments: &[String]) -> String {
     let mut path = JSON_ROOT_NODE_ID.to_string();

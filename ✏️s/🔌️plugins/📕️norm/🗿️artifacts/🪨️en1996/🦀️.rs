@@ -651,3 +651,11 @@ pub mod viewer {
         }
     }
 }
+
+//#region 🪢️TaxonomyMounts
+#[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🧱️loadbearing-wall/🦀️.rs"]
+pub mod loadbearing_wall;
+#[cfg(test)]
+#[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🧱️loadbearing-wall/🧪️tests/🧩️example/🦀️.rs"]
+mod example;
+//#endregion 🪢️TaxonomyMounts

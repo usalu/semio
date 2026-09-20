@@ -90,52 +90,43 @@ pub(crate) fn agg_diff(this: &StepMutation, base: &StepSnapshot) -> protocol::Mu
 
         StepMutation::InsertEntity(insert_entity::InsertEntity { index, entity }) => StepDiff { entities: Some(StepEntitiesDiff { added: vec![StepEntityAdded { index: *index, entity: entity.clone() }], ..Default::default() }), ..Default::default() },
 
-        StepMutation::RemoveEntity(remove_entity::RemoveEntity { id }) => {
-            if base.entities.iter().any(|e| e.id == *id) {
-                StepDiff { entities: Some(StepEntitiesDiff { removed: vec![*id], ..Default::default() }), ..Default::default() }
-            } else {
-                StepDiff::default()
-            }
-        }
+        // 🎯️ A target that does NOT exist must be REJECTED, not silently dropped: the diff is
+        // emitted as written and `validate_entities_diff` (../🔺️diff) refuses it with the target
+        // path the caller asked for (`["entities", "<id>"]`, `["entities", "<id>", "args", "<i>"]`),
+        // which `apply_step_mutation` above turns into the outcome's messages. Pre-checking here and
+        // returning an EMPTY diff instead made every impossible edit look like a successful no-op,
+        // and left `missing_and_out_of_range_targets_are_rejected_without_mutating` reading
+        // `messages()[0]` of an empty message list. A target that EXISTS and already carries the
+        // requested value is the genuine no-op, and still yields the empty diff below.
+        StepMutation::RemoveEntity(remove_entity::RemoveEntity { id }) => StepDiff { entities: Some(StepEntitiesDiff { removed: vec![*id], ..Default::default() }), ..Default::default() },
 
         StepMutation::SetEntityName(set_entity_name::SetEntityName { id, name }) => match base.entities.iter().find(|e| e.id == *id) {
-            Some(e) if e.name != *name => {
-                StepDiff { entities: Some(StepEntitiesDiff { modified: vec![StepEntityModified { id: *id, diff: StepEntityDiff { name: Some(name.clone()), ..Default::default() } }], ..Default::default() }), ..Default::default() }
-            }
-            _ => StepDiff::default(),
+            Some(e) if e.name == *name => StepDiff::default(),
+            _ => StepDiff { entities: Some(StepEntitiesDiff { modified: vec![StepEntityModified { id: *id, diff: StepEntityDiff { name: Some(name.clone()), ..Default::default() } }], ..Default::default() }), ..Default::default() },
         },
 
         StepMutation::SetEntityArg(set_entity_arg::SetEntityArg { id, arg_index, value }) => match base.entities.iter().find(|e| e.id == *id) {
-            Some(e) if e.args.get(*arg_index).is_some_and(|v| v != value) => StepDiff {
+            Some(e) if e.args.get(*arg_index).is_some_and(|v| v == value) => StepDiff::default(),
+            _ => StepDiff {
                 entities: Some(StepEntitiesDiff {
                     modified: vec![StepEntityModified { id: *id, diff: StepEntityDiff { args: Some(StepArgsDiff { modified: vec![StepArgModified { index: *arg_index, value: value.clone() }], ..Default::default() }), ..Default::default() } }],
                     ..Default::default()
                 }),
                 ..Default::default()
             },
-            _ => StepDiff::default(),
         },
 
-        StepMutation::InsertEntityArg(insert_entity_arg::InsertEntityArg { id, arg_index, value }) => {
-            if base.entities.iter().any(|e| e.id == *id) {
-                StepDiff {
-                    entities: Some(StepEntitiesDiff {
-                        modified: vec![StepEntityModified { id: *id, diff: StepEntityDiff { args: Some(StepArgsDiff { added: vec![StepArgAdded { index: *arg_index, value: value.clone() }], ..Default::default() }), ..Default::default() } }],
-                        ..Default::default()
-                    }),
-                    ..Default::default()
-                }
-            } else {
-                StepDiff::default()
-            }
-        }
-
-        StepMutation::RemoveEntityArg(remove_entity_arg::RemoveEntityArg { id, arg_index }) => match base.entities.iter().find(|e| e.id == *id) {
-            Some(e) if *arg_index < e.args.len() => StepDiff {
-                entities: Some(StepEntitiesDiff { modified: vec![StepEntityModified { id: *id, diff: StepEntityDiff { args: Some(StepArgsDiff { removed: vec![*arg_index], ..Default::default() }), ..Default::default() } }], ..Default::default() }),
+        StepMutation::InsertEntityArg(insert_entity_arg::InsertEntityArg { id, arg_index, value }) => StepDiff {
+            entities: Some(StepEntitiesDiff {
+                modified: vec![StepEntityModified { id: *id, diff: StepEntityDiff { args: Some(StepArgsDiff { added: vec![StepArgAdded { index: *arg_index, value: value.clone() }], ..Default::default() }), ..Default::default() } }],
                 ..Default::default()
-            },
-            _ => StepDiff::default(),
+            }),
+            ..Default::default()
+        },
+
+        StepMutation::RemoveEntityArg(remove_entity_arg::RemoveEntityArg { id, arg_index }) => StepDiff {
+            entities: Some(StepEntitiesDiff { modified: vec![StepEntityModified { id: *id, diff: StepEntityDiff { args: Some(StepArgsDiff { removed: vec![*arg_index], ..Default::default() }), ..Default::default() } }], ..Default::default() }),
+            ..Default::default()
         },
     })
 }

@@ -61,7 +61,10 @@ fn every_surface_declares_a_artifact_schema() {
 #[test]
 fn contribution_consumers_declare_the_hidden_app_command() {
     let consumers: Vec<String> = test_bundle().manifest.apps.iter().filter(|app| app.commands.iter().any(|command| command.id == "setContributions")).map(|app| app.id.clone()).collect();
-    assert_eq!(consumers, vec!["s.cad.cad@1/*#editor", "s.sourcing.curation@1/*#editor", "s.process.process3d@1/*#editor"]);
+    // 🧩️ `generation3d` became a contribution consumer in its own right (its editor declares
+    // `setContributions` with a HostOnly publication lane, see procedural's `✏️editor/🦀️.rs`), so the
+    // pinned set carries it in this bundle's registration order.
+    assert_eq!(consumers, vec!["s.procedural.generation3d@1/*#editor", "s.cad.cad@1/*#editor", "s.sourcing.curation@1/*#editor", "s.process.process3d@1/*#editor"]);
     for app in test_bundle().manifest.apps {
         if let Some(command) = app.commands.iter().find(|command| command.id == "setContributions") {
             assert!(!command.in_palette, "host catalogue command leaked into {}'s palette", app.id);
@@ -103,12 +106,15 @@ async fn aggregate_runtime_renders_every_demonstrator_window() {
         ("s.process.process3d@1/*#editor", &["process.play.main"]),
         ("s.gis.gismap@1/*#editor", &["gis2d.play.composite"]),
     ];
+    // 🗣️ `ViewModel::locale`/`terminology` are non-optional (the shell always resolves one before the
+    // first render), so a bare `"{}"` is not a decodable view state — the host's own default view is.
+    let view_state = serde_json::to_string(&semio_framework_plugin::ViewModel::default()).expect("aggregate view state serializes");
     let mut generation = 1_u64;
     for (app_index, (app_id, body_keys)) in apps.iter().enumerate() {
         let instance_id = u32::try_from(app_index + 1).expect("six aggregate app instances");
         semio_framework_plugin::plugin_runtime::plugin_create_app_with_id(&runtime, instance_id, app_id).await.unwrap_or_else(|fault| panic!("aggregate app {app_id} opens: {fault:?}"));
         for body_key in *body_keys {
-            let tree = semio_framework_plugin::plugin_runtime::plugin_render(&runtime, instance_id, body_key, "{}").await.unwrap_or_else(|fault| panic!("aggregate body {body_key} renders: {fault:?}"));
+            let tree = semio_framework_plugin::plugin_runtime::plugin_render(&runtime, instance_id, body_key, &view_state).await.unwrap_or_else(|fault| panic!("aggregate body {body_key} renders: {fault:?}"));
             assert_tree_reconciles(tree, generation, body_key);
             generation += 1;
         }
@@ -140,7 +146,9 @@ fn every_bundled_surface_declares_its_derived_child_dialects() {
     assert_editor_children_declared::<crate::editor::playground::PlaygroundEditor>("s.demonstrator.playground@1/*#editor", 0);
     assert_viewer_children_declared::<crate::viewer::playground::PlaygroundViewer>("s.demonstrator.playground@1/*#viewer", 0);
     assert_editor_children_declared::<Generation3dPlayApp>("s.procedural.generation3d@1/*#editor", 0);
-    assert_editor_children_declared::<CadPlayApp>("s.cad.cad@1/*#editor", 0);
+    // 🏗️ cad composes four genesis children of its own now (shape/building/energy/structure), all
+    // declared by the roster the helper checks before it returns this count.
+    assert_editor_children_declared::<CadPlayApp>("s.cad.cad@1/*#editor", 4);
     assert_editor_children_declared::<Puzzle3dPlayApp>("s.puzzle.puzzle3d@1/*#editor", 0);
     assert_editor_children_declared::<SourcingCurationApp>("s.sourcing.curation@1/*#editor", 1);
     assert_viewer_children_declared::<SourcingViewer>("s.sourcing.curation@1/*#viewer", 1);

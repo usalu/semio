@@ -27,16 +27,39 @@ pub(crate) struct BlurGlobals {
     pub _pad: [f32; 7],
 }
 
-/// 🌐️ Mirrors `WORLD3D_SHADER`'s `Globals { view_proj: mat4x4<f32>, light_dir: vec4<f32> }`.
+/// 🌐️ Mirrors `WORLD3D_SHADER`'s 240-byte per-pass environment and shadow globals.
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Pod, Zeroable)]
 pub(crate) struct World3dGlobals {
     pub view_proj: [f32; 16],
+    pub shadow_view_proj: [f32; 16],
+    pub camera_position: [f32; 4],
     pub light_dir: [f32; 4],
+    pub ambient: [f32; 4],
+    pub sun: [f32; 4],
+    pub material: [f32; 4],
+    pub material_emissive: [f32; 4],
+    pub shadow: [f32; 4],
+}
+
+impl World3dGlobals {
+    pub(crate) fn from_pass(pass: &ui_render::SurfacePass) -> Self {
+        Self {
+            view_proj: pass.view_proj,
+            shadow_view_proj: pass.shadow.view_proj,
+            camera_position: [pass.camera_position[0], pass.camera_position[1], pass.camera_position[2], 0.0],
+            light_dir: [pass.light_dir[0], pass.light_dir[1], pass.light_dir[2], 0.0],
+            ambient: [pass.lighting.ambient_color[0], pass.lighting.ambient_color[1], pass.lighting.ambient_color[2], pass.lighting.ambient_intensity],
+            sun: [pass.lighting.sun_color[0], pass.lighting.sun_color[1], pass.lighting.sun_color[2], pass.lighting.sun_intensity],
+            material: [pass.neutral_material.metalness, pass.neutral_material.roughness, pass.neutral_material.emissive_intensity, if pass.lighting.sun_enabled { 1.0 } else { 0.0 }],
+            material_emissive: [pass.neutral_material.emissive[0], pass.neutral_material.emissive[1], pass.neutral_material.emissive[2], 0.0],
+            shadow: [if pass.shadow.enabled { 1.0 } else { 0.0 }, pass.shadow.opacity, pass.shadow.softness, 0.0],
+        }
+    }
 }
 
 /// 🧊️ Mirrors `WORLD3D_SHADER`'s per-instance `InstanceInput` (`model0..3`/`color`/`flags`), built
-/// from [`ui_render::MeshInstance`]'s row-major `model`/`color`/`selected`/`hovered`.
+/// from [`ui_render::MeshInstance`]'s row-major model, color, and resolved material policy.
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Pod, Zeroable)]
 pub(crate) struct World3dGpuInstance {
@@ -58,7 +81,7 @@ impl World3dGpuInstance {
             model2: [m[8], m[9], m[10], m[11]],
             model3: [m[12], m[13], m[14], m[15]],
             color: instance.color,
-            flags: [if instance.selected { 1.0 } else { 0.0 }, if instance.hovered { 1.0 } else { 0.0 }, 0.0, 0.0],
+            flags: [if instance.preserve_vertex_color { 1.0 } else { 0.0 }, instance.emissive_intensity, instance.metalness, instance.roughness],
         }
     }
 }

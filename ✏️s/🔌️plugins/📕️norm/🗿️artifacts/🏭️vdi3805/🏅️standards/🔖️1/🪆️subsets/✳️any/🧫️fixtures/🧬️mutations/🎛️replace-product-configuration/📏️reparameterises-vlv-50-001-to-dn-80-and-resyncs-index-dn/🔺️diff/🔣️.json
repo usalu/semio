@@ -59,12 +59,12 @@
             },
             "kvs": {
               "kind": "decimal",
-              "value": 8,
+              "value": 8.0,
               "unit": {
                 "symbol": "m3/h",
                 "kind": "Volume",
                 "delta": false,
-                "si_factor": 1
+                "si_factor": 1.0
               }
             }
           },

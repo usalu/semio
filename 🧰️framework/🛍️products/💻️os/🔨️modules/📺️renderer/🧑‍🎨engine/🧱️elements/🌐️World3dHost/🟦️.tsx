@@ -3668,7 +3668,7 @@ function WorldInstancesLayer({
               scale={scale as [number, number, number]}
               quaternion={quaternion}
               targets={targets}
-              activeObjectId={selection.activeObjectId}
+              activeObjectId={selection.activeObjectId ?? undefined}
               selectionMode={selectionMode}
               selectedComponentIds={selectedComponentIds}
               previewComponentIds={previewComponentIds}
@@ -5360,7 +5360,9 @@ function world3dSuggestionsDispatchWindowRightDown(event: PointerEvent): void {
   }
 }
 
-function world3dSuggestionsDispatchWindowContextMenu(event: MouseEvent): void {
+// 🧭️ `globalThis.` because this file imports React's synthetic `MouseEvent`/`DragEvent` for JSX props,
+// which shadow the globals — and a real `window.addEventListener` listener is handed the DOM event.
+function world3dSuggestionsDispatchWindowContextMenu(event: globalThis.MouseEvent): void {
   for (const route of world3dSuggestionsRightDownRoutes) {
     if (!world3dSuggestionsEventOverHost(route.host(), event.clientX, event.clientY)) continue;
     const asPointer = event as unknown as PointerEvent;
@@ -6674,7 +6676,7 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
       const hits = resolveMarqueeInstanceIds(instances, meshes, marqueePath, rect, camera, method, marqueeCoverage);
       return { mergedComponentIds: null, mergedInstanceIds: mergeIdSet(marqueeMergeMode, selection.ids ?? [], hits) };
     }
-    const hits = resolveMarqueeComponentIds(instances, meshes, selectionMode, selection.activeObjectId, marqueePath, rect, camera, method, marqueeCoverage);
+    const hits = resolveMarqueeComponentIds(instances, meshes, selectionMode, selection.activeObjectId ?? undefined, marqueePath, rect, camera, method, marqueeCoverage);
     return { mergedComponentIds: mergeIdSet(marqueeMergeMode, selection.componentIds ?? [], hits), mergedInstanceIds: null };
   }, [instances, marqueeCoverage, marqueeDragActive, marqueeMergeMode, marqueePath, meshes, method, selection.activeObjectId, selection.componentIds, selection.ids, selectionMode]);
   const selectionPreviewSourceId = windowInstanceId ?? node.surfaceId;
@@ -7267,7 +7269,9 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
   }, [node.controllerId, node.surfaceId, windowInstanceId]);
 
   useEffect(() => {
-    const onWindowDragOver = (event: DragEvent) => {
+    // 🧭️ The DOM `DragEvent`, not React's synthetic one (imported above for JSX props): this listener
+    // is installed on `window`, which delivers the browser's own event.
+    const onWindowDragOver = (event: globalThis.DragEvent) => {
       if (!getActiveCatalogueDragPayload() && !event.dataTransfer?.types.includes(CATALOGUE_DRAG_MIME)) return;
       if (!parsePuzzle3dCatalogueDragPayload(getActiveCatalogueDragPayload()) && !event.dataTransfer?.types.includes(CATALOGUE_DRAG_MIME)) return;
       event.preventDefault();

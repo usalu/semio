@@ -1,5 +1,88 @@
-
 use super::*;
+
+#[test]
+fn a_reopened_text_owner_drains_the_prior_projection_before_projecting_its_current_value() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧪️fixtures/⌨️text-owner-lifecycle/🔣️.json")).expect("text owner lifecycle fixture");
+    assert_eq!(fixture["sequence"], serde_json::json!(["focus", "advance-to-projection", "blur", "refocus", "drain"]));
+    let owner = fixture["owner"].as_str().expect("owner").to_string();
+    let value = fixture["value"].as_str().expect("value").to_string();
+    let mut input = InputState::<()>::default();
+    input.focus_input_owned(owner.clone(), value.clone());
+    for _ in 0..256 {
+        input.drive_text_step().expect("initial text step");
+        if input.text_projection_pending {
+            break;
+        }
+    }
+    assert!(input.text_projection_pending, "the first owner has checked out a real bounded projection");
+    input.blur_input();
+    input.focus_input_owned(owner.clone(), value.clone());
+    for turn in 0..2048 {
+        let pending = input.drive_text_step().expect("close/reopen must not manufacture a protocol fault");
+        if !pending && input.text_buffer.reserved_bytes() == 0 && !input.text_projection_pending {
+            assert!(turn > 0, "the checked-out projection is drained incrementally");
+            break;
+        }
+        assert!(turn < 2047, "the current owner settles under a fixed bound");
+    }
+    assert_eq!(input.focused_id.as_deref(), fixture["expected"]["owner"].as_str());
+    assert_eq!(input.text_view(), fixture["expected"]["value"].as_str().expect("expected value"));
+
+    let mut authority = ui_contract::TextEditAuthority::default();
+    authority.start_projection(0, 1).expect("first projection");
+    assert_eq!(authority.start_projection(0, 1), Err(ui_contract::TextEditFault::Protocol), "a genuine concurrent projection remains a precise protocol refusal");
+}
+
+#[test]
+fn an_up_flow_tree_section_registers_its_header_at_the_painted_bottom_edge() {
+    let section = Rect::new(100.0, 200.0, 300.0, 240.0);
+    assert_eq!(retained_tree_section_header_band(section, 24.0, true), Rect::new(100.0, 416.0, 300.0, 24.0));
+    assert_eq!(retained_tree_section_header_band(section, 24.0, false), Rect::new(100.0, 200.0, 300.0, 24.0));
+}
+
+#[test]
+fn a_childful_up_flow_tree_item_registers_label_and_gutter_on_its_painted_bottom_row() {
+    use crate::wgpu::chrome::UiDriverDrag;
+    use crate::wgpu::component::ui::{UiNode, UiPresence, UiStackNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode};
+    use crate::wgpu::layout::TreeRowMetrics;
+    use crate::wgpu::tree::{Node, NodeKey, UiTree, WidgetSpec};
+    use crate::wgpu::Label;
+
+    let child = UiTreeItemNode::base("child", Label::data("Child"));
+    let mut branch = UiTreeItemNode::base("branch", Label::data("Branch"));
+    branch.items = Some(vec![child]);
+    let section = UiTreeSectionNode { window: None, id: "section".into(), label: Some(Label::data("Section")), default_open: Some(true), presence: UiPresence::default(), items: vec![branch] };
+    let mut tree = UiTree::new();
+    let owner = tree.insert_child(None, Node::new(NodeKey::Explicit("tree".into()), WidgetSpec(UiNode::Tree(UiTreeNode { sections: vec![section], presence: UiPresence::default(), drop_action: None, menu: None, interaction_domain: None }))));
+    let row = |id: &str| {
+        UiNode::Stack(UiStackNode {
+            direction: "vertical".into(),
+            gap: None,
+            padding: None,
+            id: Some(id.into()),
+            presence: UiPresence::default(),
+            activate: None,
+            drop_action: None,
+            drop_overlay: None,
+            children: Vec::new(),
+            menu: None,
+        })
+    };
+    let section_row = tree.insert_child(Some(owner), Node::new(NodeKey::Explicit("section".into()), WidgetSpec(row("section"))));
+    let branch_row = tree.insert_child(Some(section_row), Node::new(NodeKey::Explicit("branch".into()), WidgetSpec(row("branch"))));
+    let _child_row = tree.insert_child(Some(branch_row), Node::new(NodeKey::Explicit("child".into()), WidgetSpec(row("child"))));
+    let metrics = TreeRowMetrics::from_theme(&crate::wgpu::theme::Theme::default());
+    let subtree = Rect::new(100.0, 200.0, 300.0, metrics.row_height * 2.0);
+
+    let label = retained_hit_registration(&tree, branch_row, subtree, &metrics, UiDriverDrag::Handle, true).expect("branch label");
+    let gutter = retained_tree_chevron_registration(&tree, branch_row, subtree, &metrics, true).expect("branch gutter");
+    assert_eq!(label.control_id, "tree.label.branch");
+    assert_eq!(gutter.control_id, "tree.chevron.branch");
+    assert_eq!(label.rect.y, subtree.y + metrics.row_height);
+    assert_eq!(gutter.rect.y, label.rect.y);
+    assert_eq!(gutter.rect.h, metrics.row_height);
+    assert!(gutter.rect.w > 0.0 && gutter.rect.w < label.rect.w);
+}
 
 #[test]
 fn hit_at_prefers_content_registered_after_scroll_region() {
@@ -77,6 +160,64 @@ fn action_fault_is_observed_before_another_queued_owner() {
     input.record_action_fault(BoundedActionFault::ByteCredits);
     assert!(matches!(input.take_action_step(), Err(BoundedActionFault::ByteCredits)));
     assert_eq!(input.take_action_step().expect("authority").expect("queued").into_descriptor().expect("descriptor").action, "queued");
+}
+
+#[test]
+fn batch_length_step_observes_fault_then_preserves_the_complete_source_slice() {
+    let mut input = InputState::<ActionDescriptor>::default();
+    let mut batch = input.reserve_actions(2, 64).unwrap();
+    batch.action("controller", "first", 32, |_| Ok(())).unwrap();
+    batch.action("controller", "second", 32, |_| Ok(())).unwrap();
+    batch.publish().unwrap();
+    input.record_action_fault(BoundedActionFault::ByteCredits);
+    assert_eq!(input.take_action_batch_len_step(), Err(BoundedActionFault::ByteCredits));
+    assert_eq!(input.take_action_batch_len_step(), Ok(Some(2)));
+    assert_eq!(input.take_action_step().unwrap().unwrap().into_descriptor().unwrap().action, "first");
+    assert_eq!(input.take_action_batch_len_step(), Ok(Some(1)));
+}
+
+#[test]
+fn shared_tree_drag_fixture_projects_driver_specific_row_and_handle_targets() {
+    use crate::wgpu::chrome::UiDriverDrag;
+    use crate::wgpu::component::ui::{UiNode, UiPresence, UiStackNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode};
+    use crate::wgpu::layout::TreeRowMetrics;
+    use crate::wgpu::tree::{Node, NodeKey, UiTree, WidgetSpec};
+    use crate::wgpu::Label;
+    use std::collections::HashMap;
+
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🌳️tree-drag-handles/🔣️.json")).expect("tree drag fixture");
+    let metrics = TreeRowMetrics::from_theme(&crate::wgpu::theme::Theme::default());
+    let row_width = fixture["rowWidth"].as_f64().expect("row width") as f32;
+    for row in fixture["rows"].as_array().expect("rows") {
+        let id = row["id"].as_str().expect("row id");
+        let drag_data = row["dragData"].as_object().map(|map| map.iter().map(|(key, value)| (key.clone(), value.as_str().expect("payload").to_string())).collect::<HashMap<_, _>>());
+        let mut item = UiTreeItemNode::base(id, Label::data(row["label"].as_str().expect("label")));
+        item.draggable = row["draggable"].as_bool();
+        item.drag_data = drag_data;
+        let section = UiTreeSectionNode { window: None, id: "fixture".into(), label: None, default_open: Some(true), presence: UiPresence::default(), items: vec![item] };
+        let mut tree = UiTree::new();
+        let owner = tree.insert_child(None, Node::new(NodeKey::Explicit("tree".into()), WidgetSpec(UiNode::Tree(UiTreeNode { sections: vec![section], presence: UiPresence::default(), drop_action: None, menu: None, interaction_domain: None }))));
+        let stack = UiStackNode { direction: "vertical".into(), gap: None, padding: None, id: Some(id.into()), presence: UiPresence::default(), activate: None, drop_action: None, drop_overlay: None, children: Vec::new(), menu: None };
+        let row_node = tree.insert_child(Some(owner), Node::new(NodeKey::Explicit(id.into()), WidgetSpec(UiNode::Stack(stack))));
+        let rect = Rect::new(0.0, 0.0, row_width, metrics.row_height);
+
+        for driver in fixture["drivers"].as_array().expect("drivers") {
+            let mode = if driver["drag"].as_str() == Some("surface") { UiDriverDrag::Surface } else { UiDriverDrag::Handle };
+            let row_hit = retained_hit_registration(&tree, row_node, rect, &metrics, mode, false).expect("row hit");
+            let handle_hit = retained_tree_drag_handle_registration(&tree, row_node, rect, &metrics, mode);
+            let visible = driver["visibleHandles"].as_array().expect("visible handles").iter().any(|value| value.as_str() == Some(id));
+            let label_starts = driver["labelStarts"].as_array().expect("label starts").iter().any(|value| value.as_str() == Some(id));
+            let handle_starts = driver["handleStarts"].as_array().expect("handle starts").iter().any(|value| value.as_str() == Some(id));
+            assert_eq!(row_hit.drag_data.is_some(), label_starts, "{id}: row initiation under {:?}", mode);
+            assert_eq!(handle_hit.is_some(), visible, "{id}: handle visibility under {:?}", mode);
+            assert_eq!(handle_hit.as_ref().is_some_and(|hit| hit.drag_data.is_some()), handle_starts, "{id}: handle initiation under {:?}", mode);
+            if let (Some(hit), Some(role)) = (handle_hit, row["role"].as_str()) {
+                assert_eq!(hit.kind, HitKind::TreeDragHandle);
+                assert_eq!(hit.control_id, format!("tree.drag.{role}.{id}"));
+                assert!(rect.contains(hit.rect.x + hit.rect.w * 0.5, hit.rect.y + hit.rect.h * 0.5));
+            }
+        }
+    }
 }
 
 //#region 🔢️InputConstraints

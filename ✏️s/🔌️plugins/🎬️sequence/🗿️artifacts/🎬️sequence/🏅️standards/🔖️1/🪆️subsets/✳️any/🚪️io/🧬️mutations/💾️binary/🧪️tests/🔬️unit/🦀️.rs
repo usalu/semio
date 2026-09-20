@@ -20,19 +20,24 @@ fn move_step_for_test() -> SequenceMutation {
 #[semio_framework_async_macros::async_test]
 async fn sequence_document_text_round_trips_store_with_applied_mutation() {
     let envelope = store::create_document_envelope::<SequenceSnapshot, SequenceMutation>(crate::SEQUENCE_DOCUMENT_SCHEMA, "sequence-text-test", default_snapshot(), None);
-    let mut doc_store = store::ArtifactStore::new(envelope).await.expect("valid artifact store fixture");
+    // 🔐️ `new_sequence_store` installs the exact owner catalog a bare `ArtifactStore::new` leaves
+    // empty — without it `Apply` is refused (`edit history insertion requires its exact mutation
+    // retirement factory`) and the store cannot close at Drop either.
+    let mut doc_store = crate::standards::v1::subsets::any::schema::operations::new_sequence_store(envelope).await.expect("valid artifact store fixture");
     doc_store
         .dispatch(store::ArtifactCommand::Apply { mutations: vec![create_step(SequenceStep { id: "step-7".into(), kind: "log.print".into(), params: StepParams::new(), x: 12.0, y: 24.0, slot: None, collapsed: false })], description: None })
         .await
         .expect("apply");
-    store::os_store::test_support::assert_document_text_round_trip(&doc_store).await;
-    store::os_store::test_support::assert_document_pack_round_trip(&doc_store).await;
+    store::os_store::test_support::assert_document_text_round_trip(&*doc_store).await;
+    store::os_store::test_support::assert_document_pack_round_trip(&*doc_store).await;
 }
 
 //#region 🔖️OpTextTests
 #[semio_framework_async_macros::async_test]
 async fn op_text_round_trips_create_step() {
-    store::os_store::test_support::assert_op_line_round_trip(&create_step(SequenceStep {
+    // 🧊️ The payload owns a non-empty `StepParams` dictionary on BOTH sides of the round trip, so the
+    // source is held in a cold boundary and the parsed twin is retired rather than dropped.
+    let mutation = neural_engine::ColdOwner::new(create_step(SequenceStep {
         id: "step-99".into(),
         kind: "log.print".into(),
         params: StepParams::new().insert("message", Value::Atom(Atom::String("hi there".into()))),
@@ -41,6 +46,7 @@ async fn op_text_round_trips_create_step() {
         slot: None,
         collapsed: false,
     }));
+    store::os_store::test_support::assert_op_line_round_trip_cold(&*mutation, |parsed: SequenceMutation| neural_engine::ColdRetire::retire_cold(parsed));
 }
 
 #[semio_framework_async_macros::async_test]

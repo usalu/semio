@@ -6,9 +6,9 @@
 
 use crate::wgpu::chrome::{ICON_TINY, ICON_TREE_ROW, SIZE_TINY};
 use crate::wgpu::component::ui::{UiPresence, UiProgressNode};
-use crate::wgpu::Label;
 use crate::wgpu::geometry::Rect;
 use crate::wgpu::theme::Theme;
+use crate::wgpu::Label;
 
 /// 📶️ One progress node; `total: None` is the indeterminate case (`ui_contract::progress_fraction`).
 fn progress(completed: f64, total: Option<f64>) -> UiProgressNode {
@@ -64,4 +64,54 @@ async fn an_indeterminate_progress_bar_centres_a_fixed_share() {
     let left = fill[0] - track[0];
     let right = track[0] + track[2] - (fill[0] + fill[2]);
     assert!((left - right).abs() < 0.001, "the sweep is centred");
+}
+
+/// 🧭️ Real gizmo paint stays bounded after translating a pane, and its circular heads match the neutral Three sprite corpus.
+#[semio_framework_async_macros::async_test]
+async fn orbit_gizmo_heads_keep_diameter_when_the_viewport_moves() {
+    use crate::wgpu::draw_types::gizmo::{orbit_view_gizmo_head_radius, orbit_view_gizmo_tips};
+    use crate::wgpu::draw_types::{DrawList, KIND_ROUNDED};
+    use crate::wgpu::widgets::{gizmo::paint_orbit_view_gizmo, WidgetContext};
+    use crate::wgpu::{Camera3d, FontAtlas, InputState};
+    use std::collections::HashMap;
+
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧭️gizmo-tip-bounds/🔣️.json")).unwrap();
+    for row in fixture["cases"].as_array().unwrap() {
+        let radius = orbit_view_gizmo_head_radius(row["prominent"].as_bool().unwrap(), row["hovered"].as_bool().unwrap());
+        assert!((f64::from(radius) - row["radius"].as_f64().unwrap()).abs() < 0.00001);
+    }
+    let camera = Camera3d::default();
+    let theme = Theme::light();
+    let mut atlas = FontAtlas::builtin();
+    for row in fixture["viewports"].as_array().unwrap() {
+        let values: Vec<f32> = row.as_array().unwrap().iter().map(|value| value.as_f64().unwrap() as f32).collect();
+        let viewport = Rect::new(values[0], values[1], values[2], values[3]);
+        let tips = orbit_view_gizmo_tips(&camera, viewport);
+        let center = &tips[14];
+        for (tip, row) in tips.iter().take(6).zip(fixture["axisOffsets"].as_array().unwrap()) {
+            let expected: Vec<f32> = row.as_array().unwrap().iter().map(|value| value.as_f64().unwrap() as f32).collect();
+            assert!((tip.screen_x - center.screen_x - expected[0]).abs() < 0.001);
+            assert!((tip.screen_y - center.screen_y - expected[1]).abs() < 0.001);
+            assert!((tip.depth - expected[2]).abs() < 0.00001);
+        }
+        for hovered in [None, Some(0)] {
+            let mut draw = DrawList::default();
+            let mut input = InputState::<()>::default();
+            let mut scroll = HashMap::new();
+            let mut collapsed = HashMap::new();
+            let mut selects = HashMap::new();
+            let mut ctx = WidgetContext { draw: &mut draw, overlay: None, atlas: &mut atlas, icons: None, input: &mut input, theme: &theme, scroll_offsets: &mut scroll, collapsed_sections: &mut collapsed, open_selects: &mut selects, interaction_maps: None, pick_clip: None, viewport_height: viewport.h };
+            paint_orbit_view_gizmo(&mut ctx, &camera, viewport, hovered);
+            let heads: Vec<_> = draw.layers.iter().flat_map(|layer| &layer.overlay_ui_instances).collect();
+            assert_eq!(heads.len(), 15);
+            for head in heads {
+                assert_eq!(head.params[2], KIND_ROUNDED);
+                assert!((head.rect[2] - head.rect[3]).abs() < 0.00001);
+                assert!(f64::from(head.rect[2]) <= fixture["maxHeadDiameter"].as_f64().unwrap() + 0.00001);
+                assert!((head.params[0] * 2.0 - head.rect[2]).abs() < 0.00001);
+                let center = [head.rect[0] + head.rect[2] * 0.5, head.rect[1] + head.rect[3] * 0.5];
+                assert!(tips.iter().any(|tip| (tip.screen_x - center[0]).abs() < 0.001 && (tip.screen_y - center[1]).abs() < 0.001));
+            }
+        }
+    }
 }

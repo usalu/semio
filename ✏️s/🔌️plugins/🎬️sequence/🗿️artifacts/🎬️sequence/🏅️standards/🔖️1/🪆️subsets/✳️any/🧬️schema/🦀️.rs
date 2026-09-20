@@ -85,8 +85,9 @@ pub fn sequence_artifact_schema_descriptor() -> framework_schema::ArtifactSchema
 /// `document_json` is loaded via `serde_json::from_str` by `ArtifactApp::load_document`'s default impl)
 /// — out of scope to change, since both are defined in `framework/plugin`.
 pub fn sequence_example_json() -> String {
-    let fixture = <SequenceSnapshot as ArtifactDsl>::parse_dsl(&default_snapshot().print_dsl()).expect("default_snapshot round-trips through its own DSL");
-    dsl::os_pack::to_json_string(&fixture)
+    let seed = neural_engine::ColdOwner::new(default_snapshot());
+    let fixture = neural_engine::ColdOwner::new(<SequenceSnapshot as ArtifactDsl>::parse_dsl(&seed.print_dsl()).expect("default_snapshot round-trips through its own DSL"));
+    dsl::os_pack::to_json_string(&*fixture)
 }
 //#endregion 🔖️Example
 

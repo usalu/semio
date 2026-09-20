@@ -72,6 +72,7 @@ import {
   packWireNatural,
   BACKBONE_HOT_MESSAGE_MAXIMUM_BYTES,
   DOCUMENT_ARCHIVE_MAXIMUM_BYTES,
+  HUB_SESSION_CAPABILITY_PATTERN_V1,
   parseHubSessionPortRequestV1,
   parseDocumentBackboneMessage,
   parseSocketGrantReceiptV1,
@@ -278,8 +279,8 @@ const workerScope = typeof self !== "undefined" && !Reflect.has(self, "document"
 
 if (workerScope) {
   workerScope.onmessage = (messageEvent: MessageEvent<unknown>) => {
-    if (typeof messageEvent.data === "object" && messageEvent.data !== null && Reflect.get(messageEvent.data, "kind") === "semio-browser-broker-port" && Reflect.get(messageEvent.data, "port") instanceof MessagePort) {
-      attachLocalBrokerPort(Reflect.get(messageEvent.data, "port") as MessagePort);
+    if (typeof messageEvent.data === "object" && messageEvent.data !== null && Reflect.get(messageEvent.data, "kind") === "semio-hub-session-port" && Reflect.get(messageEvent.data, "port") instanceof MessagePort) {
+      attachHubSessionPort(Reflect.get(messageEvent.data, "port") as MessagePort);
       return;
     }
     // 🛡️ React DevTools and other injectors postMessage into every Worker; ignore non-wire traffic.
@@ -306,8 +307,7 @@ export type BackboneWorkerTestSeams = {
   executionTargetStatusObserver: typeof executionTargetStatusObserver;
   inferenceApprovalUndoEpoch: typeof inferenceApprovalUndoEpoch;
   inferenceApprovalUndoOwner: typeof inferenceApprovalUndoOwner;
-  localBrowserBrokerProofExpiresAtMs: typeof localBrowserBrokerProofExpiresAtMs;
-  localBrowserBrokerQueued: typeof localBrowserBrokerQueued;
+  hubSessionQueued: typeof hubSessionQueued;
   socketGrantTestIssue: typeof socketGrantTestIssue;
   spaceArtifactCreationTestFetch: typeof spaceArtifactCreationTestFetch;
   workerPostTestSink: typeof workerPostTestSink;
@@ -315,8 +315,8 @@ export type BackboneWorkerTestSeams = {
   readonly browserSessionOperationFence: typeof browserSessionOperationFence;
   readonly acceptBrowserSessionAuthority: typeof acceptBrowserSessionAuthority;
   readonly captureBrowserSessionOperationFence: typeof captureBrowserSessionOperationFence;
-  readonly attachLocalBrokerPort: typeof attachLocalBrokerPort;
-  readonly detachLocalBrokerPort: typeof detachLocalBrokerPort;
+  readonly attachHubSessionPort: typeof attachHubSessionPort;
+  readonly detachHubSessionPort: typeof detachHubSessionPort;
 };
 
 /** 🧪️ Exact shape of the dependency bag `🧪️tests/🧪️space-artifact-creation-owner` receives from this module. */
@@ -345,12 +345,11 @@ export type BackboneWorkerTestDependencies = {
   readonly artifacts: typeof artifacts;
   readonly bindInferenceApprovalUndoToMountedPair: typeof bindInferenceApprovalUndoToMountedPair;
   readonly browserActorChildCapacity: typeof browserActorChildCapacity;
-  readonly browserBrokerFetch: typeof browserBrokerFetch;
-  readonly browserBrokerProofDigest: typeof browserBrokerProofDigest;
+  readonly hubSessionFetch: typeof hubSessionFetch;
   readonly browserDirectoryRequest: typeof browserDirectoryRequest;
   readonly browserExecutionTargetAssetRequest: typeof browserExecutionTargetAssetRequest;
   readonly bytesHex: typeof bytesHex;
-  readonly clearLocalBrowserBrokerProof: typeof clearLocalBrowserBrokerProof;
+  readonly clearHubSessionCapability: typeof clearHubSessionCapability;
   readonly closeArtifact: typeof closeArtifact;
   readonly closeArtifactRuntime: typeof closeArtifactRuntime;
   readonly closeDirectory: typeof closeDirectory;
@@ -395,15 +394,13 @@ export type BackboneWorkerTestDependencies = {
   readonly fromWireEnvelope: typeof fromWireEnvelope;
   readonly handleHubFrame: typeof handleHubFrame;
   readonly handleTsRequest: typeof handleTsRequest;
-  readonly hexBytes: typeof hexBytes;
   readonly hubBinding: typeof hubBinding;
   readonly identityActorConfig: typeof identityActorConfig;
   readonly idleGisMapInferencePortStatusV1: typeof idleGisMapInferencePortStatusV1;
   readonly inferenceApprovalUndoEpoch: typeof inferenceApprovalUndoEpoch;
   readonly inferenceApprovalUndoOwner: typeof inferenceApprovalUndoOwner;
-  readonly installLocalBrowserBrokerProof: typeof installLocalBrowserBrokerProof;
-  readonly localBrowserBrokerProofExpiresAtMs: typeof localBrowserBrokerProofExpiresAtMs;
-  readonly localBrowserBrokerQueued: typeof localBrowserBrokerQueued;
+  readonly installHubSessionCapability: typeof installHubSessionCapability;
+  readonly hubSessionQueued: typeof hubSessionQueued;
   readonly openArtifact: typeof openArtifact;
   readonly ownedArrayBuffer: typeof ownedArrayBuffer;
   readonly parseDocumentBackboneMessage: typeof parseDocumentBackboneMessage;
@@ -658,6 +655,10 @@ let hubSessionQueued = 0;
 let hubSessionPort: MessagePort | undefined;
 const hubSessionRpcControllers = new Map<string, AbortController>();
 
+function bytesHex(value: Uint8Array): string {
+  return Array.from(value, (byte) => byte.toString(16).padStart(2, "0")).join("");
+}
+
 function clearHubSessionCapability(): void {
   hubSessionAdmission = {};
   consumeHubSessionCapability();
@@ -716,7 +717,7 @@ async function acceptBrowserSessionAuthority(response: FetchTimeoutResponse, adm
   if (authority.expiresAt <= Date.now()) throw new Error("directory session authority: expired");
   const current = browserSessionAuthority;
   if (current !== null && (current.sessionBindingSha256 !== authority.sessionBindingSha256 || current.authorizationGeneration !== authority.authorizationGeneration)) {
-    localBrowserBrokerAdmission = {};
+    hubSessionAdmission = {};
     retireBrowserSessionAuthority();
   } else if (current !== null && (current.userId !== authority.userId || current.expiresAt !== authority.expiresAt || current.sessionKind !== authority.sessionKind)) {
     throw new Error("directory session authority: contradictory binding");
@@ -725,139 +726,120 @@ async function acceptBrowserSessionAuthority(response: FetchTimeoutResponse, adm
   return { ok: response.ok, status: response.status, statusText: response.statusText, headers: response.headers, text: async () => body, json: async () => JSON.parse(body) };
 }
 
-function consumeLocalBrowserBrokerProof(): void {
-  localBrowserBrokerOwner = {};
-  localBrowserBrokerProof?.fill(0);
-  localBrowserBrokerProof = undefined;
-  localBrowserBrokerProofExpiresAtMs = 0;
+function consumeHubSessionCapability(): void {
+  hubSessionOwner = {};
+  hubSessionCapability = undefined;
 }
 
-function installLocalBrowserBrokerProof(proof: string): boolean {
-  const decoded = hexBytes(proof);
-  if (!decoded || localBrowserBrokerProof) {
-    decoded?.fill(0);
-    return false;
-  }
+/** 🎫️ Adopts the capability the signed-in human's shell minted. Re-installing a DIFFERENT capability
+ * retires every document, directory and inference owner bound to the previous one first, so one
+ * worker can never mix two principals' work; re-installing the SAME one is idempotent, which is what
+ * lets a reloaded page hand back the session it restored from storage without tearing anything down. */
+function installHubSessionCapability(capability: string): boolean {
+  if (!HUB_SESSION_CAPABILITY_PATTERN_V1.test(capability)) return false;
+  if (hubSessionCapability === capability) return true;
   retireBrowserSessionAuthority();
-  localBrowserBrokerProof = decoded;
-  localBrowserBrokerOwner = {};
-  localBrowserBrokerAdmission = {};
-  localBrowserBrokerProofExpiresAtMs = Date.now() + BROWSER_BROKER_PROOF_TTL_MS;
+  hubSessionCapability = capability;
+  hubSessionOwner = {};
+  hubSessionAdmission = {};
   return true;
 }
 
-async function browserBrokerFetch(input: string, init: RequestInit = {}, options: { readonly timeoutMs: number; readonly signal?: AbortSignal; readonly admit?: () => boolean; readonly retain?: () => boolean; readonly accept?: (response: FetchTimeoutResponse, admission: object) => Promise<FetchTimeoutResponse> }): Promise<FetchTimeoutResponse> {
-  if (options.signal?.aborted) throw options.signal.reason ?? new Error("browser broker cancelled");
-  const admission = localBrowserBrokerAdmission;
-  if (localBrowserBrokerQueued >= 64) throw new Error("browser broker capacity exceeded");
-  localBrowserBrokerQueued += 1;
+/** 🌐️ The single authenticated hub lane. Every hub HTTP call this worker makes goes through here,
+ * carries the human's own `Authorization: Bearer`, and is serialized behind one queue so a retired
+ * owner can never observe a response minted for its successor. A `401` is the hub's own statement
+ * that the capability is gone: it drops the session rather than retrying, which is what surfaces
+ * re-authentication in the shell instead of a silent stall. */
+async function hubSessionFetch(path: string, init: RequestInit = {}, options: { readonly timeoutMs: number; readonly signal?: AbortSignal; readonly admit?: () => boolean; readonly retain?: () => boolean; readonly accept?: (response: FetchTimeoutResponse, admission: object) => Promise<FetchTimeoutResponse> }): Promise<FetchTimeoutResponse> {
+  if (options.signal?.aborted) throw options.signal.reason ?? new Error("hub session cancelled");
+  const admission = hubSessionAdmission;
+  if (hubSessionQueued >= 64) throw new Error("hub session capacity exceeded");
+  hubSessionQueued += 1;
   let resolveTurn: () => void = () => undefined;
-  const prior = localBrowserBrokerQueue;
-  localBrowserBrokerQueue = new Promise<void>((resolve) => {
+  const prior = hubSessionQueue;
+  hubSessionQueue = new Promise<void>((resolve) => {
     resolveTurn = resolve;
   });
   await prior;
   try {
-    if (options.signal?.aborted) throw options.signal.reason ?? new Error("browser broker cancelled");
-    if (admission !== localBrowserBrokerAdmission || options.admit?.() === false) throw new Error("browser broker owner retired");
-    const current = localBrowserBrokerProof;
-    if (!current || Date.now() > localBrowserBrokerProofExpiresAtMs) {
-      clearLocalBrowserBrokerProof();
-      throw new Error("browser broker rebootstrap required");
-    }
-    const next = crypto.getRandomValues(new Uint8Array(32));
-    const nextDigest = await browserBrokerProofDigest(next);
-    if (options.signal?.aborted || admission !== localBrowserBrokerAdmission || options.admit?.() === false) {
-      next.fill(0);
-      nextDigest.fill(0);
-      throw new Error("browser broker owner retired");
-    }
-    const currentHex = bytesHex(current);
-    consumeLocalBrowserBrokerProof();
-    const owner = localBrowserBrokerOwner;
+    if (options.signal?.aborted) throw options.signal.reason ?? new Error("hub session cancelled");
+    if (admission !== hubSessionAdmission || options.admit?.() === false) throw new Error("hub session owner retired");
+    const capability = hubSessionCapability;
+    if (capability === undefined) throw new Error("hub session rebootstrap required");
+    const owner = hubSessionOwner;
+    let response: FetchTimeoutResponse;
     try {
-      const response = await fetchWithTimeout(
-        input,
-        {
-          ...init,
-          headers: { ...(init.headers as Record<string, string> | undefined), "x-semio-browser-broker": currentHex, "x-semio-browser-broker-next": bytesHex(nextDigest) },
-        },
+      response = await fetchWithTimeout(
+        `${HUB_REQUEST_ROUTE_PREFIX}${path}`,
+        { ...init, headers: { ...(init.headers as Record<string, string> | undefined), authorization: `Bearer ${capability}` } },
         options,
       );
-      if (admission !== localBrowserBrokerAdmission || localBrowserBrokerOwner !== owner || (options.retain ?? options.admit)?.() === false) throw new Error("browser broker owner retired");
-      if (response.headers.get("x-semio-browser-broker-advanced") === "1" && response.status !== 401) {
-        localBrowserBrokerProof = next;
-        localBrowserBrokerProofExpiresAtMs = Date.now() + BROWSER_BROKER_PROOF_TTL_MS;
-      } else {
-        next.fill(0);
-        nextDigest.fill(0);
-        throw new Error("browser broker rebootstrap required");
-      }
-      nextDigest.fill(0);
-      return options.accept === undefined ? response : await options.accept(response, admission);
     } catch {
-      next.fill(0);
-      nextDigest.fill(0);
-      if (localBrowserBrokerOwner === owner) clearLocalBrowserBrokerProof();
-      throw new Error("browser broker rebootstrap required");
+      throw new Error("hub session unreachable");
     }
+    if (response.status === 401) {
+      if (hubSessionOwner === owner) clearHubSessionCapability();
+      throw new Error("hub session rebootstrap required");
+    }
+    if (admission !== hubSessionAdmission || hubSessionOwner !== owner || (options.retain ?? options.admit)?.() === false) throw new Error("hub session owner retired");
+    return options.accept === undefined ? response : await options.accept(response, admission);
   } finally {
-    localBrowserBrokerQueued -= 1;
+    hubSessionQueued -= 1;
     resolveTurn();
   }
 }
 
 /** 🔌️ Retires one private port and every body reader it admitted before a successor attaches. */
-function detachLocalBrokerPort(): void {
-  if (localBrowserBrokerPort === undefined) return;
-  localBrowserBrokerPort.onmessage = null;
-  localBrowserBrokerPort.close();
-  localBrowserBrokerPort = undefined;
-  clearLocalBrowserBrokerProof();
-  for (const controller of localBrowserBrokerRpcControllers.values()) controller.abort(new Error("browser broker port retired"));
-  localBrowserBrokerRpcControllers.clear();
+function detachHubSessionPort(): void {
+  if (hubSessionPort === undefined) return;
+  hubSessionPort.onmessage = null;
+  hubSessionPort.close();
+  hubSessionPort = undefined;
+  clearHubSessionCapability();
+  for (const controller of hubSessionRpcControllers.values()) controller.abort(new Error("hub session port retired"));
+  hubSessionRpcControllers.clear();
 }
 
-function attachLocalBrokerPort(port: MessagePort): void {
-  detachLocalBrokerPort();
-  localBrowserBrokerPort = port;
+function attachHubSessionPort(port: MessagePort): void {
+  detachHubSessionPort();
+  hubSessionPort = port;
   port.onmessage = (event: MessageEvent<unknown>) => {
     const message = parseHubSessionPortRequestV1(event.data);
     if (!message) return;
     if (message.kind === "initialize") {
-      const response: HubSessionPortResponseV1 = { kind: "initialized", ok: installLocalBrowserBrokerProof(message.proof) };
+      const response: HubSessionPortResponseV1 = { kind: "initialized", ok: installHubSessionCapability(message.capability) };
       port.postMessage(response);
       return;
     }
     if (message.kind === "close") {
-      detachLocalBrokerPort();
+      detachHubSessionPort();
       return;
     }
     if (message.kind === "cancel") {
-      localBrowserBrokerRpcControllers.get(message.requestId)?.abort();
+      hubSessionRpcControllers.get(message.requestId)?.abort();
       return;
     }
     if (message.kind !== "request") return;
-    if (localBrowserBrokerRpcControllers.size >= 64) {
+    if (hubSessionRpcControllers.size >= 64) {
       const response: HubSessionPortResponseV1 = { kind: "response", requestId: message.requestId, status: 503, body: "" };
       port.postMessage(response);
       return;
     }
     const requestId = message.requestId;
     const controller = new AbortController();
-    localBrowserBrokerRpcControllers.set(requestId, controller);
-    void browserBrokerFetch("/_semio/hub/auth/sessions/me", { method: "GET" }, { timeoutMs: 2_000, signal: controller.signal, accept: (response, admission) => acceptBrowserSessionAuthority(response, admission, controller.signal) })
+    hubSessionRpcControllers.set(requestId, controller);
+    void hubSessionFetch("/auth/sessions/me", { method: "GET" }, { timeoutMs: 2_000, signal: controller.signal, accept: (response, admission) => acceptBrowserSessionAuthority(response, admission, controller.signal) })
       .then(async (response) => {
         const body = await response.text();
         const result: HubSessionPortResponseV1 = { kind: "response", requestId, status: response.status, body };
         port.postMessage(result);
       })
       .catch((error: unknown) => {
-        const result: HubSessionPortResponseV1 = { kind: "response", requestId, status: error instanceof Error && error.message === "browser broker rebootstrap required" ? 428 : 503, body: "" };
+        const result: HubSessionPortResponseV1 = { kind: "response", requestId, status: error instanceof Error && error.message === "hub session rebootstrap required" ? 401 : 503, body: "" };
         port.postMessage(result);
       })
       .finally(() => {
-        if (localBrowserBrokerRpcControllers.get(requestId) === controller) localBrowserBrokerRpcControllers.delete(requestId);
+        if (hubSessionRpcControllers.get(requestId) === controller) hubSessionRpcControllers.delete(requestId);
       });
   };
   port.start();
@@ -867,12 +849,12 @@ function attachLocalBrokerPort(port: MessagePort): void {
 async function requestSocketGrant(baseUrl: string, path: string, signal?: AbortSignal): Promise<SocketGrantReceiptV1> {
   if (socketGrantTestIssue) return socketGrantTestIssue(baseUrl, path, signal);
   if (signal?.aborted || !baseUrl) throw new Error("socket grant: cancelled");
-  const response = await browserBrokerFetch(`/_semio/hub${path}`, { method: "POST" }, { timeoutMs: SOCKET_GRANT_REQUEST_TIMEOUT_MS, signal });
+  const response = await hubSessionFetch(`${path}`, { method: "POST" }, { timeoutMs: SOCKET_GRANT_REQUEST_TIMEOUT_MS, signal });
   if (!response.ok) throw new Error("socket grant: unavailable");
   try {
     return parseSocketGrantReceiptV1(await response.json());
   } catch (error) {
-    clearLocalBrowserBrokerProof();
+    clearHubSessionCapability();
     throw error;
   }
 }
@@ -1225,7 +1207,7 @@ function browserExecutionTargetAssetRequest(
   const path = executionTargetAssetPath(binding.spaceId, documentId, asset);
   if (!/^\/spaces\/[^/?#]+\/documents\/[^/?#]+\/execution-target\/(?:manifest|component|descriptor|browser-actor)$/u.test(path)) return Promise.reject(new Error("document execution target: operation denied"));
   if (intent.scope.spaceId !== binding.spaceId || intent.scope.documentId !== documentId) return Promise.reject(new Error("document execution target: operation denied"));
-  return browserBrokerFetch(`/_semio/hub${path}`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(intent) }, options);
+  return hubSessionFetch(`${path}`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(intent) }, options);
 }
 
 /** 🔭️ Observation seam for the execution-target live region, mirroring {@link socketGrantTestIssue}:
@@ -2719,8 +2701,8 @@ async function requestDocumentSocketAuthority(state: ArtifactState, binding: Ext
   const openControl: ExecutionTargetReadControl = { signal: state.docAbort.signal, deadlineAtMs: Date.now() + SOCKET_GRANT_REQUEST_TIMEOUT_MS, assertCurrent: assertOwner };
   assertExecutionTargetRead(openControl);
   const openPath = `/spaces/${encodeURIComponent(binding.spaceId)}/documents/${encodeURIComponent(state.config.documentId)}/open-plan`;
-  const openResponse = await browserBrokerFetch(
-    `/_semio/hub${openPath}`,
+  const openResponse = await hubSessionFetch(
+    `${openPath}`,
     { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(intent) },
     { timeoutMs: SOCKET_GRANT_REQUEST_TIMEOUT_MS, signal: state.docAbort.signal },
   );
@@ -2730,7 +2712,7 @@ async function requestDocumentSocketAuthority(state: ArtifactState, binding: Ext
     plan = parseDocumentOpenPlanV1(await readDocumentOpenJson(openResponse, openControl), Date.now());
   } catch {
     const cancelled = state.docAbort.signal.aborted;
-    clearLocalBrowserBrokerProof();
+    clearHubSessionCapability();
     throw new Error(cancelled ? "document open: cancelled" : "document open: invalid plan");
   }
   assertOwner();
@@ -2744,7 +2726,7 @@ async function requestDocumentSocketAuthority(state: ArtifactState, binding: Ext
       } catch (error) {
         const cancelled = state.docAbort.signal.aborted || String((error as Error).message).includes("cancelled");
         emitExecutionTargetStatus(state, binding, cancelled ? "cancelled" : "integrity-failed");
-        clearLocalBrowserBrokerProof();
+        clearHubSessionCapability();
         throw new Error(cancelled ? "document open: cancelled" : "document open: invalid execution target");
       }
     }
@@ -2756,7 +2738,7 @@ async function requestDocumentSocketAuthority(state: ArtifactState, binding: Ext
     } catch {
       lease?.drop();
       emitExecutionTargetStatus(state, binding, "stale");
-      clearLocalBrowserBrokerProof();
+      clearHubSessionCapability();
       throw new Error("document open: invalid plan");
     }
     if (state.docAbort.signal.aborted || (lease !== undefined && !lease.live)) {
@@ -2767,8 +2749,8 @@ async function requestDocumentSocketAuthority(state: ArtifactState, binding: Ext
     const grantControl: ExecutionTargetReadControl = { signal: state.docAbort.signal, deadlineAtMs: Math.min(plan.expiresAtUnixMs, Date.now() + SOCKET_GRANT_REQUEST_TIMEOUT_MS), assertCurrent: assertOwner };
     assertExecutionTargetRead(grantControl);
     const exchange = parseDocumentPlanSocketGrantIntentV1({ schema: "semio.hub.document-plan-socket-grant-intent/v1", version: 1, planReceipt: plan.receipt });
-    const grantResponse = await browserBrokerFetch(
-      `/_semio/hub${grantPath}`,
+    const grantResponse = await hubSessionFetch(
+      `${grantPath}`,
       { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(exchange) },
       { timeoutMs: SOCKET_GRANT_REQUEST_TIMEOUT_MS, signal: state.docAbort.signal },
     );
@@ -2791,7 +2773,7 @@ async function requestDocumentSocketAuthority(state: ArtifactState, binding: Ext
       return { receipt, ...authority };
     } catch {
       lease?.drop();
-      clearLocalBrowserBrokerProof();
+      clearHubSessionCapability();
       throw new Error("document open: invalid grant");
     }
   } finally {
@@ -2803,18 +2785,18 @@ async function requestDocumentSocketAuthority(state: ArtifactState, binding: Ext
 }
 
 function browserDirectoryRequest(input: string, init: RequestInit = {}, options: { readonly timeoutMs: number; readonly signal?: AbortSignal }): Promise<FetchTimeoutResponse> {
-  const url = new URL(input, "http://browser-broker.invalid");
+  const url = new URL(input, "http://hub-session.invalid");
   const method = init.method ?? "GET";
   const after = url.searchParams.get("after") ?? "";
-  const eventPage = url.pathname === "/_semio/hub/directory/event-page/v1" && [...url.searchParams].length === 1 && /^(?:0|[1-9]\d*)$/u.test(after) && Number.isSafeInteger(Number(after));
+  const eventPage = url.pathname === "/directory/event-page/v1" && [...url.searchParams].length === 1 && /^(?:0|[1-9]\d*)$/u.test(after) && Number.isSafeInteger(Number(after));
   const allowed =
     (method === "GET" &&
-      (((url.pathname === "/_semio/hub/directory/spaces" || /^\/_semio\/hub\/directory\/spaces\/[^/]+$/u.test(url.pathname)) && url.search === "") ||
-        (url.pathname === "/_semio/hub/directory/events" && [...url.searchParams].length === 1 && /^\d+$/u.test(url.searchParams.get("since") ?? "")) ||
+      (((url.pathname === "/directory/spaces" || /^\/directory\/spaces\/[^/]+$/u.test(url.pathname)) && url.search === "") ||
+        (url.pathname === "/directory/events" && [...url.searchParams].length === 1 && /^\d+$/u.test(url.searchParams.get("since") ?? "")) ||
         eventPage)) ||
-    (method === "POST" && url.pathname === "/_semio/hub/directory/commands" && url.search === "");
+    (method === "POST" && url.pathname === "/directory/commands" && url.search === "");
   if (!allowed) return Promise.reject(new Error("browser directory operation denied"));
-  return browserBrokerFetch(`${url.pathname}${url.search}`, init, options);
+  return hubSessionFetch(`${url.pathname}${url.search}`, init, options);
 }
 
 function setStatus(state: ArtifactState, patch: Partial<ArtifactSyncStatus>): void {
@@ -4308,7 +4290,7 @@ async function openSpaceArtifactCreationCatalog(spaceId: string, clientInstanceI
     if (!/^[A-Za-z0-9][A-Za-z0-9._:-]{0,255}$/u.test(spaceId) || encodedSpaceId !== spaceId) throw new Error("space artifact creation catalog: invalid scope");
     const path = `/spaces/${encodedSpaceId}/artifact-creations`;
     const response = spaceArtifactCreationTestFetch === null
-      ? await browserBrokerFetch(`/_semio/hub${path}`, { method: "GET" }, { timeoutMs: SPACE_ARTIFACT_CREATION_CATALOG_DEADLINE_MS, signal: operation.abort.signal })
+      ? await hubSessionFetch(`${path}`, { method: "GET" }, { timeoutMs: SPACE_ARTIFACT_CREATION_CATALOG_DEADLINE_MS, signal: operation.abort.signal })
       : await spaceArtifactCreationTestFetch(path, { method: "GET" }, operation.abort.signal);
     if (!response.ok || !current()) throw new Error("space artifact creation catalog: unavailable");
     const control: ExecutionTargetReadControl = { signal: operation.abort.signal, deadlineAtMs: Date.now() + SPACE_ARTIFACT_CREATION_CATALOG_DEADLINE_MS, assertCurrent: () => {
@@ -4354,7 +4336,7 @@ function spaceArtifactCreationFetch(operation: SpaceArtifactCreationOperationV1,
   const path = spaceArtifactCreationPath(operation, suffix);
   if (!spaceArtifactCreationCurrent(operation)) return Promise.reject(new Error("space artifact creation: stale owner"));
   if (spaceArtifactCreationTestFetch !== null) return spaceArtifactCreationTestFetch(path, init, operation.abort.signal);
-  return browserBrokerFetch(`/_semio/hub${path}`, init, { timeoutMs: SOCKET_GRANT_REQUEST_TIMEOUT_MS, signal: operation.abort.signal });
+  return hubSessionFetch(`${path}`, init, { timeoutMs: SOCKET_GRANT_REQUEST_TIMEOUT_MS, signal: operation.abort.signal });
 }
 
 async function readSpaceArtifactCreationStatus(operation: SpaceArtifactCreationOperationV1, response: FetchTimeoutResponse): Promise<HubSpaceArtifactCreationStatusV1> {
@@ -4549,7 +4531,7 @@ function openDirectory(baseUrl: string, since: number): void {
   directorySessionEpoch += 1;
   const issuer = createSocketGrantIssuerV1({ post: (path, options) => requestSocketGrant(baseUrl, path, options?.signal) });
   const client = new DirectoryClient(baseUrl, {
-    requestBaseUrl: "/_semio/hub",
+    requestBaseUrl: "",
     socketGrantIssuer: issuer,
     request: browserDirectoryRequest,
   });
@@ -4584,7 +4566,7 @@ async function fetchDirectoryBootstrapPage(owner: DirectoryBootstrapOwner): Prom
       page.authorizationGeneration !== authority.authorizationGeneration
     ) {
       post({ kind: "directory-bootstrap-failed", bootstrapEpoch: owner.machine.bootstrapEpoch, code: "unauthorized", retryable: false });
-      clearLocalBrowserBrokerProof();
+      clearHubSessionCapability();
       closeDirectory();
       return;
     }
@@ -4639,7 +4621,7 @@ function openDirectoryBootstrap(baseUrl: string, after: number, bootstrapEpoch: 
   closeDirectory();
   const abort = new AbortController();
   const client = new DirectoryClient(baseUrl, {
-    requestBaseUrl: "/_semio/hub",
+    requestBaseUrl: "",
     socketGrantIssuer: createSocketGrantIssuerV1({ post: (path, options) => requestSocketGrant(baseUrl, path, options?.signal) }),
     request: browserDirectoryRequest,
   });
@@ -4688,7 +4670,7 @@ function openScopedDirectory(baseUrl: string, scope: DocumentScope, since: numbe
   const key = scopedDirectoryKey(scope);
   scopedDirectoryStreams.get(key)?.close();
   const client = new DirectoryClient(baseUrl, {
-    requestBaseUrl: "/_semio/hub",
+    requestBaseUrl: "",
     socketGrantIssuer: createSocketGrantIssuerV1({ post: (path, options) => requestSocketGrant(baseUrl, path, options?.signal) }),
     request: browserDirectoryRequest,
   });
@@ -5488,8 +5470,8 @@ async function inferenceBrokerFetch(operation: InferenceOperationV1, suffix: str
   if (!/^\/spaces\/[^/?#]+\/documents\/[^/?#]+\/inference\/gis-map\/jobs(?:\/reconcile|\/[0-9a-f]{32}\/(?:events\?after=\d{1,3}|cancel|approval))?$/u.test(path)) throw new Error("gis map inference: operation denied");
   if (operation.sessionEpoch !== directorySessionEpoch || !sameBrowserSessionOperationFence(operation.sessionFence)) throw new Error("gis map inference: original session unavailable");
   if ((suffix === "/jobs" || suffix.endsWith("/approval")) && !inferenceLeaseVerified(operation.scope)) throw new Error("gis map inference: document closed");
-  return browserBrokerFetch(
-    `/_semio/hub${path}`,
+  return hubSessionFetch(
+    `${path}`,
     {
       method: init.method,
       ...(init.body === undefined ? {} : { headers: { "content-type": "application/json" }, body: init.body }),
@@ -5506,8 +5488,8 @@ async function inferenceBrokerFetch(operation: InferenceOperationV1, suffix: str
 async function inferenceApprovalUndoBrokerFetch(owner: InferenceApprovalUndoOwnerV1, body: string): Promise<FetchTimeoutResponse> {
   const state = artifactState(owner.scope.documentId, owner.scope.spaceId);
   if (state === undefined || state.closed || state.openClientInstanceId !== owner.clientInstanceId || state.docAbort.signal.aborted || !sameBrowserSessionOperationFence(owner.sessionFence)) throw new Error("gis map approval undo: document closed");
-  return browserBrokerFetch(
-    `/_semio/hub${inferenceJobPath(owner.scope, "/approval-undos")}`,
+  return hubSessionFetch(
+    `${inferenceJobPath(owner.scope, "/approval-undos")}`,
     { method: "POST", headers: { "content-type": "application/json" }, body },
     {
       timeoutMs: SOCKET_GRANT_REQUEST_TIMEOUT_MS,
@@ -6386,16 +6368,14 @@ if (import.meta.vitest) {
     set inferenceApprovalUndoEpoch(value: typeof inferenceApprovalUndoEpoch) { inferenceApprovalUndoEpoch = value; },
     get inferenceApprovalUndoOwner() { return inferenceApprovalUndoOwner; },
     set inferenceApprovalUndoOwner(value: typeof inferenceApprovalUndoOwner) { inferenceApprovalUndoOwner = value; },
-    get localBrowserBrokerProofExpiresAtMs() { return localBrowserBrokerProofExpiresAtMs; },
-    set localBrowserBrokerProofExpiresAtMs(value: typeof localBrowserBrokerProofExpiresAtMs) { localBrowserBrokerProofExpiresAtMs = value; },
-    get localBrowserBrokerQueued() { return localBrowserBrokerQueued; },
-    set localBrowserBrokerQueued(value: typeof localBrowserBrokerQueued) { localBrowserBrokerQueued = value; },
+    get hubSessionQueued() { return hubSessionQueued; },
+    set hubSessionQueued(value: typeof hubSessionQueued) { hubSessionQueued = value; },
     get browserSessionAuthority() { return browserSessionAuthority; },
     get browserSessionOperationFence() { return browserSessionOperationFence; },
     acceptBrowserSessionAuthority,
     captureBrowserSessionOperationFence,
-    attachLocalBrokerPort,
-    detachLocalBrokerPort,
+    attachHubSessionPort,
+    detachHubSessionPort,
     get socketGrantTestIssue() { return socketGrantTestIssue; },
     set socketGrantTestIssue(value: typeof socketGrantTestIssue) { socketGrantTestIssue = value; },
     get spaceArtifactCreationTestFetch() { return spaceArtifactCreationTestFetch; },
@@ -6403,6 +6383,6 @@ if (import.meta.vitest) {
     get workerPostTestSink() { return workerPostTestSink; },
     set workerPostTestSink(value: typeof workerPostTestSink) { workerPostTestSink = value; },
   };
-  await registerTests1(import.meta.vitest, { testSeams, DOCUMENT_BACKBONE_RETENTION_LIMITS, handleAck, ARTIFACT_BOOTSTRAP_DIAGNOSTIC_MAX_BYTES, ArtifactBootstrapAssembler, DIRECTORY_COMMAND_TRANSPORT_CAPACITY, DOCUMENT_EXECUTION_PROTOCOL_APP_CHANNEL_VERSION_V1, DOCUMENT_EXECUTION_TARGET_STATUS_TEXT_V1, DirectoryClient, DirectoryEventPageBootstrapV1, DocumentExecutionTargetLease, HUB_RECONNECT_MAX_MS, IDENTITY_CONFIG_SCHEMA, PENDING_MUTATIONS_QUEUE_LIMIT, SANITY_POLL_MIN_MS, SSE_RECONNECT_MAX_MS, SUSTAINED_HEALTHY_MS, VerifiedColdDocumentPair, abortArtifactBootstrap, artifactBootstrapFailure, artifactState, artifacts, bindInferenceApprovalUndoToMountedPair, browserActorChildCapacity, browserBrokerFetch, browserBrokerProofDigest, browserDirectoryRequest, browserExecutionTargetAssetRequest, bytesHex, clearLocalBrowserBrokerProof, closeArtifact, closeArtifactRuntime, closeDirectory, connectHubOnce, decodeBackboneWorkerRequest, decodeBackboneWorkerResponse, decodeClientFrame, decodePackPayload, decodePackValue, decodeServerFrame, directoryAdministration, directoryClient, directoryCommandOperations, directoryCommandQueue, directoryCommandSha256, directorySessionEpoch, directoryWorkerEpoch, dispatchBackboneWorkerRequest, documentExecutionOwners, documentExecutionTargetLeaseMintToken, documentExecutionTargetStatusRoleV1, documentOpenPlanAuthority, documentRuntimeKeyForConfig, documentRuntimeKeyV1, driveInferencePort, dropDocumentExecutionTargetLease, dropVerifiedColdDocumentPair, emitEvent, encodeActorUiPatchReceipt, encodeBackboneMessage, encodeBackboneWorkerRequest, encodeBackboneWorkerResponse, encodeDocumentBackboneEnvelopeBatchExact, encodePackValue, encodeServerFrame, executionTargetHex, executionTargetSha256Hex, executionTargetStatusObserver, extractServerCommandsDocumentBackboneBatchExact, flushDirectoryQueue, foldIdentityEvent, fromWireEnvelope, handleHubFrame, handleTsRequest, hexBytes, hubBinding, identityActorConfig, idleGisMapInferencePortStatusV1, inferenceApprovalUndoEpoch, inferenceApprovalUndoOwner, installLocalBrowserBrokerProof, localBrowserBrokerProofExpiresAtMs, localBrowserBrokerQueued, openArtifact, ownedArrayBuffer, parseDocumentBackboneMessage, parseDocumentExecutionTargetLeaseFieldsV1, parseGisMapInferenceApprovalReceiptV1, queueOutbox, readExecutionTargetBody, reissueInferenceApprovalUndoForRebootstrap, relayMutationsToHub, requestDocumentSocketAuthority, reserveDocumentBrowserActorChild, retainInferenceApprovalUndo, revokeDirectoryAdministrationForScope, rollbackEnvelope, sameLeaseFieldsV1, scopedDirectoryStreams, sealDirectoryCommandReceiptV1, sealDirectoryCommandRequestV1, settleDirectoryCommand, socketGrantTestIssue, spaceArtifactCreationCatalogOperations, spaceArtifactCreationOperations, spaceArtifactCreationTestFetch, stampSession, toWireEnvelope, undoInferenceApproval, verifiedColdDocumentPairMintToken, verifyBrowserActorDescribeV1, workerPostTestSink }, { directory: import.meta.dir, url: import.meta.url });
+  await registerTests1(import.meta.vitest, { testSeams, DOCUMENT_BACKBONE_RETENTION_LIMITS, handleAck, ARTIFACT_BOOTSTRAP_DIAGNOSTIC_MAX_BYTES, ArtifactBootstrapAssembler, DIRECTORY_COMMAND_TRANSPORT_CAPACITY, DOCUMENT_EXECUTION_PROTOCOL_APP_CHANNEL_VERSION_V1, DOCUMENT_EXECUTION_TARGET_STATUS_TEXT_V1, DirectoryClient, DirectoryEventPageBootstrapV1, DocumentExecutionTargetLease, HUB_RECONNECT_MAX_MS, IDENTITY_CONFIG_SCHEMA, PENDING_MUTATIONS_QUEUE_LIMIT, SANITY_POLL_MIN_MS, SSE_RECONNECT_MAX_MS, SUSTAINED_HEALTHY_MS, VerifiedColdDocumentPair, abortArtifactBootstrap, artifactBootstrapFailure, artifactState, artifacts, bindInferenceApprovalUndoToMountedPair, browserActorChildCapacity, browserDirectoryRequest, browserExecutionTargetAssetRequest, bytesHex, clearHubSessionCapability, closeArtifact, closeArtifactRuntime, closeDirectory, connectHubOnce, decodeBackboneWorkerRequest, decodeBackboneWorkerResponse, decodeClientFrame, decodePackPayload, decodePackValue, decodeServerFrame, directoryAdministration, directoryClient, directoryCommandOperations, directoryCommandQueue, directoryCommandSha256, directorySessionEpoch, directoryWorkerEpoch, dispatchBackboneWorkerRequest, documentExecutionOwners, documentExecutionTargetLeaseMintToken, documentExecutionTargetStatusRoleV1, documentOpenPlanAuthority, documentRuntimeKeyForConfig, documentRuntimeKeyV1, driveInferencePort, dropDocumentExecutionTargetLease, dropVerifiedColdDocumentPair, emitEvent, encodeActorUiPatchReceipt, encodeBackboneMessage, encodeBackboneWorkerRequest, encodeBackboneWorkerResponse, encodeDocumentBackboneEnvelopeBatchExact, encodePackValue, encodeServerFrame, executionTargetHex, executionTargetSha256Hex, executionTargetStatusObserver, extractServerCommandsDocumentBackboneBatchExact, flushDirectoryQueue, foldIdentityEvent, fromWireEnvelope, handleHubFrame, handleTsRequest, hubBinding, identityActorConfig, idleGisMapInferencePortStatusV1, inferenceApprovalUndoEpoch, inferenceApprovalUndoOwner, installHubSessionCapability, hubSessionFetch, hubSessionQueued, openArtifact, ownedArrayBuffer, parseDocumentBackboneMessage, parseDocumentExecutionTargetLeaseFieldsV1, parseGisMapInferenceApprovalReceiptV1, queueOutbox, readExecutionTargetBody, reissueInferenceApprovalUndoForRebootstrap, relayMutationsToHub, requestDocumentSocketAuthority, reserveDocumentBrowserActorChild, retainInferenceApprovalUndo, revokeDirectoryAdministrationForScope, rollbackEnvelope, sameLeaseFieldsV1, scopedDirectoryStreams, sealDirectoryCommandReceiptV1, sealDirectoryCommandRequestV1, settleDirectoryCommand, socketGrantTestIssue, spaceArtifactCreationCatalogOperations, spaceArtifactCreationOperations, spaceArtifactCreationTestFetch, stampSession, toWireEnvelope, undoInferenceApproval, verifiedColdDocumentPairMintToken, verifyBrowserActorDescribeV1, workerPostTestSink }, { directory: import.meta.dir, url: import.meta.url });
 }
 //#endregion 🧪️Tests

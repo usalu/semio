@@ -1,0 +1,160 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/framework/os/renderer/scene-raster-ownership.json",
+  "title": "Scene Raster Ownership Contract",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["limits", "profiles", "capabilities", "creditLifetimes", "upload", "naturalReference", "leaseReuse", "meshPaint", "terminalVectors"],
+  "properties": {
+    "limits": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["decodedItemBytes", "slotCapacity", "poolBytes", "leaseCapacityPerSlot", "encodedByteCapacity", "sourcePixelCapacity", "activeWorkerDecodeCapacity", "activePageDecodeCapacity", "activeNativeDecodeCapacity", "workerBitmapBytes", "workerCanvasBytes", "pageBitmapBytes", "nativeDecodeBytes", "readbackChunkBytes", "uploadChunkBytes", "retireChunkBytes", "liveUploadPerSurface", "gpuResidentBytes"],
+      "properties": {
+        "decodedItemBytes": { "const": 67108864 },
+        "slotCapacity": { "const": 4 },
+        "poolBytes": { "const": 268435456 },
+        "leaseCapacityPerSlot": { "const": 64 },
+        "encodedByteCapacity": { "const": 16777216 },
+        "sourcePixelCapacity": { "const": 16777216 },
+        "activeWorkerDecodeCapacity": { "const": 1 },
+        "activePageDecodeCapacity": { "const": 1 },
+        "activeNativeDecodeCapacity": { "const": 1 },
+        "workerBitmapBytes": { "const": 67108864 },
+        "workerCanvasBytes": { "const": 67108864 },
+        "pageBitmapBytes": { "const": 67108864 },
+        "nativeDecodeBytes": { "const": 67108864 },
+        "readbackChunkBytes": { "const": 1048576 },
+        "uploadChunkBytes": { "const": 1048576 },
+        "retireChunkBytes": { "const": 1048576 },
+        "liveUploadPerSurface": { "const": 1 },
+        "gpuResidentBytes": { "const": 268435456 }
+      }
+    },
+    "profiles": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": { "$ref": "#/definitions/profile" }
+    },
+    "capabilities": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["browserMetadata", "browserWorkerDecode", "browserPageDecode", "nativeDecode", "fullQualityAcceptance", "unreachableRendererRoutes", "unimplementedWgpu"],
+      "properties": {
+        "browserMetadata": { "$ref": "#/definitions/mediaTypes" },
+        "browserWorkerDecode": { "$ref": "#/definitions/mediaTypes" },
+        "browserPageDecode": { "$ref": "#/definitions/mediaTypes" },
+        "nativeDecode": { "$ref": "#/definitions/mediaTypes" },
+        "fullQualityAcceptance": { "$ref": "#/definitions/mediaTypes" },
+        "unreachableRendererRoutes": { "$ref": "#/definitions/mediaTypes" },
+        "unimplementedWgpu": { "$ref": "#/definitions/mediaTypes" }
+      }
+    },
+    "creditLifetimes": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["encodedSource", "decodeWorkspace", "decodedPool", "preparedLogical", "gpuUploadLogical", "gpuResident"],
+      "properties": {
+        "encodedSource": { "const": "decode-input-accepted" },
+        "decodeWorkspace": { "const": "pool-seal-or-terminal-refusal" },
+        "decodedPool": { "const": "zero-leases-and-retirement-terminal" },
+        "preparedLogical": { "const": "gpu-commit-or-partial-retirement-terminal" },
+        "gpuUploadLogical": { "const": "committed-ack-or-partial-retirement-terminal" },
+        "gpuResident": { "const": "texture-retirement-terminal" }
+      }
+    },
+    "upload": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["progress", "committedAckRequired", "replacementPolicy", "cancelPolicy"],
+      "properties": {
+        "progress": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "uniqueItems": true,
+          "items": { "enum": ["uploadedBytes", "totalBytes"] }
+        },
+        "committedAckRequired": { "const": true },
+        "replacementPolicy": { "const": "keep-old-until-new-commit" },
+        "cancelPolicy": { "const": "retire-partial-before-release" }
+      }
+    },
+    "naturalReference": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sourceDigest", "width", "height", "rgbaBytes", "orientation", "expectedWidth", "expectedHeight", "expectedUploadChunks"],
+      "properties": {
+        "sourceDigest": { "$ref": "#/definitions/digest" },
+        "width": { "const": 2275 },
+        "height": { "const": 2560 },
+        "rgbaBytes": { "const": 23296000 },
+        "orientation": { "const": 1 },
+        "expectedWidth": { "const": 2275 },
+        "expectedHeight": { "const": 2560 },
+        "expectedUploadChunks": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "leaseReuse": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["owners", "expectedDecodeCount", "expectedLeaseCount", "allLiveSlots", "fifthIdentityOutcome"],
+      "properties": {
+        "owners": { "type": "array", "minItems": 2, "maxItems": 2, "uniqueItems": true, "items": { "type": "string", "minLength": 1 } },
+        "expectedDecodeCount": { "const": 1 },
+        "expectedLeaseCount": { "const": 2 },
+        "allLiveSlots": { "const": 4 },
+        "fifthIdentityOutcome": { "const": "retryable-backpressure" }
+      }
+    },
+    "meshPaint": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["meshKey", "meshRevision", "uvWitness", "staleRevisionOutcome", "missingUvOutcome", "matchingSealOutcome"],
+      "properties": {
+        "meshKey": { "type": "string", "minLength": 1 },
+        "meshRevision": { "type": "integer", "minimum": 1 },
+        "uvWitness": { "type": "integer", "minimum": 1 },
+        "staleRevisionOutcome": { "const": "terminal-refusal" },
+        "missingUvOutcome": { "const": "terminal-refusal" },
+        "matchingSealOutcome": { "const": "ready-lease" }
+      }
+    },
+    "terminalVectors": {
+      "type": "array",
+      "minItems": 8,
+      "maxItems": 8,
+      "uniqueItems": true,
+      "items": {
+        "enum": ["source-format-refusal", "all-live-pool", "cancel-during-decode", "cancel-during-pool-push", "cancel-during-gpu-upload", "close-during-page-fallback", "stale-token-at-seal", "changed-identity-replacement"]
+      }
+    }
+  },
+  "definitions": {
+    "digest": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "mediaTypes": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": { "type": "string", "pattern": "^[a-z]+/[a-z0-9.+-]+$" }
+    },
+    "profile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "consumer", "mediaPath", "rendererReachable", "version", "pixelFormat", "orientation", "alphaMode", "decodeColourConversion", "materialColourSpace", "resampling"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "consumer": { "enum": ["reference-underlay", "mesh-paint"] },
+        "mediaPath": { "enum": ["image-map", "canvas-raster", "paint-map"] },
+        "rendererReachable": { "type": "boolean" },
+        "version": { "type": "integer", "minimum": 1 },
+        "pixelFormat": { "const": "rgba8unorm" },
+        "orientation": { "const": "from-image" },
+        "alphaMode": { "const": "straight" },
+        "decodeColourConversion": { "const": "browser-default" },
+        "materialColourSpace": { "enum": ["none", "srgb"] },
+        "resampling": { "const": "linear" }
+      }
+    }
+  }
+}

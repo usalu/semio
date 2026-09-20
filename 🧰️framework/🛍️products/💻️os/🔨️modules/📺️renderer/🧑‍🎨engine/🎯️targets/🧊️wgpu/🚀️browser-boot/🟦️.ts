@@ -1,7 +1,7 @@
 //#region 🧲️PlatformBoot
 /** @emoji 🧵️ Browser UI isolate host for the dedicated frame Worker. */
 
-import { BrowserFrameTransport, browserFrameEventFromDom, browserFrameEventIsReplaceable, type BrowserFrameDomEvent, type BrowserFrameFallbackState, type BrowserFrameIntrospectionProbe, type BrowserFrameWorkerFaultCode } from "../🚚️browser-frame-transport/🟦️.ts";
+import { BrowserFrameTransport, browserFrameEventFromDom, browserFrameEventIsReplaceable, browserFramePointerDomEvent, browserFrameWheelDomEvent, type BrowserFrameDomEvent, type BrowserFrameFallbackState, type BrowserFrameIntrospectionProbe, type BrowserFrameWorkerFaultCode, type BrowserHubDocumentRemote } from "../🚚️browser-frame-transport/🟦️.ts";
 import { createWgpuPageHostIo } from "../🚪️host-io/🟦️.ts";
 import { setInteractiveJobPort } from "../../../../../../../../🔨️modules/🖱️ui/🧱️elements/🔌️Ports/📡️interactive-jobs/🟦️.ts";
 import { TURN_DIAGNOSTICS_KEY, setTurnDiagnostics } from "../⏱️turn-budget/🟦️.ts";
@@ -9,6 +9,8 @@ import { stampShardWorkerDiagnostics } from "../../../../../../../../🔨️modu
 import { describeBrowserBootPhase } from "../🫀️boot-liveness/🟦️.ts";
 import { WGPU_PREFERS_DARK_MEDIA_QUERY, WGPU_READINESS_BEACON_UNKNOWN_PLUGIN, documentBootMetaReader, readWgpuHostStorageSnapshot, resolveWgpuBootDescriptor, resolveWgpuHostAppearance, resolveWgpuHostPlatform, stripBootBrokerProof, wgpuReadinessBeacon, type WgpuBootDescriptor, type WgpuHostAppearance, type WgpuHostPlatform, type WgpuHostStorageSnapshot } from "../🧭️boot-descriptor/🟦️.ts";
 import { DEFAULT_HOST_VARIANT } from "../../../../../🔌️plugin/📇️registry/🤖️generated/🎮️playgrounds/🟦️.ts";
+import { createAccessibilityMirror } from "../♿️accessibility-mirror/🟦️.ts";
+import { browserClipboardPasteCandidate, wireBrowserFullscreen, wireBrowserKeyboard } from "../🎮️input-wire/🟦️.ts";
 
 /** 🚏️ Resolves completed renderer artifacts and the generated frame worker through the browser host. */
 const RENDERER_MODULE_URL = new URL("../renderer-modules/wgpu/semio-framework-os-renderer-wgpu.js", import.meta.url).href;
@@ -98,163 +100,24 @@ function canvasElement(): HTMLCanvasElement {
  * answers `""` rather than throwing when the dump is unavailable, so a probe reads an empty dump instead of
  * a page error. */
 export const WGPU_INTROSPECTION_GLOBAL = "semioWgpuIntrospection";
+export const WGPU_HUB_PROJECTION_GLOBAL = "semioWgpuHubProjection";
 
 type WgpuIntrospection = { readonly dumpStructure: (windowId?: string) => Promise<string>; readonly dumpFrameStats: (windowId?: string) => Promise<string>; readonly dumpAccessibility: (windowId?: string) => Promise<string>; readonly dumpMeshStats: (windowId?: string) => Promise<string>; readonly dumpChrome: (windowId?: string) => Promise<string> };
+type WgpuHubProjection = { readonly publishDocumentStatus: (documentKey: string, remote: BrowserHubDocumentRemote | null) => boolean };
 
 function attachIntrospectionBindings(transport: BrowserFrameTransport): () => void {
   const probe = (kind: BrowserFrameIntrospectionProbe) => async (windowId?: string) => (await transport.introspect(kind, windowId)) ?? "";
-  const host = window as unknown as { semioWgpuIntrospection?: WgpuIntrospection };
+  const host = window as unknown as { semioWgpuIntrospection?: WgpuIntrospection; semioWgpuHubProjection?: WgpuHubProjection };
   host.semioWgpuIntrospection = { dumpStructure: probe("structure"), dumpFrameStats: probe("frame-stats"), dumpAccessibility: probe("accessibility"), dumpMeshStats: probe("mesh-stats"), dumpChrome: probe("chrome") };
-  return () => delete host.semioWgpuIntrospection;
-}
-
-//#region ♿️AccessibilityMirror
-/** @emoji ♿️ The id of the ARIA subtree this host maintains beside the canvas. Fixed, so a probe (and
- * a screen-reader user's own tooling) can address it. */
-export const WGPU_ACCESSIBILITY_MIRROR_ID = "semio-wgpu-accessibility";
-
-/** ♿️ How long the mirror waits after one refresh before answering another, however many frames
- * arrive in between. The projection crosses the Worker seam, so refreshing per frame would put a
- * message round-trip on every pointer move; coalescing to this floor keeps it event-driven (nothing
- * ticks while nothing happens) without paying per frame. */
-const ACCESSIBILITY_REFRESH_FLOOR_MS = 400;
-
-/** ♿️ One node of the renderer's published accessibility tree — `ui_contract`'s own
- * `AccessibilityProjectionNode` wire shape (`🖱️ui/🧬️contract/♿️accessibility/🦀️.rs`), not a
- * host-private one, so a second renderer publishing the same tree needs no new mirror. */
-type AccessibilityProjectionNode = {
-  readonly nodeId: number;
-  readonly key: string;
-  readonly role: string;
-  readonly depth: number;
-  readonly label?: string;
-  readonly description?: string;
-  readonly live: string;
-  readonly shortcut?: string;
-  readonly hidden?: boolean;
-  readonly disabled?: boolean;
-  readonly focusable?: boolean;
-  readonly actionable?: boolean;
-  readonly focused?: boolean;
-  readonly valueMin?: number;
-  readonly valueMax?: number;
-  readonly valueNow?: number;
-  readonly valueText?: string;
-  readonly busy?: boolean;
-};
-
-/** ♿️ One live window's slice of the published tree. The renderer announces EVERY window (a dock
- * mounts several, and a reader must reach all of them), so the mirror is a concatenation in the
- * renderer's own window order and each element carries its `data-window`. */
-type AccessibilityProjectionWindow = { readonly windowId: string; readonly nodes: readonly AccessibilityProjectionNode[] };
-
-/**
- * @emoji ♿️ The ARIA subtree that gives a GPU canvas an accessibility tree at all.
- *
- * React's Interpreter writes `aria-label`/`aria-describedby`/`aria-live`/`aria-keyshortcuts` straight
- * onto the element it renders per `UiNodeRecord`. A wgpu canvas renders no elements, so the renderer
- * publishes the same information as data (`dumpAccessibility`, the `accessibility` introspection
- * probe) and THIS is where it gets elements again.
- *
- * Visually hidden by the standard clip rule, never `display:none`/`visibility:hidden` — those two
- * remove a subtree from the accessibility tree as well as from the page, which would defeat the whole
- * point. Every mirrored element carries `tabindex="-1"`: keyboard focus belongs to the canvas, which
- * owns the renderer's own focus ring and Tab traversal, so the mirror must be readable without ever
- * stealing a Tab stop from it. `data-*` attributes carry the raw projection fields so a probe can
- * read the tree without parsing ARIA.
- *
- * Ticket 26/09/09/PROCEDURAL-3D-END-TO-END, gap #3 of `📓️audit-wgpu-parity-2026-09-13.md`.
- */
-function accessibilityMirror(root: HTMLElement, transport: BrowserFrameTransport): { readonly refresh: () => void; readonly dispose: () => void } {
-  const mirror = document.createElement("div");
-  mirror.id = WGPU_ACCESSIBILITY_MIRROR_ID;
-  mirror.setAttribute("role", "region");
-  mirror.setAttribute("aria-label", locale() === "de" ? "Semio Bedienelemente" : "Semio controls");
-  mirror.style.cssText = "position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;border:0;";
-  root.appendChild(mirror);
-  let published = "";
-  let lastAt = 0;
-  let pending = false;
-  let disposed = false;
-
-  const element = (surface: AccessibilityProjectionWindow, node: AccessibilityProjectionNode): HTMLElement => {
-    const element = document.createElement("div");
-    element.setAttribute("role", node.role);
-    element.tabIndex = -1;
-    element.dataset.window = surface.windowId;
-    element.dataset.nodeId = String(node.nodeId);
-    element.dataset.nodeKey = node.key;
-    element.dataset.depth = String(node.depth);
-    if (node.label !== undefined) element.setAttribute("aria-label", node.label);
-    if (node.live !== "off") element.setAttribute("aria-live", node.live);
-    if (node.shortcut !== undefined) element.setAttribute("aria-keyshortcuts", node.shortcut);
-    if (node.hidden === true) element.setAttribute("aria-hidden", "true");
-    if (node.disabled === true) element.setAttribute("aria-disabled", "true");
-    if (node.valueMin !== undefined) element.setAttribute("aria-valuemin", String(node.valueMin));
-    if (node.valueMax !== undefined) element.setAttribute("aria-valuemax", String(node.valueMax));
-    if (node.valueNow !== undefined) element.setAttribute("aria-valuenow", String(node.valueNow));
-    if (node.valueText !== undefined) element.setAttribute("aria-valuetext", node.valueText);
-    if (node.busy === true) element.setAttribute("aria-busy", "true");
-    if (node.focused === true) element.dataset.focused = "true";
-    if (node.focusable === true) element.dataset.focusable = "true";
-    if (node.actionable === true) element.dataset.actionable = "true";
-    if (node.description !== undefined) {
-      const description = document.createElement("span");
-      description.id = `${WGPU_ACCESSIBILITY_MIRROR_ID}-${surface.windowId}-${node.nodeId}-desc`;
-      description.textContent = node.description;
-      element.setAttribute("aria-describedby", description.id);
-      element.appendChild(description);
-    }
-    return element;
-  };
-
-  const paint = (surfaces: readonly AccessibilityProjectionWindow[]): void => {
-    const elements = surfaces.flatMap((surface) => surface.nodes.map((node) => element(surface, node)));
-    mirror.replaceChildren(...elements);
-    mirror.dataset.nodeCount = String(elements.length);
-    mirror.dataset.windows = surfaces.map((surface) => surface.windowId).join(" ");
-  };
-
-  const pull = async (): Promise<void> => {
-    lastAt = performance.now();
-    const json = await transport.introspect("accessibility");
-    if (disposed || json === null || json === published) return;
-    published = json;
-    let dump: { readonly windows?: readonly AccessibilityProjectionWindow[] };
-    try {
-      dump = JSON.parse(json) as { readonly windows?: readonly AccessibilityProjectionWindow[] };
-    } catch {
-      return;
-    }
-    paint(dump.windows ?? []);
-  };
-
-  /** ♿️ Asks for a refresh, coalesced onto the floor above — a frame burst produces one pull, not one
-   * per frame. The pull is ALWAYS scheduled off the caller: the driving hook is the transport's own
-   * per-frame directive hook, which runs inside the UI turn's executing clock, and `introspect`
-   * flushes a batch — doing that re-entrantly from inside frame-message handling is exactly the kind
-   * of thing a production accessibility path must not do. */
-  const refresh = (): void => {
-    if (disposed || pending) return;
-    pending = true;
-    window.setTimeout(
-      () => {
-        pending = false;
-        if (!disposed) void pull();
-      },
-      Math.max(0, ACCESSIBILITY_REFRESH_FLOOR_MS - (performance.now() - lastAt)),
-    );
-  };
-
-  return {
-    refresh,
-    dispose: () => {
-      disposed = true;
-      mirror.remove();
-    },
+  host.semioWgpuHubProjection = { publishDocumentStatus: (documentKey, remote) => transport.publishHubDocumentStatus(documentKey, remote) };
+  return () => {
+    delete host.semioWgpuIntrospection;
+    delete host.semioWgpuHubProjection;
   };
 }
-//#endregion ♿️AccessibilityMirror
+
+export { WGPU_ACCESSIBILITY_MIRROR_ID } from "../♿️accessibility-mirror/🟦️.ts";
+
 
 function statusElement(root: HTMLElement): HTMLElement {
   const status = document.createElement("div");
@@ -320,7 +183,7 @@ function renderFault(root: HTMLElement, code: string, detail: string, state?: Br
 //#endregion 🧲️PlatformBoot
 
 //#region 🎮️PlatformInput
-function wireInput(canvas: HTMLCanvasElement, transport: BrowserFrameTransport): () => void {
+function wireInput(root: HTMLElement, canvas: HTMLCanvasElement, transport: BrowserFrameTransport): () => void {
   const abort = new AbortController();
   const options = { signal: abort.signal };
   const observed = (site: string, startedAt: number) => void transport.observeUiTurn(site, performance.now() - startedAt);
@@ -332,33 +195,21 @@ function wireInput(canvas: HTMLCanvasElement, transport: BrowserFrameTransport):
     else transport.enqueueLossless(event);
     observed(dom.type, startedAt);
   };
-  const pointer = (event: PointerEvent, type: "pointermove" | "pointerdown" | "pointerup"): BrowserFrameDomEvent => ({
-    type,
-    pointerId: event.pointerId,
-    pointerType: event.pointerType,
-    offsetX: event.offsetX,
-    offsetY: event.offsetY,
-    pressure: event.pressure,
-    tiltX: event.tiltX,
-    tiltY: event.tiltY,
-    button: event.button,
-  });
-  canvas.addEventListener("pointermove", (event) => admit(pointer(event, "pointermove"), performance.now()), options);
+  canvas.addEventListener("pointermove", (event) => admit(browserFramePointerDomEvent(event, "pointermove"), performance.now()), options);
   canvas.addEventListener("pointerdown", (event) => {
     const startedAt = performance.now();
     canvas.focus({ preventScroll: true });
     canvas.setPointerCapture(event.pointerId);
-    admit(pointer(event, "pointerdown"), startedAt);
+    admit(browserFramePointerDomEvent(event, "pointerdown"), startedAt);
   }, options);
-  canvas.addEventListener("pointerup", (event) => admit(pointer(event, "pointerup"), performance.now()), options);
+  canvas.addEventListener("pointerup", (event) => admit(browserFramePointerDomEvent(event, "pointerup"), performance.now()), options);
+  canvas.addEventListener("pointercancel", (event) => admit(browserFramePointerDomEvent(event, "pointercancel"), performance.now()), options);
   canvas.addEventListener("wheel", (event) => {
     const startedAt = performance.now();
     event.preventDefault();
-    admit({ type: "wheel", offsetX: event.offsetX, offsetY: event.offsetY, deltaX: event.deltaX, deltaY: event.deltaY }, startedAt);
+    admit(browserFrameWheelDomEvent(event), startedAt);
   }, { ...options, passive: false });
-  const key = (event: KeyboardEvent, type: "keydown" | "keyup") => admit({ type, key: event.key, shift: event.shiftKey, ctrl: event.ctrlKey, alt: event.altKey, meta: event.metaKey }, performance.now());
-  canvas.addEventListener("keydown", (event) => void key(event, "keydown"), options);
-  canvas.addEventListener("keyup", (event) => void key(event, "keyup"), options);
+  const cleanupKeyboard = wireBrowserKeyboard(root, canvas, event => admit(event, performance.now()));
   canvas.addEventListener("compositionstart", () => {
     const startedAt = performance.now();
     transport.enqueueLossless({ kind: "ime-start" });
@@ -376,23 +227,34 @@ function wireInput(canvas: HTMLCanvasElement, transport: BrowserFrameTransport):
   }, options);
   canvas.addEventListener("paste", (event) => {
     const startedAt = performance.now();
-    const items = event.clipboardData?.items;
-    if (items) {
-      const count = Math.min(items.length, 16);
-      for (let index = 0; index < count; index++) {
-        const item = items[index];
-        if (item?.kind !== "string" || item.type !== "text/plain") continue;
-        item.getAsString((text) => {
+    const candidate = browserClipboardPasteCandidate(event.clipboardData?.items);
+    if (candidate) {
+      if (candidate.kind === "image") {
+        event.preventDefault();
+        const reader = new FileReader();
+        reader.addEventListener("load", () => {
+          if (typeof reader.result !== "string") return;
           const handoffStartedAt = performance.now();
-          transport.enqueueLossless({ kind: "paste", text });
-          transport.observeUiTurn("paste-handoff", performance.now() - handoffStartedAt);
-        });
-        break;
+          transport.enqueueLossless({ kind: "paste-image-data-url", text: reader.result });
+          transport.observeUiTurn("paste-image-handoff", performance.now() - handoffStartedAt);
+        }, { once: true });
+        reader.readAsDataURL(candidate.file);
+        observed("paste", startedAt);
+        return;
       }
+      event.preventDefault();
+      candidate.item.getAsString((text) => {
+        const handoffStartedAt = performance.now();
+        transport.enqueueLossless({ kind: "paste", text });
+        transport.observeUiTurn("paste-handoff", performance.now() - handoffStartedAt);
+      });
     }
     observed("paste", startedAt);
   }, options);
-  return () => abort.abort();
+  return () => {
+    cleanupKeyboard();
+    abort.abort();
+  };
 }
 //#endregion 🎮️PlatformInput
 
@@ -424,6 +286,7 @@ async function mount(root: HTMLElement): Promise<void> {
     throw new Error(`worker-construction-failed: ${error instanceof Error ? error.message : String(error)}`);
   }
   let cleanupInput = () => {};
+  const fullscreenOwner = wireBrowserFullscreen(root, canvas);
   let detachIntrospection = () => {};
   let accessibility: { readonly refresh: () => void; readonly dispose: () => void } | undefined;
   const transport = new BrowserFrameTransport({
@@ -447,9 +310,9 @@ async function mount(root: HTMLElement): Promise<void> {
       beacon.ready();
       status.remove();
       detachIntrospection = attachIntrospectionBindings(transport);
-      accessibility = accessibilityMirror(root, transport);
+      accessibility = createAccessibilityMirror(root, transport, locale());
       accessibility.refresh();
-      cleanupInput = wireInput(canvas, transport);
+      cleanupInput = wireInput(root, canvas, transport);
       transport.enqueueReplaceable(browserFrameEventFromDom({ type: "resize", clientWidth: canvas.clientWidth, clientHeight: canvas.clientHeight }, dpr) as Extract<ReturnType<typeof browserFrameEventFromDom>, { kind: "resize" }>);
       canvas.focus({ preventScroll: true });
     },
@@ -463,13 +326,13 @@ async function mount(root: HTMLElement): Promise<void> {
     // to win (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
     onDirectives: ({ cursor, fullscreen }) => {
       canvas.style.cursor = cursor;
-      if (fullscreen === true) void canvas.requestFullscreen().catch(() => {});
-      if (fullscreen === false && document.fullscreenElement) void document.exitFullscreen().catch(() => {});
+      if (typeof fullscreen === "boolean") void fullscreenOwner.set(fullscreen).catch(() => {});
       accessibility?.refresh();
     },
     onFault: (code: BrowserFrameWorkerFaultCode, detail, fallback) => {
       beacon.error();
       cleanupInput();
+      fullscreenOwner.dispose();
       detachIntrospection();
       accessibility?.dispose();
       renderFault(root, code, detail, fallback);
@@ -522,6 +385,7 @@ async function mount(root: HTMLElement): Promise<void> {
     window.removeEventListener("storage", republishHostStorage);
     resolutionQuery?.removeEventListener("change", onResolutionChange);
     cleanupInput();
+    fullscreenOwner.dispose();
     detachIntrospection();
     accessibility?.dispose();
     setInteractiveJobPort(previousInteractiveJobPort);

@@ -1,0 +1,101 @@
+{
+  "provenance": {
+    "what": "The actual Component document shape emitted by Puzzle3D's app Settings panel for one default pane.",
+    "source": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/⚙️settings/🦀️.rs::render",
+    "implementations": {
+      "rust": "🧰️framework/🔨️modules/🖱️ui/🧪️tests/🔬️targets-wgpu-engine-unit/🦀️.rs",
+      "typescript": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/⚙️puzzle3d-settings-document/🟦️.tsx"
+    }
+  },
+  "windowId": "pane-top",
+  "document": {
+    "generation": 1,
+    "surface": "puzzle3d.panel.settings",
+    "revision": 1,
+    "root": 0,
+    "layoutEpoch": 1,
+    "nodeCount": 9,
+    "nodes": [
+      {
+        "id": 0,
+        "key": "puzzle3d-play-settings",
+        "component": { "type": "container", "role": "section", "label": "Settings — pane-top", "defaultOpen": true },
+        "layout": { "kind": "stack", "axis": "vertical", "gap": "none", "padding": { "all": "none" }, "align": "stretch", "justify": "start", "grow": false, "wrap": false },
+        "style": {},
+        "activity": "idle",
+        "accessibility": {},
+        "children": [1, 3, 5, 7]
+      },
+      {
+        "id": 1,
+        "key": "puzzle3d-play-settings.contact-tolerance",
+        "component": { "type": "container", "role": "field", "label": "Contact tolerance (m)" },
+        "layout": { "kind": "stack", "axis": "vertical", "gap": "none", "padding": { "all": "none" }, "align": "stretch", "justify": "start", "grow": false, "wrap": false },
+        "style": {}, "activity": "idle", "accessibility": {}, "children": [2]
+      },
+      {
+        "id": 2,
+        "key": "puzzle3d-play-settings.contact-tolerance.control",
+        "component": { "type": "numberStepper", "value": 0.005, "step": 0.001, "uniform": true },
+        "layout": { "kind": "leaf", "width": "hug", "height": "hug" },
+        "style": {}, "activity": "idle", "accessibility": { "label": "Contact tolerance (m)" },
+        "bindings": [{ "trigger": "change", "action": { "scope": "puzzle3d-play", "name": "setBrushPlacementContactTolerance", "version": 1 }, "args": { "windowId": "pane-top" } }],
+        "children": []
+      },
+      {
+        "id": 3,
+        "key": "puzzle3d-play-settings.proximity-radius",
+        "component": { "type": "container", "role": "field", "label": "Proximity Radius" },
+        "layout": { "kind": "stack", "axis": "vertical", "gap": "none", "padding": { "all": "none" }, "align": "stretch", "justify": "start", "grow": false, "wrap": false },
+        "style": {}, "activity": "idle", "accessibility": {}, "children": [4]
+      },
+      {
+        "id": 4,
+        "key": "puzzle3d-play-settings.proximity-radius.control",
+        "component": { "type": "numberStepper", "value": 0.75, "step": 0.1, "uniform": true },
+        "layout": { "kind": "leaf", "width": "hug", "height": "hug" },
+        "style": {}, "activity": "idle", "accessibility": { "label": "Proximity Radius" },
+        "bindings": [{ "trigger": "change", "action": { "scope": "puzzle3d-play", "name": "setProximityRadius", "version": 1 }, "args": { "windowId": "pane-top" } }],
+        "children": []
+      },
+      {
+        "id": 5,
+        "key": "puzzle3d-play-settings.chunk-size",
+        "component": { "type": "container", "role": "field", "label": "Chunk Size" },
+        "layout": { "kind": "stack", "axis": "vertical", "gap": "none", "padding": { "all": "none" }, "align": "stretch", "justify": "start", "grow": false, "wrap": false },
+        "style": {}, "activity": "idle", "accessibility": {}, "children": [6]
+      },
+      {
+        "id": 6,
+        "key": "puzzle3d-play-settings.chunk-size.control",
+        "component": { "type": "numberStepper", "value": 256.0, "step": 1.0, "uniform": true },
+        "layout": { "kind": "leaf", "width": "hug", "height": "hug" },
+        "style": {}, "activity": "idle", "accessibility": { "label": "Chunk Size" },
+        "bindings": [{ "trigger": "change", "action": { "scope": "puzzle3d-play", "name": "setChunkSize", "version": 1 }, "args": { "windowId": "pane-top" } }],
+        "children": []
+      },
+      {
+        "id": 7,
+        "key": "puzzle3d-play-settings.grid-spacing",
+        "component": { "type": "container", "role": "field", "label": "Spacing" },
+        "layout": { "kind": "stack", "axis": "vertical", "gap": "none", "padding": { "all": "none" }, "align": "stretch", "justify": "start", "grow": false, "wrap": false },
+        "style": {}, "activity": "idle", "accessibility": {}, "children": [8]
+      },
+      {
+        "id": 8,
+        "key": "puzzle3d-play-settings.grid-spacing.control",
+        "component": { "type": "numberStepper", "value": 10.0, "step": 0.5, "uniform": true },
+        "layout": { "kind": "leaf", "width": "hug", "height": "hug" },
+        "style": {}, "activity": "idle", "accessibility": { "label": "Spacing" },
+        "bindings": [{ "trigger": "change", "action": { "scope": "puzzle3d-play", "name": "setGridSpacing", "version": 1 }, "args": { "windowId": "pane-top" } }],
+        "children": []
+      }
+    ]
+  },
+  "controls": [
+    { "key": "puzzle3d-play-settings.contact-tolerance.control", "value": 0.005, "step": 0.001, "formatted": "0.005", "action": "setBrushPlacementContactTolerance", "label": "Contact tolerance (m)" },
+    { "key": "puzzle3d-play-settings.proximity-radius.control", "value": 0.75, "step": 0.1, "formatted": "0.750", "action": "setProximityRadius", "label": "Proximity Radius" },
+    { "key": "puzzle3d-play-settings.chunk-size.control", "value": 256.0, "step": 1.0, "formatted": "256.000", "action": "setChunkSize", "label": "Chunk Size" },
+    { "key": "puzzle3d-play-settings.grid-spacing.control", "value": 10.0, "step": 0.5, "formatted": "10.000", "action": "setGridSpacing", "label": "Spacing" }
+  ]
+}

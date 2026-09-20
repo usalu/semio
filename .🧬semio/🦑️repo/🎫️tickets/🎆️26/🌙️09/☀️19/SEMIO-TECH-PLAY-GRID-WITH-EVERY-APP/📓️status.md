@@ -65,3 +65,46 @@ Relaunched as fleet v2 under `📋️fleet-brief-v2.md`; every agent writes `�
 - Sonnet audits: `audit-coverage` (plugins/apps without a pane: stdio, space, extensions), `audit-parity`
   (demonstrator → play capability gaps), `audit-visual` (per-pane screenshots + content verdicts on :6033).
 Recovery after a restart: read each topic's REPORT.md / RECIPES.md / STATUS.md, re-run crates, relaunch the rest.
+
+### 2026-09-20 00:10 — audit conclusions (session 3) and second wave
+- Coverage audit: 32 of 34 plugins have every editor app in a pane. Gaps: `stdio` (no apps, no playground row, full wasm
+  unlinkable), `space` (home/space apps excluded together with the `studio` host), the five
+  `imperative-extension-*` components are in NO activation union (imperative Cargo metadata lacks
+  `consumes = ["imperative.module"]`), and the coverage gate silently skips `playbook` (no root `🔣️.json`).
+- Parity audit: P0 no per-pane default example (`playPaneBrand` sets no `defaults.exampleId`; demonstrator brands do);
+  P1 `schedulePlayIdle` never wired (no background warm boot), cards lost description + open CTA, touch-scroll
+  next-pane preload missing; P2 no map-tile serve-mode test, `🔒️dependencies.json` predates play, 6 trailing grid
+  cells, `extensionDir()` build-mode fallback to check.
+- Second wave (Opus): `play-landing` (P1/P2 landing items), `play-defaults` (catalog `example` field + curated
+  defaults + pinning test + example inventory), `play-coverage` (imperative `consumes`, space home/space panes,
+  playbook gate, all-plugins/all-components law), `play-stdio` (feasibility → linkable stdio app + playground + pane).
+- Machine note: 16 agents saturate 10 cores / 32 GB (swap ~17 GB used); :6033 answers in ~15 s. Browser verdicts
+  taken under this load are valid for content, not for timing.
+
+## 2026-09-20 01:30 — session 4 (recovery)
+Process restart at ~01:18 killed the coordinator and the whole v2 fleet mid-flight (no REPORT.md anywhere; orphaned
+cargo runs kept writing logs). Repo MCP `ticket_reopen` still answers "invalid tool params" → bookkeeping stays manual.
+Relaunched every topic under `📋️fleet-brief-v3.md` (recovery protocol: successor reads the topic folder, re-runs,
+continues, keeps a per-topic `STATUS.md`). Topics: play-stdio, play-coverage, play-landing, play-defaults,
+xcut-toolproof, xcut-dict, norm-a, norm-b, stdio-a2, stdio-b2, stdio-semio2, block-puzzle, engineering, knowledge,
+media, design (Opus); audit-visual, audit-followups, audit-artifacts (Sonnet, reports as files via general-purpose).
+Fleet v3 launched 01:40 (resume a rate-limited/killed agent by SendMessage to its id while this coordinator lives;
+after a coordinator restart relaunch the topic from its STATUS.md): play-stdio aa7075a1fd8edfe70 · play-coverage
+a72a5d4100328eff0 · play-landing a840a37ca84ded74f · play-defaults a052c2c890e1d1a7a · xcut-toolproof
+ad1ebd81e22d0fb96 · xcut-dict a8cc462c37bf8ef59 · norm-a aeb92792913fb97d9 · norm-b a8746ede20b4be230 · stdio-a2
+a8c1c9b2c3b74fea5 · stdio-b2 ac264a30b0c885e44 · stdio-semio2 a1842b36009067ac6 · block-puzzle a66f4036588a27a57 ·
+engineering a5474a5e1786c5135 · knowledge a422ef1ab6bd2acae · media a0ecca054ae2ae8c1 · design ad61ef16b42193158 ·
+audit-visual adc299625bf483222 · audit-artifacts a41c9ecc4a2af26d6 · audit-interaction a1a704077be6d57ca.
+
+### 02:35 — session 4 progress
+- Harness refuses subagent `REPORT.md` writes ("return findings as text") → topic reports live in each `STATUS.md`
+  and in the coordinator's `📓️*.md` notes. Audit of artifacts/apps/extensions: `📓️audit-artifacts.md`.
+- :6033 crash-looped on the imperative-extension union until play-coverage re-activated (up 01:49); then Vite wedged
+  on the fleet's edit storm → play gained a FROZEN serve mode (`SEMIO_TECH_PLAY_FROZEN=true` → `server.watch = null`;
+  `serve-test` always frozen), supervisor runs it frozen and recycles on `🗑️generated/serve-restart.request`.
+- play-landing DONE: gapless-first grid geometry (60 panes → 9×7, trailing row centred, pan clamped to occupied
+  columns), `playExtensionDirectory` build fallback tested, `🔒️dependencies.json` users, en+de landing/card labels,
+  navigation landmark + alert role. Unit 58/62 (4 red = stdio ×3, playbook ×1, sibling-owned); chrome-i18n 0;
+  3 browser probes 0 errors. Details `🗑️generated/play-landing/STATUS.md`.
+- Serve log lists most staged components `[stale] source-newer` → a full play re-activation is required before the
+  final acceptance run (after the plugin fix agents finish their production edits).

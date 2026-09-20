@@ -181,7 +181,7 @@ fn retained_refresh_aggregate_admits_only_a_handful_of_ceiling_sized_surfaces() 
     eprintln!("[DEBUG] resident-refresh-ceiling admitted={count} refusal={refusal:?} surface-bytes={UI_RESIDENT_SURFACE_BYTES} aggregate={UI_RESIDENT_AGGREGATE_BYTES} fixed-backing={}", UiResidentPermit::contract_backing_bytes());
     assert_eq!(count, data["ceilingSizedRoots"].as_u64().unwrap() as usize);
     assert!(count < UI_RESIDENT_SLOTS, "the ceiling is a maximum, never a price: {count} ceiling-sized roots against {UI_RESIDENT_SLOTS} slots");
-    assert_eq!(UI_RESIDENT_SLOTS * UI_RESIDENT_DOCUMENT_BYTES, UI_RESIDENT_AGGREGATE_BYTES, "the aggregate funds every slot at one full document each");
+    assert_eq!(UI_RESIDENT_SLOTS * UI_RESIDENT_DOCUMENT_BYTES, UI_RESIDENT_AGGREGATE_BYTES, "the aggregate uses the declared per-slot record-byte baseline");
     assert_eq!(refusal, Some(UiResidentFault::Capacity));
     assert_eq!(UiResidentPermit::snapshot().unwrap(), before);
 }
@@ -221,6 +221,38 @@ fn cold_document_roots_are_priced_from_their_census_and_reach_every_slot() {
             }
         }
         assert!(builder.terminal_is_empty(), "a cold root retires within its bounded budget");
+    }
+    drain_pages();
+    assert_eq!(UiResidentPermit::snapshot().unwrap(), before);
+}
+
+/// 🎟️ A populated 128-node document reserves its complete record and assembly backing, so the byte
+/// ledger reaches its independent ceiling before the sixty-four-position slot ledger.
+#[test]
+fn populated_full_documents_admit_sixty_two_and_refuse_the_sixty_third_on_bytes() {
+    let data = fixture();
+    let nodes = data["documentNodes"].as_u64().unwrap() as usize;
+    let full = surface_limits(nodes);
+    let admitted_roots = data["fullDocumentAdmittedRoots"].as_u64().unwrap() as usize;
+    let refused_root = data["fullDocumentRefusedRoot"].as_u64().unwrap() as usize;
+    assert_eq!(full.bytes, data["fullDocumentBytes"].as_u64().unwrap() as usize);
+    assert_eq!(UiResidentPermit::contract_backing_bytes(), data["measured"]["fixedBackingBytes"].as_u64().unwrap() as usize);
+    let before = UiResidentPermit::snapshot().unwrap();
+    let mut admitted = Vec::new();
+    for root in 1..=admitted_roots {
+        admitted.push(open_surface(&format!("full.census.{root}"), root as u64, nodes).expect("the populated full-document byte ledger admits this root"));
+    }
+    let held = UiResidentPermit::snapshot().unwrap();
+    assert_eq!(held.used_slots - before.used_slots, admitted_roots);
+    assert_eq!(held.bytes - before.bytes, admitted_roots * full.bytes);
+    assert_eq!(refused_root, admitted_roots + 1);
+    assert_eq!(
+        open_surface(&format!("full.census.{refused_root}"), refused_root as u64, nodes).expect_err("the next populated document exceeds the independent byte ceiling"),
+        UiResidentFault::Capacity
+    );
+    assert!(held.used_slots - before.used_slots < UI_RESIDENT_SLOTS, "the byte ledger refuses with slot positions still free");
+    for lease in &mut admitted {
+        retire(lease, 1024, 32768);
     }
     drain_pages();
     assert_eq!(UiResidentPermit::snapshot().unwrap(), before);

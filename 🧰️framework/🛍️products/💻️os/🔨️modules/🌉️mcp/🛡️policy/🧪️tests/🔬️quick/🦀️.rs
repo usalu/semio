@@ -1,14 +1,15 @@
 
 use super::*;
-use crate::catalog::{CapabilityKind, CapabilityOwner, CapabilityPresentation, CapabilityRef, CapabilitySource, ToolExposure};
+use crate::catalog::{CapabilityAudience, CapabilityKind, CapabilityOwner, CapabilityPresentation, CapabilityRef, CapabilitySource, ToolExposure};
 use semio_framework::manifest::{CapabilityEffects, CapabilityExecution, CapabilityPolicy};
 
 fn capability(id: &str, scopes: &[&str], approval: ApprovalMode, destructive: bool) -> CapabilityDefinition {
     CapabilityDefinition {
         id: CapabilityRef(id.to_string()),
         version: 1,
-        owner: CapabilityOwner::Plugin { plugin_id: "cad".into(), app_id: Some("editor".into()), window_kind_id: Some("viewport".into()), mode_id: None },
+        owner: CapabilityOwner::Plugin { plugin_id: "cad".into(), label: None, app_id: Some("editor".into()), window_kind_id: Some("viewport".into()), mode_id: None },
         kind: CapabilityKind::Mutation,
+        audience: CapabilityAudience::Agent,
         title: id.to_string(),
         description: String::new(),
         artifact_kind: None,
@@ -166,7 +167,15 @@ use crate::transport::{ElicitationChannel, ElicitationSlot, StdioLines};
 use std::sync::OnceLock;
 
 fn approval_request<'a>(handle: &'a str, diff: &'a serde_json::Value) -> ApprovalRequest<'a> {
-    ApprovalRequest { approval_handle: handle, capability_id: "cad.editor.deleteSelection", capability_title: "Delete Selection", principal_id: "agent:local", diff_summary: diff }
+    ApprovalRequest {
+        approval_handle: handle,
+        capability_id: "cad.editor.deleteSelection",
+        capability_title: "Delete Selection",
+        capability_description: "Removes every currently selected element from the drawing.",
+        artifact_kind: Some("s.cad.cad"),
+        principal_id: "agent:local",
+        diff_summary: diff,
+    }
 }
 
 /// 🙋 An elicitation slot whose client already answered `response_line`, with `elicitation` either
@@ -319,6 +328,12 @@ fn the_shell_lane_publishes_a_structured_request_and_honours_the_humans_yes() {
             assert_eq!(parsed["capabilityId"], "cad.editor.deleteSelection");
             assert_eq!(parsed["requestedBy"], "agent:local");
             assert_eq!(parsed["risk"], "high");
+            // 🧾️ WHO / WHAT / HOW LONG — the three things a human cannot decide without, and the
+            // reason a shell-lane approval is an affordance rather than a JSON blob on screen.
+            assert_eq!(parsed["capabilityTitle"], "Delete Selection");
+            assert_eq!(parsed["description"], "Removes every currently selected element from the drawing.");
+            assert_eq!(parsed["artifactKind"], "s.cad.cad");
+            assert_eq!(parsed["timeoutMs"], 8_000);
         }
         other => panic!("expected ApprovalRequested, got {other:?}"),
     }

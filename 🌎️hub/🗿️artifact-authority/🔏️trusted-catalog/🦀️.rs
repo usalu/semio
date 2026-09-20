@@ -1010,6 +1010,17 @@ fn validate_bundle(bundle: &TrustedBundleV1, profile_id: &str) -> Result<Selecte
                 return Err(catalog("trusted native codec identity is empty, zero, or duplicated"));
             }
         }
+        // 🎯️ An open target carries TWO artifact-kind ids from two deliberately distinct spaces, and they
+        // are never equal in a real bundle: `artifact_kind` is the manifest `ArtifactKindSpec::id`
+        // (`stdio.json` — `validate_descriptor_open_target` requires a manifest kind with exactly that id
+        // and schema), while `parent_dialect` is the owning app's `Dialect`, whose kind is the descriptor
+        // id (`s.stdio.json` — the same function requires `app.dialect == target.parent_dialect`). Every
+        // stdio artifact ships both spellings (`📜️native-codec-factories.json`: `artifact_kind` is
+        // `stdio.<x>` for all of them; every `Viewer::builder(…)` dialect is `s.stdio.<x>`). This loop
+        // used to refuse a target whose two spellings differed, which made every real stdio bundle
+        // unloadable and left `artifactAuthority` permanently not-ready. Binding is enforced where it is
+        // meaningful: to a native codec of the same package below, and to the descriptor's own app and
+        // artifact kind in `validate_descriptor_open_target`.
         let mut open_target_keys = BTreeSet::new();
         for target in &package.open_targets {
             let expected_grant = TrustedBundleGrantV1 { read: true, write: matches!(target.role, TrustedBundleOpenRole::Editor), observe: true };
@@ -1019,13 +1030,20 @@ fn validate_bundle(bundle: &TrustedBundleV1, profile_id: &str) -> Result<Selecte
                 || !valid_open_identity(&target.app_id)
                 || !valid_open_identity(&target.window_kind_id)
                 || [&target.parent_dialect.artifact_kind, &target.parent_dialect.standard, &target.parent_dialect.subset].into_iter().any(|value| !valid_open_identity(value))
-                || target.parent_dialect.artifact_kind != target.artifact_kind
-                || target.grant != expected_grant
-                || decode_digest(&target.pack_schema_hash, "open target pack schema hash")? == [0; 32]
-                || !package.native_codecs.iter().any(|codec| codec.artifact_kind == target.artifact_kind && codec.artifact_schema == target.artifact_schema && codec.pack_schema_hash == target.pack_schema_hash)
-                || !open_target_keys.insert((target.artifact_kind.as_str(), target.artifact_schema.as_str(), target.surface_id.as_str(), target.role as u8))
             {
-                return Err(catalog("trusted document-open target is invalid, unbound, or duplicated"));
+                return Err(catalog("trusted document-open target names an empty, padded or control-bearing identity"));
+            }
+            if target.grant != expected_grant {
+                return Err(catalog("trusted document-open target grant differs from the one its role fixes"));
+            }
+            if decode_digest(&target.pack_schema_hash, "open target pack schema hash")? == [0; 32] {
+                return Err(catalog("trusted document-open target pack schema hash is zero"));
+            }
+            if !package.native_codecs.iter().any(|codec| codec.artifact_kind == target.artifact_kind && codec.artifact_schema == target.artifact_schema && codec.pack_schema_hash == target.pack_schema_hash) {
+                return Err(catalog("trusted document-open target is bound to no native codec of its own package"));
+            }
+            if !open_target_keys.insert((target.artifact_kind.as_str(), target.artifact_schema.as_str(), target.surface_id.as_str(), target.role as u8)) {
+                return Err(catalog("trusted document-open target key is duplicated within one package"));
             }
         }
     }

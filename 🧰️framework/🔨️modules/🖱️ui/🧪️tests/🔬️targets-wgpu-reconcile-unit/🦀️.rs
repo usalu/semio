@@ -1,7 +1,6 @@
-
 use super::*;
 use crate::wgpu::component::layout::ActionDescriptor;
-use crate::wgpu::component::ui::{UiButtonNode, UiControlNode, UiPresence, UiStackNode, UiTextNode, UiToggleNode, ui_tree_stamp_presence};
+use crate::wgpu::component::ui::{ui_tree_stamp_presence, UiButtonNode, UiControlNode, UiPresence, UiStackNode, UiTextNode, UiToggleNode};
 use crate::wgpu::tree::NodeFlags;
 
 fn action() -> ActionDescriptor {
@@ -117,7 +116,9 @@ fn select(id: &str, value: &str, items: Vec<(&str, &str)>) -> UiNode {
 }
 
 fn tree_item(id: &str, label: &str) -> UiTreeItemNode {
-    UiTreeItemNode { window: None, granularity: None,
+    UiTreeItemNode {
+        window: None,
+        granularity: None,
         id: id.into(),
         label: Label::data(label),
         description: None,
@@ -237,7 +238,9 @@ fn tree_expands_sections_and_nested_items_into_keyed_stack_rows() {
 #[test]
 fn tree_item_control_and_trailing_actions_become_retained_children_too() {
     let mut tree = UiTree::new();
-    let item = UiTreeItemNode { window: None, granularity: None,
+    let item = UiTreeItemNode {
+        window: None,
+        granularity: None,
         control: Some(UiControlNode::Toggle(UiToggleNode { id: "tog".into(), icon_id: IconName::CircleDot, text: None, on_change: action(), presence: UiPresence::selected(true), menu: None })),
         actions: Some(vec![UiTreeItemAction { icon_id: IconName::Trash2, label: Some(Label::data("Delete")), action: action(), placement: Some(UiTreeActionPlacement::Menu) }]),
         ..tree_item("leaf", "Leaf")

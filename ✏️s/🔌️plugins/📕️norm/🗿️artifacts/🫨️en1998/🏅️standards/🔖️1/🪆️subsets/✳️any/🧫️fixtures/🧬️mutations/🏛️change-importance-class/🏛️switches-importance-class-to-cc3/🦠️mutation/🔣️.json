@@ -1,5 +1,4 @@
 {
-  "ChangeImportanceClass": {
-    "newImportanceClass": "cc3"
-  }
+  "mutation": "changeImportanceClass",
+  "newImportanceClass": "cc3"
 }

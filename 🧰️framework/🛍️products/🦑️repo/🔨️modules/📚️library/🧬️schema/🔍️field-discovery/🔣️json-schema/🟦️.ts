@@ -11,6 +11,7 @@ export function policyJsonSchemaScalar(schema: Record<string, unknown>): string 
     if (format === "int32") return "int32";
     if (format === "uint32") return "uint32";
     if (format === "int64") return "int64";
+    if (format === "uint64") return "uint64";
     return "int32";
   }
   if (type === "number") {

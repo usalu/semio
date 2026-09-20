@@ -1,0 +1,17 @@
+# 🐳️ Build-context exclusions for 🌎️hub/Dockerfile (see its header — the image is UNBUILT).
+# Deliberately conservative: only host-local state and compiler output that the builder stage
+# recreates. Committed `🤖️generated` sources are NOT excluded — several crates and the plugin
+# catalog are generated-then-committed, and dropping them would break the build inside the image.
+.git
+.jj
+node_modules
+target
+temp
+test-results
+storybook-static
+**/🗑️generated
+**/dist/build
+**/dist/build-dev
+**/dist/build-release
+**/dist/publish
+**/.DS_Store

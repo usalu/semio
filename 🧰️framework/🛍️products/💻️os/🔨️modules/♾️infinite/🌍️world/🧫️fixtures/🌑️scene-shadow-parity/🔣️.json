@@ -1,0 +1,69 @@
+{
+  "$schema": "https://json.schemas.assets.semio-tech.com/framework/ui/render/schema.json#/$defs/World3dShadowParityFixture",
+  "schemaVersion": 1,
+  "provenance": "React World3dHost, WorldTerrainLayer, IconRender and current Three PCF shadow semantics",
+  "profiles": {
+    "world": {
+      "format": "canvas",
+      "mapSize": 512,
+      "filter": "pcf",
+      "bias": 0,
+      "normalBias": 0,
+      "radius": 1,
+      "intensity": 1,
+      "opacityInput": 0.31,
+      "softnessInput": 3.25,
+      "consumesOpacity": false,
+      "consumesSoftness": false,
+      "usesShadowMap": true
+    },
+    "iconPng": {
+      "format": "png",
+      "mapSize": 1024,
+      "usesShadowMap": true
+    },
+    "iconSvg": {
+      "format": "svg",
+      "usesShadowMap": false
+    }
+  },
+  "roles": [
+    { "kind": "glb", "transparent": false, "materialPresent": true, "casts": true, "receives": true },
+    { "kind": "glb", "transparent": true, "materialPresent": true, "casts": true, "receives": true },
+    { "kind": "terrain", "transparent": false, "materialPresent": true, "casts": false, "receives": true },
+    { "kind": "paint", "transparent": false, "materialPresent": true, "casts": false, "receives": false },
+    { "kind": "icon", "transparent": false, "materialPresent": true, "casts": true, "receives": true },
+    { "kind": "icon", "transparent": false, "materialPresent": false, "casts": false, "receives": false }
+  ],
+  "frusta": {
+    "mainCamera": {
+      "position": [0, 0, 10],
+      "target": [0, 0, 0],
+      "up": [0, 1, 0],
+      "fov": 50,
+      "aspect": 1,
+      "near": 0.1,
+      "far": 100
+    },
+    "sun": { "azimuth": 120, "elevation": 25, "distance": 120 },
+    "offscreenCasterBounds": { "min": [-7.25, -0.25, -0.25], "max": [-6.75, 0.25, 0.25] },
+    "visibleReceiverBounds": { "min": [-0.25, -0.25, -0.25], "max": [0.25, 0.25, 0.25] },
+    "offscreenCasterMainVisible": false,
+    "offscreenCasterLightVisible": true,
+    "visibleReceiverMainVisible": true,
+    "visibleReceiverLightVisible": true
+  },
+  "pcf": {
+    "sampleCount": 5,
+    "fragmentPosition": [137.5, 83.25],
+    "interleavedGradientNoise": 0.810981250374347,
+    "rotation": 5.095545476750562,
+    "unitOffsets": [
+      [0.1182217323847746, -0.29329783836902507],
+      [0.1921655239354973, 0.5129058504351416],
+      [-0.6302115927074241, -0.32067639204838877],
+      [0.8061394729805477, -0.22391773065714315],
+      [-0.5025051709973765, 0.8046667341955286]
+    ]
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "semio.ui.text-owner-lifecycle/v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "owner", "value", "sequence", "expected"],
+  "properties": {
+    "version": { "const": 1 },
+    "owner": { "type": "string", "minLength": 1 },
+    "value": { "type": "string" },
+    "sequence": {
+      "type": "array",
+      "prefixItems": [
+        { "const": "focus" },
+        { "const": "advance-to-projection" },
+        { "const": "blur" },
+        { "const": "refocus" },
+        { "const": "drain" }
+      ],
+      "items": false,
+      "minItems": 5,
+      "maxItems": 5
+    },
+    "expected": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["owner", "value", "fault", "duplicateProjectionFault"],
+      "properties": {
+        "owner": { "type": "string", "minLength": 1 },
+        "value": { "type": "string" },
+        "fault": { "type": "null" },
+        "duplicateProjectionFault": { "const": "Protocol" }
+      }
+    }
+  }
+}

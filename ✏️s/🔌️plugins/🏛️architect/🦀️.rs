@@ -43,3 +43,12 @@ pub fn plugin() -> Result<Plugin<ArchitectApps>, PluginAssemblyError> {
 #[path = "🧪️tests/🔬️surface/🦀️.rs"]
 mod surface_tests;
 //#endregion 🧪️SurfaceTests
+
+//#region 🪢️TaxonomyMounts
+#[path = "🎟️capabilities/🦀️.rs"]
+pub mod capabilities;
+#[path = "🔧️setup/🦀️.rs"]
+pub mod setup;
+#[path = "🪪️manifest/🦀️.rs"]
+pub mod manifest;
+//#endregion 🪢️TaxonomyMounts

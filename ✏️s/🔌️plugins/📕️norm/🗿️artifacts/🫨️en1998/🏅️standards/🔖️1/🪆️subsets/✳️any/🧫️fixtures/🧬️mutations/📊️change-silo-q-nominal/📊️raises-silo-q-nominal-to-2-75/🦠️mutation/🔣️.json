@@ -1,5 +1,4 @@
 {
-  "ChangeSiloQNominal": {
-    "newSiloQNominal": 2.75
-  }
+  "mutation": "changeSiloQNominal",
+  "newSiloQNominal": 2.75
 }

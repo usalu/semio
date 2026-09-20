@@ -1034,6 +1034,7 @@ impl DatabaseCapabilityOpenFuture {
         }
         let slot = admission.slot;
         let generation = admission.generation;
+        DATABASE_CAPABILITY_OPEN_LIVE.fetch_add(1, std::sync::atomic::Ordering::AcqRel);
         let state = Arc::new(DatabaseCapabilityOpenState {
             pool,
             _pool_use: pool_use,
@@ -2369,6 +2370,7 @@ impl DatabaseCatalogReadFuture {
         if database_catalog_read_registry().lock().unwrap_or_else(std::sync::PoisonError::into_inner)[slot].is_some() {
             return Err(DatabaseCatalogReadRejected { error: Some(DbError::Unavailable("database catalog-read terminal slot occupied".to_string())), storage: Some(storage), key: Some(key) });
         }
+        DATABASE_CATALOG_READ_LIVE.fetch_add(1, std::sync::atomic::Ordering::AcqRel);
         let state = Arc::new(DatabaseCatalogReadState {
             pool,
             _pool_use: pool_use,
@@ -3765,6 +3767,7 @@ impl DatabaseCatalogBootstrapFuture {
         if database_catalog_bootstrap_registry().lock().unwrap_or_else(std::sync::PoisonError::into_inner)[slot].is_some() {
             return Err(DatabaseCatalogBootstrapRejected::new(pool, DbError::LimitExceeded("database catalog-bootstrap terminal slot"), storage, pages, key, expected));
         }
+        DATABASE_CATALOG_BOOTSTRAP_LIVE.fetch_add(1, std::sync::atomic::Ordering::AcqRel);
         let state = Arc::new(DatabaseCatalogBootstrapState {
             pool,
             _pool_use: pool_use,
@@ -7114,6 +7117,10 @@ impl DatabaseCreateCatalogState {
             return;
         }
         drop(cursor);
+        if self.closing.load(std::sync::atomic::Ordering::Acquire) {
+            self.set_phase(DatabaseCreateCatalogPhase::Terminal);
+            return;
+        }
         self.set_phase(DatabaseCreateCatalogPhase::Publish);
     }
 
@@ -7285,6 +7292,7 @@ impl DatabaseCreateCatalogFuture {
         let base_identity = Arc::as_ptr(&base) as usize;
         let created_at_ms = pool.now_ms();
         let deadline_ms = created_at_ms.checked_add(DATABASE_CREATE_CATALOG_DEADLINE_MS).unwrap_or(u64::MAX);
+        DATABASE_CREATE_CATALOG_LIVE.fetch_add(1, std::sync::atomic::Ordering::AcqRel);
         let state = Arc::new(DatabaseCreateCatalogState {
             pool,
             pool_use: Mutex::new(Some(pool_use)),
@@ -7403,6 +7411,7 @@ impl Future for DatabaseCreateCatalogFuture {
         let completion = { self.state.completion.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take() };
         if let Some(result) = completion {
             self.resolved = true;
+            self.state.release_success();
             return std::task::Poll::Ready(result);
         }
         #[cfg(test)]
@@ -7414,6 +7423,7 @@ impl Future for DatabaseCreateCatalogFuture {
         if let Some(result) = completion {
             self.state.waker.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take();
             self.resolved = true;
+            self.state.release_success();
             return std::task::Poll::Ready(result);
         }
         std::task::Poll::Pending
@@ -7533,11 +7543,127 @@ impl DatabaseShutdownControl {
         self.cancelled.load(std::sync::atomic::Ordering::Acquire) || std::time::Instant::now() >= self.deadline
     }
 
-    fn interruption_error(&self) -> DbError {
+    /// 🔦️ The interruption an expired or cancelled shutdown answers with. A deadline names the
+    /// phase it expired in and that phase's retained owner counts, because the caller's only other
+    /// evidence — the step sequence — is already gone by the time the error reaches it.
+    fn interruption_error(&self, witness: DatabaseShutdownInterruptionWitness) -> DbError {
         if self.cancelled.load(std::sync::atomic::Ordering::Acquire) {
             DbError::Closed
         } else {
-            DbError::Unavailable("database shutdown deadline elapsed".to_string())
+            DbError::Unavailable(format!(
+                "database shutdown deadline elapsed in phase {:?}: open artifacts {}, version graph complete {}, emit started {}, retained pool-use owners {}, retained slots {:?}",
+                witness.phase, witness.open_artifacts, witness.graph_complete, witness.emit_started, witness.pool_use_owners, witness.retained_slots
+            ))
+        }
+    }
+}
+
+/// 🔎️ What one interrupted shutdown had reached when its deadline expired.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+struct DatabaseShutdownInterruptionWitness {
+    phase: Option<DatabaseShutdownPhase>,
+    open_artifacts: usize,
+    graph_complete: bool,
+    emit_started: bool,
+    pool_use_owners: usize,
+    retained_slots: DatabaseRetainedPoolUseCensus,
+}
+
+/// 🔬️ How many LIVE owners of each retained-activity family still hold a `WorkerPoolUse` clone.
+/// Every slot registry in this crate is a TERMINAL table — a state registers its slot only when it
+/// is orphaned — so a census built from those tables reads 0 for a family whose owner is simply
+/// still alive. These four counters are incremented where the state that stores the clone is built
+/// and decremented in its `Drop`, so they see the live owner the tables cannot.
+static DATABASE_MOUNT_FUTURE_LIVE: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
+
+/// 🔬️ One live document-mount future. A mount future OWNS a `WorkerPoolUse` clone from the moment
+/// it is built, and the clone lives exactly as long as the future — whoever holds it. Every other
+/// census family counts a struct field; this one counts the futures themselves, which is the only
+/// carrier left once every field reads 0.
+struct DatabaseMountFutureLiveGuardV1;
+
+impl DatabaseMountFutureLiveGuardV1 {
+    fn new() -> Self {
+        DATABASE_MOUNT_FUTURE_LIVE.fetch_add(1, std::sync::atomic::Ordering::AcqRel);
+        Self
+    }
+}
+
+impl Drop for DatabaseMountFutureLiveGuardV1 {
+    fn drop(&mut self) {
+        DATABASE_MOUNT_FUTURE_LIVE.fetch_sub(1, std::sync::atomic::Ordering::AcqRel);
+    }
+}
+
+static DATABASE_CAPABILITY_OPEN_LIVE: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
+static DATABASE_CATALOG_READ_LIVE: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
+static DATABASE_CATALOG_BOOTSTRAP_LIVE: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
+static DATABASE_CREATE_CATALOG_LIVE: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
+
+impl Drop for DatabaseCapabilityOpenState {
+    fn drop(&mut self) {
+        DATABASE_CAPABILITY_OPEN_LIVE.fetch_sub(1, std::sync::atomic::Ordering::AcqRel);
+    }
+}
+
+impl Drop for DatabaseCatalogReadState {
+    fn drop(&mut self) {
+        DATABASE_CATALOG_READ_LIVE.fetch_sub(1, std::sync::atomic::Ordering::AcqRel);
+    }
+}
+
+impl Drop for DatabaseCatalogBootstrapState {
+    fn drop(&mut self) {
+        DATABASE_CATALOG_BOOTSTRAP_LIVE.fetch_sub(1, std::sync::atomic::Ordering::AcqRel);
+    }
+}
+
+impl Drop for DatabaseCreateCatalogState {
+    fn drop(&mut self) {
+        DATABASE_CREATE_CATALOG_LIVE.fetch_sub(1, std::sync::atomic::Ordering::AcqRel);
+    }
+}
+
+/// 🔬️ How many retained owners of each family still hold a `WorkerPoolUse` clone of the
+/// `Database`'s use, because `Arc::strong_count` names a number and never an owner. The first six
+/// are process-global slot tables; `runner_handoff` is the family that has no table at all — a
+/// runner handoff parks its clone inside the runner until the terminal transition takes it, so an
+/// authority already absent from `open_artifacts` can still pin the use through one.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+struct DatabaseRetainedPoolUseCensus {
+    capability_open: usize,
+    catalog_read: usize,
+    catalog_bootstrap: usize,
+    create_catalog: usize,
+    sync_hello: usize,
+    artifact_retirement: usize,
+    runner_handoff: usize,
+    mount_work: usize,
+    live_authority: usize,
+    live_capability_open: usize,
+    live_catalog_read: usize,
+    live_catalog_bootstrap: usize,
+    live_create_catalog: usize,
+    live_mount_future: usize,
+}
+
+impl DatabaseRetainedPoolUseCensus {
+    fn observe() -> Self {
+        Self {
+            capability_open: database_capability_open_registry().lock().unwrap_or_else(std::sync::PoisonError::into_inner).iter().filter(|slot| slot.is_some()).count(),
+            catalog_read: database_catalog_read_registry().lock().unwrap_or_else(std::sync::PoisonError::into_inner).iter().filter(|slot| slot.is_some()).count(),
+            catalog_bootstrap: database_catalog_bootstrap_registry().lock().unwrap_or_else(std::sync::PoisonError::into_inner).iter().filter(|slot| slot.is_some()).count(),
+            create_catalog: database_create_catalog_registry().lock().unwrap_or_else(std::sync::PoisonError::into_inner).iter().filter(|slot| slot.is_some()).count(),
+            sync_hello: db_sync::database_sync_hello_live_slots(),
+            artifact_retirement: db_artifact::artifact_runner_retirement_live_slots(),
+            runner_handoff: db_artifact::artifact_runner_handoff_pool_use_live_slots(),
+            mount_work: database_document_mount_work_live_slots(),
+            live_authority: db_artifact::artifact_authority_live_pool_uses(),
+            live_capability_open: DATABASE_CAPABILITY_OPEN_LIVE.load(std::sync::atomic::Ordering::Acquire),
+            live_catalog_read: DATABASE_CATALOG_READ_LIVE.load(std::sync::atomic::Ordering::Acquire),
+            live_catalog_bootstrap: DATABASE_CATALOG_BOOTSTRAP_LIVE.load(std::sync::atomic::Ordering::Acquire),
+            live_create_catalog: DATABASE_CREATE_CATALOG_LIVE.load(std::sync::atomic::Ordering::Acquire),
+            live_mount_future: DATABASE_MOUNT_FUTURE_LIVE.load(std::sync::atomic::Ordering::Acquire),
         }
     }
 }
@@ -7793,6 +7919,22 @@ struct DatabaseDocumentMountOwner {
     terminal: std::sync::atomic::AtomicBool,
 }
 
+static DATABASE_DOCUMENT_MOUNT_WORK_LIVE: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
+
+/// 🔬️ How many document-mount owners are still alive holding their boxed mount work. Each one
+/// carries the `WorkerPoolUse` clone `mount_document` handed its `run_document_mount` future, and a
+/// retained-open retry carries a SECOND clone in its `resume` future — and neither is in any slot
+/// table, so a mount owner that outlives its registry entry pins the database's pool use invisibly.
+fn database_document_mount_work_live_slots() -> usize {
+    DATABASE_DOCUMENT_MOUNT_WORK_LIVE.load(std::sync::atomic::Ordering::Acquire)
+}
+
+impl Drop for DatabaseDocumentMountOwner {
+    fn drop(&mut self) {
+        DATABASE_DOCUMENT_MOUNT_WORK_LIVE.fetch_sub(1, std::sync::atomic::Ordering::AcqRel);
+    }
+}
+
 struct DatabaseDocumentMountWake {
     owner: std::sync::Weak<DatabaseDocumentMountOwner>,
     generation: u64,
@@ -7822,6 +7964,7 @@ impl DatabaseDocumentMountOwner {
         #[cfg(test)] cleanup_fault_hook: Arc<Mutex<Option<DatabaseDocumentMountCleanupFaultHook>>>,
         #[cfg(test)] parked_hook: Arc<Mutex<Option<DatabaseDocumentMountParkedHook>>>,
     ) -> Arc<Self> {
+        DATABASE_DOCUMENT_MOUNT_WORK_LIVE.fetch_add(1, std::sync::atomic::Ordering::AcqRel);
         Arc::new(Self {
             pool,
             registry,
@@ -8361,7 +8504,7 @@ impl<A: db_artifact::AuthzHook + 'static, E: Emit + 'static> Database<A, E> {
         Ok(known)
     }
 
-    async fn publish_mount_catalog(pool: Arc<WorkerPool>, pool_use: Arc<WorkerPoolUse>, storage: Arc<db_storage::DbBackend>, catalog: Arc<Mutex<CatalogState>>, document: protocol::ArtifactId) -> Result<(), DbError> {
+    async fn publish_mount_catalog(_live: DatabaseMountFutureLiveGuardV1, pool: Arc<WorkerPool>, pool_use: Arc<WorkerPoolUse>, storage: Arc<db_storage::DbBackend>, catalog: Arc<Mutex<CatalogState>>, document: protocol::ArtifactId) -> Result<(), DbError> {
         let transaction = match DatabaseCreateCatalogFuture::try_prepare_with_use(pool, pool_use, catalog, storage, document, true) {
             Ok(transaction) => transaction,
             Err(rejected) => return Err(rejected.close_and_take_error()),
@@ -8372,6 +8515,7 @@ impl<A: db_artifact::AuthzHook + 'static, E: Emit + 'static> Database<A, E> {
     }
 
     async fn run_open_document_mount(
+        _live: DatabaseMountFutureLiveGuardV1,
         pool: Arc<WorkerPool>,
         pool_use: Arc<WorkerPoolUse>,
         storage: Arc<db_storage::DbBackend>,
@@ -8385,7 +8529,7 @@ impl<A: db_artifact::AuthzHook + 'static, E: Emit + 'static> Database<A, E> {
         let authority = match db_artifact::ArtifactAuthority::spawn_with_pool_use(
             pool,
             pool_use,
-            move || async move { db_artifact::ArtifactEngine::open_retained(open_document, storage, config, opened_at_ms).await.map(|(engine, _)| engine) },
+            move || async move { db_artifact::ArtifactEngine::open_retained(open_document, storage, config, opened_at_ms).await.map(|(engine, _)| Box::new(engine)) },
             mailbox_capacities,
         )
         .await
@@ -8398,6 +8542,7 @@ impl<A: db_artifact::AuthzHook + 'static, E: Emit + 'static> Database<A, E> {
     }
 
     async fn run_document_mount(
+        _live: DatabaseMountFutureLiveGuardV1,
         pool: Arc<WorkerPool>,
         pool_use: Arc<WorkerPoolUse>,
         storage: Arc<db_storage::DbBackend>,
@@ -8413,7 +8558,7 @@ impl<A: db_artifact::AuthzHook + 'static, E: Emit + 'static> Database<A, E> {
     ) -> Result<DatabaseDocumentMountReply, DatabaseDocumentMountFailure> {
         let mut create = !catalog_known && policy != DatabaseDocumentMountPolicy::Open;
         if create {
-            if let Err(error) = Self::publish_mount_catalog(pool.clone(), pool_use.clone(), storage.clone(), catalog.clone(), document.clone()).await {
+            if let Err(error) = Self::publish_mount_catalog(DatabaseMountFutureLiveGuardV1::new(), pool.clone(), pool_use.clone(), storage.clone(), catalog.clone(), document.clone()).await {
                 if policy != DatabaseDocumentMountPolicy::Ensure || !matches!(error, DbError::AlreadyExists(_) | DbError::Fenced { .. }) {
                     return Err(error.into());
                 }
@@ -8435,16 +8580,16 @@ impl<A: db_artifact::AuthzHook + 'static, E: Emit + 'static> Database<A, E> {
             let create_storage = storage.clone();
             let create_document = document.clone();
             let created_at_ms = now_ms().await;
-            match db_artifact::ArtifactAuthority::spawn_with_pool_use(create_pool, pool_use.clone(), move || db_artifact::ArtifactEngine::create_retained(create_document, create_storage, create_config, created_at_ms), mailbox_capacities).await {
+            match db_artifact::ArtifactAuthority::spawn_with_pool_use(create_pool, pool_use.clone(), move || async move { db_artifact::ArtifactEngine::create_retained(create_document, create_storage, create_config, created_at_ms).await.map(Box::new) }, mailbox_capacities).await {
                 Ok(authority) => authority,
                 Err(rejected) => {
                     let retry_open = policy == DatabaseDocumentMountPolicy::Ensure && matches!(rejected.error(), DbError::AlreadyExists(_));
-                    let resume = retry_open.then(|| Box::pin(Self::run_open_document_mount(pool.clone(), pool_use.clone(), storage.clone(), document.clone(), open_config, mailbox_capacities, emit.clone())) as DatabaseDocumentMountFuture);
+                    let resume = retry_open.then(|| Box::pin(Self::run_open_document_mount(DatabaseMountFutureLiveGuardV1::new(), pool.clone(), pool_use.clone(), storage.clone(), document.clone(), open_config, mailbox_capacities, emit.clone())) as DatabaseDocumentMountFuture);
                     return Err(Self::retained_mount_rejection(rejected, resume));
                 }
             }
         } else {
-            return Self::run_open_document_mount(pool, pool_use, storage, document, open_config, mailbox_capacities, emit).await;
+            return Self::run_open_document_mount(DatabaseMountFutureLiveGuardV1::new(), pool, pool_use, storage, document, open_config, mailbox_capacities, emit).await;
         };
         emit.emit(EmitEvent::new("db_engine.document_created").with_document(to_core_document_id(&document).await)).await;
         Ok(DatabaseDocumentMountReply { authority: Arc::new(authority) })
@@ -8483,6 +8628,7 @@ impl<A: db_artifact::AuthzHook + 'static, E: Emit + 'static> Database<A, E> {
                 let generation = registry.take_generation()?;
                 let (reply, raw_receiver) = db_actor::oneshot();
                 let future = Box::pin(Self::run_document_mount(
+                    DatabaseMountFutureLiveGuardV1::new(),
                     self.pool.clone(),
                     pool_use,
                     self.storage.clone(),
@@ -8642,9 +8788,13 @@ impl<A: db_artifact::AuthzHook + 'static, E: Emit + 'static> Database<A, E> {
     /// 🛬️ Drives bounded shutdown steps to a terminal acknowledgement while borrowing the exact
     /// Database. Error and future cancellation therefore preserve caller retry authority.
     pub async fn shutdown(&mut self, control: &DatabaseShutdownControl) -> Result<(), DbError> {
+        let mut reached = None;
         loop {
             match self.shutdown_step(control).await? {
-                DatabaseShutdownProgress::Progress { .. } => semio_framework_async::yield_once().await,
+                DatabaseShutdownProgress::Progress { phase, .. } => {
+                    reached = Some(phase);
+                    semio_framework_async::yield_once().await;
+                }
                 DatabaseShutdownProgress::Blocked(DatabaseShutdownBlock::Authorities(count)) => {
                     return Err(DbError::Conflict(format!("database shutdown retains {count} shared artifact authorities")));
                 }
@@ -8655,18 +8805,14 @@ impl<A: db_artifact::AuthzHook + 'static, E: Emit + 'static> Database<A, E> {
                     return Err(DbError::Unavailable(format!("database shutdown retains a non-runnable document-mount job: {kind:?}")));
                 }
                 DatabaseShutdownProgress::Interrupted => {
-                    #[cfg(test)]
-                    {
-                        let closing = self.closing_authority.as_ref().map(|(document, authority)| format!("document={document} {}", authority.shutdown_debug_witness())).unwrap_or_else(|| String::from("none"));
-                        eprintln!(
-                            "[DEBUG] database shutdown interrupted: closing={closing} registry={} graph_complete={} emit_started={} pool_use={}",
-                            self.open_artifacts.lock().unwrap_or_else(std::sync::PoisonError::into_inner).len(),
-                            self.shutdown_graph_complete,
-                            self.shutdown_emit_started,
-                            self.pool_use.as_ref().map_or(0, Arc::strong_count),
-                        );
-                    }
-                    return Err(control.interruption_error());
+                    return Err(control.interruption_error(DatabaseShutdownInterruptionWitness {
+                        phase: reached,
+                        open_artifacts: self.open_artifacts.lock().unwrap_or_else(std::sync::PoisonError::into_inner).len(),
+                        graph_complete: self.shutdown_graph_complete,
+                        emit_started: self.shutdown_emit_started,
+                        pool_use_owners: self.pool_use.as_ref().map_or(0, Arc::strong_count),
+                        retained_slots: DatabaseRetainedPoolUseCensus::observe(),
+                    }));
                 }
                 DatabaseShutdownProgress::Complete => return Ok(()),
             }

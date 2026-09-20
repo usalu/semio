@@ -744,27 +744,3 @@ fn penetration_of_flush_thousand_triangle_parts_stays_interactive() {
     assert!(worst < Duration::from_millis(8), "one probe step exceeded the 8 ms interaction ceiling: {worst:?} (runs {runs:?})");
     assert!(total < Duration::from_millis(250), "a fitting 1k-triangle pair must measure within 250 ms unoptimized: {total:?} (runs {runs:?})");
 }
-
-#[test]
-fn debug_w6_real_glb_pair_depth() {
-    // [DEBUG] temp: the 26 cm committed pair from the :6013 w6 probe on the real hexagonal GLB.
-    let path = "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️13/INTERACTIVE-TOOLS-VISIBLE-PROCESS/🗑️generated/W5-mac-react-e2e/debug-pair.json";
-    let value: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(path).expect("pair")).expect("json");
-    let positions: Vec<f32> = value["positions"].as_array().expect("positions").iter().map(|v| v.as_f64().expect("f") as f32).collect();
-    let indices: Vec<u32> = (0..(positions.len() / 3) as u32).collect();
-    let body = collision_body_from_buffers(&positions, &indices).expect("body");
-    let pose = |key: &str| {
-        let p: Vec<f32> = value[key]["position"].as_array().expect("p").iter().map(|v| v.as_f64().expect("f") as f32).collect();
-        let r: Vec<f32> = value[key]["rotation"].as_array().expect("r").iter().map(|v| v.as_f64().expect("f") as f32).collect();
-        Pose3d::from_parts(Vec3d::new(p[0], p[1], p[2]), Rotation3d::from_ijkw(r[0], r[1], r[2], r[3]))
-    };
-    let (a, b) = (pose("a"), pose("b"));
-    let started = Instant::now();
-    let depth = depth_of(drive_depth(CollisionPenetrationState::new(f64::INFINITY), &body, &a, &body, &b).1);
-    let full = started.elapsed();
-    let early = drive_depth(CollisionPenetrationState::new(0.005), &body, &a, &body, &b).1;
-    let flush = Pose3d::from_parts(Vec3d::new(10.8, 0.0, 0.0), Rotation3d::identity());
-    let started = Instant::now();
-    let flush_result = drive_depth(CollisionPenetrationState::new(0.005), &body, &Pose3d::identity(), &body, &flush).1;
-    eprintln!("[DEBUG] w6 pair depth={depth} in {full:?} tol0.005={early:?} flush={flush_result:?} in {:?}", started.elapsed());
-}

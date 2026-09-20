@@ -126,25 +126,19 @@ fn fixture_app(app: &FixtureApp) -> AppDefinition {
         icon_id: None,
         controller_id: "mode-layouts".into(),
         modes: Modes::try_from(
-            app.modes
-                .iter()
-                .map(|mode| ModeDefinition { id: mode.id.clone(), label: LocalizedLabel::data(&mode.id), icon_id: "pencil".into(), tools: vec![], layout_id: mode.layout_id.clone(), commands: vec![] })
-                .collect::<Vec<_>>(),
+            app.modes.iter().map(|mode| ModeDefinition { id: mode.id.clone(), label: LocalizedLabel::data(&mode.id), icon_id: "pencil".into(), tools: vec![], layout_id: mode.layout_id.clone(), commands: vec![] }).collect::<Vec<_>>(),
         )
         .expect("every fixture app declares at least one mode"),
         default_mode_id: app.default_mode_id.clone(),
         window_kinds: WindowKinds::try_from(app.window_kinds.iter().map(fixture_window_kind).collect::<Vec<_>>()).expect("every fixture app declares at least one window kind"),
         panel_tabs: vec![],
         keybindings: vec![],
+        actions: vec![],
         interactions: vec![],
         utilities: vec![],
         tools: vec![],
         commands: vec![],
-        named_layouts: app
-            .named_layouts
-            .iter()
-            .map(|named| NamedLayout { id: named.id.clone(), label: named.id.clone(), icon_id: None, layout: named.layout.clone(), origin: "builtin".into(), group_path: None })
-            .collect(),
+        named_layouts: app.named_layouts.iter().map(|named| NamedLayout { id: named.id.clone(), label: named.id.clone(), icon_id: None, layout: named.layout.clone(), origin: "builtin".into(), group_path: None }).collect(),
         default_layout: app.default_layout.clone(),
         terminologies: vec![],
         terminology_breadcrumbs: HashMap::new(),
@@ -301,11 +295,7 @@ fn the_shared_fixture_declares_a_closed_layout_for_every_case() {
         }
         let area: f32 = case.expected.stacks.iter().map(|stack| stack.rect[2] * stack.rect[3]).sum();
         assert_close(area, canvas.w * canvas.h, "declared rects tile the canvas", &case.id);
-        assert!(
-            case.expected.stacks.iter().any(|stack| stack.windows.contains(&case.expected.active_window_id)),
-            "{}: the focused window is in one of the declared stacks",
-            case.id
-        );
+        assert!(case.expected.stacks.iter().any(|stack| stack.windows.contains(&case.expected.active_window_id)), "{}: the focused window is in one of the declared stacks", case.id);
     }
     eprintln!("[DEBUG] shared mode-layout fixture is internally closed across {} cases", fixture.cases.len());
 }

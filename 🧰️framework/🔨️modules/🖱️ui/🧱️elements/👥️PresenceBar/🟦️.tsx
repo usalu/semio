@@ -39,6 +39,11 @@ export interface PresencePeer {
   /** 🎨️ Hub-assigned session-color palette index (contract freeze §C7.5) — `undefined` for a
    * folder-only peer with no hub connection, which renders as index 0. */
   readonly color?: number;
+  /** 🤖️ `true` when this peer is an AI agent acting under a credential a human delegated to it,
+   * rather than a person. The hub decides this from the session it AUTHENTICATED, so it cannot be
+   * spoofed by a client; a peer with no declared kind is a person. An agent gets its own roster row
+   * and its own badge — it is never folded into the human who delegated to it. */
+  readonly isAgent?: boolean;
 }
 
 /**
@@ -108,6 +113,7 @@ export const PresenceBar: React.FC<PresenceBarProps> = ({ peers, max = PRESENCE_
   const emptyLabel = useLabel("ui.presence.empty");
   const authorRoleLabel = useLabel("ui.presence.role.author");
   const spectatorRoleLabel = useLabel("ui.presence.role.spectator");
+  const agentKindLabel = useLabel("ui.presence.kind.agent");
   const visible = peers.slice(0, Math.max(max, 0));
   const overflowCount = Math.max(peers.length - visible.length, 0);
   const overflowLabel = useLabel("ui.presence.overflow", { count: overflowCount });
@@ -125,10 +131,32 @@ export const PresenceBar: React.FC<PresenceBarProps> = ({ peers, max = PRESENCE_
     <div id={id} role="list" aria-label={rosterLabel} className={cn("flex items-center -space-x-2", className)}>
       {visible.map((peer) => {
         const roleLabel = peer.role === "author" ? authorRoleLabel : peer.role === "spectator" ? spectatorRoleLabel : undefined;
-        const peerTitle = roleLabel ? `${peer.label} (${roleLabel})` : peer.label;
+        // 🤖️ The agent badge is part of the accessible name, not decoration beside it: a screen
+        // reader must hear "Drafting agent (AI agent, Editing)" from the roster row itself.
+        const qualifiers = [peer.isAgent === true ? agentKindLabel : undefined, roleLabel].filter((value): value is string => value !== undefined);
+        const peerTitle = qualifiers.length > 0 ? `${peer.label} (${qualifiers.join(", ")})` : peer.label;
         return (
-          <div key={peer.actor} role="listitem" data-row-id={`peer:${peer.actor}`} tabIndex={0} title={peerTitle} aria-label={peerTitle} className="rounded-full">
+          <div
+            key={peer.actor}
+            role="listitem"
+            data-row-id={`peer:${peer.actor}`}
+            data-presence-kind={peer.isAgent === true ? "agent" : "human"}
+            tabIndex={0}
+            title={peerTitle}
+            aria-label={peerTitle}
+            className="relative rounded-full"
+          >
             <TableAvatar name={peer.label} style={{ borderColor: presenceStyleColor(peer.color, appearance), borderWidth: 2 }} />
+            {peer.isAgent === true ? (
+              <span
+                aria-hidden="true"
+                data-row-id={`peer-agent-badge:${peer.actor}`}
+                className={cn(surfaceClass, "pointer-events-none absolute -bottom-0.5 -right-0.5 flex size-3 items-center justify-center rounded-full border text-[8px] leading-none")}
+                style={{ borderColor: presenceStyleColor(peer.color, appearance) }}
+              >
+                🤖
+              </span>
+            ) : null}
           </div>
         );
       })}

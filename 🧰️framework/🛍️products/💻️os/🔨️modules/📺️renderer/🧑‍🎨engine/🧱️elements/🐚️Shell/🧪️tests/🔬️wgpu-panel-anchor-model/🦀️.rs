@@ -311,9 +311,9 @@ fn anchor_rect_bands_only_the_open_anchors_of_a_column() {
     let mut shell = fixture_dock_shell();
     shell.toggle_anchor(PanelAnchor::TopLeft);
     let alone = shell.anchor_rect(PanelAnchor::TopLeft, body, &theme);
-    // 📐️ React's chrome-hosted open panel grows by the navbar overhang (`maxHeight: calc(100% + …)`),
-    // so a column's only open anchor is the body PLUS that overhang, never the body minus two insets.
-    assert_eq!(alone.h, body.h + (theme.navbar_height + theme.control_height) * 0.5);
+    // 📐️ The chrome-hosted root remains in the navbar/footer. The floating child panel grows into
+    // the overhang but omits that already-owned root row.
+    assert_eq!(alone.h, body.h + (theme.navbar_height + theme.control_height) * 0.5 - theme.control_height);
     shell.toggle_anchor(PanelAnchor::BottomLeft);
     let shared = shell.anchor_rect(PanelAnchor::TopLeft, body, &theme);
     assert!(shared.h < alone.h * 0.6, "🧭️ opening the column's other anchor must shrink this one's band");
@@ -321,8 +321,8 @@ fn anchor_rect_bands_only_the_open_anchors_of_a_column() {
 }
 
 /// 🧭️ React's `chromeHostedOpenPanelPositionStyle`: an OPEN top anchor is pulled
-/// `-(size-large + size-medium)/2` out of the mode body and into the navbar band, so its own cap row
-/// sits beside the folded toggles and only its BODY covers the dock's window caps. Measured on
+/// `-(size-large + size-medium)/2` out of the mode body and into the navbar band. The root row stays
+/// in chrome, so the floating child panel starts one root-row height after that edge. Measured on
 /// React's live DOM at 1600×1000 (`🗑️generated/w14d-cap-occlusion.json`, ticket
 /// 26/09/17/WGPU-RENDERER-REACT-PARITY): mode body `y=29`, open Catalogue panel `y=3 h=168`, dock cap
 /// row `y=32..61`, focus/close chips `[48,35,22,22]`/`[73,35,22,22]` — under the panel's body.
@@ -334,14 +334,14 @@ fn an_open_top_panel_is_pulled_into_the_navbar_band_like_reacts_chrome_hosted_st
     let mut shell = fixture_dock_shell();
     shell.toggle_anchor(PanelAnchor::TopLeft);
     let rect = shell.anchor_rect(PanelAnchor::TopLeft, body, &theme);
-    assert!((rect.y - (body.y - overhang)).abs() < 0.01, "🧭️ a top anchor starts one overhang ABOVE the body, not at it: {rect:?}");
+    assert!((rect.y - (body.y - overhang + theme.control_height)).abs() < 0.01, "🧭️ a top child panel starts after its chrome-owned root row: {rect:?}");
     assert!(rect.y < theme.navbar_height, "🧭️ …which is inside the navbar band React parks the folded toggle in");
-    assert!((rect.h - (body.h + overhang)).abs() < 0.01, "🧭️ and its band grows by exactly that overhang");
+    assert!((rect.h - (body.h + overhang - theme.control_height)).abs() < 0.01, "🧭️ and its band omits the chrome-owned root-row height");
 }
 
-/// 🧭️ The same rule mirrored on the bottom row: a bottom anchor's LAST edge is one overhang into the
-/// footer band, and a middle anchor — which React gives no bonded vertical edge — still centres on the
-/// plain mode body.
+/// 🧭️ The same rule mirrored on the bottom row: a bottom child panel ends where the footer-owned
+/// root row starts, and a middle anchor — which React gives no bonded vertical edge — still centres
+/// on the plain mode body.
 #[test]
 fn a_bottom_anchor_overhangs_into_the_footer_and_a_middle_anchor_keeps_the_body() {
     let theme = Theme::default();
@@ -350,7 +350,7 @@ fn a_bottom_anchor_overhangs_into_the_footer_and_a_middle_anchor_keeps_the_body(
     let mut shell = fixture_dock_shell();
     shell.toggle_anchor(PanelAnchor::BottomLeft);
     let bottom = shell.anchor_rect(PanelAnchor::BottomLeft, body, &theme);
-    assert!((bottom.y + bottom.h - (body.y + body.h + overhang)).abs() < 0.01, "🧭️ a bottom anchor ends one overhang BELOW the body: {bottom:?}");
+    assert!((bottom.y + bottom.h - (body.y + body.h + overhang - theme.control_height)).abs() < 0.01, "🧭️ a bottom child panel ends at its footer-owned root row: {bottom:?}");
     let mut middle_shell = fixture_dock_shell();
     middle_shell.toggle_anchor(PanelAnchor::LeftMiddle);
     let middle = middle_shell.anchor_rect(PanelAnchor::LeftMiddle, body, &theme);
@@ -610,20 +610,19 @@ fn persist_dock_ui_if_changed_is_idempotent_when_nothing_changed() {
 fn build_settings_theme_ui_lists_builtins_and_gates_delete_on_custom_theme() {
     let mut state = fresh_state();
     state.chrome_build.preferences.theme_id = "semio".to_string();
-    let UiNode::Stack(builtin_panel) = state.build_settings_theme_ui() else {
-        panic!("expected a stack root");
-    };
-    let has_select = builtin_panel.children.iter().any(|node| matches!(node, UiNode::Select(_)));
-    assert!(has_select, "must render the theme picker select");
-    let button_count = builtin_panel.children.iter().filter(|node| matches!(node, UiNode::Button(_))).count();
-    assert_eq!(button_count, 1, "only Reset, no Delete, while the built-in \"semio\" theme is active");
+    let builtin = panel_ui_records(FRAMEWORK_SETTINGS_THEME_TAB_ID, &state.build_settings_theme_ui()).expect("built-in theme editor projection");
+    assert!(builtin.iter().any(|record| record.key.as_str().ends_with("/framework.settings.theme.select")), "the canonical tree publishes the theme picker");
+    assert!(builtin.iter().any(|record| record.key.as_str().ends_with("/framework.settings.theme.reset")), "the canonical tree publishes Reset");
+    assert!(!builtin.iter().any(|record| record.key.as_str().ends_with("/framework.settings.theme.delete")), "a built-in theme publishes no Delete control");
+    drop(builtin);
+    while !ui_contract::close_ui_value_page_one() {}
 
     state.chrome_build.preferences.theme_id = "custom.wp-audit-test".to_string();
-    let UiNode::Stack(custom_panel) = state.build_settings_theme_ui() else {
-        panic!("expected a stack root");
-    };
-    let button_count = custom_panel.children.iter().filter(|node| matches!(node, UiNode::Button(_))).count();
-    assert_eq!(button_count, 2, "Reset and Delete once a custom theme is active");
+    let custom = panel_ui_records(FRAMEWORK_SETTINGS_THEME_TAB_ID, &state.build_settings_theme_ui()).expect("custom theme editor projection");
+    assert!(custom.iter().any(|record| record.key.as_str().ends_with("/framework.settings.theme.reset")), "a custom theme retains Reset");
+    assert!(custom.iter().any(|record| record.key.as_str().ends_with("/framework.settings.theme.delete")), "a custom theme publishes Delete");
+    drop(custom);
+    while !ui_contract::close_ui_value_page_one() {}
 }
 
 //#region ⚙️SettingsBranchAndShellOwnedLeaves
@@ -638,7 +637,7 @@ fn the_settings_branch_nests_the_five_framework_leaves_after_the_apps_own() {
     let shell = fixture_dock_shell();
     let dock = shell.default_dock();
     let roots: Vec<&str> = dock.tabs(PanelAnchor::BottomRight).iter().map(|tab| tab.id.as_str()).collect();
-    assert_eq!(roots, vec![FRAMEWORK_SETTINGS_PANEL_ID, FRAMEWORK_MARKETPLACE_TAB_ID, FRAMEWORK_PANEL_TAB_HISTORY_ID], "⚙️ bottom-right carries one Settings branch, then Marketplace, then History");
+    assert_eq!(roots, vec![FRAMEWORK_SETTINGS_PANEL_ID, FRAMEWORK_MARKETPLACE_TAB_ID, FRAMEWORK_TASK_MANAGER_PANEL_ID, FRAMEWORK_PANEL_TAB_HISTORY_ID], "⚙️ bottom-right carries Settings, Marketplace, Task Manager, then History");
     let branch = dock.tabs(PanelAnchor::BottomRight).first().expect("the Settings branch");
     assert!(branch.is_branch(), "⚙️ Settings is a branch, not a leaf");
     let children: Vec<&str> = branch.children.iter().map(|child| child.id.as_str()).collect();
@@ -658,7 +657,11 @@ fn every_shell_owned_leaf_projects_into_retained_records() {
     let shell = fixture_dock_shell();
     let dock = shell.default_dock();
     for tab_id in shell.shell_owned_panel_leaves() {
-        assert!(dock.locate(&tab_id).is_some(), "🧾️ {tab_id} publishes a body but no anchor declares it");
+        if tab_id == crate::hub_connection::FRAMEWORK_HUB_PANEL_ID {
+            assert!(dock.locate(&tab_id).is_none(), "🧾️ Hub is the route-owned overlay React opens from its footer/command, never a dock substitute");
+        } else {
+            assert!(dock.locate(&tab_id).is_some(), "🧾️ {tab_id} publishes a body but no anchor declares it");
+        }
         let node = match tab_id.as_str() {
             FRAMEWORK_SETTINGS_GENERAL_TAB_ID => shell.build_settings_general_ui(),
             FRAMEWORK_SETTINGS_THEME_TAB_ID => shell.build_settings_theme_ui(),
@@ -666,6 +669,8 @@ fn every_shell_owned_leaf_projects_into_retained_records() {
             FRAMEWORK_SETTINGS_DEFAULT_APPS_TAB_ID => shell.build_settings_default_apps_ui(),
             FRAMEWORK_SETTINGS_CONFLICTS_TAB_ID => shell.build_settings_conflicts_ui(),
             FRAMEWORK_MARKETPLACE_TAB_ID => shell.build_marketplace_ui(),
+            FRAMEWORK_SYNC_PANEL_TAB_ID => shell.build_sync_attach_ui(),
+            FRAMEWORK_TASK_MANAGER_PANEL_ID => shell.build_task_manager_ui(),
             FRAMEWORK_CHAT_PANEL_ID => shell.build_agent_chat_ui(),
             other => shell.build_command_category_ui(other.trim_start_matches(FRAMEWORK_COMMAND_CATEGORY_TAB_PREFIX)),
         };
@@ -909,6 +914,14 @@ fn chat_entry_ids(root: &UiNode) -> Vec<String> {
     feed.children.iter().filter_map(|child| if let UiNode::Stack(stack) = child { stack.id.clone() } else { None }).collect()
 }
 
+fn chat_button_action(root: &UiNode, id: &str) -> Option<ActionDescriptor> {
+    match root {
+        UiNode::Button(button) if button.id.as_deref() == Some(id) => Some(button.action.clone()),
+        UiNode::Stack(stack) => stack.children.iter().find_map(|child| chat_button_action(child, id)),
+        _ => None,
+    }
+}
+
 /// 💬️ LAW: a bridge `AgentToolCall` frame — the one the gateway emits from its own `tools/call`
 /// dispatch — becomes a conversation row in the wgpu panel model, and the matching `AgentToolResult`
 /// folds its summary into that SAME row rather than opening a second one. This is the parity the wgpu
@@ -938,6 +951,55 @@ fn a_bridge_tool_call_frame_becomes_a_conversation_row_in_the_chat_panel() {
     chat_panel_lines(&settled, &mut settled_lines);
     assert!(settled_lines.contains(&"Done".to_string()), "💬️ the state chip settles: {settled_lines:?}");
     assert!(settled_lines.contains(&"Result: opened doc-1".to_string()), "💬️ the summary folds into the call's own row: {settled_lines:?}");
+}
+
+/// 🛑️ The actual retained button carries the gateway's invocation id into Shell dispatch, sends one
+/// cancel frame, retires itself while cancellation is pending, and trusts only the result to settle.
+#[test]
+fn the_chat_cancel_control_drives_the_shared_invocation_lifecycle_end_to_end() {
+    let fixture: Value = serde_json::from_str(include_str!("../../../🔗️AgentBridge/🧫️fixtures/🛑️cancellation/🔣️.json")).expect("cancellation fixture");
+    let invocation_id = fixture["invocation"]["id"].as_str().expect("invocation id");
+    let tool_name = fixture["invocation"]["toolName"].as_str().expect("tool name");
+    let arguments = fixture["invocation"]["arguments"].as_str().expect("arguments");
+    let mut shell = welcomed_shell();
+    shell.apply_agent_bridge_frame(&crate::agent_bridge::GatewayToShell::AgentToolCall { invocation_id: invocation_id.into(), tool_name: tool_name.into(), arguments: arguments.into() }.encode()).expect("tool call frame");
+    let control_id = format!("framework.chat.cancel.{invocation_id}");
+    let action = chat_button_action(&shell.build_agent_chat_ui(), &control_id).expect("a running call publishes its cancel control");
+    assert_eq!(action.action, "cancelToolCall");
+    assert_eq!(action.args.as_ref().and_then(|args| args.get("invocationId")).and_then(DslValue::as_str), Some(invocation_id));
+    semio_framework_async::block_on(shell.dispatch_action(action)).expect("framework owns cancellation");
+    let frames = shell.take_agent_bridge_outbox();
+    assert_eq!(frames.len(), 1);
+    assert_eq!(crate::agent_bridge::ShellToGateway::decode(&frames[0]).expect("cancel frame"), crate::agent_bridge::ShellToGateway::AgentCancel { invocation_id: invocation_id.into() });
+    let cancelling = shell.build_agent_chat_ui();
+    assert!(chat_button_action(&cancelling, &control_id).is_none(), "a cancelling row cannot send a duplicate control action");
+    let mut cancelling_lines = Vec::new();
+    chat_panel_lines(&cancelling, &mut cancelling_lines);
+    assert!(cancelling_lines.contains(&"Cancelling…".to_string()), "optimistic state is visible: {cancelling_lines:?}");
+
+    shell.apply_agent_bridge_frame(
+        &crate::agent_bridge::GatewayToShell::AgentToolResult {
+            invocation_id: invocation_id.into(),
+            tool_name: tool_name.into(),
+            ok: fixture["terminalResult"]["ok"].as_bool().expect("terminal ok"),
+            summary: fixture["terminalResult"]["summary"].as_str().expect("terminal summary").into(),
+        }
+        .encode(),
+    )
+    .expect("terminal result frame");
+    let settled = shell.build_agent_chat_ui();
+    assert!(chat_button_action(&settled, &control_id).is_none());
+    let mut settled_lines = Vec::new();
+    chat_panel_lines(&settled, &mut settled_lines);
+    assert!(settled_lines.contains(&"Failed".to_string()) && settled_lines.iter().any(|line| line.contains("cancelled by user")), "the gateway result settles the row: {settled_lines:?}");
+
+    let mut offline = welcomed_shell();
+    offline.apply_agent_bridge_frame(&crate::agent_bridge::GatewayToShell::AgentToolCall { invocation_id: invocation_id.into(), tool_name: tool_name.into(), arguments: arguments.into() }.encode()).expect("tool call frame");
+    offline.chrome_build.agent.note_socket_closed();
+    let offline_action = chat_button_action(&offline.build_agent_chat_ui(), &control_id).expect("React leaves a running row's control mounted while its sender can refuse");
+    semio_framework_async::block_on(offline.dispatch_action(offline_action)).expect("framework owns cancellation");
+    assert!(offline.take_agent_bridge_outbox().is_empty(), "a disconnected cancel changes and sends nothing");
+    assert!(matches!(&offline.chrome_build.agent.conversation[0], crate::agent_bridge::AgentConversationEntry::ToolCall { state: crate::agent_bridge::AgentToolCallState::Running, .. }));
 }
 
 /// 💬️ The composer: a turn typed here leaves as a real `ShellToGateway::AgentMessage` and is echoed
@@ -1070,9 +1132,8 @@ fn navbar_bands_match_the_react_chrome_band_fixture() {
     eprintln!("[DEBUG] navbar leading={expected_leading:?} trailing(paint order)={expected_trailing:?}");
 }
 
-/// 📑️ **The footer band pin.** bottom-left hugs the leading edge, bottom-middle is CENTRED on the
-/// footer and bottom-right ends at the trailing edge — React's `footerItems` (`centered: true` on the
-/// middle bar, a fill before the right one). The renderer used to left-pack all three in one run.
+/// 📑️ Footer bands follow React's measured placement: edge bands hug their edge and the centered
+/// group clamps to the free span left by panel tabs, presence, and the Hub indicator.
 #[test]
 fn footer_bands_match_the_react_chrome_band_fixture() {
     let fixture = default_dock_fixture();
@@ -1099,7 +1160,11 @@ fn footer_bands_match_the_react_chrome_band_fixture() {
         let rows = band(name);
         let (Some(first), Some(last)) = (rows.first(), rows.last()) else { continue };
         let span = (last.2.x + last.2.w) - first.2.x;
-        assert!((first.2.x + span * 0.5 - width * 0.5).abs() < 0.5, "📑️ {name} is centred on the footer");
+        let layout = shell.footer_chrome_layout(&mut atlas, &theme, width, 0.0, btn_h);
+        let ideal = (width - span) * 0.5;
+        let expected = ideal.clamp(layout.center.free.left, (layout.center.free.right - span).max(layout.center.free.left));
+        assert!((first.2.x - expected).abs() < 0.5, "📑️ {name} uses the free footer band: first={first:?}, last={last:?}, span={span}, expected={expected}");
+        assert!(first.2.x >= layout.center.free.left && last.2.x + last.2.w <= layout.center.free.right + 0.01);
     }
     for name in fixture["chromeBands"]["footer"]["trailing"].as_array().expect("footer trailing band").iter().map(|value| value.as_str().expect("anchor id")) {
         let rows = band(name);

@@ -1,5 +1,4 @@
 {
-  "ChangeHeightM": {
-    "newHeightM": 18.75
-  }
+  "mutation": "changeHeightM",
+  "newHeightM": 18.75
 }

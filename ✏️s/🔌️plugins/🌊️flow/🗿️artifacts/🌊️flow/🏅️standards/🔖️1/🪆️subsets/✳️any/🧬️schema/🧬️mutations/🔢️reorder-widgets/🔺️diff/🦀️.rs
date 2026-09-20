@@ -17,5 +17,5 @@ pub fn diff(payload: &ReorderWidgets, base: &FlowSnapshot) -> protocol::Mutation
     }
     let item = scene.widgets.remove(from);
     scene.widgets.insert(to, item);
-    protocol::MutationOutcome::new(diff_replace_content(scene.widgets, scene.synapses, scene.layout))
+    protocol::MutationOutcome::new({ let (widgets, synapses, layout) = scene.into_parts(); diff_replace_content(widgets, synapses, layout) })
 }

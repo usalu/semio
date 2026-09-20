@@ -4,7 +4,7 @@
 //! (a later milestone) holds `HashMap<window_id, UiTree>`.
 
 use crate::wgpu::arena::{Arena, NodeId};
-use crate::wgpu::component::ui::UiNode;
+use crate::wgpu::component::ui::{UiNode, UiTreeItemNode, UiTreeSectionNode};
 use ui_contract::{SurfaceId, UiDocumentLeaseHeader, UiNodeId, UiNodeRecord, UiNodeTable, UiRevision, UI_DOCUMENT_NODES};
 
 //#region 🔖️RetainedDocument
@@ -197,6 +197,7 @@ impl NodeFlags {
     /// `focus_visible` latch is set (set on `KeyDown`, cleared on `PointerDown`), so a clicked
     /// control takes focus without painting the accent ring React would only show for the keyboard.
     pub const FOCUS_VISIBLE: NodeFlags = NodeFlags(1 << 13);
+    pub(crate) const DISCLOSURE_CHANGED: NodeFlags = NodeFlags(1 << 14);
 
     pub const fn empty() -> Self {
         NodeFlags(0)
@@ -255,12 +256,14 @@ pub struct WidgetState {
     /// `open_overlay`/`close_overlay`, see `EventRouter::toggle_select_popup`/`finish_close`), read
     /// by `paint::paint_select` to decide whether to paint the popup at all.
     pub open: bool,
+    pub disclosure_open: Option<bool>,
     /// ⌨️ Which option row of an OPEN `Select` the keyboard currently highlights — React's
     /// `aria-activedescendant`/`data-highlighted` row (`🧱️elements/🔽️Select/🟦️.tsx`'s `activeId`).
     /// Distinct from `NodeFlags::HOVERED` (a pointer fact) and from the Select's own committed
     /// `value`: arrowing through a popup moves this and nothing else, and only `Enter` commits.
     /// Written by `events::EventRouter::route_select_key`, read by `paint`'s popup rows.
     pub highlighted: Option<usize>,
+    pub(crate) select_popup: Option<crate::wgpu::select::SelectPopupGeometry>,
 }
 
 /// 📐️ Resolved rect from the last taffy layout pass, in the node's **parent-relative** coordinate
@@ -336,6 +339,10 @@ pub struct Node {
 
 impl Node {
     pub fn new(key: NodeKey, spec: WidgetSpec) -> Self {
+        let disclosure_open = match &spec.0 {
+            UiNode::Section(section) => Some(section.default_open.unwrap_or(true)),
+            _ => None,
+        };
         Self {
             parent: None,
             first_child: None,
@@ -345,7 +352,7 @@ impl Node {
             key,
             spec,
             layout_spec: None,
-            state: WidgetState::default(),
+            state: WidgetState { disclosure_open, ..WidgetState::default() },
             layout: LayoutBucket::default(),
             mounted_layout: [MountedLayoutRecord::default(); 2],
             paint: PaintBucket,
@@ -412,6 +419,105 @@ impl UiTree {
         self.arena.get_mut(id)
     }
 
+    pub(crate) fn explicit_child(&self, parent: NodeId, key: &str) -> Option<NodeId> {
+        self.children(parent).find(|child| matches!(self.node(*child).map(|node| &node.key), Some(NodeKey::Explicit(candidate)) if candidate == key))
+    }
+
+    pub(crate) fn authored_tree_section(&self, id: NodeId) -> Option<&UiTreeSectionNode> {
+        let node = self.node(id)?;
+        let UiNode::Tree(owner) = &self.node(node.parent?)?.spec.0 else { return None };
+        let NodeKey::Explicit(key) = &node.key else { return None };
+        owner.sections.iter().find(|section| &section.id == key)
+    }
+
+    pub(crate) fn authored_tree_item(&self, id: NodeId) -> Option<&UiTreeItemNode> {
+        let node = self.node(id)?;
+        let NodeKey::Explicit(key) = &node.key else { return None };
+        let mut ancestor = node.parent;
+        let mut depth = 0usize;
+        while let Some(candidate) = ancestor {
+            if depth >= crate::wgpu::layout::TREE_ROW_MAX_DEPTH {
+                return None;
+            }
+            depth += 1;
+            let owner = self.node(candidate)?;
+            if let UiNode::Tree(tree) = &owner.spec.0 {
+                return tree.sections.iter().find_map(|section| find_tree_item(&section.items, key, 0));
+            }
+            ancestor = owner.parent;
+        }
+        None
+    }
+
+    pub(crate) fn tree_item_depth(&self, id: NodeId) -> Option<usize> {
+        self.authored_tree_item(id)?;
+        let mut ancestor = self.node(id)?.parent;
+        let mut depth = 1usize;
+        while let Some(candidate) = ancestor {
+            let owner = self.node(candidate)?;
+            if matches!(&owner.spec.0, UiNode::Tree(_)) {
+                return Some(depth.saturating_sub(1).max(1));
+            }
+            depth = depth.checked_add(1)?;
+            if depth > crate::wgpu::layout::TREE_ROW_MAX_DEPTH + 1 {
+                return None;
+            }
+            ancestor = owner.parent;
+        }
+        None
+    }
+
+    pub(crate) fn disclosure_open(&self, id: NodeId) -> Option<bool> {
+        let node = self.node(id)?;
+        if let UiNode::Section(section) = &node.spec.0 {
+            return Some(node.state.disclosure_open.unwrap_or(section.default_open.unwrap_or(true)));
+        }
+        if let Some(section) = self.authored_tree_section(id) {
+            return Some(node.state.disclosure_open.unwrap_or(section.default_open.unwrap_or(true)));
+        }
+        let item = self.authored_tree_item(id)?;
+        item.items.as_deref().filter(|items| !items.is_empty())?;
+        Some(node.state.disclosure_open.unwrap_or(item.default_open.unwrap_or(false)))
+    }
+
+    pub(crate) fn disclosure_is_interactive(&self, id: NodeId) -> bool {
+        let Some(node) = self.node(id) else { return false };
+        if let UiNode::Section(section) = &node.spec.0 {
+            return section.label.is_some();
+        }
+        if self.authored_tree_section(id).is_some_and(|section| section.label.is_some()) {
+            return true;
+        }
+        self.authored_tree_item(id).and_then(|item| item.items.as_deref()).is_some_and(|items| !items.is_empty())
+    }
+
+    pub(crate) fn toggle_disclosure(&mut self, id: NodeId) -> Option<bool> {
+        if !self.disclosure_is_interactive(id) {
+            return None;
+        }
+        let open = !self.disclosure_open(id)?;
+        self.node_mut(id)?.state.disclosure_open = Some(open);
+        self.mark_dirty(id, NodeFlags::DIRTY_LAYOUT);
+        if let Some(root) = self.root.and_then(|root| self.node_mut(root)) {
+            root.flags.set(NodeFlags::DISCLOSURE_CHANGED, true);
+        }
+        Some(open)
+    }
+
+    pub(crate) fn take_disclosure_changed(&mut self) -> bool {
+        let Some(root) = self.root.and_then(|root| self.node_mut(root)) else { return false };
+        let changed = root.flags.contains(NodeFlags::DISCLOSURE_CHANGED);
+        root.flags.set(NodeFlags::DISCLOSURE_CHANGED, false);
+        changed
+    }
+
+    pub(crate) fn tree_section_open(&self, tree_id: NodeId, section_id: &str, default_open: bool) -> bool {
+        self.children(tree_id)
+            .find(|child| matches!(self.node(*child).map(|node| &node.key), Some(NodeKey::Explicit(key)) if key == section_id))
+            .and_then(|child| self.disclosure_open(child))
+            .unwrap_or(default_open)
+    }
+
     pub(crate) fn accepted_layout(&self, id: NodeId) -> Option<AcceptedLayout> {
         let node = self.arena.get(id)?;
         let mounted = node.mounted_layout[self.mounted_layout_active];
@@ -443,6 +549,14 @@ impl UiTree {
         Some((x - layout.x, y - layout.y))
     }
 
+    /// 📜️ Resolves a parent's content origin from its placed walk origin and live viewport offset.
+    pub(crate) fn child_walk_origin(&self, parent: NodeId, origin: (f32, f32)) -> Option<(f32, f32)> {
+        let layout = self.accepted_layout(parent)?;
+        let node = self.node(parent)?;
+        let scroll = if node.flags.contains(NodeFlags::SCROLLABLE) { node.state.scroll_offset } else { (0.0, 0.0) };
+        Some((origin.0 + layout.x - scroll.0, origin.1 + layout.y - scroll.1))
+    }
+
     /** @emoji 📐️ One node's ABSOLUTE painted rect: its own accepted layout plus every ancestor's
      * origin, with the accumulation stopping at an OPEN overlay (itself or an ancestor) because
      * everything under a floating surface is positioned against that surface's placement rather than
@@ -457,12 +571,13 @@ impl UiTree {
         let mut y = layout.y;
         let mut cursor = self.node(id)?.parent;
         while let Some(parent_id) = cursor {
-            let parent_layout = self.accepted_layout(parent_id)?;
-            if let Some((origin_x, origin_y)) = self.overlay_walk_origin(parent_id) {
-                return Some(crate::wgpu::geometry::Rect::new(origin_x + parent_layout.x + x, origin_y + parent_layout.y + y, layout.width, layout.height));
+            let overlay_origin = self.overlay_walk_origin(parent_id);
+            let (parent_x, parent_y) = self.child_walk_origin(parent_id, overlay_origin.unwrap_or((0.0, 0.0)))?;
+            x += parent_x;
+            y += parent_y;
+            if overlay_origin.is_some() {
+                return Some(crate::wgpu::geometry::Rect::new(x, y, layout.width, layout.height));
             }
-            x += parent_layout.x;
-            y += parent_layout.y;
             cursor = self.node(parent_id)?.parent;
         }
         Some(crate::wgpu::geometry::Rect::new(x, y, layout.width, layout.height))
@@ -607,9 +722,51 @@ impl UiTree {
         self.composite_rows.len()
     }
 
+    /// 🔽️ Whether `row` is one synthesized option of a currently open Select popup. These rows
+    /// remain children of their trigger so capture and keyed reconciliation share one owner, but
+    /// their paint and pointer priority is overlay priority rather than ordinary child priority.
+    pub(crate) fn is_open_select_popup_row(&self, row: NodeId) -> bool {
+        let Some(owner) = self.composite_rows.iter().find_map(|(owner, candidate)| (*candidate == row).then_some(*owner)) else { return false };
+        self.node(owner).is_some_and(|node| matches!(&node.spec.0, UiNode::Select(_)) && node.state.open && node.state.select_popup.is_some())
+    }
+
+    /// 🔒️ The still-published Select owner of a synthesized `row`. A captured option uses this to
+    /// preserve its owner's rows across a host document refresh; a removed or retyped owner answers
+    /// `None`, so the reconcile retires the row and the gesture terminates without dispatch.
+    pub(crate) fn surviving_composite_owner(&self, row: NodeId) -> Option<NodeId> {
+        let owner = self.composite_rows.iter().find_map(|(owner, candidate)| (*candidate == row).then_some(*owner))?;
+        let document_id = self.document_nodes.iter().find_map(|(id, node)| (*node == owner).then_some(*id))?;
+        self.document
+            .as_ref()
+            .and_then(|document| document.record(document_id))
+            .filter(|record| matches!(&record.component, ui_contract::Component::Select(_)))
+            .map(|_| owner)
+    }
+
     /// 🔽️ Whether `owner` already has its synthesized rows this generation.
     pub(crate) fn composite_rows_of(&self, owner: NodeId) -> usize {
         self.composite_rows.iter().filter(|(candidate, _)| *candidate == owner).count()
+    }
+
+    /// 🔒️ Retires one synthesized row outside `preserved_owner`. `true` means only that captured
+    /// owner's rows remain, or the ledger is empty.
+    pub(crate) fn retire_composite_row_except_step(&mut self, preserved_owner: Option<NodeId>) -> bool {
+        let Some(index) = self.composite_rows.iter().rposition(|(owner, _)| Some(*owner) != preserved_owner) else { return true };
+        let (owner, row) = self.composite_rows.remove(index);
+        self.detach_child(owner, row);
+        self.remove(row);
+        false
+    }
+
+    /// 🔗️ Restores a preserved owner's synthesized child chain after the document relink cleared
+    /// its tree links. The fixed ledger order is the popup's existing row order.
+    pub(crate) fn reattach_composite_rows(&mut self, owner: NodeId) {
+        for index in 0..self.composite_rows.len() {
+            let (candidate, row) = self.composite_rows[index];
+            if candidate == owner && self.contains(row) {
+                self.attach_child(owner, row);
+            }
+        }
     }
 
     /// 🔗️ Unlinks `child` from `parent`'s sibling chain without touching `child`'s own subtree — the
@@ -793,6 +950,21 @@ impl UiTree {
             Some(current)
         })
     }
+}
+
+fn find_tree_item<'a>(items: &'a [UiTreeItemNode], key: &str, depth: usize) -> Option<&'a UiTreeItemNode> {
+    if depth >= crate::wgpu::layout::TREE_ROW_MAX_DEPTH {
+        return None;
+    }
+    for item in items {
+        if item.id == key {
+            return Some(item);
+        }
+        if let Some(found) = item.items.as_deref().and_then(|children| find_tree_item(children, key, depth + 1)) {
+            return Some(found);
+        }
+    }
+    None
 }
 
 #[cfg(test)]

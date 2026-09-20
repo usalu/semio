@@ -1,5 +1,4 @@
 {
-  "ChangeKFoundation": {
-    "newKFoundation": 640000.0
-  }
+  "mutation": "changeKFoundation",
+  "newKFoundation": 640000.0
 }

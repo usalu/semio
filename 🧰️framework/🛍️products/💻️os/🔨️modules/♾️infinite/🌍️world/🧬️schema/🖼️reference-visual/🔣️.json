@@ -1,0 +1,496 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/framework/world3d/reference-visual.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "$schema",
+    "schema",
+    "reference",
+    "scene",
+    "geometry",
+    "identityCases",
+    "sourceProfiles",
+    "themes",
+    "stateCases",
+    "pixelOracle"
+  ],
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "minLength": 1
+    },
+    "schema": {
+      "const": "framework.world3d.reference-visual/v1"
+    },
+    "reference": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "threeRevision",
+        "fiberVersion",
+        "material",
+        "side",
+        "depthWrite",
+        "toneMapped",
+        "lockedOpacityScale",
+        "selectedContentOpacityScale",
+        "renderOrder"
+      ],
+      "properties": {
+        "threeRevision": {
+          "const": "182"
+        },
+        "fiberVersion": {
+          "const": "9.7.0"
+        },
+        "material": {
+          "const": "MeshBasicMaterial"
+        },
+        "side": {
+          "const": "DoubleSide"
+        },
+        "depthWrite": {
+          "const": false
+        },
+        "toneMapped": {
+          "const": false
+        },
+        "lockedOpacityScale": {
+          "const": 0.35
+        },
+        "selectedContentOpacityScale": {
+          "const": 0.5
+        },
+        "renderOrder": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "background",
+            "content",
+            "outline"
+          ],
+          "properties": {
+            "background": {
+              "const": -11
+            },
+            "content": {
+              "const": -10
+            },
+            "outline": {
+              "const": -9
+            }
+          }
+        }
+      }
+    },
+    "scene": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "viewport",
+        "cameraExtent",
+        "planeSize",
+        "textureRgba8",
+        "clearHex",
+        "antialias",
+        "premultipliedAlpha"
+      ],
+      "properties": {
+        "viewport": {
+          "$ref": "#/definitions/vec2Integer"
+        },
+        "cameraExtent": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "planeSize": {
+          "$ref": "#/definitions/vec2Number"
+        },
+        "textureRgba8": {
+          "$ref": "#/definitions/rgba8"
+        },
+        "clearHex": {
+          "$ref": "#/definitions/hex"
+        },
+        "antialias": {
+          "const": false
+        },
+        "premultipliedAlpha": {
+          "const": false
+        }
+      }
+    },
+    "identityCases": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "url",
+          "expectedInteractionId"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "url": {
+            "type": "string",
+            "minLength": 1
+          },
+          "expectedInteractionId": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "sourceProfiles": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "route",
+          "mediaKinds",
+          "textureColorSpace",
+          "reachableFromWorld3dHost"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "route": {
+            "enum": [
+              "TextureLoader",
+              "CanvasTexture"
+            ]
+          },
+          "mediaKinds": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": {
+              "enum": [
+                "image",
+                "svg",
+                "pdf"
+              ]
+            }
+          },
+          "textureColorSpace": {
+            "enum": [
+              "NoColorSpace",
+              "SRGBColorSpace"
+            ]
+          },
+          "reachableFromWorld3dHost": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "themes": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "activeBase",
+          "hoverBase",
+          "accentSecondary"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "activeBase": {
+            "$ref": "#/definitions/semanticPaint"
+          },
+          "hoverBase": {
+            "$ref": "#/definitions/semanticPaint"
+          },
+          "accentSecondary": {
+            "$ref": "#/definitions/semanticPaint"
+          }
+        }
+      }
+    },
+    "stateCases": {
+      "type": "array",
+      "minItems": 8,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "themeId",
+          "sourceProfileId",
+          "baseOpacity",
+          "locked",
+          "hidden",
+          "revealed",
+          "hovered",
+          "selected",
+          "expected",
+          "samples"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "themeId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "sourceProfileId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "baseOpacity": {
+            "$ref": "#/definitions/unit"
+          },
+          "locked": {
+            "type": "boolean"
+          },
+          "hidden": {
+            "type": "boolean"
+          },
+          "revealed": {
+            "type": "boolean"
+          },
+          "hovered": {
+            "type": "boolean"
+          },
+          "selected": {
+            "type": "boolean"
+          },
+          "expected": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "visible",
+              "selectable",
+              "interactionId",
+              "contentOpacity",
+              "backgroundSemantic",
+              "outlineSemantic",
+              "outlineOpacity"
+            ],
+            "properties": {
+              "visible": {
+                "type": "boolean"
+              },
+              "selectable": {
+                "type": "boolean"
+              },
+              "interactionId": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "contentOpacity": {
+                "$ref": "#/definitions/unit"
+              },
+              "backgroundSemantic": {
+                "enum": [
+                  null,
+                  "activeBase",
+                  "hoverBase"
+                ]
+              },
+              "outlineSemantic": {
+                "enum": [
+                  null,
+                  "activeBase",
+                  "accentSecondary"
+                ]
+              },
+              "outlineOpacity": {
+                "$ref": "#/definitions/unit"
+              }
+            }
+          },
+          "samples": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "id",
+                "point"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "point": {
+                  "$ref": "#/definitions/vec2Integer"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "pixelOracle": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "status",
+        "producer",
+        "maximumRgbError",
+        "rows"
+      ],
+      "properties": {
+        "status": {
+          "enum": [
+            "unrecorded",
+            "recorded"
+          ]
+        },
+        "producer": {
+          "type": "string"
+        },
+        "maximumRgbError": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 2
+        },
+        "rows": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "rgba8"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "rgba8": {
+                "$ref": "#/definitions/rgba8"
+              }
+            }
+          }
+        }
+      }
+    },
+    "geometry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "origin",
+        "widthWorld",
+        "sourceNaturalSize",
+        "expectedPlaneSize",
+        "expectedCorners",
+        "originMeaning"
+      ],
+      "properties": {
+        "origin": {
+          "$ref": "#/definitions/vec3Number"
+        },
+        "widthWorld": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "sourceNaturalSize": {
+          "$ref": "#/definitions/vec2Integer"
+        },
+        "expectedPlaneSize": {
+          "$ref": "#/definitions/vec2Number"
+        },
+        "expectedCorners": {
+          "type": "array",
+          "minItems": 4,
+          "maxItems": 4,
+          "items": {
+            "$ref": "#/definitions/vec3Number"
+          }
+        },
+        "originMeaning": {
+          "const": "plane-center"
+        }
+      }
+    }
+  },
+  "definitions": {
+    "unit": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "hex": {
+      "type": "string",
+      "pattern": "^#[0-9a-fA-F]{6}$"
+    },
+    "rgba8": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "items": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 255
+      }
+    },
+    "vec2Integer": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {
+        "type": "integer"
+      }
+    },
+    "vec2Number": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {
+        "type": "number"
+      }
+    },
+    "semanticPaint": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "cssVar",
+        "hex"
+      ],
+      "properties": {
+        "cssVar": {
+          "type": "string",
+          "pattern": "^--[a-z0-9-]+$"
+        },
+        "hex": {
+          "$ref": "#/definitions/hex"
+        }
+      }
+    },
+    "vec3Number": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "type": "number"
+      }
+    }
+  }
+}

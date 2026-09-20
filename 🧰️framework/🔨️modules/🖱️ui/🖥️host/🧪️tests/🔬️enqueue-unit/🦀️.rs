@@ -11,11 +11,12 @@ fn pointer_move_storm_coalesces_to_one_sample() {
     let mut queue = EventQueue::new();
     let ui = UiThreadToken::mint();
     for i in 0..1000 {
-        queue.enqueue(ui, DispatchEvent::PointerMove { pointer: pointer(), x: i as f32, y: 0.0 });
+        queue.enqueue(ui, DispatchEvent::PointerMove { pointer: pointer(), x: i as f32, y: 0.0, modifiers: EventModifiers { shift: i == 0, ..Default::default() } });
     }
     assert_eq!(queue.pending_discrete_len(), 0, "pointer move never touches the discrete queue");
     let drained = queue.drain_page(WorkerContext::new(queue.current_generation()));
     assert_eq!(drained.pointer_move.map(|sample| sample.x), Some(999.0), "only the latest position survives");
+    assert_eq!(drained.pointer_move.map(|sample| sample.modifiers.shift), Some(false), "the latest modifier snapshot replaces a stale held modifier");
 }
 
 #[test]
@@ -23,10 +24,11 @@ fn scroll_storm_accumulates_delta_rather_than_overwriting() {
     let mut queue = EventQueue::new();
     let ui = UiThreadToken::mint();
     for _ in 0..10 {
-        queue.enqueue(ui, DispatchEvent::Scroll { x: 0.0, y: 0.0, delta_x: 0.0, delta_y: 1.0 });
+        queue.enqueue(ui, DispatchEvent::Scroll { x: 0.0, y: 0.0, delta_x: 0.0, delta_y: 1.0, modifiers: EventModifiers { ctrl: true, ..Default::default() } });
     }
     let drained = queue.drain_page(WorkerContext::new(queue.current_generation()));
     assert_eq!(drained.scroll.map(|sample| sample.delta_y), Some(10.0), "10 wheel ticks of 1.0 each must sum, not overwrite");
+    assert_eq!(drained.scroll.map(|sample| sample.modifiers.ctrl), Some(true), "the wheel modifier snapshot survives accumulation");
 }
 
 #[test]
@@ -99,9 +101,9 @@ fn one_variable_payload_over_the_page_credit_is_rejected() {
 fn pointer_down_up_are_lossless_and_ordered() {
     let mut queue = EventQueue::new();
     let ui = UiThreadToken::mint();
-    queue.enqueue(ui, DispatchEvent::PointerDown { pointer: pointer(), x: 1.0, y: 1.0, button: PointerButton::Primary });
-    queue.enqueue(ui, DispatchEvent::PointerMove { pointer: pointer(), x: 5.0, y: 5.0 });
-    queue.enqueue(ui, DispatchEvent::PointerUp { pointer: pointer(), x: 5.0, y: 5.0, button: PointerButton::Primary });
+    queue.enqueue(ui, DispatchEvent::PointerDown { pointer: pointer(), x: 1.0, y: 1.0, button: PointerButton::Primary, modifiers: EventModifiers { shift: true, ..Default::default() } });
+    queue.enqueue(ui, DispatchEvent::PointerMove { pointer: pointer(), x: 5.0, y: 5.0, modifiers: EventModifiers::default() });
+    queue.enqueue(ui, DispatchEvent::PointerUp { pointer: pointer(), x: 5.0, y: 5.0, button: PointerButton::Primary, modifiers: EventModifiers::default() });
     let drained = queue.drain_page(WorkerContext::new(queue.current_generation()));
     let mut discrete = drained.discrete.into_iter().flatten();
     assert!(matches!(discrete.next().map(|event| event.event), Some(DispatchEvent::PointerDown { .. })));
@@ -114,7 +116,7 @@ fn input_generation_increases_monotonically_and_survives_drain() {
     let mut queue = EventQueue::new();
     let ui = UiThreadToken::mint();
     let g0 = queue.current_generation();
-    queue.enqueue(ui, DispatchEvent::PointerMove { pointer: pointer(), x: 0.0, y: 0.0 });
+    queue.enqueue(ui, DispatchEvent::PointerMove { pointer: pointer(), x: 0.0, y: 0.0, modifiers: EventModifiers::default() });
     let g1 = queue.current_generation();
     assert!(g1 > g0, "enqueue must bump the generation");
     queue.enqueue(ui, DispatchEvent::KeyDown { key: "x".to_string(), modifiers: EventModifiers::default() });
@@ -128,7 +130,7 @@ fn input_generation_increases_monotonically_and_survives_drain() {
 fn drain_leaves_the_queue_empty() {
     let mut queue = EventQueue::new();
     let ui = UiThreadToken::mint();
-    queue.enqueue(ui, DispatchEvent::PointerMove { pointer: pointer(), x: 0.0, y: 0.0 });
+    queue.enqueue(ui, DispatchEvent::PointerMove { pointer: pointer(), x: 0.0, y: 0.0, modifiers: EventModifiers::default() });
     queue.enqueue(ui, DispatchEvent::KeyDown { key: "a".to_string(), modifiers: EventModifiers::default() });
     assert!(!queue.is_empty());
     while !queue.is_empty() {

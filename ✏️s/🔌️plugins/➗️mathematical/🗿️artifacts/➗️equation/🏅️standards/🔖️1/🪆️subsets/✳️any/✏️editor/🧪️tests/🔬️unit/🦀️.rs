@@ -1,17 +1,22 @@
 pub(crate) mod context {
     use super::super::*;
-    use semio_framework_plugin::artifact_app_laws::{meta, new_app, new_app_with_registry};
+    use semio_framework_plugin::artifact_app_laws::{meta, new_app_with_registry_and_members};
     use semio_framework_plugin::{EditorApp, InvocationResult, PluginApp, VcsArtifactApp, ViewModel};
     
     /// ✏️ `EquationPlayApp` implements the AUTHORING trait `ArtifactEditor`, not the runtime
     /// `ArtifactApp` — `EditorApp<EquationPlayApp>` (SDK adapter, contract §2.1) is the real
     /// `ArtifactApp` implementor `VcsArtifactApp` wraps, exactly the way
     /// `PluginBuilder::editor::<EquationPlayApp>` builds it.
-    pub type MathApp = VcsArtifactApp<EditorApp<EquationPlayApp>>;
+    pub type MathApp = VcsArtifactApp<EditorApp<EquationPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>;
     
-    /// 🧪️ A bare app instance — no `AppActionRegistry`, so undeclared internal commands dispatch freely.
+    /// 🧪️ The app instance every test builds — registry-backed, because there is no other kind.
+    /// `EditorApp<EquationPlayApp>` publishes a `bounded_first_step_tool_proofs!` roster, and
+    /// `with_registry_on_bus` joins that roster against the registry's `Migrated` tool ids
+    /// (`AppActionRegistry::validate_tool_job_rows`): an empty registry declares none of them, so the
+    /// registry-LESS `artifact_app_laws::new_app` fails construction outright with
+    /// `interactive-job.catalog-authority … generated_migrated=false, migrated={}`.
     pub async fn math_app() -> MathApp {
-        new_app::<EditorApp<EquationPlayApp>>().await
+        math_app_with_registry().await
     }
     
     /// ✏️ Adapts `create_equation_app`'s `AppDefinition` (contract §2.4) into the `App {
@@ -24,7 +29,7 @@ pub(crate) mod context {
     
     /// 🧪️ An app wired to the real manifest registry — enforces View/Shell kind discipline.
     pub async fn math_app_with_registry() -> MathApp {
-        new_app_with_registry::<EditorApp<EquationPlayApp>>(equation_app_manifest_for_tests).await
+        new_app_with_registry_and_members::<EditorApp<EquationPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(equation_app_manifest_for_tests).await
     }
     
     pub async fn dispatch(app: &mut MathApp, command: EquationCommand) -> InvocationResult {
@@ -272,6 +277,7 @@ pub(super) fn every_command() -> Vec<EquationCommand> {
         EquationCommand::NodeGraphEdit(node_graph_edit::NodeGraphEdit { operations_json: r#"[{"operation":"addNode","x":12.0,"y":34.0}]"#.into() }),
         EquationCommand::NodeGraphViewport(node_graph_viewport::NodeGraphViewport { viewport: semio_framework_os_kernel::Viewport2d { x: 5.0, y: 6.0, zoom: 2.0 } }),
         EquationCommand::SetPoints(set_points::SetPoints { geometry: EquationGeometry::default() }),
+        EquationCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: crate::examples::demo::ID.into() }),
     ]
 }
 
@@ -401,3 +407,48 @@ async fn geometry_layers_include_hull_and_centroid() {
     assert!(layers_json.contains("\"centroid\""));
 }
 //#endregion 🔖️Geometry
+
+//#region 🔖️LoadedDocumentDispatch
+/// 🧩️ A document arriving by `Effect::LoadDocument` is DECODED, so it carries no local
+/// `EquationWorkingScene` owner — the ephemeral owner only a same-session mutation mints. Every
+/// document verb used to be measured against that owner and refused with `equation-command-capacity`
+/// on exactly the documents `setActiveExample` had just made loadable (measured live 2026-09-20,
+/// slice PB2). The extent now reads the fail-soft projection, so a decoded snapshot is editable.
+#[semio_framework_async_macros::async_test]
+async fn a_decoded_document_without_a_scene_owner_still_admits_its_document_verbs() {
+    let authored = crate::equation_snapshot_with_state(&graph_with_shape(4, 3), &EquationGeometry::default());
+    assert!(crate::equation_scene_owner(&authored).is_some(), "an authored snapshot mints the live scene owner");
+    let decoded = <crate::EquationSnapshot as ArtifactPack>::decode_pack(&<crate::EquationSnapshot as ArtifactPack>::encode_pack(&authored)).expect("decode");
+    assert!(crate::equation_scene_owner(&decoded).is_none(), "a decoded snapshot carries no local owner");
+    let command = EquationCommand::SetDirected(set_directed::SetDirected { directed: false });
+    assert!(equation_command_extent(&command, &decoded).is_some(), "a decoded document must still admit its document verbs");
+    assert!(EquationRetainedCommandWork::source_scene(&decoded).is_ok(), "the phase machine reads the same fail-soft projection the extent measures");
+}
+
+/// 🧬️ The Actions pane stages `nodeGraphEdit.operations` as a `json_text` argument, which arrives as
+/// a `DslValue::String` already holding the JSON document. Re-printing it wrapped the array in
+/// quotes and `equation_edit_preflight` refused it as a non-array, so the pane could dispatch no
+/// document verb at all. A structured value still prints through `json::to_json_string`.
+#[semio_framework_async_macros::async_test]
+async fn a_staged_json_text_operations_argument_survives_command_from_action() {
+    let staged = dsl::DslValue::Object(vec![("operations".to_string(), dsl::DslValue::String(EQUATION_DEFAULT_EDIT_OPERATIONS.to_string()))]);
+    let command = <EquationPlayApp as ArtifactEditor>::command_from_action("nodeGraphEdit", Some(&staged)).expect("staged operations");
+    let EquationCommand::NodeGraphEdit(payload) = &command else { panic!("nodeGraphEdit routes to its own command") };
+    assert_eq!(payload.operations_json, EQUATION_DEFAULT_EDIT_OPERATIONS);
+    assert_eq!(equation_edit_preflight(payload), Some(1), "the staged default is exactly one admitted operation");
+    let snapshot = crate::equation_snapshot_with_state(&EquationGraph::default(), &EquationGeometry::default());
+    assert!(equation_command_extent(&command, &snapshot).is_some());
+}
+
+/// 🧺️ `ArtifactStoreOneItemFootprint::work_items` counts staged edit ROWS, so a point-invertible
+/// item costs 2 — the hand-written `1` fail-closed every durable equation gesture with
+/// `batched item candidate failed its exact fixed fold contract`.
+#[semio_framework_async_macros::async_test]
+async fn the_store_preparation_declares_a_point_invertible_footprint() {
+    assert_eq!(
+        store::ArtifactStoreOneItemFootprint::for_one_invertible_item(store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES).work_items,
+        store::ARTIFACT_STORE_ONE_ITEM_INVERTIBLE_WORK_ITEMS
+    );
+    assert_eq!(store::ARTIFACT_STORE_ONE_ITEM_INVERTIBLE_WORK_ITEMS, 2);
+}
+//#endregion 🔖️LoadedDocumentDispatch

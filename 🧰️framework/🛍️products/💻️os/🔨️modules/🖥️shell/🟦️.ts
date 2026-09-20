@@ -94,6 +94,71 @@ function requireNonEmpty(value: string, field: string): void {
 }
 //#endregion 🚨️Rejected
 
+//#region 🌱️default
+/** 🌱️ The neutral `ShellState` — the TypeScript twin of `🦀️.rs`'s `impl Default for ShellState`,
+ * and the ONLY place a default is spelled on this side. It is a purely technical starting point for
+ * tests, fixtures and bridge mirrors, never a product choice of language, theme or driver: durable
+ * UI preferences reach a host through the OS config projection, and the nine `ui*` preference rows
+ * `📺️renderer`'s `🐚️Shell` keeps (`uiAppearance`, `uiLayout`, `uiLocale`, `uiTerminology`,
+ * `uiDriverId`, `uiThemeId`, `uiCustomDrivers`, `uiCustomThemes`, `uiKeybindingOverrides`) belong to
+ * that renderer state, NOT to this SSOT — a second hand-written default in `🔗️AgentBridge` carried
+ * them and drifted nine fields wide against `../🧫️fixtures/*.json`. Every committed fixture's
+ * `state` is this value with at most a few rows set, so fixture parity holds this honest. */
+export function defaultShellState(): ShellState {
+  return {
+    revision: 0,
+    loadedPlugins: [],
+    pluginStatusById: {},
+    pluginSupervisorById: {},
+    activeSession: null,
+    sessionError: null,
+    appLabelsOverlay: {},
+    actionPaneFoldedByWindow: {},
+    actionPaneExpandedByWindow: {},
+    stagedActionArgs: {},
+    activeUtilityByWindow: {},
+    activeToolId: null,
+    commandPanelExpanded: null,
+    stagedCommandArgs: {},
+    panelsVisible: { left: false, right: false, top: false, bottom: false },
+    panelsSize: { left: 280, right: 280, top: 280, bottom: 280 },
+    panelsPath: { left: [], right: [], top: [], bottom: [] },
+    dockOverride: null,
+    panelPathMemory: {},
+    treeOpenStates: {},
+    activeWindowId: null,
+    shellLayout: null,
+    activeExampleId: "",
+    mobilePanelPath: [],
+    mobilePanelVisible: false,
+    extraWindows: [],
+    windowTitlesById: {},
+    windowIconsById: {},
+    searchOpen: false,
+    findOpen: false,
+    introductionStepIndex: null,
+    introductionAutoStartedKeys: [],
+    introductionCompletedInteractions: [],
+    dialogStack: [],
+    transientNotice: null,
+    openWithFocusRole: null,
+    activeTutorialId: null,
+    uiDriverDraft: null,
+    uiThemeDraft: null,
+    syncBackboneUri: null,
+    syncCardKind: null,
+    syncDraftPath: "",
+    syncStatusByDocument: {},
+    inferencePortByDocument: {},
+    mergePolicy: "manual",
+    conflicts: [],
+    selectedConflictId: null,
+    storageScope: "memory",
+    openingPreferences: {},
+  };
+}
+//#endregion 🌱️default
+
 //#region 🧮️reduce
 export type ReduceOk = { readonly ok: true; readonly state: ShellState; readonly events: readonly ShellEvent[] };
 export type ReduceErr = { readonly ok: false; readonly error: ShellError };
@@ -494,6 +559,6 @@ function applyCommand(next: ShellState, original: ShellState, command: ShellComm
 //#region 🧪️tests
 if (import.meta.vitest) {
   const { registerTests1 } = await import("./🧪️tests/🧪️semio-tech-framework-os-shell-reduce/🟦️.ts");
-  await registerTests1(import.meta.vitest, { reduce }, { directory: import.meta.dir, url: import.meta.url });
+  await registerTests1(import.meta.vitest, { reduce, defaultShellState }, { directory: import.meta.dir, url: import.meta.url });
 }
 //#endregion 🧪️tests

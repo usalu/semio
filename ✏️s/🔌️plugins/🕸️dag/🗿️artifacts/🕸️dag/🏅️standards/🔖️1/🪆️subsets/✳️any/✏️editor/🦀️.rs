@@ -867,7 +867,9 @@ pub fn create_dag_app() -> semio_framework_plugin::AppDefinition {
             // 🗂️ Referenced by `dag_context_menu_items` — categorized for grouped-context-menu disclosure.
             .action_with(ActionDefinition::bounded_catalog("addNode", LocalizedLabel::native("Add Node", "Knoten hinzufügen"), ActionKind::Mutation).with_category("create"))
             .mutation("removeNode", LocalizedLabel::native("Remove Node", "Knoten entfernen"))
+            .action_destructive("removeNode")
             .action_with(ActionDefinition::bounded_catalog("deleteSelection", LocalizedLabel::native("Delete Selection", "Auswahl löschen"), ActionKind::Mutation).with_category("selection"))
+            .action_destructive("deleteSelection")
             .action_with(ActionDefinition::bounded_catalog("nodeGraphEdit", LocalizedLabel::native("Node Graph Edit", "Knotengraph bearbeiten"), ActionKind::Mutation).with_category("selection"))
             .mutation("connectMediaPorts", LocalizedLabel::native("Connect Ports", "Ports verbinden"))
             .action_with(ActionDefinition::bounded_catalog("disconnect", LocalizedLabel::native("Disconnect", "Trennen"), ActionKind::Mutation).with_category("transfer"))
@@ -881,6 +883,7 @@ pub fn create_dag_app() -> semio_framework_plugin::AppDefinition {
             // actions yourself).
             .action_with(ActionDefinition::new("nodeGraphViewport", LocalizedLabel::native("Node Graph Viewport", "Knotengraph-Ansicht"), ActionKind::View, "camera"))
             .action_with(ActionDefinition::new("graphPointerDown", LocalizedLabel::native("Graph Pointer Down", "Graph-Zeiger gedrückt"), ActionKind::View, "mouse-pointer"))
+            .action_audience("graphPointerDown", semio_framework_plugin::CapabilityAudience::Input)
             // 🧬️ The example picker's verb. The subset registers `crate::examples::demo`, so the shell
             // dispatches this at boot and on every navbar pick; with no declaration at all every one of
             // those was dropped `undeclared-action` before it reached the app.
@@ -954,3 +957,10 @@ pub fn create_dag_app() -> semio_framework_plugin::AppDefinition {
 pub(crate) mod unit_tests;
 //#endregion 🧪️UnitTests
 
+//#region 🪢️TaxonomyMounts
+#[path = "📚️examples/🎬️demo-session/🦀️.rs"]
+pub mod demo_session;
+#[cfg(test)]
+#[path = "📚️examples/🎬️demo-session/🧪️tests/🧩️example/🦀️.rs"]
+mod example;
+//#endregion 🪢️TaxonomyMounts

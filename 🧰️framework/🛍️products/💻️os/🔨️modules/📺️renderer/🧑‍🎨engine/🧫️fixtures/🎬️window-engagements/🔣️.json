@@ -1,0 +1,37 @@
+{
+  "section": {
+    "pane-top": {
+      "input": {
+        "id": "engagement-input",
+        "value": "box",
+        "placeholder": "Search"
+      }
+    },
+    "pane-perspective": {
+      "possibleEngagements": [
+        {
+          "id": "possible-box",
+          "label": "Box",
+          "detail": "Create a box"
+        }
+      ]
+    }
+  },
+  "windows": [
+    {
+      "windowId": "pane-top",
+      "hasSearchSpec": true,
+      "hasSearchBody": true
+    },
+    {
+      "windowId": "pane-perspective",
+      "hasSearchSpec": true,
+      "hasSearchBody": false
+    },
+    {
+      "windowId": "pane-missing",
+      "hasSearchSpec": false,
+      "hasSearchBody": false
+    }
+  ]
+}

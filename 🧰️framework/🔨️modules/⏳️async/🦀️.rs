@@ -1478,8 +1478,8 @@ pub fn boxed_fixed_slots<T, const N: usize>(fill: impl FnMut() -> T) -> Box<[T; 
 /// `Builder::stack_size` **overrides** `RUST_MIN_STACK`, which is the whole point: the repo runner
 /// floors that variable at 128 MiB, so a constructor that re-materialises its slot table in the
 /// caller's frame stays green in every gate until a lane like this one pins the real budget. The
-/// budget to pin is the one [`WorkerPool`]'s workers actually get — Rust's 2 MiB default, since
-/// `native_pool` spawns them with no `stack_size` of its own.
+/// budget to pin is the one [`WorkerPool`]'s workers actually get — `WORKER_STACK_BYTES`, which
+/// `native_pool` now states explicitly instead of inheriting Rust's 2 MiB default.
 /// 🧱️ One row of the [fixed-slot fixture](🧫️fixtures/🧱️boxed-fixed-slots/🔣️.json), measured or declared — see
 /// [`assert_fixed_slot_tables`].
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -1818,6 +1818,31 @@ mod native_pool {
         }
     }
 
+    /// 🪜️ The stack every pool worker owns, stated rather than inherited.
+    ///
+    /// A worker runs whole subsystem closures — shard turns, DB actor turns, artifact-engine mounts
+    /// — so its budget is a product decision, not `std::thread`'s default. Left unstated it was
+    /// **two** numbers at once, which is the whole defect: a cargo-launched process got
+    /// `.cargo/config.toml`'s repo-wide `RUST_MIN_STACK = 67108864`, while the shipped `os-hub`,
+    /// started by a holder rather than by cargo, got `std::thread`'s 2 MiB. Every gate therefore ran
+    /// these workers with 64 MiB and stayed green while the binary aborted on its first document
+    /// socket with `thread 'semio-pool-worker-N' has overflowed its stack` (ticket 26/09/18 slice
+    /// HS1, `📓️hs1-hub-pool-worker-stack-overflow.md`).
+    ///
+    /// The number is the one the gates have in fact been proving all along, now stated where the
+    /// binary reads it too. It is not a guess: HS1 priced the artifact-engine turn chain out of the
+    /// crash reports' own AArch64 prologues — 21,520,944 B before the `db_artifact` boxing of §4.1
+    /// and 9,060,912 B after it, on a path that still exhausted a 16 MiB stack — so 16 MiB is
+    /// measurably too small for a debug build and 64 MiB is the budget under which this suite has
+    /// always passed. It costs address space, not memory: thread stacks are lazily committed, so an
+    /// untouched page never becomes resident.
+    ///
+    /// `Builder::stack_size` **overrides** `RUST_MIN_STACK` in both directions, which is why this
+    /// constant must never be lowered casually: dropping it to 16 MiB took three green hub laws to
+    /// `SIGABRT` in seconds. The law that pins it is
+    /// `native_pool_workers_own_the_stated_worker_stack`.
+    pub const WORKER_STACK_BYTES: usize = 64 * 1024 * 1024;
+
     /// 🧵️ The native, multi-OS-thread work-stealing pool. Per-worker per-lane deques (own-thread
     /// DRR pop, cross-thread steal) implemented with plain `std::sync::Mutex<VecDeque<_>>` — no
     /// lock-free Chase-Lev deque, no external crate: a `Mutex` per (worker, lane) pair is simple,
@@ -1865,7 +1890,7 @@ mod native_pool {
             let mut handles = Vec::with_capacity(worker_count);
             for index in 0..worker_count {
                 let worker_inner = Arc::clone(&inner);
-                let handle = thread::Builder::new().name(format!("semio-pool-worker-{index}")).spawn(move || worker_loop(&worker_inner, index as u32)).expect("WorkerPool: failed to spawn worker thread");
+                let handle = thread::Builder::new().name(format!("semio-pool-worker-{index}")).stack_size(WORKER_STACK_BYTES).spawn(move || worker_loop(&worker_inner, index as u32)).expect("WorkerPool: failed to spawn worker thread");
                 handles.push(handle);
             }
             *inner.handles.lock().unwrap_or_else(PoisonError::into_inner) = handles;
@@ -1875,9 +1900,17 @@ mod native_pool {
         /// ▶️ Enqueues `job` onto `lane`, targeting one worker round-robin (siblings pick it up via
         /// [`steal`] if that worker is busy) and waking any idle-parked worker.
         pub fn submit(&self, lane: Lane, job: Job) {
-            if let Err(error) = self.try_submit(lane, job) {
-                panic!("WorkerPool: mandatory submission failed closed: {:?}", error.kind());
+            if self.is_shutdown() {
+                panic!("WorkerPool: mandatory submission failed closed: {:?}", WorkerSubmitErrorKind::Shutdown);
             }
+            let index = self.inner.next_submit.fetch_add(1, Ordering::SeqCst) % self.inner.workers.len();
+            let mut queue = self.inner.workers[index].queues[lane.index()].lock().unwrap_or_else(|_| panic!("WorkerPool: mandatory submission failed closed: {:?}", WorkerSubmitErrorKind::Poisoned));
+            if queue.len() >= WORKER_JOBS_PER_LANE {
+                panic!("WorkerPool: mandatory submission failed closed: {:?}", WorkerSubmitErrorKind::Saturated);
+            }
+            queue.push_back(job);
+            drop(queue);
+            self.inner.notify_idle();
         }
 
         /// 🔔️ Installs a fixed callback slot before any owner can request retirement.
@@ -2432,7 +2465,7 @@ mod wasm_pool {
 //#endregion 🧵️WorkerPoolWasm
 
 #[cfg(not(target_arch = "wasm32"))]
-pub use native_pool::{WorkerPool, WorkerPoolUse};
+pub use native_pool::{WORKER_STACK_BYTES, WorkerPool, WorkerPoolUse};
 #[cfg(target_arch = "wasm32")]
 pub use wasm_pool::{CooperativePoolSnapshot, WorkerPool, WorkerPoolUse};
 

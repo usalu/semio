@@ -223,7 +223,7 @@
       "additionalProperties": false,
       "required": ["proposal", "commandHex", "jobId", "proposalHash", "commandHash", "mutationId", "preparedCount", "reconciledCount"],
       "properties": {
-        "proposal": { "const": "ledger-only-proposal" },
+        "proposal": { "const": "{\"CreateRegion\":{\"index\":0,\"item\":{\"id\":\"inference-4da0cbcd465dd9474f46e2a9e1efd24d\",\"data\":{\"id\":\"inference-4da0cbcd465dd9474f46e2a9e1efd24d\",\"kind\":\"inference-bounds\",\"ring\":[[7.0,46.0],[9.0,46.0],[9.0,48.0],[7.0,48.0],[7.0,46.0]]}}}}" },
         "commandHex": { "allOf": [{ "$ref": "#/$defs/hexBytes" }, { "type": "string", "minLength": 2, "maxLength": 16384 }] },
         "jobId": { "$ref": "#/$defs/id" },
         "mutationId": { "$ref": "#/$defs/id" },

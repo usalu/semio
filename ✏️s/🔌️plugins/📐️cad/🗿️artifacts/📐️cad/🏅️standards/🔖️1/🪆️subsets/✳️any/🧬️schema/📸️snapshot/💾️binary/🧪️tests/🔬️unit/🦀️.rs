@@ -18,10 +18,11 @@ async fn command_envelope_round_trip_holds_for_an_applied_operation() {
     use crate::mutations::create_shape_model::CreateShapeModel;
     use crate::op::CadMutation;
     use crate::{empty_cad_snapshot, sample_scene_fixture::sample_model_child, CAD_DOCUMENT_SCHEMA};
+    use crate::standards::v1::subsets::any::schema::mutations::binary::new_cad_store;
     use protocol::{ArtifactId, Edit, SchemaId};
-    use store::{create_document_envelope, ArtifactCommand, ArtifactStore};
+    use store::{create_document_envelope, ArtifactCommand};
 
-    let mut store: ArtifactStore<CadSnapshot, CadMutation> = ArtifactStore::new(create_document_envelope(CAD_DOCUMENT_SCHEMA, "cad-demo", empty_cad_snapshot(), None)).await.expect("valid artifact store fixture");
+    let mut store = new_cad_store(create_document_envelope(CAD_DOCUMENT_SCHEMA, "cad-demo", empty_cad_snapshot(), None)).await.expect("valid artifact store fixture");
     let sample = sample_model_child("command-envelope-1");
     store.dispatch(ArtifactCommand::Apply { mutations: vec![CadMutation::CreateShapeModel(CreateShapeModel { child_id: sample.child_id.clone(), target: sample.target.to_uri() })], description: None }).await.expect("apply");
     let edit: &Edit<CadMutation> = store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");

@@ -435,11 +435,18 @@ pub enum CheckpointPublicationCurrentV1 {
     Active { checkpoint_id: String, baseline_frontier: CheckpointPublicationFrontierV1 },
 }
 
-/// 🪞️ Public content identity for one already-landed Hub blob.
+/// 🪞️ Public content identity for one already-landed Hub blob, in the two hash spaces the product
+/// actually keeps apart. `blake3` is the **address**: the hub's payload store is a BLAKE3 CAS by
+/// declaration (`PayloadStorage`), so it is the only word that can find the bytes, and the only word
+/// `PUT /spaces/{space}/blobs/{hash}` accepts. `sha256` stays what it always was — the **integrity
+/// claim** the artifact lineage is written in (`ArtifactBlobIntegrity`, `bootstrap_snapshot_hash`,
+/// checkpoint identity) — and is verified against the resolved bytes. Carrying only `sha256` made a
+/// publication unresolvable: it named its inputs in a keyspace the store does not index.
 #[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct CheckpointPublicationBlobV1 {
     pub sha256: String,
+    pub blake3: String,
     pub byte_length: u64,
 }
 
@@ -461,7 +468,7 @@ impl CheckpointPublicationCommandV1 {
     /// 🛡️ Validates the schema-owned command independently of route-owned scope.
     pub fn validate(&self) -> bool {
         let frontier_valid = |frontier: &DocumentFrontier| frontier.head_seq <= DOCUMENT_OPEN_MAX_SAFE_INTEGER && frontier.commit_seq <= frontier.head_seq && frontier.epoch <= DOCUMENT_OPEN_MAX_SAFE_INTEGER;
-        let blob_valid = |blob: &CheckpointPublicationBlobV1| blob.byte_length > 0 && blob.byte_length <= DOCUMENT_OPEN_MAX_SAFE_INTEGER && valid_document_open_hash(&blob.sha256);
+        let blob_valid = |blob: &CheckpointPublicationBlobV1| blob.byte_length > 0 && blob.byte_length <= DOCUMENT_OPEN_MAX_SAFE_INTEGER && valid_document_open_hash(&blob.sha256) && valid_document_open_hash(&blob.blake3);
         self.schema == "semio.hub.checkpoint-publication-command/v1"
             && self.correlation_id.len() == DIRECTORY_COMMAND_REQUEST_ID_LEN
             && !self.correlation_id.bytes().all(|byte| byte == b'0')
@@ -1301,8 +1308,15 @@ impl DirectorySpaceAdministrationPageV1 {
         };
         let anonymous = generation == 0 && binding.bytes().all(|byte| byte == b'0');
         let bound = (1..=DOCUMENT_OPEN_MAX_SAFE_INTEGER).contains(&generation) && !binding.bytes().all(|byte| byte == b'0');
+        // 🔓️ The anonymous binding IS the all-zero word (`space_administration_session_binding_v1`
+        // returns `[0u8; 32]` when there is no caller), and `valid_document_open_hash` rejects exactly
+        // that word — so requiring it here made every anonymous read of a PUBLIC space unconstructible
+        // and the route answered 500. The shape is checked here; whether an all-zero or a real digest is
+        // the admissible one is already decided by `anonymous || bound` below, and `Member`/`Author` still
+        // demand `bound`.
+        let binding_is_hex = binding.len() == 64 && binding.bytes().all(|byte| byte.is_ascii_digit() || matches!(byte, b'a'..=b'f'));
         if schema != DIRECTORY_SPACE_ADMINISTRATION_PAGE_SCHEMA
-            || !valid_document_open_hash(binding)
+            || !binding_is_hex
             || !valid_document_open_hash(self.receipt_sha256())
             || !directory_space_administration_text_valid(space_id)
             || !(anonymous || bound)
@@ -1695,6 +1709,15 @@ impl DocumentOpenIntentV1 {
 
 impl DocumentOpenPlanV1 {
     /// ✅ Validates a complete receipt-free authority projection at a caller-supplied wall time.
+    ///
+    /// 🪢 `artifact.kind` and `parent_dialect.artifact_kind` are two DIFFERENT id spaces and are
+    /// bounded separately, never against each other: `artifact.kind` is a manifest
+    /// `ArtifactKindSpec::id` (`2d.note`, `text.document`, `stdio.json`) and `parent_dialect` is the
+    /// owning app's `Dialect` (`s.note.note`, `s.writer.writer`, `s.stdio.json`). Only `gis` spells
+    /// them alike, so an equality here is a plan that no plugin but `gis` can ever be issued. Both
+    /// are pinned to the trusted catalog's own selection by `validate_descriptor_open_target`, which
+    /// requires a manifest kind with exactly `artifact.kind` and an app whose dialect is exactly
+    /// `parent_dialect`, so the binding is declared there and not re-derivable from two strings.
     pub fn validate(&self, now_ms: u64) -> Result<(), DocumentOpenPlanErrorCodeV1> {
         self.browser_actor
             .validate(DocumentBrowserActorSourceV1 { component_sha256: &self.package.component_sha256, descriptor_byte_sha256: &self.package.descriptor_byte_sha256 }, self.surface.renderer_target.as_str())
@@ -1718,7 +1741,6 @@ impl DocumentOpenPlanV1 {
             || self.expires_at_unix_ms <= now_ms
             || self.expires_at_unix_ms.checked_sub(now_ms).is_none_or(|ttl| ttl > DOCUMENT_OPEN_PLAN_MAX_TTL_MS)
             || ids.iter().any(|value| !valid_document_open_text(value, DOCUMENT_OPEN_ID_MAX_BYTES))
-            || self.parent_dialect.artifact_kind != self.artifact.kind
             || [&self.parent_dialect.artifact_kind, &self.parent_dialect.standard, &self.parent_dialect.subset].into_iter().any(|value| !valid_document_open_text(value, DOCUMENT_OPEN_ID_MAX_BYTES) || value.trim() != value.as_str())
             || !valid_document_open_hash(&self.descriptor_digest_v1)
             || !valid_document_open_hash(&self.catalog.generation_id)
@@ -1820,6 +1842,10 @@ pub struct DocumentExecutionTargetLeaseFieldsV1 {
 
 impl DocumentExecutionTargetLeaseFieldsV1 {
     /// ✅ Validates every identity, byte and grant invariant of one receipt-free lease projection.
+    ///
+    /// 🪢 `artifact.kind` (manifest taxonomy space) and `parent_dialect.artifact_kind` (plugin
+    /// dialect space) are bounded separately for the reason `DocumentOpenPlanV1::validate` records;
+    /// the lease is projected from a plan that already carries both from one catalog selection.
     pub fn validate(&self) -> Result<(), DocumentOpenPlanErrorCodeV1> {
         self.browser_actor
             .validate(DocumentBrowserActorSourceV1 { component_sha256: &self.package.component_sha256, descriptor_byte_sha256: &self.package.descriptor_byte_sha256 }, self.surface.renderer_target.as_str())
@@ -1839,7 +1865,6 @@ impl DocumentExecutionTargetLeaseFieldsV1 {
         if self.schema != "semio.os.document-execution-target-lease/v1"
             || self.version != 1
             || ids.iter().any(|value| !valid_document_open_text(value, DOCUMENT_OPEN_ID_MAX_BYTES))
-            || self.parent_dialect.artifact_kind != self.artifact.kind
             || [&self.parent_dialect.artifact_kind, &self.parent_dialect.standard, &self.parent_dialect.subset].into_iter().any(|value| !valid_document_open_text(value, DOCUMENT_OPEN_ID_MAX_BYTES) || value.trim() != value.as_str())
             || !valid_document_open_hash(&self.descriptor_digest_v1)
             || !valid_document_open_hash(&self.catalog.generation_id)

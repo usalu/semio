@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "extends": "../../../../../../../tsconfig.json",
+  "compilerOptions": {
+    "incremental": false,
+    "tsBuildInfoFile": null,
+    "types": ["bun", "node"]
+  },
+  "include": [],
+  "files": [
+    "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🤝️collaboration/🟦️.ts",
+    "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🏗️builder/🌐️vite/🟦️.ts"
+  ]
+}

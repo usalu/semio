@@ -1,4 +1,3 @@
-
 use super::*;
 
 struct LegacyMeshOracleData {
@@ -190,7 +189,7 @@ fn ray_hits_triangle_direct() {
 #[test]
 fn ray_hits_box() {
     let mesh = test_box_mesh();
-    let instance = Instance3d { id: "box".into(), model: mat4_identity_m(), color: [1.0, 1.0, 1.0, 1.0], selected: false, hovered: false };
+    let instance = Instance3d { id: "box".into(), model: mat4_identity_m(), color: [1.0, 1.0, 1.0, 1.0], selected: false, hovered: false, material: Default::default() };
     let hit = ray_pick_instance(vec3_new_m(0.0, 0.0, -5.0), vec3_new_m(0.0, 0.0, 1.0), mesh, &instance);
     assert!(hit.is_some());
 }
@@ -198,7 +197,7 @@ fn ray_hits_box() {
 #[test]
 fn ray_aabb_misses_offset_box() {
     let mesh = test_box_mesh();
-    let instance = Instance3d { id: "box".into(), model: mat4_translation_m(vec3_new_m(100.0, 0.0, 0.0)), color: [1.0, 1.0, 1.0, 1.0], selected: false, hovered: false };
+    let instance = Instance3d { id: "box".into(), model: mat4_translation_m(vec3_new_m(100.0, 0.0, 0.0)), color: [1.0, 1.0, 1.0, 1.0], selected: false, hovered: false, material: Default::default() };
     let hit = ray_pick_instance(vec3_new_m(0.0, 0.0, -5.0), vec3_new_m(0.0, 0.0, 1.0), mesh, &instance);
     assert!(hit.is_none());
 }
@@ -273,7 +272,7 @@ fn rectangle_marquee_bounds_use_start_and_end_corners() {
 #[test]
 fn projected_aabb_skips_far_instance() {
     let mesh = test_box_mesh();
-    let draws = vec![SceneDraw3d { mesh_key: "box".into(), mesh_version: 0, instances: vec![Instance3d { id: "far".into(), model: mat4_translation_m(vec3_new_m(0.0, 0.0, -500.0)), color: [1.0, 1.0, 1.0, 1.0], selected: false, hovered: false }] }];
+    let draws = vec![SceneDraw3d { mesh_key: "box".into(), mesh_version: 0, instances: vec![Instance3d { id: "far".into(), model: mat4_translation_m(vec3_new_m(0.0, 0.0, -500.0)), color: [1.0, 1.0, 1.0, 1.0], selected: false, hovered: false, material: Default::default() }], shadow_role: Default::default() }];
     let mut lookup = std::collections::HashMap::new();
     lookup.insert("box".into(), mesh);
     let camera = Camera3d::default();
@@ -299,7 +298,7 @@ fn marquee_is_crossing_from_path_lasso_uses_first_horizontal_step() {
 #[test]
 fn screen_select_instances_window_requires_full_vertex_enclosure() {
     let mesh = test_box_mesh();
-    let draws = vec![SceneDraw3d { mesh_key: "box".into(), mesh_version: 0, instances: vec![Instance3d { id: "partial".into(), model: mat4_identity_m(), color: [1.0, 1.0, 1.0, 1.0], selected: false, hovered: false }] }];
+    let draws = vec![SceneDraw3d { mesh_key: "box".into(), mesh_version: 0, instances: vec![Instance3d { id: "partial".into(), model: mat4_identity_m(), color: [1.0, 1.0, 1.0, 1.0], selected: false, hovered: false, material: Default::default() }], shadow_role: Default::default() }];
     let mut lookup = std::collections::HashMap::new();
     lookup.insert("box".into(), mesh);
     let camera = Camera3d::default();
@@ -451,11 +450,10 @@ fn a_perspective_pick_ray_survives_the_adaptive_far_plane() {
     }
 }
 
-/// 🎯️ LAW: a fit moves the number its camera family owns. A perspective orbit dollies; a parallel
-/// one cannot, so it takes React's `worldProjectionOrthoZoom` and keeps its distance
-/// (`frameWorldProjectionPose`, `🎨️r3f/🟦️.tsx`).
+/// 🎯️ LAW: React's `WorldAutoFit` uses the sphere-fit eye distance in both camera families and
+/// preserves parallel zoom from the independent projection-content frame.
 #[test]
-fn a_parallel_fit_moves_the_zoom_and_a_perspective_fit_moves_the_distance() {
+fn auto_fit_moves_both_camera_families_eye_distance_and_preserves_parallel_zoom() {
     let (width, height) = (478.0_f32, 814.0_f32);
     let minimum = [0.0_f32, -2.0, 0.0];
     let maximum = [7.0_f32, 2.0, 1.0];
@@ -466,15 +464,13 @@ fn a_parallel_fit_moves_the_zoom_and_a_perspective_fit_moves_the_distance() {
     assert!((framed.distance - perspective.distance).abs() > 1e-3, "a perspective fit dollies");
     assert!((framed.zoom - 1.0).abs() < 1e-6, "and leaves the identity zoom alone");
 
-    let parallel = OrbitController { projection: CameraProjection3d::Orthographic, zoom: 1.0, ..OrbitController::default() };
+    let parallel = OrbitController { projection: CameraProjection3d::Orthographic, zoom: 7.7595, ..OrbitController::default() };
     let parallel_framed = frame_orbit_to_bounds(&parallel, minimum, maximum, width, height, WORLD_FRAME_BOUNDS_MARGIN);
     assert_eq!(parallel_framed.target, vec3_new_m(3.5, 0.0, 0.5));
-    assert!((parallel_framed.distance - parallel.distance).abs() < 1e-6, "a parallel fit never dollies");
-    let framed_camera = parallel_framed.to_camera();
-    let (screen_half_w, screen_half_h) = screen_half_extent(&framed_camera, minimum, maximum);
-    assert!((parallel_framed.zoom - world_projection_ortho_zoom(screen_half_w, screen_half_h, width, height, WORLD_FRAME_BOUNDS_MARGIN)).abs() < 1e-3, "it takes React's ortho zoom over the box's SCREEN half-extent: {}", parallel_framed.zoom);
-    let (half_width, half_height) = framed_camera.orthographic_half_extent(width, height);
-    assert!(half_width >= screen_half_w && half_height >= screen_half_h, "and the framed box fits inside the frustum it chose");
+    assert!((parallel_framed.distance - 11.888316).abs() < 1e-5, "Three OrthographicCamera has no aspect property, so WorldAutoFit uses one");
+    let parallel_wide = frame_orbit_to_bounds(&parallel, minimum, maximum, height, width, WORLD_FRAME_BOUNDS_MARGIN);
+    assert!((parallel_wide.distance - parallel_framed.distance).abs() < 1e-6, "parallel eye distance is independent of viewport aspect");
+    assert!((parallel_framed.zoom - parallel.zoom).abs() < 1e-6, "and preserves projection-content zoom");
 }
 
 /// 📐️ LAW: a projection pane frames on React's CARDINAL half-extent, not on the box's projected
@@ -512,8 +508,10 @@ fn a_projection_frame_reads_reacts_cardinal_half_extent() {
     let corner = OrbitController { projection: CameraProjection3d::Orthographic, zoom: 1.0, yaw: 0.7, pitch: 0.6, ..OrbitController::default() };
     let (thin_min, thin_max) = ([-8.0_f32, -1.0, -1.0], [8.0_f32, 1.0, 1.0]);
     let isotropic = frame_projection_orbit_to_bounds(&corner, WorldProjectionOrientation::Free, false, thin_min, thin_max, 400.0, 800.0, WORLD_PROJECTION_FRAME_PADDING);
-    let projected = frame_orbit_to_bounds(&corner, thin_min, thin_max, 400.0, 800.0, WORLD_PROJECTION_FRAME_PADDING);
-    assert!(isotropic.zoom < projected.zoom, "📐️ React's isotropic span frames WIDER than the projected box extent: {} vs {}", isotropic.zoom, projected.zoom);
+    let centered = OrbitController { target: vec3_new_m(0.0, 0.0, 0.0), ..corner };
+    let (projected_half_width, projected_half_height) = screen_half_extent(&centered.to_camera(), thin_min, thin_max);
+    let projected_zoom = world_projection_ortho_zoom(projected_half_width, projected_half_height, 400.0, 800.0, WORLD_PROJECTION_FRAME_PADDING);
+    assert!(isotropic.zoom < projected_zoom, "📐️ React's isotropic span frames WIDER than the projected box extent: {} vs {}", isotropic.zoom, projected_zoom);
 }
 
 /// 🔎️ LAW: the wheel moves whichever number the family owns — three's `OrbitControls` dollies a
@@ -670,7 +668,7 @@ fn orbit_controller_zoom_clamps_distance_bounds() {
 #[test]
 fn ray_pick_mesh_detail_returns_triangle_index_and_barycentrics() {
     let mesh = test_box_mesh();
-    let instance = Instance3d { id: "box".into(), model: mat4_identity_m(), color: [1.0, 1.0, 1.0, 1.0], selected: false, hovered: false };
+    let instance = Instance3d { id: "box".into(), model: mat4_identity_m(), color: [1.0, 1.0, 1.0, 1.0], selected: false, hovered: false, material: Default::default() };
     let hit = ray_pick_mesh_detail(vec3_new_m(0.0, -0.5, -5.0), vec3_new_m(0.0, 0.0, 1.0), mesh, &instance).expect("hit");
     assert_eq!(hit.triangle_index, 0);
     assert!(hit.bary_u >= 0.0 && hit.bary_v >= 0.0 && hit.bary_u + hit.bary_v <= 1.0);
@@ -679,7 +677,7 @@ fn ray_pick_mesh_detail_returns_triangle_index_and_barycentrics() {
 #[test]
 fn ray_pick_mesh_detail_misses_when_aabb_not_hit() {
     let mesh = test_box_mesh();
-    let instance = Instance3d { id: "box".into(), model: mat4_translation_m(vec3_new_m(50.0, 0.0, 0.0)), color: [1.0, 1.0, 1.0, 1.0], selected: false, hovered: false };
+    let instance = Instance3d { id: "box".into(), model: mat4_translation_m(vec3_new_m(50.0, 0.0, 0.0)), color: [1.0, 1.0, 1.0, 1.0], selected: false, hovered: false, material: Default::default() };
     assert!(ray_pick_mesh_detail(vec3_new_m(0.0, 0.0, -5.0), vec3_new_m(0.0, 0.0, 1.0), mesh, &instance).is_none());
 }
 
@@ -814,7 +812,7 @@ fn screen_select_components_face_granularity_selects_visible_triangle() {
     let mut data = LegacyMeshOracleData::triangle();
     data.face_ids = vec![42];
     let mesh = paged_mesh_fixture(data);
-    let draws = vec![SceneDraw3d { mesh_key: "box".into(), mesh_version: 0, instances: vec![Instance3d { id: "box".into(), model: mat4_identity_m(), color: [1.0, 1.0, 1.0, 1.0], selected: false, hovered: false }] }];
+    let draws = vec![SceneDraw3d { mesh_key: "box".into(), mesh_version: 0, instances: vec![Instance3d { id: "box".into(), model: mat4_identity_m(), color: [1.0, 1.0, 1.0, 1.0], selected: false, hovered: false, material: Default::default() }], shadow_role: Default::default() }];
     let mut lookup = std::collections::HashMap::new();
     lookup.insert("box".into(), mesh);
     let camera = Camera3d::default();
@@ -829,7 +827,7 @@ fn screen_select_components_vertex_granularity_selects_ids() {
     let mut data = LegacyMeshOracleData::triangle();
     data.vertex_ids = vec![10, 11, 12];
     let mesh = paged_mesh_fixture(data);
-    let draws = vec![SceneDraw3d { mesh_key: "box".into(), mesh_version: 0, instances: vec![Instance3d { id: "box".into(), model: mat4_identity_m(), color: [1.0, 1.0, 1.0, 1.0], selected: false, hovered: false }] }];
+    let draws = vec![SceneDraw3d { mesh_key: "box".into(), mesh_version: 0, instances: vec![Instance3d { id: "box".into(), model: mat4_identity_m(), color: [1.0, 1.0, 1.0, 1.0], selected: false, hovered: false, material: Default::default() }], shadow_role: Default::default() }];
     let mut lookup = std::collections::HashMap::new();
     lookup.insert("box".into(), mesh);
     let camera = Camera3d::default();
@@ -846,7 +844,7 @@ fn screen_select_components_edge_granularity_selects_ids() {
     data.edges = vec![[[-1.0, -1.0, 0.0], [1.0, -1.0, 0.0]]];
     data.edge_ids = vec![99];
     let mesh = paged_mesh_fixture(data);
-    let draws = vec![SceneDraw3d { mesh_key: "box".into(), mesh_version: 0, instances: vec![Instance3d { id: "box".into(), model: mat4_identity_m(), color: [1.0, 1.0, 1.0, 1.0], selected: false, hovered: false }] }];
+    let draws = vec![SceneDraw3d { mesh_key: "box".into(), mesh_version: 0, instances: vec![Instance3d { id: "box".into(), model: mat4_identity_m(), color: [1.0, 1.0, 1.0, 1.0], selected: false, hovered: false, material: Default::default() }], shadow_role: Default::default() }];
     let mut lookup = std::collections::HashMap::new();
     lookup.insert("box".into(), mesh);
     let camera = Camera3d::default();
@@ -859,7 +857,7 @@ fn screen_select_components_edge_granularity_selects_ids() {
 #[test]
 fn screen_select_components_default_granularity_selects_whole_instance() {
     let mesh = test_box_mesh();
-    let draws = vec![SceneDraw3d { mesh_key: "box".into(), mesh_version: 0, instances: vec![Instance3d { id: "whole".into(), model: mat4_identity_m(), color: [1.0, 1.0, 1.0, 1.0], selected: false, hovered: false }] }];
+    let draws = vec![SceneDraw3d { mesh_key: "box".into(), mesh_version: 0, instances: vec![Instance3d { id: "whole".into(), model: mat4_identity_m(), color: [1.0, 1.0, 1.0, 1.0], selected: false, hovered: false, material: Default::default() }], shadow_role: Default::default() }];
     let mut lookup = std::collections::HashMap::new();
     lookup.insert("box".into(), mesh);
     let camera = Camera3d::default();
@@ -876,9 +874,10 @@ fn screen_select_components_filters_by_active_instance_id() {
         mesh_key: "box".into(),
         mesh_version: 0,
         instances: vec![
-            Instance3d { id: "keep".into(), model: mat4_identity_m(), color: [1.0, 1.0, 1.0, 1.0], selected: false, hovered: false },
-            Instance3d { id: "skip".into(), model: mat4_identity_m(), color: [1.0, 1.0, 1.0, 1.0], selected: false, hovered: false },
+            Instance3d { id: "keep".into(), model: mat4_identity_m(), color: [1.0, 1.0, 1.0, 1.0], selected: false, hovered: false, material: Default::default() },
+            Instance3d { id: "skip".into(), model: mat4_identity_m(), color: [1.0, 1.0, 1.0, 1.0], selected: false, hovered: false, material: Default::default() },
         ],
+        shadow_role: Default::default(),
     }];
     let mut lookup = std::collections::HashMap::new();
     lookup.insert("box".into(), mesh);
@@ -891,7 +890,7 @@ fn screen_select_components_filters_by_active_instance_id() {
 
 #[test]
 fn screen_select_components_skips_missing_mesh_lookup() {
-    let draws = vec![SceneDraw3d { mesh_key: "missing".into(), mesh_version: 0, instances: vec![] }];
+    let draws = vec![SceneDraw3d { mesh_key: "missing".into(), mesh_version: 0, instances: vec![], shadow_role: Default::default() }];
     let lookup = std::collections::HashMap::new();
     let camera = Camera3d::default();
     let view_proj = camera.view_proj(800.0, 800.0);

@@ -705,6 +705,53 @@ export interface TreeDataActivationContext {
   sectionId: string;
 }
 
+/** @emoji 🖱️ Builds the exact `(event, context)` pair a row activation carries, for hosts that press a
+ * {@link TreeDataItem.onClick} without a rendered tree (row-gate and category-tree tests). The event is a
+ * real DOM `MouseEvent` wrapped in React's synthetic surface, so a handler that reads `button`,
+ * `metaKey` or calls `preventDefault()` behaves exactly as it does under a rendered row. */
+export function treeDataActivation(options: { readonly sectionId?: string; readonly path?: string[]; readonly selectedIds?: readonly string[]; readonly target?: Element; readonly init?: MouseEventInit } = {}): readonly [React.MouseEvent, TreeDataActivationContext] {
+  const target = options.target ?? document.createElement("div");
+  const nativeEvent = new MouseEvent("click", { bubbles: true, cancelable: true, ...options.init });
+  let defaultPrevented = false;
+  let propagationStopped = false;
+  const event: React.MouseEvent = {
+    altKey: nativeEvent.altKey,
+    bubbles: nativeEvent.bubbles,
+    button: nativeEvent.button,
+    buttons: nativeEvent.buttons,
+    cancelable: nativeEvent.cancelable,
+    clientX: nativeEvent.clientX,
+    clientY: nativeEvent.clientY,
+    ctrlKey: nativeEvent.ctrlKey,
+    currentTarget: target,
+    get defaultPrevented() { return defaultPrevented; },
+    detail: nativeEvent.detail,
+    eventPhase: nativeEvent.eventPhase,
+    getModifierState: (key) => nativeEvent.getModifierState(key),
+    isDefaultPrevented: () => defaultPrevented,
+    isPropagationStopped: () => propagationStopped,
+    isTrusted: nativeEvent.isTrusted,
+    metaKey: nativeEvent.metaKey,
+    movementX: nativeEvent.movementX,
+    movementY: nativeEvent.movementY,
+    nativeEvent,
+    pageX: nativeEvent.pageX,
+    pageY: nativeEvent.pageY,
+    persist: () => {},
+    preventDefault: () => { defaultPrevented = true; nativeEvent.preventDefault(); },
+    relatedTarget: nativeEvent.relatedTarget,
+    screenX: nativeEvent.screenX,
+    screenY: nativeEvent.screenY,
+    shiftKey: nativeEvent.shiftKey,
+    stopPropagation: () => { propagationStopped = true; nativeEvent.stopPropagation(); },
+    target,
+    timeStamp: nativeEvent.timeStamp,
+    type: nativeEvent.type,
+    view: { styleMedia: { type: "screen", matchMedium: (query: string) => target.ownerDocument.defaultView?.matchMedia(query).matches === true }, document: target.ownerDocument },
+  };
+  return [event, { path: options.path ?? [], selectedIds: options.selectedIds ?? [], sectionId: options.sectionId ?? "" }];
+}
+
 // #region 🪟️TreeWindow
 /**
  * 🪟️ The materialised slice of a logically {@link TreeDataWindow.total}-long child list: the container's
@@ -1242,10 +1289,16 @@ export const Catalogue: React.FC<CatalogueProps> = ({ title, items, mime = CATAL
 };
 
 const activeCatalogueDragPayload = ephemeralBox<string | null>("framework.modules.ui.elements.Tree.component.tsx.activeCatalogueDragPayload", null);
+const activeCataloguePointerDragPayload = ephemeralBox<string | null>("framework.modules.ui.elements.Tree.component.tsx.activeCataloguePointerDragPayload", null);
 
 /** @emoji 🖱️ Payload of the catalogue drag currently in flight — native HTML5 `dragover` can't read `dataTransfer` until drop, so drop targets (e.g. a canvas host previewing a fixture drop) read this instead. */
 export function getActiveCatalogueDragPayload(): string | null {
   return activeCatalogueDragPayload.current;
+}
+
+/** @emoji 🖱️ Payload owned specifically by the pointer transport, separate from native HTML drag. */
+export function getActiveCataloguePointerDragPayload(): string | null {
+  return activeCataloguePointerDragPayload.current;
 }
 
 /** @emoji 🖱️ {@link TreeDragAndDropController} for catalogue rows carrying encoded payloads. */
@@ -1261,18 +1314,23 @@ export function catalogueTreeDragController(mime: string = CATALOGUE_DRAG_MIME):
       begin: (encoded) => {
         pointerRef.active = true;
         activeCatalogueDragPayload.current = encoded;
+        activeCataloguePointerDragPayload.current = encoded;
       },
       cancel: () => {
         pointerRef.active = false;
         activeCatalogueDragPayload.current = null;
+        activeCataloguePointerDragPayload.current = null;
       },
     },
     onDragStart: ({ sourceItem }) => {
-      activeCatalogueDragPayload.current = readEncoded(sourceItem.dragData) ?? null;
+      const encoded = readEncoded(sourceItem.dragData) ?? null;
+      activeCatalogueDragPayload.current = encoded;
+      if (!pointerRef.active) activeCataloguePointerDragPayload.current = null;
     },
     onDragEnd: () => {
       pointerRef.active = false;
       activeCatalogueDragPayload.current = null;
+      activeCataloguePointerDragPayload.current = null;
     },
     handleDrop: ({ data, target, targetKind, dropPosition }) => {
       const encoded = readEncoded(data);

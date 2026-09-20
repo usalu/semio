@@ -52,7 +52,7 @@
   "eerActual": null,
   "qCKwh": null,
   "generationReferenceKwh": null,
-  "dataCenterSupplyC": 27,
+  "dataCenterSupplyC": 27.0,
   "hStWK": null,
   "thetaStC": null,
   "thetaAmbC": null,

@@ -1,0 +1,57 @@
+{
+  "descriptorVersion": 1,
+  "packageId": "semio:imperative-extension-effect",
+  "role": "extension",
+  "manifest": {
+    "pluginId": "imperative-extension-effect",
+    "label": "Imperative Effect",
+    "version": "0.1.0",
+    "apps": [],
+    "examples": [],
+    "capabilities": [],
+    "topicContributions": [
+      {
+        "topic": "imperative.module",
+        "payload": {
+          "appId": "imperative-play",
+          "iconId": "zap",
+          "label": "Actions",
+          "manifestJson": "{\"schema\":\"imperative.extension\",\"id\":\"core\",\"name\":\"Core\",\"version\":\"0.1.0\",\"contributes\":{\"operators\":[{\"id\":\"log.print\",\"extension\":\"imperative\",\"name\":\"Log Print\",\"abbreviation\":\"Log\",\"icon\":\"emoji:⚡️\",\"summary\":\"Writes a message to the effect log\",\"inputs\":[{\"code\":\"S\",\"abbreviation\":\"Str\",\"name\":\"message\",\"fullName\":\"message\",\"operators\":[],\"valueTypes\":[],\"default\":null,\"label\":null,\"cardinality\":\"!\"}],\"outputs\":[{\"code\":\"M\",\"abbreviation\":\"Msg\",\"name\":\"message\",\"fullName\":\"Message\",\"operators\":[],\"valueTypes\":[],\"default\":null,\"label\":null,\"cardinality\":\"!\"}],\"variadicInput\":null,\"variadicOutput\":null,\"group\":[]},{\"id\":\"state.increment\",\"extension\":\"imperative\",\"name\":\"State Increment\",\"abbreviation\":\"Inc\",\"icon\":\"emoji:⚡️\",\"summary\":\"Increments a numeric scope key\",\"inputs\":[{\"code\":\"S\",\"abbreviation\":\"Str\",\"name\":\"key\",\"fullName\":\"key\",\"operators\":[],\"valueTypes\":[],\"default\":null,\"label\":null,\"cardinality\":\"!\"},{\"code\":\"N\",\"abbreviation\":\"Num\",\"name\":\"by\",\"fullName\":\"by\",\"operators\":[],\"valueTypes\":[],\"default\":null,\"label\":null,\"cardinality\":\"!\"}],\"outputs\":[{\"code\":\"*\",\"abbreviation\":\"*\",\"name\":\"*\",\"fullName\":\"*\",\"operators\":[],\"valueTypes\":[],\"default\":null,\"label\":null,\"cardinality\":\"!\"}],\"variadicInput\":null,\"variadicOutput\":null,\"group\":[]},{\"id\":\"state.set\",\"extension\":\"imperative\",\"name\":\"State Set\",\"abbreviation\":\"Set\",\"icon\":\"emoji:⚡️\",\"summary\":\"Sets a scope key to a value\",\"inputs\":[{\"code\":\"S\",\"abbreviation\":\"Str\",\"name\":\"key\",\"fullName\":\"key\",\"operators\":[],\"valueTypes\":[],\"default\":null,\"label\":null,\"cardinality\":\"!\"},{\"code\":\"V\",\"abbreviation\":\"Val\",\"name\":\"value\",\"fullName\":\"Value\",\"operators\":[],\"valueTypes\":[],\"default\":null,\"label\":null,\"cardinality\":\"!\"}],\"outputs\":[{\"code\":\"*\",\"abbreviation\":\"*\",\"name\":\"*\",\"fullName\":\"*\",\"operators\":[],\"valueTypes\":[],\"default\":null,\"label\":null,\"cardinality\":\"!\"}],\"variadicInput\":null,\"variadicOutput\":null,\"group\":[]},{\"id\":\"wait.delay\",\"extension\":\"imperative\",\"name\":\"Wait Delay\",\"abbreviation\":\"Wait\",\"icon\":\"emoji:⚡️\",\"summary\":\"Records a delay side effect\",\"inputs\":[{\"code\":\"N\",\"abbreviation\":\"Num\",\"name\":\"ms\",\"fullName\":\"ms\",\"operators\":[],\"valueTypes\":[],\"default\":null,\"label\":null,\"cardinality\":\"!\"}],\"outputs\":[{\"code\":\"D\",\"abbreviation\":\"Dly\",\"name\":\"delay\",\"fullName\":\"Delay\",\"operators\":[],\"valueTypes\":[],\"default\":null,\"label\":null,\"cardinality\":\"!\"}],\"variadicInput\":null,\"variadicOutput\":null,\"group\":[]}],\"catalogueJson\":\"{\\\"schema\\\":\\\"imperative.catalogue\\\",\\\"sections\\\":[{\\\"id\\\":\\\"actions\\\",\\\"title\\\":\\\"Actions\\\",\\\"items\\\":[{\\\"kind\\\":\\\"log.print\\\",\\\"name\\\":\\\"Log Print\\\",\\\"abbreviation\\\":\\\"Log\\\",\\\"icon\\\":\\\"emoji:⚡️\\\",\\\"summary\\\":\\\"Writes a message to the effect log\\\",\\\"inputs\\\":[{\\\"name\\\":\\\"message\\\",\\\"code\\\":\\\"S\\\"}]},{\\\"kind\\\":\\\"state.increment\\\",\\\"name\\\":\\\"State Increment\\\",\\\"abbreviation\\\":\\\"Inc\\\",\\\"icon\\\":\\\"emoji:⚡️\\\",\\\"summary\\\":\\\"Increments a numeric scope key\\\",\\\"inputs\\\":[{\\\"name\\\":\\\"key\\\",\\\"code\\\":\\\"S\\\"},{\\\"name\\\":\\\"by\\\",\\\"code\\\":\\\"N\\\"}]},{\\\"kind\\\":\\\"state.set\\\",\\\"name\\\":\\\"State Set\\\",\\\"abbreviation\\\":\\\"Set\\\",\\\"icon\\\":\\\"emoji:⚡️\\\",\\\"summary\\\":\\\"Sets a scope key to a value\\\",\\\"inputs\\\":[{\\\"name\\\":\\\"key\\\",\\\"code\\\":\\\"S\\\"},{\\\"name\\\":\\\"value\\\",\\\"code\\\":\\\"V\\\"}]},{\\\"kind\\\":\\\"wait.delay\\\",\\\"name\\\":\\\"Wait Delay\\\",\\\"abbreviation\\\":\\\"Wait\\\",\\\"icon\\\":\\\"emoji:⚡️\\\",\\\"summary\\\":\\\"Records a delay side effect\\\",\\\"inputs\\\":[{\\\"name\\\":\\\"ms\\\",\\\"code\\\":\\\"N\\\"}]}]}]}\"}}",
+          "moduleId": "core"
+        }
+      }
+    ],
+    "commands": [],
+    "artifactKinds": [],
+    "dependencies": [
+      {
+        "pluginId": "imperative",
+        "version": "*"
+      }
+    ]
+  },
+  "execution": "linked",
+  "executionProtocol": {
+    "appChannelVersion": 17
+  },
+  "quotas": {},
+  "contributions": {
+    "topicContributions": [
+      {
+        "topic": "imperative.module",
+        "payload": {
+          "appId": "imperative-play",
+          "iconId": "zap",
+          "label": "Actions",
+          "manifestJson": "{\"schema\":\"imperative.extension\",\"id\":\"core\",\"name\":\"Core\",\"version\":\"0.1.0\",\"contributes\":{\"operators\":[{\"id\":\"log.print\",\"extension\":\"imperative\",\"name\":\"Log Print\",\"abbreviation\":\"Log\",\"icon\":\"emoji:⚡️\",\"summary\":\"Writes a message to the effect log\",\"inputs\":[{\"code\":\"S\",\"abbreviation\":\"Str\",\"name\":\"message\",\"fullName\":\"message\",\"operators\":[],\"valueTypes\":[],\"default\":null,\"label\":null,\"cardinality\":\"!\"}],\"outputs\":[{\"code\":\"M\",\"abbreviation\":\"Msg\",\"name\":\"message\",\"fullName\":\"Message\",\"operators\":[],\"valueTypes\":[],\"default\":null,\"label\":null,\"cardinality\":\"!\"}],\"variadicInput\":null,\"variadicOutput\":null,\"group\":[]},{\"id\":\"state.increment\",\"extension\":\"imperative\",\"name\":\"State Increment\",\"abbreviation\":\"Inc\",\"icon\":\"emoji:⚡️\",\"summary\":\"Increments a numeric scope key\",\"inputs\":[{\"code\":\"S\",\"abbreviation\":\"Str\",\"name\":\"key\",\"fullName\":\"key\",\"operators\":[],\"valueTypes\":[],\"default\":null,\"label\":null,\"cardinality\":\"!\"},{\"code\":\"N\",\"abbreviation\":\"Num\",\"name\":\"by\",\"fullName\":\"by\",\"operators\":[],\"valueTypes\":[],\"default\":null,\"label\":null,\"cardinality\":\"!\"}],\"outputs\":[{\"code\":\"*\",\"abbreviation\":\"*\",\"name\":\"*\",\"fullName\":\"*\",\"operators\":[],\"valueTypes\":[],\"default\":null,\"label\":null,\"cardinality\":\"!\"}],\"variadicInput\":null,\"variadicOutput\":null,\"group\":[]},{\"id\":\"state.set\",\"extension\":\"imperative\",\"name\":\"State Set\",\"abbreviation\":\"Set\",\"icon\":\"emoji:⚡️\",\"summary\":\"Sets a scope key to a value\",\"inputs\":[{\"code\":\"S\",\"abbreviation\":\"Str\",\"name\":\"key\",\"fullName\":\"key\",\"operators\":[],\"valueTypes\":[],\"default\":null,\"label\":null,\"cardinality\":\"!\"},{\"code\":\"V\",\"abbreviation\":\"Val\",\"name\":\"value\",\"fullName\":\"Value\",\"operators\":[],\"valueTypes\":[],\"default\":null,\"label\":null,\"cardinality\":\"!\"}],\"outputs\":[{\"code\":\"*\",\"abbreviation\":\"*\",\"name\":\"*\",\"fullName\":\"*\",\"operators\":[],\"valueTypes\":[],\"default\":null,\"label\":null,\"cardinality\":\"!\"}],\"variadicInput\":null,\"variadicOutput\":null,\"group\":[]},{\"id\":\"wait.delay\",\"extension\":\"imperative\",\"name\":\"Wait Delay\",\"abbreviation\":\"Wait\",\"icon\":\"emoji:⚡️\",\"summary\":\"Records a delay side effect\",\"inputs\":[{\"code\":\"N\",\"abbreviation\":\"Num\",\"name\":\"ms\",\"fullName\":\"ms\",\"operators\":[],\"valueTypes\":[],\"default\":null,\"label\":null,\"cardinality\":\"!\"}],\"outputs\":[{\"code\":\"D\",\"abbreviation\":\"Dly\",\"name\":\"delay\",\"fullName\":\"Delay\",\"operators\":[],\"valueTypes\":[],\"default\":null,\"label\":null,\"cardinality\":\"!\"}],\"variadicInput\":null,\"variadicOutput\":null,\"group\":[]}],\"catalogueJson\":\"{\\\"schema\\\":\\\"imperative.catalogue\\\",\\\"sections\\\":[{\\\"id\\\":\\\"actions\\\",\\\"title\\\":\\\"Actions\\\",\\\"items\\\":[{\\\"kind\\\":\\\"log.print\\\",\\\"name\\\":\\\"Log Print\\\",\\\"abbreviation\\\":\\\"Log\\\",\\\"icon\\\":\\\"emoji:⚡️\\\",\\\"summary\\\":\\\"Writes a message to the effect log\\\",\\\"inputs\\\":[{\\\"name\\\":\\\"message\\\",\\\"code\\\":\\\"S\\\"}]},{\\\"kind\\\":\\\"state.increment\\\",\\\"name\\\":\\\"State Increment\\\",\\\"abbreviation\\\":\\\"Inc\\\",\\\"icon\\\":\\\"emoji:⚡️\\\",\\\"summary\\\":\\\"Increments a numeric scope key\\\",\\\"inputs\\\":[{\\\"name\\\":\\\"key\\\",\\\"code\\\":\\\"S\\\"},{\\\"name\\\":\\\"by\\\",\\\"code\\\":\\\"N\\\"}]},{\\\"kind\\\":\\\"state.set\\\",\\\"name\\\":\\\"State Set\\\",\\\"abbreviation\\\":\\\"Set\\\",\\\"icon\\\":\\\"emoji:⚡️\\\",\\\"summary\\\":\\\"Sets a scope key to a value\\\",\\\"inputs\\\":[{\\\"name\\\":\\\"key\\\",\\\"code\\\":\\\"S\\\"},{\\\"name\\\":\\\"value\\\",\\\"code\\\":\\\"V\\\"}]},{\\\"kind\\\":\\\"wait.delay\\\",\\\"name\\\":\\\"Wait Delay\\\",\\\"abbreviation\\\":\\\"Wait\\\",\\\"icon\\\":\\\"emoji:⚡️\\\",\\\"summary\\\":\\\"Records a delay side effect\\\",\\\"inputs\\\":[{\\\"name\\\":\\\"ms\\\",\\\"code\\\":\\\"N\\\"}]}]}]}\"}}",
+          "moduleId": "core"
+        }
+      }
+    ]
+  },
+  "hashes": {
+    "wasmSha256": "4b8329fc9b82dec869b617a659ac7a47e6d1ad1124e7bf83bcc8ebe8f5bf958e",
+    "coreWasmSha256": "efe1fe35ad5d332c6c8fc13ca9850516e991f186f1717a96413c94ea1252123a",
+    "descriptorSha256": "25e2061e07149d16f139f71491558867ca1f0295a7b98bc09bed52c4f59fbea6"
+  }
+}

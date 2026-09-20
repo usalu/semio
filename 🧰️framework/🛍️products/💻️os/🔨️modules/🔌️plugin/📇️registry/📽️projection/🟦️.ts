@@ -491,20 +491,21 @@ export class CheckScript extends BundleScript {
       process.exit(1);
     }
     const newContractPluginRoots = findNewContractPluginRoots(repoRoot);
-    const violations = [...launchViolations, ...validatePlaygroundRegistry(playgrounds, repoRoot), ...validatePlaygroundSessions(repoRoot)];
+    const hostPluginIds = new Set(entries.filter((entry) => entry.host !== undefined).map((entry) => entry.pluginId));
+    const violations = [...launchViolations, ...validatePlaygroundRegistry(playgrounds, repoRoot, hostPluginIds), ...validatePlaygroundSessions(repoRoot)];
     if (violations.length > 0) {
       console.error("plugin registry catalog has playground validation errors:");
       for (const violation of violations) console.error(`  - ${violation}`);
       process.exit(1);
     }
     // 🗿️ Taxonomy tree audit for plugins discovered via the shared package contract. Its severity is
-    // the plugin areas' declared maturity, not a hand-flipped flag: warn while any area is
-    // `legacy`/`mixed` (plugins still mid-migration), hard failure once every area is declared `clean`
+    // the plugin areas' declared maturity, not a hand-flipped flag: warn while any area is `exempt`
+    // (a subtree discovery itself skips), hard failure once every area is declared `clean`
     // — the finalization flip is then a one-word edit in `🔣️taxonomy.json`.
     const taxonomyFindings = newContractPluginRoots.flatMap(({ pluginId, pluginRoot }) => validateTaxonomyTree(pluginRoot, pluginId));
     if (taxonomyFindings.length > 0) {
       const areaLabel = PLUGIN_AREAS.join(", ");
-      if (PLUGIN_AREAS_STATE === "legacy" || PLUGIN_AREAS_STATE === "mixed") {
+      if (PLUGIN_AREAS_STATE === "exempt") {
         console.warn(`plugin taxonomy tree findings (area(s) "${areaLabel}" is "${PLUGIN_AREAS_STATE}" — not failing the gate yet):`);
         for (const finding of taxonomyFindings) console.warn(`  - ${finding}`);
       } else {
@@ -513,8 +514,8 @@ export class CheckScript extends BundleScript {
         process.exit(1);
       }
     }
-    // 🧭️ Shared-discovery diagnostics: a non-empty `discoverPackageProblems` outside a
-    // legacy/mixed/exempt area means a manifest lost its role marker (the failure mode that silently
+    // 🧭️ Shared-discovery diagnostics: a non-empty `discoverPackageProblems` outside an
+    // exempt area means a manifest lost its role marker (the failure mode that silently
     // dropped a migrated extension crate from this very catalog) or a `🎯️targets/<target>/` dir is
     // missing its manifest. Warn-only while any area is pre-`clean`.
     const discoveryProblems = discoverPackageProblems(repoRoot, TAXONOMY);

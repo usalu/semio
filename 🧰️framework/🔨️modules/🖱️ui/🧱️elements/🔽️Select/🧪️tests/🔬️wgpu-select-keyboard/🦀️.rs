@@ -93,10 +93,7 @@ async fn the_popup_sits_below_the_trigger_until_the_viewport_runs_out_then_flips
     let flipped = select_menu_top(near_bottom, trigger_h, menu_h, 800.0);
     assert!(flipped < 0.0, "no room below and plenty above must flip the popup over the trigger, got {flipped}");
     assert!((near_bottom + flipped + menu_h + SELECT_SIDE_OFFSET - near_bottom).abs() < 0.001, "a flipped popup's bottom edge keeps the sideOffset gap");
-    assert!(
-        (select_menu_top(0.0, trigger_h, menu_h, trigger_h + 1.0) - (trigger_h + SELECT_SIDE_OFFSET)).abs() < f32::EPSILON,
-        "with no room on EITHER side React keeps the requested side rather than flipping"
-    );
+    assert!((select_menu_top(0.0, trigger_h, menu_h, trigger_h + 1.0) - (trigger_h + SELECT_SIDE_OFFSET)).abs() < f32::EPSILON, "with no room on EITHER side React keeps the requested side rather than flipping");
     assert!((select_menu_top(600.0, trigger_h, menu_h, 0.0) - (trigger_h + SELECT_SIDE_OFFSET)).abs() < f32::EPSILON, "an unmeasured viewport never flips");
 }
 

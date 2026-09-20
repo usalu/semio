@@ -7,7 +7,7 @@
   "selfWeightThicknessM": null,
   "assumedGKKnM2": null,
   "fireCurve": null,
-  "fireResistanceMin": 120,
+  "fireResistanceMin": 120.0,
   "fireMemberCapacityC": null,
   "snowZone": null,
   "snowAltitudeM": null,

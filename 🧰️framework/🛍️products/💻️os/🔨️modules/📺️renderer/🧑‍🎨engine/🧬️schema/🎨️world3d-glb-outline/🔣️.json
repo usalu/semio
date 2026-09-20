@@ -1,0 +1,69 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio.tech/schema/framework/world3d-glb-outline-v1.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "thresholdAngleDegrees", "outlineScale", "positionWeldPrecisionDecimals", "semanticEdgeIds", "derivation", "cases"],
+  "properties": {
+    "schema": { "const": "framework.world3d.glb-outline/v1" },
+    "thresholdAngleDegrees": { "const": 1 },
+    "outlineScale": { "const": 1.001 },
+    "positionWeldPrecisionDecimals": { "const": 4 },
+    "semanticEdgeIds": { "type": "array", "maxItems": 0 },
+    "derivation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["workUnit", "publication", "cancellation"],
+      "properties": {
+        "workUnit": { "const": "oneTrianglePerStep" },
+        "publication": { "const": "meshAndOutlineTogether" },
+        "cancellation": { "const": "retirePartialWithoutPublication" }
+      }
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "positions", "indices", "expectedSegments"],
+        "properties": {
+          "id": { "enum": ["coplanar-indexed-square", "folded-indexed-crease", "coplanar-duplicate-position-square"] },
+          "positions": {
+            "type": "array",
+            "minItems": 3,
+            "items": { "$ref": "#/$defs/point" }
+          },
+          "indices": {
+            "type": "array",
+            "minItems": 3,
+            "items": { "type": "integer", "minimum": 0 }
+          },
+          "expectedSegments": {
+            "type": "array",
+            "minItems": 1,
+            "items": { "$ref": "#/$defs/segment" }
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "point": {
+      "type": "array",
+      "prefixItems": [{ "type": "number" }, { "type": "number" }, { "type": "number" }],
+      "items": false,
+      "minItems": 3,
+      "maxItems": 3
+    },
+    "segment": {
+      "type": "array",
+      "prefixItems": [{ "$ref": "#/$defs/point" }, { "$ref": "#/$defs/point" }],
+      "items": false,
+      "minItems": 2,
+      "maxItems": 2
+    }
+  }
+}
+

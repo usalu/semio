@@ -13,7 +13,7 @@
   "snowAltitudeM": null,
   "enSKKnM2": null,
   "windZone": null,
-  "enVBMS": 30,
+  "enVBMS": 30.0,
   "deltaTK": null,
   "constructionActivity": null,
   "accidentalMassT": null,

@@ -1,6 +1,6 @@
 pub(crate) mod context {
     use super::super::*;
-    use semio_framework_plugin::artifact_app_laws::{meta, new_app, new_app_with_registry};
+    use semio_framework_plugin::artifact_app_laws::{meta, new_app_with_registry};
     use semio_framework_plugin::{ActionMeta, App, EditorApp, Fault, InvocationResult, PluginApp, VcsArtifactApp, ViewModel, ViewWindowInstance};
 
     pub type NoteApp = VcsArtifactApp<EditorApp<NotePlayApp>>;
@@ -14,11 +14,15 @@ pub(crate) mod context {
         App { definition: create_note_app(), examples: Vec::new() }
     }
 
-    /// 🧪️ A bare app instance — no `AppActionRegistry`, so undeclared internal commands dispatch freely.
+    /// 🧪️ An app instance bound to instance 1. The registry-LESS `artifact_app_laws::new_app` is
+    /// unusable for this app: `VcsArtifactApp::with_registry_on_bus` joins
+    /// `NotePlayApp::bounded_first_step_tool_proofs()` against the registry's `Migrated` tool ids, and
+    /// with an empty `AppActionRegistry` that join is empty — construction panics with
+    /// `interactive-job.catalog-authority` … `generated_migrated=false`. A registry-less wrapper could
+    /// not dispatch anything anyway (`admit_command_wire_with_proof` refuses every verb with no
+    /// manifest declaration), so this delegates to the manifest-backed constructor.
     pub async fn note_app() -> NoteApp {
-        let mut app = new_app::<EditorApp<NotePlayApp>>().await;
-        app.bind_instance_id(1).await;
-        app
+        note_app_with_registry_id(1).await
     }
 
     /// 🧪️ An app wired to the real manifest registry — enforces View/Shell kind discipline.

@@ -19,7 +19,7 @@
   "accidentalMassT": null,
   "accidentalSpeedKmH": null,
   "bridgeLane": null,
-  "bridgeSpanM": 36,
+  "bridgeSpanM": 36.0,
   "bridgeLaneWidthM": null,
   "bridgeMomentResistanceKnm": null,
   "craneClass": null,

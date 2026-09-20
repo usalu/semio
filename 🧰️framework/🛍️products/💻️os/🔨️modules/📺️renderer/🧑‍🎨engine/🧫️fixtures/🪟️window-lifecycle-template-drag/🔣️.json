@@ -1,0 +1,223 @@
+{
+  "schemaVersion": 1,
+  "mime": "application/x-compose-window-template",
+  "templatePayload": {
+    "windowKindId": "world",
+    "templateId": "top"
+  },
+  "dropCases": [
+    {
+      "name": "tab",
+      "zone": {
+        "kind": "tab",
+        "path": [],
+        "index": 1
+      },
+      "expectedRootKind": "stack",
+      "expectedPaths": {
+        "main": [],
+        "world-2": []
+      }
+    },
+    {
+      "name": "left",
+      "zone": {
+        "kind": "split",
+        "path": [],
+        "side": "left"
+      },
+      "expectedRootKind": "row",
+      "expectedPaths": {
+        "world-2": [
+          0
+        ],
+        "main": [
+          1
+        ]
+      }
+    },
+    {
+      "name": "right",
+      "zone": {
+        "kind": "split",
+        "path": [],
+        "side": "right"
+      },
+      "expectedRootKind": "row",
+      "expectedPaths": {
+        "main": [
+          0
+        ],
+        "world-2": [
+          1
+        ]
+      }
+    },
+    {
+      "name": "top",
+      "zone": {
+        "kind": "split",
+        "path": [],
+        "side": "top"
+      },
+      "expectedRootKind": "column",
+      "expectedPaths": {
+        "world-2": [
+          0
+        ],
+        "main": [
+          1
+        ]
+      }
+    },
+    {
+      "name": "bottom",
+      "zone": {
+        "kind": "rootSplit",
+        "side": "bottom"
+      },
+      "expectedRootKind": "column",
+      "expectedPaths": {
+        "main": [
+          0
+        ],
+        "world-2": [
+          1
+        ]
+      }
+    },
+    {
+      "name": "empty",
+      "initialWindows": [],
+      "zone": {
+        "kind": "rootSplit",
+        "side": "right"
+      },
+      "expectedRootKind": "stack",
+      "expectedPaths": {
+        "world-2": []
+      }
+    }
+  ],
+  "retirement": {
+    "capacity": 256,
+    "pressure": "retired owners reserve active-scene admission grants until terminal drain",
+    "lateCompletion": "an old surface generation token is refused after same-id reopen",
+    "initialWorlds": [
+      "world",
+      "world-2"
+    ],
+    "liveAfterClose": [
+      "world-2"
+    ],
+    "retired": [
+      "world"
+    ],
+    "reopened": "world"
+  },
+  "oracles": {
+    "reactTemplateSource": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎨️Canvas/🟦️.tsx",
+    "reactShellSource": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🟦️.tsx",
+    "reactTests": "🧰️framework/🔨️modules/🖱️ui/🧪️tests/🧪️owned-locale-detector-retirement/🟦️.tsx"
+  },
+  "publication": {
+    "windowKindId": "main",
+    "bodyKey": "main.body",
+    "closedInstances": [
+      "main"
+    ],
+    "openedInstance": "main-2",
+    "mountedAfter": [
+      "main-2"
+    ],
+    "fetchedAfter": [
+      "main-2"
+    ],
+    "surfaceKind": "world3d",
+    "controllerId": "test"
+  },
+  "publicationOutcomes": {
+    "retryCeiling": 3,
+    "journalPolicy": {
+      "transferCommand": "shell.windowSplit",
+      "directOpen": "none"
+    },
+    "recovery": [
+      {
+        "render": "refuse",
+        "journal": "held",
+        "topologyOwed": true,
+        "surfaceFault": true
+      },
+      {
+        "render": "document",
+        "journal": "dispatch-on-next-settle",
+        "topologyOwed": false,
+        "surfaceFault": false
+      }
+    ],
+    "permanentFault": {
+      "renderAttempts": [
+        "refuse",
+        "refuse",
+        "refuse"
+      ],
+      "journal": "terminal-refusal",
+      "topologyOwed": false,
+      "surfaceFault": true
+    },
+    "cohort": {
+      "refused": "main-2",
+      "ready": "main-3",
+      "firstRefreshReleased": [
+        "main-3"
+      ],
+      "afterRetryDispatches": {
+        "main-2": 1,
+        "main-3": 1
+      }
+    },
+    "atomicCreditRefusals": [
+      {
+        "credit": "item",
+        "dockMutation": "none",
+        "journal": "refused-before-mutation"
+      },
+      {
+        "credit": "byte",
+        "dockMutation": "none",
+        "journal": "refused-before-mutation"
+      }
+    ]
+  },
+  "displayBranchPublication": {
+    "flow": "up",
+    "acceptedGeneration": 7,
+    "staleGeneration": 6,
+    "viewport": { "x": 0, "y": 368, "w": 300, "h": 72 },
+    "section": {
+      "id": "framework.display.windows.puzzle3d-main",
+      "defaultOpen": false,
+      "rows": [
+        { "id": "framework.display.windows.puzzle3d-main.kind", "branch": false, "rect": { "x": 0, "y": 344, "w": 300, "h": 24 } },
+        { "id": "framework.display.windows.puzzle3d-main.projection.parallel", "branch": true, "defaultOpen": false, "rect": { "x": 0, "y": 368, "w": 300, "h": 24 } },
+        { "id": "framework.display.windows.puzzle3d-main.projection.perspective", "branch": false, "rect": { "x": 0, "y": 392, "w": 300, "h": 24 } }
+      ],
+      "headerRect": { "x": 0, "y": 416, "w": 300, "h": 24 }
+    },
+    "closedPublishedIds": [
+      "section.chevron.framework.display.windows.puzzle3d-main"
+    ],
+    "openedPublishedIds": [
+      "tree.label.framework.display.windows.puzzle3d-main.projection.parallel",
+      "tree.chevron.framework.display.windows.puzzle3d-main.projection.parallel",
+      "tree.label.framework.display.windows.puzzle3d-main.projection.perspective",
+      "section.chevron.framework.display.windows.puzzle3d-main"
+    ],
+    "rules": {
+      "publishedOnlyIfPaintedInViewport": true,
+      "branchChevronOnlyForVisibleBranch": true,
+      "paintAndHitsShareAcceptedGeneration": true
+    }
+  }
+}

@@ -1,4 +1,3 @@
-
 use super::*;
 fn tab(id: &str) -> DockStackTab {
     DockStackTab::new(id)
@@ -15,7 +14,7 @@ fn stack_tabs(ids: &[&str], active: &str) -> DockNode {
 use crate::shell::ShellState;
 use semio_framework::{AppDefinition, AppRole, ArtifactDialect, ModeDefinition, PanelGroup, PanelTabDefinition, PanelTabKind, WindowKindDefinition};
 use ui_wgpu::wgpu::LocalizedLabel;
-use ui_wgpu::wgpu::{WindowOptions, create_default_layout};
+use ui_wgpu::wgpu::{create_default_layout, WindowOptions};
 
 fn sample_app(window_ids: &[&str], layout: Option<WindowLayout>) -> AppDefinition {
     AppDefinition {
@@ -52,6 +51,7 @@ fn sample_app(window_ids: &[&str], layout: Option<WindowLayout>) -> AppDefinitio
         .expect("sample_app tests always pass at least one window id"),
         panel_tabs: vec![PanelTabDefinition { kind: PanelTabKind::App("tab".into()), label: LocalizedLabel::data("Tab"), group: PanelGroup::Workbench, body_key: Some("tab.body".into()), children: vec![] }],
         keybindings: vec![],
+        actions: vec![],
         interactions: vec![],
         utilities: vec![],
         tools: vec![],
@@ -95,7 +95,7 @@ fn concrete_window_instances_round_trip_without_kind_collapse() {
     let mut atlas = FontAtlas::builtin();
     let chrome = layout_stack_cap(windows, &labels, &HashMap::new(), &mut atlas, &Theme::default(), Rect::new(0.0, 0.0, 640.0, 480.0), 0);
     assert_eq!(chrome.groups[0].tabs.iter().map(|tab| tab.label.as_str()).collect::<Vec<_>>(), vec!["Canvas", "Canvas"]);
-    let payload = DockDragPayload { kind: DockDragKind::Tab, window_id: "canvas-copy".into(), window_kind_id: "canvas".into(), source_path: Vec::new(), tab_index: 1, ghost_label: "Canvas copy".into() };
+    let payload = DockDragPayload { kind: DockDragKind::Tab, window_id: "canvas-copy".into(), window_kind_id: "canvas".into(), template_id: None, source_path: Vec::new(), tab_index: 1, ghost_label: "Canvas copy".into() };
     assert!(dock.apply_drop(&payload, &DockDropZone::RootSplit { side: DockSide::Right }));
     assert_eq!(dock.window_kind_id("canvas-copy"), Some("canvas"));
     let persisted = serde_json::to_value(dock.to_window_layout()).expect("persisted layout");
@@ -108,12 +108,13 @@ fn split_axis_extent_uses_row_width_not_canvas_max() {
     let mut dock = DockState::from_app(&sample_app(&["a", "b"], None), Some("a"));
     dock.root = DockNode::Column(vec![(DockNode::Row(vec![(stack_with("a"), 0.5), (stack_with("b"), 0.5)]), 0.5), (stack_with("c"), 0.5)]);
     let canvas = Rect::new(0.0, 0.0, 1000.0, 800.0);
-    let row_extent = dock.split_axis_extent(&vec![0], canvas).unwrap();
-    assert!((row_extent - 1000.0).abs() < 0.1);
-    let col_extent = dock.split_axis_extent(&vec![], canvas);
-    assert!((col_extent.unwrap() - 800.0).abs() < 0.1);
-    let nested_extent = dock.split_axis_extent(&vec![0], canvas).unwrap();
-    assert!((nested_extent - 1000.0).abs() < 0.1);
+    let separator = Theme::default().gap_standard;
+    let row_extent = dock.split_axis_extent(&vec![0], canvas, separator).unwrap();
+    assert!((row_extent - (1000.0 - separator)).abs() < 0.1);
+    let col_extent = dock.split_axis_extent(&vec![], canvas, separator);
+    assert!((col_extent.unwrap() - (800.0 - separator)).abs() < 0.1);
+    let nested_extent = dock.split_axis_extent(&vec![0], canvas, separator).unwrap();
+    assert!((nested_extent - (1000.0 - separator)).abs() < 0.1);
 }
 
 #[test]
@@ -142,7 +143,7 @@ fn row_layout_stack_content_rects_match_per_window() {
     let flow_rect = flow_rect.expect("flow body rect");
     let preview_rect = preview_rect.expect("preview body rect");
     assert!(flow_rect.w > preview_rect.w);
-    assert!((flow_rect.x + flow_rect.w - preview_rect.x).abs() < 1.0);
+    assert!((preview_rect.x - (flow_rect.x + flow_rect.w) - theme.gap_standard - theme.padding_standard * 2.0).abs() < 0.01, "📐️ one separator plus both adjacent body insets separate scene content");
     assert!(flow_rect.h > 0.0 && preview_rect.h > 0.0);
 }
 
@@ -216,6 +217,51 @@ fn dock_stack_glass_and_hits_exist_only_on_owned_chips() {
 }
 
 #[test]
+fn dock_cap_depth_is_control_plus_padding_with_inset_actions_and_active_fill() {
+    let mut dock = DockState::from_app(&sample_app(&["a", "b"], None), Some("a"));
+    dock.root = stack_tabs(&["a", "b"], "a");
+    dock.active_stack = Some(Vec::new());
+    let bounds = Rect::new(10.0, 20.0, 600.0, 400.0);
+    let mut theme = Theme::default();
+    theme.control_height = 24.0;
+    theme.padding_standard = 8.0;
+    theme.navbar_height = 52.0;
+    let cap_depth = 40.0;
+    assert_eq!(dock_cap_depth(&theme), cap_depth);
+    assert_ne!(dock_cap_depth(&theme), theme.navbar_height);
+    assert_eq!(stack_tab_bar_rect(bounds, &theme).h, cap_depth);
+
+    let mut atlas = FontAtlas::builtin();
+    let icons = IconAtlas::default();
+    let mut input = InputState::<ActionDescriptor>::default();
+    let mut draw = DrawList::default();
+    let labels = HashMap::from([("a".into(), "A".into()), ("b".into(), "B".into())]);
+    let icon_ids = HashMap::new();
+    let action_count = dock_tab_actions(dock.show_maximize(), false).len();
+    let layout = layout_stack_cap(&tabs(&["a", "b"]), &labels, &icon_ids, &mut atlas, &theme, bounds, action_count);
+    assert!(layout.groups.iter().flat_map(|group| &group.tabs).all(|tab| tab.rect.h == cap_depth));
+    let silhouette = stack_window_silhouette(bounds, &theme, &layout);
+    assert_eq!(silhouette.safe_body_rect().y, bounds.y + cap_depth);
+    let active_rect = layout.groups.iter().flat_map(|group| &group.tabs).find(|tab| tab.window_id == "a").expect("active tab").rect;
+
+    let mut ctx = DockRenderContext { draw: &mut draw, atlas: &mut atlas, icons: &icons, input: &mut input, theme: &theme, window_labels: &labels, window_icon_ids: &icon_ids };
+    dock.paint_chrome(&mut ctx, bounds, false);
+    let selected = [theme.selected.r, theme.selected.g, theme.selected.b, theme.selected.a];
+    assert!(
+        draw.layers.iter().flat_map(|layer| layer.ui_instances.iter()).any(|instance| instance.rect == [active_rect.x, active_rect.y, active_rect.w, active_rect.h] && instance.color == selected),
+        "globally active selected tab owns the full cap fill"
+    );
+
+    let select = input.staged_hits().iter().find(|hit| hit.control_id.as_deref() == Some("dock.tab..a")).expect("select hit");
+    assert_eq!((select.rect.y, select.rect.h), (bounds.y, cap_depth));
+    for suffix in ["focus", "close", "drag"] {
+        let id = format!("dock.tab..a.{suffix}");
+        let action = input.staged_hits().iter().find(|hit| hit.control_id.as_deref() == Some(id.as_str())).unwrap_or_else(|| panic!("missing {id}"));
+        assert_eq!((action.rect.y, action.rect.h), (bounds.y + theme.padding_standard, theme.control_height));
+    }
+}
+
+#[test]
 fn apply_drop_tab_moves_window_to_target_corner() {
     let mut dock = DockState::from_app(&sample_app(&["a", "b"], None), Some("a"));
     dock.root = DockNode::Row(vec![(stack_tabs(&["a", "x"], "a"), 0.5), (stack_tabs(&["b"], "b"), 0.5)]);
@@ -280,11 +326,11 @@ fn stack_with(id: &str) -> DockNode {
 //#region DragDropAndLayoutDiffTests
 
 fn tab_payload(window_id: &str, source_path: DockPath, tab_index: usize) -> DockDragPayload {
-    DockDragPayload { kind: DockDragKind::Tab, window_id: window_id.into(), window_kind_id: window_id.into(), source_path, tab_index, ghost_label: window_id.into() }
+    DockDragPayload { kind: DockDragKind::Tab, window_id: window_id.into(), window_kind_id: window_id.into(), template_id: None, source_path, tab_index, ghost_label: window_id.into() }
 }
 
 fn stack_payload(window_id: &str, source_path: DockPath, tab_index: usize) -> DockDragPayload {
-    DockDragPayload { kind: DockDragKind::Stack, window_id: window_id.into(), window_kind_id: window_id.into(), source_path, tab_index, ghost_label: window_id.into() }
+    DockDragPayload { kind: DockDragKind::Stack, window_id: window_id.into(), window_kind_id: window_id.into(), template_id: None, source_path, tab_index, ghost_label: window_id.into() }
 }
 
 /// 🎯️ A cross-stack tab drop lands where the DERIVED tree said it would: the drag leaves the
@@ -597,8 +643,8 @@ fn maximized_stack_uses_full_canvas_bounds() {
     let bodies = dock.stack_body_rects(canvas, &theme, &HashMap::new(), &mut atlas);
     assert_eq!(bodies.len(), 1);
     let (_, body, _) = &bodies[0];
-    assert!((body.w - canvas.w).abs() < 1.0);
-    assert!((body.h - (canvas.h - theme.control_height)).abs() < 2.0);
+    assert!((body.w - (canvas.w - theme.padding_standard * 2.0)).abs() < 1.0);
+    assert!((body.h - (canvas.h - dock_cap_depth(&theme))).abs() < 2.0);
 }
 
 #[test]
@@ -753,7 +799,7 @@ fn action_host_window_id_finds_scoping_window() {
 /// absent from BOTH buckets otherwise — untagged groups always stay in the general Measures rail.
 #[test]
 fn utility_options_partition_gates_tagged_group_by_active_utility() {
-    use ui_wgpu::wgpu::{ActionDescriptor, WindowMeasure, partition_window_measures};
+    use ui_wgpu::wgpu::{partition_window_measures, ActionDescriptor, WindowMeasure};
     let measures = vec![
         WindowMeasure::Group {
             id: "brush-params".into(),
@@ -1008,6 +1054,33 @@ fn split_resize_conserves_the_pair_total_and_floors_at_eight_percent() {
     assert!((children[2].1 - 0.5).abs() < 1e-5, "and the clamp never restretches the rest of the axis");
 }
 
+/// 📏️ Authored window layouts retain React's percentage weights, so a physical pointer delta must
+/// be converted into that axis's captured weight scale before the split is solved.
+#[test]
+fn split_resize_moves_the_separator_by_the_pointer_delta_on_react_percentage_weights() {
+    let repo = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../../../../../../../../..");
+    let fixture_path = repo.join("🧰️framework/🔨️modules/🖱️ui/🧫️fixtures/📐️dock-axis-geometry/🔣️.json");
+    let fixture: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(&fixture_path).unwrap_or_else(|error| panic!("read {}: {error}", fixture_path.display()))).expect("dock axis fixture");
+    let oracle = &fixture["resizeOracle"];
+    let axis_extent = oracle["axisExtentPixels"].as_f64().expect("axis extent") as f32;
+    let delta = oracle["deltaPixels"].as_f64().expect("delta pixels") as f32;
+    let before: Vec<f32> = oracle["beforeWeights"].as_array().expect("before weights").iter().map(|value| value.as_f64().expect("weight") as f32).collect();
+    let after: Vec<f32> = oracle["afterWeights"].as_array().expect("after weights").iter().map(|value| value.as_f64().expect("weight") as f32).collect();
+    let mut dock = dock_with(DockNode::Row(before.iter().enumerate().map(|(index, weight)| (stack_with(&format!("window-{index}")), *weight)).collect()), "window-0");
+    let canvas = Rect::new(0.0, 0.0, axis_extent, 200.0);
+    let before_frame = dock.stack_frame_rects_with_separator(canvas, 0.0)[0].1;
+    let before_separator = before_frame.x + before_frame.w;
+    let origin = dock.begin_split_drag(&vec![]);
+    dock.apply_split_drag_with_origin(&vec![], 0, delta, axis_extent, &origin);
+    let after_frame = dock.stack_frame_rects_with_separator(canvas, 0.0)[0].1;
+    let after_separator = after_frame.x + after_frame.w;
+    let DockNode::Row(children) = &dock.root else { panic!("row") };
+    for ((_, actual), expected) in children.iter().zip(after) {
+        assert!((*actual - expected).abs() < 0.0001, "weight {actual} != {expected}");
+    }
+    assert!((after_separator - before_separator - oracle["expectedSeparatorDeltaPixels"].as_f64().expect("separator delta") as f32).abs() < 0.001);
+}
+
 /// ↔️ Resize gutters: React's `Resizable` separator is a thin visual line with a fat grab zone; wgpu
 /// pins the visual at 6 px and the hit at 20 px, centred on the seam, plus 10 px join-corner squares
 /// mirroring `modeJoinCornerSpecsForSeparator` (`🎨️Canvas/🟦️.tsx:515-580`).
@@ -1213,8 +1286,67 @@ fn tab_insert_index_follows_the_painted_gapless_chip_run() {
     assert_eq!(compute_tab_insert_index(125.0, bar, &widths, 0.0), 2, "past the last tab's midpoint the drop appends");
     let tab_bars = vec![(vec![0], WindowStackCorner::TopLeft, bar, widths)];
     let bodies = vec![(vec![0], Rect::new(0.0, 24.0, 200.0, 200.0), "a".to_string())];
-    assert_eq!(
-        compute_dock_drop_zone(125.0, 10.0, &tab_bars, &bodies, Rect::new(0.0, 0.0, 200.0, 224.0)),
-        Some(DockDropZone::Tab { stack_path: vec![0], corner: WindowStackCorner::TopLeft, index: 2 })
-    );
+    assert_eq!(compute_dock_drop_zone(125.0, 10.0, &tab_bars, &bodies, Rect::new(0.0, 0.0, 200.0, 224.0)), Some(DockDropZone::Tab { stack_path: vec![0], corner: WindowStackCorner::TopLeft, index: 2 }));
+}
+
+/// 📐️ The shared React geometry fixture is the dock's physical axis law: themed separators consume
+/// extent before weights, nested axes use the same solver, bodies add horizontal WindowChrome
+/// padding, and resize targets stay centred on the reserved separator while clipped to the canvas.
+#[test]
+fn themed_axis_geometry_matches_the_shared_react_fixture() {
+    let repo = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../../../../../../../../..");
+    let fixture_path = repo.join("🧰️framework/🔨️modules/🖱️ui/🧫️fixtures/📐️dock-axis-geometry/🔣️.json");
+    let fixture: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(&fixture_path).unwrap_or_else(|error| panic!("read {}: {error}", fixture_path.display()))).expect("dock axis fixture");
+    let token = fixture["oracleSample"]["tokenPixels"].as_f64().expect("token pixels") as f32;
+    let width = fixture["viewport"]["width"].as_f64().expect("viewport width") as f32;
+    let height = fixture["viewport"]["height"].as_f64().expect("viewport height") as f32;
+    let canvas = Rect::new(token, token, width - token * 2.0, height - token * 2.0);
+    let stack = |id: &str| DockNode::Stack { windows: vec![DockStackTab::new(id)], active: id.to_string() };
+    let dock = DockState {
+        root: DockNode::Row(vec![(stack("left"), 35.0), (DockNode::Column(vec![(stack("right-top"), 70.0), (stack("right-bottom"), 30.0)]), 65.0)]),
+        active_window_id: Some("left".into()),
+        active_stack: Some(vec![0]),
+        ..DockState::default()
+    };
+    let frames = dock.stack_frame_rects_with_separator(canvas, token);
+    assert_eq!(frames.len(), 3);
+    for (_, rect, id) in &frames {
+        let expected = &fixture["oracleSample"]["stacks"][id];
+        for (actual, key) in [(rect.x, "x"), (rect.y, "y"), (rect.w, "width"), (rect.h, "height")] {
+            let wanted = expected[key].as_f64().unwrap_or_else(|| panic!("{id}.{key}")) as f32;
+            assert!((actual - wanted).abs() < 0.001, "📐️ {id}.{key}: {actual} != {wanted}");
+        }
+    }
+    assert!((dock.split_axis_extent(&Vec::new(), canvas, token).expect("root row") - (canvas.w - token)).abs() < 0.001);
+    assert!((dock.split_axis_extent(&vec![1], canvas, token).expect("nested column") - (canvas.h - token)).abs() < 0.001);
+
+    let theme = Theme::light();
+    assert!((theme.gap_standard - token).abs() < 0.001, "📐️ the neutral sample is the default live spacing token");
+    let mut atlas = FontAtlas::builtin();
+    let labels = HashMap::new();
+    let bodies = dock.stack_body_rects(canvas, &theme, &labels, &mut atlas);
+    for (_, body, id) in &bodies {
+        let frame = frames.iter().find(|(_, _, frame_id)| frame_id == id).expect("matching frame").1;
+        assert!((body.x - frame.x - token).abs() < 0.001, "📐️ {id} begins after one horizontal body inset");
+        assert!((body.w - (frame.w - token * 2.0)).abs() < 0.001, "📐️ {id} removes both horizontal body insets");
+    }
+
+    let mut draw = DrawList::default();
+    let icons = IconAtlas::default();
+    let mut input = InputState::<ActionDescriptor>::default();
+    let icon_ids = HashMap::new();
+    let mut ctx = DockRenderContext { draw: &mut draw, atlas: &mut atlas, icons: &icons, input: &mut input, theme: &theme, window_labels: &labels, window_icon_ids: &icon_ids };
+    dock.register_resize_hits(&mut ctx, canvas);
+    let split_hits = input.staged_hits().iter().filter(|hit| hit.kind == HitKind::DockSplit).collect::<Vec<_>>();
+    assert_eq!(split_hits.len(), 2, "📐️ root and nested axes each publish one resize target");
+    for hit in split_hits {
+        assert!(
+            hit.rect.x >= canvas.x && hit.rect.y >= canvas.y && hit.rect.x + hit.rect.w <= canvas.x + canvas.w + 0.001 && hit.rect.y + hit.rect.h <= canvas.y + canvas.h + 0.001,
+            "📐️ physical hit rect is clipped to its solved canvas: {:?}",
+            hit.rect
+        );
+    }
+
+    let single = DockState { root: stack("single"), ..DockState::default() };
+    assert_eq!(single.stack_frame_rects_with_separator(canvas, token)[0].1, canvas, "📐️ a single stack reserves no separator");
 }

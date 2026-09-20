@@ -16,11 +16,12 @@ pub struct PreparedRenderLimits {
     pub max_draw_bytes: usize,
     pub max_upload_items: usize,
     pub max_upload_bytes: usize,
+    pub max_scene_raster_bytes: usize,
 }
 
 impl Default for PreparedRenderLimits {
     fn default() -> Self {
-        Self { max_draw_items: 262_144, max_draw_bytes: 64 * 1024 * 1024, max_upload_items: 256, max_upload_bytes: 32 * 1024 * 1024 }
+        Self { max_draw_items: 262_144, max_draw_bytes: 64 * 1024 * 1024, max_upload_items: 256, max_upload_bytes: 32 * 1024 * 1024, max_scene_raster_bytes: 256 * 1024 * 1024 }
     }
 }
 
@@ -31,6 +32,7 @@ pub struct PreparedRenderUsage {
     pub draw_bytes: usize,
     pub upload_items: usize,
     pub upload_bytes: usize,
+    pub scene_raster_bytes: usize,
 }
 
 impl PreparedRenderUsage {
@@ -42,16 +44,22 @@ impl PreparedRenderUsage {
         true
     }
 
-    fn include_upload(&mut self, bytes: usize) -> bool {
+    fn include_upload(&mut self, bytes: usize, scene_raster_bytes: usize) -> bool {
         let Some(upload_items) = self.upload_items.checked_add(1) else { return false };
         let Some(upload_bytes) = self.upload_bytes.checked_add(bytes) else { return false };
+        let Some(scene_raster_bytes) = self.scene_raster_bytes.checked_add(scene_raster_bytes) else { return false };
         self.upload_items = upload_items;
         self.upload_bytes = upload_bytes;
+        self.scene_raster_bytes = scene_raster_bytes;
         true
     }
 
     pub fn fits(self, limits: PreparedRenderLimits) -> bool {
-        self.draw_items <= limits.max_draw_items && self.draw_bytes <= limits.max_draw_bytes && self.upload_items <= limits.max_upload_items && self.upload_bytes <= limits.max_upload_bytes
+        self.draw_items <= limits.max_draw_items
+            && self.draw_bytes <= limits.max_draw_bytes
+            && self.upload_items <= limits.max_upload_items
+            && self.upload_bytes <= limits.max_upload_bytes
+            && self.scene_raster_bytes <= limits.max_scene_raster_bytes
     }
 }
 
@@ -335,6 +343,68 @@ impl Drop for PreparedRenderProcessPermit {
 
 //#region 🧩️PagedRasterProducer
 pub const PREPARED_RASTER_PAGE_BYTES: usize = 16 * 1024;
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct RasterContentIdentity {
+    width: u32,
+    height: u32,
+    byte_len: u64,
+    digest_a: u64,
+    digest_b: u64,
+}
+
+impl RasterContentIdentity {
+    pub(crate) fn pixels(width: u32, height: u32, byte_len: usize) -> Option<Self> {
+        let byte_len = u64::try_from(byte_len).ok()?;
+        let mut identity = Self { width, height, byte_len, digest_a: 0x243f_6a88_85a3_08d3, digest_b: 0x1319_8a2e_0370_7344 };
+        identity.mix_word(0x7069_7865_6c73_0001);
+        identity.mix_word(u64::from(width));
+        identity.mix_word(u64::from(height));
+        identity.mix_word(byte_len);
+        Some(identity)
+    }
+
+    pub fn revision(width: u32, height: u32, revisions: [u64; 6]) -> Option<Self> {
+        let byte_len = u64::from(width).checked_mul(u64::from(height))?.checked_mul(4)?;
+        let mut identity = Self { width, height, byte_len, digest_a: 0x243f_6a88_85a3_08d3, digest_b: 0x1319_8a2e_0370_7344 };
+        identity.mix_word(0x7265_7669_7369_6f6e);
+        identity.mix_word(u64::from(width));
+        identity.mix_word(u64::from(height));
+        identity.mix_word(byte_len);
+        for revision in revisions {
+            identity.mix_word(revision);
+        }
+        Some(identity)
+    }
+
+    pub(crate) fn mix_word(&mut self, word: u64) {
+        self.digest_a ^= word.wrapping_mul(0x9e37_79b1_85eb_ca87);
+        self.digest_a = self.digest_a.rotate_left(27).wrapping_mul(0x94d0_49bb_1331_11eb);
+        self.digest_b = self.digest_b.wrapping_add(word ^ 0xd6e8_feb8_6659_fd93).rotate_left(31).wrapping_mul(0xbf58_476d_1ce4_e5b9);
+    }
+
+    pub(crate) fn mix_bytes(&mut self, offset: usize, bytes: &[u8]) {
+        for (relative, byte) in bytes.iter().copied().enumerate() {
+            let index = u64::try_from(offset.saturating_add(relative)).unwrap_or(u64::MAX);
+            let word = index.rotate_left(17) ^ u64::from(byte) ^ 0xa076_1d64_78bd_642f;
+            self.digest_a ^= word.wrapping_mul(0xe703_7ed1_a0b4_28db);
+            self.digest_b = self.digest_b.wrapping_add(word.wrapping_mul(0x8ebc_6af0_9c88_c6e3));
+        }
+    }
+
+    pub fn dimensions_match(self, width: u32, height: u32, byte_len: usize) -> bool {
+        self.width == width && self.height == height && u64::try_from(byte_len).is_ok_and(|byte_len| self.byte_len == byte_len)
+    }
+
+    #[cfg(test)]
+    pub(crate) fn test_pixels(width: u32, height: u32, pixels: &[u8]) -> Option<Self> {
+        let mut identity = Self::pixels(width, height, pixels.len())?;
+        for (page, bytes) in pixels.chunks(PREPARED_RASTER_PAGE_BYTES).enumerate() {
+            identity.mix_bytes(page.saturating_mul(PREPARED_RASTER_PAGE_BYTES), bytes);
+        }
+        Some(identity)
+    }
+}
 const PREPARED_RASTER_KEY_BYTES: usize = 256;
 /// 🖼️ The straight-RGBA ceiling ONE raster item may carry into a prepared packet. `pub` because a
 /// PRODUCER of raster sources has to size its own decode against it: the world reference underlay
@@ -455,6 +525,7 @@ pub struct PreparedRasterPages {
     width: u32,
     height: u32,
     byte_len: usize,
+    content_identity: RasterContentIdentity,
     source_generation: PreparedRasterGeneration,
     frame_generation: u64,
     credit: Option<PreparedRasterCredit>,
@@ -757,6 +828,10 @@ impl PreparedRasterPages {
         self.byte_len
     }
 
+    pub fn content_identity(&self) -> RasterContentIdentity {
+        self.content_identity
+    }
+
     pub fn source_generation(&self) -> PreparedRasterGeneration {
         self.source_generation
     }
@@ -805,12 +880,13 @@ impl PreparedRasterPages {
             3 => self.width = 0,
             4 => self.height = 0,
             5 => self.byte_len = 0,
-            6 => self.source_generation = PreparedRasterGeneration::default(),
-            7 => self.frame_generation = 0,
-            8 => self.backing_released = true,
-            9 => {
+            6 => self.content_identity = RasterContentIdentity::pixels(0, 0, 0).expect("empty raster identity"),
+            7 => self.source_generation = PreparedRasterGeneration::default(),
+            8 => self.frame_generation = 0,
+            9 => self.backing_released = true,
+            10 => {
                 let Some(credit) = self.credit.as_ref() else {
-                    self.close_phase = 10;
+                    self.close_phase = 11;
                     return true;
                 };
                 let Ok(mut ledger) = PREPARED_RASTER_LEDGER.lock() else { return false };
@@ -1010,6 +1086,7 @@ impl PreparedRasterReservation {
         if claim.width != width || claim.height != height || source.len() != claim.byte_len || source.capacity() > claim.byte_len || retained_source.capacity() > self.source_bytes {
             return Err(reject(self, "raster materialization did not match its exact claim", source, retained_source));
         }
+        let Some(content_identity) = RasterContentIdentity::pixels(width, height, claim.byte_len) else { return Err(reject(self, "raster content identity byte credits overflowed", source, retained_source)) };
         let Some(credit) = self.credit.take() else { return Err(reject(self, "raster reservation lost its exact credit", source, retained_source)) };
         let source_generation = PreparedRasterGeneration { slot: credit.slot, epoch: credit.epoch };
         let pages = PreparedRasterPages {
@@ -1020,6 +1097,7 @@ impl PreparedRasterReservation {
             width,
             height,
             byte_len: claim.byte_len,
+            content_identity,
             source_generation,
             frame_generation: 0,
             credit: Some(credit),
@@ -1131,6 +1209,7 @@ impl PreparedRasterProducer {
         let Some(end) = start.checked_add(page_bytes).map(|end| end.min(self.source.len())) else { return PreparedRasterProducerStep::Fault("raster page end exhausted") };
         let Ok(start_row) = u32::try_from(start / row_bytes) else { return PreparedRasterProducerStep::Fault("raster start row exhausted") };
         let Ok(rows) = u32::try_from((end - start) / row_bytes) else { return PreparedRasterProducerStep::Fault("raster page rows exhausted") };
+        pages.content_identity.mix_bytes(start, &self.source[start..end]);
         pages.slots.push(PreparedRasterPage { start_row, rows });
         PreparedRasterProducerStep::Pending
     }
@@ -1231,6 +1310,10 @@ pub enum PreparedRenderUpload {
         key: String,
         pixels: PreparedRasterPages,
     },
+    SceneRaster {
+        key: String,
+        lease: crate::wgpu::raster_ownership::SceneRasterLease,
+    },
     Mesh {
         key: String,
         version: u64,
@@ -1261,6 +1344,7 @@ impl PreparedRenderUpload {
             #[cfg(test)]
             Self::Raster { key, pixels, .. } => key.len().checked_add(pixels.len()),
             Self::RasterPages { key, pixels } => key.len().checked_add(pixels.byte_len()),
+            Self::SceneRaster { key, .. } => key.len().checked_add(size_of::<crate::wgpu::raster_ownership::SceneRasterLease>()),
             Self::Mesh { key, lease, .. } => {
                 let Ok(schema) = lease.schema() else { return Some(key.len()) };
                 let bytes = usize::try_from(schema.vertices)
@@ -1275,6 +1359,13 @@ impl PreparedRenderUpload {
                     .checked_add(usize::try_from(schema.colors).ok()?.checked_mul(16)?)?;
                 key.len().checked_add(bytes)
             }
+        }
+    }
+
+    pub fn scene_raster_byte_len(&self) -> usize {
+        match self {
+            Self::SceneRaster { lease, .. } => lease.byte_len(),
+            _ => 0,
         }
     }
 
@@ -1299,6 +1390,15 @@ impl PreparedRenderUpload {
                 }
             }
             Self::RasterPages { key, pixels } => pixels.retire_with_key_step(key),
+            Self::SceneRaster { key, lease } => {
+                if key.pop().is_some() {
+                    return false;
+                }
+                if lease.release_committed() {
+                    return false;
+                }
+                true
+            }
             Self::Mesh { key, .. } => key.pop().is_none(),
         }
     }
@@ -1512,6 +1612,19 @@ pub struct PreparedRenderPacket {
     abandonment_slot: u8,
 }
 
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub struct PreparedRasterKeepCursorV1 {
+    owner: u8,
+    draw: crate::wgpu::draw_types::RasterKeepCursorV1,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum PreparedRasterKeepStepV1<'a> {
+    Pending,
+    Key(&'a str),
+    Complete,
+}
+
 impl PreparedRenderPacket {
     #[cfg(test)]
     const RETIRE_PAGE_BYTES: usize = 16 * 1024;
@@ -1558,6 +1671,28 @@ impl PreparedRenderPacket {
 
     pub fn command_pages(&self) -> &PreparedRenderCommandPages {
         &self.commands
+    }
+
+    pub fn raster_keep_step<'a>(&'a self, cursor: &mut PreparedRasterKeepCursorV1) -> PreparedRasterKeepStepV1<'a> {
+        let draw = match cursor.owner {
+            0 => Some(&self.draw),
+            1 => self.overlay.as_ref(),
+            _ => return PreparedRasterKeepStepV1::Complete,
+        };
+        let Some(draw) = draw else {
+            cursor.owner += 1;
+            cursor.draw = crate::wgpu::draw_types::RasterKeepCursorV1::default();
+            return PreparedRasterKeepStepV1::Pending;
+        };
+        match draw.raster_keep_step(&mut cursor.draw) {
+            crate::wgpu::draw_types::RasterKeepStepV1::Pending => PreparedRasterKeepStepV1::Pending,
+            crate::wgpu::draw_types::RasterKeepStepV1::Key(key) => PreparedRasterKeepStepV1::Key(key),
+            crate::wgpu::draw_types::RasterKeepStepV1::Complete => {
+                cursor.owner += 1;
+                cursor.draw = crate::wgpu::draw_types::RasterKeepCursorV1::default();
+                PreparedRasterKeepStepV1::Pending
+            }
+        }
     }
 
     #[expect(clippy::result_large_err, reason = "Refusal returns the exact admitted packet without allocating another owner.")]
@@ -1615,6 +1750,7 @@ impl PreparedRenderPacket {
                     }
                 }
                 PreparedRenderUpload::RasterPages { key, pixels } => !pixels.retire_with_key_step(key),
+                PreparedRenderUpload::SceneRaster { key, lease } => key.pop().is_some() || lease.release_committed(),
                 PreparedRenderUpload::Mesh { key, .. } => key.pop().is_some(),
             };
             if retained {
@@ -1938,6 +2074,7 @@ impl PreparedRenderInput {
                 #[cfg(test)]
                 PreparedRenderUpload::Raster { key, pixels, .. } => pixels.pop().is_some() || key.pop().is_some(),
                 PreparedRenderUpload::RasterPages { key, pixels } => !pixels.retire_with_key_step(key),
+                PreparedRenderUpload::SceneRaster { key, lease } => key.pop().is_some() || lease.release_committed(),
                 PreparedRenderUpload::Mesh { key, .. } => key.pop().is_some(),
             };
             if retained {
@@ -2271,9 +2408,11 @@ pub(crate) enum DrawMeasureCursor {
     LayerHeader(usize),
     LayerUi { layer: usize, item: usize, overlay: bool },
     LayerVector { layer: usize, item: usize, overlay: bool },
-    LayerRaster { layer: usize, raster: usize },
-    LayerRasterKey { layer: usize, raster: usize, byte: usize },
+    LayerRaster { layer: usize, raster: usize, overlay: bool },
+    LayerRasterKey { layer: usize, raster: usize, byte: usize, overlay: bool },
     PassHeader(usize),
+    PassShadowBegin(usize),
+    PassShadowInstance { pass: usize, draw: usize, instance: usize },
     PassDraw { pass: usize, draw: usize, translucent: bool },
     PassDrawKey { pass: usize, draw: usize, byte: usize, translucent: bool },
     PassInstance { pass: usize, draw: usize, instance: usize, translucent: bool },
@@ -2283,6 +2422,11 @@ pub(crate) enum DrawMeasureCursor {
     PassTextured { pass: usize, draw: usize },
     PassTexturedInstance { pass: usize, draw: usize, instance: usize },
     PassTexturedKey { pass: usize, draw: usize, instance: usize, byte: usize },
+    PassMaterial { pass: usize, draw: usize, translucent: bool },
+    PassMaterialMeshKey { pass: usize, draw: usize, byte: usize, translucent: bool },
+    PassMaterialTextureKey { pass: usize, draw: usize, byte: usize, translucent: bool },
+    PassMaterialInstance { pass: usize, draw: usize, instance: usize, translucent: bool },
+    PassMaterialInstanceKey { pass: usize, draw: usize, instance: usize, byte: usize, translucent: bool },
     Glass(usize),
     Complete,
 }
@@ -2405,6 +2549,7 @@ impl PreparedRenderJob {
                 #[cfg(test)]
                 PreparedRenderUpload::Raster { key, pixels, .. } => pixels.pop().is_some() || key.pop().is_some(),
                 PreparedRenderUpload::RasterPages { key, pixels } => !pixels.retire_with_key_step(key),
+                PreparedRenderUpload::SceneRaster { key, lease } => key.pop().is_some() || lease.release_committed(),
                 PreparedRenderUpload::Mesh { key, .. } => key.pop().is_some(),
             };
             if retained {
@@ -2490,32 +2635,26 @@ impl PreparedRenderJob {
             DrawMeasureCursor::LayerUi { layer, item, overlay } => {
                 let value = &draw.layers[layer];
                 let items = if overlay { &value.overlay_ui_instances } else { &value.ui_instances };
-                let next = if item + 1 < items.len() {
-                    DrawMeasureCursor::LayerUi { layer, item: item + 1, overlay }
-                } else {
-                    Self::layer_channel_cursor(draw, layer, if overlay { 4 } else { 1 })
-                };
+                let next = if item + 1 < items.len() { DrawMeasureCursor::LayerUi { layer, item: item + 1, overlay } } else { Self::layer_channel_cursor(draw, layer, if overlay { 4 } else { 1 }) };
                 (PreparedRenderUsage { draw_items: 1, draw_bytes: size_of::<crate::wgpu::draw_types::UiInstance>(), ..PreparedRenderUsage::default() }, next)
             }
             DrawMeasureCursor::LayerVector { layer, item, overlay } => {
                 let value = &draw.layers[layer];
                 let items = if overlay { &value.overlay_vector_vertices } else { &value.vector_vertices };
-                let next = if item + 1 < items.len() {
-                    DrawMeasureCursor::LayerVector { layer, item: item + 1, overlay }
-                } else {
-                    Self::layer_channel_cursor(draw, layer, if overlay { 5 } else { 2 })
-                };
+                let next = if item + 1 < items.len() { DrawMeasureCursor::LayerVector { layer, item: item + 1, overlay } } else { Self::layer_channel_cursor(draw, layer, if overlay { 5 } else { 2 }) };
                 (PreparedRenderUsage { draw_items: 1, draw_bytes: size_of::<crate::wgpu::draw_types::VectorVertex>(), ..PreparedRenderUsage::default() }, next)
             }
-            DrawMeasureCursor::LayerRaster { layer, raster } => {
-                let value = &draw.layers[layer].raster_instances[raster];
+            DrawMeasureCursor::LayerRaster { layer, raster, overlay } => {
+                let instances = if overlay { &draw.layers[layer].overlay_raster_instances } else { &draw.layers[layer].raster_instances };
+                let value = &instances[raster];
                 let usage = PreparedRenderUsage { draw_items: 1, draw_bytes: size_of::<crate::wgpu::draw_types::UiInstance>(), ..PreparedRenderUsage::default() };
-                let next = if value.0.is_empty() { Self::next_layer_raster(draw, layer, raster) } else { DrawMeasureCursor::LayerRasterKey { layer, raster, byte: 0 } };
+                let next = if value.0.is_empty() { Self::next_layer_raster(draw, layer, raster, overlay) } else { DrawMeasureCursor::LayerRasterKey { layer, raster, byte: 0, overlay } };
                 (usage, next)
             }
-            DrawMeasureCursor::LayerRasterKey { layer, raster, byte } => {
-                let key = &draw.layers[layer].raster_instances[raster].0;
-                let next = if byte + 1 < key.len() { DrawMeasureCursor::LayerRasterKey { layer, raster, byte: byte + 1 } } else { Self::next_layer_raster(draw, layer, raster) };
+            DrawMeasureCursor::LayerRasterKey { layer, raster, byte, overlay } => {
+                let instances = if overlay { &draw.layers[layer].overlay_raster_instances } else { &draw.layers[layer].raster_instances };
+                let key = &instances[raster].0;
+                let next = if byte + 1 < key.len() { DrawMeasureCursor::LayerRasterKey { layer, raster, byte: byte + 1, overlay } } else { Self::next_layer_raster(draw, layer, raster, overlay) };
                 (PreparedRenderUsage { draw_items: 1, draw_bytes: 1, ..PreparedRenderUsage::default() }, next)
             }
             DrawMeasureCursor::PassHeader(pass) => {
@@ -2523,8 +2662,21 @@ impl PreparedRenderJob {
                     *cursor = DrawMeasureCursor::Glass(0);
                     return Some(PreparedRenderUsage::default());
                 };
-                let next = if value.textured_draws.is_empty() { Self::next_after_textured(draw, pass) } else { DrawMeasureCursor::PassTextured { pass, draw: 0 } };
+                let next = if value.shadow.enabled && value.shadow_draws.iter().any(|draw| draw.shadow_role.casts && !draw.instances.is_empty()) { DrawMeasureCursor::PassShadowBegin(pass) } else { Self::next_after_shadow(draw, pass) };
                 (PreparedRenderUsage { draw_items: 1, draw_bytes: size_of::<crate::wgpu::kernel_3d_scene::ScenePass3d>(), ..PreparedRenderUsage::default() }, next)
+            }
+            DrawMeasureCursor::PassShadowBegin(pass) => {
+                let next = Self::first_shadow_instance(draw, pass).unwrap_or_else(|| Self::next_after_shadow(draw, pass));
+                (PreparedRenderUsage { draw_items: 1, ..PreparedRenderUsage::default() }, next)
+            }
+            DrawMeasureCursor::PassShadowInstance { pass, draw: draw_index, instance } => {
+                let draw_value = &draw.scene_passes[pass].shadow_draws[draw_index];
+                let instance_value = &draw_value.instances[instance];
+                let next = Self::next_shadow_instance(draw, pass, draw_index, instance);
+                let draw_bytes = size_of::<crate::wgpu::kernel_3d_scene::Instance3d>()
+                    + instance_value.id.len()
+                    + if instance == 0 { size_of::<crate::wgpu::kernel_3d_scene::SceneDraw3d>() + draw_value.mesh_key.len() } else { 0 };
+                (PreparedRenderUsage { draw_items: 1, draw_bytes, ..PreparedRenderUsage::default() }, next)
             }
             DrawMeasureCursor::PassDraw { pass, draw: draw_index, translucent } => {
                 let pass_value = &draw.scene_passes[pass];
@@ -2593,6 +2745,55 @@ impl PreparedRenderJob {
                 let next = if byte + 1 < key.len() { DrawMeasureCursor::PassTexturedKey { pass, draw: draw_index, instance, byte: byte + 1 } } else { Self::next_textured_instance(draw, pass, draw_index, instance) };
                 (PreparedRenderUsage { draw_items: 1, draw_bytes: 1, ..PreparedRenderUsage::default() }, next)
             }
+            DrawMeasureCursor::PassMaterial { pass, draw: draw_index, translucent } => {
+                let value = &draw.scene_passes[pass].material_draws[draw_index];
+                let next = if !value.mesh_key.is_empty() {
+                    DrawMeasureCursor::PassMaterialMeshKey { pass, draw: draw_index, byte: 0, translucent }
+                } else {
+                    Self::next_material_after_keys(draw, pass, draw_index, translucent)
+                };
+                (PreparedRenderUsage { draw_items: 1, draw_bytes: size_of::<crate::wgpu::kernel_3d_scene::SceneMaterialDraw3d>(), ..PreparedRenderUsage::default() }, next)
+            }
+            DrawMeasureCursor::PassMaterialMeshKey { pass, draw: draw_index, byte, translucent } => {
+                let value = &draw.scene_passes[pass].material_draws[draw_index];
+                let next = if byte + 1 < value.mesh_key.len() {
+                    DrawMeasureCursor::PassMaterialMeshKey { pass, draw: draw_index, byte: byte + 1, translucent }
+                } else {
+                    Self::next_material_after_keys(draw, pass, draw_index, translucent)
+                };
+                (PreparedRenderUsage { draw_items: 1, draw_bytes: 1, ..PreparedRenderUsage::default() }, next)
+            }
+            DrawMeasureCursor::PassMaterialTextureKey { pass, draw: draw_index, byte, translucent } => {
+                let crate::wgpu::kernel_3d_scene::SceneMaterialKind3d::Painted { texture_key } = &draw.scene_passes[pass].material_draws[draw_index].material else {
+                    unreachable!("only painted material draws measure a texture key")
+                };
+                let next = if byte + 1 < texture_key.len() {
+                    DrawMeasureCursor::PassMaterialTextureKey { pass, draw: draw_index, byte: byte + 1, translucent }
+                } else if draw.scene_passes[pass].material_draws[draw_index].instances.is_empty() {
+                    Self::next_material_draw(draw, pass, draw_index, translucent)
+                } else {
+                    DrawMeasureCursor::PassMaterialInstance { pass, draw: draw_index, instance: 0, translucent }
+                };
+                (PreparedRenderUsage { draw_items: 1, draw_bytes: 1, ..PreparedRenderUsage::default() }, next)
+            }
+            DrawMeasureCursor::PassMaterialInstance { pass, draw: draw_index, instance, translucent } => {
+                let value = &draw.scene_passes[pass].material_draws[draw_index].instances[instance];
+                let next = if value.id.is_empty() {
+                    Self::next_material_instance(draw, pass, draw_index, instance, translucent)
+                } else {
+                    DrawMeasureCursor::PassMaterialInstanceKey { pass, draw: draw_index, instance, byte: 0, translucent }
+                };
+                (PreparedRenderUsage { draw_items: 1, draw_bytes: size_of::<crate::wgpu::kernel_3d_scene::Instance3d>(), ..PreparedRenderUsage::default() }, next)
+            }
+            DrawMeasureCursor::PassMaterialInstanceKey { pass, draw: draw_index, instance, byte, translucent } => {
+                let key = &draw.scene_passes[pass].material_draws[draw_index].instances[instance].id;
+                let next = if byte + 1 < key.len() {
+                    DrawMeasureCursor::PassMaterialInstanceKey { pass, draw: draw_index, instance, byte: byte + 1, translucent }
+                } else {
+                    Self::next_material_instance(draw, pass, draw_index, instance, translucent)
+                };
+                (PreparedRenderUsage { draw_items: 1, draw_bytes: 1, ..PreparedRenderUsage::default() }, next)
+            }
             DrawMeasureCursor::Glass(index) => {
                 if index >= draw.glass_regions.len() {
                     *cursor = DrawMeasureCursor::Complete;
@@ -2606,17 +2807,19 @@ impl PreparedRenderJob {
         Some(usage)
     }
 
-    fn next_layer_raster(draw: &DrawList, layer: usize, raster: usize) -> DrawMeasureCursor {
-        if raster + 1 < draw.layers[layer].raster_instances.len() {
-            DrawMeasureCursor::LayerRaster { layer, raster: raster + 1 }
+    fn next_layer_raster(draw: &DrawList, layer: usize, raster: usize, overlay: bool) -> DrawMeasureCursor {
+        let instances = if overlay { &draw.layers[layer].overlay_raster_instances } else { &draw.layers[layer].raster_instances };
+        if raster + 1 < instances.len() {
+            DrawMeasureCursor::LayerRaster { layer, raster: raster + 1, overlay }
         } else {
-            Self::layer_channel_cursor(draw, layer, 3)
+            Self::layer_channel_cursor(draw, layer, if overlay { 6 } else { 3 })
         }
     }
 
-    /// 🥞️ The five channels one `DrawLayer` publishes, walked in the order the IMMEDIATE renderer
+    /// 🥞️ The six channels one `DrawLayer` publishes, walked in the order the IMMEDIATE renderer
     /// composites them (`Pipelines::render`: the ui/vector pass, then `ui_raster_pass`, then the
-    /// `overlay_pass` LAST) — opaque ui, opaque vector, rasters, overlay ui, overlay vector.
+    /// `overlay_pass` LAST) — opaque ui, opaque vector, rasters, overlay ui, overlay vector,
+    /// overlay rasters.
     ///
     /// 🩸️ This walk used to put the RASTERS last, after both overlay channels, so within one layer an
     /// engine surface's opaque vello texture was composited ON TOP of the overlay glyphs painted over
@@ -2629,13 +2832,14 @@ impl PreparedRenderJob {
         let Some(value) = draw.layers.get(layer) else {
             return DrawMeasureCursor::LayerHeader(layer + 1);
         };
-        for channel in from_channel..5 {
+        for channel in from_channel..6 {
             match channel {
                 0 if !value.ui_instances.is_empty() => return DrawMeasureCursor::LayerUi { layer, item: 0, overlay: false },
                 1 if !value.vector_vertices.is_empty() => return DrawMeasureCursor::LayerVector { layer, item: 0, overlay: false },
-                2 if !value.raster_instances.is_empty() => return DrawMeasureCursor::LayerRaster { layer, raster: 0 },
+                2 if !value.raster_instances.is_empty() => return DrawMeasureCursor::LayerRaster { layer, raster: 0, overlay: false },
                 3 if !value.overlay_ui_instances.is_empty() => return DrawMeasureCursor::LayerUi { layer, item: 0, overlay: true },
                 4 if !value.overlay_vector_vertices.is_empty() => return DrawMeasureCursor::LayerVector { layer, item: 0, overlay: true },
+                5 if !value.overlay_raster_instances.is_empty() => return DrawMeasureCursor::LayerRaster { layer, raster: 0, overlay: true },
                 _ => {}
             }
         }
@@ -2652,6 +2856,29 @@ impl PreparedRenderJob {
         }
     }
 
+    fn first_shadow_instance(draw: &DrawList, pass: usize) -> Option<DrawMeasureCursor> {
+        draw.scene_passes[pass].shadow_draws.iter().position(|draw| draw.shadow_role.casts && !draw.instances.is_empty()).map(|draw| DrawMeasureCursor::PassShadowInstance { pass, draw, instance: 0 })
+    }
+
+    fn next_shadow_instance(draw: &DrawList, pass: usize, draw_index: usize, instance: usize) -> DrawMeasureCursor {
+        let draws = &draw.scene_passes[pass].shadow_draws;
+        if instance + 1 < draws[draw_index].instances.len() {
+            return DrawMeasureCursor::PassShadowInstance { pass, draw: draw_index, instance: instance + 1 };
+        }
+        if let Some(next_draw) = draws.iter().enumerate().skip(draw_index + 1).find_map(|(index, draw)| (draw.shadow_role.casts && !draw.instances.is_empty()).then_some(index)) {
+            return DrawMeasureCursor::PassShadowInstance { pass, draw: next_draw, instance: 0 };
+        }
+        Self::next_after_shadow(draw, pass)
+    }
+
+    fn next_after_shadow(draw: &DrawList, pass: usize) -> DrawMeasureCursor {
+        if draw.scene_passes[pass].textured_draws.is_empty() {
+            Self::next_after_textured(draw, pass)
+        } else {
+            DrawMeasureCursor::PassTextured { pass, draw: 0 }
+        }
+    }
+
     fn next_pass_line(draw: &DrawList, pass: usize, draw_index: usize) -> DrawMeasureCursor {
         if draw_index + 1 < draw.scene_passes[pass].line_draws.len() {
             DrawMeasureCursor::PassLine { pass, draw: draw_index + 1 }
@@ -2665,6 +2892,49 @@ impl PreparedRenderJob {
             DrawMeasureCursor::PassTexturedInstance { pass, draw: draw_index, instance: instance + 1 }
         } else {
             Self::next_textured_draw(draw, pass, draw_index)
+        }
+    }
+
+    fn first_material(draw: &DrawList, pass: usize, translucent: bool) -> Option<DrawMeasureCursor> {
+        draw.scene_passes[pass]
+            .material_draws
+            .iter()
+            .position(|value| value.translucent == translucent && !value.instances.is_empty())
+            .map(|draw| DrawMeasureCursor::PassMaterial { pass, draw, translucent })
+    }
+
+    fn next_material_after_keys(draw: &DrawList, pass: usize, draw_index: usize, translucent: bool) -> DrawMeasureCursor {
+        let value = &draw.scene_passes[pass].material_draws[draw_index];
+        match &value.material {
+            crate::wgpu::kernel_3d_scene::SceneMaterialKind3d::Painted { texture_key } if !texture_key.is_empty() => DrawMeasureCursor::PassMaterialTextureKey { pass, draw: draw_index, byte: 0, translucent },
+            _ if value.instances.is_empty() => Self::next_material_draw(draw, pass, draw_index, translucent),
+            _ => DrawMeasureCursor::PassMaterialInstance { pass, draw: draw_index, instance: 0, translucent },
+        }
+    }
+
+    fn next_material_instance(draw: &DrawList, pass: usize, draw_index: usize, instance: usize, translucent: bool) -> DrawMeasureCursor {
+        if instance + 1 < draw.scene_passes[pass].material_draws[draw_index].instances.len() {
+            DrawMeasureCursor::PassMaterialInstance { pass, draw: draw_index, instance: instance + 1, translucent }
+        } else {
+            Self::next_material_draw(draw, pass, draw_index, translucent)
+        }
+    }
+
+    fn next_material_draw(draw: &DrawList, pass: usize, draw_index: usize, translucent: bool) -> DrawMeasureCursor {
+        if let Some((next, _)) = draw.scene_passes[pass]
+            .material_draws
+            .iter()
+            .enumerate()
+            .skip(draw_index + 1)
+            .find(|(_, value)| value.translucent == translucent && !value.instances.is_empty())
+        {
+            DrawMeasureCursor::PassMaterial { pass, draw: next, translucent }
+        } else if translucent {
+            DrawMeasureCursor::PassHeader(pass + 1)
+        } else if !draw.scene_passes[pass].draws.is_empty() {
+            DrawMeasureCursor::PassDraw { pass, draw: 0, translucent: false }
+        } else {
+            Self::next_after_opaque(draw, pass)
         }
     }
 
@@ -2707,15 +2977,17 @@ impl PreparedRenderJob {
     /// first is what makes the geometry in front of it actually occlude it (ticket
     /// 26/09/17/WGPU-RENDERER-REACT-PARITY, `📓️w7b-presenter-one-frame-per-boot.md` §4).
     fn next_after_textured(draw: &DrawList, pass: usize) -> DrawMeasureCursor {
-        if !draw.scene_passes[pass].draws.is_empty() {
+        if let Some(cursor) = Self::first_material(draw, pass, false) {
+            cursor
+        } else if !draw.scene_passes[pass].draws.is_empty() {
             DrawMeasureCursor::PassDraw { pass, draw: 0, translucent: false }
         } else {
             Self::next_after_opaque(draw, pass)
         }
     }
 
-    fn next_after_translucent(_draw: &DrawList, pass: usize) -> DrawMeasureCursor {
-        DrawMeasureCursor::PassHeader(pass + 1)
+    fn next_after_translucent(draw: &DrawList, pass: usize) -> DrawMeasureCursor {
+        Self::first_material(draw, pass, true).unwrap_or(DrawMeasureCursor::PassHeader(pass + 1))
     }
 
     fn next_textured_draw(draw: &DrawList, pass: usize, draw_index: usize) -> DrawMeasureCursor {
@@ -2760,7 +3032,8 @@ impl PreparedRenderJob {
                         return Some(PreparedRenderUsage::default());
                     };
                     self.metadata_cursor = next;
-                    let Some(digest) = u64::try_from(bytes).ok() else {
+                    let scene_raster_bytes = upload.scene_raster_byte_len();
+                    let Some(digest) = u64::try_from(bytes).ok().zip(u64::try_from(scene_raster_bytes).ok()).map(|(bytes, scene)| bytes ^ scene.rotate_left(31)) else {
                         self.fault = Some("prepared upload digest exhausted");
                         return Some(PreparedRenderUsage::default());
                     };
@@ -2773,7 +3046,7 @@ impl PreparedRenderJob {
                         self.fault = Some("prepared render command page credits exhausted");
                         return Some(PreparedRenderUsage::default());
                     }
-                    return Some(PreparedRenderUsage { upload_items: 1, upload_bytes: bytes, ..PreparedRenderUsage::default() });
+                    return Some(PreparedRenderUsage { upload_items: 1, upload_bytes: bytes, scene_raster_bytes, ..PreparedRenderUsage::default() });
                 }
                 self.section = PreparationSection::Evictions;
                 self.metadata_cursor = 0;
@@ -2883,7 +3156,7 @@ impl PreparedRenderJob {
     }
 
     fn include_usage(&mut self, usage: PreparedRenderUsage) -> bool {
-        self.usage.include_draw(usage.draw_items, usage.draw_bytes) && (usage.upload_items == 0 || self.usage.include_upload(usage.upload_bytes))
+        self.usage.include_draw(usage.draw_items, usage.draw_bytes) && (usage.upload_items == 0 || self.usage.include_upload(usage.upload_bytes, usage.scene_raster_bytes))
     }
 
     fn fault_outcome(&mut self, fault: &'static str) -> StepOutcome {

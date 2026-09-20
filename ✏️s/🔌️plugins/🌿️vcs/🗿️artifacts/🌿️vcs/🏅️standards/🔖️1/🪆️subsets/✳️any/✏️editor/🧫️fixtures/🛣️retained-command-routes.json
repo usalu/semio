@@ -58,6 +58,14 @@
       "reason": "no persisted publication"
     },
     {
+      "id": "setActiveExample",
+      "execution": "bounded-first-step",
+      "lanes": [
+        "HostOnly"
+      ],
+      "reason": "replaces the whole document through an Effect::LoadDocument, outside undo history"
+    },
+    {
       "id": "textEdit",
       "execution": "resumable",
       "lanes": [

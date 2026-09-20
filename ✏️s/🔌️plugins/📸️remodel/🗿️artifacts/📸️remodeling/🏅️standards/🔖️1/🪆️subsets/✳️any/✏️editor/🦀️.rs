@@ -1046,6 +1046,7 @@ pub fn create_remodeling_app() -> AppDefinition {
                 ActionArgDef::text("cameraId", LocalizedLabel::native("Camera Id", "Kamera-Id")).default_value(&""),
             ])
             .mutation("removeStream", LocalizedLabel::native("Remove Stream", "Stream entfernen"))
+            .action_destructive("removeStream")
             .action_args("removeStream", vec![ActionArgDef::text("streamId", LocalizedLabel::native("Stream Id", "Stream-Id")).required()])
             .mutation("setStreamSync", LocalizedLabel::native("Set Stream Sync", "Stream-Synchronisation festlegen"))
             .action_args("setStreamSync", vec![ActionArgDef::text("streamId", LocalizedLabel::native("Stream Id", "Stream-Id")).required(), ActionArgDef::number("syncOffsetMs", LocalizedLabel::native("Sync Offset (ms)", "Sync-Versatz (ms)")).default_value(&0)])
@@ -1076,6 +1077,7 @@ pub fn create_remodeling_app() -> AppDefinition {
                 ActionArgDef::number("worldZ", LocalizedLabel::native("World Z", "Welt Z")).default_value(&0),
             ])
             .mutation("removeGcp", LocalizedLabel::native("Remove Ground Control Point", "Passpunkt entfernen"))
+            .action_destructive("removeGcp")
             .action_args("removeGcp", vec![ActionArgDef::text("gcpId", LocalizedLabel::native("GCP Id", "Passpunkt-Id")).required()])
             .mutation("placeGcpObservation", LocalizedLabel::native("Place GCP Observation", "Passpunkt-Beobachtung setzen"))
             .action_args("placeGcpObservation", vec![
@@ -1160,11 +1162,17 @@ pub fn create_remodeling_app() -> AppDefinition {
             // 🧹️ Clear/reset.
             .mutation("resetPlaceholderMesh", LocalizedLabel::native("Reset Placeholder Mesh", "Platzhalter-Mesh zurücksetzen"))
             .mutation("clearSparse", LocalizedLabel::native("Clear Sparse Cloud", "Dünne Punktwolke löschen"))
+            .action_destructive("clearSparse")
             .mutation("clearDense", LocalizedLabel::native("Clear Dense Cloud", "Dichte Punktwolke löschen"))
+            .action_destructive("clearDense")
             .mutation("clearMeshResult", LocalizedLabel::native("Clear Mesh", "Mesh löschen"))
+            .action_destructive("clearMeshResult")
             .mutation("clearTracks", LocalizedLabel::native("Clear Tracks", "Spuren löschen"))
+            .action_destructive("clearTracks")
             .mutation("clearGeoProducts", LocalizedLabel::native("Clear Geo Products", "Geo-Produkte löschen"))
+            .action_destructive("clearGeoProducts")
             .mutation("clearResult", LocalizedLabel::native("Clear Result", "Ergebnis löschen"))
+            .action_destructive("clearResult")
             // 👁️ View-only runtime actions.
             .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new("setCamera", LocalizedLabel::native("Set Camera", "Kamera festlegen"), ActionKind::View, "camera") })
             .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::bounded_catalog("setLayerVisibility", LocalizedLabel::native("Set Layer Visibility", "Ebenensichtbarkeit festlegen"), ActionKind::View) })
@@ -1183,6 +1191,7 @@ pub fn create_remodeling_app() -> AppDefinition {
             // 🎬️ Example picker — one option per `crate::editor::remodeling::examples::REMODELING_EXAMPLES`
             // entry, so appending an example there is the only edit a new example needs.
             .action_with(ActionDefinition { in_palette: true, ..ActionDefinition::new("setActiveExample", LocalizedLabel::native("Load Example", "Beispiel laden"), ActionKind::Mutation, "panel-left") })
+            .action_destructive("setActiveExample")
             .action_args("setActiveExample", vec![ActionArgDef::select(
                 "exampleId",
                 LocalizedLabel::native("Example", "Beispiel"),

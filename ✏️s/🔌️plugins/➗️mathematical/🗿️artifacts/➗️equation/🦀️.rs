@@ -346,6 +346,27 @@ pub fn equation_children_from_state(graph: &EquationGraph, geometry: &EquationGe
     )
 }
 
+/// 🌱️ `ArtifactApp::genesis_child_pack` for the three composed members every equation document
+/// declares — `notation` (the node labels as `text` runs), `results` (the node table) and
+/// `computed` (direction/algorithm/edges/points as one `value` map) — all pure functions of the
+/// snapshot's own scene through the three converters in `🔖️Converters`, so a fresh boot and a
+/// whole-document load (`Effect::LoadDocument`, whose archive the react shell sends MEMBER-LESS)
+/// materialise exactly the children `equation_children_from_state` minted handles for. A decoded
+/// snapshot carries no local owner, so `equation_scene` answers the empty scene there — which is
+/// precisely the document `EquationSnapshot::default()` and the committed `🎬️demo` asset describe.
+/// Without this the archive closure reports `Incomplete` and every `setActiveExample` fails with
+/// `document archive replacement failed its closure leg` (measured live 2026-09-20, slice F3).
+pub fn genesis_equation_child_pack(snapshot: &EquationSnapshot, slot: &str, child_id: &str) -> Option<Vec<u8>> {
+    use store::ArtifactPack;
+    let scene = equation_scene(snapshot);
+    match slot {
+        "notation" if child_id == snapshot.notation.child_id => Some(<SemioTextSnapshot as ArtifactPack>::encode_pack(&equation_notation_from_graph(&scene.graph))),
+        "results" if child_id == snapshot.results.child_id => Some(<SemioTableSnapshot as ArtifactPack>::encode_pack(&equation_results_from_graph(&scene.graph))),
+        "computed" if child_id == snapshot.computed.child_id => Some(<SemioValueSnapshot as ArtifactPack>::encode_pack(&equation_computed_from_state(&scene.graph, &scene.geometry))),
+        _ => None,
+    }
+}
+
 /// 🔎 Reads the exact artifact-instance scene behind a snapshot's composed children.
 pub fn equation_scene(snapshot: &EquationSnapshot) -> EquationWorkingScene {
     equation_scene_owner(snapshot).map_or_else(
@@ -557,15 +578,15 @@ pub fn artifact<A: EquationApplication>() -> semio_framework_plugin::app::declar
 /// 🧩️ App fleet capable of hosting this artifact's editor and viewer.
 pub trait EquationApplication:
     semio_framework_plugin::PluginApp
-    + From<semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<editor::equation::EquationPlayApp>>>
-    + From<semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<viewer::equation::EquationViewer>>>
+    + From<semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<editor::equation::EquationPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>>
+    + From<semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<viewer::equation::EquationViewer>, semio_s_artifact_stdio_semio::SemioMembers>>
 {
 }
 
 impl<A> EquationApplication for A where
     A: semio_framework_plugin::PluginApp
-        + From<semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<editor::equation::EquationPlayApp>>>
-        + From<semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<viewer::equation::EquationViewer>>>
+        + From<semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<editor::equation::EquationPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>>
+        + From<semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<viewer::equation::EquationViewer>, semio_s_artifact_stdio_semio::SemioMembers>>
 {
 }
 
@@ -1090,6 +1111,8 @@ pub mod editor {
             pub mod node_graph_edit;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔭️node-graph-viewport/🦀️.rs"]
             pub mod node_graph_viewport;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎬️set-active-example/🦀️.rs"]
+            pub mod set_active_example;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧮️set-algorithm/🦀️.rs"]
             pub mod set_algorithm;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🗿️set-artifact/🦀️.rs"]

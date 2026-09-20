@@ -9,24 +9,25 @@
 
 use std::collections::HashMap;
 
+use crate::wgpu::chrome::UiDriverDrag;
 use crate::wgpu::component::layout::WindowLayout;
 use crate::wgpu::component::ui::UiNode;
 use crate::wgpu::draw::{DrawList, IconAtlas};
-use crate::wgpu::events::{resolve_overlay_placement_side, DragPayload, EventRouter, OverlayAnchor, OverlayKind, TooltipStep, UiCommand, UiEvent};
-use crate::wgpu::input::{retained_hit_registration, RetainedHitRegistration};
-use crate::wgpu::layout::TreeRowMetrics;
+use crate::wgpu::events::{resolve_overlay_placement_side, AccessibilityUiEvent, DragPayload, EventRouter, OverlayAnchor, OverlayKind, TooltipStep, UiCommand, UiEvent};
 use crate::wgpu::flex::{LayoutJobStage, LayoutJobStep};
+use crate::wgpu::input::{retained_hit_registration, retained_tree_chevron_registration, retained_tree_drag_handle_registration, HitKind, RetainedHitRegistration};
+use crate::wgpu::layout::TreeRowMetrics;
 use crate::wgpu::mounted_layout::{MountedLayoutIdentity, MountedLayoutJob, MountedLayoutResult, RetainedGlyphPreview};
 #[cfg(test)]
 use crate::wgpu::paint::paint_tree;
-use crate::wgpu::paint::{paint_node_step, retained_overlay_chrome_step, sync_interactive_state_node_step, RetainedInteractiveSyncCursor, RetainedInteractiveSyncStep, RetainedNodePaintCursor, RetainedNodePaintStep};
+use crate::wgpu::paint::{paint_node_step_with_driver, retained_overlay_chrome_step, sync_interactive_state_node_step, RetainedInteractiveSyncCursor, RetainedInteractiveSyncStep, RetainedNodePaintCursor, RetainedNodePaintStep};
+use crate::wgpu::reconcile::{UiDocumentReconcileCursor, UiDocumentReconcileStep};
 #[cfg(test)]
 use crate::wgpu::scene_slots::collect_scene_slots;
 use crate::wgpu::scene_slots::{scene_slot_for_node, SceneHost, ScenePaintCursor, ScenePaintStep};
 use crate::wgpu::shell::{Shell, ShellEvent};
 use crate::wgpu::text::FontAtlas;
 use crate::wgpu::theme::Theme;
-use crate::wgpu::reconcile::{UiDocumentReconcileCursor, UiDocumentReconcileStep};
 use crate::wgpu::tree::{NodeFlags, UiDocumentPageRejection, UiDocumentTree, UiDocumentTreeFault, UiTree};
 use crate::wgpu::IconName;
 use semio_framework_job::StepContext;
@@ -69,10 +70,12 @@ struct UiWindow {
     glyph_preview: Option<RetainedGlyphPreview>,
     lane: SurfaceLane,
     queued: bool,
+    intrinsic_content_height: f32,
     revision: u64,
     theme_revision: u64,
     viewport_revision: u64,
     layout_generation: u64,
+    accessibility_generation: u64,
     document_ingress: Option<UiDocumentIngress>,
     retiring_document: Option<UiDocumentTree>,
     /// 🌳️ The published document's own reconcile into the paintable arena — the one thing that ever
@@ -102,10 +105,12 @@ impl UiWindow {
             glyph_preview: None,
             lane: SurfaceLane::UserVisible,
             queued: false,
+            intrinsic_content_height: f32::NAN,
             revision: 1,
             theme_revision: 1,
             viewport_revision: 1,
             layout_generation: 1,
+            accessibility_generation: 0,
             document_ingress: None,
             retiring_document: None,
             document_reconcile: UiDocumentReconcileCursor::default(),
@@ -158,7 +163,7 @@ enum RetainedPaintWalkStep {
 
 impl RetainedPaintWalk {
     fn new(tree: &UiTree, root: crate::wgpu::arena::NodeId) -> Self {
-        let root_visit = RetainedPaintVisit { node: root, origin_x: 0.0, origin_y: 0.0, next_child: tree.node(root).and_then(|node| node.first_child), entered: false, overlay_root: None };
+        let root_visit = RetainedPaintVisit { node: root, origin_x: 0.0, origin_y: 0.0, next_child: retained_first_child(tree, root), entered: false, overlay_root: None };
         let mut visits = [None; RETAINED_PAINT_DEPTH_CREDITS];
         visits[0] = Some(root_visit);
         Self { visits, len: 1 }
@@ -177,19 +182,17 @@ impl RetainedPaintWalk {
         }
         if let Some(child) = visit.next_child {
             visit.next_child = tree.node(child).and_then(|node| node.next_sibling);
+            if tree.accepted_layout(child).is_none() {
+                return RetainedPaintWalkStep::Scalar;
+            }
             if self.len == RETAINED_PAINT_DEPTH_CREDITS {
                 return RetainedPaintWalkStep::DepthFault;
             }
-            let Some(layout) = tree.accepted_layout(visit.node) else { return RetainedPaintWalkStep::DepthFault };
-            // 📜️ The ONE child-origin rule of this target: parent-relative layout offset minus the
-            // parent's own live scroll offset when it owns a scrollable viewport. Both the paint
-            // phase and the hit-registry phase walk through here, so a scrolled container can never
-            // paint its children at one origin and register them at another.
-            let (scroll_x, scroll_y) = tree.node(visit.node).filter(|node| node.flags.contains(NodeFlags::SCROLLABLE)).map_or((0.0, 0.0), |node| node.state.scroll_offset);
+            let Some(child_origin) = tree.child_walk_origin(visit.node, (visit.origin_x, visit.origin_y)) else { return RetainedPaintWalkStep::DepthFault };
             let overlay_origin = tree.overlay_walk_origin(child);
-            let (child_origin_x, child_origin_y) = overlay_origin.unwrap_or((visit.origin_x + layout.x - scroll_x, visit.origin_y + layout.y - scroll_y));
+            let (child_origin_x, child_origin_y) = overlay_origin.unwrap_or(child_origin);
             let child_overlay_root = if overlay_origin.is_some() { Some(child) } else { visit.overlay_root };
-            let child_visit = RetainedPaintVisit { node: child, origin_x: child_origin_x, origin_y: child_origin_y, next_child: tree.node(child).and_then(|node| node.first_child), entered: false, overlay_root: child_overlay_root };
+            let child_visit = RetainedPaintVisit { node: child, origin_x: child_origin_x, origin_y: child_origin_y, next_child: retained_first_child(tree, child), entered: false, overlay_root: child_overlay_root };
             self.visits[self.len] = Some(child_visit);
             self.len += 1;
             return RetainedPaintWalkStep::Scalar;
@@ -198,6 +201,59 @@ impl RetainedPaintWalk {
         self.len = index;
         RetainedPaintWalkStep::Scalar
     }
+}
+
+fn intersect_rect(parent: Option<crate::wgpu::geometry::Rect>, rect: crate::wgpu::geometry::Rect) -> Option<crate::wgpu::geometry::Rect> {
+    let Some(parent) = parent else { return Some(rect) };
+    let x = parent.x.max(rect.x);
+    let y = parent.y.max(rect.y);
+    let right = (parent.x + parent.w).min(rect.x + rect.w);
+    let bottom = (parent.y + parent.h).min(rect.y + rect.h);
+    Some(crate::wgpu::geometry::Rect::new(x, y, (right - x).max(0.0), (bottom - y).max(0.0)))
+}
+
+fn offset_rect(rect: crate::wgpu::geometry::Rect, x: f32, y: f32) -> crate::wgpu::geometry::Rect {
+    crate::wgpu::geometry::Rect::new(rect.x + x, rect.y + y, rect.w, rect.h)
+}
+
+fn retained_node_clip(tree: &UiTree, node: crate::wgpu::arena::NodeId) -> Option<crate::wgpu::geometry::Rect> {
+    if tree.node(node).is_some_and(|node| matches!(&node.spec.0, UiNode::Select(_)) && node.state.open) {
+        return None;
+    }
+    let mut path = [None; RETAINED_PAINT_DEPTH_CREDITS];
+    let mut len = 0;
+    let mut cursor = Some(node);
+    while let Some(id) = cursor {
+        if len == RETAINED_PAINT_DEPTH_CREDITS {
+            return Some(crate::wgpu::geometry::Rect::default());
+        }
+        path[len] = Some(id);
+        len += 1;
+        cursor = tree.node(id).and_then(|node| node.parent);
+    }
+    let mut origin = (0.0_f32, 0.0_f32);
+    let mut clip = None;
+    for index in (0..len).rev() {
+        let id = path[index]?;
+        if let Some(overlay_origin) = tree.overlay_walk_origin(id) {
+            origin = overlay_origin;
+            clip = None;
+        }
+        let layout = tree.accepted_layout(id)?;
+        let rect = crate::wgpu::geometry::Rect::new(origin.0 + layout.x, origin.1 + layout.y, layout.width, layout.height);
+        if id == node {
+            return clip;
+        }
+        if tree.node(id).is_some_and(|node| node.flags.contains(NodeFlags::CLIPS_CHILDREN)) {
+            clip = intersect_rect(clip, rect);
+        }
+        origin = tree.child_walk_origin(id, origin)?;
+    }
+    clip
+}
+
+fn retained_first_child(tree: &UiTree, id: crate::wgpu::arena::NodeId) -> Option<crate::wgpu::arena::NodeId> {
+    tree.disclosure_open(id).unwrap_or(true).then(|| tree.node(id).and_then(|node| node.first_child)).flatten()
 }
 
 #[derive(Clone, Copy)]
@@ -249,7 +305,14 @@ impl UiFramePaintCensus {
         let mut census = Self::default();
         let scene_layers: std::collections::BTreeSet<usize> = draw.scene_passes.iter().map(|pass| pass.layer_index).collect();
         for (index, layer) in draw.layers.iter().enumerate() {
-            if !layer.ui_instances.is_empty() || !layer.raster_instances.is_empty() || !layer.vector_vertices.is_empty() || !layer.overlay_ui_instances.is_empty() || !layer.overlay_vector_vertices.is_empty() || scene_layers.contains(&index) {
+            if !layer.ui_instances.is_empty()
+                || !layer.raster_instances.is_empty()
+                || !layer.vector_vertices.is_empty()
+                || !layer.overlay_ui_instances.is_empty()
+                || !layer.overlay_raster_instances.is_empty()
+                || !layer.overlay_vector_vertices.is_empty()
+                || scene_layers.contains(&index)
+            {
                 census.layers += 1;
             }
             for instance in layer.ui_instances.iter().chain(layer.overlay_ui_instances.iter()) {
@@ -261,8 +324,10 @@ impl UiFramePaintCensus {
         }
         census.scene_passes = draw.scene_passes.len();
         for pass in &draw.scene_passes {
-            census.scene_draws += pass.draws.len() + pass.translucent_draws.len() + pass.textured_draws.len() + pass.line_draws.len();
-            census.scene_instances += pass.draws.iter().chain(pass.translucent_draws.iter()).map(|draw| draw.instances.len()).sum::<usize>() + pass.textured_draws.iter().map(|draw| draw.instances.len()).sum::<usize>();
+            census.scene_draws += pass.shadow_draws.len() + pass.draws.len() + pass.translucent_draws.len() + pass.material_draws.len() + pass.textured_draws.len() + pass.line_draws.len();
+            census.scene_instances += pass.shadow_draws.iter().chain(pass.draws.iter()).chain(pass.translucent_draws.iter()).map(|draw| draw.instances.len()).sum::<usize>()
+                + pass.material_draws.iter().map(|draw| draw.instances.len()).sum::<usize>()
+                + pass.textured_draws.iter().map(|draw| draw.instances.len()).sum::<usize>();
         }
         census
     }
@@ -301,14 +366,67 @@ fn scene_slot_for_node_absolute(tree: &UiTree, id: crate::wgpu::arena::NodeId) -
 
 /// 🎯️ Appends `node`'s registry entry, if it has one, at the ABSOLUTE rect the paint walk just
 /// painted it at — `origin` is that walk's own accumulated offset, so the two can never diverge.
-fn register_retained_hit(tree: &UiTree, theme: &Theme, node: crate::wgpu::arena::NodeId, origin_x: f32, origin_y: f32, out: &mut Vec<RetainedHitRegistration>) {
+fn push_retained_hit(out: &mut Vec<RetainedHitRegistration>, overlay_hits: &mut usize, overlay: bool, mut registration: RetainedHitRegistration) {
+    registration.overlay = overlay;
+    if overlay {
+        out.push(registration);
+        *overlay_hits += 1;
+    } else {
+        out.insert(out.len().saturating_sub(*overlay_hits), registration);
+    }
+}
+
+fn register_retained_hit(
+    tree: &UiTree,
+    theme: &Theme,
+    driver_drag: UiDriverDrag,
+    reversed: bool,
+    node: crate::wgpu::arena::NodeId,
+    origin_x: f32,
+    origin_y: f32,
+    clip: Option<crate::wgpu::geometry::Rect>,
+    overlay: bool,
+    overlay_hits: &mut usize,
+    out: &mut Vec<RetainedHitRegistration>,
+) {
     if out.len() >= RETAINED_HIT_REGISTRY_CAPACITY {
         return;
     }
     let Some(layout) = tree.accepted_layout(node) else { return };
-    let rect = crate::wgpu::geometry::Rect::new(origin_x + layout.x, origin_y + layout.y, layout.width, layout.height);
-    if let Some(registration) = retained_hit_registration(tree, node, rect, &TreeRowMetrics::from_theme(theme)) {
-        out.push(registration);
+    let authored_rect = crate::wgpu::geometry::Rect::new(origin_x + layout.x, origin_y + layout.y, layout.width, layout.height);
+    let Some(rect) = intersect_rect(clip, authored_rect) else { return };
+    if rect.w <= 0.0 || rect.h <= 0.0 {
+        return;
+    }
+    let metrics = TreeRowMetrics::from_theme(theme);
+    let overlay = overlay || tree.is_open_select_popup_row(node);
+    if let Some(registration) = retained_hit_registration(tree, node, rect, &metrics, driver_drag, reversed) {
+        push_retained_hit(out, overlay_hits, overlay, registration);
+    }
+    if out.len() < RETAINED_HIT_REGISTRY_CAPACITY {
+        if let Some(registration) = retained_tree_drag_handle_registration(tree, node, rect, &metrics, driver_drag) {
+            push_retained_hit(out, overlay_hits, overlay, registration);
+        }
+    }
+    if out.len() < RETAINED_HIT_REGISTRY_CAPACITY {
+        if let Some(registration) = retained_tree_chevron_registration(tree, node, rect, &metrics, reversed) {
+            push_retained_hit(out, overlay_hits, overlay, registration);
+        }
+    }
+    let Some((select_id, popup)) = tree.node(node).and_then(|node| match &node.spec.0 {
+        UiNode::Select(select) => node.state.select_popup.map(|popup| (select.id.as_str(), popup)),
+        _ => None,
+    }) else {
+        return;
+    };
+    let Some(local) = tree.absolute_rect(node) else { return };
+    let popup = popup.translated(rect.x - local.x, rect.y - local.y);
+    for (rect, up) in [(popup.up, true), (popup.down, false)] {
+        let Some(rect) = rect else { continue };
+        if out.len() >= RETAINED_HIT_REGISTRY_CAPACITY {
+            return;
+        }
+        push_retained_hit(out, overlay_hits, true, RetainedHitRegistration { node, rect, overlay: true, kind: HitKind::DropdownItem, control_id: crate::wgpu::select::select_scroll_control_id(select_id, up), action: None, drag_axis: None, drag_data: None });
     }
 }
 
@@ -447,6 +565,10 @@ impl UiSurfaceRegistry {
 
     fn values(&self) -> impl Iterator<Item = &UiWindow> {
         self.slots.iter().filter_map(|slot| slot.as_ref().map(|slot| &slot.window))
+    }
+
+    fn values_mut(&mut self) -> impl Iterator<Item = &mut UiWindow> {
+        self.slots.iter_mut().filter_map(|slot| slot.as_mut().map(|slot| &mut slot.window))
     }
 
     fn ids(&self) -> impl Iterator<Item = &SurfaceId> {
@@ -656,6 +778,7 @@ pub struct Ui {
     windows: UiSurfaceRegistry,
     shell: Shell,
     theme: Theme,
+    driver_drag: UiDriverDrag,
     pending_commands: Vec<UiCommand>,
     layout_queues: [SurfaceLaneRing; 3],
     layout_pressure: Option<SurfaceLaneEntry>,
@@ -677,6 +800,7 @@ impl Ui {
             windows: UiSurfaceRegistry::default(),
             shell: Shell::new(),
             theme: Theme::default(),
+            driver_drag: UiDriverDrag::Handle,
             pending_commands: Vec::new(),
             layout_queues: std::array::from_fn(|_| SurfaceLaneRing::default()),
             layout_pressure: None,
@@ -698,6 +822,28 @@ impl Ui {
         } else {
             self.theme_propagation = Some(ThemePropagationCursor::new(theme));
         }
+    }
+
+    pub fn set_driver_drag(&mut self, driver_drag: UiDriverDrag) {
+        if self.driver_drag == driver_drag {
+            return;
+        }
+        self.driver_drag = driver_drag;
+        let metrics = TreeRowMetrics::from_theme(&self.theme);
+        let mut commands = Vec::new();
+        for window in self.windows.values_mut() {
+            commands.extend(window.router.set_tree_drag_policy(&mut window.tree, driver_drag, metrics));
+            let Some(next_revision) = window.theme_revision.checked_add(1) else { continue };
+            window.theme_revision = next_revision;
+            if let Some(root) = window.tree.root {
+                window.tree.mark_dirty(root, NodeFlags::DIRTY_PAINT);
+            }
+        }
+        self.pending_commands.extend(commands);
+    }
+
+    pub fn driver_drag(&self) -> UiDriverDrag {
+        self.driver_drag
     }
 
     #[expect(clippy::result_large_err, reason = "Surface and document admission return the exact refused identity or page without allocating a rejection wrapper.")]
@@ -882,7 +1028,15 @@ impl Ui {
         }
         let Some(next_revision) = window.revision.checked_add(1) else { return Err(UiDocumentIngressFault::StaleGeneration) };
         let Some(next_layout_generation) = window.layout_generation.checked_add(1) else { return Err(UiDocumentIngressFault::StaleGeneration) };
+        let next_accessibility_generation = if window.tree.document().is_none() {
+            Some(window.accessibility_generation.checked_add(1).ok_or(UiDocumentIngressFault::StaleGeneration)?)
+        } else {
+            None
+        };
         let Some(ingress) = window.document_ingress.take() else { return Err(UiDocumentIngressFault::StaleGeneration) };
+        if let Some(generation) = next_accessibility_generation {
+            window.accessibility_generation = generation;
+        }
         window.retiring_document = window.tree.publish_document(ingress.document);
         window.revision = next_revision;
         window.layout_generation = next_layout_generation;
@@ -903,6 +1057,15 @@ impl Ui {
         let Some(window) = self.window_mut(window_id) else { return false };
         let Some(next_revision) = window.revision.checked_add(1) else { return false };
         let Some(next_layout_generation) = window.layout_generation.checked_add(1) else { return false };
+        let next_accessibility_generation = if window.tree.document().is_none() {
+            let Some(generation) = window.accessibility_generation.checked_add(1) else { return false };
+            Some(generation)
+        } else {
+            None
+        };
+        if let Some(generation) = next_accessibility_generation {
+            window.accessibility_generation = generation;
+        }
         window.retiring_document = window.tree.publish_document(document);
         window.revision = next_revision;
         window.layout_generation = next_layout_generation;
@@ -928,9 +1091,10 @@ impl Ui {
         if window.document_reconcile.terminal_is_complete() {
             return UiDocumentReconcileStep::Complete;
         }
+        let preserved_composite_owner = window.router.capture().and_then(|(target, _)| window.tree.surviving_composite_owner(target));
         let UiWindow { tree, document_reconcile, .. } = window;
         let step = loop {
-            let step = tree.step_document_reconcile(document_reconcile, window_id, controller);
+            let step = tree.step_document_reconcile_preserving(document_reconcile, window_id, controller, preserved_composite_owner);
             cx.consume_fuel(1);
             if !matches!(step, UiDocumentReconcileStep::Pending) || cx.is_cancelled() || cx.should_yield() {
                 break step;
@@ -1040,6 +1204,7 @@ impl Ui {
                 let identity = (token, window.layout_generation, window.revision, window.theme_revision, window.viewport_revision, window.viewport.0, window.viewport.1);
                 let layout_preview = session.checked_out_job_mut().and_then(MountedLayoutJob::take_preview_one);
                 let glyph_preview = session.checked_out_job_mut().and_then(|job| job.latest_glyph_preview());
+                let root_intrinsic_height = session.checked_out_job_mut().and_then(|job| job.root_intrinsic_height());
                 if let Some(preview) = layout_preview {
                     window.layout_preview = Some(preview);
                 }
@@ -1047,6 +1212,9 @@ impl Ui {
                     window.glyph_preview = Some(preview);
                 }
                 let publish = session.checked_out_job_mut().filter(|job| job.stage() == LayoutJobStage::PublishResults).map(|job| job.publish_one(&mut window.tree, identity));
+                if matches!(publish, Some(LayoutJobStep::Complete)) {
+                    window.intrinsic_content_height = root_intrinsic_height.unwrap_or(f32::NAN);
+                }
                 if terminal || matches!(publish, Some(LayoutJobStep::Complete | LayoutJobStep::Fault(_))) || session.resume().is_err() {
                     session.begin_close();
                     window.layout_closing = true;
@@ -1118,7 +1286,16 @@ impl Ui {
                 LayoutJobStep::Complete => {}
             }
         }
-        window.layout_job = MountedLayoutJob::try_new(&window.tree, root, MountedLayoutIdentity { surface: token, generation: window.layout_generation, revision: window.revision, theme_revision: window.theme_revision, viewport_revision: window.viewport_revision }, theme, window.viewport.0, window.viewport.1).ok();
+        window.layout_job = MountedLayoutJob::try_new(
+            &window.tree,
+            root,
+            MountedLayoutIdentity { surface: token, generation: window.layout_generation, revision: window.revision, theme_revision: window.theme_revision, viewport_revision: window.viewport_revision },
+            theme,
+            window.viewport.0,
+            window.viewport.1,
+            window.router.flow().block.is_reversed(),
+        )
+        .ok();
         if window.layout_job.is_some() {
             self.enqueue_layout(window_id.as_ref());
             UiLayoutStep::Yielded { window_id, lane, stage: "Layout.Preadmit", nodes: 0, glyphs: 0 }
@@ -1317,6 +1494,7 @@ impl Ui {
         let theme = self.theme;
         let Some(window) = self.windows.get_mut(window_id) else { return UiFrameStep::Missing };
         let Some(root) = window.tree.root else { return UiFrameStep::Missing };
+        let reversed = window.router.flow().block == ui_contract::FlowBlock::Up;
         if let Some(retiring) = window.retiring_draw.as_mut() {
             if !retiring.retire_step() {
                 return UiFrameStep::Pending;
@@ -1357,6 +1535,9 @@ impl Ui {
         }
         let fresh = window.paint_frame.as_ref().is_some_and(|frame| frame.revision == window.revision && frame.theme_revision == window.theme_revision && frame.viewport_revision == window.viewport_revision);
         if !fresh {
+            if let Some(frame) = window.paint_frame.as_mut() {
+                frame.node_paint.cancel_draw_route(&mut frame.candidate);
+            }
             if !window.paint_frame.as_mut().is_some_and(|frame| frame.node_sync.close_step()) {
                 return UiFrameStep::Pending;
             }
@@ -1366,6 +1547,7 @@ impl Ui {
         }
         let Some(frame) = window.paint_frame.as_mut() else { return UiFrameStep::Fault };
         if matches!(frame.phase, RetainedPaintPhase::Fault) {
+            frame.node_paint.cancel_draw_route(&mut frame.candidate);
             if !frame.node_sync.close_step() {
                 return UiFrameStep::Pending;
             }
@@ -1389,19 +1571,29 @@ impl Ui {
         }
         if matches!(frame.phase, RetainedPaintPhase::Paint) {
             if let Some((node, origin_x, origin_y)) = frame.paint_node {
+                let starting = !frame.node_paint.is_active();
+                let clip = starting.then(|| retained_node_clip(&window.tree, node)).flatten();
+                if starting {
+                    if let Some(clip) = clip {
+                        frame.candidate.push_scissor(clip);
+                    }
+                }
                 // 🪟️ An overlay's content paints into the overlay bucket, ON TOP of the surface the
                 // `Overlays` phase already drew for it and above every panel in the frame — the
                 // browser's portal + `z-menu` equivalent. Plain in-flow content is untouched.
                 if frame.paint_overlay {
                     frame.candidate.begin_overlay_route();
                 }
-                let step = paint_node_step(&window.tree, node, origin_x, origin_y, &theme, atlas, icons, scene_host.is_some(), &mut frame.candidate, &mut frame.node_paint);
+                let step = paint_node_step_with_driver(&window.tree, node, origin_x, origin_y, &theme, atlas, icons, scene_host.is_some(), self.driver_drag, window.router.flow().block.is_reversed(), &mut frame.candidate, &mut frame.node_paint);
                 if frame.paint_overlay {
                     frame.candidate.end_overlay_route();
                 }
                 match step {
                     RetainedNodePaintStep::Pending => return UiFrameStep::Pending,
                     RetainedNodePaintStep::Complete => {
+                        if clip.is_some() || (!starting && retained_node_clip(&window.tree, node).is_some()) {
+                            frame.candidate.pop_scissor();
+                        }
                         frame.paint_node = None;
                         if let Some(node) = window.tree.node_mut(node) {
                             node.flags.set(NodeFlags::DIRTY_PAINT, false);
@@ -1409,6 +1601,9 @@ impl Ui {
                         return UiFrameStep::Pending;
                     }
                     RetainedNodePaintStep::Fault => {
+                        if clip.is_some() || (!starting && retained_node_clip(&window.tree, node).is_some()) {
+                            frame.candidate.pop_scissor();
+                        }
                         frame.phase = RetainedPaintPhase::Fault;
                         return UiFrameStep::Fault;
                     }
@@ -1500,6 +1695,7 @@ impl Ui {
                     frame.phase = RetainedPaintPhase::Hits;
                     frame.walk = RetainedPaintWalk::new(&window.tree, root);
                     frame.hit_candidates.clear();
+                    frame.overlay_index = 0;
                     UiFrameStep::Pending
                 }
                 RetainedPaintWalkStep::DepthFault => {
@@ -1508,8 +1704,8 @@ impl Ui {
                 }
             },
             RetainedPaintPhase::Hits => match frame.walk.step(&window.tree) {
-                RetainedPaintWalkStep::Visit(node, origin_x, origin_y, _) => {
-                    register_retained_hit(&window.tree, &theme, node, origin_x, origin_y, &mut frame.hit_candidates);
+                RetainedPaintWalkStep::Visit(node, origin_x, origin_y, overlay_root) => {
+                    register_retained_hit(&window.tree, &theme, self.driver_drag, reversed, node, origin_x, origin_y, retained_node_clip(&window.tree, node), overlay_root.is_some(), &mut frame.overlay_index, &mut frame.hit_candidates);
                     UiFrameStep::Pending
                 }
                 RetainedPaintWalkStep::Scalar => UiFrameStep::Pending,
@@ -1539,15 +1735,7 @@ impl Ui {
     }
 
     /// 🧱️ Advances one retained UI node directly into a caller-owned unpublished frame candidate.
-    pub fn frame_into_step<H: SceneHost>(
-        &mut self,
-        window_id: &str,
-        viewport: crate::wgpu::geometry::Rect,
-        atlas: &mut FontAtlas,
-        icons: Option<&IconAtlas>,
-        mut scene_host: Option<&mut H>,
-        target: &mut DrawList,
-    ) -> UiFrameStep {
+    pub fn frame_into_step<H: SceneHost>(&mut self, window_id: &str, viewport: crate::wgpu::geometry::Rect, atlas: &mut FontAtlas, icons: Option<&IconAtlas>, mut scene_host: Option<&mut H>, target: &mut DrawList) -> UiFrameStep {
         let crate::wgpu::geometry::Rect { x: offset_x, y: offset_y, w: viewport_width, h: viewport_height } = viewport;
         self.set_viewport(window_id, viewport_width, viewport_height);
         self.publish_overlay_origins(window_id);
@@ -1556,6 +1744,7 @@ impl Ui {
         let theme = self.theme;
         let Some(window) = self.windows.get_mut(window_id) else { return UiFrameStep::Missing };
         let Some(root) = window.tree.root else { return UiFrameStep::Missing };
+        let reversed = window.router.flow().block == ui_contract::FlowBlock::Up;
         let layout_dirty = window.tree.node(root).is_some_and(|node| node.flags.contains(NodeFlags::DIRTY_LAYOUT) || node.flags.contains(NodeFlags::SUBTREE_DIRTY));
         if layout_dirty {
             return UiFrameStep::Pending;
@@ -1585,6 +1774,9 @@ impl Ui {
         }
         let fresh = window.paint_frame.as_ref().is_some_and(|frame| frame.revision == window.revision && frame.theme_revision == window.theme_revision && frame.viewport_revision == window.viewport_revision);
         if !fresh {
+            if let Some(frame) = window.paint_frame.as_mut() {
+                frame.node_paint.cancel_draw_route(target);
+            }
             if !window.paint_frame.as_mut().is_some_and(|frame| frame.node_sync.close_step()) {
                 return UiFrameStep::Pending;
             }
@@ -1594,6 +1786,7 @@ impl Ui {
         }
         let Some(frame) = window.paint_frame.as_mut() else { return UiFrameStep::Fault };
         if matches!(frame.phase, RetainedPaintPhase::Fault) {
+            frame.node_paint.cancel_draw_route(target);
             if !frame.node_sync.close_step() {
                 return UiFrameStep::Pending;
             }
@@ -1618,17 +1811,27 @@ impl Ui {
         }
         if matches!(frame.phase, RetainedPaintPhase::Paint) {
             if let Some((node, origin_x, origin_y)) = frame.paint_node {
+                let starting = !frame.node_paint.is_active();
+                let clip = starting.then(|| retained_node_clip(&window.tree, node).map(|clip| offset_rect(clip, offset_x, offset_y))).flatten();
+                if starting {
+                    if let Some(clip) = clip {
+                        target.push_scissor(clip);
+                    }
+                }
                 // 🪟️ See `frame_step`'s twin: overlay content composites above the surface chrome.
                 if frame.paint_overlay {
                     target.begin_overlay_route();
                 }
-                let step = paint_node_step(&window.tree, node, origin_x, origin_y, &theme, atlas, icons, scene_host.is_some(), target, &mut frame.node_paint);
+                let step = paint_node_step_with_driver(&window.tree, node, origin_x, origin_y, &theme, atlas, icons, scene_host.is_some(), self.driver_drag, window.router.flow().block.is_reversed(), target, &mut frame.node_paint);
                 if frame.paint_overlay {
                     target.end_overlay_route();
                 }
                 match step {
                     RetainedNodePaintStep::Pending => return UiFrameStep::Pending,
                     RetainedNodePaintStep::Complete => {
+                        if clip.is_some() || (!starting && retained_node_clip(&window.tree, node).is_some()) {
+                            target.pop_scissor();
+                        }
                         frame.paint_node = None;
                         if let Some(node) = window.tree.node_mut(node) {
                             node.flags.set(NodeFlags::DIRTY_PAINT, false);
@@ -1636,6 +1839,9 @@ impl Ui {
                         return UiFrameStep::Pending;
                     }
                     RetainedNodePaintStep::Fault => {
+                        if clip.is_some() || (!starting && retained_node_clip(&window.tree, node).is_some()) {
+                            target.pop_scissor();
+                        }
                         frame.phase = RetainedPaintPhase::Fault;
                         frame.fault_site = Some("paint-node");
                         return UiFrameStep::Fault;
@@ -1736,6 +1942,7 @@ impl Ui {
                     frame.phase = RetainedPaintPhase::Hits;
                     frame.walk = RetainedPaintWalk::new(&window.tree, root);
                     frame.hit_candidates.clear();
+                    frame.overlay_index = 0;
                     UiFrameStep::Pending
                 }
                 RetainedPaintWalkStep::DepthFault => {
@@ -1745,8 +1952,20 @@ impl Ui {
                 }
             },
             RetainedPaintPhase::Hits => match frame.walk.step(&window.tree) {
-                RetainedPaintWalkStep::Visit(node, origin_x, origin_y, _) => {
-                    register_retained_hit(&window.tree, &theme, node, origin_x + offset_x, origin_y + offset_y, &mut frame.hit_candidates);
+                RetainedPaintWalkStep::Visit(node, origin_x, origin_y, overlay_root) => {
+                    register_retained_hit(
+                        &window.tree,
+                        &theme,
+                        self.driver_drag,
+                        reversed,
+                        node,
+                        origin_x + offset_x,
+                        origin_y + offset_y,
+                        retained_node_clip(&window.tree, node).map(|clip| offset_rect(clip, offset_x, offset_y)),
+                        overlay_root.is_some(),
+                        &mut frame.overlay_index,
+                        &mut frame.hit_candidates,
+                    );
                     UiFrameStep::Pending
                 }
                 RetainedPaintWalkStep::Scalar => UiFrameStep::Pending,
@@ -1818,32 +2037,18 @@ impl Ui {
         window.tree.node(root).is_some_and(|node| node.flags.contains(NodeFlags::DIRTY_LAYOUT) || node.flags.contains(NodeFlags::SUBTREE_DIRTY))
     }
 
-    /// 📐️ The SOLVED height of one surface's root node — the measured content extent a floating panel
-    /// needs in order to HUG its content the way React's `<Panel>` does (`🖼️Panel/🟦️.tsx`: one bonded
-    /// edge plus `maxHeight: calc(100% - 2 * --spacing-single)`, never a `top`+`bottom` pair). `None`
-    /// while the surface has no window, no root or no accepted layout yet, so a caller falls back to
-    /// its own band rather than collapsing the panel to nothing.
+    /// 📐️ The bottom-up intrinsic height measured for one surface's root before the top-down viewport
+    /// solve stretches it — the content extent a floating panel needs to HUG its content the way
+    /// React's `<Panel>` does (`🖼️Panel/🟦️.tsx`: one bonded edge plus
+    /// `maxHeight: calc(100% - 2 * --spacing-single)`, never a `top`+`bottom` pair). A root with no
+    /// intrinsic extent, such as an engine surface, keeps its accepted viewport height. `None` while
+    /// the surface has no window, no root or no accepted layout yet.
     pub fn surface_content_height(&self, window_id: &str) -> Option<f32> {
         let window = self.windows.get(window_id)?;
         let root = window.tree.root?;
         let root_layout = window.tree.accepted_layout(root)?;
-        // 📐️ The document's OWN extent, not the box it was stretched into. A window root fills the
-        // viewport it was laid out against, so answering `root_layout.height` answers the caller's own
-        // input — which made the panel content-hug (`anchor_panel_rect`'s `content_h`) a no-op and left
-        // every floating panel at its full column band. React hugs because its panel is `height: auto`
-        // around a content-sized document; the equivalent measure here is how far the root's own
-        // children reach. Measured on 6118: the `framework.panel.toolRun` root reported 781.6 while its
-        // single run group was 233.96 tall, so the Tool-runs panel covered the whole right column and
-        // the 3D preview under it (ticket 26/09/17/WGPU-RENDERER-REACT-PARITY,
-        // `📓️w14b-generation3d-labels-preview-layout.md`).
-        let content = window
-            .tree
-            .children(root)
-            .filter_map(|child| window.tree.accepted_layout(child))
-            .map(|layout| layout.y + layout.height)
-            .fold(f32::NEG_INFINITY, f32::max);
-        if content.is_finite() {
-            Some(content.clamp(0.0, root_layout.height))
+        if window.intrinsic_content_height.is_finite() && window.intrinsic_content_height > 0.0 {
+            Some(window.intrinsic_content_height)
         } else {
             Some(root_layout.height)
         }
@@ -1868,8 +2073,10 @@ impl Ui {
         let dirty_layout = window.tree.node(root).is_some_and(|node| node.flags.contains(NodeFlags::DIRTY_LAYOUT));
         let subtree_dirty = window.tree.node(root).is_some_and(|node| node.flags.contains(NodeFlags::SUBTREE_DIRTY));
         let frame = window.paint_frame.as_ref();
+        let paint_key = frame.and_then(|frame| frame.paint_node).and_then(|(node, _, _)| window.tree.node(node)).map(|node| format!("{:?}", node.key)).unwrap_or_else(|| "none".to_string());
+        let paint_cursor = frame.map(|frame| frame.node_paint.census()).unwrap_or_else(|| "none".to_string());
         format!(
-            "root=present dirty-layout={dirty_layout} subtree-dirty={subtree_dirty} frame={} revision={}/{} theme={}/{} viewport={}/{} phase={:?} fault-site={:?}",
+            "root=present dirty-layout={dirty_layout} subtree-dirty={subtree_dirty} frame={} revision={}/{} theme={}/{} viewport={}/{} phase={:?} fault-site={:?} paint-key={paint_key} cursor=[{paint_cursor}]",
             frame.is_some(),
             frame.map_or(0, |frame| frame.revision),
             window.revision,
@@ -1892,14 +2099,14 @@ impl Ui {
         self.windows.get(window_id).and_then(|window| window.paint_frame.as_ref()).map(|frame| match (frame.fault_site, frame.phase) {
             (Some(site), _) => site,
             _ => match frame.phase {
-            RetainedPaintPhase::Synchronize => "synchronize",
-            RetainedPaintPhase::Overlays => "overlays",
-            RetainedPaintPhase::Paint => "paint",
-            RetainedPaintPhase::Scenes => "scenes",
-            RetainedPaintPhase::Hits => "hits",
-            RetainedPaintPhase::Publish => "publish",
-            RetainedPaintPhase::Complete => "complete",
-            RetainedPaintPhase::Fault => "fault",
+                RetainedPaintPhase::Synchronize => "synchronize",
+                RetainedPaintPhase::Overlays => "overlays",
+                RetainedPaintPhase::Paint => "paint",
+                RetainedPaintPhase::Scenes => "scenes",
+                RetainedPaintPhase::Hits => "hits",
+                RetainedPaintPhase::Publish => "publish",
+                RetainedPaintPhase::Complete => "complete",
+                RetainedPaintPhase::Fault => "fault",
             },
         })
     }
@@ -1927,11 +2134,60 @@ impl Ui {
     /// `drain_commands` call — callers may use either.
     #[allow(clippy::needless_pass_by_value, reason = "changing to &UiEvent is a breaking public API change across ~30 downstream plugins, out of T1 scope")]
     pub fn dispatch_event(&mut self, window_id: &str, event: UiEvent) -> Vec<UiCommand> {
+        let metrics = TreeRowMetrics::from_theme(&self.theme);
+        let driver_drag = self.driver_drag;
         let Some(window) = self.windows.get_mut(window_id) else { return Vec::new() };
         let Some(root) = window.tree.root else { return Vec::new() };
+        let policy_commands = window.router.set_tree_drag_policy(&mut window.tree, driver_drag, metrics);
         let commands = window.router.dispatch(&mut window.tree, root, &event);
+        let layout_changed = window.tree.take_disclosure_changed();
+        if layout_changed {
+            let Some(generation) = window.layout_generation.checked_add(1) else { return commands };
+            window.layout_generation = generation;
+            window.intrinsic_content_height = f32::NAN;
+        }
+        self.pending_commands.extend(policy_commands);
         self.pending_commands.extend(commands.iter().cloned());
+        if layout_changed {
+            self.enqueue_layout(window_id);
+        }
         commands
+    }
+
+    pub fn dispatch_accessibility_event(&mut self, window_id: &str, window_generation: u64, node_id: u64, node_key: &str, event: AccessibilityUiEvent) -> Option<Vec<UiCommand>> {
+        let metrics = TreeRowMetrics::from_theme(&self.theme);
+        let driver_drag = self.driver_drag;
+        let window = self.windows.get_mut(window_id)?;
+        if window.accessibility_generation != window_generation || window_generation == 0 {
+            return None;
+        }
+        let document_id = UiNodeId(node_id);
+        let record = window.tree.document()?.record(document_id)?;
+        let virtual_select_value = (record.key.as_str() != node_key).then(|| crate::wgpu::accessibility::select_accessibility_option_value(record, node_key)).flatten();
+        if record.key.as_str() != node_key && virtual_select_value.is_none() {
+            return None;
+        }
+        let target = window.tree.document_node(document_id)?;
+        if virtual_select_value.is_some() && !window.tree.node(target).is_some_and(|node| node.state.open) {
+            return None;
+        }
+        let policy_commands = window.router.set_tree_drag_policy(&mut window.tree, driver_drag, metrics);
+        let commands = match virtual_select_value {
+            Some(value) => window.router.dispatch_accessibility_select_option(&mut window.tree, target, &value, &event),
+            None => window.router.dispatch_accessibility(&mut window.tree, target, &event),
+        };
+        let layout_changed = window.tree.take_disclosure_changed();
+        if layout_changed {
+            let generation = window.layout_generation.checked_add(1)?;
+            window.layout_generation = generation;
+            window.intrinsic_content_height = f32::NAN;
+        }
+        self.pending_commands.extend(policy_commands);
+        self.pending_commands.extend(commands.iter().cloned());
+        if layout_changed {
+            self.enqueue_layout(window_id);
+        }
+        Some(commands)
     }
 
     //#region 🪟️OverlayApi
@@ -1976,9 +2232,11 @@ impl Ui {
         chrome
     }
 
-    /** @emoji 🪟️ Republishes every OPEN overlay's resolved placement onto the window's own tree, so
-     * this frame's paint walk, scene walk, hit registry and `events::hit_test`/`absolute_rect` all
-     * read ONE origin for a floating surface (`UiTree::overlay_origins`).
+    /** @emoji 🪟️ Republishes every portal-backed OPEN overlay's resolved placement onto the window's
+     * own tree, so this frame's paint walk, scene walk, hit registry and
+     * `events::hit_test`/`absolute_rect` all read ONE origin for a floating surface
+     * (`UiTree::overlay_origins`). A SelectPopup stays at its in-flow trigger because its Select
+     * paints and routes the window-local popup geometry itself.
      *
      * This is what makes an overlay's BODY paint through the normal node pipeline INSIDE the overlay
      * rect: the Group/Section children under the content root are walked, laid out and painted
@@ -1988,7 +2246,12 @@ impl Ui {
      * (`🧱️elements/🗨️Popover/🟦️.tsx`, `🧱️elements/💬️Dialog/🟦️.tsx`), where the children are ordinary
      * DOM inside the portalled box. */
     fn publish_overlay_origins(&mut self, window_id: &str) {
-        let origins: Vec<(crate::wgpu::arena::NodeId, f32, f32)> = self.overlay_placements(window_id).into_iter().map(|placement| (placement.root, placement.x, placement.y)).collect();
+        let origins: Vec<(crate::wgpu::arena::NodeId, f32, f32)> = self
+            .overlay_placements(window_id)
+            .into_iter()
+            .filter(|placement| placement.kind != OverlayKind::SelectPopup)
+            .map(|placement| (placement.root, placement.x, placement.y))
+            .collect();
         if let Some(window) = self.windows.get_mut(window_id) {
             window.tree.set_overlay_origins(origins);
         }
@@ -2113,6 +2376,10 @@ impl Ui {
         self.windows.get(window_id).map(|window| window.revision)
     }
 
+    pub fn surface_generation(&self, window_id: &str) -> Option<u64> {
+        self.windows.get(window_id).map(|window| window.accessibility_generation)
+    }
+
     /// 🖱️ The `ComponentScene` leaf under a WINDOW-LOCAL point, resolved through the same
     /// reverse-paint-order walk a real press uses (`events::hit_test`) and the same ancestor-offset
     /// accumulation `scene_slots` does — but WITHOUT mutating focus, capture, hover or the tree.
@@ -2183,4 +2450,10 @@ mod tests;
 #[path = "../../../🧪️tests/🔬️targets-wgpu-engine-retained-document-hostile-fixtures/🦀️.rs"]
 mod retained_document_hostile_fixtures;
 //#endregion 🧪️RetainedDocumentHostileFixtures
+#[cfg(test)]
+#[path = "../../../🧪️tests/📂️retained-section-collapse/🦀️.rs"]
+mod retained_section_collapse_tests;
+#[cfg(test)]
+#[path = "../../../🧪️tests/🔽️retained-select-origin/🦀️.rs"]
+mod retained_select_origin_tests;
 // #endregion engine

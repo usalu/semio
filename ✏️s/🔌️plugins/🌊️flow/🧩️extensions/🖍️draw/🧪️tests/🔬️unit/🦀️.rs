@@ -22,12 +22,13 @@ fn kernel_write_guard() -> std::sync::RwLockWriteGuard<'static, ()> {
 async fn rect_operator_creates_drawing() {
     let mut reg = Registry::new();
     register(&mut reg);
+    let reg = neural_engine::ColdOwner::new(reg);
     let input = Dictionary::new()
         .insert("x", Value::Dictionary(number_dictionary(0.0)))
         .insert("y", Value::Dictionary(number_dictionary(0.0)))
         .insert("width", Value::Dictionary(number_dictionary(10.0)))
         .insert("height", Value::Dictionary(number_dictionary(20.0)));
-    let out = reg.dispatch("draw.shape.rect", &input).unwrap();
+    let out = reg.dispatch_cold("draw.shape.rect", input).unwrap();
     let drawing = out.get("draw.drawing").and_then(|v| v.as_dictionary()).expect("drawing channel");
     assert_eq!(drawing.schema(), Some("draw.drawing"));
     let handle = drawing.get("handle").and_then(|v| v.as_atom()).and_then(|a| a.as_str()).unwrap_or("");
@@ -37,7 +38,7 @@ async fn rect_operator_creates_drawing() {
 
 #[semio_framework_async_macros::async_test]
 async fn manifest_lists_draw_operators() {
-    let json = build_manifest_json("draw", "Draw", "0.1.0", &module_registry(), vec!["onStartup".into()], vec![], vec![], vec![]);
+    let json = build_manifest_json("draw", "Draw", "0.1.0", &neural_engine::ColdOwner::new(module_registry()), vec!["onStartup".into()], vec![], vec![], vec![]);
     assert!(json.contains("draw.shape.rect"));
     assert!(json.contains("draw.drawing"));
 }
@@ -47,12 +48,13 @@ async fn render_scene_json_returns_nodes() {
     let _guard = kernel_read_guard();
     let mut reg = Registry::new();
     register(&mut reg);
+    let reg = neural_engine::ColdOwner::new(reg);
     let input = Dictionary::new()
         .insert("x", Value::Dictionary(number_dictionary(0.0)))
         .insert("y", Value::Dictionary(number_dictionary(0.0)))
         .insert("width", Value::Dictionary(number_dictionary(5.0)))
         .insert("height", Value::Dictionary(number_dictionary(5.0)));
-    let out = reg.dispatch("draw.shape.rect", &input).unwrap();
+    let out = reg.dispatch_cold("draw.shape.rect", input).unwrap();
     let handle = out.get("draw.drawing").and_then(|v| v.as_dictionary()).and_then(|d| d.get("handle")).and_then(|v| v.as_atom()).and_then(|a| a.as_str()).unwrap();
     let scene_json = render_scene_json(handle);
     assert!(scene_json.contains("nodes"));
@@ -84,21 +86,21 @@ fn make_rect(x: f64, y: f64, width: f64, height: f64) -> String {
         .insert("y", Value::Dictionary(number_dictionary(y)))
         .insert("width", Value::Dictionary(number_dictionary(width)))
         .insert("height", Value::Dictionary(number_dictionary(height)));
-    drawing_handle_of(&ShapeRect.evaluate(&input).unwrap())
+    drawing_handle_of(&ShapeRect.evaluate_cold(input).unwrap())
 }
 
 #[semio_framework_async_macros::async_test]
 async fn ellipse_operator_creates_drawing() {
     let input =
         Dictionary::new().insert("cx", Value::Dictionary(number_dictionary(5.0))).insert("cy", Value::Dictionary(number_dictionary(5.0))).insert("rx", Value::Dictionary(number_dictionary(3.0))).insert("ry", Value::Dictionary(number_dictionary(2.0)));
-    let out = ShapeEllipse.evaluate(&input).unwrap();
+    let out = ShapeEllipse.evaluate_cold(input).unwrap();
     assert_eq!(drawing_kind_of(&out), "ellipse");
 }
 
 #[semio_framework_async_macros::async_test]
 async fn circle_operator_creates_drawing() {
     let input = Dictionary::new().insert("cx", Value::Dictionary(number_dictionary(0.0))).insert("cy", Value::Dictionary(number_dictionary(0.0))).insert("r", Value::Dictionary(number_dictionary(4.0)));
-    let out = ShapeCircle.evaluate(&input).unwrap();
+    let out = ShapeCircle.evaluate_cold(input).unwrap();
     assert_eq!(drawing_kind_of(&out), "circle");
 }
 
@@ -109,34 +111,34 @@ async fn line_operator_creates_drawing() {
         .insert("y1", Value::Dictionary(number_dictionary(0.0)))
         .insert("x2", Value::Dictionary(number_dictionary(10.0)))
         .insert("y2", Value::Dictionary(number_dictionary(10.0)));
-    let out = ShapeLine.evaluate(&input).unwrap();
+    let out = ShapeLine.evaluate_cold(input).unwrap();
     assert_eq!(drawing_kind_of(&out), "line");
 }
 
 #[semio_framework_async_macros::async_test]
 async fn polygon_operator_creates_drawing_from_points() {
     let input = Dictionary::new().insert("points", Value::Dictionary(point_list(&[(0.0, 0.0), (10.0, 0.0), (5.0, 10.0)])));
-    let out = ShapePolygon.evaluate(&input).unwrap();
+    let out = ShapePolygon.evaluate_cold(input).unwrap();
     assert_eq!(drawing_kind_of(&out), "polygon");
 }
 
 #[semio_framework_async_macros::async_test]
 async fn polygon_operator_errors_with_fewer_than_three_points() {
     let input = Dictionary::new().insert("points", Value::Dictionary(point_list(&[(0.0, 0.0), (10.0, 0.0)])));
-    assert!(matches!(ShapePolygon.evaluate(&input), Err(EvalError::InvalidInput(_))));
+    assert!(matches!(ShapePolygon.evaluate_cold(input), Err(EvalError::InvalidInput(_))));
 }
 
 #[semio_framework_async_macros::async_test]
 async fn polyline_path_operator_creates_open_path() {
     let input = Dictionary::new().insert("points", Value::Dictionary(point_list(&[(0.0, 0.0), (10.0, 0.0), (10.0, 10.0)])));
-    let out = PathPolyline.evaluate(&input).unwrap();
+    let out = PathPolyline.evaluate_cold(input).unwrap();
     assert_eq!(drawing_kind_of(&out), "path");
 }
 
 #[semio_framework_async_macros::async_test]
 async fn polyline_path_operator_errors_with_fewer_than_two_points() {
     let input = Dictionary::new().insert("points", Value::Dictionary(point_list(&[(0.0, 0.0)])));
-    assert!(matches!(PathPolyline.evaluate(&input), Err(EvalError::InvalidInput(_))));
+    assert!(matches!(PathPolyline.evaluate_cold(input), Err(EvalError::InvalidInput(_))));
 }
 
 #[semio_framework_async_macros::async_test]
@@ -146,7 +148,7 @@ async fn rect_path_operator_creates_path() {
         .insert("y", Value::Dictionary(number_dictionary(0.0)))
         .insert("width", Value::Dictionary(number_dictionary(5.0)))
         .insert("height", Value::Dictionary(number_dictionary(5.0)));
-    let out = PathRect.evaluate(&input).unwrap();
+    let out = PathRect.evaluate_cold(input).unwrap();
     assert_eq!(drawing_kind_of(&out), "path");
 }
 
@@ -159,7 +161,7 @@ async fn fill_operator_applies_solid_color() {
         .insert("colorG", Value::Dictionary(number_dictionary(0.5)))
         .insert("colorB", Value::Dictionary(number_dictionary(0.25)))
         .insert("colorA", Value::Dictionary(number_dictionary(1.0)));
-    let out = StyleFill.evaluate(&input).unwrap();
+    let out = StyleFill.evaluate_cold(input).unwrap();
     assert_eq!(drawing_kind_of(&out), "rect");
 }
 
@@ -167,7 +169,7 @@ async fn fill_operator_applies_solid_color() {
 async fn stroke_operator_defaults_width_when_missing() {
     let _guard = kernel_read_guard();
     let handle = make_rect(0.0, 0.0, 5.0, 5.0);
-    let out = StyleStroke.evaluate(&drawing_input("drawing", &handle)).unwrap();
+    let out = StyleStroke.evaluate_cold(drawing_input("drawing", &handle)).unwrap();
     assert_eq!(drawing_kind_of(&out), "rect");
 }
 
@@ -176,7 +178,7 @@ async fn translate_operator_moves_drawing() {
     let _guard = kernel_read_guard();
     let handle = make_rect(0.0, 0.0, 5.0, 5.0);
     let input = drawing_input("drawing", &handle).insert("dx", Value::Dictionary(number_dictionary(3.0))).insert("dy", Value::Dictionary(number_dictionary(-2.0)));
-    let out = XformTranslate.evaluate(&input).unwrap();
+    let out = XformTranslate.evaluate_cold(input).unwrap();
     assert_ne!(drawing_handle_of(&out), handle);
 }
 
@@ -185,7 +187,7 @@ async fn rotate_operator_rotates_drawing() {
     let _guard = kernel_read_guard();
     let handle = make_rect(0.0, 0.0, 5.0, 5.0);
     let input = drawing_input("drawing", &handle).insert("angle", Value::Dictionary(number_dictionary(45.0)));
-    let out = XformRotate.evaluate(&input).unwrap();
+    let out = XformRotate.evaluate_cold(input).unwrap();
     assert_ne!(drawing_handle_of(&out), handle);
 }
 
@@ -194,7 +196,7 @@ async fn scale_operator_defaults_sy_to_sx_when_missing() {
     let _guard = kernel_read_guard();
     let handle = make_rect(0.0, 0.0, 5.0, 5.0);
     let input = drawing_input("drawing", &handle).insert("sx", Value::Dictionary(number_dictionary(2.0)));
-    let out = XformScale.evaluate(&input).unwrap();
+    let out = XformScale.evaluate_cold(input).unwrap();
     assert_ne!(drawing_handle_of(&out), handle);
 }
 
@@ -204,7 +206,7 @@ async fn group_merge_operator_combines_two_drawings() {
     let a = make_rect(0.0, 0.0, 5.0, 5.0);
     let b = make_rect(10.0, 10.0, 5.0, 5.0);
     let input = with_drawing(drawing_input("a", &a), "b", &b);
-    let out = GroupMerge.evaluate(&input).unwrap();
+    let out = GroupMerge.evaluate_cold(input).unwrap();
     assert_eq!(drawing_kind_of(&out), "group");
 }
 
@@ -214,7 +216,7 @@ async fn bool_union_operator_combines_two_drawings() {
     let a = make_rect(0.0, 0.0, 5.0, 5.0);
     let b = make_rect(2.0, 2.0, 5.0, 5.0);
     let input = with_drawing(drawing_input("a", &a), "b", &b);
-    let out = BoolUnion.evaluate(&input).unwrap();
+    let out = BoolUnion.evaluate_cold(input).unwrap();
     assert_eq!(drawing_kind_of(&out), "path");
 }
 
@@ -224,7 +226,7 @@ async fn bool_difference_operator_combines_two_drawings() {
     let a = make_rect(0.0, 0.0, 5.0, 5.0);
     let b = make_rect(2.0, 2.0, 5.0, 5.0);
     let input = with_drawing(drawing_input("a", &a), "b", &b);
-    let out = BoolDifference.evaluate(&input).unwrap();
+    let out = BoolDifference.evaluate_cold(input).unwrap();
     assert_eq!(drawing_kind_of(&out), "path");
 }
 
@@ -234,7 +236,7 @@ async fn bool_intersection_operator_combines_two_drawings() {
     let a = make_rect(0.0, 0.0, 5.0, 5.0);
     let b = make_rect(2.0, 2.0, 5.0, 5.0);
     let input = with_drawing(drawing_input("a", &a), "b", &b);
-    let out = BoolIntersection.evaluate(&input).unwrap();
+    let out = BoolIntersection.evaluate_cold(input).unwrap();
     assert_eq!(drawing_kind_of(&out), "path");
 }
 
@@ -242,7 +244,7 @@ async fn bool_intersection_operator_combines_two_drawings() {
 async fn text_operator_creates_drawing_with_default_size() {
     let input =
         Dictionary::new().insert("x", Value::Dictionary(number_dictionary(0.0))).insert("y", Value::Dictionary(number_dictionary(0.0))).insert("text", Value::Dictionary(Dictionary::new().insert("value", Value::Atom(Atom::String("hi".into())))));
-    let out = DrawText.evaluate(&input).unwrap();
+    let out = DrawText.evaluate_cold(input).unwrap();
     assert_eq!(drawing_kind_of(&out), "text");
 }
 
@@ -257,7 +259,7 @@ async fn gradient_linear_operator_creates_drawing() {
     for key in ["startR", "startG", "startB", "startA", "endR", "endG", "endB", "endA"] {
         input = input.insert(key, Value::Dictionary(number_dictionary(1.0)));
     }
-    let out = GradientLinear.evaluate(&input).unwrap();
+    let out = GradientLinear.evaluate_cold(input).unwrap();
     assert_eq!(drawing_kind_of(&out), "rect");
 }
 
@@ -267,7 +269,7 @@ async fn clip_apply_operator_creates_drawing() {
     let target = make_rect(0.0, 0.0, 10.0, 10.0);
     let clip = make_rect(2.0, 2.0, 4.0, 4.0);
     let input = with_drawing(drawing_input("target", &target), "clip", &clip);
-    let out = ClipApply.evaluate(&input).unwrap();
+    let out = ClipApply.evaluate_cold(input).unwrap();
     assert_eq!(drawing_kind_of(&out), "rect");
 }
 
@@ -374,14 +376,14 @@ async fn read_text_errors_when_key_missing() {
 
 #[semio_framework_async_macros::async_test]
 async fn read_drawing_errors_when_handle_missing() {
-    let input = Dictionary::new().insert("drawing", Value::Dictionary(Dictionary::new()));
+    let input = neural_engine::ColdOwner::new(Dictionary::new().insert("drawing", Value::Dictionary(Dictionary::new())));
     assert!(matches!(read_drawing(&input, "drawing"), Err(EvalError::MissingInput(ref key)) if key == "drawing.handle"));
 }
 
 #[semio_framework_async_macros::async_test]
 async fn read_point_list_errors_when_entry_is_not_a_point() {
     let list = Dictionary::with_schema("list").insert("0", Value::Atom(Atom::Decimal(1.0)));
-    let input = Dictionary::new().insert("points", Value::Dictionary(list));
+    let input = neural_engine::ColdOwner::new(Dictionary::new().insert("points", Value::Dictionary(list)));
     assert!(matches!(read_point_list(&input, "points"), Err(EvalError::InvalidInput(_))));
 }
 
@@ -390,14 +392,14 @@ async fn bundle_contributes_draw_for_flow_and_procedural3d_play() {
     use flow_extension_sdk::build_manifest_json;
     use semio_framework_plugin::{extension_activate, extension_invoke, extension_manifest, install_extension_bundle, ExtensionBundle};
 
-    let manifest_json = build_manifest_json("draw", "Draw", "0.1.0", &module_registry(), vec!["onStartup".into()], vec![], vec![], vec![]);
+    let manifest_json = build_manifest_json("draw", "Draw", "0.1.0", &neural_engine::ColdOwner::new(module_registry()), vec!["onStartup".into()], vec![], vec![], vec![]);
     let flow_topic = flow_extension_sdk::flow_extension_topic_contribution("flow-play", "draw", "Draw", "draw", &manifest_json);
     let procedural3d_topic = flow_extension_sdk::flow_extension_topic_contribution("procedural3d-play", "draw", "Draw", "draw", &manifest_json);
     let bundle = ExtensionBundle::new("flow-extension-draw", "Draw", "0.1.0")
         .extends("flow")
         .contributes_topic(flow_topic.topic, flow_topic.payload)
         .contributes_topic(procedural3d_topic.topic, procedural3d_topic.payload)
-        .handler("evaluate", |req| Ok(flow_extension_sdk::evaluate_invoke_json(&module_registry(), req).unwrap()));
+        .handler("evaluate", |req| Ok(flow_extension_sdk::evaluate_invoke_json(&neural_engine::ColdOwner::new(module_registry()), req).unwrap()));
     install_extension_bundle(bundle).await;
     let installed = extension_manifest().await;
     assert_eq!(installed.topic_contributions.len(), 2);

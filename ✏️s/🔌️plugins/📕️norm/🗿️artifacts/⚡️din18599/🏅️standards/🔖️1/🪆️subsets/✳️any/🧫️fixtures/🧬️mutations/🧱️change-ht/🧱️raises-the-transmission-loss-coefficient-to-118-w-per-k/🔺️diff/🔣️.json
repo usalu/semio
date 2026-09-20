@@ -2,7 +2,7 @@
   "useClass": null,
   "heatedAreaM2": null,
   "occupants": null,
-  "hT": 118,
+  "hT": 118.0,
   "hV": null,
   "climate": null,
   "internalGainsWM2": null,

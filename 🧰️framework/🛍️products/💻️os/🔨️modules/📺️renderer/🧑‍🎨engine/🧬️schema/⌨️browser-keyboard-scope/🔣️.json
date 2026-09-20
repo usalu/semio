@@ -1,0 +1,183 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Browser Keyboard Scope",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "cases",
+    "focusLossCases",
+    "fullscreenCases"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "target",
+          "key",
+          "modifiers",
+          "prevented",
+          "forwarded"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "target": {
+            "enum": [
+              "canvas",
+              "mirror-tree",
+              "mirror-button",
+              "mirror-input",
+              "mirror-combobox",
+              "mirror-editable-combobox",
+              "outside"
+            ]
+          },
+          "key": {
+            "type": "string",
+            "minLength": 1
+          },
+          "modifiers": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "ctrl": {
+                "type": "boolean"
+              },
+              "meta": {
+                "type": "boolean"
+              },
+              "alt": {
+                "type": "boolean"
+              },
+              "shift": {
+                "type": "boolean"
+              }
+            }
+          },
+          "prevented": {
+            "type": "boolean"
+          },
+          "forwarded": {
+            "type": "integer",
+            "enum": [
+              0,
+              2
+            ]
+          }
+        }
+      }
+    },
+    "focusLossCases": {
+      "type": "array",
+      "minItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "loss",
+          "releasedKeys",
+          "expectedModifiers"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "loss": {
+            "enum": [
+              "outside-focus",
+              "window-blur",
+              "hidden-page"
+            ]
+          },
+          "releasedKeys": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": {
+              "enum": [
+                "Control",
+                "Meta",
+                "Alt",
+                "Shift"
+              ]
+            }
+          },
+          "expectedModifiers": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "ctrl",
+              "meta",
+              "alt",
+              "shift"
+            ],
+            "properties": {
+              "ctrl": {
+                "const": false
+              },
+              "meta": {
+                "const": false
+              },
+              "alt": {
+                "const": false
+              },
+              "shift": {
+                "const": false
+              }
+            }
+          }
+        }
+      }
+    },
+    "fullscreenCases": {
+      "type": "array",
+      "minItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "focus",
+          "expectedOwner",
+          "expectedFocus"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "focus": {
+            "enum": [
+              "canvas",
+              "mirror-tree",
+              "mirror-combobox"
+            ]
+          },
+          "expectedOwner": {
+            "const": "root"
+          },
+          "expectedFocus": {
+            "enum": [
+              "canvas",
+              "mirror-tree",
+              "mirror-combobox"
+            ]
+          }
+        }
+      }
+    }
+  }
+}

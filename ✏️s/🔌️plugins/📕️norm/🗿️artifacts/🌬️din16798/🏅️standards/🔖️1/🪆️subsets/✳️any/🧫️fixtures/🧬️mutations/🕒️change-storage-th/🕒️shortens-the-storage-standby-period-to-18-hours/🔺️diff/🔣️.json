@@ -56,7 +56,7 @@
   "hStWK": null,
   "thetaStC": null,
   "thetaAmbC": null,
-  "storageTH": 18,
+  "storageTH": 18.0,
   "storageAllowanceKwh": null,
   "dhwDeliveryC": null,
   "ductClass": null,

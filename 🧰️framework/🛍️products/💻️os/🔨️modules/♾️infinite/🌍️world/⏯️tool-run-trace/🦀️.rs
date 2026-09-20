@@ -173,12 +173,7 @@ impl ToolRunTraceLayer {
             self.batches.remove(&slot.batch);
         }
         if self.newest_testing.is_some_and(|(newest, _)| newest == key) {
-            self.newest_testing = self
-                .batches
-                .iter()
-                .filter(|(batch_key, _)| batch_key.verdict() == ToolRunVerdict::Testing)
-                .flat_map(|(_, batch)| batch.keys.iter().copied().zip(batch.stamps.iter().copied()))
-                .max_by_key(|(_, stamp)| *stamp);
+            self.newest_testing = self.batches.iter().filter(|(batch_key, _)| batch_key.verdict() == ToolRunVerdict::Testing).flat_map(|(_, batch)| batch.keys.iter().copied().zip(batch.stamps.iter().copied())).max_by_key(|(_, stamp)| *stamp);
         }
     }
 
@@ -233,7 +228,7 @@ impl ToolRunTraceLayer {
                         let ToolRunTraceSubject::Instance3d { position, rotation, scale, .. } = *subject else { return None };
                         let newest = newest_testing == Some(*record);
                         let alpha = if newest { base.a } else { base.a * tool_run_trace_fade(newest_stamp - stamp) };
-                        Some(Instance3d { id: format!("toolRunTrace:{record}"), model: Instance3d::model_from_trs(position, rotation, [scale; 3]), color: [base.r, base.g, base.b, alpha], selected: newest, hovered: false })
+                        Some(Instance3d { id: format!("toolRunTrace:{record}"), model: Instance3d::model_from_trs(position, rotation, [scale; 3]), color: [base.r, base.g, base.b, alpha], selected: newest, hovered: false, material: Default::default() })
                     })
                     .collect();
                 ToolRunTraceDraw { mesh: key.index, verdict, instances }

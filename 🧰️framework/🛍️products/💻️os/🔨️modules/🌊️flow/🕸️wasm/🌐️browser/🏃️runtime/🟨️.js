@@ -10,7 +10,11 @@ import { FlowFeatureGroups, FlowOperation, FlowOperationFields, attachFlowSurfac
  * `source` carries only the RAW wasm exports, which cannot take an `HtmlCanvasElement` — the
  * wasm-bindgen wrappers can, and that is how a flow surface reaches its own WebGPU presenter
  * (`flowAttachSurfaceCanvas`). Without it every surface simply presents through the encoded draw
- * list instead, which is also what a host with no WebGPU gets. */
+ * list instead, which is also what a host with no WebGPU gets.
+ *
+ * @param {import("../📝️declaration/🤖️generated/🟦️.d.ts").FlowBrowserOptions} [options] the owned browser ABI options
+ * @returns {Promise<import("../📝️declaration/🤖️generated/🟦️.d.ts").FlowBrowserRuntime>} the runtime this module's own published declaration describes
+ */
 export async function createFlowBrowserRuntime({ source, imports = {}, instantiate, bindings, ...hostOptions } = {}) {
   if (source === undefined) throw new Error("Flow Wasm source is required");
   let exports = source?.exports ?? source;

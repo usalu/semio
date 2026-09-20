@@ -1,11 +1,10 @@
-
 use super::*;
 use ui_wgpu::wgpu::{BlockListScene, DrawList, FontAtlas, IconAtlas, InputState};
 
-fn block_list_scene(surface_id: &str, block_list: BlockListScene) -> UiComponentSceneNode {
+fn block_list_scene(surface_id: &str, controller_id: &str, steps: Value, palette: Value) -> UiComponentSceneNode {
     UiComponentSceneNode {
         surface_id: surface_id.into(),
-        controller_id: "controller".into(),
+        controller_id: controller_id.into(),
         component_kind: SurfaceKind::BlockList,
         pane_id: None,
         binding_id: None,
@@ -24,21 +23,29 @@ fn block_list_scene(surface_id: &str, block_list: BlockListScene) -> UiComponent
         graph_timeline: None,
         diff_view: None,
         event_feed: None,
-        block_list: Some(block_list),
+        block_list: Some(BlockListScene { steps_json: steps.to_string(), palette_json: palette.to_string(), selected_id: None, dragging_id: None, domain_id: None }),
         menu: None,
     }
 }
 
-fn step_json(id: &str, blocks: &[(&str, &str, &str)]) -> Value {
-    json!({
-        "id": id,
-        "title": format!("Step {id}"),
-        "blocks": blocks.iter().map(|(bid, label, kind)| json!({ "id": bid, "label": label, "kind": kind })).collect::<Vec<_>>(),
-    })
+fn shared_fixture() -> Value {
+    serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../../../../../🔨️modules/🖱️ui/🧫️fixtures/🔀️scene-list-transfer/🔣️.json"))).expect("shared scene-list transfer fixture")
 }
 
-/// 🧪️ Renders `node` and returns the `InputState` so tests can inspect registered hit targets.
-fn render(node: &UiComponentSceneNode) -> InputState<ActionDescriptor> {
+fn drain_actions(input: &mut InputState<ActionDescriptor>) -> Vec<ActionDescriptor> {
+    let mut actions = Vec::new();
+    while let Some(action) = input.take_action_step().expect("action authority live") {
+        actions.push(action.into_descriptor().expect("bounded action materializes"));
+    }
+    actions
+}
+
+fn fixture_scene() -> UiComponentSceneNode {
+    let fixture = shared_fixture();
+    block_list_scene("pipeline", "controller.block-list", fixture["blockList"]["steps"].clone(), fixture["blockList"]["palette"].clone())
+}
+
+fn render(node: &UiComponentSceneNode, driver_drag: UiDriverDrag) -> InputState<ActionDescriptor> {
     let mut draw = DrawList::default();
     let mut atlas = FontAtlas::builtin();
     let icons = IconAtlas::default();
@@ -49,231 +56,125 @@ fn render(node: &UiComponentSceneNode) -> InputState<ActionDescriptor> {
     let mut selects = HashMap::new();
     {
         let mut ctx = crate::interpreter::framework_widget_context(&mut draw, None, &mut atlas, Some(&icons), &mut input, &theme, &mut scroll, &mut collapsed, &mut selects, None, 0.0);
-        render_block_list(node, Rect::new(0.0, 0.0, 600.0, 400.0), &mut ctx);
+        render_block_list(node, Rect::new(0.0, 0.0, 600.0, 400.0), &mut ctx, driver_drag);
     }
     input
 }
 
-fn hit<'a>(input: &'a InputState<ActionDescriptor>, control_id: &str) -> &'a HitTarget<ActionDescriptor> {
-    input.staged_hits().iter().find(|target| target.control_id.as_deref() == Some(control_id)).unwrap_or_else(|| panic!("no hit target registered for control_id {control_id:?}"))
+fn role_rect(plan: &BlockListPlan, accepts: impl Fn(&BlockListRole) -> bool) -> Rect {
+    plan.targets.iter().find(|target| accepts(&target.role)).expect("role target").rect
 }
 
-fn find_hit<'a>(input: &'a InputState<ActionDescriptor>, control_id: &str) -> Option<&'a HitTarget<ActionDescriptor>> {
-    input.staged_hits().iter().find(|target| target.control_id.as_deref() == Some(control_id))
+fn pointer(node: &UiComponentSceneNode, input: &mut InputState<ActionDescriptor>, point: (f32, f32), down: bool, generation: u64, driver_drag: UiDriverDrag) {
+    passive_scene_pointer_button(node, Rect::new(0.0, 0.0, 600.0, 400.0), point.0, point.1, down, 0, SceneModifiers::default(), "window.pipeline", generation, driver_drag, input).expect("bounded pointer action");
+}
+
+fn center(rect: Rect) -> (f32, f32) {
+    (rect.x + rect.w * 0.5, rect.y + rect.h * 0.5)
 }
 
 #[test]
 fn missing_scene_renders_placeholder_without_panicking() {
-    let node = UiComponentSceneNode {
-        surface_id: "s1".into(),
-        controller_id: "controller".into(),
-        component_kind: SurfaceKind::BlockList,
-        pane_id: None,
-        binding_id: None,
-        presence: UiPresence::default(),
-        canvas_2d: None,
-        world_3d: None,
-        node_graph: None,
-        text_editor: None,
-        table: None,
-        paint_2d: None,
-        virtual_file_system: None,
-        tiled_map: None,
-        board2d: None,
-        icon_render: None,
-        ink_canvas: None,
-        graph_timeline: None,
-        diff_view: None,
-        event_feed: None,
-        block_list: None,
-        menu: None,
-    };
-    render(&node);
+    let mut node = fixture_scene();
+    node.block_list = None;
+    render(&node, UiDriverDrag::Handle);
 }
 
 #[test]
-fn add_step_button_dispatches_add_step() {
-    let scene = BlockListScene { steps_json: "[]".into(), palette_json: "[]".into(), selected_id: None, dragging_id: None, domain_id: None };
-    let node = block_list_scene("s1", scene);
-    let input = render(&node);
-    let target = hit(&input, "s1.addStep");
-    let action = target.event.as_ref().expect("addStep action");
-    assert_eq!(action.action, "addStep");
+fn shared_driver_fixture_exposes_only_semantic_handles_or_surfaces_and_no_move_buttons() {
+    let node = fixture_scene();
+    let bounds = Rect::new(0.0, 0.0, 600.0, 400.0);
+    let theme = Theme::default();
+    let handle = block_list_plan(&node, bounds, &theme, UiDriverDrag::Handle);
+    let surface = block_list_plan(&node, bounds, &theme, UiDriverDrag::Surface);
+    let handle_roles = handle.targets.iter().filter(|target| matches!(target.role, BlockListRole::StepHandle { .. } | BlockListRole::BlockHandle { .. } | BlockListRole::PaletteHandle { .. })).count();
+    assert_eq!(handle_roles, 6, "two steps, three blocks and one palette entry publish six handles");
+    assert!(!surface.targets.iter().any(|target| matches!(target.role, BlockListRole::StepHandle { .. } | BlockListRole::BlockHandle { .. } | BlockListRole::PaletteHandle { .. })));
+    assert!(handle.targets.iter().all(|target| !target.control_id.ends_with(".moveUp") && !target.control_id.ends_with(".moveDown")), "the alternate reorder button UI is retired");
+
+    let prepare = role_rect(&handle, |role| matches!(role, BlockListRole::Step { step_id, .. } if step_id == "prepare"));
+    let handle_point = center(role_rect(&handle, |role| matches!(role, BlockListRole::StepHandle { step_id, .. } if step_id == "prepare")));
+    let label_point = (prepare.x + prepare.w * 0.5, prepare.y + theme.control_height * 0.5);
+    assert!(block_list_transfer_start(&node, bounds, handle_point.0, handle_point.1, &theme, UiDriverDrag::Handle).is_some());
+    assert!(block_list_transfer_start(&node, bounds, label_point.0, label_point.1, &theme, UiDriverDrag::Handle).is_none(), "a Handle label does not arm sorting");
+    assert!(block_list_transfer_start(&node, bounds, label_point.0, label_point.1, &theme, UiDriverDrag::Surface).is_some(), "the same row arms under Surface policy");
 }
 
 #[test]
-fn palette_entry_dispatches_add_block_with_kind() {
-    let palette = json!([{ "blockKind": "text", "label": "Text", "iconId": "type" }]).to_string();
-    let scene = BlockListScene { steps_json: "[]".into(), palette_json: palette, selected_id: None, dragging_id: None, domain_id: None };
-    let node = block_list_scene("s1", scene);
-    let input = render(&node);
-    let target = hit(&input, "s1.palette.text");
-    let action = target.event.as_ref().expect("addBlock action");
-    assert_eq!(action.action, "addBlock");
-    assert_eq!(action.args.as_ref().and_then(|args| args.get("kind")).and_then(semio_framework::DslValue::as_str), Some("text"));
+fn shared_fixture_step_and_block_reorders_match_closest_center_actions() {
+    cancel_scene_list_transfer();
+    let fixture = shared_fixture();
+    let node = fixture_scene();
+    let bounds = Rect::new(0.0, 0.0, 600.0, 400.0);
+    let theme = Theme::default();
+    remember_scene_theme(&theme);
+    let plan = block_list_plan(&node, bounds, &theme, UiDriverDrag::Handle);
+    let mut input = InputState::<ActionDescriptor>::default();
+
+    let step_source = center(role_rect(&plan, |role| matches!(role, BlockListRole::StepHandle { step_id, .. } if step_id == "prepare")));
+    let step_target = center(role_rect(&plan, |role| matches!(role, BlockListRole::Step { step_id, .. } if step_id == "publish")));
+    pointer(&node, &mut input, step_source, true, 11, UiDriverDrag::Handle);
+    passive_scene_pointer_move(&node, bounds, step_target.0, step_target.1, "window.pipeline", 11, UiDriverDrag::Handle);
+    pointer(&node, &mut input, step_target, false, 11, UiDriverDrag::Handle);
+    let action = drain_actions(&mut input).pop().expect("moveStep action");
+    assert_eq!(serde_json::to_value(action).unwrap(), fixture["journeys"][4]["expectedAction"]);
+
+    let block_source = center(role_rect(&plan, |role| matches!(role, BlockListRole::BlockHandle { block_id, .. } if block_id == "load")));
+    let block_target = center(role_rect(&plan, |role| matches!(role, BlockListRole::Block { block_id, .. } if block_id == "clean")));
+    pointer(&node, &mut input, block_source, true, 12, UiDriverDrag::Handle);
+    passive_scene_pointer_move(&node, bounds, block_target.0, block_target.1, "window.pipeline", 12, UiDriverDrag::Handle);
+    pointer(&node, &mut input, block_target, false, 12, UiDriverDrag::Handle);
+    let action = drain_actions(&mut input).pop().expect("moveBlock action");
+    assert_eq!(serde_json::to_value(action).unwrap(), fixture["journeys"][5]["expectedAction"]);
 }
 
 #[test]
-fn first_step_has_no_move_up_but_has_move_down_when_a_second_step_exists() {
-    let steps = json!([step_json("a", &[]), step_json("b", &[])]).to_string();
-    let scene = BlockListScene { steps_json: steps, palette_json: "[]".into(), selected_id: None, dragging_id: None, domain_id: None };
-    let node = block_list_scene("s1", scene);
-    let input = render(&node);
-    assert!(hit(&input, "s1.step.a.moveUp").event.is_none(), "the first step must not be able to move further up");
-    let down = hit(&input, "s1.step.a.moveDown");
-    let action = down.event.as_ref().expect("moveStep action");
-    assert_eq!(action.action, "moveStep");
-    assert_eq!(action.args.as_ref().and_then(|args| args.get("stepId")).and_then(semio_framework::DslValue::as_str), Some("a"));
-    assert_eq!(action.args.as_ref().and_then(|args| args.get("index")).and_then(semio_framework::DslValue::as_f64), Some(1.0));
+fn shared_fixture_palette_drop_and_cancellation_paths_use_the_one_authority() {
+    cancel_scene_list_transfer();
+    let fixture = shared_fixture();
+    let node = fixture_scene();
+    let bounds = Rect::new(0.0, 0.0, 600.0, 400.0);
+    let theme = Theme::default();
+    remember_scene_theme(&theme);
+    let plan = block_list_plan(&node, bounds, &theme, UiDriverDrag::Handle);
+    let palette = center(role_rect(&plan, |role| matches!(role, BlockListRole::PaletteHandle { kind } if kind == "filter")));
+    let publish = center(role_rect(&plan, |role| matches!(role, BlockListRole::Step { step_id, .. } if step_id == "publish")));
+    let mut input = InputState::<ActionDescriptor>::default();
+
+    pointer(&node, &mut input, palette, true, 13, UiDriverDrag::Handle);
+    passive_scene_pointer_move(&node, bounds, publish.0, publish.1, "window.pipeline", 13, UiDriverDrag::Handle);
+    pointer(&node, &mut input, publish, false, 13, UiDriverDrag::Handle);
+    let action = drain_actions(&mut input).pop().expect("addBlock action");
+    assert_eq!(serde_json::to_value(action).unwrap(), fixture["journeys"][6]["expectedAction"]);
+
+    pointer(&node, &mut input, palette, true, 14, UiDriverDrag::Handle);
+    assert!(cancel_scene_list_transfer(), "Escape cancellation consumes the active authority");
+    pointer(&node, &mut input, publish, false, 14, UiDriverDrag::Handle);
+    assert!(drain_actions(&mut input).is_empty());
+
+    pointer(&node, &mut input, palette, true, 15, UiDriverDrag::Handle);
+    passive_scene_pointer_move(&node, bounds, publish.0, publish.1, "window.pipeline", 16, UiDriverDrag::Handle);
+    pointer(&node, &mut input, publish, false, 16, UiDriverDrag::Handle);
+    assert!(drain_actions(&mut input).is_empty(), "a subtree revision change retires the source before release");
 }
 
 #[test]
-fn last_step_has_no_move_down() {
-    let steps = json!([step_json("a", &[]), step_json("b", &[])]).to_string();
-    let scene = BlockListScene { steps_json: steps, palette_json: "[]".into(), selected_id: None, dragging_id: None, domain_id: None };
-    let node = block_list_scene("s1", scene);
-    let input = render(&node);
-    assert!(hit(&input, "s1.step.b.moveDown").event.is_none(), "the last step must not be able to move further down");
+fn block_list_actions_match_react_args_without_an_invented_surface_id() {
+    let node = fixture_scene();
+    let plan = block_list_plan(&node, Rect::new(0.0, 0.0, 600.0, 400.0), &Theme::default(), UiDriverDrag::Handle);
+    let remove = plan.targets.iter().find(|target| target.control_id == "pipeline.block.load.remove").and_then(|target| target.action.as_ref()).expect("remove block action");
+    let args = remove.args.as_ref().expect("args");
+    assert_eq!(remove.action, "removeBlock");
+    assert_eq!(args.get("stepId").and_then(semio_framework::DslValue::as_str), Some("prepare"));
+    assert_eq!(args.get("blockId").and_then(semio_framework::DslValue::as_str), Some("load"));
+    assert!(args.get("surfaceId").is_none(), "React's dispatchBlockListAction does not inject surfaceId");
 }
 
 #[test]
-fn remove_step_button_dispatches_remove_step_with_step_id() {
-    let steps = json!([step_json("a", &[])]).to_string();
-    let scene = BlockListScene { steps_json: steps, palette_json: "[]".into(), selected_id: None, dragging_id: None, domain_id: None };
-    let node = block_list_scene("s1", scene);
-    let input = render(&node);
-    let target = hit(&input, "s1.step.a.remove");
-    let action = target.event.as_ref().expect("removeStep action");
-    assert_eq!(action.action, "removeStep");
-    assert_eq!(action.args.as_ref().and_then(|args| args.get("stepId")).and_then(semio_framework::DslValue::as_str), Some("a"));
-}
-
-#[test]
-fn block_move_and_remove_dispatch_expected_action_shapes() {
-    let steps = json!([step_json("a", &[("b1", "Block One", "text"), ("b2", "Block Two", "number")])]).to_string();
-    let scene = BlockListScene { steps_json: steps, palette_json: "[]".into(), selected_id: None, dragging_id: None, domain_id: None };
-    let node = block_list_scene("s1", scene);
-    let input = render(&node);
-
-    assert!(hit(&input, "s1.block.b1.moveUp").event.is_none(), "the first block in a step must not move further up");
-    let move_down = hit(&input, "s1.block.b1.moveDown");
-    let move_action = move_down.event.as_ref().expect("moveBlock action");
-    assert_eq!(move_action.action, "moveBlock");
-    assert_eq!(move_action.args.as_ref().and_then(|args| args.get("blockId")).and_then(semio_framework::DslValue::as_str), Some("b1"));
-    assert_eq!(move_action.args.as_ref().and_then(|args| args.get("fromStepId")).and_then(semio_framework::DslValue::as_str), Some("a"));
-    assert_eq!(move_action.args.as_ref().and_then(|args| args.get("toStepId")).and_then(semio_framework::DslValue::as_str), Some("a"));
-    assert_eq!(move_action.args.as_ref().and_then(|args| args.get("index")).and_then(semio_framework::DslValue::as_f64), Some(1.0));
-
-    assert!(hit(&input, "s1.block.b2.moveDown").event.is_none(), "the last block in a step must not move further down");
-
-    let remove = hit(&input, "s1.block.b1.remove");
-    let remove_action = remove.event.as_ref().expect("removeBlock action");
-    assert_eq!(remove_action.action, "removeBlock");
-    assert_eq!(remove_action.args.as_ref().and_then(|args| args.get("stepId")).and_then(semio_framework::DslValue::as_str), Some("a"));
-    assert_eq!(remove_action.args.as_ref().and_then(|args| args.get("blockId")).and_then(semio_framework::DslValue::as_str), Some("b1"));
-}
-
-#[test]
-fn empty_steps_registers_no_step_hit_targets() {
-    let scene = BlockListScene { steps_json: "[]".into(), palette_json: "[]".into(), selected_id: None, dragging_id: None, domain_id: None };
-    let node = block_list_scene("s1", scene);
-    let input = render(&node);
-    assert!(find_hit(&input, "s1.step.a.remove").is_none());
-}
-
-//#region BlockListPaintTests
-#[test]
-fn step_card_draws_a_full_four_sided_border_not_just_top_and_bottom() {
-    // 🖼️ Unit-tests `draw_ink_rect_outline` directly (the helper `render_block_list`'s step-card
-    // border calls) rather than filtering `render_block_list`'s full draw output by color: `theme
-    // .separator` and `theme.border_normal` are byte-identical by design (both derive from
-    // `chrome.border_normal` in `Theme::from_chrome`), and the card's right edge sits only a few
-    // px from the unrelated main/palette divider line — too tight a margin for a position filter
-    // to reliably separate the two from the full scene, so isolate the helper instead.
+fn step_card_draws_a_full_four_sided_border() {
     let mut draw = DrawList::default();
     let color = Theme::default().border_normal;
     draw_ink_rect_outline(&mut draw, 10.0, 20.0, 200.0, 80.0, color, 1.0);
-    let border_vertex_count = draw.layers.iter().flat_map(|layer| layer.vector_vertices.iter()).filter(|v| v.color == [color.r, color.g, color.b, color.a]).count();
-    assert_eq!(border_vertex_count, 24, "4 lines (top/right/bottom/left) * 6 vertices should emit 24, got {border_vertex_count}");
+    let border_vertex_count = draw.layers.iter().flat_map(|layer| layer.vector_vertices.iter()).filter(|vertex| vertex.color == [color.r, color.g, color.b, color.a]).count();
+    assert_eq!(border_vertex_count, 24);
 }
-//#endregion BlockListPaintTests
-
-//#region BlockListPointerTests
-/// 🧩️ LAW: the pointer path and the paint share ONE layout (`block_list_plan`), so every control the
-/// paint registered at a rect resolves to the SAME action when pressed at that rect's centre. This is
-/// what keeps a re-derived hit test from drifting away from what is on screen.
-#[test]
-fn every_painted_control_resolves_to_the_same_action_when_pressed_at_its_centre() {
-    let steps = json!([step_json("a", &[("b1", "Block One", "text"), ("b2", "Block Two", "number")]), step_json("b", &[])]).to_string();
-    let palette = json!([{ "blockKind": "text", "label": "Text", "iconId": "type" }]).to_string();
-    let scene = BlockListScene { steps_json: steps, palette_json: palette, selected_id: None, dragging_id: None, domain_id: None };
-    let node = block_list_scene("block-list-press", scene);
-    let bounds = Rect::new(0.0, 0.0, 600.0, 400.0);
-    let theme = Theme::default();
-    let input = render(&node);
-    let mut checked = 0;
-    for target in input.staged_hits() {
-        let Some(control_id) = target.control_id.as_deref() else { continue };
-        if control_id.ends_with(".blockList") {
-            continue;
-        }
-        let (x, y) = (target.rect.x + target.rect.w * 0.5, target.rect.y + target.rect.h * 0.5);
-        let hit = block_list_hit(&node, bounds, x, y, &theme).unwrap_or_else(|| panic!("no pointer hit at the centre of {control_id}"));
-        assert_eq!(hit.control_id, control_id, "the pointer resolved a different control than the paint drew there");
-        assert_eq!(hit.action.as_ref().map(|action| action.action.clone()), target.event.as_ref().map(|action| action.action.clone()), "{control_id} dispatches a different verb through the pointer path");
-        checked += 1;
-    }
-    assert!(checked >= 10, "expected the plan to register step/block/palette controls, only saw {checked}");
-}
-
-/// 🧩️ A press on empty space inside the step body resolves nothing — React's block list has no
-/// whole-surface click verb.
-#[test]
-fn empty_block_list_body_dispatches_nothing() {
-    let scene = BlockListScene { steps_json: "[]".into(), palette_json: "[]".into(), selected_id: None, dragging_id: None, domain_id: None };
-    let node = block_list_scene("block-list-press-empty", scene);
-    assert!(block_list_hit(&node, Rect::new(0.0, 0.0, 600.0, 400.0), 100.0, 200.0, &Theme::default()).is_none());
-}
-//#endregion BlockListPointerTests
-
-//#region BlockListPaletteTransferTests
-/// 🧩️ React `🧩️BlockListHost/🟦️.tsx` `PaletteEntryRow`: a palette row is `draggable` and puts its
-/// `blockKind` on the transfer under `PALETTE_DRAG_MIME`.
-#[test]
-fn a_palette_entry_is_a_drag_source_carrying_its_block_kind() {
-    let palette = json!([{ "blockKind": "text", "label": "Text", "iconId": "type" }]).to_string();
-    let scene = BlockListScene { steps_json: "[]".into(), palette_json: palette, selected_id: None, dragging_id: None, domain_id: None };
-    let node = block_list_scene("bl-drag-src", scene);
-    let bounds = Rect::new(0.0, 0.0, 600.0, 400.0);
-    let theme = Theme::default();
-    let plan = block_list_plan(&node, bounds, &theme);
-    let entry = plan.targets[plan.body_range.end..].first().expect("one palette target");
-    let (mime, payload) = scene_transfer_drag_source(&node, bounds, entry.rect.x + 2.0, entry.rect.y + entry.rect.h * 0.5, &theme).expect("palette drag source");
-    assert_eq!(mime, BLOCK_LIST_PALETTE_DRAG_MIME);
-    assert_eq!(mime, "application/x-semio-block-list-block-kind", "the mime is React's own PALETTE_DRAG_MIME string");
-    assert_eq!(payload, "text");
-}
-
-/// 🧩️ React `🧩️BlockListHost/🟦️.tsx` `StepCard`'s `onDrop`: a palette drop on a STEP CARD adds a block
-/// of the dragged kind to that step. A drop that lands on no step card adds nothing.
-#[test]
-fn a_palette_drop_on_a_step_card_adds_a_block_to_that_step() {
-    let steps = json!([step_json("s-a", &[]), step_json("s-b", &[])]).to_string();
-    let palette = json!([{ "blockKind": "text", "label": "Text", "iconId": "type" }]).to_string();
-    let scene = BlockListScene { steps_json: steps, palette_json: palette, selected_id: None, dragging_id: None, domain_id: None };
-    let node = block_list_scene("bl-drop", scene);
-    let bounds = Rect::new(0.0, 0.0, 600.0, 400.0);
-    let theme = Theme::default();
-    let plan = block_list_plan(&node, bounds, &theme);
-    let card = plan.targets[plan.body_range.clone()].iter().find(|target| target.control_id == "bl-drop.step.s-b").expect("the second step card");
-    let action = scene_transfer_drop_action(&node, bounds, card.rect.x + 4.0, card.rect.y + 2.0, &theme, BLOCK_LIST_PALETTE_DRAG_MIME, "text").expect("addBlock action");
-    assert_eq!(action.action, "addBlock");
-    let args = action.args.as_ref().expect("args");
-    assert_eq!(args.get("stepId").and_then(semio_framework::DslValue::as_str), Some("s-b"));
-    assert_eq!(args.get("kind").and_then(semio_framework::DslValue::as_str), Some("text"));
-    assert!(
-        scene_transfer_drop_action(&node, bounds, plan.palette_rect.x + 4.0, plan.palette_rect.y + plan.palette_rect.h * 0.5, &theme, BLOCK_LIST_PALETTE_DRAG_MIME, "text").is_none(),
-        "the palette rail is not a drop target — React binds onDrop on the step card alone"
-    );
-}
-//#endregion BlockListPaletteTransferTests

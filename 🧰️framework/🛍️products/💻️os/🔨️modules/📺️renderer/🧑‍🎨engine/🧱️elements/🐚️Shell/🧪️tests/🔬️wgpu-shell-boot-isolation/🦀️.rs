@@ -37,6 +37,7 @@ fn boot_app(app_id: &str) -> AppDefinition {
         .expect("non-empty window kinds"),
         panel_tabs: vec![],
         keybindings: vec![],
+        actions: vec![],
         utilities: vec![],
         tools: vec![],
         commands: vec![],

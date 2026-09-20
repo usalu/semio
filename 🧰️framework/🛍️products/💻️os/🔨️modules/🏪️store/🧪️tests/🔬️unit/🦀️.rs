@@ -2630,11 +2630,24 @@ pub(super) struct DemoOneItemPreparationFactory {
     footprint: ArtifactStoreOneItemFootprint,
     published_root: Arc<Mutex<Option<std::sync::Weak<DemoSnapshot>>>>,
     forge_digest: bool,
+    stamped_clock: Option<HybridLogicalTimestamp>,
+    stamped_mutation_id: Option<MutationId>,
 }
 
 impl DemoOneItemPreparationFactory {
     pub(super) fn admissible() -> Self {
-        Self { footprint: ArtifactStoreOneItemFootprint::for_one_invertible_item(512), published_root: Arc::new(Mutex::new(None)), forge_digest: false }
+        Self { footprint: ArtifactStoreOneItemFootprint::for_one_invertible_item(512), published_root: Arc::new(Mutex::new(None)), forge_digest: false, stamped_clock: None, stamped_mutation_id: None }
+    }
+
+    /// 🕰️ A server-derived publication clock, as a durable committer declares it.
+    fn stamped(clock: HybridLogicalTimestamp) -> Self {
+        Self { stamped_clock: Some(clock), ..Self::admissible() }
+    }
+
+    /// 🔏 A server-derived clock AND identity, as the Hub's approval committer declares both: the
+    /// pair its canonical command was hashed over before the Store was ever reached.
+    fn stamped_identity(clock: HybridLogicalTimestamp, mutation_id: &str) -> Self {
+        Self { stamped_clock: Some(clock), stamped_mutation_id: Some(MutationId(mutation_id.to_string())), ..Self::admissible() }
     }
 
     /// 🚫️ The repo-wide app-side defect, as a fixture: a durable preflight that declares ONE work item
@@ -2659,12 +2672,21 @@ struct DemoOneItemPreparation {
     checkpoint: ArtifactStoreOneItemCheckpoint,
     published_root: Arc<Mutex<Option<std::sync::Weak<DemoSnapshot>>>>,
     forge_digest: bool,
+    stamped_mutation_id: Option<MutationId>,
     active_id_retirement: Option<ArtifactStoreStringRetirement>,
     cancelled: bool,
     closing: bool,
 }
 
 impl ArtifactStoreOneItemPreparationFactory<DemoSnapshot, DemoMutation> for DemoOneItemPreparationFactory {
+    fn stamped_clock(&self) -> Option<HybridLogicalTimestamp> {
+        self.stamped_clock
+    }
+
+    fn stamped_mutation_id(&self) -> Option<MutationId> {
+        self.stamped_mutation_id.clone()
+    }
+
     fn preflight(&self, _mutation: &DemoMutation, _description: Option<&str>, _lane: HistoryLane) -> Result<ArtifactStoreOneItemFootprint, String> {
         Ok(self.footprint)
     }
@@ -2679,6 +2701,7 @@ impl ArtifactStoreOneItemPreparationFactory<DemoSnapshot, DemoMutation> for Demo
             checkpoint: ArtifactStoreOneItemCheckpoint::default(),
             published_root: self.published_root.clone(),
             forge_digest: self.forge_digest,
+            stamped_mutation_id: self.stamped_mutation_id.clone(),
             active_id_retirement: None,
             cancelled: false,
             closing: false,
@@ -2707,7 +2730,9 @@ impl ArtifactStoreOneItemPreparation<DemoSnapshot, DemoMutation> for DemoOneItem
         let inverse = mutation.inverse(base.get());
         let authority = self.authority.as_ref().ok_or_else(|| "demo preparation lost its live Store authority".to_string())?;
         let sequence_number = authority.next_sequence_number;
-        let id = format!("retained-one-item-{sequence_number}");
+        let stamped = self.stamped_mutation_id.clone();
+        let id = stamped.as_ref().map_or_else(|| format!("retained-one-item-{sequence_number}"), |mutation| mutation.0.clone());
+        let mutation_id = stamped.unwrap_or_else(|| MutationId(format!("{id}#0")));
         let forward = mutation;
         let edit = Edit {
             id: id.clone(),
@@ -2715,7 +2740,7 @@ impl ArtifactStoreOneItemPreparation<DemoSnapshot, DemoMutation> for DemoOneItem
             forwards: vec![forward],
             inverse,
             mutation_meta: vec![MutationMeta {
-                mutation_id: Some(MutationId(format!("{id}#0"))),
+                mutation_id: Some(mutation_id),
                 dependencies: Vec::new(),
                 base_version: 0,
                 author_id: Some(ActorId(authority.actor.clone())),
@@ -3426,6 +3451,145 @@ async fn artifact_store_one_item_stale_saturation_and_cancel_leave_root_generati
     assert_eq!(store.generation_now(), generation);
     assert_eq!(store.content_revision_now(), revision);
     assert!(Arc::ptr_eq(&root, &store.snapshot_root()));
+    close_demo_artifact_store(&mut store);
+}
+
+/// 🕰️ ticket 26/09/18 HT3a: a durable committer stamps a server-derived HLC on the edit it will
+/// hash into its canonical command, so the Store must mint the publication authority at that exact
+/// tick — the semantic-edit contract stays an exact equality and a stamp that is not strictly ahead
+/// of the Store's own clock is refused before any owner is reserved.
+#[semio_framework_async_macros::async_test]
+async fn artifact_store_stamped_publication_clock_is_admitted_ahead_and_refused_behind() {
+    let mut store = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "stamped-clock", DemoSnapshot { n: Some(0) }, None)).await;
+    store.install_document_store_owners_exact(demo_closable_store_owners());
+    let generation = store.generation_now();
+    let revision = store.content_revision_now();
+    let stamp = HybridLogicalTimestamp { actor: 7, physical_ms: store.clock.physical_ms + 1_000, logical: 0 };
+    let ahead: Arc<dyn ArtifactStoreOneItemPreparationFactory<DemoSnapshot, DemoMutation>> = Arc::new(DemoOneItemPreparationFactory::stamped(stamp));
+    let mut publication = store
+        .begin_apply_batch(semio_framework_job::OperationId(11), generation, revision, "retained-test".into(), vec![DemoMutation::SetN(SetN { n: 5 })], None, HistoryLane::Document, Some(&ahead))
+        .expect("a stamped clock strictly ahead of the Store clock admits");
+    let grant = ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: 512 };
+    let receipt = loop {
+        if let ArtifactStoreOneItemAdvance::Published(receipt) = store.advance_apply_batch(&mut publication, grant).expect("one bounded stamped step") {
+            break receipt;
+        }
+    };
+    assert_eq!(receipt, LaneItemReceipt { generation_before: generation, generation_after: generation + 1 });
+    assert_eq!(store.clock, stamp, "the committed Store clock is the stamp the committer hashed into its command");
+    let published = store.envelope.vcs.edits.last().expect("one published stamped edit");
+    assert_eq!(published.mutation_meta.first().expect("stamped authority metadata").timestamp, stamp);
+    assert!(publication.acknowledge());
+    close_durable_publication(&mut publication);
+
+    let behind: Arc<dyn ArtifactStoreOneItemPreparationFactory<DemoSnapshot, DemoMutation>> = Arc::new(DemoOneItemPreparationFactory::stamped(stamp));
+    let refused = store
+        .begin_apply_batch(semio_framework_job::OperationId(12), store.generation_now(), store.content_revision_now(), "retained-test".into(), vec![DemoMutation::SetN(SetN { n: 6 })], None, HistoryLane::Document, Some(&behind))
+        .err()
+        .expect("a stamp at or behind the Store clock is refused");
+    assert_eq!(refused.reason, "stamped publication clock is not strictly after this Store's own last published edit");
+    assert_eq!(store.generation_now(), generation + 1, "a refused stamp never publishes");
+    assert_eq!(store.clock, stamp);
+
+    let same_millisecond = HybridLogicalTimestamp { actor: 7, physical_ms: stamp.physical_ms, logical: stamp.logical + 1 };
+    let tied: Arc<dyn ArtifactStoreOneItemPreparationFactory<DemoSnapshot, DemoMutation>> = Arc::new(DemoOneItemPreparationFactory::stamped(same_millisecond));
+    let mut tied_publication = store
+        .begin_apply_batch(semio_framework_job::OperationId(13), store.generation_now(), store.content_revision_now(), "retained-test".into(), vec![DemoMutation::SetN(SetN { n: 7 })], None, HistoryLane::Document, Some(&tied))
+        .expect("a second approval in the same millisecond carries the next logical tick and admits");
+    let tied_receipt = loop {
+        if let ArtifactStoreOneItemAdvance::Published(receipt) = store.advance_apply_batch(&mut tied_publication, grant).expect("one bounded same-millisecond step") {
+            break receipt;
+        }
+    };
+    assert_eq!(tied_receipt, LaneItemReceipt { generation_before: generation + 1, generation_after: generation + 2 });
+    assert_eq!(store.clock, same_millisecond, "the same-millisecond stamp is the committed clock, so the command hash still rebuilds");
+    assert!(tied_publication.acknowledge());
+    close_durable_publication(&mut tied_publication);
+    close_demo_artifact_store(&mut store);
+}
+
+/// 🌱️ ticket 26/09/18 HT4: a Store seeds `clock` from `now_ms()` at construction, which is a fact
+/// about the machine and not about the document. A document with no published edit of its own is
+/// therefore after nothing, and a server-minted stamp far behind that seed — a hub preparing the
+/// first approval on a genesis document — must publish rather than be refused against a wall clock
+/// the document never saw.
+#[semio_framework_async_macros::async_test]
+async fn artifact_store_stamped_publication_clock_admits_a_genesis_document_behind_its_construction_seed() {
+    let mut store = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "stamped-genesis-clock", DemoSnapshot { n: Some(0) }, None)).await;
+    store.install_document_store_owners_exact(demo_closable_store_owners());
+    let generation = store.generation_now();
+    let stamp = HybridLogicalTimestamp { actor: 1, physical_ms: 1_004, logical: 0 };
+    assert!(store.clock.physical_ms > stamp.physical_ms, "the construction seed is a wall-clock tick far ahead of the minted stamp");
+    let genesis: Arc<dyn ArtifactStoreOneItemPreparationFactory<DemoSnapshot, DemoMutation>> = Arc::new(DemoOneItemPreparationFactory::stamped(stamp));
+    let mut publication = store
+        .begin_apply_batch(semio_framework_job::OperationId(21), generation, store.content_revision_now(), "retained-test".into(), vec![DemoMutation::SetN(SetN { n: 3 })], None, HistoryLane::Document, Some(&genesis))
+        .expect("a genesis document is after nothing, so the minted stamp admits");
+    let grant = ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: 512 };
+    loop {
+        if let ArtifactStoreOneItemAdvance::Published(_) = store.advance_apply_batch(&mut publication, grant).expect("one bounded genesis step") {
+            break;
+        }
+    }
+    assert_eq!(store.clock, stamp, "the committed clock is the stamp, never the construction seed");
+    assert!(publication.acknowledge());
+    close_durable_publication(&mut publication);
+
+    let behind: Arc<dyn ArtifactStoreOneItemPreparationFactory<DemoSnapshot, DemoMutation>> = Arc::new(DemoOneItemPreparationFactory::stamped(stamp));
+    let refused = store
+        .begin_apply_batch(semio_framework_job::OperationId(22), store.generation_now(), store.content_revision_now(), "retained-test".into(), vec![DemoMutation::SetN(SetN { n: 4 })], None, HistoryLane::Document, Some(&behind))
+        .err()
+        .expect("once this Store has published an edit, its clock is a document fact and the replay is refused");
+    assert_eq!(refused.reason, "stamped publication clock is not strictly after this Store's own last published edit");
+    close_demo_artifact_store(&mut store);
+}
+
+/// 🔏 ticket 26/09/18 HT5: a durable committer hashes its canonical command over BOTH the stamped
+/// clock and the stamped mutation id, then persists that hash. If the Store mints its own
+/// content-addressed `edit_id()` for the publication anyway, the committed edit carries an identity
+/// no verifier can bind back to the approval it executed — which is exactly what the hub's WAL
+/// reported as "committed decision does not bind its approval target — mutation-id" and what the
+/// actor frontier reported as `edit-…` where the approval's mutation id was required. So a stamped
+/// publication publishes under the stamped identity, as `Edit.id` AND as the folded item's
+/// `mutation_id`, while every unstamped gesture keeps the store's mint and its `#position` form.
+#[semio_framework_async_macros::async_test]
+async fn artifact_store_stamped_publication_carries_its_committed_identity_into_the_published_edit() {
+    let mut store = ArtifactStore::bare(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "stamped-identity", DemoSnapshot { n: Some(0) }, None)).await;
+    store.install_document_store_owners_exact(demo_closable_store_owners());
+    let generation = store.generation_now();
+    let grant = ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: 512 };
+
+    let approval = "7d6bd4f3246ae47f074ed7a02011c0cf";
+    let stamp = HybridLogicalTimestamp { actor: 1, physical_ms: 1_004, logical: 0 };
+    let stamped: Arc<dyn ArtifactStoreOneItemPreparationFactory<DemoSnapshot, DemoMutation>> = Arc::new(DemoOneItemPreparationFactory::stamped_identity(stamp, approval));
+    let mut publication = store
+        .begin_apply_batch(semio_framework_job::OperationId(31), generation, store.content_revision_now(), "retained-test".into(), vec![DemoMutation::SetN(SetN { n: 5 })], None, HistoryLane::Document, Some(&stamped))
+        .expect("a stamped identity admits with its stamped clock");
+    loop {
+        if let ArtifactStoreOneItemAdvance::Published(_) = store.advance_apply_batch(&mut publication, grant).expect("one bounded stamped-identity step") {
+            break;
+        }
+    }
+    let published = store.envelope.vcs.edits.last().expect("one published stamped edit");
+    assert_eq!(published.id, approval, "the published edit publishes under the identity the durable decision hashed");
+    assert_eq!(published.mutation_meta.first().expect("stamped authority metadata").mutation_id.as_ref().map(|mutation| mutation.0.as_str()), Some(approval), "the folded item keeps the approval's mutation id, never the store's `#position` rewrite");
+    assert_eq!(store.applied_edit_ids.last().map(String::as_str), Some(approval), "the applied cursor names the stamped identity, so the actor frontier's head edit is the approval");
+    assert!(publication.acknowledge());
+    close_durable_publication(&mut publication);
+
+    let local: Arc<dyn ArtifactStoreOneItemPreparationFactory<DemoSnapshot, DemoMutation>> = Arc::new(DemoOneItemPreparationFactory::admissible());
+    let mut gesture = store
+        .begin_apply_batch(semio_framework_job::OperationId(32), store.generation_now(), store.content_revision_now(), "retained-test".into(), vec![DemoMutation::SetN(SetN { n: 6 })], None, HistoryLane::Document, Some(&local))
+        .expect("an unstamped local gesture admits unchanged");
+    loop {
+        if let ArtifactStoreOneItemAdvance::Published(_) = store.advance_apply_batch(&mut gesture, grant).expect("one bounded unstamped step") {
+            break;
+        }
+    }
+    let gestured = store.envelope.vcs.edits.last().expect("one published local edit");
+    assert!(gestured.id.starts_with("edit-"), "an unstamped gesture keeps the store's content-addressed mint, got {}", gestured.id);
+    assert_eq!(gestured.mutation_meta.first().expect("local authority metadata").mutation_id.as_ref().map(|mutation| mutation.0.clone()), Some(format!("{}#0", gestured.id)), "an unstamped gesture keeps the `<edit-id>#<position>` form");
+    assert!(gesture.acknowledge());
+    close_durable_publication(&mut gesture);
     close_demo_artifact_store(&mut store);
 }
 

@@ -11,4 +11,5 @@ async fn definition_declares_this_windows_body_key() {
 async fn renders_the_document_as_json() {
     let mut app = context::app_with_registry().await;
     assert!(context::render(&mut app, BODY_INPUTS).await.contains(':'), "the inputs body renders the document json");
+    context::close(&mut app);
 }

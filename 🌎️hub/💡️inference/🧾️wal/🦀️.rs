@@ -15,6 +15,43 @@ use std::time::{Duration, Instant};
 const VERIFIER_CAPACITY: usize = 4;
 const CLOSE_MAX_STEPS: usize = 8192;
 
+/// 🔎️ Which coordinate of one committed WAL witness failed to match its reconciliation target.
+/// Eleven conjuncts share one `false`, so a law that reads the refusal cannot name the coordinate.
+/// The answer is identical in production; only a test build records which conjunct produced it.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum CommittedWitnessMismatchV1 {
+    Scope,
+    Generation,
+    FenceInactive,
+    FenceGeneration,
+    JobId,
+    ProposalHash,
+    MutationId,
+    CommandHash,
+    DecisionHash,
+    TransactionId,
+    RecordIndex,
+}
+
+#[cfg(test)]
+static LAST_COMMITTED_WITNESS_MISMATCH: std::sync::Mutex<Option<CommittedWitnessMismatchV1>> = std::sync::Mutex::new(None);
+
+/// 🧾️ Answers the unchanged `false` after recording which conjunct refused.
+fn record_committed_witness_mismatch(reason: CommittedWitnessMismatchV1) -> bool {
+    #[cfg(test)]
+    {
+        *LAST_COMMITTED_WITNESS_MISMATCH.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(reason);
+    }
+    let _ = reason;
+    false
+}
+
+/// 🔬️ The last recorded witness mismatch of this process, for laws that only see the taxonomy.
+#[cfg(test)]
+pub(in crate::inference) fn last_committed_witness_mismatch() -> Option<CommittedWitnessMismatchV1> {
+    *LAST_COMMITTED_WITNESS_MISMATCH.lock().unwrap_or_else(std::sync::PoisonError::into_inner)
+}
+
 pub struct InferenceDocumentFenceV1 {
     scope: DocumentScope,
     generation: AtomicU64,
@@ -111,17 +148,25 @@ impl CommittedInferenceWalWitnessV1 {
     }
 
     pub(super) fn matches(&self, scope: &DocumentScope, generation: u64, job_id: &str, proposal_hash: &str, mutation_id: &str, command_hash: &str) -> bool {
-        self.scope == *scope
-            && self.generation == generation
-            && self.fence.active.load(Ordering::Acquire)
-            && self.fence.generation.load(Ordering::Acquire) == generation
-            && self.job_id == job_id
-            && self.proposal_hash == proposal_hash
-            && self.mutation_id == mutation_id
-            && self.command_hash == command_hash
-            && hex(&self.decision_hash, 64)
-            && self.transaction_id != 0
-            && self.record_index != 0
+        use CommittedWitnessMismatchV1 as Mismatch;
+        for (matched, reason) in [
+            (self.scope == *scope, Mismatch::Scope),
+            (self.generation == generation, Mismatch::Generation),
+            (self.fence.active.load(Ordering::Acquire), Mismatch::FenceInactive),
+            (self.fence.generation.load(Ordering::Acquire) == generation, Mismatch::FenceGeneration),
+            (self.job_id == job_id, Mismatch::JobId),
+            (self.proposal_hash == proposal_hash, Mismatch::ProposalHash),
+            (self.mutation_id == mutation_id, Mismatch::MutationId),
+            (self.command_hash == command_hash, Mismatch::CommandHash),
+            (hex(&self.decision_hash, 64), Mismatch::DecisionHash),
+            (self.transaction_id != 0, Mismatch::TransactionId),
+            (self.record_index != 0, Mismatch::RecordIndex),
+        ] {
+            if !matched {
+                return record_committed_witness_mismatch(reason);
+            }
+        }
+        true
     }
 
     /// 🖋️ Derives the durable undo target from every private committed-decision coordinate.
@@ -242,27 +287,44 @@ fn durable_decision_event_match(bytes: &[u8], target: &InferenceWalTargetV1, doc
         value::schema::{mutations::SemioValueMutation, snapshot::SemioValueSnapshot},
     };
 
-    let record = directory::os_store::durable_group::DurableOwnedGroupJournalRecordV1::admit_canonical(bytes.to_vec()).map_err(|_| InferenceErrorV1::Invalid)?;
+    let record = directory::os_store::durable_group::DurableOwnedGroupJournalRecordV1::admit_canonical(bytes.to_vec()).map_err(|error| {
+        eprintln!("[WARN] inference wal: committed event is not an admissible durable decision — {error:?}");
+        InferenceErrorV1::Invalid
+    })?;
     if record.document().artifact_id != document.0 {
         return Err(InferenceErrorV1::Invalid);
     }
-    let verified = record.verify_fixed_three_edits::<GisMapSnapshot, GisMapMutation, SemioDrawingSnapshot, SemioDrawingMutation, SemioValueSnapshot, SemioValueMutation>().map_err(|_| InferenceErrorV1::Invalid)?;
+    let verified = record.verify_fixed_three_edits::<GisMapSnapshot, GisMapMutation, SemioDrawingSnapshot, SemioDrawingMutation, SemioValueSnapshot, SemioValueMutation>().map_err(|error| {
+        eprintln!("[WARN] inference wal: committed decision fails fixed-three verification — {error:?}");
+        InferenceErrorV1::Invalid
+    })?;
     if verified.document().artifact_id != document.0 {
         return Err(InferenceErrorV1::Invalid);
     }
     let parent = verified.parent();
     let meta = parent.mutation_meta.first().ok_or(InferenceErrorV1::Invalid)?;
-    if parent.forwards.len() != 1
-        || parent.mutation_meta.len() != 1
-        || !meta.dependencies.is_empty()
-        || meta.mutation_id.as_ref().map(|mutation| mutation.0.as_str()) != Some(target.mutation_id.as_str())
-        || parent.actor.as_deref() != Some(target.actor.as_str())
-        || meta.author_id.as_ref().map(|actor| actor.0.as_str()) != Some(target.actor.as_str())
-    {
+    let unbound = if parent.forwards.len() != 1 {
+        Some("forward-count")
+    } else if parent.mutation_meta.len() != 1 {
+        Some("mutation-meta-count")
+    } else if !meta.dependencies.is_empty() {
+        Some("mutation-dependencies")
+    } else if meta.mutation_id.as_ref().map(|mutation| mutation.0.as_str()) != Some(target.mutation_id.as_str()) {
+        Some("mutation-id")
+    } else if parent.actor.as_deref() != Some(target.actor.as_str()) {
+        Some("edit-actor")
+    } else if meta.author_id.as_ref().map(|actor| actor.0.as_str()) != Some(target.actor.as_str()) {
+        Some("author-id")
+    } else {
+        None
+    };
+    if let Some(gate) = unbound {
+        eprintln!("[WARN] inference wal: committed decision does not bind its approval target — {gate}");
         return Ok((verified.decision_sha256().to_string(), verified.anchor_sha256().to_string(), false));
     }
     let proposal = directory::os_pack::json::to_json_string(&parent.forwards[0]).into_bytes();
     if super::sha256(&proposal) != target.proposal_hash {
+        eprintln!("[WARN] inference wal: committed decision does not bind its approval target — proposal-hash");
         return Ok((verified.decision_sha256().to_string(), verified.anchor_sha256().to_string(), false));
     }
     let inverse = directory::os_pack::json::to_json_string(&parent.inverse).into_bytes();
@@ -276,7 +338,11 @@ fn durable_decision_event_match(bytes: &[u8], target: &InferenceWalTargetV1, doc
         inverse_payload: &inverse,
         timestamp: meta.timestamp,
     })?;
-    Ok((verified.decision_sha256().to_string(), verified.anchor_sha256().to_string(), super::sha256(&command) == target.command_hash))
+    let bound = super::sha256(&command) == target.command_hash;
+    if !bound {
+        eprintln!("[WARN] inference wal: committed decision does not bind its approval target — command-hash");
+    }
+    Ok((verified.decision_sha256().to_string(), verified.anchor_sha256().to_string(), bound))
 }
 
 async fn verify_retained(state: &VerifierState, target: &InferenceWalTargetV1, fence: &Arc<InferenceDocumentFenceV1>, control: &InferenceOperationControlV1) -> Result<Option<CommittedInferenceWalWitnessV1>, InferenceErrorV1> {
@@ -284,7 +350,18 @@ async fn verify_retained(state: &VerifierState, target: &InferenceWalTargetV1, f
     let storage = state.storage.wal().await;
     let retained_control = WalCursorControl::new(Arc::new(AtomicBool::new(false)), Instant::now() + Duration::from_secs(2), 1_000_000).map_err(|_| InferenceErrorV1::Storage)?;
     control.checkpoint(0)?;
-    let mut replay = WalReplayCursor::open_at_segment(&storage, &document, target.receipt.segment_index, retained_control).await.map_err(|_| InferenceErrorV1::Storage)?;
+    let mut replay = match WalReplayCursor::open_at_segment(&storage, &document, target.receipt.segment_index, retained_control).await {
+        Ok(replay) => replay,
+        Err(_) => {
+            // 🧹️ A replay begins when the verifier takes the WAL lease above, not when the cursor
+            // opens: a retained log whose receipt segment was compacted away fails the open, and
+            // returning here left the retirement unaccounted, so `close_steps` read zero for a
+            // verification that did take and release a lease. The retirement is one step and it is
+            // recorded, so the counter answers "every replay I began, I retired" on both paths.
+            state.close_steps.fetch_add(1, Ordering::AcqRel);
+            return Err(InferenceErrorV1::Storage);
+        }
+    };
     let outcome = scan(state, &mut replay, target, fence, control).await;
     for _ in 0..CLOSE_MAX_STEPS {
         replay.replenish(Instant::now() + Duration::from_secs(2), 1024).map_err(|_| InferenceErrorV1::Storage)?;
@@ -317,9 +394,9 @@ async fn scan(
     let mut matched_transaction = None;
     let mut last_transaction = 0;
     let mut header_seen = false;
+    let mut last_segment: u64 = 0;
     let mut records = 0;
     let mut target_records = 0;
-    let mut target_finished = false;
     loop {
         control.checkpoint(records)?;
         target.validate(fence)?;
@@ -343,17 +420,21 @@ async fn scan(
             control.checkpoint(records)?;
             target.validate(fence)?;
             if let WalRecord::SegmentHeader { document: stored, segment_index, prev_chain_hash } = &record {
+                if stored != &document {
+                    return Err(InferenceErrorV1::Invalid);
+                }
                 if header_seen {
-                    if active.is_some() {
+                    if active.is_some() || prev_chain_hash.is_none() || last_segment.checked_add(1) != Some(*segment_index) {
                         return Err(InferenceErrorV1::Invalid);
                     }
-                    target_finished = true;
+                    last_segment = *segment_index;
                     return Ok(());
                 }
-                if stored != &document || *segment_index != target.receipt.segment_index || (*segment_index == 0) != prev_chain_hash.is_none() {
+                if *segment_index != target.receipt.segment_index || (*segment_index == 0) != prev_chain_hash.is_none() {
                     return Err(InferenceErrorV1::Invalid);
                 }
                 header_seen = true;
+                last_segment = *segment_index;
                 return Ok(());
             }
             if !header_seen {
@@ -400,9 +481,6 @@ async fn scan(
                             }
                         }
                     }
-                    if transaction.id == target.receipt.transaction_id {
-                        target_finished = true;
-                    }
                     last_transaction = *tx_id;
                 }
                 _ => {
@@ -427,7 +505,7 @@ async fn scan(
                                     control.checkpoint(records)?;
                                     exact.extend_from_slice(fragment);
                                 }
-                                if exact.starts_with(b"\x89SEMIO\r\n\x1a\n") {
+                                if exact.starts_with(&directory::os_store::semio_format::BINARY_MAGIC) {
                                     let (decision_hash, anchor_hash, matches) = durable_decision_event_match(&exact, target, &document)?;
                                     if decision_hash != target.receipt.decision_sha256 || anchor_hash != target.receipt.anchor_sha256 {
                                         return Err(InferenceErrorV1::Invalid);
@@ -435,6 +513,8 @@ async fn scan(
                                     if matches {
                                         transaction.matched = Some((target.receipt.segment_index, records, decision_hash, anchor_hash));
                                     }
+                                } else {
+                                    eprintln!("[WARN] inference wal: receipt transaction carries an event that is not a durable decision pack");
                                 }
                             }
                         }
@@ -459,9 +539,6 @@ async fn scan(
             if let Some(gate) = &_state.replay_gate {
                 gate.acquire().await.map_err(|_| InferenceErrorV1::Storage)?.forget();
             }
-        }
-        if target_finished {
-            break;
         }
         tokio::task::yield_now().await;
     }

@@ -63,7 +63,18 @@ string single raw
 # against the shared lexer's `single` match table, `🔍️lexer/🦀️.rs`) -- no header
 # directive or promotion needed for any of them, unlike the genuinely-promoted `<>&;` set.
 document = part+
-part = content-types-part | relationships-part | workbook-part | worksheet-part | shared-strings-part
+part = declaration? part-body
+part-body = content-types-part | relationships-part | workbook-part | worksheet-part | shared-strings-part
+
+# ── XML declaration (OPC-universal, identical to docx's own) ──────────────────────────────────
+# `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>` -- every OPC document
+# `🎒️zip/📦️opc/🦀️.rs`'s `xml_document_to_opc_text` writes carries this prolog
+# (`OpcContentTypes::to_xml`/`relationships_to_xml` both set it), so the two parts the OPC codec
+# itself materializes open with it; restated verbatim from xml's own `declaration` production
+# (`📰️xml/…/📸️snapshot/📝️text/📖️.grammar.semio`), the same way docx's own FG-wave grammar does.
+declaration = LT "?" "xml" "version" "=" TEXT decl-encoding? decl-standalone? "?" GT
+decl-encoding = "encoding" "=" TEXT
+decl-standalone = "standalone" "=" TEXT
 
 # ── [Content_Types].xml (OPC-universal, identical to docx's own) ──────────────────────────────
 content-types-part = LT "Types" "xmlns" "=" TEXT GT ct-entry* LT "/" "Types" GT

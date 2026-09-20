@@ -979,7 +979,15 @@ impl ActionAdapter {
             };
         };
         let capability_id = capability.id.to_string();
-        let request = ApprovalRequest { approval_handle, capability_id: &capability_id, capability_title: &capability.title, principal_id: &principal.id, diff_summary };
+        let request = ApprovalRequest {
+            approval_handle,
+            capability_id: &capability_id,
+            capability_title: &capability.title,
+            capability_description: &capability.description,
+            artifact_kind: capability.artifact_kind.as_deref(),
+            principal_id: &principal.id,
+            diff_summary,
+        };
         match coordinator.resolve(&request) {
             ApprovalResolution::Approved { channel } => match self.policy.resolve_approval(session, approval_handle, true, now_ms) {
                 Ok(decided) => match self.policy.gate_approval(principal, capability, diff_summary.clone(), Some(&decided), session, now_ms) {

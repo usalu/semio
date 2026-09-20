@@ -1,0 +1,57 @@
+{
+  "descriptorVersion": 1,
+  "packageId": "semio:process-extension-concrete",
+  "role": "extension",
+  "manifest": {
+    "pluginId": "process-extension-concrete",
+    "label": "Process Concrete Machines",
+    "version": "0.1.0",
+    "apps": [],
+    "examples": [],
+    "capabilities": [],
+    "topicContributions": [
+      {
+        "topic": "process.machines",
+        "payload": {
+          "appId": "process3d-play",
+          "iconId": "slab",
+          "label": "Concrete",
+          "machinesJson": "[{\"id\":\"diamondSaw\",\"label\":\"Diamond Saw\",\"iconId\":\"scissors\",\"capabilities\":[{\"id\":\"crosscut\",\"label\":\"Crosscut\",\"iconId\":\"scissors\",\"recipe\":{\"recipe\":\"discCut\",\"diameter\":\"bladeDiameter\",\"kerf\":\"kerf\"},\"parameters\":[{\"id\":\"bladeDiameter\",\"label\":\"Blade Diameter\",\"value\":0.35},{\"id\":\"kerf\",\"label\":\"Kerf\",\"value\":0.004},{\"id\":\"maxCutDepth\",\"label\":\"Max Cut Depth\",\"value\":0.125}],\"rules\":[{\"kind\":\"max\",\"quantity\":\"height\",\"parameter\":\"maxCutDepth\",\"margin\":0.0}]}]},{\"id\":\"wallSaw\",\"label\":\"Wall Saw\",\"iconId\":\"scissors\",\"capabilities\":[{\"id\":\"wallCut\",\"label\":\"Wall Cut\",\"iconId\":\"scissors\",\"recipe\":{\"recipe\":\"discCut\",\"diameter\":\"bladeDiameter\",\"kerf\":\"kerf\"},\"parameters\":[{\"id\":\"bladeDiameter\",\"label\":\"Blade Diameter\",\"value\":0.8},{\"id\":\"kerf\",\"label\":\"Kerf\",\"value\":0.0045},{\"id\":\"maxCutDepth\",\"label\":\"Max Cut Depth\",\"value\":0.32}],\"rules\":[{\"kind\":\"max\",\"quantity\":\"height\",\"parameter\":\"maxCutDepth\",\"margin\":0.0}]}]},{\"id\":\"wireSaw\",\"label\":\"Wire Saw\",\"iconId\":\"scissors\",\"capabilities\":[{\"id\":\"wireCut\",\"label\":\"Wire Cut\",\"iconId\":\"scissors\",\"recipe\":{\"recipe\":\"bladeCut\",\"kerf\":\"kerf\",\"length\":\"wireSpan\",\"depth\":\"maxSection\"},\"parameters\":[{\"id\":\"kerf\",\"label\":\"Kerf\",\"value\":0.011},{\"id\":\"wireSpan\",\"label\":\"Wire Span\",\"value\":3.0},{\"id\":\"maxSection\",\"label\":\"Max Section\",\"value\":2.5}],\"rules\":[{\"kind\":\"max\",\"quantity\":\"maxDimension\",\"parameter\":\"maxSection\",\"margin\":0.0}]}]},{\"id\":\"coreDrill\",\"label\":\"Core Drill\",\"iconId\":\"circle-dot\",\"capabilities\":[{\"id\":\"core\",\"label\":\"Core\",\"iconId\":\"circle-dot\",\"recipe\":{\"recipe\":\"boreDrill\",\"radius\":\"bitRadius\",\"depth\":\"coreLength\"},\"parameters\":[{\"id\":\"bitRadius\",\"label\":\"Bit Radius\",\"value\":0.051},{\"id\":\"coreLength\",\"label\":\"Core Length\",\"value\":0.45}],\"rules\":[{\"kind\":\"max\",\"quantity\":\"height\",\"parameter\":\"coreLength\",\"margin\":0.0}]}]},{\"id\":\"rotaryHammer\",\"label\":\"Rotary Hammer\",\"iconId\":\"hammer\",\"capabilities\":[{\"id\":\"anchorHole\",\"label\":\"Anchor Hole\",\"iconId\":\"hammer\",\"recipe\":{\"recipe\":\"boreDrill\",\"radius\":\"bitRadius\",\"depth\":\"maxDrillDepth\"},\"parameters\":[{\"id\":\"bitRadius\",\"label\":\"Bit Radius\",\"value\":0.006},{\"id\":\"maxDrillDepth\",\"label\":\"Max Drill Depth\",\"value\":0.16},{\"id\":\"minStockThickness\",\"label\":\"Min Stock Thickness\",\"value\":0.01}],\"rules\":[{\"kind\":\"min\",\"quantity\":\"height\",\"parameter\":\"minStockThickness\",\"margin\":0.0}]}]},{\"id\":\"anchorSetter\",\"label\":\"Anchor Setter\",\"iconId\":\"plus\",\"capabilities\":[{\"id\":\"anchor\",\"label\":\"Anchor\",\"iconId\":\"plus\",\"recipe\":{\"recipe\":\"cylinderAttach\",\"radius\":\"anchorRadius\",\"length\":\"anchorLength\"},\"parameters\":[{\"id\":\"anchorRadius\",\"label\":\"Anchor Radius\",\"value\":0.008},{\"id\":\"anchorLength\",\"label\":\"Anchor Length\",\"value\":0.11},{\"id\":\"minEmbedment\",\"label\":\"Min Embedment\",\"value\":0.07}],\"rules\":[{\"kind\":\"min\",\"quantity\":\"height\",\"parameter\":\"minEmbedment\",\"margin\":0.0}]}]},{\"id\":\"surfaceGrinder\",\"label\":\"Surface Grinder\",\"iconId\":\"layers\",\"capabilities\":[{\"id\":\"grind\",\"label\":\"Grind\",\"iconId\":\"layers\",\"recipe\":{\"recipe\":\"discCut\",\"diameter\":\"padDiameter\",\"kerf\":\"grindDepth\"},\"parameters\":[{\"id\":\"padDiameter\",\"label\":\"Pad Diameter\",\"value\":0.25},{\"id\":\"grindDepth\",\"label\":\"Grind Depth\",\"value\":0.005},{\"id\":\"minGrindDimension\",\"label\":\"Min Grind Dimension\",\"value\":0.02}],\"rules\":[{\"kind\":\"min\",\"quantity\":\"minDimension\",\"parameter\":\"minGrindDimension\",\"margin\":0.0}]}]}]",
+          "moduleId": "concrete"
+        }
+      }
+    ],
+    "commands": [],
+    "artifactKinds": [],
+    "dependencies": [
+      {
+        "pluginId": "process",
+        "version": "*"
+      }
+    ]
+  },
+  "execution": "declarative",
+  "executionProtocol": {
+    "appChannelVersion": 17
+  },
+  "quotas": {},
+  "contributions": {
+    "topicContributions": [
+      {
+        "topic": "process.machines",
+        "payload": {
+          "appId": "process3d-play",
+          "iconId": "slab",
+          "label": "Concrete",
+          "machinesJson": "[{\"id\":\"diamondSaw\",\"label\":\"Diamond Saw\",\"iconId\":\"scissors\",\"capabilities\":[{\"id\":\"crosscut\",\"label\":\"Crosscut\",\"iconId\":\"scissors\",\"recipe\":{\"recipe\":\"discCut\",\"diameter\":\"bladeDiameter\",\"kerf\":\"kerf\"},\"parameters\":[{\"id\":\"bladeDiameter\",\"label\":\"Blade Diameter\",\"value\":0.35},{\"id\":\"kerf\",\"label\":\"Kerf\",\"value\":0.004},{\"id\":\"maxCutDepth\",\"label\":\"Max Cut Depth\",\"value\":0.125}],\"rules\":[{\"kind\":\"max\",\"quantity\":\"height\",\"parameter\":\"maxCutDepth\",\"margin\":0.0}]}]},{\"id\":\"wallSaw\",\"label\":\"Wall Saw\",\"iconId\":\"scissors\",\"capabilities\":[{\"id\":\"wallCut\",\"label\":\"Wall Cut\",\"iconId\":\"scissors\",\"recipe\":{\"recipe\":\"discCut\",\"diameter\":\"bladeDiameter\",\"kerf\":\"kerf\"},\"parameters\":[{\"id\":\"bladeDiameter\",\"label\":\"Blade Diameter\",\"value\":0.8},{\"id\":\"kerf\",\"label\":\"Kerf\",\"value\":0.0045},{\"id\":\"maxCutDepth\",\"label\":\"Max Cut Depth\",\"value\":0.32}],\"rules\":[{\"kind\":\"max\",\"quantity\":\"height\",\"parameter\":\"maxCutDepth\",\"margin\":0.0}]}]},{\"id\":\"wireSaw\",\"label\":\"Wire Saw\",\"iconId\":\"scissors\",\"capabilities\":[{\"id\":\"wireCut\",\"label\":\"Wire Cut\",\"iconId\":\"scissors\",\"recipe\":{\"recipe\":\"bladeCut\",\"kerf\":\"kerf\",\"length\":\"wireSpan\",\"depth\":\"maxSection\"},\"parameters\":[{\"id\":\"kerf\",\"label\":\"Kerf\",\"value\":0.011},{\"id\":\"wireSpan\",\"label\":\"Wire Span\",\"value\":3.0},{\"id\":\"maxSection\",\"label\":\"Max Section\",\"value\":2.5}],\"rules\":[{\"kind\":\"max\",\"quantity\":\"maxDimension\",\"parameter\":\"maxSection\",\"margin\":0.0}]}]},{\"id\":\"coreDrill\",\"label\":\"Core Drill\",\"iconId\":\"circle-dot\",\"capabilities\":[{\"id\":\"core\",\"label\":\"Core\",\"iconId\":\"circle-dot\",\"recipe\":{\"recipe\":\"boreDrill\",\"radius\":\"bitRadius\",\"depth\":\"coreLength\"},\"parameters\":[{\"id\":\"bitRadius\",\"label\":\"Bit Radius\",\"value\":0.051},{\"id\":\"coreLength\",\"label\":\"Core Length\",\"value\":0.45}],\"rules\":[{\"kind\":\"max\",\"quantity\":\"height\",\"parameter\":\"coreLength\",\"margin\":0.0}]}]},{\"id\":\"rotaryHammer\",\"label\":\"Rotary Hammer\",\"iconId\":\"hammer\",\"capabilities\":[{\"id\":\"anchorHole\",\"label\":\"Anchor Hole\",\"iconId\":\"hammer\",\"recipe\":{\"recipe\":\"boreDrill\",\"radius\":\"bitRadius\",\"depth\":\"maxDrillDepth\"},\"parameters\":[{\"id\":\"bitRadius\",\"label\":\"Bit Radius\",\"value\":0.006},{\"id\":\"maxDrillDepth\",\"label\":\"Max Drill Depth\",\"value\":0.16},{\"id\":\"minStockThickness\",\"label\":\"Min Stock Thickness\",\"value\":0.01}],\"rules\":[{\"kind\":\"min\",\"quantity\":\"height\",\"parameter\":\"minStockThickness\",\"margin\":0.0}]}]},{\"id\":\"anchorSetter\",\"label\":\"Anchor Setter\",\"iconId\":\"plus\",\"capabilities\":[{\"id\":\"anchor\",\"label\":\"Anchor\",\"iconId\":\"plus\",\"recipe\":{\"recipe\":\"cylinderAttach\",\"radius\":\"anchorRadius\",\"length\":\"anchorLength\"},\"parameters\":[{\"id\":\"anchorRadius\",\"label\":\"Anchor Radius\",\"value\":0.008},{\"id\":\"anchorLength\",\"label\":\"Anchor Length\",\"value\":0.11},{\"id\":\"minEmbedment\",\"label\":\"Min Embedment\",\"value\":0.07}],\"rules\":[{\"kind\":\"min\",\"quantity\":\"height\",\"parameter\":\"minEmbedment\",\"margin\":0.0}]}]},{\"id\":\"surfaceGrinder\",\"label\":\"Surface Grinder\",\"iconId\":\"layers\",\"capabilities\":[{\"id\":\"grind\",\"label\":\"Grind\",\"iconId\":\"layers\",\"recipe\":{\"recipe\":\"discCut\",\"diameter\":\"padDiameter\",\"kerf\":\"grindDepth\"},\"parameters\":[{\"id\":\"padDiameter\",\"label\":\"Pad Diameter\",\"value\":0.25},{\"id\":\"grindDepth\",\"label\":\"Grind Depth\",\"value\":0.005},{\"id\":\"minGrindDimension\",\"label\":\"Min Grind Dimension\",\"value\":0.02}],\"rules\":[{\"kind\":\"min\",\"quantity\":\"minDimension\",\"parameter\":\"minGrindDimension\",\"margin\":0.0}]}]}]",
+          "moduleId": "concrete"
+        }
+      }
+    ]
+  },
+  "hashes": {
+    "wasmSha256": "7088d7fa774742494e1d3de22966eb6a88617b8e67109b558048343c668b0d4c",
+    "coreWasmSha256": "d24cb07444c88bcd5bcf99fd4de76e7461f83f9a52c642d15bae684d8e91a400",
+    "descriptorSha256": "9be40c5f607847ec3cdcfeb1faaf7d8ff5dc88a916816311378cbe3f5412b0ea"
+  }
+}

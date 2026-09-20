@@ -1,9 +1,8 @@
-
 use super::*;
 use crate::wgpu::component::layout::ActionDescriptor;
 use crate::wgpu::component::ui::{UiFieldNode, UiNumberStepperNode, UiSectionNode, UiSeparatorNode, UiSliderNode, UiStackNode, UiTreeItemAction, UiTreeSectionNode};
 use crate::wgpu::draw::{KIND_GLYPH, KIND_LOADING_BORDER, KIND_SOLID, KIND_WAITING_BORDER};
-use crate::wgpu::select::{select_scroll_step, select_scroll_viewport_height, SELECT_COLLISION_PADDING};
+use crate::wgpu::select::{arm_retained_select_scroll_at, select_scroll_step, select_scroll_viewport_height, SELECT_COLLISION_PADDING};
 use crate::wgpu::tree::EditState;
 
 fn action() -> ActionDescriptor {
@@ -429,10 +428,14 @@ fn painting_an_open_select_popup_emits_more_instances_than_a_closed_one_and_high
 
 #[test]
 fn retained_select_popup_is_viewport_clamped_scrolled_and_glass_foreground() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔽️retained-select-overlay-raster/🔣️.json")).expect("retained Select/overlay raster fixture");
+    assert_eq!(fixture["schema"].as_str(), Some("semio.ui.retained-select-overlay-raster.v1"));
+    let select_fixture = &fixture["select"];
+    let item_count = usize::try_from(select_fixture["itemCount"].as_u64().expect("item count")).expect("item count fits");
     let authored = UiNode::Select(UiSelectNode {
         id: "long-select".into(),
         value: "0".into(),
-        items: (0..20).map(|index| UiSelectItem { value: index.to_string(), label: Label::data(index.to_string()) }).collect(),
+        items: (0..item_count).map(|index| UiSelectItem { value: index.to_string(), label: Label::data(index.to_string()) }).collect(),
         placeholder: None,
         on_change: action(),
         presence: UiPresence::default(),
@@ -443,18 +446,19 @@ fn retained_select_popup_is_viewport_clamped_scrolled_and_glass_foreground() {
     let document = tree.root.expect("document root");
     let root = tree.node(document).and_then(|node| node.first_child).expect("select root");
     let theme = Theme::default();
+    assert!((theme.control_height - select_fixture["trigger"]["height"].as_f64().expect("trigger height") as f32).abs() < 0.001);
     {
         let node = tree.node_mut(document).expect("document node");
         node.layout.x = 0.0;
         node.layout.y = 0.0;
-        node.layout.width = 160.0;
-        node.layout.height = 100.0;
+        node.layout.width = select_fixture["viewport"]["width"].as_f64().expect("viewport width") as f32;
+        node.layout.height = select_fixture["viewport"]["height"].as_f64().expect("viewport height") as f32;
     }
     {
         let node = tree.node_mut(root).expect("select node");
-        node.layout.x = 8.0;
-        node.layout.y = 62.0;
-        node.layout.width = 120.0;
+        node.layout.x = select_fixture["trigger"]["x"].as_f64().expect("trigger x") as f32;
+        node.layout.y = select_fixture["trigger"]["y"].as_f64().expect("trigger y") as f32;
+        node.layout.width = select_fixture["trigger"]["width"].as_f64().expect("trigger width") as f32;
         node.layout.height = theme.control_height;
         node.state.open = true;
     }
@@ -465,9 +469,16 @@ fn retained_select_popup_is_viewport_clamped_scrolled_and_glass_foreground() {
         }
     }
     let popup = tree.node(root).and_then(|node| node.state.select_popup).expect("open Select popup geometry");
+    let expected = &select_fixture["expectedInitial"];
+    for (actual, key) in [(popup.menu.x, "x"), (popup.menu.y, "y"), (popup.menu.w, "width"), (popup.menu.h, "height")] {
+        assert!((actual - expected["menu"][key].as_f64().expect("expected menu scalar") as f32).abs() < 0.001, "menu {key}");
+    }
+    assert_eq!(popup.first_row, expected["firstRow"].as_u64().expect("first row") as usize);
+    assert_eq!(popup.last_row, expected["lastRowExclusive"].as_u64().expect("last row") as usize);
+    assert!((popup.scroll - expected["scroll"].as_f64().expect("initial scroll") as f32).abs() < 0.001);
     assert!(popup.menu.y >= SELECT_COLLISION_PADDING);
-    assert!(popup.menu.y + popup.menu.h <= 100.0 - SELECT_COLLISION_PADDING + 0.001, "the painted popup remains inside the viewport");
-    assert!(popup.last_row - popup.first_row < 20, "only a viewport-sized row window is retained for paint and hit testing");
+    assert!(popup.menu.y + popup.menu.h <= select_fixture["viewport"]["height"].as_f64().expect("viewport height") as f32 - SELECT_COLLISION_PADDING + 0.001, "the painted popup remains inside the viewport");
+    assert!(popup.last_row - popup.first_row < item_count, "only a viewport-sized row window is retained for paint and hit testing");
 
     let mut atlas = FontAtlas::builtin();
     let mut draw = DrawList::default();
@@ -481,10 +492,35 @@ fn retained_select_popup_is_viewport_clamped_scrolled_and_glass_foreground() {
     }
     assert_eq!(draw.glass_regions.len(), 1);
     assert!(draw.layers.iter().any(|layer| layer.foreground_of == Some(0) && !layer.ui_instances.is_empty()), "popup rows are encoded after their own glass");
-    assert!(!draw.layers.iter().filter(|layer| layer.foreground_of.is_none()).flat_map(|layer| layer.ui_instances.iter()).any(|instance| instance.rect[1] >= popup.menu.y && instance.rect[1] < popup.menu.y + popup.menu.h && (instance.params[2] - KIND_GLYPH).abs() < 0.01), "popup row glyphs never remain beneath the glass");
+    assert!(
+        !draw
+            .layers
+            .iter()
+            .filter(|layer| layer.foreground_of.is_none())
+            .flat_map(|layer| layer.ui_instances.iter())
+            .any(|instance| instance.rect[1] >= popup.menu.y && instance.rect[1] < popup.menu.y + popup.menu.h && (instance.params[2] - KIND_GLYPH).abs() < 0.01),
+        "popup row glyphs never remain beneath the glass"
+    );
+    let tail = draw.layers.last().expect("popup route close layer");
+    assert!(tail.scissor.is_none() && tail.foreground_of.is_none(), "completed popup paint closes its scissor and glass route");
+
+    let mut cancelled_draw = DrawList::default();
+    let mut cancelled = RetainedNodePaintCursor::default();
+    for _ in 0..64 {
+        let step = paint_node_step(&tree, root, 0.0, 0.0, &theme, &mut atlas, None, false, &mut cancelled_draw, &mut cancelled);
+        assert_ne!(step, RetainedNodePaintStep::Fault);
+        if cancelled.popup_route {
+            break;
+        }
+    }
+    assert!(cancelled.popup_route, "the cancellation probe reached an open popup route");
+    cancelled.cancel_draw_route(&mut cancelled_draw);
+    let tail = cancelled_draw.layers.last().expect("cancelled popup route close layer");
+    assert!(tail.scissor.is_none() && tail.foreground_of.is_none(), "cancellation closes both retained route stacks");
 
     let before = popup.first_row;
     let down = popup.down.expect("a long popup has a down chevron");
+    assert_eq!(crate::wgpu::select::select_scroll_direction_at(popup, down.x + down.w * 0.5, down.y + down.h * 0.5), Some(select_fixture["downPress"]["direction"].as_f64().expect("down direction") as f32));
     assert!(arm_retained_select_scroll_at(&mut tree, root, down.x + down.w * 0.5, down.y + down.h * 0.5));
     let mut sync = RetainedInteractiveSyncCursor::default();
     for _ in 0..4_096 {
@@ -493,7 +529,11 @@ fn retained_select_popup_is_viewport_clamped_scrolled_and_glass_foreground() {
         }
     }
     let scrolled = tree.node(root).and_then(|node| node.state.select_popup).expect("scrolled geometry");
+    let down_expected = &select_fixture["downPress"];
+    assert_eq!(scrolled.first_row, down_expected["expectedFirstRow"].as_u64().expect("scrolled first row") as usize);
+    assert_eq!(scrolled.last_row, down_expected["expectedLastRowExclusive"].as_u64().expect("scrolled last row") as usize);
     assert!(scrolled.first_row > before, "one down-chevron press advances the retained row window");
+    assert!((scrolled.scroll - down_expected["expectedScroll"].as_f64().expect("expected scroll") as f32).abs() < 0.001);
     assert!((scrolled.scroll - select_scroll_step(select_scroll_viewport_height(&theme, scrolled.menu.h))).abs() < 0.001, "the press uses React's shared 80%-of-viewport step");
 }
 
@@ -530,7 +570,18 @@ fn opening_a_selects_popup_gives_its_synthesized_item_rows_real_hit_testable_lay
 #[test]
 fn the_production_sync_pass_materialises_an_open_selects_option_rows_and_unmounts_them_on_close() {
     let fixture = select("sel", "a");
-    let (mut tree, root, theme, _atlas) = setup(&fixture);
+    let mut tree = UiTree::new();
+    tree.apply_tree(&stack(vec![fixture]));
+    let document = tree.root.expect("document root");
+    let root = tree.node(document).and_then(|node| node.first_child).expect("select root");
+    let theme = Theme::default();
+    let document_node = tree.node_mut(document).expect("document node");
+    document_node.layout.width = 400.0;
+    document_node.layout.height = 400.0;
+    let select_node = tree.node_mut(root).expect("select node");
+    select_node.layout.y = 100.0;
+    select_node.layout.width = 400.0;
+    select_node.layout.height = theme.control_height;
     assert_eq!(tree.composite_row_count(), 0, "a closed Select owns no synthesized rows");
 
     let drive = |tree: &mut UiTree, theme: &Theme| {
@@ -654,7 +705,23 @@ fn a_trees_draggable_item_gets_real_row_layout_and_the_drag_source_flag() {
 // focusable control kind (`Button`/`Select`/`Toggle`/`NumberStepper`/`IconSelect`, plus a
 // `NumberStepper` hover tint) that only `paint_input` had before this pass.
 fn input(id: &str, value: &str) -> UiNode {
-    UiNode::Input(UiInputNode { id: id.into(), input_kind: "text".into(), value: value.into(), placeholder: None, commit: None, min: None, max: None, step: None, accept: None, on_change: action(), on_submit: None, on_abort: None, on_repeat_last: None, presence: UiPresence::default(), menu: None })
+    UiNode::Input(UiInputNode {
+        id: id.into(),
+        input_kind: "text".into(),
+        value: value.into(),
+        placeholder: None,
+        commit: None,
+        min: None,
+        max: None,
+        step: None,
+        accept: None,
+        on_change: action(),
+        on_submit: None,
+        on_abort: None,
+        on_repeat_last: None,
+        presence: UiPresence::default(),
+        menu: None,
+    })
 }
 
 // ⌨️ Keyboard focus: BOTH bits, the way `EventRouter::set_focus` stamps them for a `Tab` move.
@@ -764,10 +831,7 @@ fn assert_focus_swaps_border_color(make: impl Fn() -> UiNode, label: &str) {
 
     assert!(!has_solid_instance_colored(&unfocused_draw, theme.accent), "{label}: an unfocused control must not paint its focus-ring color");
     assert!(has_solid_instance_colored(&focused_draw, theme.accent), "{label}: a keyboard-focused control should swap its border to theme.accent, React's own focus-visible border");
-    assert!(
-        !has_solid_instance_colored(&pointer_draw, theme.accent),
-        "{label}: a POINTER-focused control must not paint the ring — React's selector is `:focus-visible`, not `:focus` (ticket 26/09/17 packet W2k)"
-    );
+    assert!(!has_solid_instance_colored(&pointer_draw, theme.accent), "{label}: a POINTER-focused control must not paint the ring — React's selector is `:focus-visible`, not `:focus` (ticket 26/09/17 packet W2k)");
 }
 
 #[test]
@@ -971,17 +1035,8 @@ fn retained_select_sync_max_plus_one_fault_closes_exact_cursor_owner() {
 /// (`framework.panel.toolRun` on the live generation3d wgpu playground).
 #[test]
 fn retained_tree_sync_skips_a_declared_row_the_document_never_mounted() {
-    let section = |id: &str, item: &str| UiTreeSectionNode {
-        window: None,
-        id: id.into(),
-        label: Some(Label::data(id)),
-        default_open: Some(true),
-        presence: UiPresence::default(),
-        items: vec![UiTreeItemNode::base(item, Label::data(item))],
-    };
-    let tree_of = |id: &str, item: &str| {
-        UiNode::Tree(UiTreeNode { sections: vec![section(id, item)], presence: UiPresence::default(), drop_action: None, menu: None, interaction_domain: None })
-    };
+    let section = |id: &str, item: &str| UiTreeSectionNode { window: None, id: id.into(), label: Some(Label::data(id)), default_open: Some(true), presence: UiPresence::default(), items: vec![UiTreeItemNode::base(item, Label::data(item))] };
+    let tree_of = |id: &str, item: &str| UiNode::Tree(UiTreeNode { sections: vec![section(id, item)], presence: UiPresence::default(), drop_action: None, menu: None, interaction_domain: None });
     let (mut tree, root, theme, _) = setup(&tree_of("mounted", "row"));
     let Some(node) = tree.node_mut(root) else { panic!("retained tree root") };
     node.spec = crate::wgpu::tree::WidgetSpec(tree_of("never-mounted", "ghost"));
@@ -1217,10 +1272,20 @@ fn a_decoded_image_paints_a_raster_quad_instead_of_the_placeholder() {
 
 #[test]
 fn a_decoded_overlay_image_keeps_its_upload_identity_in_the_overlay_raster_lane() {
-    let src = png_data_url(4, 2);
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔽️retained-select-overlay-raster/🔣️.json")).expect("retained Select/overlay raster fixture");
+    let image = &fixture["image"];
+    let width = u32::try_from(image["decodedWidth"].as_u64().expect("decoded width")).expect("decoded width fits");
+    let height = u32::try_from(image["decodedHeight"].as_u64().expect("decoded height")).expect("decoded height fits");
+    let src = png_data_url(width, height);
     assert_eq!(admit_ui_image(&src), UiImageAdmission::Ready);
     let (tree, root, theme, mut atlas) = setup(&image_node("dialog-picture", &src));
     let mut draw = DrawList::default();
+    let mut scene_cursor = RetainedNodePaintCursor::default();
+    for _ in 0..8 {
+        if paint_node_step(&tree, root, 0.0, 0.0, &theme, &mut atlas, None, false, &mut draw, &mut scene_cursor) == RetainedNodePaintStep::Complete {
+            break;
+        }
+    }
     let mut cursor = RetainedNodePaintCursor::default();
     for _ in 0..8 {
         draw.begin_overlay_route();
@@ -1230,11 +1295,13 @@ fn a_decoded_overlay_image_keeps_its_upload_identity_in_the_overlay_raster_lane(
             break;
         }
     }
-    assert_eq!(draw.layers.iter().flat_map(|layer| layer.raster_instances.iter()).count(), 0);
+    let scenes: Vec<_> = draw.layers.iter().flat_map(|layer| layer.raster_instances.iter()).collect();
     let overlays: Vec<_> = draw.layers.iter().flat_map(|layer| layer.overlay_raster_instances.iter()).collect();
+    assert_eq!(scenes.len(), 1);
     assert_eq!(overlays.len(), 1);
+    assert_eq!(scenes[0].0, overlays[0].0, "normal and overlay draws retain one decoded upload key");
     assert_eq!(overlays[0].0, src);
-    assert_eq!(ui_image_natural_size(&src), Some((4, 2)), "routing does not alter decoded dimensions");
+    assert_eq!(ui_image_natural_size(&src), Some((width, height)), "routing does not alter decoded dimensions");
 }
 
 /// ⚖️ Law: the paint arm ADMITS the source itself. `admit_ui_image` had only test callers, so in

@@ -522,3 +522,8 @@ pub fn split(runtime: &crate::editor::puzzle2d::config::Puzzle2dPlayRuntime, win
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
+
+//#region 🪢️TaxonomyMounts
+#[path = "🧬️schema/🦀️.rs"]
+pub mod schema;
+//#endregion 🪢️TaxonomyMounts

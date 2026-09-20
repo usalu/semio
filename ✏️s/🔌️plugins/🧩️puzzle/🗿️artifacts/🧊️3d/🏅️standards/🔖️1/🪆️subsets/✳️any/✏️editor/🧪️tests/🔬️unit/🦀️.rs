@@ -5775,6 +5775,12 @@ async fn every_context_menu_row_dispatches_a_declared_action() {
         (PUZZLE3D_GRANULARITY_REFERENCE, "reference-1"),
         (PUZZLE3D_GRANULARITY_ATTRACTION, "attraction-1"),
     ] {
+        // 🧹️ `Puzzle3dContextSelection::fill_from_interaction` fills every granularity the CLIENT
+        // surface did not send from the framework-owned selection, so the object `addObjectKind`
+        // left selected would win every branch and each granularity would build the OBJECT menu.
+        // A real client's document selection is the one it right-clicks in; clear it so the
+        // surface group under test is the only subject and each branch is genuinely exercised.
+        dispatch(&mut app, "clearSelection", None, None).await.expect("clearSelection");
         let menu = context_menu_for_selection(&mut app, granularity, id).await;
         let mut rows = Vec::new();
         context_menu_action_ids(&menu, &mut rows);

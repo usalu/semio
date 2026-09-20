@@ -1,4 +1,3 @@
-
 use super::*;
 
 static TEST_LOCK: std::sync::Mutex<()> = std::sync::Mutex::new(());
@@ -160,6 +159,24 @@ fn only_a_glass_content_layer_is_split_off_the_scene_target() {
     assert!(!prepared_draw_scalar_is_glass_foreground(&draw, DrawMeasureCursor::PassInstance { pass: 0, draw: 0, instance: 0, translucent: false }), "a scene pass with no layer is never a foreground scalar");
 }
 
+#[test]
+fn overlay_rasters_are_encoded_in_the_foreground_phase() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔽️retained-select-overlay-raster/🔣️.json")).expect("retained Select/overlay raster fixture");
+    let image = &fixture["image"];
+    let key = image["sharedKey"].as_str().expect("shared raster key");
+    let mut draw = crate::wgpu::draw_types::DrawList::default();
+    draw.push_raster_quad(key, [0.0, 0.0, 8.0, 8.0], [0.0, 0.0, 1.0, 1.0], 1.0);
+    draw.begin_overlay_route();
+    draw.push_raster_quad(key, [8.0, 0.0, 8.0, 8.0], [0.0, 0.0, 1.0, 1.0], 1.0);
+    draw.end_overlay_route();
+
+    for row in image["draws"].as_array().expect("draw phase rows") {
+        let overlay = row["route"].as_str() == Some("overlay");
+        let foreground = prepared_draw_scalar_is_glass_foreground(&draw, DrawMeasureCursor::LayerRaster { layer: 0, raster: 0, overlay });
+        assert_eq!(if foreground { "foreground" } else { "scene" }, row["expectedPhase"].as_str().expect("expected phase"));
+    }
+}
+
 /// ⚖️ LAW: **a window cap goes UNDER the veil.** Glass content whose own region is fully enclosed by a
 /// LATER glass region — the introduction veil over a cap, a dialog over a floating panel — is encoded
 /// into the SCENE the blur chain mips, not into the composite after the glass pass. React's veil
@@ -230,17 +247,76 @@ fn a_textured_world_instance_is_encoded_into_its_pass_target() {
     draw.push_scene_pass(crate::wgpu::kernel_3d_scene::ScenePass3d {
         viewport: [0.0, 0.0, 100.0, 40.0],
         textured_draws: vec![crate::wgpu::kernel_3d_scene::TexturedDraw3d {
-            instances: vec![crate::wgpu::kernel_3d_scene::TexturedInstance3d { texture_key: "/reference.png".to_string(), model: crate::wgpu::kernel_3d_scene::Instance3d::model_from_trs([3.5, 0.0, 0.0], [0.0, 0.0, 0.0, 1.0], [12.0, 8.0, 1.0]), tint: [1.0, 1.0, 1.0, 0.85] }],
+            instances: vec![crate::wgpu::kernel_3d_scene::TexturedInstance3d {
+                texture_key: "/reference.png".to_string(),
+                model: crate::wgpu::kernel_3d_scene::Instance3d::model_from_trs([3.5, 0.0, 0.0], [0.0, 0.0, 0.0, 1.0], [12.0, 8.0, 1.0]),
+                background: [0.0; 4], appearance: [0.85, 0.0, 0.0, 0.0],
+            }],
         }],
         ..Default::default()
     });
     assert_eq!(draw.scene_passes.len(), 1, "the pass carries its textured draw");
     let cursor = DrawMeasureCursor::PassTexturedInstance { pass: 0, draw: 0, instance: 0 };
     assert!(!prepared_draw_scalar_is_glass_foreground(&draw, cursor), "a textured scalar under an ordinary layer stays on the scene target");
-    assert!(
-        !prepared_draw_scalar_is_glass_foreground(&draw, DrawMeasureCursor::PassTexturedInstance { pass: draw.scene_passes.len(), draw: 0, instance: 0 }),
-        "a stale pass index is never a foreground scalar"
-    );
+    assert!(!prepared_draw_scalar_is_glass_foreground(&draw, DrawMeasureCursor::PassTexturedInstance { pass: draw.scene_passes.len(), draw: 0, instance: 0 }), "a stale pass index is never a foreground scalar");
+}
+
+#[test]
+fn every_world_color_cursor_uses_the_encoded_attachment_in_scene_and_foreground_phases() {
+    let theme = crate::wgpu::theme::Theme::default();
+    let mut draw = crate::wgpu::draw_types::DrawList::default();
+    draw.push_rounded([0.0, 0.0, 100.0, 40.0], theme.accent, 0.0);
+    draw.push_scene_pass(crate::wgpu::kernel_3d_scene::ScenePass3d::default());
+    let region = draw.push_glass([0.0, 0.0, 100.0, 40.0], 0.0, theme.glass(crate::wgpu::theme::Level::Window));
+    draw.begin_glass_content(region);
+    draw.push_scene_pass(crate::wgpu::kernel_3d_scene::ScenePass3d::default());
+    draw.end_glass_content();
+
+    for (pass, foreground) in [(0, false), (1, true)] {
+        let cursors = [
+            DrawMeasureCursor::PassInstance { pass, draw: 0, instance: 0, translucent: false },
+            DrawMeasureCursor::PassInstance { pass, draw: 0, instance: 0, translucent: true },
+            DrawMeasureCursor::PassMaterialInstance { pass, draw: 0, instance: 0, translucent: false },
+            DrawMeasureCursor::PassMaterialInstance { pass, draw: 0, instance: 0, translucent: true },
+            DrawMeasureCursor::PassTexturedInstance { pass, draw: 0, instance: 0 },
+            DrawMeasureCursor::PassLineVertex { pass, draw: 0, vertex: 1 },
+        ];
+        for cursor in cursors {
+            assert!(prepared_draw_scalar_uses_world_encoded_attachment(cursor), "every World color family selects the encoded attachment");
+            assert_eq!(prepared_draw_scalar_is_glass_foreground(&draw, cursor), foreground, "the encoded view follows the pass into its ordinary or glass-foreground target");
+        }
+    }
+    for cursor in [
+        DrawMeasureCursor::LayerUi { layer: 0, item: 0, overlay: false },
+        DrawMeasureCursor::LayerVector { layer: 0, item: 2, overlay: false },
+        DrawMeasureCursor::LayerRaster { layer: 0, raster: 0, overlay: false },
+        DrawMeasureCursor::PassShadowBegin(0),
+        DrawMeasureCursor::PassShadowInstance { pass: 0, draw: 0, instance: 0 },
+    ] {
+        assert!(!prepared_draw_scalar_uses_world_encoded_attachment(cursor), "UI and depth-only cursors retain the linear sRGB attachment view");
+    }
+
+    let source = include_str!("../../🎯️targets/🧊️wgpu/🧊️gpu/🦀️.rs");
+    assert!(source.contains("if world_encoded { scene.world_encoded_view() } else { scene.mip_view(0) }"));
+    assert!(source.contains("if world_encoded { composite.world_encoded_view() } else { composite.view() }"));
+    let draw_source = include_str!("../../🎯️targets/🧊️wgpu/🖍️draw/🦀️.rs");
+    assert!(draw_source.contains("let world_encoded_format = format.remove_srgb_suffix();"));
+    assert!(draw_source.contains("scene_color_world_encoded"));
+    assert!(draw_source.contains("prepared_composite_world_encoded_view"));
+    assert_eq!(draw_source.matches("format: world_encoded_format, blend:").count(), 9, "standard, depth-writing standard translucent, painted, celebration, line and textured pipelines all target the encoded UNORM view");
+    assert!(draw_source.contains("shadow: [if pass.shadow.enabled { 1.0 } else { 0.0 }, 0.0, 0.0, 1.0]"), "the legacy WGPU producer declares that its World attachment expects encoded output");
+}
+
+/// 🫧 LAW: React's transparent `MeshStandardMaterial` remains front-sided and depth-writing; it is
+/// distinct from overlay transparency and celebration's opacity-dependent depth policy.
+#[test]
+fn standard_translucent_world_pipeline_preserves_react_depth_and_side_policy() {
+    let source = include_str!("../../🎯️targets/🧊️wgpu/🖍️draw/🦀️.rs");
+    let pipeline = source.split("label: Some(\"world3d_standard_translucent_pipeline\")").nth(1).expect("the Standard translucent pipeline");
+    let pipeline = &pipeline[..pipeline.find("cache: None,").expect("the pipeline descriptor closes")];
+    assert!(pipeline.contains("blend: Some(wgpu::BlendState::ALPHA_BLENDING)"));
+    assert!(pipeline.contains("cull_mode: Some(wgpu::Face::Back)"), "React Standard defaults to FrontSide");
+    assert!(pipeline.contains("depth_stencil: Some(material_depth(true))"), "React Standard keeps depthWrite=true when transparent");
 }
 
 /// 🖼️ LAW: the world textured pass is an UNDERLAY — it blends and never writes depth, and its quad
@@ -251,7 +327,7 @@ fn a_textured_world_instance_is_encoded_into_its_pass_target() {
 /// expensive to see on a live boot, so they are pinned here.
 #[test]
 fn the_world_textured_pass_is_a_blended_underlay_on_a_centred_plane() {
-    assert_eq!(size_of::<crate::wgpu::draw::World3dTexturedGpuInstance>(), 80, "the instance stride the shader contract declares");
+    assert_eq!(size_of::<crate::wgpu::draw::World3dTexturedGpuInstance>(), 96, "the instance stride the shader contract declares");
     let vertices = crate::wgpu::draw::WORLD_PLANE_VERTICES;
     assert_eq!(vertices.len(), 30, "six vertices of position(3) + uv(2)");
     for chunk in vertices.chunks_exact(5) {

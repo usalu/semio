@@ -269,6 +269,21 @@ pub fn procedure_snapshot_with_content(schema: &str, path: &Path, seed: &BTreeMa
     ProcedureSnapshot { schema: schema.into(), flow: procedure_flow_child_with_owner(path), text: procedure_text_child_with_owner(seed) }
 }
 
+/// 🧩️ Materialises the pack of either composed `s.stdio.semio` child from the parent snapshot alone.
+/// A whole-document `Effect::LoadDocument` hands the host a pack whose two child handles name
+/// documents no store has ever seen; the archive's closure leg asks the app for each one's genesis
+/// bytes and refuses the whole replacement when the app returns `None`. `ProcedureSnapshot` owns TWO
+/// children, so both slots must answer — `flow` is the program graph, `text` the seed projection.
+pub fn genesis_procedure_child_pack(snapshot: &ProcedureSnapshot, slot: &str, child_id: &str) -> Option<Vec<u8>> {
+    use store::ArtifactPack;
+    let scene = procedure_working_scene(snapshot);
+    match slot {
+        "flow" if child_id == snapshot.flow.child_id => Some(<SemioFlowSnapshot as ArtifactPack>::encode_pack(&flow_content_snapshot_from_path(&scene.path))),
+        "text" if child_id == snapshot.text.child_id => Some(<SemioTextSnapshot as ArtifactPack>::encode_pack(&text_content_snapshot_from_seed(&scene.seed))),
+        _ => None,
+    }
+}
+
 /// 📸️ A sparse `ProcedureDiff` that whole-handle-replaces `flow` from a fully computed `Path` —
 /// composed children are opaque, so a diff never edits a sub-slice, only mints a whole replacement
 /// (the "mint+cache whole handle, never apply-then-capture" pattern `writer`'s `diff_set_text`/
@@ -432,19 +447,15 @@ pub fn artifact_kind() -> ArtifactKindSpec {
 //#endregion 🔖️ArtifactKind
 
 /// 🧹️ Releases a test document's exact child owners and their nested neural dictionaries.
+/// 🧊️ The flow side needs no walk any more: [`Step`] declares its own cold boundary (`Drop` retires
+/// `params` and recurses through `bodies`), so dropping the owner IS the retirement. Kept as a named
+/// helper because the `seed` side still has to be retired explicitly and because the fixtures read
+/// better naming what they release.
 #[cfg(test)]
 pub(crate) fn retire_procedure_fixture(mut snapshot: ProcedureSnapshot) {
     use neural_engine::ColdRetire;
     if let Some(owner) = snapshot.flow.take_local_owner::<ProcedureFlowWorkingData>().expect("flow fixture owner") {
-        if let Some(data) = std::sync::Arc::into_inner(owner) {
-            let mut paths = vec![data.path];
-            while let Some(path) = paths.pop() {
-                for Step { params, bodies, .. } in path.steps {
-                    params.retire_cold();
-                    paths.extend(bodies.into_values());
-                }
-            }
-        }
+        drop(std::sync::Arc::into_inner(owner));
     }
     if let Some(owner) = snapshot.text.take_local_owner::<ProcedureTextWorkingData>().expect("text fixture owner") {
         if let Some(data) = std::sync::Arc::into_inner(owner) {
@@ -804,6 +815,8 @@ pub mod editor {
             pub mod remove_step_at;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🏃️run/🦀️.rs"]
             pub mod run;
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧬️set-active-example/🦀️.rs"]
+            pub mod set_active_example;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧩️set-contributions/🦀️.rs"]
             pub mod set_contributions;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎚️set-step-params/🦀️.rs"]

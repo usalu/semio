@@ -266,17 +266,54 @@ semio_framework_plugin::app_commands! {
 //#endregion 🔖️Commands
 
 //#region 🧵️RetainedCommands
-const ANIMATE_PRESENTATION_RETAINED_TOOL_IDS: &[&str] = &["setActiveExample", "engagementInput", "noMutation"];
+const ANIMATE_PRESENTATION_RETAINED_TOOL_IDS: &[&str] = &[
+    "seedGrid",
+    "addTile",
+    "deleteTile",
+    "deleteSelection",
+    "renameTiles",
+    "patchTileCrops",
+    "setSource",
+    "setFrame",
+    "setActiveExample",
+    "clearTiles",
+    "engagementSubmit",
+    "resetGrid",
+    "engagementInput",
+    "canvasPointerDown",
+    "noMutation",
+    "copyPrompt",
+];
 const ANIMATE_PRESENTATION_RETAINED_PAYLOAD_SCHEMA: &str = "animate.presentation.tool-command.v1";
 const ANIMATE_PRESENTATION_RETAINED_RAW_BYTES: usize = 8_192;
 const ANIMATE_PRESENTATION_RETAINED_WORK_ITEMS: usize = 1;
 const ANIMATE_PRESENTATION_CONFIG_VALUE_BYTES: usize = 512;
 const ANIMATE_PRESENTATION_CONFIG_BASE_BYTES: usize = 512;
 const ANIMATE_PRESENTATION_CONFIG_STEP_BYTES: usize = 4_096;
+/// 🀄️ The largest tile roster one retained verb may build. A `ReplaceTiles` is a single store row
+/// whatever its length, so nothing downstream bounds it — this constant is the only ceiling.
+const ANIMATE_PRESENTATION_MAXIMUM_TILES: usize = 256;
+/// 📦️ The admission envelope ONE encoded document mutation may occupy on the retained artifact lane.
+/// A `ReplaceTiles` carrying the contract's whole 64-cell work ceiling is the largest row this app
+/// can stage (id + name + four crop floats per tile), which is an order of magnitude under this.
+const ANIMATE_PRESENTATION_ARTIFACT_MUTATION_MAXIMUM_BYTES: usize = 65_536;
 const ANIMATE_PRESENTATION_RETAINED_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] = &[
+    ArtifactToolPublicationContract { tool_id: "seedGrid", lanes: &[ArtifactToolPublicationLane::Artifact] },
+    ArtifactToolPublicationContract { tool_id: "addTile", lanes: &[ArtifactToolPublicationLane::Artifact] },
+    ArtifactToolPublicationContract { tool_id: "deleteTile", lanes: &[ArtifactToolPublicationLane::Artifact] },
+    ArtifactToolPublicationContract { tool_id: "deleteSelection", lanes: &[ArtifactToolPublicationLane::Artifact] },
+    ArtifactToolPublicationContract { tool_id: "renameTiles", lanes: &[ArtifactToolPublicationLane::Artifact] },
+    ArtifactToolPublicationContract { tool_id: "patchTileCrops", lanes: &[ArtifactToolPublicationLane::Artifact] },
+    ArtifactToolPublicationContract { tool_id: "setSource", lanes: &[ArtifactToolPublicationLane::Artifact] },
+    ArtifactToolPublicationContract { tool_id: "setFrame", lanes: &[ArtifactToolPublicationLane::Artifact] },
     ArtifactToolPublicationContract { tool_id: "setActiveExample", lanes: &[ArtifactToolPublicationLane::HostOnly] },
+    ArtifactToolPublicationContract { tool_id: "clearTiles", lanes: &[ArtifactToolPublicationLane::Artifact] },
+    ArtifactToolPublicationContract { tool_id: "engagementSubmit", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::Config] },
+    ArtifactToolPublicationContract { tool_id: "resetGrid", lanes: &[ArtifactToolPublicationLane::Artifact] },
     ArtifactToolPublicationContract { tool_id: "engagementInput", lanes: &[ArtifactToolPublicationLane::Config] },
+    ArtifactToolPublicationContract { tool_id: "canvasPointerDown", lanes: &[ArtifactToolPublicationLane::HostOnly] },
     ArtifactToolPublicationContract { tool_id: "noMutation", lanes: &[ArtifactToolPublicationLane::HostOnly] },
+    ArtifactToolPublicationContract { tool_id: "copyPrompt", lanes: &[ArtifactToolPublicationLane::HostOnly] },
 ];
 
 /// 🧾️ The ONE execution contract this app's retained factory publishes AND declares in its
@@ -288,12 +325,34 @@ fn animate_presentation_retained_contract() -> ToolExecutionContract {
     ToolExecutionContract::resumable(ANIMATE_PRESENTATION_RETAINED_RAW_BYTES, 64, 1, 65_536, 7_500, 1, 1)
 }
 
+/// 🕹️ The tile ids the framework-owned `tiles` interaction domain holds selected, read straight off
+/// the retained job's own `InteractionState` — the retained lane used to hand every handler an EMPTY
+/// selection, which silently turned `deleteSelection`/`renameTiles`/`patchTileCrops` into no-ops the
+/// moment they became retained jobs. `ArtifactApp::handle` reads the same domain (`:830`).
+fn animate_presentation_selected_ids(interaction: &protocol::InteractionState) -> Vec<String> {
+    interaction.selection.get(PRESENTATION_INTERACTION_DOMAIN).map(|selection| selection.ids.clone()).unwrap_or_default()
+}
+
+/// 📏️ Every retained verb here is ONE semantic work item — the job reduces the whole command in a
+/// single `BoundedArtifactCommandWork` step, and `ArtifactRetainedCommandPayload::try_new` is handed
+/// `ANIMATE_PRESENTATION_RETAINED_WORK_ITEMS` (1) as its preflight ceiling, so an extent priced per
+/// emitted ROW is refused outright (`retained command exceeds semantic work capacity` — measured on
+/// `seedGrid` 2×2 before this was corrected). Fan-out is therefore bounded HERE, by refusing the
+/// command whose payload would build more than this app's tile ceiling, not by the extent number.
 fn animate_presentation_retained_extent(command: &PresentationCommand, _snapshot: &PresentationSnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
+    let bounded = |length: usize| (length <= ANIMATE_PRESENTATION_RETAINED_RAW_BYTES).then_some(1);
     match command {
-        PresentationCommand::SetActiveExample(payload) if payload.example_id.len() <= ANIMATE_PRESENTATION_RETAINED_RAW_BYTES => Some(1),
-        PresentationCommand::EngagementInput(payload) if payload.value.len() <= ANIMATE_PRESENTATION_CONFIG_VALUE_BYTES => Some(1),
-        PresentationCommand::NoOperation(_) => Some(1),
-        _ => None,
+        PresentationCommand::SeedGrid(payload) => (payload.rows as usize).checked_mul(payload.columns as usize).filter(|cells| *cells > 0 && *cells <= ANIMATE_PRESENTATION_MAXIMUM_TILES).map(|_| 1),
+        PresentationCommand::AddTile(_) | PresentationCommand::DeleteSelection(_) | PresentationCommand::ClearTiles(_) | PresentationCommand::ResetGrid(_) | PresentationCommand::NoOperation(_) | PresentationCommand::CopyPrompt(_) | PresentationCommand::SetFrame(_) => Some(1),
+        PresentationCommand::DeleteTile(payload) => bounded(payload.id.len()),
+        PresentationCommand::RenameTiles(payload) => (payload.value.len() <= ANIMATE_PRESENTATION_RETAINED_RAW_BYTES && payload.ids.len() <= ANIMATE_PRESENTATION_MAXIMUM_TILES).then_some(1),
+        PresentationCommand::PatchTileCrops(payload) => (payload.field.len() <= ANIMATE_PRESENTATION_RETAINED_RAW_BYTES && payload.ids.len() <= ANIMATE_PRESENTATION_MAXIMUM_TILES).then_some(1),
+        PresentationCommand::SetSource(payload) => bounded(payload.source.src.len()),
+        PresentationCommand::SetActiveExample(payload) => bounded(payload.example_id.len()),
+        PresentationCommand::EngagementSubmit(payload) => bounded(payload.value.len()),
+        PresentationCommand::EngagementInput(payload) => (payload.value.len() <= ANIMATE_PRESENTATION_CONFIG_VALUE_BYTES).then_some(1),
+        PresentationCommand::CanvasPointerDown(payload) => bounded(payload.layer_id.as_ref().map_or(0, String::len)),
+        PresentationCommand::ExportVideoFromDeck(_) => None,
     }
 }
 
@@ -303,20 +362,18 @@ fn animate_presentation_retained_reduce(
     snapshot: &PresentationSnapshot,
     config: &PresentationConfig,
     history: &semio_framework_plugin::HistoryView,
-    _interaction: &protocol::InteractionState,
+    interaction: &protocol::InteractionState,
     _hover: &semio_framework_plugin::app::InteractionHoverState,
     _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<AnimatePresentationPlayApp>>>,
     operation: &AppOperationContext,
 ) -> Result<Emit<PresentationMutation, PresentationConfigMutation, NoDraftMutation>, Fault> {
+    if !ANIMATE_PRESENTATION_RETAINED_TOOL_IDS.contains(&command.command_id()) || animate_presentation_retained_extent(command, snapshot, interaction).is_none() {
+        return Err(Fault::from("animate-presentation-retained-route-mismatch"));
+    }
     let document = ArtifactView::with_operation(snapshot, history, operation.clone());
     let config = ConfigView { snapshot: config, window: None };
-    let mut context = PresentationDispatchCtx { selected_ids: Vec::new() };
-    match command {
-        PresentationCommand::SetActiveExample(payload) if payload.example_id.len() <= ANIMATE_PRESENTATION_RETAINED_RAW_BYTES => set_active_example::handle(payload, &document, &config, &mut context),
-        PresentationCommand::EngagementInput(payload) if payload.value.len() <= ANIMATE_PRESENTATION_CONFIG_VALUE_BYTES => engagement_input::handle(payload, &document, &config, &mut context),
-        PresentationCommand::NoOperation(payload) => no_operation::handle(payload, &document, &config, &mut context),
-        _ => Err(Fault::from("animate-presentation-retained-route-mismatch")),
-    }
+    let mut context = PresentationDispatchCtx { selected_ids: animate_presentation_selected_ids(interaction) };
+    command.dispatch(&document, &config, &mut context)
 }
 
 struct AnimatePresentationRetainedCommandJobFactory {
@@ -635,6 +692,17 @@ impl ArtifactEditor for AnimatePresentationPlayApp {
         Ok(semio_framework_plugin::bounded_document_store_initialization_job(envelope, PRESENTATION_DOCUMENT_SCHEMA, operation, generation))
     }
 
+    /// 📬️ Exact one-item PUBLICATION authority for the DOCUMENT store. Without it every tool
+    /// declaring the `artifact` lane is marked `unsupported-publication-contract` at boot and fails
+    /// closed with `interactive-job.publication-authority-missing`, which is why this app could own
+    /// no retained document verb at all (B1a: "promoting a document verb is a two-part change").
+    fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
+        Some(semio_framework_plugin::bounded_config_store_one_item_preparation_factory::<Self::Snapshot, Self::Mutation>(
+            "animate-presentation-artifact-retained",
+            ANIMATE_PRESENTATION_ARTIFACT_MUTATION_MAXIMUM_BYTES,
+        ))
+    }
+
     fn build_config_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Config, Self::ConfigMutation>>> {
         Some(std::sync::Arc::new(AnimatePresentationConfigPreparationFactory))
     }
@@ -688,7 +756,24 @@ impl ArtifactEditor for AnimatePresentationPlayApp {
         factory: "AnimatePresentationRetainedCommandJobFactory",
         factory_type: AnimatePresentationRetainedCommandJobFactory,
         contract: animate_presentation_retained_contract(),
-        tools: ["setActiveExample", "engagementInput", "noMutation"]
+        tools: [
+            "seedGrid",
+            "addTile",
+            "deleteTile",
+            "deleteSelection",
+            "renameTiles",
+            "patchTileCrops",
+            "setSource",
+            "setFrame",
+            "setActiveExample",
+            "clearTiles",
+            "engagementSubmit",
+            "resetGrid",
+            "engagementInput",
+            "canvasPointerDown",
+            "noMutation",
+            "copyPrompt"
+        ]
     }
 
     fn register_tool_job_factories(registry: &mut ArtifactToolFactoryRegistry<'_, EditorApp<Self>>) -> Result<(), Fault> {
@@ -853,6 +938,18 @@ impl ArtifactEditor for AnimatePresentationPlayApp {
 //#endregion 🔖️AnimatePresentationPlayApp
 
 //#region 🔖️Manifest
+/// 🖼️ The four fields of `FigureTileFrame`, as the declared record shape of every `#[dsl(block)]`
+/// frame argument (`setFrame.frame`, `setSource.source.frame`) — one source for both declarations so
+/// the published input schema cannot drift from the struct `command_from_action` decodes into.
+fn figure_tile_frame_arg_fields() -> Vec<ActionArgDef> {
+    vec![
+        ActionArgDef::number("x", LocalizedLabel::native("X", "X")).required().default_value(&0.0),
+        ActionArgDef::number("y", LocalizedLabel::native("Y", "Y")).required().default_value(&0.0),
+        ActionArgDef::number("width", LocalizedLabel::native("Width", "Breite")).required().default_value(&1.0),
+        ActionArgDef::number("height", LocalizedLabel::native("Height", "Höhe")).required().default_value(&1.0),
+    ]
+}
+
 /// 🧱️ The manifest stitch: one call per taxonomy node, each sourced from that node's own `definition()`.
 /// Only the leaf action/keybinding declarations (which have no dedicated `_def` passthrough) are written
 /// out inline.
@@ -872,14 +969,19 @@ pub fn create_animate_presentation_app() -> semio_framework_plugin::AppDefinitio
             .mutation("seedGrid", LocalizedLabel::native("Seed Grid", "Raster erzeugen"))
             .mutation("addTile", LocalizedLabel::native("Add Tile", "Kachel hinzufügen"))
             .mutation("deleteTile", LocalizedLabel::native("Delete Tile", "Kachel löschen"))
+            .action_destructive("deleteTile")
             .mutation("deleteSelection", LocalizedLabel::native("Delete Selection", "Auswahl löschen"))
+            .action_destructive("deleteSelection")
             .mutation("renameTiles", LocalizedLabel::native("Rename Tiles", "Kacheln umbenennen"))
             .mutation("patchTileCrops", LocalizedLabel::native("Patch Tile Crops", "Kachelzuschnitte aktualisieren"))
             .mutation("setSource", LocalizedLabel::native("Set Source", "Quelle festlegen"))
             .mutation("setFrame", LocalizedLabel::native("Set Frame", "Rahmen festlegen"))
             .action_with(semio_framework_plugin::ActionDefinition::new("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"), ActionKind::Mutation, "panel-left"))
+            .action_destructive("setActiveExample")
             .mutation("clearTiles", LocalizedLabel::native("Clear Tiles", "Kacheln leeren"))
+            .action_destructive("clearTiles")
             .mutation("engagementSubmit", LocalizedLabel::native("Engagement Submit", "Eingabe bestätigen"))
+            .action_audience("engagementSubmit", semio_framework_plugin::CapabilityAudience::Input)
             // 🐚️ Host side-effect — exports the generated tile-morph prompt to the user (no document mutation).
             .action_with(semio_framework_plugin::ActionDefinition::new("copyPrompt", LocalizedLabel::native("Copy Prompt", "Prompt kopieren"), ActionKind::Shell, "copy"))
             .action_with(semio_framework_plugin::ActionDefinition::new("exportVideoFromDeck", LocalizedLabel::native("Export Video From Deck", "Video aus Deck exportieren"), ActionKind::Shell, "download"))
@@ -888,14 +990,33 @@ pub fn create_animate_presentation_app() -> semio_framework_plugin::AppDefinitio
             // selectAll/setSelectionMode/setInteractionGranularity auto-inject, never declared here
             // (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM).
             .action_with(semio_framework_plugin::ActionDefinition::new("engagementInput", LocalizedLabel::native("Engagement Input", "Eingabe"), ActionKind::View, "hand"))
+            .action_audience("engagementInput", semio_framework_plugin::CapabilityAudience::Input)
             .action_with(semio_framework_plugin::ActionDefinition::new("canvasPointerDown", LocalizedLabel::native("Canvas Pointer Down", "Leinwand-Zeiger gedrückt"), ActionKind::View, "mouse-pointer"))
+            .action_audience("canvasPointerDown", semio_framework_plugin::CapabilityAudience::Input)
             .view_action("noMutation", LocalizedLabel::native("No Operation", "Keine Aktion"))
             // 🎛️ Declared arg schemas for palette-parametric actions (materialized before dispatch).
             .action_args("seedGrid", vec![
                 ActionArgDef::number("rows", LocalizedLabel::native("Rows", "Zeilen")).required().default_value(&2),
                 ActionArgDef::number("columns", LocalizedLabel::native("Columns", "Spalten")).required().default_value(&2),
             ])
-            .action_args("setSource", vec![ActionArgDef::text("src", LocalizedLabel::native("Source", "Quelle")).required()])
+            // 🧱️ `setSource`/`setFrame` decode `#[dsl(block)]` payloads (`source`, `frame`) — the arg
+            // ids and the record shapes are the reducer's, so an agent reading the published input
+            // schema sends what `command_from_action` actually decodes.
+            .action_args("setSource", vec![
+                ActionArgDef::object(
+                    "source",
+                    LocalizedLabel::native("Source", "Quelle"),
+                    vec![
+                        ActionArgDef::text("src", LocalizedLabel::native("Source URL", "Quell-URL")).required(),
+                        ActionArgDef::text("kind", LocalizedLabel::native("Kind", "Art")).required().default_value(&"image"),
+                        ActionArgDef::object("frame", LocalizedLabel::native("Frame", "Rahmen"), figure_tile_frame_arg_fields()).required(),
+                    ],
+                )
+                .required(),
+            ])
+            .action_args("setFrame", vec![
+                ActionArgDef::object("frame", LocalizedLabel::native("Frame", "Rahmen"), figure_tile_frame_arg_fields()).required(),
+            ])
             .action_args("setActiveExample", vec![
                 ActionArgDef::select("exampleId", LocalizedLabel::native("Example", "Beispiel"), vec![ActionArgOption::new("demo", LocalizedLabel::native("Demo", "Demo"))])
                     .required()
@@ -904,22 +1025,22 @@ pub fn create_animate_presentation_app() -> semio_framework_plugin::AppDefinitio
             // 🎛️ App-scope command — see `🎮️commands/🌱️seed-grid::reset_grid`'s doc comment for why this
             // isn't `seedGrid`/`clearTiles`.
             .app_command("resetGrid", LocalizedLabel::native("Reset to Default Grid", "Auf Standardraster zurücksetzen"), "document", ActionKind::Mutation)
-            .action_interactive_job("seedGrid", InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("addTile", InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("deleteTile", InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("deleteSelection", InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("renameTiles", InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("patchTileCrops", InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("setSource", InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("setFrame", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("seedGrid", InteractiveJobClassification::Migrated)
+            .action_interactive_job("addTile", InteractiveJobClassification::Migrated)
+            .action_interactive_job("deleteTile", InteractiveJobClassification::Migrated)
+            .action_interactive_job("deleteSelection", InteractiveJobClassification::Migrated)
+            .action_interactive_job("renameTiles", InteractiveJobClassification::Migrated)
+            .action_interactive_job("patchTileCrops", InteractiveJobClassification::Migrated)
+            .action_interactive_job("setSource", InteractiveJobClassification::Migrated)
+            .action_interactive_job("setFrame", InteractiveJobClassification::Migrated)
             .action_interactive_job("setActiveExample", InteractiveJobClassification::Migrated)
-            .action_interactive_job("clearTiles", InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("engagementSubmit", InteractiveJobClassification::BatchOnlyPendingRewrite)
-            .action_interactive_job("resetGrid", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("clearTiles", InteractiveJobClassification::Migrated)
+            .action_interactive_job("engagementSubmit", InteractiveJobClassification::Migrated)
+            .action_interactive_job("resetGrid", InteractiveJobClassification::Migrated)
             .action_interactive_job("engagementInput", InteractiveJobClassification::Migrated)
-            .action_interactive_job("canvasPointerDown", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("canvasPointerDown", InteractiveJobClassification::Migrated)
             .action_interactive_job("noMutation", InteractiveJobClassification::Migrated)
-            .action_interactive_job("copyPrompt", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("copyPrompt", InteractiveJobClassification::Migrated)
             .action_interactive_job("exportVideoFromDeck", InteractiveJobClassification::BatchOnlyPendingRewrite)
             // 🕹️ The framework-owned "tiles" interaction domain (ticket
             // 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM) — covers both the document panel
@@ -961,3 +1082,10 @@ pub fn create_animate_presentation_app() -> semio_framework_plugin::AppDefinitio
 pub(crate) mod unit_tests;
 //#endregion 🧪️UnitTests
 
+//#region 🪢️TaxonomyMounts
+#[path = "📚️examples/🎬️demo-session/🦀️.rs"]
+pub mod demo_session;
+#[cfg(test)]
+#[path = "📚️examples/🎬️demo-session/🧪️tests/🧩️example/🦀️.rs"]
+mod example;
+//#endregion 🪢️TaxonomyMounts

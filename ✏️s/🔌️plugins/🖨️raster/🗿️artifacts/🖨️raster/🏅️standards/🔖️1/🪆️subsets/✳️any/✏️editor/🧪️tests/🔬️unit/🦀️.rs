@@ -4,13 +4,58 @@ pub(crate) mod context {
     use semio_framework_plugin::{artifact_app_laws as artifact_laws, InvocationResult, VcsArtifactApp, ViewModel};
     
     pub type RasterApp = VcsArtifactApp<EditorApp<RasterPlayApp>>;
-    
+
     use semio_framework_plugin::PluginApp;
-    
-    pub async fn app() -> RasterApp {
-        artifact_laws::new_app::<EditorApp<RasterPlayApp>>().await
+
+    /// 🧹️ A live app fixture that CLOSES itself. `VcsArtifactApp`'s `ArtifactStore` owns an
+    /// `ArtifactStoreCursorDisposer` whose `Drop` asserts terminal-empty ownership, so a plainly
+    /// dropped fixture panics with "artifact store reached Drop without its exact terminal-empty
+    /// shallow-shell witness". Dereferences to the app and drains the exact retained close ladder on
+    /// the way out — the same law the runtime uses, and the same shape `mounted_app` already had.
+    pub struct RasterAppFixture(RasterApp);
+
+    impl std::ops::Deref for RasterAppFixture {
+        type Target = RasterApp;
+        fn deref(&self) -> &Self::Target {
+            &self.0
+        }
     }
-    
+
+    impl std::ops::DerefMut for RasterAppFixture {
+        fn deref_mut(&mut self) -> &mut Self::Target {
+            &mut self.0
+        }
+    }
+
+    impl Drop for RasterAppFixture {
+        fn drop(&mut self) {
+            if !std::thread::panicking() {
+                artifact_laws::close_registered_fixture_app(&mut self.0);
+            }
+        }
+    }
+
+    /// ✏️ Adapts `create_raster_app`'s `AppDefinition` (contract §2.4) into the `App { definition,
+    /// examples }` shape `new_app_with_registry` still expects — framework test context gap.
+    pub fn raster_app_manifest_for_tests() -> semio_framework_plugin::App {
+        semio_framework_plugin::App { definition: create_raster_app(), examples: Vec::new() }
+    }
+
+    /// 🧪️ The app instance every test builds — registry-backed, because there is no other kind.
+    /// `EditorApp<RasterPlayApp>` publishes a `bounded_first_step_tool_proofs!` roster, and
+    /// `with_registry_on_bus` joins that roster against the registry's `Migrated` tool ids
+    /// (`AppActionRegistry::validate_tool_job_rows`): an empty registry declares none of them, so the
+    /// registry-LESS `artifact_app_laws::new_app` fails construction outright with
+    /// `interactive-job.catalog-authority … generated_migrated=false, migrated={}`.
+    /// 🔌️ Mounted (`bind_instance_id`): `dispatch_typed` refuses `interactive-job.live-instance` for
+    /// every typed command until the app carries the live runtime instance the `ActionMeta` names, so
+    /// an unmounted fixture can construct and render but never mutate.
+    pub async fn app() -> RasterAppFixture {
+        let mut app = artifact_laws::new_app_with_registry::<EditorApp<RasterPlayApp>>(raster_app_manifest_for_tests).await;
+        app.bind_instance_id(artifact_laws::meta("local").instance_id).await;
+        RasterAppFixture(app)
+    }
+
     pub async fn dispatch(app: &mut RasterApp, command: RasterCommand) -> InvocationResult {
         app.dispatch_typed(command, &artifact_laws::meta("local")).await.expect("dispatch")
     }
@@ -28,8 +73,8 @@ pub(crate) mod context {
         app.window_measures(&ViewModel::default()).await.remove(composite::RASTER_PLAY_WINDOW_COMPOSITE).unwrap_or_default()
     }
     
-    pub async fn semio_app() -> RasterApp {
-        let mut app = artifact_laws::new_app::<EditorApp<RasterPlayApp>>().await;
+    pub async fn semio_app() -> RasterAppFixture {
+        let mut app = app().await;
         let document = crate::standards::v1::subsets::any::schema::semio_example_document();
         let envelope = store::create_document_envelope::<RasterSnapshot, RasterMutation>(RASTER_DOCUMENT_SCHEMA, "raster", document, None);
         let files = store::print_document_pack(&envelope).await.expect("print document pack");
@@ -443,9 +488,16 @@ async fn two_instances_converge_disjoint_layer_edits_via_backbone() {
     assert_eq!(layer_name(&projection_b.layers[0]), "Renamed By B", "B keeps its rename");
 }
 
+/// 🔁️ The REGISTERED idempotency law: raster publishes bounded tool proofs, so the registry-less
+/// `assert_ingest_idempotent` faults `interactive-job.catalog-authority` while it builds its sender.
 #[semio_framework_async_macros::async_test]
 async fn ingest_operations_is_idempotent() {
-    artifact_app_laws::assert_ingest_idempotent::<EditorApp<RasterPlayApp>, usize>(RasterCommand::AddLayer(add_layer::AddLayer { kind: "pixel".into() }), |app| app.snapshot().unwrap().layers.len()).await;
+    artifact_app_laws::assert_registered_ingest_idempotent::<EditorApp<RasterPlayApp>, usize, _, _>(
+        || async { context::raster_app_manifest_for_tests() },
+        RasterCommand::AddLayer(add_layer::AddLayer { kind: "pixel".into() }),
+        |app| app.snapshot().unwrap().layers.len(),
+    )
+    .await;
 }
 
 #[semio_framework_async_macros::async_test]
@@ -510,7 +562,7 @@ fn every_command() -> Vec<RasterCommand> {
 
 /// ⚖️ LAW: raster's retained route table, its publication contracts, its bounded-first-step proofs,
 /// `RasterCommand::TOOL_JOB_IDS` and the catalog's `Migrated` classifications are the SAME
-/// seventeen ids — the exact join `validate_tool_job_rows` demands
+/// fifteen ids — the exact join `validate_tool_job_rows` demands
 /// (`interactive-job.catalog-authority` / `interactive-job.catalog-incomplete`). Mirrors block2d's
 /// `retained_route_dispositions_are_exact_and_exhaustive`.
 #[semio_framework_async_macros::async_test]
@@ -518,8 +570,8 @@ async fn retained_route_dispositions_are_exact_and_exhaustive() {
     use semio_framework::{ToolCancellationPolicy, ToolExecutionShape};
     use std::collections::BTreeSet;
     assert_eq!(RASTER_RETAINED_TOOL_IDS.len(), 15);
-    assert_eq!(<RasterPlayApp as ArtifactEditor>::bounded_first_step_tool_proofs().len(), 17);
-    assert_eq!(RasterRetainedCommandJobFactory::PUBLICATION_CONTRACTS.len(), 17);
+    assert_eq!(<RasterPlayApp as ArtifactEditor>::bounded_first_step_tool_proofs().len(), 15);
+    assert_eq!(RasterRetainedCommandJobFactory::PUBLICATION_CONTRACTS.len(), 15);
     assert_eq!(raster_retained_contract().shape, ToolExecutionShape::BoundedFirstStep);
     assert_eq!(raster_retained_contract().cancellation, ToolCancellationPolicy::PerOperation);
 
@@ -577,7 +629,7 @@ async fn every_command_round_trips_through_text_and_binary() {
 #[semio_framework_async_macros::async_test]
 async fn command_wire_keywords_are_unique_across_every_row() {
     let commands = every_command();
-    assert_eq!(commands.len(), 17, "every RasterCommand row must be covered by every_command()");
+    assert_eq!(commands.len(), 15, "every RasterCommand row must be covered by every_command()");
     let mut keywords: Vec<String> = commands.iter().map(|command| protocol::OpText::print_op(command).split(' ').next().unwrap_or_default().to_string()).collect();
     keywords.sort();
     keywords.dedup();
@@ -760,6 +812,14 @@ pub(crate) mod mounted {
         result.requested_effects.extend(settled.effects);
         result
     }
+
+    /// ⏪️ One framework-reserved history verb (`undo`/`redo`) driven the whole way a shell drives it:
+    /// the admission comes back as a `SpawnJob` receipt the caller must commit before the store ever
+    /// sees `ArtifactCommand::Undo`, and only then does the typed publication settle. Pressing it
+    /// without that ladder reads back as a silent no-op.
+    pub async fn history(app: &mut MountedRasterApp, action: &str) {
+        semio_framework_plugin::artifact_app_laws::settle_history_verb(&mut app.0, action, RASTER_TEST_INSTANCE).await;
+    }
 }
 
 /// 🔡️ The composite scene is a packed record (`"bytes":[…]` arrays in the projected tree) — decodes
@@ -795,6 +855,39 @@ async fn mounted_boot_replays_the_demo_example_through_the_retained_route() {
     let composite = packed_scene_text(&render(&mut app, composite::RASTER_PLAY_BODY_COMPOSITE).await);
     std::mem::forget(app);
     assert!(composite.contains("composite") && composite.contains("documentSync"), "the composite window publishes its document-sync lane: {composite}");
+}
+
+/// ↩️ The five-clause bar's undo/redo half on the LIVE document shape: boot the demo carrier, paint
+/// a layer, then walk `undo → redo → undo`. Every step displaces a projection that owns the demo's
+/// asset pool, so each one must reach its owner instead of `RasterOwnedMap`'s fail-closed `Drop`
+/// (slice B3e fixed the undo half; the redo press still aborted the guest at `🦀️.rs:301` on the
+/// live bar, measured 2026-09-20 by B3f).
+/// 📸️ Reads the live layer count and hands the materialized projection straight back to the
+/// artifact's own retirement seam — `PluginApp::snapshot` CLONES, and a clone of a demo-shaped
+/// document owns a populated asset pool, so a test that lets it fall off the end of a statement
+/// trips the same fail-closed `Drop` the law below is about.
+fn observed_layer_count(app: &mounted::MountedRasterApp) -> usize {
+    let snapshot = app.snapshot().expect("snapshot");
+    let count = snapshot.layers.len();
+    crate::standards::v1::subsets::any::schema::snapshot::retire_raster_snapshot(snapshot);
+    count
+}
+
+#[semio_framework_async_macros::async_test]
+async fn mounted_paint_undo_redo_undo_never_reaches_an_owned_map_drop() {
+    let mut app = mounted::mounted_app();
+    mounted::dispatch(&mut app, RasterCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: crate::examples::art_raster_demo::ID.into() })).await;
+    let planted = observed_layer_count(&app);
+    assert!(planted > 0, "the demo carrier plants its layer forest");
+    mounted::dispatch(&mut app, RasterCommand::AddLayer(add_layer::AddLayer { kind: "pixel".into() })).await;
+    assert_eq!(observed_layer_count(&app), planted + 1, "the painted layer lands");
+    mounted::history(&mut app, "undo").await;
+    assert_eq!(observed_layer_count(&app), planted, "undo withdraws the painted layer");
+    mounted::history(&mut app, "redo").await;
+    assert_eq!(observed_layer_count(&app), planted + 1, "redo reinstates the painted layer");
+    mounted::history(&mut app, "undo").await;
+    assert_eq!(observed_layer_count(&app), planted, "the second undo withdraws it again");
+    std::mem::forget(app);
 }
 
 //#endregion 🔖️MountedBoot

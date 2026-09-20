@@ -20,7 +20,13 @@ snapshot-lit = "[" hex "," byte-order-lit "," ifds-list "," hex "]"
 ifds-list = "[" ifd-item-list? "]"
 ifd-item-list = ifd-lit {"," ifd-lit}*
 
-ifd-lit = "[" ifd-entry-list? "]"
+# `enc_ifd` -- `[<entries-list>,<pixels-hex>]`: the bracketed `enc_tag` list followed by this
+# directory's OWN raw strip bytes as hex (`TiffIfd::pixels`, added 2026-08-25 by ticket
+# 26/08/23/END-TO-END-TESTING-REFACTOR wave 17). The hex run is EMPTY for a metadata-only
+# directory and for IFD 0 (whose raster is the snapshot's own `pixels`), which the built-in `hex`
+# macro accepts (zero-width floor).
+ifd-lit = "[" ifd-entries "," hex "]"
+ifd-entries = "[" ifd-entry-list? "]"
 ifd-entry-list = tag-lit {"," tag-lit}*
 tag-lit = "[" INT "," INT "," tiff-values "]"
 

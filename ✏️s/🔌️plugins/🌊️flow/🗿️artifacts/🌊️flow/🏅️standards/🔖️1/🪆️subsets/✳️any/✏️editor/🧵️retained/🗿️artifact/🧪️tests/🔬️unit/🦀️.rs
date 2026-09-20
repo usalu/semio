@@ -40,7 +40,7 @@ fn sixteen_kib_authored_label_copies_and_retires_at_actual_grants() {
         let label = row["unit"].as_str().unwrap().repeat(row["repetitions"].as_u64().unwrap() as usize);
         let grant = row["grantBytes"].as_u64().unwrap() as usize;
         let bytes = label.len() + "slider".len();
-        let source = Arc::new(FlowWorkingScene { widgets: vec![Widget::InputSlider { id: "slider".into(), label, value: 6.0, min: 0.0, max: 10.0, step: 0.5 }], ..Default::default() });
+        let source = Arc::new(FlowWorkingScene { widgets: vec![Widget::InputSlider { id: "slider".into(), label, value: 6.0, min: 0.0, max: 10.0, step: 0.5 }], synapses: Vec::new(), layout: Default::default() });
         let expected = serde_json::Value::from(dsl::ToValue::to_value(&*source));
         let weak = Arc::downgrade(&source);
         let mut cursor = SceneCopy::new(source);
@@ -65,7 +65,7 @@ fn sixteen_kib_authored_label_copies_and_retires_at_actual_grants() {
 #[cfg(not(target_arch = "wasm32"))]
 fn cancelled_nested_map_cursor_keeps_source_alive_across_worker_transfer() {
     let params = neural::Dictionary::new().insert("🌊".repeat(2048), neural::Value::Dictionary(neural::Dictionary::new().insert("value", neural::Value::Atom(neural::Atom::String("x".repeat(8192))))));
-    let source = Arc::new(FlowWorkingScene { widgets: vec![Widget::Neuron { id: "node".into(), neuron_kind: "nested".into(), params, input_ports: vec![], output_ports: vec![], preview: false }], ..Default::default() });
+    let source = Arc::new(FlowWorkingScene { widgets: vec![Widget::Neuron { id: "node".into(), neuron_kind: "nested".into(), params, input_ports: vec![], output_ports: vec![], preview: false }], synapses: Vec::new(), layout: Default::default() });
     let weak = Arc::downgrade(&source);
     let mut cursor = SceneCopy::new(source);
     for _ in 0..5 {
@@ -139,5 +139,4 @@ fn scene_identity_matches_node_crypto_and_adopts_the_exact_root() {
         }
         assert!(retirement.terminal_is_empty());
     }
-    eprintln!("[DEBUG] Flow content-addressed child and target identities matched the five Node crypto vectors at three grants");
 }

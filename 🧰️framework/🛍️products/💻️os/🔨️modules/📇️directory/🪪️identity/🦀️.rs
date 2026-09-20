@@ -30,6 +30,7 @@ pub enum IdentityStatus {
 pub struct IdentityOutcome {
     pub identity: Identity,
     pub status: IdentityStatus,
+    pub authority: super::DirectorySessionAuthorityV1,
     pub credential: Arc<LocalHubCredential>,
 }
 
@@ -99,7 +100,12 @@ pub async fn restore_claimed<T: DirectoryTransport>(ctx: &OperationContext, tran
     let credential = claimed_local_hub_credential(expected_class).ok_or(IdentityError)?;
     let client = DirectoryClient::authenticated(transport, credential.clone());
     let session = client.me(ctx).await.map_err(|_| IdentityError)?;
-    Ok(IdentityOutcome { identity: Identity { user_id: session.user_id, email: session.email, display_name: session.display_name, hub_base_url: client.base_url().to_string(), issued_at_ms: now_ms() }, status: IdentityStatus::Online, credential })
+    Ok(IdentityOutcome {
+        identity: Identity { user_id: session.user_id.clone(), email: session.email.clone(), display_name: session.display_name.clone(), hub_base_url: client.base_url().to_string(), issued_at_ms: now_ms() },
+        status: IdentityStatus::Online,
+        authority: session,
+        credential,
+    })
 }
 //#endregion 🔖️Bootstrap
 

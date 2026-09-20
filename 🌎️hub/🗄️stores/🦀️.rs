@@ -244,6 +244,82 @@ async fn create_dir(path: &Path) -> Result<(), StorageError> {
     tokio::fs::create_dir_all(path).await.map_err(|error| backend(path, &error))
 }
 
+/// 📐️ The stamp file every durable store writes into its own directory on creation.
+const STORE_FORMAT_FILE: &str = "format.json";
+
+/// 📐️ The stamp's own shape, so a future version of the file is recognised rather than guessed at.
+const STORE_FORMAT_SCHEMA: &str = "semio/hub/store-format/v1";
+
+/// 📐️ The event/record format this build writes and reads. Bump it in the same commit that changes
+/// what a journal line or a session file means.
+const STORE_FORMAT_VERSION: u32 = 1;
+
+/// 📐️ The on-disk format one durable store was created with.
+///
+/// The hub is event-sourced and has **no migration framework**, on purpose — `📇️directory/🐘️postgres`
+/// says so out loud (greenfield: no users yet, schema changes are edited in place). The price of
+/// that decision is that a data root written by one build and opened by another is only safe while
+/// both agree on the format, and *silence* is the worst possible answer to a disagreement: a fold
+/// over records it half-understands produces a plausible, wrong state. So every durable store
+/// stamps the format it was created with, and refuses to open anything it does not write itself,
+/// naming both numbers and what to do about it.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct StoreFormatStamp {
+    schema: String,
+    store: String,
+    version: u32,
+}
+
+/// 📐️ Stamp `dir` on creation, or check the stamp already there.
+///
+/// Four outcomes, and each one is a decision rather than a default:
+/// - **no stamp, empty directory** — creation: write this build's stamp.
+/// - **no stamp, but records already there** — adoption at [`STORE_FORMAT_VERSION`]. The stamp was
+///   introduced after these stores were and exactly one format has ever existed, so a v1 store that
+///   predates the stamp is genuinely a v1 store. This branch stops being reachable the moment a v2
+///   exists, and must be deleted then rather than extended.
+/// - **a newer version** — refused. This build cannot know what a later format means.
+/// - **an older version** — refused. There is no migration framework to run.
+async fn open_store_format(dir: &Path, store: &'static str) -> Result<(), StorageError> {
+    let path = dir.join(STORE_FORMAT_FILE);
+    let stamped = match tokio::fs::read(&path).await {
+        Ok(bytes) => Some(serde_json::from_slice::<StoreFormatStamp>(&bytes).map_err(|error| StorageError::Backend(format!("{}: unreadable hub store format stamp ({error})", path.display())))?),
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => None,
+        Err(error) => return Err(backend(&path, &error)),
+    };
+    let Some(stamp) = stamped else {
+        let adopted = tokio::fs::read_dir(dir).await.map_err(|error| backend(dir, &error))?.next_entry().await.map_err(|error| backend(dir, &error))?.is_some();
+        if adopted {
+            eprintln!("[WARN] {}: adopting an unstamped hub {store} store as format v{STORE_FORMAT_VERSION}", dir.display());
+        }
+        let stamp = StoreFormatStamp { schema: STORE_FORMAT_SCHEMA.to_string(), store: store.to_string(), version: STORE_FORMAT_VERSION };
+        let bytes = serde_json::to_vec(&stamp).map_err(|error| StorageError::Backend(error.to_string()))?;
+        return tokio::fs::write(&path, &bytes).await.map_err(|error| backend(&path, &error));
+    };
+    if stamp.schema != STORE_FORMAT_SCHEMA {
+        return Err(StorageError::Backend(format!("{}: format stamp declares {:?}, not {STORE_FORMAT_SCHEMA}", path.display(), stamp.schema)));
+    }
+    if stamp.store != store {
+        return Err(StorageError::Backend(format!("{}: this directory holds the hub {:?} store, not {store:?}", path.display(), stamp.store)));
+    }
+    if stamp.version > STORE_FORMAT_VERSION {
+        return Err(StorageError::Backend(format!(
+            "{}: the hub {store} store on disk is format v{} and this build understands v{STORE_FORMAT_VERSION} — run the newer hub against this data root, or point OS_HUB_DATA at an empty directory",
+            path.display(),
+            stamp.version
+        )));
+    }
+    if stamp.version < STORE_FORMAT_VERSION {
+        return Err(StorageError::Backend(format!(
+            "{}: the hub {store} store on disk is format v{} and this build writes v{STORE_FORMAT_VERSION} — there is no migration framework, so this data root must be opened by the build that wrote it",
+            path.display(),
+            stamp.version
+        )));
+    }
+    Ok(())
+}
+
 /// 🔡️ Lowercase hex of `bytes` — how an opaque identity becomes a filename no platform argues with.
 fn hex(bytes: &[u8]) -> String {
     const DIGITS: &[u8; 16] = b"0123456789abcdef";
@@ -296,6 +372,7 @@ impl HubAuthorityStore {
     /// 💾️ Open the durable authority under `dir`, replaying every fact ever journalled there.
     pub async fn open(dir: &Path) -> Result<Self, StorageError> {
         create_dir(dir).await?;
+        open_store_format(dir, "authority").await?;
         let path = dir.join("log.jsonl");
         let records = Journal::replay(&path).await?;
         Ok(Self::folded(Journal::attach(&path).await?, records))
@@ -492,6 +569,7 @@ impl HubProjectionStore {
     /// 💾️ Open the durable read models under `dir` and compact their journal to what they now hold.
     pub async fn open(dir: &Path) -> Result<Self, StorageError> {
         create_dir(dir).await?;
+        open_store_format(dir, "projections").await?;
         let path = dir.join("log.jsonl");
         let mut store = Self::folded(Journal::ephemeral(), Journal::replay(&path).await?);
         Journal::rewrite(&path, &store.compacted()).await?;
@@ -592,6 +670,7 @@ impl HubBlobStore {
     /// 💾️ Open the durable content store under `dir`.
     pub async fn open(dir: &Path) -> Result<Self, StorageError> {
         create_dir(dir).await?;
+        open_store_format(dir, "blobs").await?;
         Ok(Self { memory: HashMap::new(), dir: Some(dir.to_path_buf()) })
     }
 
@@ -663,10 +742,14 @@ impl HubSessionStore {
     /// 💾️ Open the durable session set under `dir`, reading back every session still live.
     pub async fn open(dir: &Path) -> Result<Self, StorageError> {
         create_dir(dir).await?;
+        open_store_format(dir, "sessions").await?;
         let mut sessions = HashMap::new();
         let mut entries = tokio::fs::read_dir(dir).await.map_err(|error| backend(dir, &error))?;
         while let Some(entry) = entries.next_entry().await.map_err(|error| backend(dir, &error))? {
             let path = entry.path();
+            if entry.file_name() == STORE_FORMAT_FILE {
+                continue;
+            }
             let Ok(bytes) = tokio::fs::read(&path).await else {
                 continue;
             };

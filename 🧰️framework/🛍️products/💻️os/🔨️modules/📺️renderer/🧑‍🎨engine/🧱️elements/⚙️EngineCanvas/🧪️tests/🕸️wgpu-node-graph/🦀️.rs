@@ -33,6 +33,7 @@ pub(super) fn flow_window_scene(surface_id: &str) -> UiComponentSceneNode {
         world_3d: None,
         node_graph: Some(NodeGraphScene {
             editable: Some(true),
+            operators: serde_json::from_value(serde_json::from_str::<Value>(NODE_GRAPH_SCENE_FIXTURE).expect("graph fixture")["operators"].clone()).expect("document operator records"),
             host_snapshot_json: Some(hexagonal_mushroom_column_fixture_json()),
             capabilities_json: Some(json!({ "engine": "flow", "spotlight": true }).to_string()),
             lod_json: Some(json!({ "automatic": true }).to_string()),
@@ -87,7 +88,7 @@ fn paint_scene_into_draw_list(scene: &UiComponentSceneNode, bounds: Rect) -> Dra
         let mut hosts = crate::scenes::SceneEngineHosts { world3d_states: &mut world3d_states, world_resources: &mut world_resources, window_id: "law-window" };
         let mut cursor = ui_wgpu::wgpu::ScenePaintCursor::default();
         for _ in 0..4096 {
-            match crate::scenes::render_component_scene_step(scene, bounds, &mut ctx, &mut cursor, &mut hosts) {
+            match crate::scenes::render_component_scene_step(scene, bounds, &mut ctx, &mut cursor, &mut hosts, ui_wgpu::wgpu::UiDriverDrag::Handle, 1) {
                 ui_wgpu::wgpu::ScenePaintStep::Pending => continue,
                 ui_wgpu::wgpu::ScenePaintStep::Complete => break,
                 ui_wgpu::wgpu::ScenePaintStep::Fault => panic!("node-graph scene paint faulted"),
@@ -100,25 +101,19 @@ fn paint_scene_into_draw_list(scene: &UiComponentSceneNode, bounds: Rect) -> Dra
 /// 🔤️ One action's string fields, key-sorted — the emitted value contract is order-preserving, and a
 /// key-order assertion would pin the writer's statement order rather than the payload React sends.
 pub(super) fn action_fields(action: &ActionDescriptor) -> Vec<(String, String)> {
-    let mut fields: Vec<(String, String)> = action
-        .args
-        .as_ref()
-        .and_then(dsl::DslValue::as_object)
-        .expect("action args are an object")
-        .iter()
-        .map(|(key, value)| (key.clone(), value.as_str().unwrap_or_default().to_owned()))
-        .collect();
+    let mut fields: Vec<(String, String)> = action.args.as_ref().and_then(dsl::DslValue::as_object).expect("action args are an object").iter().map(|(key, value)| (key.clone(), value.as_str().unwrap_or_default().to_owned())).collect();
     fields.sort_by(|left, right| left.0.cmp(&right.0));
     fields
 }
 
 pub(super) fn entity_screen_rect(surface_id: &str, domain: &str, id: &str) -> [f64; 4] {
-    let geometry = ENGINE_SURFACES.with(|cell| {
-        let map = cell.borrow();
-        let Some(NodeGraphEngine::Flow(host)) = map.get(surface_id)?.node_graph.as_ref() else { return None };
-        serde_json::from_str::<Value>(&host.entity_screen_json(domain, id)).ok()
-    })
-    .expect("live flow host answers the entity's screen geometry");
+    let geometry = ENGINE_SURFACES
+        .with(|cell| {
+            let map = cell.borrow();
+            let Some(NodeGraphEngine::Flow(host)) = map.get(surface_id)?.node_graph.as_ref() else { return None };
+            serde_json::from_str::<Value>(&host.entity_screen_json(domain, id)).ok()
+        })
+        .expect("live flow host answers the entity's screen geometry");
     assert_eq!(geometry.get("visible").and_then(Value::as_bool), Some(true), "{domain} {id} is on screen for the fixture camera");
     let rect = geometry.get("rect").and_then(Value::as_array).expect("entity screen rect").iter().filter_map(Value::as_f64).collect::<Vec<_>>();
     [rect[0], rect[1], rect[2], rect[3]]
@@ -185,6 +180,46 @@ fn node_graph_window_attaches_the_flow_engine_and_paints_a_non_empty_draw_list()
 }
 
 #[test]
+fn tutorial_semantic_points_resolve_through_live_graph_geometry() {
+    let _serialized = engine_surface_law_guard();
+    let surface_id = "graph-main";
+    drop_engine_surface(surface_id);
+    let scene = flow_window_scene(surface_id);
+    let bounds = Rect { x: 24.0, y: 36.0, w: 966.0, h: 836.0 };
+    let _draw = paint_scene_into_draw_list(&scene, bounds);
+    let points = [
+        semio_framework::IntroductionPoint::Canvas { id: surface_id.into(), x: 0.0, y: 0.0 },
+        semio_framework::IntroductionPoint::Entity { id: surface_id.into(), domain: "node".into(), entity: "radius".into(), offset: Some([0.5, 0.5]) },
+        semio_framework::IntroductionPoint::Curve { id: surface_id.into(), domain: "edge".into(), entity: "e2".into(), t: 0.5 },
+        semio_framework::IntroductionPoint::Domain { id: surface_id.into(), domain: "slider".into(), entity: "radius".into(), value: 1.5 },
+    ];
+    for point in points {
+        let resolved = resolve_tutorial_surface_point(surface_id, &point).unwrap_or_else(|| panic!("known graph semantic point resolves: {point:?}"));
+        assert!(resolved.0 >= 0.0 && resolved.0 <= bounds.w && resolved.1 >= 0.0 && resolved.1 <= bounds.h, "resolved point remains inside the live surface: {resolved:?}");
+    }
+    for point in [
+        semio_framework::IntroductionPoint::Entity { id: surface_id.into(), domain: "node".into(), entity: "height".into(), offset: None },
+        semio_framework::IntroductionPoint::Domain { id: surface_id.into(), domain: "slider".into(), entity: "height".into(), value: 0.0 },
+        semio_framework::IntroductionPoint::Canvas { id: surface_id.into(), x: -1_000_000.0, y: 0.0 },
+    ] {
+        assert_eq!(resolve_tutorial_surface_point(surface_id, &point), None, "off-surface semantic point is not targetable: {point:?}");
+    }
+    let expected = ENGINE_SURFACES.with(|cell| {
+        let surfaces = cell.borrow();
+        let engine = surfaces.get(surface_id).unwrap().node_graph.as_ref().unwrap();
+        let NodeGraphEngine::Flow(host) = engine else { panic!("flow host") };
+        let state: Value = serde_json::from_str(&host.slider_overlay_state_json().unwrap()).unwrap();
+        let slider = state["sliders"].as_array().unwrap().iter().find(|row| row["widgetId"] == "radius").unwrap();
+        let ratio = (1.5 - slider["min"].as_f64().unwrap()) / (slider["max"].as_f64().unwrap() - slider["min"].as_f64().unwrap());
+        tutorial_graph_world_to_screen(engine, slider["x"].as_f64().unwrap() + (ratio - 0.5) * slider["w"].as_f64().unwrap(), slider["y"].as_f64().unwrap())
+    });
+    let actual = resolve_tutorial_surface_point(surface_id, &semio_framework::IntroductionPoint::Domain { id: surface_id.into(), domain: "slider".into(), entity: "radius".into(), value: 1.5 }).unwrap();
+    assert!((actual.0 - expected[0]).abs() < 0.001 && (actual.1 - expected[1]).abs() < 0.001, "slider domain must use the same zoomed track as React: {actual:?} vs {expected:?}");
+    assert_eq!(resolve_tutorial_surface_point(surface_id, &semio_framework::IntroductionPoint::Scene { id: surface_id.into(), position: [0.0, 0.0, 0.0] }), None, "a 2D graph intentionally has no 3D scene projector");
+    drop_engine_surface(surface_id);
+}
+
+#[test]
 fn pointer_down_on_a_node_emits_the_graph_domain_selection_react_dispatches() {
     let _serialized = engine_surface_law_guard();
     let surface_id = "node-graph-attach-pick";
@@ -200,22 +235,13 @@ fn pointer_down_on_a_node_emits_the_graph_domain_selection_react_dispatches() {
     assert_eq!(select.controller_id, "generation3d");
     assert_eq!(
         action_fields(select),
-        vec![
-            ("domainId".to_owned(), "graph".to_owned()),
-            ("merge".to_owned(), "replace".to_owned()),
-            ("method".to_owned(), "pick".to_owned()),
-            ("targets".to_owned(), r#"[{"granularity":"node","id":"extrude"}]"#.to_owned()),
-        ],
+        vec![("domainId".to_owned(), "graph".to_owned()), ("merge".to_owned(), "replace".to_owned()), ("method".to_owned(), "pick".to_owned()), ("targets".to_owned(), r#"[{"granularity":"node","id":"extrude"}]"#.to_owned()),],
         "byte-identical to React's nodeGraphSelectionActionArgs with nodeIds [extrude]"
     );
     let hover = actions.iter().find(|action| action.action == "interactionHover").expect("pointer-down publishes interactionHover");
     assert_eq!(
         action_fields(hover),
-        vec![
-            ("channel".to_owned(), "pointer".to_owned()),
-            ("domainId".to_owned(), "graph".to_owned()),
-            ("targets".to_owned(), r#"[{"granularity":"node","id":"extrude"}]"#.to_owned()),
-        ],
+        vec![("channel".to_owned(), "pointer".to_owned()), ("domainId".to_owned(), "graph".to_owned()), ("targets".to_owned(), r#"[{"granularity":"node","id":"extrude"}]"#.to_owned()),],
         "byte-identical to React's nodeGraphHoverActionArgs(\"extrude\") - a node-body pick carries no channel, so the target stays node-granular"
     );
 
@@ -224,11 +250,7 @@ fn pointer_down_on_a_node_emits_the_graph_domain_selection_react_dispatches() {
     let channel_hover = moved.iter().find(|action| action.action == "interactionHover").expect("pointer-move publishes interactionHover");
     assert_eq!(
         action_fields(channel_hover),
-        vec![
-            ("channel".to_owned(), "pointer".to_owned()),
-            ("domainId".to_owned(), "graph".to_owned()),
-            ("targets".to_owned(), r#"[{"granularity":"handle","id":"extrude@wire"}]"#.to_owned()),
-        ],
+        vec![("channel".to_owned(), "pointer".to_owned()), ("domainId".to_owned(), "graph".to_owned()), ("targets".to_owned(), r#"[{"granularity":"handle","id":"extrude@wire"}]"#.to_owned()),],
         "byte-identical to React's nodeGraphHoverActionArgs(\"extrude\", \"wire\") - a port pick qualifies the target by channel"
     );
     drop_engine_surface(surface_id);
@@ -246,12 +268,13 @@ fn wheel_zoom_emits_the_node_graph_viewport_action_with_the_moved_camera() {
     let actions = node_graph_wheel(surface_id, &scene.controller_id, bounds, 480.0, 400.0, -120.0, false);
     let viewport = actions.iter().find(|action| action.action == "nodeGraphViewport").expect("wheel publishes nodeGraphViewport");
 
-    let committed = ENGINE_SURFACES.with(|cell| {
-        let map = cell.borrow();
-        let Some(NodeGraphEngine::Flow(host)) = map.get(surface_id)?.node_graph.as_ref() else { return None };
-        Some([host.host_snapshot.camera.x, host.host_snapshot.camera.y, host.host_snapshot.camera.zoom])
-    })
-    .expect("live flow host");
+    let committed = ENGINE_SURFACES
+        .with(|cell| {
+            let map = cell.borrow();
+            let Some(NodeGraphEngine::Flow(host)) = map.get(surface_id)?.node_graph.as_ref() else { return None };
+            Some([host.host_snapshot.camera.x, host.host_snapshot.camera.y, host.host_snapshot.camera.zoom])
+        })
+        .expect("live flow host");
     assert!(committed[2] > 1.784_432_561_601_109_9, "a wheel-up zooms in from the fixture camera, got {}", committed[2]);
     assert_eq!(
         viewport.args,
@@ -302,10 +325,7 @@ fn fit_graph_answers_the_fitted_camera_not_the_scene_camera() {
 fn projection_snapshot_rejects_invalid_node_graph_viewports() {
     let _serialized = engine_surface_law_guard();
     for camera in [[0.0, 0.0, 0.0], [f64::NAN, 0.0, 1.0], [0.0, f64::INFINITY, 1.0]] {
-        assert!(matches!(
-            graph_projection_snapshot(Vec::new(), None, None, camera),
-            Err(ui_wgpu::wgpu::BoundedActionFault::Structure)
-        ));
+        assert!(matches!(graph_projection_snapshot(Vec::new(), None, None, camera), Err(ui_wgpu::wgpu::BoundedActionFault::Structure)));
     }
 }
 
@@ -336,15 +356,20 @@ fn node_graph_paint_publishes_its_captions_over_the_engine_raster() {
             serde_json::from_str(&host.label_overlay_paint_state_json().ok()?).ok()
         })
         .expect("the live flow host answers its label overlay state");
-    let labels = rows.get("labels").and_then(Value::as_array).expect("label rows").len();
-    assert!(labels >= 20, "the seven-node fixture publishes a caption per node and per port, got {labels} at lod {:?}", rows.get("lod"));
+    let label_rows = rows.get("labels").and_then(Value::as_array).expect("label rows");
+    let fixture: Value = serde_json::from_str(NODE_GRAPH_SCENE_FIXTURE).unwrap();
+    let ports = label_rows.iter().filter(|row| row["kind"] == "port").count();
+    let labels = label_rows.len();
+    assert_eq!(ports, fixture["captionExpectation"]["ports"].as_u64().unwrap() as usize, "overlay state {rows:?}");
+    assert_eq!(labels - ports, fixture["captionExpectation"]["nodes"].as_u64().unwrap() as usize);
+    assert!(!label_rows.iter().any(|row| row["id"] == "column-preview"));
+    for handle in fixture["captionExpectation"]["outputHandles"].as_array().unwrap() {
+        let rect = entity_screen_rect(surface_id, "handle", handle.as_str().unwrap());
+        assert!(rect.iter().all(|value| value.is_finite()));
+    }
 
     let key = engine_raster_key(surface_id).expect("bounded engine raster key");
-    let raster_layer = draw
-        .layers
-        .iter()
-        .position(|layer| layer.raster_instances.iter().any(|(instance_key, _)| instance_key == &key))
-        .expect("the painted graph is composited into the window's draw list");
+    let raster_layer = draw.layers.iter().position(|layer| layer.raster_instances.iter().any(|(instance_key, _)| instance_key == &key)).expect("the painted graph is composited into the window's draw list");
     let caption_layer = draw.layers.iter().position(|layer| !layer.overlay_ui_instances.is_empty()).expect("the caption overlay published glyph instances");
     assert!(caption_layer > raster_layer, "captions paint in a LATER layer than the engine raster ({caption_layer} vs {raster_layer}), or the opaque texture covers them");
     let glyphs: usize = draw.layers.iter().map(|layer| layer.overlay_ui_instances.len()).sum();

@@ -1,0 +1,52 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/framework/ui/raster-residency-v1.json",
+  "title": "Prepared raster residency fixture",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "capacity", "sources", "scenarios"],
+  "properties": {
+    "schema": { "const": "semio.ui.prepared-raster-residency.v1" },
+    "capacity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["items", "bytes", "retirementUnitsPerStep"],
+      "properties": {
+        "items": { "const": 256 },
+        "bytes": { "const": 268435456 },
+        "retirementUnitsPerStep": { "const": 1 }
+      }
+    },
+    "sources": {
+      "type": "array",
+      "minItems": 4,
+      "uniqueItems": true,
+      "items": { "enum": ["worldReference", "worldPaint", "uiRaster", "overlayRaster"] }
+    },
+    "scenarios": {
+      "type": "array",
+      "minItems": 6,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "events", "expected"],
+        "properties": {
+          "name": { "type": "string", "minLength": 1 },
+          "events": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 } },
+          "expected": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["live", "staged", "paintable"],
+            "properties": {
+              "live": { "type": "array", "uniqueItems": true, "items": { "type": "string", "minLength": 1 } },
+              "staged": { "type": "array", "uniqueItems": true, "items": { "type": "string", "minLength": 1 } },
+              "paintable": { "type": "array", "uniqueItems": true, "items": { "type": "string", "minLength": 1 } },
+              "maxLiveItems": { "type": "integer", "minimum": 0, "maximum": 256 },
+              "admissionRecovered": { "type": "boolean" }
+            }
+          }
+        }
+      }
+    }
+  }
+}

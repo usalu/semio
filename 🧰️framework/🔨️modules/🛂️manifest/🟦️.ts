@@ -977,7 +977,13 @@ export function parseResolvedPluginViewState(value: unknown): ResolvedPluginView
     if (typeof input !== "string" || input.length === 0 || Array.from(input).length > 256 || /[\u0000-\u001f\u007f]/u.test(input)) throw new Error("view context: invalid identifier");
     return input;
   };
-  const row = object(value);
+  // 🕳️ An absent optional field crosses the worker wire as `null`, not as `undefined`: `encodePackValue`
+  // has no `undefined` in its vocabulary and the Rust twin's `Option<String>` decodes `null` to `None`
+  // (`🛂️manifest/🦀️.rs:4691`). Reading `!== undefined` therefore handed `identifier()` a `null` and
+  // refused EVERY view context that had no active utility or tool — the ordinary case — so a hub
+  // document's browser actor never received one and the opening stalled after its execution-target
+  // fetches with `view context: invalid identifier` (ticket 26/09/18 slice C2).
+  const row = Object.fromEntries(Object.entries(object(value)).filter(([, item]) => item !== null));
   const short = ["activeModeId", "activeWindowKindId", "activeUtilityId", "activeToolId", "windowId", "focusedWindowId"];
   const long = VIEW_CONTEXT_LONG_STRING_FIELDS;
   const allowed = new Set([...short, ...long, "locale", "terminology", "sessionIdentity", "activeUtilityByWindowId", "windowInstances", "toolRunTraceCursorByWindowId", "treeWindows", "treeViewportRows"]);
@@ -1212,6 +1218,20 @@ export function examplesForDialect<E extends { readonly id: string; readonly dia
     resolved.push(example);
   }
   return resolved;
+}
+
+/** 🏷️ One asset-name component — everything outside `[0-9A-Za-z._-]` folds to `-`. TS twin of Rust
+ * `describe::asset_name_segment`. */
+function assetNameSegment(raw: string): string {
+  return raw.replace(/[^0-9A-Za-z._-]/g, "-");
+}
+
+/** 📦️ The `AssetDeclaration.name` an externalized example body travels under — TS twin of Rust
+ * `describe::externalize_oversized_example_bodies`. A descriptor never inlines a body over
+ * `DESCRIPTOR_INLINE_EXAMPLE_MAX_BYTES` (256 KiB); it keeps the row and declares the body as this
+ * asset instead, so the 4 MiB descriptor bound cannot be breached by an authored document. */
+export function exampleBodyAssetName(example: { readonly id: string; readonly dialect: ArtifactDialect }): string {
+  return `📚️examples/${assetNameSegment(example.dialect.artifactKind)}.${assetNameSegment(example.dialect.standard)}.${assetNameSegment(example.dialect.subset)}/${assetNameSegment(example.id)}.json`;
 }
 
 /** 📚️ The examples one surface may offer — {@link examplesForDialect} against that surface's own

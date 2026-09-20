@@ -16,7 +16,7 @@ pub fn diff(payload: &DeleteWidget, base: &FlowSnapshot) -> protocol::MutationOu
     scene.widgets.retain(|widget| widget.id() != &payload.id);
     scene.synapses.retain(|synapse| synapse.from != payload.id && synapse.to != payload.id);
     scene.layout.remove(&payload.id);
-    let outcome = protocol::MutationOutcome::new(diff_replace_content(scene.widgets, scene.synapses, scene.layout));
+    let outcome = protocol::MutationOutcome::new({ let (widgets, synapses, layout) = scene.into_parts(); diff_replace_content(widgets, synapses, layout) });
     if cascaded_synapse_ids.is_empty() {
         outcome
     } else {

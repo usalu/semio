@@ -37,8 +37,24 @@ pub struct ReplaceSnapshot {
 //#region 🔖️Handler
 pub fn handle(payload: &ReplaceSnapshot, doc: &ArtifactView<'_, En1990Snapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<En1990Mutation, NoConfigMutation>, Fault> {
     let text = crate::document::unescape_op_text_field(&payload.text);
-    let target = <En1990Snapshot as store::ArtifactDsl>::parse_dsl(&text).map_err(|error| Fault::from(format!("set-snapshot: invalid document text: {error}")))?;
+    let mut target = <En1990Snapshot as store::ArtifactDsl>::parse_dsl(&text).map_err(|error| Fault::from(format!("set-snapshot: invalid document text: {error}")))?;
+    reattach_unchanged_qk_child(&mut target, doc.snapshot);
     crate::app_surface::commit_snapshot_fields(En1990Mutation::from_snapshot(doc.snapshot, &target), "setSnapshot")
+}
+
+/// 🧷️ The `.en1990` payload carries the composed `q_k` child by id and uri ONLY — its ephemeral
+/// local owner never crosses the wire, and `crate::en1990_qk` fails soft to an EMPTY action list for
+/// a wire-only child. The child id is a content hash, so a payload naming the id the live document
+/// already materialized describes the SAME variable actions: re-attach that owner instead of letting
+/// `from_snapshot` stage a remove-every-action cascade the payload never intended. A payload naming
+/// a DIFFERENT child keeps its wire-only handle for the host to materialize.
+fn reattach_unchanged_qk_child(target: &mut En1990Snapshot, live: &En1990Snapshot) {
+    if target.q_k.local_owner::<crate::En1990QkWorkingTable>().is_some() || target.q_k.child_id != live.q_k.child_id {
+        return;
+    }
+    if let Some(owner) = live.q_k.local_owner::<crate::En1990QkWorkingTable>() {
+        target.q_k.set_local_owner(owner);
+    }
 }
 //#endregion 🔖️Handler
 

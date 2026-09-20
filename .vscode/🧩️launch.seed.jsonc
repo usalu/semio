@@ -1912,12 +1912,31 @@
       "request": "launch",
       "command": "bun nx run @semio-tech/framework-os-dev:collab-e2e",
       "cwd": "${workspaceFolder}",
-      "env": {
-        "SEMIO_BUILD_BUDGET_MS": "5400000"
-      },
       "presentation": {
         "group": "3_dev",
         "order": 387.064
+      }
+    },
+    {
+      "name": "🛠️dev🪐️os-s🩺️cold-boot",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-os-dev:cold-boot-check-s",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 387.065
+      }
+    },
+    {
+      "name": "🛠️dev🪐️os-s🔭️foreign-kind",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-os-dev:s-host-foreign-kind-s -- http://127.0.0.1:6071/ draw note layout",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 387.066
       }
     },
     {
@@ -2047,6 +2066,17 @@
       "presentation": {
         "group": "3_dev",
         "order": 390.1
+      }
+    },
+    {
+      "name": "🛠️dev💻️os🪁️typecheck",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-os:typecheck",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 390.2
       }
     },
     "@generated:fem2d:react",
@@ -2293,6 +2323,39 @@
       "presentation": {
         "group": "4_build",
         "order": 206.16
+      }
+    },
+    {
+      "name": "🚚️publish🗄️os-hub",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run os-hub:publish",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 206.1601
+      }
+    },
+    {
+      "name": "📦️build-release🌉️os-mcp",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-os-mcp-rs:build-release",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 206.1602
+      }
+    },
+    {
+      "name": "🚚️publish🌉️os-mcp",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-os-mcp-rs:publish",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 206.1603
       }
     },
     {
@@ -2612,6 +2675,28 @@
       "presentation": {
         "group": "4_gate",
         "order": 411.10757
+      }
+    },
+    {
+      "name": "⚖️gate🌉️os-mcp🚨️capability-audit",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-os-mcp-rs:capability-audit-check",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 411.107575
+      }
+    },
+    {
+      "name": "⚖️gate🌉️os-mcp🤖️live-agent-loop",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-os-mcp-rs:live-agent-loop-check",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 411.10758
       }
     },
     {
@@ -3008,6 +3093,17 @@
       "presentation": {
         "group": "4_gate",
         "order": 411.1
+      }
+    },
+    {
+      "name": "⚖️gate🪆️composed-child-refs",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run workspace:verify -- composed-child-refs",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 411.42
       }
     },
     {

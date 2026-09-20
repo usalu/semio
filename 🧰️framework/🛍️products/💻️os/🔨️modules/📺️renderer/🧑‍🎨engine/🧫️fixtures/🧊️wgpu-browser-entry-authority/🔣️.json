@@ -4,6 +4,9 @@
     { "id": "frame-worker", "sourceRelativePath": "🎞️frame-worker/🟦️.ts", "outputRelativePath": "🎞️frame-worker/🤖️generated/🟨️.js", "inclusion": "tracked" },
     { "id": "browser-boot", "sourceRelativePath": "🚀️browser-boot/🟦️.ts", "outputRelativePath": "🚀️browser-boot/🤖️generated/🟨️.js", "inclusion": "ignored" }
   ],
+  "browserImports": [
+    { "source": "🚀️browser-boot/🟦️.ts", "module": "../♿️accessibility-mirror/🟦️.ts", "binding": "createAccessibilityMirror", "target": "♿️accessibility-mirror/🟦️.ts" }
+  ],
   "catalogCases": [
     { "id": "reviewed-catalog-bytes", "suffix": "", "expected": true },
     { "id": "whitespace-digest-drift", "suffix": " ", "expected": false },

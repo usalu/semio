@@ -34,7 +34,7 @@ mod wasm_program_exchange {
     use super::*;
     use dsl::{from_dsl_value, to_dsl_value, DslValue, FromValue, ToValue};
     use protocol::{AppCommand, AppFrame};
-    use semio_framework::kernel::{AppEvent, Effect, InvocationId, InvocationResult, UndoGroup};
+    use semio_framework::kernel::{AppEvent, Effect, Event, InvocationId, InvocationResult, MessageEndpoint, PluginInstanceId, UndoGroup};
     use std::sync::atomic::{AtomicU64, Ordering};
     use store::pack_rt;
 
@@ -393,19 +393,62 @@ mod wasm_program_exchange {
         expect_done(&outcome.frames, seq)
     }
 
-    /// 🚧️ `AppCommand::AttachBackbone`/`DetachBackbone` no longer exist in channel v12 (packet
-    /// A4-channel's report: backbone attach/detach collapses into event-driven `Event::Message`/
-    /// `subscribe` per `📓️design-abi.md` §2/§4 — "backbone-poll/backbone-status deleted → event.
-    /// message / subscribe{topic}"). That is real design work belonging to whichever packet wires
-    /// `EffectBackbone` end to end (flagged as a critical-path gap in `📓️status.md`'s "A2-abi-sdk —
-    /// honest partial" entry, still open as of this packet), not a rename this packet can do safely.
-    /// Honest stub, not a silent no-op.
-    pub fn attach_backbone(_instance_id: u32, _uri: &str) -> Result<(), String> {
-        Err("attach_backbone: retired in channel v12 — backbone is now event-driven (design-abi.md §2/§4); no EffectBackbone replacement has landed yet".to_string())
+    async fn exchange_document_backbone_binding(client: &KernelClient, command: semio_framework_plugin::document_backbone_binding::DocumentBackboneBindingCommandV1) -> Result<Vec<Effect>, String> {
+        let instance = command.instance_id;
+        let payload = command.encode()?;
+        let mut outcome = client
+            .exchange_events(instance, vec![Event::Message { source: MessageEndpoint::Shell { instance: PluginInstanceId(instance.to_string()) }, payload }])
+            .await?;
+        let candidates = outcome
+            .effects
+            .iter()
+            .enumerate()
+            .filter_map(|(index, effect)| match effect {
+                Effect::SendMessage { target: MessageEndpoint::Shell { instance: target }, payload } if target.0 == instance.to_string() => Some((index, payload)),
+                _ => None,
+            })
+            .collect::<Vec<_>>();
+        if candidates.len() != 1 {
+            return Err(format!("plugin document-backbone binding returned {} shell receipts", candidates.len()));
+        }
+        semio_framework_plugin::document_backbone_binding::require_document_backbone_binding_receipt_v1(candidates[0].1, &command)?;
+        outcome.effects.remove(candidates[0].0);
+        Ok(outcome.effects)
     }
 
-    pub fn detach_backbone(_instance_id: u32) -> Result<(), String> {
-        Err("detach_backbone: retired in channel v12 — backbone is now event-driven (design-abi.md §2/§4); no EffectBackbone replacement has landed yet".to_string())
+    pub async fn bind_document_backbone(client: &KernelClient, instance_id: u32, binding_generation: u64, uri: &str) -> Result<Vec<Effect>, String> {
+        exchange_document_backbone_binding(
+            client,
+            semio_framework_plugin::document_backbone_binding::DocumentBackboneBindingCommandV1 {
+                operation: semio_framework_plugin::document_backbone_binding::DocumentBackboneBindingOperationV1::Bind,
+                instance_id,
+                binding_generation,
+                uri: uri.to_string(),
+            },
+        )
+        .await
+    }
+
+    pub async fn retire_document_backbone(client: &KernelClient, instance_id: u32, binding_generation: u64, uri: &str) -> Result<Vec<Effect>, String> {
+        exchange_document_backbone_binding(
+            client,
+            semio_framework_plugin::document_backbone_binding::DocumentBackboneBindingCommandV1 {
+                operation: semio_framework_plugin::document_backbone_binding::DocumentBackboneBindingOperationV1::Retire,
+                instance_id,
+                binding_generation,
+                uri: uri.to_string(),
+            },
+        )
+        .await
+    }
+
+    pub async fn receive_document_backbone(client: &KernelClient, instance_id: u32, uri: &str, payload: Vec<u8>) -> Result<Vec<Effect>, String> {
+        store::decode_hot_backbone_message_exact(&payload).map_err(|error| error.to_string())?;
+        let outcome = client.exchange_events(instance_id, vec![Event::Message { source: MessageEndpoint::Backbone { uri: uri.to_string() }, payload }]).await?;
+        if let Some(AppFrame::Error { fault, report, .. }) = outcome.frames.iter().find(|frame| matches!(frame, AppFrame::Error { .. })) {
+            return Err(app_frame_error_message(fault, report));
+        }
+        Ok(outcome.effects)
     }
 
     /// 🚧️ The old implementation was the literal `exchange(id, [])` drain design-abi.md §4 names as
@@ -459,15 +502,6 @@ mod wasm_program_exchange {
         Err(format!("plugin retained document for surface '{surface_id}' exceeded its bounded opportunity budget"))
     }
 
-    /// 🚧️ `window_engagements` rode the SAME `RefreshUi`/`SectionProbe{kind}` channel as the window
-    /// body, just with a different payload type, and has no reader of the reserved
-    /// `framework.section.engagements` surface on this target yet. Matches the wasm32/JS backend's own
-    /// fallback (`window_engagements_js` returns an empty map when the JS side doesn't expose the
-    /// function) rather than a hard error, since callers already treat "nothing yet" as a normal case.
-    pub async fn window_engagements(_client: &KernelClient, _instance_id: u32, _view_state: &ViewModel) -> Result<HashMap<String, WindowEngagement>, String> {
-        Ok(HashMap::new())
-    }
-
     #[cfg(test)]
     include!("../../🧪️tests/🕹️wgpu-reserved-verb-answer/🦀️.rs");
 }
@@ -501,6 +535,10 @@ pub struct ProgramBridgeEntry {
     pub package_id: Option<String>,
     pub manifest: PluginManifest,
     backend: ProgramBridgeBackend,
+    #[cfg(test)]
+    fixture_render: Option<fn(u32, &str, &str, &ViewModel, Option<&str>, Option<&mut Vec<Effect>>) -> Result<UiDocumentLease, String>>,
+    #[cfg(test)]
+    fixture_action: Option<fn(u32, &str, &ViewModel) -> Result<semio_framework::kernel::InvocationResult, String>>,
 }
 
 impl ProgramBridgeEntry {
@@ -511,7 +549,16 @@ impl ProgramBridgeEntry {
         let manifest_json = manifest_fn.call0(&JsValue::NULL).map_err(|_| "manifest call failed")?.as_string().ok_or("manifest not string")?;
         let manifest: PluginManifest = serde_json::from_str(&manifest_json).map_err(|err| format!("manifest parse: {err}"))?;
         let _create_app = get_fn(&handle, "createApp")?;
-        Ok(Self { plugin_id, package_id: None, manifest, backend: ProgramBridgeBackend::Js(Rc::new(handle)) })
+        Ok(Self {
+            plugin_id,
+            package_id: None,
+            manifest,
+            backend: ProgramBridgeBackend::Js(Rc::new(handle)),
+            #[cfg(test)]
+            fixture_render: None,
+            #[cfg(test)]
+            fixture_action: None,
+        })
     }
 
     /// 🎠️ H3-wgpu-native — no longer instantiates anything (see `load_wasm_plugins` below, item 3
@@ -522,7 +569,32 @@ impl ProgramBridgeEntry {
     /// actually called.
     #[cfg(not(target_arch = "wasm32"))]
     pub fn from_wasm(plugin_id: String, package_id: Option<String>, wasm_path: std::path::PathBuf, manifest: PluginManifest) -> Result<Self, String> {
-        Ok(Self { plugin_id: plugin_id.clone(), package_id, manifest, backend: ProgramBridgeBackend::Wasm { client: KernelClient::get(), wasm_path } })
+        Ok(Self {
+            plugin_id: plugin_id.clone(),
+            package_id,
+            manifest,
+            backend: ProgramBridgeBackend::Wasm { client: KernelClient::get(), wasm_path },
+            #[cfg(test)]
+            fixture_render: None,
+            #[cfg(test)]
+            fixture_action: None,
+        })
+    }
+
+    #[cfg(test)]
+    pub(crate) fn install_fixture_render(
+        &mut self,
+        render: fn(u32, &str, &str, &ViewModel, Option<&str>, Option<&mut Vec<Effect>>) -> Result<UiDocumentLease, String>,
+    ) {
+        self.fixture_render = Some(render);
+    }
+
+    #[cfg(test)]
+    pub(crate) fn install_fixture_action(
+        &mut self,
+        action: fn(u32, &str, &ViewModel) -> Result<semio_framework::kernel::InvocationResult, String>,
+    ) {
+        self.fixture_action = Some(action);
     }
 
     /// 🎠️ H3-wgpu-native — replaces the old `Arc<WasmPluginRuntime>`-returning `wasm_runtime()`.
@@ -561,6 +633,10 @@ impl ProgramBridgeEntry {
     }
 
     pub async fn handle_action(&self, instance_id: u32, action_json: &str, view_state: &ViewModel) -> Result<semio_framework::kernel::InvocationResult, String> {
+        #[cfg(test)]
+        if let Some(action) = self.fixture_action {
+            return action(instance_id, action_json, view_state);
+        }
         match &self.backend {
             #[cfg(target_arch = "wasm32")]
             ProgramBridgeBackend::Js(handle) => handle_action_js(handle, instance_id, action_json, view_state).await,
@@ -636,6 +712,15 @@ impl ProgramBridgeEntry {
     }
 
     pub async fn render_with_document(&self, instance_id: u32, surface_id: &str, body_key: &str, view_state: &ViewModel, document_dsl: Option<&str>, refresh_effects: Option<&mut Vec<Effect>>) -> Result<UiDocumentLease, String> {
+        let _latency = crate::frame_latency::FrameLatencyTimer::start(
+            crate::frame_latency::latest_frame_authority(),
+            crate::frame_latency::FrameLatencyStage::RetainedExchange,
+            1,
+        );
+        #[cfg(test)]
+        if let Some(render) = self.fixture_render {
+            return render(instance_id, surface_id, body_key, view_state, document_dsl, refresh_effects);
+        }
         match &self.backend {
             #[cfg(target_arch = "wasm32")]
             ProgramBridgeBackend::Js(handle) => render_with_document_js(handle, instance_id, surface_id, body_key, view_state, document_dsl, refresh_effects).await,
@@ -644,13 +729,12 @@ impl ProgramBridgeEntry {
         }
     }
 
-    pub async fn window_engagements(&self, instance_id: u32, view_state: &ViewModel) -> Result<HashMap<String, WindowEngagement>, String> {
-        match &self.backend {
-            #[cfg(target_arch = "wasm32")]
-            ProgramBridgeBackend::Js(handle) => window_engagements_js(handle, instance_id, view_state).await,
-            #[cfg(not(target_arch = "wasm32"))]
-            ProgramBridgeBackend::Wasm { client, .. } => wasm_program_exchange::window_engagements(client, instance_id, view_state).await,
-        }
+    /// 🎬️ Publishes the instance's reserved `framework.section.engagements` surface through the
+    /// canonical retained render route shared by native and browser guests. The caller owns the
+    /// returned lease and must retire it after [`window_engagements_from_section`] reads it.
+    pub async fn window_engagements_section(&self, instance_id: u32, view_state: &ViewModel) -> Result<UiDocumentLease, String> {
+        let body_key = semio_framework::UiRefreshSection::Engagements.body_key();
+        self.render_with_document(instance_id, body_key, body_key, view_state, None, None).await
     }
 
     /// 📏️ Publishes the instance's reserved `framework.section.measures` surface — the ONE retained wire
@@ -697,24 +781,30 @@ impl ProgramBridgeEntry {
         }
     }
 
-    /// 🎠️ Kept synchronous (unlike `apply_mutations`/`read_history` below): the body never actually
-    /// awaits anything — see `wasm_program_exchange::attach_backbone`'s doc for why, this stays a
-    /// plain fn so its existing non-async Shell.rs call sites don't need touching at all.
     #[cfg(not(target_arch = "wasm32"))]
-    pub fn attach_backbone(&self, instance_id: u32, uri: &str) -> Result<(), String> {
+    pub async fn bind_document_backbone(&self, instance_id: u32, binding_generation: u64, uri: &str) -> Result<Vec<Effect>, String> {
         match &self.backend {
-            ProgramBridgeBackend::Wasm { .. } => wasm_program_exchange::attach_backbone(instance_id, uri),
+            ProgramBridgeBackend::Wasm { client, .. } => wasm_program_exchange::bind_document_backbone(client, instance_id, binding_generation, uri).await,
             #[cfg(target_arch = "wasm32")]
-            _ => Err("attach_backbone unavailable".into()),
+            _ => Err("bind_document_backbone unavailable".into()),
         }
     }
 
     #[cfg(not(target_arch = "wasm32"))]
-    pub fn detach_backbone(&self, instance_id: u32) -> Result<(), String> {
+    pub async fn retire_document_backbone(&self, instance_id: u32, binding_generation: u64, uri: &str) -> Result<Vec<Effect>, String> {
         match &self.backend {
-            ProgramBridgeBackend::Wasm { .. } => wasm_program_exchange::detach_backbone(instance_id),
+            ProgramBridgeBackend::Wasm { client, .. } => wasm_program_exchange::retire_document_backbone(client, instance_id, binding_generation, uri).await,
             #[cfg(target_arch = "wasm32")]
-            _ => Err("detach_backbone unavailable".into()),
+            _ => Err("retire_document_backbone unavailable".into()),
+        }
+    }
+
+    #[cfg(not(target_arch = "wasm32"))]
+    pub async fn receive_document_backbone(&self, instance_id: u32, uri: &str, payload: Vec<u8>) -> Result<Vec<Effect>, String> {
+        match &self.backend {
+            ProgramBridgeBackend::Wasm { client, .. } => wasm_program_exchange::receive_document_backbone(client, instance_id, uri, payload).await,
+            #[cfg(target_arch = "wasm32")]
+            _ => Err("receive_document_backbone unavailable".into()),
         }
     }
 
@@ -775,9 +865,21 @@ pub fn window_measures_from_section(document: &UiDocumentLease) -> Result<HashMa
     serde_json::from_str(&payload).map_err(|error| format!("window measures section parse: {error}"))
 }
 
+/// 🎬️ Reads the canonical per-window engagement map from its reserved retained section.
+///
+/// See `🧑‍🎨engine/🧫️fixtures/🎬️window-engagements/🔣️.json`.
+pub fn window_engagements_from_section(document: &UiDocumentLease) -> Result<HashMap<String, WindowEngagement>, String> {
+    let payload = document.read_paged_text().map_err(|error| format!("window engagements section unreadable: {error:?}"))?;
+    serde_json::from_str(&payload).map_err(|error| format!("window engagements section parse: {error}"))
+}
+
 #[cfg(test)]
 #[path = "../../🧪️tests/📏️wgpu-window-measures-section/🦀️.rs"]
 pub(crate) mod window_measures_section_tests;
+
+#[cfg(test)]
+#[path = "../../🧪️tests/🎬️wgpu-window-engagements-section/🦀️.rs"]
+pub(crate) mod window_engagements_section_tests;
 
 #[cfg(target_arch = "wasm32")]
 /// ❗️ Renders a rejected JS promise's reason as text. `map_err(|_| "...")` discarded it, so every
@@ -1059,19 +1161,6 @@ fn browser_document_generation(surface_id: &str, revision: u64) -> u64 {
         minted.insert(surface_id.to_string(), (revision, generation));
         generation
     })
-}
-
-#[cfg(target_arch = "wasm32")]
-async fn window_engagements_js(handle: &Rc<JsValue>, instance_id: u32, view_state: &ViewModel) -> Result<HashMap<String, WindowEngagement>, String> {
-    let engagements = Reflect::get(handle.as_ref(), &JsValue::from_str("windowEngagements")).ok().and_then(|v| v.dyn_into::<Function>().ok());
-    let Some(engagements) = engagements else {
-        return Ok(HashMap::new());
-    };
-    let view_json = serde_json::to_string(view_state).map_err(|err| err.to_string())?;
-    let result = engagements.call2(&JsValue::NULL, &JsValue::from_f64(instance_id as f64), &JsValue::from_str(&view_json)).map_err(|_| "window_engagements failed")?;
-    let resolved = if let Some(promise) = result.dyn_ref::<js_sys::Promise>() { JsFuture::from(promise.clone()).await.map_err(|_| "window_engagements promise failed")? } else { result };
-    let json = resolved.as_string().ok_or("window_engagements not string")?;
-    serde_json::from_str(&json).map_err(|err| format!("window_engagements parse: {err}"))
 }
 
 /// 📦️ The view state as the `pk:`-prefixed pack payload the JS bridge forwards to the guest verbatim.

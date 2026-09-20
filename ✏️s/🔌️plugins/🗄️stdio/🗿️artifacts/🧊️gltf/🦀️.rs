@@ -679,6 +679,9 @@ mod tests;
 pub mod standards {
     #[path = "."]
     pub mod v2_0 {
+        #[path = "🏅️standards/🔖️2.0/🦀️.rs"]
+        mod component;
+        pub use component::*;
         // ⚙️→🚪️/🧬️ dissolved (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES):
         // real code now lives in `subsets::any::{io,schema}`; this stays an inline barrel
         // so every existing `standards::v2_0::engine::*`/root `engine::*` path still resolves.
@@ -696,6 +699,9 @@ pub mod standards {
         pub mod subsets {
             #[path = "."]
             pub mod any {
+                #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🦀️.rs"]
+                mod component;
+                pub use component::*;
                 #[path = "."]
                 pub mod schema {
                     #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🦀️.rs"]

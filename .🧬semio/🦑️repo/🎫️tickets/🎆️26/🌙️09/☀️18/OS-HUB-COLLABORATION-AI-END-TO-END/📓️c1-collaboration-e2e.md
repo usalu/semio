@@ -622,32 +622,621 @@ Slice C1c (Opus 5 execution worker), 2026-09-19 session 4. Continues C1b above. 
 
 ## 14. Inherited state and the decision taken
 
-_(filling)_
+C1b left two product gaps (§10.4 hub readiness, §12.1 identity). DS1 owns the first. C1c owns the
+second, and the brief names its shape exactly: the hub session AU3's live sign-in mints must become
+the shell's `verifiedSessionAuthority`, it must survive a reload, and the harness must stand up two
+distinct users zero-touch.
+
+**The decision.** There is now exactly ONE identity input to the React shell: the **hub session
+capability** a human mints with `POST /auth/sessions`. The launcher-issued `#semio-broker=` proof,
+its 15 s TTL, its rolling SHA-256 proof chain and the `LocalBrowserRelay` round trip are gone from
+the os shell and its backbone worker. What replaced each part:
+
+| was | is | why |
+|---|---|---|
+| `#semio-broker=<64 hex>` URL fragment, one-shot, 15 s | `sessionStorage` capability record `{origin, token, userId}` | a fragment cannot survive a reload and a 15 s TTL cannot survive a *page*, which is exactly C1b §12.1 gap 3 |
+| rolling proof + `x-semio-browser-broker{,-next,-advanced}` headers | `Authorization: Bearer <session.v1.…>` | the hub already authenticates humans this way; the ratchet authenticated the *browser* to a relay, which is a different question and made the hub see the relay's bootstrap principal, never the human (AU3 §2) |
+| `/_semio/hub/*` → `LocalBrowserRelay` → hub | `/_semio/hub/*` → hub, proxied by the dev server | same-origin is kept (no preflight on an authenticated request), the relay is no longer on the shell's identity path |
+| `S_USER=<email>` vite env | nothing | it reached no browser at all (C1b §12.2); the two shells are now distinguished by who signed in |
+
+The relay itself is untouched and still serves the hub's own operator launcher: setting
+`S_LOCAL_RELAY_URL` still proxies the whole `/_semio` namespace to it and takes precedence. What the
+shell no longer does is *depend* on it for identity.
 
 ## 15. Identity — one path for the React shell
 
-_(filling)_
+**Page side.** `🏛️ShellHost/🟦️.tsx`:
+- `hubSessionStorageV1()` (`:222`) — `sessionStorage`, chosen deliberately over `localStorage`: the
+  connection *book* (which hubs exist) is durable profile identity and carries no secret, but a
+  bearer belongs to the browsing context that signed in. It must survive a reload and must not
+  outlive the tab or leak into a second one. Every access is `try`-wrapped; a blocked store is "no
+  session", never a boot failure.
+- `hubSessionCapability` state + `rememberHubSessionCapability` (`:2474-2485`) — seeded from the
+  store at mount, replaced by every mint, cleared by sign-out and by the hub answering `401`.
+- the identity bootstrap effect (`:3432+`) now takes `[hubEnv, hubSessionCapability]`, opens a fresh
+  `MessageChannel` per bootstrap, hands the worker the capability through
+  `HubSessionPortClientV1`, and drives the *existing* `startDirectorySessionRefreshV1` off
+  `sessionPort.me(signal)`. `verifiedSessionAuthority` is therefore the hub's own
+  `GET /auth/sessions/me` answer **for the capability the worker holds** — the same predicate every
+  hub-authenticated operation is admitted against.
+- `hubEnv` with **no** capability is no longer a fault: the blocking `SessionAuthorityNotice` renders
+  only while a capability exists and its authority has not resolved (`:11125`). A shell with a hub
+  and no session runs local-first and the badge offers sign-in, which is what AGENTS.md's
+  local-first law requires and what the old broker-only assumption broke.
+- `hubSessionPresence` (`:9017`) is now **derived** from `verifiedSessionAuthority` instead of
+  mirroring the workspace overlay. That closes AU3 gap 7 (a session minted before the overlay was
+  opened read `signedOut`) and it is what makes the badge an honest runtime probe: the sign-in
+  affordance disappears exactly when the shell holds authority. `HubWorkspace`'s `onSessionChange`
+  prop is deleted rather than left dangling.
+
+**Worker side.** `🏪️store/👷️worker/🟦️.ts`:
+- `hubSessionCapability` / `hubSessionOwner` / `hubSessionAdmission` / `hubSessionQueue` replace the
+  proof state (`:646-656`). The owner/admission/serial-queue machinery is kept verbatim — it is what
+  stops a retired owner observing its successor's response, and nothing about it was broker-specific.
+- `installHubSessionCapability` (`:733`) is idempotent for the same capability and retires every
+  document, directory and inference owner when a *different* one arrives, so one worker can never
+  mix two principals' work. That idempotence is what lets a reloaded page re-hand the session it
+  restored without tearing anything down.
+- `hubSessionFetch` (`:748`) is the single authenticated lane: `${HUB_REQUEST_ROUTE_PREFIX}${path}`
+  plus `Authorization: Bearer`. A `401` drops the capability rather than retrying, which is what
+  surfaces re-authentication in the shell instead of a silent stall.
+- `captureBrowserSessionOperationFence` (`:669`) lost the proof-TTL clause; the session's own
+  `expiresAt` is the only deadline there was ever a reason to have.
+- `attachHubSessionPort` (`:797`) keeps the private-port RPC shape; `initialize` now carries
+  `capability` instead of `proof`, validated against `HUB_SESSION_CAPABILITY_PATTERN_V1`.
+- `DirectoryClient`'s three constructions take `requestBaseUrl: ""` and `browserDirectoryRequest`'s
+  allowlist matches bare hub paths; the route prefix is applied in one place.
+
+**Contract.** `💻️os/🟦️.ts`: `HubSessionPortRequestV1`/`ResponseV1` +
+`parseHubSessionPortRequestV1`/`parseHubSessionPortResponseV1` +
+`HUB_SESSION_CAPABILITY_PATTERN_V1` replace the `BrowserBrokerPort*` pair. The module
+`📇️directory/🪪️session-refresh/🌐️broker-port/` is renamed `🪪️session-port/` and its class is
+`HubSessionPortClientV1`; its fixture/schema pair is renamed with it
+(`semio.directory.hub-session-port-client-fixtures.v1`, `clearsCapability`).
+
+**Persistence contract.** `📇️directory/🔐️sign-in/🟦️.ts` gained a `🔖️Capability` region:
+`HubSessionCapabilityV1`, `parseHubSessionCapabilityV1`, `readHubSessionCapabilityV1`,
+`writeHubSessionCapabilityV1`. The decoder refuses a tampered record, a token of the wrong shape and
+— load-bearing — a capability minted by a *different* origin than the one being asked about.
+
+**Port.** `🔗️HubConnection/🟦️.tsx`: `createHubConnectionFetchPortV1` takes `restoredCapability` and
+`onCapability`; `mint` now parses through the production `parseHubSessionMintResultV1` (it used to
+cast `JSON.parse(...).token`, which would have installed a proxy's error page as a session), `read`
+announces `null` on `401`, `end` announces `null`. `useHubConnection` re-bootstraps once at mount
+when the port restored a capability — presuming the session live only until the hub's own `me`
+confirms it.
 
 ## 16. Hub readiness configuration actually used
 
-_(filling)_
+DS1's blocker is real and unchanged in this tree: `artifactAuthority` never reports ready, so the
+`fullyReady` branch of `localHubReadinessAdmitted` is unreachable. The narrowest legitimate
+configuration that *does* come up — and the exact one C1c ran against — is the hub's own
+`bootstrapSecuritySmoke` readiness boundary:
+
+```
+$ bun 🐍️c1c-hub-hold.ts 7501 /private/tmp/c1c-hub-eCgs
+provisioned user1@semio.dev=01a0bbc1-126b-758b-a461-e6b9763fdb99
+provisioned user2@semio.dev=01a0bbc1-63dc-7354-a4cc-14302245c2ff
+[INFO] os-hub ready at http://127.0.0.1:7501
+HOLD origin=http://127.0.0.1:7501 status=not-ready artifactAuthority={"ready":false}
+
+$ curl -s http://127.0.0.1:7501/readyz
+{"schema":"semio.hub.readiness/v1","status":"not-ready",…,"authentication":{"kind":"local-bootstrap-pipe-v1",
+ "bootstrapReady":true,"publicSessionIssuance":true},"directory":{"ready":true},"storage":{"ready":true},
+ "artifactCasBarrier":{"ready":true},"artifactPublication":{"ready":true},"artifactAuthority":{"ready":false},
+ "adminAssets":{"ready":true},"features":{"openPlan":false,"openPlanExchange":false,"rebootstrap":true,…}}
+```
+
+**What that configuration can and cannot serve.** Auth (`/auth/sessions`, `/auth/sessions/me`,
+`/auth/credentials`), the directory (`/directory/spaces`, `/directory/commands`, invites, the space
+roster) and `/admin` are all live. Artifacts are not: `features.openPlan` is `false`, so a document
+open plan — the first hub call any editor makes — is refused. That is the exact boundary between the
+scenario's identity/space steps and its document steps, and it is DS1's to move.
+
+**One boot fault found and recorded here because it costs a whole cycle.** Spawning the staged
+`os-hub` binary directly with `OS_HUB_MODE=development` and no launcher pipe aborts the process:
+
+```
+thread 'tokio-rt-worker' panicked at tokio-1.52.3/src/runtime/io/driver.rs:196:23:
+unexpected error when polling the I/O driver: Os { code: 9, … message: "Bad file descriptor" }
+worker thread panicking; aborting process
+```
+
+A development hub completes an authenticated local-bootstrap handshake over an **inherited pipe on
+fd 3**; without it the reactor polls a descriptor that does not exist. `startLocalHub` is the only
+supported way to boot one (it opens `stdio: [ignore, …, "pipe"]`), which is what
+`🐍️c1c-hub-hold.ts` now does. The message names neither the pipe nor the handshake, so it reads as a
+tokio bug rather than a missing launcher contract.
 
 ## 17. Per-step observed results
 
-_(filling)_
+Superseded by `## Session 5` below, which ran the identity path live and states exactly which
+collaboration steps were reachable and which were not.
 
 ## 18. The three behaviours the brief requires and the scenario lacked
 
-_(filling)_
+The harness now carries all three as steps 11, 12 and 13 (`COLLAB_E2E_STEP_NAMES`,
+`🤝️collaboration/🟦️.ts:111-124`): per-user undo, a short connection loss, and two-writer convergence.
+Whether they have been *run* is §S5.3.
 
 ## 19. Permanent target wiring
 
-_(filling)_
+Unchanged from §11 and re-verified on the current tree: script route
+`🧑‍💻dev/🧪️tests/✅️verification/🟦️.ts`, nx target `collab-e2e`, launch row `🛠️dev🤝️os-collab-e2e`.
+No new target was needed.
 
 ## 20. Honest gaps
 
-_(filling)_
+See §S5.5.
 
 ## 21. Files changed by C1c
 
-_(filling)_
+See §S5.6.
+
+# Session 5 — C1c resumed, 2026-09-20 01:20→02:05
+
+Worker C1c (resume). Everything below is measured; every capture named is on disk under
+`🗑️generated/`. Inherited live from the predecessor and reused rather than rebuilt: the hub held by
+`🐍️c1c-hub-hold.ts` (pid 4409, `os-hub` pid 5468) on `http://127.0.0.1:7501` with data root
+`/private/tmp/c1c-hub-eCgs`, and its `animate` react dev serve on `http://127.0.0.1:7502`
+(pid 43068/43140). Both were verified by `curl` before use, not assumed.
+
+### E2E baseline (session 5)
+
+**This is the block W3c gates on.** The 13-step `collabRunScenario` was **not** run, and the honest
+reason is a build blocker owned elsewhere, not a scenario result:
+
+| field | value |
+|---|---|
+| command attempted | `bun nx run @semio-tech/framework-os-dev:activate-s-react-dev` (the harness's own `collabActivateShellRuntime`, `🤝️collaboration/🟦️.ts:339`) |
+| capture | `🗑️generated/c1c-activate-s-react.txt` (run 1, 13 min), `c1c-activate-s-react-2.txt` (run 2) |
+| outcome | `error: Cargo artifact build failed: ✏️s/🔌️plugins/🧱️block/📦️packages/🦀️rust/Cargo.toml` |
+| underlying errors | `error[E0502]: cannot borrow counters as immutable because it is also borrowed as mutable` → `could not compile semio-framework-trace`; `error[E0599]: no method named principal_kind found for struct PresencePeerReader<'a>` → `could not compile semio-framework-replication` |
+| owner | peers' in-flight refactors (`principal_kind` is slice M6's agent-presence work). Preamble rule 3/13: not mine to revert. |
+| hub mode used | `startLocalHub` + `bootstrapSecuritySmoke` readiness, `OS_HUB_CREDENTIAL_SIGN_IN=1`, `status=not-ready` with `artifactAuthority.ready=false` and `features.openPlan=false` (DS1's blocker, §16) |
+| ports | hub `7501`; shells `7502` (`animate`, inherited) and `6108` (`home`, started this session, pid 4842) |
+| steps 1-13 | **0 run.** Not "failed" — the two `s` shells the scenario needs cannot be staged while the workspace is red. |
+
+What *was* observed live with two real humans is §S5.1 (identity, 19/19) and §S5.4 (the host-mode
+finding that decides what a two-user run will need). No step of the ten/thirteen has yet been
+observed passing in a browser, by C1, C1b or C1c.
+
+### E2E run 2 (session 5)
+
+The coordinator's instruction was to stop waiting for the `s` host and prove a shared document in the
+cheapest shell that already serves. That was attempted and it produced a definite answer: **host mode
+is not what gates a shared document — the hub is, and the gate is DS1's, measured exactly.**
+
+| step | verdict | measured reason |
+|---|---|---|
+| 1 space created / replicated | not run | needs the Home table, host mode only (§S5.4 finding 2) |
+| 2 share + open `/spaces/{id}` | not run | same |
+| 3 create artifact, editor opens | **blocked at the hub** | `features.openPlan:false` |
+| 4 live edit A→B | **blocked at the hub** | `features.openPlan:false` |
+| 5 presence roster, 2 distinct colours | **blocked at the hub** | presence beats ride the document socket, which needs an open plan |
+| 6 check-in | not run | needs 3 |
+| 7 `/admin/api/connections` | not run | needs a connection, which needs 3 |
+| 8 one-round-trip bound | **blocked at the hub** | needs 4 |
+| 9 restart persistence / 10 in-flight edit | **blocked at the hub** | needs 3 |
+| 11 per-user undo / 12 connection loss / 13 convergence | **blocked at the hub** | needs 4 |
+
+**The gate, exactly.** `🌎️hub/🏗️bootstrap/🦀️.rs:9481`:
+
+```rust
+let open_plan_ready = artifact_authority.as_ref().is_some_and(|configured| configured.catalog.open_target_count() > 0);
+```
+
+and `:2540` / `:2739` refuse every document-open-plan and plan-exchange request when
+`!state.readiness.features.open_plan`. So a document open is admitted only when the **trusted catalog
+publishes at least one open target**. Every trusted-catalog directory in this tree is empty —
+`.🧬semio/🌐hub/hub-dev/trusted-catalog`, `.🧬semio/🌐hub/c1b-warm/trusted-catalog` (C1b's warm
+catalog never materialised) and this slice's own `/private/tmp/c1c-hub-eCgs` — so `openPlan` is
+`false` on every hub this repo can boot today, for every shell, host mode or not. Capture
+`🗑️generated/c1c-hub-document-admission.txt` (probe `🐍️c1c-hub-document-admission.ts`) shows the
+live `features` line and the empty `/directory/spaces` listings from both signed-in humans.
+
+**A real gate on the cheap path, found and removed.** Chasing "can a playground shell join a space
+document" turned up the one path that does it without host mode — the sync card's `remote://` attach
+— and it was broken at the root. `buildRemoteBackboneUri` encodes three parts
+(`remote://<host>/<spaceId>/<documentId>`) and `parseRemoteBackboneUri` (`💻️os/🟦️.ts:159`) decodes
+all three, but `attachSyncBackbone` (`🏛️ShellHost/🟦️.tsx:6454`) hand-rolled its own split:
+
+```ts
+const spaceId = slash > 0 ? rest.slice(slash + 1) || "default" : "default";   // ← "space-1/doc-a"
+const documentId = syncDocumentId(targetSession, panel, hostMode);            // ← ignores the uri
+```
+
+`syncDocumentId` is `${pluginId}-${instanceId}` in a playground, so **two browsers attaching to the
+same hub document opened two different documents in two mis-named spaces** and never shared a
+replication session — which is precisely why joining one shared document looked like it needed host
+mode. Fixed to use the canonical decoder: the uri's own `documentId` is used when present, the
+`spaceId` is the single segment it actually is. It cannot be *observed* until `openPlan` opens,
+and that is said plainly rather than claimed.
+
+### E2E run 3 (session 5b, 06:15→07:0x)
+
+Resumed after the ~03:00 session-limit cut. Housekeeping first: hub 7501 (`os-hub` pid 5468, up
+5 h 51 m) and both serves (7502 animate, 6108 home) still answer; C1c's own
+`activate-s-react-dev` chain (pid 34630, 4 h 16 m, no output since its generate phase) was **killed by
+pid** as instructed — S2 owns the one cold `s` activation from here. No cargo was started by this
+slice in session 5b (48 `rustc` processes were running for the rest of the fleet).
+
+**The task: publish a minimal trusted catalog for one proven editor so the 13 steps can run.**
+Attempted, and it stops at a specific, nameable place — not at "no artifacts".
+
+What IS on disk and coherent (this was the open question, and the answer is better than expected):
+
+| artifact | path | measured |
+|---|---|---|
+| component wasm | `✏️s/🔌️plugins/🗒️note/…/dist/component-release/semio_s_plugin_note.wasm` | 14 503 410 B, sha256 `f227eba2c443c965…`, built 09-19 19:56 |
+| descriptor pack | `…/🔌️plugin/📦️packages/🟦️typescript/dist/release/🔌️plugin-modules/🗒️note/🛂️.descriptor.semio` | same build |
+| descriptor json | same dir, `🔣️.json` | `hashes.wasmSha256 = f227eba2c443c965…` — **matches the component byte-for-byte**; `coreWasmSha256 = 7ea971e4…` matches the staged core |
+
+So a fresh, self-consistent release triple exists for `🗒️note` (and for `🖍️draw` and `✒️writer`), and
+it needs **no cargo at all**. `os-hub trusted-catalog publish` is compiled into the staged binary —
+fed empty stdin it answers `ArtifactAuthority(Catalog("EOF while parsing a value"))`, i.e. it
+dispatches and parses, it is not an unknown verb.
+
+**Where it stops.** `TrustedBundlePackageV1` requires eleven fields
+(`🔏️trusted-catalog/🧬️schema/🔣️.json`), and three of them cannot be produced outside the product's
+own encoders:
+
+1. `browserActor` is **required for every package** — a closed browser actor artifact with its own
+   `sha256`, `policySha256`, `codegenPolicy` and `importInterfaces`, derived from the component by
+   `buildClosedBrowserActorArtifactV1` (jco codegen). There is no such artifact on disk for `note`;
+   only the gis path builds one today.
+2. `component.blake3` — a blake3 digest of the component, alongside the sha256.
+3. `profiles[].selectedClosureSha256` and `profiles[].generationId` are canonical digests over
+   domain-separated, length-prefixed encodings (`selected_closure_digest`, `🦀️.rs:823-832`, over
+   `b"semio/hub/trusted-profile-selected-closure/v1\0"` + a BE `u32` count + `append_document_open_catalog_field`
+   per field; `trusted_profile_generation` likewise).
+
+Reimplementing a security-critical canonical encoder inside a ticket probe to make an authority gate
+open is the wrong shape of work, and a bundle whose digests I had reverse-engineered would be evidence
+of nothing. So this was **not** done, and nothing was published.
+
+**The cheap unblock, located exactly, for whoever owns it (DS1).**
+`materializeTrustedStdioGisBundle` (`🌎️hub/📦️packages/🦀️rust/📜️script.ts:9407`) already performs
+every one of those steps — component production, descriptor read, closed-actor derivation, all
+digests, staging and `validateAndPublishTrustedStdioGisCandidate`. The only reason it cannot produce a
+`note`-only catalog today is two hardcoded spots inside it:
+
+```ts
+const requests = [
+  { pluginId: "stdio", cargoPackage: "semio-s-plugin-stdio", … },
+  { pluginId: "gis",   cargoPackage: "semio-s-plugin-gis",   … },
+];
+…
+if (request.pluginId === "gis") derivedActor = await buildClosedBrowserActorArtifactV1(component, …)
+```
+
+Parameterising that list (and deriving the actor for whichever package carries the open target) yields
+a catalog that **does not contain the oversized `stdio` descriptor at all** — which is the descriptor
+that fails `trustedBootstrapReadRegular` at `:9450` and is the whole of DS1's blocker. A `note`-only
+or `draw`-only trusted catalog would open `features.openPlan` for outcome 3 while the stdio bound is
+fixed separately, and its components are already built.
+
+**Steps 1-13: still 0 observed.** Unchanged from run 2, for the unchanged reason — `openPlan` is
+`false` on every hub in this tree. No presence screenshots exist; there is still nothing true to
+screenshot.
+
+### E2E run 4 (session 5b) — the generalisation, scoped against the real code, NOT landed
+
+Instruction: generalise `materializeTrustedStdioGisBundle` into a request-list verb, derive the
+browser actor for any plugin, publish a note+draw+writer catalog, open `openPlan`, run the 13 steps.
+I read the function and its callers end to end before editing, and stopped before editing, for two
+findings that change the cost — both measured, not estimated.
+
+**1. The stdio+gis shape is not a parameter, it is the function's type.** Beyond the `requests` array
+and the `if (request.pluginId === "gis")` actor line I named in run 3, the same closure is welded in at
+six more places:
+
+| place | what is welded | line |
+|---|---|---|
+| `projectTrustedBootstrapCodecsV1(stdio, gis)` | returns `Record<"gis" \| "stdio", Codec[]>`; both sources are hardcoded file paths (`🗄️stdio/…/native-codec-factories.json`, `🌍️gis/📇️native-codecs/🔣️.json`) | `:8759`, `:8857` |
+| exactness law | `codecs.stdio.length !== 26 \|\| codecs.gis.length !== 2` | `:9489` |
+| open target | the single `target` literal is gis Map (`s.gis.gismap`, `gis2d-main`, `rendererTarget: "wasm"`) | `:9497` |
+| `selectedClosure` / `packageSummary` | two hand-written entries, gis then stdio, with literal `codecCount: 2` / `26` | `:9493`, `:9509` |
+| `file(plugin: "gis" \| "stdio", …)` | the package emitter's parameter type, and `openTargets: plugin === "gis" ? [target] : []` | `:9540` |
+| rotation reader | `trustedBootstrapReadCurrentBundle` refuses any bundle whose `packages?.length !== 2` | `:9612` |
+
+and **three source-text guard tests assert on the literals** — `processConforms` matches
+`"await materializeTrustedStdioGisBundle("` (`:7192`), the retained-GIS proof requires the string
+`'"packages/gis/browser/closed-actor.mjs"'` and `gis.browserActor.sourceComponentSha256 !== gis.component.sha256`
+(`:8245-8249`), and `:8427-8431` pins the exact `validateAndPublishTrustedStdioGisCandidate(...)` call
+text in three callers. Generalising means rewriting those laws too, so they keep proving the same
+property for an arbitrary package set.
+
+**2. Even generalised, it cannot reuse the artifacts I found.** `produceFreshComponentV1`
+(`🖨️describe/🏭️fresh-component/🟦️.ts:256-259`) runs `cargo rustc … --target wasm32-wasip2 --profile
+wasm-release` into a private `CARGO_TARGET_DIR` with `CARGO_INCREMENTAL=0` — a cold build per package,
+sharing nothing. That is the point: "fresh" is the provenance property the trusted catalog exists to
+have, so feeding it the release wasm already on disk (run 3's table) would defeat exactly the
+guarantee being published. note+draw+writer therefore costs **three cold wasm-release component
+builds**, on a machine that had 48 `rustc` running and whose cargo queue deadlocked for four hours
+this morning.
+
+**Why I stopped rather than landed it.** This is a rewrite of the central function of a file DS1 is
+editing right now for descriptor regeneration (preamble rules 3 and 13), its correctness is carried by
+source-text laws I would have to rewrite in the same pass, and its payoff is gated behind three cold
+cargo builds I have no budget for and was told not to start. A half-landed generalisation in that file
+is worse than none: it would collide with DS1's hunks and leave the laws asserting on text that no
+longer exists. Recorded here so the next owner starts from the six places above rather than rediscovering
+them.
+
+**Steps 1-13: still 0 observed.** `openPlan` is still `false`; no catalog was published; no presence
+screenshots exist.
+
+### E2E run 5 (session 5b) — signed-in `s` host, two humans, observed
+
+S2's cold `s` boot (pid 26173, `http://127.0.0.1:6070/`, 60/60 staged — **not touched**) has no hub
+env: its serve carries `S_OS_PORT=6070` and no `S_HUB_URL`, and `/_semio/hub/readyz` there answers
+`text/html` (the SPA fallback), so no hub lane exists on it. A **second serve of the same staged
+output** was started — serve only, no activation — on a free port:
+
+```
+S_OS_PORT=6071 S_HUB_URL=http://127.0.0.1:7501 bun 📜️script.ts serve s react dev    # pid 33969
+$ curl -sD- http://127.0.0.1:6071/_semio/hub/healthz → 200, content-type: application/json
+```
+
+Probe `🐍️c1c-s-host-probe.mjs` (new, permanent), capture `🗑️generated/c1c-s-host.txt`, screenshots
+`c1c-s-host-user{1,2}-{before,after}.png` and `c1c-s-host-presence-user{1,2}.png` (10 in all with the
+identity and census runs).
+
+**A probe bug worth naming, because every emoji-path probe in this repo can have it.**
+`new URL("./🗑️generated/x.png", import.meta.url).pathname` percent-encodes **every** emoji segment,
+so playwright silently created a whole stray tree at
+`/Users/ueli/Documents/semio/.%F0%9F%A7%ACsemio/%F0%9F%A6%91%EF%B8%8Frepo/…/%F0%9F%97%91%EF%B8%8Fgenerated/`
+and wrote all ten screenshots there — no error, and the ticket folder simply had no images. They were
+moved into `🗑️generated/`, the stray tree was removed (verified empty first), and all three C1c probes
+now use `fileURLToPath(new URL(…))`. Any probe that spells a screenshot or capture path with
+`.pathname` under this repo's emoji directories is writing outside the ticket folder.
+
+| # | check | result |
+|---|---|---|
+| 1 | the `s` host renders its hub badge signed out | **PASS** (`signInOffered: 1`) |
+| 1 | Home refuses its surface without a signed-in human | **PASS** — `identityFault: true`, `homeSurface: false` |
+| 2 | the human is signed in inside `s` | **PASS** (`signInOffered: 0`) |
+| 2 | **Home no longer answers `s.home.session-identity-required`** | **PASS** — `identityFault: false` |
+| 2 | the host app surface is published | **FAIL** — `s-home-main` still absent after 120 s |
+| 2 | the command palette tab is present | **PASS** |
+| 3 | both humans signed in at once, two contexts, one `s` host | **PASS** (`[0, 0]`) |
+| 4 | presence rosters | 0 and 0 — expected without `openPlan` (beats ride the document socket) |
+
+**What this settles.** The transition is observed on the SAME page with no reload, for both humans:
+`s.home.session-identity-required` is present before the sign-in and gone after it. That is C1c's
+ShellHost re-assembly fix (§S5.4 finding 1) working at runtime for the first time, and it is the
+blocker S2's foreign-kind probe stops on. The `s` host also accepts two distinct signed-in humans
+concurrently — outcome 3's identity half, now inside the real host rather than a playground.
+
+**What it does not settle, precisely.** Clearing the fault is necessary but **not sufficient**:
+`refreshUi` talks to the actor that already stopped (`actor space#1 stopped … status=idle`), so the
+box disappears while `s-home-main` is never published. The missing half is re-**establishing** the
+session, not refreshing it — and the file already has that recovery shape: `establishPrimaryWithShardRetry`
+(`🏛️ShellHost/🟦️.tsx:3742`) and the "a LIVE session whose worker was taken down is recoverable
+exactly the way a killed boot is" path at `:3759`. The change is to run that recovery when the
+**human** component of the session key changes (every surface assembled under `sessionIdentity:
+undefined` is invalid anyway), rather than only `refreshUi`. It was **not** made: it is a structural
+change in the region S2 edited this session (`:3675+`), each verification cycle against a live `s`
+shell is ~12 min, and I had no budget left to verify it — an unverified structural edit there is worse
+than none. Whoever takes it can re-run `🐍️c1c-s-host-probe.mjs` unchanged to judge it; check 2's
+surface row is the pass/fail.
+
+Document steps (live edit, undo, convergence, restart) remain blocked on DS1's published catalog and
+were not attempted.
+
+### S5.1 Two humans, two browsers, one hub — observed, 19/19
+
+`bun 🐍️c1c-identity-probe.mjs http://127.0.0.1:7502 http://127.0.0.1:7501`, capture
+`🗑️generated/c1c-identity.txt`, screenshots `c1c-identity-user1.png` / `c1c-identity-user2.png`:
+
+```
+PASS 1 the badge is rendered / offers sign-in while signed out / no blocking notice / nothing minted before a human asked
+PASS 2 the badge no longer offers sign-in · POST /auth/sessions 200 · GET /auth/sessions/me 200 · capability remembered for this context
+PASS 3 the reloaded shell is signed in again · no second session was minted · it re-read the hub's own authority · the user id survived
+PASS 4 the second context starts signed out · the second human is signed in · the first human is still signed in
+PASS 4 the two browsers hold two DIFFERENT hub principals
+PASS 5 the worker reached the hub through its own same-origin lane · every worker hub request carried a session bearer · no retired broker proof
+c1c-identity: all checks passed
+```
+
+The two principals are the hub's own: `01a0bbc1-126b-758b-a461-e6b9763fdb99` (user1@semio.dev) and
+`01a0bbc1-63dc-7354-a4cc-14302245c2ff` (user2@semio.dev), provisioned through
+`os-hub credential set` and signed in through the shell's own form — no launcher, no relay, no
+`#semio-broker=` fragment on any request (check 5 asserts that). This is C1b §12.1 closed: **the
+React shell now has a two-user identity path and it was observed at runtime.**
+
+Note the two humans share ONE dev server origin. That is a consequence of §15's rework, not an
+accident: identity is now a `sessionStorage` capability per browsing context, so two contexts on one
+origin are two humans. The harness's per-user `S_OS_PORT` pair is no longer required for identity.
+
+### S5.2 Root fix — one transient `me` failure permanently signed a shell out
+
+**Found live, not by reading.** On the first two-user run, check 4 "the first human is still signed
+in" FAILED: user1's shell, signed in and refreshing happily for minutes, was signed out the moment
+user2's context signed in on the same dev server. Isolated with `🐍️c1c-session-lifetime.mjs`
+(capture `🗑️generated/c1c-session-lifetime.txt`): one shell alone held its authority for the whole
+90 s window, refreshing `GET /auth/sessions/me` every 5 s, 45/45 samples `signInAffordance=0`. So it
+was not a lifetime or a shared-worker defect — it was the second page's boot (≈900 module
+transforms) queueing the first shell's proxied `me` past its deadline.
+
+`startDirectorySessionRefreshV1` treated **every** non-200 as a refusal:
+
+```ts
+if (response.status !== 200) throw new Error("directory.session-authority.unavailable");
+…
+} catch { close(); options.onUnavailable(); }      // ← closed the loop for ever, on one hiccup
+```
+
+`onUnavailable` nulls `verifiedSessionAuthority`, and the loop was closed, so nothing ever retried.
+A shell was signed out for the rest of the page's life by a queued request — and the brief's "short
+connection loss with catch-up" could never have passed for the same reason.
+
+Fixed at the root, `🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🪪️session-refresh/🟦️.ts`:
+
+- `DIRECTORY_SESSION_AUTHORITY_REFUSAL_STATUSES = [401, 403]` (`:11`) — the only answers *about the
+  session*. An expired parsed authority is the other one.
+- everything else (transport throw, gateway status, a proxy's HTML error page) is transient: retried
+  on `directorySessionRefreshRetryDelayMsV1` (`:38`), 500 ms doubling to a 5 s ceiling, **keeping the
+  authority already verified**, bounded by that authority's own `expiresAt` — once it has passed
+  there is nothing left to ride out and the next failure retires it.
+- new optional `onDegraded(boolean)` reports the transient window's two edges, wired in
+  `🏛️ShellHost/🟦️.tsx:3537` to `setIdentityOffline` only — the session is *not* torn down.
+
+Laws added to the existing corpus (`🪪️session-refresh/🔣️.json` + `🧬️.schema.json` gained
+`transientFailures` and `retryDelaysMs`; `refusals` narrowed to `http-401`/`http-403`/`expired`), in
+`🧪️tests/🧪️space-artifact-creation-owner/🟦️.ts`: each of five transient shapes keeps the authority,
+reads on exactly the fixture's backoff, reports `[true]` then `[true,false]` degraded edges and never
+calls `onUnavailable`; a loss outliving the session's own deadline does retire it; the delay function
+matches the fixture and refuses attempt 0.
+
+```
+$ bun ./📜️script.ts test long "👷️worker" -t "refreshes Shell session authority"
+Test Files  1 passed (1)     Tests  1 passed | 111 skipped (112)
+```
+capture `🗑️generated/c1c-session-refresh-test.txt`. With it in place the two-user probe went
+18/19 → **19/19** (§S5.1) against the same hub and the same shells.
+
+### S5.3 Harness fix — the sign-in click was ambiguous
+
+`collabSignIn` (`🤝️collaboration/🟦️.ts:265`) clicked `button[type="submit"][aria-busy]`, which
+resolves to **two** elements in the live workspace overlay ("Sign in" and a disabled "Join space") —
+playwright strict-mode violation, so every harness run would have died in sign-in before step 1. The
+same bug was in `🐍️c1c-identity-probe.mjs`. Both now click
+`button[type="submit"][aria-label="Sign in"]`. Found by running it, not by reading it.
+
+### S5.4 Why the collaboration steps still cannot run — and exactly what it will take
+
+With the identity path live, the obvious next move was to skip the 60-crate `s` activation and drive
+the space Home from the `home` playground variant, whose activation receipt is fresh on disk
+(`dist/runtime/react/dev/home/activation/🔣️receipt.json`, `space` @ `ad15ab32…`, 01:08 today). A
+`home` react dev serve was started against the live hub (port 6108, pid 4842,
+`🗑️generated/c1c-home-serve.txt`) and censused signed-in (`🐍️c1c-home-census.mjs`, capture
+`🗑️generated/c1c-home-census.txt`, screenshots `c1c-home-census*.png`). The shell boots, signs in and
+renders `#s-presence-peers` — and the Home app refuses its own surface:
+
+```
+PluginRuntime: actor space#1 stopped without publishing requested UI surfaces
+  (missing=["1:s-home-main"], status=idle,
+   faults=["plugin.internal: s.home.session-identity-required: current host session identity is required"])
+tableHosts: 0   rows: []
+```
+
+Two distinct findings came out of chasing that, both verified in the source after being seen live:
+
+1. **The shell never re-assembled a plugin surface when a human signed in.** `resolvedTargetViewState`
+   (`🏛️ShellHost/🟦️.tsx:4595`) stamps `sessionIdentity` from `identityRef.current` at plugin-call
+   time, but the effect that re-renders the session was keyed on
+   `pluginId:app:instanceId` only (`:5376`). A shell that boots local-first — the ordinary state:
+   hub configured, nobody signed in yet — assembled Home identity-less, and nothing re-ran it after
+   sign-in. **Fixed**: the key now carries the signed-in human
+   (`…:${identity?.userId ?? ""}:${identity?.displayName ?? ""}`), so signing in, signing out and
+   switching humans each re-assemble the active session's surfaces.
+2. **The `home` variant can never show the spaces table, by design.** `resolvePluginHostConfig`
+   (`🧰️framework/🔨️modules/🎠️kernel/🟦️.ts:3186`) returns `undefined` for any playground row that
+   names an `app`, and `🪐️space`'s `home` row names `s.space.home@1/*#editor`. No host config ⇒
+   `hostMode === false` ⇒ no `hostPlugin`/`landingApp` ⇒ the directory bootstrap effect
+   (`🏛️ShellHost/🟦️.tsx:3563`, the one that opens the Home owner *with* `identity`) is guarded off
+   entirely. Only the `s` variant is the host. So fix 1 is landed but **not yet observable**: proving
+   it needs the same `s` shell the scenario needs.
+
+That is the whole remaining chain for outcome 3: `semio-framework-trace` + `semio-framework-replication`
+green ⇒ `🧱️block` builds ⇒ `activate-s-react-dev` completes ⇒ two `s` shells ⇒ steps 1, 2, 5, 6, 7
+are reachable on this hub today, and steps 3, 4, 8, 10-13 additionally need DS1's
+`features.openPlan` (§16) because every one of them opens a document.
+
+### S5.5 Honest gaps
+
+- **The 13-step scenario has never been run.** Not by C1, C1b or C1c. §"E2E baseline (session 5)"
+  states the exact blocker and capture.
+- **Presence colours, cursors and rosters with two users: not observed** (coordinator addendum 2).
+  `#s-presence-peers` exists in the React shell and reads "No one else is here" for a lone signed-in
+  human (`c1c-home-census.txt`); the roster/colour/`online` assertions need two shells in ONE space,
+  which needs the host variant. `collabPresenceColors` (`🤝️collaboration/🟦️.ts:466`) already reads
+  *computed* border colours, so the distinctness assertion is not vacuous when it does run. No
+  `c1c-presence-*.png` exists, deliberately: there is nothing true to screenshot yet.
+- **Fix 1 of §S5.4 is landed but unobserved** for the reason in that section.
+- **Six worker tests were red from the predecessor's broker→capability rework; five are fixed, one is
+  left.** They all failed with `Error: hub session rebootstrap required` from `hubSessionFetch`
+  (`👷️worker/🟦️.ts:768`) because the `gis map inference port` harness still installed a retired
+  64-hex *proof* where the worker now demands a `session.v1.…` capability
+  (`HUB_SESSION_CAPABILITY_PATTERN_V1`). Fixed by finishing that migration in the corpus, not by
+  loosening the pattern: `🧫️fixtures/💡️gis-map-inference-port-v1/🔣️.json`'s `successorProof` is now
+  `successorCapability` with a capability value, `🧬️schema/🔣️.json` gained
+  `GisMapInferencePortSessionCapability`, the harness installs `WORKER_LAW_CAPABILITY`, the three
+  header assertions compare `Bearer <capability>` (they compared a bare proof), and the retirement
+  law asserts the session port's own statuses — `401` when the hub said the capability is gone, `503`
+  otherwise (`👷️worker/🟦️.ts:838`); the broker-era `428` it asserted has no producer left in the
+  worker at all.
+
+  ```
+  $ bun ./📜️script.ts test long "👷️worker" -t "session"
+  before: Tests  6 failed | 11 passed | 95 skipped (112)
+  after:  Tests  1 failed | 16 passed | 95 skipped (112)
+  ```
+  capture `🗑️generated/c1c-worker-session-tests.txt`.
+
+  The last one was resolved by taking the contract decision rather than fitting the assertion:
+  **retirement follows the hub's authority over the session, not the shape of one answer.** `401`
+  (the hub saying the capability is gone, `👷️worker/🟦️.ts:779-782` → `clearHubSessionCapability`)
+  and a capability replaced mid-flight (the human's own switch) retire every owner, bump
+  `directorySessionEpoch` and drop the open artifacts. A `201` or an unparsable body is the link
+  failing to *confirm* the session and says nothing about it: `acceptBrowserSessionAuthority` refuses
+  the read — the caller sees `503` and retries — and the authority already accepted is kept. That is
+  the same law §S5.2 established one layer up in the shell's revalidation loop; before this slice both
+  layers signed a shell out for ever on one hiccup, and the old assertion encoded exactly that
+  broker-era behaviour. Final: **17 passed, 0 failed** on `-t session`.
+
+- **Eight `backbone-worker offline resilience` laws plus `DirectoryEventPageBootstrapV1` are red and
+  are NOT this slice's doing** — verified, not assumed: run in isolation with `-t "offline resilience"`
+  (so none of the tests C1c touched execute at all) they still fail 8/8
+  (`🗑️generated/c1c-worker-offline-isolated.txt`); the full file is 103 passed / 9 failed
+  (`c1c-worker-suite.txt`). They fail on `browser directory operation denied` and missing
+  `open-plan`/`manifest` routes — the same proof→capability rework debt, in a different test family,
+  and no product file the worker uses was edited by this session.
+- **A mid-edit hub restart** (steps 9/10) was not attempted: restarting the hub with no scenario able
+  to reach step 1 proves nothing.
+
+### S5.6 Files changed by C1c in session 5
+
+| File | Change |
+|---|---|
+| `🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🪪️session-refresh/🟦️.ts` | transient-vs-refusal split, bounded retry backoff, `onDegraded`, `directorySessionRefreshRetryDelayMsV1`, `DIRECTORY_SESSION_AUTHORITY_REFUSAL_STATUSES` |
+| `…/🪪️session-refresh/🔣️.json`, `…/🧬️.schema.json` | `transientFailures` + `retryDelaysMs` corpus; `refusals` narrowed to the three authoritative shapes |
+| `🧰️framework/🛍️products/💻️os/🧪️tests/🧪️space-artifact-creation-owner/🟦️.ts` | new laws for the transient window, the degraded edges, the expiry bound and the delay function; the `gis map inference port` harness finished its proof→capability migration (5 of 6 red laws green) |
+| `🧰️framework/🛍️products/💻️os/🧫️fixtures/💡️gis-map-inference-port-v1/🔣️.json`, `🧰️framework/🛍️products/💻️os/🧬️schema/🔣️.json` | `successorProof` → `successorCapability` with a `session.v1.…` value and its own `$def` pattern |
+| `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🟦️.tsx` | `onDegraded` → `setIdentityOffline` without retiring the session (`:3537`); the session-refresh key carries the signed-in human (`:5383`); `attachSyncBackbone` decodes `remote://` with `parseRemoteBackboneUri` so the uri's own space and document ids survive (`:6454-6475`) |
+| `🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🤝️collaboration/🟦️.ts` | `collabSignIn` clicks the unambiguous `aria-label="Sign in"` submit |
+
+Ticket folder (not product code): `🐍️c1c-identity-probe.mjs` (selector fix),
+`🐍️c1c-session-lifetime.mjs` (new), `🐍️c1c-home-census.mjs` (new), captures
+`🗑️generated/c1c-identity.txt`, `c1c-session-lifetime.txt`, `c1c-session-refresh-test.txt`,
+`c1c-home-census.txt`, `c1c-home-serve.txt`, `c1c-activate-s-react{,-2}.txt`, screenshots
+`c1c-identity-user{1,2}.png`, `c1c-home-census{,-reloaded}.png`.
+
+Processes started by this session, by pid: `home` react dev serve **4842** (port 6108),
+`activate-s-react-dev` **77973** (run 1, exited on the `🧱️block` cargo failure after 13 min) and
+**34630** (run 2, still in its generate phase at hand-off, capture
+`🗑️generated/c1c-activate-s-react-2.txt` — check it before starting a third). The inherited hub
+(4409/5468, port 7501, credential sign-in on, both humans provisioned) and the animate serve (43068,
+port 7502) were left running: **the successor can re-run `🐍️c1c-identity-probe.mjs` against them in
+under two minutes** rather than rebuilding any of it.
+
+Next worker's shortest path, in dependency order — and the order matters, because run 2 proved the
+hub is the binding constraint, not the host:
+
+1. **DS1's `openPlan` first.** Until `artifact_authority.catalog.open_target_count() > 0`
+   (`🌎️hub/🏗️bootstrap/🦀️.rs:9481`) no browser can open a shared document on any hub in this tree,
+   so steps 3-5 and 8-13 are unreachable no matter which shell is served. This is the single
+   highest-value unblock for outcome 3.
+2. **`s` activation** for steps 1, 2, 6 and 7 (the Home/Space tables, which need host mode). Watch
+   `c1c-activate-s-react-2.txt`; if it dies on `semio-framework-trace` /
+   `semio-framework-replication` again, that is the peers' tree — wait, do not patch. S2's healthy-set
+   rule (`📓️s2-cold-s-boot-and-foreign-kind-open.md` §2.1) now lets an activation exclude a broken
+   component instead of aborting, which is why run 2 got past where run 1 stopped. S2 had no `s`
+   receipt of its own at 01:46, so there was nothing to share; check again before starting a third
+   activation.
+3. With both: `serve s react dev` (one port is enough — see §S5.1), sign the two provisioned humans
+   in through the badge, and the whole 13-step scenario is reachable. Verify the §S5.4 re-assembly fix
+   there — Home must stop answering `s.home.session-identity-required` once a human signs in — and the
+   run-2 `remote://` fix by attaching two contexts to one `remote://127.0.0.1:7501/<space>/<doc>`.

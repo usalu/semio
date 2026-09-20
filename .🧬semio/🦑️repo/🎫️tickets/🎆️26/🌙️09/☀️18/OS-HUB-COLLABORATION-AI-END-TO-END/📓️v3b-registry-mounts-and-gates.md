@@ -8,6 +8,36 @@ Captures: `🗑️generated/v3b-*.txt`. Status: **IN PROGRESS** — sections fil
 
 ---
 
+## 0a. Session 4 (2026-09-19 23:20 →) — re-measured baseline
+
+Sessions 1–3 of this slice died mid-way. Everything §1–§5 below claims to have landed was verified
+present in the tree at the start of session 4 (auto-commit had taken it): `RustModuleIncludeFact` +
+`frozenCoordinateEvidenceSeal` + the `🗑️generated` skip entry in
+`…/📚️library/🔍️discovery/🟦️.ts`, `isRepositoryTestCaseAdapter`/`includeClosure`/`TEST_FEATURE_FILENAME`
+in `…/📇️registry/🗿️taxonomy-validation/🟦️.ts` (the file has since been consolidated, so the line
+numbers quoted in §1 have moved), and the 75 `📸️set-snapshot` facet mounts (spot-checked at
+`🗿️artifacts/🎒️zip/…/🧬️mutations/📸️set-snapshot/🦀️.rs:9-12`).
+
+Re-measured at the start of session 4 (`🗑️generated/v3b-s4-check-1.txt`, exit 1, 35 min under a
+load-150 fleet):
+
+| family | V3b session 3 | session 4 start | owner |
+|---|---|---|---|
+| `plugin-registry check` total | 1363 | **619** | — (V3a's schema-lane work took ~730) |
+| `unreachable-from-cargo-manifest` | 415 | **333** | V3b |
+| subset directory lanes (`📚️examples/` 66, `🚪️io/` 48, `🧬️schema/` 13, `🏅️standards/` 4, misc 2) | 133 | **133** | V3b |
+| mode `is missing required child` | 61 | **61** | V3b |
+| example-content lanes (`🦀️.rs`/`🟦️.ts` 46, `🧪️tests/` 22, `🖼️assets/` 10) | — | **78** | V3b |
+| taxonomy-owner decisions (plugin-root leaves, `🔌️plugin` nesting, window child, surface leaves) | 45 | **17** | V3b (11 of the 17 are `📕️norm` schema lanes → V3a) |
+
+**A faster re-measure exists now.** `CheckScript` reaches the taxonomy rows only after rendering the
+whole catalog (35 min under fleet load); the rows themselves come from `validateTaxonomyTree` over
+`findNewContractPluginRoots`. `🐍️v3b-taxonomy-census.ts` (this folder) calls that pair directly — the
+gate's own code — and prints the same rows with a family histogram in ~6 min
+(`🗑️generated/v3b-s4-census-before.txt`: `plugins=34 findings=632`).
+
+---
+
 ## 0. Headline
 
 | # | Item | Before | After |
@@ -16,14 +46,14 @@ Captures: `🗑️generated/v3b-*.txt`. Status: **IN PROGRESS** — sections fil
 | 1 | `unreachable-from-cargo-manifest` | **892** | **415** — 477 were two gate defects, both now compiler-checked (§1) |
 | 1 | `rust-taxonomy-mounts-check` oracle cases | 10 | **12**, `compiler=12`, exit 0 |
 | 1 | unmounted `📸️set-snapshot` behaviour facets | 75 across 28 artifacts | **0** — mounted; all **17** affected crates `cargo check` exit 0 |
-| 2 | directory lanes (133 subset + 61 mode) | 194 | _pending_ |
-| 2 | taxonomy-owner decisions | 45 | _pending_ |
+| 2 | directory lanes (133 subset + 61 mode) | 194 | **133** — the 61 mode lanes landed (§S5.1); the 133 are migration backlog (§S5.2) |
+| 2 | taxonomy-owner decisions | 45 | **13**, each decided in writing (§S5.5) |
 | 3 | `verify interactivity apps` | **776 failures** (the "25" in status.md was `selfTests=25`) | **44**, all one real family (§3) |
 | 3 | …its discovered surface | descriptors 3, apps 14, actions 487 | descriptors **45**, apps **127**, actions **6254** |
 | 3 | …its self-tests | 25 | **29** |
 | 4 | dead `frozenCoordinateEvidenceContracts` | 28 | **0 unrecorded** — all 28 retired with ticket + reason, seal digest unchanged (§4) |
 | 4 | `🕰️historical-json-source-encoding` suite | 17 pass / 3 fail | **21 pass / 1 fail**; the 1 is a seal that never matched its own birth commit |
-| 5 | `verify layering` / deps literal-external / deps freeze / package-purity | 213 / 236 / +7 / 434 | _pending_ |
+| 5 | `verify layering` / deps literal-external / deps freeze / package-purity | 213 / 236 / +7 / 434 | **218 / 236 / +7 / 430** — triaged in §5, one gate defect fixed (−595) |
 
 ---
 
@@ -146,9 +176,107 @@ dependencies; both cleared on retry with the mounts unchanged.
 
 ---
 
+## 1b. Session 4 — the remaining 333 unreachable mounts → **0**
+
+```
+🗑️generated/v3b-s4-census-before.txt      unreachable-from-cargo-manifest = 333   (findings 632)
+🗑️generated/v3b-s4-census-after-mounts.txt                                =   1   (findings 286)
+🗑️generated/v3b-s4-census-mounts-zero.txt                                 =   0   (findings 285)
+```
+
+### 1b.1 327 leaves were missing their mount, and the placement is mechanical
+
+Every one of the 333 is a file on disk that `rustc` never compiles. The taxonomy's own answer — used by
+every mounted sibling — is that the **nearest ancestor component leaf** mounts the child by a literal
+`#[path]` relative to itself (`…/🧬️mutations/🎛️sampler/🚚️move/🦀️.rs:77` mounts
+`🧪️tests/🔬️direct-leaf/🦀️.rs` exactly that way). `🐍️v3b-mount-repair.ts` (this folder) reproduces that
+placement:
+
+* host = closest ancestor directory whose `🦀️.rs` is itself reachable (an unreachable ancestor would
+  only move the problem up a level), falling back to the plugin root leaf;
+* a leaf under a `🧪️tests` segment mounts as `#[cfg(test)] mod`, everything else as `pub mod`;
+* the module identifier is the shortest path suffix at which **all** of that host's new mounts differ
+  from each other and from the modules the file already declares — so `📤️export/🧵️serializers/…` and
+  its `📥️import` twin get symmetric names instead of `artifacts` / `deserializers_artifacts`;
+* every host is re-read immediately before it is written (peers edit these crates concurrently) and a
+  leaf already carrying its `#[path]` in the host is skipped, so re-running changes nothing.
+
+Landed: **327 mounts across 210 host files in 23 plugins** (`🗑️generated/v3b-s4-mount-apply.txt`;
+`🗄️stdio` 206, `📕️norm` 53, `🌊️flow` 11, then ≤5 each). By family: ~130 mutation test-case leaves
+(`🧬️mutations/<entity>/<verb>/🧪️tests/<case>/🦀️.rs` — substantial authored oracles that reference
+`crate::schema::mutations::…` and were never compiled), 55 `🧪️tests/🧩️example/🦀️.rs`, 34
+`📚️examples/🎬️demo-session/🦀️.rs` + ~20 `📚️examples/<slug>/🦀️.rs`, 31 `🧪️tests/🔬️unit/🦀️.rs`, and the
+plugin-root facet leaves (`🎟️capabilities`, `🔧️setup`, `🪪️manifest`/`📜️manifest`).
+
+### 1b.2 Two `🧊️gltf` barrel leaves — mounted by hand, against the count
+
+`🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🦀️.rs` and `…/🪆️subsets/♾️any/🦀️.rs` carried docstrings asserting
+they are "deliberately empty … not part of any `mod` tree" because the artifact root builds those two
+coordinates as inline `#[path = "."]` barrels. **Measured, and the docstring was wrong about the
+siblings:** 31 standard-level and 31 subset-level leaves exist under `✏️s/🔌️plugins`, and **29 of each
+are mounted** (e.g. `✒️writer/🗿️artifacts/✒️writer/🦀️.rs:235,242`); gltf was the only outlier at both
+levels. So they were mounted into their own barrels as `mod component; pub use component::*;`, the
+shape the other 29 use, and both docstrings were rewritten to say so.
+
+### 1b.3 Gate defect C — an escaped-quote char literal blinds the whole module graph of a file
+
+The last remaining finding, `🗄️stdio`'s
+`🗿️artifacts/📰️xml/…/🧬️schema/📸️snapshot/🧪️tests/🔬️unit/🦀️.rs`, was mounted correctly at
+`📸️snapshot/🦀️.rs:773` and still reported unreachable. `🐍️v3b-mount-probe.ts` (this folder) rebuilds
+the gate's own graph for one plugin root: the host file had **1 context and 0 modules** — the parser
+saw no `mod` at all in it. A suffix bisect put the break at `📸️snapshot/🦀️.rs:294`:
+
+```rust
+out.push('\"');
+```
+
+`rustTokens` (`…/📚️library/🔍️discovery/🟦️.ts:6495` before the fix) read a character literal as exactly
+`'x'` — three characters. `'\"'` is four, so the `'` fell through to punctuation, the `\` fell
+through to punctuation, and the `"` **opened a string** that ran to the next `"` in the file. Every
+token from there to EOF was mis-lexed and the file's module graph vanished. `'\n'`, `'\\'` and `'\''`
+mis-lex too but harmlessly; only the `"` escape swallows code, which is why this went unseen.
+
+Fix: `…/📚️library/🔍️discovery/🟦️.ts:6495-6510` reads the literal through its escape sequence
+(`\n`, `\\`, `\'`, `\"`, `\xNN`, `\u{…}`) and leaves a `'` that does not close that way as a
+lifetime/label tick. The old `'x'` path is subsumed exactly.
+
+**Compiler-checked, not self-asserted.** `RustTaxonomyMountsCheckScript` compiles each fixture case
+with a real `rustc` and compares the registry's verdict against the compiler's dep-info. New case
+`escaped-quote-char-literal-before-a-mount`
+(`…/📇️registry/🧫️fixtures/🕸️rust-taxonomy-mounts/🔣️.json`, schema `cases` 12 → 13 at
+`…/📇️registry/🧬️schema/🔣️.json:145-146`): a leaf mounted **after** `out.push('\"')` and
+`out.push(b'\"' as char)`, with `rustcSuccess: true` and `expectedUnmounted: []`. Before the fix the
+registry calls that leaf unmounted while rustc compiles it, so the case fails.
+
+```
+$ bun ./📜️script.ts rust-taxonomy-mounts-check
+registry-rust-mounts-oracle cases=13 ajv=1 compiler=13      # exit 0 (🗑️generated/v3b-s4-mounts-oracle.txt)
+```
+
+Blast radius outside this slice: only **3** authored `.rs` files in the repo carry `'\"'` —
+`✏️s/🔌️plugins/🗄️stdio/…/📸️snapshot/🦀️.rs`, `🧰️framework/🔨️modules/🧮️math/🎯️sampling/🦀️.rs` and
+`🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🦀️.rs` — but `rustTokens` feeds every Rust
+analysis in the repo product, so those two framework files were silently invisible to all of them.
+
+### 1b.4 Compile proof — blocked by a fleet-wide cargo deadlock (honest gap)
+
+The mounts are `#[path]`/`mod` lines only, and `#[cfg(test)]` leaves need `--all-targets` to be
+type-checked, so the proof wanted is `cargo check -p <crate> --all-targets` over the **47 crates**
+that own the 210 edited files (`🐍️v3b-touched-crates.ts` → `🗑️generated/v3b-s4-crates.txt`;
+`semio-s-artifact-stdio-gltf` alone owns 121). That proof is **not yet obtained**: see §6.1.
+
+---
+
 ## 2. 194 directory lanes + 45 taxonomy-owner decisions
 
-_pending_
+**Answered in session 5** — the three sections below carry the measured verdicts:
+
+* the **61 mode lanes** landed to **0** (§S5.1) and turned up a marker-filename drift on the way;
+* the **133 subset lanes** and **78 example-content lanes** are *not* a gate defect but the unfinished
+  tail of the `subset_conformance_roundtrips` migration, whose own plan forbids the shortcut that
+  would have closed them — left red on purpose, with the per-shape census (§S5.2);
+* the taxonomy-owner decisions, down from 45 to **13**, are each decided in writing in §S5.5, with the
+  evidence and the owner named; 4 more turned out to be one gate defect (§S5.4).
 
 ---
 
@@ -427,10 +555,421 @@ ownership. Recorded with the exact `file:line` rather than guessed at.
 
 ## 6. Honest gaps
 
-_pending_
+### 6.1 The whole machine's cargo is deadlocked — no Rust compile proof this session
+
+At 2026-09-20 00:0x the machine had **30 live `cargo` processes and zero `rustc`**, and the shared
+build dir had not been written to in three minutes
+(`find .🧬semio/🦑️repo/⚡️cache/cargo/build/debug -newermt '-3 minutes'` → 0). `sample` on the holder of
+`…/build/debug/.cargo-build-lock` (pid 936, a peer's `cargo test`, launched 23:23) shows its worker
+threads in:
+
+```
+cargo::core::compiler::prebuild_lock_exclusive → LockManager::lock → flock
+```
+
+i.e. it holds the profile lock and dozens of per-unit locks while itself blocking on another unit
+lock — the `fine-grain-locking` deadlock recorded for this repo. Every other cargo, mine included
+(`cargo check -p semio-s-plugin-writer --all-targets`, pid 52605, queued 19 min with no progress), is
+behind it.
+
+I did not kill it: worker rule 15 forbids killing processes I did not start, and every one of these
+belongs to a peer slice. **Consequence: none of the 327 mounts is compile-verified in this session.**
+The mounts are `#[path]`/`mod` lines whose placement follows the convention already proven by the 13
+compiler-checked oracle cases, but that is a structural argument, not a type-check. The exact command
+that closes this gap, once the fleet's build dir is unwedged, is one cargo over the 47 owning crates:
+
+```
+cargo check --all-targets $(sed -n 's/^-p /-p /p' 🗑️generated/v3b-s4-crates.txt | tail -1)
+```
+
+(the `=== -p list ===` line of `🗑️generated/v3b-s4-crates.txt`). Expect real work there: the ~130
+mutation test-case leaves have never been compiled, so some of them will have drifted from the APIs
+they call. Coordinator: this deadlock blocks **every** Rust slice, not just V3b.
+
+---
+
+## Session 5 (2026-09-20 ~01:30 →)
+
+### S5.0 What session 4 actually left behind — verified by diff before touching anything
+
+Session 4 ended mid-unmount. Verified in the tree at the start of session 5:
+
+* the `🧊️gltf` unmount **completed**: `🐍️v3b-unmount.ts` removed the 120 mount blocks it was given
+  (`🗑️generated/v3b-s4-unmount-gltf.txt` is the target list), the whole `🧊️gltf` artifact is back to
+  **8 changed files** in `git diff --stat`, and `🗑️generated/v3b-s4-cargo-gltf2.txt` ends
+  `Finished dev profile … in 1m 06s` — so `semio-s-artifact-stdio-gltf --all-targets` compiles again.
+  No half-applied host file: the only `#[path]` mounts left in `🧊️gltf` are the pre-existing ones.
+* the `📕️norm`/`🌊️flow`/rest of the session-4 mounts are still in the tree (207 of the 327).
+* `🗑️generated/v3b-s4-cargo-groupA.txt` stops mid-`semio-framework-plugin` — that run was cut, not failed.
+
+Re-measured baseline with the fast census (`🗑️generated/v3b-s5-census-before.txt`, ~90 s):
+
+```
+plugins=34 findings=405
+  120 unreachable-from-cargo-manifest      ← all 120 are 🧊️gltf mutation test-case leaves (§S5.3)
+  133 subset directory lanes (📚️examples 66, 🚪️io 48, 🧬️schema 13, 🏅️standards 4, misc 2)
+   61 mode "…" is missing required child   ← landed to 0 (§S5.1)
+   78 example-content lanes (🦀️.rs 23, 🟦️.ts 25, 🧪️tests 25, 🖼️assets 13, surface 2)
+   13 owner decisions (surface/window/🔌️plugin/plugin-root)
+```
+
+### S5.1 61 mode lanes → 0 — landed, and it exposed a marker-filename drift
+
+`validateTaxonomyTree:573-577` states the law in its own comment: *"a mode declares its windows plus
+its own 🎚️config / 👥️presence / 🫧️transient lanes; an empty lane is valid (it carries only the tracked
+marker), an absent lane is not."* All 61 were `📕️norm`'s 15 viewer `👁️view` modes (4 lanes each, 60)
+plus `🪐️space`'s editor `✏️edit` missing `🎮️commands`. The neighbouring `🗒️note` viewer resolves exactly
+this situation with four empty markers, so the lane is the declared shape, not a silencer.
+
+`🐍️v3b-mode-lanes.ts` (this folder, idempotent) writes them with the scaffolder's **own** emitter
+(`scaffoldEmptyFacetMarkdown`), not a hand-copied body. Its independent count matched the gate's:
+**61 missing, 61 created, 16 modes, 305 modes walked**; a second run reports `missing=0`
+(`🗑️generated/v3b-s5-mode-lanes-dryrun.txt`, `…-apply.txt`).
+
+**Gate defect D — the scaffolder writes a marker filename no lane on disk uses.**
+`🗿️taxonomy-validation/🟦️.ts:175` derived `WINDOW_EMPTY_FACET_FILENAME` from the file **kind**
+(`windowEmptyFacetFileKindId` → `markdown` → generic `📝️.md`), while the taxonomy's projection
+contract `semanticOwnedFileProjectionContracts["artifact-empty-facet-primary-markdown-v1"]` names the
+**file** — `sourceFilename: "📌️.empty.md"` — and cites that same kind as its `fileKindAuthority`.
+The gate's sibling constant `PLUGIN_EMPTY_LANE_FILENAME` (`:164`) already resolves it correctly.
+Measured: **4265 `📌️.empty.md` markers** in the plugin tree against **4 `📝️.md`**, and three of those
+four are wfc lanes written 2026-09-18 by the *other* emitter
+(`🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️authoring/🧱️contract/🟦️.ts:13`, "Authored by
+`bun ./📜️script.ts new …`") — i.e. the drift is live and producing files right now.
+
+Fixed at `🗿️taxonomy-validation/🟦️.ts:175` (now `= PLUGIN_EMPTY_LANE_FILENAME`, with the reasoning
+recorded on it). The 61 lanes this slice wrote therefore carry `📌️.empty.md`, matching the 4265.
+**Not fixed, and not mine:** the second emitter in `🏗️authoring/🧱️contract/🟦️.ts` spells its own body
+(`# Empty <facet> facet` / "Authored by `bun ./📜️script.ts new …`") and writes `📝️.md`; the three
+`🀄️wfc` lanes it produced are the only authored `📝️.md` facet markers in the plugin tree.
+
+### S5.2 133 subset lanes + 78 example-content lanes — real migration backlog, deliberately not silenced
+
+The first reading was that these are a gate defect, because the thin subsets are *declared* as
+delegating: `🗄️stdio`'s `💬️bcf`, `📼️avi`, `🖋️dxf`, `☁️las`, `🎞️gif`, `🗽️obj` subset descriptors say in
+prose that "the other two subsets reuse it (**family-module pattern**) rather than duplicating it",
+and `🔣️taxonomy.json:29596` already carries the vocabulary `subsetArchetypes: ["owning", "derived"]`
+with `archetype`/`derivesFrom`/`ioFidelity` live in three descriptors
+(`🧿️semio`, `📰️xml`). Making the law archetype-aware would have taken all 133 to ~0.
+
+**That reading is wrong, and the repo says so in writing.** The plan that introduced the vocabulary —
+`.cursor/plans/subset_conformance_roundtrips_c57a3e1a.plan.md` — defines the two archetypes as
+*"Owning: owns snapshot, diff, mutation, and inference types. **Derived: reuses owning types but owns a
+real conformance gate, TypeScript mirror, inference, IO declaration, positive and negative
+examples**"*, and its rule 5 requires **every** subset to own "snapshot, diff, mutations, inferences,
+import, export, engine, and examples", adding that "**hollow re-exports … do not satisfy the
+contract**". Its own todo list has `migrate-subsets` (all 138 subsets) still `in_progress`.
+
+So the gate is right and these are the unfinished tail of that migration. Measured with
+`🐍️v3b-lane-census.ts` (this folder) over the gate's own rows
+(`🗑️generated/v3b-s5-lanes.txt`): **73 subsets**, in exactly two shapes —
+
+| shape | subsets | reading |
+|---|---|---|
+| has `🧬️schema` (+7 that do not), missing `🚪️io/` **and** `📚️examples/` | **48** | slice subsets of a container the sibling owns: `🧊️gltf` 8, `🗒️note` 8, `🏗️fem` 10, `🖍️draw` 4, `➗️mathematical` 3, `🎬️sequence` 2, `🗄️stdio` 13 |
+| complete (`🧬️schema 🚪️io 👁️viewer ✏️editor`), missing only `📚️examples/` | **25** | 24 `🗄️stdio` + 1 `🧱️block` — subset exists, nobody authored an example |
+
+**Every one of the 73 has a complete sibling subset** except 2, which is what makes the delegation
+reading tempting and the plan's rule 5 decisive. Landing them means authoring 48 IO declarations and
+73 example sets (each `🦀️.rs` + `🟦️.ts` + `🖼️assets/` + `🧪️tests/`) — real product content for the
+subset-migration owner, not a gate change. **Decision: leave the 211 rows red**, because the only way
+to turn them green from here is either to author the content or to weaken a law the plan wrote
+deliberately. Recorded rather than silenced.
+
+The 78 example-content rows are the same backlog one level down: examples that exist but are missing
+`🦀️.rs` (23) / `🟦️.ts` (25) / `🧪️tests/` (25) / `🖼️assets/` (13), 64 of them in `🗄️stdio`.
+
+### S5.3 The 120 `🧊️gltf` unreachable leaves — dead, and here is the proof
+
+Session 4 mounted them, `cargo check --all-targets` produced **458 errors**
+(`🗑️generated/v3b-s4-cargo-gltf.txt`), and they were unmounted again. Session 5 answers *why* they do
+not compile, which decides mount-vs-delete:
+
+Every one of the 116 files imports `use crate::schema::mutations::<verb>::{diff, inverse, mutation};`
+and calls `mutation::apply`, `diff::derive`, `inverse::derive`, and matches on types like
+`diff::GltfCreateAnimationOperation`. Measured:
+
+* **that import shape exists in exactly one artifact in the whole repo — `🧊️gltf` — and nowhere else**
+  (`grep -rl … ✏️s/🔌️plugins` → 116 files, all gltf);
+* `🧊️gltf` has **no mutation facet module directories at all**: its 241 `🔺️diff` dirs are all under
+  `🧫️fixtures/`. Every gltf mutation inlines `apply` + `MutationKind::{diff,inverse}` into its direct
+  leaf (`…/✅️required-extension/➕️add/🦀️.rs:31,47-70`);
+* the leaf **never had** those modules: `git show` at `599a5d8450`, `025ec86a42`, `6152f9ca6a`,
+  `0a0bb74380`, `fe7c8a8f8b` (back to 2026-09-05) shows one `#[path]` line, the `🔬️direct-leaf` test;
+* `pub fn derive` is defined **nowhere** in `🧊️gltf`, and `GltfCreateAnimationOperation` occurs
+  **once in the whole repo — in the test that asserts on it**;
+* the 244 `E0277`s are the same story at the payload level: the tests `serde_json::from_str` the
+  payload structs, and no gltf payload carries the `#[cfg_attr(test, derive(serde::Deserialize))]`
+  that `🧱️block`'s equivalents do (`grep -c` over gltf → **0**).
+
+So these leaves have never compiled since birth (2026-08-21) and were written against an API that was
+never authored anywhere. Meanwhile **every** gltf mutation already has a `🧪️tests/🔬️direct-leaf/🦀️.rs`
+that *is* mounted and *does* compile (120 of them). The committed fixtures they read
+(`🧫️fixtures/🧬️mutations/…/🔬️tNNN/`) are separate files and are not touched by any verdict here.
+
+**Decision: these are dead, not unmounted product code — but deleting 116 substantial authored
+oracles is the artifact owner's call, not a gate slice's.** What is not defensible is what session 4
+briefly had: mounting them so the gate goes quiet while the crate stops compiling. They are therefore
+left unmounted and the gate left red at 120, with the evidence above. The cheapest real fix, for
+whoever owns `🧊️gltf`, is the one the repo's own contract already prescribes
+(`mutationDirectLeafInlinedBehaviorFacets`, `…/📚️library/🔍️discovery/🟦️.ts:3877-3904`): give each gltf
+mutation its `🧬️mutation`/`🔺️diff`/`↩️inverse` facet directories — the shape `🧱️block/🖐️5d` uses
+(`…/🙅remove-author/🔺️diff/🦀️.rs`) — at which point the 116 oracles compile as written.
+
+### S5.4 Gate defect E — a surface's `📚️examples/🧪️tests/` was audited as a fourth example
+
+`📸️remodel`'s editor surface carries `📚️examples/{🎬️demo-session, 🦀️.rs, 🧪️tests/🔬️unit}`. The
+**subset**-level example walk excludes the two test-owner names
+(`🗿️taxonomy-validation/🟦️.ts:503`, `!== TAXONOMY.testsDirName && !== TAXONOMY.testFixturesDirName`);
+the **surface**-level walk 50 lines above it did not. So `🧪️tests` was treated as an example slug and
+asked for a `🦀️.rs`, a `🟦️.ts`, an `🖼️assets/` and a `🧪️tests/` of its own — 4 findings. Nothing else
+catches it either: `🧪️tests` *passes* the emoji+VS16+kebab slug pattern.
+
+Fixed at `🗿️taxonomy-validation/🟦️.ts:547-551` by applying the same exclusion, with the reason
+recorded. Measured: **342 → 338**, exactly the 4 `📸️remodel` rows and nothing else.
+
+### S5.5 The 13 remaining owner decisions — taken, with the evidence for each
+
+| # | finding | decision | evidence |
+|---|---|---|---|
+| 1–4 | `🗄️stdio: artifact "🛂️contract" / "🕸️graph" / "📇️inventory" / "🏃️commands" is missing 🏅️standards/` | **Not artifacts — move them out of `🗿️artifacts/`.** Each directory contains exactly one file, `🟦️.ts`, and no Rust, no standard, no subset. `🕸️graph/🟦️.ts` imports `CARGO_COMPOSITION_NAME`, `StdioArtifactPackageRecord`, `canonicalStdioArtifactNames` from `../../📇️inventory/🟦️.ts` and shells out to `nx` — it is stdio's own **repo tooling** (a package-contract harness), not a document artifact. Their home is `🗄️stdio/🔨️modules/<module>/`. Left in place because the move rewrites their relative imports and their `📋️project.json` targets, which is the stdio package owner's change, not a gate slice's. | `ls` of each dir; `head` of `🕸️graph/🟦️.ts` |
+| 5 | `🧱️block: artifact "◻️2d" … is missing 🧬️schema/{🔣️.json,🔗️.graphql,🛰️.proto}` + `has undeclared 🧬️schema/🧱️shared` | **One cause, not four: an artifact-level `🧬️schema/` that should not exist.** `🗿️artifacts/◻️2d/🧬️schema/` holds nothing but `🧱️shared/🦀️.rs` (163 lines of `BlockKindIdentity` etc., live — mounted at `◻️2d/🦀️.rs:29`). Its two sibling artifacts `🧊️3d` and `🖐️5d` have **no artifact-level `🧬️schema` at all**; all three keep schema under `🪆️subsets/<s>/🧬️schema/`, which is where `_standardsSubsetsComment` puts it. Because the facet exists, the gate then demands the three spec files of it. **Recommended home: `✏️s/🔌️plugins/🧱️block/🔨️modules/🧱️shared/`** — the module level, exactly where the ENGINELESS ticket moved cross-artifact behaviour. Not moved here: it changes `#[path]` in three crates and is the block owner's call. | `ls` of all three artifacts; `grep` for the mount |
+| 6 | `🎪️demonstrator: plugin root is missing 🦀️.rs` | **Real: the entry sits one level too deep.** `📦️packages/🦀️rust/Cargo.toml:130-132` declares `[lib] path = "🦀️.rs"`, resolving to `📦️packages/🦀️rust/🦀️.rs`, while `🗄️stdio`, `🧱️block` and `🀄️wfc` all declare `path = "../../🦀️.rs"` — the `leaf-prefixed` convention `rustEntryPathRules` names. Moving the entry to the plugin root is a `#[path]`-resolution change across a crate that bundles six panes; left for the demonstrator owner with the exact two-line fix recorded. | the four `Cargo.toml` `[lib]` blocks; `rustEntryPathRules.conventions` |
+| 7 | `🗄️stdio: move the redundant 🔌️plugin contract and facets directly into the plugin root, then remove 🔌️plugin/` | **Agreed, and cheap in shape but not in risk.** `🗄️stdio/🔌️plugin/` holds one file, mounted at `🗄️stdio/🦀️.rs:9` (`#[path = "🔌️plugin/🦀️.rs"]`); it is the closed `dyn_enum_close!` app fleet. Inlining it is a copy plus deleting one `#[path]`, but `semio-s-plugin-stdio` is the slowest crate in the tree and this slice could not afford the verification round. Recorded for the stdio owner. | `ls 🗄️stdio/🔌️plugin`, `grep` for the mount |
+| 8 | `📐️cad: window "✳️any/✏️editor/✏️edit/🎚️config" has unexpected child "🧬️schema"` | **The window law is right and `📐️cad` is the outlier.** `windowChildDirs` has no `🧬️schema`; a window's config schema belongs to the surface lane (`surfaceSchemaSpecFileKinds` maps only `🎚️config/🧬️schema` and `👥️presence/🧬️schema` at *surface* level). Left for the cad owner — relocating a schema lane changes what `policyDiscoverAppSchemaOwners` sees. | `TAXONOMY_WINDOW_CHILDREN`, `surfaceSchemaSpecFileKinds` |
+| 9–13 | `artifact "X" subset "X" is missing PATH` ×2, `plugin root is missing PATH` ×1, `example … is missing 🟦️.ts` (`🪐️space 🎬️demo`) | same backlog as §S5.2 — authored content that was never written | census rows |
+
+### S5.6 Compile proof for the 207 live session-4 mounts — the §6.1 gap, partly closed
+
+The fleet-wide cargo deadlock of §6.1 was gone this session (the lock holder, a peer's
+`cargo test -p semio-s-plugin-cad-aec-building`, had a live `rustc` child throughout — working, not
+wedged). After the `🧊️gltf` revert, **207** of the 327 session-4 mounts are still in the tree, and
+their owners are led by `semio-s-artifact-stdio-semio` with **74** — a third of the total and by far
+the largest single crate.
+
+```
+$ cargo check -p semio-s-artifact-stdio-semio --features component-app-assembly --all-targets
+warning: `semio-s-artifact-stdio-semio` (lib) generated 4 warnings
+warning: `semio-s-artifact-stdio-semio` (lib test) generated 4 warnings (4 duplicates)
+    Finished `dev` profile [unoptimized] target(s) in 11m 58s        # exit 0, 63 warning lines
+```
+(`🗑️generated/v3b-s5-cargo-semio.txt`.) Warnings present, so the type-check really ran rather than
+aborting early — the 74 `🧿️semio` mounts, including its `#[cfg(test)]` test-case leaves under
+`--all-targets`, compile.
+
+The rest was compiled after the 06:12 fleet-wide cargo kill left the machine calm — see §S5.10.
+
+### S5.7 V3a's two 🪐️space schema lanes (K3 hand-off) — landed and verified
+
+Taken over mid-flight after K3 was killed at ~01:45. K3's edits were already in the working tree and
+are **complete, not half-applied** — verified by `git diff` before touching anything:
+
+* **`uint64` in the repo schema library** — `📚️library/🧬️schema/🔍️field-discovery/🧱️contract/🟦️.ts:33`
+  (`u64: "uint64"` in `policyCanonicalScalar`) and `…/🔣️json-schema/🟦️.ts:14`
+  (`format === "uint64"`). Two lines; the other three parsers (rust/graphql/protobuf) route through
+  `policyCanonicalScalar` and need no entry because an unknown token falls through unchanged.
+* **the projection's scalar table** — `📇️registry/🧬️surface-schema/🟦️.ts:59`:
+  `uint64: { json: { type: "integer", format: "uint64", minimum: 0, maximum: SAFE_INTEGER_BOUND }, rust: "u64", typescript: "number", graphql: "Long", proto: "uint64" }`,
+  with the JS 53-bit bound recorded on the table's own docstring (`:45-52`).
+* **nested `$defs`** — `:286-289` emits `{ $ref: "#/$defs/<Type>" }` for a non-scalar field and
+  `:244,:271` refuse a lane whose composite is neither declared nor resolvable.
+
+Both lanes are now real files, and they are the projection's output, not hand-carving:
+
+| lane | result |
+|---|---|
+| `🪐️space/🗿️artifacts/🪐️space/…/✏️editor/🎚️config/🧬️schema/🔣️.json` | `SpaceIndexConfig` with `$defs` for `SpaceIndexMember`, `SpaceArtifactRow`, `SpaceIndexArtifactPresence`, each field `$ref`-ed from the property |
+| `🪐️space/🗿️artifacts/🏠️home/…/👁️viewer/🎚️config/🧬️schema/🔣️.json` | `directoryAuthorizationGeneration` as `{"type":"integer","format":"uint64","minimum":0,"maximum":9007199254740991}` |
+
+Verified, all three re-run tonight:
+
+```
+$ bunx vitest run --config 🧪️tests/🎚️config/🟦️.ts 🧪️tests/🧬️surface-schema/🟦️.ts
+ Test Files 1 passed (1)   Tests 12 passed (12)          # V3a's 9 + K3's 3, exit 0
+$ bun ./📜️script.ts surface-schema        (twice in a row)
+ 572 lane(s): 0 written, 524 current, 48 authored, 0 blocked, 0 drifted     # both runs identical
+```
+(`🗑️generated/v3b-s5-vitest-surface-schema.txt`, `v3b-s5-surface-schema-run1.txt`, `…-run2.txt`.)
+Terminating and idempotent: the second run writes nothing, and `blocked`/`drifted` are 0, so no lane
+is refused and no authored lane disagrees with what the projection would emit.
+
+**Schema-lane family: 2 → 0** — confirmed twice over: the fast census and the **real
+`plugin-registry check`** both report zero `🎚️config/🧬️schema` / `👥️presence/🧬️schema` rows among the
+338 (`grep -cE … v3b-s5-check.txt` → 0). The only `🪐️space` row left is an example-content one
+(`example "🎬️demo" is missing 🟦️.ts`, §S5.2's backlog).
+
+Re-verified after the 03:00 fleet cut and the peers' churn in this module (`🗑️generated/v3b-s5b-*`):
+`Tests 12 passed (12)`, and the projection still reports `0 written, 524 current, 48 authored, 0
+blocked, 0 drifted` — so the repo-wide run *has* now been done, three times, with identical output.
+
+**One thing I did not fix, recorded because it will bite:** `🏠️home`'s **editor** config lane is an
+*authored* lane (no `🤖️Generated by` comment) and its `directoryAuthorizationGeneration` carries
+`{"type":"integer","minimum":0,…}` with **no `"format": "uint64"`**, while the generated viewer lane
+beside it does. `policyJsonSchemaScalar` reads a formatless `integer` as `int32`, so the two lanes
+describe the same Rust `u64` field with two different canonical scalars. The generator cedes authored
+lanes by design, so it will never correct this; the space owner should either add the format or let
+the projection own that lane.
+
+### S5.8 Gate defect F — two laws in the same module contradicted each other and aborted the whole gate
+
+The first full `bun ./📜️script.ts check` of this session did not reach a single taxonomy row. It
+exited after **one** line:
+
+```
+plugin registry catalog has playground validation errors:
+  - playground variant "s" in ✏️s/🔌️plugins/🪐️space/📦️packages/🦀️rust must set "app" (crate declares 3 playground entries)
+```
+
+Cause, measured: a peer's **uncommitted** working-tree edit to
+`✏️s/🔌️plugins/🪐️space/📦️packages/🦀️rust/Cargo.toml` added two app variants (`home`, `space`) beside the
+long-standing app-less `s` row, turning that crate into a 3-entry group. `validatePlaygroundRegistry`
+then required `app` on **every** row of a multi-entry crate — including the shell row.
+
+But `defaultHostVariant` (`📇️registry/🎮️playground/🔎️discovery/🟦️.ts:210-214`) states the opposite in
+its own comment — *"The host crate also ships ordinary artifact apps as their own single-app
+playgrounds (Home, Space); the row that boots the SHELL is the one naming no `app`"* — and **throws**
+unless the host crate has exactly one app-less row. So the two laws in the same module could not both
+be satisfied, and the peer's edit was exactly the shape `defaultHostVariant` was written for. This is
+a hard `process.exit(1)` **before** the taxonomy audit, so it blocked the gate for every slice, not
+just mine.
+
+Fixed at `🗿️taxonomy-validation/🟦️.ts:13-23,74-85` (+ `📽️projection/🟦️.ts:494-495`, which already had
+the plugin entries in scope): the multi-app rule takes the host plugin ids and skips the host crate's
+single app-less row. **It still discriminates** — a second app-less row on the host crate is still a
+violation, and an app-less row on any crate that declares no `[package.metadata.semio].host` is
+unchanged. I did not touch the peer's `Cargo.toml`.
+
+With that, the gate runs end to end again:
+
+```
+$ bun ./📜️script.ts check         # 🗑️generated/v3b-s5-check.txt, exit 1, 338 finding lines
+plugin taxonomy tree violations (area(s) "✏️s/🔌️plugins" is "clean"):  … 338
+```
+
+### S5.10 §6.1 closed — all 203 live mounts compiled, and two of them were hiding real bugs
+
+After the coordinator killed the 34 deadlocked cargos at 06:12 the build dir was usable again, so the
+203 live mounts were compiled in three scoped runs (all `--all-targets`, the target `#[cfg(test)]`
+leaves need):
+
+| run | crates | mounts | result |
+|---|---|---|---|
+| `-p semio-s-artifact-stdio-semio --features component-app-assembly` | 1 | 74 | **exit 0**, 63 warnings, 11m58s |
+| the 15 `-p semio-s-artifact-norm-*` | 15 | 53 | **exit 0**, 92 warnings, 8m53s |
+| the remaining 27, `--keep-going` | 27 | 76 | 5 crates failed → §below |
+
+(`🗑️generated/v3b-s5-cargo-semio.txt`, `v3b-s5b-cargo-norm.txt`, `v3b-s5b-cargo-rest2.txt`.) Warnings
+are present in every run, so the type-check reached the bodies rather than aborting in expansion.
+
+**Two failures were mine, and both were real defects the mount exposed — fixed, not unmounted:**
+
+* `semio-s-artifact-forms-forms` — my 2 mounts of the `▶️try` window's `🎚️config/🧬️schema/🦀️.rs` and
+  `🫧️transient/🧬️schema/🦀️.rs` made the `ArtifactSchema` derive reject
+  `#[state(window_config)]` / `#[state(window_transient)]`: *"unknown state class … the only four
+  lanes are artifact, config, presence, transient"*. Measured across every window config schema leaf
+  in the tree, **7 use `#[state(config)]` and exactly 1 used `window_config`** — forms. Corrected to
+  `config` / `transient` at `…/▶️try/{🎚️config,🫧️transient}/🧬️schema/🦀️.rs:9,10`. These two leaves had
+  never compiled; the gate row was right and the code behind it was broken.
+
+**One failure was mine and the *mount* was wrong — unmounted, and it is a second instance of gate
+defect A (§1.2):**
+
+* `semio-s-artifact-note-note` — `🪆️subsets/✳️any/🔮️oracles/🦀️.rs` and its `🧪️tests/🔬️smoke/` leaf
+  import `semio_repo_test_host::Json` and `lopdf`, neither of which is a dependency of the note
+  artifact crate and neither of which ever could be: `semio-repo-test-host` is deliberately outside
+  the workspace (§1.2). `🔮️oracles/` is **test-platform-owned, like `🧪️tests/<case>/`** — the
+  exemption `isRepositoryTestCaseAdapter` grants only to cases beside a `🥒️.feature`. Only two
+  plugins in the tree mount a `🔮️oracles/🦀️.rs` at all, and one of them was my session-4 mount.
+  Removed from `🗒️note/…/✳️any/🦀️.rs:38-45`; note then compiles (with `📋️forms`) **exit 0, 158
+  warnings**. The 2 gate rows come back, honestly, and the durable fix is to extend
+  `isRepositoryTestCaseAdapter` to the `🔮️oracles` owner kind — recorded, not landed, because it
+  wants its own compiler-checked oracle case like §1.4's.
+
+**Two failures are not mine** (verified against `🗑️generated/v3b-s4-mount-apply.txt`, 0 matches):
+
+* `semio-s-plugin-space` + `semio-s-artifact-vcs-vcs` — both call
+  `semio_framework_plugin::artifact_app_laws::settle_framework_reserved_admission`, which now lives at
+  `app::artifact_app_laws` (`🧰️framework/…/🔌️plugin/🦀️.rs:6936,28532`) and is re-exported through
+  `plugin_app_close_prelude`. A live framework re-export move by a peer, in pre-existing mounts;
+  **coordinator: this breaks two crates' `lib test` for everybody**, the fix is the prelude path the
+  compiler itself suggests.
+* `semio-s-artifact-flow-flow` — 9 × `E0509` in
+  `✏️editor/🧵️retained/🗿️artifact/…/🧪️tests/🔬️unit/🦀️.rs`; pre-existing mounts, not in my apply list.
+
+So: **198 of the 203 live mounts are compiler-verified**; the 5 in `🪐️space`/`🌿️vcs` wait on the
+framework re-export above, and `🌊️flow`'s 11 sit in a crate broken by someone else's `E0509`s.
+
+### S5.9 Gate numbers — the real `plugin-registry check`, measured end to end
+
+```
+plugin-registry check total        619  →  338          (🗑️generated/v3b-s5-check.txt)
+                                         →  340          after the deliberate 🗒️note 🔮️oracles unmount (§S5.10)
+```
+
+The fast census (`🐍️v3b-taxonomy-census.ts`) reported **338** for the same tree at the same moment, so
+the two independent paths agree exactly — the census is a faithful stand-in for the 35-minute gate.
+The final census (`🗑️generated/v3b-s5b-census-final.txt`) reads **340**: the two rows that came back
+are the note oracle leaves this slice chose to stop mis-mounting.
+
+| family | session 4 start | session 4 end | **session 5** |
+|---|---|---|---|
+| **`plugin-registry check` total** | **619** | 405¹ | **340** |
+| `unreachable-from-cargo-manifest` | 333 | 120 | 122² |
+| subset directory lanes (`📚️examples` 66, `🚪️io` 48, `🧬️schema` 13, `🏅️standards` 4, misc 2) | 133 | 133 | 133 |
+| example-content lanes | 78 | 78 | **74** |
+| `mode … is missing required child` | 61 | 61 | **0** |
+| surface schema lanes (V3a/K3) | 2 | 2 | **0** |
+| owner decisions | 13 | 13 | 13 |
+
+¹ census figure; the gate itself could not be run at the end of session 4 — and when it was first run
+this session it aborted on §S5.8's contradiction without printing a single taxonomy row.
+² 120 gltf (§S5.3) + 2 note oracle leaves deliberately unmounted (§S5.10).
+
+**What this session actually changed, family by family:**
+
+| family | before | after | how |
+|---|---|---|---|
+| `mode … is missing required child` | 61 | **0** | 61 empty lanes written with the scaffolder's own emitter (§S5.1) |
+| surface `📚️examples/🧪️tests` rows | 4 | **0** | gate defect E (§S5.4) |
+| surface schema-lane family (V3a/K3 hand-off) | 2 | **0** | verified + re-run repo-wide (§S5.7) |
+| gate aborting before any taxonomy row | blocked | **runs** | gate defect F (§S5.8) |
+| live mounts compiler-verified | 0 | **198 / 203** | §S5.10, incl. 2 real bugs fixed and 1 wrong mount removed |
+| `unreachable-from-cargo-manifest` | 120 | 122 | §S5.3 / §S5.10 — verdicts recorded, never silenced |
+| subset + example-content lanes | 211 | 211 | §S5.2 — the subset-migration plan's own backlog |
+| owner decisions | 13 | 13 | §S5.5 — each decided in writing, each left to its owner |
 
 ---
 
 ## 7. Files changed
 
-_pending_
+### Session 5
+
+| file | change |
+|---|---|
+| `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🗿️taxonomy-validation/🟦️.ts:169-175` | `WINDOW_EMPTY_FACET_FILENAME` now resolves from the empty-facet projection contract instead of the markdown file kind (§S5.1) |
+| `…/📇️registry/🗿️taxonomy-validation/🟦️.ts:547-551` | the surface example walk excludes `🧪️tests`/`🧫️fixtures`, as the subset walk already did (§S5.4) |
+| `…/📇️registry/🗿️taxonomy-validation/🟦️.ts:13-23, 74-85` + `…/📇️registry/📽️projection/🟦️.ts:494-495` | the multi-app playground rule exempts the host crate's single app-less shell row, which `defaultHostVariant` requires (§S5.8) — this is what unblocked the gate |
+| `✏️s/🔌️plugins/📋️forms/…/🪟️windows/▶️try/{🎚️config,🫧️transient}/🧬️schema/🦀️.rs:9,10` | `#[state(window_config\|window_transient)]` → `#[state(config\|transient)]`, the derive's closed vocabulary (§S5.10) |
+| `✏️s/🔌️plugins/🗒️note/…/🪆️subsets/✳️any/🦀️.rs:38-45` | the 2 `🔮️oracles` mounts removed — test-platform-owned, not Cargo-owned (§S5.10) |
+| 61 × `✏️s/🔌️plugins/{📕️norm×15,🪐️space}/…/🎭️modes/<mode>/{🎮️commands,🎚️config,👥️presence,🫧️transient}/📌️.empty.md` | new empty mode lanes (§S5.1) |
+| ticket folder | `🐍️v3b-mode-lanes.ts`, `🐍️v3b-lane-census.ts` (new); captures `🗑️generated/v3b-s5-*` |
+
+Inherited from K3 and verified, **not** authored by this slice (§S5.7): the `uint64` entries in
+`📚️library/🧬️schema/🔍️field-discovery/{🧱️contract,🔣️json-schema}/🟦️.ts`, the `$defs`/`uint64` work in
+`📇️registry/🧬️surface-schema/🟦️.ts` + its tests and fixture, and the two `🪐️space` lane files.
+
+### Sessions 1–4 (carried)
+
+| file | change |
+|---|---|
+| `…/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts` | `RustModuleIncludeFact` + `includes` on `inspectRustModuleGraphFacts` (§1.3); `rustTokens` char-literal escape handling (§1b.3); `FrozenCoordinateEvidenceRetirement` + `frozenCoordinateEvidenceSeal` (§4.1); `🗑️generated` in `DISCOVERY_SKIP_DIRS` (§5.1) |
+| `…/💻️os/…/📇️registry/🗿️taxonomy-validation/🟦️.ts` | `isRepositoryTestCaseAdapter` + `TEST_FEATURE_FILENAME` (§1.2); `includeClosure` (§1.3) |
+| `…/📇️registry/🧫️fixtures/🕸️rust-taxonomy-mounts/🔣️.json` + `…/📇️registry/🧬️schema/🔣️.json` | oracle cases 10 → 13 (§1.4, §1b.3) |
+| `📜️script.ts:9001-9276` | interactivity descriptor coordinate, gate list + loop, launch command templates, extension role/bundle id (§3) |
+| `…/📚️library/🔍️discovery/🧪️tests/🔬️interactivity-all-app-discovery/🟦️.ts` | self-tests 25 → 29 (§3.5) |
+| `…/📚️library/🔣️taxonomy.json` | 28 `retired` records on `frozenCoordinateEvidenceContracts` (§4.2) |
+| `…/📚️library/🧪️tests/🕰️historical-json-source-encoding/🟦️.ts` | three retirement laws (§4.3) |
+| `.vscode/launch.json` + `🧩️launch.seed.jsonc` | six `⚖️gate…` rows restored (§3.2) |
+| 28 × `…/🧬️mutations/📸️set-snapshot`-owning artifact leaves | 75 facet mounts (§1.6) |
+| 210 host leaves in 23 plugins | 327 `#[path]` mounts, of which 120 (`🧊️gltf`) were reverted in session 4 → **207 live** (§1b.1, §S5.0) |
+| 2 × `🧊️gltf` barrel leaves | `mod component; pub use component::*;` + corrected docstrings (§1b.2) |

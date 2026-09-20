@@ -59,10 +59,11 @@ equal(canvas.attributes.get("role"), "application", "accessible-role");
 equal(canvas.attributes.get("aria-label"), "Diagram", "accessible-label");
 poll(); poll();
 
-canvas.listeners.get("pointermove")({ pointerId: 7, pointerType: "mouse", pressure: 0, tiltX: 0, tiltY: 0, offsetX: 10, offsetY: 20, button: 0 });
-canvas.listeners.get("pointermove")({ pointerId: 7, pointerType: "mouse", pressure: 0, tiltX: 0, tiltY: 0, offsetX: 11, offsetY: 21, button: 0 });
+canvas.listeners.get("pointermove")({ pointerId: 7, pointerType: "mouse", pressure: 0, tiltX: 0, tiltY: 0, offsetX: 10, offsetY: 20, button: 0, shiftKey: true });
+canvas.listeners.get("pointermove")({ pointerId: 7, pointerType: "mouse", pressure: 0, tiltX: 0, tiltY: 0, offsetX: 11, offsetY: 21, button: 0, shiftKey: false });
 const pointer = poll();
-equal(new DataView(pointer.buffer, pointer.byteOffset + pointer.length - 10, 4).getFloat32(0, true), 11, "pointer-latest-wins");
+equal(new DataView(pointer.buffer, pointer.byteOffset + pointer.length - 11, 4).getFloat32(0, true), 11, "pointer-latest-wins");
+equal(pointer.at(-1), 0, "pointer-latest-modifiers-win");
 const pointerView = new DataView(pointer.buffer, pointer.byteOffset, pointer.byteLength);
 const pointerAck = replyAck(pointerView.getBigUint64(2, true), pointerView.getUint32(10, true));
 send(pointerAck);

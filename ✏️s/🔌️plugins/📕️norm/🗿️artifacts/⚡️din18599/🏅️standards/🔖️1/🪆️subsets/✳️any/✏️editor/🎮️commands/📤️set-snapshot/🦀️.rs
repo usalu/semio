@@ -37,10 +37,27 @@ pub struct ReplaceSnapshot {
 //#endregion 🔖️Payload
 
 //#region 🔖️Handler
-pub fn handle(payload: &ReplaceSnapshot, _doc: &ArtifactView<'_, Din18599Snapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<Din18599Mutation, NoConfigMutation>, Fault> {
+pub fn handle(payload: &ReplaceSnapshot, doc: &ArtifactView<'_, Din18599Snapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<Din18599Mutation, NoConfigMutation>, Fault> {
     let text = crate::document::unescape_op_text_field(&payload.text);
-    let target = <Din18599Snapshot as store::ArtifactDsl>::parse_dsl(&text).map_err(|error| Fault::from(format!("set-snapshot: invalid document text: {error}")))?;
+    let mut target = <Din18599Snapshot as store::ArtifactDsl>::parse_dsl(&text).map_err(|error| Fault::from(format!("set-snapshot: invalid document text: {error}")))?;
+    reattach_unchanged_climate_child(&mut target, doc.snapshot);
     crate::app_surface::commit_snapshot_fields(Din18599Mutation::from_snapshot(&target), "setSnapshot")
+}
+
+/// 🧷️ The `.din18599` payload carries the composed climate child by id and uri ONLY — its
+/// ephemeral local owner never crosses the wire, and `crate::din18599_climate` fails soft to twelve
+/// zero months for a wire-only child. The child id is a content hash, so a payload naming the id
+/// the live document already materialized describes the SAME climate: re-attach that owner instead
+/// of letting `from_snapshot` stage an `UpdateClimate` that zeroes a climate the payload never
+/// intended to touch. A payload naming a DIFFERENT child keeps its wire-only handle for the host to
+/// materialize.
+fn reattach_unchanged_climate_child(target: &mut Din18599Snapshot, live: &Din18599Snapshot) {
+    if target.climate.local_owner::<crate::Din18599ClimateWorkingData>().is_some() || target.climate.child_id != live.climate.child_id {
+        return;
+    }
+    if let Some(owner) = live.climate.local_owner::<crate::Din18599ClimateWorkingData>() {
+        target.climate.set_local_owner(owner);
+    }
 }
 //#endregion 🔖️Handler
 

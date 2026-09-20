@@ -5,8 +5,7 @@
 /// `validate_state` without seeding a document label first, and this law measures the surface route
 /// instead of a typed-command factory proof.
 async fn surface_routing_registry() -> AppActionRegistry {
-    let app = App::from_builder(
-        App::builder(test_app_surface_id().await, LocalizedLabel::data("Synthetic"))
+    let builder = App::builder(test_app_surface_id().await, LocalizedLabel::data("Synthetic"))
             .await
             .document(["state"])
             .mode("edit", LocalizedLabel::data("Edit"), "pencil")
@@ -23,9 +22,8 @@ async fn surface_routing_registry() -> AppActionRegistry {
             })
             .await
             .window_kind_interactions("main", vec![InteractionRef::new("items")])
-            .await,
-    )
-    .await;
+            .await;
+    let app = App::from_builder(declare_test_app_verbs(builder).interactive_jobs(InteractiveJobClassification::Migrated).await).await;
     AppActionRegistry::from_definition(&app.definition)
 }
 

@@ -13,8 +13,16 @@ pub(crate) mod context {
     /// ✏️ `CadPlayApp` implements the AUTHORING trait `ArtifactEditor`, not the runtime `ArtifactApp`
     /// — `EditorApp<CadPlayApp>` (SDK adapter, contract §2.1) is the real `ArtifactApp` implementor
     /// `VcsArtifactApp` wraps, exactly the way `PluginBuilder::editor::<CadPlayApp>` builds it.
+    ///
+    /// 🧾️ It carries the real `AppActionRegistry`: `with_registry_on_bus` joins
+    /// `EditorApp<CadPlayApp>`'s `bounded_first_step_tool_proofs!` roster against the registry's
+    /// `Migrated` tool ids (`AppActionRegistry::validate_tool_job_rows`), so the registry-LESS
+    /// `artifact_app_laws::new_app` — whose empty registry declares nothing — panics at construction
+    /// with `interactive-job.catalog-authority` … `generated_migrated=false`, `migrated={}`. A
+    /// registry-less wrapper could not dispatch anything anyway (`admit_command_wire_with_proof`
+    /// refuses every verb that has no manifest declaration).
     pub async fn new_app() -> VcsArtifactApp<EditorApp<CadPlayApp>> {
-        semio_framework_plugin::artifact_app_laws::new_app::<EditorApp<CadPlayApp>>().await
+        semio_framework_plugin::artifact_app_laws::new_app_with_registry::<EditorApp<CadPlayApp>>(cad_app_manifest_for_tests).await
     }
     
     /// ✏️ Adapts `create_cad_app`'s `AppDefinition` (contract §2.4) into the `App { definition,
@@ -261,7 +269,7 @@ async fn production_action_bridge_loads_the_declared_example() {
 async fn every_example_load_is_admitted_and_settles_through_the_host_document_archive_door() {
     use semio_framework_plugin::app::TypedOperationResultLane;
     let definition = create_cad_app();
-    let declared = definition.window_kinds.iter().flat_map(|window| &window.actions).filter(|action| action.id == "setActiveExample").map(|action| action.semantics.execution.interactive_job).chain(definition.commands.iter().filter(|command| command.id == "setActiveExample").map(|command| command.semantics.execution.interactive_job)).collect::<Vec<_>>();
+    let declared = definition.window_kinds.iter().flat_map(|window| semio_framework::window_kind_actions(&definition, window)).filter(|action| action.id == "setActiveExample").map(|action| action.semantics.execution.interactive_job).chain(definition.commands.iter().filter(|command| command.id == "setActiveExample").map(|command| command.semantics.execution.interactive_job)).collect::<Vec<_>>();
     assert!(!declared.is_empty() && declared.iter().all(|classification| *classification == InteractiveJobClassification::Migrated), "setActiveExample must be a live interactive job: {declared:?}");
     const INSTANCE: u32 = 7;
     for (archive_id, example_id) in [(91_u64, CAD_EXAMPLE_FOREST_LEFT), (92, crate::examples::demo::ID), (93, "")] {
@@ -507,7 +515,7 @@ fn retained_route_fixture_matches_the_exact_owner_manifest_and_laws() {
             declarations += 1;
         }
         for window in &manifest.window_kinds {
-            let actions = window.actions.iter().filter(|action| action.id == *tool_id).collect::<Vec<_>>();
+            let actions = semio_framework::window_kind_actions(&manifest, window).into_iter().filter(|action| action.id == *tool_id).collect::<Vec<_>>();
             if actions.is_empty() {
                 continue;
             }
@@ -517,8 +525,8 @@ fn retained_route_fixture_matches_the_exact_owner_manifest_and_laws() {
         }
         assert!(declarations > 0, "{tool_id} requires a manifest command or window declaration");
     }
-    assert_eq!(manifest.window_kinds.iter().flat_map(|window| &window.actions).find(|action| action.id == SET_ACTIVE_UTILITY_ACTION_ID).map(|action| action.semantics.execution.interactive_job), Some(InteractiveJobClassification::Migrated));
-    assert!(manifest.window_kinds.iter().flat_map(|window| &window.actions).filter(|action| route_ids.contains(action.id.as_str())).all(|action| {
+    assert_eq!(manifest.window_kinds.iter().flat_map(|window| semio_framework::window_kind_actions(&manifest, window)).find(|action| action.id == SET_ACTIVE_UTILITY_ACTION_ID).map(|action| action.semantics.execution.interactive_job), Some(InteractiveJobClassification::Migrated));
+    assert!(manifest.window_kinds.iter().flat_map(|window| semio_framework::window_kind_actions(&manifest, window)).filter(|action| route_ids.contains(action.id.as_str())).all(|action| {
         let expected = if CAD_RETAINED_TOOL_IDS.contains(&action.id.as_str()) { InteractiveJobClassification::Migrated } else { InteractiveJobClassification::BatchOnlyPendingRewrite };
         action.semantics.execution.interactive_job == expected
     }));
@@ -884,7 +892,7 @@ async fn app_definition_declares_one_window_scoped_dislocate_utility() {
     assert_eq!(utility_ids, vec![CAD_DISLOCATE_UTILITY_ID]);
     // 🧰️ The framework auto-injects `setActiveUtility` as a View action once utilities are declared —
     // cad must NOT also declare it as an Mutation.
-    let set_active_utility = definition.window_kinds.iter().flat_map(|window| window.actions.iter()).find(|action| action.id == SET_ACTIVE_UTILITY_ACTION_ID).expect("setActiveUtility auto-injected");
+    let set_active_utility = definition.window_kinds.iter().flat_map(|window| semio_framework::window_kind_actions(&definition, window)).find(|action| action.id == SET_ACTIVE_UTILITY_ACTION_ID).expect("setActiveUtility auto-injected");
     assert_eq!(set_active_utility.kind, ActionKind::View);
     // 🚦️ Transform utilities gate the action panel while active (the default) — cad declares no
     // passive `allows_actions_while_active` view utilities.
@@ -975,13 +983,13 @@ async fn internal_and_plumbing_actions_excluded_from_palette() {
         "setDislocateOption",
     ];
     for action_id in hidden_actions {
-        let action = definition.window_kinds.iter().flat_map(|window| window.actions.iter()).find(|entry| entry.id == action_id).unwrap_or_else(|| panic!("action {action_id} missing from manifest"));
+        let action = definition.window_kinds.iter().flat_map(|window| semio_framework::window_kind_actions(&definition, window)).find(|entry| entry.id == action_id).unwrap_or_else(|| panic!("action {action_id} missing from manifest"));
         assert!(!action.in_palette, "internal action {action_id} must have in_palette: false");
     }
 
     let palette_user_actions = ["addObject", "deleteObject", "duplicateObject", "translateSelection", "rotateSelection", "scaleSelection"];
     for action_id in palette_user_actions {
-        let action = definition.window_kinds.iter().flat_map(|window| window.actions.iter()).find(|entry| entry.id == action_id).unwrap_or_else(|| panic!("user action {action_id} missing from manifest"));
+        let action = definition.window_kinds.iter().flat_map(|window| semio_framework::window_kind_actions(&definition, window)).find(|entry| entry.id == action_id).unwrap_or_else(|| panic!("user action {action_id} missing from manifest"));
         assert!(action.in_palette, "user action {action_id} must have in_palette: true");
     }
 }

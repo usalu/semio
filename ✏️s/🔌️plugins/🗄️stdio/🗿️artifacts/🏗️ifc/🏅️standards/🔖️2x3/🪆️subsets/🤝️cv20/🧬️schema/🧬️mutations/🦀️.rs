@@ -86,7 +86,7 @@ pub enum Ifc2x3Cv20Mutation {
 /// `ifc-2x3-cv20` catalog in `../../🔣️oracle.json` is required to match verbatim, and
 /// `kinds_const_matches_enum_variants_in_declaration_order` below is what keeps that honest (the
 /// framework never parses Rust to check it itself).
-pub const KINDS: &[&str] = &["no-mutation", "set-snapshot", "set-view-definition", "set-structural-entity", "set-project-units", "set-product-placement"];
+pub const KINDS: &[&str] = &["set-snapshot", "set-view-definition", "set-structural-entity", "set-project-units", "set-product-placement"];
 
 impl Ifc2x3Cv20Mutation {
     /// 🏷️ This mutation's own kebab-case kind — the single spelling `KINDS`, the `ifc-2x3-cv20`

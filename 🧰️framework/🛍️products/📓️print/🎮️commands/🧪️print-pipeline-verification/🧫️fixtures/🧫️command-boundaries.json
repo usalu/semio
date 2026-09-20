@@ -5,7 +5,7 @@
     "🔨️modules/🖨️tectonic-template-compilation/📜️script.ts",
     "🔨️modules/🎨print-design-token-paints/📜️script.ts"
   ],
-  "maxSourceFiles": 14,
+  "maxSourceFiles": 16,
   "forbidden": [
     "📚️library/📦️packages/🟦️typescript/🟦️.ts",
     "🎨️styling/📦️packages/🦀️rust/📜️script.ts",
@@ -13,11 +13,13 @@
   ],
   "externalDependencies": {
     "🔨️modules/🖨️tectonic-template-compilation/🟦️.ts": [
+      "bun:sqlite",
       "pdfjs-dist",
       "sharp"
     ],
     "🔨️modules/🎨print-design-token-paints/🟦️.ts": [],
     "🔨️modules/🖨️tectonic-template-compilation/📜️script.ts": [
+      "bun:sqlite",
       "pdfjs-dist",
       "sharp"
     ],

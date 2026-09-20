@@ -47,6 +47,7 @@ import {
   type PluginAppLabelsOverlay,
   type PluginDependency,
   type PluginViewState,
+  type TopicContribution,
   type PresenceInteraction,
   type Severity,
   type ShellBrand,
@@ -117,6 +118,10 @@ export type PluginManifest = {
   /** 🔗️ This plugin's direct dependencies — mirrors Rust `PluginManifest.dependencies`, gates a
    * contributed surface through {@link AppRouter.build}'s `surface.contribution-not-permitted` check. */
   readonly dependencies?: readonly PluginDependency[];
+  /** 🗂️ Open plugin contributions — the SAME rows core's `PluginManifest.topicContributions` carries.
+   * The host→guest contributions push (`scopeContributionsJson`) reads exactly this field off a
+   * loaded program, so leaving it off this shape made that push typecheck against nothing. */
+  readonly topicContributions?: readonly TopicContribution[];
 };
 
 export type LoadedProgramState = {
@@ -462,9 +467,14 @@ type WindowUiState = {
 };
 
 type SpawnedWindowState = {
-  readonly spawnedWindowUi: BuiltNode | null;
-  /** 🩺️ Why `spawnedWindowUi` went `null`, when it went null because the guest faulted rather than
-   * because the window legitimately has nothing to draw — the difference an empty body cannot show. */
+  /** 🪟️ The focused spawned program's window bodies, keyed by the SHELL window instance id
+   * (`${spawnedId}::${windowKindId}`) — one entry per window kind the spawned app declares, so a
+   * spawned program projects every window it owns onto the canvas exactly as the session's own app
+   * does. It was a single `BuiltNode` while a spawned app was allowed only its canvas body. */
+  readonly spawnedWindowUiByWindowId: Readonly<Record<string, BuiltNode>>;
+  /** 🩺️ Why `spawnedWindowUiByWindowId` went empty, when it went empty because the guest faulted
+   * rather than because the windows legitimately have nothing to draw — the difference an empty body
+   * cannot show. */
   readonly spawnedWindowFault: WindowFault | null;
   readonly spawnedWindowEngagements: Readonly<Record<string, WindowEngagement>>;
   readonly spawnedWindowMeasures: Readonly<Record<string, readonly WindowMeasure[]>>;
@@ -691,7 +701,7 @@ export type ShellAction =
   | { readonly type: "SET_PANEL_UI_BY_KEY"; readonly value: Updatable<Readonly<Record<string, BuiltNode>>> }
   | { readonly type: "SET_APP_LABELS_OVERLAY"; readonly value: Updatable<PluginAppLabelsOverlay> }
   | { readonly type: "SET_APP_CATALOGUE"; readonly value: Updatable<AppCatalogue> }
-  | { readonly type: "SET_SPAWNED_WINDOW_UI"; readonly value: Updatable<BuiltNode | null>; readonly fault?: WindowFault | null }
+  | { readonly type: "SET_SPAWNED_WINDOW_UI"; readonly value: Updatable<Readonly<Record<string, BuiltNode>>>; readonly fault?: WindowFault | null }
   | { readonly type: "SET_SPAWNED_WINDOW_ENGAGEMENTS"; readonly value: Updatable<Readonly<Record<string, WindowEngagement>>> }
   | { readonly type: "SET_SPAWNED_WINDOW_MEASURES"; readonly value: Updatable<Readonly<Record<string, readonly WindowMeasure[]>>> }
   | { readonly type: "SET_ACTION_PANE_FOLDED"; readonly windowId: string; readonly value: boolean }
@@ -810,7 +820,7 @@ function windowUiReducer(state: WindowUiState, action: ShellAction): WindowUiSta
 function spawnedWindowReducer(state: SpawnedWindowState, action: ShellAction): SpawnedWindowState {
   switch (action.type) {
     case "SET_SPAWNED_WINDOW_UI":
-      return { ...state, spawnedWindowUi: resolveUpdatable(action.value, state.spawnedWindowUi), spawnedWindowFault: action.fault ?? null };
+      return { ...state, spawnedWindowUiByWindowId: resolveUpdatable(action.value, state.spawnedWindowUiByWindowId), spawnedWindowFault: action.fault ?? null };
     case "SET_SPAWNED_WINDOW_ENGAGEMENTS":
       return withField(state, "spawnedWindowEngagements", resolveUpdatable(action.value, state.spawnedWindowEngagements));
     case "SET_SPAWNED_WINDOW_MEASURES":
@@ -1185,7 +1195,7 @@ export function initialShellState(_props: {
   return {
     pluginRuntime: { loadedPlugins: [], pluginStatusById: {}, pluginSupervisorById: {}, session: null, error: null, sessionFault: null, instanceFault: null },
     windowUi: { windowUiByWindowId: {}, windowEngagementsByWindowId: {}, windowMeasuresByWindowId: {}, toolMeasuresByToolId: {}, panelUiByKey: {}, appLabelsOverlay: EMPTY_APP_LABELS_OVERLAY, appCatalogue: EMPTY_APP_CATALOGUE },
-    spawnedWindow: { spawnedWindowUi: null, spawnedWindowFault: null, spawnedWindowEngagements: {}, spawnedWindowMeasures: {} },
+    spawnedWindow: { spawnedWindowUiByWindowId: {}, spawnedWindowFault: null, spawnedWindowEngagements: {}, spawnedWindowMeasures: {} },
     actionPane: { foldedByWindowId: {}, expandedByWindowId: {}, stagedArgsByKey: {}, activeUtilityByWindowId: {}, activeToolId: null },
     commandPanel: { expandedCommandId: null, stagedArgsByCommandId: {} },
     layout: {

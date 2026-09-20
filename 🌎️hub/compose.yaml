@@ -1,0 +1,77 @@
+# 🐳️ `os-hub` compose example — UNBUILT, UNRUN.
+#
+# Authored alongside `🌎️hub/Dockerfile` on a machine with no Docker installed. Nothing here has been
+# validated by `docker compose config`, let alone started.
+#
+#   docker compose -f 🌎️hub/compose.yaml up --build           # sqlite + filesystem store (default)
+#   docker compose -f 🌎️hub/compose.yaml --profile postgres up --build
+#
+# The build context is the repository root, because the image carries the repository — see the long
+# comment at the top of the Dockerfile for why the binary alone cannot boot today.
+
+name: semio-hub
+
+services:
+  hub:
+    build:
+      context: ..
+      dockerfile: 🌎️hub/Dockerfile
+    # 🌐️ Loopback *inside the container*: `validate_auth_startup` refuses any non-loopback bind in
+    # both modes, so the port must be published rather than bound wide. Publishing on 127.0.0.1 of
+    # the host keeps it off the network until a TLS-terminating proxy fronts it
+    # (`🌎️hub/README.md` § "TLS-terminating reverse proxy").
+    ports:
+      - "127.0.0.1:8787:8787"
+    environment:
+      OS_HUB_DATA: /srv/semio-hub/data
+      OS_HUB_BIND: 127.0.0.1
+      OS_HUB_PORT: "8787"
+      OS_HUB_MODE: development
+      OS_HUB_CREDENTIAL_SIGN_IN: "true"
+      OS_HUB_SESSION_TTL_SECONDS: "43200"
+      OS_HUB_STORAGE_BACKEND: fs
+      OS_HUB_DIRECTORY_BACKEND: sqlite
+      # OS_HUB_ALLOWED_ORIGINS: https://s.example.com
+    volumes:
+      # 🗄️ The whole durable state of a hub: WAL + snapshots, `directory.db`, blobs, the trusted
+      # catalog pointer and the instance stores' format stamps. Backup unit = this volume, hub
+      # stopped (`README.md` § "Backup and restore").
+      - hub-data:/srv/semio-hub/data
+    # 🛑️ The hub drains on SIGTERM; give the drains room before Docker escalates to SIGKILL.
+    stop_signal: SIGTERM
+    stop_grace_period: 30s
+    restart: unless-stopped
+
+  # 🐘️ Optional. `docker compose --profile postgres up` starts this *and* the hub still has to be
+  # told to use it — uncomment the two `OS_HUB_*_DATABASE_URL` lines below into the `hub` service's
+  # environment and switch the two backend variables to `postgres`. Both the document store and the
+  # directory can be pointed at postgres independently; they are separate variables on purpose.
+  #
+  #   OS_HUB_STORAGE_BACKEND: postgres
+  #   OS_HUB_DATABASE_URL: postgres://semio:semio@postgres:5432/semio
+  #   OS_HUB_DIRECTORY_BACKEND: postgres
+  #   OS_HUB_DIRECTORY_DATABASE_URL: postgres://semio:semio@postgres:5432/semio
+  #
+  # The postgres lanes compile and are unit-tested but have never been run against a real server
+  # (ticket 26/09/18, G11 §B.1 — an open decision, not a claim of support). The image must also be
+  # built with the `postgres` cargo feature for those variables to be anything but a boot error
+  # naming the backend.
+  postgres:
+    profiles: ["postgres"]
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: semio
+      POSTGRES_PASSWORD: semio
+      POSTGRES_DB: semio
+    volumes:
+      - hub-postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready --username=semio --dbname=semio"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+volumes:
+  hub-data:
+  hub-postgres:

@@ -24,5 +24,5 @@ pub fn diff(payload: &ConnectWidgets, base: &FlowSnapshot) -> protocol::Mutation
     let synapse = SynapseSpec { id: payload.id.clone(), from: payload.from.clone(), from_port: payload.from_port.clone(), to: payload.to.clone(), to_port: payload.to_port.clone() };
     let index = payload.index.min(scene.synapses.len());
     scene.synapses.insert(index, synapse);
-    protocol::MutationOutcome::new(diff_replace_content(scene.widgets, scene.synapses, scene.layout))
+    protocol::MutationOutcome::new({ let (widgets, synapses, layout) = scene.into_parts(); diff_replace_content(widgets, synapses, layout) })
 }

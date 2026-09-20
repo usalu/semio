@@ -19,7 +19,11 @@
       "suffixHex": "",
       "accepted": true,
       "canonicalHex": "01610001",
-      "expected": { "actor": "a", "connectedAtMs": 1, "views": [] }
+      "expected": {
+        "actor": "a",
+        "connectedAtMs": 1,
+        "views": []
+      }
     },
     {
       "id": "every-field-present",
@@ -37,12 +41,55 @@
         "userId": "user-9",
         "role": "owner",
         "dragGhostJson": "{\"kind\":\"move\"}",
-        "interaction": { "appId": "draw", "domains": [{ "domain": "graph", "granularity": "node", "selected": ["n1"], "hovered": ["n2"] }] },
+        "interaction": {
+          "appId": "draw",
+          "domains": [
+            {
+              "domain": "graph",
+              "granularity": "node",
+              "selected": [
+                "n1"
+              ],
+              "hovered": [
+                "n2"
+              ]
+            }
+          ]
+        },
         "color": 3,
         "surface": "surface-1",
-        "views": [{ "windowId": "w1", "space": "canvas", "kind": { "kind": "canvas", "x": 1, "y": 2, "zoom": 1.5 }, "size": [800, 600], "pointer": [10, 20, 0] }],
-        "ui": { "hoveredPath": "row[0]#a", "pressedPath": "btn[1]#save" },
-        "toolRun": { "toolId": "fill", "state": "running", "stage": 1, "completed": 42, "total": 100 }
+        "views": [
+          {
+            "windowId": "w1",
+            "space": "canvas",
+            "kind": {
+              "kind": "canvas",
+              "x": 1,
+              "y": 2,
+              "zoom": 1.5
+            },
+            "size": [
+              800,
+              600
+            ],
+            "pointer": [
+              10,
+              20,
+              0
+            ]
+          }
+        ],
+        "ui": {
+          "hoveredPath": "row[0]#a",
+          "pressedPath": "btn[1]#save"
+        },
+        "toolRun": {
+          "toolId": "fill",
+          "state": "running",
+          "stage": 1,
+          "completed": 42,
+          "total": 100
+        }
       }
     },
     {
@@ -53,7 +100,17 @@
       "suffixHex": "0700",
       "accepted": true,
       "canonicalHex": "016180080105627275736802000700",
-      "expected": { "actor": "a", "connectedAtMs": 1, "views": [], "toolRun": { "toolId": "brush", "state": "paused", "stage": 0, "completed": 7 } }
+      "expected": {
+        "actor": "a",
+        "connectedAtMs": 1,
+        "views": [],
+        "toolRun": {
+          "toolId": "brush",
+          "state": "paused",
+          "stage": 0,
+          "completed": 7
+        }
+      }
     },
     {
       "id": "tool-run-faulted-boundaries",
@@ -63,30 +120,248 @@
       "suffixHex": "",
       "accepted": true,
       "canonicalHex": "01618008010466696c6c08ffff03000100",
-      "expected": { "actor": "a", "connectedAtMs": 1, "views": [], "toolRun": { "toolId": "fill", "state": "faulted", "stage": 65535, "completed": 0, "total": 0 } }
+      "expected": {
+        "actor": "a",
+        "connectedAtMs": 1,
+        "views": [],
+        "toolRun": {
+          "toolId": "fill",
+          "state": "faulted",
+          "stage": 65535,
+          "completed": 0,
+          "total": 0
+        }
+      }
     },
-    { "id": "tool-run-unknown-state", "prefixHex": "01618008010466696c6c09000000", "repeatHex": "00", "repeatCount": 0, "suffixHex": "", "accepted": false },
-    { "id": "tool-run-stage-over-u16", "prefixHex": "01618008010466696c6c018080040000", "repeatHex": "00", "repeatCount": 0, "suffixHex": "", "accepted": false },
-    { "id": "tool-run-completed-over-exact-range", "prefixHex": "01618008010466696c6c0100808080808080801000", "repeatHex": "00", "repeatCount": 0, "suffixHex": "", "accepted": false },
-    { "id": "tool-run-total-over-exact-range", "prefixHex": "01618008010466696c6c010000018080808080808010", "repeatHex": "00", "repeatCount": 0, "suffixHex": "", "accepted": false },
-    { "id": "tool-run-completed-over-total", "prefixHex": "01618008010466696c6c0100650164", "repeatHex": "00", "repeatCount": 0, "suffixHex": "", "accepted": false },
-    { "id": "tool-run-invalid-total-boolean", "prefixHex": "01618008010466696c6c01000002", "repeatHex": "00", "repeatCount": 0, "suffixHex": "", "accepted": false },
-    { "id": "tool-run-truncated", "prefixHex": "01618008010466696c6c01", "repeatHex": "00", "repeatCount": 0, "suffixHex": "", "accepted": false },
-    { "id": "unknown-flag", "prefixHex": "0161801001", "repeatHex": "00", "repeatCount": 0, "suffixHex": "", "accepted": false },
-    { "id": "unknown-high-flag", "prefixHex": "016180808080802001", "repeatHex": "00", "repeatCount": 0, "suffixHex": "", "accepted": false },
-    { "id": "truncated-field", "prefixHex": "0261", "repeatHex": "00", "repeatCount": 0, "suffixHex": "", "accepted": false },
-    { "id": "trailing-byte", "prefixHex": "0161000100", "repeatHex": "00", "repeatCount": 0, "suffixHex": "", "accepted": false },
-    { "id": "noncanonical-varint", "prefixHex": "8100610001", "repeatHex": "00", "repeatCount": 0, "suffixHex": "", "accepted": false },
-    { "id": "huge-views-count", "prefixHex": "0161800201ffffffffffffffffff01", "repeatHex": "00", "repeatCount": 0, "suffixHex": "", "accepted": false },
-    { "id": "huge-domains-count", "prefixHex": "0161200100ffffffffffffffffff01", "repeatHex": "00", "repeatCount": 0, "suffixHex": "", "accepted": false },
-    { "id": "huge-selected-count", "prefixHex": "0161200100010000ffffffffffffffffff01", "repeatHex": "00", "repeatCount": 0, "suffixHex": "", "accepted": false },
-    { "id": "huge-hovered-count", "prefixHex": "016120010001000000ffffffffffffffffff01", "repeatHex": "00", "repeatCount": 0, "suffixHex": "", "accepted": false },
-    { "id": "entry-over-limit", "prefixHex": "01610001", "repeatHex": "00", "repeatCount": 4093, "suffixHex": "", "accepted": false },
-    { "id": "text-over-limit", "prefixHex": "8108", "repeatHex": "61", "repeatCount": 1025, "suffixHex": "0001", "accepted": false },
-    { "id": "pack-over-limit", "prefixHex": "016102018110", "repeatHex": "00", "repeatCount": 2049, "suffixHex": "", "accepted": false },
-    { "id": "nonfinite-view-number", "prefixHex": "0161800201010000000000000000f87f", "repeatHex": "00", "repeatCount": 0, "suffixHex": "", "accepted": false },
-    { "id": "invalid-boolean", "prefixHex": "016180040102", "repeatHex": "00", "repeatCount": 0, "suffixHex": "", "accepted": false },
-    { "id": "invalid-utf8", "prefixHex": "01ff0001", "repeatHex": "00", "repeatCount": 0, "suffixHex": "", "accepted": false },
-    { "id": "connected-over-exact-range", "prefixHex": "0161008080808080808010", "repeatHex": "00", "repeatCount": 0, "suffixHex": "", "accepted": false }
+    {
+      "id": "tool-run-unknown-state",
+      "prefixHex": "01618008010466696c6c09000000",
+      "repeatHex": "00",
+      "repeatCount": 0,
+      "suffixHex": "",
+      "accepted": false
+    },
+    {
+      "id": "tool-run-stage-over-u16",
+      "prefixHex": "01618008010466696c6c018080040000",
+      "repeatHex": "00",
+      "repeatCount": 0,
+      "suffixHex": "",
+      "accepted": false
+    },
+    {
+      "id": "tool-run-completed-over-exact-range",
+      "prefixHex": "01618008010466696c6c0100808080808080801000",
+      "repeatHex": "00",
+      "repeatCount": 0,
+      "suffixHex": "",
+      "accepted": false
+    },
+    {
+      "id": "tool-run-total-over-exact-range",
+      "prefixHex": "01618008010466696c6c010000018080808080808010",
+      "repeatHex": "00",
+      "repeatCount": 0,
+      "suffixHex": "",
+      "accepted": false
+    },
+    {
+      "id": "tool-run-completed-over-total",
+      "prefixHex": "01618008010466696c6c0100650164",
+      "repeatHex": "00",
+      "repeatCount": 0,
+      "suffixHex": "",
+      "accepted": false
+    },
+    {
+      "id": "tool-run-invalid-total-boolean",
+      "prefixHex": "01618008010466696c6c01000002",
+      "repeatHex": "00",
+      "repeatCount": 0,
+      "suffixHex": "",
+      "accepted": false
+    },
+    {
+      "id": "tool-run-truncated",
+      "prefixHex": "01618008010466696c6c01",
+      "repeatHex": "00",
+      "repeatCount": 0,
+      "suffixHex": "",
+      "accepted": false
+    },
+    {
+      "id": "unknown-flag",
+      "prefixHex": "0161802001",
+      "repeatHex": "00",
+      "repeatCount": 0,
+      "suffixHex": "",
+      "accepted": false
+    },
+    {
+      "id": "unknown-high-flag",
+      "prefixHex": "016180808080802001",
+      "repeatHex": "00",
+      "repeatCount": 0,
+      "suffixHex": "",
+      "accepted": false
+    },
+    {
+      "id": "truncated-field",
+      "prefixHex": "0261",
+      "repeatHex": "00",
+      "repeatCount": 0,
+      "suffixHex": "",
+      "accepted": false
+    },
+    {
+      "id": "trailing-byte",
+      "prefixHex": "0161000100",
+      "repeatHex": "00",
+      "repeatCount": 0,
+      "suffixHex": "",
+      "accepted": false
+    },
+    {
+      "id": "noncanonical-varint",
+      "prefixHex": "8100610001",
+      "repeatHex": "00",
+      "repeatCount": 0,
+      "suffixHex": "",
+      "accepted": false
+    },
+    {
+      "id": "huge-views-count",
+      "prefixHex": "0161800201ffffffffffffffffff01",
+      "repeatHex": "00",
+      "repeatCount": 0,
+      "suffixHex": "",
+      "accepted": false
+    },
+    {
+      "id": "huge-domains-count",
+      "prefixHex": "0161200100ffffffffffffffffff01",
+      "repeatHex": "00",
+      "repeatCount": 0,
+      "suffixHex": "",
+      "accepted": false
+    },
+    {
+      "id": "huge-selected-count",
+      "prefixHex": "0161200100010000ffffffffffffffffff01",
+      "repeatHex": "00",
+      "repeatCount": 0,
+      "suffixHex": "",
+      "accepted": false
+    },
+    {
+      "id": "huge-hovered-count",
+      "prefixHex": "016120010001000000ffffffffffffffffff01",
+      "repeatHex": "00",
+      "repeatCount": 0,
+      "suffixHex": "",
+      "accepted": false
+    },
+    {
+      "id": "entry-over-limit",
+      "prefixHex": "01610001",
+      "repeatHex": "00",
+      "repeatCount": 4093,
+      "suffixHex": "",
+      "accepted": false
+    },
+    {
+      "id": "text-over-limit",
+      "prefixHex": "8108",
+      "repeatHex": "61",
+      "repeatCount": 1025,
+      "suffixHex": "0001",
+      "accepted": false
+    },
+    {
+      "id": "pack-over-limit",
+      "prefixHex": "016102018110",
+      "repeatHex": "00",
+      "repeatCount": 2049,
+      "suffixHex": "",
+      "accepted": false
+    },
+    {
+      "id": "nonfinite-view-number",
+      "prefixHex": "0161800201010000000000000000f87f",
+      "repeatHex": "00",
+      "repeatCount": 0,
+      "suffixHex": "",
+      "accepted": false
+    },
+    {
+      "id": "invalid-boolean",
+      "prefixHex": "016180040102",
+      "repeatHex": "00",
+      "repeatCount": 0,
+      "suffixHex": "",
+      "accepted": false
+    },
+    {
+      "id": "invalid-utf8",
+      "prefixHex": "01ff0001",
+      "repeatHex": "00",
+      "repeatCount": 0,
+      "suffixHex": "",
+      "accepted": false
+    },
+    {
+      "id": "connected-over-exact-range",
+      "prefixHex": "0161008080808080808010",
+      "repeatHex": "00",
+      "repeatCount": 0,
+      "suffixHex": "",
+      "accepted": false
+    },
+    {
+      "id": "principal-kind-human",
+      "prefixHex": "016180100100",
+      "repeatHex": "00",
+      "repeatCount": 0,
+      "suffixHex": "",
+      "accepted": true,
+      "canonicalHex": "016180100100",
+      "expected": {
+        "actor": "a",
+        "connectedAtMs": 1,
+        "principalKind": "human",
+        "views": []
+      }
+    },
+    {
+      "id": "principal-kind-agent",
+      "prefixHex": "016180100101",
+      "repeatHex": "00",
+      "repeatCount": 0,
+      "suffixHex": "",
+      "accepted": true,
+      "canonicalHex": "016180100101",
+      "expected": {
+        "actor": "a",
+        "connectedAtMs": 1,
+        "principalKind": "agent",
+        "views": []
+      }
+    },
+    {
+      "id": "principal-kind-unknown-tag",
+      "prefixHex": "016180100102",
+      "repeatHex": "00",
+      "repeatCount": 0,
+      "suffixHex": "",
+      "accepted": false
+    },
+    {
+      "id": "principal-kind-truncated",
+      "prefixHex": "0161801001",
+      "repeatHex": "00",
+      "repeatCount": 0,
+      "suffixHex": "",
+      "accepted": false
+    }
   ]
 }

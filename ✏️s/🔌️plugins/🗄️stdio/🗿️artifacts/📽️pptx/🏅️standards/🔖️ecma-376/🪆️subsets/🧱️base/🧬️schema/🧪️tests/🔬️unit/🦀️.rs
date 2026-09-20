@@ -6,6 +6,7 @@ use crate::standards::v_ecma_376::subsets::base::io::{
     PptxError, MINIMAL_SLIDE_MASTER_XML, PRESENTATION_CONTENT_TYPE, PRESENTATION_PART, REL_TYPE_OFFICE_DOCUMENT_STRICT, REL_TYPE_SLIDE, REL_TYPE_SLIDE_LAYOUT, REL_TYPE_SLIDE_MASTER, SLIDE_CONTENT_TYPE, SLIDE_LAYOUT_PART, SLIDE_MASTER_CONTENT_TYPE,
     SLIDE_MASTER_PART, THEME_PART,
 };
+use semio_s_artifact_stdio_xml::schema::snapshot::xml_document_from_text;
 use semio_s_artifact_stdio_zip::opc::{self, OpcPackage, RELS_CONTENT_TYPE, REL_TYPE_OFFICE_DOCUMENT};
 
 async fn sample_presentation() -> PptxPresentation {
@@ -180,17 +181,23 @@ async fn decode_rejects_missing_presentation_relationship() {
 
 #[semio_framework_async_macros::async_test]
 async fn unmodeled_slide_master_survives_decode_encode_logically() {
-    let snap = build_minimal_pptx(sample_presentation().await);
-    // Replace the synthesized slide master with a distinguishable "real" one before encoding.
-    let mut opc = snap.opc.clone();
-    opc.set_part(SLIDE_MASTER_PART, SLIDE_MASTER_CONTENT_TYPE, b"<p:sldMaster marker=\"real-file\"/>".to_vec());
-    let bytes = opc::encode_opc(&opc).expect("encode");
+    let mut snap = build_minimal_pptx(sample_presentation().await);
+    // Replace the synthesized slide master with a distinguishable "real" one before encoding. The
+    // slide master is an XML part, so its authority is `xml_parts` (since the logical split,
+    // `opc.parts` carries only the parts `pptx_part_is_xml` rejects), and the package is written
+    // by the real `encode_pptx` -- `opc::encode_opc` alone would emit a package with no
+    // `ppt/presentation.xml` at all, because that part is materialized by the pptx encoder.
+    let marker = "<p:sldMaster marker=\"real-file\"/>";
+    let master = snap.xml_parts.iter_mut().find(|part| part.path == SLIDE_MASTER_PART).expect("synthesized slide master");
+    assert_eq!(master.content_type, SLIDE_MASTER_CONTENT_TYPE);
+    master.document = xml_document_from_text(marker).expect("parse marker slide master");
+    let bytes = encode_pptx(&snap).expect("encode");
 
     let decoded = decode_pptx(&bytes).expect("decode");
-    assert_eq!(decoded.opc.part_bytes(SLIDE_MASTER_PART), Some(b"<p:sldMaster marker=\"real-file\"/>".as_slice()));
+    assert_eq!(decoded.part_text(SLIDE_MASTER_PART).as_deref(), Some(marker));
     let re_encoded = encode_pptx(&decoded).expect("re-encode must not clobber an already-present slide master");
     let re_decoded = decode_pptx(&re_encoded).expect("re-decode");
-    assert_eq!(re_decoded.opc.part_bytes(SLIDE_MASTER_PART), Some(b"<p:sldMaster marker=\"real-file\"/>".as_slice()));
+    assert_eq!(re_decoded.part_text(SLIDE_MASTER_PART).as_deref(), Some(marker));
     assert_eq!(re_decoded.presentation, sample_presentation().await);
 }
 

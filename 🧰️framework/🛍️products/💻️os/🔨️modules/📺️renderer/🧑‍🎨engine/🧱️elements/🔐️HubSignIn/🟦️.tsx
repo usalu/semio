@@ -173,6 +173,7 @@ export function HubSignInPane({ book, session, locale, onSelectConnection, onAdd
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
           <select
             id={`${id}-hub`}
+            data-element-alias="os.hub.signIn.hub"
             value={book.selectedId}
             disabled={busy}
             onChange={(event) => onSelectConnection(event.target.value)}
@@ -220,6 +221,7 @@ export function HubSignInPane({ book, session, locale, onSelectConnection, onAdd
             <label htmlFor={`${id}-email`} className="text-xs text-muted-foreground">{emailLabel}</label>
             <input
               id={`${id}-email`}
+              data-element-alias="os.hub.signIn.email"
               name="email"
               type="email"
               inputMode="email"
@@ -238,6 +240,7 @@ export function HubSignInPane({ book, session, locale, onSelectConnection, onAdd
             <label htmlFor={`${id}-password`} className="text-xs text-muted-foreground">{passwordLabel}</label>
             <input
               id={`${id}-password`}
+              data-element-alias="os.hub.signIn.password"
               name="password"
               type="password"
               autoComplete="current-password"
@@ -253,7 +256,7 @@ export function HubSignInPane({ book, session, locale, onSelectConnection, onAdd
             {passwordValid ? null : <p id={`${id}-password-error`} className="text-xs text-red-400">{text.shortPassword}</p>}
           </div>
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-            <Button icon="unlock" type="submit" variant="outline" aria-busy={busy} aria-label={busy ? busyLabel : submitLabel} disabled={!submittable}>{busy ? busyLabel : submitLabel}</Button>
+            <Button id="os.hub.signIn.submit" icon="unlock" type="submit" variant="outline" aria-busy={busy} aria-label={busy ? busyLabel : submitLabel} disabled={!submittable}>{busy ? busyLabel : submitLabel}</Button>
             {busy ? <Button icon="x" type="button" variant="outline" aria-label={cancelLabel} onClick={onCancel}>{cancelLabel}</Button> : null}
           </div>
         </form>

@@ -23,5 +23,8 @@ export function scopedPresencePeersV1(
       ...(presenceRole(peer.role) === undefined ? {} : { role: presenceRole(peer.role) }),
       connectedAtMs: peer.connectedAtMs,
       ...(peer.color === undefined ? {} : { color: peer.color }),
+      // 🤖️ `principalKind` is admitted by the Hub from the session it authenticated, exactly like
+      // `color` and `surface`; an absent value is the pre-agent wire shape and means a person.
+      ...(peer.principalKind === "agent" ? { isAgent: true } : {}),
     }));
 }

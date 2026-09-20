@@ -67,7 +67,7 @@ async fn change_importance_class_committed_json_is_canonical() {
     }
     let reencoded = serde_json::to_value(mutation()).expect("change-importance-class mutation encodes");
     let original: serde_json::Value = serde_json::from_str(MUTATION).expect("change-importance-class mutation reparses");
-    assert_eq!(reencoded, original, "change-importance-class/switches-importance-class-to-cc3: committed mutation JSON is not the canonical externally-tagged ChangeImportanceClass form carrying newImportanceClass");
+    assert_eq!(reencoded, original, "change-importance-class/switches-importance-class-to-cc3: committed mutation JSON is not the canonical internally-tagged ChangeImportanceClass form carrying mutation and newImportanceClass");
 }
 
 /// 🎯️ The declared outcome holds: `change-importance-class` at cc3 is applied, not rejected, and carries no

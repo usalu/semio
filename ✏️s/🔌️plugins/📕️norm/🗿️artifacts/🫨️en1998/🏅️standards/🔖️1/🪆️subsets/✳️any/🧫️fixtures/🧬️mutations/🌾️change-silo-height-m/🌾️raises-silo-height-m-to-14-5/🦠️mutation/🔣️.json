@@ -1,5 +1,4 @@
 {
-  "ChangeSiloHeightM": {
-    "newSiloHeightM": 14.5
-  }
+  "mutation": "changeSiloHeightM",
+  "newSiloHeightM": 14.5
 }

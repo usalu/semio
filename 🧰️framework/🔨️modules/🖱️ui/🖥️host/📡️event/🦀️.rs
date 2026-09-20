@@ -108,13 +108,20 @@ pub fn decode_browser_host_event(event: &AbiEvent, canvas: CanvasId, listener: L
             let x = decoder.f32()?;
             let y = decoder.f32()?;
             let button = pointer_button_from_web(decoder.i16()?).ok_or(AbiErrorCode::MalformedTag)?;
+            let modifiers = modifiers_from_bits(decoder.u8()?);
             BrowserHostEvent::Dispatch(match event.event.get() {
-                BROWSER_EVENT_POINTER_MOVE => DispatchEvent::PointerMove { pointer, x, y },
-                BROWSER_EVENT_POINTER_DOWN => DispatchEvent::PointerDown { pointer, x, y, button },
-                _ => DispatchEvent::PointerUp { pointer, x, y, button },
+                BROWSER_EVENT_POINTER_MOVE => DispatchEvent::PointerMove { pointer, x, y, modifiers },
+                BROWSER_EVENT_POINTER_DOWN => DispatchEvent::PointerDown { pointer, x, y, button, modifiers },
+                _ => DispatchEvent::PointerUp { pointer, x, y, button, modifiers },
             })
         }
-        BROWSER_EVENT_WHEEL => BrowserHostEvent::Dispatch(DispatchEvent::Scroll { x: decoder.f32()?, y: decoder.f32()?, delta_x: decoder.f32()?, delta_y: decoder.f32()? }),
+        BROWSER_EVENT_WHEEL => BrowserHostEvent::Dispatch(DispatchEvent::Scroll {
+            x: decoder.f32()?,
+            y: decoder.f32()?,
+            delta_x: decoder.f32()?,
+            delta_y: decoder.f32()?,
+            modifiers: modifiers_from_bits(decoder.u8()?),
+        }),
         BROWSER_EVENT_KEY_DOWN | BROWSER_EVENT_KEY_UP => {
             let modifiers = modifiers_from_bits(decoder.u8()?);
             let key = decoder.string()?;

@@ -1,6 +1,5 @@
-
 use super::*;
-use semio_framework_job::{Generation, InteractiveStage, OperationId, StepBudget, drive_step, root_cancel_token};
+use semio_framework_job::{drive_step, root_cancel_token, Generation, InteractiveStage, OperationId, StepBudget};
 
 static PREPARED_PROCESS_TEST_LOCK: Mutex<()> = Mutex::new(());
 
@@ -118,6 +117,39 @@ fn paged_raster_producer_advances_one_page_and_moves_page_identity() {
     assert_eq!(first, source_pointer, "page view borrows the exact decoder backing");
     assert!(matches!(&upload, PreparedRenderUpload::RasterPages { pixels, .. } if pixels.page_pointer(0) == Some(first) && pixels.frame_generation() == 9));
     retire_raster_upload(upload);
+}
+
+#[test]
+fn paged_raster_content_identity_is_stable_and_changes_with_one_pixel_byte() {
+    fn complete(mut producer: PreparedRasterProducer, generation: u64) -> PreparedRenderUpload {
+        assert!(producer.bind_frame_generation(generation));
+        for _ in 0..8 {
+            if let PreparedRasterProducerStep::Complete(upload) = producer.step(generation) {
+                return upload;
+            }
+        }
+        panic!("bounded two-page producer did not complete");
+    }
+
+    let _guard = prepared_process_guard();
+    let first = vec![7; PREPARED_RASTER_PAGE_BYTES * 2];
+    let same = first.clone();
+    let mut changed = first.clone();
+    *changed.last_mut().expect("changed byte") = 8;
+    let (first, _) = PreparedRasterProducer::try_admit("first".into(), first, 4_096, 2).expect("first producer");
+    let (same, _) = PreparedRasterProducer::try_admit("same".into(), same, 4_096, 2).expect("same producer");
+    let (changed, _) = PreparedRasterProducer::try_admit("changed".into(), changed, 4_096, 2).expect("changed producer");
+    let first = complete(first, 31);
+    let same = complete(same, 32);
+    let changed = complete(changed, 33);
+    let PreparedRenderUpload::RasterPages { pixels: first_pixels, .. } = &first else { panic!("first pages") };
+    let PreparedRenderUpload::RasterPages { pixels: same_pixels, .. } = &same else { panic!("same pages") };
+    let PreparedRenderUpload::RasterPages { pixels: changed_pixels, .. } = &changed else { panic!("changed pages") };
+    assert_eq!(first_pixels.content_identity(), same_pixels.content_identity());
+    assert_ne!(first_pixels.content_identity(), changed_pixels.content_identity());
+    retire_raster_upload(first);
+    retire_raster_upload(same);
+    retire_raster_upload(changed);
 }
 
 #[test]
@@ -344,20 +376,26 @@ fn retained_codec_source_moves_once_and_retires_one_page_per_governed_step() {
     assert!(job.terminal_is_empty());
 }
 
-/// 🖼️ LAW: a scene pass is measured — and therefore ENCODED — textured underlay → opaque → lines →
-/// translucent, mirroring React's `renderOrder` of -10 (reference plane), -5 (grid) and 0 (model).
+/// 🌑️ LAW: the bounded caster prepass completes before every receiver, then the color pass
+/// keeps React's textured underlay → opaque → lines → translucent order.
 #[test]
-fn a_scene_pass_measures_its_textured_underlay_before_everything_it_sits_under() {
+fn an_enabled_shadow_pass_measures_every_caster_before_its_receivers() {
     let _guard = prepared_process_guard();
-    use crate::wgpu::kernel_3d_scene::{Instance3d, LineDraw3d, LineVertex3d, ScenePass3d, SceneDraw3d, TexturedDraw3d, TexturedInstance3d};
+    use crate::wgpu::kernel_3d_scene::{Instance3d, LineDraw3d, LineVertex3d, SceneDraw3d, SceneMaterialDraw3d, SceneMaterialKind3d, ScenePass3d, SceneShadowRole3d, TexturedDraw3d, TexturedInstance3d};
     let mut draw = DrawList::default();
-    let instance = Instance3d { id: String::new(), model: Instance3d::model_from_trs([0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 1.0], [1.0, 1.0, 1.0]), color: [1.0, 1.0, 1.0, 1.0], selected: false, hovered: false };
+    let instance = Instance3d { id: String::new(), model: Instance3d::model_from_trs([0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 1.0], [1.0, 1.0, 1.0]), color: [1.0, 1.0, 1.0, 1.0], selected: false, hovered: false, material: Default::default() };
     draw.push_scene_pass(ScenePass3d {
         viewport: [0.0, 0.0, 100.0, 40.0],
-        draws: vec![SceneDraw3d { mesh_key: String::new(), mesh_version: 0, instances: vec![instance.clone()] }],
-        translucent_draws: vec![SceneDraw3d { mesh_key: String::new(), mesh_version: 0, instances: vec![instance.clone()] }],
+        shadow: crate::wgpu::kernel_3d_scene::SceneShadow3d { enabled: true, ..Default::default() },
+        shadow_draws: vec![SceneDraw3d { mesh_key: "caster".into(), mesh_version: 0, instances: vec![instance.clone()], shadow_role: SceneShadowRole3d { casts: true, receives: true } }],
+        draws: vec![SceneDraw3d { mesh_key: String::new(), mesh_version: 0, instances: vec![instance.clone()], shadow_role: Default::default() }],
+        translucent_draws: vec![SceneDraw3d { mesh_key: String::new(), mesh_version: 0, instances: vec![instance.clone()], shadow_role: Default::default() }],
+        material_draws: vec![
+            SceneMaterialDraw3d { mesh_key: "painted".into(), mesh_version: 3, instances: vec![instance.clone()], material: SceneMaterialKind3d::Painted { texture_key: "paint-map".into() }, translucent: false },
+            SceneMaterialDraw3d { mesh_key: "celebrated".into(), mesh_version: 4, instances: vec![instance.clone()], material: SceneMaterialKind3d::Celebration { stops: [[1.0; 4]; 3], angle: 0.5 }, translucent: true },
+        ],
         line_draws: vec![LineDraw3d { vertices: vec![LineVertex3d { position: [0.0, 0.0, 0.0], color: [1.0, 1.0, 1.0, 1.0] }] }],
-        textured_draws: vec![TexturedDraw3d { instances: vec![TexturedInstance3d { texture_key: String::new(), model: instance.model, tint: [1.0, 1.0, 1.0, 0.85] }] }],
+        textured_draws: vec![TexturedDraw3d { instances: vec![TexturedInstance3d { texture_key: String::new(), model: instance.model, background: [0.0; 4], appearance: [0.85, 0.0, 0.0, 0.0] }] }],
         ..Default::default()
     });
 
@@ -365,12 +403,24 @@ fn a_scene_pass_measures_its_textured_underlay_before_everything_it_sits_under()
     let mut order = Vec::new();
     for _ in 0..64 {
         let label = match cursor {
+            DrawMeasureCursor::PassShadowBegin(..) | DrawMeasureCursor::PassShadowInstance { .. } => "shadow",
             DrawMeasureCursor::PassTextured { .. } | DrawMeasureCursor::PassTexturedInstance { .. } | DrawMeasureCursor::PassTexturedKey { .. } => "textured",
             DrawMeasureCursor::PassDraw { translucent, .. } | DrawMeasureCursor::PassDrawKey { translucent, .. } | DrawMeasureCursor::PassInstance { translucent, .. } | DrawMeasureCursor::PassInstanceKey { translucent, .. } => {
                 if translucent {
                     "translucent"
                 } else {
                     "opaque"
+                }
+            }
+            DrawMeasureCursor::PassMaterial { translucent, .. }
+            | DrawMeasureCursor::PassMaterialMeshKey { translucent, .. }
+            | DrawMeasureCursor::PassMaterialTextureKey { translucent, .. }
+            | DrawMeasureCursor::PassMaterialInstance { translucent, .. }
+            | DrawMeasureCursor::PassMaterialInstanceKey { translucent, .. } => {
+                if translucent {
+                    "material-translucent"
+                } else {
+                    "material-opaque"
                 }
             }
             DrawMeasureCursor::PassLine { .. } | DrawMeasureCursor::PassLineVertex { .. } => "lines",
@@ -383,7 +433,23 @@ fn a_scene_pass_measures_its_textured_underlay_before_everything_it_sits_under()
             break;
         }
     }
-    assert_eq!(order, vec!["textured", "opaque", "lines", "translucent"], "the underlay is measured first and the translucent draws last");
+    assert_eq!(order, vec!["shadow", "textured", "material-opaque", "opaque", "lines", "translucent", "material-translucent"], "casters complete before the underlay and every color receiver");
+}
+
+#[test]
+fn a_disabled_shadow_never_publishes_a_gpu_shadow_scalar() {
+    let _guard = prepared_process_guard();
+    use crate::wgpu::kernel_3d_scene::{Instance3d, SceneDraw3d, ScenePass3d};
+    let instance = Instance3d { id: String::new(), model: Instance3d::model_from_trs([0.0; 3], [0.0, 0.0, 0.0, 1.0], [1.0; 3]), color: [1.0; 4], selected: false, hovered: false, material: Default::default() };
+    let mut draw = DrawList::default();
+    draw.push_scene_pass(ScenePass3d { draws: vec![SceneDraw3d { mesh_key: String::new(), mesh_version: 0, instances: vec![instance], shadow_role: Default::default() }], ..Default::default() });
+    let mut cursor = DrawMeasureCursor::PassHeader(0);
+    for _ in 0..32 {
+        assert!(!matches!(cursor, DrawMeasureCursor::PassShadowBegin(..) | DrawMeasureCursor::PassShadowInstance { .. }));
+        if PreparedRenderJob::next_draw_usage(&draw, &mut cursor).is_none() || matches!(cursor, DrawMeasureCursor::Complete) {
+            break;
+        }
+    }
 }
 
 /// 🎟️ A raster producer must be bound to the frame it is published into BEFORE it is pushed, and the
@@ -831,21 +897,21 @@ fn tessellation_commands_retain_exact_scalar_and_overlay_cursors() {
         Some(packet) => packet,
         None => panic!("prepared packet handoff"),
     };
-    assert!(
-        (0..packet.commands.len())
-            .filter_map(|index| packet.commands.get(index))
-            .any(|command| { command.kind == PreparedRenderCommandKind::Tessellate && command.draw_cursor == Some(DrawMeasureCursor::LayerUi { layer: 0, item: 0, overlay: false }) && !command.packet_overlay })
-    );
+    assert!((0..packet.commands.len())
+        .filter_map(|index| packet.commands.get(index))
+        .any(|command| { command.kind == PreparedRenderCommandKind::Tessellate && command.draw_cursor == Some(DrawMeasureCursor::LayerUi { layer: 0, item: 0, overlay: false }) && !command.packet_overlay }));
     while !packet.retire_step() {}
     while !job.close_step() {}
 }
 
 #[test]
 fn prepared_measurement_retains_scene_and_overlay_raster_cursors() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔽️retained-select-overlay-raster/🔣️.json")).expect("retained Select/overlay raster fixture");
+    let key = fixture["image"]["sharedKey"].as_str().expect("shared raster key");
     let mut draw = DrawList::default();
-    draw.push_raster_quad("scene", [0.0, 0.0, 4.0, 4.0], [0.0, 0.0, 1.0, 1.0], 1.0);
+    draw.push_raster_quad(key, [0.0, 0.0, 4.0, 4.0], [0.0, 0.0, 1.0, 1.0], 1.0);
     draw.begin_overlay_route();
-    draw.push_raster_quad("overlay", [4.0, 0.0, 4.0, 4.0], [0.0, 0.0, 1.0, 1.0], 1.0);
+    draw.push_raster_quad(key, [4.0, 0.0, 4.0, 4.0], [0.0, 0.0, 1.0, 1.0], 1.0);
     draw.end_overlay_route();
     let mut cursor = DrawMeasureCursor::LayerHeader(0);
     let mut measured = Vec::new();
@@ -861,4 +927,39 @@ fn prepared_measurement_retains_scene_and_overlay_raster_cursors() {
     }
     assert!(measured.contains(&DrawMeasureCursor::LayerRaster { layer: 0, raster: 0, overlay: false }));
     assert!(measured.contains(&DrawMeasureCursor::LayerRaster { layer: 0, raster: 0, overlay: true }));
+    let raster_order: Vec<_> = measured
+        .iter()
+        .filter_map(|cursor| match cursor {
+            DrawMeasureCursor::LayerRaster { overlay, .. } => Some(*overlay),
+            _ => None,
+        })
+        .collect();
+    for row in fixture["image"]["draws"].as_array().expect("draw order rows") {
+        let ordinal = usize::try_from(row["expectedOrdinal"].as_u64().expect("expected ordinal")).expect("ordinal fits");
+        assert_eq!(raster_order.get(ordinal).copied(), Some(row["route"].as_str() == Some("overlay")));
+    }
+}
+
+#[test]
+fn prepared_packet_publishes_main_overlay_and_top_overlay_raster_owners() {
+    let _guard = prepared_process_guard();
+    let mut packet = packet(7, 3);
+    packet.draw.push_raster_quad("main-image", [0.0, 0.0, 4.0, 4.0], [0.0, 0.0, 1.0, 1.0], 1.0);
+    packet.draw.begin_overlay_route();
+    packet.draw.push_raster_quad("inline-overlay-image", [4.0, 0.0, 4.0, 4.0], [0.0, 0.0, 1.0, 1.0], 1.0);
+    packet.draw.end_overlay_route();
+    let mut overlay = DrawList::default();
+    overlay.push_raster_quad("top-overlay-image", [8.0, 0.0, 4.0, 4.0], [0.0, 0.0, 1.0, 1.0], 1.0);
+    packet.overlay = Some(overlay);
+    let mut cursor = PreparedRasterKeepCursorV1::default();
+    let mut keys = Vec::new();
+    for _ in 0..64 {
+        match packet.raster_keep_step(&mut cursor) {
+            PreparedRasterKeepStepV1::Pending => {}
+            PreparedRasterKeepStepV1::Key(key) => keys.push(key.to_owned()),
+            PreparedRasterKeepStepV1::Complete => break,
+        }
+    }
+    assert_eq!(keys, ["main-image", "inline-overlay-image", "top-overlay-image"]);
+    while !packet.retire_step() {}
 }

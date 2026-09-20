@@ -16,8 +16,11 @@ import {
   readStoredUiChromeAppearance,
   readStoredUiChromeLayout,
   readStoredUiDriver,
+  registerUiTranslationBundles,
+  uiDataLabel,
   UI_MOBILE_MEDIA_QUERY,
   useElementsSurfaceChrome,
+  useLabel,
   useMediaQuery,
 } from "@semio-tech/ui-react";
 import { createBrowserStoragePort, resolvePlaygroundBoot } from "@semio-tech/framework";
@@ -25,7 +28,7 @@ import { PLUGIN_CATALOG } from "@semio-tech/plugin-registry/catalog";
 import { FrameworkOsShell, resolveShellLocks, resolveShellDefaults } from "@semio-tech/framework-renderer-react";
 import { PUZZLE_BOARD_SESSION_FACTORIES } from "@semio-tech/puzzle-js";
 import { PlayCard } from "./⚛️play-card.tsx";
-import { PLAY_LOCALE, PLAY_PANES, SEMIO_TECH_PLAY_INTRODUCTION, SEMIO_TECH_PLAY_LOGO_SVG, playGridDimensions, playPanesOverBudget, type PlayPaneSpec } from "./🪧️brand.ts";
+import { PLAY_LOCALE, PLAY_PANES, SEMIO_TECH_PLAY_INTRODUCTION, SEMIO_TECH_PLAY_LOGO_SVG, playGridDimensions, playNextWarmBootPane, playOccupiedColumnRange, playPaneGridCell, playPanesOverBudget, schedulePlayIdle, type PlayPaneSpec } from "./🪧️brand.ts";
 import "./🎨️globals.css";
 
 // 🎡️ Page-owning (single React root, no `ShellScope` of its own) — plain browser storage is correct;
@@ -38,16 +41,54 @@ initUiLocaleSync(PLAY_LOCALE);
 /** @emoji 📱️ Touch-first viewports use the vertical snap list even when wider than {@link UI_MOBILE_MEDIA_QUERY}. */
 const PLAY_TOUCH_LIST_MEDIA_QUERY = `${UI_MOBILE_MEDIA_QUERY} and (hover: none) and (pointer: coarse)`;
 
+//#region 🌐️PlayLandingLabels
+/** @emoji 🌐️ The landing's own chrome strings. Play locks its shells to {@link PLAY_LOCALE}, but chrome
+ * never carries a default language: every key is registered for English AND German, and the page reads
+ * them through `useLabel` like any other shell — so the same landing serves a German lock unchanged. */
+export const playLandingUiLabel = registerUiTranslationBundles({
+  en: {
+    translation: {
+      play: {
+        landing: {
+          appCount: { label: { normal: "{{apps}} apps", beginner: "{{apps}} apps" } },
+          overview: { label: { normal: "Overview", beginner: "Back to all apps" } },
+          paneWaiting: { label: { normal: "{{label}} is waiting to start", beginner: "{{label}} is waiting to start" } },
+          paneFailed: { label: { normal: "{{label}} could not be loaded.", beginner: "{{label}} could not be loaded." } },
+          grid: { label: { normal: "Every semio app", beginner: "Every semio app" } },
+        },
+      },
+    },
+  },
+  de: {
+    translation: {
+      play: {
+        landing: {
+          appCount: { label: { normal: "{{apps}} Apps", beginner: "{{apps}} Apps" } },
+          overview: { label: { normal: "Übersicht", beginner: "Zurück zu allen Apps" } },
+          paneWaiting: { label: { normal: "{{label}} wartet auf den Start", beginner: "{{label}} wartet auf den Start" } },
+          paneFailed: { label: { normal: "{{label}} konnte nicht geladen werden.", beginner: "{{label}} konnte nicht geladen werden." } },
+          grid: { label: { normal: "Alle semio Apps", beginner: "Alle semio Apps" } },
+        },
+      },
+    },
+  },
+});
+//#endregion 🌐️PlayLandingLabels
+
 //#region 🎡️PlayGridGeometry
 /** @emoji 🔢️ Columns and rows of the play grid; the strip spans `columns * 100vw` by `rows * 100vh`. */
 const { columns: PLAY_GRID_COLUMNS, rows: PLAY_GRID_ROWS } = playGridDimensions(PLAY_PANES.length);
 
+/** @emoji 📍️ Every pane's cell, row-major with the short trailing row centred — the single source both the
+ * pane strip, the card overlay and every scroll offset read, so a centred pane still pins under its card. */
+const PLAY_GRID_CELLS: readonly { readonly column: number; readonly row: number }[] = PLAY_PANES.map((_, paneIndex) => playPaneGridCell(paneIndex, PLAY_PANES.length));
+
 function paneColumn(paneIndex: number): number {
-  return paneIndex % PLAY_GRID_COLUMNS;
+  return PLAY_GRID_CELLS[paneIndex]?.column ?? 0;
 }
 
 function paneRow(paneIndex: number): number {
-  return Math.floor(paneIndex / PLAY_GRID_COLUMNS);
+  return PLAY_GRID_CELLS[paneIndex]?.row ?? 0;
 }
 
 function paneIndexById(id: string): number {
@@ -65,6 +106,14 @@ type ScrollOffset = { readonly x: number; readonly y: number };
 
 /** @emoji 🧭️ Largest scroll offset that still keeps the last column and row flush with the viewport edge. */
 const PLAY_MAX_SCROLL: ScrollOffset = { x: (PLAY_GRID_COLUMNS - 1) * 100, y: (PLAY_GRID_ROWS - 1) * 100 };
+
+/** @emoji 🧭️ Keeps a free pan on occupied ground ({@link playOccupiedColumnRange}): the flanks beside a
+ * short trailing row are never a viewport of their own, so the overview has no reachable empty cell. */
+function clampScrollOffset(offset: ScrollOffset): ScrollOffset {
+  const y = Math.min(PLAY_MAX_SCROLL.y, Math.max(0, offset.y));
+  const { first, last } = playOccupiedColumnRange(y / 100, PLAY_PANES.length);
+  return { x: Math.min(last * 100, Math.max(first * 100, offset.x)), y };
+}
 
 /** @emoji 🎞 Programmatic pane pin / focus glide duration — one rAF timeline owns the transform. */
 const PLAY_SCROLL_GLIDE_MS = 500;
@@ -151,6 +200,17 @@ const PLAY_SUSPENSION_SWEEP_MS = 5_000;
 /** @emoji ⏱️ A pristine pane nobody has looked at for this long is released even within budget. */
 const PLAY_IDLE_SUSPEND_MS = 2 * 60_000;
 
+/** @emoji ⏱️ Grace period before the background warm-boot queue starts, so the first paint and the
+ * introduction are never fighting a wasm plugin boot for the main thread. */
+const PLAY_WARM_BOOT_START_MS = 4_000;
+
+/** @emoji ⏱️ Distance between two warm boots — one pane's 30-second plugin-load budget must be over
+ * before the next shell starts competing with it. */
+const PLAY_WARM_BOOT_INTERVAL_MS = 35_000;
+
+/** @emoji 📋️ Warm-boot order IS grid order. */
+const PLAY_PANE_IDS: readonly string[] = PLAY_PANES.map((pane) => pane.id);
+
 /** @emoji 🖼️ Composites every canvas inside a pane's container into one offscreen 2D canvas and returns
  * it as a data URL — synchronously, before a `preserveDrawingBuffer: false` backbuffer is cleared. */
 function capturePanePoster(container: HTMLElement): string | null {
@@ -182,14 +242,18 @@ function capturePanePoster(container: HTMLElement): string | null {
   }
 }
 
-/** @emoji 🎡️ Boots panes on demand (hash, hover, focus, keyboard) and keeps at most
- * {@link PLAY_LIVE_PANE_BUDGET} of them live: the least recently touched PRISTINE pane is released to a
- * poster first. A pane the user interacted with is never released, because its document would be lost. */
+/** @emoji 🎡️ Boots panes on demand (hash, hover, focus, keyboard) plus a slow background warm-boot queue
+ * ({@link playNextWarmBootPane}), and keeps at most {@link PLAY_LIVE_PANE_BUDGET} of them live: the least
+ * recently touched PRISTINE pane is released to a poster first. A pane the user interacted with is never
+ * released, because its document would be lost. A warm-booted pane carries no touch timestamp, so it sorts
+ * ahead of every user-touched pane in the release order and never idles one of them out. */
 function usePaneLifecycle(initialFocusId: string | null, focusedId: string | null): {
   readonly bootedIds: ReadonlySet<string>;
   readonly suspendedIds: ReadonlySet<string>;
+  readonly liveCount: number;
   readonly postersById: ReadonlyMap<string, string>;
   readonly touch: (id: string) => void;
+  readonly warm: (id: string) => void;
   readonly markDirty: (id: string) => void;
   readonly registerContainer: (id: string, el: HTMLDivElement | null) => void;
 } {
@@ -209,6 +273,14 @@ function usePaneLifecycle(initialFocusId: string | null, focusedId: string | nul
       next.delete(id);
       return next;
     });
+  }, []);
+
+  /** @emoji 🐢️ Only the very first warm boot waits the short start grace; every later one waits a full interval. */
+  const warmedRef = useRef(false);
+
+  const warm = useCallback((id: string) => {
+    warmedRef.current = true;
+    setBootedIds((prev) => (prev.has(id) ? prev : new Set(prev).add(id)));
   }, []);
 
   const markDirty = useCallback((id: string) => {
@@ -237,9 +309,17 @@ function usePaneLifecycle(initialFocusId: string | null, focusedId: string | nul
     [bootedIds, suspendedIds],
   );
 
+  const liveCount = useMemo(() => [...bootedIds].filter((id) => !suspendedIds.has(id)).length, [bootedIds, suspendedIds]);
+
   useEffect(() => {
     suspend(playPanesOverBudget(liveByRecency(), dirtyIds, focusedId, PLAY_LIVE_PANE_BUDGET));
   }, [liveByRecency, dirtyIds, focusedId, suspend]);
+
+  useEffect(() => {
+    const step = playNextWarmBootPane(PLAY_PANE_IDS, bootedIds, liveCount, focusedId, PLAY_LIVE_PANE_BUDGET);
+    if (step.kind !== "boot") return;
+    return schedulePlayIdle(() => warm(step.id), warmedRef.current ? PLAY_WARM_BOOT_INTERVAL_MS : PLAY_WARM_BOOT_START_MS, window);
+  }, [bootedIds, liveCount, focusedId, warm]);
 
   useEffect(() => {
     const sweep = () => {
@@ -251,13 +331,13 @@ function usePaneLifecycle(initialFocusId: string | null, focusedId: string | nul
     return () => window.clearInterval(interval);
   }, [liveByRecency, dirtyIds, focusedId, suspend]);
 
-  return { bootedIds, suspendedIds, postersById, touch, markDirty, registerContainer };
+  return { bootedIds, suspendedIds, liveCount, postersById, touch, warm, markDirty, registerContainer };
 }
 //#endregion 🎡️PlayPaneLifecycle
 
 //#region 🛟️PaneErrorBoundary
 /** @emoji 🛟️ One pane crashing must never take down the others or the landing chrome around them. */
-type PaneErrorBoundaryProps = { readonly paneLabel: string; readonly children: UiNode };
+type PaneErrorBoundaryProps = { readonly paneLabel: string; readonly failedLabel: string; readonly children: UiNode };
 type PaneErrorBoundaryState = { readonly error: Error | null };
 
 const PaneErrorBoundary = createUiErrorBoundary<PaneErrorBoundaryProps, PaneErrorBoundaryState>({
@@ -267,8 +347,8 @@ const PaneErrorBoundary = createUiErrorBoundary<PaneErrorBoundaryProps, PaneErro
   render: (props, state) => {
     if (state.error) {
       return (
-        <div data-play-pane-error="" className="flex h-full w-full items-center justify-center bg-background p-double text-center text-sm text-muted-foreground">
-          {props.paneLabel} could not be loaded.
+        <div data-play-pane-error="" role="alert" className="flex h-full w-full items-center justify-center bg-background p-double text-center text-sm text-muted-foreground">
+          {props.failedLabel}
         </div>
       );
     }
@@ -286,6 +366,7 @@ function PlayPane({
   focused,
   suspended,
   posterDataUrl,
+  style,
   onDirty,
   onContainerElement,
 }: {
@@ -294,12 +375,16 @@ function PlayPane({
   readonly focused: boolean;
   readonly suspended: boolean;
   readonly posterDataUrl: string | null;
+  /** @emoji 📍️ Explicit grid placement — the trailing row is centred, so cells are never auto-flowed. */
+  readonly style?: { readonly gridColumn: number; readonly gridRow: number };
   readonly onDirty: () => void;
   readonly onContainerElement: (id: string, el: HTMLDivElement | null) => void;
 }) {
   const boot = useMemo(() => resolvePlaygroundBoot(PLUGIN_CATALOG, pane.variant), [pane.variant]);
   const locks = useMemo(() => resolveShellLocks(pane.brand.locks), [pane.brand]);
   const defaults = useMemo(() => resolveShellDefaults(pane.brand, undefined), [pane.brand]);
+  const waitingLabel = useLabel(playLandingUiLabel("play.landing.paneWaiting"), { label: pane.label });
+  const failedLabel = useLabel(playLandingUiLabel("play.landing.paneFailed"), { label: pane.label });
   const live = booted && !suspended;
 
   return (
@@ -307,12 +392,13 @@ function PlayPane({
       ref={(el) => onContainerElement(pane.id, el)}
       data-play-pane={pane.id}
       className="relative h-full w-full overflow-hidden bg-background"
+      style={style}
       inert={!focused}
       onPointerDownCapture={onDirty}
       onKeyDownCapture={onDirty}
     >
       {live ? (
-        <PaneErrorBoundary paneLabel={pane.label}>
+        <PaneErrorBoundary paneLabel={pane.label} failedLabel={failedLabel}>
           <FrameworkOsShell
             pluginFilter={pane.variant}
             plugins={boot.plugins}
@@ -329,10 +415,10 @@ function PlayPane({
       ) : booted && suspended && posterDataUrl ? (
         <img src={posterDataUrl} alt="" className="h-full w-full object-cover" aria-hidden />
       ) : (
-        <div className={cn("flex h-full w-full flex-col items-center justify-center gap-double bg-background", loadingBorderClass)} role="status" aria-busy={booted}>
-          <Icon icon={pane.icon} size="large" className="text-foreground opacity-40" />
+        <div className={cn("flex h-full w-full flex-col items-center justify-center gap-double bg-background", loadingBorderClass)} role="status" aria-busy={booted} aria-label={waitingLabel}>
+          <Icon icon={pane.icon} size="large" className="text-foreground opacity-40" title={uiDataLabel(pane.label)} />
           <div className="h-full min-h-0 w-full max-w-4xl flex-1 p-double">
-            <CanvasSkeleton label={`${pane.label} is waiting to start`} />
+            <CanvasSkeleton label={waitingLabel} />
           </div>
         </div>
       )}
@@ -356,7 +442,10 @@ function PlayLanding() {
   const [introductionStep, setIntroductionStep] = useState(0);
   const [showIntroduction, setShowIntroduction] = useState(!initialFocusId);
   const [focusedId, setFocusedId] = useState<string | null>(initialFocusId);
-  const { bootedIds, suspendedIds, postersById, touch, markDirty, registerContainer } = usePaneLifecycle(initialFocusId, focusedId);
+  const { bootedIds, suspendedIds, liveCount, postersById, touch, warm, markDirty, registerContainer } = usePaneLifecycle(initialFocusId, focusedId);
+  const appCountLabel = useLabel(playLandingUiLabel("play.landing.appCount"), { apps: PLAY_PANES.length });
+  const overviewLabel = useLabel(playLandingUiLabel("play.landing.overview"));
+  const gridLabel = useLabel(playLandingUiLabel("play.landing.grid"));
   const [hoveredPaneId, setHoveredPaneId] = useState<string | null>(null);
   const [revealRect, setRevealRect] = useState<RectPx | null>(null);
   const hoveredPaneIdRef = useRef<string | null>(null);
@@ -479,11 +568,16 @@ function PlayLanding() {
     });
   }, [listScrollLocked]);
 
+  // 📱️ Snap-list scrolling warms the pane the user is about to land on as well as the one under the thumb,
+  // but only while a slot is free — the preload must never cost a pane the user already touched.
   useEffect(() => {
     if (!touchListMode || focusedId) return;
-    const pane = PLAY_PANES[Math.round(listProgress)];
+    const current = Math.round(listProgress);
+    const pane = PLAY_PANES[current];
     if (pane) touch(pane.id);
-  }, [touchListMode, listProgress, focusedId, touch]);
+    const next = PLAY_PANES[current + 1];
+    if (next && liveCount < PLAY_LIVE_PANE_BUDGET) warm(next.id);
+  }, [touchListMode, listProgress, focusedId, touch, warm, liveCount]);
 
   const refreshRevealRect = useCallback((paneId: string | null, offset: ScrollOffset) => {
     const paneIndex = paneId ? paneIndexById(paneId) : -1;
@@ -509,7 +603,7 @@ function PlayLanding() {
       if (hoveredPaneIdRef.current) return;
       if (scrollDriveRef.current.mode !== "follow") scrollEpochRef.current += 1;
       scrollDriveRef.current = { mode: "follow" };
-      scrollTargetRef.current = { x: (event.clientX / window.innerWidth) * PLAY_MAX_SCROLL.x, y: (event.clientY / window.innerHeight) * PLAY_MAX_SCROLL.y };
+      scrollTargetRef.current = clampScrollOffset({ x: (event.clientX / window.innerWidth) * PLAY_MAX_SCROLL.x, y: (event.clientY / window.innerHeight) * PLAY_MAX_SCROLL.y });
       ensureScrollLoopRef.current();
     };
     window.addEventListener("mousemove", onMove, { passive: true });
@@ -605,7 +699,7 @@ function PlayLanding() {
                     semio Play
                   </span>
                   <span data-slot="play-app-count" className="text-xs text-muted-foreground">
-                    {PLAY_PANES.length} apps
+                    {appCountLabel}
                   </span>
                 </div>
               ),
@@ -623,10 +717,11 @@ function PlayLanding() {
       type="button"
       onClick={returnToOverview}
       data-play-overview-button=""
+      aria-label={overviewLabel}
       className="ui-glass absolute right-double top-double z-40 inline-flex items-center gap-single rounded-md border border-border-normal px-single py-half text-sm font-medium text-foreground shadow-md outline-none transition-colors hover:border-border-emphasized focus-visible:ring-2 focus-visible:ring-ring"
     >
       <Icon icon="layout-grid" size="small" />
-      Overview
+      {overviewLabel}
     </button>
   ) : null;
 
@@ -636,6 +731,7 @@ function PlayLanding() {
         <div
           ref={listScrollRef}
           data-play-list-scroll=""
+          aria-label={gridLabel}
           onScroll={handleListScroll}
           className={cn("flex w-full flex-col overscroll-y-contain", listScrollLocked ? "overflow-hidden" : "snap-y snap-mandatory overflow-y-auto")}
           style={{ height: "100dvh" }}
@@ -684,7 +780,7 @@ function PlayLanding() {
           transform: `translate(-${scrollOffset.x}vw, -${scrollOffset.y}vh)`,
         }}
       >
-        {PLAY_PANES.map((pane) => (
+        {PLAY_PANES.map((pane, paneIndex) => (
           <PlayPane
             key={pane.id}
             pane={pane}
@@ -692,6 +788,7 @@ function PlayLanding() {
             focused={focusedId === pane.id}
             suspended={suspendedIds.has(pane.id)}
             posterDataUrl={postersById.get(pane.id) ?? null}
+            style={{ gridColumn: paneColumn(paneIndex) + 1, gridRow: paneRow(paneIndex) + 1 }}
             onDirty={() => markDirty(pane.id)}
             onContainerElement={registerContainer}
           />
@@ -708,11 +805,13 @@ function PlayLanding() {
 
           <div
             data-play-overview=""
+            role="navigation"
+            aria-label={gridLabel}
             className="pointer-events-none absolute inset-0 z-[31] grid items-center pb-double pt-[calc(var(--size-workbench)*1.5)]"
             style={{ gridTemplateColumns: `repeat(${PLAY_GRID_COLUMNS}, minmax(0, 1fr))`, gridTemplateRows: `repeat(${PLAY_GRID_ROWS}, minmax(0, 1fr))` }}
           >
             {PLAY_PANES.map((pane, paneIndex) => (
-              <div key={pane.id} className="flex min-w-0 justify-center px-single">
+              <div key={pane.id} className="flex min-w-0 justify-center px-single" style={{ gridColumn: paneColumn(paneIndex) + 1, gridRow: paneRow(paneIndex) + 1 }}>
                 <PlayCard
                   pane={pane}
                   lifted={hoveredPaneId === pane.id}

@@ -1,0 +1,57 @@
+{
+  "descriptorVersion": 1,
+  "packageId": "semio:imperative-extension-control",
+  "role": "extension",
+  "manifest": {
+    "pluginId": "imperative-extension-control",
+    "label": "Imperative Control",
+    "version": "0.1.0",
+    "apps": [],
+    "examples": [],
+    "capabilities": [],
+    "topicContributions": [
+      {
+        "topic": "imperative.module",
+        "payload": {
+          "appId": "imperative-play",
+          "iconId": "git-branch",
+          "label": "Control",
+          "manifestJson": "{\"schema\":\"imperative.extension\",\"id\":\"control\",\"name\":\"Control\",\"version\":\"0.1.0\",\"contributes\":{\"operators\":[],\"catalogueJson\":\"{\\\"schema\\\":\\\"imperative.catalogue\\\",\\\"sections\\\":[{\\\"id\\\":\\\"control\\\",\\\"title\\\":\\\"Control\\\",\\\"items\\\":[{\\\"kind\\\":\\\"control.if\\\",\\\"name\\\":\\\"If\\\",\\\"abbreviation\\\":\\\"If\\\",\\\"icon\\\":\\\"emoji:🔀️\\\",\\\"summary\\\":\\\"Runs the then or else body based on a boolean scope key.\\\",\\\"module\\\":\\\"control\\\",\\\"inputs\\\":[{\\\"name\\\":\\\"key\\\",\\\"code\\\":\\\"S\\\"}],\\\"bodies\\\":[\\\"then\\\",\\\"else\\\"]},{\\\"kind\\\":\\\"control.while\\\",\\\"name\\\":\\\"While\\\",\\\"abbreviation\\\":\\\"Whl\\\",\\\"icon\\\":\\\"emoji:🔁️\\\",\\\"summary\\\":\\\"Repeats the body while a boolean scope key is true.\\\",\\\"module\\\":\\\"control\\\",\\\"inputs\\\":[{\\\"name\\\":\\\"key\\\",\\\"code\\\":\\\"S\\\"}],\\\"bodies\\\":[\\\"body\\\"]},{\\\"kind\\\":\\\"control.repeat\\\",\\\"name\\\":\\\"Repeat\\\",\\\"abbreviation\\\":\\\"Rpt\\\",\\\"icon\\\":\\\"emoji:🔁️\\\",\\\"summary\\\":\\\"Repeats the body a fixed number of times.\\\",\\\"module\\\":\\\"control\\\",\\\"inputs\\\":[{\\\"name\\\":\\\"count\\\",\\\"code\\\":\\\"N\\\"}],\\\"bodies\\\":[\\\"body\\\"]}]}]}\"}}",
+          "moduleId": "control"
+        }
+      }
+    ],
+    "commands": [],
+    "artifactKinds": [],
+    "dependencies": [
+      {
+        "pluginId": "imperative",
+        "version": "*"
+      }
+    ]
+  },
+  "execution": "linked",
+  "executionProtocol": {
+    "appChannelVersion": 17
+  },
+  "quotas": {},
+  "contributions": {
+    "topicContributions": [
+      {
+        "topic": "imperative.module",
+        "payload": {
+          "appId": "imperative-play",
+          "iconId": "git-branch",
+          "label": "Control",
+          "manifestJson": "{\"schema\":\"imperative.extension\",\"id\":\"control\",\"name\":\"Control\",\"version\":\"0.1.0\",\"contributes\":{\"operators\":[],\"catalogueJson\":\"{\\\"schema\\\":\\\"imperative.catalogue\\\",\\\"sections\\\":[{\\\"id\\\":\\\"control\\\",\\\"title\\\":\\\"Control\\\",\\\"items\\\":[{\\\"kind\\\":\\\"control.if\\\",\\\"name\\\":\\\"If\\\",\\\"abbreviation\\\":\\\"If\\\",\\\"icon\\\":\\\"emoji:🔀️\\\",\\\"summary\\\":\\\"Runs the then or else body based on a boolean scope key.\\\",\\\"module\\\":\\\"control\\\",\\\"inputs\\\":[{\\\"name\\\":\\\"key\\\",\\\"code\\\":\\\"S\\\"}],\\\"bodies\\\":[\\\"then\\\",\\\"else\\\"]},{\\\"kind\\\":\\\"control.while\\\",\\\"name\\\":\\\"While\\\",\\\"abbreviation\\\":\\\"Whl\\\",\\\"icon\\\":\\\"emoji:🔁️\\\",\\\"summary\\\":\\\"Repeats the body while a boolean scope key is true.\\\",\\\"module\\\":\\\"control\\\",\\\"inputs\\\":[{\\\"name\\\":\\\"key\\\",\\\"code\\\":\\\"S\\\"}],\\\"bodies\\\":[\\\"body\\\"]},{\\\"kind\\\":\\\"control.repeat\\\",\\\"name\\\":\\\"Repeat\\\",\\\"abbreviation\\\":\\\"Rpt\\\",\\\"icon\\\":\\\"emoji:🔁️\\\",\\\"summary\\\":\\\"Repeats the body a fixed number of times.\\\",\\\"module\\\":\\\"control\\\",\\\"inputs\\\":[{\\\"name\\\":\\\"count\\\",\\\"code\\\":\\\"N\\\"}],\\\"bodies\\\":[\\\"body\\\"]}]}]}\"}}",
+          "moduleId": "control"
+        }
+      }
+    ]
+  },
+  "hashes": {
+    "wasmSha256": "65a2c4301ac3d17f3cd3b9404b3fb1d0d98d3ff0bb030bc6a2dd039a5e74b005",
+    "coreWasmSha256": "0d9186062a5f5a722ca433d66cc47d411a24ac1a29dbcf11b60d8efe8031951a",
+    "descriptorSha256": "faaa8521614776d88fd062d4659eab7804a420dbead35193c6638962dba64fe8"
+  }
+}

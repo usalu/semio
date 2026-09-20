@@ -44,20 +44,6 @@ fn hmac_sha256_matches_third_party_vectors() {
 }
 
 #[test]
-fn pbkdf2_sha256_matches_third_party_vectors() {
-    let fixture: serde_json::Value = serde_json::from_str(VECTORS).expect("pbkdf2 vector fixture");
-    let vectors = fixture["pbkdf2Sha256"].as_array().expect("pbkdf2 vectors");
-    assert_eq!(vectors.len(), 4);
-    for vector in vectors {
-        let name = vector["name"].as_str().expect("name");
-        let password = vector["password"].as_str().expect("password");
-        let salt = decode_hex(vector["saltHex"].as_str().expect("salt"));
-        let iterations = u32::try_from(vector["iterations"].as_u64().expect("iterations")).expect("iteration bound");
-        assert_eq!(encode_hex(&pbkdf2_sha256(password.as_bytes(), &salt, iterations)), vector["digestHex"].as_str().expect("digest"), "pbkdf2 vector {name}");
-    }
-}
-
-#[test]
 fn credential_round_trips_through_its_encoding_and_verifies_only_the_right_password() {
     let credential = PasswordCredentialV1::derive("correct horse battery staple", [0x11; 16], 1_000).expect("derive");
     let encoded = credential.encode();
@@ -255,31 +241,53 @@ fn structural(export: &str) -> semio_framework_schema::OwnedJsonSchemaValidator 
     semio_framework_schema::OwnedJsonSchemaValidator::compile(&document.to_string()).unwrap_or_else(|error| panic!("{export} does not compile: {error:?}"))
 }
 
-#[test]
-fn the_rust_decoders_and_the_json_schema_admit_exactly_the_same_wire() {
-    let request = serde_json::json!({ "schema": CREDENTIAL_SIGN_IN_SCHEMA, "email": "person@example.com", "password": "correct horse battery staple", "deviceInstanceId": "device-1", "clientClass": "browser" });
-    let request_schema = structural("CredentialSignInRequestV1");
-    assert!(request_schema.is_valid_json(&request.to_string()));
-    assert!(serde_json::from_value::<CredentialSignInRequestV1>(request.clone()).expect("decode").verify().is_ok());
-    for (name, mutate) in [
-        ("unknown field", serde_json::json!({ "schema": CREDENTIAL_SIGN_IN_SCHEMA, "email": "person@example.com", "password": "correct horse battery staple", "deviceInstanceId": "device-1", "clientClass": "browser", "extra": 1 })),
-        ("short password", serde_json::json!({ "schema": CREDENTIAL_SIGN_IN_SCHEMA, "email": "person@example.com", "password": "short", "deviceInstanceId": "device-1", "clientClass": "browser" })),
-        ("no at sign", serde_json::json!({ "schema": CREDENTIAL_SIGN_IN_SCHEMA, "email": "person.example.com", "password": "correct horse battery staple", "deviceInstanceId": "device-1", "clientClass": "browser" })),
-        ("spaced device", serde_json::json!({ "schema": CREDENTIAL_SIGN_IN_SCHEMA, "email": "person@example.com", "password": "correct horse battery staple", "deviceInstanceId": "device 1", "clientClass": "browser" })),
-        ("unknown class", serde_json::json!({ "schema": CREDENTIAL_SIGN_IN_SCHEMA, "email": "person@example.com", "password": "correct horse battery staple", "deviceInstanceId": "device-1", "clientClass": "robot" })),
-        ("wrong schema", serde_json::json!({ "schema": "semio.hub.auth.credential-sign-in/v2", "email": "person@example.com", "password": "correct horse battery staple", "deviceInstanceId": "device-1", "clientClass": "browser" })),
-    ] {
-        assert!(!request_schema.is_valid_json(&mutate.to_string()), "{name} must fail the schema");
-        let decoded = serde_json::from_value::<CredentialSignInRequestV1>(mutate).map_err(|_| AuthErrorCodeV1::MalformedRequest).and_then(CredentialSignInRequestV1::verify);
-        assert!(decoded.is_err(), "{name} must fail the Rust decoder");
-    }
+mod quick {
+    use super::*;
 
-    let minted = SessionMintResponseV1 { token: format!("session.v1.{}.{}", "0".repeat(32), "a".repeat(64)), user_id: "usr-1".into() };
-    assert!(structural("SessionMintResponseV1").is_valid_json(&serde_json::to_string(&minted).expect("mint json")));
-    let error_schema = structural("AuthErrorV1");
-    assert!(error_schema.is_valid_json(&serde_json::to_string(&AuthErrorV1::new(AuthErrorCodeV1::InvalidCredentials)).expect("error json")));
-    assert!(error_schema.is_valid_json(&serde_json::to_string(&AuthErrorV1::rate_limited(6_000)).expect("error json")));
-    let credential_schema = structural("CredentialHashV1");
-    assert!(credential_schema.is_valid_json(&serde_json::to_string(&PasswordCredentialV1::derive("correct horse battery staple", [0x2a; 16], 210_000).expect("derive").encode()).expect("credential json")));
-    assert!(!credential_schema.is_valid_json(&serde_json::to_string("pbkdf2-sha512$1000$00$00").expect("credential json")));
+    #[test]
+    fn pbkdf2_sha256_matches_third_party_vectors() {
+        let fixture: serde_json::Value = serde_json::from_str(VECTORS).expect("pbkdf2 vector fixture");
+        let vectors = fixture["pbkdf2Sha256"].as_array().expect("pbkdf2 vectors");
+        assert_eq!(vectors.len(), 4);
+        for vector in vectors {
+            let name = vector["name"].as_str().expect("name");
+            let password = vector["password"].as_str().expect("password");
+            let salt = decode_hex(vector["saltHex"].as_str().expect("salt"));
+            let iterations = u32::try_from(vector["iterations"].as_u64().expect("iterations")).expect("iteration bound");
+            assert_eq!(encode_hex(&pbkdf2_sha256(password.as_bytes(), &salt, iterations)), vector["digestHex"].as_str().expect("digest"), "pbkdf2 vector {name}");
+        }
+    }
+}
+
+mod long {
+    use super::*;
+
+    #[test]
+    fn the_rust_decoders_and_the_json_schema_admit_exactly_the_same_wire() {
+        let request = serde_json::json!({ "schema": CREDENTIAL_SIGN_IN_SCHEMA, "email": "person@example.com", "password": "correct horse battery staple", "deviceInstanceId": "device-1", "clientClass": "browser" });
+        let request_schema = structural("CredentialSignInRequestV1");
+        assert!(request_schema.is_valid_json(&request.to_string()));
+        assert!(serde_json::from_value::<CredentialSignInRequestV1>(request.clone()).expect("decode").verify().is_ok());
+        for (name, mutate) in [
+            ("unknown field", serde_json::json!({ "schema": CREDENTIAL_SIGN_IN_SCHEMA, "email": "person@example.com", "password": "correct horse battery staple", "deviceInstanceId": "device-1", "clientClass": "browser", "extra": 1 })),
+            ("short password", serde_json::json!({ "schema": CREDENTIAL_SIGN_IN_SCHEMA, "email": "person@example.com", "password": "short", "deviceInstanceId": "device-1", "clientClass": "browser" })),
+            ("no at sign", serde_json::json!({ "schema": CREDENTIAL_SIGN_IN_SCHEMA, "email": "person.example.com", "password": "correct horse battery staple", "deviceInstanceId": "device-1", "clientClass": "browser" })),
+            ("spaced device", serde_json::json!({ "schema": CREDENTIAL_SIGN_IN_SCHEMA, "email": "person@example.com", "password": "correct horse battery staple", "deviceInstanceId": "device 1", "clientClass": "browser" })),
+            ("unknown class", serde_json::json!({ "schema": CREDENTIAL_SIGN_IN_SCHEMA, "email": "person@example.com", "password": "correct horse battery staple", "deviceInstanceId": "device-1", "clientClass": "robot" })),
+            ("wrong schema", serde_json::json!({ "schema": "semio.hub.auth.credential-sign-in/v2", "email": "person@example.com", "password": "correct horse battery staple", "deviceInstanceId": "device-1", "clientClass": "browser" })),
+        ] {
+            assert!(!request_schema.is_valid_json(&mutate.to_string()), "{name} must fail the schema");
+            let decoded = serde_json::from_value::<CredentialSignInRequestV1>(mutate).map_err(|_| AuthErrorCodeV1::MalformedRequest).and_then(CredentialSignInRequestV1::verify);
+            assert!(decoded.is_err(), "{name} must fail the Rust decoder");
+        }
+
+        let minted = SessionMintResponseV1 { token: format!("session.v1.{}.{}", "0".repeat(32), "a".repeat(64)), user_id: "usr-1".into() };
+        assert!(structural("SessionMintResponseV1").is_valid_json(&serde_json::to_string(&minted).expect("mint json")));
+        let error_schema = structural("AuthErrorV1");
+        assert!(error_schema.is_valid_json(&serde_json::to_string(&AuthErrorV1::new(AuthErrorCodeV1::InvalidCredentials)).expect("error json")));
+        assert!(error_schema.is_valid_json(&serde_json::to_string(&AuthErrorV1::rate_limited(6_000)).expect("error json")));
+        let credential_schema = structural("CredentialHashV1");
+        assert!(credential_schema.is_valid_json(&serde_json::to_string(&PasswordCredentialV1::derive("correct horse battery staple", [0x2a; 16], 210_000).expect("derive").encode()).expect("credential json")));
+        assert!(!credential_schema.is_valid_json(&serde_json::to_string("pbkdf2-sha512$1000$00$00").expect("credential json")));
+    }
 }

@@ -3,7 +3,7 @@
 //! editor module — built directly from the shared artifact-level `Block2dSnapshot`.
 
 use crate::Block2dSnapshot;
-use semio_framework_plugin::plugin_app_close_prelude::{column, text, Buildable, HasChildren, Label};
+use semio_framework_plugin::plugin_app_close_prelude::{column, text, Buildable, HasBase, HasChildren, Label};
 use semio_framework_plugin::{BuiltNode, LocalizedLabel, PluginAssemblyError, SurfaceKind, UiAssemblyResult, UiFixedList, WindowKindDefinition, WindowOptions};
 
 //#region 🔖️Constants
@@ -40,26 +40,41 @@ pub fn definition() -> WindowKindDefinition {
 /// builders the editor's own board window uses (`column`/`text`) — duplicated on purpose rather than
 /// imported from the sibling editor module, which viewer purity forbids; block2d's board surface is
 /// UI-node-based, not a 3D mesh/world scene, so there is no `world2d_*` helper to reuse here.
-fn line(value: String) -> UiAssemblyResult<BuiltNode> {
+/// 🪧️ One board summary line. The id is NOT decoration: two sibling nodes without one project to the
+/// same key and the whole body is refused with `duplicate-key` before it ever reaches a renderer —
+/// which is exactly what a per-handle-kind/per-handle list of anonymous `text` nodes does.
+fn line(id: String, value: String) -> UiAssemblyResult<BuiltNode> {
     let label = Label::try_from(value).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "block2d viewer board label admission failed"))?;
-    text(label).try_build().map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "block2d viewer board line admission failed"))
+    text(label)
+        .try_id(id.as_str())
+        .map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "block2d viewer board line id admission failed"))?
+        .try_build()
+        .map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "block2d viewer board line admission failed"))
 }
 
 pub fn render(document: &Block2dSnapshot) -> UiAssemblyResult<BuiltNode> {
-    let mut lines = vec![line(format!("{}: {}", "Node kind", if document.node_kind.label.is_empty() { "\u{2014}" } else { &document.node_kind.label }))?];
-    lines.push(line(format!("{} handle kind(s)", document.handle_kinds.len()))?);
-    for kind in &document.handle_kinds {
-        lines.push(line(format!("  \u{25e6} {} ({}) \u{2014} {}", kind.label, kind.id, kind.color))?);
+    let mut lines = vec![line(
+        format!("{BODY_KEY}.summary"),
+        format!("{}: {}", "Node kind", if document.node_kind.label.is_empty() { "\u{2014}" } else { &document.node_kind.label }),
+    )?];
+    lines.push(line(format!("{BODY_KEY}.handle-kinds"), format!("{} handle kind(s)", document.handle_kinds.len()))?);
+    for (index, kind) in document.handle_kinds.iter().enumerate() {
+        lines.push(line(format!("{BODY_KEY}.handle-kind.{index}"), format!("  \u{25e6} {} ({}) \u{2014} {}", kind.label, kind.id, kind.color))?);
     }
-    lines.push(line(format!("{} handle(s)", document.handles.len()))?);
-    for handle in &document.handles {
-        lines.push(line(format!("  \u{25e6} {} \u{2014} kind {}, angle {:.1}\u{b0}, radius {:.2}", handle.id, handle.handle_kind, handle.angle.to_degrees(), handle.radius))?);
+    lines.push(line(format!("{BODY_KEY}.handles"), format!("{} handle(s)", document.handles.len()))?);
+    for (index, handle) in document.handles.iter().enumerate() {
+        lines.push(line(
+            format!("{BODY_KEY}.handle.{index}"),
+            format!("  \u{25e6} {} \u{2014} kind {}, angle {:.1}\u{b0}, radius {:.2}", handle.id, handle.handle_kind, handle.angle.to_degrees(), handle.radius),
+        )?);
     }
     let mut children = UiFixedList::<BuiltNode>::default();
     for node in lines {
         children.try_push(node).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "block2d viewer board child admission failed"))?;
     }
     column()
+        .try_id(BODY_KEY)
+        .map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "block2d viewer board id admission failed"))?
         .try_children(children)
         .map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "block2d viewer board children admission failed"))?
         .try_build()

@@ -198,14 +198,8 @@ fn context_menu_surface_kind_ids_are_react_camel_case() {
 #[test]
 fn node_graph_selection_domains_accept_both_wire_shapes() {
     assert_eq!(engine_canvas::selection_domains_for_test(&json!(["a", "b"]).to_string()), (vec!["a".to_string(), "b".to_string()], Vec::new(), Vec::new()));
-    assert_eq!(
-        engine_canvas::selection_domains_for_test(&json!({ "nodes": ["n"], "edgeIds": ["e"], "handleIds": ["h"] }).to_string()),
-        (vec!["n".to_string()], vec!["e".to_string()], vec!["h".to_string()])
-    );
-    assert_eq!(
-        engine_canvas::selection_domains_for_test(&json!({ "nodes": ["n"], "edges": ["e"], "handles": ["h"] }).to_string()),
-        (vec!["n".to_string()], vec!["e".to_string()], vec!["h".to_string()])
-    );
+    assert_eq!(engine_canvas::selection_domains_for_test(&json!({ "nodes": ["n"], "edgeIds": ["e"], "handleIds": ["h"] }).to_string()), (vec!["n".to_string()], vec!["e".to_string()], vec!["h".to_string()]));
+    assert_eq!(engine_canvas::selection_domains_for_test(&json!({ "nodes": ["n"], "edges": ["e"], "handles": ["h"] }).to_string()), (vec!["n".to_string()], vec!["e".to_string()], vec!["h".to_string()]));
     assert_eq!(engine_canvas::selection_domains_for_test("not json"), (Vec::new(), Vec::new(), Vec::new()));
 }
 

@@ -504,7 +504,7 @@ async fn context_menu_stays_within_budget_and_keeps_clear_selection_destructive_
 //#region 🎬️StageableActionVocabulary
 /// 🔎️ One declared action of the gis2d manifest, wherever its window kind declares it.
 fn declared_action(definition: &semio_framework_plugin::AppDefinition, id: &str) -> ActionDefinition {
-    definition.window_kinds.iter().flat_map(|window| &window.actions).find(|action| action.id == id).unwrap_or_else(|| panic!("{id} is declared")).clone()
+    definition.window_kinds.iter().flat_map(|window| semio_framework::window_kind_actions(&definition, window)).find(|action| action.id == id).unwrap_or_else(|| panic!("{id} is declared")).clone()
 }
 
 /// 🗺️ Every per-feature editing verb is declared a document `Mutation`, is argument-staged so the

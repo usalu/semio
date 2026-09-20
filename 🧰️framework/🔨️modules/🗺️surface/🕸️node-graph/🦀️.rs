@@ -598,6 +598,13 @@ impl GraphHost {
         self.pending_gather = if target_ids.is_empty() { None } else { Some(SelectionGather { target_ids, method }) };
     }
 
+    pub fn pointer_cancel_screen(&mut self) {
+        self.interaction_revision = self.interaction_revision.wrapping_add(1);
+        self.pending_gather = None;
+        self.dag.pointer_cancel_screen();
+        self.refresh_interaction_projection();
+    }
+
     /// 🎯️ Reads (and clears) the batch of node ids the last completed pick/marquee gesture hit — the
     /// caller turns this into ONE `interactionSelect{targets,method,merge}` dispatch, applying the
     /// modifier→merge policy itself (this host receives no merge concept, only raw geometry).
@@ -820,6 +827,11 @@ mod wasm_session {
             // 🕹️ Routed through the `GraphHost` wrapper (not straight to `dag`) so a completed
             // pick/marquee gesture is captured into `pending_gather` — see `take_selection_gather_json`.
             self.state.borrow_mut().host.pointer_up_screen(sx, sy, shift, ctrl_or_meta, alt);
+        }
+
+        #[wasm_bindgen(js_name = pointerCancelScreen)]
+        pub fn pointer_cancel_screen(&self) {
+            self.state.borrow_mut().host.pointer_cancel_screen();
         }
 
         #[wasm_bindgen(js_name = wheelScreen)]

@@ -7,6 +7,7 @@ use super::*;
 //#region 🔖️Payload
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
+#[dsl(keyword = "set-frame-transparency")]
 pub struct SetFrameTransparency {
     pub(crate) index: usize,
     pub(crate) transparent_index: Option<u8>,

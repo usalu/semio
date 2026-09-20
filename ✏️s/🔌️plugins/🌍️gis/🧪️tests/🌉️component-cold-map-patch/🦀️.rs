@@ -9,8 +9,8 @@ use semio_framework_actor::ActorId;
 use semio_framework_os_kernel::os_spr::channel::{encode_app_command, AppCommand};
 use semio_framework_plugin::AppInstanceId;
 use semio_framework_plugin_host::{shard, GuestInstance, GuestRuntime, PackageHash, PackageId, PackageRef, SharedEngineConfig, WasmtimeRuntime};
-use semio_framework_ui_contract::{Component, SurfaceKind, UiPatch, UiPatchOp};
-use semio_framework_ui_scene::TiledMapScene;
+use semio_framework_ui_contract::{Component, SurfaceKind, UiNodeId, UiPatch, UiPatchOp};
+use semio_framework_ui_scene::{SceneDoc, TiledMapScene};
 use semio_s_artifact_gis_gismap::standards::v1::subsets::any::schema::mutations::GisMapMutation;
 use semio_s_artifact_gis_gismap::{gis_map_snapshot_with_derived_children, GisMapSnapshot, MapFeature, GIS_MAP_SCHEMA};
 use std::collections::BTreeMap;
@@ -156,28 +156,109 @@ async fn load_pair(runtime: &WasmtimeRuntime, instance: &mut GuestInstance, life
     applied
 }
 
-fn scene_from_patch(patch: &UiPatch) -> Option<TiledMapScene> {
-    patch.ops.iter().find_map(|operation| {
-        let component = match operation {
-            UiPatchOp::Upsert(record) => Some(&record.component),
-            UiPatchOp::SetComponent { component, .. } => Some(component),
-            _ => None,
-        }?;
-        let Component::Surface(props) = component else { return None };
-        if props.kind != SurfaceKind::TiledMap || props.doc_schema.as_str() != "tiled-map@1" {
-            return None;
-        }
-        semio_framework_ui_scene::decode(props).ok()
-    })
+/// 🩹️ The RETAINED receiver of this surface, the way every render host holds one: a revision and an
+/// id-keyed node table folded from the published patches. A plugin publishes the surface ONCE in
+/// full and every later render as a delta — the addressed `patchPositions` render is two
+/// `SetComponent` ops (the lane's packed text leaf and the surface spine) against nodes the first
+/// patch installed — so a reader that decodes one patch in isolation sees no surface at all from the
+/// second render onwards.
+#[derive(Default)]
+struct RetainedSurface {
+    revision: u64,
+    nodes: Vec<semio_framework_ui_contract::UiNodeRecord>,
 }
 
-async fn retain_patch(result: TurnResult, expected_lifetime: ActorInstanceLifetime, session: u64) -> (ActorUiPatchReceipt, String, u64, Option<TiledMapScene>) {
+impl RetainedSurface {
+    /// 🩹️ Folds one published patch in. `base_revision` must be exactly the revision this receiver
+    /// already holds, so a skipped or replayed publication is a refusal rather than a silent gap.
+    fn apply(&mut self, patch: &UiPatch) {
+        assert_eq!(patch.base_revision.0, self.revision, "GIS patch publishes against the retained revision");
+        for operation in patch.ops.iter() {
+            match operation {
+                UiPatchOp::Upsert(record) => {
+                    let record = record.credited_clone().expect("retained GIS node record");
+                    match self.nodes.iter_mut().find(|current| current.id == record.id) {
+                        Some(current) => *current = record,
+                        None => self.nodes.push(record),
+                    }
+                }
+                UiPatchOp::SetComponent { id, component } => {
+                    self.node_mut(*id).component = component.credited_clone().expect("retained GIS component");
+                }
+                UiPatchOp::SetChildren { id, children } => self.node_mut(*id).children = children.clone(),
+                UiPatchOp::Remove { id } => self.remove_subtree(*id),
+                // 🎨️ Layout, style, activity, accessibility, bindings, menu and the root pointer are
+                // presentation, not scene content: they carry no surface doc and no lane payload.
+                _ => {}
+            }
+        }
+        self.revision = patch.revision.0;
+    }
+
+    fn node_mut(&mut self, id: UiNodeId) -> &mut semio_framework_ui_contract::UiNodeRecord {
+        self.nodes.iter_mut().find(|record| record.id == id).expect("retained GIS node the patch mutates")
+    }
+
+    fn remove_subtree(&mut self, id: UiNodeId) {
+        let mut frontier = vec![id];
+        while let Some(current) = frontier.pop() {
+            let Some(index) = self.nodes.iter().position(|record| record.id == current) else { continue };
+            let record = self.nodes.swap_remove(index);
+            frontier.extend(record.children.iter().copied());
+        }
+    }
+
+    /// 🚚️ The ASSEMBLED tiled-map scene: the spine decoded out of the fixed-capacity
+    /// `SurfaceProps.doc`, plus every out-of-doc payload lane (`SceneDoc::split_lanes`) that rides
+    /// beside it as a `paged_text_carrier` child of the same node. `map_fixture_json` IS such a lane
+    /// (`framework.scene.tiledmap.mapFixture`), so a bare `semio_framework_ui_scene::decode` reads it
+    /// as the empty spine field — this is the Rust twin of the React Interpreter's `sceneFromLanes`
+    /// and of the framework's own `built_surface_scene`.
+    fn scene(&self) -> Option<TiledMapScene> {
+        let surface = self.nodes.iter().find(|record| match &record.component {
+            Component::Surface(props) => props.kind == SurfaceKind::TiledMap && props.doc_schema.as_str() == "tiled-map@1",
+            _ => false,
+        })?;
+        let Component::Surface(props) = &surface.component else { return None };
+        let mut scene: TiledMapScene = semio_framework_ui_scene::decode(props).ok()?;
+        for child in surface.children.iter() {
+            let Some(carrier) = self.nodes.iter().find(|record| record.id == *child) else { continue };
+            scene.merge_lane(carrier.key.as_str(), self.carrier_text(carrier));
+        }
+        Some(scene)
+    }
+
+    /// 🚚️ Depth-first concatenation of every `Component::Text` leaf under one lane carrier — the exact
+    /// inverse of `paged_text_carrier`, read through the retained id table.
+    fn carrier_text(&self, root: &semio_framework_ui_contract::UiNodeRecord) -> String {
+        let mut payload = String::new();
+        let mut frontier = vec![root];
+        let mut order = Vec::new();
+        while let Some(current) = frontier.pop() {
+            order.push(current);
+            for child in current.children.iter().rev() {
+                if let Some(record) = self.nodes.iter().find(|record| record.id == *child) {
+                    frontier.push(record);
+                }
+            }
+        }
+        for current in order {
+            if let Component::Text(text) = &current.component {
+                payload.push_str(&text.packed_payload());
+            }
+        }
+        payload
+    }
+}
+
+async fn retain_patch(result: TurnResult, expected_lifetime: ActorInstanceLifetime, session: u64, retained: &mut RetainedSurface) -> (ActorUiPatchReceipt, String, u64, Option<TiledMapScene>) {
     let receipt = result.ui_patch_receipt.expect("one exact GIS patch receipt");
     assert_eq!(receipt.lifetime, expected_lifetime);
     assert_eq!(result.ui_patches.len(), 1);
     let patch = result.ui_patches.iter().next().expect("one GIS patch owner");
     assert_eq!(patch.surface.as_ref(), SURFACE);
-    let scene = scene_from_patch(patch);
+    retained.apply(patch);
+    let scene = retained.scene();
     let surface = patch.surface.as_ref().to_string();
     let revision = patch.revision.0;
     let bridged = shard::to_actor_turn_result(result, session, 0, 0).await.expect("GIS patch enters retained shard owner");
@@ -189,7 +270,7 @@ async fn retain_patch(result: TurnResult, expected_lifetime: ActorInstanceLifeti
     (receipt, surface, revision, scene)
 }
 
-async fn render_until_scene(runtime: &WasmtimeRuntime, instance: &mut GuestInstance, lifetime: ActorInstanceLifetime, marker: &str, session: &mut u64) -> (TiledMapScene, u64) {
+async fn render_until_scene(runtime: &WasmtimeRuntime, instance: &mut GuestInstance, lifetime: ActorInstanceLifetime, marker: &str, session: &mut u64, retained: &mut RetainedSurface) -> (TiledMapScene, u64) {
     use semio_framework_os_kernel::ToValue;
     let mut event = Event::SurfaceVisible { surface: SURFACE.into(), body_key: "gis2d.play.composite".into(), view_state: semio_framework_os_kernel::pack_rt::encode_wire_value(&gis_view().to_value()) };
     let mut matched = None;
@@ -202,7 +283,7 @@ async fn render_until_scene(runtime: &WasmtimeRuntime, instance: &mut GuestInsta
             }
             continue;
         }
-        let (receipt, surface, revision, scene) = retain_patch(result, lifetime, *session).await;
+        let (receipt, surface, revision, scene) = retain_patch(result, lifetime, *session, retained).await;
         *session += 1;
         event = Event::PatchAck { receipt, surface, revision };
         if let Some(scene) = scene {
@@ -261,10 +342,11 @@ async fn genuine_gis_component_cold_loads_and_patches_the_exact_tiled_map_surfac
     let applied = load_pair(&runtime, &mut instance, lifetime, &pack, &spr).await;
     assert_ne!(applied.aggregate_sha256, [0; 32]);
     let mut session = 940_051;
-    let (before, before_revision) = render_until_scene(&runtime, &mut instance, lifetime, "cold-before", &mut session).await;
+    let mut retained = RetainedSurface::default();
+    let (before, before_revision) = render_until_scene(&runtime, &mut instance, lifetime, "cold-before", &mut session, &mut retained).await;
     assert!(!before.map_fixture_json.contains("patched-after"));
     dispatch_patch_positions(&runtime, &mut instance, &fixture["document"]["after"]).await;
-    let (after, after_revision) = render_until_scene(&runtime, &mut instance, lifetime, "patched-after", &mut session).await;
+    let (after, after_revision) = render_until_scene(&runtime, &mut instance, lifetime, "patched-after", &mut session, &mut retained).await;
     assert!(!after.map_fixture_json.contains("cold-before"));
     assert!(after_revision > before_revision);
 }

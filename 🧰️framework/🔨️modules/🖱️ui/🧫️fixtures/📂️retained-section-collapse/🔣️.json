@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "section": {
+    "id": "fixture.section",
+    "label": "Fixture Section",
+    "defaultOpen": false,
+    "childId": "fixture.section.child",
+    "childLabel": "Fixture Child"
+  },
+  "states": {
+    "closed": {
+      "expanded": false,
+      "childLayout": false,
+      "childPaint": false,
+      "childHit": false,
+      "childAccessibility": false
+    },
+    "open": {
+      "expanded": true,
+      "childLayout": true,
+      "childPaint": true,
+      "childHit": true,
+      "childAccessibility": true
+    }
+  }
+}

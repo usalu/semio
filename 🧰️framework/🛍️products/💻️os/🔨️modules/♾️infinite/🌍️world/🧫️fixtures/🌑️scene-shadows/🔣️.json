@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json.schemas.assets.semio-tech.com/framework/ui/render/schema.json#/$defs/World3dShadowFixture",
+  "schemaVersion": 1,
+  "worldEnvironment": {
+    "ambient": { "intensity": 0.42, "color": "#336699" },
+    "sun": { "enabled": true, "azimuth": 120, "elevation": 25, "intensity": 1.7, "color": "#ffd080" },
+    "shadow": { "enabled": true, "opacity": 0.65, "softness": 1.75 },
+    "material": { "color": "#587ca8", "metalness": 0.63, "roughness": 0.27, "emissive": "#2a1048", "emissiveIntensity": 2.4 }
+  },
+  "iconRender": { "shadowEnabled": true, "materialPresent": true, "mapSize": 1024 },
+  "oracle": {
+    "shadowMatrix": [
+      0.0682037565680259,
+      0.0574000268109806,
+      0.0009072150020386882,
+      0,
+      8.326672684688675e-18,
+      0.06196407397577628,
+      -0.0015713424769197115,
+      0,
+      0.07313171398244038,
+      -0.053532144160525014,
+      -0.0008460826060874861,
+      0,
+      0.4999999999999996,
+      0.5000000000000007,
+      0.23923923923923923,
+      0.9999999999999999
+    ],
+    "sampleWorldPosition": [1.25, -0.75, 0.5]
+  }
+}

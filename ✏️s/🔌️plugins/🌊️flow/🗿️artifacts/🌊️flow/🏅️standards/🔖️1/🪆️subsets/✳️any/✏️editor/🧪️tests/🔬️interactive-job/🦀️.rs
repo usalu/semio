@@ -217,9 +217,8 @@ fn booting_renders_and_evaluates_without_dropping_a_live_flow_owner() {
         let tree = project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(body.expect("flow body renders"))).expect("rendered flow body retires");
         assert!(!tree.is_empty());
     }
-    let armed = evaluate::evaluate_result(&snapshot, &config, &mut session);
+    let armed = evaluate::evaluate_result(&snapshot, &config, &mut session, main::FLOW_PLAY_WINDOW_MAIN, main::FLOW_PLAY_WINDOW_MAIN);
     assert_eq!(armed.effects.len(), 1, "the starter graph arms the boot evaluation chain");
-    let _ = flow_eval_tick::tick_result(&snapshot, &config, &mut session);
+    let _ = flow_eval_tick::tick_result(&snapshot, &config, &mut session, main::FLOW_PLAY_WINDOW_MAIN, main::FLOW_PLAY_WINDOW_MAIN);
     session.retire_cold();
-    eprintln!("[DEBUG] flow boot renders + evaluation chain retired every live flow owner");
 }

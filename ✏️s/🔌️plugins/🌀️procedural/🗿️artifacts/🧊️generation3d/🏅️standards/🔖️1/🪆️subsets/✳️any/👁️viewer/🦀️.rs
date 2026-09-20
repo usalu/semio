@@ -1637,6 +1637,7 @@ pub fn create_generation3d_viewer() -> semio_framework_plugin::AppDefinition {
         .action_interactive_job("setSunElevation", InteractiveJobClassification::Migrated)
         .action_interactive_job("setSunIntensity", InteractiveJobClassification::Migrated)
         .action_interactive_job("setActiveExample", InteractiveJobClassification::Migrated)
+        .action_destructive("setActiveExample")
         .action_args("setActiveExample", vec![semio_framework_plugin::ActionArgDef::select("exampleId", LocalizedLabel::native("Example", "Beispiel"), generation3d_view_example_options()).required()])
         // 📤️ The reader's own io verb. `ActionKind::View` for the same reason `setActiveExample` is:
         // `ShellHost` refuses a `Mutation`-kind action on a viewer session outright, and an export

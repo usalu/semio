@@ -1630,6 +1630,120 @@ impl PagedDocumentArchiveDecode {
     }
 }
 
+/// 🧮️ `AppCommand::TransactionPrepare`'s `prepared_ops` roster authority — the same fixed shape
+/// `DOCUMENT_ARCHIVE_MAXIMUM_MEMBERS` gives an archive's member list, declared on BOTH sides
+/// (`encode_app_command` refuses to write more, [`PagedRouteFieldsDecode`] refuses to admit more) so
+/// a guest never reserves an unbounded op roster out of a host-supplied count.
+const TRANSACTION_PREPARED_OPS_MAXIMUM: usize = 1024;
+
+/// 🧭️ One route-specific command's flat field plan, in `encode_app_command`'s own write order:
+/// how many length-prefixed fields precede the `prepared_ops` roster, whether the roster is written
+/// at all, and how many fields follow it. The decoder below and the encoder above are twins — this
+/// table is the ONE place their field counts are stated, so a new field on either side is a
+/// one-line change on both.
+const fn route_field_plan(tag: u8) -> Option<(usize, bool, usize)> {
+    match tag {
+        10 => Some((3, false, 0)),
+        11 => Some((2, false, 0)),
+        12 => Some((1, false, 0)),
+        17 => Some((3, true, 2)),
+        18..=21 => Some((1, false, 0)),
+        _ => None,
+    }
+}
+
+/// 🧾️ The retained decoder every transaction and media route shares: one bounded field read per
+/// step, an exact reservation for the `prepared_ops` roster, and a close path that releases what it
+/// has accumulated one field at a time. `AppCommand::Presence` is deliberately NOT here — it is
+/// admitted by its own reserved `PresenceCommandCursor` ingress (one exact page per peer), which the
+/// generic cursor refuses by kind before this decoder is ever reached.
+#[derive(Debug)]
+struct PagedRouteFieldsDecode {
+    tag: u8,
+    leading: usize,
+    has_ops: bool,
+    trailing: usize,
+    fields: Vec<Vec<u8>>,
+    ops: Vec<Vec<u8>>,
+    ops_remaining: Option<usize>,
+}
+
+impl PagedRouteFieldsDecode {
+    fn new(tag: u8, plan: (usize, bool, usize)) -> Self {
+        let (leading, has_ops, trailing) = plan;
+        Self { tag, leading, has_ops, trailing, fields: Vec::with_capacity(leading + trailing), ops: Vec::new(), ops_remaining: None }
+    }
+
+    fn text(fields: &mut std::vec::IntoIter<Vec<u8>>) -> Result<String, Vec<u8>> {
+        let bytes = fields.next().expect("retained route field");
+        String::from_utf8(bytes).map_err(std::string::FromUtf8Error::into_bytes)
+    }
+
+    fn step(&mut self, seq: u64, reader: &mut PagedCommandReader) -> Result<Option<AppCommand>, crate::Fault> {
+        if self.fields.len() < self.leading {
+            self.fields.push(reader.read_bounded_bytes(APP_COMMAND_FIELD_MAXIMUM_BYTES)?);
+        } else if self.has_ops && self.ops_remaining.is_none() {
+            let count = usize::try_from(reader.read_varint()?).map_err(|_| crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.transaction-prepared-ops"), "transaction prepared-ops count is not representable"))?;
+            if count > TRANSACTION_PREPARED_OPS_MAXIMUM {
+                return Err(crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.transaction-prepared-ops"), "transaction prepare exceeds its fixed 1024 prepared-op authority"));
+            }
+            self.ops.try_reserve_exact(count).map_err(|_| crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.transaction-prepared-ops-allocation"), "transaction prepared-op roster could not reserve its exact bounded authority"))?;
+            self.ops_remaining = Some(count);
+        } else if self.ops_remaining.is_some_and(|count| self.ops.len() < count) {
+            self.ops.push(reader.read_bounded_bytes(APP_COMMAND_FIELD_MAXIMUM_BYTES)?);
+        } else if self.fields.len() < self.leading + self.trailing {
+            self.fields.push(reader.read_bounded_bytes(APP_COMMAND_FIELD_MAXIMUM_BYTES)?);
+        }
+        if self.fields.len() < self.leading + self.trailing || (self.has_ops && !self.ops_remaining.is_some_and(|count| self.ops.len() == count)) {
+            return Ok(None);
+        }
+        Ok(Some(self.finish(seq)?))
+    }
+
+    fn finish(&mut self, seq: u64) -> Result<AppCommand, crate::Fault> {
+        let ops = std::mem::take(&mut self.ops);
+        let mut fields = std::mem::take(&mut self.fields).into_iter();
+        let built = match self.tag {
+            10 => Self::text(&mut fields).map(|port| AppCommand::MediaIn { seq, port, descriptor: fields.next().expect("retained media descriptor"), data: fields.next().expect("retained media data") }),
+            11 => Self::text(&mut fields).map(|port| AppCommand::MediaOut { seq, port, request: fields.next().expect("retained media request") }),
+            12 => Self::text(&mut fields).map(|port| AppCommand::MediaFingerprint { seq, port }),
+            17 => Self::text(&mut fields).and_then(|txn_id| {
+                let mutation_id = Self::text(&mut fields)?;
+                let payload = fields.next().expect("retained transaction payload");
+                let label = Self::text(&mut fields)?;
+                Ok(AppCommand::TransactionPrepare { seq, txn_id, mutation_id, payload, prepared_ops: ops, label, origin: fields.next().expect("retained transaction origin") })
+            }),
+            18 => Self::text(&mut fields).map(|txn_id| AppCommand::TransactionCommit { seq, txn_id }),
+            19 => Self::text(&mut fields).map(|txn_id| AppCommand::TransactionRollback { seq, txn_id }),
+            20 => Self::text(&mut fields).map(|group_id| AppCommand::TransactionUndo { seq, group_id }),
+            21 => Self::text(&mut fields).map(|group_id| AppCommand::TransactionRedo { seq, group_id }),
+            _ => unreachable!("route field plan admitted this tag exactly"),
+        };
+        match built {
+            Ok(command) => Ok(command),
+            Err(rejected) => {
+                self.fields = std::iter::once(rejected).chain(fields).collect();
+                Err(crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.command-field-utf8"), "route command identity is not valid UTF-8"))
+            }
+        }
+    }
+
+    fn close_step(&mut self, maximum_bytes: usize) -> (bool, usize) {
+        for retained in [&mut self.ops, &mut self.fields] {
+            if let Some(bytes) = retained.last() {
+                if bytes.len() > maximum_bytes {
+                    return (false, 0);
+                }
+                let bytes = retained.pop().expect("retained route field was present");
+                let released = bytes.len();
+                drop(bytes);
+                return (false, released);
+            }
+        }
+        (true, 0)
+    }
+}
+
 #[derive(Debug)]
 enum PagedAppCommandDecodeState {
     Header,
@@ -1654,6 +1768,7 @@ enum PagedAppCommandDecodeState {
     LoadWindowConfigPack { seq: u64, window_id: Option<String>, window_kind_id: Option<String> },
     ReadWindowConfigs { seq: u64 },
     PureCommandFields { seq: u64, fields: Vec<Vec<u8>> },
+    RouteFields { seq: u64, decode: PagedRouteFieldsDecode },
     ReadDocumentArchive { seq: u64 },
     LoadDocumentArchive { seq: u64, decode: PagedDocumentArchiveDecode },
     DocumentArchiveOperation { seq: u64, kind: u8 },
@@ -1701,6 +1816,20 @@ impl DecodedAppCommandOwner {
             drop(self.archive_close.take());
             return (false, 1, 0);
         }
+        // 🧾️ A prepared-op roster is a LIST, not a fixed field slot, so it drains before the flat
+        // stages below rather than inside them — one op per step, and an op too large for this
+        // step's grant stays retained instead of being released unbounded.
+        if let AppCommand::TransactionPrepare { prepared_ops, .. } = command {
+            if let Some(op) = prepared_ops.last() {
+                if op.len() > maximum_bytes {
+                    return (false, 0, 0);
+                }
+                let op = prepared_ops.pop().expect("retained prepared op was present");
+                let released = op.len();
+                drop(op);
+                return (false, 1, released);
+            }
+        }
         let field = match (self.close_stage, command) {
             (0, AppCommand::ConfigCommand { command, .. }) | (0, AppCommand::ContextMenu { request: command, .. }) | (0, AppCommand::ArtifactCommand { command, .. }) | (0, AppCommand::Command { command, .. }) => Some(std::mem::take(command)),
             (0, AppCommand::CommandText { line, .. }) => Some(std::mem::take(line).into_bytes()),
@@ -1710,6 +1839,18 @@ impl DecodedAppCommandOwner {
             (1, AppCommand::LoadDocument { spr, .. }) | (1, AppCommand::LoadConfig { spr, .. }) => Some(std::mem::take(spr)),
             (1, AppCommand::LoadWindowConfig { entry, .. }) => Some(std::mem::take(&mut entry.window_kind_id).into_bytes()),
             (2, AppCommand::LoadWindowConfig { entry, .. }) => Some(std::mem::take(&mut entry.envelope_pack)),
+            (0, AppCommand::MediaIn { data, .. }) => Some(std::mem::take(data)),
+            (1, AppCommand::MediaIn { descriptor, .. }) => Some(std::mem::take(descriptor)),
+            (2, AppCommand::MediaIn { port, .. }) => Some(std::mem::take(port).into_bytes()),
+            (0, AppCommand::MediaOut { request, .. }) => Some(std::mem::take(request)),
+            (1, AppCommand::MediaOut { port, .. }) | (0, AppCommand::MediaFingerprint { port, .. }) => Some(std::mem::take(port).into_bytes()),
+            (0, AppCommand::TransactionPrepare { payload, .. }) => Some(std::mem::take(payload)),
+            (1, AppCommand::TransactionPrepare { origin, .. }) => Some(std::mem::take(origin)),
+            (2, AppCommand::TransactionPrepare { txn_id, .. }) => Some(std::mem::take(txn_id).into_bytes()),
+            (3, AppCommand::TransactionPrepare { mutation_id, .. }) => Some(std::mem::take(mutation_id).into_bytes()),
+            (4, AppCommand::TransactionPrepare { label, .. }) => Some(std::mem::take(label).into_bytes()),
+            (0, AppCommand::TransactionCommit { txn_id, .. }) | (0, AppCommand::TransactionRollback { txn_id, .. }) => Some(std::mem::take(txn_id).into_bytes()),
+            (0, AppCommand::TransactionUndo { group_id, .. }) | (0, AppCommand::TransactionRedo { group_id, .. }) => Some(std::mem::take(group_id).into_bytes()),
             _ => None,
         };
         if let Some(field) = field {
@@ -1723,6 +1864,18 @@ impl DecodedAppCommandOwner {
                     (1, AppCommand::LoadDocument { spr, .. }) | (1, AppCommand::LoadConfig { spr, .. }) => *spr = field,
                     (1, AppCommand::LoadWindowConfig { entry, .. }) => entry.window_kind_id = String::from_utf8(field).expect("decoded window kind id remains valid UTF-8"),
                     (2, AppCommand::LoadWindowConfig { entry, .. }) => entry.envelope_pack = field,
+                    (0, AppCommand::MediaIn { data, .. }) => *data = field,
+                    (1, AppCommand::MediaIn { descriptor, .. }) => *descriptor = field,
+                    (2, AppCommand::MediaIn { port, .. }) => *port = String::from_utf8(field).expect("decoded media port remains valid UTF-8"),
+                    (0, AppCommand::MediaOut { request, .. }) => *request = field,
+                    (1, AppCommand::MediaOut { port, .. }) | (0, AppCommand::MediaFingerprint { port, .. }) => *port = String::from_utf8(field).expect("decoded media port remains valid UTF-8"),
+                    (0, AppCommand::TransactionPrepare { payload, .. }) => *payload = field,
+                    (1, AppCommand::TransactionPrepare { origin, .. }) => *origin = field,
+                    (2, AppCommand::TransactionPrepare { txn_id, .. }) => *txn_id = String::from_utf8(field).expect("decoded transaction id remains valid UTF-8"),
+                    (3, AppCommand::TransactionPrepare { mutation_id, .. }) => *mutation_id = String::from_utf8(field).expect("decoded mutation id remains valid UTF-8"),
+                    (4, AppCommand::TransactionPrepare { label, .. }) => *label = String::from_utf8(field).expect("decoded transaction label remains valid UTF-8"),
+                    (0, AppCommand::TransactionCommit { txn_id, .. }) | (0, AppCommand::TransactionRollback { txn_id, .. }) => *txn_id = String::from_utf8(field).expect("decoded transaction id remains valid UTF-8"),
+                    (0, AppCommand::TransactionUndo { group_id, .. }) | (0, AppCommand::TransactionRedo { group_id, .. }) => *group_id = String::from_utf8(field).expect("decoded transaction group id remains valid UTF-8"),
                     _ => unreachable!("decoded command close field has an exact restoration target"),
                 }
                 return (false, 0, 0);
@@ -1785,6 +1938,9 @@ impl PagedAppCommandDecodeCursor {
                     32 => PagedAppCommandDecodeState::LoadDocumentArchive { seq, decode: PagedDocumentArchiveDecode::new() },
                     33 => PagedAppCommandDecodeState::ReadDocumentArchive { seq },
                     34..=36 => PagedAppCommandDecodeState::DocumentArchiveOperation { seq, kind: tag },
+                    tag if route_field_plan(tag).is_some() => {
+                        PagedAppCommandDecodeState::RouteFields { seq, decode: PagedRouteFieldsDecode::new(tag, route_field_plan(tag).expect("route field plan was just matched")) }
+                    }
                     _ => {
                         return Err(crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.command-route-state-machine-required"), "this AppCommand kind requires its route-specific retained decoder before admission"));
                     }
@@ -1936,6 +2092,17 @@ impl PagedAppCommandDecodeCursor {
                 let mut next = || fields.next().expect("retained pure-command field");
                 Some(AppCommand::PureCommand { seq, command: next(), document: next(), document_spr: next(), config: next(), config_spr: next(), draft: next(), draft_spr: next() })
             }
+            PagedAppCommandDecodeState::RouteFields { seq, mut decode } => match decode.step(seq, &mut self.reader) {
+                Ok(Some(command)) => Some(command),
+                Ok(None) => {
+                    self.state = PagedAppCommandDecodeState::RouteFields { seq, decode };
+                    None
+                }
+                Err(fault) => {
+                    self.state = PagedAppCommandDecodeState::RouteFields { seq, decode };
+                    return Err(fault);
+                }
+            },
             PagedAppCommandDecodeState::ReadDocumentArchive { seq } =>Some(AppCommand::ReadDocumentArchive { seq }),
             PagedAppCommandDecodeState::LoadDocumentArchive { seq, mut decode } => match decode.step(&mut self.reader) {
                 Ok(Some(archive)) => Some(AppCommand::LoadDocumentArchive { seq, archive }),
@@ -1985,6 +2152,16 @@ impl PagedAppCommandDecodeCursor {
                     | AppCommand::AcknowledgeDocumentArchiveLoad { .. } => Vec::new(),
                     AppCommand::ReadDocumentArchive { .. } => Vec::new(),
                     AppCommand::LoadDocumentArchive { archive, .. } => document_archive_into_fields(archive),
+                    AppCommand::MediaIn { port, descriptor, data, .. } => vec![port.into_bytes(), descriptor, data],
+                    AppCommand::MediaOut { port, request, .. } => vec![port.into_bytes(), request],
+                    AppCommand::MediaFingerprint { port, .. } => vec![port.into_bytes()],
+                    AppCommand::TransactionPrepare { txn_id, mutation_id, payload, prepared_ops, label, origin, .. } => {
+                        let mut fields = vec![txn_id.into_bytes(), mutation_id.into_bytes(), payload, label.into_bytes(), origin];
+                        fields.extend(prepared_ops);
+                        fields
+                    }
+                    AppCommand::TransactionCommit { txn_id, .. } | AppCommand::TransactionRollback { txn_id, .. } => vec![txn_id.into_bytes()],
+                    AppCommand::TransactionUndo { group_id, .. } | AppCommand::TransactionRedo { group_id, .. } => vec![group_id.into_bytes()],
                     AppCommand::Presence { .. } => unreachable!("Presence is never decoded by the generic paged cursor"),
                     _ => unreachable!("route-specific AppCommand is never decoded by the generic paged cursor"),
                 };
@@ -2000,6 +2177,12 @@ impl PagedAppCommandDecodeCursor {
 
     pub fn close_step(&mut self, maximum_bytes: usize) -> (bool, usize) {
         if let PagedAppCommandDecodeState::LoadDocumentArchive { decode, .. } = &mut self.state {
+            let (empty, released) = decode.close_step(maximum_bytes);
+            if !empty || released != 0 {
+                return (false, released);
+            }
+        }
+        if let PagedAppCommandDecodeState::RouteFields { decode, .. } = &mut self.state {
             let (empty, released) = decode.close_step(maximum_bytes);
             if !empty || released != 0 {
                 return (false, released);
@@ -2834,6 +3017,9 @@ pub async fn encode_app_command(command: &AppCommand) -> Result<PagedCommand, cr
             out.varint(*seq)?;
         }
         AppCommand::TransactionPrepare { seq, txn_id, mutation_id, payload, prepared_ops, label, origin } => {
+            if prepared_ops.len() > TRANSACTION_PREPARED_OPS_MAXIMUM {
+                return Err(crate::Fault::new(crate::FaultOrigin::Framework, crate::FaultCode::new("plugin.transaction-prepared-ops"), "transaction prepare exceeds its fixed 1024 prepared-op authority"));
+            }
             out.byte(17)?;
             out.varint(*seq)?;
             out.string(txn_id)?;

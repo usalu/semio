@@ -62,32 +62,43 @@ fn camera_pose_close_only_compares_matching_kinds() {
 //#endregion CameraConversionTests
 
 //#region UiSnapshotTests
-/// 🧭️ The snapshot is keyed by `PanelGroup`, so each open CORNER anchor reports its own active leaf
-/// under the group whose default home that anchor is — `bottom-left` is Display, `bottom-right` Settings.
 #[test]
 fn ui_snapshot_round_trips_panel_tabs_and_focus() {
     let mut state = shell();
     state.active_window_id = Some("window-a".into());
-    *state.dock_tabs.tabs_mut(PanelAnchor::BottomLeft) = vec![DockTabNode::leaf("tab-x", "Tab X", "circle-dot", 0)];
-    *state.dock_tabs.tabs_mut(PanelAnchor::BottomRight) = vec![DockTabNode::leaf("tab-y", "Tab Y", "circle-dot", 0)];
-    state.toggle_anchor_tab(PanelAnchor::BottomLeft, "tab-x");
-    state.toggle_anchor_tab(PanelAnchor::BottomRight, "tab-y");
+    for anchor in PanelAnchor::ALL {
+        let tab = format!("panel.{}", anchor.as_str());
+        *state.dock_tabs.tabs_mut(anchor) = vec![DockTabNode::leaf(&tab, &tab, "circle-dot", 0)];
+        state.toggle_anchor_tab(anchor, &tab);
+    }
+    state.interaction_selection.insert("world".into(), semio_framework::DomainSelection { granularity: "object".into(), ids: vec!["solid-a".into(), "solid-b".into()], anchor_id: Some("solid-a".into()) });
+    state.interaction_selection.insert("graph".into(), semio_framework::DomainSelection { granularity: "node".into(), ids: vec!["node-a".into()], anchor_id: None });
+    state.set_canonical_tree_open("catalogue.solids", true);
+    state.set_canonical_tree_open("settings.appearance", true);
+    state.set_search_open(false);
 
     let snapshot = tutorial_capture_ui_snapshot(&state);
     assert_eq!(snapshot.focused_window_id.as_deref(), Some("window-a"));
-    assert_eq!(snapshot.active_panel_tab_by_group.get("display").map(String::as_str), Some("tab-x"));
-    assert_eq!(snapshot.active_panel_tab_by_group.get("settings").map(String::as_str), Some("tab-y"));
+    assert_eq!(snapshot.active_panel_tab_by_group.len(), PanelAnchor::ALL.len());
+    assert_eq!(snapshot.interaction_selection.len(), 2);
+    assert_eq!(snapshot.expanded_tree_ids, vec!["catalogue.solids".to_string(), "settings.appearance".to_string()]);
+    assert!(!snapshot.command_panel_open);
 
     let mut fresh = shell();
-    *fresh.dock_tabs.tabs_mut(PanelAnchor::BottomLeft) = vec![DockTabNode::leaf("tab-x", "Tab X", "circle-dot", 0)];
-    *fresh.dock_tabs.tabs_mut(PanelAnchor::BottomRight) = vec![DockTabNode::leaf("tab-y", "Tab Y", "circle-dot", 0)];
+    for anchor in PanelAnchor::ALL {
+        let tab = format!("panel.{}", anchor.as_str());
+        *fresh.dock_tabs.tabs_mut(anchor) = vec![DockTabNode::leaf(&tab, &tab, "circle-dot", 0)];
+    }
     tutorial_apply_ui_snapshot(&mut fresh, &snapshot);
     assert_eq!(fresh.active_window_id.as_deref(), Some("window-a"));
-    assert!(fresh.anchor_open(PanelAnchor::BottomLeft));
-    assert_eq!(fresh.anchor_state(PanelAnchor::BottomLeft).active_tab(), Some("tab-x"));
-    assert!(fresh.anchor_open(PanelAnchor::BottomRight));
-    assert_eq!(fresh.anchor_state(PanelAnchor::BottomRight).active_tab(), Some("tab-y"));
-    eprintln!("[DEBUG] tutorial ui snapshot round-tripped both bottom corner anchors through PanelGroup keys");
+    for anchor in PanelAnchor::ALL {
+        let tab = format!("panel.{}", anchor.as_str());
+        assert!(fresh.anchor_open(anchor), "{} is restored", anchor.as_str());
+        assert_eq!(fresh.anchor_state(anchor).active_tab(), Some(tab.as_str()));
+    }
+    assert_eq!(fresh.interaction_selection, snapshot.interaction_selection);
+    assert!(fresh.canonical_tree_open("catalogue.solids", false));
+    assert!(fresh.canonical_tree_open("settings.appearance", false));
 }
 
 #[test]
@@ -109,6 +120,57 @@ fn ui_change_applies_live_against_shell_state() {
     let change = semio_framework::TutorialUiChange::ActiveUtility { window_id: "window-a".into(), utility_id: Some("select".into()) };
     tutorial_apply_ui_change_to_shell(&mut state, &change);
     assert_eq!(state.active_utility_by_window.get("window-a").map(String::as_str), Some("select"));
+}
+
+#[test]
+fn ui_deltas_close_selection_tree_panel_and_command_state() {
+    let mut state = shell();
+    *state.dock_tabs.tabs_mut(PanelAnchor::BottomMiddle) = vec![DockTabNode::leaf("panel.bottom-middle", "Command", "circle-dot", 0)];
+    state.toggle_anchor_tab(PanelAnchor::BottomMiddle, "panel.bottom-middle");
+    state.interaction_selection.insert("world".into(), semio_framework::DomainSelection { granularity: "object".into(), ids: vec!["solid-a".into()], anchor_id: None });
+    state.set_canonical_tree_open("catalogue.solids", true);
+    state.set_search_open(true);
+    for change in [
+        semio_framework::TutorialUiChange::Selection { domain_id: "world".into(), granularity: "object".into(), ids: Vec::new() },
+        semio_framework::TutorialUiChange::TreeExpansion { id: "catalogue.solids".into(), expanded: false },
+        semio_framework::TutorialUiChange::PanelTab { group: "bottom-middle".into(), tab_id: None },
+        semio_framework::TutorialUiChange::CommandPanel { open: false },
+    ] {
+        tutorial_apply_ui_change_to_shell(&mut state, &change);
+    }
+    assert!(!state.interaction_selection.contains_key("world"));
+    assert!(!state.canonical_tree_open("catalogue.solids", true));
+    assert!(!state.anchor_open(PanelAnchor::BottomMiddle));
+    assert!(!state.search_open);
+    assert_eq!(state.overlay_state, OverlayState::None);
+}
+
+#[test]
+fn normal_interaction_completion_updates_typed_selection_projection() {
+    let mut state = shell();
+    state.observe_interaction_output(&DslValue::Object(vec![(
+        "interactionView".into(),
+        DslValue::Object(vec![(
+            "selection".into(),
+            DslValue::Object(vec![
+                (
+                    "world".into(),
+                    DslValue::Object(vec![
+                        ("granularity".into(), DslValue::String("object".into())),
+                        ("ids".into(), DslValue::Array(vec![DslValue::String("solid-a".into()), DslValue::String("solid-b".into())])),
+                        ("anchorId".into(), DslValue::String("solid-a".into())),
+                    ]),
+                ),
+                (
+                    "graph".into(),
+                    DslValue::Object(vec![("granularity".into(), DslValue::String("node".into())), ("ids".into(), DslValue::Array(vec![DslValue::String("node-a".into())]))]),
+                ),
+            ]),
+        )]),
+    )]));
+    assert_eq!(state.interaction_selection.len(), 2);
+    assert_eq!(state.interaction_selection["world"].ids, vec!["solid-a".to_string(), "solid-b".to_string()]);
+    assert_eq!(state.interaction_selection["graph"].granularity, "node");
 }
 //#endregion UiSnapshotTests
 
@@ -132,11 +194,9 @@ fn gesture_point_resolves_window_local() {
 }
 
 #[test]
-fn gesture_point_scopes_out_scene_and_entity_kinds() {
+fn gesture_point_rejects_detached_semantic_surface() {
     let state = shell();
-    assert_eq!(tutorial_resolve_gesture_point(&state, &semio_framework::IntroductionPoint::Scene { id: "w".into(), position: [0.0, 0.0, 0.0] }), None);
-    let point = semio_framework_async::block_on(semio_framework::IntroductionPoint::any_entity("w", "vortex"));
-    assert_eq!(tutorial_resolve_gesture_point(&state, &point), None);
+    assert_eq!(tutorial_resolve_gesture_point(&state, &semio_framework::IntroductionPoint::Scene { id: "detached".into(), position: [0.0, 0.0, 0.0] }), None);
 }
 //#endregion GesturePointTests
 

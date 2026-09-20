@@ -14,7 +14,7 @@
   "fatigueDetail": null,
   "dMm": null,
   "hScMm": null,
-  "fCkMpa": 40,
+  "fCkMpa": 40.0,
   "fUMpa": null,
   "eCmMpa": null,
   "vEdPerStudKn": null,

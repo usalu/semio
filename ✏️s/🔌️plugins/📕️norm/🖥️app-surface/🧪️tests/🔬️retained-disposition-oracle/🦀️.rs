@@ -29,7 +29,7 @@ impl NormRetainedDispositionOracle for SerdeJsonNormRetainedDispositionOracle {
                 return Err(format!("invalid route disposition for {expected_id}"));
             }
         }
-        if routes[0]["emittedLanes"] != serde_json::json!(["artifact"]) || routes[1]["emittedLanes"] != serde_json::json!([]) || routes[2]["emittedLanes"] != serde_json::json!(["config"]) {
+        if routes[0]["emittedLanes"] != serde_json::json!(["artifact"]) || routes[1]["emittedLanes"] != serde_json::json!([]) || routes[2]["emittedLanes"] != serde_json::json!(["window-config"]) {
             return Err("route lane audit does not match the command bodies".into());
         }
         let apps = value["apps"].as_array().ok_or("apps must be an array")?;

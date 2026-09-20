@@ -67,7 +67,7 @@ async fn change_wall_height_m_committed_json_is_canonical() {
     }
     let reencoded = serde_json::to_value(mutation()).expect("change-wall-height-m mutation encodes");
     let original: serde_json::Value = serde_json::from_str(MUTATION).expect("change-wall-height-m mutation reparses");
-    assert_eq!(reencoded, original, "change-wall-height-m/raises-wall-height-m-to-5-5: committed mutation JSON is not the canonical externally-tagged ChangeWallHeightM form carrying newWallHeightM");
+    assert_eq!(reencoded, original, "change-wall-height-m/raises-wall-height-m-to-5-5: committed mutation JSON is not the canonical internally-tagged ChangeWallHeightM form carrying mutation and newWallHeightM");
 }
 
 /// 🎯️ The declared outcome holds: `change-wall-height-m` at 5.5 is applied, not rejected, and carries no

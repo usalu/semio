@@ -132,6 +132,10 @@ function TableStoryEmptyHost(): ReactElement {
 const meta = {
   title: "🛠️framework🔌️hosts/TableHost",
   component: TableStoryHost,
+  // 🧭️ The host's props are required, so every story — including the `render`-only ones that mount a
+  // different host entirely — has to carry them. Declaring them once here is what lets a story state
+  // only what it changes.
+  args: { initialRows: STORY_TABLE_ROWS },
   parameters: { layout: "fullscreen" },
   tags: ["autodocs"],
 } satisfies Meta<typeof TableStoryHost>;
@@ -143,6 +147,17 @@ type Story = StoryObj<typeof meta>;
 /** 🧮️ Sortable Name/Kind columns, a stepper cell (`adjustCount`), and a row-action delete button (`removeRow`) — click a header to re-sort, the stepper to change count, the row to select it. */
 export const SortableWithActions: Story = {
   args: { initialRows: STORY_TABLE_ROWS },
+};
+
+/** 🪜️ The stepper cell on both bounds: `Gamma` sits on `min` (decrement disabled) and `Omega` on `max` (increment disabled). The readout is a `role="spinbutton"` keyboard stop — focus it and press ↑/↓, PageUp/PageDown or Home/End. */
+export const StepperBounds: Story = {
+  args: {
+    initialRows: [
+      { id: "row-gamma", name: "Gamma", kind: "seed", count: 0 },
+      { id: "row-beta", name: "Beta", kind: "handle", count: 5 },
+      { id: "row-omega", name: "Omega", kind: "handle", count: 10 },
+    ],
+  },
 };
 
 /** 🕳️ No `table` scene — the `emptySceneLabel` fallback. */

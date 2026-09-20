@@ -1,8 +1,7 @@
-
 use super::*;
-use crate::wgpu::Label;
 use crate::wgpu::component::ui::{UiComponentSceneNode, UiGroupNode, UiPresence, UiStackNode, UiTextNode};
 use crate::wgpu::theme::Theme;
+use crate::wgpu::Label;
 
 fn text(value: &str) -> UiNode {
     UiNode::Text(UiTextNode { value: Label::data(value), emphasize: None, data_attributes: None, presence: UiPresence::default(), menu: None })

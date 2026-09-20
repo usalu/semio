@@ -1,0 +1,32 @@
+{
+  "version": 1,
+  "invocation": {
+    "id": "inv.actual:cancel/7",
+    "toolName": "inference_run",
+    "arguments": "{\"mode\":\"bounded\"}"
+  },
+  "openCancellation": {
+    "accepted": true,
+    "outbound": {
+      "variant": "agentCancel",
+      "invocationId": "inv.actual:cancel/7"
+    },
+    "state": "cancelling",
+    "cancelControl": false
+  },
+  "closedCancellation": {
+    "accepted": false,
+    "outboundCount": 0,
+    "state": "cancelling"
+  },
+  "terminalResult": {
+    "ok": false,
+    "summary": "cancelled by user",
+    "state": "failed",
+    "cancelControl": false
+  },
+  "retirement": {
+    "maximumEntries": 200,
+    "lateResultCreatesEntry": false
+  }
+}

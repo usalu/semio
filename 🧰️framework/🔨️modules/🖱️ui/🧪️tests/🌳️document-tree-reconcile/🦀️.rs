@@ -12,7 +12,7 @@
 //! `📺️renderer/🧑‍🎨engine/🧪️tests/🌳️wgpu-document-reconcile/🟦️.ts`).
 
 use super::*;
-use crate::wgpu::engine::{ui_document_ingress_generation, Ui, UiDocumentIngressFault, UiDocumentIngressStatus, UiLayoutStep};
+use crate::wgpu::engine::{ui_document_ingress_generation, Ui, UiDocumentIngressFault, UiDocumentIngressStatus, UiFrameStep, UiLayoutStep};
 use crate::wgpu::text::FontAtlas;
 use crate::wgpu::tree::UiTree;
 use ui_contract::{SurfaceId, UiDocumentAssembly, UiDocumentAssemblyIdentity, UiDocumentLease, UiDocumentLeaseHeader, UiRevision};
@@ -241,6 +241,40 @@ fn retiring_a_document_frees_every_node_it_mounted_one_step_at_a_time() {
     assert!(tree.root.is_none(), "a fully retired document leaves no paintable root behind");
 }
 
+/// 🎬️ A synthesized Select option is not itself a published record, so it dispatches through the
+/// descriptor copied from its Select owner. That descriptor must retain the binding's action scope;
+/// the document controller identifies the live app session and is deliberately different here.
+#[test]
+fn a_synthesized_select_option_keeps_the_published_binding_scope() {
+    let law = law();
+    let action_law = &law["actionScope"];
+    let select_record = record(&action_law["selectRecord"]);
+    let document = document_from(&law, &[], 7, 3, Some(&action_law["selectRecord"]));
+    let projected = ui_node_from_record(
+        &document,
+        &select_record,
+        law["document"]["surface"].as_str().expect("fixture surface"),
+        action_law["documentController"].as_str().expect("fixture document controller"),
+    );
+    let UiNode::Select(select) = projected else { panic!("fixture Select projects as a retained Select") };
+    assert_eq!(select.on_change.controller_id, action_law["bindingController"].as_str().expect("binding controller"));
+
+    let chosen = action_law["chosenItem"].as_str().expect("chosen item");
+    let item = select.items.iter().find(|item| item.value == chosen).expect("chosen Select item");
+    let UiNode::Button(option) = select_item_row(&select, item) else { panic!("a Select option synthesizes a Button row") };
+    let expected = &action_law["expectedAction"];
+    assert_eq!(option.action.controller_id, expected["controllerId"].as_str().expect("expected controller"));
+    assert_eq!(option.action.action, expected["action"].as_str().expect("expected action"));
+    assert_eq!(
+        option.action.args,
+        Some(DslValue::Object(vec![
+            ("windowId".into(), DslValue::String("framework.settings.general".into())),
+            ("value".into(), DslValue::String(chosen.into())),
+        ])),
+        "the synthesized row preserves authored arguments and adds the chosen value",
+    );
+}
+
 //#region 🪪️IngressGeneration
 /// 📃️ Builds one real [`UiDocumentLease`] the way the BROWSER producer does — stepped
 /// `open_into`/`place_one`/`finish_into` — so the laws below can drive the engine's own page ingress
@@ -273,7 +307,8 @@ fn lease_from(law: &serde_json::Value, ids: &[u64], generation: u64, revision: u
     }
     let mut owner = UiDocumentAssembly::default();
     let mut surface = Some(SurfaceId::try_from(law["document"]["surface"].as_str().expect("fixture surface")).expect("fixture surface id"));
-    let identity = UiDocumentAssemblyIdentity { generation, revision: UiRevision(revision), root: Some(UiNodeId(law["document"]["root"].as_u64().expect("fixture root"))), layout_epoch: law["document"]["layoutEpoch"].as_u64().expect("fixture layout epoch") };
+    let identity =
+        UiDocumentAssemblyIdentity { generation, revision: UiRevision(revision), root: Some(UiNodeId(law["document"]["root"].as_u64().expect("fixture root"))), layout_epoch: law["document"]["layoutEpoch"].as_u64().expect("fixture layout epoch") };
     for _ in 0..4096 {
         if owner.open_into(&mut surface, identity, 1, 32768).expect("assembly open admits").progressed && surface.is_none() {
             break;
@@ -610,9 +645,9 @@ fn engine_surface_root_record(id: u64, key: &str, kind: &str) -> serde_json::Val
     serde_json::json!({
         "id": id,
         "key": key,
-        // 📐️ `leaf` with no `grow`, no width and no height — exactly what a producer that does not
-        // spell its scene's sizing publishes, and what `TiledMapScene`'s `scene_surface` emits.
-        "layout": { "kind": "leaf" },
+        // 📐️ A root engine surface owns the viewport in both axes. `LeafLayout` requires both
+        // sizing fields on the wire; the renderer contract has no compatibility defaults.
+        "layout": { "kind": "leaf", "width": "fill", "height": "fill" },
         "component": { "type": "surface", "kind": kind, "docSchema": "tiled-map@1", "doc": { "bytes": [] } },
         "style": {},
         "activity": "idle",
@@ -661,7 +696,14 @@ fn a_document_whose_root_is_the_engine_surface_reaches_a_painted_frame() {
     let root = engine_surface_root_record(0, "gis2d.play.composite", "tiled-map");
     assert!(ui.publish_document("gis2d-main", tiny_document("gis2d-main", 1, &root, None)));
     let mut cx_sequence = 0;
-    let mut cx = semio_framework_job::StepContext::new(semio_framework_job::allocate_operation_id(), semio_framework_job::Generation(11), semio_framework_job::StepBudget::new(4096, u64::MAX), semio_framework_job::CancelToken::root_now(), test_clock, &mut cx_sequence);
+    let mut cx = semio_framework_job::StepContext::new(
+        semio_framework_job::allocate_operation_id(),
+        semio_framework_job::Generation(11),
+        semio_framework_job::StepBudget::new(4096, u64::MAX),
+        semio_framework_job::CancelToken::root_now(),
+        test_clock,
+        &mut cx_sequence,
+    );
     assert_eq!(ui.step_document_reconcile("gis2d-main", "gis", &mut cx), UiDocumentReconcileStep::Complete);
     assert!(ui.tree("gis2d-main").and_then(|tree| tree.root).is_some(), "the single surface record mounts as the arena root");
 

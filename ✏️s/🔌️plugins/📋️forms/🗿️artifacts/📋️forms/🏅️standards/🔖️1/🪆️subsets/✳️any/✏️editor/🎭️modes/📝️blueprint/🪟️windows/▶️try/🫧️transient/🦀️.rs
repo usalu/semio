@@ -418,3 +418,8 @@ impl FormsTryWindowLease {
         self.window_id == window_id && self.window_kind_id == window_kind_id && self.window_generation == window_generation && self.document_generation == document_generation
     }
 }
+
+//#region 🪢️TaxonomyMounts
+#[path = "🧬️schema/🦀️.rs"]
+pub mod schema;
+//#endregion 🪢️TaxonomyMounts

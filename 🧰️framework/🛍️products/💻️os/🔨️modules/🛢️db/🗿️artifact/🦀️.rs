@@ -4641,16 +4641,24 @@ impl store::durable_group::DurableOwnedGroupJournalCommitV1 for ArtifactDurableG
     }
 }
 
+/// 🧳️ The runner owns its engine **boxed**, and every future it drives yields the box, never the
+/// engine itself. `ArtifactEngine<AllowAll, VersionGraphs>` measures ~529 KB by value (read off the
+/// two `catch_unwind` shim frames of ticket 26/09/18 slice HS1's crash reports), and `run_turn`
+/// carries each turn's result out through `std::panic::catch_unwind` → `do_call` → its own frame. A
+/// debug build gives every one of those moves its own stack slot, so a by-value engine priced
+/// `run_turn` at 3,598,608 B and the whole document-mount chain at 8,506,832 B — on pool workers
+/// that own 2 MiB. Moving a pointer instead is what keeps the hub's first document socket from
+/// aborting the process; see `📓️hs1-hub-pool-worker-stack-overflow.md`.
 #[cfg(not(target_arch = "wasm32"))]
-type ArtifactBuildFuture<A, V> = Pin<Box<dyn Future<Output = Result<ArtifactEngine<A, V>, ArtifactEngineOpenRejected>> + Send + 'static>>;
+type ArtifactBuildFuture<A, V> = Pin<Box<dyn Future<Output = Result<Box<ArtifactEngine<A, V>>, ArtifactEngineOpenRejected>> + Send + 'static>>;
 
 #[cfg(not(target_arch = "wasm32"))]
-type ArtifactTurnFuture<A, V> = Pin<Box<dyn Future<Output = ArtifactEngine<A, V>> + Send + 'static>>;
+type ArtifactTurnFuture<A, V> = Pin<Box<dyn Future<Output = Box<ArtifactEngine<A, V>>> + Send + 'static>>;
 
 #[cfg(not(target_arch = "wasm32"))]
 enum ArtifactTurn<A: AuthzHook + 'static, V: VersionGraph + 'static> {
     Future(ArtifactTurnFuture<A, V>),
-    History { engine: Option<ArtifactEngine<A, V>>, replay: HistoryReplayFuture, reply: Option<db_actor::ReplySender<Result<ArtifactHistoryView, DbError>>> },
+    History { engine: Option<Box<ArtifactEngine<A, V>>>, replay: HistoryReplayFuture, reply: Option<db_actor::ReplySender<Result<ArtifactHistoryView, DbError>>> },
 }
 
 #[cfg(not(target_arch = "wasm32"))]
@@ -4692,6 +4700,15 @@ struct ArtifactRunnerHandoff {
 }
 
 #[cfg(not(target_arch = "wasm32"))]
+impl Drop for ArtifactRunnerHandoff {
+    fn drop(&mut self) {
+        if self.pool_use.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take().is_some() {
+            ARTIFACT_RUNNER_HANDOFF_POOL_USES.fetch_sub(1, std::sync::atomic::Ordering::AcqRel);
+        }
+    }
+}
+
+#[cfg(not(target_arch = "wasm32"))]
 impl ArtifactRunnerHandoff {
     fn request_retirement_maintenance(&self) {
         let owner = self.retirement_maintenance.lock().unwrap_or_else(std::sync::PoisonError::into_inner).clone();
@@ -4716,6 +4733,41 @@ struct ArtifactRunnerRetirementCursor {
 
 #[cfg(not(target_arch = "wasm32"))]
 static ARTIFACT_RUNNER_RETIREMENTS: [std::sync::Mutex<Option<ArtifactRunnerRetirementCursor>>; ARTIFACT_RUNNER_RETIREMENT_SLOTS] = [const { std::sync::Mutex::new(None) }; ARTIFACT_RUNNER_RETIREMENT_SLOTS];
+/// 🔬️ How many retained artifact-runner retirement cursors still hold the `WorkerPoolUse` clone a
+/// non-terminal `ArtifactAuthority::drop` handed them. A database shutdown stuck in its `PoolUse`
+/// phase with every other registry empty is blocked by exactly these.
+#[cfg(not(target_arch = "wasm32"))]
+pub fn artifact_runner_retirement_live_slots() -> usize {
+    ARTIFACT_RUNNER_RETIREMENTS.iter().filter(|slot| slot.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_some()).count()
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+static ARTIFACT_AUTHORITY_POOL_USES: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
+
+/// 🔬️ How many LIVE `ArtifactAuthority` owners still hold the `WorkerPoolUse` clone
+/// `spawn_with_pool_use` stored in `_pool_use`. A handoff surrenders its own clone at the runner's
+/// terminal transition, so `artifact_runner_handoff_pool_use_live_slots() == 0` does NOT exclude a
+/// live authority: the authority outlives its runner's terminal transition and keeps a second
+/// clone until the authority itself is dropped.
+#[cfg(not(target_arch = "wasm32"))]
+pub fn artifact_authority_live_pool_uses() -> usize {
+    ARTIFACT_AUTHORITY_POOL_USES.load(std::sync::atomic::Ordering::Acquire)
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+static ARTIFACT_RUNNER_HANDOFF_POOL_USES: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
+
+/// 🔬️ How many LIVE artifact-runner handoffs still park the `WorkerPoolUse` clone
+/// `spawn_with_pool_use` gave them. A handoff surrenders it only at the runner's terminal
+/// transition, so an authority already gone from `open_artifacts` — and holding no retirement
+/// cursor — can still pin the database's pool use through a runner that never went terminal. This
+/// is the family no registry census can see, because handoffs live in their runner, not in a slot
+/// table.
+#[cfg(not(target_arch = "wasm32"))]
+pub fn artifact_runner_handoff_pool_use_live_slots() -> usize {
+    ARTIFACT_RUNNER_HANDOFF_POOL_USES.load(std::sync::atomic::Ordering::Acquire)
+}
+
 #[cfg(not(target_arch = "wasm32"))]
 static ARTIFACT_RUNNER_RETIREMENT_GENERATIONS: [std::sync::atomic::AtomicU64; ARTIFACT_RUNNER_RETIREMENT_SLOTS] = [const { std::sync::atomic::AtomicU64::new(0) }; ARTIFACT_RUNNER_RETIREMENT_SLOTS];
 #[cfg(not(target_arch = "wasm32"))]
@@ -4839,7 +4891,7 @@ struct ArtifactRunner<A: AuthzHook + 'static, V: VersionGraph + 'static> {
     receiver: db_actor::Receiver<ArtifactMessage>,
     generation: u64,
     builder: std::sync::Mutex<Option<ArtifactBuildFuture<A, V>>>,
-    engine: std::sync::Mutex<Option<ArtifactEngine<A, V>>>,
+    engine: std::sync::Mutex<Option<Box<ArtifactEngine<A, V>>>>,
     turn: std::sync::Mutex<Option<ArtifactTurn<A, V>>>,
     ready: std::sync::Mutex<Option<db_actor::ReplySender<Result<(), ArtifactEngineOpenRejected>>>>,
     done: std::sync::Mutex<Option<db_actor::ReplySender<()>>>,
@@ -5120,7 +5172,9 @@ impl<A: AuthzHook + 'static, V: VersionGraph + 'static> ArtifactRunner<A, V> {
                 let turn = self.turn.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take();
                 drop(turn);
             }
-            self.handoff.pool_use.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take();
+            if self.handoff.pool_use.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take().is_some() {
+                ARTIFACT_RUNNER_HANDOFF_POOL_USES.fetch_sub(1, std::sync::atomic::Ordering::AcqRel);
+            }
             self.handoff.driver.store(ArtifactRunnerDriver::Terminal as u8, std::sync::atomic::Ordering::Release);
             self.handoff.terminal.store(true, std::sync::atomic::Ordering::Release);
             if let Some(done) = self.done.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take() {
@@ -5129,27 +5183,64 @@ impl<A: AuthzHook + 'static, V: VersionGraph + 'static> ArtifactRunner<A, V> {
         }
     }
 
-    fn start_turn(engine: ArtifactEngine<A, V>, message: ArtifactMessage) -> ArtifactTurn<A, V> {
+    fn start_turn(engine: Box<ArtifactEngine<A, V>>, message: ArtifactMessage) -> ArtifactTurn<A, V> {
         match message {
             ArtifactMessage::History { operation_generation, cancelled, reservation, reply } => {
                 let replay = engine.history_replay(operation_generation, cancelled, reservation);
                 ArtifactTurn::History { engine: Some(engine), replay, reply: Some(reply) }
             }
-            message => ArtifactTurn::Future(Box::pin(async move {
+            // 🪜️ One boxed coroutine PER message kind, never one coroutine with a ten-arm `match`
+            // inside it. A coroutine's frame is the SUM of its suspend points' live locals, and a
+            // debug build overlaps nothing: with all ten engine methods awaited inside a single
+            // async block, `start_turn::{closure}` reserved **10,711,040 B** and the runner entered
+            // it twice, which is 20.4 MiB of the 21,520,944 B that aborted three hub laws
+            // (ticket 26/09/18 slice HS1, `🐍️hs1-frame-sizes.py` over the nextest crash reports).
+            // Splitting the match OUT of the async block turns that sum into a max: each arm's
+            // coroutine holds exactly one engine-method future, and `ArtifactTurnFuture` erases them
+            // all to the same type, so nothing downstream changes.
+            ArtifactMessage::AppendDurableGroupDecision { record, cancelled, now_ms, reply } => ArtifactTurn::Future(Box::pin(async move {
                 let mut engine = engine;
-                match message {
-                    ArtifactMessage::AppendDurableGroupDecision { record, cancelled, now_ms, reply } => reply.send(engine.append_durable_group_decision(record, cancelled, now_ms).await),
-                    ArtifactMessage::RecoverDurableGroupDecisions { driver, reply } => reply.send(engine.recover_durable_group_decisions(driver).await),
-                    ArtifactMessage::Submit { batch, options, now_ms, reply } => reply.send(engine.submit(batch, options, now_ms).await),
-                    ArtifactMessage::Query { path, reply } => reply.send(engine.get(&path).await),
-                    ArtifactMessage::Frontier { reply } => reply.send(engine.frontier().await),
-                    ArtifactMessage::CheckpointPublicationSnapshot { reply } => reply.send(engine.checkpoint_publication_snapshot().await),
-                    ArtifactMessage::RunQuery { query, consistency, reply } => reply.send(engine.query(query, consistency).await),
-                    ArtifactMessage::SnapshotNow { now_ms, reply } => reply.send(engine.snapshot_now(now_ms).await),
-                    ArtifactMessage::DrainOutbox { reply } => reply.send(engine.drain_outbox().await),
-                    ArtifactMessage::Compact { holder, consolidate_snapshots, budget, now_ms, cancelled, reply } => reply.send(engine.compact_retained(holder, consolidate_snapshots, budget, now_ms, cancelled).await),
-                    ArtifactMessage::History { reply, .. } => reply.send(Err(DbError::Internal("history turn bypassed retained runner cursor".to_string()))),
-                }
+                reply.send(engine.append_durable_group_decision(record, cancelled, now_ms).await);
+                engine
+            })),
+            ArtifactMessage::RecoverDurableGroupDecisions { driver, reply } => ArtifactTurn::Future(Box::pin(async move {
+                let mut engine = engine;
+                reply.send(engine.recover_durable_group_decisions(driver).await);
+                engine
+            })),
+            ArtifactMessage::Submit { batch, options, now_ms, reply } => ArtifactTurn::Future(Box::pin(async move {
+                let mut engine = engine;
+                reply.send(engine.submit(batch, options, now_ms).await);
+                engine
+            })),
+            ArtifactMessage::Query { path, reply } => ArtifactTurn::Future(Box::pin(async move {
+                reply.send(engine.get(&path).await);
+                engine
+            })),
+            ArtifactMessage::Frontier { reply } => ArtifactTurn::Future(Box::pin(async move {
+                reply.send(engine.frontier().await);
+                engine
+            })),
+            ArtifactMessage::CheckpointPublicationSnapshot { reply } => ArtifactTurn::Future(Box::pin(async move {
+                reply.send(engine.checkpoint_publication_snapshot().await);
+                engine
+            })),
+            ArtifactMessage::RunQuery { query, consistency, reply } => ArtifactTurn::Future(Box::pin(async move {
+                reply.send(engine.query(query, consistency).await);
+                engine
+            })),
+            ArtifactMessage::SnapshotNow { now_ms, reply } => ArtifactTurn::Future(Box::pin(async move {
+                reply.send(engine.snapshot_now(now_ms).await);
+                engine
+            })),
+            ArtifactMessage::DrainOutbox { reply } => ArtifactTurn::Future(Box::pin(async move {
+                let mut engine = engine;
+                reply.send(engine.drain_outbox().await);
+                engine
+            })),
+            ArtifactMessage::Compact { holder, consolidate_snapshots, budget, now_ms, cancelled, reply } => ArtifactTurn::Future(Box::pin(async move {
+                let mut engine = engine;
+                reply.send(engine.compact_retained(holder, consolidate_snapshots, budget, now_ms, cancelled).await);
                 engine
             })),
         }
@@ -5313,7 +5404,7 @@ impl<A: AuthzHook + 'static, V: VersionGraph + 'static> ArtifactRunner<A, V> {
 impl ArtifactAuthority {
     /// @emoji 🚀️ Builds the engine on the injected pool and resolves only after construction, so
     /// a caller never receives an authority whose engine failed to open.
-    pub async fn spawn<A: AuthzHook + 'static, V: VersionGraph + 'static, F: Future<Output = Result<ArtifactEngine<A, V>, ArtifactEngineOpenRejected>> + Send + 'static>(
+    pub async fn spawn<A: AuthzHook + 'static, V: VersionGraph + 'static, F: Future<Output = Result<Box<ArtifactEngine<A, V>>, ArtifactEngineOpenRejected>> + Send + 'static>(
         pool: Arc<semio_framework_async::WorkerPool>,
         build: impl FnOnce() -> F + Send + 'static,
         capacities: MailboxCapacities,
@@ -5325,7 +5416,7 @@ impl ArtifactAuthority {
     /// 🧵️ Mounts an authority under an already-retained process-pool use. Database document
     /// mounts pass their exact use cell through this boundary, so no second lifecycle admission
     /// can conflict after the catalog transaction has begun.
-    pub(crate) async fn spawn_with_pool_use<A: AuthzHook + 'static, V: VersionGraph + 'static, F: Future<Output = Result<ArtifactEngine<A, V>, ArtifactEngineOpenRejected>> + Send + 'static>(
+    pub(crate) async fn spawn_with_pool_use<A: AuthzHook + 'static, V: VersionGraph + 'static, F: Future<Output = Result<Box<ArtifactEngine<A, V>>, ArtifactEngineOpenRejected>> + Send + 'static>(
         pool: Arc<semio_framework_async::WorkerPool>,
         pool_use: Arc<semio_framework_async::WorkerPoolUse>,
         build: impl FnOnce() -> F + Send + 'static,
@@ -5335,6 +5426,7 @@ impl ArtifactAuthority {
         let (address, receiver) = db_actor::mailbox::<ArtifactMessage>(capacities);
         let (ready_tx, ready_rx) = db_actor::oneshot::<Result<(), ArtifactEngineOpenRejected>>();
         let (done_tx, done_rx) = db_actor::oneshot();
+        ARTIFACT_RUNNER_HANDOFF_POOL_USES.fetch_add(1, std::sync::atomic::Ordering::AcqRel);
         let handoff = Arc::new(ArtifactRunnerHandoff {
             pool: pool.clone(),
             pool_use: std::sync::Mutex::new(Some(pool_use.clone())),
@@ -5383,7 +5475,10 @@ impl ArtifactAuthority {
         runner.schedule();
 
         match ready_rx.await {
-            Ok(Ok(())) => Ok(ArtifactAuthority { address, cancel, handoff, retirement: Some(retirement), retirement_close: Some(retirement_close), _pool_use: pool_use, _done: std::sync::Mutex::new(Some(done_rx)) }),
+            Ok(Ok(())) => {
+                ARTIFACT_AUTHORITY_POOL_USES.fetch_add(1, std::sync::atomic::Ordering::AcqRel);
+                Ok(ArtifactAuthority { address, cancel, handoff, retirement: Some(retirement), retirement_close: Some(retirement_close), _pool_use: pool_use, _done: std::sync::Mutex::new(Some(done_rx)) })
+            }
             Ok(Err(err)) => Err(err),
             Err(_) => Err(ArtifactEngineOpenRejected::BeforeWal(DbError::Closed)),
         }
@@ -5574,6 +5669,7 @@ impl ArtifactAuthority {
 #[cfg(not(target_arch = "wasm32"))]
 impl Drop for ArtifactAuthority {
     fn drop(&mut self) {
+        ARTIFACT_AUTHORITY_POOL_USES.fetch_sub(1, std::sync::atomic::Ordering::AcqRel);
         if self.handoff.terminal.load(std::sync::atomic::Ordering::Acquire) {
             return;
         }

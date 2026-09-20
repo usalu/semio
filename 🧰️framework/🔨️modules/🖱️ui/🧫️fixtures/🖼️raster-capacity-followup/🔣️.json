@@ -1,0 +1,43 @@
+{
+  "schema": "semio.ui.raster-capacity-followup.v1",
+  "identity": { "pageBytes": 16384, "digestLanes": 2, "dimensionsIncluded": true },
+  "capacity": { "items": 256, "bytes": 268435456, "changedFullPolicy": "backpressureUntilHeadroom" },
+  "scenarios": [
+    {
+      "name": "repeat unchanged full frame",
+      "initial": "256 committed keys with content A",
+      "offer": "the same 256 keys with content A",
+      "expected": { "liveItems": 256, "stagedItems": 0, "allocations": 0, "reused": 256, "paintable": "A", "admission": "ready" }
+    },
+    {
+      "name": "changed same key stages distinct content",
+      "initial": "key image has committed content A with one free table credit",
+      "offer": "key image with content B",
+      "expected": { "liveItems": 1, "stagedItems": 1, "allocations": 1, "reused": 0, "paintable": "B while presenting and A before commit", "admission": "ready" }
+    },
+    {
+      "name": "changed full frame applies backpressure",
+      "initial": "256 committed and protected keys with content A",
+      "offer": "one protected key with content B",
+      "expected": { "liveItems": 256, "stagedItems": 0, "allocations": 0, "reused": 0, "paintable": "A", "admission": "backpressure" }
+    },
+    {
+      "name": "aborted changed replacement keeps committed content",
+      "initial": "key image has committed content A",
+      "offer": "stage content B then abort",
+      "expected": { "liveItems": 1, "stagedItems": 0, "allocations": 1, "reused": 0, "paintable": "A", "admission": "ready" }
+    },
+    {
+      "name": "previous frame remains owned until release",
+      "initial": "committed frame owns A",
+      "offer": "commit successor frame owning B before previous release",
+      "expected": { "liveItems": 2, "stagedItems": 0, "allocations": 1, "reused": 0, "paintable": "B with A retained for previous", "admission": "ready" }
+    },
+    {
+      "name": "engine canvas publishes one accounted target",
+      "initial": "no engine raster",
+      "offer": "render and stage one engine surface",
+      "expected": { "liveItems": 0, "stagedItems": 1, "allocations": 1, "reused": 0, "paintable": "staged engine raster", "admission": "ready", "presenterTargets": 0, "tableTargets": 1 }
+    }
+  ]
+}

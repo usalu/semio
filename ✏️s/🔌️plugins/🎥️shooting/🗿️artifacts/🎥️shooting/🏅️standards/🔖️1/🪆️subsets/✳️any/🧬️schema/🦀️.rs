@@ -158,14 +158,24 @@ fn shooting_scene_to_semio_drawing(snapshot: &ShootingSnapshot) -> (SemioDrawing
 
     let mut children = Vec::new();
     let mut styles = vec![DrawStyle { name: "label".into(), fill: Some(SemioRgba { r: 1.0, g: 1.0, b: 1.0, a: 1.0 }), stroke: None, stroke_width: None, opacity: None }];
-    let canvas_background = if is_transparent_shooting_background(&shot_background) {
-        None
-    } else {
-        let background_rgba = shooting_hex_color_to_rgba(&shot_background).unwrap_or(SemioRgba { r: 1.0, g: 1.0, b: 1.0, a: 1.0 });
-        children.push(DrawNode::Path { segments: shooting_shape_path_segments(shape, width as f64, height as f64), style: Some("background".into()) });
-        styles.insert(0, DrawStyle { name: "background".into(), fill: Some(background_rgba), stroke: None, stroke_width: None, opacity: None });
-        Some(background_rgba)
-    };
+    // 🖼️ The shot's `shape` is the frame every export carries, INDEPENDENT of whether that frame is
+    // filled: a transparent shot still has a rectangle/ellipse outline, and the scene material's own
+    // `stroke` colour is what draws it. So the shape is ALWAYS one real `Path` child (the only
+    // drawable `DrawNode` — see `shooting_shape_path_segments`) and only its FILL is conditional:
+    // an opaque `background` fills it, a transparent one fills it with a fully transparent colour
+    // (never a missing `fill`, which SVG would render as the default opaque black).
+    let canvas_background = (!is_transparent_shooting_background(&shot_background)).then(|| shooting_hex_color_to_rgba(&shot_background).unwrap_or(SemioRgba { r: 1.0, g: 1.0, b: 1.0, a: 1.0 }));
+    children.push(DrawNode::Path { segments: shooting_shape_path_segments(shape, width as f64, height as f64), style: Some("shape".into()) });
+    styles.insert(
+        0,
+        DrawStyle {
+            name: "shape".into(),
+            fill: Some(canvas_background.unwrap_or(SemioRgba { r: 0.0, g: 0.0, b: 0.0, a: 0.0 })),
+            stroke: shooting_hex_color_to_rgba(&snapshot.scene.material.stroke),
+            stroke_width: None,
+            opacity: None,
+        },
+    );
     if let Some(bytes) = crate::shooting_emblem_bytes(snapshot).filter(|bytes| !bytes.is_empty()) {
         children.push(DrawNode::Image { at: SemioPoint2 { x: 0.0, y: 0.0 }, width: width as f64, height: height as f64, mime: "image/png".into(), bytes });
     }

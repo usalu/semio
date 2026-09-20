@@ -11,6 +11,7 @@
 //! lives in that consumer's own component file instead.
 
 use crate::editor::sequence::commands::connection::{connect_steps, disconnect_steps};
+use crate::editor::sequence::commands::example::set_active_example;
 use crate::editor::sequence::commands::layout::{reorganize, set_orientation};
 use crate::editor::sequence::commands::node_graph::{node_graph_edit, set_viewport};
 use crate::editor::sequence::commands::playback::{run_command, stop_command};
@@ -43,6 +44,20 @@ use semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::snapshot
 
 //#region 🔖️Constants
 pub const SEQUENCE_PLAY_APP_ID: &str = "s.sequence.sequence@1/*#editor";
+
+/// 🔁️ The whole-document replacement `setActiveExample` publishes — the sanctioned non-history
+/// "replace the whole document" gesture (`ArtifactStore::reset`, applied host-side), which a
+/// composed-child document needs because the taxonomy forbids a whole-snapshot mutation variant.
+/// The spr is a fresh, edit-free op-log built with `store::empty_document_spr` — NEVER a live
+/// `ArtifactEnvelope` minted just to print one: such an envelope is a terminal store shell whose
+/// `Drop` asserts that its app-owned bounded retirement authority detached every nested owner first,
+/// and nothing on this path ever mounts or retires it, so the envelope route traps the guest
+/// (`🧊️process3d` lost its whole editor to exactly this).
+pub fn reset_sequence_document_effect(document: &SequenceSnapshot) -> semio_framework_plugin::Effect {
+    let pack = <SequenceSnapshot as store::ArtifactPack>::encode_pack(document);
+    let spr = semio_framework_plugin::resolve_ready(store::empty_document_spr(SEQUENCE_PLAY_APP_ID, SEQUENCE_DOCUMENT_SCHEMA));
+    semio_framework_plugin::Effect::LoadDocument { pack, spr }
+}
 pub use catalogue_panel::SEQUENCE_PLAY_BODY_CATALOGUE;
 pub use compiled::SEQUENCE_PLAY_BODY_COMPILED;
 pub use document_panel::SEQUENCE_PLAY_BODY_ARTIFACT;
@@ -486,9 +501,15 @@ impl neural_engine::ColdRetire for SequenceHost {
     }
 }
 
+/// 🧊️ The canonical seed snapshot owns the two demo steps' `StepParams` dictionaries, so it is the
+/// FINAL owner of two non-empty pair roots — a bare `&default_snapshot()` temporary dies inside this
+/// very expression and trips `Dictionary::drop`'s fail-closed law
+/// ("final Dictionary ownership must be explicitly retired or owned by a cold boundary").
+/// The seed is therefore built inside a cold boundary that retires it once the host has copied it.
 impl Default for SequenceHost {
     fn default() -> Self {
-        Self::from_snapshot(&default_snapshot())
+        let seed = neural_engine::ColdOwner::new(default_snapshot());
+        Self::from_snapshot(&seed)
     }
 }
 
@@ -962,6 +983,7 @@ semio_framework_plugin::app_commands! {
         "run" as "run" => run_command::Run,
         "stop" as "stop" => stop_command::Stop,
         "setViewport" as "set-viewport" => set_viewport::SetViewport,
+        "setActiveExample" as "set-active-example" => set_active_example::SetActiveExample,
     }
 }
 //#endregion 🔖️Commands
@@ -2941,6 +2963,204 @@ impl semio_framework_plugin::ArtifactOwnedToolJobFactory for SequenceRetainedCon
 }
 //#endregion 🧵️RetainedConfigRoutes
 
+//#region 🧵️RetainedExampleRoutes
+/// 🎬️ `setActiveExample`'s own retained route. It is a FOURTH factory rather than a row on any of
+/// the three above because those three route document, child and window-config mutations through
+/// their work impls, while this verb emits a host-applied effect and nothing else — the
+/// `🔱️trinity/🔌️jack` one-verb-factory shape. Its lane is therefore `HostOnly`: it publishes on no
+/// store at all.
+const SEQUENCE_RETAINED_EXAMPLE_PAYLOAD_SCHEMA: &str = "sequence.play/retained-example-command.v1";
+const SEQUENCE_RETAINED_EXAMPLE_RAW_BYTES: usize = 4_096;
+const SEQUENCE_RETAINED_EXAMPLE_MAXIMUM_UNITS: usize = 2;
+const SEQUENCE_RETAINED_EXAMPLE_MAXIMUM_ID_BYTES: usize = 256;
+const SEQUENCE_RETAINED_EXAMPLE_TOOL_IDS: &[&str] = &["setActiveExample"];
+const SEQUENCE_RETAINED_EXAMPLE_PUBLICATION_CONTRACTS: &[semio_framework_plugin::ArtifactToolPublicationContract] =
+    &[semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setActiveExample", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly] }];
+
+fn sequence_retained_example_command_admitted(command: &SequenceCommand) -> bool {
+    match command {
+        SequenceCommand::SetActiveExample(payload) => payload.example_id.len() <= SEQUENCE_RETAINED_EXAMPLE_MAXIMUM_ID_BYTES,
+        _ => false,
+    }
+}
+
+struct SequenceRetainedExampleWork {
+    tool_id: &'static str,
+    workspace_identity: u64,
+    cursor: usize,
+    replay_target: Option<usize>,
+    completed: bool,
+    closing: bool,
+}
+
+impl SequenceRetainedExampleWork {
+    fn new(tool_id: &'static str, operation: &semio_framework_plugin::AppOperationContext) -> Self {
+        let scope = format!("{}:{}:{}:{}", operation.app_instance_id, operation.parent_document_id, operation.operation_id, operation.generation);
+        let workspace_identity = scope.as_bytes().iter().fold(0xcbf2_9ce4_8422_2325_u64, |state, byte| (state ^ u64::from(*byte)).wrapping_mul(0x100_0000_01b3));
+        Self { tool_id, workspace_identity, cursor: 0, replay_target: None, completed: false, closing: false }
+    }
+}
+
+impl semio_framework_plugin::retained_command::ArtifactCommandWork<semio_framework_plugin::EditorApp<SequencePlayApp>> for SequenceRetainedExampleWork {
+    fn tool_id(&self) -> &'static str {
+        self.tool_id
+    }
+
+    fn workspace_identity(&self) -> u64 {
+        self.workspace_identity
+    }
+
+    /// 📏️ Answered without touching the snapshot or the working scene: loading an example is what
+    /// makes a scene exist, so measuring this verb against one would refuse it at exactly the boot
+    /// moment the playground navbar dispatches it.
+    fn extent(
+        &self,
+        command: &SequenceCommand,
+        _snapshot: &SequenceSnapshot,
+        _interaction: &protocol::InteractionState,
+        _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<semio_framework_plugin::EditorApp<SequencePlayApp>>>,
+    ) -> Option<usize> {
+        sequence_retained_example_command_admitted(command).then_some(SEQUENCE_RETAINED_EXAMPLE_MAXIMUM_UNITS)
+    }
+
+    fn step(
+        &mut self,
+        input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, semio_framework_plugin::EditorApp<SequencePlayApp>>,
+    ) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<semio_framework_plugin::EditorApp<SequencePlayApp>>, Fault> {
+        let semio_framework_plugin::retained_command::ArtifactCommandInputs { command, .. } = *input;
+        use semio_framework_plugin::retained_command::ArtifactCommandWorkStep;
+        if self.completed || self.cursor >= SEQUENCE_RETAINED_EXAMPLE_MAXIMUM_UNITS || !sequence_retained_example_command_admitted(command) {
+            return Err(Fault::new(
+                semio_framework_plugin::FaultOrigin::App,
+                semio_framework_plugin::FaultCode::new("sequence.retained.example-command"),
+                "Sequence retained example command exceeded its exact route or payload envelope",
+            ));
+        }
+        self.cursor += 1;
+        if let Some(target) = self.replay_target {
+            if self.cursor <= target {
+                if self.cursor == target {
+                    self.replay_target = None;
+                }
+                return Ok(ArtifactCommandWorkStep::Replay { stage: "sequence-example-replay", preview: b"{\"en\":\"Restoring Sequence example\",\"de\":\"Sequenzbeispiel wird wiederhergestellt\"}" });
+            }
+        }
+        if self.cursor == 1 {
+            return Ok(ArtifactCommandWorkStep::Progress { stage: "sequence-example-prepare", preview: b"{\"en\":\"Preparing Sequence example\",\"de\":\"Sequenzbeispiel wird vorbereitet\"}" });
+        }
+        self.completed = true;
+        match command {
+            SequenceCommand::SetActiveExample(payload) => set_active_example::emit(&payload.example_id).map(ArtifactCommandWorkStep::Complete),
+            _ => Err(Fault::from("sequence-example-route-rejected")),
+        }
+    }
+
+    fn checkpoint(&self, target: &mut [u8]) -> Result<usize, Fault> {
+        if target.len() < 24 {
+            return Err(Fault::from("sequence-retained-checkpoint-capacity"));
+        }
+        target[..24].fill(0);
+        target[..4].copy_from_slice(b"SRE1");
+        target[4] = u8::from(self.completed);
+        target[8..16].copy_from_slice(&(self.cursor as u64).to_le_bytes());
+        target[16..24].copy_from_slice(&self.workspace_identity.to_le_bytes());
+        Ok(24)
+    }
+
+    fn restore(&mut self, checkpoint: &[u8]) -> Result<(), Fault> {
+        if checkpoint.len() != 24 || &checkpoint[..4] != b"SRE1" || checkpoint[4] > 1 || checkpoint[5..8] != [0, 0, 0] {
+            return Err(Fault::from("sequence-retained-checkpoint-invalid"));
+        }
+        let cursor = usize::try_from(u64::from_le_bytes(checkpoint[8..16].try_into().map_err(|_| Fault::from("sequence-retained-checkpoint-cursor"))?)).map_err(|_| Fault::from("sequence-retained-checkpoint-cursor"))?;
+        let identity = u64::from_le_bytes(checkpoint[16..24].try_into().map_err(|_| Fault::from("sequence-retained-checkpoint-identity"))?);
+        if identity != self.workspace_identity || cursor > SEQUENCE_RETAINED_EXAMPLE_MAXIMUM_UNITS {
+            return Err(Fault::from("sequence-retained-checkpoint-owner-mismatch"));
+        }
+        self.cursor = 0;
+        self.replay_target = (cursor != 0).then_some(cursor);
+        self.completed = false;
+        Ok(())
+    }
+
+    fn begin_close(&mut self) {
+        self.closing = true;
+    }
+
+    fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
+        if !self.closing {
+            return semio_framework_job::InteractiveJobCloseStep::Blocked;
+        }
+        if maximum_items == 0 {
+            return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+        }
+        self.replay_target = None;
+        semio_framework_job::InteractiveJobCloseStep::Complete
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.closing && self.replay_target.is_none()
+    }
+}
+
+struct SequenceRetainedExampleJobFactory {
+    keys: Vec<semio_framework::ToolFactoryKey>,
+}
+
+impl SequenceRetainedExampleJobFactory {
+    fn new(controller_id: &str) -> Self {
+        Self { keys: SEQUENCE_RETAINED_EXAMPLE_TOOL_IDS.iter().map(|tool_id| semio_framework::ToolFactoryKey::new(controller_id, *tool_id)).collect() }
+    }
+}
+
+impl semio_framework::ToolJobFactory for SequenceRetainedExampleJobFactory {
+    type Payload = semio_framework_plugin::retained_command::ArtifactRetainedCommandPayload<semio_framework_plugin::EditorApp<SequencePlayApp>>;
+    type Job = semio_framework_plugin::retained_command::ArtifactRetainedCommandJob<semio_framework_plugin::EditorApp<SequencePlayApp>>;
+
+    fn keys(&self) -> &[semio_framework::ToolFactoryKey] {
+        &self.keys
+    }
+
+    fn payload_schema_id(&self) -> &str {
+        SEQUENCE_RETAINED_EXAMPLE_PAYLOAD_SCHEMA
+    }
+
+    fn classification(&self) -> semio_framework::InteractiveJobClassification {
+        semio_framework::InteractiveJobClassification::Migrated
+    }
+
+    fn execution_contract(&self) -> semio_framework::ToolExecutionContract {
+        semio_framework::ToolExecutionContract::resumable(SEQUENCE_RETAINED_EXAMPLE_RAW_BYTES, SEQUENCE_RETAINED_EXAMPLE_MAXIMUM_UNITS, 1, 65_536, 7_500, 1, 1)
+    }
+
+    fn create_job(&mut self, _operation: semio_framework_job::Operation, payload: Self::Payload) -> Result<Self::Job, semio_framework::ToolJobFactoryError> {
+        Ok(semio_framework_plugin::retained_command::ArtifactRetainedCommandJob::new(payload))
+    }
+
+    fn create_job_from_wire_pages_with_payload(
+        &mut self,
+        _operation: semio_framework_job::Operation,
+        payload: Self::Payload,
+        input: semio_framework::action_bus::RetainedToolWireInput,
+        checkpoint: Option<semio_framework::action_bus::RetainedToolWireInput>,
+    ) -> Result<Self::Job, (semio_framework::ToolJobFactoryError, semio_framework::action_bus::RetainedToolWireInput, Option<semio_framework::action_bus::RetainedToolWireInput>)> {
+        if input.declared_bytes() > SEQUENCE_RETAINED_EXAMPLE_RAW_BYTES || checkpoint.as_ref().is_some_and(|value| value.declared_bytes() > semio_framework_plugin::retained_command::ARTIFACT_COMMAND_CHECKPOINT_MAXIMUM_BYTES) {
+            return Err((semio_framework::ToolJobFactoryError::new("Sequence retained example command rejects oversized wire or checkpoint owner"), input, checkpoint));
+        }
+        Ok(match checkpoint {
+            Some(checkpoint) => semio_framework_plugin::retained_command::ArtifactRetainedCommandJob::from_wire_with_checkpoint(payload, input, checkpoint),
+            None => semio_framework_plugin::retained_command::ArtifactRetainedCommandJob::from_wire(payload, input),
+        })
+    }
+}
+
+impl semio_framework_plugin::ArtifactOwnedToolJobFactory for SequenceRetainedExampleJobFactory {
+    type Owner = semio_framework_plugin::EditorApp<SequencePlayApp>;
+    const TOOL_IDS: &'static [&'static str] = SEQUENCE_RETAINED_EXAMPLE_TOOL_IDS;
+    const DOCUMENT_SCHEMA: &'static str = SEQUENCE_DOCUMENT_SCHEMA;
+    const PUBLICATION_CONTRACTS: &'static [semio_framework_plugin::ArtifactToolPublicationContract] = SEQUENCE_RETAINED_EXAMPLE_PUBLICATION_CONTRACTS;
+}
+//#endregion 🧵️RetainedExampleRoutes
+
 //#region 🔖️SequencePlayApp
 /// 🧪️ Stateless app shell; exact window owners hold graph preferences and run output.
 #[derive(Default)]
@@ -3001,6 +3221,21 @@ impl SequenceConfigProofs {
             "setViewport" => semio_framework::ToolExecutionContract::resumable(4_096, 2, 1, 4_096, 2_000, 1, 1),
             "setOrientation" => semio_framework::ToolExecutionContract::resumable(4_096, 2, 1, 4_096, 2_000, 1, 1),
             "stop" => semio_framework::ToolExecutionContract::resumable(4_096, 2, 1, 4_096, 2_000, 1, 1),
+        }
+    }
+}
+
+struct SequenceExampleProofs;
+impl SequenceExampleProofs {
+    semio_framework_plugin::bounded_first_step_tool_proofs! {
+        owner: semio_framework_plugin::EditorApp<SequencePlayApp>,
+        owner_file: "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+        controller: "s.sequence.sequence@1/*#editor",
+        artifact_schema: "sequence.sequence",
+        factory: "SequenceRetainedExampleJobFactory",
+        factory_type: SequenceRetainedExampleJobFactory,
+        tools: {
+            "setActiveExample" => semio_framework::ToolExecutionContract::resumable(4_096, 2, 1, 65_536, 7_500, 1, 1),
         }
     }
 }
@@ -3091,21 +3326,40 @@ impl ArtifactEditor for SequencePlayApp {
     }
 
     fn bounded_first_step_tool_proofs() -> Vec<semio_framework_plugin::ArtifactBoundedFirstStepProof> {
-        SequenceArtifactProofs::bounded_first_step_tool_proofs().into_iter().chain(SequencePersistentProofs::bounded_first_step_tool_proofs()).chain(SequenceConfigProofs::bounded_first_step_tool_proofs()).collect()
+        SequenceArtifactProofs::bounded_first_step_tool_proofs()
+            .into_iter()
+            .chain(SequencePersistentProofs::bounded_first_step_tool_proofs())
+            .chain(SequenceConfigProofs::bounded_first_step_tool_proofs())
+            .chain(SequenceExampleProofs::bounded_first_step_tool_proofs())
+            .collect()
+    }
+
+    /// 📥️ Admits the whole-document replacement `reset_sequence_document_effect` emits. The trait
+    /// default owns no retained initialization authority, so the host refuses the app's own archive
+    /// with `artifact-store.persisted-initializer-refused` AFTER the guest has already accepted the
+    /// verb — which is what every `setActiveExample` would hit without this.
+    fn build_document_store_initialization_job(
+        envelope: store::ArtifactEnvelope<Self::Snapshot, Self::Mutation>,
+        operation: semio_framework_job::OperationId,
+        generation: semio_framework_job::Generation,
+    ) -> Result<semio_framework_plugin::ArtifactStoreInitializationJob<Self::Snapshot, Self::Mutation>, store::ArtifactEnvelope<Self::Snapshot, Self::Mutation>> {
+        Ok(semio_framework_plugin::bounded_document_store_initialization_job(envelope, SEQUENCE_DOCUMENT_SCHEMA, operation, generation))
     }
 
     fn register_tool_job_factories(registry: &mut semio_framework_plugin::ArtifactToolFactoryRegistry<'_, semio_framework_plugin::EditorApp<Self>>) -> Result<(), Fault> {
         let controller = registry.controller_id().to_string();
         registry.register(SequenceRetainedArtifactJobFactory::new(&controller))?;
         registry.register(SequencePersistentJobFactory::new(&controller))?;
-        registry.register(SequenceRetainedConfigJobFactory::new(&controller))
+        registry.register(SequenceRetainedConfigJobFactory::new(&controller))?;
+        registry.register(SequenceRetainedExampleJobFactory::new(&controller))
     }
 
     fn build_tool_job(request: semio_framework_plugin::ArtifactOwnedToolJobRequest<semio_framework_plugin::EditorApp<Self>>) -> Result<Option<semio_framework::ToolOperationSpec>, Fault> {
         let artifact_route = SEQUENCE_RETAINED_ARTIFACT_TOOL_IDS.contains(&request.tool_id.as_str());
         let config_route = SEQUENCE_RETAINED_CONFIG_TOOL_IDS.contains(&request.tool_id.as_str());
         let persistent_route = SEQUENCE_PERSISTENT_TOOL_IDS.contains(&request.tool_id.as_str());
-        if !artifact_route && !config_route && !persistent_route {
+        let example_route = SEQUENCE_RETAINED_EXAMPLE_TOOL_IDS.contains(&request.tool_id.as_str());
+        if !artifact_route && !config_route && !persistent_route && !example_route {
             return Ok(None);
         }
         let persistent_admitted = match request.command.as_ref() {
@@ -3117,6 +3371,7 @@ impl ArtifactEditor for SequencePlayApp {
             || (artifact_route && !sequence_retained_artifact_command_admitted(&request.command))
             || (config_route && !sequence_retained_config_command_admitted(&request.command))
             || (persistent_route && !persistent_admitted)
+            || (example_route && !sequence_retained_example_command_admitted(&request.command))
         {
             return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("sequence.retained.tool-mismatch"), "Sequence command does not match its exact retained route or payload envelope"));
         }
@@ -3132,6 +3387,8 @@ impl ArtifactEditor for SequencePlayApp {
             Box::new(SequencePersistentWork::new(tool_id, &operation_context))
         } else if artifact_route {
             Box::new(SequenceRetainedArtifactWork::new(tool_id, &operation_context))
+        } else if example_route {
+            Box::new(SequenceRetainedExampleWork::new(tool_id, &operation_context))
         } else {
             Box::new(SequenceRetainedConfigWork::new(tool_id, &operation_context))
         };
@@ -3153,6 +3410,8 @@ impl ArtifactEditor for SequencePlayApp {
                 SEQUENCE_PERSISTENT_MAXIMUM_UNITS
             } else if artifact_route {
                 SEQUENCE_STORE_MAXIMUM_SCENE_ITEMS
+            } else if example_route {
+                SEQUENCE_RETAINED_EXAMPLE_MAXIMUM_UNITS
             } else {
                 SEQUENCE_RETAINED_MAXIMUM_UNITS
             },
@@ -3238,6 +3497,9 @@ impl ArtifactEditor for SequencePlayApp {
                 let value = args.and_then(|value| value.get("camera")).or_else(|| args.and_then(|value| value.get("viewport"))).cloned().ok_or_else(|| Fault::from("sequence setViewport requires a camera"))?;
                 Ok(SequenceCommand::SetViewport(set_viewport::SetViewport { camera: dsl::from_dsl_value(value).map_err(|error| Fault::from(format!("invalid sequence setViewport camera: {error}")))? }))
             }
+            "setActiveExample" => Ok(SequenceCommand::SetActiveExample(set_active_example::SetActiveExample {
+                example_id: text_arg(&["exampleId", "example_id", "id", "value"]).unwrap_or_else(|| crate::examples::demo::ID.into()),
+            })),
             other => Err(Fault::from(format!("sequence: unhandled action id {other}"))),
         }
     }
@@ -3389,8 +3651,11 @@ pub fn create_sequence_app() -> AppDefinition {
             .action_with(ActionDefinition::bounded_catalog("addStep", LocalizedLabel::native("Add Step", "Schritt hinzufügen"), ActionKind::Mutation).with_category("create"))
             .mutation("addStepToSlot", LocalizedLabel::native("Add Step To Slot", "Schritt zu Slot hinzufügen"))
             .mutation("addStepDropped", LocalizedLabel::native("Add Step Dropped", "Schritt per Ablegen hinzufügen"))
+            .action_audience("addStepDropped", semio_framework_plugin::CapabilityAudience::Input)
             .mutation("removeStep", LocalizedLabel::native("Remove Step", "Schritt entfernen"))
+            .action_destructive("removeStep")
             .action_with(ActionDefinition::bounded_catalog("deleteSelection", LocalizedLabel::native("Delete Selection", "Auswahl löschen"), ActionKind::Mutation).with_category("selection"))
+            .action_destructive("deleteSelection")
             .mutation("moveStep", LocalizedLabel::native("Move Step", "Schritt verschieben"))
             .mutation("connectSteps", LocalizedLabel::native("Connect Steps", "Schritte verbinden"))
             .mutation("disconnectSteps", LocalizedLabel::native("Disconnect Steps", "Schritte trennen"))
@@ -3404,6 +3669,11 @@ pub fn create_sequence_app() -> AppDefinition {
             .view_action("setOrientation", LocalizedLabel::native("Set Orientation", "Ausrichtung festlegen"))
             .action_with(ActionDefinition::new("run", LocalizedLabel::native("Run", "Ausführen"), ActionKind::View, "play").with_category("actions"))
             .action_with(ActionDefinition::new("stop", LocalizedLabel::native("Stop", "Stopp"), ActionKind::View, "play").with_category("actions"))
+            // 📚️ The playground navbar dispatches `setActiveExample` on boot for its example
+            // combobox, and the shell offers that combobox only to an app that declares the verb.
+            // Undeclared, it was dropped before dispatch — this app's console ERROR at boot, and the
+            // reason its committed example never reached the document store at all.
+            .action_with(ActionDefinition::new("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"), ActionKind::Mutation, "panel-left"))
             // 📝️ Staged argument forms for the panel-visible create + layout actions.
             .action_args("addStep", vec![
                 ActionArgDef::select("kind", LocalizedLabel::native("Kind", "Art"), vec![
@@ -3436,6 +3706,12 @@ pub fn create_sequence_app() -> AppDefinition {
             .action_interactive_job("run", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_interactive_job("stop", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_interactive_job("setViewport", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_interactive_job("setActiveExample", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            .action_args("setActiveExample", vec![
+                ActionArgDef::select("exampleId", LocalizedLabel::native("Example", "Beispiel"), vec![ActionArgOption::new(crate::examples::demo::ID, crate::examples::demo::label())])
+                    .required()
+                    .default_value(&crate::examples::demo::ID),
+            ])
             .keybinding("mod+z", "undo")
             .keybinding("mod+shift+z", "redo")
             // 🕹️ First-class hover/selection (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM):

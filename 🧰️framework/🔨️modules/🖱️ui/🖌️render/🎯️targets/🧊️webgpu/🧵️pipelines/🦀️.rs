@@ -24,7 +24,8 @@ use wgpu::util::DeviceExt;
 pub(crate) fn build_pipeline(device: &wgpu::Device, module: &wgpu::ShaderModule, spec: &PipelineSpec, layout: &wgpu::PipelineLayout, surface_format: wgpu::TextureFormat) -> wgpu::RenderPipeline {
     let buffers: Vec<Vec<wgpu::VertexAttribute>> =
         spec.vertex_buffers.iter().map(|buffer| buffer.attributes.iter().map(|attribute| wgpu::VertexAttribute { offset: attribute.offset, shader_location: attribute.shader_location, format: vertex_format(attribute.format) }).collect()).collect();
-    let vertex_buffers: Vec<wgpu::VertexBufferLayout<'_>> = spec.vertex_buffers.iter().zip(buffers.iter()).map(|(buffer, attributes)| wgpu::VertexBufferLayout { array_stride: buffer.stride, step_mode: step_mode(buffer.step_mode), attributes }).collect();
+    let vertex_buffers: Vec<wgpu::VertexBufferLayout<'_>> =
+        spec.vertex_buffers.iter().zip(buffers.iter()).map(|(buffer, attributes)| wgpu::VertexBufferLayout { array_stride: buffer.stride, step_mode: step_mode(buffer.step_mode), attributes }).collect();
     device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
         label: Some(spec.label),
         layout: Some(layout),
@@ -85,12 +86,17 @@ pub(crate) struct Pipelines {
 
     pub ui_globals_layout: wgpu::BindGroupLayout,
     pub world_globals_layout: wgpu::BindGroupLayout,
+    pub world_shadow_layout: wgpu::BindGroupLayout,
     pub blur_layout: wgpu::BindGroupLayout,
     pub scene_sample_layout: wgpu::BindGroupLayout,
 
     pub quad_vertex_buffer: wgpu::Buffer,
     pub globals_buffer: wgpu::Buffer,
     pub blur_globals_buffer: wgpu::Buffer,
+    pub world_shadow_view: wgpu::TextureView,
+    pub world_shadow_bind_group: wgpu::BindGroup,
+    _world_shadow_texture: wgpu::Texture,
+    _world_shadow_sampler: wgpu::Sampler,
 }
 
 impl Pipelines {
@@ -98,6 +104,7 @@ impl Pipelines {
     pub(crate) fn new(device: &wgpu::Device, surface_format: wgpu::TextureFormat) -> Self {
         let ui_globals_layout = bind_group_layout(device, "ui_globals_layout", UI_FAMILY.variants[0].pipelines[0].bind_groups[0].entries);
         let world_globals_layout = bind_group_layout(device, "world3d_globals_layout", WORLD3D_FAMILY.variants[0].pipelines[0].bind_groups[0].entries);
+        let world_shadow_layout = bind_group_layout(device, "world3d_shadow_layout", WORLD3D_FAMILY.variants[0].pipelines[0].bind_groups[1].entries);
         let blur_layout = bind_group_layout(device, "blur_downsample_layout", BLUR_FAMILY.variants[0].pipelines[0].bind_groups[0].entries);
         let scene_sample_layout = bind_group_layout(device, "scene_sample_layout", BLUR_FAMILY.variants[1].pipelines[0].bind_groups[0].entries);
 
@@ -115,8 +122,9 @@ impl Pipelines {
         let vector_pipeline = build_pipeline(device, &vector_module, &VECTOR_FAMILY.variants[0].pipelines[0], &ui_layout, surface_format);
 
         let world_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor { label: Some("world3d_pipeline_layout"), bind_group_layouts: &[Some(&world_globals_layout)], immediate_size: 0 });
-        let world_opaque_pipeline = build_pipeline(device, &world_module, &WORLD3D_FAMILY.variants[0].pipelines[0], &world_layout, surface_format);
-        let world_translucent_pipeline = build_pipeline(device, &world_module, &WORLD3D_FAMILY.variants[0].pipelines[1], &world_layout, surface_format);
+        let world_mesh_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor { label: Some("world3d_mesh_pipeline_layout"), bind_group_layouts: &[Some(&world_globals_layout), Some(&world_shadow_layout)], immediate_size: 0 });
+        let world_opaque_pipeline = build_pipeline(device, &world_module, &WORLD3D_FAMILY.variants[0].pipelines[0], &world_mesh_layout, surface_format);
+        let world_translucent_pipeline = build_pipeline(device, &world_module, &WORLD3D_FAMILY.variants[0].pipelines[1], &world_mesh_layout, surface_format);
         let world_line_pipeline = build_pipeline(device, &world_lines_module, &WORLD3D_FAMILY.variants[1].pipelines[0], &world_layout, surface_format);
 
         let blur_pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor { label: Some("blur_downsample_pipeline_layout"), bind_group_layouts: &[Some(&blur_layout)], immediate_size: 0 });
@@ -136,6 +144,23 @@ impl Pipelines {
             usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
         });
         let blur_globals_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor { label: Some("blur_globals"), contents: bytemuck::bytes_of(&BlurGlobals::default()), usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST });
+        let world_shadow_texture = device.create_texture(&wgpu::TextureDescriptor {
+            label: Some("world3d_shadow_fallback"),
+            size: wgpu::Extent3d { width: 1, height: 1, depth_or_array_layers: 1 },
+            mip_level_count: 1,
+            sample_count: 1,
+            dimension: wgpu::TextureDimension::D2,
+            format: wgpu::TextureFormat::Depth32Float,
+            usage: wgpu::TextureUsages::RENDER_ATTACHMENT | wgpu::TextureUsages::TEXTURE_BINDING,
+            view_formats: &[],
+        });
+        let world_shadow_view = world_shadow_texture.create_view(&wgpu::TextureViewDescriptor::default());
+        let world_shadow_sampler = device.create_sampler(&wgpu::SamplerDescriptor { label: Some("world3d_shadow_fallback_sampler"), compare: Some(wgpu::CompareFunction::LessEqual), ..Default::default() });
+        let world_shadow_bind_group = device.create_bind_group(&wgpu::BindGroupDescriptor {
+            label: Some("world3d_shadow_fallback_bind_group"),
+            layout: &world_shadow_layout,
+            entries: &[wgpu::BindGroupEntry { binding: 0, resource: wgpu::BindingResource::TextureView(&world_shadow_view) }, wgpu::BindGroupEntry { binding: 1, resource: wgpu::BindingResource::Sampler(&world_shadow_sampler) }],
+        });
 
         Self {
             mask_pipeline,
@@ -149,11 +174,16 @@ impl Pipelines {
             glass_pipeline,
             ui_globals_layout,
             world_globals_layout,
+            world_shadow_layout,
             blur_layout,
             scene_sample_layout,
             quad_vertex_buffer,
             globals_buffer,
             blur_globals_buffer,
+            world_shadow_view,
+            world_shadow_bind_group,
+            _world_shadow_texture: world_shadow_texture,
+            _world_shadow_sampler: world_shadow_sampler,
         }
     }
 

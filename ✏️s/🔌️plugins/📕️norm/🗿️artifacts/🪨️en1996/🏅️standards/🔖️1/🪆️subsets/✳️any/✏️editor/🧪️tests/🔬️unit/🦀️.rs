@@ -14,7 +14,23 @@ pub(crate) mod context {
     
     /// ð§¬ï¸ A wrapper carrying the real registry so kind discipline (View-emits-operations rejection) runs.
     pub async fn app_with_registry() -> NormApp {
-        new_app_with_registry::<EditorApp<En1996PlayApp>>(en1996_manifest_for_tests).await
+        let mut app = new_app_with_registry::<EditorApp<En1996PlayApp>>(en1996_manifest_for_tests).await;
+        semio_framework::io::resolve_ready(app.bind_instance_id(meta("local").instance_id));
+        app
+    }
+
+    /// 🧹️ Closes every store the wrapper opened. A live `ArtifactStore` asserts in `Drop` unless it
+    /// was driven to its terminal-empty shallow shell, so every fixture that mounts an app must end
+    /// here.
+    pub fn close(app: &mut NormApp) {
+        semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(app);
+    }
+
+    /// 🔁️ Drives one dispatched typed operation to quiescence the way the plugin host does, draining
+    /// EVERY result page: a bare `maintenance_step` loop retires nothing and turns a publication
+    /// fault into a silent timeout.
+    pub async fn settle(app: &mut NormApp) {
+        semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(app, meta("local").instance_id).await.expect("settle the typed operation");
     }
     
     pub async fn dispatch(app: &mut NormApp, command: En1996Command) -> InvocationResult {
@@ -27,7 +43,9 @@ pub(crate) mod context {
                 ..Default::default()
             });
         }
-        app.dispatch_typed(command, &action_meta).await.expect("dispatch")
+        let result = app.dispatch_typed(command, &action_meta).await.expect("dispatch");
+        settle(app).await;
+        result
     }
     
     pub async fn render(app: &mut NormApp, body_key: &str) -> String {
@@ -44,8 +62,14 @@ fn retained_command_dispositions_match_the_language_neutral_oracle() {
     let definition = create_en1996_app();
     let mut classified = 0usize;
     for window in definition.window_kinds.iter() {
+        // 🕹️ `window.actions` holds only what a window kind claims FOR ITSELF. Since the app-wide
+        // roster stopped being cloned into every window kind, the dispatchable set of a window is
+        // `semio_framework::window_kind_actions` — the same predicate the framework's own
+        // command-bridge law uses. Norm declares all three retained tools at app level, so reading
+        // `window.actions` here saw an empty roster.
+        let dispatchable = semio_framework::window_kind_actions(&definition, window);
         for id in crate::app_surface::NORM_RETAINED_TOOL_IDS {
-            let action = window.actions.iter().find(|action| action.id == *id).unwrap_or_else(|| panic!("window {} must declare {id}", window.id));
+            let action = dispatchable.iter().find(|action| action.id == *id).unwrap_or_else(|| panic!("window {} must dispatch {id}", window.id));
             assert_eq!(action.semantics.execution.interactive_job, InteractiveJobClassification::Migrated);
             classified += 1;
         }
@@ -127,6 +151,7 @@ async fn declares_model_in_and_report_out_ports() {
 async fn an_unknown_body_key_falls_back_to_a_text_node() {
     let mut app = context::app_with_registry().await;
     assert!(context::render(&mut app, "norm.en1996.play.nope").await.contains("Unknown body"));
+    context::close(&mut app);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -135,6 +160,7 @@ async fn every_declared_body_key_renders() {
     for body_key in [inputs::BODY_INPUTS, results::BODY_RESULTS, document_panel::BODY_ARTIFACT, catalogue_panel::BODY_CATALOGUE, inspection_panel::BODY_INSPECTION] {
         assert!(!context::render(&mut app, body_key).await.contains("Unknown body"), "{body_key} must render its own node");
     }
+    context::close(&mut app);
 }
 //#endregion ðï¸Manifest
 
@@ -145,6 +171,7 @@ async fn set_snapshot_commits_a_host_backed_report() {
     context::dispatch(&mut app, En1996Command::ReplaceSnapshot(set_snapshot::ReplaceSnapshot { snapshot: En1996Snapshot::default() })).await;
     let host = NormHost::<En1996Family>::from_artifact(app.snapshot().expect("projection"));
     assert!(!host.report().checks.is_empty());
+    context::close(&mut app);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -153,6 +180,7 @@ async fn evaluate_recommits_the_current_projection_without_changing_it() {
     let before = app.snapshot().expect("projection");
     context::dispatch(&mut app, En1996Command::Evaluate(evaluate::Evaluate {})).await;
     assert_eq!(before, app.snapshot().expect("projection"));
+    context::close(&mut app);
 }
 
 /// ð§®ï¸ `setSelectedCheckIndex` is Results-window-config-only â it must dispatch cleanly and never touch the document.
@@ -163,6 +191,7 @@ async fn selected_check_index_is_a_config_only_edit() {
     let result = context::dispatch(&mut app, En1996Command::SetSelectedCheckIndex(selected_check::SetSelectedCheckIndex { index: Some(2) })).await;
     assert!(result.mutations.is_empty(), "a Results-window-config-only command must emit no document operations");
     assert_eq!(before, app.snapshot().expect("projection"), "a Results-window-config-only command must never mutate the document");
+    context::close(&mut app);
 }
 
 /// ð§¬ï¸ Kind-discipline wrapper: the real registry enforces that View actions never emit document
@@ -172,6 +201,7 @@ async fn view_actions_never_emit_artifact_mutations_under_the_real_registry() {
     let mut app = context::app_with_registry().await;
     let result = context::dispatch(&mut app, En1996Command::SetSelectedCheckIndex(selected_check::SetSelectedCheckIndex { index: Some(1) })).await;
     assert!(result.mutations.is_empty());
+    context::close(&mut app);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -179,8 +209,11 @@ async fn undo_redo_round_trips_through_the_wrapper() {
     let mut app = context::app_with_registry().await;
     context::dispatch(&mut app, En1996Command::ReplaceSnapshot(set_snapshot::ReplaceSnapshot { snapshot: En1996Snapshot::default() })).await;
     app.handle_action("undo", None, &semio_framework_plugin::artifact_app_laws::meta("local")).await.expect("undo");
+    context::settle(&mut app).await;
     app.handle_action("redo", None, &semio_framework_plugin::artifact_app_laws::meta("local")).await.expect("redo");
+    context::settle(&mut app).await;
     assert_eq!(app.snapshot().expect("projection"), En1996Snapshot::default());
+    context::close(&mut app);
 }
 
 /// ðï¸ `report:out` dumps the currently computed `CheckReport` as a `Structured` media payload.
@@ -192,5 +225,6 @@ async fn report_out_exports_the_computed_check_report() {
     assert_eq!(schema, crate::app_surface::artifact_kind_id(VARIANT));
     let report: crate::document::CheckReport = serde_json::from_str(&json).expect("report json parses");
     assert!(!report.checks.is_empty());
+    context::close(&mut app);
 }
 //#endregion ðï¸Behavior

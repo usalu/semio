@@ -1,5 +1,4 @@
 {
-  "ChangeTankMassT": {
-    "newTankMassT": 425.0
-  }
+  "mutation": "changeTankMassT",
+  "newTankMassT": 425.0
 }

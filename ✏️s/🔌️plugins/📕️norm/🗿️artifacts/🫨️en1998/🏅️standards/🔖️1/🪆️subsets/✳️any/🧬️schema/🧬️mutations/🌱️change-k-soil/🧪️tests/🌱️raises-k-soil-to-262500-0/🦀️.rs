@@ -67,7 +67,7 @@ async fn change_k_soil_committed_json_is_canonical() {
     }
     let reencoded = serde_json::to_value(mutation()).expect("change-k-soil mutation encodes");
     let original: serde_json::Value = serde_json::from_str(MUTATION).expect("change-k-soil mutation reparses");
-    assert_eq!(reencoded, original, "change-k-soil/raises-k-soil-to-262500-0: committed mutation JSON is not the canonical externally-tagged ChangeKSoil form carrying newKSoil");
+    assert_eq!(reencoded, original, "change-k-soil/raises-k-soil-to-262500-0: committed mutation JSON is not the canonical internally-tagged ChangeKSoil form carrying mutation and newKSoil");
 }
 
 /// 🎯️ The declared outcome holds: `change-k-soil` at 262500.0 is applied, not rejected, and carries no

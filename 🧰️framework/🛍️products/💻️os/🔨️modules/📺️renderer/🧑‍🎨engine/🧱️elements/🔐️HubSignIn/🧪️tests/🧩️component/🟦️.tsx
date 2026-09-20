@@ -35,8 +35,12 @@ import {
   hubSignInTextV1,
   parseHubConnectionBookV1,
   parseHubOriginV1,
+  parseHubSessionCapabilityV1,
   parseHubSessionMintResultV1,
   readHubConnectionBookV1,
+  readHubSessionCapabilityV1,
+  writeHubSessionCapabilityV1,
+  HUB_SESSION_CAPABILITY_STORAGE_KEY_V1,
   reduceHubSessionV1,
   removeHubConnectionV1,
   runHubSignInV1,
@@ -127,6 +131,11 @@ function fakePort(transport: HubSignInTransportV1, storage: HubConnectionStorage
       throw new Error("unused");
     },
     redeemInvite: async () => ({ status: 200 }),
+    listAgentDelegations: async () => [],
+    createAgentDelegation: async () => {
+      throw new Error("unused");
+    },
+    revokeAgentDelegation: async () => undefined,
   };
 }
 
@@ -227,6 +236,52 @@ describe("local-only hub connection book", () => {
     expect(capped.connections).toHaveLength(HUB_CONNECTION_BOOK_MAX_ENTRIES);
     const withPath = parseHubConnectionBookV1(JSON.stringify({ schema: "semio.os.hub-connection-book.v1", connections: [{ id: "remote:x", kind: "remote", label: "x", lastUserId: null, origin: "https://h.invalid/path" }], selectedId: "remote:x" }), "http://127.0.0.1:7777");
     expect(withPath.connections).toHaveLength(1);
+  });
+
+  it("remembers a hub session for THIS browsing context and refuses one minted by another hub", () => {
+    const storage = memoryStorage();
+    expect(readHubSessionCapabilityV1(storage, ORIGIN)).toBe(null);
+    writeHubSessionCapabilityV1(storage, { origin: ORIGIN, token: TOKEN, userId: "usr_ada" });
+    const restored = readHubSessionCapabilityV1(storage, ORIGIN);
+    expect(restored).toStrictEqual({ origin: ORIGIN, token: TOKEN, userId: "usr_ada" });
+    expect(readHubSessionCapabilityV1(storage, "https://other.invalid")).toBe(null);
+    const book = storage.entries.get("semio.os.hub-connection-book.v1") ?? "";
+    expect(book.includes(TOKEN)).toBe(false);
+    writeHubSessionCapabilityV1(storage, null);
+    expect(readHubSessionCapabilityV1(storage, ORIGIN)).toBe(null);
+    expect(storage.entries.has(HUB_SESSION_CAPABILITY_STORAGE_KEY_V1)).toBe(true);
+  });
+
+  it("refuses every remembered record that is not exactly one capability for this origin", () => {
+    const hostile = [
+      null,
+      "",
+      "not json",
+      "[]",
+      JSON.stringify({ schema: "other", origin: ORIGIN, token: TOKEN, userId: "usr_ada" }),
+      JSON.stringify({ schema: "semio.os.hub-session-capability.v1", origin: ORIGIN, token: TOKEN }),
+      JSON.stringify({ schema: "semio.os.hub-session-capability.v1", origin: ORIGIN, token: TOKEN, userId: "usr_ada", extra: 1 }),
+      JSON.stringify({ schema: "semio.os.hub-session-capability.v1", origin: ORIGIN, token: "session.v1.short", userId: "usr_ada" }),
+      JSON.stringify({ schema: "semio.os.hub-session-capability.v1", origin: ORIGIN, token: `Bearer ${TOKEN}`, userId: "usr_ada" }),
+      JSON.stringify({ schema: "semio.os.hub-session-capability.v1", origin: "https://elsewhere.invalid", token: TOKEN, userId: "usr_ada" }),
+      JSON.stringify({ schema: "semio.os.hub-session-capability.v1", origin: ORIGIN, token: TOKEN, userId: "" }),
+      "<!doctype html><title>proxy sign-in</title>",
+    ];
+    for (const source of hostile) expect(parseHubSessionCapabilityV1(source, ORIGIN)).toBe(null);
+    expect(parseHubSessionCapabilityV1(JSON.stringify({ schema: "semio.os.hub-session-capability.v1", origin: ORIGIN, token: TOKEN, userId: "usr_ada" }), ORIGIN)).toStrictEqual({ origin: ORIGIN, token: TOKEN, userId: "usr_ada" });
+  });
+
+  it("treats a blocked capability store as no session rather than a boot failure", () => {
+    const throwing: HubConnectionStorageV1 = {
+      getItem: () => {
+        throw new Error("blocked");
+      },
+      setItem: () => {
+        throw new Error("blocked");
+      },
+    };
+    expect(readHubSessionCapabilityV1(throwing, ORIGIN)).toBe(null);
+    expect(() => writeHubSessionCapabilityV1(throwing, { origin: ORIGIN, token: TOKEN, userId: "usr_ada" })).not.toThrow();
   });
 
   it("survives a throwing storage and never removes the bootstrap entry", () => {

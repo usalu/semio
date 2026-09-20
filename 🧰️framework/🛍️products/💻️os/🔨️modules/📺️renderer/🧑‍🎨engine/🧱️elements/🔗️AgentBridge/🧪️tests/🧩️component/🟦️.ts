@@ -10,9 +10,18 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, it, vi } from "vitest";
 import { type AgentBridgeConfig, type BridgeOfferFetch, AGENT_BRIDGE_OFFER_ENDPOINT, BRIDGE_DISCOVERY_MIN_INTERVAL_MS, useAgentBridge, useDiscoveredAgentBridgeConfig, applyInboundShellCommand, bridgeProtocols, buildShellStateFrame, createDefaultShellState, decodeJsonPayload, fetchAgentBridgeConfig, isAdmissibleBridgeUrl, parseAgentBridgeOffer, encodeJsonPayload } from "../../🟦️.tsx";
 import { bytesToHex, decodeShellToGateway, decodeGatewayToShell, encodeShellToGateway, encodeGatewayToShell, type GatewayToShell, type ShellToGateway } from "../../../../../../🌉️mcp/🧵️bridge/🟦️.ts";
+import { answerAgentAppCommand, NO_ARTIFACT_ROUTE_MESSAGE } from "../../🟦️.tsx";
+import { shellAppFault } from "../../../../../../🌉️mcp/🐚️channel/🟦️.ts";
+import { decodeChannelBase64, decodeShellAppCommand, encodeChannelBase64, shellAppFrameToJson, type ShellAppFrameV1 } from "../../../../../../🌉️mcp/🐚️channel/🟦️.ts";
 // #endregion 🔌️Adapters
 
 const here = dirname(fileURLToPath(import.meta.url));
+const cancellationFixture = JSON.parse(readFileSync(join(here, "../../🧫️fixtures/🛑️cancellation/🔣️.json"), "utf8")) as {
+  readonly invocation: { readonly id: string; readonly toolName: string; readonly arguments: string };
+  readonly openCancellation: { readonly accepted: boolean; readonly outbound: ShellToGateway; readonly state: string };
+  readonly closedCancellation: { readonly accepted: boolean; readonly outboundCount: number; readonly state: string };
+  readonly terminalResult: { readonly ok: boolean; readonly summary: string; readonly state: string };
+};
 
 //#region 🔖️ConfigDiscovery
 /** 🧪️ Ticket `26/09/18` slice M7: discovery is a real loopback request to the local supervisor
@@ -217,7 +226,10 @@ describe("bridge frame codec (imported, not reimplemented) round-trips through e
  * actually returns. */
 function normalizeBigints<T>(value: T): T {
   if (typeof value !== "object" || value === null) return value;
-  const clone: Record<string, unknown> = Array.isArray(value) ? [...(value as unknown[])] : { ...(value as Record<string, unknown>) };
+  // 🧭️ An array is not a `Record<string, unknown>`; it is normalized element-wise and returned before
+  // the keyed rewrites below, which only ever apply to an object.
+  if (Array.isArray(value)) return (value as unknown[]).map((entry) => normalizeBigints(entry)) as T;
+  const clone: Record<string, unknown> = { ...(value as Record<string, unknown>) };
   for (const key of ["revision", "baseRevision", "inReplyTo", "seq"]) {
     if (key in clone && typeof clone[key] === "number") clone[key] = BigInt(clone[key] as number);
   }
@@ -295,7 +307,12 @@ describe("AgentBridge inference state parity", () => {
     expect(equal(applied.result.state, fixture.expected.state)).toBe(true);
     expect(applied.result.state).toEqual(fixture.expected.state);
     expect(state.inferencePortByDocument).toEqual({});
-    console.log("[DEBUG] AgentBridge inference default/command parity: neutral=1 equality=2");
+  });
+
+  it("spells the neutral state exactly once, in the shell SSOT twin", async () => {
+    const { defaultShellState } = await import("../../../../../../🖥️shell/🟦️.ts");
+    expect(createDefaultShellState).toBe(defaultShellState);
+    expect(Object.keys(createDefaultShellState()).sort()).toEqual(Object.keys(defaultShellState()).sort());
   });
 });
 
@@ -343,7 +360,7 @@ describe("AgentBridge protected connection ownership", () => {
  * fake `WebSocket` (the one seam a jsdom test can inject), feeds a real `agentToolCall` frame in
  * through `socket.onmessage`, and asserts the exact `agentCancel` bytes that leave. */
 describe("useAgentBridge cancelToolCall", () => {
-  it("sends a real agentCancel frame for a running tool call and marks the row cancelling, and refuses when no socket is open", async () => {
+  it("matches the shared cancellation lifecycle through the real React hook", async () => {
     const { renderHook, act } = await import("@testing-library/react");
     const sent: ShellToGateway[] = [];
     let live: { onmessage: ((event: { data: ArrayBuffer }) => void) | null } | null = null;
@@ -367,27 +384,44 @@ describe("useAgentBridge cancelToolCall", () => {
     const config: AgentBridgeConfig = { url: "ws://127.0.0.1:6300/bridge", admissionProof: "session.v1.cancel.proof" };
     const hook = renderHook(() => useAgentBridge({ config }));
     try {
-      const toolCall: GatewayToShell = { variant: "agentToolCall", invocationId: "inv_7", toolName: "inference_run", arguments: "{}" };
+      const toolCall: GatewayToShell = { variant: "agentToolCall", invocationId: cancellationFixture.invocation.id, toolName: cancellationFixture.invocation.toolName, arguments: cancellationFixture.invocation.arguments };
       const wire = encodeGatewayToShell(toolCall);
       act(() => live?.onmessage?.({ data: wire.buffer.slice(wire.byteOffset, wire.byteOffset + wire.byteLength) as ArrayBuffer }));
-      expect(hook.result.current.conversation.map((entry) => entry.id)).toEqual(["inv_7"]);
+      expect(hook.result.current.conversation.map((entry) => entry.id)).toEqual([cancellationFixture.invocation.id]);
 
       let accepted = false;
       act(() => {
-        accepted = hook.result.current.cancelToolCall("inv_7");
+        accepted = hook.result.current.cancelToolCall(cancellationFixture.invocation.id);
       });
-      expect(accepted).toBe(true);
-      expect(sent.at(-1)).toEqual({ variant: "agentCancel", invocationId: "inv_7" });
+      expect(accepted).toBe(cancellationFixture.openCancellation.accepted);
+      expect(sent.at(-1)).toEqual(cancellationFixture.openCancellation.outbound);
       const entry = hook.result.current.conversation[0]!;
-      expect(entry.kind === "toolCall" && entry.state).toBe("cancelling");
+      expect(entry.kind === "toolCall" && entry.state).toBe(cancellationFixture.openCancellation.state);
 
       // 🛑️ A cancel with nothing open must report that it did not leave, never pretend.
       (live as unknown as { readyState: number }).readyState = 3;
+      const beforeClosedCancel = sent.length;
       let refused = true;
       act(() => {
-        refused = hook.result.current.cancelToolCall("inv_7");
+        refused = hook.result.current.cancelToolCall(cancellationFixture.invocation.id);
       });
-      expect(refused).toBe(false);
+      expect(refused).toBe(cancellationFixture.closedCancellation.accepted);
+      expect(sent.length - beforeClosedCancel).toBe(cancellationFixture.closedCancellation.outboundCount);
+      const cancelling = hook.result.current.conversation[0]!;
+      expect(cancelling.kind === "toolCall" && cancelling.state).toBe(cancellationFixture.closedCancellation.state);
+
+      const terminal: GatewayToShell = {
+        variant: "agentToolResult",
+        invocationId: cancellationFixture.invocation.id,
+        toolName: cancellationFixture.invocation.toolName,
+        ok: cancellationFixture.terminalResult.ok,
+        summary: cancellationFixture.terminalResult.summary,
+      };
+      const terminalWire = encodeGatewayToShell(terminal);
+      act(() => live?.onmessage?.({ data: terminalWire.buffer.slice(terminalWire.byteOffset, terminalWire.byteOffset + terminalWire.byteLength) as ArrayBuffer }));
+      const settled = hook.result.current.conversation[0]!;
+      expect(settled.kind === "toolCall" && settled.state).toBe(cancellationFixture.terminalResult.state);
+      expect(settled.kind === "toolCall" && settled.summary).toBe(cancellationFixture.terminalResult.summary);
     } finally {
       hook.unmount();
       vi.unstubAllGlobals();
@@ -395,3 +429,250 @@ describe("useAgentBridge cancelToolCall", () => {
   });
 });
 //#endregion 🔖️CancelToolCall
+
+//#region 🔖️LiveArtifactRoute
+/** 🧪️ Ticket `26/09/18` slice LB1: the LIVE artifact route — the seam that makes an MCP client's
+ * `action_invoke`/`history_undo`/`transaction_*` execute in THIS shell instead of in the gateway's
+ * own headless interpreter. Two banks, one fixture file: these laws read the same
+ * `🐚️channel/🧫️fixtures/🗿️app-payloads.json` the Rust side's own tests assert against, so a drift in
+ * either codec is red here AND there, never a dropped mutation at runtime. */
+const appPayloadFixtures = JSON.parse(readFileSync(join(here, "../../../../../../🌉️mcp/🐚️channel/🧫️fixtures/🗿️app-payloads.json"), "utf8")) as readonly {
+  readonly direction: "gateway_to_shell" | "shell_to_gateway";
+  readonly kind: string;
+  readonly payload: Record<string, unknown>;
+}[];
+
+const appPayload = (kind: string): Record<string, unknown> => {
+  const row = appPayloadFixtures.find((entry) => entry.kind === kind);
+  if (!row) throw new Error(`fixture \`${kind}\` exists`);
+  return row.payload;
+};
+
+const appPayloadBytes = (kind: string): Uint8Array => new TextEncoder().encode(JSON.stringify(appPayload(kind)));
+
+describe("shell channel payload codec", () => {
+  it("round-trips base64 at every length class and refuses malformed text", () => {
+    for (let length = 0; length <= 64; length += 1) {
+      const bytes = Uint8Array.from({ length }, (_unused, index) => (index * 7) % 251);
+      expect(Array.from(decodeChannelBase64(encodeChannelBase64(bytes)) ?? [])).toEqual(Array.from(bytes));
+    }
+    expect(decodeChannelBase64("AQI")).toBeNull();
+    expect(decodeChannelBase64("A===")).toBeNull();
+    expect(decodeChannelBase64("AQ=D")).toBeNull();
+    expect(decodeChannelBase64("AQ!D")).toBeNull();
+  });
+
+  it("decodes every gateway→shell command in the shared fixture", () => {
+    expect(decodeShellAppCommand(appPayloadBytes("readHistory"))).toEqual({ kind: "readHistory" });
+    expect(decodeShellAppCommand(appPayloadBytes("readArtifact"))).toEqual({ kind: "readArtifact" });
+    expect(decodeShellAppCommand(appPayloadBytes("pureCommand"))).toEqual({ kind: "pureCommand", capabilityId: "note.note.appendParagraph", input: { text: "hello" } });
+    const prepare = decodeShellAppCommand(appPayloadBytes("transactionPrepare"));
+    expect(prepare.kind).toBe("transactionPrepare");
+    expect(prepare.kind === "transactionPrepare" && Array.from(prepare.ops.document[0]!)).toEqual([1, 2, 3]);
+    expect(prepare.kind === "transactionPrepare" && prepare.origin).toEqual({ kind: "agent", principal: "agent:local", invocationId: "inv_1" });
+    expect(decodeShellAppCommand(appPayloadBytes("transactionCommit"))).toEqual({ kind: "transactionCommit", txnId: "txn_1" });
+    expect(decodeShellAppCommand(appPayloadBytes("transactionRollback"))).toEqual({ kind: "transactionRollback", txnId: "txn_1" });
+    expect(decodeShellAppCommand(appPayloadBytes("transactionUndo"))).toEqual({ kind: "transactionUndo", groupId: "edit_7" });
+    expect(decodeShellAppCommand(appPayloadBytes("transactionRedo"))).toEqual({ kind: "transactionRedo", groupId: "edit_7" });
+    const exported = decodeShellAppCommand(appPayloadBytes("exportMedia"));
+    expect(exported.kind === "exportMedia" && Array.from(exported.document)).toEqual([1, 2, 3, 4]);
+  });
+
+  it("encodes every shell→gateway frame back to the shared fixture, byte for byte", () => {
+    const frames: readonly ShellAppFrameV1[] = [
+      { kind: "historySnapshot", artifactId: "note-1", headEditId: "edit_7", cursor: "7" },
+      { kind: "emit", ops: { document: [Uint8Array.from([1, 2, 3])], config: [], draft: [] }, warnings: [] },
+      { kind: "transactionPrepared", txnId: "txn_1" },
+      { kind: "transactionCommitted", txnId: "txn_1", editId: "edit_8" },
+      { kind: "transactionRolledBack", txnId: "txn_1" },
+      { kind: "transactionUndone", groupId: "edit_8" },
+      { kind: "transactionRedone", groupId: "edit_8" },
+      { kind: "artifact", pack: Uint8Array.from([1, 2, 3, 4]), spr: Uint8Array.from([5, 6]) },
+      { kind: "exported", port: "pdf", descriptor: Uint8Array.from([1]), data: Uint8Array.from([2, 3]) },
+      { kind: "error", code: "mutation.rejected", message: "the document is read-only for this actor" },
+    ];
+    for (const frame of frames) expect(shellAppFrameToJson(frame)).toEqual(appPayload(frame.kind));
+    expect(frames.length).toBe(appPayloadFixtures.filter((row) => row.direction === "shell_to_gateway").length);
+  });
+
+  it("refuses a payload from another codec version and an unknown kind, by name", () => {
+    const future = new TextEncoder().encode(JSON.stringify({ ...appPayload("transactionCommit"), version: 99 }));
+    expect(() => decodeShellAppCommand(future)).toThrow(/99/);
+    const unknown = new TextEncoder().encode(JSON.stringify({ ...appPayload("transactionCommit"), kind: "teleport" }));
+    expect(() => decodeShellAppCommand(unknown)).toThrow(/teleport/);
+  });
+});
+
+describe("answerAgentAppCommand", () => {
+  it("refuses immediately when no host mounted an artifact route, instead of going silent", async () => {
+    const answer = await answerAgentAppCommand({ seq: 7n, instanceId: "inst-1", command: { kind: "readHistory" } }, undefined);
+    expect(answer.variant).toBe("appFrames");
+    expect(answer.variant === "appFrames" && answer.inReplyTo).toBe(7n);
+    expect(answer.variant === "appFrames" && answer.instanceId).toBe("inst-1");
+    const decoded = JSON.parse(new TextDecoder().decode((answer as { frames: Uint8Array[] }).frames[0]!)) as Record<string, unknown>;
+    expect(decoded.kind).toBe("error");
+    expect(decoded.code).toBe("plugin.unavailable");
+    expect(String(decoded.message)).toBe(NO_ARTIFACT_ROUTE_MESSAGE);
+  });
+
+  it("turns a throwing host handler into a named error frame on the same correlation id", async () => {
+    const answer = await answerAgentAppCommand({ seq: 9n, instanceId: "inst-2", command: { kind: "transactionCommit", txnId: "txn_1" } }, () => {
+      throw new Error("the active window rejected the dispatch");
+    });
+    expect(answer.variant === "appFrames" && answer.inReplyTo).toBe(9n);
+    const decoded = JSON.parse(new TextDecoder().decode((answer as { frames: Uint8Array[] }).frames[0]!)) as Record<string, unknown>;
+    expect(decoded.code).toBe("channel.not-wired");
+    expect(decoded.message).toBe("the active window rejected the dispatch");
+  });
+});
+
+describe("useAgentBridge live artifact route", () => {
+  it("declares relayAppCommands only with a handler, publishes its instance census, and answers an inbound appCommand", async () => {
+    const { renderHook, act } = await import("@testing-library/react");
+    const sent: ShellToGateway[] = [];
+    let live: { onopen: (() => void) | null; onmessage: ((event: { data: ArrayBuffer }) => void) | null } | null = null;
+    class Socket {
+      static OPEN = 1;
+      readyState = 1;
+      onopen: (() => void) | null = null;
+      onmessage: ((event: { data: ArrayBuffer }) => void) | null = null;
+      onerror: (() => void) | null = null;
+      onclose: (() => void) | null = null;
+      binaryType = "arraybuffer";
+      constructor() {
+        live = this as unknown as { onopen: (() => void) | null; onmessage: ((event: { data: ArrayBuffer }) => void) | null };
+      }
+      send(bytes: Uint8Array): void {
+        sent.push(decodeShellToGateway(bytes));
+      }
+      close(): void {}
+    }
+    vi.stubGlobal("WebSocket", Socket);
+    const config: AgentBridgeConfig = { url: "ws://127.0.0.1:6300/bridge", admissionProof: "session.v1.route.proof" };
+    const instances = [{ pluginId: "note", appId: "note", instanceId: "inst-1", artifactRef: "note-1", windowIds: ["note-composite"] }];
+    const seen: string[] = [];
+    const hook = renderHook(() =>
+      useAgentBridge({
+        config,
+        instances,
+        onAppCommand: (request) => {
+          seen.push(`${request.instanceId}:${request.command.kind}`);
+          return [{ kind: "transactionCommitted", txnId: "txn_1", editId: "edit_8" }];
+        },
+      }),
+    );
+    try {
+      act(() => live?.onopen?.());
+      const hello = sent.find((frame) => frame.variant === "hello");
+      expect(hello?.variant === "hello" && hello.flags.relayAppCommands).toBe(true);
+
+      const welcome = encodeGatewayToShell({ variant: "welcome", bridgeVersion: 1, connection: "conn_1", principal: "agent:local" });
+      act(() => live?.onmessage?.({ data: welcome.buffer.slice(welcome.byteOffset, welcome.byteOffset + welcome.byteLength) as ArrayBuffer }));
+      const census = sent.find((frame) => frame.variant === "instances");
+      expect(census?.variant === "instances" && census.entries).toEqual(instances);
+
+      const command = encodeGatewayToShell({ variant: "appCommand", seq: 11n, instanceId: "inst-1", command: appPayloadBytes("transactionCommit") });
+      await act(async () => {
+        live?.onmessage?.({ data: command.buffer.slice(command.byteOffset, command.byteOffset + command.byteLength) as ArrayBuffer });
+        await Promise.resolve();
+        await Promise.resolve();
+      });
+      expect(seen).toEqual(["inst-1:transactionCommit"]);
+      const reply = sent.find((frame) => frame.variant === "appFrames");
+      expect(reply?.variant === "appFrames" && reply.inReplyTo).toBe(11n);
+      const decoded = JSON.parse(new TextDecoder().decode((reply as { frames: Uint8Array[] }).frames[0]!)) as Record<string, unknown>;
+      expect(decoded).toEqual(appPayload("transactionCommitted"));
+    } finally {
+      hook.unmount();
+      vi.unstubAllGlobals();
+    }
+  });
+
+  it("does not claim the relay when no handler is mounted, so the gateway keeps its headless workspace", async () => {
+    const { renderHook, act } = await import("@testing-library/react");
+    const sent: ShellToGateway[] = [];
+    let live: { onopen: (() => void) | null } | null = null;
+    class Socket {
+      static OPEN = 1;
+      readyState = 1;
+      onopen: (() => void) | null = null;
+      onmessage: ((event: { data: ArrayBuffer }) => void) | null = null;
+      onerror: (() => void) | null = null;
+      onclose: (() => void) | null = null;
+      binaryType = "arraybuffer";
+      constructor() {
+        live = this as unknown as { onopen: (() => void) | null };
+      }
+      send(bytes: Uint8Array): void {
+        sent.push(decodeShellToGateway(bytes));
+      }
+      close(): void {}
+    }
+    vi.stubGlobal("WebSocket", Socket);
+    const hook = renderHook(() => useAgentBridge({ config: { url: "ws://127.0.0.1:6300/bridge", admissionProof: "session.v1.norelay.proof" } }));
+    try {
+      act(() => live?.onopen?.());
+      const hello = sent.find((frame) => frame.variant === "hello");
+      expect(hello?.variant === "hello" && hello.flags.relayAppCommands).toBe(false);
+    } finally {
+      hook.unmount();
+      vi.unstubAllGlobals();
+    }
+  });
+});
+//#endregion 🔖️LiveArtifactRoute
+
+//#region 🔖️ArtifactBytesRoute
+/** 🧪️ Slice LB1 §11: an agent's `ReadArtifact`/`ExportMedia` against a live editor instance. The
+ * host handler is the seam `🏛️ShellHost` fills from the plugin handle's own `readAppDocumentPack`;
+ * these laws pin BOTH outcomes the route promises — real bytes for a plugin with a document port,
+ * and a refusal that NAMES the missing port for one without. Never silence: a dropped answer costs
+ * the agent its whole wall budget and tells it nothing. */
+describe("agent artifact-bytes route", () => {
+  const decodeFrame = (answer: ShellToGateway): Record<string, unknown> => JSON.parse(new TextDecoder().decode((answer as { frames: Uint8Array[] }).frames[0]!)) as Record<string, unknown>;
+
+  it("answers a ReadArtifact for a live instance with the document's own pack and spr bytes", async () => {
+    const pack = Uint8Array.from([1, 2, 3, 4]);
+    const spr = Uint8Array.from([5, 6]);
+    const answer = await answerAgentAppCommand({ seq: 21n, instanceId: "inst-1", command: { kind: "readArtifact" } }, async () => {
+      const document: { readonly pack: Uint8Array; readonly spr: Uint8Array } | null = { pack, spr };
+      if (!document) return [shellAppFault("plugin.unavailable", "no document")];
+      return [{ kind: "artifact", pack: document.pack, spr: document.spr }];
+    });
+    expect(answer.variant === "appFrames" && answer.inReplyTo).toBe(21n);
+    const decoded = decodeFrame(answer);
+    expect(decoded.kind).toBe("artifact");
+    expect(decoded.pack).toBe(encodeChannelBase64(pack));
+    expect(decoded.spr).toBe(encodeChannelBase64(spr));
+    expect(decoded).toEqual(appPayload("artifact"));
+  });
+
+  it("refuses by name when the plugin exposes no document port, and when it holds no document", async () => {
+    const noPort = await answerAgentAppCommand({ seq: 22n, instanceId: "inst-1", command: { kind: "readArtifact" } }, () => [
+      shellAppFault("plugin.unavailable", "plugin `space` exposes no document port in this shell — an agent needing a genesis read must resolve a headless context (`--folder`/`--hub`)"),
+    ]);
+    const refused = decodeFrame(noPort);
+    expect(refused.kind).toBe("error");
+    expect(refused.code).toBe("plugin.unavailable");
+    expect(String(refused.message)).toContain("no document port");
+    expect(String(refused.message)).toContain("space");
+
+    const noDocument = await answerAgentAppCommand({ seq: 23n, instanceId: "inst-1", command: { kind: "readArtifact" } }, () => [shellAppFault("plugin.unavailable", "plugin `note` instance 3 holds no document to read")]);
+    expect(String(decodeFrame(noDocument).message)).toContain("holds no document");
+  });
+
+  it("refuses an ExportMedia by naming the missing OUT port, never a silent or empty export", async () => {
+    const answer = await answerAgentAppCommand({ seq: 24n, instanceId: "inst-1", command: { kind: "exportMedia", port: "pdf", document: new Uint8Array(), documentSpr: new Uint8Array() } }, () => [
+      shellAppFault("plugin.unavailable", "this shell has no media OUT port for `pdf` — `PluginWasmHandle` exposes none, and the UI's export path hands the human a download rather than returning bytes; `artifact_export` needs a headless context (`--folder`/`--hub`)"),
+    ]);
+    const decoded = decodeFrame(answer);
+    expect(decoded.kind).toBe("error");
+    expect(String(decoded.message)).toContain("media OUT port for `pdf`");
+    expect(answer.variant === "appFrames" && answer.instanceId).toBe("inst-1");
+  });
+
+  it("encodes a real exported frame back to the shared fixture, so the day a port exists the wire is already pinned", () => {
+    expect(shellAppFrameToJson({ kind: "exported", port: "pdf", descriptor: Uint8Array.from([1]), data: Uint8Array.from([2, 3]) })).toEqual(appPayload("exported"));
+  });
+});
+//#endregion 🔖️ArtifactBytesRoute

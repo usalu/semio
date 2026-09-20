@@ -108,6 +108,12 @@ enum ClipboardIoOperation {
     Write(String),
 }
 
+#[cfg(not(target_arch = "wasm32"))]
+pub enum ClipboardContent {
+    Text(String),
+    ImageRgba8 { width: u32, height: u32, bytes: Vec<u8> },
+}
+
 /// 📋️ Worker-owned native clipboard operation. Hosts submit it to the process `WorkerPool`
 /// I/O lane and poll the returned receiver; no event callback executes or waits for `arboard`.
 #[cfg(not(target_arch = "wasm32"))]
@@ -128,10 +134,50 @@ impl ClipboardIoJob {
 
     /// 📥️ Decodes a successful read candidate. Write candidates and empty clipboards return
     /// `None`; cancellation/fault/yield are not terminal results and also return `None`.
-    pub fn read_candidate(outcome: &semio_framework_job::StepOutcome) -> Option<String> {
+    pub fn read_candidate(outcome: &semio_framework_job::StepOutcome) -> Option<ClipboardContent> {
         let semio_framework_job::StepOutcome::Complete(candidate) = outcome else { return None };
-        let (&present, bytes) = candidate.output.page(0)?.split_first()?;
-        (present == 1).then(|| String::from_utf8(bytes.to_vec()).ok()).flatten()
+        decode_clipboard_content(candidate.output.page(0)?)
+    }
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+fn decode_clipboard_content(page: &[u8]) -> Option<ClipboardContent> {
+        let (&kind, bytes) = page.split_first()?;
+        match kind {
+            1 => String::from_utf8(bytes.to_vec()).ok().map(ClipboardContent::Text),
+            2 if bytes.len() >= 8 => {
+                let width = u32::from_le_bytes(bytes[0..4].try_into().ok()?);
+                let height = u32::from_le_bytes(bytes[4..8].try_into().ok()?);
+                let expected = usize::try_from(width).ok()?.checked_mul(usize::try_from(height).ok()?)?.checked_mul(4)?;
+                (bytes.len() == expected + 8).then(|| ClipboardContent::ImageRgba8 { width, height, bytes: bytes[8..].to_vec() })
+            }
+            _ => None,
+        }
+}
+
+#[cfg(all(test, not(target_arch = "wasm32")))]
+mod clipboard_content_tests {
+    use super::{decode_clipboard_content, ClipboardContent};
+
+    #[test]
+    fn native_clipboard_page_decodes_text_and_exact_rgba_without_conflating_them() {
+        match decode_clipboard_content(&[1, b'H', b'i']).expect("text clipboard page") {
+            ClipboardContent::Text(text) => assert_eq!(text, "Hi"),
+            ClipboardContent::ImageRgba8 { .. } => panic!("text page decoded as image"),
+        }
+        let mut image = vec![2];
+        image.extend_from_slice(&1u32.to_le_bytes());
+        image.extend_from_slice(&2u32.to_le_bytes());
+        image.extend_from_slice(&[255, 0, 0, 255, 0, 255, 0, 255]);
+        match decode_clipboard_content(&image).expect("RGBA clipboard page") {
+            ClipboardContent::ImageRgba8 { width, height, bytes } => {
+                assert_eq!((width, height), (1, 2));
+                assert_eq!(bytes, [255, 0, 0, 255, 0, 255, 0, 255]);
+            }
+            ClipboardContent::Text(_) => panic!("image page decoded as text"),
+        }
+        image.pop();
+        assert!(decode_clipboard_content(&image).is_none(), "truncated RGBA is an explicit refusal");
     }
 }
 
@@ -154,11 +200,20 @@ impl semio_framework_job::InteractiveJob for ClipboardIoJob {
                     Ok(page) => page,
                     Err(_) => return semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::Fault) }),
                 };
-                let text = system_clipboard::Clipboard::new().ok().and_then(|mut clipboard| clipboard.get_text().ok());
-                let write = match text.as_ref() {
-                    Some(text) if text.len() < semio_framework_job::JOB_PAYLOAD_PAGE_BYTES => page.write(&[1]).and_then(|_| page.write(text.as_bytes())),
-                    Some(_) => page.write(&[0]),
-                    None => page.write(&[0]),
+                let content = system_clipboard::Clipboard::new().ok().and_then(|mut clipboard| {
+                    if let Ok(image) = clipboard.get_image() {
+                        let width = u32::try_from(image.width).ok()?;
+                        let height = u32::try_from(image.height).ok()?;
+                        Some((2u8, width.to_le_bytes().to_vec(), height.to_le_bytes().to_vec(), image.bytes.into_owned()))
+                    } else {
+                        clipboard.get_text().ok().map(|text| (1u8, Vec::new(), Vec::new(), text.into_bytes()))
+                    }
+                });
+                let write = match content {
+                    Some((kind, width, height, bytes)) if 1 + width.len() + height.len() + bytes.len() <= semio_framework_job::JOB_PAYLOAD_PAGE_BYTES => {
+                        page.write(&[kind]).and_then(|_| page.write(&width)).and_then(|_| page.write(&height)).and_then(|_| page.write(&bytes))
+                    }
+                    _ => page.write(&[0]),
                 };
                 if write.is_err() {
                     return semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::Fault) });

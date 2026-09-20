@@ -25,7 +25,7 @@
 //! "the wire protocol has no validate query command yet" gap `read_artifact_resource`'s `validation`
 //! arm answers with — never a hardcoded `{"valid": true}`.
 
-use crate::catalog::{CapabilityDefinition, CapabilityKind, CapabilityOwner, CapabilityPresentation, CapabilityRef, CapabilitySource, ToolExposure};
+use crate::catalog::{CapabilityAudience, CapabilityDefinition, CapabilityKind, CapabilityOwner, CapabilityPresentation, CapabilityRef, CapabilitySource, ToolExposure};
 use crate::errors::{GatewayError, GatewayErrorCode};
 use crate::tool_from_capability;
 use crate::protocol::{CallToolResult, ContentBlock, GatewayBackend, InMemoryToolRegistry};
@@ -48,6 +48,7 @@ fn artifact_capability(id: &str, tool_name: &str, kind: CapabilityKind, icon_id:
         version: 1,
         owner: CapabilityOwner::Gateway,
         kind,
+        audience: CapabilityAudience::Agent,
         title: title.to_string(),
         description: description.to_string(),
         artifact_kind: None,

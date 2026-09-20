@@ -1,6 +1,6 @@
 /** 🧩️ Semantic activation preparation owner. */
 
-import { ACTIVATION_RECEIPT_FILE, PLAYGROUND_SESSION_OUTPUT_ROOT_ENV, developmentRuntimeRoot, newestComponentSourceMtime, nextActivationReceipt, playgroundSessionOutputPath, pluginModulesRoot, publishActivationReceipt, readActivationReceipt, stagedModuleMtime, stagedModuleReportLines, stagedModuleVerdict, type StagedModuleFacts, type StagedModuleVerdict } from "../🟦️.ts";
+import { ACTIVATION_RECEIPT_FILE, PLAYGROUND_SESSION_OUTPUT_ROOT_ENV, developmentRuntimeRoot, healthyPreparedComponents, newestComponentSourceMtime, nextActivationReceipt, playgroundSessionOutputPath, pluginModulesRoot, preparedComponentReportLines, preparedComponentVerdict, publishActivationReceipt, readActivationReceipt, stagedModuleMtime, stagedModuleReportLines, stagedModuleVerdict, type PreparedComponentFacts, type StagedModuleFacts, type StagedModuleVerdict } from "../🟦️.ts";
 
 import { FONT_ASSET, validateFontAsset } from "../../../♾️infinite/🖼️canvas/🔤️fonts/🟦️.ts";
 
@@ -65,6 +65,8 @@ const repoRoot = getWorkspaceRoot();
 
 import { playgroundCatalog } from "../../../🔌️plugin/🏗️build/📋️plan/🟦️.ts";
 
+import { stagedComponentFacts } from "../🔍️freshness/🟦️.ts";
+
 
 
 class PreparationScript extends BundleScript {
@@ -76,14 +78,13 @@ class PreparationScript extends BundleScript {
     const moduleRoot = pluginModulesRoot(profile as "dev" | "release"), registry = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry");
     const session = (await import(pathToFileURL(join(registry, "dist/sessions", variant, "🎮️playground-session", "🟦️.ts")).href)).PLAYGROUND_SESSION;
     if (session.variant !== variant || session.registryPluginId !== playground.pluginId) throw new Error("Prepared session identity mismatch");
-    for (const plugin of session.plugins) {
-      const directory = join(moduleRoot, moduleDirectoryName(plugin.pluginId));
-      const descriptor = JSON.parse(readFileSync(join(directory, "🔣️.json"), "utf8"));
-      if (descriptor.manifest?.pluginId !== plugin.pluginId || !existsSync(join(directory, MODULE_BRIDGE_FILE)) || !existsSync(join(directory, ".nx-artifact.json"))) throw new Error(`Incomplete prepared component ${plugin.pluginId}`);
-    }
+    const verdicts = session.plugins.map((plugin: { readonly pluginId: string }) => preparedComponentVerdict(stagedComponentFacts(moduleRoot, plugin.pluginId)));
+    const healthy = healthyPreparedComponents(verdicts, playground.pluginId);
+    for (const line of preparedComponentReportLines(healthy.excluded, `bun nx run @semio-tech/framework-os-dev:activate-${variant}-${renderer}-${profile}`)) console.warn(line);
+    if (healthy.refusal) throw new Error(healthy.refusal);
     for (const path of [join(PREVIEW2_VENDOR_RELATIVE, ".nx-artifact.json"), join(MODULE_SHARD_DIRECTORY, SHARD_WORKER_FILE)]) if (!existsSync(join(moduleRoot, path))) throw new Error(`Missing browser support ${path}`);
     const fonts = validateFontAsset(readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust/dist/fonts", FONT_ASSET)));
-    console.log(`Prepared ${variant} ${renderer} ${profile}: ${session.plugins.length} components, session, browser support and ${fonts} fonts`);
+    console.log(`Prepared ${variant} ${renderer} ${profile}: ${healthy.prepared.length} of ${session.plugins.length} components (${healthy.excluded.length} excluded), session, browser support and ${fonts} fonts`);
   }
 }
 

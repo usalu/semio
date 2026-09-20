@@ -1,66 +1,13 @@
 type TestSource = { readonly directory: string; readonly url: string };
 
-export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: Pick<typeof import("../../🟦️.ts"), "reduce">, source: TestSource): Promise<void> {
-  const { reduce } = dependencies;
-  type ShellState = import("../../../📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🟦️.tsx").ShellState;
+export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: Pick<typeof import("../../🟦️.ts"), "reduce" | "defaultShellState">, source: TestSource): Promise<void> {
+  const { reduce, defaultShellState } = dependencies;
 
   const { describe, expect, it } = vitest;
 
-  const defaultState = (): ShellState => ({
-    revision: 0,
-    loadedPlugins: [],
-    pluginStatusById: {},
-    pluginSupervisorById: {},
-    activeSession: null,
-    sessionError: null,
-    appLabelsOverlay: {},
-    actionPaneFoldedByWindow: {},
-    actionPaneExpandedByWindow: {},
-    stagedActionArgs: {},
-    activeUtilityByWindow: {},
-    activeToolId: null,
-    commandPanelExpanded: null,
-    stagedCommandArgs: {},
-    panelsVisible: { left: false, right: false, top: false, bottom: false },
-    panelsSize: { left: 280, right: 280, top: 280, bottom: 280 },
-    panelsPath: { left: [], right: [], top: [], bottom: [] },
-    dockOverride: null,
-    panelPathMemory: {},
-    treeOpenStates: {},
-    activeWindowId: null,
-    shellLayout: null,
-    activeExampleId: "",
-    mobilePanelPath: [],
-    mobilePanelVisible: false,
-    extraWindows: [],
-    windowTitlesById: {},
-    windowIconsById: {},
-    searchOpen: false,
-    findOpen: false,
-    introductionStepIndex: null,
-    introductionAutoStartedKeys: [],
-    introductionCompletedInteractions: [],
-    dialogStack: [],
-    transientNotice: null,
-    openWithFocusRole: null,
-    activeTutorialId: null,
-    uiDriverDraft: null,
-    uiThemeDraft: null,
-    syncBackboneUri: null,
-    syncCardKind: null,
-    syncDraftPath: "",
-    syncStatusByDocument: {},
-    inferencePortByDocument: {},
-    mergePolicy: "manual",
-    conflicts: [],
-    selectedConflictId: null,
-    storageScope: "memory",
-    openingPreferences: {},
-  });
-
   describe("@semio-tech/framework-os-shell reduce", () => {
     it("is pure and increments revision", () => {
-      const state = defaultState();
+      const state = defaultShellState();
       const result = reduce(state, { type: "setSearchOpen", open: true }, 1000);
       expect(result.ok).toBe(true);
       if (!result.ok) throw new Error("unreachable");
@@ -70,7 +17,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     });
 
     it("rejects leave state untouched and report a typed error", () => {
-      const state = defaultState();
+      const state = defaultShellState();
       const result = reduce(state, { type: "selectConflict", conflictId: "missing" }, 1000);
       expect(result.ok).toBe(false);
       if (result.ok) throw new Error("unreachable");

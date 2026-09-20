@@ -67,7 +67,7 @@ async fn change_en_a_gr_committed_json_is_canonical() {
     }
     let reencoded = serde_json::to_value(mutation()).expect("change-en-a-gr mutation encodes");
     let original: serde_json::Value = serde_json::from_str(MUTATION).expect("change-en-a-gr mutation reparses");
-    assert_eq!(reencoded, original, "change-en-a-gr/raises-en-a-gr-to-0-25: committed mutation JSON is not the canonical externally-tagged ChangeEnAGr form carrying newEnAGr");
+    assert_eq!(reencoded, original, "change-en-a-gr/raises-en-a-gr-to-0-25: committed mutation JSON is not the canonical internally-tagged ChangeEnAGr form carrying mutation and newEnAGr");
 }
 
 /// 🎯️ The declared outcome holds: `change-en-a-gr` at 0.25 is applied, not rejected, and carries no

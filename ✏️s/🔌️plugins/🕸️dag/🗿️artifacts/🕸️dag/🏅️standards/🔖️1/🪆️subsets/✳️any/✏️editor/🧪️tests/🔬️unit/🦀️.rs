@@ -27,8 +27,30 @@ pub(crate) mod context {
         framework_new_app_with_registry::<EditorApp<DagPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(dag_app_manifest_for_tests).await
     }
     
+    /// 🔁️ Drives one dispatched typed operation to quiescence the way the plugin host does, draining
+    /// EVERY result page — on a mounted app `dispatch_typed` only QUEUES the operation, so a test
+    /// reading `app.snapshot()` straight afterwards would observe the pre-dispatch document.
+    pub async fn settle(app: &mut DagApp) {
+        semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(app, semio_framework_plugin::artifact_app_laws::meta("local").instance_id).await.expect("settle the typed operation");
+    }
+
+    /// 🎛️ Dispatches one typed command and settles its publication.
+    pub async fn dispatch(app: &mut DagApp, command: DagCommand) -> semio_framework_plugin::InvocationResult {
+        let result = app.dispatch_typed(command, &semio_framework_plugin::artifact_app_laws::meta("local")).await.expect("dispatch");
+        settle(app).await;
+        result
+    }
+
+    /// 🧹️ Closes every store the wrapper opened. A live `ArtifactStore` asserts in `Drop` unless it
+    /// was driven to its terminal-empty shallow shell, so every fixture that mounts an app must end here.
+    pub fn close(app: &mut DagApp) {
+        semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(app);
+    }
+
+    /// 🖼️ Projects one rendered tree through the retained page transport — a bare `serde_json` of
+    /// `tree.root` cannot see `BuiltChildren`, whose rows only exist on the retained transport.
     pub async fn render(app: &mut DagApp, body_key: &str) -> String {
-        serde_json::to_string(&app.render(body_key, None, &ViewModel::default()).await.expect("render").root).expect("render json")
+        semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(app.render(body_key, None, &ViewModel::default()).await.expect("render")).expect("render json")
     }
 }
 
@@ -182,7 +204,7 @@ async fn declares_the_graph_interaction_domain_scoped_to_the_main_window() {
 /// target, and for transitive hover to cover a node's downstream nodes and edges.
 #[semio_framework_async_macros::async_test]
 async fn interaction_topology_covers_every_node_and_edge_via_their_edges() {
-    let app: DagApp = new_app_with_registry().await;
+    let mut app: DagApp = new_app_with_registry().await;
     let snapshot = app.snapshot().expect("snapshot");
     let node_id = snapshot.nodes().first().expect("seed node").id.clone();
     let history = semio_framework_plugin::HistoryView::empty();
@@ -191,8 +213,12 @@ async fn interaction_topology_covers_every_node_and_edge_via_their_edges() {
     let cfg = ConfigView { snapshot: &cfg_snapshot, window: None };
     let topology = DagPlayApp::interaction_topology(&doc, &cfg);
     let domain = topology.domains.get(DAG_PLAY_INTERACTION_DOMAIN).expect("graph domain topology present");
-    assert!(domain.ordered.iter().any(|node| node.id == node_id && node.granularity == "node"), "every seed node is registered");
-    assert_eq!(domain.ordered.iter().filter(|node| node.granularity == "edge").count(), snapshot.edges().len(), "every seed edge is registered");
+    let registered_node = domain.ordered.iter().any(|node| node.id == node_id && node.granularity == "node");
+    let registered_edges = domain.ordered.iter().filter(|node| node.granularity == "edge").count();
+    let seed_edges = snapshot.edges().len();
+    crate::editor::dag::unit_tests::context::close(&mut app);
+    assert!(registered_node, "every seed node is registered");
+    assert_eq!(registered_edges, seed_edges, "every seed edge is registered");
 }
 //#endregion 🔖️ManifestSanity
 
@@ -227,16 +253,21 @@ async fn context_menu_grouped_disclosure_stays_within_budget_and_keeps_destructi
     let last = menu.last().expect("grouped disclosure menu should not be empty");
     let last_is_destructive_leaf = last.id == "delete-selection" && last.destructive == Some(true) && last.action.as_deref() == Some("nodeGraphEdit");
     let last_is_group_ending_in_destructive = last.children.as_ref().and_then(|children| children.last()).is_some_and(|child| child.destructive == Some(true));
-    assert!(last_is_destructive_leaf || last_is_group_ending_in_destructive, "known destructive deleteSelection (via nodeGraphEdit) must be last: {menu:?}");
+    let ordered = last_is_destructive_leaf || last_is_group_ending_in_destructive;
+    let rendered = format!("{menu:?}");
+    crate::editor::dag::unit_tests::context::close(&mut app);
+    assert!(ordered, "known destructive deleteSelection (via nodeGraphEdit) must be last: {rendered}");
 }
 //#endregion 🔖️ContextMenu
 
 //#region 🔖️CrossCutting
 #[semio_framework_async_macros::async_test]
 async fn an_unknown_body_key_renders_a_diagnostic_instead_of_panicking() {
-    use crate::editor::dag::unit_tests::context::{new_app, render};
+    use crate::editor::dag::unit_tests::context::{close, new_app, render};
     let mut app = new_app().await;
-    assert!(render(&mut app, "dag.play.nope").await.contains("Unknown body"));
+    let json = render(&mut app, "dag.play.nope").await;
+    close(&mut app);
+    assert!(json.contains("Unknown body"));
 }
 
 #[semio_framework_async_macros::async_test]

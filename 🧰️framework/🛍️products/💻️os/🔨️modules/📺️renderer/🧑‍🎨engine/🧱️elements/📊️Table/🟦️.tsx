@@ -25,6 +25,9 @@ type TableCellRecord =
   | { readonly kind: "stepper"; readonly value: number; readonly min: number; readonly max: number; readonly step: number; readonly action: ActionDescriptor }
   | { readonly kind: "buttons"; readonly buttons: readonly TableCellButton[] };
 type TableRowRecord = Record<string, unknown> & { readonly id?: string; readonly _drag?: Record<string, unknown> };
+
+/** 📐️ How many steps one PageUp/PageDown moves a stepper cell. */
+const TABLE_STEPPER_PAGE = 10;
 //#endregion Types
 
 //#region Helpers
@@ -56,20 +59,110 @@ function tableRowMenuPlacementItems(row: TableRowRecord, onAction: (action: Acti
   return items;
 }
 
-function renderTableCell(cell: TableCellRecord, id: string, onAction: (action: ActionDescriptor) => void): React.ReactNode {
+/** ⌨️ How far one key moves a stepper cell: arrows step once, Page keys step ten, Home/End jump to a bound. */
+export function tableStepperKeyDelta(key: string, cell: { readonly value: number; readonly min: number; readonly max: number; readonly step: number }): number {
+  switch (key) {
+    case "ArrowUp":
+    case "ArrowRight":
+      return cell.step;
+    case "ArrowDown":
+    case "ArrowLeft":
+      return -cell.step;
+    case "PageUp":
+      return cell.step * TABLE_STEPPER_PAGE;
+    case "PageDown":
+      return -cell.step * TABLE_STEPPER_PAGE;
+    case "Home":
+      return cell.min - cell.value;
+    case "End":
+      return cell.max - cell.value;
+    default:
+      return 0;
+  }
+}
+
+/** 🧮️ The delta actually dispatched: never past `min`/`max`, and `0` when the cell already sits on that bound. */
+export function tableStepperClampedDelta(delta: number, cell: { readonly value: number; readonly min: number; readonly max: number }): number {
+  return Math.min(cell.max, Math.max(cell.min, cell.value + delta)) - cell.value;
+}
+
+/**
+ * 🪜️ One `TableCell::Stepper` cell: decrement · value · increment, driving the SAME contract the
+ * wgpu table widget drives — the cell's own `ActionDescriptor` with `{ delta }` merged into its args,
+ * suppressed at the bounds. The readout carries `role="spinbutton"` with the live `aria-value*`
+ * triple, so the whole control is one keyboard stop (arrows, PageUp/PageDown, Home/End). The
+ * buttons keep their `button-group`/`button-group-item` slots, which is what the touch stylesheet
+ * grows to `--layout-touch-min` at phone width.
+ */
+function TableStepperCell({ cell, id, columnLabel, onAction }: { readonly cell: Extract<TableCellRecord, { kind: "stepper" }>; readonly id: string; readonly columnLabel: string | undefined; readonly onAction: (action: ActionDescriptor) => void }): React.ReactElement {
+  const decrementLabel = useLabel("ui.tableStepper.decrement");
+  const incrementLabel = useLabel("ui.tableStepper.increment");
+  const valueLabel = useLabel("ui.tableStepper.value");
+  const readoutLabel = columnLabel?.trim() ? columnLabel : valueLabel;
+  const step = (delta: number): void => {
+    const clamped = tableStepperClampedDelta(delta, cell);
+    if (clamped === 0) return;
+    dispatchCellAction(onAction, cell.action, { delta: clamped });
+  };
+  return (
+    <div className="flex min-w-0 items-center gap-1" data-slot="table-stepper" data-stepper-for={id} onClick={(event) => event.stopPropagation()}>
+      <Button
+        aria-label={`${decrementLabel} ${readoutLabel}`}
+        className="h-medium shrink-0 px-2"
+        data-stepper-control="decrement"
+        data-stepper-for={id}
+        disabled={cell.value <= cell.min}
+        icon="minus"
+        onClick={() => dispatchCellAction(onAction, cell.action, { delta: -cell.step })}
+        tabIndex={-1}
+        title={decrementLabel}
+        type="button"
+        variant="outline"
+      />
+      <Input
+        aria-label={readoutLabel}
+        aria-valuemax={cell.max}
+        aria-valuemin={cell.min}
+        aria-valuenow={cell.value}
+        aria-valuetext={String(cell.value)}
+        className="h-medium w-14 min-w-0 text-center font-mono text-xs"
+        data-stepper-control="value"
+        id={id}
+        onKeyDown={(event) => {
+          const delta = tableStepperKeyDelta(event.key, cell);
+          if (delta === 0) return;
+          event.preventDefault();
+          step(delta);
+        }}
+        readOnly
+        role="spinbutton"
+        value={String(cell.value)}
+      />
+      <Button
+        aria-label={`${incrementLabel} ${readoutLabel}`}
+        className="h-medium shrink-0 px-2"
+        data-stepper-control="increment"
+        data-stepper-for={id}
+        disabled={cell.value >= cell.max}
+        icon="plus"
+        onClick={() => dispatchCellAction(onAction, cell.action, { delta: cell.step })}
+        tabIndex={-1}
+        title={incrementLabel}
+        type="button"
+        variant="outline"
+      />
+    </div>
+  );
+}
+
+function renderTableCell(cell: TableCellRecord, id: string, columnLabel: string | undefined, onAction: (action: ActionDescriptor) => void): React.ReactNode {
   switch (cell.kind) {
     case "text":
       return cell.value;
     case "number":
       return String(cell.value);
     case "stepper":
-      return (
-        <div className="flex min-w-0 items-center gap-1" onClick={(event) => event.stopPropagation()}>
-          <Button icon="minus" className="h-medium shrink-0 px-2" onClick={() => dispatchCellAction(onAction, cell.action, { delta: -cell.step })} disabled={cell.value <= cell.min} type="button" variant="outline" />
-          <Input id={id} className="h-medium w-14 min-w-0 text-center font-mono text-xs" readOnly value={String(cell.value)} />
-          <Button icon="plus" className="h-medium shrink-0 px-2" onClick={() => dispatchCellAction(onAction, cell.action, { delta: cell.step })} disabled={cell.value >= cell.max} type="button" variant="outline" />
-        </div>
-      );
+      return <TableStepperCell cell={cell} columnLabel={columnLabel} id={id} onAction={onAction} />;
     case "buttons":
       return (
         <div className="flex min-w-0 items-center gap-1" onClick={(event) => event.stopPropagation()}>
@@ -150,7 +243,7 @@ export function TableHost({ node, onAction, requestContextMenu }: ComponentScene
         sortable: column.sortable,
         accessor: (row) => {
           const value = row[column.id];
-          if (isTableCellRecord(value)) return renderTableCell(value, `${node.surfaceId}.${getRowId(row)}.${column.id}`, onAction);
+          if (isTableCellRecord(value)) return renderTableCell(value, `${node.surfaceId}.${getRowId(row)}.${column.id}`, column.label, onAction);
           return String(value ?? "");
         },
       })),

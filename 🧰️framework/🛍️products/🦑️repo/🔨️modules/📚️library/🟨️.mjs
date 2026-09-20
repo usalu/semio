@@ -1001,7 +1001,7 @@ function playgroundPreparationTargets(configFiles, workspaceRoot, projectRoot) {
   if (!wgpuProject?.name || !wgpuProject.targets?.wasm || !wgpuProject.targets?.["wasm-release"]) throw new Error(`WGPU renderer must name both authored wasm profile producers: ${wgpuRoot}`);
   const result = {};
   for (const playground of playgrounds) {
-    const selected = runtimeComponentClosure([...components].map(([pluginId, row]) => ({ ...row, pluginId, dependsOn: [...(row.extends ? [row.extends] : []), ...(row["depends-on"] ?? [])] })), [playground.pluginId]);
+    const selected = runtimeComponentClosure([...components].map(([pluginId, row]) => ({ ...row, pluginId, dependsOn: [...(row.extends ? [row.extends] : []), ...(row["depends-on"] ?? [])] })), [{ id: playground.pluginId, appScoped: playground.app !== undefined }]);
     const engines = new Set((playground.engines ?? []).map((path) => {
       const root = nxPath(relative(workspaceRoot, resolve(workspaceRoot, path))), project = projectAt(root);
       if (root.startsWith("../") || !project?.name || !project.targets?.wasm) throw new Error(`Playground engine must name an authored wasm producer: ${path}`);

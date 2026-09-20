@@ -1725,10 +1725,13 @@ impl<B: BlobStore + 'static> WasmtimeNodeHost<B> {
         let path = self.plugin_path_for_plugin.get(plugin_id).cloned().ok_or_else(|| RunError::Host(format!("no compiled program registered for plugin `{plugin_id}`")))?;
         if !self.compiled_for_plugin.contains_key(plugin_id) {
             let bytes = std::fs::read(&path).map_err(|error| RunError::Io { path: path.clone(), source: error })?;
-            let package = semio_framework_plugin_host::PackageRef {
-                package: PackageId(plugin_id.to_string()),
-                hash: semio_framework_plugin_host::PackageHash(framework_hash::hash_bytes(&bytes).into_bytes().try_into().unwrap_or([0u8; 32])),
-            };
+            // 🔏️ The component's OWN 32-byte digest, not `hash_bytes`' 64-char HEX STRING: that
+            // string's `into_bytes()` is 64 long, so `try_into::<[u8; 32]>()` always failed and every
+            // plugin loaded here took the `[0u8; 32]` fallback. `WasmtimeRuntime::compile` keys its
+            // on-disk `.cwasm` cache on this hash, so the placeholder made every plugin in this
+            // process collide on ONE cache entry and replay whichever component compiled first
+            // (found 2026-09-20 by ticket 26/09/18 slice WR1, which carried the same defect).
+            let package = semio_framework_plugin_host::PackageRef { package: PackageId(plugin_id.to_string()), hash: semio_framework_plugin_host::PackageHash(*framework_hash::hash(&bytes).as_bytes()) };
             let compiled = self.guest_runtime.compile(&package, &bytes).await.map_err(|error| RunError::Host(error.to_string()))?;
             self.compiled_for_plugin.insert(plugin_id.to_string(), compiled);
         }

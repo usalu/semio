@@ -28,7 +28,11 @@
  * per throttle window for as long as the user orbits — measured on process3d); `guest` is a follow-up the
  * guest armed (`replayShellCommand`, `dispatchAction`, `setActiveUtility` effects); `tutorial` and
  * `replay` are the director/recorder lanes; `tick` is a self-gating background loop. */
-export type InputOriginV1 = "user" | "gesture" | "guest" | "tutorial" | "replay" | "tick";
+/** 🎬️ Who caused this input. `agent` is an MCP client driving this shell over `/bridge`
+ * (`📓️lb1-live-bridge-action-routing.md`): its edits go through the SAME funnel as a human's, so
+ * they obey every gate and land in the same history — but they are attributable, and they raise no
+ * transient notice (the human did not ask for one; the agent reads the typed outcome instead). */
+export type InputOriginV1 = "user" | "gesture" | "guest" | "tutorial" | "replay" | "tick" | "agent";
 
 export type InputProvenanceV1 = Readonly<{
   /** 🪟️ The window instance the input addresses, or `null` for a mode-level / windowless input. */

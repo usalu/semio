@@ -5,8 +5,9 @@ use flow_extension_sdk::{build_manifest_json, evaluate_json, FlowExtensionComman
 async fn greater_compares_numbers() {
     let mut reg = Registry::new();
     register(&mut reg);
+    let reg = neural_engine::ColdOwner::new(reg);
     let input = Dictionary::new().insert("a", Value::Dictionary(number_dictionary(5.0))).insert("b", Value::Dictionary(number_dictionary(2.0)));
-    let out = reg.dispatch("logic.greater", &input).unwrap();
+    let out = reg.dispatch_cold("logic.greater", input).unwrap();
     let boolean = out.get("boolean").and_then(|v| v.as_dictionary()).expect("boolean channel");
     assert_eq!(boolean.schema(), Some("boolean"));
     assert_eq!(boolean.get("value").and_then(|v| v.as_atom()).and_then(|a| a.as_bool()), Some(true));

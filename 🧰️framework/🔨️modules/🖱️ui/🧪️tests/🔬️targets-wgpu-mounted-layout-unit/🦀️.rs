@@ -1,7 +1,6 @@
-
 use super::*;
-use crate::wgpu::Label;
 use crate::wgpu::component::ui::{UiPresence, UiStackNode, UiTextNode};
+use crate::wgpu::Label;
 
 fn clock_zero() -> Option<u64> {
     Some(0)
@@ -56,7 +55,8 @@ fn deep_tree(depth: usize) -> (UiTree, NodeId) {
 }
 
 fn text_job(tree: &UiTree, root: NodeId) -> MountedLayoutJob {
-    MountedLayoutJob::try_new(tree, root, MountedLayoutIdentity { surface: UiSurfaceToken::new(3, 7), generation: 11, revision: 13, theme_revision: 17, viewport_revision: 19 }, Theme::default(), 640.0, 480.0).unwrap_or_else(|fault| panic!("mounted text job: {fault:?}"))
+    MountedLayoutJob::try_new(tree, root, MountedLayoutIdentity { surface: UiSurfaceToken::new(3, 7), generation: 11, revision: 13, theme_revision: 17, viewport_revision: 19 }, Theme::default(), 640.0, 480.0, false)
+        .unwrap_or_else(|fault| panic!("mounted text job: {fault:?}"))
 }
 
 fn admit(job: &mut MountedLayoutJob, tree: &UiTree, cancel: &semio_framework_job::CancelToken) -> LayoutJobStep {
@@ -168,7 +168,7 @@ fn mounted_layout_worker_runs_on_shared_user_visible_lane_and_pool_thread() {
         generation: semio_framework_job::Generation(11),
         cancel,
         config: semio_framework_job::BatchDriveConfig { site: "ui.layout-text.worker.law", stage: semio_framework_job::InteractiveStage::UserVisibleSimStep, fuel_per_step: 1, step_budget_us: 1000 },
-        now_us: semio_framework_job::default_now_us,
+        now_us: clock_zero,
     };
     let mut session = semio_framework_job::MountedWorkerJobSession::try_new(job, params).unwrap_or_else(|_| panic!("mounted worker session credit"));
     let pool = semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 1));
@@ -268,10 +268,9 @@ fn mounted_layout_publication_rechecks_full_identity_and_repeat_ready_swaps_once
     assert!(job.terminal_is_empty());
 }
 
-
 //#region 📐️AuthoredLayoutRects
 use crate::wgpu::tree::{Node, NodeFlags, NodeKey, WidgetSpec};
-use ui_contract::{Align, Axis, EdgeSpace, GridLayout, GridTrack, Justify, LayoutSpec, LeafLayout, OverlayLayout, Sizing, SpaceToken, StackLayout};
+use ui_contract::{Align, Axis, EdgeSpace, GridLayout, GridTrack, Justify, LayoutSpec, LeafLayout, Sizing, SpaceToken, StackLayout};
 
 /// 🧪️ The arena is what layout reads, so a fixture mounts nodes straight into it with the AUTHORED
 /// `LayoutSpec` a `UiNodeRecord` would have carried — the same channel `reconcile`'s document mount
@@ -344,18 +343,29 @@ fn mounted_layout_publishes_a_two_column_grid_as_two_columns() {
 }
 
 #[test]
-fn mounted_layout_keeps_an_overlay_out_of_flow() {
+fn mounted_layout_publishes_the_shared_overlay_flow_fixture() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/📐️overlay-flow/🔣️.json")).expect("overlay flow fixture");
+    let layout = |node: &str| serde_json::from_value(fixture[node]["layout"].clone()).unwrap_or_else(|error| panic!("{node} layout: {error}"));
+    let expected = |node: &str| {
+        let rect = &fixture[node]["expectedRect"];
+        let number = |field: &str| rect[field].as_f64().unwrap_or_else(|| panic!("{node}.{field}")) as f32;
+        (number("x"), number("y"), number("width"), number("height"))
+    };
     let mut tree = UiTree::new();
-    let root = mount(&mut tree, None, 0, leaf(), stack_spec(Axis::Vertical, Align::Stretch, Justify::Start, false));
-    let overlay = mount(&mut tree, Some(root), 1, leaf(), LayoutSpec::Overlay(OverlayLayout { anchor: ui_contract::Anchor::Center, inset: EdgeSpace::All(SpaceToken::Md), dismissible: true }));
-    let sibling = mount(&mut tree, Some(root), 2, leaf(), fixed_leaf_spec());
+    let root = mount(&mut tree, None, 0, leaf(), layout("root"));
+    let overlay = mount(&mut tree, Some(root), 1, leaf(), layout("overlay"));
+    let content = mount(&mut tree, Some(overlay), 2, leaf(), layout("content"));
+    let absolute = mount(&mut tree, Some(root), 3, leaf(), layout("absolute"));
+    let following = mount(&mut tree, Some(root), 4, leaf(), layout("following"));
     tree.mark_dirty(root, NodeFlags::DIRTY_LAYOUT);
 
-    assert!(crate::wgpu::mounted_layout::layout_tree_now(&mut tree, root, Theme::default(), 200.0, 100.0));
+    assert!(crate::wgpu::mounted_layout::layout_tree_now(&mut tree, root, Theme::default(), fixture["viewport"]["width"].as_f64().expect("viewport width") as f32, fixture["viewport"]["height"].as_f64().expect("viewport height") as f32));
 
-    assert!(close(solved(&tree, sibling).1, 0.0), "an overlay must not push its in-flow sibling down");
-    let (x, y, width, height) = solved(&tree, overlay);
-    assert!(close(x, 12.8) && close(y, 12.8) && close(width, 174.4) && close(height, 74.4), "got {:?}", solved(&tree, overlay));
+    for (node, id) in [("root", root), ("overlay", overlay), ("content", content), ("absolute", absolute), ("following", following)] {
+        let actual = solved(&tree, id);
+        let expected = expected(node);
+        assert!(close(actual.0, expected.0) && close(actual.1, expected.1) && close(actual.2, expected.2) && close(actual.3, expected.3), "{node}: expected {expected:?}, got {actual:?}");
+    }
 }
 
 #[test]
@@ -415,7 +425,13 @@ fn mounted_layout_wraps_text_inside_a_narrow_flex_item() {
 fn a_host_content_slot_reserves_the_band_its_host_declared() {
     let declared = 240.0;
     let mut tree = UiTree::new();
-    let root = mount(&mut tree, None, 0, UiNode::Stack(UiStackNode { direction: "column".into(), gap: None, padding: None, id: None, children: Vec::new(), presence: UiPresence::default(), activate: None, drop_action: None, drop_overlay: None, menu: None }), LayoutSpec::default());
+    let root = mount(
+        &mut tree,
+        None,
+        0,
+        UiNode::Stack(UiStackNode { direction: "column".into(), gap: None, padding: None, id: None, children: Vec::new(), presence: UiPresence::default(), activate: None, drop_action: None, drop_overlay: None, menu: None }),
+        LayoutSpec::default(),
+    );
     let slot = mount(
         &mut tree,
         Some(root),

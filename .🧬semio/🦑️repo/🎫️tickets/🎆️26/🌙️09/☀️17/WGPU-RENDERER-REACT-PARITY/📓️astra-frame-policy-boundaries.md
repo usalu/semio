@@ -1,0 +1,9 @@
+# Mounted Frame Policy Boundary Audit
+
+Root executed the auxiliary `interactivityMountedFrameTransactionSelfTests` through Bun/Nx; `🗑️generated/astra-runtime/frame-transaction-policy-9.log` is RED. It reports eight missing mutation needles and multiple baseline refusals. The native and React census results do not make this policy gate green.
+
+The policy currently slices strings between source markers without checking whether either exists. Two verified missing Shell end markers are `struct WindowMeasuresRailOutcome` after `enum RetainedChromeGroupStep`, and `#[cfg(test)]\n    fn render_navbar` after `fn render_chrome_tour_step`. JavaScript `slice(start, -1)` includes nearly the entire remaining file, so the reported whole-work callee violations cannot be trusted as scoped evidence. Refactoring these checks must first require both exact source boundaries and then preserve mutation rejection.
+
+The transaction diagnostics are not all explained by those stale markers. The actual FrameTransaction region currently contains the deadline-bounded asset decode while loop, saturating deadline/cursor arithmetic, and worker-owned interaction `expect` assertions. The source validator bans their substrings, including appearances of `while` in comments. These need a deliberate contract decision and scoped executable evidence; blanket deletion of the forbidden checks would hide real regressions. No such suppression was made in this packet.
+
+The policy reader already excludes its appended declared test evidence through `POLICY_RUST_TEST_EVIDENCE_BOUNDARY`. The initial hypothesis that all failures arise from appended tests is therefore rejected. This gate remains open for a focused source-policy reconciliation packet; it must not be mislabeled as a runtime parity pass or a production runtime failure solely from these text diagnostics.

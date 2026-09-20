@@ -15,7 +15,7 @@
   "nCycles": null,
   "vWeldEdKn": null,
   "weldThroatMm": null,
-  "weldLengthMm": 200,
+  "weldLengthMm": 200.0,
   "betaW": null,
   "sheetBMm": null,
   "sheetTMm": null,

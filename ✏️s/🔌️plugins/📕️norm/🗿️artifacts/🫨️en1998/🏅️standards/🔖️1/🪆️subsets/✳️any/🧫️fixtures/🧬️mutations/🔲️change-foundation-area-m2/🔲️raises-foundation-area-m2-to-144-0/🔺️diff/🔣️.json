@@ -38,7 +38,7 @@
   "towerIsChimney": null,
   "towerQNominal": null,
   "towerMassT": null,
-  "foundationAreaM2": 144,
+  "foundationAreaM2": 144.0,
   "foundationPRdKpa": null,
   "foundationHEdKn": null,
   "foundationHRdKn": null,

@@ -40,6 +40,13 @@ const fixture = JSON.parse(readFileSync(resolve(suiteRoot, laws.fixture), "utf8"
     readonly paint: { readonly drawCallsAtLeast: number };
   };
   readonly secondGeneration: { readonly removedIds: readonly number[]; readonly expected: { readonly arenaNodeCount: number; readonly preservedIds: readonly number[]; readonly mountedIdsInTreeOrder: readonly number[] } };
+  readonly actionScope: {
+    readonly documentController: string;
+    readonly bindingController: string;
+    readonly selectRecord: { readonly bindings: readonly { readonly action: { readonly scope: string; readonly name: string; readonly version: number } }[] };
+    readonly expectedAction: { readonly controllerId: string; readonly action: string };
+    readonly reactTwin: string;
+  };
   readonly ingressGeneration: {
     readonly rule: string;
     readonly cases: readonly { readonly label: string; readonly minted: readonly [number, number] | null; readonly revision: number; readonly generation: number }[];
@@ -57,7 +64,7 @@ const ingressGeneration = (minted: readonly [number, number] | null, revision: n
   return publishedRevision === revision ? generation : generation + 1;
 };
 
-const source = (key: "reconcileSource" | "treeSource" | "engineSource" | "paintSource" | "interpreterSource" | "shellSource" | "reactInterpreterSource" | "programBridgeSource") => readFileSync(resolve(engineRoot, laws[key]), "utf8");
+const source = (key: "reconcileSource" | "treeSource" | "engineSource" | "paintSource" | "interpreterSource" | "shellSource" | "reactInterpreterSource" | "reactShellHelpersSource" | "programBridgeSource") => readFileSync(resolve(engineRoot, laws[key]), "utf8");
 const record = (id: number) => fixture.document.nodes.find((node) => node.id === id);
 
 describe("wgpu retained document reconcile", () => {
@@ -180,10 +187,17 @@ describe("wgpu retained document reconcile", () => {
     expect(bridge, "…and never mints the session-constant instance id it used to").not.toContain("generation: u64::from(instance_id)");
   });
 
-  it("hands the reconcile the owning app's controller, since the contract moved it off the node", () => {
+  it("keeps a binding's authored action scope distinct from the live document controller", () => {
+    const action = fixture.actionScope;
+    const binding = action.selectRecord.bindings[0]!.action;
+    expect(action.documentController).not.toBe(action.bindingController);
+    expect(binding.scope).toBe(action.bindingController);
+    expect(action.expectedAction).toMatchObject({ controllerId: binding.scope, action: binding.name });
+
     const shell = source("shellSource");
     expect(shell, "the shell resolves one controller for every retained document it paints").toContain("fn document_controller_id");
-    const interpreter = source("interpreterSource");
-    expect(interpreter, "…and threads it into the document step").toContain("controller_id: &str");
+    const react = source("reactShellHelpersSource");
+    expect(react, "React dispatches the action binding's own scope").toContain(`${action.reactTwin}(intent: UiIntent)`);
+    expect(react, "React never substitutes the live app controller for the binding authority").toContain("controllerId: intent.action.scope");
   });
 });

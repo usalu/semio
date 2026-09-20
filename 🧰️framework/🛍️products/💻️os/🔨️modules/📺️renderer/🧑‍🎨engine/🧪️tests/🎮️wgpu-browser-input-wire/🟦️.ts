@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 /**
  * 🎮️ TypeScript twin over `🧫️fixtures/🎮️wgpu-browser-input-wire/🔣️.json`.
  *
@@ -18,12 +19,15 @@ import {
   BrowserFrameTransport,
   browserFrameEventFromDom,
   browserFrameEventIsReplaceable,
+  browserFramePointerDomEvent,
+  browserFrameWheelDomEvent,
   type BrowserFrameDomEvent,
   type BrowserFrameUiMessage,
   type BrowserFrameWorkerMessage,
   type BrowserFrameWorkerPort,
 } from "../../🎯️targets/🧊️wgpu/🚚️browser-frame-transport/🟦️.ts";
-import { resolveWgpuBootDescriptor, type WgpuBootDescriptor, type WgpuHostAppearance } from "../../🎯️targets/🧊️wgpu/🧭️boot-descriptor/🟦️.ts";
+import { resolveWgpuBootDescriptor, type WgpuBootDescriptor, type WgpuHostAppearance, type WgpuHostStorageSnapshot } from "../../🎯️targets/🧊️wgpu/🧭️boot-descriptor/🟦️.ts";
+import { browserClipboardPasteCandidate } from "../../🎯️targets/🧊️wgpu/🎮️input-wire/🟦️.ts";
 
 /** @emoji 🧭️ One resolved boot descriptor for a fixture transport — the shared resolver, never a hand
  * rolled literal, so these fixtures cannot drift from the shape the three real doors produce
@@ -35,6 +39,7 @@ function testBootDescriptor(variant: string): WgpuBootDescriptor {
 /** @emoji 🌓️ The appearance a realm that read nothing publishes — React's own no-window default. */
 const TEST_HOST_APPEARANCE: WgpuHostAppearance = { preference: "", systemDark: false };
 const TEST_HOST_PLATFORM = "MacIntel";
+const TEST_HOST_STORAGE: WgpuHostStorageSnapshot = {};
 
 type FixtureRow = { readonly id: string; readonly why: string; readonly dom: Record<string, unknown>; readonly wire: Record<string, unknown>; readonly dispatch: Record<string, unknown> | null };
 
@@ -66,7 +71,7 @@ class FakeWorker implements BrowserFrameWorkerPort {
 function readyTransport(worker: FakeWorker): BrowserFrameTransport {
   const transport = new BrowserFrameTransport({
     worker,
-    boot: { bindingsModuleUrl: "renderer.js", bindingsWasmUrl: "renderer_bg.wasm", canvas: {} as OffscreenCanvas, width: 1434, height: 836, dpr: 1, locale: "en", descriptor: testBootDescriptor("generation3d"), appearance: TEST_HOST_APPEARANCE, platform: TEST_HOST_PLATFORM },
+    boot: { bindingsModuleUrl: "renderer.js", bindingsWasmUrl: "renderer_bg.wasm", canvas: {} as OffscreenCanvas, width: 1434, height: 836, dpr: 1, locale: "en", descriptor: testBootDescriptor("generation3d"), appearance: TEST_HOST_APPEARANCE, platform: TEST_HOST_PLATFORM, storage: TEST_HOST_STORAGE },
     setTimer: () => 1,
     clearTimer: () => {},
     now: () => 0,
@@ -76,10 +81,19 @@ function readyTransport(worker: FakeWorker): BrowserFrameTransport {
 }
 
 describe("wgpu browser input wire", () => {
+  it("carries an addressed accessibility blur on the bounded lossless lane", () => {
+    const worker = new FakeWorker();
+    const transport = readyTransport(worker);
+    expect(transport.enqueueLossless({ kind: "accessibility-blur", windowId: "framework.settings.general", windowGeneration: 7, nodeId: 21, nodeKey: "framework.settings.driver.saveLabel" })).toBe(true);
+    transport.flush();
+    const batch = worker.messages.findLast((message): message is Extract<BrowserFrameUiMessage, { kind: "batch" }> => message.kind === "batch");
+    expect(batch?.lossless).toContainEqual(expect.objectContaining({ kind: "accessibility-blur", windowId: "framework.settings.general", windowGeneration: 7, nodeId: 21, nodeKey: "framework.settings.driver.saveLabel" }));
+  });
+
   it("covers every input the shell admits", () => {
     expect(fixture.rows.length).toBeGreaterThanOrEqual(12);
     const kinds = new Set(fixture.rows.map((row) => String(row.wire.kind)));
-    expect([...kinds].sort()).toEqual(["key-down", "key-up", "pointer-down", "pointer-move", "pointer-up", "resize", "wheel"]);
+    expect([...kinds].sort()).toEqual(["key-down", "key-up", "pointer-cancel", "pointer-down", "pointer-move", "pointer-up", "resize", "wheel"]);
     for (const row of fixture.rows) expect(row.why, `${row.id} must say why it exists`).toBeTruthy();
   });
 
@@ -113,6 +127,40 @@ describe("wgpu browser input wire", () => {
     const wheel = fixture.rows.find((row) => row.id === "wheel-over-the-preview")!;
     const { event } = domEvent(wheel);
     for (const dpr of [1, 2, 3]) expect(browserFrameEventFromDom(event, dpr)).toMatchObject({ x: 250.88, y: 406.8, deltaX: 0, deltaY: 120 });
+  });
+
+  it("reads modifier snapshots from actual DOM pointer and wheel events", () => {
+    const pointer = new MouseEvent("pointerdown", { shiftKey: true, ctrlKey: true, altKey: false, metaKey: true }) as PointerEvent;
+    Object.defineProperties(pointer, {
+      pointerId: { value: 41 },
+      pointerType: { value: "mouse" },
+      offsetX: { value: 12 },
+      offsetY: { value: 34 },
+      pressure: { value: 0 },
+      tiltX: { value: 0 },
+      tiltY: { value: 0 },
+      button: { value: 0 },
+    });
+    expect(browserFrameEventFromDom(browserFramePointerDomEvent(pointer, "pointerdown"), 1)).toEqual({
+      kind: "pointer-down", pointerId: 41, pointerKind: "mouse", x: 12, y: 34, button: "primary", shift: true, ctrl: true, alt: false, meta: true,
+    });
+
+    const wheel = new WheelEvent("wheel", { deltaX: 2, deltaY: 7, altKey: true, metaKey: true });
+    Object.defineProperties(wheel, { offsetX: { value: 55 }, offsetY: { value: 66 } });
+    expect(browserFrameEventFromDom(browserFrameWheelDomEvent(wheel), 1)).toEqual({
+      kind: "wheel", x: 55, y: 66, deltaX: 2, deltaY: 7, shift: false, ctrl: false, alt: true, meta: true,
+    });
+  });
+
+  it("keeps the newest pointer modifier snapshot when moves coalesce", () => {
+    const worker = new FakeWorker();
+    const transport = readyTransport(worker);
+    transport.enqueueReplaceable({ kind: "pointer-move", pointerId: 1, pointerKind: "mouse", x: 1, y: 1, shift: true, ctrl: false, alt: false, meta: false });
+    transport.enqueueReplaceable({ kind: "pointer-move", pointerId: 1, pointerKind: "mouse", x: 2, y: 2, shift: false, ctrl: false, alt: false, meta: false });
+    transport.flush();
+    const batch = worker.messages.findLast((message): message is Extract<BrowserFrameUiMessage, { kind: "batch" }> => message.kind === "batch");
+    const move = batch?.replaceable.find((event) => event.kind === "pointer-move");
+    expect(move).toMatchObject({ x: 2, y: 2, shift: false });
   });
 
   it("puts pointer moves, wheels and resizes on the coalescing lane and transitions on the lossless one", () => {
@@ -150,11 +198,21 @@ describe("wgpu browser input wire", () => {
   });
 
   it("names an unknown DOM button the primary one rather than dropping the press", () => {
-    expect(browserFrameEventFromDom({ type: "pointerdown", pointerId: 1, pointerType: "mouse", offsetX: 1, offsetY: 2, button: 4 }, 1)).toMatchObject({ button: "primary" });
-    expect(browserFrameEventFromDom({ type: "pointerdown", pointerId: 1, pointerType: "mouse", offsetX: 1, offsetY: 2 }, 1)).toMatchObject({ button: "primary" });
+    expect(browserFrameEventFromDom({ type: "pointerdown", pointerId: 1, pointerType: "mouse", offsetX: 1, offsetY: 2, button: 4, shift: false, ctrl: false, alt: false, meta: false }, 1)).toMatchObject({ button: "primary" });
+    expect(browserFrameEventFromDom({ type: "pointerdown", pointerId: 1, pointerType: "mouse", offsetX: 1, offsetY: 2, shift: false, ctrl: false, alt: false, meta: false }, 1)).toMatchObject({ button: "primary" });
   });
 
   it("treats an unknown pointer type as a mouse", () => {
-    expect(browserFrameEventFromDom({ type: "pointermove", pointerId: 1, pointerType: "gamepad", offsetX: 1, offsetY: 2 }, 1)).toMatchObject({ pointerKind: "mouse" });
+    expect(browserFrameEventFromDom({ type: "pointermove", pointerId: 1, pointerType: "gamepad", offsetX: 1, offsetY: 2, shift: false, ctrl: false, alt: false, meta: false }, 1)).toMatchObject({ pointerKind: "mouse" });
+  });
+
+  it("selects the first valid image before text and refuses items beyond the bounded scan", () => {
+    const text = { kind: "string", type: "text/plain", getAsString: () => {}, getAsFile: () => null } as unknown as DataTransferItem;
+    const png = new File([new Uint8Array([1, 2, 3, 4])], "pixel.png", { type: "image/png" });
+    const image = { kind: "file", type: "image/png", getAsFile: () => png } as unknown as DataTransferItem;
+    expect(browserClipboardPasteCandidate([text, image])).toEqual({ kind: "image", file: png });
+    expect(browserClipboardPasteCandidate([text])).toEqual({ kind: "text", item: text });
+    expect(browserClipboardPasteCandidate([...Array.from({ length: 16 }, () => text), image])).toEqual({ kind: "text", item: text });
+    expect(browserClipboardPasteCandidate([])).toBeUndefined();
   });
 });

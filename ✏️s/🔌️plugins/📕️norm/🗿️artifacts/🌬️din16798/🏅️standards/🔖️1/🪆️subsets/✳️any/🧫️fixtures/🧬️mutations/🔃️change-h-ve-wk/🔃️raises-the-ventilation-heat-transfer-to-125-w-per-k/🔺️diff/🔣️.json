@@ -41,7 +41,7 @@
   "cellarAreaM2": null,
   "cellarVentilationM3H": null,
   "hTrWK": null,
-  "hVeWK": 125,
+  "hVeWK": 125.0,
   "thetaEC": null,
   "thetaSetC": null,
   "coolingDeltaTH": null,

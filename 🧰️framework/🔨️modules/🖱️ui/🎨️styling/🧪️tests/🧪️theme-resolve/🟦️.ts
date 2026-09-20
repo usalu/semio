@@ -1,5 +1,7 @@
 type TestSource = { readonly directory: string; readonly url: string };
 
+import canonicalThemeDocument from "../../../../../🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🧪️tests/🧱️fixtures/🎨️canonical-theme-document/🔣️.json" with { type: "json" };
+
 export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: Pick<typeof import("../../🌓️theme/🟦️.ts"), "parseUiTheme" | "resolveThemeAppearancePalettes" | "resolveThemeMetrics" | "resolveThemePaint" | "serializeUiTheme">, source: TestSource): Promise<void> {
   const { parseUiTheme, resolveThemeAppearancePalettes, resolveThemeMetrics, resolveThemePaint, serializeUiTheme } = dependencies;
   type UiTheme = any;
@@ -18,8 +20,8 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     opacities: { glassBlur: 1 },
     metrics: { dag: { ioColumnWidth: 10 } },
     appearances: {
-      light: { board: { edgeStroke: { token: "gray" } }, map: {}, canvas: {}, chrome: {} },
-      dark: { board: { edgeStroke: { token: "primary" } }, map: {}, canvas: {}, chrome: {} },
+      light: { board: { edgeStroke: { token: "gray" } }, map: {}, canvas: {}, chrome: {}, outcome: {}, diagram: {} },
+      dark: { board: { edgeStroke: { token: "primary" } }, map: {}, canvas: {}, chrome: {}, outcome: {}, diagram: {} },
     },
   };
 
@@ -52,6 +54,14 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
   });
 
   describe("theme parse", () => {
+    it("reads the canonical renderer-neutral theme document without translation", () => {
+      const parsed = parseUiTheme(canonicalThemeDocument);
+      expect(parsed.id).toBe("custom.fixture");
+      expect(parsed.label).toBe("Fixture Theme");
+      expect(parsed.appearances.light.chrome.accent).toEqual({ token: "primary" });
+      expect(parseUiTheme(JSON.parse(serializeUiTheme(parsed)))).toEqual(parsed);
+    });
+
     it("round-trips a valid theme through serialize/parse", () => {
       const parsed = parseUiTheme(JSON.parse(serializeUiTheme(MINIMAL_THEME)));
       expect(parsed).toEqual(MINIMAL_THEME);

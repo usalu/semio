@@ -1,0 +1,121 @@
+{
+  "scene": {
+    "surfaceId": "ink.edit.fixture",
+    "controllerId": "ink-edit-controller",
+    "componentKind": "ink-canvas",
+    "inkCanvas": {
+      "selectionJson": "[]",
+      "activeUtility": "selectDirect",
+      "viewMode": "edit",
+      "interactive": true
+    }
+  },
+  "viewport": { "x": 0, "y": 0, "width": 320, "height": 240 },
+  "document": {
+    "schema": "ink.document",
+    "id": "ink-edit-document",
+    "camera": { "x": 0, "y": 0, "zoom": 1 },
+    "activeUtility": "selectDirect",
+    "gridVisible": false,
+    "blocks": [
+      {
+        "id": "text-a",
+        "name": "Text A",
+        "kind": "text",
+        "x": 20,
+        "y": 20,
+        "width": 120,
+        "height": 48,
+        "rotation": 0,
+        "visible": true,
+        "locked": false,
+        "paragraphs": [{ "runs": [{ "text": "a" }] }],
+        "fontSize": 18,
+        "fontWeight": "normal",
+        "align": "left"
+      },
+      {
+        "id": "table-b",
+        "name": "Table B",
+        "kind": "table",
+        "x": 20,
+        "y": 100,
+        "width": 120,
+        "height": 60,
+        "rotation": 0,
+        "visible": true,
+        "locked": false,
+        "columns": ["A", "B"],
+        "rows": [[{ "content": "b" }, { "content": "c" }]]
+      }
+    ]
+  },
+  "gestures": {
+    "text": { "x": 40, "y": 40, "replacement": "x" },
+    "blur": { "x": 260, "y": 200 },
+    "table": { "x": 40, "y": 145, "replacement": "y" }
+  },
+  "expected": {
+    "textEvent": {
+      "operation": "updateBlock",
+      "blockId": "text-a",
+      "block": {
+        "id": "text-a",
+        "name": "Text A",
+        "kind": "text",
+        "x": 20,
+        "y": 20,
+        "width": 120,
+        "height": 48,
+        "rotation": 0,
+        "visible": true,
+        "locked": false,
+        "paragraphs": [{ "runs": [{ "text": "x" }] }],
+        "fontSize": 18,
+        "fontWeight": "normal",
+        "align": "left"
+      }
+    },
+    "tableEvent": {
+      "operation": "updateBlock",
+      "blockId": "table-b",
+      "block": {
+        "id": "table-b",
+        "name": "Table B",
+        "kind": "table",
+        "x": 20,
+        "y": 100,
+        "width": 120,
+        "height": 60,
+        "rotation": 0,
+        "visible": true,
+        "locked": false,
+        "columns": ["A", "B"],
+        "rows": [[{ "content": "y" }, { "content": "c" }]]
+      }
+    },
+    "tableTabEvent": {
+      "operation": "updateBlock",
+      "blockId": "table-b",
+      "block": {
+        "id": "table-b",
+        "name": "Table B",
+        "kind": "table",
+        "x": 20,
+        "y": 100,
+        "width": 120,
+        "height": 60,
+        "rotation": 0,
+        "visible": true,
+        "locked": false,
+        "columns": ["A", "B"],
+        "rows": [[{ "content": "y" }, { "content": "z" }]]
+      }
+    },
+    "phase": "atomic",
+    "advancedControlId": "ink.edit.fixture.ink.table.table-b.row.0.column.1.input"
+  },
+  "scope": {
+    "clipboard": "separate-follow-up"
+  }
+}

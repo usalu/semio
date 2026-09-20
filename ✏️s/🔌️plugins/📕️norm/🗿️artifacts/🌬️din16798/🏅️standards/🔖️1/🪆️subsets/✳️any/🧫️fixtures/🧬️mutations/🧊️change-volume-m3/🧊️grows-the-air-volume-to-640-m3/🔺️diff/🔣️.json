@@ -36,7 +36,7 @@
   "hrTH": null,
   "hrSavingsReferenceKwh": null,
   "n50HInv": null,
-  "volumeM3": 640,
+  "volumeM3": 640.0,
   "infiltrationAllowanceM3H": null,
   "cellarAreaM2": null,
   "cellarVentilationM3H": null,

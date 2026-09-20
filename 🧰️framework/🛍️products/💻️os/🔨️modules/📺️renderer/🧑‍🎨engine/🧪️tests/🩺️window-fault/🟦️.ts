@@ -6,6 +6,7 @@ import { exampleArtifactSources, reachableKindsFromUnknown, resolveDocumentOpera
 import Ajv from "ajv";
 import { describe, expect, it } from "vitest";
 import { classifyWindowFault, WINDOW_FAULT_ATTRIBUTE, windowFaultFromError } from "../../🧱️elements/🏛️ShellHost/🩺️fault/🟦️.ts";
+import { createContributionsPublisher } from "../../🧱️elements/🛠️ShellHelpers/🧩️contributions/🟦️.ts";
 import pluginLifetimeSchema from "../../../../🔌️plugin/🚪️lifetime/🧬️schema/🔣️.json";
 import faultVectors from "../../../../🔌️plugin/🩺️runtime-fault-vectors.json";
 import shellSource from "../../🧱️elements/🏛️ShellHost/🟦️.tsx?raw";
@@ -111,8 +112,8 @@ describe("pending window body", () => {
 
 
 describe("scopeContributionsJson", () => {
-  const manifest = (topic: string, payload: unknown) =>
-    ({ topicContributions: [{ topic, payload }], apps: [], workflows: [] }) as PluginManifest;
+  const manifest = (topic: string, payload: unknown): Pick<PluginManifest, "topicContributions"> =>
+    ({ topicContributions: [{ topic, payload }] });
   const loaded = [
     { pluginId: "procedural", manifest: manifest("flow.extension", { operators: [{ kind: "procedural.example" }] }) },
     { pluginId: "flow-extension-brep", manifest: manifest("flow.extension", { operators: [{ kind: "brep.solid.extrude" }, { kind: "brep.curve.polygon" }] }) },
@@ -145,10 +146,19 @@ describe("scopeContributionsJson", () => {
     if (scoped.status === "resolved") expect(scoped.kinds).toContain("brep.solid.extrude");
   });
 
-  it("an empty loaded table serializes as [] and that payload is not installable", () => {
-    expect(scopeContributionsJson([], "procedural", ["brep.solid.extrude"])).toBe("[]");
-    expect(shellSource).toContain('scopedContributionsJson === "[]"');
-    expect(shellSource).toContain("refused empty pack");
+  it("an empty loaded table serializes as [] and that payload is not installable", async () => {
+    const json = scopeContributionsJson([], "procedural", ["brep.solid.extrude"]);
+    expect(json).toBe("[]");
+    const installed: string[] = [];
+    const publisher = createContributionsPublisher({
+      registryGeneration: () => "fixture",
+      resolveScope: async () => ({ status: "resolved", kinds: ["brep.solid.extrude"] }),
+      buildPack: () => json,
+      install: async (_session, pack) => { installed.push(pack); },
+    });
+    expect(await publisher.publish({ pluginId: "procedural", instanceId: 1 }, undefined)).toEqual({ status: "empty" });
+    expect(installed).toEqual([]);
+    expect(publisher.installedKey()).toBeNull();
   });
 });
 
@@ -161,9 +171,9 @@ describe("contributions pack crossing", () => {
     expect(shellSource).toContain("exampleArtifactSources");
     expect(shellSource).toContain("fromExamples");
     expect(shellSource).toContain("readAppDocumentPack");
-    expect(shellSource).toContain('encoding: "pack"');
+    expect(shellSource).toContain('encodeAppCommandInvocation(pluginEntry.handle.pluginId, targetApp, "setContributions", args)');
+    expect(shellSource).toContain("pluginEntry.handle.handleCommand(instanceId, wire, environment.targetViewState)");
     expect(shellSource).toContain("page: 0, pageCount: 1");
-    expect(shellSource).toContain("crossings:");
   });
 
   it("published example graphs recover operator kinds when ReadDocument is genesis", () => {
@@ -175,9 +185,9 @@ describe("contributions pack crossing", () => {
     expect(scope).toEqual({ status: "resolved", kinds: ["brep.prim3d.box", "brep.solid.shell"] });
     const scoped = JSON.parse(scopeContributionsJson(
       [
-        { pluginId: "procedural", manifest: { topicContributions: [{ topic: "flow.extension", payload: { operators: [{ kind: "procedural.example" }] } }], apps: [], workflows: [] } as PluginManifest },
-        { pluginId: "flow-extension-brep", manifest: { topicContributions: [{ topic: "flow.extension", payload: { operators: [{ kind: "brep.prim3d.box" }, { kind: "brep.solid.shell" }] } }], apps: [], workflows: [] } as PluginManifest },
-        { pluginId: "flow-extension-bim", manifest: { topicContributions: [{ topic: "flow.extension", payload: { operators: [{ kind: "bim.wall" }] } }], apps: [], workflows: [] } as PluginManifest },
+        { pluginId: "procedural", manifest: { topicContributions: [{ topic: "flow.extension", payload: { operators: [{ kind: "procedural.example" }] } }] } },
+        { pluginId: "flow-extension-brep", manifest: { topicContributions: [{ topic: "flow.extension", payload: { operators: [{ kind: "brep.prim3d.box" }, { kind: "brep.solid.shell" }] } }] } },
+        { pluginId: "flow-extension-bim", manifest: { topicContributions: [{ topic: "flow.extension", payload: { operators: [{ kind: "bim.wall" }] } }] } },
       ],
       "procedural",
       scope.status === "resolved" ? scope.kinds : [],
@@ -186,4 +196,3 @@ describe("contributions pack crossing", () => {
     expect(JSON.stringify(scoped).includes("bim.wall")).toBe(false);
   });
 });
-

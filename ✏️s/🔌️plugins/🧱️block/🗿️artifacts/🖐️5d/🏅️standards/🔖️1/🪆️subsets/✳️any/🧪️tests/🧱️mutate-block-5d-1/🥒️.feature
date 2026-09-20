@@ -81,8 +81,8 @@ Feature: Apply every typed block5d part-kind mutation twice — once in Rust, on
       | change-part-kind-description       | 📃️change-part-kind-description/🧪️rewrites-part-kind-description      |
       | change-part-kind-icon              | 🖼️change-part-kind-icon/🧪️repoints-part-kind-icon                    |
       | change-part-kind-unit              | 📐change-part-kind-unit/🧪️switches-unit-to-centimeter                 |
-      | update-part-2d                      | 🖌️update-part-2d/🧪️circle-to-rectangle                               |
-      | update-part-3d                      | 🧊update-part-3d/🧪️reorients-and-rescales-part                        |
+      | update-part2d                      | 🖌️update-part-2d/🧪️circle-to-rectangle                               |
+      | update-part3d                      | 🧊update-part-3d/🧪️reorients-and-rescales-part                        |
       | create-representation              | 🧱create-representation/🧪️appends-frame-representation                |
       | delete-representation              | 🗑️delete-representation/🧪️removes-shell-representation                |
       | rename-representation              | ✒️rename-representation/🧪️renames-shell-to-hull                       |
@@ -101,9 +101,9 @@ Feature: Apply every typed block5d part-kind mutation twice — once in Rust, on
       | change-grip-kind-default-rope-kind | 🪢change-grip-kind-default-rope-kind/🧪️swaps-plug-default-rope-kind   |
       | create-grip                        | 🌿create-grip/🧪️appends-south-grip                                    |
       | delete-grip                        | 🕳️delete-grip/🧪️removes-north-grip                                    |
-      | move-grip-2d                        | 📍move-grip-2d/🧪️swings-north-grip-along-the-rim                      |
-      | move-grip-3d                        | 🧭move-grip-3d/🧪️repositions-north-grip-in-world                      |
-      | resize-grip-3d                      | 📏resize-grip-3d/🧪️widens-north-grip-radius                           |
+      | move-grip2d                        | 📍move-grip-2d/🧪️swings-north-grip-along-the-rim                      |
+      | move-grip3d                        | 🧭move-grip-3d/🧪️repositions-north-grip-in-world                      |
+      | resize-grip3d                      | 📏resize-grip-3d/🧪️widens-north-grip-radius                           |
       | change-grip-grip-kind              | 🧷change-grip-grip-kind/🧪️rekinds-north-grip-as-socket                |
       | add-compatibility-rule             | ➕add-compatibility-rule/🧪️allows-plug-to-socket                      |
       | remove-compatibility-rule          | ✂️remove-compatibility-rule/🧪️revokes-plug-to-plug                    |
@@ -142,8 +142,8 @@ Feature: Apply every typed block5d part-kind mutation twice — once in Rust, on
       | change-part-kind-description       | 📃️change-part-kind-description/🧪️rewrites-part-kind-description      |
       | change-part-kind-icon              | 🖼️change-part-kind-icon/🧪️repoints-part-kind-icon                    |
       | change-part-kind-unit              | 📐change-part-kind-unit/🧪️switches-unit-to-centimeter                 |
-      | update-part-2d                      | 🖌️update-part-2d/🧪️circle-to-rectangle                               |
-      | update-part-3d                      | 🧊update-part-3d/🧪️reorients-and-rescales-part                        |
+      | update-part2d                      | 🖌️update-part-2d/🧪️circle-to-rectangle                               |
+      | update-part3d                      | 🧊update-part-3d/🧪️reorients-and-rescales-part                        |
       | create-representation              | 🧱create-representation/🧪️appends-frame-representation                |
       | delete-representation              | 🗑️delete-representation/🧪️removes-shell-representation                |
       | rename-representation              | ✒️rename-representation/🧪️renames-shell-to-hull                       |
@@ -162,9 +162,9 @@ Feature: Apply every typed block5d part-kind mutation twice — once in Rust, on
       | change-grip-kind-default-rope-kind | 🪢change-grip-kind-default-rope-kind/🧪️swaps-plug-default-rope-kind   |
       | create-grip                        | 🌿create-grip/🧪️appends-south-grip                                    |
       | delete-grip                        | 🕳️delete-grip/🧪️removes-north-grip                                    |
-      | move-grip-2d                        | 📍move-grip-2d/🧪️swings-north-grip-along-the-rim                      |
-      | move-grip-3d                        | 🧭move-grip-3d/🧪️repositions-north-grip-in-world                      |
-      | resize-grip-3d                      | 📏resize-grip-3d/🧪️widens-north-grip-radius                           |
+      | move-grip2d                        | 📍move-grip-2d/🧪️swings-north-grip-along-the-rim                      |
+      | move-grip3d                        | 🧭move-grip-3d/🧪️repositions-north-grip-in-world                      |
+      | resize-grip3d                      | 📏resize-grip-3d/🧪️widens-north-grip-radius                           |
       | change-grip-grip-kind              | 🧷change-grip-grip-kind/🧪️rekinds-north-grip-as-socket                |
       | add-compatibility-rule             | ➕add-compatibility-rule/🧪️allows-plug-to-socket                      |
       | remove-compatibility-rule          | ✂️remove-compatibility-rule/🧪️revokes-plug-to-plug                    |

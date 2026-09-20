@@ -11,5 +11,5 @@ pub fn diff(payload: &DisconnectWidgets, base: &FlowSnapshot) -> protocol::Mutat
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Synapse \"{}\" does not exist.", payload.id), [payload.id.clone()]);
     }
     scene.synapses.retain(|synapse| synapse.id != payload.id);
-    protocol::MutationOutcome::new(diff_replace_content(scene.widgets, scene.synapses, scene.layout))
+    protocol::MutationOutcome::new({ let (widgets, synapses, layout) = scene.into_parts(); diff_replace_content(widgets, synapses, layout) })
 }

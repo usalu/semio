@@ -1096,6 +1096,17 @@ pub trait OperatorJob: Send {
 /// 🧮️ Computational unit: one dictionary to another.
 pub trait Operator: Send + Sync {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError>;
+    /// 🧊️ The cold-boundary form of [`Operator::evaluate`], mirroring
+    /// [`Registry::dispatch_cold`]: takes EXACT ownership of `input` and answers inside a cold
+    /// boundary, on the refusal path too. A batch caller (a test harness, an export bridge) that
+    /// evaluates an operator directly therefore never becomes the final owner of either
+    /// dictionary, and never has to open-code [`Dictionary`]'s drop law
+    /// (`final Dictionary ownership must be explicitly retired or owned by a cold boundary`).
+    // 🚫️async: E1 pure operator evaluation mirroring `evaluate` (no I/O) — see R9
+    fn evaluate_cold(&self, input: Dictionary) -> Result<ColdOwner<Dictionary>, EvalError> {
+        let input = ColdOwner::new(input);
+        self.evaluate(&input).map(ColdOwner::new)
+    }
     /// ⏱️ The budgeted, resumable form of this operator's evaluation, when it has one. `None` (the
     /// default, and the answer for every operator whose cost is microseconds) means "evaluate me in
     /// one call". An operator that answers `Some` MUST produce, through its job, exactly what
@@ -1671,6 +1682,23 @@ impl Registry {
         let output = ColdOwner::new(implementation.operator.evaluate(input)?);
         validate_operator_outputs(&operator.info, &output)?;
         Ok(output.into_inner())
+    }
+
+    /// 🧊️ The cold-boundary form of [`Registry::dispatch`]: takes EXACT ownership of `input` and
+    /// answers the operator's dictionary already inside its cold boundary, so a batch caller never
+    /// becomes the final owner of either dictionary and never has to remember
+    /// [`Dictionary`]'s drop law (`final Dictionary ownership must be explicitly retired or owned
+    /// by a cold boundary`) by hand. The refusal path retires `input` too, which a caller writing
+    /// `registry.dispatch(id, &input)?` cannot do without a second owner.
+    ///
+    /// This is the same shape the guest path already takes
+    /// (`flow_extension_sdk::evaluate_json` wraps both its input and its answer in a
+    /// [`ColdOwner`]); it is named here so every batch caller — test harness, export bridge,
+    /// catalogue probe — states one cold scope instead of open-coding two.
+    // 🚫️async: E1 pure registry dispatch mirroring `dispatch` (no I/O) — see R9
+    pub fn dispatch_cold(&self, operator_id: &str, input: Dictionary) -> Result<ColdOwner<Dictionary>, EvalError> {
+        let input = ColdOwner::new(input);
+        self.dispatch(operator_id, &input).map(ColdOwner::new)
     }
 
     /// ⏱️ The budgeted form of [`Registry::dispatch`]: resolves the same operator and

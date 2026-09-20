@@ -177,6 +177,7 @@ pub(super) fn authority() -> Arc<ArtifactStoreOneItemLiveAuthority> {
         next_clock: HybridLogicalTimestamp { actor: 1, physical_ms: 42, logical: 2 },
         actor: "actor-1".into(),
         group_id: Some("group-1".into()),
+        stamped_edit_id: None,
     })
 }
 

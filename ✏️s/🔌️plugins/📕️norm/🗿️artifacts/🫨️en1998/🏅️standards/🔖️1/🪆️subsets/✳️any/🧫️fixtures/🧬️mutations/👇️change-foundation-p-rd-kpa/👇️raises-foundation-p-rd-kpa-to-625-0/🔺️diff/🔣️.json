@@ -39,7 +39,7 @@
   "towerQNominal": null,
   "towerMassT": null,
   "foundationAreaM2": null,
-  "foundationPRdKpa": 625,
+  "foundationPRdKpa": 625.0,
   "foundationHEdKn": null,
   "foundationHRdKn": null,
   "kFoundation": null,

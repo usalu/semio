@@ -106,7 +106,7 @@ fn the_shell_reads_its_platform_from_the_host_platform_door() {
     // `MacOs → control+meta+f` and `Windows`/`Linux → f11` (`build_os_commands`). The palette row's
     // description is the resolved chord list, so it must follow the door.
     let shell = ShellState::new(Vec::new(), String::new());
-    let fullscreen_description = |shell: &ShellState| shell.command_search_items().into_iter().find(|item| item.id == "command.os:os.toggleFullscreen").and_then(|item| item.description).unwrap_or_default();
+    let fullscreen_description = |shell: &ShellState| shell.command_search_items().into_iter().find(|item| item.id == "command.os.os.toggleFullscreen").and_then(|item| item.description).unwrap_or_default();
     crate::set_host_platform("MacIntel");
     let apple = fullscreen_description(&shell);
     crate::set_host_platform("Win32");

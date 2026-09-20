@@ -130,6 +130,78 @@ function recordingPort(options: { readonly inviteToken?: string; readonly redeem
     writeClipboard: options.clipboard === undefined ? undefined : async () => {
       if (options.clipboard === "fail") throw new Error("denied");
     },
+    listAgentDelegations: async () => [],
+    createAgentDelegation: async () => {
+      throw new Error("unused");
+    },
+    revokeAgentDelegation: async () => undefined,
+  };
+}
+
+type Deferred<T> = Readonly<{ promise: Promise<T>; resolve(value: T): void }>;
+
+function deferred<T>(): Deferred<T> {
+  let resolve!: (value: T) => void;
+  const promise = new Promise<T>((accept) => { resolve = accept; });
+  return { promise, resolve };
+}
+
+const HUB_B_ORIGIN = "http://127.0.0.1:8888";
+const SESSION_TOKEN = "session.v1.0123456789abcdef0123456789abcdef.0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef";
+
+function mintResponse(userId: string) {
+  return { status: 200, body: JSON.stringify({ token: SESSION_TOKEN, user_id: userId }), retryAfterHeader: null };
+}
+
+function authorityResponse(userId: string) {
+  return {
+    status: 200,
+    body: JSON.stringify({ schema: "semio.directory.session-authority.v1", sessionBindingSha256: "c".repeat(64), authorizationGeneration: 2, userId, email: `${userId}@example.invalid`, displayName: userId, expiresAt: 4_102_444_800_000, sessionKind: "external" }),
+    retryAfterHeader: null,
+  };
+}
+
+function racePort() {
+  const endA = deferred<{ status: number; body: string; retryAfterHeader: null }>();
+  const mintA = deferred<{ status: number; body: string; retryAfterHeader: null }>();
+  const commandA = deferred<DirectoryCommandReceiptV1>();
+  const listCalls: string[] = [];
+  let deferMintA = false;
+  let deferCommandA = false;
+  let deferEndA = false;
+  const signIn: HubSignInTransportV1 = {
+    mint: async (origin) => origin === ORIGIN && deferMintA ? mintA.promise : mintResponse(origin === ORIGIN ? "usr_a" : "usr_b"),
+    read: async (origin) => authorityResponse(origin === ORIGIN ? "usr_a" : "usr_b"),
+    end: async (origin) => origin === ORIGIN && deferEndA ? endA.promise : { status: 204, body: "", retryAfterHeader: null },
+  };
+  const port: HubConnectionPortV1 = {
+    signIn,
+    storage: memoryStorage(),
+    bootstrapOrigin: ORIGIN,
+    deviceInstanceId: "device-race",
+    clientClass: "browser",
+    listSpaces: async (origin) => {
+      listCalls.push(origin);
+      return [memberEntry(origin === ORIGIN ? "space-a" : "space-b", origin === ORIGIN ? "A row" : "B row", "author", 1, "author")];
+    },
+    readSpaceMembers: async () => [],
+    submitCommand: async (origin, command) => origin === ORIGIN && deferCommandA ? commandA.promise : receiptFor(command, "inviteB012"),
+    redeemInvite: async () => ({ status: 200 }),
+    listAgentDelegations: async () => [],
+    createAgentDelegation: async () => {
+      throw new Error("unused");
+    },
+    revokeAgentDelegation: async () => undefined,
+  };
+  return {
+    port,
+    endA,
+    mintA,
+    commandA,
+    listCalls,
+    deferMintA: () => { deferMintA = true; },
+    deferCommandA: () => { deferCommandA = true; },
+    deferEndA: () => { deferEndA = true; },
   };
 }
 //#endregion 🧫️Doubles
@@ -528,6 +600,73 @@ describe("useHubConnection spaces lane", () => {
     fireEvent.click(screen.getByRole("button", { name: "Refresh spaces" }));
     await waitFor(() => expect(view.container.querySelector('[data-testid="phase"]')?.textContent).toBe("stale"));
     expect(view.container.querySelectorAll("li[data-space-id]")).toHaveLength(4);
+  });
+
+  it("retires a delayed A sign-out before B authority, rows, and invitation become current", async () => {
+    const { act: hookAct, renderHook } = await import("@testing-library/react");
+    const race = racePort();
+    const hook = renderHook(() => useHubConnection(race.port));
+    await hookAct(async () => { hook.result.current.addRemoteHub(HUB_B_ORIGIN, "B"); });
+    const aId = hook.result.current.book.connections.find((row) => row.origin === ORIGIN)!.id;
+    const bId = hook.result.current.book.connections.find((row) => row.origin === HUB_B_ORIGIN)!.id;
+    await hookAct(async () => { hook.result.current.selectConnection(aId); });
+    await hookAct(async () => { hook.result.current.signIn({ email: "a@example.invalid", password: "password-a" }); });
+    await waitFor(() => expect(hook.result.current.session.phase).toBe("signed-in"));
+    race.deferEndA();
+    await hookAct(async () => { hook.result.current.signOut(); });
+    await hookAct(async () => { hook.result.current.selectConnection(bId); });
+    await hookAct(async () => { hook.result.current.signIn({ email: "b@example.invalid", password: "password-b" }); });
+    await waitFor(() => expect(hook.result.current.session.userId).toBe("usr_b"));
+    await hookAct(async () => { hook.result.current.createInvite("space-b", "author", 3600); });
+    await waitFor(() => expect(hook.result.current.invite?.link).toContain("inviteB012"));
+    await hookAct(async () => { race.endA.resolve({ status: 204, body: "", retryAfterHeader: null }); });
+    expect(hook.result.current.connection.id).toBe(bId);
+    expect(hook.result.current.session.phase).toBe("signed-in");
+    expect(hook.result.current.session.userId).toBe("usr_b");
+    expect(hook.result.current.rows.map((row) => row.id)).toEqual(["space-b"]);
+    expect(hook.result.current.invite?.link).toContain("inviteB012");
+  });
+
+  it("retires a delayed A command without invoking its receipt or refreshing B", async () => {
+    const { act: hookAct, renderHook } = await import("@testing-library/react");
+    const race = racePort();
+    const hook = renderHook(() => useHubConnection(race.port));
+    await hookAct(async () => { hook.result.current.addRemoteHub(HUB_B_ORIGIN, "B"); });
+    const aId = hook.result.current.book.connections.find((row) => row.origin === ORIGIN)!.id;
+    const bId = hook.result.current.book.connections.find((row) => row.origin === HUB_B_ORIGIN)!.id;
+    await hookAct(async () => { hook.result.current.selectConnection(aId); });
+    race.deferCommandA();
+    await hookAct(async () => { hook.result.current.createInvite("space-a", "author", 3600); });
+    await hookAct(async () => { hook.result.current.selectConnection(bId); });
+    await hookAct(async () => { hook.result.current.signIn({ email: "b@example.invalid", password: "password-b" }); });
+    await waitFor(() => expect(hook.result.current.session.userId).toBe("usr_b"));
+    await hookAct(async () => { hook.result.current.createInvite("space-b", "author", 3600); });
+    await waitFor(() => expect(hook.result.current.invite?.link).toContain("inviteB012"));
+    const bReads = race.listCalls.filter((origin) => origin === HUB_B_ORIGIN).length;
+    await hookAct(async () => { race.commandA.resolve(await receiptFor({ kind: "create-invite", spaceId: "space-a", role: "author", ttlSecs: 3600 }, "inviteA012")); });
+    expect(hook.result.current.invite?.link).toContain("inviteB012");
+    expect(race.listCalls.filter((origin) => origin === HUB_B_ORIGIN)).toHaveLength(bReads);
+    expect(hook.result.current.rows.map((row) => row.id)).toEqual(["space-b"]);
+  });
+
+  it("rejects an aborted A sign-in normalized failure after B is signed in", async () => {
+    const { act: hookAct, renderHook } = await import("@testing-library/react");
+    const race = racePort();
+    const hook = renderHook(() => useHubConnection(race.port));
+    await hookAct(async () => { hook.result.current.addRemoteHub(HUB_B_ORIGIN, "B"); });
+    const aId = hook.result.current.book.connections.find((row) => row.origin === ORIGIN)!.id;
+    const bId = hook.result.current.book.connections.find((row) => row.origin === HUB_B_ORIGIN)!.id;
+    await hookAct(async () => { hook.result.current.selectConnection(aId); });
+    race.deferMintA();
+    await hookAct(async () => { hook.result.current.signIn({ email: "a@example.invalid", password: "password-a" }); });
+    await hookAct(async () => { hook.result.current.selectConnection(bId); });
+    await hookAct(async () => { hook.result.current.signIn({ email: "b@example.invalid", password: "password-b" }); });
+    await waitFor(() => expect(hook.result.current.session.userId).toBe("usr_b"));
+    await hookAct(async () => { race.mintA.resolve({ status: 503, body: "", retryAfterHeader: null }); });
+    expect(hook.result.current.connection.id).toBe(bId);
+    expect(hook.result.current.session.phase).toBe("signed-in");
+    expect(hook.result.current.session.userId).toBe("usr_b");
+    expect(hook.result.current.session.error).toBeNull();
   });
 });
 //#endregion 🔗️Hook

@@ -1,0 +1,44 @@
+{
+  "schema": "semio.ui.overlay-flow-fixture.v1",
+  "viewport": { "width": 200.0, "height": 100.0 },
+  "root": {
+    "layout": {
+      "kind": "stack",
+      "axis": "vertical",
+      "gap": "none",
+      "padding": { "all": "none" },
+      "align": "stretch",
+      "justify": "start",
+      "grow": false,
+      "wrap": false
+    },
+    "expectedRect": { "x": 0.0, "y": 0.0, "width": 200.0, "height": 100.0 }
+  },
+  "overlay": {
+    "layout": {
+      "kind": "overlay",
+      "anchor": "center",
+      "inset": { "each": { "top": "xs", "right": "sm", "bottom": "md", "left": "lg" } },
+      "dismissible": true
+    },
+    "expectedCss": {
+      "position": "relative",
+      "padding": "0.2rem 0.4rem 0.8rem 1.2000000000000002rem",
+      "inset": ""
+    },
+    "expectedRect": { "x": 0.0, "y": 0.0, "width": 200.0, "height": 35.2 }
+  },
+  "content": {
+    "layout": { "kind": "leaf", "width": { "fixed": "xxl" }, "height": { "fixed": "lg" } },
+    "expectedRect": { "x": 19.2, "y": 3.2, "width": 38.4, "height": 19.2 }
+  },
+  "absolute": {
+    "layout": { "kind": "absolute", "sizingWidth": { "fixed": "xxl" }, "sizingHeight": { "fixed": "xl" } },
+    "expectedCss": { "position": "absolute", "width": "2.4000000000000004rem", "height": "1.6rem" },
+    "expectedRect": { "x": 0.0, "y": 0.0, "width": 38.4, "height": 25.6 }
+  },
+  "following": {
+    "layout": { "kind": "leaf", "width": { "fixed": "xxl" }, "height": { "fixed": "lg" } },
+    "expectedRect": { "x": 0.0, "y": 35.2, "width": 38.4, "height": 19.2 }
+  }
+}

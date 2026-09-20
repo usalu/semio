@@ -44,6 +44,7 @@ use futures::{SinkExt, StreamExt};
 use protocol::{decode_client_frame, encode_server_frame, AckStage, ActorId, ApplyOutcome, ArtifactId as ProtocolArtifactId, ClientFrame, Lane, MutationEnvelope, RuntimeFrontierSummary, ServerFrame};
 use semio_framework_async::ShardedMap;
 use semio_framework_hash::Sha256;
+use semio_framework_trace::record::{EventCount, Span, TraceOutcome, TraceRecord, Tracer, SERVER_SPAN_EVENTS};
 #[cfg(feature = "neo4j")]
 use semio_hub::artifact_authority::chunk_cas::Neo4jArtifactChunkCasStorage;
 #[cfg(feature = "postgres")]
@@ -66,13 +67,17 @@ use semio_hub::artifact_authority::{
 };
 use semio_hub::auth::rate_limit::{HubRateLimiterV1, RateLimitClassV1, RateLimitDecisionV1, RateLimitSubjectV1};
 use semio_hub::auth::password::PasswordCredentialV1;
+use semio_hub::auth::agent::{
+    decide_agent_session, AgentDelegationListV1, AgentDelegationReceiptV1, AgentDelegationSummaryV1, AgentErrorCodeV1, AgentErrorV1, AgentSessionDecisionV1, AgentSessionMintResponseV1, AgentSessionRequestV1,
+    CreateAgentDelegationRequestV1,
+};
 use semio_hub::auth::{
     decide_credential_change, decide_credential_sign_in, AuthErrorCodeV1, AuthErrorV1, CredentialChangeDecisionV1, CredentialChangeRequestV1, CredentialSignInDecisionV1, CredentialSignInPolicyV1, CredentialSignInRequestV1, CredentialSubjectV1,
     SessionMintResponseV1,
 };
 use semio_hub::directory::error::DirectoryError;
 use semio_hub::directory::model::{
-    AdminEffectCommitV1, AdminOperationAuditRecord, AuthSessionIssue, AuthSessionKind, CredentialAuditFactV1, CheckpointPublicationClaimV1, CheckpointPublicationCompletionV1, CheckpointPublicationDispositionV1, DocumentScope, NewAdminOperationAuditRecord, NewAdminOperationEffectReceiptV1, NewCheckpointPublicationClaimV1, NewDirectoryCommandReceipt,
+    AdminEffectCommitV1, AdminOperationAuditRecord, AgentDelegationRow, AuthSessionIssue, AuthSessionKind, AuthSessionRecord, CredentialAuditFactV1, CheckpointPublicationClaimV1, CheckpointPublicationCompletionV1, CheckpointPublicationDispositionV1, DocumentScope, NewAdminOperationAuditRecord, NewAdminOperationEffectReceiptV1, NewCheckpointPublicationClaimV1, NewDirectoryCommandReceipt,
     SocketSessionBindingStatus, SocketShareBindingStatus, SpaceRole, SyncSessionRecord,
 };
 #[cfg(feature = "sqlite")]
@@ -82,7 +87,7 @@ use semio_hub::directory::{
     HubDirectories, HubDirectory, HubVerifiedCheckpointPublisher, ProjectionRebuildControl, ProjectionRebuildProgress, ACTIVE_SYNC_SESSION_READ_MAX, ADMIN_INTENT_REQUEST_MAX_BYTES, ADMIN_PAGE_MAX, ADMIN_RESPONSE_MAX_BYTES, CAPABILITY_MAX_TTL_SECS,
     DIRECTORY_EVENT_READ_MAX, DIRECTORY_PROJECTION_REBUILD_MAX_EVENTS, SPACE_ADMINISTRATION_PAGE_FETCH_MAX, SPACE_ADMINISTRATION_PAGE_MAX,
 };
-use semio_hub::directory::{identity_subject_digest, HubCapability, IdentityAssertionVerifier, IdentityVerificationControl, InviteCapability, LocalBootstrapTransport, SessionCapability, SocketGrantCapability, AUTH_TEXT_MAX_BYTES};
+use semio_hub::directory::{identity_subject_digest, AgentDelegationCapability, HubCapability, IdentityAssertionVerifier, IdentityVerificationControl, InviteCapability, LocalBootstrapTransport, SessionCapability, SocketGrantCapability, AUTH_TEXT_MAX_BYTES};
 #[cfg(all(feature = "sqlite", feature = "native-artifact-execution", feature = "integration-fixtures"))]
 use semio_hub::inference::runtime::InferenceCheckpointTestGateV1;
 #[cfg(all(test, feature = "sqlite", feature = "integration-fixtures"))]
@@ -103,7 +108,11 @@ use semio_hub::lag_rebootstrap::{
     RebootstrapTransferControl, VerifiedRebootstrapSource, CANONICAL_CHECKPOINT_PAIR_MEDIA_TYPE, REBOOTSTRAP_DEADLINE_MS,
 };
 use semio_hub::local_bootstrap::{serve_local_bootstrap, InheritedLocalBootstrapTransport, LOCAL_BOOTSTRAP_EXCHANGE_DEADLINE_MS};
+use semio_hub::stores::HubInstance;
 use serde::{Deserialize, Serialize};
+use server::contract::{Principal, SessionId};
+use server::gateway::{Server as FrameworkServer, ServerState};
+use server::storage::{SessionRecord, SessionStore as _, StorageProfile};
 use std::collections::{BTreeMap, BTreeSet};
 use std::net::SocketAddr;
 use std::sync::{Arc, Mutex};
@@ -127,6 +136,7 @@ enum HubError {
     UnknownStorageBackend(String),
     UnknownDirectoryBackend(String),
     UnsafeAuthConfiguration(String),
+    InstanceStorage(String),
 }
 
 impl std::fmt::Display for HubError {
@@ -143,6 +153,7 @@ impl std::fmt::Display for HubError {
             Self::UnknownStorageBackend(backend) => write!(formatter, "unknown OS_HUB_STORAGE_BACKEND: {backend}"),
             Self::UnknownDirectoryBackend(backend) => write!(formatter, "unknown OS_HUB_DIRECTORY_BACKEND: {backend}"),
             Self::UnsafeAuthConfiguration(detail) => write!(formatter, "unsafe hub authentication configuration: {detail}"),
+            Self::InstanceStorage(detail) => write!(formatter, "hub instance storage unavailable: {detail}"),
         }
     }
 }
@@ -158,7 +169,7 @@ impl std::error::Error for HubError {
             #[cfg(all(feature = "sqlite", feature = "native-artifact-execution"))]
             Self::InferenceShutdown(_) => None,
             Self::Io(error) => Some(error),
-            Self::UnknownStorageBackend(_) | Self::UnknownDirectoryBackend(_) | Self::UnsafeAuthConfiguration(_) => None,
+            Self::UnknownStorageBackend(_) | Self::UnknownDirectoryBackend(_) | Self::UnsafeAuthConfiguration(_) | Self::InstanceStorage(_) => None,
         }
     }
 }
@@ -220,7 +231,24 @@ fn now_ms() -> i64 {
     SystemTime::now().duration_since(UNIX_EPOCH).map_or(0, |d| d.as_millis() as i64)
 }
 
-struct StartupCatalogControl;
+/// @emoji 📚️ Carries the tracer the trusted-catalog load reports its progress onto. A unit struct
+/// would have had nowhere to send that progress, which is the only reason this holds a value.
+struct StartupCatalogControl {
+    tracer: Tracer,
+}
+
+impl StartupCatalogControl {
+    /// @emoji 📚️ Reporting onto `tracer`.
+    fn new(tracer: Tracer) -> Self {
+        Self { tracer }
+    }
+
+    /// @emoji 🤫️ Reporting nowhere — for a caller that runs before this process has configured
+    /// observability, and for every law that is not about the catalog's progress.
+    fn silent() -> Self {
+        Self { tracer: Tracer::disabled() }
+    }
+}
 
 impl AuthorityOperationControl for StartupCatalogControl {
     fn now_ms(&self) -> u64 {
@@ -233,7 +261,10 @@ impl AuthorityOperationControl for StartupCatalogControl {
 
     fn report(&self, progress: AuthorityProgress) {
         if progress.completed_units == 0 || progress.completed_units == progress.total_units {
-            eprintln!("[INFO] trusted catalog {:?}: {}/{}", progress.stage, progress.completed_units, progress.total_units);
+            let outcome = if progress.completed_units == progress.total_units { TraceOutcome::Ok } else { TraceOutcome::Started };
+            let mut record = TraceRecord::new("server.catalog.publication", outcome);
+            record.detail = Some(format!("stage={:?} {}/{}", progress.stage, progress.completed_units, progress.total_units));
+            self.tracer.emit(record);
         }
     }
 }
@@ -269,6 +300,7 @@ type HubArtifactPublication = CheckpointPublicationOrchestrator<ArtifactChunkBlo
 
 struct ArtifactCasMaintenanceControl {
     cancelled: Arc<std::sync::atomic::AtomicBool>,
+    tracer: Tracer,
 }
 
 impl AuthorityOperationControl for ArtifactCasMaintenanceControl {
@@ -282,7 +314,9 @@ impl AuthorityOperationControl for ArtifactCasMaintenanceControl {
 
     fn report(&self, progress: AuthorityProgress) {
         if progress.completed_units == progress.total_units {
-            eprintln!("[INFO] artifact CAS maintenance {:?}: {}/{}", progress.stage, progress.completed_units, progress.total_units);
+            let mut record = TraceRecord::new("server.artifact.maintenance", TraceOutcome::Ok);
+            record.detail = Some(format!("stage={:?} {}/{}", progress.stage, progress.completed_units, progress.total_units));
+            self.tracer.emit(record);
         }
     }
 }
@@ -317,7 +351,7 @@ impl ArtifactCasMaintenanceCheckpoint {
 }
 
 impl ArtifactCasMaintenanceSupervisor {
-    fn start(service: Arc<DirectoryService>, storage: Arc<ArtifactChunkCasStores>, execute: bool) -> Arc<Self> {
+    fn start(service: Arc<DirectoryService>, storage: Arc<ArtifactChunkCasStores>, execute: bool, tracer: Tracer) -> Arc<Self> {
         let cancelled = Arc::new(std::sync::atomic::AtomicBool::new(false));
         let healthy = Arc::new(std::sync::atomic::AtomicBool::new(true));
         let wake = Arc::new(tokio::sync::Notify::new());
@@ -325,7 +359,7 @@ impl ArtifactCasMaintenanceSupervisor {
         let task_healthy = healthy.clone();
         let task_wake = wake.clone();
         let task = tokio::spawn(async move {
-            let control = ArtifactCasMaintenanceControl { cancelled: control_cancelled };
+            let control = ArtifactCasMaintenanceControl { cancelled: control_cancelled, tracer };
             let mut interval = tokio::time::interval(std::time::Duration::from_secs(60));
             interval.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Skip);
             let mut checkpoint = ArtifactCasMaintenanceCheckpoint::default();
@@ -349,15 +383,17 @@ impl ArtifactCasMaintenanceSupervisor {
                     match service.sweep_artifact_cas(storage.as_ref(), checkpoint.request(execute, semio_hub::directory::ARTIFACT_CAS_SWEEP_OBJECT_MAX), &context).await {
                         Ok(result) => {
                             task_healthy.store(true, std::sync::atomic::Ordering::Release);
-                            eprintln!(
-                                "[INFO] artifact CAS maintenance complete: examined={} protected={} eligible={} deleted={} missing={} continued={}",
+                            let mut record = TraceRecord::new("server.artifact.maintenance", TraceOutcome::Ok);
+                            record.detail = Some(format!(
+                                "examined={} protected={} eligible={} deleted={} missing={} continued={}",
                                 result.examined_objects,
                                 result.protected_objects,
                                 result.eligible_objects,
                                 result.deleted_objects,
                                 result.missing_objects,
                                 result.continuation.is_some()
-                            );
+                            ));
+                            control.tracer.emit(record);
                             if checkpoint.accept(&result) {
                                 break;
                             }
@@ -366,7 +402,9 @@ impl ArtifactCasMaintenanceSupervisor {
                         Err(error) => {
                             task_healthy.store(false, std::sync::atomic::Ordering::Release);
                             checkpoint.fail(&error);
-                            eprintln!("[WARN] artifact CAS maintenance failed closed: {error}");
+                            let mut record = TraceRecord::new("server.artifact.maintenance", TraceOutcome::Failed);
+                            record.detail = Some(format!("failed-closed:{error}"));
+                            control.tracer.emit(record);
                             break;
                         }
                     }
@@ -408,6 +446,102 @@ impl Drop for ArtifactCasMaintenanceSupervisor {
     }
 }
 
+/// @emoji 🚰️ How often the hub hands its instance's committed outbox rows to the saga runner.
+const SAGA_DRAIN_INTERVAL: std::time::Duration = std::time::Duration::from_millis(500);
+
+/// @emoji 🚰️ How many outbox rows one drain may move. Bounded so a backlog is worked off over
+/// several turns instead of one unbounded pass holding both store locks.
+const SAGA_DRAIN_BATCH: usize = 64;
+
+/// @emoji 🚰️ Runs [`ServerState::drain_sagas`] on a fixed cadence for as long as this hub serves.
+///
+/// The framework's own doc for that call states the reason this exists: "a forgotten runner is a
+/// queue that grows forever while every event looks delivered". Hub commits into the instance's
+/// authority store the moment any of its subsystems moves behind the command bus, and the outbox
+/// row is committed in the same transaction as the event — a row nobody drains is a state change
+/// the world is never told about, and it fails silently, which is the one failure mode an outbox is
+/// built to make impossible.
+///
+/// It is silent unless it moves something. A cadence that emitted a record per tick would produce
+/// two records a second forever and bury the ones that matter; a drain that moved rows is a fact
+/// worth a line, so only that is reported (`server.saga.drain`, `ok` when every follow-up turn
+/// succeeded, `failed` with the count when some did not).
+struct SagaDrainSupervisor {
+    cancelled: Arc<std::sync::atomic::AtomicBool>,
+    wake: Arc<tokio::sync::Notify>,
+    task: Mutex<Option<tokio::task::JoinHandle<()>>>,
+    instance: ServerState<HubInstance>,
+    tracer: Tracer,
+}
+
+impl SagaDrainSupervisor {
+    fn start(instance: ServerState<HubInstance>, tracer: Tracer, interval: std::time::Duration) -> Arc<Self> {
+        let cancelled = Arc::new(std::sync::atomic::AtomicBool::new(false));
+        let wake = Arc::new(tokio::sync::Notify::new());
+        let task_cancelled = cancelled.clone();
+        let task_wake = wake.clone();
+        let task_instance = instance.clone();
+        let task_tracer = tracer.clone();
+        let task = tokio::spawn(async move {
+            loop {
+                tokio::select! {
+                    _ = tokio::time::sleep(interval) => {}
+                    _ = task_wake.notified() => {}
+                }
+                if task_cancelled.load(std::sync::atomic::Ordering::Acquire) {
+                    return;
+                }
+                drain_instance_sagas(&task_instance, &task_tracer).await;
+            }
+        });
+        Arc::new(Self { cancelled, wake, task: Mutex::new(Some(task)), instance, tracer })
+    }
+
+    /// @emoji 🚰️ Stops the cadence and then drains once more by hand. The last pass is the point:
+    /// the requests that were still in flight when the router stopped accepting may have committed
+    /// outbox rows after the final tick, and leaving those to the next boot is exactly the
+    /// acknowledged-but-never-delivered window the outbox exists to close.
+    async fn shutdown(&self) {
+        self.cancelled.store(true, std::sync::atomic::Ordering::Release);
+        self.wake.notify_waiters();
+        let task = self.task.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take();
+        if let Some(mut task) = task {
+            if tokio::time::timeout(std::time::Duration::from_secs(5), &mut task).await.is_err() {
+                task.abort();
+                let _ = task.await;
+            }
+        }
+        drain_instance_sagas(&self.instance, &self.tracer).await;
+    }
+}
+
+impl Drop for SagaDrainSupervisor {
+    fn drop(&mut self) {
+        self.cancelled.store(true, std::sync::atomic::Ordering::Release);
+        self.wake.notify_waiters();
+        if let Some(task) = self.task.get_mut().unwrap_or_else(std::sync::PoisonError::into_inner).take() {
+            task.abort();
+        }
+    }
+}
+
+/// @emoji 🚰️ One drain pass, reported only when it moved rows. Returns how many follow-up turns ran
+/// so a law can assert on the pass itself without owning the supervisor's clock.
+async fn drain_instance_sagas(instance: &ServerState<HubInstance>, tracer: &Tracer) -> usize {
+    let span = tracer.span("server.saga.drain").request(tracer.allocate_request_id());
+    let outcomes = instance.drain_sagas(SAGA_DRAIN_BATCH).await;
+    if outcomes.is_empty() {
+        return 0;
+    }
+    let rejected = outcomes.iter().filter(|outcome| matches!(outcome, server::contract::CommandOutcome::Rejected { .. })).count();
+    if rejected == 0 {
+        span.finish(TraceOutcome::Ok, Some(format!("drained-{}", outcomes.len())));
+    } else {
+        span.finish(TraceOutcome::Failed, Some(format!("drained-{} rejected-{rejected}", outcomes.len())));
+    }
+    outcomes.len()
+}
+
 fn artifact_cas_sweep_execute_from_env() -> Result<bool, HubError> {
     match std::env::var("OS_HUB_ARTIFACT_CAS_SWEEP_EXECUTE").as_deref() {
         Err(std::env::VarError::NotPresent) | Ok("") | Ok("false") | Ok("0") => Ok(false),
@@ -444,14 +578,14 @@ impl DocumentOpenCatalogAuthorityV1 for VerifiedTrustedCatalog {
     }
 }
 
-async fn configured_artifact_authority(data_dir: &std::path::Path, providers: Option<&dyn NativeCodecProviderSourceV1>) -> Result<Option<ConfiguredArtifactAuthority>, AuthorityError> {
+async fn configured_artifact_authority(data_dir: &std::path::Path, providers: Option<&dyn NativeCodecProviderSourceV1>, tracer: &Tracer) -> Result<Option<ConfiguredArtifactAuthority>, AuthorityError> {
     if providers.is_none() && data_dir.join("trusted-catalog/current.json").try_exists().map_err(|error| AuthorityError::Catalog(error.to_string()))? {
         return Err(AuthorityError::Catalog("configured trusted catalog requires the native-artifact-execution provider".into()));
     }
     let Some(providers) = providers else {
         return Ok(None);
     };
-    let control = StartupCatalogControl;
+    let control = StartupCatalogControl::new(tracer.clone());
     let started = control.now_ms();
     let context = OperationContext::new(started.saturating_add(30_000), AuthorityLimits::maximum(), &control);
     let Some(catalog) = TrustedCatalogLoader::load_current(data_dir, providers, &context).await? else {
@@ -488,6 +622,12 @@ struct PresenceLeaseSlot {
     role: Option<String>,
     document_surface: Option<String>,
     color: u8,
+    /// 🤖️ The principal kind the hub AUTHENTICATED, never one a client claimed. An agent session
+    /// (`AuthSessionKind::Agent`, minted from a delegation at `POST /auth/agent-sessions`) is an
+    /// `Agent` peer; everything else is `Human`. Normalized onto every outbound roster entry
+    /// alongside `user_id`/`role`/`color`, so a human session can never impersonate an agent and an
+    /// agent can never hide as a human.
+    principal_kind: protocol::PresencePrincipalKind,
     peer: Option<Vec<u8>>,
 }
 
@@ -560,6 +700,62 @@ struct SpaceColors {
     by_actor: BTreeMap<String, ColorLease>,
 }
 
+/// 🔎️ The exact reason one checkpoint publication was refused. The route's `409`/`503` bodies are
+/// empty by contract, so without this a law can only report the number. Test-only: the wire is unchanged.
+#[cfg(test)]
+#[derive(Clone, Debug, PartialEq, Eq)]
+enum CheckpointPublicationRefusalV1 {
+    DescriptorDigestDiffers,
+    DocumentSnapshotDiffers(String),
+    ExpectedCurrentDiffers,
+    BaseFrontierUnavailable,
+    PackBlob(String),
+    SprBlob(String),
+    Materialize(String),
+    Publish(String),
+}
+
+/// 🔎️ The exact reason one document-open plan lost its socket authority. Eleven distinct refusals
+/// collapse into close code `4401`; this names which. Test-only: the close frame is unchanged.
+#[cfg(test)]
+#[derive(Clone, Debug, PartialEq, Eq)]
+enum DocumentPlanRefusalV1 {
+    PlanInvalid,
+    BindingMismatch,
+    DescriptorMissing,
+    DescriptorDiffers,
+    CatalogSelectionDiffers,
+    DirectoryRevisionDiffers,
+    CheckpointDiffers,
+}
+
+#[cfg(test)]
+static LAST_CHECKPOINT_PUBLICATION_REFUSAL: Mutex<Option<CheckpointPublicationRefusalV1>> = Mutex::new(None);
+
+#[cfg(test)]
+static LAST_DOCUMENT_PLAN_REFUSAL: Mutex<Option<DocumentPlanRefusalV1>> = Mutex::new(None);
+
+#[cfg(test)]
+fn record_checkpoint_publication_refusal(refusal: CheckpointPublicationRefusalV1) {
+    *LAST_CHECKPOINT_PUBLICATION_REFUSAL.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(refusal);
+}
+
+#[cfg(test)]
+fn last_checkpoint_publication_refusal() -> Option<CheckpointPublicationRefusalV1> {
+    LAST_CHECKPOINT_PUBLICATION_REFUSAL.lock().unwrap_or_else(std::sync::PoisonError::into_inner).clone()
+}
+
+#[cfg(test)]
+fn record_document_plan_refusal(refusal: DocumentPlanRefusalV1) -> SocketBindingValidityV1 {
+    *LAST_DOCUMENT_PLAN_REFUSAL.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(refusal);
+    SocketBindingValidityV1::Unauthorized
+}
+
+#[cfg(test)]
+fn last_document_plan_refusal() -> Option<DocumentPlanRefusalV1> {
+    LAST_DOCUMENT_PLAN_REFUSAL.lock().unwrap_or_else(std::sync::PoisonError::into_inner).clone()
+}
+
 #[cfg(test)]
 struct TestLiveGate {
     document_subscribed: tokio::sync::Semaphore,
@@ -574,11 +770,14 @@ struct TestLiveGate {
     socket_command_release: tokio::sync::Semaphore,
     socket_lag_received: tokio::sync::Semaphore,
     socket_lag_release: tokio::sync::Semaphore,
+    socket_broadcast_pause_enabled: std::sync::atomic::AtomicBool,
     socket_broadcast_received: tokio::sync::Semaphore,
     socket_broadcast_release: tokio::sync::Semaphore,
     socket_rebootstrap_read: tokio::sync::Semaphore,
+    socket_directory_pause_enabled: std::sync::atomic::AtomicBool,
     socket_directory_admitted: tokio::sync::Semaphore,
     socket_directory_release: tokio::sync::Semaphore,
+    socket_admin_revoke_pause_enabled: std::sync::atomic::AtomicBool,
     socket_admin_revoke_admitted: tokio::sync::Semaphore,
     socket_admin_revoke_release: tokio::sync::Semaphore,
     socket_global_send_pause: Mutex<Option<(String, u8)>>,
@@ -623,11 +822,14 @@ impl Default for TestLiveGate {
             socket_command_release: tokio::sync::Semaphore::new(0),
             socket_lag_received: tokio::sync::Semaphore::new(0),
             socket_lag_release: tokio::sync::Semaphore::new(0),
+            socket_broadcast_pause_enabled: std::sync::atomic::AtomicBool::new(false),
             socket_broadcast_received: tokio::sync::Semaphore::new(0),
             socket_broadcast_release: tokio::sync::Semaphore::new(0),
             socket_rebootstrap_read: tokio::sync::Semaphore::new(0),
+            socket_directory_pause_enabled: std::sync::atomic::AtomicBool::new(false),
             socket_directory_admitted: tokio::sync::Semaphore::new(0),
             socket_directory_release: tokio::sync::Semaphore::new(0),
+            socket_admin_revoke_pause_enabled: std::sync::atomic::AtomicBool::new(false),
             socket_admin_revoke_admitted: tokio::sync::Semaphore::new(0),
             socket_admin_revoke_release: tokio::sync::Semaphore::new(0),
             socket_global_send_pause: Mutex::new(None),
@@ -745,7 +947,18 @@ enum SocketAudienceV1 {
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 enum SocketSubjectV1 {
-    Session { session_id: String, user_id: String, authorization_generation: u64, role: Option<SpaceRole>, expires_at_ms: i64 },
+    Session {
+        session_id: String,
+        user_id: String,
+        authorization_generation: u64,
+        role: Option<SpaceRole>,
+        expires_at_ms: i64,
+        session_kind: AuthSessionKind,
+        /// 🤖️ The session's own device instance. For an `AuthSessionKind::Agent` session this is
+        /// the **delegation id** `post_agent_session` minted it from, which is how socket admission
+        /// finds the agent's own label without a second authentication.
+        device_instance_id: String,
+    },
     Share { share_id: String, selector: String, scope: DocumentScope, expires_at_ms: i64 },
 }
 
@@ -764,9 +977,19 @@ impl SocketSubjectV1 {
         }
     }
 
+    /// @emoji 👤️ How this subject is named in a trace record. A share is deliberately reported by
+    /// its share id rather than by whoever redeemed it: the hub does not know that person, and
+    /// inventing an identity for an observability field would be the worst possible place to.
+    fn trace_principal(&self) -> String {
+        match self {
+            Self::Session { user_id, .. } => format!("user:{user_id}"),
+            Self::Share { share_id, .. } => format!("share:{share_id}"),
+        }
+    }
+
     async fn revalidate(&self, directory: &HubDirectories, audience: &SocketAudienceV1, at_ms: i64) -> SocketBindingValidityV1 {
         match (self, audience) {
-            (Self::Session { session_id, user_id, authorization_generation, role, expires_at_ms }, SocketAudienceV1::Document(scope)) => {
+            (Self::Session { session_id, user_id, authorization_generation, role, expires_at_ms, .. }, SocketAudienceV1::Document(scope)) => {
                 match directory.socket_session_binding(session_id, user_id, *authorization_generation, Some(&scope.space_id), at_ms).await {
                     Ok(SocketSessionBindingStatus::Active { role: current, expires_at_ms: current_expiry }) if current == *role && current_expiry == *expires_at_ms => SocketBindingValidityV1::Active,
                     Ok(SocketSessionBindingStatus::Unavailable) | Err(_) => SocketBindingValidityV1::Unavailable,
@@ -1251,6 +1474,10 @@ struct DocumentOpenPlanAuthorityV1 {
 }
 
 impl DocumentOpenPlanAuthorityV1 {
+    /// 🪢 `artifact.kind` is the manifest `ArtifactKindSpec::id` (`2d.note`, `stdio.json`) and
+    /// `parent_dialect` is the owning app's `Dialect` (`s.note.note`, `s.stdio.json`): two distinct
+    /// id spaces, so each is bounded on its own and the descriptor binds only the kind. `gis` alone
+    /// spells both alike, and an equality here refused every other plugin's plan.
     fn validate(&self) -> Result<(), DocumentOpenPlanErrorCodeV1> {
         self.browser_actor
             .validate(os_directory::DocumentBrowserActorSourceV1 { component_sha256: &self.package.component_sha256, descriptor_byte_sha256: &self.package.descriptor_byte_sha256 }, self.surface.renderer_target.as_str())
@@ -1265,8 +1492,7 @@ impl DocumentOpenPlanAuthorityV1 {
             && self.package.version == self.descriptor.owner.version
             && self.package.component_sha256 == self.descriptor.owner.package_hash
             && self.artifact.kind == self.descriptor.artifact_kind
-            && self.parent_dialect.artifact_kind == self.artifact.kind
-            && [&self.parent_dialect.standard, &self.parent_dialect.subset].into_iter().all(|value| !value.is_empty() && value.len() <= 256 && value.trim() == value.as_str() && !value.chars().any(char::is_control))
+            && [&self.parent_dialect.artifact_kind, &self.parent_dialect.standard, &self.parent_dialect.subset].into_iter().all(|value| !value.is_empty() && value.len() <= 256 && value.trim() == value.as_str() && !value.chars().any(char::is_control))
             && self.artifact.schema == self.descriptor.artifact_schema
             && self.artifact.pack_schema_hash == self.descriptor.pack_schema_hash;
         let binding_matches = match &self.subject {
@@ -1671,9 +1897,68 @@ struct HubState {
     /// `OS_HUB_MERGE_POLICY` (see `merge_policy_from_env`'s doc), never per-connection/per-space,
     /// matching `protocol::MergePolicy`'s own "local/authority state, never on the wire" law.
     merge_policy: protocol::MergePolicy,
+    /// @emoji 📝️ The structured observer every route reports through — a level, a sink and the
+    /// per-event counter table `GET /admin/api/observability` reads. Configured from
+    /// `SEMIO_TRACE_LEVEL`/`SEMIO_TRACE_SINK` at boot; a test injects a capturing one and asserts
+    /// on the exact records its own request produced.
+    tracer: Tracer,
+    /// @emoji 🗄️ Hub as instance #1 of the generic server product (`semio_hub::stores`): the four
+    /// durable storage roles plus the command bus and saga runner over them, opened in the same
+    /// `OS_HUB_DATA` root the directory and the artifact CAS live in. `sessions` is the role a
+    /// production route writes today — see `record_instance_session`.
+    instance: ServerState<HubInstance>,
 }
 
 impl HubState {
+    /// @emoji 📝️ Opens one span on this hub's tracer with a fresh request id already bound, so
+    /// every route reports under the same identity shape without restating it.
+    fn span(&self, event: &str) -> Span {
+        self.tracer.span(event).request(self.tracer.allocate_request_id())
+    }
+
+    /// @emoji 📝️ Reports one fact that has no duration — a refusal taken before any work started,
+    /// or a lifecycle event such as boot.
+    fn note(&self, event: &str, outcome: TraceOutcome, detail: &str) {
+        let mut record = TraceRecord::new(event, outcome);
+        record.detail = Some(detail.to_string());
+        self.tracer.emit(record);
+    }
+
+    /// @emoji 🎫️ Records one live session in the server-product instance's [`SessionStore`].
+    ///
+    /// The hub's session **authority** is and stays the directory: it owns the capability digest,
+    /// the expiry, the authorization generation and the revocation audit fact, and every
+    /// authentication decision is taken there. What this store holds is the *instance's* live
+    /// session set — the port `ServerState` hands to the framework's own routes and, once hub's
+    /// auth moves behind `HubResolvers`, the set the principal ladder resolves a bearer against.
+    ///
+    /// Writing it here is what makes that move possible instead of theoretical, and it is the
+    /// first production write into any [`HubInstance`] store. It is also, until the move happens,
+    /// two records of one fact: `📓️ob1-hub-observability-and-store-wiring.md` §5 names the
+    /// direction (the directory's auth-session rows *become* this store; this store is never
+    /// dropped in favour of them) and `instance_sessions_survive_a_hub_restart` holds the two in
+    /// lockstep across a reopen.
+    async fn record_instance_session(&self, session_id: &str, user_id: &str, device: Option<&str>) -> Result<(), server::storage::StorageError> {
+        let record = SessionRecord {
+            id: SessionId(session_id.to_string()),
+            principal: Principal::User { id: user_id.to_string() },
+            device: device.map(|device| server::contract::DeviceId(device.to_string())),
+            issued_at_millis: now_ms().max(0) as u64,
+        };
+        self.instance.sessions.lock().await.create(record).await
+    }
+
+    /// @emoji 🗑️ Removes one session from the instance's live set, leaving no replayable trace.
+    async fn forget_instance_session(&self, session_id: &str) -> Result<(), server::storage::StorageError> {
+        self.instance.sessions.lock().await.delete(&SessionId(session_id.to_string())).await
+    }
+
+    /// @emoji 🚪️ Removes every session of one principal — the instance-side half of "signed out
+    /// everywhere", which `POST /auth/credentials` performs on the directory.
+    async fn revoke_instance_principal(&self, user_id: &str) -> Result<usize, server::storage::StorageError> {
+        self.instance.sessions.lock().await.revoke_principal(&Principal::User { id: user_id.to_string() }).await
+    }
+
     fn fanout_for(&self, key: &str) -> broadcast::Sender<ServerFrame> {
         self.fanout.get_or_insert_with_cloned(key.to_string(), || broadcast::channel(self.fanout_capacity).0)
     }
@@ -1752,6 +2037,7 @@ impl HubState {
                 views: input.views,
                 ui: input.ui,
                 tool_run: input.tool_run,
+                principal_kind: Some(slot.principal_kind),
             })
         });
         let Some(normalized) = normalized else { return PresenceLeaseTransition::NoChange };
@@ -1925,7 +2211,7 @@ fn parse_content_hash(hex: &str) -> Option<db::ContentHash> {
 /// @emoji 🔎️ What a bearer token resolved to for document authority: an authenticated space
 /// member, an exact document share, or nothing. Public discovery never enters this boundary.
 enum AuthOutcome {
-    Session { user_id: String, role: SpaceRole, session_id: String, authorization_generation: u64 },
+    Session { user_id: String, role: SpaceRole, session_id: String, authorization_generation: u64, session_kind: AuthSessionKind },
     ShareToken,
     Denied,
 }
@@ -1937,7 +2223,7 @@ async fn resolve_auth(state: &HubState, space_id: &str, document_id: &str, token
     if let Some(HubCapability::Session(capability)) = &capability {
         if let Ok(Some(session)) = state.directory.authenticate_session(capability).await {
             if let Ok(Some(role)) = state.directory.get_role(space_id, &session.user_id).await {
-                return AuthOutcome::Session { user_id: session.user_id, role, session_id: session.id, authorization_generation: session.authorization_generation };
+                return AuthOutcome::Session { user_id: session.user_id, role, session_id: session.id, authorization_generation: session.authorization_generation, session_kind: session.session_kind };
             }
         }
     }
@@ -2050,6 +2336,18 @@ struct HubReadinessV1 {
     artifact_authority: HubComponentReadinessV1,
     admin_assets: HubComponentReadinessV1,
     features: HubFeatureReadinessV1,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    blocked_by: Vec<HubClosedReadinessGateV1>,
+}
+
+/// 🧭️ One named readiness gate that is holding `status` at `not-ready`, with the stable reason code a
+/// waiting operator, probe or launcher reads instead of polling a silent boolean. `/readyz` omits the
+/// list entirely once every required gate is open, so a ready hub's body is unchanged.
+#[derive(Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+struct HubClosedReadinessGateV1 {
+    gate: &'static str,
+    reason: &'static str,
 }
 
 #[derive(Clone, Serialize)]
@@ -2063,12 +2361,23 @@ struct HubAuthenticationReadinessV1 {
 #[derive(Clone, Serialize)]
 struct HubComponentReadinessV1 {
     ready: bool,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    reason: Option<&'static str>,
+}
+
+impl HubComponentReadinessV1 {
+    /// 🚦️ One gate: open gates carry no reason, a closed gate always names why it is closed.
+    fn gate(ready: bool, reason: &'static str) -> Self {
+        Self { ready, reason: if ready { None } else { Some(reason) } }
+    }
 }
 
 #[derive(Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
 struct HubArtifactCasSweeperReadinessV1 {
     ready: bool,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    reason: Option<&'static str>,
     execute: bool,
     default_mode: &'static str,
 }
@@ -2094,12 +2403,27 @@ fn hub_readiness(
     artifact_cas_barrier_ready: bool,
     artifact_cas_sweep_execute: bool,
     inference_ready: bool,
+    artifact_authority_reason: &'static str,
 ) -> HubReadinessV1 {
     let authentication_kind = match mode {
         HubMode::Development => "local-bootstrap-pipe-v1",
         HubMode::Production => "identity-assertion-verifier",
     };
+    let bootstrap_reason = match mode {
+        HubMode::Development => "local-bootstrap-pipe-handshake-incomplete",
+        HubMode::Production => "identity-assertion-verifier-not-configured",
+    };
     let required_ready = bootstrap_ready && artifact_authority_ready && admin_assets_ready && artifact_cas_barrier_ready;
+    let blocked_by = [
+        (bootstrap_ready, "authentication.bootstrapReady", bootstrap_reason),
+        (artifact_cas_barrier_ready, "artifactCasBarrier", "artifact-cas-coordinator-barrier-closed"),
+        (artifact_authority_ready, "artifactAuthority", artifact_authority_reason),
+        (admin_assets_ready, "adminAssets", "admin-spa-dist-missing-run-os-hub-admin-build"),
+    ]
+    .into_iter()
+    .filter(|(ready, ..)| !*ready)
+    .map(|(_, gate, reason)| HubClosedReadinessGateV1 { gate, reason })
+    .collect();
     HubReadinessV1 {
         schema: "semio.hub.readiness/v1",
         status: if required_ready { "ready" } else { "not-ready" },
@@ -2110,15 +2434,54 @@ fn hub_readiness(
         },
         bind_scope,
         authentication: HubAuthenticationReadinessV1 { kind: authentication_kind, bootstrap_ready, public_session_issuance: false },
-        directory: HubComponentReadinessV1 { ready: true },
-        storage: HubComponentReadinessV1 { ready: true },
-        artifact_cas_barrier: HubComponentReadinessV1 { ready: artifact_cas_barrier_ready },
-        artifact_publication: HubComponentReadinessV1 { ready: artifact_cas_barrier_ready },
-        artifact_cas_sweeper: HubArtifactCasSweeperReadinessV1 { ready: artifact_cas_barrier_ready, execute: artifact_cas_sweep_execute, default_mode: "dry-run" },
-        artifact_authority: HubComponentReadinessV1 { ready: artifact_authority_ready },
-        admin_assets: HubComponentReadinessV1 { ready: admin_assets_ready },
+        directory: HubComponentReadinessV1::gate(true, "directory-backend-unavailable"),
+        storage: HubComponentReadinessV1::gate(true, "document-storage-backend-unavailable"),
+        artifact_cas_barrier: HubComponentReadinessV1::gate(artifact_cas_barrier_ready, "artifact-cas-coordinator-barrier-closed"),
+        artifact_publication: HubComponentReadinessV1::gate(artifact_cas_barrier_ready, "artifact-cas-coordinator-barrier-closed"),
+        artifact_cas_sweeper: HubArtifactCasSweeperReadinessV1 {
+            ready: artifact_cas_barrier_ready,
+            reason: if artifact_cas_barrier_ready { None } else { Some("artifact-cas-coordinator-barrier-closed") },
+            execute: artifact_cas_sweep_execute,
+            default_mode: "dry-run",
+        },
+        artifact_authority: HubComponentReadinessV1::gate(artifact_authority_ready, artifact_authority_reason),
+        admin_assets: HubComponentReadinessV1::gate(admin_assets_ready, "admin-spa-dist-missing-run-os-hub-admin-build"),
         features: HubFeatureReadinessV1 { open_plan: open_plan_ready, open_plan_exchange: open_plan_ready, rebootstrap: true, mcp_workspace: false, inference: inference_ready },
+        blocked_by,
     }
+}
+
+/// 🗣️ The one line a hub prints about its own readiness at startup — `[INFO]` naming the bound
+/// address when every required gate is open, `[WARN]` naming each closed gate and its stable reason
+/// code otherwise. A hub that binds but never becomes ready must say which gate is holding it, since
+/// an operator (and the collaboration harness) otherwise sees only an endless `/readyz` poll.
+///
+/// 🔒️ The `[INFO]` branch is gated on the **served `status`**, not only on the derived gate list, so
+/// the printed line can never disagree with the `/readyz` body a probe reads. A 2026-09-20 runtime
+/// probe caught a hub printing `[INFO] os-hub ready at …` while its own `/readyz` answered
+/// `503 not-ready`; the two facts are now the same fact by construction, and a `not-ready` status
+/// with no named gate still warns rather than claiming readiness.
+fn startup_readiness_line(readiness: &HubReadinessV1, addr: &SocketAddr) -> String {
+    if readiness.status == "ready" && readiness.blocked_by.is_empty() {
+        return format!("[INFO] os-hub ready at http://{addr}");
+    }
+    let gates = if readiness.blocked_by.is_empty() {
+        format!("status={}", readiness.status)
+    } else {
+        readiness.blocked_by.iter().map(|closed| format!("{}={}", closed.gate, closed.reason)).collect::<Vec<_>>().join(" ")
+    };
+    format!("[WARN] os-hub listening at http://{addr} but /readyz reports not-ready — closed gates: {gates}")
+}
+
+/// @emoji 📝️ The same readiness fact as [`startup_readiness_line`], in the stable-code shape a
+/// `server.readiness` record's `detail` carries: `addr`, the bind scope and each closed gate by its
+/// own reason code, never a prose sentence a collector would have to parse.
+fn readiness_trace_detail(readiness: &HubReadinessV1, addr: &SocketAddr, bind_scope: &str) -> String {
+    let mut detail = format!("addr={addr} scope={bind_scope}");
+    for closed in &readiness.blocked_by {
+        let _ = std::fmt::Write::write_fmt(&mut detail, format_args!(" blocked:{}={}", closed.gate, closed.reason));
+    }
+    detail
 }
 
 /// @emoji 🔐️ Stamps the ONE truthful answer to "can a browser obtain a session from this hub by
@@ -2149,17 +2512,133 @@ fn configured_admin_subjects() -> Result<Arc<[AdminSubject]>, HubError> {
     Ok(subjects.into())
 }
 
-fn validate_auth_startup(mode: HubMode, bind: std::net::IpAddr, verifier: Option<&Arc<dyn IdentityAssertionVerifier>>, local_bootstrap: Option<&Arc<dyn LocalBootstrapTransport>>, admin_subjects: &[AdminSubject]) -> Result<(), HubError> {
+/// @emoji 🔐️ Whether a reverse proxy in front of this hub is trusted to report how the *client*
+/// reached it.
+///
+/// The hub speaks plain HTTP and always will (`grep rustls|native-tls|TlsAcceptor` → 0 hits); a real
+/// deployment terminates TLS in front of it. That leaves the hub unable to tell, from the socket
+/// alone, whether the bearer token it is about to mint travelled over TLS or over cleartext — the
+/// proxy is the only thing that knows, and it says so in `X-Forwarded-Proto`. Trusting that header
+/// is a decision an operator must take out loud, because anyone who can reach the socket directly
+/// can also set it: it is only meaningful when nothing but the proxy can reach the port.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum ForwardedTlsTrustV1 {
+    /// 🚪️ Forwarding headers are ignored entirely. The hub is reachable only on loopback, so the
+    /// transport is as private as the machine is.
+    Untrusted,
+    /// 🛡️ A TLS-terminating reverse proxy is the only thing that can reach this socket, and its
+    /// `X-Forwarded-Proto`/`X-Forwarded-Host` are the truth about the client's connection.
+    TerminatingProxy,
+}
+
+impl ForwardedTlsTrustV1 {
+    /// @emoji 🔐️ `OS_HUB_TRUSTED_FORWARDING=none|proxy`, default `none`. An unrecognized value
+    /// fails the boot rather than silently choosing the permissive answer.
+    fn from_environment() -> Result<Self, HubError> {
+        match std::env::var("OS_HUB_TRUSTED_FORWARDING").as_deref() {
+            Err(std::env::VarError::NotPresent) | Ok("") | Ok("none") => Ok(Self::Untrusted),
+            Ok("proxy") => Ok(Self::TerminatingProxy),
+            Err(error) => Err(HubError::UnsafeAuthConfiguration(format!("OS_HUB_TRUSTED_FORWARDING is unreadable: {error}"))),
+            Ok(_) => Err(HubError::UnsafeAuthConfiguration("OS_HUB_TRUSTED_FORWARDING must be none or proxy".into())),
+        }
+    }
+
+    /// @emoji 🏷️ The stable word the startup line reports.
+    fn label(self) -> &'static str {
+        match self {
+            Self::Untrusted => "none",
+            Self::TerminatingProxy => "proxy",
+        }
+    }
+}
+
+/// @emoji 🔐️ Whether one request reached the *client* over a secure transport, as far as this hub
+/// is entitled to know.
+///
+/// Under [`ForwardedTlsTrustV1::Untrusted`] every request is accepted and the forwarding headers are
+/// not even read — the hub is loopback-only there, and reading an untrusted header would be strictly
+/// worse than ignoring it. Under [`ForwardedTlsTrustV1::TerminatingProxy`] the first
+/// `X-Forwarded-Proto` value must be exactly `https`; a proxy that reports cleartext is reporting
+/// that this request's bearer token crossed the network in the clear, and the hub refuses it rather
+/// than participating.
+fn forwarded_request_is_secure(headers: &HeaderMap, trust: ForwardedTlsTrustV1) -> bool {
+    match trust {
+        ForwardedTlsTrustV1::Untrusted => true,
+        ForwardedTlsTrustV1::TerminatingProxy => headers
+            .get("x-forwarded-proto")
+            .and_then(|value| value.to_str().ok())
+            .and_then(|value| value.split(',').next())
+            .is_some_and(|scheme| scheme.trim().eq_ignore_ascii_case("https")),
+    }
+}
+
+/// @emoji 🌐️ The host the *client* used, for anything that has to name this deployment back to it.
+/// `X-Forwarded-Host` is read only under [`ForwardedTlsTrustV1::TerminatingProxy`]; otherwise the
+/// request's own `Host` is the whole truth.
+fn forwarded_external_host(headers: &HeaderMap, trust: ForwardedTlsTrustV1) -> Option<String> {
+    let forwarded = match trust {
+        ForwardedTlsTrustV1::TerminatingProxy => headers.get("x-forwarded-host").and_then(|value| value.to_str().ok()).and_then(|value| value.split(',').next()).map(str::trim).filter(|host| !host.is_empty()),
+        ForwardedTlsTrustV1::Untrusted => None,
+    };
+    forwarded.or_else(|| headers.get(axum::http::header::HOST).and_then(|value| value.to_str().ok()).map(str::trim).filter(|host| !host.is_empty())).map(str::to_string)
+}
+
+/// @emoji 🛡️ Refuses any request a trusted proxy reports as having reached the client in cleartext.
+///
+/// Router-wide and outside every other layer: a hub whose transport is compromised must not answer
+/// at all, not answer differently per route.
+async fn transport_security_middleware(State(trust): State<ForwardedTlsTrustV1>, request: axum::extract::Request, next: axum::middleware::Next) -> Response {
+    if !forwarded_request_is_secure(request.headers(), trust) {
+        let mut response = Response::builder().status(StatusCode::FORBIDDEN).body(axum::body::Body::empty()).unwrap_or_default();
+        response.headers_mut().insert("x-semio-refusal", axum::http::HeaderValue::from_static("insecure-transport"));
+        return response;
+    }
+    next.run(request).await
+}
+
+/// @emoji 🛂️ Every configuration a hub refuses to boot with, decided before a single store is opened.
+///
+/// **Production used to be unreachable.** Its only identity requirement was an external
+/// `IdentityAssertionVerifier` adapter, of which this repository has none and `main` passed a
+/// hardcoded `None` — so `OS_HUB_MODE=production` always died on the first check. That was never the
+/// real rule: what production needs is *an identity authority*, and the hub grew its own when AU1/AU3
+/// built password sign-in (`POST /auth/sessions` → `decide_credential_sign_in` → `issue_auth_session`)
+/// and the `os-hub credential set` operator verb that seeds the first user without any launcher.
+/// So the gate now accepts either authority, and deliberately does **not** wrap the credential path
+/// in a second `IdentityAssertionVerifier` implementation: that trait is the external-IdP seam, and
+/// re-expressing `decide_credential_sign_in` behind it would be a second declaration site of the one
+/// decision that matters.
+///
+/// **A network bind is now reachable too, and only under three explicit statements together**: the
+/// mode is production, the cross-origin policy is an operator-named [`CrossOriginPolicyV1::Allowlist`]
+/// (not the loopback-development default and not `closed`, which would admit no browser at all), and
+/// [`ForwardedTlsTrustV1::TerminatingProxy`] says TLS is terminated in front. Any one of them missing
+/// is a refusal that names it. Development is unchanged: loopback, and the inherited fd-3 transport.
+fn validate_auth_startup(
+    mode: HubMode,
+    bind: std::net::IpAddr,
+    verifier: Option<&Arc<dyn IdentityAssertionVerifier>>,
+    local_bootstrap: Option<&Arc<dyn LocalBootstrapTransport>>,
+    admin_subjects: &[AdminSubject],
+    credential_sign_in_enabled: bool,
+    cross_origin: &CrossOriginPolicyV1,
+    forwarded_tls: ForwardedTlsTrustV1,
+) -> Result<(), HubError> {
     match mode {
         HubMode::Production => {
-            if verifier.is_none() {
-                return Err(HubError::UnsafeAuthConfiguration("production requires an IdentityAssertionVerifier adapter".into()));
+            if verifier.is_none() && !credential_sign_in_enabled {
+                return Err(HubError::UnsafeAuthConfiguration("production requires an identity authority: set OS_HUB_CREDENTIAL_SIGN_IN=true to use the hub's own credentials, or configure an IdentityAssertionVerifier adapter".into()));
             }
             if admin_subjects.is_empty() {
                 return Err(HubError::UnsafeAuthConfiguration("production requires OS_HUB_ADMIN_SUBJECTS".into()));
             }
             if !bind.is_loopback() {
-                return Err(HubError::UnsafeAuthConfiguration("production cleartext HTTP/WebSocket may bind only to loopback".into()));
+                if !matches!(cross_origin, CrossOriginPolicyV1::Allowlist(_)) {
+                    return Err(HubError::UnsafeAuthConfiguration("a production hub on a network interface requires OS_HUB_ALLOWED_ORIGINS to name the origins its browsers are served from".into()));
+                }
+                if forwarded_tls != ForwardedTlsTrustV1::TerminatingProxy {
+                    return Err(HubError::UnsafeAuthConfiguration("a production hub on a network interface speaks cleartext HTTP and requires OS_HUB_TRUSTED_FORWARDING=proxy, which states that a TLS-terminating reverse proxy is the only thing that can reach this socket".into()));
+                }
             }
         }
         HubMode::Development => {
@@ -2335,7 +2814,7 @@ async fn authenticate_document_socket_subject(state: &HubState, scope: &Document
                 .map_err(|_| DocumentOpenPlanErrorCodeV1::DeadlineExceeded)?
                 .ok_or(DocumentOpenPlanErrorCodeV1::Denied)?;
             let material = session.secret_digest;
-            let subject = SocketSubjectV1::Session { session_id: session.id, user_id: session.user_id, authorization_generation: session.authorization_generation, role: Some(role), expires_at_ms: session.expires_at };
+            let subject = SocketSubjectV1::Session { session_id: session.id, user_id: session.user_id, authorization_generation: session.authorization_generation, role: Some(role), expires_at_ms: session.expires_at, session_kind: session.session_kind, device_instance_id: session.device_instance_id };
             (subject, Some(material))
         }
         HubCapability::Share(capability) => {
@@ -2553,7 +3032,14 @@ async fn issue_document_plan_socket_grant_inner(space_id: String, document_id: S
         return Err(document_open_plan_exchange_error(DocumentOpenPlanErrorCodeV1::Stale));
     }
     let directory_revision = state.directory.head_seq().await.map_err(|_| document_open_plan_exchange_error(DocumentOpenPlanErrorCodeV1::DeadlineExceeded))?;
-    if directory_revision != authority.revalidation.directory_revision || directory_revision != authority.revalidation.membership_generation {
+    // 🧭️ The pinned revision is a witness of issue order, not a freeze on the whole directory:
+    // demanding equality made every outstanding plan die on the next directory append anywhere on
+    // the hub — another space's invite, a rename, an unrelated membership edit — so a member's live
+    // socket was closed 4401 by an event that had nothing to do with it. What a plan may never do is
+    // claim a revision the directory has not reached: that pin is forged and stays refused. Whether
+    // this caller still holds this scope is decided by membership and session revocation on their own
+    // paths, which is what closes a removed member's socket in the very same exchange.
+    if authority.revalidation.directory_revision > directory_revision || authority.revalidation.membership_generation > directory_revision {
         return Err(document_open_plan_exchange_error(DocumentOpenPlanErrorCodeV1::Stale));
     }
     state.document_open_plans.exchange_to_socket_grant(&intent.plan_receipt, &authority, exchange_at_ms, state.socket_grants.as_ref()).map(Json).map_err(document_open_plan_exchange_error)
@@ -2774,7 +3260,7 @@ async fn issue_directory_socket_grant(headers: HeaderMap, State(state): State<Hu
         tokio::time::timeout(std::time::Duration::from_secs(2), state.directory.authenticate_session(&capability)).await.map_err(|_| StatusCode::SERVICE_UNAVAILABLE)?.map_err(|_| StatusCode::SERVICE_UNAVAILABLE)?.ok_or(StatusCode::UNAUTHORIZED)?;
     let material = session.secret_digest;
     let audience = SocketAudienceV1::Directory { auth_session_id: session.id.clone(), authorization_generation: session.authorization_generation };
-    let subject = SocketSubjectV1::Session { session_id: session.id, user_id: session.user_id, authorization_generation: session.authorization_generation, role: None, expires_at_ms: session.expires_at };
+    let subject = SocketSubjectV1::Session { session_id: session.id, user_id: session.user_id, authorization_generation: session.authorization_generation, role: None, expires_at_ms: session.expires_at, session_kind: session.session_kind, device_instance_id: session.device_instance_id };
     issue_socket_grant(&state, subject, audience, Some(material)).await
 }
 
@@ -2797,7 +3283,7 @@ async fn issue_scoped_directory_socket_grant(Path((space_id, document_id)): Path
         Ok(Err(_)) | Err(_) => return Err(StatusCode::SERVICE_UNAVAILABLE),
     }
     let material = session.secret_digest;
-    let subject = SocketSubjectV1::Session { session_id: session.id, user_id: session.user_id, authorization_generation: session.authorization_generation, role: Some(role), expires_at_ms: session.expires_at };
+    let subject = SocketSubjectV1::Session { session_id: session.id, user_id: session.user_id, authorization_generation: session.authorization_generation, role: Some(role), expires_at_ms: session.expires_at, session_kind: session.session_kind, device_instance_id: session.device_instance_id };
     issue_socket_grant(&state, subject, SocketAudienceV1::DirectoryScoped(scope), Some(material)).await
 }
 
@@ -3244,10 +3730,16 @@ fn checkpoint_publication_artifact_frontier(scope: &DocumentScope, snapshot: &db
     })
 }
 
+/// 🪪️ `authority_generation` is a supervision counter, not a liveness flag: `GenerationId::INITIAL`
+/// is **0** and is the generation of every document actor that has never been supervisor-restarted,
+/// which is every document a running hub opened for the first time. Requiring it to be non-zero
+/// refused every fresh document's checkpoint with a snapshot that matched the command field for
+/// field. Staleness is already answered where it is knowable — `checkpoint_publication_snapshot()`
+/// itself fails with `DbError::StaleGeneration` when the handle outlived its mailbox — so the
+/// snapshot's agreement with the command is the whole predicate.
 fn checkpoint_publication_snapshot_matches(scope: &DocumentScope, command: &CheckpointPublicationCommandV1, snapshot: &db::CheckpointPublicationSnapshot) -> bool {
     let Some(expected) = command.baseline_frontier.artifact_frontier() else { return false };
-    snapshot.authority_generation != 0
-        && snapshot.frontier.document == db_artifact_id(scope)
+    snapshot.frontier.document == db_artifact_id(scope)
         && snapshot.frontier.head_seq == command.expected_document_frontier.head_seq
         && snapshot.frontier.commit_seq == command.expected_document_frontier.commit_seq
         && snapshot.frontier.epoch == command.expected_document_frontier.epoch
@@ -3276,7 +3768,7 @@ fn checkpoint_publication_receipt(command: &CheckpointPublicationCommandV1, chec
 
 async fn checkpoint_publication_blob(state: &HubState, reference: &os_directory::CheckpointPublicationBlobV1, context: &OperationContext<'_>) -> Result<Vec<u8>, AuthorityError> {
     context.checkpoint()?;
-    let content_hash = parse_content_hash(&reference.sha256).ok_or(AuthorityError::BlobIntegrity("input"))?;
+    let content_hash = parse_content_hash(&reference.blake3).ok_or(AuthorityError::BlobIntegrity("input"))?;
     let pages = state.db.storage().await.payload().await.get(&content_hash).await.map_err(|_| AuthorityError::Store("checkpoint input blob unavailable".into()))?;
     let bytes = db_io_pages_into_http_bytes(pages).await.map_err(|_| AuthorityError::Store("checkpoint input blob unavailable".into()))?;
     context.checkpoint()?;
@@ -3583,7 +4075,11 @@ fn checkpoint_publication_response<'a>(
         };
         let descriptor_digest = match descriptor_digest_v1(&descriptor) {
             Ok(digest) if digest.hex() == command.descriptor_digest_v1 => digest,
-            Ok(_) => return StatusCode::CONFLICT.into_response(),
+            Ok(_) => {
+                #[cfg(test)]
+                record_checkpoint_publication_refusal(CheckpointPublicationRefusalV1::DescriptorDigestDiffers);
+                return StatusCode::CONFLICT.into_response();
+            }
             Err(_) => return StatusCode::SERVICE_UNAVAILABLE.into_response(),
         };
         let handle = match state.ensure_document(&db_artifact_id(scope)).await {
@@ -3592,40 +4088,73 @@ fn checkpoint_publication_response<'a>(
         };
         let snapshot = match handle.checkpoint_publication_snapshot().await {
             Ok(snapshot) if checkpoint_publication_snapshot_matches(scope, &command, &snapshot) => snapshot,
-            Ok(_) => return StatusCode::CONFLICT.into_response(),
+            Ok(_snapshot) => {
+                #[cfg(test)]
+                record_checkpoint_publication_refusal(CheckpointPublicationRefusalV1::DocumentSnapshotDiffers(format!(
+                    "generation {} document {:?} expected {:?} frontier {:?} expected {:?} artifact {:?} expected {:?}",
+                    _snapshot.authority_generation,
+                    _snapshot.frontier.document,
+                    db_artifact_id(scope),
+                    (_snapshot.frontier.head_seq, _snapshot.frontier.commit_seq, _snapshot.frontier.epoch),
+                    (command.expected_document_frontier.head_seq, command.expected_document_frontier.commit_seq, command.expected_document_frontier.epoch),
+                    checkpoint_publication_artifact_frontier(scope, &_snapshot),
+                    command.baseline_frontier.artifact_frontier()
+                )));
+                return StatusCode::CONFLICT.into_response();
+            }
             Err(error) => return db_error_status(&error).into_response(),
         };
         let current = match state.directory.get_active_artifact_checkpoint(scope).await {
             Ok(current) if checkpoint_publication_current_matches(&command.expected_current, current.as_ref()) => current,
-            Ok(_) => return StatusCode::CONFLICT.into_response(),
+            Ok(_) => {
+                #[cfg(test)]
+                record_checkpoint_publication_refusal(CheckpointPublicationRefusalV1::ExpectedCurrentDiffers);
+                return StatusCode::CONFLICT.into_response();
+            }
             Err(_) => return StatusCode::SERVICE_UNAVAILABLE.into_response(),
         };
         let base_frontier = match checkpoint_publication_artifact_frontier(scope, &snapshot) {
             Some(frontier) => frontier,
-            None => return StatusCode::CONFLICT.into_response(),
+            None => {
+                #[cfg(test)]
+                record_checkpoint_publication_refusal(CheckpointPublicationRefusalV1::BaseFrontierUnavailable);
+                return StatusCode::CONFLICT.into_response();
+            }
         };
         drop(document_write);
         drop(authorization);
 
         let pack = match checkpoint_publication_blob(state, &command.pack, &context).await {
             Ok(bytes) => bytes,
-            Err(error) => return checkpoint_publication_error_status(&error).into_response(),
+            Err(error) => {
+                #[cfg(test)]
+                record_checkpoint_publication_refusal(CheckpointPublicationRefusalV1::PackBlob(format!("{error:?}")));
+                return checkpoint_publication_error_status(&error).into_response();
+            }
         };
         let spr = match checkpoint_publication_blob(state, &command.spr, &context).await {
             Ok(bytes) => bytes,
-            Err(error) => return checkpoint_publication_error_status(&error).into_response(),
+            Err(error) => {
+                #[cfg(test)]
+                record_checkpoint_publication_refusal(CheckpointPublicationRefusalV1::SprBlob(format!("{error:?}")));
+                return checkpoint_publication_error_status(&error).into_response();
+            }
         };
         let Some(authority) = state.artifact_authority.as_ref() else { return StatusCode::SERVICE_UNAVAILABLE.into_response() };
         let request =
             CheckpointRequest { descriptor: descriptor.clone(), scope: scope.clone(), parent_checkpoint_id: current.as_ref().map(|checkpoint| checkpoint.checkpoint_id), base_frontier, input_pair: ArtifactPair { pack, spr }, operations: Vec::new() };
         let candidate = match authority.materialize_checkpoint(request, &context).await {
             Ok(candidate) => candidate,
-            Err(error) => return checkpoint_publication_error_status(&error).into_response(),
+            Err(error) => {
+                #[cfg(test)]
+                record_checkpoint_publication_refusal(CheckpointPublicationRefusalV1::Materialize(format!("{error:?}")));
+                return checkpoint_publication_error_status(&error).into_response();
+            }
         };
         #[cfg(test)]
         if let Some(gate) = state.live_gate.as_ref().filter(|gate| gate.checkpoint_publication_pause_enabled.load(std::sync::atomic::Ordering::Acquire)) {
             gate.checkpoint_publication_admitted.add_permits(1);
-            let _ = gate.checkpoint_publication_release.acquire().await;
+            gate.checkpoint_publication_release.acquire().await.expect("checkpoint publication test release").forget();
             if let Err(error) = context.checkpoint() {
                 return checkpoint_publication_error_status(&error).into_response();
             }
@@ -3644,7 +4173,11 @@ fn checkpoint_publication_response<'a>(
         let publication = CheckpointPublicationOrchestrator::new(ArtifactChunkBlobStore::new(state.artifact_cas.clone()), publisher);
         let published = match publication.publish_candidate(candidate, &context).await {
             Ok(published) => published,
-            Err(error) => return checkpoint_publication_error_status(&error).into_response(),
+            Err(error) => {
+                #[cfg(test)]
+                record_checkpoint_publication_refusal(CheckpointPublicationRefusalV1::Publish(format!("{error:?}")));
+                return checkpoint_publication_error_status(&error).into_response();
+            }
         };
         checkpoint_publication_receipt(&command, published_artifact_checkpoint(&published.checkpoint))
     })
@@ -3768,17 +4301,31 @@ async fn document_plan_socket_validity(state: &HubState, record: &SocketGrantRec
         return SocketBindingValidityV1::Unavailable;
     }
     if authority.validate().is_err() {
+        #[cfg(test)]
+        return record_document_plan_refusal(DocumentPlanRefusalV1::PlanInvalid);
+        #[cfg(not(test))]
         return SocketBindingValidityV1::Unauthorized;
     }
     if record.subject != authority.subject || record.actor_id != authority.server_actor_id || record.audience != SocketAudienceV1::Document(authority.scope.clone()) || surface.is_some_and(|surface| surface != authority.surface.surface_id) {
+        #[cfg(test)]
+        return record_document_plan_refusal(DocumentPlanRefusalV1::BindingMismatch);
+        #[cfg(not(test))]
         return SocketBindingValidityV1::Unauthorized;
     }
     let descriptor = match tokio::time::timeout(std::time::Duration::from_secs(2), state.directory.get_document_descriptor(&authority.scope)).await {
         Ok(Ok(Some(descriptor))) => descriptor,
-        Ok(Ok(None)) => return SocketBindingValidityV1::Unauthorized,
+        Ok(Ok(None)) => {
+            #[cfg(test)]
+            return record_document_plan_refusal(DocumentPlanRefusalV1::DescriptorMissing);
+            #[cfg(not(test))]
+            return SocketBindingValidityV1::Unauthorized;
+        }
         Ok(Err(_)) | Err(_) => return SocketBindingValidityV1::Unavailable,
     };
     if descriptor != authority.descriptor {
+        #[cfg(test)]
+        return record_document_plan_refusal(DocumentPlanRefusalV1::DescriptorDiffers);
+        #[cfg(not(test))]
         return SocketBindingValidityV1::Unauthorized;
     }
     let Some(catalog) = state.openable_catalog.as_ref() else { return SocketBindingValidityV1::Unavailable };
@@ -3792,13 +4339,26 @@ async fn document_plan_socket_validity(state: &HubState, record: &SocketGrantRec
                 || selection.grant != authority.grant
         })
     {
+        #[cfg(test)]
+        return record_document_plan_refusal(DocumentPlanRefusalV1::CatalogSelectionDiffers);
+        #[cfg(not(test))]
         return SocketBindingValidityV1::Unauthorized;
     }
     let directory_revision = match tokio::time::timeout(std::time::Duration::from_secs(2), state.directory.head_seq()).await {
         Ok(Ok(revision)) => revision,
         Ok(Err(_)) | Err(_) => return SocketBindingValidityV1::Unavailable,
     };
-    if directory_revision != authority.revalidation.directory_revision || directory_revision != authority.revalidation.membership_generation {
+    // 🧭️ The pinned revision is a witness of issue order, not a freeze on the whole directory:
+    // demanding equality made every outstanding plan die on the next directory append anywhere on
+    // the hub — another space's invite, a rename, an unrelated membership edit — so a member's live
+    // socket was closed 4401 by an event that had nothing to do with it. What a plan may never do is
+    // claim a revision the directory has not reached: that pin is forged and stays refused. Whether
+    // this caller still holds this scope is decided by membership and session revocation on their own
+    // paths, which is what closes a removed member's socket in the very same exchange.
+    if authority.revalidation.directory_revision > directory_revision || authority.revalidation.membership_generation > directory_revision {
+        #[cfg(test)]
+        return record_document_plan_refusal(DocumentPlanRefusalV1::DirectoryRevisionDiffers);
+        #[cfg(not(test))]
         return SocketBindingValidityV1::Unauthorized;
     }
     let checkpoint = match tokio::time::timeout(std::time::Duration::from_secs(2), state.directory.get_active_artifact_checkpoint(&authority.scope)).await {
@@ -3806,6 +4366,9 @@ async fn document_plan_socket_validity(state: &HubState, record: &SocketGrantRec
         Ok(Err(_)) | Err(_) => return SocketBindingValidityV1::Unavailable,
     };
     if checkpoint.as_ref() != Some(&authority.checkpoint) {
+        #[cfg(test)]
+        return record_document_plan_refusal(DocumentPlanRefusalV1::CheckpointDiffers);
+        #[cfg(not(test))]
         return SocketBindingValidityV1::Unauthorized;
     }
     SocketBindingValidityV1::Active
@@ -3848,17 +4411,33 @@ struct DocumentWsV1Query {
     surface: Option<String>,
 }
 
+/// @emoji 📝️ The document lane's admission span (`server.document.socket`): one record per
+/// upgrade attempt carrying the space and document it was for, the session that asked and how the
+/// admission ended. The session's own lifetime is reported by `handle_ws`, which closes a second
+/// span when the socket goes away.
 async fn document_ws_v1(ws: WebSocketUpgrade, Path((space_id, document_id)): Path<(String, String)>, Query(query): Query<DocumentWsV1Query>, headers: HeaderMap, State(state): State<HubState>) -> Response {
+    let span = state.span("server.document.socket").space(space_id.clone()).artifact(document_id.clone());
     let surface = query.surface.unwrap_or_default();
     if !socket_text_bounded(&space_id) || !socket_text_bounded(&document_id) || surface.len() > AUTH_TEXT_MAX_BYTES {
+        span.refused("bounds");
         return StatusCode::BAD_REQUEST.into_response();
     }
     let scope = DocumentScope::new(&space_id, &document_id);
     let admission = match consume_socket_grant(&state, &headers, SocketAudienceV1::Document(scope), Some(&surface)).await {
         Ok(admission) => admission,
-        Err(status) => return (status, "socket grant rejected").into_response(),
+        Err(status) => {
+            span.refused(&format!("socket-grant-{}", status.as_u16()));
+            return (status, "socket grant rejected").into_response();
+        }
     };
-    ws.protocols([SOCKET_PROTOCOL_V1]).on_upgrade(move |socket| handle_ws(socket, space_id, document_id, surface, state, admission)).into_response()
+    let session_span = state.span("server.document.socket").space(space_id.clone()).artifact(document_id.clone()).principal(admission.record.subject.trace_principal());
+    span.ok();
+    ws.protocols([SOCKET_PROTOCOL_V1])
+        .on_upgrade(move |socket| async move {
+            handle_ws(socket, space_id, document_id, surface, state, admission).await;
+            session_span.cancelled("closed");
+        })
+        .into_response()
 }
 
 async fn encode(frame: &ServerFrame) -> Message {
@@ -3946,17 +4525,37 @@ fn engine_frontier_to_wire(frontier: &db::db_engine::Frontier, head_edit_id: Str
 /// startup into `HubState.merge_policy` (see its own doc). An unrecognized value is a non-fatal
 /// misconfiguration (logged, falls back to the default) rather than refusing to boot, matching this
 /// crate's generally-forgiving stance on env parsing elsewhere in `main`.
-fn merge_policy_from_env() -> protocol::MergePolicy {
+fn merge_policy_from_env(tracer: &Tracer) -> protocol::MergePolicy {
     match std::env::var("OS_HUB_MERGE_POLICY").ok().as_deref() {
         None => protocol::MergePolicy::default(),
         Some("laissez-faire") => protocol::MergePolicy::LaissezFaire,
         Some("normal") => protocol::MergePolicy::Normal,
         Some("vigilant") => protocol::MergePolicy::Vigilant,
         Some(other) => {
-            eprintln!("[WARN] unknown OS_HUB_MERGE_POLICY '{other}' (expected laissez-faire|normal|vigilant), defaulting to normal");
+            let mut record = TraceRecord::new("server.boot", TraceOutcome::Refused);
+            record.detail = Some(format!("unknown-merge-policy:{other}"));
+            tracer.emit(record);
             protocol::MergePolicy::default()
         }
     }
+}
+
+/// @emoji 🗄️ Opens this process's [`HubInstance`] — the server product's four durable storage roles
+/// plus the command bus and the saga runner over them — rooted at `{data_dir}/instance`.
+///
+/// It goes through the framework's own [`FrameworkServer`] builder rather than calling
+/// `HubInstance::open` directly, because the bus, the policy engine and the saga runner are
+/// assembled there: opening the stores by hand would give hub four files and none of the machinery
+/// that makes writing to them exactly-once.
+async fn instance_state(data_dir: &std::path::Path) -> Result<ServerState<HubInstance>, HubError> {
+    let root = data_dir.join("instance");
+    let profile = StorageProfile::Embedded { data_dir: root.to_string_lossy().into_owned() };
+    let server = FrameworkServer::<HubInstance>::builder(profile)
+        .identity("os-hub", env!("CARGO_PKG_VERSION"))
+        .build()
+        .await
+        .map_err(|error| HubError::InstanceStorage(format!("{error:?}")))?;
+    Ok(server.state().clone())
 }
 
 /// @emoji 🧾️ `ApplyOutcome::Rejected.messages`'s canonical JSON payload, encoded from the
@@ -4110,8 +4709,8 @@ async fn handle_ws(socket: WebSocket, space_id: String, document_id: String, sur
         Some(ClientFrame::SocketHelloV1 { wire_version: 1, protocol_version: 1, schema, pack_schema_hash, resume_token, frontier }) if socket_text_bounded(&schema) && resume_token.as_ref().is_none_or(|value| value.len() <= AUTH_TEXT_MAX_BYTES) => {
             let actor = ActorId(socket_grant.actor_id.clone());
             let auth = match &socket_grant.subject {
-                SocketSubjectV1::Session { session_id, user_id, authorization_generation, role: Some(role), .. } => {
-                    AuthOutcome::Session { user_id: user_id.clone(), role: *role, session_id: session_id.clone(), authorization_generation: *authorization_generation }
+                SocketSubjectV1::Session { session_id, user_id, authorization_generation, role: Some(role), session_kind, .. } => {
+                    AuthOutcome::Session { user_id: user_id.clone(), role: *role, session_id: session_id.clone(), authorization_generation: *authorization_generation, session_kind: *session_kind }
                 }
                 SocketSubjectV1::Share { .. } => AuthOutcome::ShareToken,
                 SocketSubjectV1::Session { role: None, .. } => AuthOutcome::Denied,
@@ -4124,9 +4723,15 @@ async fn handle_ws(socket: WebSocket, space_id: String, document_id: String, sur
         }
     };
 
-    let (user_id, role, auth_session_id, authorization_generation) = match &auth {
-        AuthOutcome::Session { user_id, role, session_id, authorization_generation } => (Some(user_id.clone()), Some(*role), Some(session_id.as_str()), *authorization_generation),
-        AuthOutcome::ShareToken => (None, None, None, 0),
+    let (user_id, role, auth_session_id, authorization_generation, principal_kind) = match &auth {
+        AuthOutcome::Session { user_id, role, session_id, authorization_generation, session_kind } => (
+            Some(user_id.clone()),
+            Some(*role),
+            Some(session_id.as_str()),
+            *authorization_generation,
+            if session_kind.is_agent() { protocol::PresencePrincipalKind::Agent } else { protocol::PresencePrincipalKind::Human },
+        ),
+        AuthOutcome::ShareToken => (None, None, None, 0, protocol::PresencePrincipalKind::Human),
         AuthOutcome::Denied => {
             let _ = sender.send(error_frame("unauthorized", "unauthorized").await).await;
             return;
@@ -4136,6 +4741,19 @@ async fn handle_ws(socket: WebSocket, space_id: String, document_id: String, sur
     let authenticated_user = match user_id.as_deref() {
         Some(user_id) => tokio::time::timeout(std::time::Duration::from_secs(2), state.directory.get_user(user_id)).await.ok().and_then(Result::ok).flatten(),
         None => None,
+    };
+    // 🤖️ ticket 26/09/18 slice M6b — M6 §4's remaining step. The actor id stays the opaque,
+    // per-session `hub.v1.<sha256>` the hub minted, which is what keeps per-actor undo separating an
+    // agent's edits from the delegating human's; only the NAME a collaborator reads changes, from
+    // that human's display name to the agent's own delegation label.
+    let agent_delegation = match (&socket_grant.subject, principal_kind) {
+        (SocketSubjectV1::Session { device_instance_id, user_id, .. }, protocol::PresencePrincipalKind::Agent) => agent_delegation_for_session(&state, &space_id, user_id, device_instance_id).await,
+        _ => None,
+    };
+    let agent_label = agent_delegation.as_ref().map(|row| row.agent_label.clone());
+    let connection_label = match &agent_delegation {
+        Some(row) => semio_hub::auth::agent::agent_actor_display(&row.agent_label),
+        None => actor.0.clone(),
     };
     let scope = DocumentScope::new(&space_id, &document_id);
     let descriptor = match state.directory.get_document_descriptor(&scope).await {
@@ -4252,7 +4870,7 @@ async fn handle_ws(socket: WebSocket, space_id: String, document_id: String, sur
     #[cfg(test)]
     if let Some(gate) = &state.live_gate {
         gate.socket_before_welcome.add_permits(1);
-        let _ = gate.socket_welcome_release.acquire().await;
+        gate.socket_welcome_release.acquire().await.expect("socket welcome test release").forget();
     }
     let welcome_sent = tokio::time::timeout(std::time::Duration::from_secs(2), sender.send(welcome_bytes)).await;
     let welcome_acknowledged = welcome.acknowledge();
@@ -4265,7 +4883,7 @@ async fn handle_ws(socket: WebSocket, space_id: String, document_id: String, sur
     #[cfg(test)]
     if let Some(gate) = &state.live_gate {
         gate.socket_after_welcome.add_permits(1);
-        let _ = gate.socket_bootstrap_release.acquire().await;
+        gate.socket_bootstrap_release.acquire().await.expect("socket bootstrap test release").forget();
     }
     loop {
         match hello_session.next_frame().await {
@@ -4335,10 +4953,11 @@ async fn handle_ws(socket: WebSocket, space_id: String, document_id: String, sur
         expires_at: state.presence_now() + std::time::Duration::from_millis(PRESENCE_LEASE_TTL_MS),
         user_id: user_id.clone(),
         connected_at_ms,
-        label: authenticated_user.as_ref().map(|user| user.display_name.clone()),
+        label: agent_label.clone().or_else(|| authenticated_user.as_ref().map(|user| user.display_name.clone())),
         role: role.map(|role| role.as_str().to_string()),
         document_surface: socket_grant.document_plan.as_ref().map(|plan| plan.surface.surface_id.clone()),
         color,
+        principal_kind,
         peer: None,
     };
     if matches!(state.install_presence_slot(&key, &space_id, &document_id, &actor.0, slot).await, PresenceLeaseTransition::Unavailable | PresenceLeaseTransition::Rejected) {
@@ -4353,11 +4972,11 @@ async fn handle_ws(socket: WebSocket, space_id: String, document_id: String, sur
     #[cfg(test)]
     if let Some(gate) = &state.live_gate {
         gate.document_subscribed.add_permits(1);
-        let _ = gate.document_release.acquire().await;
+        gate.document_release.acquire().await.expect("document subscription test release").forget();
     }
 
     let authenticated_email = authenticated_user.as_ref().map(|user| user.email.as_str());
-    let sync_session = state.directory.record_sync_session_open(auth_session_id, authorization_generation, &actor.0, &space_id, &document_id, &surface, user_id.as_deref(), authenticated_email, role, &actor.0).await.ok();
+    let sync_session = state.directory.record_sync_session_open(auth_session_id, authorization_generation, &actor.0, &space_id, &document_id, &surface, user_id.as_deref(), authenticated_email, role, &connection_label).await.ok();
     if let Some(session) = &sync_session {
         let view = connection_view(&state, session).await;
         state.directory_service.publish(DirectoryStreamMessage::Connection { phase: DirectoryConnectionPhase::Opened, connection: view });
@@ -4413,7 +5032,7 @@ async fn handle_ws(socket: WebSocket, space_id: String, document_id: String, sur
                             #[cfg(test)]
                             if let Some(live_gate) = &state.live_gate {
                                 live_gate.socket_command_received.add_permits(1);
-                                let _ = live_gate.socket_command_release.acquire().await;
+                                live_gate.socket_command_release.acquire().await.expect("socket command test release").forget();
                             }
                             let _authority = match socket_live_authority(&state, &socket_grant, &socket_live.id).await {
                                 Ok(admission) => admission,
@@ -4455,8 +5074,10 @@ async fn handle_ws(socket: WebSocket, space_id: String, document_id: String, sur
                     Ok(frame) => {
                         #[cfg(test)]
                         if let Some(live_gate) = &state.live_gate {
-                            live_gate.socket_broadcast_received.add_permits(1);
-                            let _ = live_gate.socket_broadcast_release.acquire().await;
+                            if live_gate.socket_broadcast_pause_enabled.load(std::sync::atomic::Ordering::Acquire) {
+                                live_gate.socket_broadcast_received.add_permits(1);
+                                live_gate.socket_broadcast_release.acquire().await.expect("socket broadcast test release").forget();
+                            }
                         }
                         let frame = encode(&frame).await;
                         let _authority = match socket_live_authority(&state, &socket_grant, &socket_live.id).await {
@@ -4478,7 +5099,7 @@ async fn handle_ws(socket: WebSocket, space_id: String, document_id: String, sur
                         #[cfg(test)]
                         if let Some(live_gate) = &state.live_gate {
                             live_gate.socket_lag_received.add_permits(1);
-                            let _ = live_gate.socket_lag_release.acquire().await;
+                            live_gate.socket_lag_release.acquire().await.expect("socket lag test release").forget();
                         }
                         match send_socket_document_rebootstrap(&mut sender, &state, &socket_grant, &socket_live.id, &scope).await {
                             SocketBindingValidityV1::Active => {
@@ -4734,7 +5355,7 @@ impl ArtifactCreationHttpTaskOwnerV1 {
         ArtifactCreationHttpAdmissionV1::Owner(ArtifactCreationHttpReservationV1 { owner: self.clone(), key, pending, activated: false })
     }
 
-    fn start_recovery(self: &Arc<Self>, service: Arc<ArtifactCreationServiceV1>, authority: Arc<HubArtifactCreationCommitAuthorityV1>) {
+    fn start_recovery(self: &Arc<Self>, service: Arc<ArtifactCreationServiceV1>, authority: Arc<HubArtifactCreationCommitAuthorityV1>, tracer: Tracer) {
         let cancelled = self.recovery_cancelled.clone();
         let wake = self.changed.clone();
         let task = tokio::spawn(async move {
@@ -4750,7 +5371,9 @@ impl ArtifactCreationHttpTaskOwnerV1 {
                 let intents = match service.recovery_candidates(scan_now, 32).await {
                     Ok(intents) => intents,
                     Err(error) => {
-                        eprintln!("artifact creation recovery scan unavailable: {error}");
+                        let mut record = TraceRecord::new("server.artifact.maintenance", TraceOutcome::Failed);
+                        record.detail = Some(format!("creation-recovery-scan-unavailable:{error}"));
+                        tracer.emit(record);
                         continue;
                     }
                 };
@@ -4762,7 +5385,9 @@ impl ArtifactCreationHttpTaskOwnerV1 {
                     let deadline = control.now_ms().saturating_add(semio_hub::artifact_authority::creation::ARTIFACT_CREATION_DEADLINE_MS);
                     let context = OperationContext::new(deadline, AuthorityLimits::maximum(), &control);
                     if let Err(error) = service.recover(intent, authority.as_ref(), &context).await {
-                        eprintln!("artifact creation recovery attempt unavailable: {error}");
+                        let mut record = TraceRecord::new("server.artifact.maintenance", TraceOutcome::Failed);
+                        record.detail = Some(format!("creation-recovery-attempt-unavailable:{error}"));
+                        tracer.emit(record);
                     }
                 }
             }
@@ -5014,11 +5639,14 @@ async fn post_space_artifact_creation(Path(space_id): Path<String>, OriginalUri(
             return StatusCode::SERVICE_UNAVAILABLE.into_response();
         };
         let authority = state.artifact_creation_commit_authority.clone();
+        let execution_tracer = state.tracer.clone();
         reservation.activate(async move {
             let deadline = control.now_ms().saturating_add(semio_hub::artifact_authority::creation::ARTIFACT_CREATION_DEADLINE_MS);
             let context = OperationContext::new(deadline, AuthorityLimits::maximum(), control.as_ref());
             if let Err(error) = service.execute(execution, authority.as_ref(), &context).await {
-                eprintln!("artifact creation retained execution unavailable: {error}");
+                let mut record = TraceRecord::new("server.artifact.maintenance", TraceOutcome::Failed);
+                record.detail = Some(format!("creation-retained-execution-unavailable:{error}"));
+                execution_tracer.emit(record);
             }
         });
     } else if let Some(reservation) = reservation {
@@ -5400,15 +6028,69 @@ async fn execute_directory_command_receipt_fenced(
 /// id never resurrects a result for an expired, revoked, or differently-scoped session. The one-shot
 /// invite capability is returned to this live call alone; every later resolution of the same id is
 /// redacted, proving no duplicate invitation was minted.
+/// @emoji 🏷️ The stable label one directory command is reported under. The variant name only —
+/// never a field, because every payload field of this enum is user data.
+fn directory_command_trace_kind(command: &DirectoryCommand) -> &'static str {
+    match command {
+        DirectoryCommand::CreateSpace { .. } => "create-space",
+        DirectoryCommand::RenameSpace { .. } => "rename-space",
+        DirectoryCommand::SetVisibility { .. } => "set-visibility",
+        DirectoryCommand::ArchiveSpace { .. } => "archive-space",
+        DirectoryCommand::DeleteSpace { .. } => "delete-space",
+        DirectoryCommand::UpsertMember { .. } => "upsert-member",
+        DirectoryCommand::RemoveMember { .. } => "remove-member",
+        DirectoryCommand::CreateInvite { .. } => "create-invite",
+        DirectoryCommand::RevokeInvite { .. } => "revoke-invite",
+        DirectoryCommand::AnnounceDocument { .. } => "announce-document",
+    }
+}
+
+/// @emoji 🪐️ The space a directory command acts in, when it names one. `CreateSpace` has none yet
+/// — the id is minted by the decider — and `AnnounceDocument` carries its own descriptor's.
+fn directory_command_trace_space(command: &DirectoryCommand) -> Option<String> {
+    match command {
+        DirectoryCommand::CreateSpace { .. } => None,
+        DirectoryCommand::RenameSpace { space_id, .. }
+        | DirectoryCommand::SetVisibility { space_id, .. }
+        | DirectoryCommand::ArchiveSpace { space_id }
+        | DirectoryCommand::DeleteSpace { space_id }
+        | DirectoryCommand::UpsertMember { space_id, .. }
+        | DirectoryCommand::RemoveMember { space_id, .. }
+        | DirectoryCommand::CreateInvite { space_id, .. }
+        | DirectoryCommand::RevokeInvite { space_id, .. } => Some(space_id.clone()),
+        DirectoryCommand::AnnounceDocument { descriptor } => Some(descriptor.space_id.clone()),
+    }
+}
+
+/// @emoji 📝️ The directory command path's span (`server.directory.command`). The record names the
+/// command kind rather than its payload — a command body carries space names, invite addresses and
+/// member ids, none of which belong in an operator's log.
 async fn post_directory_commands(headers: HeaderMap, axum::extract::ConnectInfo(peer): axum::extract::ConnectInfo<SocketAddr>, State(state): State<HubState>, body: Bytes) -> Result<(StatusCode, DirectoryJson<DirectoryCommandReceiptV1>), StatusCode> {
+    let span = state.span("server.directory.command");
     if body.len() > DIRECTORY_COMMAND_REQUEST_MAX_BYTES {
+        span.refused("payload-too-large");
         return Err(StatusCode::PAYLOAD_TOO_LARGE);
     }
-    let request = std::str::from_utf8(&body).ok().and_then(|json| DirectoryCommandRequestV1::parse_canonical_json(json).ok()).ok_or(StatusCode::BAD_REQUEST)?;
-    let user = resolve_bearer_user(&state, bearer(&headers).as_deref()).await.ok_or(StatusCode::UNAUTHORIZED)?;
+    let Some(request) = std::str::from_utf8(&body).ok().and_then(|json| DirectoryCommandRequestV1::parse_canonical_json(json).ok()) else {
+        span.refused("malformed-request");
+        return Err(StatusCode::BAD_REQUEST);
+    };
+    let Some(user) = resolve_bearer_user(&state, bearer(&headers).as_deref()).await else {
+        span.refused("unauthorized");
+        return Err(StatusCode::UNAUTHORIZED);
+    };
+    let span = span.principal(format!("user:{}", user.user_id));
     let admin = is_admin(&state, &headers, Some(peer)).await;
-    authorize_directory_command(&state, &user.user_id, admin, &request.command).await?;
+    if let Err(status) = authorize_directory_command(&state, &user.user_id, admin, &request.command).await {
+        span.refused(&format!("forbidden-{}", status.as_u16()));
+        return Err(status);
+    }
     pause_directory_command_authority(&state, &user.user_id, false).await;
+    let command_kind = directory_command_trace_kind(&request.command);
+    let span = match directory_command_trace_space(&request.command) {
+        Some(space_id) => span.space(space_id),
+        None => span,
+    };
     let claim = NewDirectoryCommandReceipt {
         actor_user_id: user.user_id.clone(),
         request_id: request.request_id.clone(),
@@ -5416,18 +6098,30 @@ async fn post_directory_commands(headers: HeaderMap, axum::extract::ConnectInfo(
         result_kind: directory_command_result_kind(&request.command),
         claimed_at: now_ms(),
     };
-    let execution = execute_directory_command_receipt_fenced(&state, &user, &headers, peer, claim, request.command).await.map_err(|error| match error {
-        FencedDirectoryCommandErrorV1::Directory(error) => directory_error_status(error),
-        FencedDirectoryCommandErrorV1::Denied(status) => status,
-        FencedDirectoryCommandErrorV1::Unavailable => StatusCode::SERVICE_UNAVAILABLE,
-    })?;
+    let execution = match execute_directory_command_receipt_fenced(&state, &user, &headers, peer, claim, request.command).await {
+        Ok(execution) => execution,
+        Err(error) => {
+            let status = match error {
+                FencedDirectoryCommandErrorV1::Directory(error) => directory_error_status(error),
+                FencedDirectoryCommandErrorV1::Denied(status) => status,
+                FencedDirectoryCommandErrorV1::Unavailable => StatusCode::SERVICE_UNAVAILABLE,
+            };
+            span.failed(&format!("{command_kind}-{}", status.as_u16()));
+            return Err(status);
+        }
+    };
     let receipt = match execution {
-        DirectoryCommandExecutionV1::Conflict => return Err(StatusCode::CONFLICT),
+        DirectoryCommandExecutionV1::Conflict => {
+            span.refused(&format!("{command_kind}-conflict"));
+            return Err(StatusCode::CONFLICT);
+        }
         DirectoryCommandExecutionV1::Receipt(receipt) => receipt,
     };
     if receipt.validate().is_err() {
+        span.failed(&format!("{command_kind}-invalid-receipt"));
         return Err(StatusCode::INTERNAL_SERVER_ERROR);
     }
+    span.finish(TraceOutcome::Ok, Some(command_kind.to_string()));
     Ok((StatusCode::ACCEPTED, DirectoryJson(receipt)))
 }
 
@@ -5982,7 +6676,7 @@ async fn build_directory_event_page_v1(state: &HubState, caller: &AuthedUser, af
     if let Some(gate) = &state.live_gate {
         if gate.directory_event_page_fence_enabled.load(std::sync::atomic::Ordering::Acquire) {
             gate.directory_event_page_read_admitted.add_permits(1);
-            let _ = gate.directory_event_page_read_release.acquire().await;
+            gate.directory_event_page_read_release.acquire().await.expect("directory event page read test release").forget();
         }
     }
     control.checkpoint()?;
@@ -6225,29 +6919,60 @@ struct DirectoryScopedWsV1Query {
     since: u64,
 }
 
+/// @emoji 📝️ The directory lane's admission span (`server.directory.socket`), the same shape the
+/// document lane reports: one record for the upgrade decision and one for the session's lifetime.
 async fn directory_ws_v1(ws: WebSocketUpgrade, Query(query): Query<DirectoryWsV1Query>, headers: HeaderMap, State(state): State<HubState>) -> Response {
+    let span = state.span("server.directory.socket");
     let scope = match (query.space_id, query.document_id) {
         (Some(space_id), Some(document_id)) if socket_text_bounded(&space_id) && socket_text_bounded(&document_id) => Some(DocumentScope::new(space_id, document_id)),
         (None, None) => None,
-        _ => return StatusCode::BAD_REQUEST.into_response(),
+        _ => {
+            span.refused("bounds");
+            return StatusCode::BAD_REQUEST.into_response();
+        }
     };
     let admission = match consume_directory_socket_grant(&state, &headers).await {
         Ok(admission) => admission,
-        Err(status) => return (status, "socket grant rejected").into_response(),
+        Err(status) => {
+            span.refused(&format!("socket-grant-{}", status.as_u16()));
+            return (status, "socket grant rejected").into_response();
+        }
     };
-    ws.protocols([SOCKET_PROTOCOL_V1]).on_upgrade(move |socket| handle_directory_ws_v1(socket, query.since, scope, state, admission)).into_response()
+    let mut session_span = state.span("server.directory.socket").principal(admission.record.subject.trace_principal());
+    if let Some(scope) = &scope {
+        session_span = session_span.space(scope.space_id.clone()).artifact(scope.document_id.clone());
+    }
+    span.ok();
+    ws.protocols([SOCKET_PROTOCOL_V1])
+        .on_upgrade(move |socket| async move {
+            handle_directory_ws_v1(socket, query.since, scope, state, admission).await;
+            session_span.cancelled("closed");
+        })
+        .into_response()
 }
 
 async fn directory_scoped_ws_v1(ws: WebSocketUpgrade, Path((space_id, document_id)): Path<(String, String)>, Query(query): Query<DirectoryScopedWsV1Query>, headers: HeaderMap, State(state): State<HubState>) -> Response {
+    let span = state.span("server.directory.socket").space(space_id.clone()).artifact(document_id.clone());
     if !socket_text_bounded(&space_id) || !socket_text_bounded(&document_id) {
+        span.refused("bounds");
         return StatusCode::BAD_REQUEST.into_response();
     }
     let scope = DocumentScope::new(space_id, document_id);
     let admission = match consume_socket_grant(&state, &headers, SocketAudienceV1::DirectoryScoped(scope.clone()), None).await {
         Ok(admission) => admission,
-        Err(status) => return (status, "socket grant rejected").into_response(),
+        Err(status) => {
+            span.refused(&format!("socket-grant-{}", status.as_u16()));
+            return (status, "socket grant rejected").into_response();
+        }
     };
-    ws.protocols([SOCKET_PROTOCOL_V1]).on_upgrade(move |socket| handle_directory_ws_v1(socket, query.since, Some(scope), state, admission)).into_response()
+    let session_span = state.span("server.directory.socket").space(scope.space_id.clone()).artifact(scope.document_id.clone()).principal(admission.record.subject.trace_principal());
+    span.ok();
+    ws.protocols([SOCKET_PROTOCOL_V1])
+        .on_upgrade(move |socket| async move {
+            handle_directory_ws_v1(socket, query.since, Some(scope), state, admission).await;
+            session_span.cancelled("closed");
+        })
+        .into_response()
 }
 
 async fn send_directory_message(sender: &mut SplitSink<WebSocket, Message>, message: &DirectoryStreamMessage) -> bool {
@@ -6271,7 +6996,7 @@ async fn send_socket_directory_message(
         if let Some(gate) = &state.live_gate {
             if gate.socket_scoped_send_mode.load(std::sync::atomic::Ordering::Acquire) == 1 {
                 gate.socket_scoped_send_admitted.add_permits(1);
-                let _ = gate.socket_scoped_send_release.acquire().await;
+                gate.socket_scoped_send_release.acquire().await.expect("scoped send test release").forget();
             }
         }
     }
@@ -6285,7 +7010,7 @@ async fn send_socket_directory_message(
         if let Some(gate) = &state.live_gate {
             if gate.socket_scoped_send_mode.load(std::sync::atomic::Ordering::Acquire) == 2 {
                 gate.socket_scoped_send_admitted.add_permits(1);
-                let _ = gate.socket_scoped_send_release.acquire().await;
+                gate.socket_scoped_send_release.acquire().await.expect("scoped send test release").forget();
             }
         }
     }
@@ -6409,8 +7134,10 @@ async fn handle_directory_ws_v1(socket: WebSocket, since: u64, scope: Option<Doc
     drop(binding_gates);
     #[cfg(test)]
     if let Some(gate) = &state.live_gate {
-        gate.socket_directory_admitted.add_permits(1);
-        let _ = gate.socket_directory_release.acquire().await;
+        if gate.socket_directory_pause_enabled.load(std::sync::atomic::Ordering::Acquire) {
+            gate.socket_directory_admitted.add_permits(1);
+            gate.socket_directory_release.acquire().await.expect("directory socket admission test release").forget();
+        }
     }
     let mut delivery_invalidations = state.directory_service.subscribe_delivery_invalidations();
     let delivery_space_id = match &record.audience {
@@ -6534,9 +7261,41 @@ async fn handle_directory_ws_v1(socket: WebSocket, since: u64, scope: Option<Doc
 }
 
 async fn get_session_me(headers: HeaderMap, State(state): State<HubState>) -> Result<Json<DirectorySessionAuthorityV1>, StatusCode> {
-    let capability = SessionCapability::parse(&bearer(&headers).ok_or(StatusCode::UNAUTHORIZED)?).map_err(directory_error_status)?;
-    let session = state.directory.authenticate_session(&capability).await.map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?.ok_or(StatusCode::UNAUTHORIZED)?;
-    let user = state.directory.get_user(&session.user_id).await.map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?.ok_or(StatusCode::UNAUTHORIZED)?;
+    let span = state.span("server.auth.session.read");
+    let Some(token) = bearer(&headers) else {
+        span.refused("no-bearer");
+        return Err(StatusCode::UNAUTHORIZED);
+    };
+    let capability = match SessionCapability::parse(&token) {
+        Ok(capability) => capability,
+        Err(error) => {
+            span.refused("malformed-capability");
+            return Err(directory_error_status(error));
+        }
+    };
+    let session = match state.directory.authenticate_session(&capability).await {
+        Ok(Some(session)) => session,
+        Ok(None) => {
+            span.refused("unauthorized");
+            return Err(StatusCode::UNAUTHORIZED);
+        }
+        Err(_) => {
+            span.failed("directory-unavailable");
+            return Err(StatusCode::INTERNAL_SERVER_ERROR);
+        }
+    };
+    let span = span.principal(format!("user:{}", session.user_id));
+    let user = match state.directory.get_user(&session.user_id).await {
+        Ok(Some(user)) => user,
+        Ok(None) => {
+            span.refused("unknown-user");
+            return Err(StatusCode::UNAUTHORIZED);
+        }
+        Err(_) => {
+            span.failed("directory-unavailable");
+            return Err(StatusCode::INTERNAL_SERVER_ERROR);
+        }
+    };
     let caller = AuthedUser { user_id: session.user_id, session_id: session.id, expires_at: session.expires_at, authorization_generation: session.authorization_generation, capability };
     let response = DirectorySessionAuthorityV1 {
         schema: "semio.directory.session-authority.v1".into(),
@@ -6549,17 +7308,36 @@ async fn get_session_me(headers: HeaderMap, State(state): State<HubState>) -> Re
         session_kind: match session.session_kind {
             AuthSessionKind::External => DirectorySessionKindV1::External,
             AuthSessionKind::DevelopmentLocal => DirectorySessionKindV1::DevelopmentLocal,
+            AuthSessionKind::Agent => DirectorySessionKindV1::Agent,
         },
     };
-    response.validate().then_some(Json(response)).ok_or(StatusCode::INTERNAL_SERVER_ERROR)
+    if !response.validate() {
+        span.failed("invalid-response");
+        return Err(StatusCode::INTERNAL_SERVER_ERROR);
+    }
+    span.ok();
+    Ok(Json(response))
 }
 
+/// @emoji 🗑️ `DELETE /auth/sessions/me` — self sign-out. Revocation is a directory fact, and the
+/// same revocation is applied to the server instance's live session set: a key removed from one
+/// and left in the other is a key that still opens a door somewhere, so the two move together or
+/// the caller learns the sign-out did not complete.
 async fn delete_session_me(headers: HeaderMap, State(state): State<HubState>) -> StatusCode {
-    let Some(token) = bearer(&headers) else { return StatusCode::UNAUTHORIZED };
-    let Ok(capability) = SessionCapability::parse(&token) else { return StatusCode::UNAUTHORIZED };
-    let Ok(Ok(Some(session))) = tokio::time::timeout(std::time::Duration::from_secs(2), state.directory.authenticate_session(&capability)).await else {
+    let span = state.span("server.auth.session.revoke");
+    let Some(token) = bearer(&headers) else {
+        span.refused("no-bearer");
         return StatusCode::UNAUTHORIZED;
     };
+    let Ok(capability) = SessionCapability::parse(&token) else {
+        span.refused("malformed-capability");
+        return StatusCode::UNAUTHORIZED;
+    };
+    let Ok(Ok(Some(session))) = tokio::time::timeout(std::time::Duration::from_secs(2), state.directory.authenticate_session(&capability)).await else {
+        span.refused("unauthorized");
+        return StatusCode::UNAUTHORIZED;
+    };
+    let span = span.principal(format!("user:{}", session.user_id));
     let binding = SocketBindingKeyV1::Session(session.id.clone());
     let gate = state.socket_binding_gates.gate(binding.clone());
     #[cfg(test)]
@@ -6568,18 +7346,35 @@ async fn delete_session_me(headers: HeaderMap, State(state): State<HubState>) ->
     }
     let _admission = match tokio::time::timeout(std::time::Duration::from_secs(2), gate.lock_owned()).await {
         Ok(admission) => admission,
-        Err(_) => return StatusCode::SERVICE_UNAVAILABLE,
+        Err(_) => {
+            span.failed("binding-gate-timeout");
+            return StatusCode::SERVICE_UNAVAILABLE;
+        }
     };
     match tokio::time::timeout(std::time::Duration::from_secs(2), state.directory.revoke_auth_session(&session.id, "self-revoked", Some(&session.user_id), &directory::os_identity::time_ordered_id())).await {
         Ok(Ok(Some(revoked))) => {
             debug_assert_eq!(revoked.id, session.id);
+            if let Err(error) = state.forget_instance_session(&session.id).await {
+                span.failed(&format!("instance-session-forget-{error:?}"));
+                return StatusCode::INTERNAL_SERVER_ERROR;
+            }
             state.socket_grants.invalidate_binding(binding.clone());
             state.document_open_plans.invalidate_binding(&binding);
+            span.ok();
             StatusCode::NO_CONTENT
         }
-        Ok(Ok(None)) => StatusCode::UNAUTHORIZED,
-        Ok(Err(_)) => StatusCode::INTERNAL_SERVER_ERROR,
-        Err(_) => StatusCode::SERVICE_UNAVAILABLE,
+        Ok(Ok(None)) => {
+            span.refused("already-revoked");
+            StatusCode::UNAUTHORIZED
+        }
+        Ok(Err(_)) => {
+            span.failed("directory-unavailable");
+            StatusCode::INTERNAL_SERVER_ERROR
+        }
+        Err(_) => {
+            span.failed("directory-timeout");
+            StatusCode::SERVICE_UNAVAILABLE
+        }
     }
 }
 
@@ -6593,27 +7388,45 @@ async fn delete_session_me(headers: HeaderMap, State(state): State<HubState>) ->
 /// authentication log is the record of what happened. The minted session itself is
 /// `issue_auth_session`'s own `session-issued` fact; nothing here writes a session row.
 async fn post_auth_session(State(state): State<HubState>, body: Bytes) -> Response {
-    let Ok(request) = serde_json::from_slice::<CredentialSignInRequestV1>(&body) else { return auth_error_response(AuthErrorCodeV1::MalformedRequest, None) };
+    let span = state.span("server.auth.session.mint");
+    let Ok(request) = serde_json::from_slice::<CredentialSignInRequestV1>(&body) else {
+        span.refused("malformed-request");
+        return auth_error_response(AuthErrorCodeV1::MalformedRequest, None);
+    };
     let verified = match request.verify() {
         Ok(verified) => verified,
-        Err(code) => return auth_error_response(code, None),
+        Err(code) => {
+            span.refused(code.reason_code());
+            return auth_error_response(code, None);
+        }
     };
     if let RateLimitDecisionV1::Refused { retry_after_ms } = state.rate_limits.admit(RateLimitClassV1::Auth, &[RateLimitSubjectV1::claimed_identity(verified.email())]) {
+        state.note("server.rate-limit", TraceOutcome::Refused, "auth-claimed-identity");
+        span.refused("rate-limited");
         return auth_error_response(AuthErrorCodeV1::RateLimited, Some(retry_after_ms));
     }
     let correlation_id = directory::os_identity::time_ordered_id();
     let peer_class = verified.client_class().as_str();
     let subject = match state.directory.get_user_by_email(verified.email()).await {
         Ok(user) => user.map(|user| CredentialSubjectV1 { user_id: user.id, password_hash: user.password_hash }),
-        Err(_) => return auth_error_response(AuthErrorCodeV1::DirectoryUnavailable, None),
+        Err(_) => {
+            span.failed("directory-unavailable");
+            return auth_error_response(AuthErrorCodeV1::DirectoryUnavailable, None);
+        }
+    };
+    let span = match subject.as_ref() {
+        Some(subject) => span.principal(format!("user:{}", subject.user_id)),
+        None => span,
     };
     match decide_credential_sign_in(state.credential_sign_in, &verified, subject.as_ref()) {
         CredentialSignInDecisionV1::Refuse(code) => {
             journal_credential_sign_in(&state, subject.as_ref().map(|subject| subject.user_id.as_str()), "failure", Some(code.reason_code()), &correlation_id, peer_class).await;
+            span.refused(code.reason_code());
             auth_error_response(code, None)
         }
         CredentialSignInDecisionV1::Mint { user_id, ttl_secs } => {
             let Ok(identity_subject_digest) = identity_subject_digest(semio_hub::auth::CREDENTIAL_IDENTITY_PROVIDER, verified.email()) else {
+                span.refused("malformed-request");
                 return auth_error_response(AuthErrorCodeV1::MalformedRequest, None);
             };
             let issue = AuthSessionIssue {
@@ -6628,14 +7441,22 @@ async fn post_auth_session(State(state): State<HubState>, body: Bytes) -> Respon
             };
             match state.directory.issue_auth_session(&issue).await {
                 Ok(session) => {
+                    if let Err(error) = state.record_instance_session(&session.record.id, &session.record.user_id, Some(&session.record.device_instance_id)).await {
+                        journal_credential_sign_in(&state, Some(&session.record.user_id), "failure", Some(AuthErrorCodeV1::DirectoryUnavailable.reason_code()), &correlation_id, peer_class).await;
+                        let _ = state.directory.revoke_auth_session(&session.record.id, "instance-session-store-unavailable", Some(&session.record.user_id), &correlation_id).await;
+                        span.failed(&format!("instance-session-create-{error:?}"));
+                        return auth_error_response(AuthErrorCodeV1::DirectoryUnavailable, None);
+                    }
                     journal_credential_sign_in(&state, Some(&session.record.user_id), "success", None, &correlation_id, peer_class).await;
                     let minted = SessionMintResponseV1 { token: session.capability.expose_once(), user_id: session.record.user_id.clone() };
                     let mut response = Json(minted).into_response();
                     response.headers_mut().insert(axum::http::header::CACHE_CONTROL, axum::http::HeaderValue::from_static("no-store"));
+                    span.ok();
                     response
                 }
                 Err(_) => {
                     journal_credential_sign_in(&state, subject.as_ref().map(|subject| subject.user_id.as_str()), "failure", Some(AuthErrorCodeV1::DirectoryUnavailable.reason_code()), &correlation_id, peer_class).await;
+                    span.failed("directory-unavailable");
                     auth_error_response(AuthErrorCodeV1::DirectoryUnavailable, None)
                 }
             }
@@ -6654,40 +7475,76 @@ async fn post_auth_session(State(state): State<HubState>, body: Bytes) -> Respon
 /// credential for a principal is issued by the operator verb `os-hub credential set`, which needs
 /// filesystem access to `OS_HUB_DATA` and is therefore not reachable over the network at all.
 async fn post_auth_credential(headers: HeaderMap, State(state): State<HubState>, body: Bytes) -> Response {
-    let Some(token) = bearer(&headers) else { return auth_error_response(AuthErrorCodeV1::InvalidCredentials, None) };
-    let Ok(capability) = SessionCapability::parse(&token) else { return auth_error_response(AuthErrorCodeV1::InvalidCredentials, None) };
-    let Ok(request) = serde_json::from_slice::<CredentialChangeRequestV1>(&body) else { return auth_error_response(AuthErrorCodeV1::MalformedRequest, None) };
+    let span = state.span("server.auth.credential.change");
+    let Some(token) = bearer(&headers) else {
+        span.refused("no-bearer");
+        return auth_error_response(AuthErrorCodeV1::InvalidCredentials, None);
+    };
+    let Ok(capability) = SessionCapability::parse(&token) else {
+        span.refused("malformed-capability");
+        return auth_error_response(AuthErrorCodeV1::InvalidCredentials, None);
+    };
+    let Ok(request) = serde_json::from_slice::<CredentialChangeRequestV1>(&body) else {
+        span.refused("malformed-request");
+        return auth_error_response(AuthErrorCodeV1::MalformedRequest, None);
+    };
     let verified = match request.verify() {
         Ok(verified) => verified,
-        Err(code) => return auth_error_response(code, None),
+        Err(code) => {
+            span.refused(code.reason_code());
+            return auth_error_response(code, None);
+        }
     };
     let session = match state.directory.authenticate_session(&capability).await {
         Ok(Some(session)) => session,
-        Ok(None) => return auth_error_response(AuthErrorCodeV1::InvalidCredentials, None),
-        Err(_) => return auth_error_response(AuthErrorCodeV1::DirectoryUnavailable, None),
+        Ok(None) => {
+            span.refused("invalid-credentials");
+            return auth_error_response(AuthErrorCodeV1::InvalidCredentials, None);
+        }
+        Err(_) => {
+            span.failed("directory-unavailable");
+            return auth_error_response(AuthErrorCodeV1::DirectoryUnavailable, None);
+        }
     };
+    let span = span.principal(format!("user:{}", session.user_id));
     let correlation_id = directory::os_identity::time_ordered_id();
     let subject = match state.directory.get_user(&session.user_id).await {
         Ok(Some(user)) => CredentialSubjectV1 { user_id: user.id, password_hash: user.password_hash },
-        Ok(None) => return auth_error_response(AuthErrorCodeV1::InvalidCredentials, None),
-        Err(_) => return auth_error_response(AuthErrorCodeV1::DirectoryUnavailable, None),
+        Ok(None) => {
+            span.refused("invalid-credentials");
+            return auth_error_response(AuthErrorCodeV1::InvalidCredentials, None);
+        }
+        Err(_) => {
+            span.failed("directory-unavailable");
+            return auth_error_response(AuthErrorCodeV1::DirectoryUnavailable, None);
+        }
     };
     match decide_credential_change(state.credential_sign_in, &verified, &subject) {
         CredentialChangeDecisionV1::Refuse(code) => {
             journal_credential_change_refusal(&state, &subject.user_id, code.reason_code(), &correlation_id).await;
+            span.refused(code.reason_code());
             auth_error_response(code, None)
         }
         CredentialChangeDecisionV1::Apply { user_id, mint_iterations } => {
             let Ok(credential) = PasswordCredentialV1::mint(verified.new_password(), mint_iterations) else {
+                span.refused("malformed-request");
                 return auth_error_response(AuthErrorCodeV1::MalformedRequest, None);
             };
             if state.directory.set_password_credential(&user_id, &credential.encode(), Some(&user_id), &correlation_id).await.is_err() {
+                span.failed("directory-unavailable");
                 return auth_error_response(AuthErrorCodeV1::DirectoryUnavailable, None);
             }
             let revoked = match state.directory.revoke_auth_sessions_for_user(&user_id, "credential-changed", Some(&user_id), &correlation_id).await {
                 Ok(revoked) => revoked,
-                Err(_) => return auth_error_response(AuthErrorCodeV1::DirectoryUnavailable, None),
+                Err(_) => {
+                    span.failed("directory-unavailable");
+                    return auth_error_response(AuthErrorCodeV1::DirectoryUnavailable, None);
+                }
             };
+            if let Err(error) = state.revoke_instance_principal(&user_id).await {
+                span.failed(&format!("instance-session-revoke-{error:?}"));
+                return auth_error_response(AuthErrorCodeV1::DirectoryUnavailable, None);
+            }
             for session in &revoked {
                 let binding = SocketBindingKeyV1::Session(session.id.clone());
                 state.socket_grants.invalidate_binding(binding.clone());
@@ -6695,6 +7552,7 @@ async fn post_auth_credential(headers: HeaderMap, State(state): State<HubState>,
             }
             let mut response = StatusCode::NO_CONTENT.into_response();
             response.headers_mut().insert(axum::http::header::CACHE_CONTROL, axum::http::HeaderValue::from_static("no-store"));
+            span.finish(TraceOutcome::Ok, Some(format!("revoked-{}", revoked.len())));
             response
         }
     }
@@ -6731,6 +7589,297 @@ async fn journal_credential_sign_in(state: &HubState, target_user_id: Option<&st
 }
 
 /// @emoji 🛑️ The one shape every credential sign-in refusal is served in.
+/// @emoji 🤖️ Every agent-delegation refusal is served exactly like a credential refusal: the code's
+/// own status, `no-store`, and a `retry-after` header whenever the limiter is the reason.
+fn agent_error_response(error: AgentErrorCodeV1, retry_after_ms: Option<u64>) -> Response {
+    let status = StatusCode::from_u16(error.status()).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR);
+    let mut body = AgentErrorV1::new(error);
+    body.retry_after_ms = retry_after_ms;
+    let mut response = (status, Json(body)).into_response();
+    response.headers_mut().insert(axum::http::header::CACHE_CONTROL, axum::http::HeaderValue::from_static("no-store"));
+    if let Some(retry_after_ms) = retry_after_ms {
+        if let Ok(value) = axum::http::HeaderValue::from_str(&RateLimitDecisionV1::Refused { retry_after_ms }.retry_after_secs().to_string()) {
+            response.headers_mut().insert(axum::http::header::RETRY_AFTER, value);
+        }
+    }
+    response
+}
+
+/// @emoji 🤖️ Resolves the signed-in human behind a delegation-administration call: a live session
+/// bearer that is NOT itself an agent session. An agent can never delegate onward, so the one
+/// check that matters here is `session_kind`.
+async fn delegating_principal(state: &HubState, headers: &HeaderMap) -> Result<AuthSessionRecord, AgentErrorCodeV1> {
+    let token = bearer(headers).ok_or(AgentErrorCodeV1::InvalidDelegation)?;
+    let capability = SessionCapability::parse(&token).map_err(|_| AgentErrorCodeV1::InvalidDelegation)?;
+    let session = match state.directory.authenticate_session(&capability).await {
+        Ok(Some(session)) => session,
+        Ok(None) => return Err(AgentErrorCodeV1::InvalidDelegation),
+        Err(_) => return Err(AgentErrorCodeV1::DirectoryUnavailable),
+    };
+    if session.session_kind.is_agent() {
+        return Err(AgentErrorCodeV1::Forbidden);
+    }
+    Ok(session)
+}
+
+/// @emoji 🤖️ The delegation an agent session was minted from, resolved ONCE at socket admission so
+/// the roster and the connection log can name the agent instead of the human whose authority it
+/// borrows. `device_instance_id` carries the delegation id (`post_agent_session`), and a delegation
+/// always belongs to the space and the delegating human its session names, so that human's own
+/// listing for this space is the smallest read that answers it — no new directory method and no
+/// second authentication. A delegation revoked between the grant and the socket simply has no row,
+/// which the caller reads as an unnamed agent rather than as a person.
+async fn agent_delegation_for_session(state: &HubState, space_id: &str, delegating_user_id: &str, delegation_id: &str) -> Option<AgentDelegationRow> {
+    let rows = tokio::time::timeout(std::time::Duration::from_secs(2), state.directory.list_agent_delegations(space_id, delegating_user_id, semio_hub::directory::AGENT_DELEGATION_PAGE_MAX)).await.ok()?.ok()?;
+    rows.into_iter().find(|row| row.delegation_id == delegation_id)
+}
+
+/// @emoji 🧾️ One agent-delegation fact, written through the same append the credential log uses.
+async fn journal_agent_fact(state: &HubState, event_kind: &str, user_id: &str, outcome_code: &str, reason_code: Option<&str>, correlation_id: &str, peer_class: &str) {
+    let fact = CredentialAuditFactV1 {
+        event_kind: event_kind.to_string(),
+        target_user_id: Some(user_id.to_string()),
+        actor_user_id: Some(user_id.to_string()),
+        outcome_code: outcome_code.to_string(),
+        reason_code: reason_code.map(str::to_string),
+        correlation_id: correlation_id.to_string(),
+        peer_class: peer_class.to_string(),
+    };
+    let _ = state.directory.append_credential_audit(&fact).await;
+}
+
+/// @emoji 🤖️ `POST /auth/agent-delegations` — a signed-in human delegates a scoped, revocable
+/// credential to an AI agent. The caller must be an **author** of the target space: a spectator
+/// cannot manufacture an editing principal out of a read-only membership. The response carries the
+/// token exactly once; nothing stores it, and no later route can read it back.
+async fn post_agent_delegation(headers: HeaderMap, State(state): State<HubState>, body: Bytes) -> Response {
+    let span = state.span("server.auth.agent.delegate");
+    let session = match delegating_principal(&state, &headers).await {
+        Ok(session) => session,
+        Err(code) => {
+            span.refused(code.as_str());
+            return agent_error_response(code, None);
+        }
+    };
+    let Ok(request) = serde_json::from_slice::<CreateAgentDelegationRequestV1>(&body) else {
+        span.refused("malformed-request");
+        return agent_error_response(AgentErrorCodeV1::MalformedRequest, None);
+    };
+    let verified = match request.verify() {
+        Ok(verified) => verified,
+        Err(code) => {
+            span.refused(code.as_str());
+            return agent_error_response(code, None);
+        }
+    };
+    if let RateLimitDecisionV1::Refused { retry_after_ms } = state.rate_limits.admit(RateLimitClassV1::Auth, &[RateLimitSubjectV1::claimed_identity(&session.user_id)]) {
+        span.refused("rate-limited");
+        return agent_error_response(AgentErrorCodeV1::RateLimited, Some(retry_after_ms));
+    }
+    match state.directory.get_role(verified.space_id(), &session.user_id).await {
+        Ok(Some(SpaceRole::Author)) => {}
+        Ok(_) => {
+            span.refused("forbidden");
+            return agent_error_response(AgentErrorCodeV1::Forbidden, None);
+        }
+        Err(_) => {
+            span.failed("directory-unavailable");
+            return agent_error_response(AgentErrorCodeV1::DirectoryUnavailable, None);
+        }
+    }
+    let correlation_id = directory::os_identity::time_ordered_id();
+    let Ok(issued) = semio_hub::directory::prepare_agent_delegation(verified.space_id(), &session.user_id, verified.agent_label(), verified.audience(), verified.ttl_secs(), now_ms()) else {
+        span.refused("malformed-request");
+        return agent_error_response(AgentErrorCodeV1::MalformedRequest, None);
+    };
+    if state.directory.create_agent_delegation(&issued, &correlation_id, "server").await.is_err() {
+        journal_agent_fact(&state, semio_hub::directory::AGENT_DELEGATED_EVENT, &session.user_id, "failure", Some(AgentErrorCodeV1::DirectoryUnavailable.as_str()), &correlation_id, "server").await;
+        span.failed("directory-unavailable");
+        return agent_error_response(AgentErrorCodeV1::DirectoryUnavailable, None);
+    }
+    let receipt = AgentDelegationReceiptV1 {
+        schema: semio_hub::auth::agent::AGENT_DELEGATION_RECEIPT_SCHEMA.into(),
+        agent_principal_id: semio_hub::auth::agent::agent_principal_id(&issued.record.id),
+        delegation_id: issued.record.id.clone(),
+        agent_label: issued.record.agent_label.clone(),
+        space_id: issued.record.space_id.clone(),
+        audience: issued.record.audience,
+        expires_at_ms: issued.record.expires_at,
+        token: issued.capability.expose_once(),
+    };
+    let mut response = (StatusCode::CREATED, Json(receipt)).into_response();
+    response.headers_mut().insert(axum::http::header::CACHE_CONTROL, axum::http::HeaderValue::from_static("no-store"));
+    span.ok();
+    response
+}
+
+/// @emoji 🤖️ `GET /auth/agent-delegations?space=<id>` — every delegation this human created in this
+/// space, revoked ones included so the UI can show what was withdrawn. Never a token, never a
+/// selector, and never another human's delegations.
+async fn get_agent_delegations(headers: HeaderMap, Query(query): Query<AgentDelegationQueryV1>, State(state): State<HubState>) -> Response {
+    let span = state.span("server.auth.agent.list");
+    let session = match delegating_principal(&state, &headers).await {
+        Ok(session) => session,
+        Err(code) => {
+            span.refused(code.as_str());
+            return agent_error_response(code, None);
+        }
+    };
+    if !socket_text_bounded(&query.space) {
+        span.refused("malformed-request");
+        return agent_error_response(AgentErrorCodeV1::MalformedRequest, None);
+    }
+    match state.directory.list_agent_delegations(&query.space, &session.user_id, semio_hub::directory::AGENT_DELEGATION_PAGE_MAX).await {
+        Ok(rows) => {
+            let body = AgentDelegationListV1::new(rows.into_iter().map(AgentDelegationSummaryV1::from_row).collect());
+            let mut response = Json(body).into_response();
+            response.headers_mut().insert(axum::http::header::CACHE_CONTROL, axum::http::HeaderValue::from_static("no-store"));
+            span.ok();
+            response
+        }
+        Err(_) => {
+            span.failed("directory-unavailable");
+            agent_error_response(AgentErrorCodeV1::DirectoryUnavailable, None)
+        }
+    }
+}
+
+/// @emoji 🤖️ `DELETE /auth/agent-delegations/{id}` — withdrawal. The delegation row and its
+/// `agent-delegation-revoked` fact are written in one transaction, and every live agent session
+/// minted from it is revoked with the same `authorization_generation` bump an ordinary sign-out
+/// performs — so open socket grants and document plans die with it and the agent's next frame is
+/// closed `4401`. A delegation that is not this human's is `403`, never `404`.
+async fn delete_agent_delegation(Path(delegation_id): Path<String>, headers: HeaderMap, State(state): State<HubState>) -> Response {
+    let span = state.span("server.auth.agent.revoke");
+    let session = match delegating_principal(&state, &headers).await {
+        Ok(session) => session,
+        Err(code) => {
+            span.refused(code.as_str());
+            return agent_error_response(code, None);
+        }
+    };
+    if !socket_text_bounded(&delegation_id) {
+        span.refused("malformed-request");
+        return agent_error_response(AgentErrorCodeV1::MalformedRequest, None);
+    }
+    let correlation_id = directory::os_identity::time_ordered_id();
+    match state.directory.revoke_agent_delegation(&delegation_id, &session.user_id, "delegation-revoked-by-owner", &correlation_id, now_ms()).await {
+        Ok(Some(revoked)) => {
+            for entry in &revoked {
+                let binding = SocketBindingKeyV1::Session(entry.id.clone());
+                state.socket_grants.invalidate_binding(binding.clone());
+                state.document_open_plans.invalidate_binding(&binding);
+                let _ = state.forget_instance_session(&entry.id).await;
+            }
+            span.ok();
+            StatusCode::NO_CONTENT.into_response()
+        }
+        Ok(None) => {
+            span.refused("forbidden");
+            agent_error_response(AgentErrorCodeV1::Forbidden, None)
+        }
+        Err(_) => {
+            span.failed("directory-unavailable");
+            agent_error_response(AgentErrorCodeV1::DirectoryUnavailable, None)
+        }
+    }
+}
+
+/// @emoji 🤖️ `POST /auth/agent-sessions` — the agent exchanges its delegation for a session. The
+/// bearer is the delegation capability, not a password: nothing here ever sees a human secret.
+///
+/// The minted session is an ordinary `AuthSessionRecord` so every existing hub route authenticates
+/// the agent with no special case; what differs is `session_kind = agent`, which is what makes the
+/// agent its own principal at the presence layer, in the actor string on every edit, and in
+/// per-actor undo. `device_instance_id` carries the delegation id, which is how revoking the
+/// delegation finds and kills exactly the sessions it minted.
+async fn post_agent_session(headers: HeaderMap, State(state): State<HubState>, body: Bytes) -> Response {
+    let span = state.span("server.auth.agent.session");
+    let Some(token) = bearer(&headers) else {
+        span.refused("invalid-delegation");
+        return agent_error_response(AgentErrorCodeV1::InvalidDelegation, None);
+    };
+    let Ok(capability) = AgentDelegationCapability::parse(&token) else {
+        span.refused("invalid-delegation");
+        return agent_error_response(AgentErrorCodeV1::InvalidDelegation, None);
+    };
+    let Ok(request) = serde_json::from_slice::<AgentSessionRequestV1>(&body) else {
+        span.refused("malformed-request");
+        return agent_error_response(AgentErrorCodeV1::MalformedRequest, None);
+    };
+    if let Err(code) = request.verify() {
+        span.refused(code.as_str());
+        return agent_error_response(code, None);
+    }
+    if let RateLimitDecisionV1::Refused { retry_after_ms } = state.rate_limits.admit(RateLimitClassV1::Auth, &[RateLimitSubjectV1::claimed_identity(capability.selector())]) {
+        span.refused("rate-limited");
+        return agent_error_response(AgentErrorCodeV1::RateLimited, Some(retry_after_ms));
+    }
+    let record = match state.directory.load_agent_delegation(capability.selector()).await {
+        Ok(record) => record,
+        Err(_) => {
+            span.failed("directory-unavailable");
+            return agent_error_response(AgentErrorCodeV1::DirectoryUnavailable, None);
+        }
+    };
+    let preflight = semio_hub::directory::agent_session_preflight(record.as_ref(), &capability, request.audience, now_ms());
+    let ttl_secs = match decide_agent_session(preflight) {
+        AgentSessionDecisionV1::Mint { ttl_secs } => ttl_secs,
+        AgentSessionDecisionV1::Refuse(code) => {
+            span.refused(code.as_str());
+            return agent_error_response(code, None);
+        }
+    };
+    let Some(record) = record else {
+        span.refused("invalid-delegation");
+        return agent_error_response(AgentErrorCodeV1::InvalidDelegation, None);
+    };
+    let correlation_id = directory::os_identity::time_ordered_id();
+    let Ok(identity_subject_digest) = identity_subject_digest(semio_hub::directory::AGENT_IDENTITY_PROVIDER, &record.id) else {
+        span.refused("malformed-request");
+        return agent_error_response(AgentErrorCodeV1::MalformedRequest, None);
+    };
+    let issue = AuthSessionIssue {
+        user_id: record.delegating_user_id.clone(),
+        identity_provider: semio_hub::directory::AGENT_IDENTITY_PROVIDER.into(),
+        identity_subject_digest,
+        ttl_secs,
+        device_instance_id: record.id.clone(),
+        session_kind: AuthSessionKind::Agent,
+        correlation_id: correlation_id.clone(),
+        peer_class: "agent".into(),
+    };
+    match state.directory.issue_auth_session(&issue).await {
+        Ok(session) => {
+            journal_agent_fact(&state, semio_hub::directory::AGENT_SESSION_ISSUED_EVENT, &record.delegating_user_id, "success", Some(record.audience.as_str()), &correlation_id, "agent").await;
+            let minted = AgentSessionMintResponseV1 {
+                schema: semio_hub::auth::agent::AGENT_SESSION_REQUEST_SCHEMA.into(),
+                token: session.capability.expose_once(),
+                agent_principal_id: semio_hub::auth::agent::agent_principal_id(&record.id),
+                agent_label: record.agent_label.clone(),
+                space_id: record.space_id.clone(),
+                audience: record.audience,
+                expires_at_ms: session.record.expires_at,
+            };
+            let mut response = Json(minted).into_response();
+            response.headers_mut().insert(axum::http::header::CACHE_CONTROL, axum::http::HeaderValue::from_static("no-store"));
+            span.ok();
+            response
+        }
+        Err(_) => {
+            journal_agent_fact(&state, semio_hub::directory::AGENT_SESSION_ISSUED_EVENT, &record.delegating_user_id, "failure", Some(AgentErrorCodeV1::DirectoryUnavailable.as_str()), &correlation_id, "agent").await;
+            span.failed("directory-unavailable");
+            agent_error_response(AgentErrorCodeV1::DirectoryUnavailable, None)
+        }
+    }
+}
+
+/// @emoji 🔎️ `?space=<id>` — the one query parameter the delegation listing takes.
+#[derive(Deserialize)]
+struct AgentDelegationQueryV1 {
+    space: String,
+}
+
 fn auth_error_response(error: AuthErrorCodeV1, retry_after_ms: Option<u64>) -> Response {
     let status = StatusCode::from_u16(error.status()).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR);
     let body = match retry_after_ms {
@@ -6765,8 +7914,12 @@ async fn rate_limit_middleware(State(state): State<HubState>, request: axum::ext
     match state.rate_limits.admit(class, &subjects) {
         RateLimitDecisionV1::Admitted => next.run(request).await,
         RateLimitDecisionV1::Refused { retry_after_ms } => match class {
-            RateLimitClassV1::Auth => auth_error_response(AuthErrorCodeV1::RateLimited, Some(retry_after_ms)),
+            RateLimitClassV1::Auth => {
+                state.note("server.rate-limit", TraceOutcome::Refused, "auth");
+                auth_error_response(AuthErrorCodeV1::RateLimited, Some(retry_after_ms))
+            }
             _ => {
+                state.note("server.rate-limit", TraceOutcome::Refused, class.as_str());
                 let mut response = StatusCode::TOO_MANY_REQUESTS.into_response();
                 if let Ok(value) = axum::http::HeaderValue::from_str(&RateLimitDecisionV1::Refused { retry_after_ms }.retry_after_secs().to_string()) {
                     response.headers_mut().insert(axum::http::header::RETRY_AFTER, value);
@@ -6788,29 +7941,155 @@ fn rate_limit_class(method: &axum::http::Method, path: &str) -> Option<RateLimit
     }
 }
 
+/// @emoji 🌐️ Which browser origins this deployment admits for *credentialed* cross-origin
+/// requests, resolved once at startup from `OS_HUB_ALLOWED_ORIGINS` and the bind address.
+///
+/// The hub's dev topology serves the shell from a different port than the hub itself, so it needs
+/// a real cross-origin grant, not `*` — `access-control-allow-credentials: true` and `*` are
+/// mutually exclusive by specification. A configured allowlist is therefore the only shape that
+/// serves both, and the default is decided by **where the socket is**: a loopback bind is a
+/// developer's own machine and admits any loopback origin whatever port Vite picked; a bind that
+/// answers on a network interface admits nothing until a deployer names the origins out loud.
+///
+/// See {@link CrossOriginPolicyV1::from_environment} for the exact precedence.
+#[derive(Clone, Debug, PartialEq, Eq)]
+enum CrossOriginPolicyV1 {
+    /// 🏠️ Any `http`/`https` origin whose host is `localhost` or a loopback address, on any port.
+    LoopbackDevelopment,
+    /// 📋️ Exactly the origins a deployer named, compared whole and ASCII-case-insensitively.
+    Allowlist(Arc<[String]>),
+    /// 🚪️ No cross-origin credentialed access at all — same-origin requests are unaffected.
+    Closed,
+}
+
+impl CrossOriginPolicyV1 {
+    /// @emoji 🌐️ `OS_HUB_ALLOWED_ORIGINS=https://s.example.com,https://admin.example.com` wins
+    /// whenever it is set and non-empty. With it unset the policy follows `OS_HUB_BIND`: loopback
+    /// (the default *development* posture, and what `OS_HUB_BIND` must be for `OS_HUB_MODE=production`
+    /// to boot at all) admits loopback origins, and any other bind admits none.
+    fn from_environment(bind: std::net::IpAddr) -> Result<Self, HubError> {
+        const ALLOWED_ORIGINS_MAX: usize = 32;
+        let Some(encoded) = std::env::var("OS_HUB_ALLOWED_ORIGINS").ok().filter(|value| !value.trim().is_empty()) else {
+            return Ok(if bind.is_loopback() { Self::LoopbackDevelopment } else { Self::Closed });
+        };
+        let mut origins: Vec<String> = Vec::new();
+        for entry in encoded.split(',') {
+            let origin = entry.trim();
+            if origin.is_empty() {
+                continue;
+            }
+            if origins.len() == ALLOWED_ORIGINS_MAX {
+                return Err(HubError::UnsafeAuthConfiguration("OS_HUB_ALLOWED_ORIGINS exceeds 32 entries".into()));
+            }
+            if !is_browser_origin(origin) {
+                return Err(HubError::UnsafeAuthConfiguration(format!("OS_HUB_ALLOWED_ORIGINS entry {origin:?} is not a scheme://host[:port] origin")));
+            }
+            if !origins.iter().any(|existing| existing.eq_ignore_ascii_case(origin)) {
+                origins.push(origin.to_string());
+            }
+        }
+        if origins.is_empty() {
+            return Err(HubError::UnsafeAuthConfiguration("OS_HUB_ALLOWED_ORIGINS names no origin".into()));
+        }
+        Ok(Self::Allowlist(origins.into()))
+    }
+
+    /// @emoji ✅️ Whether one request's `Origin` header value earns the credentialed grant.
+    fn admits(&self, origin: &str) -> bool {
+        match self {
+            Self::LoopbackDevelopment => is_loopback_origin(origin),
+            Self::Allowlist(origins) => origins.iter().any(|allowed| allowed.eq_ignore_ascii_case(origin)),
+            Self::Closed => false,
+        }
+    }
+
+    /// @emoji 🏷️ The stable word the startup line and the report use for this posture.
+    fn label(&self) -> &'static str {
+        match self {
+            Self::LoopbackDevelopment => "loopback-development",
+            Self::Allowlist(_) => "allowlist",
+            Self::Closed => "closed",
+        }
+    }
+}
+
+/// @emoji 🌐️ A serialized origin: `scheme://host[:port]` with no userinfo, path, query, fragment or
+/// wildcard. Anything else in an allowlist is a deployer's mistake, not a pattern to interpret.
+fn is_browser_origin(value: &str) -> bool {
+    let Some((scheme, rest)) = value.split_once("://") else { return false };
+    if !scheme.eq_ignore_ascii_case("http") && !scheme.eq_ignore_ascii_case("https") {
+        return false;
+    }
+    if rest.is_empty() || rest.contains(['/', '?', '#', '@', '*', ' ', '\t']) {
+        return false;
+    }
+    let host = match rest.strip_prefix('[') {
+        Some(bracketed) => {
+            let Some((inside, port)) = bracketed.split_once(']') else { return false };
+            if inside.parse::<std::net::Ipv6Addr>().is_err() || !is_origin_port(port) {
+                return false;
+            }
+            return true;
+        }
+        None => rest,
+    };
+    match host.split_once(':') {
+        Some((name, port)) => !name.is_empty() && is_origin_port(&format!(":{port}")),
+        None => true,
+    }
+}
+
+/// @emoji 🔢️ An origin's optional `:port` suffix — empty, or a colon and a decimal port.
+fn is_origin_port(suffix: &str) -> bool {
+    match suffix.strip_prefix(':') {
+        None => suffix.is_empty(),
+        Some(port) => !port.is_empty() && port.parse::<u16>().is_ok(),
+    }
+}
+
+/// @emoji 🏠️ Whether an origin's host is this machine — `localhost`, `127.0.0.0/8` or `[::1]`.
+fn is_loopback_origin(value: &str) -> bool {
+    if !is_browser_origin(value) {
+        return false;
+    }
+    let Some((_, rest)) = value.split_once("://") else { return false };
+    let host = match rest.strip_prefix('[') {
+        Some(bracketed) => match bracketed.split_once(']') {
+            Some((inside, _)) => return inside.parse::<std::net::Ipv6Addr>().is_ok_and(|address| address.is_loopback()),
+            None => return false,
+        },
+        None => rest.split_once(':').map_or(rest, |(name, _)| name),
+    };
+    host.eq_ignore_ascii_case("localhost") || host.parse::<std::net::IpAddr>().is_ok_and(|address| address.is_loopback())
+}
+
 /// @emoji 🌐️ Applies the hub's explicit cross-origin response policy. The only public issuance
 /// route is `POST /auth/sessions`, which a deployment must enable explicitly and which is rate
 /// limited per remote address and per claimed identity; every protected route still requires its
 /// own typed capability.
-async fn cors_middleware(request: axum::extract::Request, next: axum::middleware::Next) -> Response {
+async fn cors_middleware(State(policy): State<CrossOriginPolicyV1>, request: axum::extract::Request, next: axum::middleware::Next) -> Response {
     let origin = request.headers().get(axum::http::header::ORIGIN).cloned();
     if request.method() == axum::http::Method::OPTIONS {
         let mut response = Response::builder().status(StatusCode::NO_CONTENT).body(axum::body::Body::empty()).unwrap_or_default();
-        apply_cors_headers(response.headers_mut(), origin.as_ref());
+        apply_cors_headers(response.headers_mut(), origin.as_ref(), &policy);
         return response;
     }
     let mut response = next.run(request).await;
-    apply_cors_headers(response.headers_mut(), origin.as_ref());
+    apply_cors_headers(response.headers_mut(), origin.as_ref(), &policy);
     response
 }
 
-/// @emoji 🌐️ See {@link cors_middleware}. Reflects the request's own `Origin` (never `*`) plus the
-/// bearer/JSON headers and verbs this control plane actually uses.
-fn apply_cors_headers(headers: &mut HeaderMap, origin: Option<&axum::http::HeaderValue>) {
+/// @emoji 🌐️ See {@link cors_middleware}. Reflects the request's own `Origin` (never `*`) only when
+/// {@link CrossOriginPolicyV1} admits it, plus the bearer/JSON headers and verbs this control plane
+/// actually uses. `Vary: Origin` is appended for every request that carried an `Origin` — including
+/// a refused one — so a shared cache never serves one origin's grant to another.
+fn apply_cors_headers(headers: &mut HeaderMap, origin: Option<&axum::http::HeaderValue>, policy: &CrossOriginPolicyV1) {
     if let Some(origin) = origin {
-        headers.insert(axum::http::header::ACCESS_CONTROL_ALLOW_ORIGIN, origin.clone());
-        headers.insert(axum::http::header::ACCESS_CONTROL_ALLOW_CREDENTIALS, axum::http::HeaderValue::from_static("true"));
         headers.append(axum::http::header::VARY, axum::http::HeaderValue::from_static("Origin"));
+        if origin.to_str().is_ok_and(|value| policy.admits(value)) {
+            headers.insert(axum::http::header::ACCESS_CONTROL_ALLOW_ORIGIN, origin.clone());
+            headers.insert(axum::http::header::ACCESS_CONTROL_ALLOW_CREDENTIALS, axum::http::HeaderValue::from_static("true"));
+        }
     }
     headers.insert(axum::http::header::ACCESS_CONTROL_ALLOW_METHODS, axum::http::HeaderValue::from_static("GET, POST, PUT, HEAD, DELETE, OPTIONS"));
     headers.insert(axum::http::header::ACCESS_CONTROL_ALLOW_HEADERS, axum::http::HeaderValue::from_static("authorization, content-type"));
@@ -7507,6 +8786,15 @@ async fn execute_admin_intent(
     } else {
         None
     };
+    #[cfg(test)]
+    if matches!(&intent, AdminIntentV1::RevokeUserSessions { .. }) {
+        if let Some(gate) = &state.live_gate {
+            if gate.socket_admin_revoke_pause_enabled.load(std::sync::atomic::Ordering::Acquire) {
+                gate.socket_admin_revoke_admitted.add_permits(1);
+                gate.socket_admin_revoke_release.acquire().await.expect("admin revoke test release").forget();
+            }
+        }
+    }
     if operation_runtime.as_ref().is_some_and(|runtime| !runtime.admit_effect()) {
         return AdminIntentExecution { phase: "cancelled", event_range: None, secret: None, outcome: AdminIntentOutcomeV1 { code: "admin-operation-cancelled-before-effect".into(), durable: false, kick_attempted: None, kick_signalled: None } };
     }
@@ -7776,6 +9064,61 @@ async fn admin_overview(headers: HeaderMap, axum::extract::ConnectInfo(peer): ax
         "headSeq": head_seq,
         "openArtifacts": state.db.catalog().await.artifacts.len(),
     });
+    if serde_json::to_vec(&response).map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?.len() > ADMIN_RESPONSE_MAX_BYTES {
+        return Err(StatusCode::PAYLOAD_TOO_LARGE);
+    }
+    Ok(Json(response))
+}
+
+/// @emoji 📝️ The per-event table one tracer has accumulated since boot, as the JSON
+/// `GET /admin/api/observability` answers with.
+///
+/// Counters, never records. Replaying the record stream over HTTP would put one tenant's
+/// principals, space ids and artifact ids behind another operator's single admin capability, and it
+/// is not what the question "what is failing, how often, and how slow is it" needs — the table
+/// answers that, and the records themselves go to the sink the operator configured, which is where
+/// their retention and access policy already lives.
+///
+/// `declaredEvents` ships the vocabulary alongside the live rows so a dashboard can show a declared
+/// event that has not fired yet as a zero rather than as a missing series, and `droppedEvents` is
+/// the bounded table's own overflow count — non-zero means some event name is being built from
+/// request data, which is itself the thing to alert on.
+fn observability_view(tracer: &Tracer) -> serde_json::Value {
+    let rows: Vec<serde_json::Value> = tracer
+        .counters()
+        .into_iter()
+        .map(|EventCount { event, counters }| {
+            let (p50_us, p95_us, p99_us) = counters.percentiles_us();
+            serde_json::json!({
+                "event": event,
+                "started": counters.started,
+                "ok": counters.ok,
+                "refused": counters.refused,
+                "failed": counters.failed,
+                "cancelled": counters.cancelled,
+                "total": counters.total(),
+                "samples": counters.samples(),
+                "p50Us": p50_us,
+                "p95Us": p95_us,
+                "p99Us": p99_us,
+            })
+        })
+        .collect();
+    serde_json::json!({
+        "schema": "semio.hub.observability/v1",
+        "level": tracer.level().as_str(),
+        "droppedEvents": tracer.dropped_event_count(),
+        "declaredEvents": SERVER_SPAN_EVENTS,
+        "rows": rows,
+    })
+}
+
+/// @emoji 📝️ `GET /admin/api/observability` — behind `authenticate_admin_principal`, exactly like
+/// every other `/admin/api` route, so a hub bound to a network interface never exposes its own
+/// internals unauthenticated. See [`observability_view`] for why the body is counters.
+async fn admin_observability(headers: HeaderMap, axum::extract::ConnectInfo(peer): axum::extract::ConnectInfo<SocketAddr>, State(state): State<HubState>) -> Result<Json<serde_json::Value>, StatusCode> {
+    let _principal = authenticate_admin_principal(&state, &headers, Some(peer)).await?;
+    let response = observability_view(&state.tracer);
     if serde_json::to_vec(&response).map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?.len() > ADMIN_RESPONSE_MAX_BYTES {
         return Err(StatusCode::PAYLOAD_TOO_LARGE);
     }
@@ -8137,6 +9480,8 @@ async fn get_readyz(State(state): State<HubState>) -> impl IntoResponse {
     readiness.artifact_cas_sweeper.ready = state.artifact_maintenance.healthy();
     if !readiness.artifact_cas_sweeper.ready {
         readiness.status = "not-ready";
+        readiness.artifact_cas_sweeper.reason = Some("artifact-cas-maintenance-supervisor-failed-closed");
+        readiness.blocked_by.push(HubClosedReadinessGateV1 { gate: "artifactCasSweeper", reason: "artifact-cas-maintenance-supervisor-failed-closed" });
     }
     let status = if readiness.status == "ready" { StatusCode::OK } else { StatusCode::SERVICE_UNAVAILABLE };
     (status, Json(readiness))
@@ -8367,7 +9712,7 @@ fn artifact_creation_routes(router: Router<HubState>) -> Router<HubState> {
     router
 }
 
-fn router(state: HubState) -> Router {
+fn router(state: HubState, cross_origin: CrossOriginPolicyV1, forwarded_tls: ForwardedTlsTrustV1) -> Router {
     std::sync::LazyLock::force(&HUB_PROCESS_START);
     artifact_creation_routes(inference_routes(Router::new()))
         .route("/healthz", get(get_healthz))
@@ -8375,6 +9720,9 @@ fn router(state: HubState) -> Router {
         .route(semio_hub::auth::SESSION_MINT_ROUTE, post(post_auth_session).layer(DefaultBodyLimit::max(semio_hub::auth::SIGN_IN_REQUEST_MAX_BYTES)))
         .route(semio_hub::auth::CREDENTIAL_ROUTE, post(post_auth_credential).layer(DefaultBodyLimit::max(semio_hub::auth::CREDENTIAL_CHANGE_REQUEST_MAX_BYTES)))
         .route("/auth/sessions/me", get(get_session_me).delete(delete_session_me))
+        .route(semio_hub::auth::agent::AGENT_DELEGATION_ROUTE, post(post_agent_delegation).get(get_agent_delegations).layer(DefaultBodyLimit::max(semio_hub::auth::agent::AGENT_DELEGATION_REQUEST_MAX_BYTES)))
+        .route("/auth/agent-delegations/{id}", axum::routing::delete(delete_agent_delegation))
+        .route(semio_hub::auth::agent::AGENT_SESSION_ROUTE, post(post_agent_session).layer(DefaultBodyLimit::max(semio_hub::auth::agent::AGENT_SESSION_REQUEST_MAX_BYTES)))
         .route("/directory/commands", post(post_directory_commands).layer(DefaultBodyLimit::max(DIRECTORY_COMMAND_REQUEST_MAX_BYTES)))
         .route("/directory/spaces", get(get_directory_spaces))
         .route("/directory/spaces/{id}", get(get_directory_space))
@@ -8395,6 +9743,7 @@ fn router(state: HubState) -> Router {
         .route("/admin/api/operations/{operation_id}", get(admin_operation))
         .route("/admin/api/operations/{operation_id}/cancel", post(cancel_admin_operation))
         .route("/admin/api/audit", get(admin_operation_audit))
+        .route("/admin/api/observability", get(admin_observability))
         .route("/admin/api/intents", post(admin_intents).layer(DefaultBodyLimit::max(ADMIN_INTENT_REQUEST_MAX_BYTES)))
         .route("/%F0%9F%A7%A9%EF%B8%8Fextension-modules", get(list_extensions))
         .route("/%F0%9F%A7%A9%EF%B8%8Fextension-modules/{extension_id}/{*rest}", get(get_extension_asset))
@@ -8420,7 +9769,10 @@ fn router(state: HubState) -> Router {
         // 🚦️ Inside the CORS layer, so a refused request never reaches a handler and its `429`
         // still leaves through `cors_middleware` with the headers a browser needs to read it.
         .layer(axum::middleware::from_fn_with_state(state.clone(), rate_limit_middleware))
-        .layer(axum::middleware::from_fn(cors_middleware))
+        .layer(axum::middleware::from_fn_with_state(cross_origin, cors_middleware))
+        // 🛡️ Outermost: a request a trusted proxy reports as cleartext is refused before CORS, rate
+        // limiting or any handler sees it — a compromised transport is not a per-route question.
+        .layer(axum::middleware::from_fn_with_state(forwarded_tls, transport_security_middleware))
         .with_state(state)
 }
 
@@ -8441,10 +9793,25 @@ fn router(state: HubState) -> Router {
 /// calls stalling their caller's own tokio worker thread. Hub is a headless server
 /// (`ProcessKind::HeadlessBatch`: no UI thread to reserve a core for), sized to the process's visible
 /// core count.
+///
+/// 🧪️ Under `cfg(test)` each hub gets its OWN pool instead of the process singleton. `process_worker_pool`
+/// is a `OnceLock` — one pool per process entry point — and that is right for a hub, which is one process.
+/// The bin test binary is not one hub: `cargo test` hosts every law of `🔬️bin-unit` in a single process, so
+/// ~180 independent `HubState`s were sharing ten workers and queueing each other's blocking storage work
+/// behind laws that hold a worker for their whole body. That is why `an_authenticated_session_read…` and
+/// `the_observability_route_answers…` never answered in-process while passing under nextest (one process per
+/// law) and on a live hub. Per-state pools restore the isolation nextest gets for free.
 fn hub_worker_pool() -> Arc<semio_framework_async::WorkerPool> {
-    let cores = std::thread::available_parallelism().map_or(1, std::num::NonZeroUsize::get);
-    let config = semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, cores);
-    Arc::new(semio_framework_async::process_worker_pool(config))
+    #[cfg(test)]
+    {
+        return Arc::new(semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 2)));
+    }
+    #[cfg(not(test))]
+    {
+        let cores = std::thread::available_parallelism().map_or(1, std::num::NonZeroUsize::get);
+        let config = semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, cores);
+        Arc::new(semio_framework_async::process_worker_pool(config))
+    }
 }
 
 async fn connect_db(data_dir: &std::path::Path) -> Result<db::Database, HubError> {
@@ -8550,6 +9917,73 @@ async fn connect_directory(data_dir: &std::path::Path) -> Result<Arc<HubDirector
     }
 }
 
+/// @emoji 🛑️ Which termination signal an orchestrator sent. `docker stop`, `systemctl stop` and a
+/// Kubernetes pod eviction all send `SIGTERM`; a terminal sends `SIGINT`. Both mean the same thing
+/// to this process — stop accepting, then run the drains `main` already runs after `axum::serve`
+/// returns (`AdminOperationTaskOwner::shutdown`, `ArtifactCreationHttpTaskOwnerV1::shutdown` →
+/// `shutdown_with_deadline`, the inference runtime close and the artifact CAS maintenance stop).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum TerminationSignalV1 {
+    Interrupt,
+    Terminate,
+}
+
+impl TerminationSignalV1 {
+    /// @emoji 🏷️ The POSIX name, as the shutdown line reports it.
+    fn name(self) -> &'static str {
+        match self {
+            Self::Interrupt => "SIGINT",
+            Self::Terminate => "SIGTERM",
+        }
+    }
+}
+
+/// @emoji 🛑️ Whichever of the two arrives first, with `SIGTERM` preferred when both are already
+/// ready — the orchestrator's verdict outranks a console interrupt. Taking the two futures as
+/// arguments is what makes the choice testable without raising a real signal at a shared test
+/// binary.
+async fn first_termination_signal(interrupt: impl std::future::Future<Output = ()>, terminate: impl std::future::Future<Output = ()>) -> TerminationSignalV1 {
+    tokio::pin!(interrupt);
+    tokio::pin!(terminate);
+    tokio::select! {
+        biased;
+        () = &mut terminate => TerminationSignalV1::Terminate,
+        () = &mut interrupt => TerminationSignalV1::Interrupt,
+    }
+}
+
+/// @emoji 🛑️ The real process-wide handler. A platform that refuses the `SIGTERM` registration
+/// leaves that arm pending for ever rather than failing the boot: a hub that cannot hear `SIGTERM`
+/// is the behaviour this process had before, and it still hears `SIGINT`.
+#[cfg(unix)]
+async fn termination_signal(tracer: &Tracer) -> TerminationSignalV1 {
+    let interrupt = async {
+        let _ = tokio::signal::ctrl_c().await;
+    };
+    let terminate = async {
+        match tokio::signal::unix::signal(tokio::signal::unix::SignalKind::terminate()) {
+            Ok(mut stream) => {
+                stream.recv().await;
+            }
+            Err(error) => {
+                let mut record = TraceRecord::new("server.boot", TraceOutcome::Failed);
+                record.detail = Some(format!("sigterm-handler-unavailable:{error}"));
+                tracer.emit(record);
+                std::future::pending::<()>().await;
+            }
+        }
+    };
+    first_termination_signal(interrupt, terminate).await
+}
+
+/// @emoji 🛑️ See the unix twin. Windows has no `SIGTERM`; `ctrl_c` covers both console interrupt
+/// and the shutdown event a service manager raises.
+#[cfg(not(unix))]
+async fn termination_signal(_tracer: &Tracer) -> TerminationSignalV1 {
+    let _ = tokio::signal::ctrl_c().await;
+    TerminationSignalV1::Interrupt
+}
+
 #[tokio::main]
 async fn main() -> Result<(), HubError> {
     let arguments = std::env::args_os().skip(1).collect::<Vec<_>>();
@@ -8562,6 +9996,14 @@ async fn main() -> Result<(), HubError> {
     let port: u16 = std::env::var("OS_HUB_PORT").ok().and_then(|value| value.parse().ok()).unwrap_or(8787);
     let bind: std::net::IpAddr = std::env::var("OS_HUB_BIND").unwrap_or_else(|_| "0.0.0.0".into()).parse().map_err(|_| HubError::UnsafeAuthConfiguration("OS_HUB_BIND must be an IP address".into()))?;
     let mode = HubMode::from_environment(bind)?;
+    let cross_origin = CrossOriginPolicyV1::from_environment(bind)?;
+    let forwarded_tls = ForwardedTlsTrustV1::from_environment()?;
+    // 🔐️ Read before the startup gate rather than next to its first use: whether the hub's own
+    // credential authority is enabled is *the* thing that decides whether production may boot, and
+    // `CredentialSignInPolicyV1::from_env` reads nothing but the environment.
+    let credential_sign_in = CredentialSignInPolicyV1::from_env().map_err(|error| HubError::UnsafeAuthConfiguration(error.to_string()))?;
+    // 🪪️ The external-IdP seam. No adapter ships in this repository; production reaches its identity
+    // requirement through `credential_sign_in` instead — see `validate_auth_startup`.
     let identity_verifier: Option<Arc<dyn IdentityAssertionVerifier>> = None;
     let bootstrap_control = Arc::new(HubBootstrapControl::new());
     let local_bootstrap: Option<Arc<dyn LocalBootstrapTransport>> = if mode == HubMode::Development {
@@ -8572,7 +10014,7 @@ async fn main() -> Result<(), HubError> {
         None
     };
     let admin_subjects = configured_admin_subjects()?;
-    validate_auth_startup(mode, bind, identity_verifier.as_ref(), local_bootstrap.as_ref(), &admin_subjects)?;
+    validate_auth_startup(mode, bind, identity_verifier.as_ref(), local_bootstrap.as_ref(), &admin_subjects, credential_sign_in.is_enabled(), &cross_origin, forwarded_tls)?;
     let data_dir = std::env::var("OS_HUB_DATA").map_or_else(|_| std::path::PathBuf::from("./.🧬semio/🌐hub/"), std::path::PathBuf::from);
     #[cfg(feature = "native-artifact-execution")]
     let native_codec_providers = NativeCodecProviderSetV1::linked();
@@ -8580,7 +10022,11 @@ async fn main() -> Result<(), HubError> {
     let native_codec_provider: Option<&dyn NativeCodecProviderSourceV1> = Some(&native_codec_providers);
     #[cfg(not(feature = "native-artifact-execution"))]
     let native_codec_provider: Option<&dyn NativeCodecProviderSourceV1> = None;
-    let artifact_authority = configured_artifact_authority(&data_dir, native_codec_provider).await?;
+    // 📝️ Observability is configured before the first subsystem that reports, so the trusted-catalog
+    // load, the artifact-CAS sweep and the creation-recovery loop all report onto the same tracer the
+    // routes later use — a tracer built after them would have silently lost every boot record.
+    let tracer = Tracer::from_environment();
+    let artifact_authority = configured_artifact_authority(&data_dir, native_codec_provider, &tracer).await?;
     let db = Arc::new(connect_db(&data_dir).await?);
     let directory = connect_directory(&data_dir).await?;
     // 🧹️ Contract §C0: clear crash residue before any real connection lands — a session that never
@@ -8588,14 +10034,14 @@ async fn main() -> Result<(), HubError> {
     directory.close_all_sync_sessions().await?;
     let directory_service = Arc::new(DirectoryService::new(directory.clone(), 1024));
     let artifact_cas = connect_artifact_cas(&data_dir).await?;
-    let startup_control = StartupCatalogControl;
+    let startup_control = StartupCatalogControl::new(tracer.clone());
     let startup_now_ms = startup_control.now_ms();
     let startup_context = OperationContext::new(startup_now_ms.saturating_add(30_000), AuthorityLimits::maximum(), &startup_control);
     let artifact_cas_coordinator_id = directory.artifact_cas_coordinator_id().await?;
     artifact_cas.configure_coordinator(artifact_cas_coordinator_id, &startup_context).await?;
     let artifact_publication = Arc::new(CheckpointPublicationOrchestrator::new(ArtifactChunkBlobStore::new(artifact_cas.clone()), HubVerifiedCheckpointPublisher::new(directory_service.clone(), artifact_cas.clone(), "system:artifact-authority")));
     let artifact_cas_sweep_execute = artifact_cas_sweep_execute_from_env()?;
-    let artifact_maintenance = ArtifactCasMaintenanceSupervisor::start(directory_service.clone(), artifact_cas.clone(), artifact_cas_sweep_execute);
+    let artifact_maintenance = ArtifactCasMaintenanceSupervisor::start(directory_service.clone(), artifact_cas.clone(), artifact_cas_sweep_execute, tracer.clone());
     let rebootstrap = Arc::new(VerifiedRebootstrapSource::new(directory.clone(), artifact_cas.clone()));
     let admin_dir = std::env::var("OS_HUB_ADMIN_DIR").map(std::path::PathBuf::from).unwrap_or_else(|_| std::path::PathBuf::from(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🔨️modules/🛡️admin/📦️packages/🟦️typescript/📤️dist")));
     let extensions_root = std::env::var("OS_HUB_EXTENSIONS_DIR").map(std::path::PathBuf::from).unwrap_or_else(|_| data_dir.join("extension-modules"));
@@ -8603,7 +10049,7 @@ async fn main() -> Result<(), HubError> {
     let run_id = local_bootstrap.as_ref().map_or_else(|| "production".to_string(), |bootstrap| bootstrap.run_id().to_string());
     let bootstrap_ready = match mode {
         HubMode::Development => local_bootstrap.as_ref().is_some_and(|bootstrap| bootstrap.is_ready()),
-        HubMode::Production => identity_verifier.is_some(),
+        HubMode::Production => identity_verifier.is_some() || credential_sign_in.is_enabled(),
     };
     let bind_scope = if bind.is_loopback() { "loopback" } else { "network" };
     let artifact_authority_ready = artifact_authority.is_some();
@@ -8624,7 +10070,7 @@ async fn main() -> Result<(), HubError> {
     let artifact_creation = verified_catalog.as_ref().map(|catalog| Arc::new(ArtifactCreationServiceV1::new(directory_service.clone(), catalog.clone(), artifact_cas.clone())));
     #[cfg(feature = "native-artifact-execution")]
     if let Some(service) = artifact_creation.as_ref() {
-        artifact_creation_tasks.start_recovery(service.clone(), artifact_creation_commit_authority.clone());
+        artifact_creation_tasks.start_recovery(service.clone(), artifact_creation_commit_authority.clone(), tracer.clone());
     }
     let fanout = Arc::new(ShardedMap::new());
     let fanout_capacity = 256;
@@ -8662,14 +10108,34 @@ async fn main() -> Result<(), HubError> {
     let inference_ready = inference_runtime.is_some();
     #[cfg(not(all(feature = "sqlite", feature = "native-artifact-execution")))]
     let inference_ready = false;
-    let credential_sign_in = CredentialSignInPolicyV1::from_env().map_err(|error| HubError::UnsafeAuthConfiguration(error.to_string()))?;
+    let artifact_authority_reason = if cfg!(feature = "native-artifact-execution") {
+        if data_dir.join("trusted-catalog/current.json").try_exists().unwrap_or(false) {
+            "trusted-catalog-pointer-present-but-not-loadable"
+        } else {
+            "trusted-catalog-never-published-in-this-data-root"
+        }
+    } else {
+        "native-artifact-execution-feature-not-compiled"
+    };
     let readiness = Arc::new(declare_public_session_issuance(
-        hub_readiness(mode, bind_scope, run_id, bootstrap_ready, artifact_authority_ready, open_plan_ready, admin_dir.is_dir(), true, artifact_cas_sweep_execute, inference_ready),
+        hub_readiness(mode, bind_scope, run_id, bootstrap_ready, artifact_authority_ready, open_plan_ready, admin_dir.is_dir(), true, artifact_cas_sweep_execute, inference_ready, artifact_authority_reason),
         credential_sign_in.is_enabled(),
     ));
     let admin_cursor_key = SessionCapability::mint()?.secret_digest();
     let space_administration_cursor_key = SessionCapability::mint()?.secret_digest();
+    let merge_policy = merge_policy_from_env(&tracer);
+    // 🗄️ Hub as instance #1 of the server product. Its four roles open under `{OS_HUB_DATA}/instance`
+    // — inside the same root the directory, the artifact CAS and the extension mirror live in, so one
+    // backup or one `rm -rf` covers the whole hub and no second data location has to be documented.
+    let instance = instance_state(&data_dir).await?;
+    tracer.emit({
+        let mut record = TraceRecord::new("server.boot", TraceOutcome::Ok);
+        record.detail = Some(format!("instance-storage={}", data_dir.join("instance").display()));
+        record
+    });
     let state = HubState {
+        tracer,
+        instance,
         db,
         artifact_cas,
         directory: directory.clone(),
@@ -8724,10 +10190,11 @@ async fn main() -> Result<(), HubError> {
         document_open_plans: Arc::new(DocumentOpenPlanLedgerV1::default()),
         socket_binding_gates,
         extensions_root,
-        merge_policy: merge_policy_from_env(),
+        merge_policy,
     };
     let addr = SocketAddr::new(bind, port);
     let listener = tokio::net::TcpListener::bind(addr).await?;
+    let saga_drain = SagaDrainSupervisor::start(state.instance.clone(), state.tracer.clone(), SAGA_DRAIN_INTERVAL);
     let admin_operation_tasks = state.admin_operation_tasks.clone();
     #[cfg(feature = "native-artifact-execution")]
     let artifact_creation_tasks = state.artifact_creation_tasks.clone();
@@ -8735,8 +10202,27 @@ async fn main() -> Result<(), HubError> {
         let control: Arc<dyn IdentityVerificationControl> = bootstrap_control.clone();
         tokio::spawn(serve_local_bootstrap(transport, directory, control))
     });
-    eprintln!("[INFO] os-hub ready at http://{addr}");
-    let server = std::future::IntoFuture::into_future(axum::serve(listener, router(state).into_make_service_with_connect_info::<SocketAddr>()));
+    // 🗣️ The startup banner is NOT a log line and is deliberately not routed through the tracer: it
+    // is this process's announcement of its own readiness, its exact text is pinned by
+    // `the_startup_line_names_the_bound_address_when_ready` and read by the collaboration harness,
+    // and it must survive `SEMIO_TRACE_SINK=none`. The same fact is additionally reported as a
+    // structured `server.readiness` record, so a collector sees it without parsing prose.
+    eprintln!("{}", startup_readiness_line(&state.readiness, &addr));
+    eprintln!("[INFO] bind scope {bind_scope} ({addr}), cross-origin policy {}, trusted forwarding {}", cross_origin.label(), forwarded_tls.label());
+    state.note(
+        "server.readiness",
+        if state.readiness.blocked_by.is_empty() { TraceOutcome::Ok } else { TraceOutcome::Refused },
+        &readiness_trace_detail(&state.readiness, &addr, bind_scope),
+    );
+    let shutdown_tracer = state.tracer.clone();
+    let server = std::future::IntoFuture::into_future(
+        axum::serve(listener, router(state, cross_origin, forwarded_tls).into_make_service_with_connect_info::<SocketAddr>()).with_graceful_shutdown(async move {
+            let signal = termination_signal(&shutdown_tracer).await;
+            let mut record = TraceRecord::new("server.readiness", TraceOutcome::Cancelled);
+            record.detail = Some(format!("{}-received-draining-in-flight-work", signal.name()));
+            shutdown_tracer.emit(record);
+        }),
+    );
     tokio::pin!(server);
     let result = if let Some(mut bootstrap_task) = bootstrap_task {
         tokio::select! {
@@ -8772,6 +10258,10 @@ async fn main() -> Result<(), HubError> {
     #[cfg(not(all(feature = "sqlite", feature = "native-artifact-execution")))]
     let inference_close_result: Result<(), HubError> = Ok(());
     artifact_maintenance.shutdown().await;
+    // 🚰️ Last, and after the router is already refusing connections: a final pass over whatever the
+    // in-flight requests committed on their way out, so nothing is left acknowledged-but-undelivered
+    // in the outbox across the restart.
+    saga_drain.shutdown().await;
     result?;
     inference_close_result
 }
@@ -8789,6 +10279,10 @@ mod credential_command;
 // naturally lives behind the same feature a plain `cargo test` already enables by default (see
 // `Cargo.toml`'s `default = ["sqlite"]`). `postgres`/`neo4j` each carry their own backend-only
 // tests in `📇️directory/{🐘️postgres,🌐️neo4j}/🦀️.rs` instead of duplicating this suite.
+#[cfg(test)]
+#[path = "../🧪️tests/🗂️artifact-root/🦀️.rs"]
+mod test_artifact_root;
+
 #[cfg(all(test, feature = "sqlite"))]
 #[path = "../🧪️tests/🔬️bin-unit/🦀️.rs"]
 mod tests;

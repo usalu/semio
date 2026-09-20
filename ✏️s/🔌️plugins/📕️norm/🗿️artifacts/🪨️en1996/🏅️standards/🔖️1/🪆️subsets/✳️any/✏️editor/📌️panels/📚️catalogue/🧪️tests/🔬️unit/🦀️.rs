@@ -11,4 +11,5 @@ async fn definition_binds_the_framework_catalogue_tab_to_this_body_key() {
 async fn renders_this_standards_catalogue_headline() {
     let mut app = context::app_with_registry().await;
     assert!(context::render(&mut app, BODY_CATALOGUE).await.contains("catalogue"));
+    context::close(&mut app);
 }

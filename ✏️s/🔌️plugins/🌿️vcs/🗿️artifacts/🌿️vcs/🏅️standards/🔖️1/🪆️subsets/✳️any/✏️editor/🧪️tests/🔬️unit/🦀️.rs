@@ -1,6 +1,6 @@
 pub(crate) mod context {
     use super::super::*;
-    use semio_framework_plugin::artifact_app_laws::{meta, new_app, new_app_with_registry};
+    use semio_framework_plugin::artifact_app_laws::{meta, new_app_with_registry};
     use semio_framework_plugin::ActionMeta;
     use semio_framework_plugin::{EditorApp, InvocationResult, PluginApp, VcsArtifactApp, ViewModel};
     use store::ArtifactEnvelope;
@@ -17,20 +17,41 @@ pub(crate) mod context {
         semio_framework_plugin::App { definition: create_vcs_app(), examples: Vec::new() }
     }
     
-    /// 🧪️ A bare, pre-seeded app instance — no `AppActionRegistry`, so undeclared internal commands
-    /// dispatch freely. Seeded via `seed_vcs_demo_history` (see its own doc comment for why this
-    /// replaced `ArtifactApp::seed`).
+    /// 🧪️ A pre-seeded app instance. It carries the real `AppActionRegistry`, exactly like
+    /// `app_with_registry()`: since the framework joins `EditorApp<VcsPlayApp>`'s
+    /// `bounded_first_step_tool_proofs!` roster against the registry's MIGRATED declarations while it
+    /// constructs the wrapper (`AppActionRegistry::validate_tool_job_rows`), a registry-LESS
+    /// `VcsArtifactApp::new` can no longer build an app that declares tool proofs — its empty registry
+    /// declares nothing, so every proof row is refused with `interactive-job.catalog-authority`
+    /// (`generated_migrated=false`, `migrated={}`). Seeded via `seed_vcs_demo_history` (see its own
+    /// doc comment for why this replaced `ArtifactApp::seed`).
     pub async fn app() -> VcsApp {
-        let mut instance = new_app::<EditorApp<VcsPlayApp>>().await;
-        seed_vcs_demo_history(&mut instance).await;
-        instance
+        app_with_registry().await
     }
     
     /// 🧪️ A pre-seeded app wired to the real manifest registry — enforces View/Shell kind discipline.
+    /// 🪪️ MOUNTED: a registered app refuses every typed command whose `ActionMeta.instance_id` is not
+    /// its bound live runtime instance (`interactive-job.live-instance`), and `meta("local")` stamps
+    /// `1` — so the id is bound here, before the demo history is seeded through that same surface.
     pub async fn app_with_registry() -> VcsApp {
         let mut instance = new_app_with_registry::<EditorApp<VcsPlayApp>>(vcs_app_manifest_for_tests).await;
+        instance.bind_instance_id(meta("local").instance_id).await;
         seed_vcs_demo_history(&mut instance).await;
         instance
+    }
+
+    /// 🔁️ Drives one dispatched typed operation to quiescence the way the plugin host does: on a
+    /// mounted app `dispatch_typed` only QUEUES the operation, so a reader that skips this step
+    /// observes the pre-dispatch document.
+    pub async fn settle(instance: &mut VcsApp) {
+        semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(instance, meta("local").instance_id).await.expect("settle the typed operation");
+    }
+
+    /// 🎬️ Admits one framework-reserved action (`commitCheckpoint`, `checkoutCheckpoint`, …) and runs
+    /// the spawned reserved job plus the publication it queues — `handle_action` only ADMITS.
+    pub async fn settle_action(instance: &mut VcsApp, admitted: InvocationResult) {
+        semio_framework_plugin::app::settle_framework_reserved_admission(instance, admitted).await.expect("framework reserved admission");
+        settle(instance).await;
     }
     
     /// 🧾️ Builds one flat, string-valued action argument object — the `DslValue` shape
@@ -45,7 +66,9 @@ pub(crate) mod context {
     }
     
     pub async fn dispatch(instance: &mut VcsApp, command: VcsCommand) -> InvocationResult {
-        instance.dispatch_typed(command, &meta("local")).await.expect("dispatch")
+        let result = instance.dispatch_typed(command, &meta("local")).await.expect("dispatch");
+        settle(instance).await;
+        result
     }
     
     pub async fn render(instance: &mut VcsApp, body_key: &str) -> String {
@@ -76,24 +99,32 @@ pub(crate) mod context {
         let mut next = app.snapshot().expect("materialize snapshot");
         mutate(&mut next);
         let text = serde_json::to_string(&next).expect("serialize snapshot");
-        let _ = app.dispatch_typed(VcsCommand::TextEdit(text_edit::TextEdit { text }), local).await;
+        app.dispatch_typed(VcsCommand::TextEdit(text_edit::TextEdit { text }), local).await.expect("seeded edit is admitted");
+        settle(app).await;
     }
-    
+
+    /// 🎬️ One seeding action, admitted AND settled — every one of these verbs publishes through the
+    /// retained operation lane on a mounted app, so dropping the receipt left the demo history empty.
+    async fn seed_action(app: &mut VcsApp, local: &ActionMeta, action_id: &str, args: dsl::DslValue) {
+        let admitted = app.handle_action(action_id, Some(&args), local).await.unwrap_or_else(|fault| panic!("seeded action {action_id} is admitted: {fault:?}"));
+        settle_action(app, admitted).await;
+    }
+
     async fn seed_commit(app: &mut VcsApp, local: &ActionMeta, message: &str) {
-        let _ = app.handle_action("commitCheckpoint", Some(&action_args([("message", message.to_string())])), local).await;
+        seed_action(app, local, "commitCheckpoint", action_args([("message", message.to_string())])).await;
     }
-    
+
     async fn seed_checkout(app: &mut VcsApp, local: &ActionMeta, checkpoint_id: &str) {
-        let _ = app.handle_action("checkoutCheckpoint", Some(&action_args([("checkpointId", checkpoint_id.to_string())])), local).await;
+        seed_action(app, local, "checkoutCheckpoint", action_args([("checkpointId", checkpoint_id.to_string())])).await;
     }
-    
+
     async fn seed_create_alternative(app: &mut VcsApp, local: &ActionMeta, name: &str) -> String {
-        let _ = app.handle_action("createAlternative", Some(&action_args([("name", name.to_string())])), local).await;
+        seed_action(app, local, "createAlternative", action_args([("name", name.to_string())])).await;
         seeded_envelope(app).await.active_alternative_id.clone().expect("alternative id")
     }
-    
+
     async fn seed_switch_alternative(app: &mut VcsApp, local: &ActionMeta, alternative_id: &str) {
-        let _ = app.handle_action("switchAlternative", Some(&action_args([("alternativeId", alternative_id.to_string())])), local).await;
+        seed_action(app, local, "switchAlternative", action_args([("alternativeId", alternative_id.to_string())])).await;
     }
     
     async fn seed_last_checkpoint_id(app: &VcsApp) -> String {
@@ -243,7 +274,12 @@ async fn command_ids_are_unique_and_match_the_declared_manifest_actions() {
     sorted.sort_unstable();
     sorted.dedup();
     assert_eq!(sorted.len(), ids.len(), "duplicate command ids in {ids:?}");
-    assert_eq!(ids.len(), 10, "every VcsCommand row must be covered by every_command()");
+    // 🧾️ Measured against the enum's OWN generated roster rather than a hand-copied count: a row
+    // appended to `app_commands!` (as `setActiveExample` was) must appear here, and lowering the
+    // number instead of adding the representative silently stops covering that row.
+    let mut declared: Vec<&str> = VcsCommand::TOOL_JOB_IDS.to_vec();
+    declared.sort_unstable();
+    assert_eq!(sorted, declared, "every VcsCommand row must be covered by every_command()");
 }
 
 /// ⚖️ LAW: text and binary are two projections of the same command, for every single row.
@@ -284,6 +320,7 @@ pub(super) fn every_command() -> Vec<VcsCommand> {
         VcsCommand::CanvasPointerMove(canvas_pointer_move::CanvasPointerMove { samples: vec![[1.0, 2.0], [3.0, 4.0]] }),
         VcsCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp { cancelled: false }),
         VcsCommand::CanvasWheel(canvas_wheel::CanvasWheel {}),
+        VcsCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: crate::examples::demo::ID.into() }),
     ]
 }
 
@@ -313,7 +350,10 @@ fn retained_factories_publish_only_their_exact_declared_lanes() {
     use semio_framework_plugin::ArtifactOwnedToolJobFactory;
     let fixture: Value = parse(RETAINED_ROUTES).expect("VCS retained route fixture decodes");
     let routes = fixture.get("routes").and_then(Value::as_array).expect("routes");
-    assert_eq!(routes.len(), 9);
+    // 🛣️ The fixture is the language-neutral oracle of BOTH declared contract rosters — measured
+    // against them rather than a frozen literal, so a tool added to either roster must be declared
+    // here too instead of silently escaping the lane law.
+    assert_eq!(routes.len(), VCS_BOUNDED_PUBLICATION_CONTRACTS.len() + VCS_RESUMABLE_PUBLICATION_CONTRACTS.len());
     assert_eq!(<VcsBoundedCommandJobFactory as ArtifactOwnedToolJobFactory>::PUBLICATION_CONTRACTS, VCS_BOUNDED_PUBLICATION_CONTRACTS);
     assert_eq!(<VcsResumableCommandJobFactory as ArtifactOwnedToolJobFactory>::PUBLICATION_CONTRACTS, VCS_RESUMABLE_PUBLICATION_CONTRACTS);
     for route in routes {
@@ -356,7 +396,14 @@ fn action_bridge_covers_all_vcs_owned_commands_and_rejects_unknown_actions() {
         ("canvasPointerMove", no_args()),
         ("canvasPointerUp", no_args()),
         ("canvasWheel", no_args()),
+        ("setActiveExample", action_args([("exampleId", crate::examples::demo::ID.to_string())])),
     ];
+    // 🏷️ "all vcs owned commands" is the enum's own roster, never a hand-copied subset.
+    let mut bridged: Vec<&str> = rows.iter().map(|(id, _)| *id).collect();
+    bridged.sort_unstable();
+    let mut declared: Vec<&str> = VcsCommand::TOOL_JOB_IDS.to_vec();
+    declared.sort_unstable();
+    assert_eq!(bridged, declared, "every VcsCommand row must have an action-bridge row here");
     for (id, args) in rows {
         assert_eq!(VcsPlayApp::command_from_action(id, Some(&args)).expect("declared action bridge").command_id(), id);
     }
@@ -577,3 +624,24 @@ async fn create_and_switch_alternative_round_trip_through_the_wrapper() {
 }
 //#endregion 🔖️CrossCutting
 
+
+//#region 📬️StorePreparation
+/// 🧺️ One point-invertible durable item folds TWO staged rows — its `forwards` row plus the row
+/// `Mutation::inverse` yields — and `ArtifactStore::fold_batch_item` compares
+/// `forwards.len() + inverse.len()` against this declaration. Declaring `1` fail-closed every
+/// Actions-pane `incrementCounter` with `batched item candidate failed its exact fixed fold
+/// contract` while the plain dispatch lane above stayed green, which is why no test caught it
+/// (ticket 26/09/18, slice F1).
+#[semio_framework_async_macros::async_test]
+async fn the_one_item_preflight_declares_room_for_a_point_inverse() {
+    let factory = VcsOneItemPreparationFactory::<VcsSnapshot, VcsDemoMutation>::new(store::HistoryLane::Document);
+    let footprint = store::ArtifactStoreOneItemPreparationFactory::preflight(&factory, &crate::mutations::change_counter(1), None, store::HistoryLane::Document)
+        .expect("the document lane admits its own counter mutation");
+    assert_eq!(footprint.work_items, store::ARTIFACT_STORE_ONE_ITEM_INVERTIBLE_WORK_ITEMS);
+    assert!(footprint.is_admissible());
+    assert!(
+        store::ArtifactStoreOneItemPreparationFactory::preflight(&factory, &crate::mutations::change_counter(1), None, store::HistoryLane::Interaction).is_err(),
+        "the declared lane is part of the envelope the factory admits"
+    );
+}
+//#endregion 📬️StorePreparation

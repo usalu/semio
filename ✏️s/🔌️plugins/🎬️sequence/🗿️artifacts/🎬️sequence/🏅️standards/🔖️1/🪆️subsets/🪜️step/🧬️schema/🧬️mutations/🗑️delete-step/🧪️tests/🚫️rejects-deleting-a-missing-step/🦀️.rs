@@ -10,12 +10,15 @@
 //!
 //! 🗑️ `delete-step` is the one sequence verb with an edge CASCADE: deleting a step also severs every
 //! edge touching it and reports that as an Info `mutation.cascade`. This case pins the branch BEFORE
-//! the cascade — the committed `content` handle is left unseeded, so the scene is empty, the target
-//! guard fires first, and no cascade note is emitted at all.
+//! the cascade — the committed `content` handle is materialized to an EXPLICITLY EMPTY scene, so the
+//! target guard fires first and no cascade note is emitted at all. (A composed child handle carries
+//! no scene of its own once decoded from JSON, and `sequence_working_scene` now REQUIRES a
+//! materialized child rather than silently reading an empty one — the emptiness this case depends on
+//! is therefore stated here instead of being inferred from an unresolved handle.)
 
 use crate::diff::SequenceDiff;
 use crate::mutations::{apply_sequence_mutation, inverse_sequence_mutation, SequenceMutation};
-use crate::SequenceSnapshot;
+use crate::{SequenceSnapshot, SequenceWorkingScene};
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🗑️delete-step/🚫️rejects-deleting-a-missing-step/📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🗑️delete-step/🚫️rejects-deleting-a-missing-step/📸️snapshot/➡️after/🔣️.json");
@@ -27,7 +30,9 @@ fn mutation() -> SequenceMutation {
     dsl::os_pack::from_json_str(MUTATION).expect("mutation decodes")
 }
 fn before() -> SequenceSnapshot {
-    dsl::os_pack::from_json_str(BEFORE).expect("before snapshot decodes")
+    let mut snapshot: SequenceSnapshot = dsl::os_pack::from_json_str(BEFORE).expect("before snapshot decodes");
+    snapshot.content.set_local_owner(std::sync::Arc::new(SequenceWorkingScene::default()));
+    snapshot
 }
 fn expected_after() -> SequenceSnapshot {
     dsl::os_pack::from_json_str(AFTER).expect("after snapshot decodes")

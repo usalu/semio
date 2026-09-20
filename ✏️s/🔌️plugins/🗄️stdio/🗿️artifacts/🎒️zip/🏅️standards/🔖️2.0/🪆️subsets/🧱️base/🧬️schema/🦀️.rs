@@ -71,7 +71,13 @@ pub fn empty_zip_snapshot() -> ZipSnapshot {
 pub fn demo_zip_snapshot() -> ZipSnapshot {
     ZipSnapshot {
         schema: STDIO_ZIP_DOCUMENT_SCHEMA.into(),
-        entries: vec![ZipEntry { name: "readme.txt".into(), data: b"hello from stdio.zip".to_vec() }, ZipEntry { name: "data/poem.txt".into(), data: b"deflate this small poem, it should compress reasonably well well well".to_vec() }],
+        // 🔤️ Canonical (`name`-ascending) member order — the order this artifact's own writer emits
+        // and its reader hands back (`🚪️io`'s `encode_zip`/`decode_zip`), so the demo is a fixpoint
+        // of its own codec rather than a snapshot no round trip could reproduce.
+        entries: vec![
+            ZipEntry { name: "data/poem.txt".into(), data: b"deflate this small poem, it should compress reasonably well well well".to_vec() },
+            ZipEntry { name: "readme.txt".into(), data: b"hello from stdio.zip".to_vec() },
+        ],
         comment: "demo archive comment".into(),
     }
 }

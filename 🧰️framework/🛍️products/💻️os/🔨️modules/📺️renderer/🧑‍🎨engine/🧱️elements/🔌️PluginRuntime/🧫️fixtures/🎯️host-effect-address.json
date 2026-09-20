@@ -10,7 +10,7 @@
     "appId": "s.procedural.procedural3d@1/*#editor",
     "osInstanceId": "os-7",
     "label": "Hexagonal Mushroom Column",
-    "documentJson": "{}"
+    "artifactJson": "{}"
   },
   "unaddressedFaultCode": "renderer.invocation.unaddressed",
   "unaddressedFaultOrigin": "renderer"

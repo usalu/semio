@@ -38,15 +38,15 @@ fn ptr(id: u64) -> PointerInfo {
 }
 
 fn down(id: u64, x: f32, y: f32) -> DispatchEvent {
-    DispatchEvent::PointerDown { pointer: ptr(id), x, y, button: PointerButton::Primary }
+    DispatchEvent::PointerDown { pointer: ptr(id), x, y, button: PointerButton::Primary, modifiers: EventModifiers::default() }
 }
 
 fn up(id: u64, x: f32, y: f32) -> DispatchEvent {
-    DispatchEvent::PointerUp { pointer: ptr(id), x, y, button: PointerButton::Primary }
+    DispatchEvent::PointerUp { pointer: ptr(id), x, y, button: PointerButton::Primary, modifiers: EventModifiers::default() }
 }
 
 fn mv(id: u64, x: f32, y: f32) -> DispatchEvent {
-    DispatchEvent::PointerMove { pointer: ptr(id), x, y }
+    DispatchEvent::PointerMove { pointer: ptr(id), x, y, modifiers: EventModifiers::default() }
 }
 
 #[test]
@@ -99,6 +99,23 @@ fn capture_routes_move_and_up_to_the_captured_node_regardless_of_pointer_positio
 
     dispatcher.dispatch(&tree, &up(1, 150.0, 50.0));
     assert_eq!(dispatcher.capture_of(PointerId(1)), None, "capture releases on PointerUp");
+}
+
+#[test]
+fn cancelling_one_pointer_retires_only_its_capture_and_never_activates() {
+    let mut tree = DispatchTree::new(UiRevision(0));
+    let root = leaf(&mut tree, None, "root", DispatchFlags::LAYOUT_CONTAINER, listen(vec![]), (0.0, 0.0, 200.0, 100.0));
+    leaf(&mut tree, Some(root), "a", DispatchFlags::NONE, listen(vec![bind(Trigger::Activate, "a")]), (0.0, 0.0, 100.0, 100.0));
+    leaf(&mut tree, Some(root), "b", DispatchFlags::NONE, listen(vec![bind(Trigger::Activate, "b")]), (100.0, 0.0, 100.0, 100.0));
+    let mut dispatcher = Dispatcher::new();
+    dispatcher.dispatch(&tree, &down(1, 50.0, 50.0));
+    dispatcher.dispatch(&tree, &down(2, 150.0, 50.0));
+    let cancelled = dispatcher.dispatch(&tree, &DispatchEvent::PointerCancel { pointer: ptr(1) });
+    assert!(cancelled.handled && cancelled.intents.is_empty());
+    assert!(dispatcher.capture_of(PointerId(1)).is_none());
+    assert!(dispatcher.capture_of(PointerId(2)).is_some());
+    assert!(dispatcher.dispatch(&tree, &up(1, 50.0, 50.0)).intents.is_empty());
+    assert_eq!(dispatcher.dispatch(&tree, &up(2, 150.0, 50.0)).intents.len(), 1);
 }
 
 #[test]
@@ -370,10 +387,10 @@ fn scroll_routes_to_the_nearest_scrollable_ancestor_and_clamps_at_zero() {
     let mut dispatcher = Dispatcher::new();
     let root_element = tree.node(root).unwrap().element;
 
-    dispatcher.dispatch(&tree, &DispatchEvent::Scroll { x: 15.0, y: 15.0, delta_x: 0.0, delta_y: 30.0 });
+    dispatcher.dispatch(&tree, &DispatchEvent::Scroll { x: 15.0, y: 15.0, delta_x: 0.0, delta_y: 30.0, modifiers: EventModifiers::default() });
     assert_eq!(dispatcher.scroll_offset(root_element), (0.0, 30.0));
 
-    dispatcher.dispatch(&tree, &DispatchEvent::Scroll { x: 15.0, y: 15.0, delta_x: 0.0, delta_y: -100.0 });
+    dispatcher.dispatch(&tree, &DispatchEvent::Scroll { x: 15.0, y: 15.0, delta_x: 0.0, delta_y: -100.0, modifiers: EventModifiers::default() });
     assert_eq!(dispatcher.scroll_offset(root_element), (0.0, 0.0), "scroll offset must clamp at zero, not go negative");
 }
 

@@ -1,0 +1,22 @@
+[
+  { "direction": "gateway_to_shell", "kind": "readHistory", "payload": {"version":1,"kind":"readHistory"} },
+  { "direction": "gateway_to_shell", "kind": "readArtifact", "payload": {"version":1,"kind":"readArtifact"} },
+  { "direction": "gateway_to_shell", "kind": "pureCommand", "payload": {"version":1,"kind":"pureCommand","capabilityId":"note.note.appendParagraph","input":{"text":"hello"}} },
+  { "direction": "gateway_to_shell", "kind": "transactionPrepare", "payload": {"version":1,"kind":"transactionPrepare","txnId":"txn_1","ops":{"document":["AQID"],"config":[],"draft":[]},"label":"append paragraph","origin":{"kind":"agent","principal":"agent:local","invocationId":"inv_1"}} },
+  { "direction": "gateway_to_shell", "kind": "transactionCommit", "payload": {"version":1,"kind":"transactionCommit","txnId":"txn_1"} },
+  { "direction": "gateway_to_shell", "kind": "transactionRollback", "payload": {"version":1,"kind":"transactionRollback","txnId":"txn_1"} },
+  { "direction": "gateway_to_shell", "kind": "transactionUndo", "payload": {"version":1,"kind":"transactionUndo","groupId":"edit_7"} },
+  { "direction": "gateway_to_shell", "kind": "transactionRedo", "payload": {"version":1,"kind":"transactionRedo","groupId":"edit_7"} },
+  { "direction": "gateway_to_shell", "kind": "exportMedia", "payload": {"version":1,"kind":"exportMedia","port":"pdf","document":"AQIDBA==","documentSpr":""} },
+
+  { "direction": "shell_to_gateway", "kind": "historySnapshot", "payload": {"version":1,"kind":"historySnapshot","artifactId":"note-1","headEditId":"edit_7","cursor":"7"} },
+  { "direction": "shell_to_gateway", "kind": "emit", "payload": {"version":1,"kind":"emit","ops":{"document":["AQID"],"config":[],"draft":[]},"warnings":[]} },
+  { "direction": "shell_to_gateway", "kind": "transactionPrepared", "payload": {"version":1,"kind":"transactionPrepared","txnId":"txn_1"} },
+  { "direction": "shell_to_gateway", "kind": "transactionCommitted", "payload": {"version":1,"kind":"transactionCommitted","txnId":"txn_1","editId":"edit_8"} },
+  { "direction": "shell_to_gateway", "kind": "transactionRolledBack", "payload": {"version":1,"kind":"transactionRolledBack","txnId":"txn_1"} },
+  { "direction": "shell_to_gateway", "kind": "transactionUndone", "payload": {"version":1,"kind":"transactionUndone","groupId":"edit_8"} },
+  { "direction": "shell_to_gateway", "kind": "transactionRedone", "payload": {"version":1,"kind":"transactionRedone","groupId":"edit_8"} },
+  { "direction": "shell_to_gateway", "kind": "artifact", "payload": {"version":1,"kind":"artifact","pack":"AQIDBA==","spr":"BQY="} },
+  { "direction": "shell_to_gateway", "kind": "exported", "payload": {"version":1,"kind":"exported","port":"pdf","descriptor":"AQ==","data":"AgM="} },
+  { "direction": "shell_to_gateway", "kind": "error", "payload": {"version":1,"kind":"error","code":"mutation.rejected","message":"the document is read-only for this actor"} }
+]

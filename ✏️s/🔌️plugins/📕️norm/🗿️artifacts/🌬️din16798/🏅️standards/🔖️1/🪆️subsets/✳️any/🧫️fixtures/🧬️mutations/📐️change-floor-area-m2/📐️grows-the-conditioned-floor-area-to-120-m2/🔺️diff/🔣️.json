@@ -13,7 +13,7 @@
   "persons": null,
   "idaClass": null,
   "ventilationM3H": null,
-  "floorAreaM2": 120,
+  "floorAreaM2": 120.0,
   "bedrooms": null,
   "dwellingVentilationM3H": null,
   "occupants": null,

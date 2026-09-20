@@ -93,7 +93,7 @@ impl RetirementCursor for Bytes {
 }
 impl Drop for Bytes {
     fn drop(&mut self) {
-        assert!(self.0.is_empty(), "owned bytes retired before terminal-empty");
+        assert!(std::thread::panicking() || self.0.is_empty(), "owned bytes retired before terminal-empty");
         unsafe { ManuallyDrop::drop(&mut self.0) };
     }
 }
@@ -114,7 +114,7 @@ impl<T: RetireOwned> RetirementCursor for Collection<T> {
 }
 impl<T: RetireOwned> Drop for Collection<T> {
     fn drop(&mut self) {
-        assert!(self.0.is_empty(), "owned collection retired before terminal-empty");
+        assert!(std::thread::panicking() || self.0.is_empty(), "owned collection retired before terminal-empty");
         unsafe { ManuallyDrop::drop(&mut self.0) };
     }
 }
@@ -135,7 +135,7 @@ impl<K: RetireOwned + Ord, V: RetireOwned> RetirementCursor for OrderedMap<K, V>
 }
 impl<K: RetireOwned + Ord, V: RetireOwned> Drop for OrderedMap<K, V> {
     fn drop(&mut self) {
-        assert!(self.0.is_empty(), "owned ordered map retired before terminal-empty");
+        assert!(std::thread::panicking() || self.0.is_empty(), "owned ordered map retired before terminal-empty");
         unsafe { ManuallyDrop::drop(&mut self.0) };
     }
 }
@@ -201,7 +201,7 @@ impl RetirementCursor for Sequence {
 }
 impl Drop for Sequence {
     fn drop(&mut self) {
-        assert!(self.0.is_empty(), "owned field sequence retired before terminal-empty");
+        assert!(std::thread::panicking() || self.0.is_empty(), "owned field sequence retired before terminal-empty");
         unsafe { ManuallyDrop::drop(&mut self.0) };
     }
 }
@@ -231,7 +231,7 @@ impl RetirementCursor for ValueRetirement {
 }
 impl Drop for ValueRetirement {
     fn drop(&mut self) {
-        assert!(self.0.is_none(), "dynamic value retired before terminal-empty");
+        assert!(std::thread::panicking() || self.0.is_none(), "dynamic value retired before terminal-empty");
     }
 }
 impl RetireOwned for crate::DslValue {
@@ -266,7 +266,7 @@ impl CursorStack {
 }
 impl Drop for CursorStack {
     fn drop(&mut self) {
-        assert!(self.0.is_empty(), "owned cursor stack retired before terminal-empty");
+        assert!(std::thread::panicking() || self.0.is_empty(), "owned cursor stack retired before terminal-empty");
         unsafe { ManuallyDrop::drop(&mut self.0) };
     }
 }
@@ -292,7 +292,7 @@ impl<T: RetireOwned> ErasedSnapshotRetirement for OwnedRetirement<T> {
 }
 impl<T: RetireOwned> Drop for OwnedRetirement<T> {
     fn drop(&mut self) {
-        assert!(self.terminal_is_empty(), "owned value retired before terminal-empty");
+        assert!(std::thread::panicking() || self.terminal_is_empty(), "owned value retired before terminal-empty");
     }
 }
 pub fn owned_retirement<T: RetireOwned>(value: T) -> Box<dyn ErasedSnapshotRetirement> {
@@ -336,7 +336,7 @@ impl<T: RetireOwned + Sync> ErasedSnapshotRetirement for SharedRetirement<T> {
 }
 impl<T: RetireOwned + Sync> Drop for SharedRetirement<T> {
     fn drop(&mut self) {
-        assert!(self.terminal_is_empty(), "shared value retired before terminal-empty");
+        assert!(std::thread::panicking() || self.terminal_is_empty(), "shared value retired before terminal-empty");
     }
 }
 pub fn shared_retirement<T: RetireOwned + Sync>(value: Arc<T>) -> Box<dyn ErasedSnapshotRetirement> {

@@ -1,10 +1,11 @@
 use super::*;
-use crate::editor::dag::unit_tests::context::{new_app, render as render_body};
+use crate::editor::dag::unit_tests::context::{close, new_app, render as render_body};
 
 #[semio_framework_async_macros::async_test]
 async fn dag_play_labels_resolve_native_by_default() {
     let mut app = new_app().await;
     let json = render_body(&mut app, DAG_PLAY_BODY_ARTIFACT).await;
+    close(&mut app);
     assert!(json.contains("Nodes"));
     assert!(json.contains("Edges"));
 }

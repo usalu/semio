@@ -8,7 +8,10 @@
 //! 🎨️ Embeds GraphHost, FlowHost, and EditorHost via vello offscreen compositing.
 
 use crate::interpreter::FrameworkWidgetContext;
-use flow::{dag::dag_screen_to_world, FlowHost};
+use flow::{
+    dag::{dag_screen_to_world, dag_world_to_screen},
+    FlowHost,
+};
 use framework_editor::EditorHost;
 use framework_surface_node_graph::node_graph::GraphHost;
 use framework_surface_node_graph::paint::RasterHost;
@@ -28,7 +31,6 @@ use vello::{AaConfig, AaSupport, RenderParams, Renderer, RendererOptions};
 
 #[cfg(target_arch = "wasm32")]
 use js_sys;
-
 
 //#region Registry
 enum NodeGraphEngine {
@@ -51,8 +53,6 @@ struct NodeGraphSyncCache {
     hover: Option<(String, String)>,
     scene_pack: Option<Vec<u8>>,
 }
-
-
 
 struct EngineSurface {
     node_graph: Option<NodeGraphEngine>,
@@ -206,8 +206,6 @@ impl EngineSurfaceRegistry {
         let index = self.slot_index(id)?;
         Some(EngineSurfaceIdentity { token: EngineSurfaceToken { slot: index as u16, generation: self.slots[index].generation }, id: self.slots[index].id? })
     }
-
-
 
     fn reserve(&mut self, id: &str) -> Option<EngineSurfaceToken> {
         let Ok(id) = EngineSurfaceId::try_from_str(id) else {
@@ -986,8 +984,6 @@ impl EngineCanvasBuildContext {
         Ok(())
     }
 
-
-
     #[cfg(test)]
     fn try_reserve_fresh_packet(&mut self, surface: EngineSurfaceSnapshot) -> Result<EngineCanvasPacketReservation, EngineSurfaceSnapshot> {
         let destination = if self.len < ENGINE_CANVAS_FRAME_PACKET_CAPACITY {
@@ -1050,12 +1046,6 @@ const _: fn() = || {
     assert_send::<EngineCanvasBuildContext>();
 };
 
-struct EngineGpuSurface {
-    vello: Renderer,
-    texture: wgpu::Texture,
-    view: wgpu::TextureView,
-}
-
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum EngineGpuBuildPhase {
     Reserve,
@@ -1063,16 +1053,13 @@ enum EngineGpuBuildPhase {
     View,
     Renderer,
     Render,
-    ReplacementTexture,
-    ReplacementView,
     Stage,
+    RetireRenderer,
     Publish,
     ClosingAdmission,
     ClosingRenderer,
     ClosingView,
     ClosingTexture,
-    ClosingReplacementView,
-    ClosingReplacementTexture,
     Terminal,
 }
 
@@ -1089,8 +1076,6 @@ struct EngineGpuCandidate {
     renderer: Option<Renderer>,
     texture: Option<wgpu::Texture>,
     view: Option<wgpu::TextureView>,
-    replacement_texture: Option<wgpu::Texture>,
-    replacement_view: Option<wgpu::TextureView>,
     phase: EngineGpuBuildPhase,
 }
 
@@ -1109,8 +1094,6 @@ impl EngineGpuCandidate {
             renderer: None,
             texture: None,
             view: None,
-            replacement_texture: None,
-            replacement_view: None,
             phase: EngineGpuBuildPhase::Reserve,
         }
     }
@@ -1128,6 +1111,15 @@ impl EngineGpuCandidate {
 
     fn matches_live(&self, live: EngineSurfaceLiveFreshness) -> bool {
         engine_gpu_freshness_matches(self.surface, self.document_generation, self.scene_revision, self.metrics_generation, live)
+    }
+
+    fn content_identity(&self) -> Result<ui_wgpu::wgpu::RasterContentIdentity, String> {
+        ui_wgpu::wgpu::RasterContentIdentity::revision(
+            self.width,
+            self.height,
+            [u64::from(self.surface.token.slot), self.surface.token.generation, self.document_generation, self.scene_revision, self.metrics_generation, self.primary_metrics_generation],
+        )
+        .ok_or_else(|| "engine raster content identity overflowed".to_string())
     }
 
     fn begin_close(&mut self) {
@@ -1161,18 +1153,6 @@ impl EngineGpuCandidate {
                 if self.texture.take().is_some() {
                     return Ok(false);
                 }
-                self.phase = EngineGpuBuildPhase::ClosingReplacementView;
-            }
-            EngineGpuBuildPhase::ClosingReplacementView => {
-                if self.replacement_view.take().is_some() {
-                    return Ok(false);
-                }
-                self.phase = EngineGpuBuildPhase::ClosingReplacementTexture;
-            }
-            EngineGpuBuildPhase::ClosingReplacementTexture => {
-                if self.replacement_texture.take().is_some() {
-                    return Ok(false);
-                }
                 self.phase = EngineGpuBuildPhase::Terminal;
             }
             EngineGpuBuildPhase::Terminal => return Ok(true),
@@ -1182,7 +1162,7 @@ impl EngineGpuCandidate {
     }
 
     fn terminal_is_empty(&self) -> bool {
-        self.phase == EngineGpuBuildPhase::Terminal && self.admission.is_none() && self.renderer.is_none() && self.texture.is_none() && self.view.is_none() && self.replacement_texture.is_none() && self.replacement_view.is_none()
+        self.phase == EngineGpuBuildPhase::Terminal && self.admission.is_none() && self.renderer.is_none() && self.texture.is_none() && self.view.is_none()
     }
 }
 
@@ -1190,103 +1170,42 @@ fn engine_gpu_freshness_matches(surface: EngineSurfaceIdentity, document_generat
     surface == live.identity && document_generation == live.document_generation && scene_revision == live.scene_revision && metrics_generation == live.metrics_generation
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-enum EngineGpuRetirementPhase {
-    Renderer,
-    View,
-    Texture,
-    Terminal,
-}
-
-struct EngineGpuRetirement {
-    renderer: Option<Renderer>,
-    view: Option<wgpu::TextureView>,
-    texture: Option<wgpu::Texture>,
-    phase: EngineGpuRetirementPhase,
-}
-
-impl EngineGpuRetirement {
-    fn new(surface: EngineGpuSurface) -> Self {
-        Self { renderer: Some(surface.vello), view: Some(surface.view), texture: Some(surface.texture), phase: EngineGpuRetirementPhase::Renderer }
-    }
-
-    fn close_step(&mut self) -> bool {
-        match self.phase {
-            EngineGpuRetirementPhase::Renderer => {
-                if self.renderer.take().is_some() {
-                    return false;
-                }
-                self.phase = EngineGpuRetirementPhase::View;
-            }
-            EngineGpuRetirementPhase::View => {
-                if self.view.take().is_some() {
-                    return false;
-                }
-                self.phase = EngineGpuRetirementPhase::Texture;
-            }
-            EngineGpuRetirementPhase::Texture => {
-                if self.texture.take().is_some() {
-                    return false;
-                }
-                self.phase = EngineGpuRetirementPhase::Terminal;
-            }
-            EngineGpuRetirementPhase::Terminal => return true,
-        }
-        self.phase == EngineGpuRetirementPhase::Terminal
-    }
-
-    fn terminal_is_empty(&self) -> bool {
-        self.phase == EngineGpuRetirementPhase::Terminal && self.renderer.is_none() && self.view.is_none() && self.texture.is_none()
-    }
-}
-
 struct EngineGpuSlot {
     id: Option<EngineSurfaceId>,
     generation: u64,
     exhausted: bool,
-    live: Option<EngineGpuSurface>,
     candidate: Option<EngineGpuCandidate>,
-    retirement: Option<EngineGpuRetirement>,
     closing: bool,
 }
 
 impl EngineGpuSlot {
     fn new() -> Self {
-        Self { id: None, generation: 0, exhausted: false, live: None, candidate: None, retirement: None, closing: false }
+        Self { id: None, generation: 0, exhausted: false, candidate: None, closing: false }
     }
 
     fn token(&self, slot: usize) -> Option<EngineSurfaceToken> {
-        (self.id.is_some() || self.live.is_some() || self.candidate.is_some() || self.retirement.is_some()).then_some(EngineSurfaceToken { slot: slot as u16, generation: self.generation })
+        (self.id.is_some() || self.candidate.is_some()).then_some(EngineSurfaceToken { slot: slot as u16, generation: self.generation })
     }
 
     fn terminal_is_empty(&self) -> bool {
-        self.id.is_none() && self.live.is_none() && self.candidate.is_none() && self.retirement.is_none()
+        self.id.is_none() && self.candidate.is_none()
     }
 
     fn publish_candidate(&mut self, packet: &EngineCanvasPacket, expected: ui_wgpu::wgpu::RasterTextureWitness, primary_metrics_generation: u64) -> Result<bool, String> {
         let Some(candidate) = self.candidate.as_mut() else {
             return Err("engine GPU publication candidate disappeared".to_string());
         };
-        if !candidate.matches(packet, expected, primary_metrics_generation) || self.retirement.is_some() {
+        if !candidate.matches(packet, expected, primary_metrics_generation) {
             candidate.begin_close();
             return Err("engine CPU/GPU publication freshness changed".to_string());
         }
-        if candidate.renderer.is_none() || candidate.replacement_texture.is_none() || candidate.replacement_view.is_none() {
+        if candidate.admission.is_some() || candidate.renderer.is_some() || candidate.texture.is_some() || candidate.view.is_some() {
             candidate.begin_close();
             return Err("engine GPU publication candidate was incomplete".to_string());
         }
         let Some(mut candidate) = self.candidate.take() else {
             return Err("engine GPU publication candidate transfer failed".to_string());
         };
-        let (Some(renderer), Some(texture), Some(view)) = (candidate.renderer.take(), candidate.replacement_texture.take(), candidate.replacement_view.take()) else {
-            candidate.begin_close();
-            self.candidate = Some(candidate);
-            return Err("engine GPU publication owner transfer was incomplete".to_string());
-        };
-        let published = EngineGpuSurface { vello: renderer, texture, view };
-        if let Some(displaced) = self.live.replace(published) {
-            self.retirement = Some(EngineGpuRetirement::new(displaced));
-        }
         candidate.phase = EngineGpuBuildPhase::Terminal;
         if !candidate.terminal_is_empty() {
             candidate.begin_close();
@@ -1315,13 +1234,7 @@ pub(crate) struct EngineCanvasPresenter {
 
 impl Default for EngineCanvasPresenter {
     fn default() -> Self {
-        Self {
-            slots: ManuallyDrop::new(Some(semio_framework_async::boxed_fixed_slots(EngineGpuSlot::new))),
-            primary_metrics_generation: 0,
-            metrics_invalidation_scan: None,
-            stall_steps: 0,
-            stall_arm: "",
-        }
+        Self { slots: ManuallyDrop::new(Some(semio_framework_async::boxed_fixed_slots(EngineGpuSlot::new))), primary_metrics_generation: 0, metrics_invalidation_scan: None, stall_steps: 0, stall_arm: "" }
     }
 }
 
@@ -1401,20 +1314,9 @@ impl EngineCanvasPresenter {
         }
         let primary_metrics_generation = self.primary_metrics_generation;
         let index = usize::from(packet.surface.token.slot);
-        let mut retiring = false;
         let slot = self.slots_mut()?.get_mut(index).ok_or_else(|| "engine surface token exceeded fixed GPU slots".to_string())?;
         if slot.closing || slot.exhausted {
             return Err("engine surface slot was closing or exhausted".to_string());
-        }
-        if let Some(retirement) = slot.retirement.as_mut() {
-            if retirement.close_step() && retirement.terminal_is_empty() {
-                slot.retirement = None;
-            }
-            retiring = true;
-        }
-        if retiring {
-            self.note_realize_stall("slot-retirement");
-            return Ok(false);
         }
         self.stall_arm = "";
         self.stall_steps = 0;
@@ -1439,9 +1341,20 @@ impl EngineCanvasPresenter {
         }
         match build.phase {
             EngineGpuBuildPhase::Reserve => {
-                let admission = build.surface.id.with_raster_key(|key| gpu.reserve_engine_texture(key, build.width, build.height, candidate_generation, expected))?;
-                build.admission = Some(admission);
-                build.phase = EngineGpuBuildPhase::Texture;
+                let identity = build.content_identity()?;
+                let surface_id = build.surface.id;
+                surface_id.with_raster_key(|key| -> Result<(), String> {
+                    if !gpu.prepare_raster_admission_step(key, build.width, build.height, identity, candidate_generation)? {
+                        return Ok(());
+                    }
+                    if gpu.raster_content_is_reusable(key, identity, candidate_generation, expected)? {
+                        build.phase = EngineGpuBuildPhase::Publish;
+                    } else {
+                        build.admission = Some(gpu.reserve_engine_texture(key, build.width, build.height, identity, candidate_generation, expected)?);
+                        build.phase = EngineGpuBuildPhase::Texture;
+                    }
+                    Ok(())
+                })?;
             }
             EngineGpuBuildPhase::Texture => {
                 let admission = build.admission.as_ref().ok_or_else(|| "engine texture admission was missing".to_string())?;
@@ -1471,19 +1384,6 @@ impl EngineCanvasPresenter {
                 let params = RenderParams { base_color: packet.clear, width: build.width, height: build.height, antialiasing_method: AaConfig::Area };
                 let vello_scene = packet.scene.vello_scene();
                 renderer.render_to_texture(gpu.device(), gpu.queue(), &vello_scene, view, &params).map_err(|error| format!("vello render: {error:?}"))?;
-                build.phase = EngineGpuBuildPhase::ReplacementTexture;
-            }
-            EngineGpuBuildPhase::ReplacementTexture => {
-                let admission = build.admission.as_ref().ok_or_else(|| "engine replacement texture admission was missing".to_string())?;
-                gpu.validate_engine_replacement_texture_allocation(admission, expected)?;
-                build.replacement_texture = Some(create_target_texture(gpu.device(), build.width, build.height));
-                build.phase = EngineGpuBuildPhase::ReplacementView;
-            }
-            EngineGpuBuildPhase::ReplacementView => {
-                let admission = build.admission.as_ref().ok_or_else(|| "engine replacement view admission was missing".to_string())?;
-                gpu.validate_engine_replacement_view_allocation(admission, expected)?;
-                let texture = build.replacement_texture.as_ref().ok_or_else(|| "engine replacement texture owner was missing".to_string())?;
-                build.replacement_view = Some(texture.create_view(&wgpu::TextureViewDescriptor::default()));
                 build.phase = EngineGpuBuildPhase::Stage;
             }
             EngineGpuBuildPhase::Stage => {
@@ -1491,7 +1391,7 @@ impl EngineCanvasPresenter {
                 let texture = build.texture.take().ok_or_else(|| "engine rendered texture owner was missing".to_string())?;
                 let view = build.view.take().ok_or_else(|| "engine rendered view owner was missing".to_string())?;
                 match gpu.stage_engine_texture(admission, texture, view, expected) {
-                    Ok(()) => build.phase = EngineGpuBuildPhase::Publish,
+                    Ok(()) => build.phase = EngineGpuBuildPhase::RetireRenderer,
                     Err(RasterTextureStageFault::Returned { fault, admission, texture, view }) => {
                         build.admission = Some(admission);
                         build.texture = Some(texture);
@@ -1504,6 +1404,12 @@ impl EngineCanvasPresenter {
                         return Err(fault.to_owned());
                     }
                 }
+            }
+            EngineGpuBuildPhase::RetireRenderer => {
+                if build.renderer.take().is_some() {
+                    return Ok(false);
+                }
+                build.phase = EngineGpuBuildPhase::Publish;
             }
             EngineGpuBuildPhase::Publish => {
                 let live = match engine_surface_live_freshness(packet.surface.token) {
@@ -1520,12 +1426,7 @@ impl EngineCanvasPresenter {
                 }
                 return slot.publish_candidate(packet, expected, primary_metrics_generation);
             }
-            EngineGpuBuildPhase::ClosingAdmission
-            | EngineGpuBuildPhase::ClosingRenderer
-            | EngineGpuBuildPhase::ClosingView
-            | EngineGpuBuildPhase::ClosingTexture
-            | EngineGpuBuildPhase::ClosingReplacementView
-            | EngineGpuBuildPhase::ClosingReplacementTexture => {
+            EngineGpuBuildPhase::ClosingAdmission | EngineGpuBuildPhase::ClosingRenderer | EngineGpuBuildPhase::ClosingView | EngineGpuBuildPhase::ClosingTexture => {
                 return Err("engine GPU candidate requires retained close".to_string());
             }
             EngineGpuBuildPhase::Terminal => {
@@ -1574,19 +1475,6 @@ impl EngineCanvasPresenter {
             if candidate.close_step(gpu)? && candidate.terminal_is_empty() {
                 slot.candidate = None;
             }
-            return Ok(false);
-        }
-        if slot.retirement.is_none() {
-            if let Some(live) = slot.live.take() {
-                slot.retirement = Some(EngineGpuRetirement::new(live));
-                return Ok(false);
-            }
-        }
-        if let Some(retirement) = slot.retirement.as_mut() {
-            if retirement.close_step() && retirement.terminal_is_empty() {
-                slot.retirement = None;
-            }
-            self.note_realize_stall("slot-retirement");
             return Ok(false);
         }
         if let Some(id) = slot.id.as_mut() {
@@ -1814,18 +1702,173 @@ impl<T: Default> WorkerCell<T> {
 
 static MAP_TILE_ASSET_FAULT: WorkerCell<Option<WorldAssetFault>> = WorkerCell::new();
 
-
-
-
-
-
-
-
-
-
-
-
 static ENGINE_SURFACES: WorkerCell<EngineSurfaceRegistry> = WorkerCell::new();
+
+#[derive(Clone, Debug, Default, PartialEq)]
+struct TutorialSurfaceGeometry {
+    point: [f32; 2],
+    rect: Option<[f32; 4]>,
+    polyline: Vec<[f32; 2]>,
+    domain: Option<(f64, f64, bool)>,
+}
+
+pub(crate) fn tutorial_polyline_point(points: &[[f32; 2]], t: f64) -> Option<[f32; 2]> {
+    let first = *points.first()?;
+    if points.len() == 1 {
+        return Some(first);
+    }
+    let lengths: Vec<f32> = points.windows(2).map(|pair| (pair[1][0] - pair[0][0]).hypot(pair[1][1] - pair[0][1])).collect();
+    let total: f32 = lengths.iter().sum();
+    if total <= f32::EPSILON {
+        return Some(first);
+    }
+    let target = t.clamp(0.0, 1.0) as f32 * total;
+    let mut consumed = 0.0;
+    for (index, length) in lengths.iter().copied().enumerate() {
+        if consumed + length >= target || index + 1 == lengths.len() {
+            let segment_t = if length <= f32::EPSILON { 0.0 } else { (target - consumed) / length };
+            return Some([points[index][0] + (points[index + 1][0] - points[index][0]) * segment_t, points[index][1] + (points[index + 1][1] - points[index][1]) * segment_t]);
+        }
+        consumed += length;
+    }
+    points.last().copied()
+}
+
+fn tutorial_geometry_from_json(raw: &str, requires_visible: bool) -> Option<TutorialSurfaceGeometry> {
+    let value: Value = serde_json::from_str(raw).ok()?;
+    if value.is_null() || requires_visible && value.get("visible").and_then(Value::as_bool) != Some(true) {
+        return None;
+    }
+    let x = value.get("x")?.as_f64()? as f32;
+    let y = value.get("y")?.as_f64()? as f32;
+    let rect = value.get("rect").and_then(Value::as_array).filter(|values| values.len() == 4).and_then(|values| Some([values[0].as_f64()? as f32, values[1].as_f64()? as f32, values[2].as_f64()? as f32, values[3].as_f64()? as f32]));
+    let polyline = value
+        .get("polyline")
+        .and_then(Value::as_array)
+        .map(|points| {
+            points
+                .iter()
+                .filter_map(|point| {
+                    let pair = point.as_array()?;
+                    Some([pair.first()?.as_f64()? as f32, pair.get(1)?.as_f64()? as f32])
+                })
+                .collect()
+        })
+        .unwrap_or_default();
+    Some(TutorialSurfaceGeometry { point: [x, y], rect, polyline, domain: None })
+}
+
+fn tutorial_graph_world_to_screen(engine: &NodeGraphEngine, x: f64, y: f64) -> [f32; 2] {
+    let point = match engine {
+        NodeGraphEngine::Dag(host) => dag_world_to_screen(&host.dag, x, y),
+        NodeGraphEngine::Flow(host) => dag_world_to_screen(&host.dag, x, y),
+    };
+    [point.0 as f32, point.1 as f32]
+}
+
+fn tutorial_graph_geometry(engine: &NodeGraphEngine, domain: &str, entity: &str) -> Option<TutorialSurfaceGeometry> {
+    if domain == "slider" {
+        let raw = match engine {
+            NodeGraphEngine::Dag(host) => host.dag.slider_overlay_state_json().ok()?,
+            NodeGraphEngine::Flow(host) => host.slider_overlay_state_json().ok()?,
+        };
+        let value: Value = serde_json::from_str(&raw).ok()?;
+        let sliders = value.get("sliders")?.as_array()?;
+        let slider = if entity == "*" { sliders.first() } else { sliders.iter().find(|slider| slider.get("widgetId").and_then(Value::as_str) == Some(entity)) }?;
+        let x = slider.get("x")?.as_f64()?;
+        let y = slider.get("y")?.as_f64()?;
+        let point = tutorial_graph_world_to_screen(engine, x, y);
+        let half_width = slider.get("w")?.as_f64()? * 0.5;
+        let half_height = slider.get("h")?.as_f64()? * 0.5;
+        let start = tutorial_graph_world_to_screen(engine, x - half_width, y - half_height);
+        let end = tutorial_graph_world_to_screen(engine, x + half_width, y + half_height);
+        return Some(TutorialSurfaceGeometry { point, rect: Some([start[0], start[1], end[0] - start[0], end[1] - start[1]]), polyline: Vec::new(), domain: Some((slider.get("min")?.as_f64()?, slider.get("max")?.as_f64()?, false)) });
+    }
+    let raw = match engine {
+        NodeGraphEngine::Dag(host) => host.entity_screen_json(domain, entity),
+        NodeGraphEngine::Flow(host) => host.entity_screen_json(domain, entity),
+    };
+    tutorial_geometry_from_json(&raw, true)
+}
+
+fn tutorial_surface_geometry(surface: &EngineSurface, domain: &str, entity: &str) -> Option<TutorialSurfaceGeometry> {
+    if let Some(engine) = surface.node_graph.as_ref() {
+        if let Some(geometry) = tutorial_graph_geometry(engine, domain, entity) {
+            return Some(geometry);
+        }
+    }
+    if let Some(host) = surface.map_host.as_ref() {
+        if let Some(geometry) = tutorial_geometry_from_json(&host.feature_screen_json(domain, entity), false) {
+            return Some(geometry);
+        }
+    }
+    None
+}
+
+/// 👻️ Resolves typed tutorial points through the attached engine surface that owns their live camera and geometry.
+pub fn resolve_tutorial_surface_point(surface_id: &str, point: &semio_framework::IntroductionPoint) -> Option<(f32, f32)> {
+    use semio_framework::IntroductionPoint as P;
+    let point_surface_id = match point {
+        P::Scene { id, .. } | P::Canvas { id, .. } | P::Entity { id, .. } | P::Curve { id, .. } | P::Domain { id, .. } => id,
+        _ => return None,
+    };
+    if point_surface_id != surface_id {
+        return None;
+    }
+    ENGINE_SURFACES.with(|cell| {
+        let surfaces = cell.borrow();
+        let surface = surfaces.get(surface_id)?;
+        let resolved = (|| match point {
+            P::Canvas { x, y, .. } => {
+                if let Some(engine) = surface.node_graph.as_ref() {
+                    let point = tutorial_graph_world_to_screen(engine, *x, *y);
+                    return Some((point[0], point[1]));
+                }
+                if let Some(host) = surface.map_host.as_ref() {
+                    let point = host.world_to_screen_point(*x, *y);
+                    return Some((point.0 as f32, point.1 as f32));
+                }
+                if let Some(host) = surface.board_host.as_ref() {
+                    let point = host.world_to_screen(canvas::Point::new(*x, *y));
+                    return Some((point.x as f32, point.y as f32));
+                }
+                if let Some(host) = surface.editor.as_ref() {
+                    let value: Value = serde_json::from_str(&host.world_to_screen_json(*x, *y)).ok()?;
+                    return Some((value.get("x")?.as_f64()? as f32, value.get("y")?.as_f64()? as f32));
+                }
+                if let Some(host) = surface.raster_host.as_ref() {
+                    let point = host.world_to_screen_point(*x, *y);
+                    return Some((point.0 as f32, point.1 as f32));
+                }
+                None
+            }
+            P::Entity { domain, entity, offset, .. } => {
+                let geometry = tutorial_surface_geometry(surface, domain, entity)?;
+                let Some([x, y, width, height]) = geometry.rect else { return Some((geometry.point[0], geometry.point[1])) };
+                let [offset_x, offset_y] = offset.unwrap_or([0.5, 0.5]);
+                Some((x + width * offset_x as f32, y + height * offset_y as f32))
+            }
+            P::Curve { domain, entity, t, .. } => {
+                let geometry = tutorial_surface_geometry(surface, domain, entity)?;
+                tutorial_polyline_point(&geometry.polyline, *t).map(|point| (point[0], point[1]))
+            }
+            P::Domain { domain, entity, value, .. } => {
+                let geometry = tutorial_surface_geometry(surface, domain, entity)?;
+                let [x, y, width, height] = geometry.rect?;
+                let (min, max, vertical) = geometry.domain?;
+                let t = if max == min { 0.0 } else { ((*value).clamp(min, max) - min) / (max - min) } as f32;
+                if vertical {
+                    Some((x + width * 0.5, y + (1.0 - t) * height))
+                } else {
+                    Some((x + t * width, y + height * 0.5))
+                }
+            }
+            P::Scene { .. } => None,
+            _ => None,
+        })();
+        resolved.filter(|(x, y)| surface.node_graph.is_none() || x.is_finite() && y.is_finite() && *x >= 0.0 && *y >= 0.0 && *x <= surface.width as f32 && *y <= surface.height as f32)
+    })
+}
 
 #[cfg(test)]
 include!("../../🧪️tests/🧊️wgpu-standalone/🦀️.rs");
@@ -1845,34 +1888,6 @@ mod node_graph_gesture_tests;
 #[cfg(test)]
 #[path = "../../🧪️tests/🩺️metrics-invalidation-drain/🦀️.rs"]
 mod metrics_invalidation_drain_tests;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 fn empty_engine_surface(pw: u32, ph: u32) -> EngineSurface {
     EngineSurface {
@@ -1946,9 +1961,6 @@ fn ensure_engine_surface(surface_id: &str, pw: u32, ph: u32) -> Option<EngineSur
     })
 }
 
-
-
-
 fn engine_surface_live_freshness(token: EngineSurfaceToken) -> Result<Option<EngineSurfaceLiveFreshness>, ()> {
     ENGINE_SURFACES.with(|cell| {
         let registry = cell.try_borrow_mut().ok_or(())?;
@@ -1986,7 +1998,6 @@ pub(crate) fn close_engine_surface_step(token: EngineSurfaceToken, context: &mut
 pub(crate) fn engine_surface_terminal_nonopaque_is_empty(token: EngineSurfaceToken) -> Result<bool, ()> {
     ENGINE_SURFACES.with(|cell| cell.try_borrow_mut().map(|registry| registry.terminal_nonopaque_is_empty(token)).ok_or(()))
 }
-
 
 fn create_target_texture(device: &wgpu::Device, width: u32, height: u32) -> wgpu::Texture {
     device.create_texture(&wgpu::TextureDescriptor {
@@ -2722,13 +2733,7 @@ fn append_board_tool_run_trace(painted: &mut canvas::Scene, host: &infinite_canv
 /// 🧭️ The `toolRunTraceCursor` every board surface echoes, keyed by the window it paints into — merged into the live view
 /// state next to `world3d_tool_run_trace_cursors`.
 pub fn board2d_tool_run_trace_cursors() -> HashMap<String, semio_framework::ToolRunTraceCursor> {
-    ENGINE_SURFACES.with(|cell| {
-        cell.borrow_mut()
-            .values_mut()
-            .filter(|entry| entry.board_host.is_some())
-            .filter_map(|entry| Some((entry.board_sync_cache.tool_run_trace_window_id.clone()?, entry.board_trace.cursor()?)))
-            .collect()
-    })
+    ENGINE_SURFACES.with(|cell| cell.borrow_mut().values_mut().filter(|entry| entry.board_host.is_some()).filter_map(|entry| Some((entry.board_sync_cache.tool_run_trace_window_id.clone()?, entry.board_trace.cursor()?))).collect())
 }
 
 /// 🔍️ Resident trace records and footprints of one board surface, for the attach law.
@@ -3038,8 +3043,6 @@ pub fn engine_raster_key(surface_id: &str) -> Option<String> {
 //#endregion 🧩️EngineSurfaceAttach
 
 //#region NodeGraph
-
-
 
 pub fn node_graph_apply_note_edit_key(action: KeyAction, modifiers: &PointerModifiers) -> bool {
     ENGINE_SURFACES.with(|cell| {
@@ -3386,17 +3389,10 @@ pub fn node_graph_pointer_move_into(surface_id: &str, controller_id: &str, inner
     node_graph_bounded_publish(surface_id, controller_id, plan, snapshot, input)
 }
 
-
 /// 🫃️ The bounded path's one dispatch point: the interaction actions this gesture CHANGED, plus
 /// the node moves it commits when it ends a drag, reserved exactly and published atomically with the
 /// host mutation. A gesture that changed nothing reserves nothing — see `📌️GraphInteractionChange`.
-fn node_graph_bounded_publish(
-    surface_id: &str,
-    controller_id: &str,
-    plan: NodeGraphPointerPlan,
-    snapshot: GraphInteractionSnapshot,
-    input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>,
-) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
+fn node_graph_bounded_publish(surface_id: &str, controller_id: &str, plan: NodeGraphPointerPlan, snapshot: GraphInteractionSnapshot, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
     let edits = plan_node_graph_edits(surface_id, &plan);
     let dispatch = graph_interaction_dispatch(published_graph_interaction(surface_id), snapshot)?;
     let items = dispatch.item_count() + usize::from(!edits.is_empty());
@@ -3445,13 +3441,19 @@ pub fn node_graph_pointer_up_into(surface_id: &str, controller_id: &str, inner: 
     node_graph_bounded_publish(surface_id, controller_id, plan, snapshot, input)
 }
 
-
-
-
-
-
-
-
+pub fn node_graph_pointer_cancel_into(surface_id: &str) -> bool {
+    ENGINE_SURFACES.with(|cell| {
+        let mut map = cell.borrow_mut();
+        let Some(entry) = map.get_mut(surface_id) else { return false };
+        let Some(engine) = entry.node_graph.as_mut() else { return false };
+        match engine {
+            NodeGraphEngine::Flow(host) => host.pointer_cancel_screen(),
+            NodeGraphEngine::Dag(host) => { host.pointer_cancel_screen(); }
+        }
+        entry.scene_revision = entry.scene_revision.wrapping_add(1);
+        true
+    })
+}
 
 struct GraphInteractionSnapshot {
     node_ids: Vec<String>,
@@ -3981,7 +3983,6 @@ fn write_graph_interaction_actions(batch: &mut ui_wgpu::wgpu::BoundedActionBatch
     Ok(())
 }
 
-
 fn world_to_screen_inner(inner: Rect, cam_x: f64, cam_y: f64, zoom: f64, wx: f64, wy: f64) -> (f32, f32) {
     let zoom = zoom.max(0.05) as f32;
     let cx = inner.w * 0.5;
@@ -4088,11 +4089,7 @@ fn paint_label_overlay_row(ctx: &mut FrameworkWidgetContext<'_>, inner: Rect, ca
     let zoom_f = zoom.max(0.05) as f32;
     // 📐️ The host publishes the caption's own screen budget (`maxScreenW`) because only it knows
     // whether the caption sits INSIDE the node body or above it; `nodeW` is the fallback.
-    let max_w = row
-        .get("maxScreenW")
-        .and_then(|v| v.as_f64())
-        .filter(|w| *w > 0.0)
-        .unwrap_or_else(|| (node_w * f64::from(zoom_f) * f64::from(LABEL_INSET)).max(4.0)) as f32;
+    let max_w = row.get("maxScreenW").and_then(|v| v.as_f64()).filter(|w| *w > 0.0).unwrap_or_else(|| (node_w * f64::from(zoom_f) * f64::from(LABEL_INSET)).max(4.0)) as f32;
     let max_h = if is_port {
         row.get("maxScreenH").and_then(|v| v.as_f64()).filter(|h| *h > 0.0).map(|h| h as f32).unwrap_or((node_h * f64::from(zoom_f) * f64::from(LABEL_INSET)).max(4.0) as f32)
     } else {
@@ -4253,13 +4250,9 @@ pub fn paint_node_graph_overlays(ctx: &mut FrameworkWidgetContext<'_>, scene: &U
 
 //#region TiledMap
 
-
 pub fn take_map_tile_asset_fault() -> Option<WorldAssetFault> {
     MAP_TILE_ASSET_FAULT.with(|cell| cell.borrow_mut().take())
 }
-
-
-
 
 /// 🗺️🔗️ `"{z}/{x}/{y}"` substituted into a tile URL template — React's own
 /// `urlTemplate.replace("{z}", …)` chain in `MapRenderer.uploadTileRow`.
@@ -4359,7 +4352,6 @@ pub fn apply_map_tile_bytes(kind: WorldAssetRequestKind, bytes: &[u8]) {
     });
 }
 
-
 pub fn with_map_host_mut<R>(surface_id: &str, f: impl FnOnce(&mut MapHost) -> R) -> Option<R> {
     ENGINE_SURFACES.with(|cell| {
         let mut map = cell.borrow_mut();
@@ -4377,8 +4369,6 @@ pub fn with_map_host<R>(surface_id: &str, f: impl FnOnce(&MapHost) -> R) -> Opti
         Some(f(host))
     })
 }
-
-
 
 pub fn map_local_pointer(inner: Rect, x: f32, y: f32) -> (f64, f64) {
     ((x - inner.x) as f64, (y - inner.y) as f64)
@@ -4455,8 +4445,6 @@ pub fn parse_map_hover(hit_json: &str) -> Value {
     serde_json::from_str(hit_json).unwrap_or(Value::Null)
 }
 
-
-
 /// 🗺️📷️ The ONE action a map pan/zoom gesture publishes. React's `mirrorSessionCameraToReact`
 /// dispatches `setCamera` and nothing else: feature selection and hover ride the generic
 /// `interactionSelect`/`interactionHover` verbs from the pointer lane (`🎞️Scenes/🎯️targets/🧊️wgpu`'s
@@ -4501,11 +4489,6 @@ pub fn tiled_map_wheel_into(surface_id: &str, controller_id: &str, inner: Rect, 
     with_map_interaction_into(surface_id, controller_id, input, MapInteractionIntent::Wheel { sx, sy, delta_y })
 }
 
-
-
-
-
-
 //#endregion TiledMap
 
 //#region Board2d
@@ -4530,11 +4513,6 @@ const PUZZLE2D_FLUSH_NOW_EVENT_NAMES: &[&str] = &["select", "preselectCancel", "
 
 /// @emoji 📬️ Drops transient rows, coalesces `camera` to its latest value and `nodeMove` to one row per id (unless a `nodeDragEnd` follows), and flags whether the buffer should flush immediately. Port of `coalesceBoard2dEvents` in the React host.
 
-
-
-
-
-
 pub fn with_board_host_mut<R>(surface_id: &str, f: impl FnOnce(&mut infinite_canvas::BoardHost) -> R) -> Option<R> {
     ENGINE_SURFACES.with(|cell| {
         let mut map = cell.borrow_mut();
@@ -4552,8 +4530,6 @@ pub fn with_board_host<R>(surface_id: &str, f: impl FnOnce(&infinite_canvas::Boa
         Some(f(host))
     })
 }
-
-
 
 /// @emoji 🎯️ Most-specific pick target at a screen point, mirroring `pickMostSpecificCanvasTarget`.
 pub fn board_pick_best_target_id(surface_id: &str, sx: f64, sy: f64) -> Option<String> {
@@ -4702,8 +4678,6 @@ fn board_drain_into_buffer(surface_id: &str) -> bool {
     })
 }
 
-
-
 fn board_peek_buffer_coalesced(surface_id: &str) -> Option<String> {
     ENGINE_SURFACES.with(|cell| {
         let map = cell.borrow();
@@ -4722,11 +4696,7 @@ fn board_peek_buffer_coalesced(surface_id: &str) -> Option<String> {
 
 /// @emoji 📤️ Unconditional drain + coalesce + dispatch, mirroring `flushBoardEvents` (used after pointer-up, pointer-leave, and wheel).
 
-
 /// @emoji 📤️ Drains into the buffer and only dispatches if a flush-now event (select, brushPlace, edgeCreate, ...) is pending, mirroring `drainAndMaybeFlush` (used on pointer-move).
-
-
-
 
 fn write_board_events_flat(batch: &mut ui_wgpu::wgpu::BoundedActionBatchReservation<'_>, controller_id: &str, events_json: &str) -> Result<(), ui_wgpu::wgpu::BoundedActionFault> {
     let action = "applyBoardEvents";
@@ -4797,13 +4767,7 @@ fn commit_board_pointer(surface_id: &str, plan: &infinite_canvas::BoardPointerPl
     })
 }
 
-fn begin_board_pointer_commit(
-    surface_id: &str,
-    controller_id: &str,
-    plan: infinite_canvas::BoardPointerPlan,
-    pointer_inside: Option<bool>,
-    input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>,
-) -> Result<(), ui_wgpu::wgpu::BoundedActionFault> {
+fn begin_board_pointer_commit(surface_id: &str, controller_id: &str, plan: infinite_canvas::BoardPointerPlan, pointer_inside: Option<bool>, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Result<(), ui_wgpu::wgpu::BoundedActionFault> {
     let emits = plan.event_count() > 0;
     let claim = if emits {
         let bytes = ui_wgpu::wgpu::checked_action_string_bytes(&[controller_id, "applyBoardEvents", "eventsJson", plan.events_json()])?;
@@ -4845,10 +4809,31 @@ pub fn drive_board_authority_step(surface_id: &str, context: &mut semio_framewor
             return infinite_canvas::BoardAuthorityStep::Complete;
         };
         if !host.pointer_authority_terminal_is_empty() {
+            if host.pointer_cancel_pending() {
+                return if host.step_pointer_cancel(context) { infinite_canvas::BoardAuthorityStep::Complete } else { infinite_canvas::BoardAuthorityStep::Pending };
+            }
             return host.step_pointer_commit(context);
         }
         host.step_event_authority(context)
     })
+}
+
+pub fn puzzle_board_pointer_cancel_into(surface_id: &str, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> bool {
+    let (cancelled, claim) = ENGINE_SURFACES.with(|cell| {
+        let mut map = cell.borrow_mut();
+        let Some(entry) = map.get_mut(surface_id) else { return (false, None) };
+        let Some(host) = entry.board_host.as_mut() else { return (false, None) };
+        let cancelled = host.pointer_cancel_screen();
+        entry.board_pointer_controller_id = None;
+        entry.board_pointer_inside = false;
+        (cancelled, entry.board_pointer_claim.take())
+    });
+    if let Some(claim) = claim {
+        if let Err(fault) = input.release_action_claim(claim) {
+            input.record_action_fault(fault);
+        }
+    }
+    cancelled
 }
 
 pub fn publish_board_pointer_step(surface_id: &str, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
@@ -4988,13 +4973,7 @@ pub fn puzzle_board_hover_into(surface_id: &str, controller_id: &str, input: &mu
 ///
 /// Returns `true` when the chord was consumed and must NOT fall through to the shell's keybinding
 /// dispatch — the Rust equivalent of React's `event.preventDefault()`.
-pub fn puzzle_board_key_into(
-    surface_id: &str,
-    controller_id: &str,
-    key: &KeyAction,
-    modifiers: &PointerModifiers,
-    input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>,
-) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
+pub fn puzzle_board_key_into(surface_id: &str, controller_id: &str, key: &KeyAction, modifiers: &PointerModifiers, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
     // 🪟️ React gates both listeners on `hoverActiveRef.current` (the pointer is over THIS pane) and
     // on `scene.interactive`; the pointer-inside witness is this target's equivalent.
     let armed = ENGINE_SURFACES.with(|cell| {
@@ -5136,12 +5115,6 @@ pub fn puzzle_board_pointer_leave_into(surface_id: &str, controller_id: &str, al
     Ok(true)
 }
 
-
-
-
-
-
-
 /// @emoji 🖐️ True while a node drag or area-select gesture is in flight, so pointer-up outside the surface bounds still reaches the host (mirrors `tiled_map_drag_active`).
 pub fn board_drag_active(surface_id: &str) -> bool {
     with_board_host(surface_id, |host| host.defers_descriptor_sync_from_js() || host.is_dragging_area_select()).unwrap_or(false)
@@ -5173,7 +5146,6 @@ pub fn puzzle_board_wheel_into(surface_id: &str, controller_id: &str, inner: Rec
     })?;
     Ok(true)
 }
-
 
 //#endregion Board2d
 
@@ -5246,14 +5218,7 @@ fn selection_domains(json: &str) -> (Vec<String>, Vec<String>, Vec<String>) {
     if let Some(array) = parsed.as_array() {
         return (array.iter().filter_map(Value::as_str).map(str::to_owned).collect(), Vec::new(), Vec::new());
     }
-    let list = |primary: &str, fallback: &str| -> Vec<String> {
-        parsed
-            .get(primary)
-            .or_else(|| parsed.get(fallback))
-            .and_then(Value::as_array)
-            .map(|ids| ids.iter().filter_map(Value::as_str).map(str::to_owned).collect())
-            .unwrap_or_default()
-    };
+    let list = |primary: &str, fallback: &str| -> Vec<String> { parsed.get(primary).or_else(|| parsed.get(fallback)).and_then(Value::as_array).map(|ids| ids.iter().filter_map(Value::as_str).map(str::to_owned).collect()).unwrap_or_default() };
     (list("nodes", "nodes"), list("edges", "edgeIds"), list("handles", "handleIds"))
 }
 
@@ -5467,11 +5432,7 @@ fn paint2d_selection_method(active_utility: &str) -> Option<&'static str> {
 /// 🖱️ The marquee path as `marquee_hits_json` wants it, plus the crossing flag React derives from
 /// `marqueeCoverageFromGesture` (a right-to-left drag is a partial/crossing marquee).
 fn paint2d_marquee_path(marquee: &Paint2dMarquee, lasso: bool, point: (f32, f32)) -> (Vec<[f32; 2]>, bool) {
-    let points: Vec<[f32; 2]> = if lasso {
-        marquee.points.iter().chain(std::iter::once(&point)).map(|(x, y)| [*x, *y]).collect()
-    } else {
-        vec![[marquee.start.0, marquee.start.1], [point.0, point.1]]
-    };
+    let points: Vec<[f32; 2]> = if lasso { marquee.points.iter().chain(std::iter::once(&point)).map(|(x, y)| [*x, *y]).collect() } else { vec![[marquee.start.0, marquee.start.1], [point.0, point.1]] };
     let crossing = ui_wgpu::wgpu::marquee_is_crossing_from_path(&points, lasso);
     (points, crossing)
 }
@@ -5514,7 +5475,17 @@ fn paint2d_selection(scene: &UiComponentSceneNode) -> Vec<String> {
  * whose resulting camera is republished as `setCamera` exactly as React's `onPointerUp` does.
  *
  * @see `🧱️elements/🖌️Paint2dHost/🟦️.tsx` — `onPointerDown`/`onPointerUp` */
-pub fn paint2d_pointer_button_into(scene: &UiComponentSceneNode, inner: Rect, x: f32, y: f32, down: bool, button: i16, shift: bool, ctrl_or_meta: bool, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
+pub fn paint2d_pointer_button_into(
+    scene: &UiComponentSceneNode,
+    inner: Rect,
+    x: f32,
+    y: f32,
+    down: bool,
+    button: i16,
+    shift: bool,
+    ctrl_or_meta: bool,
+    input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>,
+) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
     let Some(paint) = scene.paint_2d.as_ref() else {
         return Ok(false);
     };
@@ -5555,10 +5526,7 @@ pub fn paint2d_pointer_button_into(scene: &UiComponentSceneNode, inner: Rect, x:
             let merge = paint2d_merge_mode(shift, ctrl_or_meta);
             let local: Vec<[f64; 2]> = points.iter().map(|point| [f64::from(point[0] - inner.x), f64::from(point[1] - inner.y)]).collect();
             let query = json!({ "points": local.iter().map(|point| json!({ "x": point[0], "y": point[1] })).collect::<Vec<_>>(), "crossing": crossing }).to_string();
-            let hits: Vec<String> = with_raster_host_mut(&scene.surface_id, |host| host.marquee_hits_json(&query).ok())
-                .flatten()
-                .and_then(|json| serde_json::from_str::<Vec<String>>(&json).ok())
-                .unwrap_or_default();
+            let hits: Vec<String> = with_raster_host_mut(&scene.surface_id, |host| host.marquee_hits_json(&query).ok()).flatten().and_then(|json| serde_json::from_str::<Vec<String>>(&json).ok()).unwrap_or_default();
             let ids = paint2d_merge_ids(merge, &paint2d_selection(scene), &hits);
             let targets = interaction_targets_json(PAINT2D_LAYER_GRANULARITY, &ids);
             let bytes = ui_wgpu::wgpu::checked_action_string_bytes(&[&scene.controller_id, "interactionSelect", "domainId", PAINT2D_INTERACTION_DOMAIN, "targets", &targets, "merge", merge, "method", "pick"])?;
@@ -5680,6 +5648,11 @@ pub fn paint2d_pointer_move_into(scene: &UiComponentSceneNode, inner: Rect, x: f
     Ok(true)
 }
 
+pub fn paint2d_pointer_cancel_into(surface_id: &str) -> bool {
+    with_paint2d_marquee(surface_id, |marquee| *marquee = Paint2dMarquee::default());
+    with_raster_host_mut(surface_id, |host| host.pointer_cancel_screen()).is_some()
+}
+
 /** 🎡️ One paint-2d wheel notch — the host owns the zoom-at-cursor math and the resulting camera is
  * republished, matching React's `onWheel`.
  *
@@ -5710,10 +5683,6 @@ pub fn paint2d_wheel_into(scene: &UiComponentSceneNode, inner: Rect, x: f32, y: 
 
 //#region TextEditor
 
-
-
-
-
 pub fn text_editor_wheel_into(scene: &UiComponentSceneNode, delta: f32) -> bool {
     ENGINE_SURFACES.with(|cell| {
         let mut map = cell.borrow_mut();
@@ -5727,14 +5696,6 @@ pub fn text_editor_wheel_into(scene: &UiComponentSceneNode, delta: f32) -> bool 
         true
     })
 }
-
-
-
-
-
-
-
-
 
 fn emit_text_editor_actions(
     scene: &UiComponentSceneNode,
@@ -5860,6 +5821,15 @@ pub fn text_editor_pointer_move_into(scene: &UiComponentSceneNode, inner: Rect, 
     emit_text_editor_actions(scene, input, |host| host.text().len(), |host| host.pointer_move_screen(sx, sy, 0))
 }
 
+pub fn text_editor_pointer_cancel_into(surface_id: &str) -> bool {
+    ENGINE_SURFACES.with(|cell| {
+        let mut map = cell.borrow_mut();
+        let Some(host) = map.get_mut(surface_id).and_then(|entry| entry.editor.as_mut()) else { return false };
+        host.pointer_cancel_screen();
+        true
+    })
+}
+
 pub fn text_editor_set_selection_into(scene: &UiComponentSceneNode, anchor: usize, caret: usize, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
     emit_text_editor_actions(scene, input, |host| host.text().len(), |host| host.set_selection_range(anchor, caret))
 }
@@ -5915,14 +5885,11 @@ pub fn text_editor_pointer_click_into(scene: &UiComponentSceneNode, inner: Rect,
 /// (`framework/renderer/react/components/text-editor-host.tsx`). Also reused by the context menu's
 /// "Select Token" action at the original right-click point.
 
-
 /// 🎯️ Sets an explicit byte-offset selection range (anchor, caret) — used by the "Select Line" context-menu
 /// action, whose range is computed from the buffer text rather than a screen point.
 
-
 /// ✅️ Commits a completion: replaces `[prefix_start, caret)` with `insert_text`, mirroring
 /// `WasmEditorSurface.applyCompletion` (`setSelectionRange` + `replaceSelection`).
-
 
 /// 🔎️ Read-only `(anchor, caret)` byte-offset accessor — lets `scenes::TextEditor` compute the
 /// completion-prefix boundary without duplicating `EditorHost`'s own state.

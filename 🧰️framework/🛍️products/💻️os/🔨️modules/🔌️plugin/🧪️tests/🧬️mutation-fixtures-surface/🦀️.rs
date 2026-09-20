@@ -3,7 +3,7 @@ pub mod mutations;
 pub(crate) use mutations::{SetSurfaceCount, SurfaceMutation};
 
 // 🧪️ Proves the viewer helpers against a minimal editor/viewer pair sharing one dialect.
-use crate::app::artifact_app_laws::{assert_editor_and_viewer_share_dialect, assert_viewer_never_mutates, meta, new_app, new_viewer};
+use crate::app::artifact_app_laws::{assert_editor_and_viewer_share_dialect, assert_viewer_never_mutates, close_registered_fixture_app, meta, new_app, new_viewer};
 use crate::app::{
     built_text_to_component_tree, ArtifactEditor, ArtifactView, ArtifactViewer, ConfigView, DraftView, EditorApp, Emit, Media, MediaClass, MediaForm, MediaPayload, MediaType, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence,
     NoPresenceMutation, PluginApp, PluginCloseStep, UiAssemblyResult, ViewEmit, ViewModel, REVERT_TO_COMMAND_ACTION_ID,
@@ -143,6 +143,39 @@ impl ArtifactEditor for SurfaceEditorFixture {
     type TransientMutation = crate::app::NoTransientMutation;
     type Command = SurfaceEditorCommand;
 
+    fn build_document_store_owners() -> Option<store::DocumentStoreOwners<Self::Snapshot, Self::Mutation>> {
+        Some(crate::app::bounded_document_store_owners::<Self::Snapshot, Self::Mutation>())
+    }
+    fn build_config_store_owners() -> Option<store::DocumentStoreOwners<Self::Config, Self::ConfigMutation>> {
+        Some(crate::app::bounded_config_store_owners::<Self::Config, Self::ConfigMutation>())
+    }
+    fn build_draft_store_owners() -> Option<store::DocumentStoreOwners<Self::Draft, Self::DraftMutation>> {
+        Some(crate::app::bounded_document_store_owners::<Self::Draft, Self::DraftMutation>())
+    }
+    fn build_document_store_disposer() -> crate::app::ArtifactDisposal<store::ArtifactStore<Self::Snapshot, Self::Mutation>> {
+        Some(crate::app::bounded_document_store_disposer::<Self::Snapshot, Self::Mutation>())
+    }
+    fn build_config_store_disposer() -> crate::app::ArtifactDisposal<store::ConfigStore<Self::Config, Self::ConfigMutation>> {
+        Some(crate::app::bounded_config_store_disposer::<Self::Config, Self::ConfigMutation>())
+    }
+    fn build_draft_store_disposer() -> crate::app::ArtifactDisposal<store::DraftStore<Self::Draft, Self::DraftMutation>> {
+        Some(crate::app::bounded_document_store_disposer::<Self::Draft, Self::DraftMutation>())
+    }
+    fn build_presence_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
+        Some(crate::app::mutation_fixture::no_state::presence_local_root_retirement_factory())
+    }
+    fn build_presence_peer_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
+        Some(crate::app::mutation_fixture::no_state::presence_peer_retirement_factory())
+    }
+    fn build_transient_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Transient>>> {
+        Some(crate::app::mutation_fixture::no_state::transient_local_root_retirement_factory())
+    }
+    fn build_presence_store_disposer() -> crate::app::ArtifactDisposal<store::PresenceStore<Self::Presence, Self::PresenceMutation>> {
+        Some(crate::app::mutation_fixture::no_state::presence_store_disposer())
+    }
+    fn build_transient_store_disposer() -> crate::app::ArtifactDisposal<store::TransientStore<Self::Transient, Self::TransientMutation>> {
+        Some(crate::app::mutation_fixture::no_state::transient_store_disposer())
+    }
     fn initial_snapshot() -> SurfaceSnapshot {
         SurfaceSnapshot::default()
     }
@@ -208,6 +241,33 @@ impl ArtifactViewer for SurfaceViewerFixture {
         "surface-viewer-noop"
     }
 
+    fn build_document_store_owners() -> Option<store::DocumentStoreOwners<Self::Snapshot, Self::Mutation>> {
+        Some(crate::app::bounded_document_store_owners::<Self::Snapshot, Self::Mutation>())
+    }
+    fn build_config_store_owners() -> Option<store::DocumentStoreOwners<Self::Config, Self::ConfigMutation>> {
+        Some(crate::app::bounded_config_store_owners::<Self::Config, Self::ConfigMutation>())
+    }
+    fn build_document_store_disposer() -> crate::app::ArtifactDisposal<store::ArtifactStore<Self::Snapshot, Self::Mutation>> {
+        Some(crate::app::bounded_document_store_disposer::<Self::Snapshot, Self::Mutation>())
+    }
+    fn build_config_store_disposer() -> crate::app::ArtifactDisposal<store::ConfigStore<Self::Config, Self::ConfigMutation>> {
+        Some(crate::app::bounded_config_store_disposer::<Self::Config, Self::ConfigMutation>())
+    }
+    fn build_presence_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
+        Some(crate::app::mutation_fixture::no_state::presence_local_root_retirement_factory())
+    }
+    fn build_presence_peer_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
+        Some(crate::app::mutation_fixture::no_state::presence_peer_retirement_factory())
+    }
+    fn build_transient_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Transient>>> {
+        Some(crate::app::mutation_fixture::no_state::transient_local_root_retirement_factory())
+    }
+    fn build_presence_store_disposer() -> crate::app::ArtifactDisposal<store::PresenceStore<Self::Presence, Self::PresenceMutation>> {
+        Some(crate::app::mutation_fixture::no_state::presence_store_disposer())
+    }
+    fn build_transient_store_disposer() -> crate::app::ArtifactDisposal<store::TransientStore<Self::Transient, Self::TransientMutation>> {
+        Some(crate::app::mutation_fixture::no_state::transient_store_disposer())
+    }
     fn initial_snapshot() -> SurfaceSnapshot {
         SurfaceSnapshot::default()
     }
@@ -250,8 +310,9 @@ async fn editor_and_viewer_share_one_dialect() {
 
 #[semio_framework_async_macros::async_test]
 async fn new_viewer_constructs_a_registry_less_wrapper() {
-    let app = new_viewer::<SurfaceViewerFixture>().await;
+    let mut app = new_viewer::<SurfaceViewerFixture>().await;
     assert_eq!(app.snapshot().unwrap().count, 0);
+    close_registered_fixture_app(&mut app);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -259,6 +320,7 @@ async fn editor_fixture_still_mutates_normally() {
     let mut app = new_app::<EditorApp<SurfaceEditorFixture>>().await;
     app.dispatch_typed(SurfaceEditorCommand::Increment, &meta("local")).await.expect("increment");
     assert_eq!(app.snapshot().unwrap().count, 1);
+    close_registered_fixture_app(&mut app);
 }
 
 /// 🐛️ Ticket 26/08/16/HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-STUDIOS lane 4-G — WITH
@@ -284,30 +346,33 @@ async fn handle_action_invocation_accepts_the_real_canonical_surface_app_id() {
     assert!(!error.message.contains("does not match"), "the real canonical app id must satisfy the ownership check, got: {}", error.message);
     assert!(error.message.contains("unknown action mode owner"), "expected ownership to pass and the mode lookup to fail instead, got: {}", error.message);
     assert_eq!(app.app_id().await, real_id, "PluginApp::app_id must report the real canonical id, not the APP_ID placeholder");
+    close_registered_fixture_app(&mut app);
 }
 
 /// 🪪️ Verifies `EditorApp` initializes its document, config, draft, and interaction
 /// envelopes with the real canonical surface app id, not the `APP_ID` placeholder.
 #[semio_framework_async_macros::async_test]
 async fn editor_app_envelopes_carry_the_real_canonical_surface_app_id() {
-    let app = new_app::<EditorApp<SurfaceEditorFixture>>().await;
+    let mut app = new_app::<EditorApp<SurfaceEditorFixture>>().await;
     let real_id = semio_framework::surface_app_id(&SURFACE_TESTKIT_DIALECT.into(), semio_framework::AppRole::Editor);
     assert_eq!(app.store.envelope().id, real_id);
     assert_eq!(app.config_store.envelope().id, format!("{real_id}-config"));
     assert_eq!(app.draft_store.envelope().id, format!("{real_id}-draft"));
     assert_eq!(app.interaction_store.envelope().id, format!("{real_id}-interaction"));
+    close_registered_fixture_app(&mut app);
 }
 
 /// 🪪️ Verifies `ViewerApp` initializes its document, config, draft, and interaction
 /// envelopes with the real canonical surface app id, not the `APP_ID` placeholder.
 #[semio_framework_async_macros::async_test]
 async fn viewer_app_envelopes_carry_the_real_canonical_surface_app_id() {
-    let app = new_viewer::<SurfaceViewerFixture>().await;
+    let mut app = new_viewer::<SurfaceViewerFixture>().await;
     let real_id = semio_framework::surface_app_id(&SURFACE_TESTKIT_DIALECT.into(), semio_framework::AppRole::Viewer);
     assert_eq!(app.store.envelope().id, real_id);
     assert_eq!(app.config_store.envelope().id, format!("{real_id}-config"));
     assert_eq!(app.draft_store.envelope().id, format!("{real_id}-draft"));
     assert_eq!(app.interaction_store.envelope().id, format!("{real_id}-interaction"));
+    close_registered_fixture_app(&mut app);
 }
 
 /// 👁️🔒 Contract §2.3 clause 1/2 — WITH TEETH: dispatches the eight frozen mutating verbs
@@ -326,4 +391,5 @@ async fn viewer_rejects_every_contract_mutating_verb() {
     let error = app.import_media("any-port", media, &meta("local")).await.err().expect("'import' must be rejected on a viewer instance");
     assert_eq!(error.origin, FaultOrigin::Framework, "'import' rejection must carry FaultOrigin::Framework");
     assert_eq!(error.code.0, "viewer.read-only", "'import' rejection must carry the frozen viewer.read-only code");
+    close_registered_fixture_app(&mut app);
 }

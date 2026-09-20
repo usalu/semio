@@ -13,8 +13,8 @@ meta {
 representations [id:TEXT name:TEXT mesh-url:TEXT tags:LIST lod:TEXT description:TEXT attributes:TABLE] {
   r0 "Full Detail" "/mesh/🧊️capsule_J.glb" [ full ] full "" [ ]
 }
-vortex-kind-extra [id:TEXT label:TEXT color:TEXT default-cable-kind:TEXT] {
-  door Door "hsl(206 52% 48%)" cable.link
+vortex-kind-extra [id:TEXT name:TEXT label:TEXT color:TEXT default-cable-kind:TEXT] {
+  door door Door "hsl(206 52% 48%)" cable.link
 }
 vortices [id:TEXT vortex-kind:REF position:CRD direction:DIR radius:NUM label:TEXT] {
   v0 door @0,-1.6,1.2 ^0,-1,0 0.3 door

@@ -67,7 +67,7 @@ async fn change_multiple_resisting_systems_committed_json_is_canonical() {
     }
     let reencoded = serde_json::to_value(mutation()).expect("change-multiple-resisting-systems mutation encodes");
     let original: serde_json::Value = serde_json::from_str(MUTATION).expect("change-multiple-resisting-systems mutation reparses");
-    assert_eq!(reencoded, original, "change-multiple-resisting-systems/turns-multiple-resisting-systems-off: committed mutation JSON is not the canonical externally-tagged ChangeMultipleResistingSystems form carrying newMultipleResistingSystems");
+    assert_eq!(reencoded, original, "change-multiple-resisting-systems/turns-multiple-resisting-systems-off: committed mutation JSON is not the canonical internally-tagged ChangeMultipleResistingSystems form carrying mutation and newMultipleResistingSystems");
 }
 
 /// 🎯️ The declared outcome holds: `change-multiple-resisting-systems` at false is applied, not rejected, and carries no

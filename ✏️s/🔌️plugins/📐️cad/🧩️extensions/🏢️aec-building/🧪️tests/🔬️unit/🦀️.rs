@@ -52,11 +52,16 @@ async fn bundle_declares_the_cad_dependency_and_registers_the_building_storey_co
 /// `extension_bundle_dependency_tests`.
 #[semio_framework_async_macros::async_test]
 async fn contribution_onto_cad_requires_a_declared_dependency() {
+    // 🌉️ `.contributes` is `async` since the SDK's io-async-signatures sweep, so the panic only
+    // fires when the future is POLLED — `catch_unwind` over the bare builder call would catch
+    // nothing. `resolve_ready` is the same bridge `bundle()` itself uses.
     let result = std::panic::catch_unwind(|| {
-        ExtensionBundle::new("cad-extension-aec-building-test-missing-dep", "Test Missing Dep", "0.1.0")
+        semio_framework::io::resolve_ready(
+            ExtensionBundle::new("cad-extension-aec-building-test-missing-dep", "Test Missing Dep", "0.1.0")
                 .extends("cad")
                 // ⚠️ deliberately NO `.depends_on("cad", …)` here.
-                .contributes(building_storey_contribution())
+                .contributes(building_storey_contribution()),
+        )
     });
     assert!(result.is_err(), "a contribution onto a non-dependency must be rejected by the typed gate, not silently accepted");
 }

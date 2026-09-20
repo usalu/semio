@@ -1,0 +1,7 @@
+# WGPU Package Integration Reconciliation
+
+The long React census exposed seven package laws. The canonical catalog content hashes to97b7fca0a4e1a74abbb81f649524faf5b634577e48d13a33e31892ef32b05f1b; its sole taxonomy digest still named5a4c510292d2c1f56aad20fe33adfde7b4313dc118e30ae5eb3087919c43b7da. Reconciled that authority with the actual catalog, preserving adversarial digest and target-drift refusals.
+
+Bun-specific laws now execute the installed Bun runtime in a child process from the Node Vitest worker. The production pin checks remain unchanged. Both independent TypeScript compilers still execute activation vectors; independent WebCrypto and Node hashes compare actual rendered worker bytes. Module imports use file URLs for cross-platform child execution. The different-cwd law preserves one explicit NX_WORKSPACE_ROOT authority while varying working directory and renderer environment and proves caller cwd is restored. No generated browser artifact is written by these tests.
+
+Attempt2 passed21/23 and exposed two remaining harness assumptions: fresh child imports lacked Nx root when launched outside the workspace, and devcontainer setup now names workspace:setup. Attempt3 passes23/23. The provisioning law now also verifies setup depends on deps-javascript, retaining its original dependency-install guarantee. Evidence: `🗑️generated/astra-runtime/react-package-integration-2.log` and `react-package-integration-3.log`.

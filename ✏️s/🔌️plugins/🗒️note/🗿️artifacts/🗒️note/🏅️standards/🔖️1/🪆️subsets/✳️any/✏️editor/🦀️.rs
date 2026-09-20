@@ -750,6 +750,52 @@ pub fn create_note_app() -> AppDefinition {
                 ]).required().default_value(&crate::standards::v1::subsets::any::examples::demo::ID),
             ])
             .action_args("setFixtureJson", vec![ActionArgDef::text("json", LocalizedLabel::native("Document JSON", "Dokument-JSON")).required()])
+            // 💬️ Agent-facing descriptions (ticket 26/09/18 slice M5a): what `capabilities_search`
+            // matches on and `capabilities_describe` returns. EN first, DE second, no default language.
+            .action_describe("addBlock", LocalizedLabel::native("Adds a new block to the note at the given position — text, image, table, math, ink stroke or group.", "Fügt der Notiz an der angegebenen Position einen neuen Block hinzu — Text, Bild, Tabelle, Mathematik, Tinte oder Gruppe."))
+            .action_use_when("addBlock", vec!["add a text block".into(), "insert a table".into(), "add an image to the note".into(), "write a note".into()])
+            .action_describe("deleteSelection", LocalizedLabel::native("Removes every currently selected block from the note.", "Entfernt alle aktuell ausgewählten Blöcke aus der Notiz."))
+            .action_use_when("deleteSelection", vec!["delete the selected blocks".into(), "remove this".into()])
+            .action_describe("duplicateSelection", LocalizedLabel::native("Copies every currently selected block and inserts the copies beside the originals.", "Kopiert alle ausgewählten Blöcke und fügt die Kopien neben den Originalen ein."))
+            .action_use_when("duplicateSelection", vec!["duplicate the selection".into()])
+            .action_describe("setActiveExample", LocalizedLabel::native("Replaces the whole note with one of the plugin's declared playground examples.", "Ersetzt die gesamte Notiz durch eines der deklarierten Beispiele des Plugins."))
+            .action_describe("loadRequest", LocalizedLabel::native("Asks the host to open a file and import it into this note.", "Fordert den Host auf, eine Datei zu öffnen und in diese Notiz zu importieren."))
+            .action_use_when("loadRequest", vec!["import a document".into(), "open a file into the note".into()])
+            .action_describe("saveDownload", LocalizedLabel::native("Hands the note to the host as a downloadable file.", "Übergibt die Notiz dem Host als herunterladbare Datei."))
+            .action_use_when("saveDownload", vec!["export the note".into(), "download this note".into()])
+            .action_describe("moveBlock", LocalizedLabel::native("Moves one block to a new position on the page.", "Verschiebt einen Block an eine neue Position auf der Seite."))
+            .action_describe("deleteBlock", LocalizedLabel::native("Removes one block from the note by id.", "Entfernt einen Block anhand seiner Id aus der Notiz."))
+            .action_describe("duplicateBlock", LocalizedLabel::native("Copies one block and inserts the copy beside the original.", "Kopiert einen Block und fügt die Kopie neben dem Original ein."))
+            .action_describe("patchBlocks", LocalizedLabel::native("Sets one named property on several blocks at once.", "Setzt eine benannte Eigenschaft auf mehreren Blöcken gleichzeitig."))
+            .action_describe("nudgeSelection", LocalizedLabel::native("Shifts the selected blocks by a given offset.", "Verschiebt die ausgewählten Blöcke um einen angegebenen Versatz."))
+            .action_use_when("nudgeSelection", vec!["move the selection a little".into(), "shift these blocks".into()])
+            .action_describe("setFixtureJson", LocalizedLabel::native("Loads a whole note document from JSON text.", "Lädt ein vollständiges Notizdokument aus JSON-Text."))
+            .action_describe("setGridVisible", LocalizedLabel::native("Shows or hides the page grid.", "Blendet das Seitenraster ein oder aus."))
+            .action_describe("setGridSpacing", LocalizedLabel::native("Sets the distance between page grid lines.", "Legt den Abstand zwischen den Rasterlinien fest."))
+            .action_describe("setGridSubdivisions", LocalizedLabel::native("Sets how many minor lines the page grid draws between major ones.", "Legt fest, wie viele Nebenlinien das Raster zwischen Hauptlinien zeichnet."))
+            .action_describe("setGridOpacity", LocalizedLabel::native("Sets how strongly the page grid is drawn, from 0 to 1.", "Legt fest, wie stark das Seitenraster gezeichnet wird, von 0 bis 1."))
+            .action_describe("setSnapEnabled", LocalizedLabel::native("Turns snapping of moved blocks to the grid on or off.", "Schaltet das Einrasten verschobener Blöcke am Raster ein oder aus."))
+            .action_describe("setSnapGridSpacing", LocalizedLabel::native("Sets the spacing blocks snap to when snapping is on.", "Legt den Rasterabstand fest, an dem Blöcke bei aktiviertem Einrasten einrasten."))
+            .action_describe("setPencilWidth", LocalizedLabel::native("Sets the stroke width the ink pencil draws with.", "Legt die Strichbreite des Tintenstifts fest."))
+            .action_describe("setEraserRadius", LocalizedLabel::native("Sets the radius of the ink eraser.", "Legt den Radius des Tintenradierers fest."))
+            // ⚠️ Discards content no later verb reconstructs — the gateway asks a human first.
+            .action_destructive("deleteSelection")
+            .action_destructive("deleteBlock")
+            .action_destructive("setActiveExample")
+            .action_destructive("setFixtureJson")
+            // 🖱️ Raw input plumbing — the surface and the keyboard feed these, agents never do.
+            .action_audience("engagementSubmit", semio_framework_plugin::CapabilityAudience::Input)
+            .action_audience("engagementInput", semio_framework_plugin::CapabilityAudience::Input)
+            .action_audience("navigatorEngagementInput", semio_framework_plugin::CapabilityAudience::Input)
+            .action_audience("inkApplyEvents", semio_framework_plugin::CapabilityAudience::Input)
+            .action_audience("nudgeSelectionUp", semio_framework_plugin::CapabilityAudience::Input)
+            .action_audience("nudgeSelectionDown", semio_framework_plugin::CapabilityAudience::Input)
+            .action_audience("nudgeSelectionLeft", semio_framework_plugin::CapabilityAudience::Input)
+            .action_audience("nudgeSelectionRight", semio_framework_plugin::CapabilityAudience::Input)
+            .action_audience("nudgeSelectionUpFast", semio_framework_plugin::CapabilityAudience::Input)
+            .action_audience("nudgeSelectionDownFast", semio_framework_plugin::CapabilityAudience::Input)
+            .action_audience("nudgeSelectionLeftFast", semio_framework_plugin::CapabilityAudience::Input)
+            .action_audience("nudgeSelectionRightFast", semio_framework_plugin::CapabilityAudience::Input)
             .action_interactive_job("setGridVisible", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_interactive_job("setGridSpacing", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_interactive_job("setGridSubdivisions", semio_framework_plugin::InteractiveJobClassification::Migrated)
@@ -872,3 +918,11 @@ pub(crate) mod unit_tests;
 pub fn ui_label(value: impl AsRef<str>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::plugin_app_close_prelude::Label> {
     value.as_ref().try_into().map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "note label admission failed"))
 }
+
+//#region 🪢️TaxonomyMounts
+#[path = "📚️examples/🎬️demo-session/🦀️.rs"]
+pub mod demo_session;
+#[cfg(test)]
+#[path = "📚️examples/🎬️demo-session/🧪️tests/🧩️example/🦀️.rs"]
+mod example;
+//#endregion 🪢️TaxonomyMounts

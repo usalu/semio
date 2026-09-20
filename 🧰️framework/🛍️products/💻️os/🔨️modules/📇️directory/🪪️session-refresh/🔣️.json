@@ -2,6 +2,14 @@
   "schema": "semio.directory.session-refresh-fixtures.v1",
   "intervalMs": 5000,
   "proofTtlMs": 15000,
+  "retryDelaysMs": [
+    500,
+    1000,
+    2000,
+    4000,
+    5000,
+    5000
+  ],
   "success": [
     "initial",
     "same-authority",
@@ -9,10 +17,14 @@
   ],
   "refusals": [
     "http-401",
+    "http-403",
+    "expired"
+  ],
+  "transientFailures": [
     "http-428",
+    "http-503",
     "non-200",
     "invalid-body",
-    "expired",
     "transport"
   ],
   "cancellation": [
@@ -22,18 +34,46 @@
   ],
   "maximumConcurrentRequests": 1,
   "actionAdmission": [
-    { "id": "missing", "accepted": false },
-    { "id": "same", "accepted": true },
-    { "id": "different-binding", "accepted": false },
-    { "id": "different-generation", "accepted": false },
-    { "id": "expired", "accepted": false }
+    {
+      "id": "missing",
+      "accepted": false
+    },
+    {
+      "id": "same",
+      "accepted": true
+    },
+    {
+      "id": "different-binding",
+      "accepted": false
+    },
+    {
+      "id": "different-generation",
+      "accepted": false
+    },
+    {
+      "id": "expired",
+      "accepted": false
+    }
   ],
   "unavailableRetries": 0,
   "presentation": {
-    "locales": ["en", "de"],
+    "locales": [
+      "en",
+      "de"
+    ],
     "states": [
-      { "kind": "pending", "role": "status", "live": "polite", "cancellable": true },
-      { "kind": "unavailable", "role": "alert", "live": "assertive", "cancellable": false }
+      {
+        "kind": "pending",
+        "role": "status",
+        "live": "polite",
+        "cancellable": true
+      },
+      {
+        "kind": "unavailable",
+        "role": "alert",
+        "live": "assertive",
+        "cancellable": false
+      }
     ],
     "text": {
       "en": {

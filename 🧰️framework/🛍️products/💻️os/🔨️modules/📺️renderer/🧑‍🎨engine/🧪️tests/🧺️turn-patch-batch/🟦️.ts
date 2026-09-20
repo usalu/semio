@@ -15,7 +15,7 @@
  * See `📓️ui-turn-patch-batching-2026-09-15.md`.
  */
 import { describe, expect, it } from "vitest";
-import { DEFAULT_SHARD_BUDGET, ShardClient, type ShardEventEnvelope, type ShardWorkerLike } from "../../../../../../../🔨️modules/🎭️actor/📮️shard-client/🟦️.ts";
+import { MAINTENANCE_LANE_DEFAULT_BUDGET, ShardClient, type ShardEventEnvelope, type ShardWorkerLike } from "../../../../../../../🔨️modules/🎭️actor/📮️shard-client/🟦️.ts";
 import { encodeActorInstanceLifecycle } from "../../../../../../../🔨️modules/🎭️actor/🚪️lifetime/🟦️.ts";
 import { encodeActorUiPatchReceipt, validateActorUiPatchPairing } from "../../../../../../../🔨️modules/🎭️actor/🚪️lifetime/🩹️patch/🟦️.ts";
 import { OwnedUiInstance } from "../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🏘️instance/🟦️.ts";
@@ -42,14 +42,14 @@ async function fixture(actorId: string) {
     return pending;
   };
   const plain = { uiPatches: [], effects: [], nextWake: null, status: { tag: "idle" } };
-  await answer(client.activate(actorId, "/fixture.js", [], DEFAULT_SHARD_BUDGET), undefined);
+  await answer(client.activate(actorId, "/fixture.js", [], MAINTENANCE_LANE_DEFAULT_BUDGET), undefined);
   const lease = client.captureInstanceLifecycle(actorId, INSTANCE);
   const lifetime = { activationGeneration: lease.activation.activationGeneration, instanceId: INSTANCE, guestLifetime: 3n };
   const captured = { kind: "captured" as const, lifetime, requestSequence: lease.openRequest.requestSequence };
-  await answer(lease.open({ appId: "fixture", actor: {}, config: new Uint8Array(), assets: [], capabilities: [], quotas: new Uint8Array() }, DEFAULT_SHARD_BUDGET), { ...plain, lifecycleReceipt: encodeActorInstanceLifecycle(captured) });
+  await answer(lease.open({ appId: "fixture", actor: {}, config: new Uint8Array(), assets: [], capabilities: [], quotas: new Uint8Array() }, MAINTENANCE_LANE_DEFAULT_BUDGET), { ...plain, lifecycleReceipt: encodeActorInstanceLifecycle(captured) });
   const owner = new OwnedUiInstance(lease.activation, lifetime, { maxNodes: 128, maxDepth: 16, maxChildren: 32, maxTextBytes: 4096, maxPatchOps: 128, maxPatchBytes: 65_536 }, { usizeBits: 32 });
   lease.bindHostRetirement(owner);
-  await answer(lease.acknowledge(captured, DEFAULT_SHARD_BUDGET), plain);
+  await answer(lease.acknowledge(captured, MAINTENANCE_LANE_DEFAULT_BUDGET), plain);
   return { sent, client, answer, plain, lease, lifetime, owner };
 }
 
@@ -75,7 +75,7 @@ describe("🧺️ the turn patch batch, on the host side", () => {
   it("captures every patch of one turn as its own authority, in publication order, under one receipt", async () => {
     const { answer, client, plain, lease, lifetime } = await fixture("batch-capture");
     const turn = batchTurn(plain, lifetime, SURFACES.length, 1n);
-    await answer(lease.poll(DEFAULT_SHARD_BUDGET), turn);
+    await answer(lease.poll(MAINTENANCE_LANE_DEFAULT_BUDGET), turn);
     const captured = SURFACES.map((_, index) => lease.captureUiPatchAuthority(turn, index));
     expect(captured.map((source) => source.value.surface)).toEqual([...SURFACES]);
     expect(captured.map((source) => source.value.revision)).toEqual(SURFACES.map((_, index) => index + 1));
@@ -83,7 +83,7 @@ describe("🧺️ the turn patch batch, on the host side", () => {
     expect(lease.captureUiPatchAuthority(turn, 0)).toBe(captured[0]);
     expect(() => lease.captureUiPatchAuthority(turn, SURFACES.length)).toThrow("actor-lifecycle.patch-index");
     const stale = batchTurn(plain, lifetime, 1, 1n);
-    await answer(lease.poll(DEFAULT_SHARD_BUDGET), stale);
+    await answer(lease.poll(MAINTENANCE_LANE_DEFAULT_BUDGET), stale);
     expect(() => lease.captureUiPatchAuthority(stale, 0)).toThrow("actor-ui-patch.duplicate-sequence");
     client.disposeAll();
   });
@@ -92,7 +92,7 @@ describe("🧺️ the turn patch batch, on the host side", () => {
     const { sent, answer, client, plain, lease, lifetime, owner } = await fixture("batch-ack");
     const count = 3;
     const turn = batchTurn(plain, lifetime, count, 1n);
-    await answer(lease.poll(DEFAULT_SHARD_BUDGET), turn);
+    await answer(lease.poll(MAINTENANCE_LANE_DEFAULT_BUDGET), turn);
     const entries = SURFACES.slice(0, count).map((surface, index) => {
       const source = lease.captureUiPatchAuthority(turn, index);
       const lookup = owner.beginSurfaceLookup(lease.activation, lifetime, surface)!;
@@ -106,7 +106,7 @@ describe("🧺️ the turn patch batch, on the host side", () => {
       return { source, token: patch.peekAcknowledgement()!, patch };
     });
     const before = sent.length;
-    const submitted = await answer(lease.submitUiAcknowledgements(entries.map(({ source, token }) => ({ source, token })), DEFAULT_SHARD_BUDGET), plain);
+    const submitted = await answer(lease.submitUiAcknowledgements(entries.map(({ source, token }) => ({ source, token })), MAINTENANCE_LANE_DEFAULT_BUDGET), plain);
     expect(sent.length - before).toBe(1);
     const posted = sent.at(-1)!.events!;
     expect(posted).toHaveLength(count);
@@ -118,7 +118,7 @@ describe("🧺️ the turn patch batch, on the host side", () => {
       expect(patch.acceptAcknowledgement(submitted.receipts[index]!)).toBe(true);
       expect(patch.acceptAcknowledgement(submitted.receipts[index]!)).toBe(false);
     }
-    const again = await lease.submitUiAcknowledgements(entries.map(({ source, token }) => ({ source, token })), DEFAULT_SHARD_BUDGET);
+    const again = await lease.submitUiAcknowledgements(entries.map(({ source, token }) => ({ source, token })), MAINTENANCE_LANE_DEFAULT_BUDGET);
     expect(sent.length - before).toBe(1);
     expect(again.receipts).toEqual(submitted.receipts);
     client.disposeAll();
@@ -127,10 +127,10 @@ describe("🧺️ the turn patch batch, on the host side", () => {
   it("refuses an empty batch and a token that belongs to another patch", async () => {
     const { answer, client, plain, lease, lifetime } = await fixture("batch-refusal");
     const turn = batchTurn(plain, lifetime, 2, 1n);
-    await answer(lease.poll(DEFAULT_SHARD_BUDGET), turn);
-    await expect(lease.submitUiAcknowledgements([], DEFAULT_SHARD_BUDGET)).rejects.toThrow("actor-lifecycle.ui-ack-mismatch");
+    await answer(lease.poll(MAINTENANCE_LANE_DEFAULT_BUDGET), turn);
+    await expect(lease.submitUiAcknowledgements([], MAINTENANCE_LANE_DEFAULT_BUDGET)).rejects.toThrow("actor-lifecycle.ui-ack-mismatch");
     const source = lease.captureUiPatchAuthority(turn, 0);
-    await expect(lease.submitUiAcknowledgements([{ source, token: {} as never }], DEFAULT_SHARD_BUDGET)).rejects.toThrow("actor-lifecycle.ui-ack-mismatch");
+    await expect(lease.submitUiAcknowledgements([{ source, token: {} as never }], MAINTENANCE_LANE_DEFAULT_BUDGET)).rejects.toThrow("actor-lifecycle.ui-ack-mismatch");
     client.disposeAll();
   });
 });

@@ -43,7 +43,7 @@
   "hTrWK": null,
   "hVeWK": null,
   "thetaEC": null,
-  "thetaSetC": 25,
+  "thetaSetC": 25.0,
   "coolingDeltaTH": null,
   "coolingGainsKwh": null,
   "coolingUtilizationFactor": null,

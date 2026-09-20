@@ -1,13 +1,13 @@
 pub(crate) mod context {
     use super::super::*;
-    use semio_framework_plugin::artifact_app_laws::{meta, new_app_with_registry};
+    use semio_framework_plugin::artifact_app_laws::{meta, new_app_with_registry_and_members as new_app_with_registry};
     use semio_framework_plugin::{App, EditorApp, InvocationResult, PluginApp, VcsArtifactApp, ViewModel};
     
-    pub type PlaybookApp = VcsArtifactApp<EditorApp<PlaybookPlayApp>>;
+    pub type PlaybookApp = VcsArtifactApp<EditorApp<PlaybookPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>;
     
     /// 🧪️ An app instance with its concrete command registry and retained job proofs.
     pub async fn playbook_app() -> PlaybookApp {
-        new_app_with_registry::<EditorApp<PlaybookPlayApp>>(playbook_manifest_for_tests).await
+        new_app_with_registry::<EditorApp<PlaybookPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(playbook_manifest_for_tests).await
     }
     
     /// 🧪️ Adapts `create_playbook_play_app`'s `AppDefinition` (contract §2.4) into the `App {
@@ -21,7 +21,7 @@ pub(crate) mod context {
     /// 🧪️ An app wired to the real manifest registry — enforces View/Shell kind discipline, and the
     /// `kind` default declared on `addBlock` materializes host-side.
     pub async fn playbook_app_with_registry() -> PlaybookApp {
-        new_app_with_registry::<EditorApp<PlaybookPlayApp>>(playbook_manifest_for_tests).await
+        new_app_with_registry::<EditorApp<PlaybookPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(playbook_manifest_for_tests).await
     }
     
     pub async fn dispatch(app: &mut PlaybookApp, command: PlaybookCommand) -> InvocationResult {
@@ -70,6 +70,7 @@ async fn every_printed_op_line_starts_with_the_rows_wire_keyword() {
         let id = command.command_id();
         let expected = match id {
             "setContributions" => "contributions".to_string(),
+            "setActiveExample" => "active-example".to_string(),
             _ => id.chars().flat_map(|c| if c.is_ascii_uppercase() { vec!['-', c.to_ascii_lowercase()] } else { vec![c] }).collect(),
         };
         let printed = protocol::OpText::print_op(&command);
@@ -107,6 +108,7 @@ pub(super) fn every_command() -> Vec<PlaybookCommand> {
         PlaybookCommand::MoveBlock(move_block::MoveBlock { block_id: "b".into(), from_step_id: "s1".into(), to_step_id: "s2".into(), index: 0 }),
         PlaybookCommand::UpdatePlaybook(update_playbook::UpdatePlaybook { value: "Recipe".into() }),
         PlaybookCommand::SetContributions(set_contributions::SetContributions { json: "[]".into() }),
+        PlaybookCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: crate::examples::demo::ID.into() }),
     ]
 }
 //#endregion 🔖️CommandSurface
@@ -297,5 +299,31 @@ fn command_from_action_resolves_every_declared_verb() {
         assert_eq!(command.command_id(), *tool_id);
     }
     assert!(PlaybookPlayApp::command_from_action("thereIsNoSuchVerb", None).is_err());
+}
+
+/// 🧬️ The example picker's whole-document load. Every part of the recipe is asserted on the built
+/// manifest and the real demo asset, because each one fails at a DIFFERENT boundary at runtime and
+/// none of them is a compile error: an undeclared verb is dropped `undeclared-action` before the app
+/// sees it; a non-`HostOnly` contract claims a store lane this verb never writes; a child slot the
+/// app cannot mint genesis bytes for fails the archive's closure leg and the whole replacement is
+/// refused. `PlaybookSnapshot` owns TWO composed `s.stdio.semio` children, so both must answer.
+#[test]
+fn set_active_example_is_host_only_and_both_composed_children_mint_genesis_packs() {
+    use semio_framework_plugin::ArtifactEditor;
+    assert!(PLAYBOOK_RETAINED_TOOL_IDS.contains(&"setActiveExample"), "the example verb must be a retained tool or the dispatch gate refuses it");
+    let contract = PLAYBOOK_RETAINED_PUBLICATION_CONTRACTS.iter().find(|contract| contract.tool_id == "setActiveExample").expect("setActiveExample has a publication contract");
+    assert_eq!(contract.lanes, &[ArtifactToolPublicationLane::HostOnly], "a whole-document load publishes through neither the artifact nor the config store");
+    let definition = create_playbook_play_app();
+    let action = definition.actions.iter().find(|action| action.id == "setActiveExample").expect("setActiveExample is declared on the app roster");
+    assert_eq!(action.semantics.execution.interactive_job, InteractiveJobClassification::Migrated);
+    let demo = <PlaybookSnapshot as store::ArtifactDsl>::parse_dsl(crate::examples::demo::PRIMARY_TEXT).expect("the demo asset parses as a playbook snapshot");
+    for (slot, child) in [("document", &demo.document), ("flow", &demo.flow)] {
+        assert_eq!(child.target.artifact_id, child.child_id, "slot {slot}'s target must name its own child_id or ChildRestoreProjection refuses the whole load with InvalidReference");
+    }
+    for (slot, child_id) in [("document", demo.document.child_id.as_str()), ("flow", demo.flow.child_id.as_str())] {
+        let pack = PlaybookPlayApp::genesis_child_pack(&demo, slot, child_id).unwrap_or_else(|| panic!("slot {slot} mints no genesis pack, so the archive closure leg refuses the load"));
+        assert!(!pack.is_empty(), "slot {slot} minted an empty pack");
+    }
+    assert!(PlaybookPlayApp::genesis_child_pack(&demo, "flow", "not-this-documents-child").is_none(), "a foreign child id must not be answered");
 }
 //#endregion 🧵️RetainedToolCatalog

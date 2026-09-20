@@ -23,7 +23,7 @@
 //! plus a typed, retryable gap (never a fabricated value) for the one part — execution — this crate
 //! genuinely cannot do yet.
 
-use crate::catalog::{CapabilityDefinition, CapabilityKind, CapabilityOwner, CapabilityPresentation, CapabilityRef, CapabilitySource, ToolExposure};
+use crate::catalog::{CapabilityAudience, CapabilityDefinition, CapabilityKind, CapabilityOwner, CapabilityPresentation, CapabilityRef, CapabilitySource, ToolExposure};
 use crate::errors::{GatewayError, GatewayErrorCode};
 use crate::tool_from_capability;
 use crate::protocol::{CallToolResult, ContentBlock, GatewayBackend, InMemoryToolRegistry, Resource, ResourceContent};
@@ -218,6 +218,7 @@ fn inference_capability(id: &str, tool_name: &str, title: &str, description: &st
         version: 1,
         owner: CapabilityOwner::Gateway,
         kind: CapabilityKind::Query,
+        audience: CapabilityAudience::Agent,
         title: title.to_string(),
         description: description.to_string(),
         artifact_kind: None,
@@ -602,12 +603,14 @@ pub struct GisMapInferenceSubmitRequestV1 {
 }
 
 impl GisMapInferenceSubmitRequestV1 {
-    pub fn new(request_id: impl Into<String>, lifetime_ms: u64) -> Self {
+    /// 🧭️ `service_id` comes from [`resolve_hub_inference_route`] — the artifact's own descriptor
+    /// kind decides which hub-backed service this intent names, never the call site.
+    pub fn new(service_id: impl Into<String>, request_id: impl Into<String>, lifetime_ms: u64) -> Self {
         Self {
             schema: GIS_MAP_INFERENCE_REQUEST_SCHEMA.to_string(),
             version: 1,
             request_id: request_id.into(),
-            service_id: GIS_MAP_INFERENCE_SERVICE_ID.to_string(),
+            service_id: service_id.into(),
             policy_version: INFERENCE_POLICY_VERSION,
             lifetime_ms,
         }
@@ -617,7 +620,7 @@ impl GisMapInferenceSubmitRequestV1 {
         if self.schema != GIS_MAP_INFERENCE_REQUEST_SCHEMA
             || self.version != 1
             || !is_lower_hex(&self.request_id, INFERENCE_REQUEST_ID_HEX_LENGTH)
-            || self.service_id != GIS_MAP_INFERENCE_SERVICE_ID
+            || !HUB_INFERENCE_ROUTES.iter().any(|route| route.service_id == self.service_id)
             || self.policy_version != INFERENCE_POLICY_VERSION
             || self.lifetime_ms == 0
             || self.lifetime_ms > INFERENCE_JOB_MAX_LIFETIME_MS
@@ -1150,6 +1153,7 @@ fn inference_job_capability(id: &str, tool_name: &str, title: &str, description:
         version: 1,
         owner: CapabilityOwner::Gateway,
         kind,
+        audience: CapabilityAudience::Agent,
         title: title.to_string(),
         description: description.to_string(),
         artifact_kind: None,
@@ -1170,8 +1174,8 @@ pub fn inference_submit_capability() -> CapabilityDefinition {
     inference_job_capability(
         "inference.submit",
         "inference_submit",
-        "Submit GIS Map Inference Job",
-        "Submits one bounded, deterministic GIS Map inference job to the bound hub and returns its owner-private receipt and a session-owned job handle. Nothing is applied to the document. — Reicht einen begrenzten, deterministischen GIS-Karten-Inferenzauftrag beim gebundenen Hub ein und liefert dessen nur dem Eigentümer sichtbare Quittung sowie ein sitzungsgebundenes Auftrags-Handle. Es wird nichts am Dokument angewendet.",
+        "Submit Hub Inference Job",
+        "Submits one bounded, deterministic inference job to the hub-backed service this artifact's own descriptor kind declares and returns its owner-private receipt and a session-owned job handle. Nothing is applied to the document. — Reicht einen begrenzten, deterministischen Inferenzauftrag beim hub-gestützten Dienst ein, den die Deskriptor-Art dieses Artefakts deklariert, und liefert dessen nur dem Eigentümer sichtbare Quittung sowie ein sitzungsgebundenes Auftrags-Handle. Es wird nichts am Dokument angewendet.",
         CapabilityKind::Mutation,
         inference_scope_ids(),
         inference_submit_input_schema(),
@@ -1183,8 +1187,8 @@ pub fn inference_events_capability() -> CapabilityDefinition {
     inference_job_capability(
         "inference.events",
         "inference_events",
-        "Poll GIS Map Inference Job Events",
-        "Reads the next owner-private bounded page of lifecycle events and progress rows for one job handle. MCP has no progress push, so poll this cursor. — Liest die nächste, nur dem Eigentümer sichtbare begrenzte Seite mit Lebenszyklus-Ereignissen und Fortschrittszeilen zu einem Auftrags-Handle. MCP kennt keine Fortschrittsmeldung, frage diesen Cursor also ab.",
+        "Poll Hub Inference Job Events",
+        "Reads the next owner-private bounded page of lifecycle events and progress rows for one job handle. This is the hub job's own event cursor; MCP `notifications/progress` covers local job progress instead. — Liest die nächste, nur dem Eigentümer sichtbare begrenzte Seite mit Lebenszyklus-Ereignissen und Fortschrittszeilen zu einem Auftrags-Handle. Dies ist der Ereigniscursor des Hub-Auftrags; `notifications/progress` deckt den lokalen Auftragsfortschritt ab.",
         CapabilityKind::Query,
         vec![semio_framework::manifest::kernel::CapabilityId("artifacts.read".to_string())],
         inference_job_handle_input_schema("inference.events"),
@@ -1196,7 +1200,7 @@ pub fn inference_cancel_capability() -> CapabilityDefinition {
     inference_job_capability(
         "inference.cancel",
         "inference_cancel",
-        "Cancel GIS Map Inference Job",
+        "Cancel Hub Inference Job",
         "Records the owner's durable cancel request on the hub and interrupts this process's local wait. Cancellation is idempotent and never applies anything. — Vermerkt die dauerhafte Abbruchanforderung des Eigentümers beim Hub und unterbricht das lokale Warten dieses Prozesses. Der Abbruch ist idempotent und wendet niemals etwas an.",
         CapabilityKind::Mutation,
         vec![semio_framework::manifest::kernel::CapabilityId("jobs.spawn".to_string())],
@@ -1209,7 +1213,7 @@ pub fn inference_approve_capability() -> CapabilityDefinition {
     inference_job_capability(
         "inference.approve",
         "inference_approve",
-        "Approve GIS Map Inference Proposal",
+        "Approve Hub Inference Proposal",
         "Explicitly approves one offered proposal by its exact hash. The hub rebuilds the typed effect and its inverse server-side; `applied` is true only after a real committed-WAL witness. — Genehmigt ausdrücklich einen angebotenen Vorschlag anhand seines exakten Hashes. Der Hub baut die typisierte Wirkung und ihre Umkehrung serverseitig neu auf; `applied` ist nur nach einem echten festgeschriebenen WAL-Zeugen wahr.",
         CapabilityKind::Mutation,
         inference_scope_ids(),
@@ -1230,6 +1234,7 @@ pub fn inference_run_capability() -> CapabilityDefinition {
         version: 1,
         owner: CapabilityOwner::Gateway,
         kind: CapabilityKind::Job,
+        audience: CapabilityAudience::Agent,
         title: "Run Declared Inference".to_string(),
         description: "Runs one plugin-declared inference service in its own plugin's guest and returns the guest's own result, plus a job handle whose progress is readable with `job_get` and cancellable with `job_cancel`. — Führt einen von einem Plugin deklarierten Inferenzdienst im Gast dieses Plugins aus und liefert dessen eigenes Ergebnis sowie ein Auftrags-Handle, dessen Fortschritt mit `job_get` gelesen und mit `job_cancel` abgebrochen werden kann.".to_string(),
         artifact_kind: None,
@@ -1253,6 +1258,54 @@ pub fn inference_run_capability() -> CapabilityDefinition {
 pub fn inference_job_capabilities() -> Vec<CapabilityDefinition> {
     vec![inference_submit_capability(), inference_events_capability(), inference_cancel_capability(), inference_approve_capability()]
 }
+
+//#region 🔖️HubInferenceRouting
+/// 🧭️ One artifact kind ↔ hub-backed inference service binding this gateway has a transport for.
+/// A DECLARED table, not a per-call-site constant: the four hub-backed tools resolve the service
+/// from the artifact's own descriptor kind through it, so a second hub-backed service is one row
+/// here plus its transport, and an artifact whose kind has no row can never be submitted to the
+/// wrong service (`📓️g7-mcp-agent-and-collaboration-audit.md` §6 P1.9 — the four tools used to be
+/// hard-wired to `GIS_MAP_INFERENCE_SERVICE_ID` and only learned they had the wrong artifact kind
+/// from the hub, one network round trip later, with no descriptor named in the refusal).
+pub struct HubInferenceRoute {
+    pub artifact_kind: &'static str,
+    pub artifact_schema: &'static str,
+    pub service_id: &'static str,
+}
+
+pub const HUB_INFERENCE_ROUTES: &[HubInferenceRoute] =
+    &[HubInferenceRoute { artifact_kind: GIS_MAP_INFERENCE_ARTIFACT_KIND, artifact_schema: GIS_MAP_INFERENCE_ARTIFACT_SCHEMA, service_id: GIS_MAP_INFERENCE_SERVICE_ID }];
+
+/// 🧭️ The hub-backed inference service declared for one artifact kind/schema pair, or `None`.
+pub fn hub_inference_route_for(artifact_kind: &str, artifact_schema: &str) -> Option<&'static HubInferenceRoute> {
+    HUB_INFERENCE_ROUTES.iter().find(|route| route.artifact_kind == artifact_kind && route.artifact_schema == artifact_schema)
+}
+
+/// 🧭️ Routes one document to its hub-backed inference service by reading that document's OWN
+/// descriptor from the bound hub. A kind with no hub-backed row is a local, descriptor-grounded
+/// `NOT_FOUND` that names the kind, the plugin-declared services that kind DOES have, and
+/// `inference_run` as the route which serves them — never a hub round trip against the wrong
+/// service.
+pub fn resolve_hub_inference_route(workspace: &HeadlessWorkspace, document_id: &str, what: &str) -> Result<&'static HubInferenceRoute, GatewayError> {
+    let (artifact_kind, artifact_schema) = workspace.hub_inference_document_descriptor(document_id)?;
+    if let Some(route) = hub_inference_route_for(&artifact_kind, &artifact_schema) {
+        return Ok(route);
+    }
+    let declared: Vec<String> = declared_inferences_for_workspace(workspace).map(|roster| roster.into_iter().filter(|item| item.artifact_kind == artifact_kind || item.artifact_schema == artifact_schema).map(|item| item.inference_schema).collect()).unwrap_or_default();
+    Err(GatewayError::new(
+        GatewayErrorCode::NotFound,
+        format!("`{what}` has no hub-backed inference service for artifact kind `{artifact_kind}`/`{artifact_schema}` — the hub-backed services this gateway can reach are [{}]", HUB_INFERENCE_ROUTES.iter().map(|route| route.service_id).collect::<Vec<_>>().join(", ")),
+    )
+    .with_details(serde_json::json!({
+        "documentId": document_id,
+        "artifactKind": artifact_kind,
+        "artifactSchema": artifact_schema,
+        "hubBackedServices": HUB_INFERENCE_ROUTES.iter().map(|route| route.service_id).collect::<Vec<_>>(),
+        "declaredForThisKind": declared,
+        "runWith": "inference_run",
+    })))
+}
+//#endregion 🔖️HubInferenceRouting
 
 pub fn hub_inference_binding_required(what: &str) -> GatewayError {
     GatewayError::new(GatewayErrorCode::PluginUnavailable, format!("`{what}` needs an authenticated hub binding — start this gateway with `--hub <url> --space <id>`; a `--folder` workspace has no inference authority at all"))
@@ -1323,7 +1376,14 @@ fn inference_submit_handler(context: &InferenceToolContext<'_>, arguments: serde
         Ok(subject) => subject,
         Err(error) => return CallToolResult::tool_error(&error),
     };
-    let request = GisMapInferenceSubmitRequestV1::new(request_id.clone(), lifetime_ms);
+    // 🧭️ Routed by this document's own descriptor kind BEFORE anything leaves the process — a
+    // non-hub-backed artifact kind is refused here, naming its own declared services, rather than
+    // submitted to the wrong service and refused by the hub one round trip later.
+    let route = match resolve_hub_inference_route(workspace, document_id, "inference_submit") {
+        Ok(route) => route,
+        Err(error) => return CallToolResult::tool_error(&error),
+    };
+    let request = GisMapInferenceSubmitRequestV1::new(route.service_id, request_id.clone(), lifetime_ms);
     if let Err(error) = request.validate() {
         return CallToolResult::tool_error(&error.to_gateway_error("inference_submit"));
     }
@@ -1381,10 +1441,16 @@ fn inference_events_handler(context: &InferenceToolContext<'_>, arguments: serde
         Ok(payload) => payload,
         Err(error) => return CallToolResult::tool_error(&error),
     };
+    // 🧭️ The same descriptor routing `inference_submit` used, re-read from this job's own document:
+    // a document whose kind lost its hub-backed service is refused here, not polled forever.
+    let route = match resolve_hub_inference_route(workspace, &payload.document_id, "inference_events") {
+        Ok(route) => route,
+        Err(error) => return CallToolResult::tool_error(&error),
+    };
     match workspace.read_gis_map_inference_job_events(&payload.document_id, &payload.job_id, after) {
         Ok(page) => {
             let text = format!("job {} is {:?} / {:?}, {} event(s), {} progress row(s), next cursor {}", page.job_id, page.state, page.proposal_state, page.events.len(), page.progress.len(), page.next_cursor);
-            CallToolResult::ok(vec![ContentBlock::Text { text }], Some(serde_json::json!({ "jobHandle": handle, "page": inference_page_value(&page), "baseBinding": payload.base })))
+            CallToolResult::ok(vec![ContentBlock::Text { text }], Some(serde_json::json!({ "jobHandle": handle, "serviceId": route.service_id, "page": inference_page_value(&page), "baseBinding": payload.base })))
         }
         Err(error) => CallToolResult::tool_error(&error),
     }
@@ -1409,11 +1475,15 @@ fn inference_cancel_handler(context: &InferenceToolContext<'_>, arguments: serde
         Ok(payload) => payload,
         Err(error) => return CallToolResult::tool_error(&error),
     };
+    let route = match resolve_hub_inference_route(workspace, &payload.document_id, "inference_cancel") {
+        Ok(route) => route,
+        Err(error) => return CallToolResult::tool_error(&error),
+    };
     let interrupted = interrupt_inference_operation(&inference_operation_label(&payload.space_id, &payload.document_id, Some(&payload.job_id))) | interrupt_inference_operation(&inference_operation_label(&payload.space_id, &payload.document_id, None));
     match workspace.cancel_gis_map_inference_job(&payload.document_id, &payload.job_id) {
         Ok(page) => {
             let text = format!("job {} cancel requested: {} (local wait interrupted: {interrupted})", page.job_id, page.cancel_requested);
-            CallToolResult::ok(vec![ContentBlock::Text { text }], Some(serde_json::json!({ "jobHandle": handle, "page": inference_page_value(&page), "localWaitInterrupted": interrupted })))
+            CallToolResult::ok(vec![ContentBlock::Text { text }], Some(serde_json::json!({ "jobHandle": handle, "serviceId": route.service_id, "page": inference_page_value(&page), "localWaitInterrupted": interrupted })))
         }
         Err(error) => CallToolResult::tool_error(&error),
     }
@@ -1441,6 +1511,10 @@ fn inference_approve_handler(context: &InferenceToolContext<'_>, arguments: serd
         Ok(payload) => payload,
         Err(error) => return CallToolResult::tool_error(&error),
     };
+    let route = match resolve_hub_inference_route(workspace, &payload.document_id, "inference_approve") {
+        Ok(route) => route,
+        Err(error) => return CallToolResult::tool_error(&error),
+    };
     let request = GisMapInferenceApprovalRequestV1::new(payload.job_id.clone(), proposal_hash.to_string());
     if let Err(error) = request.validate() {
         return CallToolResult::tool_error(&error.to_gateway_error("inference_approve"));
@@ -1456,7 +1530,7 @@ fn inference_approve_handler(context: &InferenceToolContext<'_>, arguments: serd
                 Err(error) => return CallToolResult::tool_error(&error),
             };
             let text = format!("approval of job {} produced mutation {} (applied: {})", receipt.job_id, receipt.mutation_id, receipt.applied);
-            CallToolResult::ok(vec![ContentBlock::Text { text }], Some(serde_json::json!({ "jobHandle": handle, "undoToken": undo_token, "receipt": serde_json::to_value(&receipt).unwrap_or(serde_json::Value::Null), "baseBinding": payload.base })))
+            CallToolResult::ok(vec![ContentBlock::Text { text }], Some(serde_json::json!({ "jobHandle": handle, "serviceId": route.service_id, "undoToken": undo_token, "receipt": serde_json::to_value(&receipt).unwrap_or(serde_json::Value::Null), "baseBinding": payload.base })))
         }
         Err(error) => CallToolResult::tool_error(&error),
     }
@@ -1638,7 +1712,11 @@ pub fn gis_map_hub_inference_read(workspace: &Arc<HeadlessWorkspace>, artifact_i
         Ok(subject) => subject,
         Err(error) => return Some(Err(error)),
     };
-    let request = GisMapInferenceSubmitRequestV1::new(deterministic_inference_request_id(&subject, artifact_id), INFERENCE_JOB_MAX_LIFETIME_MS);
+    let route = match resolve_hub_inference_route(workspace, artifact_id, "inference_get") {
+        Ok(route) => route,
+        Err(error) => return Some(Err(error)),
+    };
+    let request = GisMapInferenceSubmitRequestV1::new(route.service_id, deterministic_inference_request_id(&subject, artifact_id), INFERENCE_JOB_MAX_LIFETIME_MS);
     Some(workspace.submit_gis_map_inference_job(artifact_id, &request).map(|receipt| {
         serde_json::json!({
             "artifactId": artifact_id,

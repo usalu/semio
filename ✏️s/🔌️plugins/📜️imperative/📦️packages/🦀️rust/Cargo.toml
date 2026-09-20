@@ -13,6 +13,7 @@ package = "semio:imperative"
 
 [package.metadata.semio]
 role = "plugin"
+consumes = ["imperative.module"]
 
 [[package.metadata.semio.playground]]
 variant = "imperative"

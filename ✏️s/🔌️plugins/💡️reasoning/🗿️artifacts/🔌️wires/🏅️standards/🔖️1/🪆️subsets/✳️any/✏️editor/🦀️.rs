@@ -753,16 +753,21 @@ pub fn create_wires_app() -> semio_framework_plugin::AppDefinition {
         .panel_tab_def(inspection_panel::definition())
         // ✏️ Document-mutating actions — dispatched as VCS operations with true inverses.
         .action_with(semio_framework_plugin::ActionDefinition::new("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"), semio_framework_plugin::ActionKind::Mutation, "panel-left"))
+        .action_destructive("setActiveExample")
         .mutation("addNode", LocalizedLabel::native("Add Node", "Knoten hinzufügen"))
         .mutation("addRelationship", LocalizedLabel::native("Add Relationship", "Beziehung hinzufügen"))
         .mutation("deleteSelection", LocalizedLabel::native("Delete Selection", "Auswahl löschen"))
+        .action_destructive("deleteSelection")
         .action_with(semio_framework_plugin::ActionDefinition::new("canvasPointerMove", LocalizedLabel::native("Canvas Pointer Move", "Leinwand-Zeiger bewegt"), semio_framework_plugin::ActionKind::View, "mouse-pointer"))
+        .action_audience("canvasPointerMove", semio_framework_plugin::CapabilityAudience::Input)
         // 👁️ Ephemeral view state — in-flight drag. Selection/hover are framework-owned now
         // (domain "graph") — no app-declared verbs; `interactionSelect`/`interactionHover`/
         // `clearSelection`/`selectAll`/`setSelectionMode`/`setInteractionGranularity` auto-inject
         // below via `.interaction(...)`.
         .action_with(semio_framework_plugin::ActionDefinition::new("canvasPointerDown", LocalizedLabel::native("Canvas Pointer Down", "Leinwand-Zeiger gedrückt"), semio_framework_plugin::ActionKind::View, "mouse-pointer"))
+        .action_audience("canvasPointerDown", semio_framework_plugin::CapabilityAudience::Input)
         .action_with(semio_framework_plugin::ActionDefinition::new("canvasPointerUp", LocalizedLabel::native("Canvas Pointer Up", "Leinwand-Zeiger losgelassen"), semio_framework_plugin::ActionKind::Mutation, "mouse-pointer"))
+        .action_audience("canvasPointerUp", semio_framework_plugin::CapabilityAudience::Input)
         .action_with(semio_framework_plugin::ActionDefinition::new("nodeGraphViewport", LocalizedLabel::native("Node Graph Viewport", "Knotengraph-Ansicht"), semio_framework_plugin::ActionKind::View, "camera"))
         .action_interactive_job("canvasPointerUp", InteractiveJobClassification::Migrated)
         .action_interactive_job("setActiveExample", InteractiveJobClassification::Migrated)
@@ -803,3 +808,11 @@ pub fn create_wires_app() -> semio_framework_plugin::AppDefinition {
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 pub(crate) mod unit_tests;
 //#endregion 🧪️UnitTests
+
+//#region 🪢️TaxonomyMounts
+#[path = "📚️examples/🎬️demo-session/🦀️.rs"]
+pub mod demo_session;
+#[cfg(test)]
+#[path = "📚️examples/🎬️demo-session/🧪️tests/🧩️example/🦀️.rs"]
+mod example;
+//#endregion 🪢️TaxonomyMounts

@@ -132,3 +132,8 @@ pub fn addressed(view: &semio_framework_plugin::ViewModel, config: FormsTryWindo
 #[cfg(test)]
 #[path = "🧪️tests/🔬️window-ownership/🦀️.rs"]
 mod tests;
+
+//#region 🪢️TaxonomyMounts
+#[path = "🧬️schema/🦀️.rs"]
+pub mod schema;
+//#endregion 🪢️TaxonomyMounts

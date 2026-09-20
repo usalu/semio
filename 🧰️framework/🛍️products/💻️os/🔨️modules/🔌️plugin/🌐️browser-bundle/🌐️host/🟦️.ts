@@ -94,7 +94,7 @@ export function createBrowserHostActivation(identity: BrowserHostIdentity, port:
         } else if (reader) {
           for (;;) {
             if (!checkStream()) return;
-            let result: ReadableStreamReadResult<Uint8Array>;
+            let result: Awaited<ReturnType<typeof reader.read>>;
             try { result = await reader.read(); }
             catch (error) { sourceFailed = true; throw error; }
             if (!checkStream()) return;

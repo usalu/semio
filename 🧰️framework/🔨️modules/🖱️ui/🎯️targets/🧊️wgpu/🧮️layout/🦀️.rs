@@ -1,7 +1,7 @@
 // #region layout
 //! 🧮️ Flex stack layout for widget trees.
 
-use crate::wgpu::component::ui::{UiTreeItemNode, UiTreeNode, UiTreeSectionNode};
+use crate::wgpu::component::ui::{UiControlNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode};
 use crate::wgpu::geometry::Rect;
 use crate::wgpu::theme::Theme;
 use ui_contract::SpaceToken;
@@ -131,10 +131,17 @@ pub struct TreeRowMetrics {
     pub control_width: f32,
     pub control_height: f32,
     pub gap: f32,
+    pub drag_handle_extent: f32,
 }
 
-/// 🌳️ Width of the inline control a tree row may carry, in row-relative px.
-pub const TREE_ROW_CONTROL_WIDTH: f32 = 120.0;
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum TreeDragRole {
+    Sort,
+    Transfer,
+}
+
+/// 🌳️ React's property-row value column: `controlValueColumnUiSpacing × --ui-spacing`.
+pub const TREE_ROW_CONTROL_WIDTH: f32 = (ui_styling::metrics::dom::CONTROL_VALUE_COLUMN_UI_SPACING * ui_styling::metrics::chrome::UI_SPACING_COMPACT_PX) as f32;
 
 /// 🌳️ Depth past which a tree's own spec is refused rather than recursed — the same ceiling
 /// `paint::RETAINED_TREE_DEPTH` walks with, so neither side can out-recurse the other.
@@ -142,8 +149,20 @@ pub const TREE_ROW_MAX_DEPTH: usize = 64;
 
 impl TreeRowMetrics {
     pub fn from_theme(theme: &Theme) -> Self {
-        Self { row_height: theme.tree_row_height, header_height: theme.tree_row_height, control_width: TREE_ROW_CONTROL_WIDTH, control_height: theme.control_height, gap: theme.gap_standard }
+        Self { row_height: theme.tree_row_height, header_height: theme.tree_row_height, control_width: TREE_ROW_CONTROL_WIDTH, control_height: theme.control_height, gap: theme.gap_standard, drag_handle_extent: crate::wgpu::chrome::ICON_TREE_ROW }
     }
+}
+
+pub fn tree_drag_role(item: &UiTreeItemNode) -> Option<TreeDragRole> {
+    item.draggable.unwrap_or(false).then_some(if item.drag_data.is_some() { TreeDragRole::Transfer } else { TreeDragRole::Sort })
+}
+
+pub fn tree_drag_handle_rect(row_width: f32, metrics: &TreeRowMetrics) -> Rect {
+    Rect::new((row_width - metrics.gap - metrics.drag_handle_extent).max(0.0), (metrics.row_height - metrics.drag_handle_extent) * 0.5, metrics.drag_handle_extent.min(row_width.max(0.0)), metrics.drag_handle_extent.min(metrics.row_height.max(0.0)))
+}
+
+pub fn tree_drag_handle_reservation(metrics: &TreeRowMetrics) -> f32 {
+    metrics.drag_handle_extent + metrics.gap * 2.0
 }
 
 /// 🌳️ A tree item row's own height: its row plus every expanded, visible nested row beneath it —
@@ -169,12 +188,18 @@ fn tree_item_height_at(item: &UiTreeItemNode, metrics: &TreeRowMetrics, depth: u
 /// 🌳️ A tree section row's own height: its header row (only when it is labelled, matching the
 /// painter's own `section.label.is_some()` gate) plus every visible item row.
 pub fn tree_section_height(section: &UiTreeSectionNode, metrics: &TreeRowMetrics) -> f32 {
+    tree_section_height_with_open(section, metrics, section.default_open.unwrap_or(true))
+}
+
+pub fn tree_section_height_with_open(section: &UiTreeSectionNode, metrics: &TreeRowMetrics, open: bool) -> f32 {
     if !section.presence.visible() {
         return 0.0;
     }
     let mut height = tree_section_header_height(section, metrics);
-    for item in &section.items {
-        height += tree_item_height_at(item, metrics, 0);
+    if open {
+        for item in &section.items {
+            height += tree_item_height_at(item, metrics, 0);
+        }
     }
     height
 }
@@ -188,6 +213,19 @@ pub fn tree_section_header_height(section: &UiTreeSectionNode, metrics: &TreeRow
     }
 }
 
+/// 🌳️ The section header band at the edge its block flow paints.
+pub fn tree_section_header_band(rect: Rect, header_height: f32, reversed: bool) -> Rect {
+    let header_height = header_height.min(rect.h);
+    Rect::new(rect.x, if reversed { rect.y + rect.h - header_height } else { rect.y }, rect.w, header_height)
+}
+
+pub fn tree_item_chevron_rect(rect: Rect, depth: usize, metrics: &TreeRowMetrics, reversed: bool) -> Rect {
+    let row = tree_section_header_band(rect, metrics.row_height, reversed);
+    let indent = (ui_styling::metrics::dom::TREE_INDENT_PER_LEVEL_UI_SPACING * ui_styling::metrics::chrome::UI_SPACING_COMPACT_PX) as f32;
+    let width = (ui_styling::metrics::dom::TREE_TOGGLE_UI_SPACING * ui_styling::metrics::chrome::UI_SPACING_COMPACT_PX) as f32;
+    Rect::new(row.x + depth.saturating_sub(1) as f32 * indent, row.y, width.min(row.w), row.h)
+}
+
 /// 🌳️ A whole `Tree` node's height: the sum of its visible sections.
 pub fn tree_node_height(node: &UiTreeNode, metrics: &TreeRowMetrics) -> f32 {
     node.sections.iter().map(|section| tree_section_height(section, metrics)).sum()
@@ -196,7 +234,31 @@ pub fn tree_node_height(node: &UiTreeNode, metrics: &TreeRowMetrics) -> f32 {
 /// 🌳️ The rect a row's inline control occupies, **relative to that row's own top-left** — the one
 /// definition `paint`'s control draw and `mounted_layout`'s arrange both take it from.
 pub fn tree_row_control_rect(row_width: f32, metrics: &TreeRowMetrics) -> Rect {
-    Rect::new((row_width - metrics.control_width - metrics.gap).max(0.0), (metrics.row_height - metrics.control_height) * 0.5, metrics.control_width, metrics.control_height)
+    tree_row_control_rect_with_height(row_width, metrics.control_height, metrics)
+}
+
+/// 🎛️ The value-column rect for a control's own authored height. General's Select/Input are small;
+/// Stepper/Toggle/Button retain the default chrome height while sharing the same 160px column.
+pub fn tree_row_control_rect_with_height(row_width: f32, control_height: f32, metrics: &TreeRowMetrics) -> Rect {
+    Rect::new((row_width - metrics.control_width - metrics.gap).max(0.0), (metrics.row_height - control_height) * 0.5, metrics.control_width, control_height)
+}
+
+pub fn tree_inline_control_height(control: &UiControlNode, theme: &Theme) -> f32 {
+    match control {
+        UiControlNode::Input(_) | UiControlNode::Select(_) => theme.control_height_small,
+        UiControlNode::Toggle(_)
+        | UiControlNode::Button(_)
+        | UiControlNode::KeyValue(_)
+        | UiControlNode::Slider(_)
+        | UiControlNode::NumberStepper(_)
+        | UiControlNode::Ring(_)
+        | UiControlNode::IconSelect(_) => theme.control_height,
+    }
+}
+
+pub fn tree_row_control_rect_before_drag(row_width: f32, metrics: &TreeRowMetrics) -> Rect {
+    let reservation = tree_drag_handle_reservation(metrics);
+    Rect::new((row_width - metrics.control_width - metrics.gap - reservation).max(0.0), (metrics.row_height - metrics.control_height) * 0.5, metrics.control_width.min((row_width - reservation).max(0.0)), metrics.control_height)
 }
 //#endregion 🌳️TreeRowGeometry
 

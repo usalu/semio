@@ -8,7 +8,7 @@
 import { act, cleanup, render } from "@semio-tech/ui-react/test";
 import { createElement } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import type { UiComponentSceneNode } from "@semio-tech/framework";
+import type { ActionDescriptor, UiComponentSceneNode } from "@semio-tech/framework";
 import { Board2dHost, BOARD_2D_ZOOM_BOUNDS, board2dPinchCamera } from "../../🟦️.tsx";
 import { BoardSessionFactoryContext, createBoardPeerScope, type Board2dWasmSession } from "../../../🪪️WasmSessionLoader/🟦️.tsx";
 // #endregion 🔌️Adapters
@@ -44,6 +44,7 @@ function createStubSession(): Board2dWasmSession & { readonly calls: string[]; r
     pointerDownScreen: () => calls.push("pointerDownScreen"),
     pointerMoveScreen: () => calls.push("pointerMoveScreen"),
     pointerUpScreen: () => calls.push("pointerUpScreen"),
+    pointerCancelScreen: () => calls.push("pointerCancelScreen"),
     pointerLeaveScreen: () => calls.push("pointerLeaveScreen"),
     cancelAreaSelect: () => {
       calls.push("cancelAreaSelect");
@@ -93,11 +94,11 @@ function stubLayout(container: HTMLElement): void {
   }
 }
 
-async function mountBoard(session: Board2dWasmSession): Promise<{ readonly canvas: HTMLCanvasElement; readonly actions: { action: string; args?: Record<string, unknown> }[] }> {
-  const actions: { action: string; args?: Record<string, unknown> }[] = [];
+async function mountBoard(session: Board2dWasmSession): Promise<{ readonly canvas: HTMLCanvasElement; readonly actions: { action: string; args?: unknown }[] }> {
+  const actions: { action: string; args?: unknown }[] = [];
   const factory = { pluginId: "test", appId: "test", instanceId: 1, create: async () => session, scope: createBoardPeerScope() };
   const view = render(
-    createElement(BoardSessionFactoryContext.Provider, { value: factory }, createElement(Board2dHost, { node: boardSceneNode(), onAction: (descriptor: { action: string; args?: Record<string, unknown> }) => void actions.push({ action: descriptor.action, args: descriptor.args }) })),
+    createElement(BoardSessionFactoryContext.Provider, { value: factory }, createElement(Board2dHost, { node: boardSceneNode(), onAction: (descriptor: ActionDescriptor) => void actions.push({ action: descriptor.action, args: descriptor.args }) })),
   );
   const canvas = view.container.querySelector("canvas")!;
   stubLayout(view.container as HTMLElement);
@@ -204,6 +205,18 @@ describe("🤏️ board 2d two-finger gesture", () => {
     const gestureCalls = session.calls.slice(callsBeforeGesture);
     expect(gestureCalls).toEqual(expect.arrayContaining(["pointerDownScreen", "pointerMoveScreen", "pointerUpScreen"]));
     expect(gestureCalls).not.toContain("setCameraSilent");
+  });
+
+  it("retires the owned board gesture without synthesizing an up and admits the next contact", async () => {
+    const session = createStubSession();
+    const { canvas } = await mountBoard(session);
+    pointerBatch(() => canvas.dispatchEvent(pointer("pointerdown", 7, 300, 300)));
+    const callsBeforeCancel = session.calls.length;
+    pointerBatch(() => window.dispatchEvent(pointer("pointercancel", 7, 320, 300)));
+    expect(session.calls.slice(callsBeforeCancel)).not.toContain("pointerUpScreen");
+    expect(session.calls.slice(callsBeforeCancel)).toEqual(expect.arrayContaining(["pointerCancelScreen"]));
+    pointerBatch(() => canvas.dispatchEvent(pointer("pointerdown", 8, 340, 300)));
+    expect(session.calls.filter((call) => call === "pointerDownScreen")).toHaveLength(2);
   });
 });
 // #endregion 🤏️PinchLaws

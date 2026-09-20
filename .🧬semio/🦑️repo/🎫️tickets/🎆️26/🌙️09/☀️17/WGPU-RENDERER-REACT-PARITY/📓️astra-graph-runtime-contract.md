@@ -1,0 +1,9 @@
+# Graph Runtime Contract Reconciliation
+
+Renderer13 executed1160 tests:1145 passed and15 failed. It consumed the corrected graph fixture during compilation: the exact six-node/thirteen-port caption law passed, including the three output handles and post-raster glyph layer. The tutorial law failed on the newly explicit negative case: height slider value0 resolved to(-55.960037,408.7217), outside its surface. That establishes the retained domain visibility defect before the production correction.
+
+The fixture now carries the three document operator records required by the production Flow window. It preserves the actual stored camera and seven widgets/six synapses. The positive tutorial entity/domain target is visible radius; height remains a negative case. React dagWorldToScreen and an independent Three Matrix3 projection both replay the fixture; the focused Bun+Nx oracle passed1 test with3 unrelated skips. It also validates all declared ports and six synapse endpoints.
+
+The WGPU tutorial resolver now projects both slider track corners through the live camera, so its domain ratio uses zoomed dimensions, and validates the final graph result against finite local surface bounds. This covers Canvas, Entity offsets, Curve parameters, and Domain values without moving the camera. The native law additionally compares a radius domain point against the live host's world track projected through the same public camera mapping. Native validation of this source correction is pending.
+
+The old footer law assumed unconditional window-centering even when the live presence/Hub/right controls occupy that position. React clamps centered groups to the widest free span. The native footer acceptance now checks the exact centered-and-clamped position and full containment, retaining edge alignment and non-overlap laws. The existing neutral React placement oracle already validated the shared clamp contract; the integrated native rerun is pending.

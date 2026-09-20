@@ -1,5 +1,4 @@
 {
-  "ChangeRetrofitKnowledgeLevel": {
-    "newRetrofitKnowledgeLevel": "kl3"
-  }
+  "mutation": "changeRetrofitKnowledgeLevel",
+  "newRetrofitKnowledgeLevel": "kl3"
 }

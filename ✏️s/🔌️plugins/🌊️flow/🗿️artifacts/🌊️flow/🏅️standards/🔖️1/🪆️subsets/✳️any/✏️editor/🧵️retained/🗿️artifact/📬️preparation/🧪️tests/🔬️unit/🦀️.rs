@@ -10,7 +10,7 @@ async fn semantic_artifact_prepare_publish_retry_cancel_and_close_use_production
         for row in fixture["cases"].as_array().unwrap() {
             for cancel in [None, Some(0), Some(131), Some(5001)] {
                 let scene = super::super::recipe::tests::source(&label);
-                let content = crate::flow_content_child_handle_and_cache(scene.widgets, scene.synapses, scene.layout);
+                let content = crate::flow_content_child_handle_and_cache(scene.widgets.clone(), scene.synapses.clone(), scene.layout.clone());
                 let initial = FlowSnapshot { schema: "flow".into(), content };
                 let initial_scene = initial.content.local_owner::<FlowWorkingScene>().unwrap();
                 let baseline = serde_json::Value::from(dsl::ToValue::to_value(&*initial_scene));
@@ -82,7 +82,6 @@ async fn semantic_artifact_prepare_publish_retry_cancel_and_close_use_production
                     }
                 }
                 assert!(store.close_owned_terminal_is_empty());
-                eprintln!("[DEBUG] Flow artifact recipe={} grant={} cancel={cancel:?} published={published} terminal=true", row["id"], grant.maximum_bytes);
             }
         }
     }

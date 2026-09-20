@@ -1,0 +1,91 @@
+{
+  "schemaVersion": 1,
+  "cases": [
+    {
+      "id": "verified-live-uses-busiest-document",
+      "projection": {
+        "authority": { "kind": "verifiedSession", "authorizationGeneration": 7 },
+        "documents": [
+          { "documentKey": "local:detached", "remote": { "kind": "detached" } },
+          { "documentKey": "hub:space-a/connecting", "remote": { "kind": "connecting" } },
+          { "documentKey": "hub:space-a/live-2", "remote": { "kind": "live", "peerCount": 2 } },
+          { "documentKey": "hub:space-b/live-5", "remote": { "kind": "live", "peerCount": 5 } }
+        ]
+      },
+      "expected": { "state": "live", "peerCount": 5, "documentCount": 4 }
+    },
+    {
+      "id": "unverified-masks-live",
+      "projection": {
+        "authority": { "kind": "noVerifiedSession" },
+        "documents": [
+          { "documentKey": "hub:space-a/live-2", "remote": { "kind": "live", "peerCount": 2 } },
+          { "documentKey": "hub:space-b/live-5", "remote": { "kind": "live", "peerCount": 5 } }
+        ]
+      },
+      "expected": { "state": "signedOut", "peerCount": 0, "documentCount": 2 }
+    },
+    {
+      "id": "connecting-outranks-backoff",
+      "projection": {
+        "authority": { "kind": "verifiedSession", "authorizationGeneration": 8 },
+        "documents": [
+          { "documentKey": "hub:space-a/backoff", "remote": { "kind": "backoff", "retryInMs": 1000 } },
+          { "documentKey": "hub:space-a/connecting", "remote": { "kind": "connecting" } }
+        ]
+      },
+      "expected": { "state": "connecting", "peerCount": 0, "documentCount": 2 }
+    },
+    {
+      "id": "backoff-outranks-detached",
+      "projection": {
+        "authority": { "kind": "verifiedSession", "authorizationGeneration": 9 },
+        "documents": [
+          { "documentKey": "local:detached", "remote": { "kind": "detached" } },
+          { "documentKey": "hub:space-a/backoff", "remote": { "kind": "backoff", "retryInMs": 2000 } }
+        ]
+      },
+      "expected": { "state": "reconnecting", "peerCount": 0, "documentCount": 2 }
+    },
+    {
+      "id": "empty-is-offline",
+      "projection": { "authority": { "kind": "verifiedSession", "authorizationGeneration": 10 }, "documents": [] },
+      "expected": { "state": "offline", "peerCount": 0, "documentCount": 0 }
+    }
+  ],
+  "workspace": {
+    "openerId": "framework.hub.signIn",
+    "route": "/hub",
+    "controls": [
+      "framework.hub.close",
+      "framework.hub.connection",
+      "framework.hub.address",
+      "framework.hub.add",
+      "framework.hub.email",
+      "framework.hub.password",
+      "framework.hub.submit",
+      "framework.hub.spaces.refresh",
+      "framework.hub.spaces.search",
+      "framework.hub.invitation.code",
+      "framework.hub.invitation.join"
+    ],
+    "sections": ["signIn", "spaces", "invitations"]
+  },
+  "operationOwnership": {
+    "selectedGeneration": 2,
+    "completions": [
+      { "operation": "signInFailure", "ownerGeneration": 1, "accepted": false },
+      { "operation": "signOut", "ownerGeneration": 1, "accepted": false },
+      { "operation": "command", "ownerGeneration": 1, "accepted": false },
+      { "operation": "authority", "ownerGeneration": 1, "accepted": false },
+      { "operation": "members", "ownerGeneration": 1, "accepted": false },
+      { "operation": "redemption", "ownerGeneration": 2, "accepted": true }
+    ]
+  },
+  "transport": {
+    "capacity": 64,
+    "documentKey": "hub:space-a/document-a",
+    "publications": ["connecting", "live", "close"],
+    "expected": "close"
+  }
+}

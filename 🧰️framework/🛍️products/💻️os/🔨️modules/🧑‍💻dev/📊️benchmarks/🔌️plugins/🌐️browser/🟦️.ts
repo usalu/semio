@@ -40,7 +40,10 @@ async function buildBenchWebHarnessBundle(): Promise<string> {
   return await output.text();
 }
 
-async function runWebBenchViaHeadlessChromium(pluginIds: readonly string[], firstPluginExtensionIds: readonly string[], shardCount: number): Promise<Record<string, unknown>[]> {
+/** 📊️ One row the in-page harness reports — the exact shape `benchWebMeasuredRow` reads. */
+type BenchWebHarnessRow = { readonly id: number; readonly ok: boolean; readonly measured: unknown; readonly note: string };
+
+async function runWebBenchViaHeadlessChromium(pluginIds: readonly string[], firstPluginExtensionIds: readonly string[], shardCount: number): Promise<BenchWebHarnessRow[]> {
   const bundleJs = await buildBenchWebHarnessBundle();
   const html = `<!doctype html><html><head><meta charset="utf-8"><title>bench-web</title></head><body><script type="module">
 ${bundleJs}
@@ -57,7 +60,7 @@ runBenchWebBudgets(${JSON.stringify({ pluginIds, firstPluginExtensionIds, shardC
     const page = await browser.newPage();
     await page.setContent(html, { waitUntil: "load" });
     await page.waitForFunction(() => (window as unknown as { __BENCH_WEB__: { done: boolean } }).__BENCH_WEB__.done === true, { timeout: 60_000 });
-    const state = await page.evaluate(() => (window as unknown as { __BENCH_WEB__: { rows: Record<string, unknown>[] | null; error: string | null } }).__BENCH_WEB__);
+    const state = await page.evaluate(() => (window as unknown as { __BENCH_WEB__: { rows: { id: number; ok: boolean; measured: unknown; note: string }[] | null; error: string | null } }).__BENCH_WEB__);
     if (state.error) throw new Error(`bench-web harness page error: ${state.error}`);
     if (!state.rows) throw new Error("bench-web harness produced no rows");
     return state.rows;

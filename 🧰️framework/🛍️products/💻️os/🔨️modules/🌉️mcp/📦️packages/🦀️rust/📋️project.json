@@ -27,6 +27,35 @@
         "{projectRoot}/dist/build"
       ]
     },
+    "build-release": {
+      "executor": "nx:run-commands",
+      "cache": true,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts build-release"
+      },
+      "inputs": [
+        "production",
+        "^production"
+      ],
+      "outputs": [
+        "{projectRoot}/dist/build-release"
+      ]
+    },
+    "publish": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "dependsOn": [
+        "build-release"
+      ],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts publish"
+      },
+      "outputs": [
+        "{projectRoot}/dist/publish"
+      ]
+    },
     "check": {
       "executor": "nx:run-commands",
       "options": {
@@ -140,6 +169,26 @@
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts canonical-checkpoint-resource-native-check"
+      },
+      "outputs": []
+    },
+    "capability-audit-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "dependsOn": ["build"],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts capability-audit-check"
+      },
+      "outputs": []
+    },
+    "live-agent-loop-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "dependsOn": ["build"],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts live-agent-loop-check"
       },
       "outputs": []
     },

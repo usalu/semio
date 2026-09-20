@@ -1,0 +1,907 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/framework/world3d/scene-shading.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "reference",
+    "scene",
+    "appearances",
+    "provenanceCases",
+    "styleCases",
+    "materialCases",
+    "mixedMaterialScope",
+    "textureCases",
+    "celebration",
+    "depthOrderCases",
+    "math",
+    "pixelOracle",
+    "s2PixelOracle",
+    "compositingCases"
+  ],
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "minLength": 1
+    },
+    "schema": {
+      "const": "framework.world3d.scene-shading/v1"
+    },
+    "reference": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "threeRevision",
+        "fiberVersion",
+        "toneMapping",
+        "outputColorSpace",
+        "workingColorSpace",
+        "exposure"
+      ],
+      "properties": {
+        "threeRevision": {
+          "const": "182"
+        },
+        "fiberVersion": {
+          "const": "9.7.0"
+        },
+        "toneMapping": {
+          "const": "ACESFilmic"
+        },
+        "outputColorSpace": {
+          "const": "srgb"
+        },
+        "workingColorSpace": {
+          "const": "linear-srgb"
+        },
+        "exposure": {
+          "const": 1
+        }
+      }
+    },
+    "scene": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "viewport",
+        "camera",
+        "geometry",
+        "material",
+        "fallbackLights",
+        "sunLight"
+      ],
+      "properties": {
+        "viewport": {
+          "$ref": "#/definitions/vec2"
+        },
+        "camera": {
+          "$ref": "#/definitions/camera"
+        },
+        "geometry": {
+          "$ref": "#/definitions/geometry"
+        },
+        "material": {
+          "$ref": "#/definitions/material"
+        },
+        "fallbackLights": {
+          "$ref": "#/definitions/fallbackLights"
+        },
+        "sunLight": {
+          "$ref": "#/definitions/sunLight"
+        }
+      }
+    },
+    "appearances": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "light",
+        "dark"
+      ],
+      "properties": {
+        "light": {
+          "$ref": "#/definitions/appearance"
+        },
+        "dark": {
+          "$ref": "#/definitions/appearance"
+        }
+      }
+    },
+    "provenanceCases": {
+      "type": "array",
+      "minItems": 4,
+      "items": {
+        "$ref": "#/definitions/provenanceCase"
+      }
+    },
+    "styleCases": {
+      "type": "array",
+      "minItems": 6,
+      "items": {
+        "$ref": "#/definitions/styleCase"
+      }
+    },
+    "materialCases": {
+      "type": "array",
+      "minItems": 3,
+      "items": {
+        "$ref": "#/definitions/materialCase"
+      }
+    },
+    "mixedMaterialScope": {
+      "$ref": "#/definitions/mixedMaterialScope"
+    },
+    "textureCases": {
+      "type": "array",
+      "minItems": 3,
+      "items": {
+        "$ref": "#/definitions/textureCase"
+      }
+    },
+    "celebration": {
+      "$ref": "#/definitions/celebration"
+    },
+    "depthOrderCases": {
+      "type": "array",
+      "minItems": 3,
+      "items": {
+        "$ref": "#/definitions/depthOrderCase"
+      }
+    },
+    "math": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "normalTransforms",
+        "indirectLambert",
+        "directSamples",
+        "acesInputs"
+      ],
+      "properties": {
+        "normalTransforms": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/normalTransform"
+          }
+        },
+        "indirectLambert": {
+          "$ref": "#/definitions/lambert"
+        },
+        "directSamples": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/directSample"
+          }
+        },
+        "acesInputs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/acesInput"
+          }
+        }
+      }
+    },
+    "pixelOracle": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "status",
+        "producer",
+        "rows",
+        "profile"
+      ],
+      "properties": {
+        "status": {
+          "enum": [
+            "pending-browser",
+            "recorded"
+          ]
+        },
+        "producer": {
+          "type": "string",
+          "minLength": 1
+        },
+        "rows": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "rgba8"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "rgba8": {
+                "$ref": "#/definitions/rgba8"
+              }
+            }
+          }
+        },
+        "profile": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "samplePosition",
+            "clearRgba",
+            "antialias",
+            "premultipliedAlpha",
+            "maximumRgbError"
+          ],
+          "properties": {
+            "samplePosition": {
+              "$ref": "#/definitions/vec2"
+            },
+            "clearRgba": {
+              "type": "array",
+              "minItems": 4,
+              "maxItems": 4,
+              "items": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1
+              }
+            },
+            "antialias": {
+              "const": false
+            },
+            "premultipliedAlpha": {
+              "const": false
+            },
+            "maximumRgbError": {
+              "const": 1
+            }
+          }
+        }
+      }
+    },
+    "s2PixelOracle": {
+      "$ref": "#/definitions/pixelOracle"
+    },
+    "compositingCases": {
+      "type": "array",
+      "minItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "clearLinearRgba",
+          "layers"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "clearLinearRgba": {
+            "$ref": "#/definitions/rgba"
+          },
+          "layers": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "vec2": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {
+        "type": "number"
+      }
+    },
+    "vec3": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "type": "number"
+      }
+    },
+    "rgba": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "items": {
+        "type": "number"
+      }
+    },
+    "rgba8": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "items": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 255
+      }
+    },
+    "camera": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "position",
+        "target",
+        "up",
+        "fov"
+      ],
+      "properties": {
+        "position": {
+          "$ref": "#/definitions/vec3"
+        },
+        "target": {
+          "$ref": "#/definitions/vec3"
+        },
+        "up": {
+          "$ref": "#/definitions/vec3"
+        },
+        "fov": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        }
+      }
+    },
+    "geometry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "positions",
+        "normals",
+        "colors",
+        "indices"
+      ],
+      "properties": {
+        "positions": {
+          "type": "array",
+          "minItems": 9,
+          "items": {
+            "type": "number"
+          }
+        },
+        "normals": {
+          "type": "array",
+          "minItems": 9,
+          "items": {
+            "type": "number"
+          }
+        },
+        "colors": {
+          "type": "array",
+          "minItems": 12,
+          "items": {
+            "type": "number"
+          }
+        },
+        "indices": {
+          "type": "array",
+          "minItems": 3,
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      }
+    },
+    "material": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "metalness",
+        "roughness",
+        "emissive",
+        "emissiveIntensity",
+        "opacity"
+      ],
+      "properties": {
+        "metalness": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "roughness": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "emissive": {
+          "$ref": "#/definitions/vec3"
+        },
+        "emissiveIntensity": {
+          "type": "number",
+          "minimum": 0
+        },
+        "opacity": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        }
+      }
+    },
+    "fallbackLights": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ambient",
+        "hemisphere",
+        "directional"
+      ],
+      "properties": {
+        "ambient": {
+          "$ref": "#/definitions/light"
+        },
+        "hemisphere": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "position",
+            "skyHex",
+            "groundHex",
+            "sky",
+            "ground",
+            "intensity"
+          ],
+          "properties": {
+            "position": {
+              "$ref": "#/definitions/vec3"
+            },
+            "skyHex": {
+              "$ref": "#/definitions/hexColor"
+            },
+            "groundHex": {
+              "$ref": "#/definitions/hexColor"
+            },
+            "sky": {
+              "$ref": "#/definitions/vec3"
+            },
+            "ground": {
+              "$ref": "#/definitions/vec3"
+            },
+            "intensity": {
+              "type": "number",
+              "minimum": 0
+            }
+          }
+        },
+        "directional": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/directionalLight"
+          }
+        }
+      }
+    },
+    "sunLight": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "direction",
+        "color",
+        "intensity"
+      ],
+      "properties": {
+        "direction": {
+          "$ref": "#/definitions/vec3"
+        },
+        "color": {
+          "$ref": "#/definitions/vec3"
+        },
+        "intensity": {
+          "type": "number",
+          "minimum": 0
+        }
+      }
+    },
+    "light": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "color",
+        "intensity"
+      ],
+      "properties": {
+        "color": {
+          "$ref": "#/definitions/vec3"
+        },
+        "intensity": {
+          "type": "number",
+          "minimum": 0
+        }
+      }
+    },
+    "directionalLight": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "position",
+        "color",
+        "intensity"
+      ],
+      "properties": {
+        "position": {
+          "$ref": "#/definitions/vec3"
+        },
+        "color": {
+          "$ref": "#/definitions/vec3"
+        },
+        "intensity": {
+          "type": "number",
+          "minimum": 0
+        }
+      }
+    },
+    "hexColor": {
+      "type": "string",
+      "pattern": "^#[0-9a-f]{6}$"
+    },
+    "appearance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "panelHex",
+        "panelLinear"
+      ],
+      "properties": {
+        "panelHex": {
+          "$ref": "#/definitions/hexColor"
+        },
+        "panelLinear": {
+          "$ref": "#/definitions/rgba"
+        }
+      }
+    },
+    "provenanceCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "source",
+        "appearance",
+        "sourceLinear",
+        "expectedNeutralLinear"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "source": {
+          "enum": [
+            "semanticNeutral",
+            "authored",
+            "environment"
+          ]
+        },
+        "appearance": {
+          "enum": [
+            "light",
+            "dark"
+          ]
+        },
+        "sourceLinear": {
+          "$ref": "#/definitions/rgba"
+        },
+        "expectedNeutralLinear": {
+          "$ref": "#/definitions/rgba"
+        }
+      }
+    },
+    "styleCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "kind",
+        "hasVertexColors",
+        "baseColor",
+        "vertexColorWeight",
+        "emissiveIntensity",
+        "opacity"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "kind": {
+          "enum": [
+            "neutral",
+            "disabled",
+            "selected",
+            "hovered",
+            "highlighted",
+            "provisional"
+          ]
+        },
+        "hasVertexColors": {
+          "type": "boolean"
+        },
+        "baseColor": {
+          "$ref": "#/definitions/rgba"
+        },
+        "vertexColorWeight": {
+          "enum": [
+            0,
+            1
+          ]
+        },
+        "emissiveIntensity": {
+          "type": "number",
+          "minimum": 0
+        },
+        "opacity": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        }
+      }
+    },
+    "materialPair": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["metalness", "roughness"],
+      "properties": {
+        "metalness": { "type": "number", "minimum": 0, "maximum": 1 },
+        "roughness": { "type": "number", "minimum": 0, "maximum": 1 }
+      }
+    },
+    "materialCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "geometryKind", "source", "environment", "expected", "side", "depthWrite"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "geometryKind": { "enum": ["inline", "glb"] },
+        "source": { "$ref": "#/definitions/materialPair" },
+        "environment": { "oneOf": [{ "$ref": "#/definitions/materialPair" }, { "type": "null" }] },
+        "expected": { "$ref": "#/definitions/materialPair" },
+        "side": { "enum": ["front", "double"] },
+        "depthWrite": { "const": true }
+      }
+    },
+    "mixedMaterialScope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["environment", "scale", "cases"],
+      "properties": {
+        "environment": { "$ref": "#/definitions/materialPair" },
+        "scale": { "type": "number", "exclusiveMinimum": 0, "maximum": 1 },
+        "cases": { "type": "array", "minItems": 2, "maxItems": 2, "items": { "$ref": "#/definitions/mixedMaterialCase" } }
+      }
+    },
+    "mixedMaterialCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "geometryKind", "position", "samplePosition", "expected"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "geometryKind": { "enum": ["inline", "glb"] },
+        "position": { "$ref": "#/definitions/vec3" },
+        "samplePosition": { "$ref": "#/definitions/vec2" },
+        "expected": { "$ref": "#/definitions/materialPair" }
+      }
+    },
+    "textureCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "texelRgba8", "mapColorSpace", "styleKind", "baseColor", "vertexColor", "preserveVertexColor", "emissiveIntensity", "opacity", "depthWrite"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "texelRgba8": { "$ref": "#/definitions/rgba8" },
+        "mapColorSpace": { "enum": ["none", "srgb"] },
+        "styleKind": { "enum": ["neutral", "disabled", "selected"] },
+        "baseColor": { "$ref": "#/definitions/rgba" },
+        "vertexColor": { "$ref": "#/definitions/rgba" },
+        "preserveVertexColor": { "type": "boolean" },
+        "emissiveIntensity": { "type": "number", "minimum": 0 },
+        "opacity": { "type": "number", "minimum": 0, "maximum": 1 },
+        "depthWrite": { "const": true }
+      }
+    },
+    "celebration": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["spinSeconds", "stops", "cases"],
+      "properties": {
+        "spinSeconds": { "const": 1.2 },
+        "stops": { "type": "array", "minItems": 3, "maxItems": 3, "items": { "$ref": "#/definitions/celebrationStop" } },
+        "cases": { "type": "array", "minItems": 4, "items": { "$ref": "#/definitions/celebrationCase" } }
+      }
+    },
+    "celebrationStop": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["hex", "linear"],
+      "properties": {
+        "hex": { "$ref": "#/definitions/hexColor" },
+        "linear": { "$ref": "#/definitions/vec3" }
+      }
+    },
+    "celebrationCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "phaseSeconds", "localPosition", "opacity", "side", "depthWrite"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "phaseSeconds": { "type": "number", "minimum": 0, "exclusiveMaximum": 1.2 },
+        "localPosition": { "$ref": "#/definitions/vec3" },
+        "opacity": { "type": "number", "minimum": 0, "maximum": 1 },
+        "side": { "const": "double" },
+        "depthWrite": { "type": "boolean" }
+      }
+    },
+    "depthOrderCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "layers", "expectedDrawOrder"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "layers": { "type": "array", "minItems": 2, "maxItems": 2, "items": { "$ref": "#/definitions/depthLayer" } },
+        "expectedDrawOrder": { "type": "array", "minItems": 2, "maxItems": 2, "uniqueItems": true, "items": { "type": "string", "minLength": 1 } }
+      }
+    },
+    "depthLayer": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "position", "localCenter", "color", "opacity", "depthWrite"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "position": { "$ref": "#/definitions/vec3" },
+        "localCenter": { "$ref": "#/definitions/vec3" },
+        "color": { "$ref": "#/definitions/rgba" },
+        "opacity": { "type": "number", "exclusiveMinimum": 0, "exclusiveMaximum": 1 },
+        "depthWrite": { "const": true }
+      }
+    },
+    "pixelOracle": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "producer", "rows", "profile"],
+      "properties": {
+        "status": { "enum": ["pending-browser", "recorded"] },
+        "producer": { "type": "string", "minLength": 1 },
+        "rows": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "rgba8"],
+            "properties": {
+              "id": { "type": "string", "minLength": 1 },
+              "rgba8": { "$ref": "#/definitions/rgba8" }
+            }
+          }
+        },
+        "profile": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["samplePosition", "clearRgba", "antialias", "premultipliedAlpha", "maximumRgbError"],
+          "properties": {
+            "samplePosition": { "$ref": "#/definitions/vec2" },
+            "clearRgba": { "$ref": "#/definitions/rgba" },
+            "antialias": { "const": false },
+            "premultipliedAlpha": { "const": false },
+            "maximumRgbError": { "const": 1 }
+          }
+        }
+      }
+    },
+    "normalTransform": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "modelScale",
+        "objectNormal",
+        "expectedWorldNormal",
+        "oracle"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "modelScale": {
+          "$ref": "#/definitions/vec3"
+        },
+        "objectNormal": {
+          "$ref": "#/definitions/vec3"
+        },
+        "expectedWorldNormal": {
+          "$ref": "#/definitions/vec3"
+        },
+        "oracle": {
+          "type": "string"
+        }
+      }
+    },
+    "lambert": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "irradiance",
+        "baseColor",
+        "metalness",
+        "expectedDiffuse"
+      ],
+      "properties": {
+        "irradiance": {
+          "$ref": "#/definitions/vec3"
+        },
+        "baseColor": {
+          "$ref": "#/definitions/vec3"
+        },
+        "metalness": {
+          "type": "number"
+        },
+        "expectedDiffuse": {
+          "$ref": "#/definitions/vec3"
+        }
+      }
+    },
+    "directSample": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "normal",
+        "view",
+        "light",
+        "radiance",
+        "baseColor",
+        "metalness",
+        "roughness"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "normal": {
+          "$ref": "#/definitions/vec3"
+        },
+        "view": {
+          "$ref": "#/definitions/vec3"
+        },
+        "light": {
+          "$ref": "#/definitions/vec3"
+        },
+        "radiance": {
+          "$ref": "#/definitions/vec3"
+        },
+        "baseColor": {
+          "$ref": "#/definitions/vec3"
+        },
+        "metalness": {
+          "type": "number"
+        },
+        "roughness": {
+          "type": "number"
+        }
+      }
+    },
+    "acesInput": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "linearRgb"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "linearRgb": {
+          "$ref": "#/definitions/vec3"
+        }
+      }
+    }
+  }
+}

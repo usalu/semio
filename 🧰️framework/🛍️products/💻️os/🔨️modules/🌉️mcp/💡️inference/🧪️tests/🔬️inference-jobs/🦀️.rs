@@ -138,7 +138,7 @@ fn the_client_mirrors_the_neutral_fixtures_exact_fixed_limits() {
 //#region 🧪️WireShapes
 #[test]
 fn a_submit_intent_encodes_within_the_fixed_bound_and_every_hostile_field_is_refused() {
-    let request = GisMapInferenceSubmitRequestV1::new(sample_job_id(), INFERENCE_JOB_MAX_LIFETIME_MS);
+    let request = GisMapInferenceSubmitRequestV1::new(GIS_MAP_INFERENCE_SERVICE_ID, sample_job_id(), INFERENCE_JOB_MAX_LIFETIME_MS);
     let encoded = request.encode().expect("a well-formed intent encodes");
     assert!(encoded.len() <= INFERENCE_REQUEST_MAX_BYTES);
     let decoded: GisMapInferenceSubmitRequestV1 = serde_json::from_slice(&encoded).expect("closed round trip");
@@ -343,7 +343,7 @@ fn a_submit_call_posts_the_bounded_closed_intent_to_the_exact_job_route() {
     let transport =
         ScriptedTransport::ok(200, serde_json::json!({ "schema": GIS_MAP_INFERENCE_RECEIPT_SCHEMA, "jobId": sample_job_id(), "state": "accepted", "proposalState": "none", "proposalHash": serde_json::Value::Null, "cursor": 0, "expiresAtMs": 9 }));
     let cancel = CancelToken::root_now();
-    let request = GisMapInferenceSubmitRequestV1::new(sample_job_id(), 1_000);
+    let request = GisMapInferenceSubmitRequestV1::new(GIS_MAP_INFERENCE_SERVICE_ID, sample_job_id(), 1_000);
     let receipt = block_on(submit_gis_map_job(&transport, &context(&cancel), "https://hub.invalid", &scope(), &request)).expect("scripted receipt");
     assert_eq!(receipt.job_id, sample_job_id());
     assert_eq!(receipt.proposal_hash, None);

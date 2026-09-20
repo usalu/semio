@@ -62,54 +62,17 @@ pub fn mask_row_id(target_id: &str) -> String {
 /// 📡️ Document JSON for the WASM compositor, omitting embedded assets — mirrors premigration
 /// `rasterDocumentToSyncJson`. Stays app-level next to {@link raster_scene}, its only caller.
 ///
-/// 🛡️ Never materializes the snapshot wholesale: `RasterOwnedMap`'s `ToValue` refuses a populated
-/// map (the `assets` pool, an adjustment's `params`), so the projection walks the layer forest and
-/// reads each owned map through its borrowed entry iterator instead — the demo's `brighten`
-/// adjustment and `semio-emblem` asset used to trap the guest on the first composite render.
+/// 🛡️ Built field by field rather than from `RasterSnapshot`'s own `ToValue`, because the compositor
+/// reads its pixels from `assetsJson` (resolved content) and must not also carry the `assets` HANDLE
+/// pool. The layer forest itself — including a group's children and an adjustment's `params` owned
+/// map — goes through the artifact's real derived codec.
 fn document_sync_json(document: &RasterSnapshot) -> String {
     let mut fields = vec![("schema".to_string(), dsl::DslValue::String(document.schema.clone())), ("id".to_string(), dsl::DslValue::String(document.id.clone()))];
     if let Some(title) = &document.title {
         fields.push(("title".to_string(), dsl::DslValue::String(title.clone())));
     }
-    fields.push(("layers".to_string(), dsl::DslValue::Array(document.layers.iter().map(layer_sync_value).collect())));
+    fields.push(("layers".to_string(), dsl::DslValue::Array(document.layers.iter().map(dsl::ToValue::to_value).collect())));
     dsl::os_pack::json::from_dsl_value(&dsl::DslValue::Object(fields)).to_string()
-}
-
-/// 🌳️ One layer's sync value. Owned-map-free leaves reuse the derived codec as-is; a group or an
-/// adjustment is materialized as a map-free shell (children/params emptied) and the owned subtree is
-/// then written in place — children recursively, params entry by entry.
-fn layer_sync_value(layer: &RasterLayerNode) -> dsl::DslValue {
-    match layer {
-        RasterLayerNode::Pixel { .. } => dsl::ToValue::to_value(layer),
-        RasterLayerNode::Group { id, name, visible, opacity, blend_mode, transform, mask, children } => {
-            let shell = RasterLayerNode::Group { id: id.clone(), name: name.clone(), visible: *visible, opacity: *opacity, blend_mode: blend_mode.clone(), transform: transform.clone(), mask: mask.clone(), children: Vec::new() };
-            with_sync_field(dsl::ToValue::to_value(&shell), "children", dsl::DslValue::Array(children.iter().map(layer_sync_value).collect()))
-        }
-        RasterLayerNode::Adjustment { id, name, visible, opacity, blend_mode, transform, adjustment_kind, params } => {
-            let shell = RasterLayerNode::Adjustment {
-                id: id.clone(),
-                name: name.clone(),
-                visible: *visible,
-                opacity: *opacity,
-                blend_mode: blend_mode.clone(),
-                transform: transform.clone(),
-                adjustment_kind: adjustment_kind.clone(),
-                params: crate::RasterOwnedMap::new(),
-            };
-            let params = dsl::DslValue::Object(params.iter().map(|(key, value)| (key.clone(), value.clone())).collect());
-            with_sync_field(dsl::ToValue::to_value(&shell), "params", params)
-        }
-    }
-}
-
-/// ✍️ Replaces (or appends) one field of a derived layer object.
-fn with_sync_field(value: dsl::DslValue, key: &str, field: dsl::DslValue) -> dsl::DslValue {
-    let dsl::DslValue::Object(mut entries) = value else { return value };
-    match entries.iter_mut().find(|(entry_key, _)| entry_key == key) {
-        Some((_, slot)) => *slot = field,
-        None => entries.push((key.to_string(), field)),
-    }
-    dsl::DslValue::Object(entries)
 }
 
 /// 🧩️ Resolves every asset handle on `document.assets` back to its real `RasterImageAsset` bytes
@@ -352,7 +315,7 @@ use crate::editor::raster::commands::{set_camera, set_camera_zoom, set_composite
 
 //#region 🧵️RetainedCommands
 /// 🧵️ Every `RasterCommand` row, without exception — the retained route table, the manifest's
-/// `Migrated` classification list and `RasterCommand::TOOL_JOB_IDS` are the SAME seventeen ids, which
+/// `Migrated` classification list and `RasterCommand::TOOL_JOB_IDS` are the SAME fifteen ids, which
 /// is exactly what the framework's `validate_tool_job_rows` demands (`expected = TOOL_JOB_IDS ∩
 /// migrated` must equal the proof set). Row order mirrors the `app_commands!` declaration order above.
 const RASTER_RETAINED_TOOL_IDS: &[&str] = &[
@@ -377,7 +340,7 @@ const RASTER_RETAINED_RAW_BYTES: usize = 65_536;
 const RASTER_RETAINED_WORK_ITEMS: usize = 4_096;
 /// 🛣️ Publication lanes per route, read off each handler's own `Emit` in `🎮️commands/*/🦀️.rs` — the
 /// ten document verbs build `Emit { artifact_mutations, .. }`/`Emit::mutations(..)` over
-/// `RasterMutation` and never touch the config, while the seven session verbs build `Emit::config(..)`
+/// `RasterMutation` and never touch the config, while the five session verbs build `Emit::config(..)`
 /// over `RasterConfigMutation` and never touch the document. No raster handler emits both lanes, a
 /// draft, a presence or a transient mutation, so no route declares more than one lane here.
 ///
@@ -985,14 +948,11 @@ impl ArtifactEditor for RasterPlayApp {
 
     /// 📄️ Boots on the constant EMPTY shell `empty_raster_snapshot()` (zero layers, zero assets) —
     /// NOT the `📚️examples/🎬️demo` carrier and not even `empty_raster_document()`'s one Background
-    /// layer: `VcsArtifactApp::with_registry` builds the store through `ArtifactStore::new`, which
-    /// (a) `fold_history`-`Clone`s the initial snapshot with the derive (`RasterOwnedMap::clone`
-    /// panics on a populated map — the demo's adjustment layer carries `brightness`/`contrast`) and
-    /// (b) digests `initial_snapshot.encode_pack()`, and raster's whole-output codecs admit only the
-    /// empty shell (`require_empty_output_shell`). The shell replays `setActiveExample demo` on every
-    /// boot, so the demo still lands, through the bounded `set-active-example` mutations (the same
-    /// document flow block2d/forms use). Found at the first react boots of ticket
-    /// 26/09/05/RASTER-PLUGIN-END-TO-END (2026-09-16).
+    /// layer. The document is event-sourced: the initial snapshot is the constant every replica
+    /// agrees on, and the shell replays `setActiveExample demo` on every boot so the demo lands
+    /// through the bounded `set-active-example` mutations (the same document flow block2d/forms
+    /// use). Found at the first react boots of ticket 26/09/05/RASTER-PLUGIN-END-TO-END
+    /// (2026-09-16).
     fn initial_snapshot() -> RasterSnapshot {
         crate::standards::v1::subsets::any::schema::empty_raster_snapshot()
     }
@@ -1212,6 +1172,7 @@ pub fn create_raster_app() -> AppDefinition {
             .action_with(raster_internal_action("setLayerVisible", LocalizedLabel::native("Set Layer Visible", "Ebenensichtbarkeit festlegen"), ActionKind::Mutation))
             .action_with(raster_internal_action("toggleLayerVisible", LocalizedLabel::native("Toggle Layer Visible", "Ebenensichtbarkeit umschalten"), ActionKind::Mutation))
             .action_with(raster_internal_action("dropLayerKind", LocalizedLabel::native("Drop Layer Kind", "Ebenenart ablegen"), ActionKind::Mutation))
+            .action_audience("dropLayerKind", semio_framework_plugin::CapabilityAudience::Agent)
             .action_with(raster_internal_action("deleteLayer", LocalizedLabel::native("Delete Layer", "Ebene löschen"), ActionKind::Mutation))
             .action_with(raster_internal_action("duplicateLayer", LocalizedLabel::native("Duplicate Layer", "Ebene duplizieren"), ActionKind::Mutation))
             .action_with(raster_internal_action("patchLayer", LocalizedLabel::native("Patch Layer", "Ebene aktualisieren"), ActionKind::Mutation))
@@ -1251,6 +1212,24 @@ pub fn create_raster_app() -> AppDefinition {
                     ActionArgOption::new("adjustment", LocalizedLabel::native("Adjustment", "Anpassung")),
                 ]).required().default_value(&"pixel"),
             ])
+            // 💬️ Agent-facing descriptions (ticket 26/09/18 slice M5a) — EN first, DE second.
+            .action_describe("addLayer", LocalizedLabel::native("Adds a new raster layer to the image — a pixel layer, a group, or an adjustment layer.", "Fügt dem Bild eine neue Rasterebene hinzu — Pixelebene, Gruppe oder Anpassungsebene."))
+            .action_use_when("addLayer", vec!["add a pixel layer".into(), "add an adjustment layer".into(), "new layer in the image".into()])
+            .action_describe("setActiveExample", LocalizedLabel::native("Replaces the whole image with one of the plugin's declared playground examples.", "Ersetzt das gesamte Bild durch eines der deklarierten Beispiele des Plugins."))
+            .action_describe("setLayerVisible", LocalizedLabel::native("Shows or hides one raster layer explicitly.", "Blendet eine Rasterebene gezielt ein oder aus."))
+            .action_describe("toggleLayerVisible", LocalizedLabel::native("Flips one raster layer between visible and hidden.", "Schaltet eine Rasterebene zwischen sichtbar und ausgeblendet um."))
+            .action_describe("dropLayerKind", LocalizedLabel::native("Creates a raster layer of the given kind at a drop target in the layer tree.", "Erzeugt eine Rasterebene der angegebenen Art an einer Ablagestelle im Ebenenbaum."))
+            .action_describe("deleteLayer", LocalizedLabel::native("Removes one raster layer from the image by id.", "Entfernt eine Rasterebene anhand ihrer Id aus dem Bild."))
+            .action_describe("duplicateLayer", LocalizedLabel::native("Copies one raster layer and inserts the copy above the original.", "Kopiert eine Rasterebene und fügt die Kopie über dem Original ein."))
+            .action_describe("patchLayer", LocalizedLabel::native("Sets one named property of one raster layer — its name, opacity, blend mode or visibility.", "Setzt eine benannte Eigenschaft einer Rasterebene — Name, Deckkraft, Mischmodus oder Sichtbarkeit."))
+            .action_use_when("patchLayer", vec!["rename a layer".into(), "change the layer opacity".into(), "set the blend mode".into()])
+            .action_describe("patchLayers", LocalizedLabel::native("Sets the same named property on several raster layers at once.", "Setzt dieselbe benannte Eigenschaft auf mehreren Rasterebenen gleichzeitig."))
+            .action_describe("moveLayer", LocalizedLabel::native("Reorders one raster layer within the layer stack.", "Ordnet eine Rasterebene im Ebenenstapel um."))
+            .action_describe("setBrushSize", LocalizedLabel::native("Sets the painting brush diameter for this session.", "Legt den Pinseldurchmesser für diese Sitzung fest."))
+            .action_describe("setBrushOpacity", LocalizedLabel::native("Sets the painting brush opacity for this session.", "Legt die Pinseldeckkraft für diese Sitzung fest."))
+            // ⚠️ Discards content no later verb reconstructs — the gateway asks a human first.
+            .action_destructive("deleteLayer")
+            .action_destructive("setActiveExample")
             // 🧵️ Phase-8 dispositions. Every id declared above is `Migrated`: each one is backed by the
             // exact-owner `RasterRetainedCommandJobFactory` proof in `🧵️RetainedCommands`, so UI dispatch
             // (which rejects anything that is not `Migrated`) and the release-blocking

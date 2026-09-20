@@ -7,7 +7,7 @@
   "rhPercent": null,
   "airSpeedMS": null,
   "thetaRmC": null,
-  "co2Ppm": 950,
+  "co2Ppm": 950.0,
   "dfPercent": null,
   "lAeqDb": null,
   "persons": null,

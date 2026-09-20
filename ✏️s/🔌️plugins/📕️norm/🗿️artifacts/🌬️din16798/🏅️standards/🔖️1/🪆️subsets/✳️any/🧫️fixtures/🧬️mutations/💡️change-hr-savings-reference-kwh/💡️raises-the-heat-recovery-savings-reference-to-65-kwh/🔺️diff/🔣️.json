@@ -34,7 +34,7 @@
   "hrCpJKgk": null,
   "hrDeltaTC": null,
   "hrTH": null,
-  "hrSavingsReferenceKwh": 65,
+  "hrSavingsReferenceKwh": 65.0,
   "n50HInv": null,
   "volumeM3": null,
   "infiltrationAllowanceM3H": null,

@@ -1,0 +1,77 @@
+{
+  "contractVersion": 1,
+  "surfaceId": "framework.settings.theme",
+  "requiresGuestRefresh": false,
+  "workflow": [
+    {
+      "action": "setThemeId",
+      "arguments": { "value": "mono" },
+      "observations": [
+        { "controlId": "framework.settings.theme.select", "expectedState": "select:mono" },
+        { "controlId": "framework.settings.theme.reset", "expectedState": "button:enabled" },
+        { "controlId": "framework.settings.theme.delete", "expectedState": "absent" }
+      ]
+    },
+    {
+      "action": "setThemeColor",
+      "arguments": { "key": "primary", "value": "#123456" },
+      "observations": [
+        { "controlId": "framework.settings.theme.colors.primary", "expectedState": "input:#123456" },
+        { "controlId": "framework.settings.theme.reset", "expectedState": "button:enabled" }
+      ]
+    },
+    {
+      "action": "setThemeSaveLabel",
+      "arguments": { "value": "Retained Publication" },
+      "observations": [
+        { "controlId": "framework.settings.theme.saveLabel", "expectedState": "input:Retained Publication" },
+        { "controlId": "framework.settings.theme.save", "expectedState": "button:enabled" }
+      ]
+    },
+    {
+      "action": "saveTheme",
+      "arguments": {},
+      "observations": [
+        { "controlId": "framework.settings.theme.select", "expectedState": "select:custom.retained-publication" },
+        { "controlId": "framework.settings.theme.saveLabel", "expectedState": "input:" },
+        { "controlId": "framework.settings.theme.save", "expectedState": "button:disabled" },
+        { "controlId": "framework.settings.theme.delete", "expectedState": "button:enabled" }
+      ]
+    },
+    {
+      "action": "applyImportedTheme",
+      "arguments": {
+        "value": "{\"id\":\"portable\",\"label\":\"Imported Publication\",\"colors\":{\"primary\":\"#abcdef\"},\"spacing\":{},\"fontStacks\":{},\"canvasFonts\":{},\"strokes\":{},\"radii\":{},\"opacities\":{},\"metrics\":{},\"appearances\":{\"light\":{\"board\":{},\"map\":{},\"canvas\":{},\"chrome\":{},\"outcome\":{},\"diagram\":{}},\"dark\":{\"board\":{},\"map\":{},\"canvas\":{},\"chrome\":{},\"outcome\":{},\"diagram\":{}}}}"
+      },
+      "observations": [
+        { "controlId": "framework.settings.theme.select", "expectedState": "select:custom.imported-publication" },
+        { "controlId": "framework.settings.theme.delete", "expectedState": "button:enabled" }
+      ]
+    },
+    {
+      "action": "resetThemeId",
+      "arguments": {},
+      "observations": [
+        { "controlId": "framework.settings.theme.select", "expectedState": "select:semio" },
+        { "controlId": "framework.settings.theme.reset", "expectedState": "button:disabled" },
+        { "controlId": "framework.settings.theme.delete", "expectedState": "absent" }
+      ]
+    },
+    {
+      "action": "setThemeId",
+      "arguments": { "value": "custom.retained-publication" },
+      "observations": [
+        { "controlId": "framework.settings.theme.select", "expectedState": "select:custom.retained-publication" },
+        { "controlId": "framework.settings.theme.delete", "expectedState": "button:enabled" }
+      ]
+    },
+    {
+      "action": "deleteThemeId",
+      "arguments": { "value": "custom.retained-publication" },
+      "observations": [
+        { "controlId": "framework.settings.theme.select", "expectedState": "select:semio" },
+        { "controlId": "framework.settings.theme.delete", "expectedState": "absent" }
+      ]
+    }
+  ]
+}

@@ -7,7 +7,7 @@ import { BundleScript, ScriptRouter, orchestratorBudgetOpts, runBundleScriptMain
 //#region 🔖️Types
 type RetainedRoute = { id: string; emittedLanes: string[]; publicationLanes: string[]; execution: string; admission: string; reducer: string };
 type RetainedContract = { toolId: string; lanes: string[] };
-type RetainedApp = { variant: string; controller: string; documentSchema: string };
+type RetainedApp = { variant: string; controller: string; artifactSchema: string };
 type RetainedFixture = {
   schemaVersion: number;
   factory: { type: string; payloadSchema: string; maximumRawBytes: number; shared: boolean };

@@ -494,5 +494,21 @@ mod conformance_laws {
         assert_eq!(decoded, demo, "shipped .pack.semio fixture does not decode back to demo_xml_snapshot()");
         assert_eq!(store::ArtifactPack::encode_pack(&demo), FIXTURE_PACK, "encode_pack(demo_xml_snapshot()) drifted from the shipped .pack.semio fixture");
     }
+
+    /// 🏭️ Regenerates the two shipped demo fixtures from `demo_xml_snapshot()` with the crate's OWN
+    /// printer/packer (never by hand) — the writer `fixture_honesty_law` above is the gate for. The
+    /// committed pair predated the `encode_snapshot`/`encode_snapshot_binary` wire this artifact's
+    /// `ArtifactDsl`/`ArtifactPack` have emitted since 2026-08-27: they still held the document's own
+    /// `<?xml ...?>` markup, which `parse_dsl` (preamble present → `decode_snapshot`) cannot read
+    /// back, and which took `xml_valid_subset_integrated_roundtrip` down with them since
+    /// `📚️examples/🎬️demo::PRIMARY_TEXT` IS this file.
+    #[semio_framework_async_macros::async_test]
+    #[ignore]
+    async fn zzz_write_dsl_and_pack_fixtures() {
+        let demo = demo_xml_snapshot();
+        let assets = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🏅️standards/🔖️1.0/🪆️subsets/🧱️base/📚️examples/🎬️demo/🖼️assets");
+        std::fs::write(assets.join("🗣️.dsl.semio"), store::ArtifactDsl::print_dsl(&demo)).expect("write 🗣️.dsl.semio");
+        std::fs::write(assets.join("🎒️.pack.semio"), store::ArtifactPack::encode_pack(&demo)).expect("write 🎒️.pack.semio");
+    }
 }
 //#endregion 🔖️ConformanceLaws

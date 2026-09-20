@@ -33,6 +33,7 @@ fn empty_path() -> DockPath {
 pub struct DockStackTab {
     pub window_id: String,
     pub window_kind_id: String,
+    pub template_id: Option<String>,
     pub corner: WindowStackCorner,
 }
 
@@ -40,17 +41,22 @@ impl DockStackTab {
     /// 🧭️ Builds a tab at the default top-left corner.
     pub fn new(window_id: impl Into<String>) -> Self {
         let window_id = window_id.into();
-        Self { window_kind_id: window_id.clone(), window_id, corner: WindowStackCorner::TopLeft }
+        Self { window_kind_id: window_id.clone(), window_id, template_id: None, corner: WindowStackCorner::TopLeft }
     }
 
     /// 🧭️ Builds a tab at an explicit chrome corner.
     pub fn at(window_id: impl Into<String>, corner: WindowStackCorner) -> Self {
         let window_id = window_id.into();
-        Self { window_kind_id: window_id.clone(), window_id, corner }
+        Self { window_kind_id: window_id.clone(), window_id, template_id: None, corner }
     }
 
     pub fn instance(window_id: impl Into<String>, window_kind_id: impl Into<String>, corner: WindowStackCorner) -> Self {
-        Self { window_id: window_id.into(), window_kind_id: window_kind_id.into(), corner }
+        Self { window_id: window_id.into(), window_kind_id: window_kind_id.into(), template_id: None, corner }
+    }
+
+    /// 🪟️ Builds one concrete window instance carrying its authored projection template.
+    pub fn instance_template(window_id: impl Into<String>, window_kind_id: impl Into<String>, template_id: Option<String>, corner: WindowStackCorner) -> Self {
+        Self { window_id: window_id.into(), window_kind_id: window_kind_id.into(), template_id, corner }
     }
 }
 
@@ -139,6 +145,7 @@ pub enum DockDropZone {
 pub enum DockDragKind {
     Tab,
     Stack,
+    NewWindow,
 }
 
 #[derive(Clone, Debug)]
@@ -146,6 +153,7 @@ pub struct DockDragPayload {
     pub kind: DockDragKind,
     pub window_id: String,
     pub window_kind_id: String,
+    pub template_id: Option<String>,
     pub source_path: DockPath,
     pub tab_index: usize,
     pub ghost_label: String,
@@ -288,8 +296,8 @@ impl DockState {
         true
     }
 
-    /// ↔️ React's `applyAxisResizeDelta` `minPct = 8` (`🧱️elements/🎨️Canvas/🟦️.tsx:593`), read on this
-    /// crate's fraction scale (axis children sum to `1.0`, React's to `100`).
+    /// ↔️ React's `applyAxisResizeDelta` `minPct = 8` (`🧱️elements/🎨️Canvas/🟦️.tsx:593`),
+    /// converted onto the captured axis's authored weight scale.
     ///
     /// 🩸️ The pair used to be clamped side-by-side to `[0.08, 0.92]` and then fed to a
     /// `normalize_pair_sizes` that was arithmetically a no-op, so a drag that hit the clamp changed
@@ -314,14 +322,19 @@ impl DockState {
         if split_index + 1 >= children.len() || axis_total <= 0.0 {
             return;
         }
-        let delta_frac = delta_px / axis_total;
-        if delta_frac.abs() < SPLIT_DELTA_EPSILON {
+        let delta_ratio = delta_px / axis_total;
+        if delta_ratio.abs() < SPLIT_DELTA_EPSILON {
             return;
         }
         let origin_left = origin.get(split_index).copied().unwrap_or(children[split_index].1);
         let origin_right = origin.get(split_index + 1).copied().unwrap_or(children[split_index + 1].1);
+        let axis_weight: f32 = (0..children.len()).map(|index| origin.get(index).copied().unwrap_or(children[index].1)).map(|weight| if weight.is_finite() { weight.max(0.0) } else { 0.0 }).sum();
+        if axis_weight <= 0.0 {
+            return;
+        }
         let pair_sum = origin_left + origin_right;
-        let new_left = (origin_left + delta_frac).clamp(SPLIT_MIN_FRACTION, (pair_sum - SPLIT_MIN_FRACTION).max(SPLIT_MIN_FRACTION));
+        let minimum_weight = axis_weight * SPLIT_MIN_FRACTION;
+        let new_left = (origin_left + delta_ratio * axis_weight).clamp(minimum_weight, (pair_sum - minimum_weight).max(minimum_weight));
         children[split_index].1 = new_left;
         children[split_index + 1].1 = pair_sum - new_left;
     }
@@ -347,7 +360,20 @@ impl DockState {
             }
             return out;
         }
-        collect_stack_frames(&self.root, bounds, &empty_path(), &mut out);
+        collect_stack_frames(&self.root, bounds, &empty_path(), 0.0, &mut out);
+        out
+    }
+
+    /// 📐️ The physical stack frames after reserving one themed separator between axis siblings.
+    pub fn stack_frame_rects_with_separator(&self, bounds: Rect, separator: f32) -> Vec<(DockPath, Rect, String)> {
+        let mut out = Vec::new();
+        if let Some(path) = &self.maximized_stack {
+            if let Some(DockNode::Stack { active, .. }) = node_at(&self.root, path) {
+                out.push((path.clone(), bounds, active.clone()));
+            }
+            return out;
+        }
+        collect_stack_frames(&self.root, bounds, &empty_path(), separator, &mut out);
         out
     }
 
@@ -365,7 +391,7 @@ impl DockState {
                 if let DockNode::Stack { windows, active } = node {
                     let layout = layout_stack_cap(windows, window_labels, &HashMap::new(), atlas, theme, rect, self.tab_action_count());
                     let silhouette = stack_window_silhouette(rect, theme, &layout);
-                    out.push((path.clone(), silhouette.safe_body_rect(), active.clone()));
+                    out.push((path.clone(), dock_stack_body_rect(silhouette.safe_body_rect(), theme), active.clone()));
                     silhouettes.insert(active.clone(), silhouette);
                 }
             }
@@ -472,6 +498,9 @@ impl DockState {
             DockNode::Stack { active, .. } => Some(active.clone()),
             _ => None,
         });
+        if drag.kind == DockDragKind::NewWindow && self.collect_window_ids().contains(&drag.window_id) {
+            return false;
+        }
         let same_source = matches!(
             zone,
             DockDropZone::Tab { stack_path, .. } | DockDropZone::Split { stack_path, .. }
@@ -485,7 +514,7 @@ impl DockState {
                 if !self.collect_window_ids().iter().any(|id| *id == drag.window_id) {
                     return false;
                 }
-                let tab = DockStackTab::instance(drag.window_id.clone(), drag.window_kind_id.clone(), WindowStackCorner::TopLeft);
+                let tab = DockStackTab::instance_template(drag.window_id.clone(), drag.window_kind_id.clone(), drag.template_id.clone(), WindowStackCorner::TopLeft);
                 (remove_window_from_layout(&self.root, &drag.window_id).unwrap_or_else(empty_stack), DockNode::Stack { windows: vec![tab], active: drag.window_id.clone() })
             }
             DockDragKind::Stack => {
@@ -494,11 +523,16 @@ impl DockState {
                 };
                 (base.unwrap_or_else(empty_stack), stack)
             }
+            DockDragKind::NewWindow => {
+                let tab = DockStackTab::instance_template(drag.window_id.clone(), drag.window_kind_id.clone(), drag.template_id.clone(), WindowStackCorner::TopLeft);
+                (self.root.clone(), DockNode::Stack { windows: vec![tab], active: drag.window_id.clone() })
+            }
         };
         let DockNode::Stack { windows: group, .. } = &incoming else {
             return false;
         };
         let group_ids = dock_tab_ids(group);
+        let group_templates: Vec<(String, Option<String>)> = group.iter().map(|tab| (tab.window_id.clone(), tab.template_id.clone())).collect();
         let landed = match zone {
             DockDropZone::Tab { stack_path, corner, index } => insert_tabs_at_corner_in_node(&mut next, stack_path, &group_ids, *corner, Some(*index), &drag.window_id, &window_kinds),
             DockDropZone::Split { stack_path, side } => split_node_at_path(&mut next, stack_path, incoming.clone(), *side),
@@ -509,6 +543,9 @@ impl DockState {
         };
         if !landed {
             return false;
+        }
+        for (window_id, template_id) in group_templates {
+            set_window_template(&mut next, &window_id, template_id);
         }
         self.root = next;
         self.active_window_id = Some(drag.window_id.clone());
@@ -670,6 +707,16 @@ impl DockState {
         find(&self.root, window_id)
     }
 
+    pub fn window_template_id(&self, window_id: &str) -> Option<&str> {
+        fn find<'a>(node: &'a DockNode, window_id: &str) -> Option<&'a str> {
+            match node {
+                DockNode::Stack { windows, .. } => windows.iter().find(|tab| tab.window_id == window_id).and_then(|tab| tab.template_id.as_deref()),
+                DockNode::Row(children) | DockNode::Column(children) => children.iter().find_map(|(child, _)| find(child, window_id)),
+            }
+        }
+        find(&self.root, window_id)
+    }
+
     pub fn to_window_layout(&self) -> WindowLayout {
         WindowLayout { root: dock_node_to_layout_root(&self.root) }
     }
@@ -706,11 +753,11 @@ impl DockState {
         walk_resize_hits(self, ctx, &self.root, bounds, &empty_path(), None);
     }
 
-    pub fn split_axis_extent(&self, path: &DockPath, canvas: Rect) -> Option<f32> {
-        let bounds = solve_node_bounds(&self.root, canvas, path, &empty_path())?;
+    pub fn split_axis_extent(&self, path: &DockPath, canvas: Rect, separator: f32) -> Option<f32> {
+        let bounds = solve_node_bounds(&self.root, canvas, path, &empty_path(), separator)?;
         match node_at(&self.root, path)? {
-            DockNode::Row(_) => Some(bounds.w.max(1.0)),
-            DockNode::Column(_) => Some(bounds.h.max(1.0)),
+            DockNode::Row(children) => Some(axis_distributable_extent(bounds.w, children.len(), separator).max(1.0)),
+            DockNode::Column(children) => Some(axis_distributable_extent(bounds.h, children.len(), separator).max(1.0)),
             DockNode::Stack { .. } => None,
         }
     }
@@ -778,7 +825,7 @@ fn stack_from_node(stack: &WindowLayoutStackNode) -> DockNode {
     let windows: Vec<DockStackTab> = stack
         .children
         .iter()
-        .map(|window| DockStackTab::instance(window.instance_id.clone().unwrap_or_else(|| window.window_kind_id.clone()), window.window_kind_id.clone(), window.corner.unwrap_or(WindowStackCorner::TopLeft)))
+        .map(|window| DockStackTab::instance_template(window.instance_id.clone().unwrap_or_else(|| window.window_kind_id.clone()), window.window_kind_id.clone(), window.template_id.clone(), window.corner.unwrap_or(WindowStackCorner::TopLeft)))
         .collect();
     let active = stack
         .active_window_kind_id
@@ -796,7 +843,7 @@ fn layout_window_node(tab: &DockStackTab) -> WindowLayoutWindowNode {
         window_kind_id: tab.window_kind_id.clone(),
         title: None,
         instance_id: (tab.window_id != tab.window_kind_id).then(|| tab.window_id.clone()),
-        template_id: None,
+        template_id: tab.template_id.clone(),
         corner: Some(tab.corner),
     }
 }
@@ -855,10 +902,7 @@ fn empty_stack() -> DockNode {
 /// 🪟️ One stack node from window ids plus the kind each id renders — the shape every split and
 /// tab-join builds around.
 fn stack_of(windows: &[String], active_id: &str, window_kinds: &HashMap<String, String>) -> DockNode {
-    DockNode::Stack {
-        windows: windows.iter().map(|id| DockStackTab::instance(id.clone(), window_kinds.get(id).cloned().unwrap_or_else(|| id.clone()), WindowStackCorner::TopLeft)).collect(),
-        active: active_id.to_string(),
-    }
+    DockNode::Stack { windows: windows.iter().map(|id| DockStackTab::instance(id.clone(), window_kinds.get(id).cloned().unwrap_or_else(|| id.clone()), WindowStackCorner::TopLeft)).collect(), active: active_id.to_string() }
 }
 
 /// 🗄️ Inserts every window of `windows` into the stack at `path`, at `corner`'s local `index`,
@@ -898,12 +942,27 @@ fn split_node_at_path(root: &mut DockNode, path: &DockPath, incoming: DockNode, 
     if !matches!(target, DockNode::Stack { .. }) {
         return false;
     }
+    if matches!(&target, DockNode::Stack { windows, .. } if windows.is_empty()) {
+        replace_node_at(root, path, incoming);
+        return true;
+    }
     let replacement = match side {
         DockSide::Left | DockSide::Top => axis_pair_from_stacks(&incoming, &target, side),
         DockSide::Right | DockSide::Bottom => axis_pair_from_stacks(&target, &incoming, side),
     };
     replace_node_at(root, path, replacement);
     true
+}
+
+fn set_window_template(node: &mut DockNode, window_id: &str, template_id: Option<String>) -> bool {
+    match node {
+        DockNode::Stack { windows, .. } => {
+            let Some(tab) = windows.iter_mut().find(|tab| tab.window_id == window_id) else { return false };
+            tab.template_id = template_id;
+            true
+        }
+        DockNode::Row(children) | DockNode::Column(children) => children.iter_mut().any(|(child, _)| set_window_template(child, window_id, template_id.clone())),
+    }
 }
 
 /// 🪟️ Splits the mode root with `incoming` — React's `splitRootWithWindow`/`splitRootWithStack`
@@ -956,6 +1015,7 @@ fn dock_out_layout(root: &DockNode, drag: &DockDragPayload) -> DockNode {
     match drag.kind {
         DockDragKind::Stack => extract_stack_from_layout(root, &drag.source_path).0.unwrap_or_else(empty_stack),
         DockDragKind::Tab => remove_window_from_layout(root, &drag.window_id).unwrap_or_else(|| root.clone()),
+        DockDragKind::NewWindow => root.clone(),
     }
 }
 
@@ -971,7 +1031,7 @@ fn mobile_flat_stack(root: &DockNode, active_window_id: Option<&str>) -> DockNod
 
 fn collect_flat_tabs(node: &DockNode, out: &mut Vec<DockStackTab>) {
     match node {
-        DockNode::Stack { windows, .. } => out.extend(windows.iter().map(|tab| DockStackTab::instance(tab.window_id.clone(), tab.window_kind_id.clone(), WindowStackCorner::TopLeft))),
+        DockNode::Stack { windows, .. } => out.extend(windows.iter().map(|tab| DockStackTab::instance_template(tab.window_id.clone(), tab.window_kind_id.clone(), tab.template_id.clone(), WindowStackCorner::TopLeft))),
         DockNode::Row(children) | DockNode::Column(children) => children.iter().for_each(|(child, _)| collect_flat_tabs(child, out)),
     }
 }
@@ -1058,32 +1118,28 @@ pub fn drop_zone_indicator_rect(zone: &DockDropZone, tab_bars: &[(DockPath, Wind
     }
 }
 
+pub(crate) fn dock_cap_depth(theme: &Theme) -> f32 {
+    theme.control_height + theme.padding_standard * 2.0
+}
+
 fn stack_tab_bar_rect(bounds: Rect, theme: &Theme) -> Rect {
-    Rect::new(bounds.x, bounds.y, bounds.w, theme.control_height)
+    Rect::new(bounds.x, bounds.y, bounds.w, dock_cap_depth(theme))
 }
 
 fn collect_stack_tab_bars(node: &DockNode, bounds: Rect, path: &[usize], theme: &Theme, out: &mut Vec<(DockPath, Rect)>) {
     match node {
         DockNode::Row(children) => {
-            let total: f32 = children.iter().map(|(_, s)| *s).sum::<f32>().max(0.001);
-            let mut x = bounds.x;
-            for (index, (child, size)) in children.iter().enumerate() {
-                let w = bounds.w * (*size / total);
+            for slot in dock_axis_slots(children, bounds, true, theme.gap_standard) {
                 let mut child_path = path.to_vec();
-                child_path.push(index);
-                collect_stack_tab_bars(child, Rect::new(x, bounds.y, w, bounds.h), &child_path, theme, out);
-                x += w;
+                child_path.push(slot.index);
+                collect_stack_tab_bars(slot.node, slot.rect, &child_path, theme, out);
             }
         }
         DockNode::Column(children) => {
-            let total: f32 = children.iter().map(|(_, s)| *s).sum::<f32>().max(0.001);
-            let mut y = bounds.y;
-            for (index, (child, size)) in children.iter().enumerate() {
-                let h = bounds.h * (*size / total);
+            for slot in dock_axis_slots(children, bounds, false, theme.gap_standard) {
                 let mut child_path = path.to_vec();
-                child_path.push(index);
-                collect_stack_tab_bars(child, Rect::new(bounds.x, y, bounds.w, h), &child_path, theme, out);
-                y += h;
+                child_path.push(slot.index);
+                collect_stack_tab_bars(slot.node, slot.rect, &child_path, theme, out);
             }
         }
         DockNode::Stack { .. } => {
@@ -1195,8 +1251,17 @@ fn dock_tab_label<'a>(tab: &'a DockStackTab, window_labels: &'a HashMap<String, 
 /// 📥️ An empty corner still offers a drop pad: React renders `mode-dock-corner-drop-pad` at
 /// `min-h-medium min-w-medium` while a drag is live (`🧱️elements/🎨️Canvas/🟦️.tsx:1114`), and
 /// `--size-medium` is `7 × --ui-spacing` — the same token `theme.control_height` carries.
-fn collect_corner_tab_bars_for_stack(path: &DockPath, windows: &[DockStackTab], bounds: Rect, theme: &Theme, atlas: &mut FontAtlas, window_labels: &HashMap<String, String>, action_count: usize, out: &mut Vec<(DockPath, WindowStackCorner, Rect, Vec<f32>)>) {
-    let tab_h = theme.control_height;
+fn collect_corner_tab_bars_for_stack(
+    path: &DockPath,
+    windows: &[DockStackTab],
+    bounds: Rect,
+    theme: &Theme,
+    atlas: &mut FontAtlas,
+    window_labels: &HashMap<String, String>,
+    action_count: usize,
+    out: &mut Vec<(DockPath, WindowStackCorner, Rect, Vec<f32>)>,
+) {
+    let tab_h = dock_cap_depth(theme);
     let pad = theme.control_height;
     for (corner, tabs) in tabs_by_corner(windows) {
         let widths: Vec<f32> = tabs.iter().map(|tab| dock_tab_chip_width(atlas, theme, dock_tab_label(tab, window_labels), action_count)).collect();
@@ -1214,25 +1279,17 @@ fn collect_corner_tab_bars_for_stack(path: &DockPath, windows: &[DockStackTab], 
 fn collect_stack_corner_tab_bars(node: &DockNode, bounds: Rect, path: &[usize], theme: &Theme, atlas: &mut FontAtlas, window_labels: &HashMap<String, String>, action_count: usize, out: &mut Vec<(DockPath, WindowStackCorner, Rect, Vec<f32>)>) {
     match node {
         DockNode::Row(children) => {
-            let total: f32 = children.iter().map(|(_, s)| *s).sum::<f32>().max(0.001);
-            let mut x = bounds.x;
-            for (index, (child, size)) in children.iter().enumerate() {
-                let w = bounds.w * (*size / total);
+            for slot in dock_axis_slots(children, bounds, true, theme.gap_standard) {
                 let mut child_path = path.to_vec();
-                child_path.push(index);
-                collect_stack_corner_tab_bars(child, Rect::new(x, bounds.y, w, bounds.h), &child_path, theme, atlas, window_labels, action_count, out);
-                x += w;
+                child_path.push(slot.index);
+                collect_stack_corner_tab_bars(slot.node, slot.rect, &child_path, theme, atlas, window_labels, action_count, out);
             }
         }
         DockNode::Column(children) => {
-            let total: f32 = children.iter().map(|(_, s)| *s).sum::<f32>().max(0.001);
-            let mut y = bounds.y;
-            for (index, (child, size)) in children.iter().enumerate() {
-                let h = bounds.h * (*size / total);
+            for slot in dock_axis_slots(children, bounds, false, theme.gap_standard) {
                 let mut child_path = path.to_vec();
-                child_path.push(index);
-                collect_stack_corner_tab_bars(child, Rect::new(bounds.x, y, bounds.w, h), &child_path, theme, atlas, window_labels, action_count, out);
-                y += h;
+                child_path.push(slot.index);
+                collect_stack_corner_tab_bars(slot.node, slot.rect, &child_path, theme, atlas, window_labels, action_count, out);
             }
         }
         DockNode::Stack { windows, .. } => {
@@ -1400,36 +1457,90 @@ fn diff_axis_children(old_children: &[(DockNode, f32)], next_children: &[(DockNo
         .collect()
 }
 
-fn solve_node_bounds(node: &DockNode, bounds: Rect, target_path: &[usize], current_path: &[usize]) -> Option<Rect> {
+#[derive(Clone, Copy, Debug)]
+struct DockAxisSlot<'a> {
+    index: usize,
+    node: &'a DockNode,
+    rect: Rect,
+    separator_after: Option<Rect>,
+}
+
+struct DockAxisSlots<'a> {
+    children: &'a [(DockNode, f32)],
+    bounds: Rect,
+    horizontal: bool,
+    separator: f32,
+    distributable: f32,
+    total_weight: f32,
+    cursor: f32,
+    index: usize,
+}
+
+impl<'a> Iterator for DockAxisSlots<'a> {
+    type Item = DockAxisSlot<'a>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        let index = self.index;
+        let (node, weight) = self.children.get(index)?;
+        let positive_weight = if weight.is_finite() { weight.max(0.0) } else { 0.0 };
+        let normalized_weight = if self.total_weight > f32::EPSILON { positive_weight / self.total_weight } else { 1.0 / self.children.len() as f32 };
+        let extent = if index + 1 == self.children.len() {
+            let far = if self.horizontal { self.bounds.x + self.bounds.w } else { self.bounds.y + self.bounds.h };
+            (far - self.cursor).max(0.0)
+        } else {
+            self.distributable * normalized_weight
+        };
+        let rect = if self.horizontal { Rect::new(self.cursor, self.bounds.y, extent, self.bounds.h) } else { Rect::new(self.bounds.x, self.cursor, self.bounds.w, extent) };
+        let separator_after =
+            (index + 1 < self.children.len()).then(|| if self.horizontal { Rect::new(self.cursor + extent, self.bounds.y, self.separator, self.bounds.h) } else { Rect::new(self.bounds.x, self.cursor + extent, self.bounds.w, self.separator) });
+        self.cursor += extent + separator_after.map_or(0.0, |_| self.separator);
+        self.index += 1;
+        Some(DockAxisSlot { index, node, rect, separator_after })
+    }
+}
+
+fn axis_separator_extent(extent: f32, child_count: usize, separator: f32) -> f32 {
+    let boundaries = child_count.saturating_sub(1);
+    if boundaries == 0 {
+        return 0.0;
+    }
+    separator.max(0.0).min(extent.max(0.0) / boundaries as f32)
+}
+
+fn axis_distributable_extent(extent: f32, child_count: usize, separator: f32) -> f32 {
+    let separator = axis_separator_extent(extent, child_count, separator);
+    (extent.max(0.0) - separator * child_count.saturating_sub(1) as f32).max(0.0)
+}
+
+fn dock_axis_slots(children: &[(DockNode, f32)], bounds: Rect, horizontal: bool, separator: f32) -> DockAxisSlots<'_> {
+    let extent = if horizontal { bounds.w } else { bounds.h };
+    let separator = axis_separator_extent(extent, children.len(), separator);
+    let total_weight = children.iter().map(|(_, weight)| if weight.is_finite() { weight.max(0.0) } else { 0.0 }).sum();
+    DockAxisSlots { children, bounds, horizontal, separator, distributable: axis_distributable_extent(extent, children.len(), separator), total_weight, cursor: if horizontal { bounds.x } else { bounds.y }, index: 0 }
+}
+
+fn solve_node_bounds(node: &DockNode, bounds: Rect, target_path: &[usize], current_path: &[usize], separator: f32) -> Option<Rect> {
     if current_path == target_path {
         return Some(bounds);
     }
     match node {
         DockNode::Row(children) => {
-            let total: f32 = children.iter().map(|(_, s)| *s).sum::<f32>().max(0.001);
-            let mut x = bounds.x;
-            for (index, (child, size)) in children.iter().enumerate() {
-                let w = bounds.w * (*size / total);
+            for slot in dock_axis_slots(children, bounds, true, separator) {
                 let mut path = current_path.to_vec();
-                path.push(index);
-                if let Some(found) = solve_node_bounds(child, Rect::new(x, bounds.y, w, bounds.h), target_path, &path) {
+                path.push(slot.index);
+                if let Some(found) = solve_node_bounds(slot.node, slot.rect, target_path, &path, separator) {
                     return Some(found);
                 }
-                x += w;
             }
             None
         }
         DockNode::Column(children) => {
-            let total: f32 = children.iter().map(|(_, s)| *s).sum::<f32>().max(0.001);
-            let mut y = bounds.y;
-            for (index, (child, size)) in children.iter().enumerate() {
-                let h = bounds.h * (*size / total);
+            for slot in dock_axis_slots(children, bounds, false, separator) {
                 let mut path = current_path.to_vec();
-                path.push(index);
-                if let Some(found) = solve_node_bounds(child, Rect::new(bounds.x, y, bounds.w, h), target_path, &path) {
+                path.push(slot.index);
+                if let Some(found) = solve_node_bounds(slot.node, slot.rect, target_path, &path, separator) {
                     return Some(found);
                 }
-                y += h;
             }
             None
         }
@@ -1452,27 +1563,10 @@ const SPLIT_VIS_PX: f32 = 6.0;
 const SPLIT_HIT_MIN_PX: f32 = 20.0;
 
 fn render_axis(state: &DockState, ctx: &mut DockRenderContext<'_>, children: &[(DockNode, f32)], bounds: Rect, path: &[usize], horizontal: bool, body_fill: bool, render_body: &mut dyn FnMut(Rect, &str), outer_split: Option<(DockPath, usize, bool)>) {
-    let total: f32 = children.iter().map(|(_, s)| *s).sum::<f32>().max(0.001);
-    if horizontal {
-        let mut x = bounds.x;
-        for (index, (child, size)) in children.iter().enumerate() {
-            let w = bounds.w * (*size / total);
-            let child_rect = Rect::new(x, bounds.y, w, bounds.h);
-            let mut child_path = path.to_vec();
-            child_path.push(index);
-            render_node(state, ctx, child, child_rect, &child_path, body_fill, render_body, Some((path.to_vec(), index, true)));
-            x += w;
-        }
-    } else {
-        let mut y = bounds.y;
-        for (index, (child, size)) in children.iter().enumerate() {
-            let h = bounds.h * (*size / total);
-            let child_rect = Rect::new(bounds.x, y, bounds.w, h);
-            let mut child_path = path.to_vec();
-            child_path.push(index);
-            render_node(state, ctx, child, child_rect, &child_path, body_fill, render_body, Some((path.to_vec(), index, false)));
-            y += h;
-        }
+    for slot in dock_axis_slots(children, bounds, horizontal, ctx.theme.gap_standard) {
+        let mut child_path = path.to_vec();
+        child_path.push(slot.index);
+        render_node(state, ctx, slot.node, slot.rect, &child_path, body_fill, render_body, Some((path.to_vec(), slot.index, horizontal)));
     }
     let _ = outer_split;
 }
@@ -1486,47 +1580,33 @@ fn walk_resize_hits(state: &DockState, ctx: &mut DockRenderContext<'_>, node: &D
 }
 
 fn walk_resize_axis(state: &DockState, ctx: &mut DockRenderContext<'_>, children: &[(DockNode, f32)], bounds: Rect, path: &[usize], horizontal: bool, outer_split: Option<(DockPath, usize, bool)>) {
-    let total: f32 = children.iter().map(|(_, s)| *s).sum::<f32>().max(0.001);
+    for slot in dock_axis_slots(children, bounds, horizontal, ctx.theme.gap_standard) {
+        let mut child_path = path.to_vec();
+        child_path.push(slot.index);
+        walk_resize_hits(state, ctx, slot.node, slot.rect, &child_path, Some((path.to_vec(), slot.index, horizontal)));
+        if let Some(separator) = slot.separator_after {
+            let handle = centered_axis_hit(bounds, separator, horizontal, SPLIT_HIT_MIN_PX.max(SPLIT_VIS_PX));
+            register_split_hit(ctx, path, slot.index, handle, if horizontal { DragAxis::Horizontal } else { DragAxis::Vertical });
+            if let Some((parent_path, parent_index, parent_horizontal)) = &outer_split {
+                if *parent_horizontal != horizontal {
+                    register_join_corner_hits(ctx, path, slot.index, parent_path, *parent_index, handle, horizontal);
+                }
+            }
+        }
+    }
+}
+
+fn centered_axis_hit(bounds: Rect, separator: Rect, horizontal: bool, hit_extent: f32) -> Rect {
     if horizontal {
-        let mut x = bounds.x;
-        for (index, (child, size)) in children.iter().enumerate() {
-            let w = bounds.w * (*size / total);
-            let child_rect = Rect::new(x, bounds.y, w, bounds.h);
-            let mut child_path = path.to_vec();
-            child_path.push(index);
-            walk_resize_hits(state, ctx, child, child_rect, &child_path, Some((path.to_vec(), index, true)));
-            x += w;
-            if index + 1 < children.len() {
-                let hit_w = SPLIT_HIT_MIN_PX.max(SPLIT_VIS_PX);
-                let handle = Rect::new(x - hit_w * 0.5, bounds.y, hit_w, bounds.h);
-                register_split_hit(ctx, path, index, handle, DragAxis::Horizontal);
-                if let Some((parent_path, parent_index, parent_horizontal)) = &outer_split {
-                    if *parent_horizontal != horizontal {
-                        register_join_corner_hits(ctx, path, index, parent_path, *parent_index, handle, horizontal);
-                    }
-                }
-            }
-        }
+        let center = separator.x + separator.w * 0.5;
+        let left = (center - hit_extent * 0.5).max(bounds.x);
+        let right = (center + hit_extent * 0.5).min(bounds.x + bounds.w);
+        Rect::new(left, bounds.y, (right - left).max(0.0), bounds.h)
     } else {
-        let mut y = bounds.y;
-        for (index, (child, size)) in children.iter().enumerate() {
-            let h = bounds.h * (*size / total);
-            let child_rect = Rect::new(bounds.x, y, bounds.w, h);
-            let mut child_path = path.to_vec();
-            child_path.push(index);
-            walk_resize_hits(state, ctx, child, child_rect, &child_path, Some((path.to_vec(), index, false)));
-            y += h;
-            if index + 1 < children.len() {
-                let hit_h = SPLIT_HIT_MIN_PX.max(SPLIT_VIS_PX);
-                let handle = Rect::new(bounds.x, y - hit_h * 0.5, bounds.w, hit_h);
-                register_split_hit(ctx, path, index, handle, DragAxis::Vertical);
-                if let Some((parent_path, parent_index, parent_horizontal)) = &outer_split {
-                    if *parent_horizontal != horizontal {
-                        register_join_corner_hits(ctx, path, index, parent_path, *parent_index, handle, horizontal);
-                    }
-                }
-            }
-        }
+        let center = separator.y + separator.h * 0.5;
+        let top = (center - hit_extent * 0.5).max(bounds.y);
+        let bottom = (center + hit_extent * 0.5).min(bounds.y + bounds.h);
+        Rect::new(bounds.x, top, bounds.w, (bottom - top).max(0.0))
     }
 }
 
@@ -1597,7 +1677,7 @@ fn render_stack(state: &DockState, ctx: &mut DockRenderContext<'_>, path: &[usiz
         return;
     }
     let theme = ctx.theme;
-    let tab_h = theme.control_height;
+    let tab_h = dock_cap_depth(theme);
     let globally_active = state.active_stack.as_ref().map(|p| p.as_slice()) == Some(path);
 
     let actions = dock_tab_actions(state.show_maximize(), maximized);
@@ -1606,9 +1686,10 @@ fn render_stack(state: &DockState, ctx: &mut DockRenderContext<'_>, path: &[usiz
 
     if body_fill {
         let content_bounds = silhouette.content_bounds();
+        let body_bounds = dock_stack_body_rect(silhouette.safe_body_rect(), theme);
         ctx.draw.begin_silhouette_clip(&silhouette.content_clip_rects());
         ctx.draw.push_solid([content_bounds.x, content_bounds.y, content_bounds.w, content_bounds.h], theme.canvas_clear);
-        render_body(content_bounds, active);
+        render_body(body_bounds, active);
         ctx.draw.end_silhouette_clip();
     }
 
@@ -1624,6 +1705,9 @@ fn render_stack(state: &DockState, ctx: &mut DockRenderContext<'_>, path: &[usiz
             let is_active = tab.window_id == *active;
             let stack_active_tab = is_active && globally_active;
             let hovered = tab.rect.contains(ctx.input.pointer_x, ctx.input.pointer_y);
+            if stack_active_tab {
+                ctx.draw.push_solid([tab.rect.x, tab.rect.y, tab.rect.w, tab.rect.h], theme.selected);
+            }
             let tint = if stack_active_tab {
                 theme.active_foreground
             } else if hovered {
@@ -1631,17 +1715,18 @@ fn render_stack(state: &DockState, ctx: &mut DockRenderContext<'_>, path: &[usiz
             } else {
                 theme.text_element
             };
-            let mut content_x = tab.rect.x + theme.padding_standard;
-            let icon_w = paint_dock_tab_icon(ctx, &tab.icon_id, content_x, tab.rect, tint);
+            let control_rect = Rect::new(tab.rect.x, tab.rect.y + theme.padding_standard, tab.rect.w, theme.control_height);
+            let mut content_x = control_rect.x + theme.padding_standard;
+            let icon_w = paint_dock_tab_icon(ctx, &tab.icon_id, content_x, control_rect, tint);
             content_x += icon_w;
-            dock_text(ctx, &tab.label, content_x, tab.rect.y + (tab.rect.h + theme.font_size_small) * 0.5 - 1.0, theme.font_size_small, tint);
+            dock_text(ctx, &tab.label, content_x, control_rect.y + (control_rect.h + theme.font_size_small) * 0.5 - 1.0, theme.font_size_small, tint);
             let action_w = dock_tab_action_width(theme);
             let select_w = (tab.rect.w - action_w * actions.len() as f32).max(theme.padding_standard * 2.0);
             let select_rect = Rect::new(tab.rect.x, tab.rect.y, select_w, tab.rect.h);
             ctx.input.register_hit(HitTarget { rect: select_rect, event: None, control_id: Some(format!("dock.tab.{}.{}", path_str(path), tab.window_id)), kind: HitKind::Window, drag_axis: None, drag_data: None });
             content_x = tab.rect.x + tab.rect.w - action_w * actions.len() as f32;
             for (action, icon_id) in actions.iter() {
-                let action_rect = Rect::new(content_x, tab.rect.y, action_w, tab.rect.h);
+                let action_rect = Rect::new(content_x, control_rect.y, action_w, control_rect.h);
                 let action_hovered = action_rect.contains(ctx.input.pointer_x, ctx.input.pointer_y);
                 let action_tint = chrome_item_text(theme, false, action_hovered);
                 let _ = paint_dock_tab_icon(ctx, icon_id, action_rect.x + theme.padding_standard * 0.5, action_rect, action_tint);
@@ -1850,7 +1935,7 @@ struct StackCapLayout {
 }
 
 fn layout_stack_cap(windows: &[DockStackTab], labels: &HashMap<String, String>, icon_ids: &HashMap<String, String>, atlas: &mut FontAtlas, theme: &Theme, bounds: Rect, action_count: usize) -> StackCapLayout {
-    let tab_h = theme.control_height;
+    let tab_h = dock_cap_depth(theme);
     let mut groups = Vec::new();
     let mut top_spans = Vec::new();
     let mut bottom_spans = Vec::new();
@@ -1890,9 +1975,14 @@ fn layout_stack_cap(windows: &[DockStackTab], labels: &HashMap<String, String>, 
 }
 
 fn stack_window_silhouette(bounds: Rect, theme: &Theme, layout: &StackCapLayout) -> WindowSilhouette {
-    let top_depth = if layout.top_spans.is_empty() { 0.0 } else { theme.control_height };
-    let bottom_depth = if layout.bottom_spans.is_empty() { 0.0 } else { theme.control_height };
+    let top_depth = if layout.top_spans.is_empty() { 0.0 } else { dock_cap_depth(theme) };
+    let bottom_depth = if layout.bottom_spans.is_empty() { 0.0 } else { dock_cap_depth(theme) };
     WindowSilhouette::from_measured_edges(bounds, layout.top_spans.clone(), layout.bottom_spans.clone(), top_depth, bottom_depth)
+}
+
+fn dock_stack_body_rect(body: Rect, theme: &Theme) -> Rect {
+    let inset = theme.padding_standard.min(body.w * 0.5);
+    Rect::new(body.x + inset, body.y, (body.w - inset * 2.0).max(0.0), body.h)
 }
 
 pub fn path_str(path: &[usize]) -> String {
@@ -1906,28 +1996,20 @@ pub fn parse_path(value: &str) -> DockPath {
     value.split(',').filter_map(|part| part.parse().ok()).collect()
 }
 
-fn collect_stack_frames(node: &DockNode, bounds: Rect, path: &[usize], out: &mut Vec<(DockPath, Rect, String)>) {
+fn collect_stack_frames(node: &DockNode, bounds: Rect, path: &[usize], separator: f32, out: &mut Vec<(DockPath, Rect, String)>) {
     match node {
         DockNode::Row(children) => {
-            let total: f32 = children.iter().map(|(_, size)| *size).sum::<f32>().max(0.001);
-            let mut x = bounds.x;
-            for (index, (child, size)) in children.iter().enumerate() {
-                let w = bounds.w * (*size / total);
+            for slot in dock_axis_slots(children, bounds, true, separator) {
                 let mut child_path = path.to_vec();
-                child_path.push(index);
-                collect_stack_frames(child, Rect::new(x, bounds.y, w, bounds.h), &child_path, out);
-                x += w;
+                child_path.push(slot.index);
+                collect_stack_frames(slot.node, slot.rect, &child_path, separator, out);
             }
         }
         DockNode::Column(children) => {
-            let total: f32 = children.iter().map(|(_, size)| *size).sum::<f32>().max(0.001);
-            let mut y = bounds.y;
-            for (index, (child, size)) in children.iter().enumerate() {
-                let h = bounds.h * (*size / total);
+            for slot in dock_axis_slots(children, bounds, false, separator) {
                 let mut child_path = path.to_vec();
-                child_path.push(index);
-                collect_stack_frames(child, Rect::new(bounds.x, y, bounds.w, h), &child_path, out);
-                y += h;
+                child_path.push(slot.index);
+                collect_stack_frames(slot.node, slot.rect, &child_path, separator, out);
             }
         }
         DockNode::Stack { active, .. } => out.push((path.to_vec(), bounds, active.clone())),
@@ -1954,32 +2036,24 @@ fn collect_stack_bodies(
 ) {
     match node {
         DockNode::Row(children) => {
-            let total: f32 = children.iter().map(|(_, s)| *s).sum::<f32>().max(0.001);
-            let mut x = bounds.x;
-            for (index, (child, size)) in children.iter().enumerate() {
-                let w = bounds.w * (*size / total);
+            for slot in dock_axis_slots(children, bounds, true, theme.gap_standard) {
                 let mut child_path = path.to_vec();
-                child_path.push(index);
-                collect_stack_bodies(child, Rect::new(x, bounds.y, w, bounds.h), &child_path, theme, window_labels, atlas, state, action_count, out, silhouettes);
-                x += w;
+                child_path.push(slot.index);
+                collect_stack_bodies(slot.node, slot.rect, &child_path, theme, window_labels, atlas, state, action_count, out, silhouettes);
             }
         }
         DockNode::Column(children) => {
-            let total: f32 = children.iter().map(|(_, s)| *s).sum::<f32>().max(0.001);
-            let mut y = bounds.y;
-            for (index, (child, size)) in children.iter().enumerate() {
-                let h = bounds.h * (*size / total);
+            for slot in dock_axis_slots(children, bounds, false, theme.gap_standard) {
                 let mut child_path = path.to_vec();
-                child_path.push(index);
-                collect_stack_bodies(child, Rect::new(bounds.x, y, bounds.w, h), &child_path, theme, window_labels, atlas, state, action_count, out, silhouettes);
-                y += h;
+                child_path.push(slot.index);
+                collect_stack_bodies(slot.node, slot.rect, &child_path, theme, window_labels, atlas, state, action_count, out, silhouettes);
             }
         }
         DockNode::Stack { windows, active } => {
             let _maximized = state.maximized_stack.as_ref().map(|p| p.as_slice()) == Some(path);
             let layout = layout_stack_cap(windows, window_labels, &HashMap::new(), atlas, theme, bounds, action_count);
             let silhouette = stack_window_silhouette(bounds, theme, &layout);
-            out.push((path.to_vec(), silhouette.safe_body_rect(), active.clone()));
+            out.push((path.to_vec(), dock_stack_body_rect(silhouette.safe_body_rect(), theme), active.clone()));
             if !active.is_empty() {
                 silhouettes.insert(active.clone(), silhouette);
             }
@@ -2006,4 +2080,8 @@ mod tests;
 #[cfg(all(test, not(target_arch = "wasm32")))]
 #[path = "../../🧪️tests/🪟️app-mode-layouts/🦀️.rs"]
 mod app_mode_layout_tests;
+
+#[cfg(all(test, not(target_arch = "wasm32")))]
+#[path = "../../🧪️tests/🪟️window-template-drag/🦀️.rs"]
+mod window_template_drag_tests;
 //#endregion DockTests

@@ -13,7 +13,24 @@
       "type": "object",
       "additionalProperties": false,
       "required": ["ready"],
-      "properties": { "ready": { "type": "boolean" } }
+      "properties": {
+        "ready": { "type": "boolean" },
+        "reason": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "description": "🧭️ Why this gate is closed, as a stable kebab-case code. Present only when ready is false, so an operator or launcher waiting on /readyz reads the blocking condition instead of polling a silent boolean."
+        }
+      }
+    },
+    "closedReadinessGate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["gate", "reason"],
+      "properties": {
+        "gate": { "type": "string", "minLength": 1, "maxLength": 64 },
+        "reason": { "type": "string", "minLength": 1, "maxLength": 128 }
+      }
     },
     "authenticated": {
       "type": "object",
@@ -210,13 +227,15 @@
             "mcpWorkspace": { "type": "boolean" },
             "inference": { "type": "boolean" }
           }
-        }
+        },
+        "blockedBy": { "type": "array", "minItems": 1, "maxItems": 8, "items": { "$ref": "#/$defs/closedReadinessGate" } }
       },
       "allOf": [
         {
           "if": { "type": "object", "required": ["status"], "properties": { "status": { "const": "ready" } } },
           "then": {
             "type": "object",
+            "not": { "required": ["blockedBy"] },
             "properties": {
               "authentication": { "type": "object", "properties": { "bootstrapReady": { "const": true } } },
               "directory": { "type": "object", "properties": { "ready": { "const": true } } },

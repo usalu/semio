@@ -11,12 +11,17 @@
 //! "`--folder <space dir>`…`--hub <url> --space <id>`"). Hub authority is claimed from protected fd 3
 //! before argv parsing and never enters argv or workspace state. HTTP and bridge admission reuse
 //! that protected authority without copying it into argv, a URL, a file, logs, or protocol output.
-use semio_framework_os_mcp::{AutoApprovePolicy, HttpOptions, HubOptions, StdioOptions};
+use semio_framework_os_mcp::{AgentCredentialSource, AutoApprovePolicy, HttpOptions, HubOptions, StdioOptions};
 
 //#region 🔖️Args
 enum Mode {
     Stdio(StdioOptions),
     Http(HttpOptions),
+    /// 🚨️ `semio-os-mcp audit [--folder <dir>]` — compiles the catalog source from the committed
+    /// plugin descriptors under `<dir>` and prints every `CatalogAuditFinding` (a gesture-named
+    /// route published to agents with no declared audience; a delete/clear/replace mutation with
+    /// `effects.destructive = false`). Exits 1 when the list is non-empty, so it is a gate.
+    Audit { folder: String },
 }
 
 fn parse_scopes(raw: &str) -> Vec<String> {
@@ -30,22 +35,56 @@ fn parse_auto_approve(raw: &str) -> Result<AutoApprovePolicy, String> {
     AutoApprovePolicy::parse(raw).ok_or_else(|| format!("--auto-approve expects never|readonly|all, got `{raw}`"))
 }
 
-/// 🏠️ Shared credential-free `--hub <url> --space <id>` selector.
+/// 🏠️ Shared `--hub <url> --space <id>` selector, plus the *path* of the delegated agent
+/// credential — never the credential itself, because argv is world-readable through `ps`.
+///
+/// Before this flag existed, `--hub` could only authenticate through the inherited fd-3
+/// local-bootstrap envelope, which a `dev s` launcher mints for its own children. No MCP client
+/// configuration — `claude_desktop_config.json`, `.mcp.json`, `.cursor/mcp.json` — can pass a file
+/// descriptor, so `--hub` was mechanically unreachable for an end user. `--credential-file <path>`
+/// is the reachable shape: a `0600` file the delegation UI hands the human once, named in the
+/// client config.
 #[derive(Default)]
 struct HubArgs {
     base_url: Option<String>,
     space_id: Option<String>,
+    credential_file: Option<String>,
+    credential_fd: Option<i32>,
 }
 
 impl HubArgs {
     fn into_options(self) -> Result<Option<HubOptions>, String> {
+        let credential = match (self.credential_file, self.credential_fd) {
+            (Some(_), Some(_)) => return Err("--credential-file and --credential-fd are mutually exclusive".to_string()),
+            (Some(path), None) => Some(AgentCredentialSource::File(path)),
+            (None, Some(descriptor)) => Some(AgentCredentialSource::Descriptor(descriptor)),
+            (None, None) => None,
+        };
         match (self.base_url, self.space_id) {
+            (None, None) if credential.is_some() => Err("an agent credential requires --hub <url> --space <id>".to_string()),
             (None, None) => Ok(None),
-            (Some(base_url), Some(space_id)) => Ok(Some(HubOptions { base_url, space_id })),
+            (Some(base_url), Some(space_id)) => Ok(Some(HubOptions { base_url, space_id, credential })),
             (Some(_), None) => Err("--hub requires --space <id>".to_string()),
             (None, Some(_)) => Err("--space requires --hub <url>".to_string()),
         }
     }
+}
+
+/// 🔢️ `--credential-fd <n>`. In `stdio` mode descriptors 0/1/2 are this process's MCP framing
+/// channel and descriptor 3 is the local-bootstrap envelope, so none of them may be re-used for a
+/// delegation — a launcher that wants to pipe the credential passes another inherited descriptor.
+fn parse_credential_fd(raw: &str, stdio_mode: bool) -> Result<i32, String> {
+    let descriptor: i32 = raw.parse().map_err(|_| "--credential-fd must be a descriptor number".to_string())?;
+    if descriptor < 0 {
+        return Err("--credential-fd must be non-negative".to_string());
+    }
+    if descriptor == 3 {
+        return Err("--credential-fd 3 is the local-bootstrap envelope; pass another descriptor".to_string());
+    }
+    if stdio_mode && descriptor <= 2 {
+        return Err("--credential-fd 0/1/2 carry this process's stdio MCP framing; pass another descriptor or use --credential-file".to_string());
+    }
+    Ok(descriptor)
 }
 
 fn parse_stdio_args(argv: &mut impl Iterator<Item = String>) -> Result<StdioOptions, String> {
@@ -56,6 +95,8 @@ fn parse_stdio_args(argv: &mut impl Iterator<Item = String>) -> Result<StdioOpti
             "--folder" => options.folder = Some(argv.next().ok_or("--folder requires a value")?),
             "--hub" => hub.base_url = Some(argv.next().ok_or("--hub requires a value")?),
             "--space" => hub.space_id = Some(argv.next().ok_or("--space requires a value")?),
+            "--credential-file" => hub.credential_file = Some(argv.next().ok_or("--credential-file requires a path")?),
+            "--credential-fd" => hub.credential_fd = Some(parse_credential_fd(&argv.next().ok_or("--credential-fd requires a descriptor number")?, true)?),
             "--principal" => options.principal = Some(argv.next().ok_or("--principal requires a value")?),
             "--scopes" => options.scopes = parse_scopes(&argv.next().ok_or("--scopes requires a comma-separated value")?),
             "--auto-approve" => options.auto_approve = parse_auto_approve(&argv.next().ok_or("--auto-approve requires never|readonly|all")?)?,
@@ -87,6 +128,8 @@ fn parse_http_args(argv: &mut impl Iterator<Item = String>) -> Result<HttpOption
             "--folder" => folder = Some(argv.next().ok_or("--folder requires a value")?),
             "--hub" => hub.base_url = Some(argv.next().ok_or("--hub requires a value")?),
             "--space" => hub.space_id = Some(argv.next().ok_or("--space requires a value")?),
+            "--credential-file" => hub.credential_file = Some(argv.next().ok_or("--credential-file requires a path")?),
+            "--credential-fd" => hub.credential_fd = Some(parse_credential_fd(&argv.next().ok_or("--credential-fd requires a descriptor number")?, false)?),
             "--principal" => principal = Some(argv.next().ok_or("--principal requires a value")?),
             "--scopes" => scopes = parse_scopes(&argv.next().ok_or("--scopes requires a comma-separated value")?),
             "--audit-dir" => audit_dir = Some(argv.next().ok_or("--audit-dir requires a value")?),
@@ -102,17 +145,31 @@ fn parse_http_args(argv: &mut impl Iterator<Item = String>) -> Result<HttpOption
     Ok(HttpOptions { port, bind, folder, hub, principal, scopes, audit_dir, allow_origin, auto_approve })
 }
 
+/// 🚨️ `audit` takes one optional `--folder <dir>` (default `.`) and nothing else — it never opens a
+/// workspace, never claims hub authority and never talks to a shell; it reads committed descriptors.
+fn parse_audit_args(argv: &mut impl Iterator<Item = String>) -> Result<String, String> {
+    let mut folder = ".".to_string();
+    while let Some(flag) = argv.next() {
+        match flag.as_str() {
+            "--folder" => folder = argv.next().ok_or("--folder requires a value")?,
+            other => return Err(format!("unknown flag {other}")),
+        }
+    }
+    Ok(folder)
+}
+
 fn parse_args() -> Result<Mode, String> {
     let mut argv = std::env::args().skip(1);
     let Some(mode) = argv.next() else {
         return Err(
-            "usage: semio-os-mcp <stdio|http|schemas> [--folder <dir> | --hub <url> --space <id>] [--principal <id>] [--scopes a,b] [--auto-approve never|readonly|all] [stdio-only: --no-bridge] [http-only: --port <p> --bind <addr> --audit-dir <dir> --allow-origin <origin>]".to_string()
+            "usage: semio-os-mcp <stdio|http|audit|schemas> [--folder <dir> | --hub <url> --space <id> [--credential-file <path> | --credential-fd <n>]] [--principal <id>] [--scopes a,b] [--auto-approve never|readonly|all] [stdio-only: --no-bridge] [http-only: --port <p> --bind <addr> --audit-dir <dir> --allow-origin <origin>]".to_string()
         );
     };
     match mode.as_str() {
         "stdio" => Ok(Mode::Stdio(parse_stdio_args(&mut argv)?)),
         "http" => Ok(Mode::Http(parse_http_args(&mut argv)?)),
-        other => Err(format!("unknown mode `{other}` — only `stdio`/`http`/`schemas` are implemented by this binary")),
+        "audit" => Ok(Mode::Audit { folder: parse_audit_args(&mut argv)? }),
+        other => Err(format!("unknown mode `{other}` — only `stdio`/`http`/`audit`/`schemas` are implemented by this binary")),
     }
 }
 //#endregion 🔖️Args
@@ -226,9 +283,19 @@ fn main() {
             std::process::exit(1);
         }
     };
+    if let Mode::Audit { folder } = &mode {
+        let source = semio_framework_os_mcp::registry::discover_catalog_source(Some(std::path::Path::new(folder)));
+        let findings = semio_framework_os_mcp::catalog::audit_source(&source);
+        for finding in &findings {
+            println!("{}", finding.message());
+        }
+        println!("semio-os-mcp audit: {} finding(s) over {} descriptor(s) under {folder}", findings.len(), source.descriptors.len());
+        std::process::exit(if findings.is_empty() { 0 } else { 1 });
+    }
     let result = match mode {
         Mode::Stdio(options) => semio_framework_os_mcp::run_stdio(options),
         Mode::Http(options) => semio_framework_os_mcp::run_http(options),
+        Mode::Audit { .. } => unreachable!("handled above"),
     };
     if let Err(error) = result {
         eprintln!("[semio-os-mcp] {:?}: {}", error.code, error.message);

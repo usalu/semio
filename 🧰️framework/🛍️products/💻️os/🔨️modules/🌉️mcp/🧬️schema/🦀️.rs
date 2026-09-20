@@ -134,6 +134,12 @@ pub struct SearchHit {
     pub score: f64,
     pub plugin_id: String,
     pub app_id: String,
+    /// 🎯️ `agent` on every published hit — carried on the wire so a client can SEE that the catalog
+    /// is an agent projection rather than having to infer it from what is missing.
+    pub audience: String,
+    /// 🗿️ The artifact kind this verb acts on (`s.draw.drawing`), empty for gateway/framework verbs —
+    /// the cheapest way for an agent to tell two same-titled verbs of different plugins apart.
+    pub artifact_kind: String,
 }
 //#endregion 🔖️SearchHit
 
@@ -186,6 +192,13 @@ pub struct ContextSummary {
     pub active_artifact_id: Option<String>,
     pub catalog_hash: String,
     pub locale: String,
+    /// 🔀️ Which document owner this session's artifact verbs execute against — `"shell"` when a
+    /// live shell is attached over `/bridge` and declared `relayAppCommands` (the agent's edits
+    /// happen in the window the human is looking at, land in that human's undo history and
+    /// replicate to their collaborators), `"headless"` when this process's own `--folder`/`--hub`
+    /// workspace owns them. The decision is taken HERE, once per session, and is sticky: a client
+    /// that reads `"shell"` is never silently re-routed onto a different document.
+    pub channel: String,
 }
 //#endregion 🔖️ContextSummary
 
@@ -307,6 +320,8 @@ pub fn capabilities_search_input_shape() -> serde_json::Value {
             "owner": { "type": "string" },
             "artifactKind": { "type": "string" },
             "requiresScope": { "type": "string" },
+            "limit": { "type": "integer", "minimum": 1, "maximum": 100, "default": 20 },
+            "cursor": { "type": "string", "description": "The `nextCursor` of a previous page; omit for the first page." },
         },
         "required": ["query"],
         "additionalProperties": false,
@@ -322,7 +337,7 @@ pub fn capabilities_search_input_schema() -> serde_json::Value {
 /// (caught live running `bun nx run @semio-tech/framework-os-mcp:test-quick`, not read off the spec).
 /// The hits themselves are therefore wrapped under a `results` property.
 pub fn capabilities_search_output_shape() -> serde_json::Value {
-    serde_json::json!({ "type": "object", "properties": { "results": { "type": "array" } } })
+    serde_json::json!({ "type": "object", "properties": { "results": { "type": "array" }, "total": { "type": "integer" }, "nextCursor": { "type": ["string", "null"] } } })
 }
 
 pub fn capabilities_search_output_schema() -> serde_json::Value {

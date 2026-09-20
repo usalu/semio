@@ -278,9 +278,15 @@ def inverse_spec(original, mutation):
             return {"kind": "upsert-member", "params": {"path": path, "key": key, "value": parent[key]}}
         return {"kind": "remove-member", "params": {"path": path, "key": key}}
     if kind == "remove-member":
+        # ⚠️ Member order is state in this profile and `upsert-member` APPENDS an absent key, so it
+        # only undoes the removal of the LAST member; anything else degrades to the whole-snapshot
+        # restore. Same rule as the subject's `agg_inverse` — see its ⚠️ note.
         parent = resolve(original, path)
         key = params["key"]
-        return {"kind": "upsert-member", "params": {"path": path, "key": key, "value": parent[key]}}
+        keys = list(parent.keys())
+        if keys and keys[-1] == key:
+            return {"kind": "upsert-member", "params": {"path": path, "key": key, "value": parent[key]}}
+        return {"kind": "set-snapshot", "params": {"value": original}}
     if kind == "rename-member":
         return {"kind": "rename-member", "params": {"path": path, "from": params["to"], "to": params["from"]}}
     if kind == "set-safe-number":

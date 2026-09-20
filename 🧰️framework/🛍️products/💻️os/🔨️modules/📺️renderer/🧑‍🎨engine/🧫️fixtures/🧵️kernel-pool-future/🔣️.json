@@ -1,0 +1,37 @@
+{
+  "cases": [
+    {
+      "id": "immediate-ready",
+      "pendingWakes": 0,
+      "expectedPolls": [
+        "ready"
+      ]
+    },
+    {
+      "id": "resume-after-self-wake",
+      "pendingWakes": 2,
+      "expectedPolls": [
+        "pending-wake",
+        "pending-wake",
+        "ready"
+      ]
+    }
+  ],
+  "responses": [
+    {
+      "id": "before-poll",
+      "delivery": "before-poll",
+      "value": 23
+    },
+    {
+      "id": "register-waker",
+      "delivery": "register-waker",
+      "value": 23
+    },
+    {
+      "id": "after-pending",
+      "delivery": "after-pending",
+      "value": 23
+    }
+  ]
+}

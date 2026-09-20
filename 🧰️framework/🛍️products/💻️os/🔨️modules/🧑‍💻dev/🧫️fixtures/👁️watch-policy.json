@@ -23,5 +23,10 @@
     "♻️mit-bestand/🧺️demonstrator/🪧️brand.ts"
   ],
   "requiredRoots": ["🧰️framework", "✏️s", "♻️mit-bestand"],
-  "forbiddenRoots": [".git", ".nx", ".vscode", ".🧬semio", "node_modules"]
+  "forbiddenRoots": [".git", ".nx", ".vscode", ".🧬semio", "node_modules"],
+  "vanishedRename": {
+    "path": "🧰️framework/atomic-source.ts.tmp.already-renamed",
+    "previousExists": true,
+    "expectedEvents": ["unlink:🧰️framework/atomic-source.ts.tmp.already-renamed", "change:🧰️framework/source.ts"]
+  }
 }

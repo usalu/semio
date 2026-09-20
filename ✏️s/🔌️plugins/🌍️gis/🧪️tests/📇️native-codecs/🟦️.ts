@@ -23,7 +23,7 @@ export async function proveGisNativeCodecReceipts(repoRoot: string): Promise<voi
   registryAjv.addSchema(registryModule);
   const validateDocumentIds = registryAjv.compile({ $ref: `${registryModule.$id}#/$defs/ArtifactDocumentIdV1` });
   if (!validateDocumentIds(documentIds)) throw new Error(`invalid artifact document-id corpus: ${JSON.stringify(validateDocumentIds.errors)}`);
-  for (const row of documentIds.cases) if (/^artifact-(?!0{32}$)[0-9a-f]{32}$/u.test(row.documentId) !== row.accepted) throw new Error(`artifact document-id oracle mismatch ${row.id}`);
+  for (const row of documentIds.cases) if (/^artifact-(?!0{32}$)[0-9a-f]{32}$/u.test(row.artifactId) !== row.accepted) throw new Error(`artifact document-id oracle mismatch ${row.id}`);
   const manifest = Bun.TOML.parse(readFileSync(join(owner, "📦️packages/🦀️rust/Cargo.toml"), "utf8")) as any;
   if (manifest.package.metadata.component.package !== fixture.packageId) throw new Error("GIS Cargo package identity differs from receipt owner");
   const workspace = Bun.TOML.parse(readFileSync(join(repoRoot, "Cargo.toml"), "utf8")) as any;

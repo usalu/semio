@@ -1,5 +1,5 @@
 use super::*;
-use crate::editor::fem3d::unit_tests::context::{dispatch, fem3d_app};
+use crate::editor::fem3d::unit_tests::context::{dispatch, fem3d_demo_app};
 use crate::editor::fem3d::Fem3dCommand;
 
 fn emit(snapshot: &Fem3dSnapshot, payload: PatchSolid) -> Result<Emit<Fem3dMutation, NoConfigMutation>, Fault> {
@@ -11,7 +11,7 @@ fn emit(snapshot: &Fem3dSnapshot, payload: PatchSolid) -> Result<Emit<Fem3dMutat
 
 #[semio_framework_async_macros::async_test]
 async fn patch_solid_edits_extrusion_axis_and_material_on_the_live_demo_3d() {
-    let mut app = fem3d_app();
+    let mut app = fem3d_demo_app().await;
     dispatch(&mut app, Fem3dCommand::PatchSolid(PatchSolid { id: "sol1".into(), field: "height".into(), value: "0.8".into() })).await;
     dispatch(&mut app, Fem3dCommand::PatchSolid(PatchSolid { id: "sol1".into(), field: "axis".into(), value: "y".into() })).await;
     dispatch(&mut app, Fem3dCommand::PatchSolid(PatchSolid { id: "sol1".into(), field: "layers".into(), value: "3".into() })).await;

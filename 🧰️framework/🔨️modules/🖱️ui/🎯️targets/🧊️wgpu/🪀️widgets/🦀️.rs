@@ -1,13 +1,13 @@
 // #region widgets
 //! 🧩️ Generic widget tree — layout, measurement, and drawing.
 
+use crate::wgpu::component::ui::UiTreeWindow;
 use crate::wgpu::draw::{DrawList, IconAtlas};
 use crate::wgpu::geometry::Rect;
 use crate::wgpu::input::{HitKind, HitTarget, InputState};
 use crate::wgpu::layout::{gap_for_token, layout_horizontal, layout_vertical, padding_for_token};
 use crate::wgpu::text::FontAtlas;
 use crate::wgpu::theme::{Rgba, Theme};
-use crate::wgpu::component::ui::UiTreeWindow;
 use crate::wgpu::IconName;
 use crate::wgpu::UiTreeActionPlacement;
 use std::collections::HashMap;
@@ -209,21 +209,100 @@ pub enum ControlNode<E> {
 
 #[derive(Clone, Debug)]
 pub enum WidgetNode<E> {
-    Stack { direction: String, gap: Option<String>, padding: Option<String>, children: Vec<WidgetNode<E>> },
-    Text { value: String, emphasize: bool },
+    Stack {
+        direction: String,
+        gap: Option<String>,
+        padding: Option<String>,
+        children: Vec<WidgetNode<E>>,
+    },
+    Text {
+        value: String,
+        emphasize: bool,
+    },
     Separator,
-    Button { id: Option<String>, icon_id: Option<IconName>, label: String, event: Option<E> },
-    Input { id: String, input_kind: String, value: String, placeholder: Option<String>, commit: Option<String>, min: Option<f64>, max: Option<f64>, step: Option<f64>, accept: Option<String>, on_change: Option<E> },
-    Select { id: String, value: String, items: Vec<SelectItem>, placeholder: Option<String>, on_change: Option<E> },
-    Toggle { id: String, icon_id: IconName, pressed: bool, text: Option<String>, on_change: Option<E> },
-    KeyValue { entries: Vec<KeyValueEntry> },
-    Slider { id: String, value: f64, min: f64, max: f64, step: f64, ready: Option<f64>, disabled: bool, on_change: Option<E> },
-    NumberStepper { id: String, value: f64, step: f64, uniform: bool, on_absolute: Option<E>, on_delta: Option<E> },
-    Ring { id: String, t: f64, disabled: bool, on_change: Option<E> },
-    IconSelect { id: String, value: String, uniform: bool, classifier_kind: String, on_change: Option<E> },
-    Field { id: String, label: String, child: ControlNode<E> },
-    Section { id: String, label: Option<String>, default_open: bool, children: Vec<WidgetNode<E>> },
-    Tree { sections: Vec<TreeSection<E>>, selected_ids: Vec<String>, highlighted_ids: Vec<String>, selection_change: Option<E> },
+    Button {
+        id: Option<String>,
+        icon_id: Option<IconName>,
+        label: String,
+        event: Option<E>,
+    },
+    Input {
+        id: String,
+        input_kind: String,
+        value: String,
+        placeholder: Option<String>,
+        commit: Option<String>,
+        min: Option<f64>,
+        max: Option<f64>,
+        step: Option<f64>,
+        accept: Option<String>,
+        on_change: Option<E>,
+    },
+    Select {
+        id: String,
+        value: String,
+        items: Vec<SelectItem>,
+        placeholder: Option<String>,
+        on_change: Option<E>,
+    },
+    Toggle {
+        id: String,
+        icon_id: IconName,
+        pressed: bool,
+        text: Option<String>,
+        on_change: Option<E>,
+    },
+    KeyValue {
+        entries: Vec<KeyValueEntry>,
+    },
+    Slider {
+        id: String,
+        value: f64,
+        min: f64,
+        max: f64,
+        step: f64,
+        ready: Option<f64>,
+        disabled: bool,
+        on_change: Option<E>,
+    },
+    NumberStepper {
+        id: String,
+        value: f64,
+        step: f64,
+        uniform: bool,
+        on_absolute: Option<E>,
+        on_delta: Option<E>,
+    },
+    Ring {
+        id: String,
+        t: f64,
+        disabled: bool,
+        on_change: Option<E>,
+    },
+    IconSelect {
+        id: String,
+        value: String,
+        uniform: bool,
+        classifier_kind: String,
+        on_change: Option<E>,
+    },
+    Field {
+        id: String,
+        label: String,
+        child: ControlNode<E>,
+    },
+    Section {
+        id: String,
+        label: Option<String>,
+        default_open: bool,
+        children: Vec<WidgetNode<E>>,
+    },
+    Tree {
+        sections: Vec<TreeSection<E>>,
+        selected_ids: Vec<String>,
+        highlighted_ids: Vec<String>,
+        selection_change: Option<E>,
+    },
     //#region 🧩️KitCompositeParity
     // 🧩️ The five `UiNode` kinds this second, smaller paint kit carried NO arm for until ticket
     // 26/09/17 packet W15a — a panel painted through `render_widget` (scene-embedded chrome, the
@@ -236,20 +315,39 @@ pub enum WidgetNode<E> {
     /// track with a `bg-accent` fill at `uiProgressFractionV1(completed, total)`, or the centred
     /// one-third busy band when `total` is absent. `completed`/`total` are `UiProgressNode`'s own
     /// fields, so `paint::progress_bar_rects` prices both kits' geometry.
-    Progress { id: String, completed: f64, total: Option<f64> },
+    Progress {
+        id: String,
+        completed: f64,
+        total: Option<f64>,
+    },
     /// 🖼️ React's `ImageView` — a real `<img src>`. A `data:` PNG decodes through the shared
     /// `🖼️UiImageSources` ledger and draws a raster quad at `object-contain`; anything else is a host
     /// fetch and shows the `alt` placeholder, exactly as the retained arm does.
-    Image { id: String, src: String, alt: Option<String> },
+    Image {
+        id: String,
+        src: String,
+        alt: Option<String>,
+    },
     /// 🗂️ A `container` with `role="group"` on React's side; a chevron + label header over its
     /// children here, sharing `Section`'s own `collapsed_sections` slot so the two fold the same way.
-    Group { id: String, label: String, default_open: bool, children: Vec<WidgetNode<E>> },
+    Group {
+        id: String,
+        label: String,
+        default_open: bool,
+        children: Vec<WidgetNode<E>>,
+    },
     /// 🎬️ A scene surface's rect. With no host to fill it this paints the retained arm's placeholder
     /// chrome; the hit target is minted by `scene_hit_kind` so a press resolves the same
     /// kind/control id `input::retained_hit_registration`'s `ComponentScene` arm resolves.
-    ComponentScene { surface_id: String, hit_kind: HitKind, hit_control_id: String },
+    ComponentScene {
+        surface_id: String,
+        hit_kind: HitKind,
+        hit_control_id: String,
+    },
     /// 🧩️ A plugin body slot: placeholder chrome labelled with its `body_key`, like the retained arm.
-    ExternalSlot { body_key: String },
+    ExternalSlot {
+        body_key: String,
+    },
     //#endregion 🧩️KitCompositeParity
 }
 
@@ -481,7 +579,7 @@ pub fn render_widget<E: Clone>(node: &WidgetNode<E>, bounds: Rect, ctx: &mut Wid
             if let Some(maps) = ctx.interaction_maps.as_deref_mut() {
                 maps.tree_selection_change = selection_change.clone();
             }
-            let scroll_id = format!("tree:{:.0}:{:.0}", bounds.x, bounds.y);
+            let scroll_id = sections.first().map_or_else(|| format!("tree:{:.0}:{:.0}", bounds.x, bounds.y), |section| format!("tree:{}", section.id));
             let content_h = measure_tree_sections_state(sections, ctx.collapsed_sections);
             render_scroll_region(&scroll_id, bounds, content_h.max(bounds.h), ctx, |content, ctx| {
                 render_tree(sections, selected_ids, highlighted_ids, content, ctx);
@@ -784,7 +882,7 @@ plumbing (`update_world_orbit_view_gizmo_hover`, which owns `&mut World3dState`)
 /// needs `WidgetContext`, which bundles the font/icon atlases. The placement/tip-geometry/
 /// hit-test math it calls into lives target-neutral in `draw_types::gizmo`.
 pub mod gizmo {
-    use crate::wgpu::draw_types::gizmo::{orbit_view_gizmo_placement, orbit_view_gizmo_tips};
+    use crate::wgpu::draw_types::gizmo::{orbit_view_gizmo_head_radius, orbit_view_gizmo_placement, orbit_view_gizmo_tips};
     use crate::wgpu::widgets::WidgetContext;
     use crate::wgpu::{Camera3d, Rect, Rgba};
 
@@ -805,18 +903,8 @@ pub mod gizmo {
             let alpha = (tip.color.a * depth_fade * hover_fade).min(1.0);
             let stroke = Rgba::new(tip.color.r, tip.color.g, tip.color.b, if hovered { tip.color.a.min(1.0) } else { alpha });
             ctx.draw.push_line_overlay(origin_x, origin_y, tip.screen_x, tip.screen_y, stroke, if tip.is_corner { 1.5 } else { 2.0 });
-            let r = if tip.prominent {
-                if hovered {
-                    3.6
-                } else {
-                    3.0
-                }
-            } else if hovered {
-                2.4
-            } else {
-                2.0
-            };
-            ctx.draw.push_solid_overlay([tip.screen_x - r, tip.screen_y - r, tip.screen_x + r, tip.screen_y + r], stroke);
+            let r = orbit_view_gizmo_head_radius(tip.prominent, hovered);
+            ctx.draw.push_rounded_overlay([tip.screen_x - r, tip.screen_y - r, r * 2.0, r * 2.0], stroke, r);
         }
     }
 }

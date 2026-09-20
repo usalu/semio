@@ -56,6 +56,7 @@ fn prepared_outcome(role: &str, recovery_schema: &str, generation: u64, base_rev
         next_clock,
         actor: actor.clone(),
         group_id: None,
+        stamped_edit_id: None,
     });
     let edit_id = format!("map-{role}-edit-{ordinal}");
     let edit = Edit {
@@ -134,6 +135,7 @@ fn store_prepared(store: &ArtifactStore<DemoSnapshot, DemoMutation>, ordinal: u6
         next_clock,
         actor: actor.clone(),
         group_id: None,
+        stamped_edit_id: None,
     });
     let edit_id = format!("map-store-edit-{ordinal}");
     let edit = Edit {

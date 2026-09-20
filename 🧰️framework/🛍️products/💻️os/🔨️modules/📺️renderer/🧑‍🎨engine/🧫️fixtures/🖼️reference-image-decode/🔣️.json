@@ -1,0 +1,143 @@
+{
+  "decodedByteCapacity": 67108864,
+  "sourcePixelCapacity": 16777216,
+  "readbackStripByteCapacity": 1048576,
+  "readbackMode": "row-strip",
+  "yieldAfterEveryStrip": true,
+  "reactRoutedExtensions": [
+    "png",
+    "jpg",
+    "jpeg",
+    "gif",
+    "webp",
+    "bmp",
+    "avif",
+    "tif",
+    "tiff",
+    "svg",
+    "pdf"
+  ],
+  "reactRoutedMediaTypes": [
+    "image/png",
+    "image/jpeg",
+    "image/gif",
+    "image/webp",
+    "image/bmp",
+    "image/avif",
+    "image/tiff",
+    "image/svg+xml",
+    "application/pdf"
+  ],
+  "browserMetadataFormats": [
+    "image/png",
+    "image/jpeg",
+    "image/gif",
+    "image/webp",
+    "image/bmp",
+    "image/svg+xml"
+  ],
+  "browserWorkerBitmapFormats": [
+    "image/png",
+    "image/jpeg",
+    "image/gif",
+    "image/webp",
+    "image/bmp"
+  ],
+  "browserPageBitmapFormats": [
+    "image/svg+xml"
+  ],
+  "browserPageDecodeCapacity": 1,
+  "nativeDecodeFormats": [
+    "image/png",
+    "image/jpeg",
+    "image/gif",
+    "image/webp"
+  ],
+  "unimplementedWgpuFormats": [
+    "image/avif",
+    "image/tiff",
+    "application/pdf"
+  ],
+  "pixelFormat": "srgb-rgba8",
+  "colorSpaceConversion": "browser-default-to-srgb",
+  "alpha": "straight",
+  "orientation": "from-image",
+  "resampling": "linear",
+  "oracle": {
+    "sampleCapacity": 4096,
+    "meanChannelDeltaMax": 4,
+    "maxChannelDeltaMax": 48
+  },
+  "cases": [
+    {
+      "name": "cold plan scan",
+      "url": "/reference/plan.jpg",
+      "sourceDigest": "1111111111111111111111111111111111111111111111111111111111111111",
+      "sourceWidth": 2275,
+      "sourceHeight": 2560,
+      "sourceOrientation": 1,
+      "expectedWidth": 2275,
+      "expectedHeight": 2560,
+      "expectedRowsPerStrip": 115,
+      "expectedStripCount": 23,
+      "currentGeneration": true,
+      "expected": "decode"
+    },
+    {
+      "name": "same bytes second pane",
+      "url": "/reference/plan.jpg",
+      "sourceDigest": "1111111111111111111111111111111111111111111111111111111111111111",
+      "sourceWidth": 2275,
+      "sourceHeight": 2560,
+      "sourceOrientation": 1,
+      "expectedWidth": 2275,
+      "expectedHeight": 2560,
+      "expectedRowsPerStrip": 115,
+      "expectedStripCount": 23,
+      "currentGeneration": true,
+      "expected": "reuse"
+    },
+    {
+      "name": "same url changed bytes",
+      "url": "/reference/plan.jpg",
+      "sourceDigest": "2222222222222222222222222222222222222222222222222222222222222222",
+      "sourceWidth": 1373,
+      "sourceHeight": 761,
+      "sourceOrientation": 1,
+      "expectedWidth": 1373,
+      "expectedHeight": 761,
+      "expectedRowsPerStrip": 190,
+      "expectedStripCount": 5,
+      "currentGeneration": true,
+      "expected": "replace"
+    },
+    {
+      "name": "retired surface",
+      "url": "/reference/plan.jpg",
+      "sourceDigest": "3333333333333333333333333333333333333333333333333333333333333333",
+      "sourceWidth": 2275,
+      "sourceHeight": 2560,
+      "sourceOrientation": 1,
+      "expectedWidth": 2275,
+      "expectedHeight": 2560,
+      "expectedRowsPerStrip": 115,
+      "expectedStripCount": 23,
+      "currentGeneration": false,
+      "expected": "cancel"
+    },
+    {
+      "name": "EXIF quarter turn",
+      "url": "/reference/portrait.jpg",
+      "sourceDigest": "4444444444444444444444444444444444444444444444444444444444444444",
+      "sourceWidth": 3,
+      "sourceHeight": 2,
+      "sourceOrientation": 6,
+      "expectedWidth": 2,
+      "expectedHeight": 3,
+      "expectedRowsPerStrip": 131072,
+      "expectedStripCount": 1,
+      "currentGeneration": true,
+      "expected": "decode"
+    }
+  ]
+}

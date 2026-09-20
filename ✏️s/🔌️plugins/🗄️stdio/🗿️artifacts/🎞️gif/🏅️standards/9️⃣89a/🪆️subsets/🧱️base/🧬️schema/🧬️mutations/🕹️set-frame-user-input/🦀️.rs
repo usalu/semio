@@ -7,6 +7,7 @@ use super::*;
 //#region 🔖️Payload
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
+#[dsl(keyword = "set-frame-user-input")]
 pub struct SetFrameUserInput {
     pub(crate) index: usize,
     pub(crate) user_input: bool,

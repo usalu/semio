@@ -1186,8 +1186,8 @@ export { hostLabel, lineRangeAt, multiSpanReplace, TextEditorHost };
 //#endregion 🔖️TextEditorHost
 
 //#region 🔖️TableHost
-import { TableHost } from "../../🧱️elements/📊️Table/🟦️.tsx";
-export { TableHost };
+import { TableHost, tableStepperClampedDelta, tableStepperKeyDelta } from "../../🧱️elements/📊️Table/🟦️.tsx";
+export { TableHost, tableStepperClampedDelta, tableStepperKeyDelta };
 //#endregion 🔖️TableHost
 
 //#region 🔖️Paint2dHost
@@ -1410,9 +1410,21 @@ export { EventFeedHost };
 import { createHubConnectionFetchPortV1, hubUiLabel, useHubConnection, type HubConnectionPortV1, type HubConnectionValueV1, type HubFetchResponseV1, type HubInviteCapabilityV1, type HubRedemptionStateV1 } from "../../🧱️elements/🔗️HubConnection/🟦️.tsx";
 import { HubSignInPane, hubSignInFormOfferedV1, hubSignInSubmittableV1, type HubSignInPaneProps } from "../../🧱️elements/🔐️HubSignIn/🟦️.tsx";
 import { SpaceBrowser, spaceBrowserPresencePeersV1, type SpaceBrowserProps } from "../../🧱️elements/🏘️SpaceBrowser/🟦️.tsx";
-export { HubSignInPane, SpaceBrowser, createHubConnectionFetchPortV1, hubSignInFormOfferedV1, hubSignInSubmittableV1, hubUiLabel, spaceBrowserPresencePeersV1, useHubConnection };
-export type { HubConnectionPortV1, HubConnectionValueV1, HubFetchResponseV1, HubInviteCapabilityV1, HubRedemptionStateV1, HubSignInPaneProps, SpaceBrowserProps };
+/** 🤖️ ticket 26/09/18 slice M6b — the delegation pane that turns a signed-in human into the issuer
+ * of an AI agent's own scoped, revocable principal in the space that is open. */
+import { AgentDelegations, agentDelegationInstantV1, type AgentDelegationsProps } from "../../🧱️elements/🤖️AgentDelegations/🟦️.tsx";
+export { AgentDelegations, HubSignInPane, SpaceBrowser, agentDelegationInstantV1, createHubConnectionFetchPortV1, hubSignInFormOfferedV1, hubSignInSubmittableV1, hubUiLabel, spaceBrowserPresencePeersV1, useHubConnection };
+export type { AgentDelegationsProps, HubConnectionPortV1, HubConnectionValueV1, HubFetchResponseV1, HubInviteCapabilityV1, HubRedemptionStateV1, HubSignInPaneProps, SpaceBrowserProps };
 //#endregion 🔖️HubConnection
+
+//#region 🔖️HubFirstRun
+/** 🎓️ ticket 26/09/18/OS-HUB-COLLABORATION-AI-END-TO-END slice D2 (G12 #12) — the hub first-run
+ * walkthrough (sign in → create or join a space → invite), rendered through the shell's existing
+ * `UIIntroduction` surface rather than a second onboarding chrome. */
+import { HubFirstRun, hubFirstRunStageAtIndex, type HubFirstRunProps } from "../../🧱️elements/🎓️HubFirstRun/🟦️.tsx";
+export { HubFirstRun, hubFirstRunStageAtIndex };
+export type { HubFirstRunProps };
+//#endregion 🔖️HubFirstRun
 
 //#region 🔖️SpacesI18n
 /** 📇️ ticket 26/08/16/HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-STUDIOS — `ui.home.*`/`ui.space.*`/

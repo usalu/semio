@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json.schemas.assets.semio-tech.com/framework/ui/render/schema.json#/$defs/World3dLightingFixture",
+  "schemaVersion": 1,
+  "worldEnvironment": {
+    "ambient": { "intensity": 0.42, "color": "#336699" },
+    "sun": { "enabled": true, "azimuth": 120, "elevation": 25, "intensity": 1.7, "color": "#ffd080" },
+    "shadow": { "enabled": true, "opacity": 0.65, "softness": 1.75 },
+    "material": { "color": "#587ca8", "metalness": 0.63, "roughness": 0.27, "emissive": "#2a1048", "emissiveIntensity": 2.4 }
+  },
+  "iconRenderRequest": {
+    "assetUrl": "fixture://neutral.glb",
+    "format": "png",
+    "camera": { "position": [4, -3, 8], "target": [0, 0, 0], "zoom": 1 },
+    "lights": { "ambientIntensity": 0.42, "ambientColor": "#336699", "sunAzimuth": 120, "sunElevation": 25, "sunIntensity": 1.7, "sunColor": "#ffd080" },
+    "width": 128,
+    "height": 96,
+    "shadowEnabled": true,
+    "material": { "color": "#587ca8", "metalness": 0.63, "roughness": 0.27, "emissive": "#2a1048", "emissiveIntensity": 2.4 }
+  },
+  "sample": { "normal": [0.25, 0.45, 0.8573214099741123], "baseColor": "#587ca8" }
+}

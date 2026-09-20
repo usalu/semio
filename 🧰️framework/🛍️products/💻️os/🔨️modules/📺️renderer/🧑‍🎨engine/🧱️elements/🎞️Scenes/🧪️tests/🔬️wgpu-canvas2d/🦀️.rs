@@ -1,4 +1,3 @@
-
 use super::*;
 
 fn canvas_scene(surface_id: &str, layers_json: String) -> UiComponentSceneNode {
@@ -26,6 +25,96 @@ fn canvas_scene(surface_id: &str, layers_json: String) -> UiComponentSceneNode {
         block_list: None,
         menu: None,
     }
+}
+
+fn seed_catalogue_hover(scene: &UiComponentSceneNode) {
+    CANVAS_CATALOGUE_HOVER.with(|cell| {
+        *cell.borrow_mut() = Some(CanvasCatalogueHover {
+            window_id: "canvas-catalogue-terminal-window".into(),
+            document_generation: 7,
+            surface_id: scene.surface_id.clone(),
+            controller_id: scene.controller_id.clone(),
+            last_x: 0.0,
+            last_y: 0.0,
+            last_dispatch_ms: 0.0,
+            cancellation_requested: false,
+        });
+    });
+}
+
+fn catalogue_actions(input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Vec<ActionDescriptor> {
+    crate::collect_fixture_actions(input)
+}
+
+#[test]
+fn catalogue_drop_publishes_one_terminal_leave_drop_slice_and_preserves_raw_payload() {
+    let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🖱️ui/🧪️fixtures/🛒️canvas-catalogue-terminal/🔣️.json")).expect("shared catalogue terminal fixture");
+    let mut scene = canvas_scene(fixture["surface"]["id"].as_str().unwrap(), "[]".into());
+    scene.controller_id = fixture["surface"]["controllerId"].as_str().unwrap().into();
+    let inner = Rect::new(0.0, 0.0, fixture["surface"]["width"].as_f64().unwrap() as f32, fixture["surface"]["height"].as_f64().unwrap() as f32);
+
+    for row in fixture["cases"].as_array().unwrap().iter().filter(|row| row["terminal"] != "nonCatalogue") {
+        seed_catalogue_hover(&scene);
+        let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
+        let point = &row["point"];
+        let accepted = canvas_catalogue_drop_into(
+            &scene,
+            inner,
+            "canvas-catalogue-terminal-window",
+            7,
+            point["x"].as_f64().unwrap() as f32,
+            point["y"].as_f64().unwrap() as f32,
+            row["rawPayload"].as_str().unwrap(),
+            &mut input,
+        )
+        .expect("terminal action batch admits");
+        assert_eq!(accepted, row["terminal"] != "empty");
+        let actions = catalogue_actions(&mut input);
+        assert_eq!(actions.iter().map(|action| action.action.as_str()).collect::<Vec<_>>(), row["expectedActions"].as_array().unwrap().iter().map(|action| action.as_str().unwrap()).collect::<Vec<_>>());
+        if let Some(drop) = actions.iter().find(|action| action.action == "canvasDrop") {
+            let args = Value::from(drop.args.as_ref().unwrap());
+            assert_eq!(args["dragData"], row["rawPayload"], "malformed catalogue text stays byte-for-byte owned by the application decoder");
+            assert_eq!(args["x"].as_f64(), point["x"].as_f64());
+            assert_eq!(args["y"].as_f64(), point["y"].as_f64());
+        }
+        assert!(CANVAS_CATALOGUE_HOVER.with(|cell| cell.borrow().is_none()), "a published terminal slice clears the hover owner");
+    }
+}
+
+#[test]
+fn catalogue_drop_refusal_keeps_hover_and_never_publishes_a_partial_pair() {
+    let scene = canvas_scene("canvas-catalogue-refusal", "[]".into());
+    let inner = Rect::new(0.0, 0.0, 320.0, 200.0);
+    seed_catalogue_hover(&scene);
+    let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
+    for index in 0..ui_wgpu::wgpu::action::ACTION_QUEUE_ITEM_CAPACITY - 1 {
+        let action = format!("occupied-{index}");
+        let bytes = ui_wgpu::wgpu::checked_action_string_bytes(&["fixture", action.as_str()]).unwrap();
+        input.reserve_action("fixture", &action, bytes).unwrap().publish().unwrap();
+    }
+    assert_eq!(
+        canvas_catalogue_drop_into(&scene, inner, "canvas-catalogue-terminal-window", 7, 73.0, 41.0, "{\"kind\":\"rect\"}", &mut input),
+        Err(ui_wgpu::wgpu::BoundedActionFault::ItemCredits),
+    );
+    assert!(CANVAS_CATALOGUE_HOVER.with(|cell| cell.borrow().is_some()), "refusal retains the terminal hover owner for a bounded retry");
+    let first = input.take_action_step().unwrap().unwrap().into_descriptor().unwrap();
+    assert_eq!(first.action, "occupied-0", "refusal leaves the pre-existing FIFO unchanged and publishes neither terminal member");
+    assert!(canvas_catalogue_drop_into(&scene, inner, "canvas-catalogue-terminal-window", 7, 73.0, 41.0, "{\"kind\":\"rect\"}", &mut input).unwrap());
+    let actions = catalogue_actions(&mut input);
+    assert_eq!(actions[actions.len() - 2..].iter().map(|action| action.action.as_str()).collect::<Vec<_>>(), ["canvasDragLeave", "canvasDrop"]);
+    assert!(CANVAS_CATALOGUE_HOVER.with(|cell| cell.borrow().is_none()));
+}
+
+#[test]
+fn foreign_drop_is_inert_and_does_not_consume_the_catalogue_hover_owner() {
+    let scene = canvas_scene("canvas-catalogue-foreign", "[]".into());
+    seed_catalogue_hover(&scene);
+    let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
+    let drag_data = std::collections::HashMap::from([("text/plain".to_string(), "foreign".to_string())]);
+    assert!(!crate::interpreter::canvas_catalogue_drop("unpublished-window", 10.0, 10.0, &drag_data, &mut input));
+    assert!(catalogue_actions(&mut input).is_empty());
+    assert!(CANVAS_CATALOGUE_HOVER.with(|cell| cell.borrow().is_some()));
+    CANVAS_CATALOGUE_HOVER.with(|cell| *cell.borrow_mut() = None);
 }
 
 /// 🖊️ A shape-selection ring should be tinted amber (matching `drawBoundsLayer`'s hardcoded

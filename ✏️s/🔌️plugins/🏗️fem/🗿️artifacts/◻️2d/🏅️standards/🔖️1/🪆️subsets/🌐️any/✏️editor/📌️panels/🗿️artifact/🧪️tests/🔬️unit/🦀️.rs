@@ -94,6 +94,13 @@ fn request(node_key: &str, open: Option<bool>, offset: u32, rows: u32) -> TreeWi
     TreeWindowRequest { body_key: BODY_KEY.into(), node_key: node_key.into(), open, offset, rows }
 }
 
+/// 🔑️ The WINDOW PATH a nested container is addressed by — the enclosing windowed containers' keys,
+/// outermost first, then its own key (`TreeWindows::path_of`). A load-case row is a row of the
+/// `load-cases` section's window, so a host request for it names the whole path, never the bare id.
+fn load_case_path(case_id: &str) -> String {
+    format!("{TREE_NAMESPACE}.load-cases{}{case_id}", semio_framework_plugin::TREE_WINDOW_PATH_SEPARATOR)
+}
+
 fn viewing(requests: Vec<TreeWindowRequest>) -> ViewModel {
     ViewModel { tree_windows: requests, ..Default::default() }
 }
@@ -351,7 +358,7 @@ async fn an_oversized_document_stamps_every_extent_and_materialises_one_viewport
 #[semio_framework_async_macros::async_test]
 async fn a_closed_container_stamps_its_extent_and_builds_no_child() {
     let document = oversized();
-    let view = viewing(vec![request(&format!("{TREE_NAMESPACE}.nodes"), Some(false), 0, 48), request("wind", Some(false), 0, 48)]);
+    let view = viewing(vec![request(&format!("{TREE_NAMESPACE}.nodes"), Some(false), 0, 48), request(&load_case_path("wind"), Some(false), 0, 48)]);
     let tree = render(&document, &Fem2dInteractionSnapshot::default(), english(), &TreeWindows::for_body(&view, BODY_KEY)).expect("a closed container still assembles");
     let nodes = section_node(&tree, "nodes");
     assert_eq!(window_of(nodes).total, 60, "a closed section still announces its extent");
@@ -366,7 +373,7 @@ async fn a_closed_container_stamps_its_extent_and_builds_no_child() {
 #[semio_framework_async_macros::async_test]
 async fn a_window_request_materialises_exactly_its_own_range() {
     let document = oversized();
-    let view = viewing(vec![request(&format!("{TREE_NAMESPACE}.nodes"), None, 20, 8), request("wind", None, 5, 4)]);
+    let view = viewing(vec![request(&format!("{TREE_NAMESPACE}.nodes"), None, 20, 8), request(&load_case_path("wind"), None, 5, 4)]);
     let tree = render(&document, &Fem2dInteractionSnapshot::default(), english(), &TreeWindows::for_body(&view, BODY_KEY)).expect("a windowed document assembles");
     let nodes = section_node(&tree, "nodes");
     assert_eq!(window_of(nodes), TreeWindow { total: 60, offset: 20 });

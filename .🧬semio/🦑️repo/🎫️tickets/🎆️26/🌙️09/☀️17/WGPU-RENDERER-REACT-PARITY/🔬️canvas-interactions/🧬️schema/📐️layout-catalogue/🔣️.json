@@ -1,0 +1,147 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio.tech/schema/probes/layout-catalogue-physical.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["target", "transport", "mime", "kindMimePrefix", "catalogueTabId", "artifactTabId", "transferHandlePrefix", "pageSectionId", "frameSectionId", "seed", "previewAction", "leaveAction", "dropAction", "cases"],
+  "properties": {
+    "target": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["plugin", "surfaceKind", "controllerId", "windowId", "surfaceId", "reactSelector", "initialExampleId", "urls"],
+      "properties": {
+        "plugin": { "const": "layout" },
+        "surfaceKind": { "const": "canvas-2d" },
+        "controllerId": { "const": "s.layout.layout@1/*#editor" },
+        "windowId": { "const": "layout-blueprint" },
+        "surfaceId": { "const": "layout.play.blueprint" },
+        "reactSelector": { "type": "string", "minLength": 1 },
+        "initialExampleId": { "const": "demo" },
+        "urls": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["react", "wgpu"],
+          "properties": {
+            "react": { "const": "http://127.0.0.1:6079/?plugin=layout" },
+            "wgpu": { "const": "http://127.0.0.1:6179/?plugin=layout" }
+          }
+        }
+      }
+    },
+    "transport": { "const": "pointer-catalogue" },
+    "mime": { "const": "application/x-semio-catalogue-item" },
+    "kindMimePrefix": { "const": "application/x-semio-catalogue-kind." },
+    "catalogueTabId": { "const": "framework.panel.catalogue" },
+    "artifactTabId": { "const": "framework.panel.artifact" },
+    "transferHandlePrefix": { "const": "tree.drag.transfer." },
+    "pageSectionId": { "const": "layout-document.pages" },
+    "frameSectionId": { "const": "layout-document.frames" },
+    "seed": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["exampleId", "reset", "pages", "frames"],
+      "properties": {
+        "exampleId": { "const": "demo" },
+        "reset": { "const": "browser-reload" },
+        "pages": { "const": 2 },
+        "frames": { "const": 3 }
+      }
+    },
+    "previewAction": { "const": "canvasDragOver" },
+    "leaveAction": { "const": "canvasDragLeave" },
+    "dropAction": { "const": "canvasDrop" },
+    "cases": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "prefixItems": [
+        { "$ref": "#/$defs/page" },
+        { "$ref": "#/$defs/rect" },
+        { "$ref": "#/$defs/text" },
+        { "$ref": "#/$defs/image" }
+      ],
+      "items": false
+    }
+  },
+  "$defs": {
+    "base": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "kind", "sourceId", "dragPayload", "previewPixels", "createdCollection", "createdDelta", "consequence"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "kind": { "enum": ["page", "rect", "text", "image"] },
+        "sourceId": { "type": "string", "minLength": 1 },
+        "dragPayload": { "type": "string", "minLength": 1 },
+        "previewPixels": { "enum": ["changed", "unchanged"] },
+        "createdCollection": { "enum": ["pages", "frames"] },
+        "createdDelta": { "const": 1 },
+        "consequence": { "type": "string", "minLength": 1 }
+      }
+    },
+    "page": {
+      "allOf": [
+        { "$ref": "#/$defs/base" },
+        {
+          "type": "object",
+          "properties": {
+            "id": { "const": "page-catalogue-drop" },
+            "kind": { "const": "page" },
+            "sourceId": { "const": "layout-catalogue.page" },
+            "dragPayload": { "const": "{\"kind\":\"page\"}" },
+            "previewPixels": { "const": "unchanged" },
+            "createdCollection": { "const": "pages" }
+          }
+        }
+      ]
+    },
+    "rect": {
+      "allOf": [
+        { "$ref": "#/$defs/base" },
+        {
+          "type": "object",
+          "properties": {
+            "id": { "const": "rect-catalogue-drop" },
+            "kind": { "const": "rect" },
+            "sourceId": { "const": "layout-catalogue.rect" },
+            "dragPayload": { "const": "{\"kind\":\"rect\"}" },
+            "previewPixels": { "const": "changed" },
+            "createdCollection": { "const": "frames" }
+          }
+        }
+      ]
+    },
+    "text": {
+      "allOf": [
+        { "$ref": "#/$defs/base" },
+        {
+          "type": "object",
+          "properties": {
+            "id": { "const": "text-catalogue-drop" },
+            "kind": { "const": "text" },
+            "sourceId": { "const": "layout-catalogue.text" },
+            "dragPayload": { "const": "{\"kind\":\"text\"}" },
+            "previewPixels": { "const": "changed" },
+            "createdCollection": { "const": "frames" }
+          }
+        }
+      ]
+    },
+    "image": {
+      "allOf": [
+        { "$ref": "#/$defs/base" },
+        {
+          "type": "object",
+          "properties": {
+            "id": { "const": "image-catalogue-drop" },
+            "kind": { "const": "image" },
+            "sourceId": { "const": "layout-catalogue.image" },
+            "dragPayload": { "const": "{\"kind\":\"image\"}" },
+            "previewPixels": { "const": "changed" },
+            "createdCollection": { "const": "frames" }
+          }
+        }
+      ]
+    }
+  }
+}

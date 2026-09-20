@@ -12,6 +12,10 @@ pub const DIRECTORY_SESSION_AUTHORITY_MAX_BYTES: usize = 2048;
 pub enum DirectorySessionKindV1 {
     External,
     DevelopmentLocal,
+    /// 🤖️ An AI agent acting under a credential a signed-in human delegated to it. The session
+    /// belongs to the delegating user's account for membership and role, but the principal is the
+    /// agent: `context_resolve`, the presence roster and per-actor undo all treat it as its own.
+    Agent,
 }
 
 /// 🔐️ Public identity plus a digest binding to one exact live server session.

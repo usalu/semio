@@ -5,7 +5,14 @@ use crate::editor::fem3d::unit_tests::context::{dispatch, fem3d_app, render as r
 use crate::editor::fem3d::Fem3dCommand;
 use semio_framework_plugin::{ComponentTree, Locale, Terminology, TreeWindows, ViewModel};
 
+/// 🎬️ The bundled `demo` fixture — the only built-in document carrying solids, supports and both
+/// load cases, so every law over `n20_l1`/`sol1`/`s_00`/`l2` is stated over it.
 fn demo() -> Fem3dSnapshot {
+    crate::standards::v1::subsets::any::schema::snapshot::text::fem3d_demo_snapshot()
+}
+
+/// 🌲️ The document the app actually boots on (`concrete-forest`) — frames and member UDLs only.
+fn boot() -> Fem3dSnapshot {
     crate::standards::v1::subsets::any::schema::snapshot::text::fem3d_boot_snapshot()
 }
 
@@ -125,7 +132,7 @@ async fn a_selected_load_names_its_owning_case_3d() {
 
 #[semio_framework_async_macros::async_test]
 async fn a_selected_load_case_lists_its_loads_as_picks_3d() {
-    let json = english(&demo(), &["live"]);
+    let json = english(&boot(), &["live"]);
     assert_eq!(component_at(&json, "fem3d-play-inspection.load-case.self-weight.toggle"), "toggle");
     assert!(json.contains("patchLoadCase"));
     assert!(json.contains("interactionSelect"), "a load row hands the load to the framework-owned selection");
@@ -152,7 +159,7 @@ async fn a_selected_combination_renders_one_factor_input_per_term_3d() {
 
 #[semio_framework_async_macros::async_test]
 async fn a_multi_selection_headers_the_count_and_inspects_the_first_3d() {
-    let json = english(&demo(), &["lc1b", "lc2b", "l_col1"]);
+    let json = english(&boot(), &["lc1b", "lc2b", "l_col1"]);
     assert!(json.contains("3 Selected"), "{json}");
     assert!(json.contains("fem3d-play-inspection.node.x.input"), "the fields belong to the first selected id");
 }

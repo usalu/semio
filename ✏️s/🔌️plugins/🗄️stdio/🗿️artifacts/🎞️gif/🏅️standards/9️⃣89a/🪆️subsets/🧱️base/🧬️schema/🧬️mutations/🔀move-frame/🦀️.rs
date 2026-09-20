@@ -7,6 +7,7 @@ use super::*;
 //#region 🔖️Payload
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
+#[dsl(keyword = "move-frame")]
 pub struct MoveFrame {
     pub(crate) from: usize,
     pub(crate) to: usize,

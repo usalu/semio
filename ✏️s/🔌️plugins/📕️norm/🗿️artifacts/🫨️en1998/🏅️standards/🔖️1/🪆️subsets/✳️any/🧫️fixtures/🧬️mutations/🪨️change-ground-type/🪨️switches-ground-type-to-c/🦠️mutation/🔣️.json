@@ -1,5 +1,4 @@
 {
-  "ChangeGroundType": {
-    "newGroundType": "c"
-  }
+  "mutation": "changeGroundType",
+  "newGroundType": "c"
 }

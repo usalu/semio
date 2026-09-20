@@ -120,7 +120,10 @@ async fn home_declares_every_fixture_migrated_id_and_backs_it_with_the_owned_fac
     assert_eq!(factory_contract_ids::<semio_s_artifact_space_home::editor::home::HomeRetainedCommandJobFactory>(), owned);
     assert_eq!(factory_host_only_ids::<semio_s_artifact_space_home::editor::home::HomeRetainedCommandJobFactory>(), fixture_host_only);
     assert_eq!(<EditorApp<semio_s_artifact_space_home::editor::home::HomeApp> as ArtifactApp>::bounded_first_step_tool_proofs().len(), owned.len());
-    for tool in ["importSpace", "foldDirectoryEvents", "createStudio", "deleteVirtualFileSystemNode", "renameSpace", "bindSpaceFile"] {
+    // 🏠️ Home's retained (migrated) surface is the nine rows `HOME_RETAINED_TOOL_IDS` declares and the
+    // committed fixture pins above; the spot-check below keeps this assertion from going vacuous if
+    // the fixture and the factory ever drift to the same empty set together.
+    for tool in ["openSpace", "navigateVirtualFileSystemNode", "goHome", "createSpace", "deleteSpace", "presenceHeartbeat"] {
         assert!(owned.contains(tool), "Home's own rows and the shell dispatch {tool}");
     }
 }
@@ -246,7 +249,10 @@ async fn every_app_instance_constructs_against_its_registered_proof_catalog() {
     let mut home = VcsArtifactApp::<EditorApp<semio_s_artifact_space_home::editor::home::HomeApp>>::with_registry(Default::default(), AppActionRegistry::from_definition(&semio_s_artifact_space_home::editor::home::create_home_app().await)).await;
     let mut index = VcsArtifactApp::<EditorApp<semio_s_artifact_space_space::editor::space_index::SpaceIndexEditor>>::with_registry(Default::default(), AppActionRegistry::from_definition(&semio_s_artifact_space_space::editor::space_index::create_space_index_editor())).await;
     assert_eq!(<engine::space::SpaceApp as ArtifactApp>::bounded_first_step_tool_proofs().len(), 15);
-    assert_eq!(<EditorApp<semio_s_artifact_space_home::editor::home::HomeApp> as ArtifactApp>::bounded_first_step_tool_proofs().len(), 18);
+    // 🏠️ 11 since ticket 26/09/18 S4: `applyDirectoryEventPage` (the directory bootstrap's
+    // acknowledgement) and `createStudio` (the local, hub-free studio path) joined Home's retained
+    // set — both were `BatchOnlyPendingRewrite` and therefore hard-dead at UI dispatch.
+    assert_eq!(<EditorApp<semio_s_artifact_space_home::editor::home::HomeApp> as ArtifactApp>::bounded_first_step_tool_proofs().len(), 11);
     assert_eq!(<EditorApp<semio_s_artifact_space_space::editor::space_index::SpaceIndexEditor> as ArtifactApp>::bounded_first_step_tool_proofs().len(), 14);
     artifact_app_laws::close_registered_fixture_app(&mut studio);
     artifact_app_laws::close_registered_fixture_app(&mut home);

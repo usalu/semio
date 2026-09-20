@@ -43,16 +43,27 @@ pub(crate) mod context {
 
     /// 🧪️ A MOUNTED app: bound to [`FEM3D_TEST_INSTANCE`], so a typed command reaches its retained
     /// route instead of being refused with `interactive-job.live-instance`, and its publication
-    /// actually settles into the stores. It boots on the bundled demo.
+    /// actually settles into the stores. It boots on whatever `Fem3dPlayApp::initial_snapshot`
+    /// boots on (the `concrete-forest` example); [`fem3d_demo_app`] loads the `demo` fixture.
     pub fn fem3d_app() -> Fem3dApp {
         let mut app = semio_framework_plugin::resolve_ready(new_app_with_registry::<EditorApp<Fem3dPlayApp>>(manifest));
         semio_framework_plugin::resolve_ready(app.bind_instance_id(FEM3D_TEST_INSTANCE));
         Fem3dApp(app)
     }
 
-    /// 🧪️ A mounted app on the EMPTY document — the app boots on the bundled demo, so a test that
-    /// counts what it adds itself starts from nothing instead (any example id but the demo's loads
-    /// the empty snapshot).
+    /// 🧪️ A mounted app on the bundled `demo` document — the app boots on `concrete-forest` (frames
+    /// only), so every law stated over the demo's solids, supports and load cases (`sol1`, `ss_0`,
+    /// `l2`, `hea200`, …) loads that fixture through the real `setActiveExample` door first.
+    pub async fn fem3d_demo_app() -> Fem3dApp {
+        let mut app = fem3d_app();
+        dispatch(&mut app, Fem3dCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: crate::examples::demo::ID.into() })).await;
+        assert!(!app.snapshot().expect("snapshot").solids.is_empty(), "the demo example must load the document carrying the meshed slab");
+        app
+    }
+
+    /// 🧪️ A mounted app on the EMPTY document — the app boots on a bundled example, so a test that
+    /// counts what it adds itself starts from nothing instead (any unknown example id loads the
+    /// empty snapshot).
     pub async fn fem3d_empty_app() -> Fem3dApp {
         let mut app = fem3d_app();
         dispatch(&mut app, Fem3dCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: "empty".into() })).await;
@@ -174,7 +185,7 @@ async fn retained_route_dispositions_are_exact_and_exhaustive() {
     let definition = create_fem3d_app();
     let model_window = definition.window_kinds.iter().find(|window| window.id == window_model::FEM3D_WINDOW_MODEL).expect("model window declared");
     for tool_id in FEM3D_RETAINED_TOOL_IDS {
-        let action = model_window.actions.iter().find(|action| action.id == *tool_id).unwrap_or_else(|| panic!("action {tool_id} is declared by the manifest"));
+        let action = semio_framework::window_kind_actions(&definition, model_window).into_iter().find(|action| action.id == *tool_id).unwrap_or_else(|| panic!("action {tool_id} is declared by the manifest"));
         assert_eq!(action.semantics.execution.interactive_job, InteractiveJobClassification::Migrated, "action {tool_id} must be UI-dispatchable");
     }
 }
@@ -417,7 +428,7 @@ async fn manifest_labels_resolve_german_3d() {
     let definition = create_fem3d_app();
     let window = definition.window_kinds.iter().find(|w| w.id == window_model::FEM3D_WINDOW_MODEL).expect("model window declared");
     assert_eq!(window.label.resolve(Terminology::Native, Locale::De), "Modell");
-    let action = window.actions.iter().find(|action| action.id == "addFrame").expect("addFrame declared");
+    let action = semio_framework::window_kind_actions(&definition, window).into_iter().find(|action| action.id == "addFrame").expect("addFrame declared");
     assert_eq!(action.label.resolve(Terminology::Native, Locale::De), "Rahmen hinzufügen");
     assert_eq!(action.label.resolve(Terminology::Native, Locale::En), "Add Frame");
 }
@@ -429,6 +440,39 @@ async fn undo_restores_document_after_add_node() {
     let mut app = fem3d_app();
     let before = app.snapshot().expect("snapshot").nodes.len();
     assert_undo_redo_round_trip(&mut app, Fem3dCommand::AddNode(add_node::AddNode { x: 1.0, y: 2.0, z: 3.0 }), |app| app.snapshot().expect("snapshot").nodes.len(), before, before + 1).await;
+}
+
+/// 🛡️ The same round trip for `addSupport`, the verb 🏗️fem3d's own bar presses. B3f measured it
+/// applying (`edits 0 → 1`) and then NOT undoing — four routes pressed, every one answered `ok`, no
+/// `Undo` ledger row, the guest republishing an identical revision five times with zero refusals —
+/// while the identical binary's 🏗️fem2d bar undid cleanly (2026-09-20). `addSupport` is the verb the
+/// live tree row emits with an EMPTY `node_id`, which is the shape this law pins.
+#[semio_framework_async_macros::async_test]
+async fn undo_restores_document_after_add_support() {
+    let mut app = fem3d_app();
+    let node_id = app.snapshot().expect("snapshot").nodes.first().map(|node| node.id.clone()).expect("the bundled example has nodes");
+    let before = app.snapshot().expect("snapshot").supports.len();
+    assert_undo_redo_round_trip(
+        &mut app,
+        Fem3dCommand::AddSupport(add_support::AddSupport { node_id, fixed: crate::FemDof::ALL.to_vec() }),
+        |app| app.snapshot().expect("snapshot").supports.len(),
+        before,
+        before + 1,
+    )
+    .await;
+}
+
+/// 🧿️ The EMPTY-`node_id` shape the live tree row emits when nothing is selected: it must not
+/// journal a history row it cannot apply. B3f's bar read `edits 0 → 1` as a real mutation and then
+/// found undo silently declining — the phantom-edit signature.
+#[semio_framework_async_macros::async_test]
+async fn add_support_without_a_node_does_not_journal_a_phantom_edit() {
+    let mut app = fem3d_app();
+    let before = app.snapshot().expect("snapshot").supports.len();
+    let result = dispatch(&mut app, Fem3dCommand::AddSupport(add_support::AddSupport { node_id: String::new(), fixed: crate::FemDof::ALL.to_vec() })).await;
+    let after = app.snapshot().expect("snapshot").supports.len();
+    assert_eq!(after, before, "a support with no node must not reach the document: {result:?}");
+    assert!(result.history_patch.is_none(), "a verb that changes nothing must not deliver a history row the bar can read as a mutation: {:?}", result.history_patch);
 }
 
 #[semio_framework_async_macros::async_test]

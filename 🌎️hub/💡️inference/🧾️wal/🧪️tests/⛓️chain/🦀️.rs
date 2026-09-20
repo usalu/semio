@@ -143,7 +143,7 @@ async fn chain_segments(fixture: &serde_json::Value, case: &serde_json::Value, d
         for tx in transactions {
             writer.write_record(db::wal::WAL_TX_BEGIN, true, &tx.to_le_bytes(), protocol::codec::ids::CodecId(0)).await.unwrap();
             let mut event = durable.record.canonical_pack().to_vec();
-            if tx == 1 {
+            if tx != 1 {
                 let last = event.len() - 1;
                 event[last] ^= 1;
             }
@@ -235,86 +235,90 @@ async fn inference_wal_chain_rejects_crc_valid_tampering_and_exact_cross_segment
     }
 }
 
-#[tokio::test]
-async fn inference_wal_chain_cancellation_retires_hashing_and_compacted_suffix_is_not_a_genesis_proof() {
-    let chain: serde_json::Value = serde_json::from_str(include_str!("../../../../🧫️fixtures/⛓️inference-wal-chain-v1/🔣️.json")).unwrap();
-    let fixture = fixture();
-    let durable = durable_fixture_record(&fixture);
-    let segments = chain_segments(&fixture, &chain["cases"][0], &durable).await;
-    for owner in chain["hashingOwnership"].as_array().unwrap() {
-        let mut verifier = InferenceWalVerifierV1::new(retained_storage(&fixture, &segments, 0).await);
-        let gate = Arc::new(tokio::sync::Semaphore::new(0));
-        Arc::get_mut(&mut verifier.state).unwrap().hashing_gate = Some(gate.clone());
-        let fence = Arc::new(InferenceDocumentFenceV1::new(scope(&fixture), 17).unwrap());
-        let control = Arc::new(InferenceOperationControlV1::new(2000, 64).unwrap());
-        let mut future = Box::pin(verifier.verify(target(&fixture, &fixture["traces"][0], &durable), fence, control.clone()));
-        assert!(futures::poll!(future.as_mut()).is_pending());
-        tokio::time::timeout(Duration::from_secs(2), async {
-            while verifier.state.hashing_steps.load(Ordering::Acquire) == 0 {
-                tokio::task::yield_now().await;
-            }
-        })
-        .await
-        .unwrap();
-        let expected = if owner["expected"] == "expired" { InferenceErrorV1::Expired } else { InferenceErrorV1::Cancelled };
-        match owner["interrupt"].as_str().unwrap() {
-            "drop" => drop(future),
-            "cancel" => {
-                control.cancel();
-                assert!(matches!(tokio::time::timeout(Duration::from_secs(1), future).await.unwrap(), Err(error) if error == expected));
-            }
-            "deadline" => {
-                assert!(matches!(tokio::time::timeout(Duration::from_secs(3), future).await.unwrap(), Err(error) if error == expected));
-            }
-            _ => panic!("unknown hashing interrupt"),
-        }
-        assert_eq!(control.checkpoint(0), Err(expected));
-        assert_eq!(verifier.active() as u64, owner["heldActive"].as_u64().unwrap());
-        assert_eq!(verifier.close_steps(), 0);
-        assert_eq!(control.progress().0, owner["stoppedProgress"].as_u64().unwrap());
-        assert_eq!(verifier.state.hashing_steps.load(Ordering::Acquire), owner["hashingSteps"].as_u64().unwrap());
-        gate.add_permits(1);
-        tokio::time::timeout(Duration::from_secs(2), async {
-            while verifier.active() != 0 {
-                tokio::task::yield_now().await;
-            }
-        })
-        .await
-        .unwrap();
-        assert_eq!(verifier.active() as u64, owner["releasedActive"].as_u64().unwrap());
-        assert!(verifier.close_steps() > 0);
-        assert_eq!(control.progress().0, 0);
-        assert_eq!(verifier.state.hashing_steps.load(Ordering::Acquire), 1);
-    }
-    for boundary in chain["retainedBoundaries"].as_array().unwrap() {
-        let segments = chain_segments(&fixture, &serde_json::json!({"segments": 2, "mutation": boundary["mutation"]}), &durable).await;
-        let backend = retained_storage(&fixture, &segments, 1).await;
-        let storage = backend.wal().await;
-        let document = db::ArtifactId(fixture["documentKey"].as_str().unwrap().into());
-        let control = WalCursorControl::new(Arc::new(AtomicBool::new(false)), Instant::now() + Duration::from_secs(2), 65_536).unwrap();
-        let mut replay = WalReplayCursor::open(&storage, &document, control).await.unwrap();
-        let mut records = 0;
-        loop {
-            match replay.next_step().await.unwrap() {
-                WalReplayStep::Record(mut record) => {
-                    records += 1;
-                    while record.close_step().unwrap() {}
+mod quick {
+    use super::*;
+
+    #[tokio::test]
+    async fn inference_wal_chain_cancellation_retires_hashing_and_compacted_suffix_is_not_a_genesis_proof() {
+        let chain: serde_json::Value = serde_json::from_str(include_str!("../../../../🧫️fixtures/⛓️inference-wal-chain-v1/🔣️.json")).unwrap();
+        let fixture = fixture();
+        let durable = durable_fixture_record(&fixture);
+        let segments = chain_segments(&fixture, &chain["cases"][0], &durable).await;
+        for owner in chain["hashingOwnership"].as_array().unwrap() {
+            let mut verifier = InferenceWalVerifierV1::new(retained_storage(&fixture, &segments, 0).await);
+            let gate = Arc::new(tokio::sync::Semaphore::new(0));
+            Arc::get_mut(&mut verifier.state).unwrap().hashing_gate = Some(gate.clone());
+            let fence = Arc::new(InferenceDocumentFenceV1::new(scope(&fixture), 17).unwrap());
+            let control = Arc::new(InferenceOperationControlV1::new(2000, 64).unwrap());
+            let mut future = Box::pin(verifier.verify(target(&fixture, &fixture["traces"][0], &durable), fence, control.clone()));
+            assert!(futures::poll!(future.as_mut()).is_pending());
+            tokio::time::timeout(Duration::from_secs(2), async {
+                while verifier.state.hashing_steps.load(Ordering::Acquire) == 0 {
+                    tokio::task::yield_now().await;
                 }
-                WalReplayStep::Yield => tokio::task::yield_now().await,
-                WalReplayStep::Done => break,
+            })
+            .await
+            .unwrap();
+            let expected = if owner["expected"] == "expired" { InferenceErrorV1::Expired } else { InferenceErrorV1::Cancelled };
+            match owner["interrupt"].as_str().unwrap() {
+                "drop" => drop(future),
+                "cancel" => {
+                    control.cancel();
+                    assert!(matches!(tokio::time::timeout(Duration::from_secs(1), future).await.unwrap(), Err(error) if error == expected));
+                }
+                "deadline" => {
+                    assert!(matches!(tokio::time::timeout(Duration::from_secs(3), future).await.unwrap(), Err(error) if error == expected));
+                }
+                _ => panic!("unknown hashing interrupt"),
             }
+            assert_eq!(control.checkpoint(0), Err(expected));
+            assert_eq!(verifier.active() as u64, owner["heldActive"].as_u64().unwrap());
+            assert_eq!(verifier.close_steps(), 0);
+            assert_eq!(control.progress().0, owner["stoppedProgress"].as_u64().unwrap());
+            assert_eq!(verifier.state.hashing_steps.load(Ordering::Acquire), owner["hashingSteps"].as_u64().unwrap());
+            gate.add_permits(1);
+            tokio::time::timeout(Duration::from_secs(2), async {
+                while verifier.active() != 0 {
+                    tokio::task::yield_now().await;
+                }
+            })
+            .await
+            .unwrap();
+            assert_eq!(verifier.active() as u64, owner["releasedActive"].as_u64().unwrap());
+            assert!(verifier.close_steps() > 0);
+            assert_eq!(control.progress().0, 0);
+            assert_eq!(verifier.state.hashing_steps.load(Ordering::Acquire), 1);
         }
-        while replay.close_owner_step().unwrap() {}
-        assert!(replay.terminal_is_empty());
-        assert_eq!(records == 4, boundary["replayAccepted"].as_bool().unwrap());
-        drop(replay);
-        drop(storage);
-        let verifier = InferenceWalVerifierV1::new(backend);
-        let fence = Arc::new(InferenceDocumentFenceV1::new(scope(&fixture), 17).unwrap());
-        let result = verifier.verify(target(&fixture, &fixture["traces"][0], &durable), fence, Arc::new(InferenceOperationControlV1::new(2000, 64).unwrap())).await;
-        assert_eq!(matches!(result, Ok(Some(_))), boundary["genesisProofAccepted"].as_bool().unwrap());
-        assert!(matches!(result, Err(InferenceErrorV1::Storage)));
-        assert_eq!(verifier.active(), 0);
-        assert!(verifier.close_steps() > 0);
+        for boundary in chain["retainedBoundaries"].as_array().unwrap() {
+            let segments = chain_segments(&fixture, &serde_json::json!({"segments": 2, "mutation": boundary["mutation"]}), &durable).await;
+            let backend = retained_storage(&fixture, &segments, 1).await;
+            let storage = backend.wal().await;
+            let document = db::ArtifactId(fixture["documentKey"].as_str().unwrap().into());
+            let control = WalCursorControl::new(Arc::new(AtomicBool::new(false)), Instant::now() + Duration::from_secs(2), 65_536).unwrap();
+            let mut replay = WalReplayCursor::open(&storage, &document, control).await.unwrap();
+            let mut records = 0;
+            loop {
+                match replay.next_step().await.unwrap() {
+                    WalReplayStep::Record(mut record) => {
+                        records += 1;
+                        while record.close_step().unwrap() {}
+                    }
+                    WalReplayStep::Yield => tokio::task::yield_now().await,
+                    WalReplayStep::Done => break,
+                }
+            }
+            while replay.close_owner_step().unwrap() {}
+            assert!(replay.terminal_is_empty());
+            assert_eq!(records == 4, boundary["replayAccepted"].as_bool().unwrap());
+            drop(replay);
+            drop(storage);
+            let verifier = InferenceWalVerifierV1::new(backend);
+            let fence = Arc::new(InferenceDocumentFenceV1::new(scope(&fixture), 17).unwrap());
+            let result = verifier.verify(target(&fixture, &fixture["traces"][0], &durable), fence, Arc::new(InferenceOperationControlV1::new(2000, 64).unwrap())).await;
+            assert_eq!(matches!(result, Ok(Some(_))), boundary["genesisProofAccepted"].as_bool().unwrap());
+            assert!(matches!(result, Err(InferenceErrorV1::Storage)));
+            assert_eq!(verifier.active(), 0);
+            assert!(verifier.close_steps() > 0);
+        }
     }
 }

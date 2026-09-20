@@ -1056,12 +1056,15 @@ pub async fn create_space_app() -> App {
         .mutation("patchParameter", LocalizedLabel::native("Patch Parameter", "Parameter aktualisieren")).await
         .mutation("addParameter", LocalizedLabel::native("Add Parameter", "Parameter hinzufügen")).await
         .mutation("removeParameter", LocalizedLabel::native("Remove Parameter", "Parameter entfernen")).await
+        .action_destructive("removeParameter").await
         .mutation("spawnApp", LocalizedLabel::native("Spawn App", "App erzeugen")).await
         .mutation("moveMediaNode", LocalizedLabel::native("Move Media Node", "Medienknoten verschieben")).await
         .mutation("connectMediaPorts", LocalizedLabel::native("Connect Media Ports", "Medien-Ports verbinden")).await
         .mutation("disconnectMediaEdge", LocalizedLabel::native("Disconnect Media Edge", "Medienverbindung trennen")).await
         .action_with(ActionDefinition::bounded_catalog("removeAppInstance", LocalizedLabel::native("Remove App Instance", "App-Instanz entfernen"), ActionKind::Mutation).with_category("selection")).await
+        .action_destructive("removeAppInstance").await
         .mutation("deleteSelection", LocalizedLabel::native("Delete Selection", "Auswahl löschen")).await
+        .action_destructive("deleteSelection").await
         .action_with(ActionDefinition::bounded_catalog("copyAppInstance", LocalizedLabel::native("Copy App Instance", "App-Instanz kopieren"), ActionKind::Mutation).with_category("transfer")).await
         .action_with(ActionDefinition::bounded_catalog("duplicateAppInstance", LocalizedLabel::native("Duplicate App Instance", "App-Instanz duplizieren"), ActionKind::Mutation).with_category("create")).await
         .action_with(ActionDefinition::bounded_catalog("pasteAppInstance", LocalizedLabel::native("Paste App Instance", "App-Instanz einfügen"), ActionKind::Mutation).with_category("transfer")).await
@@ -1072,7 +1075,9 @@ pub async fn create_space_app() -> App {
         .mutation("unbindParameterField", LocalizedLabel::native("Unbind Parameter Field", "Parameterfeld lösen")).await
         .action_with(ActionDefinition::bounded_catalog("reorganizeWorkflow", LocalizedLabel::native("Reorganize Workflow", "Workflow neu anordnen"), ActionKind::Mutation).with_category("transform")).await
         .mutation("workflowEngagementSubmit", LocalizedLabel::native("Workflow Engagement Submit", "Workflow-Eingabe bestätigen")).await
+        .action_audience("workflowEngagementSubmit", semio_framework_plugin::CapabilityAudience::Input).await
         .mutation("compiledDagEngagementSubmit", LocalizedLabel::native("Compiled DAG Engagement Submit", "Kompilierter-DAG-Eingabe bestätigen")).await
+        .action_audience("compiledDagEngagementSubmit", semio_framework_plugin::CapabilityAudience::Input).await
         .mutation("nodeGraphEdit", LocalizedLabel::native("Edit Workflow", "Workflow bearbeiten")).await
         // 🕹️ Selection/hover are the framework's `graph` interaction domain now (`.interaction(...)`
         // below) — the six framework verbs (`interactionSelect`/`interactionHover`/`clearSelection`/
@@ -1081,7 +1086,9 @@ pub async fn create_space_app() -> App {
         .action_with(ActionDefinition::new("nodeGraphViewport", LocalizedLabel::native("Set Graph Viewport", "Graph-Ansichtsfenster festlegen"), ActionKind::View, "camera")).await
         .view_action("presenceHeartbeat", LocalizedLabel::native("Presence Heartbeat", "Anwesenheits-Heartbeat")).await
         .action_with(ActionDefinition::new("workflowEngagementInput", LocalizedLabel::native("Workflow Engagement Input", "Workflow-Eingabe"), ActionKind::View, "hand")).await
+        .action_audience("workflowEngagementInput", semio_framework_plugin::CapabilityAudience::Input).await
         .action_with(ActionDefinition::new("compiledDagEngagementInput", LocalizedLabel::native("Compiled DAG Engagement Input", "Kompilierter-DAG-Eingabe"), ActionKind::View, "hand")).await
+        .action_audience("compiledDagEngagementInput", semio_framework_plugin::CapabilityAudience::Input).await
         .action_with(ActionDefinition::new("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"), ActionKind::Shell, "panel-left")).await
         .action_with(ActionDefinition::new("exportMedia", LocalizedLabel::native("Export Media", "Medien exportieren"), ActionKind::Shell, "download")).await
         .action_with(ActionDefinition::new("importMedia", LocalizedLabel::native("Import Media", "Medien importieren"), ActionKind::Shell, "hard-drive")).await
@@ -1222,3 +1229,11 @@ pub async fn create_space_app() -> App {
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 pub(crate) mod unit_tests;
 //#endregion 🧪️UnitTests
+
+//#region 🪢️TaxonomyMounts
+#[path = "📚️examples/🎬️demo-session/🦀️.rs"]
+pub mod demo_session;
+#[cfg(test)]
+#[path = "📚️examples/🎬️demo-session/🧪️tests/🧩️example/🦀️.rs"]
+mod example;
+//#endregion 🪢️TaxonomyMounts

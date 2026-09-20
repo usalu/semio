@@ -1,4 +1,3 @@
-
 use super::*;
 use crate::interpreter::framework_widget_context;
 use ui_wgpu::wgpu::UiPresence;
@@ -394,10 +393,7 @@ fn completions_popup_paints_a_bordered_container_an_accent_row_and_per_row_hit_t
     }
     let theme = fixture.theme;
     let border = theme.panel_border;
-    assert!(
-        fixture.draw.layers.iter().flat_map(|layer| layer.vector_vertices.iter()).any(|vertex| vertex.color == [border.r, border.g, border.b, border.a]),
-        "expected the completions popup to draw an outer container border"
-    );
+    assert!(fixture.draw.layers.iter().flat_map(|layer| layer.vector_vertices.iter()).any(|vertex| vertex.color == [border.r, border.g, border.b, border.a]), "expected the completions popup to draw an outer container border");
     let colors: Vec<[f32; 4]> = fixture.draw.layers.iter().flat_map(|layer| layer.ui_instances.iter()).map(|instance| instance.color).collect();
     let accent = theme.accent;
     assert!(colors.contains(&[accent.r, accent.g, accent.b, accent.a]), "expected the active completion row's background to be theme.accent, got {colors:?}");
@@ -428,10 +424,7 @@ fn rename_input_paints_only_while_a_draft_is_armed() {
     }
     let theme = fixture.theme;
     let border = theme.panel_border;
-    assert!(
-        fixture.draw.layers.iter().flat_map(|layer| layer.vector_vertices.iter()).any(|vertex| vertex.color == [border.r, border.g, border.b, border.a]),
-        "expected the rename input to draw a border stroke"
-    );
+    assert!(fixture.draw.layers.iter().flat_map(|layer| layer.vector_vertices.iter()).any(|vertex| vertex.color == [border.r, border.g, border.b, border.a]), "expected the rename input to draw a border stroke");
     let colors: Vec<[f32; 4]> = fixture.draw.layers.iter().flat_map(|layer| layer.ui_instances.iter()).map(|instance| instance.color).collect();
     let panel = theme.panel;
     assert!(colors.contains(&[panel.r, panel.g, panel.b, panel.a]), "expected the rename input fill to use theme.panel, got {colors:?}");

@@ -42,7 +42,7 @@
   "foundationPRdKpa": null,
   "foundationHEdKn": null,
   "foundationHRdKn": null,
-  "kFoundation": 640000,
+  "kFoundation": 640000.0,
   "kSoil": null,
   "wallHeightM": null,
   "wallPhiDeg": null,

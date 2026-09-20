@@ -25,5 +25,5 @@ pub fn diff(payload: &UpdateSynapseEndpoints, base: &FlowSnapshot) -> protocol::
     synapse.from_port = payload.from_port.clone();
     synapse.to = payload.to.clone();
     synapse.to_port = payload.to_port.clone();
-    protocol::MutationOutcome::new(diff_replace_content(scene.widgets, scene.synapses, scene.layout))
+    protocol::MutationOutcome::new({ let (widgets, synapses, layout) = scene.into_parts(); diff_replace_content(widgets, synapses, layout) })
 }

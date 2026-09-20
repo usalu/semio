@@ -7,6 +7,8 @@ import { fileURLToPath } from "node:url";
 import Ajv, { type ValidateFunction } from "ajv";
 import { BundleScript, ScriptRouter, runBundleScriptMain, resolveTestLevel, runBunx, runVitest } from "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 
+import { SceneShadingPixelCheckScript } from "../../../../🧪️tests/🎨️world3d-scene-shading/📜️script.ts";
+
 const MODULE_SCHEMAS = {
   renderer: "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧬️schema/🔣️.json",
   interaction: "🧰️framework/🔨️modules/🕹️interaction/🧬️schema/🔣️.json",
@@ -152,7 +154,15 @@ export function directoryHomeBootstrapOracle(repoRoot: string): number {
   const owner = readFileSync(join(contractRoot, "🟦️.tsx"), "utf8");
   const shell = readFileSync(join(contractRoot, "../🟦️.tsx"), "utf8");
   const runtime = readFileSync(join(contractRoot, "../../🔌️PluginRuntime/🟦️.tsx"), "utf8");
-  assert(owner.includes("await owner.plugin.handleAction") && owner.includes("parseDirectoryProjectionReceiptV1(response.output)"));
+  assert(owner.includes("await owner.plugin.handleAction") && owner.includes("parseDirectoryProjectionReceiptV1(await settle.terminalOutputOf(operation))"));
+  // 🧾️ The receipt is the SETTLED typed operation's terminal publication, never the admitting reply:
+  // `applyDirectoryEventPage` is job-routed, so its admission carries the `{ operationId, generation }`
+  // handle and the receipt rides `AppFrame::OperationCompleted` turns later. Reading `output` off the
+  // admission is the defect that left Home's space table empty on every hub holding an artifact.
+  assert(!owner.includes("parseDirectoryProjectionReceiptV1(response.output)") && !owner.includes("parseDirectoryProjectionReceiptV1(admission.output)"));
+  assert(owner.includes("owner.plugin.subscribeOperationCompletions(owner.instanceId, receive)") && owner.includes("startedDirectoryOperationIdV1(admission.output)"));
+  assert(owner.indexOf("subscribeOperationCompletions") < owner.indexOf("await owner.plugin.handleAction"), "the completion subscription must open before the dispatch it settles");
+  assert(runtime.includes("terminalOutput: typedOperationTerminalOutputV1(leftover)") && runtime.includes("completionFanouts"));
   assert(owner.indexOf("await owner.plugin.handleAction") < owner.indexOf('kind: "directory-bootstrap-ack"'));
   assert(owner.includes('sessionIdentity: { userId: input.identity.userId, displayName: input.identity.displayName }'));
   assert(owner.includes('sessionIdentity: { userId: owner.identity.userId, displayName: owner.identity.displayName }'));
@@ -169,7 +179,7 @@ export function directoryHomeBootstrapOracle(repoRoot: string): number {
   assert(fixture.labels.en.every((label: string) => label.length > 0) && fixture.labels.de.every((label: string) => label.length > 0));
   assert.deepEqual(Object.keys(fixture.identities).sort(), ["a", "b"]);
   assert(fixture.identities.a.userId !== fixture.identities.b.userId && Object.values(fixture.identities).every((identity) => identity.userId.length > 0 && identity.displayName.length > 0));
-  return 29;
+  return 33;
 }
 
 class DirectoryHomeBootstrapCheckScript extends BundleScript {
@@ -178,7 +188,9 @@ class DirectoryHomeBootstrapCheckScript extends BundleScript {
     console.log(`directory-home-bootstrap-oracle: checks=${directoryHomeBootstrapOracle(this.repoRoot)} clean`);
     process.env.SEMIO_TEST_LEVEL = "long";
     runVitest(this.root, ["../../../../🧪️tests/📇️directory-home-bootstrap/🟦️.tsx"], "../../🧪️tests/🎚️config/🟦️.ts");
-    runVitest(this.root, ["../../../../🧱️elements/🔌️PluginRuntime/🟦️.tsx", "--testNamePattern=validates fixed result page authority and preserves document and download effects"], "../../🧪️tests/🎚️config/🟦️.ts");
+    // 🏁️ The second law is this lane's other half: the receipt only reaches the bootstrap because a
+    // completion carries its operation's terminal output to EVERY subscriber of that instance.
+    runVitest(this.root, ["../../../../🧱️elements/🔌️PluginRuntime/🟦️.tsx", "--testNamePattern=validates fixed result page authority and preserves document and download effects|hands one completion its own effects"], "../../🧪️tests/🎚️config/🟦️.ts");
   }
 }
 
@@ -233,7 +245,7 @@ class HubSignInSpacesCheckScript extends BundleScript {
     process.env.SEMIO_TEST_LEVEL = "long";
     runVitest(
       this.root,
-      ["../../../../🧱️elements/🔐️HubSignIn/🧪️tests/🧩️component/🟦️.tsx", "../../../../🧱️elements/🏘️SpaceBrowser/🧪️tests/🧩️component/🟦️.tsx", "--silent=false", "--reporter=verbose"],
+      ["../../../../🧱️elements/🔐️HubSignIn/🧪️tests/🧩️component/🟦️.tsx", "../../../../🧱️elements/🏘️SpaceBrowser/🧪️tests/🧩️component/🟦️.tsx", "../../../../🧱️elements/🤖️AgentDelegations/🧪️tests/🧩️component/🟦️.tsx", "--silent=false", "--reporter=verbose"],
       "../../🧪️tests/🎚️config/🟦️.ts",
     );
   }
@@ -388,12 +400,12 @@ export function world3dPointerGestureOracle(repoRoot: string): number {
     readonly expect: { readonly action: string; readonly domainId?: string; readonly channel?: string; readonly merge?: string; readonly method?: string; readonly targets?: readonly Target[]; readonly dispatches?: number; readonly camera?: Record<string, unknown> };
   };
   const fixture = JSON.parse(readFileSync(join(hostRoot, "🧫️fixtures/🖱️pointer-gestures.json"), "utf8")) as {
-    scene: { surfaceId: string; controllerId: string; windowInstanceId: string; domainId: string; domainGranularityId: string; instances: readonly { id: string; interactionId: string }[] };
+    scene: { surfaceId: string; controllerId: string; windowInstanceId: string; domainId: string; domainGranularityId: string; instances: readonly { id: string; interactionId: string; interactionGranularityId?: string }[] };
     viewport: { width: number; height: number };
     cameraDebounceMs: number;
     marqueeDragThresholdPx: number;
     gestures: readonly Gesture[];
-    wiring: { selectionArgsBuilder: string; hoverArgsBuilder: string; cameraArgsBuilder: string; targetsBuilder: string; selectionTargetsAreASet: string; mergeVocabularyFixture: string; mergeIsNotTranslated: string; deletedMergeBuilders: readonly string[]; deadVerbs: readonly string[] };
+    wiring: { selectionArgsBuilder: string; selectionTargetsArgsBuilder: string; instanceTargetBuilder: string; hoverArgsBuilder: string; cameraArgsBuilder: string; targetsBuilder: string; selectionTargetsAreASet: string; mergeVocabularyFixture: string; mergeIsNotTranslated: string; deletedMergeBuilders: readonly string[]; deadVerbs: readonly string[] };
   };
   const scene = fixture.scene;
   /** 🖱️ The merge word a modifier set resolves to — the oracle's own copy of `marqueeModeFromModifiers`,
@@ -408,15 +420,16 @@ export function world3dPointerGestureOracle(repoRoot: string): number {
     if (control) return "subtractive";
     return "replace";
   };
-  /** 🎯️ The oracle's own copy of `interactionTargetsForInstances` — order-preserving dedup of the
-   * topology ids a set of rendered instance ids stands for. */
-  const topologyTargets = (ids: readonly string[]): readonly string[] => {
+  /** 🎯️ Resolves the fixture's declared topology targets, deduplicating each granularity/id pair. */
+  const topologyTargets = (ids: readonly string[]): readonly Target[] => {
     const seen = new Set<string>();
-    const targets: string[] = [];
+    const targets: Target[] = [];
     for (const id of ids) {
-      const target = scene.instances.find((instance) => instance.id === id)?.interactionId ?? id;
-      if (seen.has(target)) continue;
-      seen.add(target);
+      const instance = scene.instances.find((instance) => instance.id === id);
+      const target = { granularity: instance?.interactionGranularityId ?? scene.domainGranularityId, id: instance?.interactionId ?? id };
+      const key = JSON.stringify(target);
+      if (seen.has(key)) continue;
+      seen.add(key);
       targets.push(target);
     }
     return targets;
@@ -436,7 +449,7 @@ export function world3dPointerGestureOracle(repoRoot: string): number {
       check(expected.action === "interactionSelect", `${gesture.id}: a pick is an interactionSelect`);
       check(expected.method === "pick" && expected.domainId === scene.domainId, `${gesture.id}: a pick carries method=pick on the scene domain`);
       check(expected.merge === mergeWord(gesture.modifiers), `${gesture.id}: merge must be ${mergeWord(gesture.modifiers)}`);
-      assert.deepEqual(expected.targets, [{ granularity: "object", id: instance.interactionId }], `${gesture.id}: a pick names the TOPOLOGY id at object granularity`);
+      assert.deepEqual(expected.targets, [{ granularity: instance.interactionGranularityId ?? scene.domainGranularityId, id: instance.interactionId }], `${gesture.id}: a pick preserves the instance target and declared scene fallback`);
       checks += 1;
     } else if (gesture.kind === "selection-args") {
       const ids = gesture.ids ?? [];
@@ -452,7 +465,7 @@ export function world3dPointerGestureOracle(repoRoot: string): number {
       const instance = scene.instances.find((entry) => entry.id === gesture.instanceId);
       assert(instance, `gesture ${gesture.id} names no scene instance`);
       check(expected.action === "interactionHover" && expected.channel === "pointer", `${gesture.id}: hover travels on the pointer channel`);
-      assert.deepEqual(expected.targets, [{ granularity: scene.domainGranularityId, id: instance.interactionId }], `${gesture.id}: hover reports the SCENE granularity, not the pick granularity`);
+      assert.deepEqual(expected.targets, [{ granularity: instance.interactionGranularityId ?? scene.domainGranularityId, id: instance.interactionId }], `${gesture.id}: hover preserves the instance target and declared scene fallback`);
       checks += 1;
     } else if (gesture.kind === "background-click") {
       check(expected.action === "interactionSelect" && expected.merge === mergeWord(gesture.modifiers), `${gesture.id}: an empty click still dispatches a select`);
@@ -468,9 +481,10 @@ export function world3dPointerGestureOracle(repoRoot: string): number {
       const span = Math.hypot(path[path.length - 1]!.x - path[0]!.x, path[path.length - 1]!.y - path[0]!.y);
       check(path.length > 1 && span > fixture.marqueeDragThresholdPx, `${gesture.id}: the path must exceed the drag threshold or it is a click`);
       check(expected.merge === "replace", `${gesture.id}: a marquee release always replaces`);
+      check(expected.method === "rectangle", `${gesture.id}: a rectangular marquee retains its selection method`);
       assert.deepEqual(
         expected.targets,
-        topologyTargets(scene.instances.map((instance) => instance.id)).map((id) => ({ granularity: "object", id })),
+        topologyTargets(scene.instances.map((instance) => instance.id)),
         `${gesture.id}: a full-viewport marquee collapses every rendered instance onto its deduplicated topology targets`,
       );
       checks += 1;
@@ -479,15 +493,15 @@ export function world3dPointerGestureOracle(repoRoot: string): number {
     }
   }
   const host = readFileSync(join(hostRoot, "🟦️.tsx"), "utf8");
-  check(host.includes(`dispatch("interactionSelect", ${fixture.wiring.selectionArgsBuilder}(interactionDomainId, "object", [record?.interactionId ?? id], merge))`), "the instance pick must still build its args through the selection builder");
+  check(host.includes(`dispatch("interactionSelect", ${fixture.wiring.selectionTargetsArgsBuilder}(interactionDomainId, [${fixture.wiring.instanceTargetBuilder}(instances, id, interactionGranularity)], merge))`), "the instance pick must preserve its resolved target through the selection builder");
   // 🏁️ Hover travels on `dispatchSettled`, `dispatch`'s awaitable twin: the coalescing dispatcher bounds the
   // lane at ONE outstanding round trip only when it can see the promise `onAction` settles on, and `dispatch`
   // discards it (ticket 26/09/02 wave B33 §3 — 72 hover turns enqueued by one 70-move storm, 11 settled).
-  check(host.includes(`return dispatchSettled("interactionHover", ${fixture.wiring.hoverArgsBuilder}(interactionDomainId, interactionGranularity, target))`), "the instance hover must still build its args through the hover builder AND hand the coalescing gate its awaitable");
+  check(host.includes(`return dispatchSettled("interactionHover", ${fixture.wiring.hoverArgsBuilder}(interactionDomainId, target.granularity, target.id))`), "the instance hover must preserve its resolved target and hand the coalescing gate its awaitable");
   check(host.includes(`dispatch("interactionSelect", ${fixture.wiring.selectionArgsBuilder}(interactionDomainId, interactionGranularity, [], merge))`), "the empty click must still clear through the selection builder");
   check(host.includes(`dispatch("setCamera", ${fixture.wiring.cameraArgsBuilder}(`), "the debounced camera sync must still build its args through the camera builder");
-  check(host.includes(`const domainTargets = ${fixture.wiring.targetsBuilder}(instancesRef.current, preview.mergedInstanceIds)`), "the marquee release must still resolve instances onto topology targets");
-  check(host.includes(`dispatch("interactionSelect", ${fixture.wiring.selectionArgsBuilder}(interactionDomainId, "object", domainTargets, "replace"))`), "the marquee release must still replace on the scene domain");
+  check(host.includes(`const domainTargets = ${fixture.wiring.targetsBuilder}(instancesRef.current, preview.mergedInstanceIds, interactionGranularity)`), "the marquee release must still resolve instances onto topology targets");
+  check(host.includes(`dispatch("interactionSelect", ${fixture.wiring.selectionTargetsArgsBuilder}(interactionDomainId, domainTargets, "replace", method === "lasso" ? "lasso" : "rectangle"))`), "the marquee release must preserve its shape while replacing on the scene domain");
   check(host.includes(fixture.wiring.selectionTargetsAreASet), "the selection args builder must keep collapsing repeated topology ids — the host never emits a duplicate target");
   check(host.includes('return { domainId, targets: JSON.stringify(targets), merge, method: "pick" };'), "the selection args shape is the wire contract and must stay verbatim");
   check(host.includes('return { domainId, channel: "pointer", targets: JSON.stringify(targets) };'), "the hover args shape is the wire contract and must stay verbatim");
@@ -962,6 +976,7 @@ const router = new ScriptRouter(fileURLToPath(new URL(".", import.meta.url)))
   .register("hub-sign-in-spaces-check", HubSignInSpacesCheckScript)
   .register("scoped-presence-check", ScopedPresenceCheckScript)
   .register("world3d-interaction-check", World3dInteractionCheckScript)
+  .register("scene-shading-pixel-check", SceneShadingPixelCheckScript)
   .register("surface-switch-check", SurfaceSwitchCheckScript)
   .register("input-ledger-check", InputLedgerCheckScript)
   .register("window-scope-check", WindowScopeCheckScript)

@@ -1772,7 +1772,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
                     publication.acknowledge();
                     let description = self.store.envelope().vcs.edits.last().and_then(|edit| edit.description.clone());
                     let edit_id = self.store.envelope().vcs.edits.last().map(|edit| edit.id.clone());
-                    self.record_command(&tool_id, ActionKind::Mutation, description, edit_id, None, None).await;
+                    self.record_command(&tool_id, ActionKind::Mutation, description, edit_id, None, None);
                     self.revalidate_interaction_state_after_document_change(&ActionMeta { actor, instance_id: self.live_runtime_instance_id.unwrap_or(1), view_state: None }).await?;
                     let entry = selected_entry_mut!(self.tool_runs).expect("finalizing slot");
                     let finalize = entry.finalize.as_mut().expect("finalize owner");

@@ -180,6 +180,23 @@
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/📦️packages/🟦️typescript"
       },
       "outputs": []
+    },
+    "scene-shading-pixel-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "dependsOn": [
+        {
+          "projects": [
+            "workspace"
+          ],
+          "target": "deps-browsers"
+        }
+      ],
+      "options": {
+        "command": "bun ./📜️script.ts scene-shading-pixel-check",
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/📦️packages/🟦️typescript"
+      },
+      "outputs": []
     }
   },
   "tags": [

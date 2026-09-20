@@ -67,7 +67,7 @@ async fn change_tank_height_m_committed_json_is_canonical() {
     }
     let reencoded = serde_json::to_value(mutation()).expect("change-tank-height-m mutation encodes");
     let original: serde_json::Value = serde_json::from_str(MUTATION).expect("change-tank-height-m mutation reparses");
-    assert_eq!(reencoded, original, "change-tank-height-m/raises-tank-height-m-to-11-5: committed mutation JSON is not the canonical externally-tagged ChangeTankHeightM form carrying newTankHeightM");
+    assert_eq!(reencoded, original, "change-tank-height-m/raises-tank-height-m-to-11-5: committed mutation JSON is not the canonical internally-tagged ChangeTankHeightM form carrying mutation and newTankHeightM");
 }
 
 /// 🎯️ The declared outcome holds: `change-tank-height-m` at 11.5 is applied, not rejected, and carries no

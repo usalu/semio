@@ -89,7 +89,7 @@ pub fn upload_world_passes(device: &Device, ring: &mut WorldGlobalsRing, frame_b
         return;
     }
     ring.ensure_slots(device, passes.len() as u32);
-    let globals: Vec<WorldGlobalsGpu> = passes.iter().map(|pass| WorldGlobalsGpu { view_proj: pass.view_proj, light_dir: [pass.light_dir[0], pass.light_dir[1], pass.light_dir[2], 0.0] }).collect();
+    let globals: Vec<WorldGlobalsGpu> = passes.iter().map(WorldGlobalsGpu::from_pass).collect();
     ring.write_passes(&globals);
 
     let mut instances: Vec<World3dGpuInstance> = Vec::new();

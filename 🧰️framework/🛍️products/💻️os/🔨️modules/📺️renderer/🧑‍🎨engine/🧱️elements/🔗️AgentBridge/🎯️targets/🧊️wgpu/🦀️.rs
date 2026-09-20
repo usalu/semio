@@ -433,7 +433,7 @@ impl GatewayToShell {
 //#endregion 🔖️GatewayToShell
 
 //#region 🔖️ShellToGateway
-/// 📨️ Shell→Gateway frames this shell actually produces. The SSOT's enum has ten variants
+/// 📨️ Shell→Gateway frames this shell actually produces. The SSOT's enum has eleven variants
 /// (`ShellState`/`ShellStatePatch`/`Instances`/`AppFrames` carry the React mirror's snapshots); the
 /// wgpu shell publishes none of those four yet, so encoding them here would be dead wire with no
 /// producer — their tags (`1`,`2`,`3`,`4`) stay reserved and unread.
@@ -446,6 +446,7 @@ pub enum ShellToGateway {
     Bye,
     /// 💬️ One human turn typed into this shell and sent to the connected agent.
     AgentMessage { message_id: String, text: String },
+    AgentCancel { invocation_id: String },
 }
 
 impl ShellToGateway {
@@ -479,6 +480,10 @@ impl ShellToGateway {
                 wire::write_string(&mut buf, message_id);
                 wire::write_string(&mut buf, text);
             }
+            ShellToGateway::AgentCancel { invocation_id } => {
+                wire::write_u8(&mut buf, 10);
+                wire::write_string(&mut buf, invocation_id);
+            }
         }
         buf
     }
@@ -500,6 +505,7 @@ impl ShellToGateway {
             7 => ShellToGateway::Ping,
             8 => ShellToGateway::Bye,
             9 => ShellToGateway::AgentMessage { message_id: reader.read_string()?, text: reader.read_string()? },
+            10 => ShellToGateway::AgentCancel { invocation_id: reader.read_string()? },
             other => return Err(BridgeFrameFault::UnknownTag(other)),
         };
         reader.finish()?;
@@ -540,6 +546,7 @@ pub struct PendingAgentApproval {
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum AgentToolCallState {
     Running,
+    Cancelling,
     Ok,
     Failed,
 }
@@ -555,7 +562,9 @@ pub enum AgentApprovalState {
 /// React's `AgentConversationEntry`. `UserMessage` is a turn this shell itself sent, echoed the
 /// moment the frame is queued so the panel is never behind the human's own typing; every other kind
 /// comes from a real `GatewayToShell` frame. Nothing is synthesised from a guess: a tool call with no
-/// result yet simply stays [`AgentToolCallState::Running`].
+/// result yet simply stays [`AgentToolCallState::Running`]. A cancellation request moves it to
+/// [`AgentToolCallState::Cancelling`] until the gateway's real result settles it; cooperative
+/// cancellation never invents a terminal state in this shell.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum AgentConversationEntry {
     UserMessage { id: String, text: String },
@@ -588,6 +597,48 @@ pub struct AgentBridgeState {
     pub reconnect_attempt: u32,
     next_message_ordinal: u64,
     outbox: Vec<ShellToGateway>,
+    inbound_shell_commands: Vec<InboundShellCommand>,
+}
+
+/// 🎛️ One inbound `ShellCommand` this shell can carry out on its own chrome, already decoded off
+/// the wire. The gateway's `ui_focus`/`ui_reveal` are the whole live surface today
+/// (`🌉️mcp/🖥️ui/🦀️.rs`): `ui_reveal` sends `setPanelVisible` and then `setPanelPath`, and the PATH's
+/// last segment is the address that matters — the shell SSOT's four-anchor vocabulary is narrower
+/// than either dock's, so both renderers resolve the tab's real home themselves rather than
+/// believing the requested anchor (the React twin does the same through `findPanelTabInDock`).
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum InboundShellCommand {
+    FocusWindow { seq: u64, window_id: Option<String> },
+    RevealPanelTab { seq: u64, tab_id: String },
+    /// 👁️ `setPanelVisible` alone carries no tab, so it is acknowledged and applied as a no-op: the
+    /// `setPanelPath` that always follows it is what actually opens the anchor.
+    Acknowledge { seq: u64 },
+}
+
+impl InboundShellCommand {
+    pub fn seq(&self) -> u64 {
+        match self {
+            InboundShellCommand::FocusWindow { seq, .. } | InboundShellCommand::RevealPanelTab { seq, .. } | InboundShellCommand::Acknowledge { seq } => *seq,
+        }
+    }
+}
+
+/// 🔎️ Decodes one `ShellCommand` JSON payload into the chrome action this shell can perform.
+/// `Err` carries the reason the gateway is told, so a verb this renderer has no chrome for is
+/// refused BY NAME instead of behind one blanket "no reducer twin" that hid `ui_focus` and
+/// `ui_reveal` — both of which this shell has always been able to honour.
+pub fn decode_inbound_shell_command(seq: u64, command: &[u8]) -> Result<InboundShellCommand, String> {
+    let value: serde_json::Value = serde_json::from_slice(command).map_err(|error| format!("malformed ShellCommand JSON: {error}"))?;
+    match value.get("type").and_then(serde_json::Value::as_str) {
+        Some("focusWindow") => Ok(InboundShellCommand::FocusWindow { seq, window_id: value.get("windowId").and_then(serde_json::Value::as_str).map(str::to_string) }),
+        Some("setPanelPath") => match value.get("path").and_then(serde_json::Value::as_array).and_then(|path| path.last()).and_then(serde_json::Value::as_str) {
+            Some(tab_id) if !tab_id.is_empty() => Ok(InboundShellCommand::RevealPanelTab { seq, tab_id: tab_id.to_string() }),
+            _ => Err("setPanelPath carried no panel tab id to reveal".to_string()),
+        },
+        Some("setPanelVisible") => Ok(InboundShellCommand::Acknowledge { seq }),
+        Some(other) => Err(format!("this shell has no chrome for the `{other}` shell command")),
+        None => Err("ShellCommand carried no `type`".to_string()),
+    }
 }
 
 impl AgentBridgeState {
@@ -605,6 +656,19 @@ impl AgentBridgeState {
             principal_actor: principal_actor.into(),
             flags,
         });
+    }
+
+    /// 📤️ Takes every inbound chrome command the host has not applied yet. The host applies each
+    /// one and then calls [`AgentBridgeState::settle_shell_command`] — an acknowledgement is only
+    /// honest AFTER the chrome moved, which is exactly what distinguishes this from the React
+    /// twin's earlier mirror-only reduce (it answered `ok` while nothing on screen changed).
+    pub fn take_inbound_shell_commands(&mut self) -> Vec<InboundShellCommand> {
+        std::mem::take(&mut self.inbound_shell_commands)
+    }
+
+    /// ✅️ Acknowledges one applied inbound command back to the gateway.
+    pub fn settle_shell_command(&mut self, seq: u64, ok: bool, fault: Option<String>) {
+        self.outbox.push(ShellToGateway::ShellCommandResult { in_reply_to: seq, ok, fault });
     }
 
     /// 🔌️ The socket closed: the next dial is a reconnect, and presence can no longer be trusted.
@@ -629,9 +693,10 @@ impl AgentBridgeState {
                 self.status = AgentBridgeStatus::Open;
                 self.last_error = None;
             }
-            GatewayToShell::ShellCommand { seq, .. } => {
-                self.outbox.push(ShellToGateway::ShellCommandResult { in_reply_to: seq, ok: false, fault: Some("wgpu shell has no ShellState reducer twin".into()) });
-            }
+            GatewayToShell::ShellCommand { seq, command } => match decode_inbound_shell_command(seq, &command) {
+                Ok(inbound) => self.inbound_shell_commands.push(inbound),
+                Err(fault) => self.outbox.push(ShellToGateway::ShellCommandResult { in_reply_to: seq, ok: false, fault: Some(fault) }),
+            },
             GatewayToShell::AppCommand { .. } => {}
             GatewayToShell::ApprovalRequested { approval_id, summary } => {
                 self.pending_approvals.retain(|approval| approval.approval_id != approval_id);
@@ -718,6 +783,23 @@ impl AgentBridgeState {
         self.next_message_ordinal = self.next_message_ordinal.saturating_add(1);
         self.outbox.push(ShellToGateway::AgentMessage { message_id: message_id.clone(), text: trimmed.to_string() });
         self.append_conversation(AgentConversationEntry::UserMessage { id: message_id, text: trimmed.to_string() });
+        true
+    }
+
+    /// 🛑️ Asks the open gateway to cancel the exact invocation the conversation reported. The
+    /// optimistic state says only that the request left; the gateway's later `AgentToolResult`
+    /// remains the sole terminal authority. This intentionally mirrors React's sender contract:
+    /// any non-empty id can be sent while open, while only a matching running row changes state.
+    pub fn cancel_tool_call(&mut self, invocation_id: &str) -> bool {
+        if invocation_id.is_empty() || !matches!(self.status, AgentBridgeStatus::Open) {
+            return false;
+        }
+        self.outbox.push(ShellToGateway::AgentCancel { invocation_id: invocation_id.to_string() });
+        if let Some(AgentConversationEntry::ToolCall { state, .. }) = self.conversation.iter_mut().find(|entry| entry.id() == invocation_id) {
+            if matches!(state, AgentToolCallState::Running) {
+                *state = AgentToolCallState::Cancelling;
+            }
+        }
         true
     }
 

@@ -1,0 +1,504 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "mime",
+    "templatePayload",
+    "dropCases",
+    "retirement",
+    "oracles",
+    "publication",
+    "publicationOutcomes",
+    "displayBranchPublication"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "mime": {
+      "const": "application/x-compose-window-template"
+    },
+    "templatePayload": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "windowKindId",
+        "templateId"
+      ],
+      "properties": {
+        "windowKindId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "templateId": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "dropCases": {
+      "type": "array",
+      "minItems": 6,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "zone",
+          "expectedRootKind",
+          "expectedPaths"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "initialWindows": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "uniqueItems": true
+          },
+          "zone": {
+            "type": "object",
+            "required": [
+              "kind"
+            ],
+            "properties": {
+              "kind": {
+                "enum": [
+                  "tab",
+                  "split",
+                  "rootSplit"
+                ]
+              },
+              "path": {
+                "type": "array",
+                "items": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              },
+              "index": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "side": {
+                "enum": [
+                  "left",
+                  "right",
+                  "top",
+                  "bottom"
+                ]
+              }
+            }
+          },
+          "expectedRootKind": {
+            "enum": [
+              "stack",
+              "row",
+              "column"
+            ]
+          },
+          "expectedPaths": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          }
+        }
+      }
+    },
+    "retirement": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "capacity",
+        "pressure",
+        "lateCompletion",
+        "initialWorlds",
+        "liveAfterClose",
+        "retired",
+        "reopened"
+      ],
+      "properties": {
+        "capacity": {
+          "const": 256
+        },
+        "pressure": {
+          "type": "string",
+          "minLength": 1
+        },
+        "lateCompletion": {
+          "type": "string",
+          "minLength": 1
+        },
+        "initialWorlds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true
+        },
+        "liveAfterClose": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true
+        },
+        "retired": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true
+        },
+        "reopened": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "oracles": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "reactTemplateSource",
+        "reactShellSource",
+        "reactTests"
+      ],
+      "properties": {
+        "reactTemplateSource": {
+          "type": "string",
+          "minLength": 1
+        },
+        "reactShellSource": {
+          "type": "string",
+          "minLength": 1
+        },
+        "reactTests": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "publication": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "windowKindId",
+        "bodyKey",
+        "closedInstances",
+        "openedInstance",
+        "mountedAfter",
+        "fetchedAfter",
+        "surfaceKind",
+        "controllerId"
+      ],
+      "properties": {
+        "windowKindId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "bodyKey": {
+          "type": "string",
+          "minLength": 1
+        },
+        "closedInstances": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true
+        },
+        "openedInstance": {
+          "type": "string",
+          "minLength": 1
+        },
+        "mountedAfter": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true
+        },
+        "fetchedAfter": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true
+        },
+        "surfaceKind": {
+          "const": "world3d"
+        },
+        "controllerId": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "publicationOutcomes": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "retryCeiling",
+        "journalPolicy",
+        "recovery",
+        "permanentFault",
+        "cohort",
+        "atomicCreditRefusals"
+      ],
+      "properties": {
+        "retryCeiling": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 8
+        },
+        "journalPolicy": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "transferCommand",
+            "directOpen"
+          ],
+          "properties": {
+            "transferCommand": {
+              "const": "shell.windowSplit"
+            },
+            "directOpen": {
+              "const": "none"
+            }
+          }
+        },
+        "recovery": {
+          "type": "array",
+          "minItems": 2,
+          "items": {
+            "$ref": "#/definitions/publicationAttempt"
+          }
+        },
+        "permanentFault": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "renderAttempts",
+            "journal",
+            "topologyOwed",
+            "surfaceFault"
+          ],
+          "properties": {
+            "renderAttempts": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "const": "refuse"
+              }
+            },
+            "journal": {
+              "const": "terminal-refusal"
+            },
+            "topologyOwed": {
+              "const": false
+            },
+            "surfaceFault": {
+              "const": true
+            }
+          }
+        },
+        "cohort": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "refused",
+            "ready",
+            "firstRefreshReleased",
+            "afterRetryDispatches"
+          ],
+          "properties": {
+            "refused": {
+              "type": "string",
+              "minLength": 1
+            },
+            "ready": {
+              "type": "string",
+              "minLength": 1
+            },
+            "firstRefreshReleased": {
+              "type": "array",
+              "minItems": 1,
+              "uniqueItems": true,
+              "items": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "afterRetryDispatches": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "integer",
+                "const": 1
+              }
+            }
+          }
+        },
+        "atomicCreditRefusals": {
+          "type": "array",
+          "minItems": 2,
+          "uniqueItems": true,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "credit",
+              "dockMutation",
+              "journal"
+            ],
+            "properties": {
+              "credit": {
+                "enum": [
+                  "item",
+                  "byte"
+                ]
+              },
+              "dockMutation": {
+                "const": "none"
+              },
+              "journal": {
+                "const": "refused-before-mutation"
+              }
+            }
+          }
+        }
+      }
+    },
+    "displayBranchPublication": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "flow",
+        "acceptedGeneration",
+        "staleGeneration",
+        "viewport",
+        "section",
+        "closedPublishedIds",
+        "openedPublishedIds",
+        "rules"
+      ],
+      "properties": {
+        "flow": { "const": "up" },
+        "acceptedGeneration": { "type": "integer", "minimum": 1 },
+        "staleGeneration": { "type": "integer", "minimum": 0 },
+        "viewport": { "$ref": "#/definitions/rect" },
+        "section": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["id", "defaultOpen", "rows", "headerRect"],
+          "properties": {
+            "id": { "type": "string", "minLength": 1 },
+            "defaultOpen": { "const": false },
+            "rows": {
+              "type": "array",
+              "minItems": 3,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["id", "branch", "rect"],
+                "properties": {
+                  "id": { "type": "string", "minLength": 1 },
+                  "branch": { "type": "boolean" },
+                  "defaultOpen": { "const": false },
+                  "rect": { "$ref": "#/definitions/rect" }
+                }
+              }
+            },
+            "headerRect": { "$ref": "#/definitions/rect" }
+          }
+        },
+        "closedPublishedIds": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "openedPublishedIds": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "rules": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["publishedOnlyIfPaintedInViewport", "branchChevronOnlyForVisibleBranch", "paintAndHitsShareAcceptedGeneration"],
+          "properties": {
+            "publishedOnlyIfPaintedInViewport": { "const": true },
+            "branchChevronOnlyForVisibleBranch": { "const": true },
+            "paintAndHitsShareAcceptedGeneration": { "const": true }
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "rect": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["x", "y", "w", "h"],
+      "properties": {
+        "x": { "type": "number" },
+        "y": { "type": "number" },
+        "w": { "type": "number", "exclusiveMinimum": 0 },
+        "h": { "type": "number", "exclusiveMinimum": 0 }
+      }
+    },
+    "publicationAttempt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "render",
+        "journal",
+        "topologyOwed",
+        "surfaceFault"
+      ],
+      "properties": {
+        "render": {
+          "enum": [
+            "refuse",
+            "document"
+          ]
+        },
+        "journal": {
+          "enum": [
+            "held",
+            "dispatch-on-next-settle"
+          ]
+        },
+        "topologyOwed": {
+          "type": "boolean"
+        },
+        "surfaceFault": {
+          "type": "boolean"
+        }
+      }
+    }
+  }
+}

@@ -1,7 +1,7 @@
 type TestSource = { readonly directory: string; readonly url: string };
 
-export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: Pick<typeof import("../../../../🖼️assets/🥽️mesh/🟦️.ts"), "meshAssetTransportUrl" | "resolveMeshAsset"> & Pick<typeof import("../../🏗️builder/🌐️vite/🟦️.ts"), "GIS_MAP_DEFAULT_PREFETCH_BOUNDS" | "PLAYGROUND_PLAY_BOOT_APPEARANCE_SCRIPT" | "PLAYGROUND_PLAY_BOOT_INLINE_STYLE" | "PLAYGROUND_PLAY_BOOT_REVEAL_SCRIPT" | "PLAYGROUND_PLAY_BOOT_THEME_SCRIPT" | "PLAYGROUND_WASM_STUB_PREFIX" | "SEMIO_ASSET_ROOT" | "SEMIO_FAVICON_HEAD_HTML" | "contentTypeForStaticDirAsset" | "createWorkspaceViteResolveConfig" | "findWorkspacePackages" | "isPlaygroundOptimizedDepUrl" | "listMapTilesForBounds" | "mapTileCacheRoots" | "meshCollectionVitePlugin" | "playgroundAssetVitePlugins" | "playgroundFlowWasmDevStubPlugin" | "playgroundOptimizedDepUrlPrefix" | "playgroundPlayBootHtmlPlugin" | "playgroundSceneHostOptimizeDeps" | "playgroundSceneHostResolveAliases" | "playgroundWasmStubKey" | "prefetchMapTiles" | "resolveGisMapTileServeMode" | "resolveSemioAssetRoot" | "rewriteSpaFallbackToEmojiEntry" | "semioFaviconSources" | "semioFaviconSvgMarkup" | "semioFaviconVitePlugin" | "semioHostHtmlString" | "semioHostHtmlVitePlugin" | "startAssetServer" | "staticDirVitePlugin" | "statusSurfaceHtml" | "tileProxyVitePlugin"> & Pick<typeof import("node:fs"), "existsSync" | "mkdirSync" | "mkdtempSync" | "rmSync" | "writeFileSync"> & Pick<typeof import("node:http"), "createServer"> & Pick<typeof import("node:os"), "tmpdir"> & Pick<typeof import("node:path"), "join" | "resolve"> & Pick<typeof import("node:url"), "fileURLToPath">, source: TestSource): Promise<void> {
-  const { GIS_MAP_DEFAULT_PREFETCH_BOUNDS, PLAYGROUND_PLAY_BOOT_APPEARANCE_SCRIPT, PLAYGROUND_PLAY_BOOT_INLINE_STYLE, PLAYGROUND_PLAY_BOOT_REVEAL_SCRIPT, PLAYGROUND_PLAY_BOOT_THEME_SCRIPT, PLAYGROUND_WASM_STUB_PREFIX, SEMIO_ASSET_ROOT, SEMIO_FAVICON_HEAD_HTML, contentTypeForStaticDirAsset, createServer, createWorkspaceViteResolveConfig, existsSync, fileURLToPath, findWorkspacePackages, isPlaygroundOptimizedDepUrl, playgroundOptimizedDepUrlPrefix, listMapTilesForBounds, mapTileCacheRoots, meshAssetTransportUrl, meshCollectionVitePlugin, mkdirSync, mkdtempSync, playgroundAssetVitePlugins, playgroundFlowWasmDevStubPlugin, playgroundPlayBootHtmlPlugin, playgroundSceneHostOptimizeDeps, playgroundSceneHostResolveAliases, playgroundWasmStubKey, prefetchMapTiles, resolve, resolveGisMapTileServeMode, resolveMeshAsset, resolveSemioAssetRoot, rewriteSpaFallbackToEmojiEntry, rmSync, semioFaviconSources, semioFaviconSvgMarkup, semioFaviconVitePlugin, semioHostHtmlString, semioHostHtmlVitePlugin, startAssetServer, staticDirVitePlugin, statusSurfaceHtml, tileProxyVitePlugin, tmpdir, writeFileSync, join } = dependencies;
+export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: Pick<typeof import("../../../../🖼️assets/🥽️mesh/🟦️.ts"), "meshAssetTransportUrl" | "resolveMeshAsset"> & Pick<typeof import("../../🏗️builder/🌐️vite/🟦️.ts"), "GIS_MAP_DEFAULT_PREFETCH_BOUNDS" | "PLAYGROUND_PLAY_BOOT_APPEARANCE_SCRIPT" | "PLAYGROUND_PLAY_BOOT_INLINE_STYLE" | "PLAYGROUND_PLAY_BOOT_REVEAL_SCRIPT" | "PLAYGROUND_PLAY_BOOT_THEME_SCRIPT" | "PLAYGROUND_WASM_STUB_PREFIX" | "SEMIO_ASSET_ROOT" | "SEMIO_FAVICON_HEAD_HTML" | "contentTypeForStaticDirAsset" | "createWorkspaceViteResolveConfig" | "findWorkspacePackages" | "isPlaygroundOptimizedDepUrl" | "listMapTilesForBounds" | "mapTileCacheRoots" | "meshCollectionVitePlugin" | "playgroundAssetVitePlugins" | "playgroundFlowWasmDevStubPlugin" | "playgroundOptimizedDepUrlPrefix" | "playgroundPlayBootHtmlPlugin" | "playgroundSceneHostOptimizeDeps" | "playgroundSceneHostResolveAliases" | "playgroundWasmStubKey" | "prefetchMapTiles" | "resolveGisMapTileServeMode" | "resolveSemioAssetRoot" | "rewriteSpaFallbackToEmojiEntry" | "semioFaviconSources" | "semioFaviconSvgMarkup" | "semioFaviconVitePlugin" | "semioHostHtmlString" | "semioHostHtmlVitePlugin" | "startAssetServer" | "staticDirVitePlugin" | "statusSurfaceHtml" | "tileProxyVitePlugin"> & Pick<typeof import("node:fs"), "existsSync" | "mkdirSync" | "mkdtempSync" | "rmSync" | "symlinkSync" | "writeFileSync"> & Pick<typeof import("node:http"), "createServer"> & Pick<typeof import("node:os"), "tmpdir"> & Pick<typeof import("node:path"), "join" | "resolve"> & Pick<typeof import("node:url"), "fileURLToPath">, source: TestSource): Promise<void> {
+  const { GIS_MAP_DEFAULT_PREFETCH_BOUNDS, PLAYGROUND_PLAY_BOOT_APPEARANCE_SCRIPT, PLAYGROUND_PLAY_BOOT_INLINE_STYLE, PLAYGROUND_PLAY_BOOT_REVEAL_SCRIPT, PLAYGROUND_PLAY_BOOT_THEME_SCRIPT, PLAYGROUND_WASM_STUB_PREFIX, SEMIO_ASSET_ROOT, SEMIO_FAVICON_HEAD_HTML, contentTypeForStaticDirAsset, createServer, createWorkspaceViteResolveConfig, existsSync, fileURLToPath, findWorkspacePackages, isPlaygroundOptimizedDepUrl, playgroundOptimizedDepUrlPrefix, listMapTilesForBounds, mapTileCacheRoots, meshAssetTransportUrl, meshCollectionVitePlugin, mkdirSync, mkdtempSync, playgroundAssetVitePlugins, playgroundFlowWasmDevStubPlugin, playgroundPlayBootHtmlPlugin, playgroundSceneHostOptimizeDeps, playgroundSceneHostResolveAliases, playgroundWasmStubKey, prefetchMapTiles, resolve, resolveGisMapTileServeMode, resolveMeshAsset, resolveSemioAssetRoot, rewriteSpaFallbackToEmojiEntry, rmSync, semioFaviconSources, semioFaviconSvgMarkup, semioFaviconVitePlugin, semioHostHtmlString, semioHostHtmlVitePlugin, startAssetServer, staticDirVitePlugin, statusSurfaceHtml, symlinkSync, tileProxyVitePlugin, tmpdir, writeFileSync, join } = dependencies;
   type PlaygroundAssetSpec = any;
 
   const { describe, expect, it } = vitest;
@@ -359,7 +359,8 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
   });
 
   describe("createWorkspaceViteResolveConfig", () => {
-    // ⏱️ `findWorkspacePackages` walks the whole repo tree — past the 5s default on this monorepo's size.
+    // ⏱️ `findWorkspacePackages` walks the whole repo tree: measured 14.4 s cold, 27 s under fleet load.
+    // The first caller in the process pays it; the memo makes every later one free.
     it(
       "pins scene hosts and excludes workspace packages from optimizeDeps",
       () => {
@@ -369,7 +370,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         expect(config.server?.fs?.allow).toContain(repoRoot);
         expect(config.optimizeDeps?.exclude).toContain("@semio-tech/flow-module-core");
       },
-      20000,
+      90000,
     );
   });
 
@@ -381,8 +382,25 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         expect(pkgs).toContain("@semio-tech/ui-react");
         expect(pkgs.every((p) => p.startsWith("@semio-tech/"))).toBe(true);
       },
-      20000,
+      90000,
     );
+
+    it("terminates on a self-referential symlink and never reads through it", () => {
+      const root = mkdtempSync(join(tmpdir(), "semio-workspace-scan-"));
+      try {
+        const real = join(root, "📦️packages");
+        mkdirSync(real, { recursive: true });
+        writeFileSync(join(real, "package.json"), JSON.stringify({ name: "@semio-tech/scan-probe" }));
+        const generated = join(root, "🗑️generated", "test-artifacts");
+        mkdirSync(generated, { recursive: true });
+        writeFileSync(join(generated, "package.json"), JSON.stringify({ name: "@semio-tech/scan-generated-output" }));
+        symlinkSync(generated, join(generated, "linked-ancestor-publication-owner-0"));
+        symlinkSync(real, join(root, "linked-packages"));
+        expect(findWorkspacePackages(root)).toEqual(["@semio-tech/scan-probe"]);
+      } finally {
+        rmSync(root, { recursive: true, force: true });
+      }
+    });
   });
 
 }

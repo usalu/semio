@@ -602,6 +602,14 @@ where
     M: protocol::Mutation<P> + Send + Sync + 'static,
     M::Diff: protocol::MutationDiff<P>,
 {
+    fn stamped_clock(&self) -> Option<protocol::HybridLogicalTimestamp> {
+        self.stamp.as_ref().map(|stamp| stamp.timestamp)
+    }
+
+    fn stamped_mutation_id(&self) -> Option<protocol::MutationId> {
+        self.stamp.as_ref().map(|stamp| stamp.mutation_id.clone())
+    }
+
     fn preflight(&self, _mutation: &M, description: Option<&str>, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
         if lane != store::HistoryLane::Document || description.is_some_and(|value| value.len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES) {
             return Err("GIS map retained preparation rejected its lane or description envelope".into());
@@ -1218,6 +1226,7 @@ pub fn create_gis2d_app() -> semio_framework_plugin::AppDefinition {
             // replace-data operations (never a whole-document snapshot swap — that vocabulary is
             // retired by the taxonomy), so it is a Mutation, not a View action.
             .action_with(ActionDefinition::new("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"), ActionKind::Mutation, "panel-left"))
+            .action_destructive("setActiveExample")
             .mutation("patchPositions", LocalizedLabel::native("Patch Positions", "Positionen aktualisieren"))
             .mutation("patchRoutes", LocalizedLabel::native("Patch Routes", "Routen aktualisieren"))
             .mutation("patchRoute", LocalizedLabel::native("Patch Route", "Route aktualisieren"))

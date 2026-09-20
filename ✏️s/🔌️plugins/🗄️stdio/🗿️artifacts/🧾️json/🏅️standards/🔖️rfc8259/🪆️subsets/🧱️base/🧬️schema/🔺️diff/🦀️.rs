@@ -622,31 +622,52 @@ fn absorb_array_diff(d1: JsonArrayDiff, d2: &JsonArrayDiff) -> JsonArrayDiff {
     JsonArrayDiff { removed: final_removed, modified, added }
 }
 
-/// ➕️ Name-keyed absorb: resolution of WHICH entry a `d2` op refers to is exact (key identity),
-/// but — unlike arrays — surviving `d1`-added entries' `index` is carried forward unshifted by
-/// unrelated `d2` removals elsewhere in the object (member NAME identity carries no positional
-/// information base-free, unlike array indices). This is exact for the realistic/expected usage
-/// pattern (new members always appended — see `JsonMutation::SetMember`'s own diff construction)
-/// and for every canonical `absorb_law` case this artifact tests; see the ticket report's
-/// `deviations` for the documented residual gap on adversarial synthetic diff pairs.
+/// ➕️ Name-keyed absorb: resolution of WHICH entry a `d2` op refers to is exact (key identity).
+/// Positions need the same replay arrays get, with one asymmetry: a `d1`-added entry's `index`
+/// counts positions in `mid`, a `d2`-added entry's counts positions in `after`, and member NAME
+/// identity carries no positional information base-free — so where a `d2` removal of a BASE member
+/// sat inside `mid` is unknowable here. Two sound facts close the gap:
+/// - each `d2` removal deletes exactly one slot from `mid`, so a surviving `d1`-added entry's final
+///   index is at most `index - <removals>`; dropping it by the count of `d2` removals of `mid`
+///   slots is EXACT whenever the removed members precede it (the expected pattern — new members are
+///   appended, see `JsonMutation::SetMember`'s own diff construction) and otherwise stays an upper
+///   bound that [`apply_object_diff`]'s normative `min(index, len)` clamp absorbs;
+/// - a `d1`-added index is therefore never authoritatively BELOW a `d2`-added one it ties with, so
+///   the stable sort keeps `d1`'s entry first and the tie is broken upwards.
+///
+/// The result is always a valid triple (strictly ascending, collision-free `added` indices), which
+/// the unshifted carry-forward this replaced was not: `{a:1} -> {a:1,b:2} -> {a:9,b:2} -> {b:2,c:3}`
+/// produced two additions claiming index 1 and failed `validate_object_diff` outright.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn absorb_object_diff(d1: JsonObjectDiff, d2: JsonObjectDiff) -> JsonObjectDiff {
     let mut removed: Vec<String> = d1.removed;
     let mut modified: Vec<JsonObjectModified> = d1.modified;
     let mut added: Vec<JsonObjectAdded> = d1.added;
     let mut merged_removed: HashSet<String> = HashSet::new();
+    let mut base_slots_removed = 0usize;
 
     for key in d2.removed {
         if let Some(pos) = added.iter().position(|a| a.key == key) {
+            let vacated = added[pos].index;
             added.remove(pos);
+            for entry in added.iter_mut() {
+                if entry.index > vacated {
+                    entry.index -= 1;
+                }
+            }
         } else if let Some(pos) = modified.iter().position(|m| m.key == key) {
             modified.remove(pos);
             if merged_removed.insert(key.clone()) {
                 removed.push(key);
+                base_slots_removed += 1;
             }
         } else if merged_removed.insert(key.clone()) {
             removed.push(key);
+            base_slots_removed += 1;
         }
+    }
+    for entry in added.iter_mut() {
+        entry.index = entry.index.saturating_sub(base_slots_removed);
     }
     for m in d2.modified {
         if let Some(a) = added.iter_mut().find(|a| a.key == m.key) {
@@ -666,6 +687,11 @@ fn absorb_object_diff(d1: JsonObjectDiff, d2: JsonObjectDiff) -> JsonObjectDiff 
         added.push(a);
     }
     added.sort_by_key(|a| a.index);
+    let mut next_free = 0usize;
+    for entry in added.iter_mut() {
+        entry.index = entry.index.max(next_free);
+        next_free = entry.index + 1;
+    }
     removed.sort();
     removed.dedup();
     JsonObjectDiff { removed, modified, added }

@@ -6298,6 +6298,19 @@ export function nativeSecondImplementationBreaches(registry: OracleRegistry): Br
         );
         continue;
       }
+      if (!isPlainObject(evidence) || typeof evidence.format !== "string" || evidence.format.trim().length === 0) {
+        breaches.push(
+          breach(
+            "testing/oracle",
+            "native-second-implementation-unearned",
+            scope,
+            `${oracle.id} records nativeSecondImplementation evidence without the schema-required non-empty format`,
+            "The format joins this evidence to the owner's authoritative mutation manifest. Missing or malformed metadata cannot earn a discharge and must remain an explicit contract breach.",
+            "Record nativeSecondImplementation.format as the artifact id declared by this contribution's mutationManifests entry.",
+          ),
+        );
+        continue;
+      }
       if (!isSemioNativeArtifact(evidence.format)) {
         breaches.push(
           breach(
@@ -6751,6 +6764,11 @@ export function noOracleMisuseBreaches(registry: OracleRegistry): BreachRecord[]
   const mutationCapabilities = new Set(registry.mutationManifests.flatMap((manifest) => manifest.mutations.flatMap((mutation) => [mutation.capability, ...mutation.oracleRequirements.map((requirement) => requirement.capability)])));
   const breaches: BreachRecord[] = [];
   for (const decision of registry.noOracleDecisions) {
+    if (!isPlainObject(decision) || !Array.isArray(decision.capabilities) || !decision.capabilities.every((capability) => typeof capability === "string")) {
+      const id = isPlainObject(decision) && typeof decision.id === "string" ? decision.id : "unknown-no-oracle-decision";
+      breaches.push(breach("testing/oracle", "no-oracle-decision-invalid", id, `No-oracle decision ${id} has no schema-required capabilities array`, "A malformed decision cannot be matched against mutation requirements, and crashing here hides every subsequent contract finding.", "Record capabilities as a non-empty string array and retain the decision's rationale and substitutes."));
+      continue;
+    }
     const covered = decision.capabilities.filter((capability) => mutationCapabilities.has(capability));
     if (covered.length > 0) {
       breaches.push(breach("testing/oracle", "no-oracle-covers-mutation", decision.id, `No-oracle decision ${decision.id} claims mutation capability/capabilities ${covered.join(", ")}`, "A runtime mutation's oracle requirement is discharged only by a qualifying third-party reference; recording a decision instead would make the gap invisible rather than blocking.", "Remove the mutation capability from the decision and register a qualifying oracle, or block the mutation."));

@@ -105,13 +105,28 @@ function exampleInventory(root: string): { directories: string[]; files: string[
   return { directories: directories.map(path => relative(root, path)).sort(), files };
 }
 
+/** 🧪️ One hostile or valid row of `🧫️fixtures/🔣️.json`, exactly as `🧬️schema/🔣️.json` `$defs/case` declares it. */
+interface FixtureSweepReportCase {
+  readonly id: string;
+  readonly assertions: number;
+  readonly output: string;
+}
+
+/** 🧪️ The whole report fixture — `$defs/caseWithExpected` for `valid`, `$defs/case` for every `hostile` row. */
+interface FixtureSweepReportFixture {
+  readonly schemaVersion: 1;
+  readonly valid: FixtureSweepReportCase & { readonly expected: FixtureSweepEvidence };
+  readonly hostile: readonly FixtureSweepReportCase[];
+}
+
 export function testFixtureSweepReportContract(): void {
-  const reportFixture = JSON.parse(read(testFileUrlToPath(new URL("🧫️fixtures/🔣️.json", import.meta.url))));
+  const reportFixture: unknown = JSON.parse(read(testFileUrlToPath(new URL("🧫️fixtures/🔣️.json", import.meta.url))));
   const reportSchema = JSON.parse(read(testFileUrlToPath(new URL("🧬️schema/🔣️.json", import.meta.url))));
   const reportAjv = new Ajv2020({ strict: true, allErrors: true });
-  assert(reportAjv.validate(reportSchema, reportFixture), JSON.stringify(reportAjv.errors));
+  const validateReport = reportAjv.compile<FixtureSweepReportFixture>(reportSchema);
+  assert(validateReport(reportFixture), JSON.stringify(validateReport.errors));
   assert.deepEqual(assertFixtureSweepOutput(reportFixture.valid.output, reportFixture.valid.assertions), reportFixture.valid.expected);
-  for (const hostile of reportFixture.hostile) assert.throws(() => assertFixtureSweepOutput(hostile.output, hostile.assertions), undefined, hostile.id);
+  for (const hostile of reportFixture.hostile) assert.throws(() => assertFixtureSweepOutput(hostile.output, hostile.assertions), hostile.id);
 }
 
 export async function testFixtureSweepExtraction(): Promise<void> {

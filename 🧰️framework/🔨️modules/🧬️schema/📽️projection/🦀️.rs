@@ -173,7 +173,16 @@ modes: ModeDefinition[], defaultModeId: string,
 /**
  * 🚧️ See `modes` above — `WindowKinds` is `NonEmptyVec<WindowKindDefinition>`.
  */
-windowKinds: WindowKindDefinition[], panelTabs: Array<PanelTabDefinition>, keybindings: Array<Keybinding>,
+windowKinds: WindowKindDefinition[],
+/**
+ * 🕹️ The app-wide action roster: every action dispatchable in ANY window of this app that no
+ * window kind claims as its own, including the framework-injected History/Clipboard/tutorial
+ * constants. A window kind's dispatchable set is `WindowKindDefinition.actions` followed by this
+ * roster minus the ids some window claims — `resolveWindowActions` (`🎯️action-bus/🟦️.ts`), whose
+ * Rust twin is `window_kind_actions`. Kept here rather than copied into every window kind because a
+ * copy made the package descriptor grow as `apps × window kinds × actions`.
+ */
+actions: Array<ActionDefinition>, panelTabs: Array<PanelTabDefinition>, keybindings: Array<Keybinding>,
 /**
  * 🧰️ The interactive utilities this app exposes (referenced by `WindowKindDefinition.utilities`).
  */

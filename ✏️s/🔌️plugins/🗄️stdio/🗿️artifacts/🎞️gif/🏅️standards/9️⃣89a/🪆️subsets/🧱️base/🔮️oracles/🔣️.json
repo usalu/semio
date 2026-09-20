@@ -159,12 +159,21 @@
         "set-global-color-table",
         "set-background-color-index",
         "set-pixel-aspect-ratio",
+        "set-loop-count",
         "insert-frame",
         "remove-frame",
         "move-frame",
         "set-frame-geometry",
         "set-frame-pixels",
-        "set-frame-interlace"
+        "set-frame-interlace",
+        "set-frame-delay",
+        "set-frame-disposal",
+        "set-frame-transparency",
+        "set-frame-user-input",
+        "insert-comment",
+        "remove-comment",
+        "add-app-extension",
+        "remove-app-extension"
       ]
     }
   ],
@@ -544,6 +553,285 @@
           "invariants": {
             "local": [
               "frame-interlace-flag-and-row-order-agree"
+            ],
+            "enclosing": [
+              "gif-reencode-round-trip-agrees-with-reference-decoder"
+            ]
+          }
+        },
+        {
+          "id": "set-loop-count",
+          "capability": "gif-89a-mutate",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#SetLoopCount",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-loop-count",
+            "bridgeVersion": 1,
+            "variant": "GifMutation::SetLoopCount"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "gif-89a-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "gif-89a-any-mutate-reader"
+            }
+          ],
+          "carriers": [
+            "gif"
+          ],
+          "invariants": {
+            "local": [
+              "netscape-looping-extension-count-agrees"
+            ],
+            "enclosing": [
+              "gif-reencode-round-trip-agrees-with-reference-decoder"
+            ]
+          }
+        },
+        {
+          "id": "set-frame-delay",
+          "capability": "gif-89a-mutate",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#SetFrameDelay",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-frame-delay",
+            "bridgeVersion": 1,
+            "variant": "GifMutation::SetFrameDelay"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "gif-89a-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "gif-89a-any-mutate-reader"
+            }
+          ],
+          "carriers": [
+            "gif"
+          ],
+          "invariants": {
+            "local": [
+              "graphic-control-extension-delay-agrees"
+            ],
+            "enclosing": [
+              "gif-reencode-round-trip-agrees-with-reference-decoder"
+            ]
+          }
+        },
+        {
+          "id": "set-frame-disposal",
+          "capability": "gif-89a-mutate",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#SetFrameDisposal",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-frame-disposal",
+            "bridgeVersion": 1,
+            "variant": "GifMutation::SetFrameDisposal"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "gif-89a-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "gif-89a-any-mutate-reader"
+            }
+          ],
+          "carriers": [
+            "gif"
+          ],
+          "invariants": {
+            "local": [
+              "graphic-control-extension-disposal-agrees"
+            ],
+            "enclosing": [
+              "gif-reencode-round-trip-agrees-with-reference-decoder"
+            ]
+          }
+        },
+        {
+          "id": "set-frame-transparency",
+          "capability": "gif-89a-mutate",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#SetFrameTransparency",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-frame-transparency",
+            "bridgeVersion": 1,
+            "variant": "GifMutation::SetFrameTransparency"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "gif-89a-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "gif-89a-any-mutate-reader"
+            }
+          ],
+          "carriers": [
+            "gif"
+          ],
+          "invariants": {
+            "local": [
+              "graphic-control-extension-transparency-agrees"
+            ],
+            "enclosing": [
+              "gif-reencode-round-trip-agrees-with-reference-decoder"
+            ]
+          }
+        },
+        {
+          "id": "set-frame-user-input",
+          "capability": "gif-89a-mutate",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#SetFrameUserInput",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "set-frame-user-input",
+            "bridgeVersion": 1,
+            "variant": "GifMutation::SetFrameUserInput"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "gif-89a-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "gif-89a-any-mutate-reader"
+            }
+          ],
+          "carriers": [
+            "gif"
+          ],
+          "invariants": {
+            "local": [
+              "graphic-control-extension-user-input-agrees"
+            ],
+            "enclosing": [
+              "gif-reencode-round-trip-agrees-with-reference-decoder"
+            ]
+          }
+        },
+        {
+          "id": "insert-comment",
+          "capability": "gif-89a-mutate",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#InsertComment",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "insert-comment",
+            "bridgeVersion": 1,
+            "variant": "GifMutation::InsertComment"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "gif-89a-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "gif-89a-any-mutate-reader"
+            }
+          ],
+          "carriers": [
+            "gif"
+          ],
+          "invariants": {
+            "local": [
+              "comment-extension-blocks-agree"
+            ],
+            "enclosing": [
+              "gif-reencode-round-trip-agrees-with-reference-decoder"
+            ]
+          }
+        },
+        {
+          "id": "remove-comment",
+          "capability": "gif-89a-mutate",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#RemoveComment",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "remove-comment",
+            "bridgeVersion": 1,
+            "variant": "GifMutation::RemoveComment"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "gif-89a-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "gif-89a-any-mutate-reader"
+            }
+          ],
+          "carriers": [
+            "gif"
+          ],
+          "invariants": {
+            "local": [
+              "comment-extension-blocks-agree"
+            ],
+            "enclosing": [
+              "gif-reencode-round-trip-agrees-with-reference-decoder"
+            ]
+          }
+        },
+        {
+          "id": "add-app-extension",
+          "capability": "gif-89a-mutate",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#AddAppExtension",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "add-app-extension",
+            "bridgeVersion": 1,
+            "variant": "GifMutation::AddAppExtension"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "gif-89a-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "gif-89a-any-mutate-reader"
+            }
+          ],
+          "carriers": [
+            "gif"
+          ],
+          "invariants": {
+            "local": [
+              "application-extension-blocks-agree"
+            ],
+            "enclosing": [
+              "gif-reencode-round-trip-agrees-with-reference-decoder"
+            ]
+          }
+        },
+        {
+          "id": "remove-app-extension",
+          "capability": "gif-89a-mutate",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🦀️.rs#RemoveAppExtension",
+          "outcomes": [
+            "applied"
+          ],
+          "productionDispatch": {
+            "operation": "remove-app-extension",
+            "bridgeVersion": 1,
+            "variant": "GifMutation::RemoveAppExtension"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "gif-89a-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "gif-89a-any-mutate-reader"
+            }
+          ],
+          "carriers": [
+            "gif"
+          ],
+          "invariants": {
+            "local": [
+              "application-extension-blocks-agree"
             ],
             "enclosing": [
               "gif-reencode-round-trip-agrees-with-reference-decoder"

@@ -7046,6 +7046,92 @@ function censusGeneratedCorruption(root: string): GeneratedCorruptionCensus {
 //#endregion 🔖️GeneratedCorruptionCensus
 
 /** 🧪️Aggregates lint + generated-catalog freshness + region/host-contract script lints (`gate`, the cheap pre-`ticket_close` step every refactor session runs), plus the full test suite for the top-level `verify` verb. */
+/** 🧸️One composed-child row of a committed `*.dsl.semio` document whose target names a different id than the row's own `child_id`. */
+export type ComposedChildRefRow = { path: string; slot: string; childId: string; targetArtifactId: string; targetUri: string; waiver?: string };
+
+/**
+ * 🧾️The only rows `verify composed-child-refs` tolerates. `🌍️gis`'s durable three-store assembly
+ * deliberately pins its member documents to fixed ids (`gismap-drawing`, `gismap-value`) that are
+ * declared as constants in the framework's own durable-group composition
+ * (`🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🦀️.rs`), in
+ * `✏️s/🔌️plugins/🌍️gis/🧬️schema/🔣️.json` as `const`, and in `🌎️hub`'s committed fixtures — so the
+ * parent's per-handle `child_id` and the member's stable document id are two different things on
+ * purpose. The consequence is stated, not hidden: a durable-group child in that shape can never pass
+ * `ChildRestoreProjection`, so gis cannot take a whole-document `Effect::LoadDocument` until that
+ * fork is resolved by the durable-group owner. Each waiver names the id it protects.
+ */
+const COMPOSED_CHILD_REF_WAIVERS: { targetArtifactId: string; reason: string }[] = [
+  { targetArtifactId: "gismap-drawing", reason: "gis durable-group member id, declared const in store/🗄️durable-group, gis 🧬️schema/🔣️.json and 🌎️hub fixtures" },
+  { targetArtifactId: "gismap-value", reason: "gis durable-group member id, declared const in store/🗄️durable-group, gis 🧬️schema/🔣️.json and 🌎️hub fixtures" },
+];
+
+/** 🚫️Directory names the composed-child-ref walk never descends into — caches and build output carry copies of the same assets. */
+const COMPOSED_CHILD_REF_SKIPPED_DIRECTORIES = new Set([".git", "node_modules", "dist", "target", "⚡️cache", "🗑️generated"]);
+
+/** 📚️Every committed `*.dsl.semio` document in the workspace, in walk order. */
+function verifyComposedChildRefAssets(root: string): string[] {
+  const found: string[] = [];
+  const walk = (directory: string): void => {
+    let entries;
+    try {
+      entries = readdirSync(directory, { withFileTypes: true });
+    } catch {
+      return;
+    }
+    for (const entry of entries) {
+      if (entry.isDirectory()) {
+        if (!COMPOSED_CHILD_REF_SKIPPED_DIRECTORIES.has(entry.name)) walk(join(directory, entry.name));
+      } else if (entry.name.endsWith(".dsl.semio")) found.push(join(directory, entry.name));
+    }
+  };
+  walk(root);
+  return found;
+}
+
+/** 🔢️Count of the documents the law scanned, so a zero-breach run still proves it looked at something. */
+export function verifyComposedChildRefAssetCount(root: string): number {
+  return verifyComposedChildRefAssets(root).length;
+}
+
+/**
+ * 🔎️Scans every committed `*.dsl.semio` for child rows of the DSL shape
+ * `<slot>=[<hex child_id>,<hex target uri>]` that `store::artifact_child_to_record` writes, and
+ * returns the rows whose target uri names an artifact id other than the row's own `child_id`.
+ * Rows matching `COMPOSED_CHILD_REF_WAIVERS` come back carrying their waiver reason rather than
+ * being dropped, so the census always shows the whole truth.
+ */
+export function verifyComposedChildRefRows(root: string): ComposedChildRefRow[] {
+  const rows: ComposedChildRefRow[] = [];
+  const decode = (hex: string): string | undefined => {
+    if (hex.length % 2 !== 0) return undefined;
+    try {
+      return Buffer.from(hex, "hex").toString("utf8");
+    } catch {
+      return undefined;
+    }
+  };
+  for (const path of verifyComposedChildRefAssets(root)) {
+    let text;
+    try {
+      text = readFileSync(path, "utf8");
+    } catch {
+      continue;
+    }
+    for (const line of text.split("\n")) {
+      const match = /^([A-Za-z0-9_]+)=\[([0-9a-f]+),([0-9a-f]+)\]$/.exec(line.trim());
+      if (match === null) continue;
+      const childId = decode(match[2]);
+      const targetUri = decode(match[3]);
+      if (childId === undefined || targetUri === undefined || !targetUri.includes("!")) continue;
+      const targetArtifactId = targetUri.slice(0, targetUri.indexOf("!"));
+      if (targetArtifactId === childId) continue;
+      const waiver = COMPOSED_CHILD_REF_WAIVERS.find((row) => row.targetArtifactId === targetArtifactId)?.reason;
+      rows.push({ path: relative(root, path), slot: match[1], childId, targetArtifactId, targetUri, waiver });
+    }
+  }
+  return rows;
+}
+
 export class VerifyScript extends Script {
   async run(segments: string[]): Promise<void> {
     if (segments[0] === "taxonomy") {
@@ -7054,6 +7140,10 @@ export class VerifyScript extends Script {
     }
     if (segments[0] === "mutation-outcome-law") {
       this.runMutationOutcomeLaw();
+      return;
+    }
+    if (segments[0] === "composed-child-refs") {
+      this.runComposedChildRefs(segments.slice(1));
       return;
     }
     if (segments[0] === "semantic-vocabulary") {
@@ -8233,6 +8323,33 @@ export class VerifyScript extends Script {
    * `bun ./📜️script.ts verify mutation-outcome-law` (the `mutation-outcome-law` nx target in
    * `📋️project.json` wires this ahead of `verify-gate`).
    */
+  /**
+   * 🪆️Repo-wide law for composed-child rows in committed `*.dsl.semio` documents: a child row's
+   * `child_id` and its target `ArtifactRef.artifact_id` must be the SAME string. That is not a style
+   * rule — `ChildRestoreProjection::child`
+   * (`🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs`) refuses any other pair with
+   * `InvalidReference`, so a mismatched asset cannot survive a whole-document `Effect::LoadDocument`
+   * and every app that gains an example picker fails at its first boot dispatch with
+   * `document archive genesis child projection failed`. Found 2026-09-20 by slice B2c on
+   * `📖️playbook`'s demo asset (ticket `26/09/18/OS-HUB-COLLABORATION-AI-END-TO-END`), where the verb
+   * was correct and the ASSET was a month-stale bare-id artefact. `--json` prints the census instead
+   * of failing.
+   */
+  private runComposedChildRefs(segments: string[]): void {
+    const rows = verifyComposedChildRefRows(this.root);
+    const waived = rows.filter((row) => row.waiver !== undefined);
+    const breaches = rows.filter((row) => row.waiver === undefined);
+    if (segments.includes("--json")) {
+      console.log(JSON.stringify({ assets: verifyComposedChildRefAssetCount(this.root), rows, breaches: breaches.length, waived: waived.length }, null, 2));
+      return;
+    }
+    console.log(`[verify composed-child-refs] assets=${verifyComposedChildRefAssetCount(this.root)} mismatched=${rows.length} waived=${waived.length} breaches=${breaches.length}`);
+    for (const row of waived) console.log(`[verify composed-child-refs] waived ${row.path} ${row.slot}: ${row.waiver}`);
+    for (const row of breaches) console.error(`[verify composed-child-refs] ${row.path} slot ${row.slot}: child_id ${JSON.stringify(row.childId)} but target artifact_id ${JSON.stringify(row.targetArtifactId)}`);
+    if (breaches.length > 0) throw new Error(`[verify composed-child-refs] ${breaches.length} composed-child row(s) whose target artifact_id is not their own child_id`);
+    console.log("[verify composed-child-refs] passed.");
+  }
+
   private runMutationOutcomeLaw(): void {
     const breaches = policyMutationOutcomeMergePolicyBreaches(this.root).filter((b) => b.priority === "high");
     if (breaches.length > 0) {
@@ -9034,6 +9151,7 @@ const INTERACTIVITY_ALL_APP_REQUIRED_GATES: readonly { readonly name: string; re
   { name: "⚖️gate⚡️interactivity🧭️apps🎛️actions", command: "bun nx run workspace:verify -- interactivity apps --actions" },
   { name: "⚖️gate📦️dependencies", command: "bun nx run workspace:verify -- dependencies" },
   { name: "⚖️gate📦️dependencies0️⃣", command: "bun nx run workspace:verify -- dependencies literal-external" },
+  { name: "⚖️gate🪆️composed-child-refs", command: "bun nx run workspace:verify -- composed-child-refs" },
 ];
 
 type InteractivityAllAppAction = { appId: string; windowId: string; actionId: string; disposition?: string };
@@ -14882,7 +15000,12 @@ export class CppScript extends Script {
 export class PublishScript extends Script {
   run(segments: string[]): void {
     const slice = segments[0];
+    /** 🚚️ Every slice that has a real, versioned, checksummed local deliverable today. Each target
+     * depends on its own release build and writes `<project>/dist/publish/<name>-<version>-<platform>-<arch>.tar.gz`
+     * plus a `.sha256`; none of them uploads or pushes anything anywhere. */
     const map: Record<string, string> = {
+      "os-hub": "os-hub:publish",
+      "os-mcp": "@semio-tech/framework-os-mcp-rs:publish",
     };
     if (!slice) {
       console.error(`[publish] usage: bun ./📜️script.ts publish <${Object.keys(map).join(" | ")}>`);
@@ -19012,8 +19135,6 @@ const POLICY_PLUGIN_CLOSED_SHAPE_DESTINATIONS: Readonly<Record<string, string>> 
   "✏️s/🔌️plugins/🏭️process/🧩️extensions": "Extension-crate axis (role=extension, extends=process, 4 crates) — pending the §6 ruling in 📓️w0-census.md.",
   "✏️s/🔌️plugins/📐️cad/🔨️modules": "Needs per-subdir inspection (14 files, not enumerated) — likely folds into 🗿️artifacts/<cad-artifact>/🏅️standards/…/⚙️engine/ per the gis/puzzle pattern — 📓️w0-b-plugin-shape.md §5.",
   "✏️s/🔌️plugins/📐️cad/🧩️extensions": "Extension-crate axis (role=extension, extends=cad, 4 crates) — pending the §6 ruling in 📓️w0-census.md.",
-  "✏️s/🔌️plugins/📕️norm/🎚️config": "Shared default for 15 norm apps — needs a cross-app-shared-code ruling (duplicate into each 🎛️apps/<norm-app>/🎚️config/, or a new sanctioned slot) — 📓️w0-census.md §6.",
-  "✏️s/🔌️plugins/📕️norm/👥️presence": "Same shared-across-15-apps ruling as 🎚️config — 📓️w0-census.md §6.",
   "✏️s/🔌️plugins/📕️norm/⚖️compliance": "Feeds all 15 norm standard artifacts — needs a cross-artifact-shared-engine ruling (candidate: 🗿️artifacts/norm/🏅️standards/🔖️shared/⚙️engine/core/) — 📓️w0-census.md §6.",
   "✏️s/🔌️plugins/📕️norm/🖥️app-surface": "Same cross-app-shared ruling as fem's 🖥️app-surface — 📓️w0-census.md §6.",
   "✏️s/🔌️plugins/📖️playbook/🧩️extensions": "Extension-crate axis (role=extension, extends=playbook, 1 crate) — pending the §6 ruling in 📓️w0-census.md.",

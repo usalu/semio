@@ -15,7 +15,10 @@ import { describe, expect, it } from "vitest";
 import {
   COMPONENT_SOURCE_SCAN_MAXIMUM_ENTRIES,
   UNWATCHED_COMPONENT_SOURCE_DIRECTORIES,
+  healthyPreparedComponents,
   newestComponentSourceMtime,
+  preparedComponentReportLines,
+  preparedComponentVerdict,
   pluginModulesRoot,
   pluginModulesRootIn,
   stagedModuleMtime,
@@ -116,6 +119,43 @@ describe("one plugin staging root", () => {
     expect([...project.namedInputs.stagingRootSources].sort()).toEqual(expected);
     const targets = Object.values(project.targets) as { options?: { command?: string }; inputs?: readonly string[] }[];
     for (const target of targets.filter((target) => target.options?.command?.startsWith("bun ./📜️script.ts test"))) expect(target.inputs).toContain("stagingRootSources");
+  });
+});
+
+/** @emoji 🩺️ The healthy-set rule a 60-plugin host stands or falls on: one red crate is a missing
+ * component, never an un-bootable product. Every case is stated against the same pure pair
+ * (`preparedComponentVerdict` → `healthyPreparedComponents`) the preparation pass and the activation
+ * receipt both call, so there is no second, drifting notion of "prepared". */
+describe("healthy prepared set", () => {
+  const complete = (pluginId: string) => ({ pluginId, directoryPresent: true, descriptorPluginId: pluginId, bridgePresent: true, artifactMarkerPresent: true });
+
+  it.each([
+    ["a complete staging directory is prepared", complete("space"), "prepared", undefined],
+    ["a crate that never compiled leaves no directory", { pluginId: "block", directoryPresent: false, bridgePresent: false, artifactMarkerPresent: false }, "unstaged", "no staged module directory"],
+    ["an unreadable descriptor is a fact, not a throw", { pluginId: "block", directoryPresent: true, bridgePresent: true, artifactMarkerPresent: true }, "incomplete", "no readable 🔣️.json descriptor"],
+    ["a descriptor naming another plugin is incomplete", { ...complete("block"), descriptorPluginId: "draw" }, "incomplete", "descriptor names draw"],
+    ["a missing bridge is incomplete", { ...complete("block"), bridgePresent: false }, "incomplete", "no module bridge"],
+    ["a missing Nx marker is incomplete", { ...complete("block"), artifactMarkerPresent: false }, "incomplete", "no .nx-artifact.json marker"],
+  ] as const)("%s", (_name, facts, kind, detail) => {
+    expect(preparedComponentVerdict(facts)).toEqual({ pluginId: facts.pluginId, kind, ...(detail === undefined ? {} : { detail }) });
+  });
+
+  it("excludes one red component and still boots the host", () => {
+    const verdicts = [complete("space"), complete("draw"), { pluginId: "block", directoryPresent: false, bridgePresent: false, artifactMarkerPresent: false }].map(preparedComponentVerdict);
+    const healthy = healthyPreparedComponents(verdicts, "space");
+    expect(healthy.refusal).toBeUndefined();
+    expect(healthy.prepared).toEqual(["space", "draw"]);
+    expect(preparedComponentReportLines(healthy.excluded, "CMD")).toEqual(["[excluded] block: unstaged — no staged module directory — run: CMD"]);
+  });
+
+  it("refuses when the host's own component is the one that failed", () => {
+    const verdicts = [{ pluginId: "space", directoryPresent: false, bridgePresent: false, artifactMarkerPresent: false }, complete("draw")].map(preparedComponentVerdict);
+    expect(healthyPreparedComponents(verdicts, "space").refusal).toBe("Host component space is unstaged — no staged module directory");
+  });
+
+  it("refuses when nothing prepared at all", () => {
+    const verdicts = [{ pluginId: "draw", directoryPresent: false, bridgePresent: false, artifactMarkerPresent: false }].map(preparedComponentVerdict);
+    expect(healthyPreparedComponents(verdicts, "space").refusal).toBe("No component of 1 prepared");
   });
 });
 

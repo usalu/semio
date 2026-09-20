@@ -33,6 +33,53 @@ struct PendingProjection {
     origin: (f32, f32),
 }
 
+const SELECT_LISTBOX_KEY_SUFFIX: &str = "::listbox";
+const SELECT_OPTION_KEY_INFIX: &str = "::option::";
+
+pub(crate) fn select_accessibility_option_value(record: &ui_contract::UiNodeRecord, key: &str) -> Option<String> {
+    let ui_contract::Component::Select(select) = &record.component else { return None };
+    let prefix = format!("{}{SELECT_OPTION_KEY_INFIX}", record.key.as_str());
+    let value = key.strip_prefix(&prefix)?;
+    select.items.iter().find(|item| item.value.as_str() == value).map(|item| item.value.as_str().to_string())
+}
+
+fn select_accessibility_nodes(record: &ui_contract::UiNodeRecord, depth: usize, owner: &AccessibilityProjectionNode) -> Vec<AccessibilityProjectionNode> {
+    let ui_contract::Component::Select(select) = &record.component else { return Vec::new() };
+    let mut nodes = Vec::with_capacity(select.items.len().saturating_add(1));
+    let mut listbox = owner.clone();
+    listbox.key = format!("{}{SELECT_LISTBOX_KEY_SUFFIX}", record.key.as_str());
+    listbox.role = "listbox".to_string();
+    listbox.depth = depth;
+    listbox.description = None;
+    listbox.shortcut = None;
+    listbox.focusable = false;
+    listbox.actionable = false;
+    listbox.focused = false;
+    listbox.checked = None;
+    listbox.selected = None;
+    listbox.expanded = None;
+    listbox.level = None;
+    listbox.rect = None;
+    listbox.value_min = None;
+    listbox.value_max = None;
+    listbox.value_now = None;
+    listbox.value_text = None;
+    listbox.busy = false;
+    nodes.push(listbox.clone());
+    for item in select.items.iter() {
+        let mut option = listbox.clone();
+        option.key = format!("{}{SELECT_OPTION_KEY_INFIX}{}", record.key.as_str(), item.value.as_str());
+        option.role = "option".to_string();
+        option.depth = depth.saturating_add(1);
+        option.label = Some(item.label.0.as_str().to_string());
+        option.actionable = !record.disabled;
+        option.selected = Some(item.value == select.value);
+        option.value_text = Some(item.value.as_str().to_string());
+        nodes.push(option);
+    }
+    nodes
+}
+
 /// ♿️ The accessibility tree ONE window's retained document publishes, in pre-order — the reading
 /// order an assistive technology walks.
 ///
@@ -56,19 +103,47 @@ pub fn accessibility_projection(tree: &UiTree) -> Vec<AccessibilityProjectionNod
         let Some(record) = document.record(pending.id) else { continue };
         let mut node = accessibility_projection_node(record, pending.depth);
         let mut origin = pending.origin;
+        let mut children_visible = true;
         if let Some(mounted) = tree.document_node(pending.id) {
             if let Some(arena_node) = tree.node(mounted) {
                 node.focused = arena_node.flags.contains(NodeFlags::FOCUSED);
+                if node.role == "treeitem" {
+                    node.selected = Some(arena_node.spec.0.presence().selected);
+                }
+                match &arena_node.spec.0 {
+                    crate::wgpu::UiNode::Input(input) => node.value_text = Some(arena_node.state.edit.as_ref().map(|edit| edit.text.clone()).unwrap_or_else(|| input.value.clone())),
+                    crate::wgpu::UiNode::Select(_) => node.expanded = Some(arena_node.state.open),
+                    crate::wgpu::UiNode::Toggle(toggle) => node.checked = Some(toggle.presence.selected),
+                    _ => {}
+                }
+                if let Some(open) = tree.disclosure_open(mounted) {
+                    node.expanded = Some(open);
+                    children_visible = open;
+                }
             }
             if let Some((x, y, width, height)) = tree.mounted_layout(mounted) {
                 origin = (pending.origin.0 + x, pending.origin.1 + y);
                 node.rect = Some([origin.0, origin.1, width, height]);
             }
         }
-        projection.push(node);
-        for index in (0..record.children.len()).rev() {
-            if let Some(child) = record.children.get(index) {
-                stack.push(PendingProjection { id: *child, depth: pending.depth + 1, origin });
+        let select_open = tree
+            .document_node(pending.id)
+            .and_then(|mounted| tree.node(mounted))
+            .is_some_and(|arena_node| matches!(&arena_node.spec.0, crate::wgpu::UiNode::Select(_)) && arena_node.state.open);
+        projection.push(node.clone());
+        if select_open {
+            for virtual_node in select_accessibility_nodes(record, pending.depth, &node) {
+                if projection.len() >= UI_DOCUMENT_NODES {
+                    break;
+                }
+                projection.push(virtual_node);
+            }
+        }
+        if children_visible {
+            for index in (0..record.children.len()).rev() {
+                if let Some(child) = record.children.get(index) {
+                    stack.push(PendingProjection { id: *child, depth: pending.depth + 1, origin });
+                }
             }
         }
     }
@@ -87,3 +162,6 @@ pub fn accessibility_announced(projection: &[AccessibilityProjectionNode]) -> Ve
 #[cfg(test)]
 #[path = "../../../🧪️tests/🔬️targets-wgpu-accessibility-projection/🦀️.rs"]
 mod tests;
+#[cfg(test)]
+#[path = "../../../🧪️tests/📂️retained-section-collapse/♿️.rs"]
+mod retained_section_collapse_tests;

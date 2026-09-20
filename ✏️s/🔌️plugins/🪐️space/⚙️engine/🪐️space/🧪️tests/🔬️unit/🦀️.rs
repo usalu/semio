@@ -12,8 +12,14 @@ pub(crate) mod context {
     pub type SpaceVcsApp = semio_framework_plugin::VcsArtifactApp<SpaceApp>;
     
     /// 🕹️ Creates a fixture with the real manifest registry and graph interaction domain.
+    ///
+    /// 🔗️ The instance id is BOUND here: a retained (migrated) tool command is refused with
+    /// `interactive-job.live-instance` unless the app's mounted live instance id equals the
+    /// dispatching `ActionMeta`'s, and every fixture in this tree dispatches as `meta("local")`.
     pub(crate) async fn app_with_registry() -> SpaceVcsApp {
-        semio_framework_plugin::artifact_app_laws::new_registered_app::<SpaceApp, _>(create_space_app()).await
+        let mut app = semio_framework_plugin::artifact_app_laws::new_registered_app::<SpaceApp, _>(create_space_app()).await;
+        semio_framework_plugin::PluginApp::bind_instance_id(&mut app, semio_framework_plugin::artifact_app_laws::meta("local").instance_id).await;
+        app
     }
     
     pub(crate) async fn dispatch(app: &mut SpaceVcsApp, command: SpaceCommand) -> semio_framework_plugin::InvocationResult {
@@ -239,14 +245,16 @@ async fn retained_command_catalog_matches_the_serde_json_oracle() {
         .collect::<std::collections::BTreeSet<_>>();
     assert_eq!(oracle, SpaceRetainedCatalogSummary { routes: 40, bounded: 15, batch: 25, migrated: 15, unique: true, bounded_ids: bounded_ids.clone(), migrated_ids: bounded_ids.clone(), host_only_ids: host_only_ids.clone() });
     assert_eq!(bounded_ids.len(), SPACE_BOUNDED_TOOL_IDS.len());
-    assert_eq!(host_only_ids.len(), 6);
+    // 📣️ `presenceHeartbeat` joined the HostOnly lane (see `SpaceCommandJobFactory`'s own
+    // `PUBLICATION_CONTRACTS` and the committed `🧫️retained-command-limits` fixture): seven now.
+    assert_eq!(host_only_ids.len(), 7);
     assert_eq!(SPACE_BATCH_ONLY_TOOL_IDS.len(), 25);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn retained_publication_oracle_rejects_hostile_tool_and_lane_fixtures() {
     let fixture = include_str!("../../🧫️fixtures/🧫️retained-command-limits/🔣️.json");
-    let expected = ["setActiveExample", "importSpacePack", "goHome", "navigateVirtualFileSystemNode", "importSpacePackPayload", "setAppRegistrations"].iter().map(|id| (*id).to_string()).collect::<std::collections::BTreeSet<_>>();
+    let expected = ["presenceHeartbeat", "setActiveExample", "importSpacePack", "goHome", "navigateVirtualFileSystemNode", "importSpacePackPayload", "setAppRegistrations"].iter().map(|id| (*id).to_string()).collect::<std::collections::BTreeSet<_>>();
     let wrong_lane = fixture.replacen("\"HostOnly\"", "\"Artifact\"", 1);
     let wrong_tool = fixture.replacen("\"setActiveExample\"", "\"forgedTool\"", 1);
     assert_ne!(SerdeJsonSpaceRetainedCatalogOracle.summarize(&wrong_lane).host_only_ids, expected);
@@ -320,7 +328,10 @@ async fn space_manifest_uses_studio_app_id() {
 async fn commit_checkpoint_round_trips_projection() {
     use crate::engine::space::commands::spawn_app;
     context::seed_draw_plugin().await;
-    let mut app = VcsArtifactApp::<SpaceApp>::new(SpaceApp::default()).await;
+    // 🧾️ The REGISTERED wrapper: `SpaceApp` publishes bounded tool proofs, so the registry-less
+    // `VcsArtifactApp::new` faults in the `interactive-job.catalog-authority` proof join
+    // (`generated_migrated=false`, `migrated={}`) while it is constructed.
+    let mut app = context::app_with_registry().await;
     app.dispatch_typed(SpaceCommand::SpawnApp(spawn_app::SpawnApp { plugin_id: "draw".into(), app_id: context::test_surface_id("draw").await, x: 80.0, y: 80.0 }), &plugin_laws::meta("local")).await.expect("spawn");
     let before = app.snapshot().expect("projection").graph.nodes.len();
     let commit_args = pack::json_to_dsl_value(&pack::json!({ "message": "snapshot" }));
@@ -332,7 +343,10 @@ async fn commit_checkpoint_round_trips_projection() {
 async fn checkout_checkpoint_restores_projection() {
     use crate::engine::space::commands::spawn_app;
     context::seed_draw_plugin().await;
-    let mut app = VcsArtifactApp::<SpaceApp>::new(SpaceApp::default()).await;
+    // 🧾️ The REGISTERED wrapper: `SpaceApp` publishes bounded tool proofs, so the registry-less
+    // `VcsArtifactApp::new` faults in the `interactive-job.catalog-authority` proof join
+    // (`generated_migrated=false`, `migrated={}`) while it is constructed.
+    let mut app = context::app_with_registry().await;
     let before = app.snapshot().expect("projection").graph.nodes.len();
     app.dispatch_typed(SpaceCommand::SpawnApp(spawn_app::SpawnApp { plugin_id: "draw".into(), app_id: context::test_surface_id("draw").await, x: 80.0, y: 80.0 }), &plugin_laws::meta("local")).await.expect("spawn");
     let commit_args = pack::json_to_dsl_value(&pack::json!({ "message": "after-first-spawn" }));
@@ -381,8 +395,12 @@ async fn two_instances_converge_on_disjoint_edits_via_backbone() {
     context::seed_multi_port_plugins().await;
     let draw_surface_id = context::test_surface_id("draw").await;
     let shooting_surface_id = context::test_surface_id("shooting").await;
-    plugin_laws::assert_two_instances_converge::<SpaceApp, (usize, usize)>(
+    // 🧹️ The REGISTERED pair: `SpaceApp` publishes bounded tool proofs, so a registry-less
+    // `paired_apps` instance faults in the `interactive-job.catalog-authority` proof join
+    // (`generated_migrated=false`, `migrated={}`) while it is constructed, before any edit lands.
+    plugin_laws::assert_two_registered_instances_converge::<SpaceApp, (usize, usize), _, _>(
         "mem://s-studio-convergence",
+        || create_space_app(),
         SpaceCommand::SpawnApp(spawn_app::SpawnApp { plugin_id: "draw".into(), app_id: draw_surface_id, x: 80.0, y: 80.0 }),
         SpaceCommand::SpawnApp(spawn_app::SpawnApp { plugin_id: "shooting".into(), app_id: shooting_surface_id, x: 300.0, y: 100.0 }),
         move |app| {

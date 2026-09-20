@@ -49,7 +49,7 @@ pub enum StepValue {
 /// every conformant writer (including the ruststep reference this repository measures against)
 /// emits.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn unpopulated_string_list() -> Vec<String> {
+pub(crate) fn unpopulated_string_list() -> Vec<String> {
     vec![String::new()]
 }
 

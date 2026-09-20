@@ -64,31 +64,59 @@ impl ApprovalRisk {
     }
 }
 
-/// 📄️ The four display fields a summary can carry.
+/// 📄️ The display fields a summary can carry — the wgpu twin of the React
+/// `ParsedApprovalSummary`, pinned to it by the shared `🧫️fixtures/🛡️summary` rows.
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct ParsedApprovalSummary {
     pub capability_id: Option<String>,
+    /// 🏷️ The verb's own published label — WHAT is about to happen.
+    pub capability_title: Option<String>,
+    /// 📖️ The verb's published description, the sentence the agent found it by.
+    pub description: Option<String>,
+    /// 🗿️ The artifact kind the verb belongs to — WHAT it happens to.
+    pub artifact_kind: Option<String>,
     pub diff_summary: String,
     pub risk: Option<ApprovalRisk>,
     pub requested_by: Option<String>,
+    /// ⏱️ The gateway's wait, as a DURATION from this frame's arrival; `None` for a producer that
+    /// sends none and for a non-positive value, neither of which can be counted down.
+    pub timeout_ms: Option<u64>,
 }
 
 /// 🔍️ Parses the single wire `summary` string: a JSON object carrying at least one of
 /// `capabilityId`/`risk`/`requestedBy` yields the rich shape, anything else (including malformed
 /// JSON, an array, or a bare string) falls back to treating the whole value as the diff summary.
+/// The producer is `🌉️mcp/🛡️policy`'s `ApprovalRequest::shell_summary`, and every row of
+/// `🧫️fixtures/🛡️summary` is asserted here AND on the React bank.
 pub fn parse_approval_summary(summary: &str) -> ParsedApprovalSummary {
-    let fallback = || ParsedApprovalSummary { capability_id: None, diff_summary: summary.to_string(), risk: None, requested_by: None };
+    let fallback = || ParsedApprovalSummary { diff_summary: summary.to_string(), ..ParsedApprovalSummary::default() };
     let Ok(serde_json::Value::Object(value)) = serde_json::from_str::<serde_json::Value>(summary) else {
         return fallback();
     };
-    let capability_id = value.get("capabilityId").and_then(|value| value.as_str()).map(str::to_string);
+    let text = |field: &str| value.get(field).and_then(|value| value.as_str()).filter(|value| !value.is_empty()).map(str::to_string);
+    let capability_id = text("capabilityId");
     let risk = value.get("risk").and_then(|value| value.as_str()).and_then(ApprovalRisk::from_wire);
-    let requested_by = value.get("requestedBy").and_then(|value| value.as_str()).map(str::to_string);
+    let requested_by = text("requestedBy");
     if capability_id.is_none() && risk.is_none() && requested_by.is_none() {
         return fallback();
     }
     let diff_summary = value.get("diffSummary").and_then(|value| value.as_str()).map_or_else(|| summary.to_string(), str::to_string);
-    ParsedApprovalSummary { capability_id, diff_summary, risk, requested_by }
+    let timeout_ms = value.get("timeoutMs").and_then(serde_json::Value::as_u64).filter(|timeout| *timeout > 0);
+    ParsedApprovalSummary { capability_id, capability_title: text("capabilityTitle"), description: text("description"), artifact_kind: text("artifactKind"), diff_summary, risk, requested_by, timeout_ms }
+}
+
+/// ⏱️ Whole seconds left of `timeout_ms` counted from the frame's arrival — the wgpu twin of
+/// `approvalSecondsRemaining`. `None` when nothing was named to count.
+#[must_use]
+pub fn approval_seconds_remaining(timeout_ms: Option<u64>, requested_at_ms: f64, now_ms: f64) -> Option<u64> {
+    let timeout_ms = timeout_ms?;
+    #[allow(clippy::cast_precision_loss)]
+    let remaining = (requested_at_ms + timeout_ms as f64 - now_ms) / 1000.0;
+    if remaining <= 0.0 {
+        return Some(0);
+    }
+    #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
+    Some(remaining.ceil() as u64)
 }
 //#endregion 🔖️ParseSummary
 

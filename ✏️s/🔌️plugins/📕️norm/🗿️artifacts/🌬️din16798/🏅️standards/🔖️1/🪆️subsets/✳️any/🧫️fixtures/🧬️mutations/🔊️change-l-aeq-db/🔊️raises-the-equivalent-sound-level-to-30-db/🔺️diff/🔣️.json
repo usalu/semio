@@ -9,7 +9,7 @@
   "thetaRmC": null,
   "co2Ppm": null,
   "dfPercent": null,
-  "lAeqDb": 30,
+  "lAeqDb": 30.0,
   "persons": null,
   "idaClass": null,
   "ventilationM3H": null,

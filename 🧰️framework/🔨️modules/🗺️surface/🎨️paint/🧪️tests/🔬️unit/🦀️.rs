@@ -389,6 +389,27 @@ fn pointer_move_while_painting_strokes_between_points() {
 }
 
 #[test]
+fn pointer_cancel_discards_only_the_live_brush_stroke_and_admits_the_next_down() {
+    let mut host = RasterHost::new();
+    host.set_size(400, 400, 1.0);
+    host.set_active_utility("paintBrush");
+    host.sync_interaction(&["back".to_string()], None);
+    host.pointer_down_screen(350.0, 400.0, 0);
+    host.pointer_up_screen(350.0, 400.0);
+    let key = RasterHost::layer_pixel_buffer_key("back");
+    let published = host.buffers.paint.get(&key).expect("published scratch").clone();
+    host.pointer_down_screen(450.0, 400.0, 0);
+    host.pointer_move_screen(470.0, 400.0);
+    assert_ne!(host.buffers.paint.get(&key), Some(&published));
+    host.pointer_cancel_screen();
+    assert_eq!(host.buffers.paint.get(&key), Some(&published));
+    assert!(!host.painting);
+    assert!(host.paint_gesture_before.is_empty());
+    host.pointer_down_screen(400.0, 400.0, 0);
+    assert!(host.painting, "the next primary down is admitted");
+}
+
+#[test]
 fn paint_eraser_reduces_alpha_instead_of_coloring() {
     let mut host = RasterHost::new();
     host.set_size(400, 400, 1.0);

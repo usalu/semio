@@ -1,10 +1,43 @@
 import { describe, expect, it } from "vitest";
+import Ajv from "ajv";
 import laws from "../../🧫️fixtures/🔬️wgpu-extension-dispatch/🔣️.json";
+import integerView from "../../../../../../../🔨️modules/🛂️manifest/🪟️view-context/🧫️fixtures/🔢️integer-carriers/🔣️.json";
+import viewContextSchema from "../../../../../../../🔨️modules/🛂️manifest/🪟️view-context/🧬️schema/🔣️.json";
 import { GUEST_CONTIGUOUS_REQUEST_CEILING_BYTES, GUEST_HOST_ANSWER_CEILING_BYTES, guestAnswerPages } from "../../../../../../../🔨️modules/⏱️trace/🧮️memory/🟦️.ts";
-import { serializeWgpuActorCall, wgpuBuildScopedContributionsPack, wgpuContributionsIngressSize, wgpuGuestAnswerPages, wgpuHostAnswerCeilingBytes, wgpuSetContributionsCommand, wgpuSlimContributionsView, WGPU_ACTOR_CALL_QUEUE_CAPACITY, WGPU_CONTRIBUTIONS_SLIM_VIEW, WgpuActorCallQueueFullError } from "../../🎯️targets/🧊️wgpu/🐚️plugin-bridge/🟦️.ts";
+import { serializeWgpuActorCall, wgpuBuildScopedContributionsPack, wgpuCommandIngressByteLength, wgpuContributionsIngressSize, wgpuGuestAnswerPages, wgpuHostAnswerCeilingBytes, wgpuSetContributionsCommand, wgpuSlimContributionsView, WGPU_ACTOR_CALL_QUEUE_CAPACITY, WGPU_CONTRIBUTIONS_SLIM_VIEW, WgpuActorCallQueueFullError } from "../../🎯️targets/🧊️wgpu/🐚️plugin-bridge/🟦️.ts";
+import { createTurnOutcomeBroadcast, type TurnOutcome } from "@semio-tech/framework";
+import { AppChannelClient, type AppChannelHandle, AppChannelRequestSequence, decodeAppCommand, encodeAppCommand, encodeAppFrame, encodePackValue } from "@semio-tech/framework-os";
 import { FRAME_WORKER_BOOT_LIVENESS_POLICY, bootPhaseCeilingMs, evaluateBrowserBootLiveness } from "../../🎯️targets/🧊️wgpu/🫀️boot-liveness/🟦️.ts";
 import { SHARD_COMMAND_MAXIMUM_PAGES } from "../../../../../../../🔨️modules/🎭️actor/📮️shard-client/🟦️.ts";
 import { PUBLIC_INVOCATION_BODY_BYTES, PUBLIC_INVOCATION_STRING_BYTES, publicInvocationStringPages } from "../../../../../../../🔨️modules/🛂️manifest/🟦️.ts";
+
+async function actualAppChannelCommand(sequenceOwnerBefore: number, commandBytes: Uint8Array, viewState: unknown): Promise<Uint8Array> {
+  const outcomes = createTurnOutcomeBroadcast<TurnOutcome>();
+  let captured: Uint8Array | undefined;
+  const handle: AppChannelHandle = {
+    enqueue: (instanceId, events) => {
+      captured = events[0];
+      if (!captured) throw new Error("actual AppChannel oracle did not receive a command");
+      const command = decodeAppCommand(captured);
+      if (!("Command" in command)) throw new Error("actual AppChannel oracle received the wrong command variant");
+      outcomes.push({ instanceId, frames: [encodeAppFrame({ Done: { in_reply_to: command.Command.seq } })] });
+    },
+    outcomes: outcomes.stream,
+  };
+  const client = new AppChannelClient(handle, new AppChannelRequestSequence(sequenceOwnerBefore), 7, "fixture");
+  try {
+    await client.command(commandBytes, viewState);
+    if (!captured) throw new Error("actual AppChannel oracle did not encode a command");
+    return captured;
+  } finally {
+    client.dispose();
+    outcomes.complete();
+  }
+}
+
+function bytesHex(bytes: readonly number[]): string {
+  return bytes.map((byte) => byte.toString(16).padStart(2, "0")).join("");
+}
 
 describe("wgpu extension-answer paging", () => {
   it("pages a 1 MiB answer so no cabi_realloc block exceeds one contiguous page", () => {
@@ -81,14 +114,44 @@ describe("wgpu scoped contributions pack", () => {
 });
 
 describe("wgpu contributions command ingress", () => {
-  it("crosses one slim-view pack under the derived shard page ceiling", () => {
+  it.each([
+    [0, 0],
+    [127, 128],
+    [16_383, 16_384],
+    [190_701, 37],
+  ])("matches the actual AppCommand encoder at command=%i view=%i bytes", (commandLength, viewLength) => {
+    const command = new Uint8Array(commandLength);
+    const view = new Uint8Array(viewLength);
+    const encoded = encodeAppCommand({ Command: { seq: 1, command: Array.from(command), view_state: Array.from(view) } });
+    expect(wgpuCommandIngressByteLength(1, command, view)).toBe(encoded.byteLength);
+  });
+
+  it.each(laws.laws.commandIngress.sequenceCases)("matches AppChannelClient at exact next sequence $sequence and normalizes integer view tags", async ({ ownerBefore, sequence }) => {
+    const validate = new Ajv({ strict: true }).compile(viewContextSchema);
+    expect(validate(integerView.viewContext), validate.errors?.map((error) => `${error.instancePath} ${error.message}`).join("\n")).toBe(true);
+    const command = wgpuSetContributionsCommand("procedural", "s.procedural.generation3d@1/*#editor", "[]");
+    const commandBytes = encodePackValue(command);
+    const actualBytes = await actualAppChannelCommand(ownerBefore, commandBytes, integerView.viewContext);
+    const actual = decodeAppCommand(actualBytes);
+    expect(actual).toHaveProperty("Command.seq", sequence);
+    if (!("Command" in actual)) throw new Error("actual AppChannel oracle received the wrong command variant");
+    expect(bytesHex(actual.Command.view_state)).toBe(integerView.packHex);
+    const estimated = wgpuContributionsIngressSize(command, integerView.viewContext, sequence);
+    expect(estimated.ingressBytes).toBe(actualBytes.byteLength);
+  });
+
+  it("crosses one slim-view pack under the derived shard page ceiling", async () => {
     const json = `[{"pluginId":"flow-extension-brep","pad":"${"p".repeat(190700)}"}]`;
     const command = wgpuSetContributionsCommand("procedural", "s.procedural.generation3d@1/*#editor", json);
     // 📌️ `panelJson` is the ONE long field a view context still carries (contributions left the
     // contract entirely — `🪟️view-context/🧬️schema/🔣️.json`), so it is what a slim view must drop.
     const live = { locale: "en", terminology: "native", panelJson: "n".repeat(laws.laws.commandIngress.fatViewChars) };
-    const slim = wgpuContributionsIngressSize(command, wgpuSlimContributionsView(live));
-    const fat = wgpuContributionsIngressSize(command, live);
+    const sequenceCase = laws.laws.commandIngress.sequenceCases[1]!;
+    const slimView = wgpuSlimContributionsView(live);
+    const slim = wgpuContributionsIngressSize(command, slimView, sequenceCase.sequence);
+    const fat = wgpuContributionsIngressSize(command, live, sequenceCase.sequence);
+    const commandBytes = encodePackValue(command);
+    const encoded = await actualAppChannelCommand(sequenceCase.ownerBefore, commandBytes, slimView);
     expect(wgpuSlimContributionsView(live).panelJson).toBeUndefined();
     expect(wgpuSlimContributionsView(live).contributionsJson).toBeUndefined();
     expect(json.length).toBeGreaterThan(laws.laws.commandIngress.payloadChars);
@@ -97,6 +160,7 @@ describe("wgpu contributions command ingress", () => {
     expect(slim.ingressPages).toBeGreaterThan(0);
     expect(slim.ingressPages).toBeLessThanOrEqual(laws.laws.commandIngress.maximumPages);
     expect(slim.ingressBytes).toBeLessThanOrEqual(laws.laws.commandIngress.maximumPages * laws.laws.commandIngress.pageBytes);
+    expect(slim.ingressBytes).toBe(encoded.byteLength);
     expect(fat.ingressPages).toBeGreaterThan(laws.laws.commandIngress.maximumPages);
     expect(slim.viewBytes).toBeLessThan(fat.viewBytes);
   });

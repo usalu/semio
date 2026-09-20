@@ -1,0 +1,164 @@
+{
+  "schemaVersion": 1,
+  "tree": {
+    "nodeType": "tree",
+    "sections": [
+      { "id": "framework.settings.app", "defaultOpen": true, "itemIds": ["framework.settings.app.label", "framework.settings.app.id", "framework.settings.app.controller", "framework.settings.app.plugin"] },
+      { "id": "framework.settings.general", "defaultOpen": true, "itemIds": ["framework.settings.appearance", "framework.settings.layout", "framework.settings.driver", "framework.settings.language", "framework.settings.terminology", "framework.settings.mergePolicy", "framework.settings.resetDock.action"] },
+      { "id": "framework.settings.driver.editor", "defaultOpen": false, "itemIds": ["framework.settings.driver.labels", "framework.settings.driver.labelTier", "framework.settings.driver.drag", "framework.settings.driver.chrome", "framework.settings.driver.gumball", "framework.settings.driver.tooltips", "framework.settings.driver.hotkeys", "framework.settings.driver.save.label", "framework.settings.driver.save.action", "framework.settings.driver.delete.action"] }
+    ],
+    "controls": [
+      { "rowId": "framework.settings.appearance", "controlId": "framework.settings.appearance", "kind": "select", "action": "setAppearance" },
+      { "rowId": "framework.settings.layout", "controlId": "framework.settings.layout", "kind": "select", "action": "setLayout" },
+      { "rowId": "framework.settings.driver", "controlId": "framework.settings.driver", "kind": "select", "action": "setDriver" },
+      { "rowId": "framework.settings.language", "controlId": "framework.settings.language", "kind": "select", "action": "setLocale" },
+      { "rowId": "framework.settings.terminology", "controlId": "framework.settings.terminology", "kind": "select", "action": "setTerminology" },
+      { "rowId": "framework.settings.mergePolicy", "controlId": "framework.settings.mergePolicy", "kind": "select", "action": "setMergePolicy" },
+      { "rowId": "framework.settings.resetDock.action", "controlId": "framework.settings.resetDock", "kind": "button", "action": "runOsCommand" },
+      { "rowId": "framework.settings.driver.save.label", "controlId": "framework.settings.driver.saveLabel", "kind": "input", "action": "setDriverSaveLabel" },
+      { "rowId": "framework.settings.driver.save.action", "controlId": "framework.settings.driver.save", "kind": "button", "action": "saveDriver" },
+      { "rowId": "framework.settings.driver.delete.action", "controlId": "framework.settings.driver.delete", "kind": "button", "action": "deleteDriver" }
+    ]
+  },
+  "bottomPanel": {
+    "panel": { "x": 100, "y": 100, "w": 300, "h": 400 },
+    "tabRows": 2,
+    "rowHeight": 24,
+    "contentInset": 8,
+    "expected": {
+      "content": { "x": 108, "y": 108, "w": 284, "h": 336 },
+      "rootTabY": 476,
+      "leafTabY": 452,
+      "dividerY": 452
+    }
+  },
+  "stableGeneral": {
+    "screen": { "width": 1440, "height": 1000 },
+    "anchor": "bottom-right",
+    "rootKind": "tree",
+    "controlId": "framework.settings.language",
+    "minimumUnusedBandHeight": 200,
+    "react": {
+      "bondedEdge": "bottom",
+      "extentProperty": "maxHeight",
+      "viewportJustification": "justify-end"
+    }
+  },
+  "upFlowDisclosure": {
+    "flow": "up",
+    "sectionRect": { "x": 100, "y": 200, "w": 300, "h": 240 },
+    "headerHeight": 24,
+    "childRect": { "x": 100, "y": 392, "w": 300, "h": 24 },
+    "expectedHeaderRect": { "x": 100, "y": 416, "w": 300, "h": 24 },
+    "react": {
+      "direction": "up",
+      "order": ["sectionContent", "sectionTrigger"]
+    }
+  },
+  "inlineControls": {
+    "uiSpacingPx": 3.2,
+    "valueColumnUiSpacing": 50,
+    "smallControlHeightUiSpacing": 5,
+    "defaultControlHeightUiSpacing": 7,
+    "expectedValueColumnWidthPx": 160,
+    "cases": [
+      { "kind": "select", "controlId": "framework.settings.appearance", "widthMode": "fill", "heightMode": "small", "expectedWidthPx": 160, "expectedHeightPx": 16 },
+      { "kind": "input", "controlId": "framework.settings.driver.saveLabel", "widthMode": "fill", "heightMode": "small", "expectedWidthPx": 160, "expectedHeightPx": 16 },
+      { "kind": "numberStepper", "controlId": "fixture.settings.numberStepper", "widthMode": "fill", "heightMode": "default", "expectedWidthPx": 160, "expectedHeightPx": 22.4 },
+      { "kind": "toggle", "controlId": "fixture.settings.toggle", "widthMode": "fit", "heightMode": "default", "expectedWidthPx": null, "expectedHeightPx": 22.4 },
+      { "kind": "button", "controlId": "framework.settings.resetDock", "widthMode": "fit", "heightMode": "default", "expectedWidthPx": null, "expectedHeightPx": 22.4 }
+    ],
+    "react": {
+      "gridTemplateColumns": "minmax(0, 1fr) calc(50 * var(--ui-spacing))",
+      "fillAttribute": "fill",
+      "fitAttribute": "fit"
+    }
+  },
+  "selectCommit": {
+    "controlId": "framework.settings.appearance",
+    "initialValue": "system",
+    "optionControlId": "dark",
+    "nextValue": "dark",
+    "action": "setAppearance",
+    "expectedQueuedActions": 1,
+    "expectedOpenOptionsAfterCommit": 0
+  },
+  "retainedPreferencePublication": {
+    "surfaceId": "framework.settings.general",
+    "requiresGuestRefresh": false,
+    "cases": [
+      {
+        "action": "setAppearance",
+        "controlId": "framework.settings.appearance",
+        "initialValue": "system",
+        "nextValue": "dark"
+      },
+      {
+        "action": "setLocale",
+        "controlId": "framework.settings.language",
+        "initialValue": "en",
+        "nextValue": "de"
+      },
+      {
+        "action": "setLayout",
+        "controlId": "framework.settings.layout",
+        "initialValue": "desktop",
+        "nextValue": "tablet"
+      },
+      {
+        "action": "setTerminology",
+        "controlId": "framework.settings.terminology",
+        "initialValue": "native",
+        "nextValue": "de"
+      },
+      {
+        "action": "setMergePolicy",
+        "controlId": "framework.settings.mergePolicy",
+        "initialValue": "Normal",
+        "nextValue": "Vigilant"
+      },
+      {
+        "action": "setDriver",
+        "controlId": "framework.settings.driver",
+        "initialValue": "default",
+        "nextValue": "compact"
+      }
+    ],
+    "driverWorkflow": [
+      {
+        "action": "setDriverField",
+        "arguments": { "key": "labels", "value": "full" },
+        "observations": [
+          { "controlId": "framework.settings.driver.labels", "expectedState": "select:full" }
+        ]
+      },
+      {
+        "action": "setDriverSaveLabel",
+        "arguments": { "value": "Studio Driver" },
+        "observations": [
+          { "controlId": "framework.settings.driver.saveLabel", "expectedState": "input:Studio Driver" },
+          { "controlId": "framework.settings.driver.save", "expectedState": "button:enabled" }
+        ]
+      },
+      {
+        "action": "saveDriver",
+        "arguments": {},
+        "observations": [
+          { "controlId": "framework.settings.driver", "expectedState": "select:custom.studio-driver" },
+          { "controlId": "framework.settings.driver.saveLabel", "expectedState": "input:" },
+          { "controlId": "framework.settings.driver.save", "expectedState": "button:disabled" },
+          { "controlId": "framework.settings.driver.delete", "expectedState": "button:enabled" }
+        ]
+      },
+      {
+        "action": "deleteDriver",
+        "arguments": { "value": "custom.studio-driver" },
+        "observations": [
+          { "controlId": "framework.settings.driver", "expectedState": "select:default" },
+          { "controlId": "framework.settings.driver.saveLabel", "expectedState": "input:" },
+          { "controlId": "framework.settings.driver.delete", "expectedState": "absent" }
+        ]
+      }
+    ]
+  }
+}

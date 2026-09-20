@@ -138,6 +138,7 @@ export type EditorWasmSession = GraphWasmSession & {
   pointerDownScreen(sx: number, sy: number, button: number): void;
   pointerMoveScreen(sx: number, sy: number, buttons: number): void;
   pointerUpScreen(sx: number, sy: number, buttons: number): void;
+  pointerCancelScreen(): void;
   wheelScrollScreen(deltaY: number): void;
   insertText(text: string): void;
   backspace(): void;
@@ -191,6 +192,7 @@ export type RasterWasmSession = {
   pointerDownScreen(sx: number, sy: number, button: number): void;
   pointerMoveScreen(sx: number, sy: number): void;
   pointerUpScreen(sx: number, sy: number): void;
+  pointerCancelScreen(): void;
   syncDocumentJson(json: string): void;
   uploadLayerImage(layerId: string, bytes: Uint8Array): void;
   uploadRasterImageKey(key: string, bytes: Uint8Array): void;
@@ -289,6 +291,7 @@ export type Board2dWasmSession = {
   pointerDownScreen(sx: number, sy: number, button: number, shift: boolean, ctrlOrMeta: boolean): void;
   pointerMoveScreen(sx: number, sy: number, shift: boolean, ctrlOrMeta: boolean, alt: boolean): void;
   pointerUpScreen(sx: number, sy: number, shift: boolean, ctrlOrMeta: boolean, alt: boolean): void;
+  pointerCancelScreen(): void;
   wheelScreen(sx: number, sy: number, deltaY: number): void;
   drainEventsJson(): string;
   cameraJson(): string;
@@ -338,7 +341,7 @@ export type Board2dWasmSession = {
   /** @emoji 🐢️ Silent cross-pane mirror setters (WS-live-sync round 4) — move nodes/set preselect/set the marquee outline without emitting board events or a fixture reset, so a peer pane can mirror another pane's live gesture without round-tripping through the program. */
   setNodePositionsJson?(json: string): void;
   setPreselectStateJsonSilent?(json: string): void;
-  setSelectionScreenPreview?(flatXy: readonly number[]): void;
+  setSelectionScreenPreview?(flatXy: Float64Array): void;
   clearSelectionScreenPreview?(): void;
   free(): void;
 };

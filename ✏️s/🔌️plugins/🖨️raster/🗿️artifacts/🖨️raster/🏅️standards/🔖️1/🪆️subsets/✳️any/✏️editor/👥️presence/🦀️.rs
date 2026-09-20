@@ -207,7 +207,7 @@ impl store::ErasedSnapshotRetirement for RasterPresenceRetirement {
 
 impl Drop for RasterPresenceRetirement {
     fn drop(&mut self) {
-        assert!(self.root.is_none(), "raster presence retirement reached Drop before its root was returned");
+        assert!((self.root.is_none()) || std::thread::panicking(), "raster presence retirement reached Drop before its root was returned");
         unsafe { std::mem::ManuallyDrop::drop(&mut self.root) };
     }
 }

@@ -9,8 +9,8 @@ use semio_framework_plugin::{ExecutionMode, Plugin, PluginApp};
 semio_framework_dispatch_macros::dyn_enum_close! {
     /// 🗃️ Closed runtime app fleet for the declaration-owned mathematical surfaces.
     pub enum MathematicalApps: PluginApp {
-        EquationEditor(VcsArtifactApp<EditorApp<crate::editor::equation::EquationPlayApp>>),
-        EquationViewer(VcsArtifactApp<ViewerApp<crate::viewer::equation::EquationViewer>>),
+        EquationEditor(VcsArtifactApp<EditorApp<crate::editor::equation::EquationPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>),
+        EquationViewer(VcsArtifactApp<ViewerApp<crate::viewer::equation::EquationViewer>, semio_s_artifact_stdio_semio::SemioMembers>),
     }
 }
 //#endregion 🗃️Apps

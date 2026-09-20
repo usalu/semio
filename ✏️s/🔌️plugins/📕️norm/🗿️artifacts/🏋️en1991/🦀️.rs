@@ -701,3 +701,11 @@ pub mod viewer {
         }
     }
 }
+
+//#region 🪢️TaxonomyMounts
+#[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🔥️retail-hydrocarbon-fire/🦀️.rs"]
+pub mod retail_hydrocarbon_fire;
+#[cfg(test)]
+#[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🔥️retail-hydrocarbon-fire/🧪️tests/🧩️example/🦀️.rs"]
+mod example;
+//#endregion 🪢️TaxonomyMounts

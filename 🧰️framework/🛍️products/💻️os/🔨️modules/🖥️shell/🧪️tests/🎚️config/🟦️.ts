@@ -20,7 +20,6 @@ export default defineConfig({
   test: {
     root: testRoot,
     name: "@semio-tech/framework-os-shell",
-    mode: "test",
     environment: "node",
     include: [],
     coverage: { include: ["../../🟦️.ts", "../../🧬️schema/🟦️.ts"] },

@@ -66,6 +66,7 @@ path = "../../📇️native-codecs/🧪️tests/📇️native-codecs/🦀️.rs"
 [[test]]
 name = "component_cold_map_patch"
 path = "../../🧪️tests/🌉️component-cold-map-patch/🦀️.rs"
+required-features = ["component-receipt-acceptance"]
 
 [features]
 # 🔌️ The WASM component entry point (`plugin_exports!` → `#[no_mangle]`
@@ -75,6 +76,11 @@ path = "../../🧪️tests/🌉️component-cold-map-patch/🦀️.rs"
 # link error, and the embedding crate is the one that must own the entry point.
 default = ["plugin-entry"]
 plugin-entry = []
+# 🧾️ The receipt-bound Wasmtime acceptance target (`component_cold_map_patch`). It reads the genuine
+# component through `SEMIO_GIS_COMPONENT_WASM`/`SEMIO_GIS_COMPONENT_SHA256`, which only its own
+# producer (`🧪️tests/🌉️component-cold-map-patch/🟦️.ts`) can bind, so it is gated OFF by default: a
+# plain `cargo test -p semio-s-plugin-gis` must not pretend to run a law it cannot supply an input to.
+component-receipt-acceptance = []
 
 [dependencies]
 semio-s-artifact-gis-gismap = { workspace = true, features = ["component-app-assembly"] }

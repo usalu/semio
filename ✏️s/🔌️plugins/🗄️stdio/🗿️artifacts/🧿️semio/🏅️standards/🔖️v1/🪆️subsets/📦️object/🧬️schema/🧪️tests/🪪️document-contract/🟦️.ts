@@ -28,8 +28,8 @@ export function testSemioObjectDocumentContract(): void {
     if (entry.valid) assert.deepEqual(artifact.parseSemioObjectArtifact(entry.input), entry.input);
     else assert.throws(() => artifact.parseSemioObjectArtifact(entry.input), JSON.stringify(entry.input));
   }
-  const parseSnapshot = (snapshot as Record<string, (input: unknown) => unknown>).parseSemioObjectSnapshot!;
-  const parseDiff = (diff as Record<string, (input: unknown) => unknown>).parseSemioObjectDiff!;
+  const parseSnapshot = snapshot.parseSemioObjectSnapshot;
+  const parseDiff = diff.parseSemioObjectDiff;
   for (const entry of fixtures.snapshotCases) {
     if (entry.valid) assert.deepEqual(parseSnapshot(entry.input), entry.input);
     else assert.throws(() => parseSnapshot(entry.input), JSON.stringify(entry.input));
@@ -61,7 +61,7 @@ export function testSemioObjectDocumentContract(): void {
       diffs++;
     } else if (file.includes("/🦠️mutation/")) {
       assert(mutationSchema(value), file + ": mutation schema oracle");
-      const payload = Object.values(value)[0] as Record<string, any>;
+      const payload = Object.values(value as Record<string, { target?: { artifactId: string }; child_id?: unknown }>)[0]!;
       if (payload.target) assert(ajv.compile({ const: payload.target.artifactId })(payload.child_id), file + ": mutation child identity");
       mutations++;
     }

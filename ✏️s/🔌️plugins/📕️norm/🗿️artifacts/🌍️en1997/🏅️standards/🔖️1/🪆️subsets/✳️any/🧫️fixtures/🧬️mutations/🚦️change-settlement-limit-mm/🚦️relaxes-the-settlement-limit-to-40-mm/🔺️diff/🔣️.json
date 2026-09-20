@@ -12,7 +12,7 @@
   "nu": null,
   "designApproach": null,
   "annex": null,
-  "settlementLimitMm": 40,
+  "settlementLimitMm": 40.0,
   "nPileEdKn": null,
   "alphaS": null,
   "pileDM": null,

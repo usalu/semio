@@ -90,6 +90,7 @@ type FrameworkGraphSession = GraphWasmSession & {
   pointerDownScreen(sx: number, sy: number, button: number, shift: boolean, ctrlOrMeta: boolean, alt: boolean): void;
   pointerMoveScreen(sx: number, sy: number, shift: boolean, ctrlOrMeta: boolean, alt: boolean): void;
   pointerUpScreen(sx: number, sy: number, shift: boolean, ctrlOrMeta: boolean, alt: boolean): void;
+  pointerCancelScreen(): void;
   wheelScreen(sx: number, sy: number, deltaX: number, deltaY: number, zoomGesture: boolean): void;
   labelOverlayPaintStateJson(): string;
   sliderOverlayStateJson(): string;
@@ -800,6 +801,7 @@ function WasmGraphSurface({
       pointerDownScreen: () => {},
       pointerMoveScreen: () => {},
       pointerUpScreen: () => {},
+      pointerCancelScreen: () => {},
       wheelScreen: () => {},
       labelOverlayPaintStateJson: () => '{"labels":[]}',
       sliderOverlayStateJson: () => "{}",
@@ -1013,6 +1015,15 @@ function WasmGraphSurface({
           session.renderFrame();
           emitInteractionState();
           commitGraphFixtureIfEdited();
+        }}
+        onPointerCancel={() => {
+          const session = sessionRef.current;
+          gestureSignatureRef.current = null;
+          pickInteraction.onCanvasPointerLeave();
+          if (!session?.pointerCancelScreen) return;
+          session.pointerCancelScreen();
+          session.renderFrame();
+          paintOverlays();
         }}
         onPointerLeave={() => pickInteraction.onCanvasPointerLeave()}
         onWheel={(event) => {
@@ -3723,6 +3734,24 @@ export function FlowGraphCanvasHost({
           // never a selection/hover round trip the board's own state did not change.
           if (wasCameraPan) publishCameraRef.current();
           else emitInteractionState();
+        }}
+        onPointerCancel={(event) => {
+          const session = sessionRef.current;
+          try {
+            if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);
+          } catch {
+            /* nothing was captured */
+          }
+          setWireRefusal(null);
+          cameraPanRef.current = false;
+          cameraOnlyGestureEndRef.current = false;
+          pickInteraction.onCanvasPointerLeave();
+          endGesture("gesture");
+          if (!session) return;
+          issueFlowGestureStep(session.pointerCancelScreen(), () => {
+            schedulerRef.current?.invalidate();
+            paintOverlays();
+          });
         }}
         onPointerLeave={() => {
           setWireRefusal(null);

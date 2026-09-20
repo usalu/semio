@@ -106,7 +106,7 @@ fn minimal_surface_def(dialect: Dialect, role: AppRole) -> AppDefinition {
 async fn editor_stamps_artifact_schema_from_the_type_when_left_empty() {
     let def = minimal_surface_def(EDITOR_STAMP_DIALECT, AppRole::Editor);
     assert!(def.io.artifact_schema.is_empty(), "fixture precondition: builder leaves io.artifact_schema empty");
-    let plugin = Plugin::<SchemaStampApps>::builder("builder-test-schema-stamp-editor").label("Builder Test Schema Stamp Editor").version("0.1.0").editor::<SchemaStampEditorFixture>(def).try_build().expect("a minimal editor surface must assemble");
+    let plugin = Plugin::<SchemaStampApps>::builder("builder-test-schema-stamp-editor").label("Builder Test Schema Stamp Editor").version("0.1.0").package_id("semio:builder-test-schema-stamp-editor").editor::<SchemaStampEditorFixture>(def).try_build().expect("a minimal editor surface must assemble");
     let app = plugin.manifest.apps.iter().find(|app| app.role == AppRole::Editor).expect("the registered editor app definition");
     assert_eq!(app.io.artifact_schema, SchemaStampEditorFixture::DOCUMENT_SCHEMA);
 }
@@ -117,7 +117,7 @@ async fn editor_does_not_overwrite_an_explicitly_set_artifact_schema() {
     def.io.artifact_schema = "already-set.document".into();
     let plugin = Plugin::<SchemaStampApps>::builder("builder-test-schema-stamp-editor-explicit")
         .label("Builder Test Schema Stamp Editor Explicit")
-        .version("0.1.0")
+        .version("0.1.0").package_id("semio:builder-test-schema-stamp-editor-explicit")
         .editor::<SchemaStampEditorFixture>(def)
         .try_build()
         .expect("a minimal editor surface must assemble");
@@ -129,7 +129,7 @@ async fn editor_does_not_overwrite_an_explicitly_set_artifact_schema() {
 async fn viewer_stamps_artifact_schema_from_the_type_when_left_empty() {
     let def = minimal_surface_def(VIEWER_STAMP_DIALECT, AppRole::Viewer);
     assert!(def.io.artifact_schema.is_empty(), "fixture precondition: builder leaves io.artifact_schema empty");
-    let plugin = Plugin::<SchemaStampApps>::builder("builder-test-schema-stamp-viewer").label("Builder Test Schema Stamp Viewer").version("0.1.0").viewer::<SchemaStampViewerFixture>(def).try_build().expect("a minimal viewer surface must assemble");
+    let plugin = Plugin::<SchemaStampApps>::builder("builder-test-schema-stamp-viewer").label("Builder Test Schema Stamp Viewer").version("0.1.0").package_id("semio:builder-test-schema-stamp-viewer").viewer::<SchemaStampViewerFixture>(def).try_build().expect("a minimal viewer surface must assemble");
     let app = plugin.manifest.apps.iter().find(|app| app.role == AppRole::Viewer).expect("the registered viewer app definition");
     assert_eq!(app.io.artifact_schema, SchemaStampViewerFixture::DOCUMENT_SCHEMA);
 }

@@ -8,7 +8,7 @@
   "assumedGKKnM2": null,
   "fireCurve": null,
   "fireResistanceMin": null,
-  "fireMemberCapacityC": 700,
+  "fireMemberCapacityC": 700.0,
   "snowZone": null,
   "snowAltitudeM": null,
   "enSKKnM2": null,

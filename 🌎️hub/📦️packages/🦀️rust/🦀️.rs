@@ -35,6 +35,10 @@ pub mod inference;
 pub mod stores;
 
 #[cfg(test)]
+#[path = "../../🧪️tests/🗂️artifact-root/🦀️.rs"]
+pub(crate) mod test_artifact_root;
+
+#[cfg(test)]
 #[path = "../../🔐️auth/🧪️tests/🧭️credential-source-order/🔮️oracles/🦀️.rs"]
 mod credential_source_order_oracle;
 

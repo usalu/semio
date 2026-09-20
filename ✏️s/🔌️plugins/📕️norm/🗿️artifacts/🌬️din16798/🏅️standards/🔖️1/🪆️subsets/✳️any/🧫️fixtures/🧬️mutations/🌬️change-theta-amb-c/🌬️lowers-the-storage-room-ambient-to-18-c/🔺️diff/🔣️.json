@@ -55,7 +55,7 @@
   "dataCenterSupplyC": null,
   "hStWK": null,
   "thetaStC": null,
-  "thetaAmbC": 18,
+  "thetaAmbC": 18.0,
   "storageTH": null,
   "storageAllowanceKwh": null,
   "dhwDeliveryC": null,

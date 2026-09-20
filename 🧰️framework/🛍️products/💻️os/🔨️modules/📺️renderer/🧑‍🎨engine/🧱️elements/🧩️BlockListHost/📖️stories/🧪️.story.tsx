@@ -148,6 +148,10 @@ function BlockListStoryEmptyHost(): ReactElement {
 const meta = {
   title: "🛠️framework🔌️hosts/BlockListHost",
   component: BlockListStoryHost,
+  // 🧭️ The host's props are required, so every story — including the `render`-only ones that mount a
+  // different host entirely — has to carry them. Declaring them once here is what lets a story state
+  // only what it changes.
+  args: { initialSteps: STORY_INITIAL_STEPS },
   parameters: { layout: "fullscreen" },
   tags: ["autodocs"],
 } satisfies Meta<typeof BlockListStoryHost>;

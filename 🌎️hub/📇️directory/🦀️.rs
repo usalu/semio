@@ -135,6 +135,11 @@ pub mod model {
     pub enum AuthSessionKind {
         External,
         DevelopmentLocal,
+        /// @emoji 🤖️ An AI agent acting under a credential a signed-in human delegated to it
+        /// (`AgentDelegationRecord`). The session belongs to the delegating user's account for
+        /// membership and role, but the principal is the agent: its edits, its presence row and its
+        /// per-actor undo history are all its own.
+        Agent,
     }
 
     impl AuthSessionKind {
@@ -142,6 +147,7 @@ pub mod model {
             match self {
                 Self::External => "external",
                 Self::DevelopmentLocal => "development-local",
+                Self::Agent => "agent",
             }
         }
 
@@ -149,8 +155,15 @@ pub mod model {
             match value {
                 "external" => Some(Self::External),
                 "development-local" => Some(Self::DevelopmentLocal),
+                "agent" => Some(Self::Agent),
                 _ => None,
             }
+        }
+
+        /// @emoji 🤖️ Whether this session's principal is an agent rather than the human who owns
+        /// the account — the one question presence, attribution and undo ownership ask.
+        pub fn is_agent(self) -> bool {
+            matches!(self, Self::Agent)
         }
     }
 
@@ -236,6 +249,93 @@ pub mod model {
         pub revoked_reason: Option<String>,
         pub accepted_at: Option<i64>,
         pub accepted_event_id: Option<String>,
+    }
+
+    /// @emoji 🤖️ An outstanding (or revoked) agent delegation: the scoped, revocable credential a
+    /// signed-in human hands to an AI agent so it can act inside ONE space as its own principal.
+    ///
+    /// Modelled on [`InviteRecord`] on purpose — same selector/secret-digest split, same
+    /// expiry/revocation columns, same "raw capability bytes never land in the read model or the
+    /// event log" law. What it adds is the *scope*: `space_id` plus `audience`, the closed set of
+    /// capability audiences the agent's sessions may exercise. Issuance and revocation are written
+    /// in the same transaction as their `agent-delegated` / `agent-delegation-revoked` facts, so
+    /// the row and the log can never disagree.
+    #[derive(Clone, Debug, PartialEq, Eq)]
+    pub struct AgentDelegationRecord {
+        pub id: String,
+        pub selector: String,
+        pub secret_digest: [u8; 32],
+        pub space_id: String,
+        pub delegating_user_id: String,
+        pub agent_label: String,
+        pub audience: AgentAudience,
+        pub created_at: i64,
+        pub expires_at: i64,
+        pub revoked_at: Option<i64>,
+        pub revoked_reason: Option<String>,
+    }
+
+    /// @emoji 🎯️ The closed set of capability audiences one delegation admits. `Read` is the floor
+    /// every delegation carries; `Edit` additionally admits document mutation. A delegation never
+    /// carries administration authority — an agent can never invite, revoke, or delegate onward.
+    #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+    #[serde(rename_all = "kebab-case")]
+    pub enum AgentAudience {
+        Read,
+        Edit,
+    }
+
+    impl AgentAudience {
+        pub const ALL: [AgentAudience; 2] = [Self::Read, Self::Edit];
+
+        pub fn as_str(self) -> &'static str {
+            match self {
+                Self::Read => "read",
+                Self::Edit => "edit",
+            }
+        }
+
+        pub fn parse(value: &str) -> Option<Self> {
+            Self::ALL.into_iter().find(|audience| audience.as_str() == value)
+        }
+
+        /// @emoji 🎚️ The space role an agent session under this audience is admitted with. `Read`
+        /// is a spectator; `Edit` is an author — and never more, whatever the delegating human's
+        /// own role is. `SpaceRole` has no administrative variant, so this is a ceiling by
+        /// construction: no delegation can ever hand an agent authority the role vocabulary
+        /// cannot even spell.
+        pub fn space_role(self) -> SpaceRole {
+            match self {
+                Self::Read => SpaceRole::Spectator,
+                Self::Edit => SpaceRole::Author,
+            }
+        }
+    }
+
+    /// @emoji 🎁️ A newly created delegation plus its one-time plaintext capability.
+    pub struct IssuedAgentDelegation {
+        pub record: AgentDelegationRecord,
+        pub capability: super::AgentDelegationCapability,
+    }
+
+    /// @emoji 📋️ One backend-projected delegation row for the delegation UI. Metadata only: the
+    /// selector and secret digest are structurally absent, not redacted later.
+    #[derive(Clone, Debug, PartialEq, Eq)]
+    pub struct AgentDelegationRow {
+        pub delegation_id: String,
+        pub space_id: String,
+        pub delegating_user_id: String,
+        pub agent_label: String,
+        pub audience: AgentAudience,
+        pub created_at_ms: i64,
+        pub expires_at_ms: i64,
+        pub revoked: bool,
+        /// 🕰️ When this delegation last minted an agent session, or `None` if it never has.
+        /// Derived, never stored: it is `MAX(issued_at)` over the agent sessions whose
+        /// `device_instance_id` is this delegation's id, which is exactly the set
+        /// `revoke_agent_delegation` cascades over. A delegation the human has forgotten about is
+        /// the one they most need to see here, so "never used" is a state, not a missing value.
+        pub last_used_at_ms: Option<i64>,
     }
 
     /// 🧑️ One backend-projected administration member row. Display columns only: no password
@@ -706,6 +806,9 @@ pub enum CapabilityKind {
     Share,
     Invite,
     Socket,
+    /// @emoji 🤖️ The long-lived, scoped, revocable credential a signed-in human hands to an AI
+    /// agent. It is never a session: it is exchanged for one at `POST /auth/agent-sessions`.
+    AgentDelegation,
 }
 
 impl CapabilityKind {
@@ -715,6 +818,7 @@ impl CapabilityKind {
             Self::Share => "share.v1",
             Self::Invite => "invite.v1",
             Self::Socket => "socket.v1",
+            Self::AgentDelegation => "delegation.v1",
         }
     }
 
@@ -724,6 +828,7 @@ impl CapabilityKind {
             Self::Share => b"semio/hub/share/v1\0",
             Self::Invite => b"semio/hub/invite/v1\0",
             Self::Socket => b"semio/hub/socket/v1\0",
+            Self::AgentDelegation => b"semio/hub/agent-delegation/v1\0",
         }
     }
 }
@@ -741,6 +846,7 @@ fn parse_capability_parts(encoded: &str, kind: CapabilityKind) -> DirectoryResul
         CapabilityKind::Share => "share",
         CapabilityKind::Invite => "invite",
         CapabilityKind::Socket => "socket",
+        CapabilityKind::AgentDelegation => "delegation",
     };
     let Some(actual_type) = components.next() else { return Err(DirectoryError::Unauthorized) };
     if actual_type != expected_type || components.next() != Some("v1") {
@@ -819,6 +925,7 @@ capability_type!(SessionCapability, CapabilityKind::Session);
 capability_type!(ShareCapability, CapabilityKind::Share);
 capability_type!(InviteCapability, CapabilityKind::Invite);
 capability_type!(SocketGrantCapability, CapabilityKind::Socket);
+capability_type!(AgentDelegationCapability, CapabilityKind::AgentDelegation);
 
 pub enum HubCapability {
     Session(SessionCapability),
@@ -1021,6 +1128,21 @@ pub trait BrowserCredentialRelay: Send + Sync + 'static {
 
 pub const AUTH_AUDIT_PAGE_MAX: usize = 1_000;
 
+/// 🤖️ The durable fact kinds agent delegation appends to the same authentication log sessions use.
+/// Nothing here is a counter or a mutable status column: `agent-delegated` is the issuance, and
+/// `agent-delegation-revoked` is the withdrawal, each written in the transaction that changed the
+/// row it describes.
+pub const AGENT_DELEGATED_EVENT: &str = "agent-delegated";
+pub const AGENT_DELEGATION_REVOKED_EVENT: &str = "agent-delegation-revoked";
+pub const AGENT_SESSION_ISSUED_EVENT: &str = "agent-session-issued";
+
+/// 🤖️ The identity provider every agent session is issued under, so a directory revocation by
+/// identity can target exactly the agent sessions and leave the delegating human signed in.
+pub const AGENT_IDENTITY_PROVIDER: &str = "agent.delegation.v1";
+
+/// 🤖️ The most delegations one listing returns.
+pub const AGENT_DELEGATION_PAGE_MAX: usize = 200;
+
 pub(crate) fn prepare_auth_session(issue: &AuthSessionIssue, now: i64) -> DirectoryResult<IssuedAuthSession> {
     validate_bounded_auth_text(&issue.user_id, "session user", AUTH_TEXT_MAX_BYTES)?;
     validate_bounded_auth_text(&issue.identity_provider, "identity provider", AUTH_TEXT_MAX_BYTES)?;
@@ -1075,6 +1197,67 @@ pub(crate) fn prepare_invite(space_id: &str, role: SpaceRole, ttl_secs: i64, now
         accepted_event_id: None,
     };
     Ok(IssuedInvite { record, capability })
+}
+
+/// @emoji 🤖️ Mints one agent delegation, bounds-checked. `agent_label` is what a human will read in
+/// the roster next to the robot badge, so it is bounded like every other auth text.
+pub fn prepare_agent_delegation(space_id: &str, delegating_user_id: &str, agent_label: &str, audience: AgentAudience, ttl_secs: i64, now: i64) -> DirectoryResult<IssuedAgentDelegation> {
+    validate_bounded_auth_text(space_id, "agent delegation space", AUTH_TEXT_MAX_BYTES)?;
+    validate_bounded_auth_text(delegating_user_id, "agent delegation user", AUTH_TEXT_MAX_BYTES)?;
+    validate_bounded_auth_text(agent_label, "agent delegation label", AGENT_LABEL_MAX_BYTES)?;
+    let (created_at, expires_at) = capability_window(now, ttl_secs)?;
+    let capability = AgentDelegationCapability::mint()?;
+    let record = AgentDelegationRecord {
+        id: time_ordered_id(),
+        selector: capability.selector().to_string(),
+        secret_digest: capability.secret_digest(),
+        space_id: space_id.to_string(),
+        delegating_user_id: delegating_user_id.to_string(),
+        agent_label: agent_label.to_string(),
+        audience,
+        created_at,
+        expires_at,
+        revoked_at: None,
+        revoked_reason: None,
+    };
+    Ok(IssuedAgentDelegation { record, capability })
+}
+
+/// @emoji 🏷️ The longest agent label a delegation may carry — it rides the presence roster, whose
+/// per-entry budget is the binding constraint.
+pub const AGENT_LABEL_MAX_BYTES: usize = 64;
+
+/// @emoji ⚖️ Why an agent-session exchange was refused, or that it may proceed. Every refusal that a
+/// caller holding a *wrong* credential could observe collapses into `Denied`, exactly like the
+/// invite preflight, so a delegation id cannot be probed for existence. `Revoked` and `Expired` are
+/// only ever reported to a caller that already proved the matching secret.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum AgentSessionPreflight {
+    Mint,
+    Revoked,
+    Expired,
+    Denied,
+}
+
+/// @emoji ⚖️ The whole agent-session law, pure and clock-injected: the record must exist, the
+/// presented capability must match its selector AND its secret digest in constant time, the
+/// delegation must not be revoked or expired, and the requested audience must be exactly the one
+/// the delegation was scoped to — an agent can never widen its own scope at exchange time.
+pub fn agent_session_preflight(record: Option<&AgentDelegationRecord>, capability: &AgentDelegationCapability, requested_audience: AgentAudience, now_ms: i64) -> AgentSessionPreflight {
+    let Some(record) = record else { return AgentSessionPreflight::Denied };
+    if record.selector != capability.selector() || !constant_time_digest_eq(&record.secret_digest, &capability.secret_digest()) {
+        return AgentSessionPreflight::Denied;
+    }
+    if requested_audience != record.audience {
+        return AgentSessionPreflight::Denied;
+    }
+    if record.revoked_at.is_some() {
+        AgentSessionPreflight::Revoked
+    } else if record.expires_at <= now_ms {
+        AgentSessionPreflight::Expired
+    } else {
+        AgentSessionPreflight::Mint
+    }
 }
 
 pub(crate) fn active_capability(selector: &str, stored_digest: &[u8; 32], expires_at: i64, revoked_at: Option<i64>, capability_selector: &str, candidate_digest: &[u8; 32], now: i64) -> bool {
@@ -1617,12 +1800,27 @@ pub(crate) fn document_genesis_completion_v1(operation: &ArtifactCreationOperati
 }
 
 /// 🔏️ Validates the exact immutable descriptor binding before any backend indexes a document.
+///
+/// 🪢 `descriptor.artifact_kind` is the manifest `ArtifactKindSpec::id` the creation intent selected
+/// (`2d.note`, `stdio.json`) while `entry.dialect` is the owning app's `Dialect`
+/// (`s.note.note`, `s.stdio.json`) — two distinct id spaces, equal only for `gis`, so an equality
+/// between them indexes exactly one plugin's documents and refuses every other plugin's. The entry
+/// is instead bound by the only relationship this gate can guarantee: its own canonical
+/// `s.<plugin>[.<artifact>]` dialect grammar, owned by `DocumentIndexEntryV1::validate` and reached
+/// from here through `validate_directory_event_page_event` below, so client fold and backend
+/// projection share one predicate. Its plugin segment is deliberately NOT required to be the
+/// descriptor's `owner.plugin_id`: one package legitimately hosts another plugin's dialect —
+/// `demonstrator` ships apps whose `Dialect` is `s.gis.gismap`, `s.cad.cad`, `s.process.process3d`
+/// and `s.sourcing.curation` (8 of the 127 app dialects in the shipped descriptors) — so an
+/// ownership predicate here would refuse real documents. The cross-package binding is declared where
+/// the catalog is in scope: `validate_descriptor_open_target` pins the dialect to the owning app and
+/// `validate_document_genesis_append_v1` pins this entry to the accepted intent.
 pub(crate) fn document_index_projection_v1(event: &DirectoryEvent, descriptor: &DocumentDescriptor) -> DirectoryResult<::directory::os_directory::DirectoryIndexedDocumentViewV1> {
     let DirectoryEventBody::DocumentIndexed { scope, descriptor_digest_v1: digest, entry } = &event.body else {
         return Err(DirectoryError::Conflict("document index event required".into()));
     };
     ::directory::os_directory::validate_directory_event_page_event(event).map_err(|_| DirectoryError::Conflict("document index event is invalid".into()))?;
-    if descriptor.space_id != scope.space_id || descriptor.document_id != scope.document_id || descriptor.artifact_kind != entry.dialect.artifact_kind || descriptor_digest_v1(descriptor).ok().as_ref() != Some(digest) {
+    if descriptor.space_id != scope.space_id || descriptor.document_id != scope.document_id || descriptor_digest_v1(descriptor).ok().as_ref() != Some(digest) {
         return Err(DirectoryError::Conflict("document index descriptor binding differs".into()));
     }
     Ok(::directory::os_directory::DirectoryIndexedDocumentViewV1 {
@@ -1635,8 +1833,18 @@ pub(crate) fn document_index_projection_v1(event: &DirectoryEvent, descriptor: &
 }
 
 /// 📇️ No active checkpoint may outlive its descriptor-bound discoverable index row.
+///
+/// 🪢 The row is bound to the checkpoint by the whole descriptor and the descriptor digest the
+/// checkpoint itself announces — nothing weaker would do and nothing stronger is available here.
+/// `row.entry.dialect.artifact_kind` is expressly NOT compared to `descriptor.artifact_kind`: the
+/// entry carries the owning app's `Dialect` (`s.note.note`) and the descriptor the manifest
+/// `ArtifactKindSpec::id` (`2d.note`), two id spaces that coincide for `gis` alone, so that equality
+/// let exactly one plugin's document keep a checkpoint and refused every other plugin's genesis
+/// publication. The entry's own grammar is already admitted by `DocumentIndexEntryV1::validate`
+/// before the row can exist, and `document_index_projection_v1` above pins the row to this same
+/// descriptor and digest.
 pub(crate) fn validate_checkpoint_index_v1(index: Option<&::directory::os_directory::DirectoryIndexedDocumentViewV1>, descriptor: &DocumentDescriptor, checkpoint: &PublishedArtifactCheckpoint) -> DirectoryResult<()> {
-    if index.is_some_and(|row| &row.descriptor == descriptor && row.descriptor_digest_v1 == checkpoint.descriptor_digest_v1 && row.entry.dialect.artifact_kind == descriptor.artifact_kind) {
+    if index.is_some_and(|row| &row.descriptor == descriptor && row.descriptor_digest_v1 == checkpoint.descriptor_digest_v1) {
         Ok(())
     } else {
         Err(DirectoryError::Conflict("artifact checkpoint requires its descriptor-bound index".into()))
@@ -3008,6 +3216,29 @@ pub trait HubDirectory: Send + Sync + 'static {
     async fn set_password_credential(&self, _user_id: &str, _encoded_credential: &str, _actor_user_id: Option<&str>, _correlation_id: &str) -> DirectoryResult<()> {
         Err(DirectoryError::Backend("password credentials are unavailable for this backend".into()))
     }
+    /// 🤖️ Writes one agent delegation and appends its `agent-delegated` fact in the same
+    /// transaction. The caller has already been authenticated as the delegating user and checked
+    /// for authorship in the target space.
+    async fn create_agent_delegation(&self, _issued: &IssuedAgentDelegation, _correlation_id: &str, _peer_class: &str) -> DirectoryResult<()> {
+        Err(DirectoryError::Backend("agent delegation is unavailable for this backend".into()))
+    }
+    /// 🤖️ Every delegation a user created in a space, newest first, revoked ones included so the
+    /// delegation UI can show what was withdrawn. Never returns the selector or secret digest.
+    async fn list_agent_delegations(&self, _space_id: &str, _delegating_user_id: &str, _limit: usize) -> DirectoryResult<Vec<AgentDelegationRow>> {
+        Err(DirectoryError::Backend("agent delegation is unavailable for this backend".into()))
+    }
+    /// 🤖️ Revokes one delegation and appends its `agent-delegation-revoked` fact in the same
+    /// transaction, then revokes every live agent session minted from it — the same
+    /// `authorization_generation` bump an ordinary sign-out performs, so open socket grants and
+    /// document plans die with it. `Ok(None)` means the delegation was not this user's to revoke.
+    async fn revoke_agent_delegation(&self, _delegation_id: &str, _delegating_user_id: &str, _reason: &str, _correlation_id: &str, _now_ms: i64) -> DirectoryResult<Option<Vec<RevokedAuthSession>>> {
+        Err(DirectoryError::Backend("agent delegation is unavailable for this backend".into()))
+    }
+    /// 🤖️ Loads one delegation by the selector half of a presented capability. The secret is never
+    /// compared here — [`agent_session_preflight`] owns that law.
+    async fn load_agent_delegation(&self, _selector: &str) -> DirectoryResult<Option<AgentDelegationRecord>> {
+        Err(DirectoryError::Backend("agent delegation is unavailable for this backend".into()))
+    }
     //#endregion
 
     //#region AdminOperations
@@ -3818,6 +4049,50 @@ impl HubDirectory for HubDirectories {
             Self::Postgres(inner) => inner.append_credential_audit(fact).await,
             #[cfg(feature = "neo4j")]
             Self::Neo4j(inner) => inner.append_credential_audit(fact).await,
+        }
+    }
+
+    async fn create_agent_delegation(&self, issued: &IssuedAgentDelegation, correlation_id: &str, peer_class: &str) -> DirectoryResult<()> {
+        match self {
+            #[cfg(feature = "sqlite")]
+            Self::Sqlite(inner) => inner.create_agent_delegation(issued, correlation_id, peer_class).await,
+            #[cfg(feature = "postgres")]
+            Self::Postgres(inner) => inner.create_agent_delegation(issued, correlation_id, peer_class).await,
+            #[cfg(feature = "neo4j")]
+            Self::Neo4j(inner) => inner.create_agent_delegation(issued, correlation_id, peer_class).await,
+        }
+    }
+
+    async fn list_agent_delegations(&self, space_id: &str, delegating_user_id: &str, limit: usize) -> DirectoryResult<Vec<AgentDelegationRow>> {
+        match self {
+            #[cfg(feature = "sqlite")]
+            Self::Sqlite(inner) => inner.list_agent_delegations(space_id, delegating_user_id, limit).await,
+            #[cfg(feature = "postgres")]
+            Self::Postgres(inner) => inner.list_agent_delegations(space_id, delegating_user_id, limit).await,
+            #[cfg(feature = "neo4j")]
+            Self::Neo4j(inner) => inner.list_agent_delegations(space_id, delegating_user_id, limit).await,
+        }
+    }
+
+    async fn revoke_agent_delegation(&self, delegation_id: &str, delegating_user_id: &str, reason: &str, correlation_id: &str, now_ms: i64) -> DirectoryResult<Option<Vec<RevokedAuthSession>>> {
+        match self {
+            #[cfg(feature = "sqlite")]
+            Self::Sqlite(inner) => inner.revoke_agent_delegation(delegation_id, delegating_user_id, reason, correlation_id, now_ms).await,
+            #[cfg(feature = "postgres")]
+            Self::Postgres(inner) => inner.revoke_agent_delegation(delegation_id, delegating_user_id, reason, correlation_id, now_ms).await,
+            #[cfg(feature = "neo4j")]
+            Self::Neo4j(inner) => inner.revoke_agent_delegation(delegation_id, delegating_user_id, reason, correlation_id, now_ms).await,
+        }
+    }
+
+    async fn load_agent_delegation(&self, selector: &str) -> DirectoryResult<Option<AgentDelegationRecord>> {
+        match self {
+            #[cfg(feature = "sqlite")]
+            Self::Sqlite(inner) => inner.load_agent_delegation(selector).await,
+            #[cfg(feature = "postgres")]
+            Self::Postgres(inner) => inner.load_agent_delegation(selector).await,
+            #[cfg(feature = "neo4j")]
+            Self::Neo4j(inner) => inner.load_agent_delegation(selector).await,
         }
     }
 

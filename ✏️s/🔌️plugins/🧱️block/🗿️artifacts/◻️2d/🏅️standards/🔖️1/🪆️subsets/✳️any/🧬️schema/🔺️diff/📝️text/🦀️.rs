@@ -189,6 +189,19 @@ impl MutationDiff<Block2dSnapshot> for Block2dDiff {
         take!(authors);
         take!(camera2d);
         take!(meta);
+        /// 🩹 Two edits touching the same item coalesce into ONE patch entry: `apply` refuses a
+        /// collection whose `patched` list names the same id twice
+        /// (`mutation.apply.duplicate-target`), so a plain `extend` breaks the diff-absorb law the
+        /// moment one gesture patches the same row twice. Every patch here is a whole-item
+        /// `replacement`, so the later entry simply supersedes the earlier one.
+        fn absorb_patches<E>(target: &mut Vec<E>, incoming: Vec<E>, id_of: impl Fn(&E) -> &str) {
+            for entry in incoming {
+                match target.iter().position(|existing| id_of(existing) == id_of(&entry)) {
+                    Some(position) => target[position] = entry,
+                    None => target.push(entry),
+                }
+            }
+        }
         fn absorb_delta<D, F>(target: &mut Option<D>, incoming: Option<D>, merge: F)
         where
             F: FnOnce(&mut D, D),
@@ -203,7 +216,7 @@ impl MutationDiff<Block2dSnapshot> for Block2dDiff {
         absorb_delta(&mut self.handle_kinds, other.handle_kinds, |dst, src| {
             dst.removed.extend(src.removed);
             dst.added.extend(src.added);
-            dst.patched.extend(src.patched);
+            absorb_patches(&mut dst.patched, src.patched, |entry| entry.id.as_str());
             if src.reordered.is_some() {
                 dst.reordered = src.reordered;
             }
@@ -211,7 +224,7 @@ impl MutationDiff<Block2dSnapshot> for Block2dDiff {
         absorb_delta(&mut self.handles, other.handles, |dst, src| {
             dst.removed.extend(src.removed);
             dst.added.extend(src.added);
-            dst.patched.extend(src.patched);
+            absorb_patches(&mut dst.patched, src.patched, |entry| entry.id.as_str());
             if src.reordered.is_some() {
                 dst.reordered = src.reordered;
             }
@@ -219,7 +232,7 @@ impl MutationDiff<Block2dSnapshot> for Block2dDiff {
         absorb_delta(&mut self.compatibility, other.compatibility, |dst, src| {
             dst.removed.extend(src.removed);
             dst.added.extend(src.added);
-            dst.patched.extend(src.patched);
+            absorb_patches(&mut dst.patched, src.patched, |entry| entry.id.as_str());
             if src.reordered.is_some() {
                 dst.reordered = src.reordered;
             }
@@ -227,7 +240,7 @@ impl MutationDiff<Block2dSnapshot> for Block2dDiff {
         absorb_delta(&mut self.attributes, other.attributes, |dst, src| {
             dst.removed.extend(src.removed);
             dst.added.extend(src.added);
-            dst.patched.extend(src.patched);
+            absorb_patches(&mut dst.patched, src.patched, |entry| entry.id.as_str());
             if src.reordered.is_some() {
                 dst.reordered = src.reordered;
             }

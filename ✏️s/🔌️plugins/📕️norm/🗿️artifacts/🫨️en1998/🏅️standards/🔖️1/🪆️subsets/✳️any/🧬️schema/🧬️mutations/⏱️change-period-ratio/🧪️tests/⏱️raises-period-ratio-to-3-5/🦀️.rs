@@ -67,7 +67,7 @@ async fn change_period_ratio_committed_json_is_canonical() {
     }
     let reencoded = serde_json::to_value(mutation()).expect("change-period-ratio mutation encodes");
     let original: serde_json::Value = serde_json::from_str(MUTATION).expect("change-period-ratio mutation reparses");
-    assert_eq!(reencoded, original, "change-period-ratio/raises-period-ratio-to-3-5: committed mutation JSON is not the canonical externally-tagged ChangePeriodRatio form carrying newPeriodRatio");
+    assert_eq!(reencoded, original, "change-period-ratio/raises-period-ratio-to-3-5: committed mutation JSON is not the canonical internally-tagged ChangePeriodRatio form carrying mutation and newPeriodRatio");
 }
 
 /// 🎯️ The declared outcome holds: `change-period-ratio` at 3.5 is applied, not rejected, and carries no

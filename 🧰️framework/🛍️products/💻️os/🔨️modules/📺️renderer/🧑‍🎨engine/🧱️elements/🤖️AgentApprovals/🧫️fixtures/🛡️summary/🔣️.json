@@ -1,0 +1,47 @@
+{
+  "version": 1,
+  "note": "The ApprovalRequested.summary payload is the schema: the bridge frame (tag 3) carries one string, and both approval surfaces parse it — 🤖️AgentApprovals' parseApprovalSummary (React) and 🎯️targets/🧊️wgpu's parse_approval_summary (Rust). The producer is 🌉️mcp/🛡️policy's ApprovalRequest::shell_summary. Every row below is asserted on BOTH banks.",
+  "rich": {
+    "summary": "{\"capabilityId\":\"cad.s.cad.cad@1/*#editor.deleteSelection\",\"capabilityTitle\":\"Delete Selection\",\"description\":\"Removes every currently selected element from the drawing.\",\"artifactKind\":\"s.cad.cad\",\"diffSummary\":\"Delete Selection — {\\\"opsCount\\\":3}\",\"risk\":\"high\",\"requestedBy\":\"agent:local\",\"timeoutMs\":120000}",
+    "parsed": {
+      "capabilityId": "cad.s.cad.cad@1/*#editor.deleteSelection",
+      "capabilityTitle": "Delete Selection",
+      "description": "Removes every currently selected element from the drawing.",
+      "artifactKind": "s.cad.cad",
+      "diffSummary": "Delete Selection — {\"opsCount\":3}",
+      "risk": "high",
+      "requestedBy": "agent:local",
+      "timeoutMs": 120000
+    }
+  },
+  "plainText": {
+    "summary": "translate selection by (1,0,0)",
+    "parsed": {
+      "capabilityId": null,
+      "capabilityTitle": null,
+      "description": null,
+      "artifactKind": null,
+      "diffSummary": "translate selection by (1,0,0)",
+      "risk": null,
+      "requestedBy": null,
+      "timeoutMs": null
+    }
+  },
+  "legacyWithoutTheNewFields": {
+    "summary": "{\"capabilityId\":\"note.s.note.note@1/*#editor.deleteSelection\",\"diffSummary\":\"Delete Selection — {}\",\"risk\":\"high\",\"requestedBy\":\"agent:local\"}",
+    "parsed": {
+      "capabilityId": "note.s.note.note@1/*#editor.deleteSelection",
+      "capabilityTitle": null,
+      "description": null,
+      "artifactKind": null,
+      "diffSummary": "Delete Selection — {}",
+      "risk": "high",
+      "requestedBy": "agent:local",
+      "timeoutMs": null
+    }
+  },
+  "unusableTimeout": {
+    "summary": "{\"capabilityId\":\"note.x\",\"diffSummary\":\"d\",\"risk\":\"low\",\"requestedBy\":\"agent:local\",\"timeoutMs\":0}",
+    "parsedTimeoutMs": null
+  }
+}

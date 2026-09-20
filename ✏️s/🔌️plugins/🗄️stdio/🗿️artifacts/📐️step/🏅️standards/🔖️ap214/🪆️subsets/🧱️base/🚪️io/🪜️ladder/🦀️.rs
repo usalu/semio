@@ -368,6 +368,28 @@ pub fn invert_class_edit(base: &Part21Document, max_rung: u8, edit: &ClassEdit) 
         },
     }
 }
+
+/// ↩️ [`invert_class_edit`], kept honest by RUNNING it: the candidate inverse is accepted only when
+/// applying `edit` to `base` and then the candidate really lands back on `base`, byte-identical
+/// document for document. Otherwise this returns `None` and the caller degrades to its documented
+/// whole-snapshot restore, exactly as it already does for an inverse the class has no verb for.
+///
+/// ⚠️ The case that makes this necessary is POSITIONAL, not semantic: [`set_product_identity`]
+/// removes every instance of the three chain rungs and re-authors them (ISO 10303-41 supertype
+/// names, id-ascending), so a document whose chain did not sit in id-ascending order to begin with
+/// comes back with the SAME instances in a different order — and Part-21 instance order is state
+/// this artifact's own `StepSnapshot` carries (its `insert-entity` verb takes an INDEX). An
+/// "inverse" that restores the members but not the order is not an inverse, and the six `✳️ccN`
+/// vocabularies' own `every_conformance_axis_round_trips_through_its_own_inverse` is what measures
+/// it.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn invert_class_edit_restoring(base: &Part21Document, class: &str, max_rung: u8, edit: &ClassEdit) -> Option<ClassEdit> {
+    let candidate = invert_class_edit(base, max_rung, edit)?;
+    let mut forward = base.clone();
+    apply_class_edit(&mut forward, class, max_rung, edit).ok()?;
+    apply_class_edit(&mut forward, class, max_rung, &candidate).ok()?;
+    (forward == *base).then_some(candidate)
+}
 //#endregion 🔖️ClassEdits
 
 //#region 🧪️Tests

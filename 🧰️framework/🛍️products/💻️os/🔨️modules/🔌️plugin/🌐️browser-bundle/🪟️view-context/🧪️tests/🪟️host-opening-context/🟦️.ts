@@ -14,10 +14,10 @@ export function testBrowserActorHostContext(): void {
   assert.deepEqual(decodeBackboneWorkerRequest(encodeBackboneWorkerRequest(request)), fixture.valid);
   for (const row of fixture.invalid) {
     const value: Record<string, unknown> = structuredClone(fixture.valid);
-    if ("remove" in row) for (const key of row.remove) delete value[key];
+    if (row.remove !== undefined) for (const key of row.remove) delete value[key];
     if ("set" in row) Object.assign(value, row.set);
     assert.equal(validate(value), false, row.name);
-    assert.throws(() => parseBrowserActorViewStateRequest(value), undefined, row.name);
+    assert.throws(() => parseBrowserActorViewStateRequest(value), row.name);
   }
   console.log(`[DEBUG] browser-actor-host-context cases=${fixture.invalid.length + 1} schema=valid wire=round-trip`);
 }

@@ -1,5 +1,4 @@
 {
-  "ChangeWallR": {
-    "newWallR": 2.25
-  }
+  "mutation": "changeWallR",
+  "newWallR": 2.25
 }

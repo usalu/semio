@@ -6,8 +6,11 @@ async fn create_block3d_viewer_builds_a_definition_for_the_viewer_role() {
     assert_eq!(def.role, semio_framework::AppRole::Viewer);
     assert_eq!(def.dialect, BLOCK3D_DIALECT.into());
     assert_eq!(def.breadcrumb, vec!["semio", "block", "3d"]);
+    // 🪪️ `AppDefinition` names this path `breadcrumb` (camelCase on the wire); the field was never
+    // called `document`, so reading `descriptor["document"]` asserted `Null == Null` would have
+    // been vacuous and asserting it against the path is what this ever meant to prove.
     let descriptor = serde_json::to_value(&def).expect("language-neutral app descriptor");
-    assert_eq!(descriptor["document"], serde_json::json!(["semio", "block", "3d"]));
+    assert_eq!(descriptor["breadcrumb"], serde_json::json!(["semio", "block", "3d"]));
 }
 
 #[semio_framework_async_macros::async_test]

@@ -67,7 +67,7 @@ async fn change_seismic_zone_committed_json_is_canonical() {
     }
     let reencoded = serde_json::to_value(mutation()).expect("change-seismic-zone mutation encodes");
     let original: serde_json::Value = serde_json::from_str(MUTATION).expect("change-seismic-zone mutation reparses");
-    assert_eq!(reencoded, original, "change-seismic-zone/raises-seismic-zone-to-4: committed mutation JSON is not the canonical externally-tagged ChangeSeismicZone form carrying newSeismicZone");
+    assert_eq!(reencoded, original, "change-seismic-zone/raises-seismic-zone-to-4: committed mutation JSON is not the canonical internally-tagged ChangeSeismicZone form carrying mutation and newSeismicZone");
 }
 
 /// 🎯️ The declared outcome holds: `change-seismic-zone` at 4 is applied, not rejected, and carries no

@@ -1,0 +1,50 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.dev/schema/settings-locale-panel-refresh.json",
+  "title": "Settings Locale Mounted Panel Refresh Contract",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contractVersion",
+    "initialLocale",
+    "nextLocale",
+    "mountedSurfaceIds",
+    "unmountedSurfaceIds",
+    "labels",
+    "maxPanelsPerStep",
+    "requiresGuestRefresh"
+  ],
+  "properties": {
+    "contractVersion": { "const": 1 },
+    "initialLocale": { "const": "en" },
+    "nextLocale": { "const": "de" },
+    "mountedSurfaceIds": {
+      "type": "array",
+      "minItems": 4,
+      "uniqueItems": true,
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "unmountedSurfaceIds": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "labels": {
+      "type": "array",
+      "minItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["key", "en", "de"],
+        "properties": {
+          "key": { "type": "string", "minLength": 1 },
+          "en": { "type": "string", "minLength": 1 },
+          "de": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "maxPanelsPerStep": { "const": 1 },
+    "requiresGuestRefresh": { "const": false }
+  }
+}

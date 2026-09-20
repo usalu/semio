@@ -1089,12 +1089,15 @@ pub fn create_trinity_jack_app() -> semio_framework_plugin::AppDefinition {
                 TRINITY_JACK_PLAY_BODY_INSPECTION,
             )
             .action_with(semio_framework_plugin::ActionDefinition::bounded_catalog("deleteSelection", LocalizedLabel::native("Delete Selection", "Auswahl löschen"), ActionKind::Mutation).with_category("selection"))
+            .action_destructive("deleteSelection")
             .mutation("patchNodes", LocalizedLabel::native("Patch Nodes", "Knoten aktualisieren"))
             .action_with(semio_framework_plugin::ActionDefinition::bounded_catalog("runQuery", LocalizedLabel::native("Run Jack Query", "Jack-Abfrage ausführen"), ActionKind::Mutation).with_category("methods"))
             .action_with(semio_framework_plugin::ActionDefinition::bounded_catalog("loadExampleQuery", LocalizedLabel::native("Load Example Query", "Beispielabfrage laden"), ActionKind::Mutation).with_category("open"))
             .action_with(semio_framework_plugin::ActionDefinition::new("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"), ActionKind::Mutation, "panel-left").with_category("mode"))
+            .action_destructive("setActiveExample")
             // 🛠️ Dev-only whole-snapshot import — kept out of the command palette.
             .action_with(semio_framework_plugin::ActionDefinition { in_palette: false, ..semio_framework_plugin::ActionDefinition::bounded_catalog("setFixtureJson", LocalizedLabel::native("Set Fixture Json", "Fixture-JSON festlegen"), ActionKind::Mutation) })
+            .action_destructive("setFixtureJson")
             .view_action("nodeGraphViewport", LocalizedLabel::native("Set Graph Viewport", "Graph-Ansicht festlegen"))
             .action_with(semio_framework_plugin::ActionDefinition::new("textEdit", LocalizedLabel::native("Edit Jack Query", "Jack-Abfrage bearbeiten"), ActionKind::View, "typography"))
             .action_with(semio_framework_plugin::ActionDefinition::new("textSelect", LocalizedLabel::native("Select Jack Query Text", "Jack-Abfragetext auswählen"), ActionKind::View, "text-cursor"))

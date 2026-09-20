@@ -377,8 +377,8 @@ fn fem3d_production_numerical_child_solid_reaction_modal_and_close_are_cursorize
     assert!(has_modal);
 }
 
-/// 🏠️ LAW (recorded limit, not a target): the mounted numerical child REFUSES the document the
-/// editor boots on — the demo frame with its meshed slab is 48 analysis nodes, whose `(node, dof)`
+/// 🏠️ LAW (recorded limit, not a target): the mounted numerical child REFUSES the bundled demo
+/// document — the demo frame with its meshed slab is 48 analysis nodes, whose `(node, dof)`
 /// order alone outgrows the 4 KiB `MOUNTED_OWNER_PAGE_BYTES` owner page — and it refuses at
 /// `PrepareAssembly` with the engine's `Singular` wording, which is what the browser console's
 /// `fem3d session fault: stiffness matrix is singular` line means. The model window then draws the
@@ -387,7 +387,7 @@ fn fem3d_production_numerical_child_solid_reaction_modal_and_close_are_cursorize
 /// purpose instead of the fault being read as a mechanism in the model.
 #[test]
 fn fem3d_production_numerical_child_refuses_the_demo_at_the_mounted_owner_page() {
-    let doc = crate::standards::v1::subsets::any::schema::snapshot::text::fem3d_boot_snapshot();
+    let doc = crate::standards::v1::subsets::any::schema::snapshot::text::fem3d_demo_snapshot();
     assert!(!doc.solids.is_empty(), "the demo carries a meshed slab");
     let (analysis_nodes, _) = crate::fem3d_engine::meshing::mesh_solids(&doc).expect("the demo meshes");
     assert!(analysis_nodes.len() * 6 * size_of::<(String, Dof)>() > 4_096, "the demo's dof order outgrows the mounted owner page — the premise of this law");

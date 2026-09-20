@@ -100,6 +100,12 @@ impl ArtifactViewer for FlowViewer {
         FlowSnapshot::default()
     }
 
+    /// 🌱️ Derives the `content` child at boot and on every archive load, so a live shell composes the
+    /// child that every `Child`-lane verb reads — see [`crate::flow_genesis_content_pack`].
+    fn genesis_child_pack(snapshot: &Self::Snapshot, slot: &str, child_id: &str) -> Option<Vec<u8>> {
+        crate::flow_genesis_content_pack(snapshot, slot, child_id)
+    }
+
     /// 👁️ Structurally read-only: the sole `FlowViewCommand::Noop` variant never carries a config
     /// change, so this always returns the empty `ViewEmit` — no config mutation, no effect, no dirty
     /// scope. Kept as a real dispatch (not an `unreachable!()`) so a future view-only action (camera

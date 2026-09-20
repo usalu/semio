@@ -17,9 +17,10 @@ pub fn store_owners() -> store::DocumentStoreOwners<FlowSnapshot, FlowMutation> 
 
 pub(crate) fn retire_scene(scene: FlowWorkingScene) -> FlowRetirement {
     let mut retirement = FlowRetirement::default();
-    retirement.push(FlowOwner::Widgets(scene.widgets));
-    retirement.push(FlowOwner::Specs(scene.synapses));
-    retirement.push(FlowOwner::Layouts(scene.layout));
+    let (widgets, synapses, layout) = scene.into_parts();
+    retirement.push(FlowOwner::Widgets(widgets));
+    retirement.push(FlowOwner::Specs(synapses));
+    retirement.push(FlowOwner::Layouts(layout));
     retirement
 }
 

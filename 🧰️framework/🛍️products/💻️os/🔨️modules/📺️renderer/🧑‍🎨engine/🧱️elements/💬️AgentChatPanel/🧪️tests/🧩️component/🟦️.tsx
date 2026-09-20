@@ -12,6 +12,9 @@
 
 // #region 🔌️Adapters
 import { cleanup, fireEvent, render, screen } from "@semio-tech/ui-react/test";
+import { readFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { AgentChatPanel } from "../../🟦️.tsx";
 import { type AgentConversationEntry } from "../../../🔗️AgentBridge/🟦️.tsx";
@@ -23,6 +26,12 @@ function toolCall(id: string, state: "running" | "cancelling" | "ok" | "failed")
 }
 
 const IDLE_PRESENCE = { active: false, label: "", invocationId: null } as const;
+const here = dirname(fileURLToPath(import.meta.url));
+const cancellationFixture = JSON.parse(readFileSync(join(here, "../../../🔗️AgentBridge/🧫️fixtures/🛑️cancellation/🔣️.json"), "utf8")) as {
+  readonly invocation: { readonly id: string; readonly toolName: string; readonly arguments: string };
+  readonly openCancellation: { readonly state: "cancelling"; readonly cancelControl: false };
+  readonly terminalResult: { readonly summary: string; readonly state: "failed"; readonly cancelControl: false };
+};
 //#endregion 🔖️Fixtures
 
 //#region 🔖️CancelAffordance
@@ -54,6 +63,34 @@ describe("AgentChatPanel cancel affordance", () => {
     const row = document.querySelector("[data-semio-agent-chat-entry='toolCall']");
     expect(row!.getAttribute("data-agent-chat-state")).toBe("cancelling");
     expect(row!.textContent).toContain("Cancelling…");
+  });
+
+  it("matches the shared neutral invocation lifecycle through the actual React panel", () => {
+    const onCancelToolCall = vi.fn(() => true);
+    const running: AgentConversationEntry = {
+      kind: "toolCall",
+      id: cancellationFixture.invocation.id,
+      toolName: cancellationFixture.invocation.toolName,
+      args: cancellationFixture.invocation.arguments,
+      state: "running",
+      summary: null,
+      atMs: 0,
+    };
+    const view = render(<AgentChatPanel status="open" presence={IDLE_PRESENCE} conversation={[running]} onSendMessage={() => true} onCancelToolCall={onCancelToolCall} />);
+    fireEvent.click(screen.getByRole("button", { name: new RegExp(cancellationFixture.invocation.toolName) }));
+    expect(onCancelToolCall).toHaveBeenCalledWith(cancellationFixture.invocation.id);
+
+    const cancelling = { ...running, state: cancellationFixture.openCancellation.state } satisfies AgentConversationEntry;
+    view.rerender(<AgentChatPanel status="open" presence={IDLE_PRESENCE} conversation={[cancelling]} onSendMessage={() => true} onCancelToolCall={onCancelToolCall} />);
+    expect(document.querySelector(`[data-semio-agent-chat-cancel='${cancellationFixture.invocation.id}']`)).toBeNull();
+    expect(document.querySelector("[data-semio-agent-chat-entry='toolCall']")!.getAttribute("data-agent-chat-state")).toBe(cancellationFixture.openCancellation.state);
+
+    const settled = { ...running, state: cancellationFixture.terminalResult.state, summary: cancellationFixture.terminalResult.summary } satisfies AgentConversationEntry;
+    view.rerender(<AgentChatPanel status="open" presence={IDLE_PRESENCE} conversation={[settled]} onSendMessage={() => true} onCancelToolCall={onCancelToolCall} />);
+    const row = document.querySelector("[data-semio-agent-chat-entry='toolCall']")!;
+    expect(row.getAttribute("data-agent-chat-state")).toBe(cancellationFixture.terminalResult.state);
+    expect(row.textContent).toContain(cancellationFixture.terminalResult.summary);
+    expect(document.querySelector("[data-semio-agent-chat-cancel]")).toBeNull();
   });
 });
 //#endregion 🔖️CancelAffordance

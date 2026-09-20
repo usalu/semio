@@ -1,9 +1,10 @@
 import { cleanup, fireEvent, render, screen } from "@semio-tech/ui-react/test";
 import Ajv from "ajv";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import type { AppDefinition, ViewModel } from "@semio-tech/framework";
+import { SemioFaultError, type AppDefinition, type Fault } from "@semio-tech/framework";
+import type { ViewModel } from "../../🧱️elements/🐚️Shell/🟦️.tsx";
 import type { BackboneWorkerRequest, BackboneWorkerResponse } from "@semio-tech/framework-os";
-import type { PluginWasmHandle } from "../../🧱️elements/🔌️PluginRuntime/🟦️.tsx";
+import type { PluginOperationCompletion, PluginWasmHandle } from "../../🧱️elements/🔌️PluginRuntime/🟦️.tsx";
 import {
   DIRECTORY_PROJECTION_RECEIPT_SCHEMA,
   DirectoryBootstrapStatusNotice,
@@ -11,6 +12,7 @@ import {
   closeDirectoryHomeOwnerV1,
   openDirectoryHomeOwnerV1,
   parseDirectoryProjectionReceiptV1,
+  startedDirectoryOperationIdV1,
 } from "../../🧱️elements/🏛️ShellHost/📇️directory-bootstrap/🟦️.tsx";
 import directorySchema from "../../../../📇️directory/🧬️schema/🔣️.json" with { type: "json" };
 import fixture from "../../🧱️elements/🏛️ShellHost/🧫️fixtures/📇️directory-bootstrap/🔣️.json";
@@ -37,19 +39,40 @@ const page = {
   receiptSha256: fixture.receipt.receiptSha256,
 } as Extract<BackboneWorkerResponse, { readonly kind: "directory-event-page" }>;
 
-function deferred<T>() {
-  let resolve!: (value: T) => void;
-  let reject!: (reason: unknown) => void;
-  const promise = new Promise<T>((ok, bad) => { resolve = ok; reject = bad; });
-  return { promise, resolve, reject };
-}
+/** 🎟️ What the migrated guest really answers a dispatched `applyDirectoryEventPage` with: the typed
+ * operation's `{ operationId, generation }` handle, both decimal strings, and NOT the verb's result. */
+const ADMISSION_OPERATION = 64;
+const ADMISSION = { operationId: String(ADMISSION_OPERATION), generation: "0" };
 
 function terminal(output: unknown) {
   return { output, mutations: [], inverseGroup: { invocationId: "fixture", mutations: [], inverseMutations: [] } };
 }
 
-function handle(output: Promise<unknown> | unknown, calls: string[] = [], viewStates: ViewModel[] = []): PluginWasmHandle {
-  return {
+function fault(code: string, retryable: boolean): SemioFaultError {
+  return new SemioFaultError({ origin: "plugin", code, severity: "error", message: code, scope: {}, retryable } as unknown as Fault);
+}
+
+/** ⏭️ Drains the microtask queue so an awaited `handleAction` and the settle registration behind it
+ * have both run — the ordering this whole lane is about. */
+async function flush(): Promise<void> {
+  for (let tick = 0; tick < 8; tick += 1) await Promise.resolve();
+}
+
+type HomeHandleV1 = Readonly<{
+  plugin: PluginWasmHandle;
+  publish(completion: Readonly<{ operation?: number; terminalOutput: unknown }>): void;
+  subscribers(): number;
+}>;
+
+/** 🏠️ A Home handle that behaves like the job-routed guest: `handleAction` answers the admission and
+ * the receipt arrives later, only through the operation-completion subscription. */
+function handle(
+  options: Readonly<{ admission?: unknown; refuse?: unknown; calls?: string[]; viewStates?: ViewModel[] }> = {},
+): HomeHandleV1 {
+  const calls = options.calls ?? [];
+  const viewStates = options.viewStates ?? [];
+  const listeners = new Set<(completion: PluginOperationCompletion) => void>();
+  const plugin = {
     pluginId: "space",
     manifest: { pluginId: "space", label: "Space", version: "1", apps: [app], examples: [] },
     createApp: async () => { calls.push("create"); return 41; },
@@ -58,9 +81,32 @@ function handle(output: Promise<unknown> | unknown, calls: string[] = [], viewSt
       const actionId = JSON.parse(invocation).address.actionId as string;
       calls.push(`action:${actionId}:${invocation}`);
       viewStates.push(structuredClone(viewState));
-      return await Promise.resolve(output).then(terminal);
+      if (options.refuse !== undefined) throw options.refuse;
+      return terminal("admission" in options ? options.admission : ADMISSION);
+    },
+    subscribeOperationCompletions: (instanceId: number, listener: (completion: PluginOperationCompletion) => void) => {
+      calls.push(`subscribe:${instanceId}`);
+      listeners.add(listener);
+      return () => { listeners.delete(listener); };
     },
   } as unknown as PluginWasmHandle;
+  return {
+    plugin,
+    publish: (completion) => {
+      for (const listener of [...listeners]) {
+        listener({
+          instanceId: 41,
+          operation: completion.operation ?? ADMISSION_OPERATION,
+          revision: 1,
+          uiScope: undefined,
+          historyPatch: undefined,
+          requestedEffects: [],
+          terminalOutput: completion.terminalOutput,
+        });
+      }
+    },
+    subscribers: () => listeners.size,
+  };
 }
 
 async function ownerFor(
@@ -100,10 +146,18 @@ describe("retained visible Home directory bootstrap", () => {
     }
   });
 
+  it("reads only the typed-operation handle out of an admitting reply", () => {
+    expect(startedDirectoryOperationIdV1(ADMISSION)).toBe(ADMISSION_OPERATION);
+    expect(startedDirectoryOperationIdV1({ operationId: 7, generation: "0" })).toBe(7);
+    expect(startedDirectoryOperationIdV1(fixture.receipt)).toBeNull();
+    for (const refused of [null, undefined, "64", 64, [], { generation: "0" }, { operationId: "-1" }, { operationId: "1.5" }, { operationId: "" }, { operationId: Number.NaN }])
+      expect(startedDirectoryOperationIdV1(refused), JSON.stringify(refused ?? null)).toBeNull();
+  });
+
   it("opens the worker epoch with the exact host identity on the owned Home instance", async () => {
     const calls: string[] = [];
     const posts: BackboneWorkerRequest[] = [];
-    const owner = await ownerFor(handle(fixture.receipt, calls), posts);
+    const owner = await ownerFor(handle({ calls }).plugin, posts);
     expect(calls).toEqual(["create"]);
     expect(posts).toEqual([{ kind: "directory-bootstrap-open", baseUrl: "https://hub.example", after: 0, bootstrapEpoch: 3 }]);
     expect(owner.viewState.locale).toBe("de-DE");
@@ -116,7 +170,7 @@ describe("retained visible Home directory bootstrap", () => {
     const calls: string[] = [];
     const posts: BackboneWorkerRequest[] = [];
     const order: string[] = [];
-    const plugin = handle(fixture.receipt, calls);
+    const plugin = handle({ calls }).plugin;
     const owner = await ownerFor(plugin, posts, {
       instance: { instanceId: 77, viewState: { activeModeId: "explore", panelJson: "visible" } },
       beforeBootstrap: async () => { order.push("refresh"); },
@@ -132,20 +186,21 @@ describe("retained visible Home directory bootstrap", () => {
   });
 
   it("suppresses an obsolete owner before replacing its host identity on the same visible instance", async () => {
-    const firstRefresh = deferred<void>();
+    let releaseFirstRefresh!: () => void;
+    const firstRefresh = new Promise<void>((resolve) => { releaseFirstRefresh = resolve; });
     const calls: string[] = [];
-    const plugin = handle(fixture.receipt, calls);
+    const plugin = handle({ calls }).plugin;
     const firstPosts: BackboneWorkerRequest[] = [];
     const firstAbort = new AbortController();
-    const first = ownerFor(plugin, firstPosts, { instance: { instanceId: 77, viewState: {} }, signal: firstAbort.signal, beforeBootstrap: () => firstRefresh.promise });
+    const first = ownerFor(plugin, firstPosts, { instance: { instanceId: 77, viewState: {} }, signal: firstAbort.signal, beforeBootstrap: () => firstRefresh });
     await Promise.resolve();
     firstAbort.abort("identity-replaced");
-    firstRefresh.resolve();
+    releaseFirstRefresh();
     await expect(first).rejects.toThrow("directory-bootstrap.stale-owner");
     expect(firstPosts).toEqual([]);
 
     const secondPosts: BackboneWorkerRequest[] = [];
-    const secondPlugin = handle(fixture.receipt, calls);
+    const secondPlugin = handle({ calls }).plugin;
     const second = await ownerFor(secondPlugin, secondPosts, { identity: fixture.identities.b, instance: { instanceId: 77, viewState: {} } });
     expect(calls).toEqual([]);
     expect(secondPosts).toHaveLength(1);
@@ -154,12 +209,12 @@ describe("retained visible Home directory bootstrap", () => {
     await closeDirectoryHomeOwnerV1(second, (message) => secondPosts.push(message));
   });
 
-  it("serializes pages and ACKs only after the typed terminal receipt resolves", async () => {
-    const result = deferred<unknown>();
+  it("never ACKs the admitting reply and ACKs only the settled operation's terminal receipt", async () => {
     const posts: BackboneWorkerRequest[] = [];
     const calls: string[] = [];
     const viewStates: ViewModel[] = [];
-    const owner = await ownerFor(handle(result.promise, calls, viewStates), posts);
+    const home = handle({ calls, viewStates });
+    const owner = await ownerFor(home.plugin, posts);
     posts.length = 0;
     const pending = applyDirectoryEventPageBootstrapV1(owner, page, (message) => posts.push(message));
     const duplicate = await applyDirectoryEventPageBootstrapV1(owner, page, (message) => posts.push(message));
@@ -171,59 +226,123 @@ describe("retained visible Home directory bootstrap", () => {
       receiptSha256: page.receiptSha256,
       throughSeqInclusive: page.throughSeqInclusive,
     });
+    // 🧾️ The admitting reply has already resolved here — its `{ operationId, generation }` handle is
+    // NOT a receipt, so nothing may be acknowledged yet. Reading it as one is the whole defect.
+    await flush();
+    expect(calls.filter((call) => call.startsWith("action:applyDirectoryEventPage:"))).toHaveLength(1);
     expect(posts).toEqual([]);
+    // 🏁️ The subscription opened BEFORE the dispatch, or a completion racing the reply is lost.
+    expect(calls.indexOf("subscribe:41")).toBeLessThan(calls.findIndex((call) => call.startsWith("action:applyDirectoryEventPage:")));
     expect(JSON.parse(calls.find((call) => call.startsWith("action:applyDirectoryEventPage:"))!.split(":").slice(2).join(":"))).toMatchObject({ address: { actionId: "applyDirectoryEventPage" }, arguments: { pageJson: page.canonicalJson } });
     expect(viewStates).toHaveLength(1);
     expect(viewStates[0]?.sessionIdentity).toEqual({ userId: "user-a", displayName: "Ada Author" });
-    result.resolve(fixture.receipt);
+    // 🧾️ A completion for ANOTHER operation on the same instance settles nothing.
+    home.publish({ operation: ADMISSION_OPERATION + 1, terminalOutput: fixture.receipt });
+    await flush();
+    expect(posts).toEqual([]);
+    home.publish({ terminalOutput: fixture.receipt });
     expect((await pending).receipt).toEqual(fixture.receipt);
     expect(posts).toEqual([{ kind: "directory-bootstrap-ack", bootstrapEpoch: 3, sessionBindingSha256: fixture.receipt.sessionBindingSha256, authorizationGeneration: 7, throughSeqInclusive: 11, receiptSha256: fixture.receipt.receiptSha256 }]);
+    expect(home.subscribers()).toBe(0);
+  });
+
+  it("settles a completion that wins the race against its own admitting reply", async () => {
+    const posts: BackboneWorkerRequest[] = [];
+    const home = handle({});
+    const owner = await ownerFor(home.plugin, posts);
+    posts.length = 0;
+    const pending = applyDirectoryEventPageBootstrapV1(owner, page, (message) => posts.push(message));
+    home.publish({ terminalOutput: fixture.receipt });
+    const result = await pending;
+    expect(result.state).toEqual({ kind: "idle" });
+    expect(result.receipt).toEqual(fixture.receipt);
   });
 
   it("refreshes the visible projection before publishing the ACK", async () => {
     const order: string[] = [];
-    const owner = await ownerFor(handle(fixture.receipt), []);
-    const result = await applyDirectoryEventPageBootstrapV1(
+    const home = handle({});
+    const owner = await ownerFor(home.plugin, []);
+    const pending = applyDirectoryEventPageBootstrapV1(
       owner,
       page,
       (message) => order.push(message.kind),
       async () => { order.push("refresh"); },
     );
-    expect(result.state).toEqual({ kind: "idle" });
+    home.publish({ terminalOutput: fixture.receipt });
+    expect((await pending).state).toEqual({ kind: "idle" });
     expect(order).toEqual(["refresh", "directory-bootstrap-ack"]);
   });
 
-  it("rejects a recoverable Home action failure once without dropping the owner", async () => {
+  it("re-offers the page only on a typed transient refusal and stops on a permanent one", async () => {
+    const transientPosts: BackboneWorkerRequest[] = [];
+    const transientCalls: string[] = [];
+    const transient = await ownerFor(handle({ calls: transientCalls, refuse: fault("s.home.config-lane-busy", true) }).plugin, transientPosts);
+    transientPosts.length = 0;
+    expect((await applyDirectoryEventPageBootstrapV1(transient, page, (message) => transientPosts.push(message))).state).toEqual({ kind: "retrying", throughSeqInclusive: 11 });
+    expect(transientPosts).toEqual([{ kind: "directory-bootstrap-reject", bootstrapEpoch: 3, receiptSha256: fixture.receipt.receiptSha256 }]);
+    expect(transient.abort.signal.aborted).toBe(false);
+    expect(transientCalls).not.toContain("destroy");
+
+    // 🚫️ A page the guest REFUSES is permanent for this page: re-offering it is the retry storm
+    // S4 measured (31 `event-page?after=0` in a 60 s window), and the code is what the notice shows.
+    const refusedPosts: BackboneWorkerRequest[] = [];
+    const refusedCalls: string[] = [];
+    const refused = await ownerFor(handle({ calls: refusedCalls, refuse: fault("s.home.directory-event-page-invalid", false) }).plugin, refusedPosts);
+    refusedPosts.length = 0;
+    expect((await applyDirectoryEventPageBootstrapV1(refused, page, (message) => refusedPosts.push(message))).state).toEqual({ kind: "fault", code: "s.home.directory-event-page-invalid" });
+    expect(refusedPosts).toEqual([{ kind: "directory-bootstrap-close", bootstrapEpoch: 3 }]);
+    expect(refusedCalls.at(-1)).toBe("destroy");
+  });
+
+  it("re-offers the page when the terminal publication never arrives", async () => {
     const posts: BackboneWorkerRequest[] = [];
     const calls: string[] = [];
-    const owner = await ownerFor(handle(Promise.reject(new Error("capacity")), calls), posts);
+    const home = handle({ calls });
+    const owner = await ownerFor(home.plugin, posts);
     posts.length = 0;
-    expect((await applyDirectoryEventPageBootstrapV1(owner, page, (message) => posts.push(message))).state).toEqual({ kind: "retrying", throughSeqInclusive: 11 });
+    const result = await applyDirectoryEventPageBootstrapV1(owner, page, (message) => posts.push(message), undefined, 1);
+    expect(result.state).toEqual({ kind: "retrying", throughSeqInclusive: 11 });
     expect(posts).toEqual([{ kind: "directory-bootstrap-reject", bootstrapEpoch: 3, receiptSha256: fixture.receipt.receiptSha256 }]);
     expect(owner.abort.signal.aborted).toBe(false);
     expect(calls).not.toContain("destroy");
+    expect(home.subscribers()).toBe(0);
+  });
+
+  it("stops when the admitting reply started no typed operation at all", async () => {
+    const posts: BackboneWorkerRequest[] = [];
+    const calls: string[] = [];
+    const owner = await ownerFor(handle({ calls, admission: fixture.receipt }).plugin, posts);
+    posts.length = 0;
+    expect((await applyDirectoryEventPageBootstrapV1(owner, page, (message) => posts.push(message))).state).toEqual({ kind: "fault", code: "directory-bootstrap.operation-unstarted" });
+    expect(posts).toEqual([{ kind: "directory-bootstrap-close", bootstrapEpoch: 3 }]);
+    expect(calls.at(-1)).toBe("destroy");
   });
 
   it("closes and destroys on an exact receipt mismatch", async () => {
     const posts: BackboneWorkerRequest[] = [];
     const calls: string[] = [];
-    const owner = await ownerFor(handle({ ...fixture.receipt, throughSeqInclusive: 12 }, calls), posts);
+    const home = handle({ calls });
+    const owner = await ownerFor(home.plugin, posts);
     posts.length = 0;
-    expect((await applyDirectoryEventPageBootstrapV1(owner, page, (message) => posts.push(message))).state).toEqual({ kind: "fault", code: "directory-bootstrap.receipt-mismatch" });
+    const pending = applyDirectoryEventPageBootstrapV1(owner, page, (message) => posts.push(message));
+    home.publish({ terminalOutput: { ...fixture.receipt, throughSeqInclusive: 12 } });
+    expect((await pending).state).toEqual({ kind: "fault", code: "directory-bootstrap.receipt-mismatch" });
     expect(posts).toEqual([{ kind: "directory-bootstrap-close", bootstrapEpoch: 3 }]);
     expect(calls.at(-1)).toBe("destroy");
   });
 
   it("suppresses a late receipt after cancellation", async () => {
-    const result = deferred<unknown>();
     const posts: BackboneWorkerRequest[] = [];
-    const owner = await ownerFor(handle(result.promise), posts);
+    const home = handle({});
+    const owner = await ownerFor(home.plugin, posts);
     posts.length = 0;
     const pending = applyDirectoryEventPageBootstrapV1(owner, page, (message) => posts.push(message));
+    await flush();
     await closeDirectoryHomeOwnerV1(owner, (message) => posts.push(message));
-    result.resolve(fixture.receipt);
+    home.publish({ terminalOutput: fixture.receipt });
     expect((await pending).state).toEqual({ kind: "fault", code: "directory-bootstrap.cancelled" });
     expect(posts).toEqual([{ kind: "directory-bootstrap-close", bootstrapEpoch: 3 }]);
+    expect(home.subscribers()).toBe(0);
   });
 
   it("renders explicit accessible EN and DE status without a fallback locale", () => {

@@ -1,5 +1,4 @@
 {
-  "ChangeTankVRdKn": {
-    "newTankVRdKn": 537.5
-  }
+  "mutation": "changeTankVRdKn",
+  "newTankVRdKn": 537.5
 }

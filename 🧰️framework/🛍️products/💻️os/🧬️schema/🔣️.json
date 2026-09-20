@@ -301,6 +301,10 @@
       "type": "string",
       "pattern": "^[0-9a-f]{64}$"
     },
+    "GisMapInferencePortSessionCapability": {
+      "type": "string",
+      "pattern": "^session\\.v1\\.[0-9a-f]{32}\\.[0-9a-f]{64}$"
+    },
     "GisMapInferencePortJobState": {
       "enum": [
         "accepted",
@@ -1094,7 +1098,7 @@
         "retainedClosing": {
           "type": "object",
           "additionalProperties": false,
-          "required": ["requestId", "operationEpoch", "cases", "approvalClose", "queuedRetirement", "brokerReplacement", "authorityRetirement", "portReplacement", "directoryPageBinding", "authorityFence", "successorProof", "unknownPhase", "terminalPhase", "reconcilePath", "closedKind"],
+          "required": ["requestId", "operationEpoch", "cases", "approvalClose", "queuedRetirement", "brokerReplacement", "authorityRetirement", "portReplacement", "directoryPageBinding", "authorityFence", "successorCapability", "unknownPhase", "terminalPhase", "reconcilePath", "closedKind"],
           "properties": {
             "requestId": { "$ref": "#/$defs/GisMapInferencePortHex32" },
             "operationEpoch": { "type": "integer", "minimum": 1, "maximum": 9007199254740991 },
@@ -1129,7 +1133,7 @@
                 }
               }
             },
-            "successorProof": { "$ref": "#/$defs/GisMapInferencePortHex64" },
+            "successorCapability": { "$ref": "#/$defs/GisMapInferencePortSessionCapability" },
             "unknownPhase": { "const": "indeterminate" },
             "terminalPhase": { "const": "cancelled" },
             "reconcilePath": { "const": "POST /_semio/hub/spaces/sp-inference/documents/doc-inference/inference/gis-map/jobs/reconcile" },

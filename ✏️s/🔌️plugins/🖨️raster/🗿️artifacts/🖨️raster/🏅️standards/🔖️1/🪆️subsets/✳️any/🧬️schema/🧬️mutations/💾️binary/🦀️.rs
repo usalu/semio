@@ -89,7 +89,7 @@ impl RasterStandaloneControlCredit {
 
 impl Drop for RasterStandaloneControlCredit {
     fn drop(&mut self) {
-        assert!(self.held_items == 0 && self.held_bytes == 0, "Raster standalone control credit reached Drop before exact return");
+        assert!((self.held_items == 0 && self.held_bytes == 0) || std::thread::panicking(), "Raster standalone control credit reached Drop before exact return");
     }
 }
 
@@ -130,7 +130,7 @@ impl RasterInitializationControlReservation {
 
 impl Drop for RasterInitializationControlReservation {
     fn drop(&mut self) {
-        assert!(self.remaining == 0 && self.remaining_bytes == 0, "Raster initialization control reservation reached Drop before every exact backing credit was returned");
+        assert!((self.remaining == 0 && self.remaining_bytes == 0) || std::thread::panicking(), "Raster initialization control reservation reached Drop before every exact backing credit was returned");
     }
 }
 
@@ -182,7 +182,7 @@ impl RasterRetirementFramePage {
 
 impl Drop for RasterRetirementFramePage {
     fn drop(&mut self) {
-        assert!(self.frames.iter().all(Option::is_none), "Raster retirement frame page reached Drop before every admitted owner was returned");
+        assert!((self.frames.iter().all(Option::is_none)) || std::thread::panicking(), "Raster retirement frame page reached Drop before every admitted owner was returned");
     }
 }
 
@@ -736,7 +736,7 @@ impl store::ErasedSnapshotRetirement for RasterOwnedRetirement {
 
 impl Drop for RasterOwnedRetirement {
     fn drop(&mut self) {
-        assert!(store::ErasedSnapshotRetirement::terminal_is_empty(self), "Raster owner reached Drop before cursor retirement reached terminal-empty");
+        assert!((store::ErasedSnapshotRetirement::terminal_is_empty(self)) || std::thread::panicking(), "Raster owner reached Drop before cursor retirement reached terminal-empty");
     }
 }
 
@@ -827,7 +827,7 @@ impl store::ErasedSnapshotRetirement for RasterSnapshotRootRetirement {
 
 impl Drop for RasterSnapshotRootRetirement {
     fn drop(&mut self) {
-        assert!(self.owner.is_none() && self.value.is_none() && self.retirement.is_none() && self.control.is_none() && self.control_returned, "Raster snapshot root reached Drop before exact Arc handback");
+        assert!((self.owner.is_none() && self.value.is_none() && self.retirement.is_none() && self.control.is_none() && self.control_returned) || std::thread::panicking(), "Raster snapshot root reached Drop before exact Arc handback");
     }
 }
 
@@ -1018,7 +1018,7 @@ macro_rules! raster_owned_field_authority {
         impl Drop for $authority {
             fn drop(&mut self) {
                 assert!(
-                    matches!(self.state, $state::Published | $state::Complete) && self.value.is_none() && self.retirement.is_none() && !self.retirement_terminal,
+                    (matches!(self.state, $state::Published | $state::Complete) && self.value.is_none() && self.retirement.is_none() && !self.retirement_terminal) || std::thread::panicking(),
                     concat!("Raster ", $kind, " decode reached Drop before publication or bounded retirement"),
                 );
             }
@@ -1727,7 +1727,7 @@ impl RasterDslValueCloneAuthority {
 
 impl Drop for RasterDslValueCloneAuthority {
     fn drop(&mut self) {
-        assert!(self.terminal_is_empty(), "Raster value clone reached Drop before exact handoff or retirement");
+        assert!((self.terminal_is_empty()) || std::thread::panicking(), "Raster value clone reached Drop before exact handoff or retirement");
     }
 }
 
@@ -2039,7 +2039,7 @@ impl RasterLayerCloneAuthority {
 
 impl Drop for RasterLayerCloneAuthority {
     fn drop(&mut self) {
-        assert!(self.terminal_is_empty(), "Raster layer clone reached Drop before exact handoff or retirement");
+        assert!((self.terminal_is_empty()) || std::thread::panicking(), "Raster layer clone reached Drop before exact handoff or retirement");
     }
 }
 
@@ -2389,7 +2389,7 @@ impl RasterSnapshotCloneAuthority {
 
 impl Drop for RasterSnapshotCloneAuthority {
     fn drop(&mut self) {
-        assert!(self.terminal_is_empty(), "Raster snapshot clone reached Drop before exact handoff or cursor retirement");
+        assert!((self.terminal_is_empty()) || std::thread::panicking(), "Raster snapshot clone reached Drop before exact handoff or cursor retirement");
     }
 }
 
@@ -2657,7 +2657,7 @@ impl RasterMutationDigestAuthority {
 
 impl Drop for RasterMutationDigestAuthority {
     fn drop(&mut self) {
-        assert!(self.terminal_is_empty(), "Raster mutation digest reached Drop with a retained derived owner");
+        assert!((self.terminal_is_empty()) || std::thread::panicking(), "Raster mutation digest reached Drop with a retained derived owner");
     }
 }
 
@@ -3373,7 +3373,7 @@ impl RasterMutationCandidateAuthority {
 
 impl Drop for RasterMutationCandidateAuthority {
     fn drop(&mut self) {
-        assert!(self.terminal_is_empty(), "Raster mutation candidate reached Drop before exact handoff or retirement");
+        assert!((self.terminal_is_empty()) || std::thread::panicking(), "Raster mutation candidate reached Drop before exact handoff or retirement");
     }
 }
 
@@ -3442,7 +3442,7 @@ impl RasterOneItemApply {
 
 impl Drop for RasterOneItemApply {
     fn drop(&mut self) {
-        assert!(self.candidate.is_none(), "Raster one-item apply reached Drop before its candidate was closed");
+        assert!((self.candidate.is_none()) || std::thread::panicking(), "Raster one-item apply reached Drop before its candidate was closed");
         unsafe { std::mem::ManuallyDrop::drop(&mut self.candidate) };
     }
 }
@@ -4116,7 +4116,7 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<RasterSnapshot
 
 impl Drop for RasterStoreInitializationAuthority {
     fn drop(&mut self) {
-        assert!(self.terminal_is_empty_inner(), "Raster store initialization authority reached Drop before exact candidate handoff or retained rejection close");
+        assert!((self.terminal_is_empty_inner()) || std::thread::panicking(), "Raster store initialization authority reached Drop before exact candidate handoff or retained rejection close");
     }
 }
 

@@ -1,5 +1,4 @@
 {
-  "ChangeSeismicZone": {
-    "newSeismicZone": 4
-  }
+  "mutation": "changeSeismicZone",
+  "newSeismicZone": 4
 }

@@ -8458,6 +8458,7 @@ pub fn create_puzzle3d_app() -> semio_framework_plugin::AppDefinition {
             .keybinding("f", "focusSelection")
             // 🔧️ Document-mutating operations (emit VCS operations through the before/after fixture delta).
             .action_with(ActionDefinition::new("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"), ActionKind::Mutation, "panel-left"))
+            .action_destructive("setActiveExample")
             // 🗨️ Shell-only effect (no document mutation): opens the "addObject" dialog. Declared HERE, in
             // front of every other create verb, because the shell fallback menu and the ribbon keep only
             // the first `CONTEXT_MENU_PRIMARY_BUDGET` leaves at top level and fold the rest into "More ›" —
@@ -8469,6 +8470,7 @@ pub fn create_puzzle3d_app() -> semio_framework_plugin::AppDefinition {
             // bare action pane instead (`📓️2026-09-11-wave-B1-battery-extension.md` §5 defect 7).
             .action_with(ActionDefinition::bounded_catalog("addObjectKind", puzzle3d_localized_phrase(|l| l.object, |w| format!("Add {w}"), |w| format!("{w} hinzufügen")), ActionKind::Mutation).category("create").in_palette(false))
             .action_with(ActionDefinition::bounded_catalog("deleteSelection", LocalizedLabel::native("Delete Selection", "Auswahl löschen"), ActionKind::Mutation).category("selection"))
+            .action_destructive("deleteSelection")
             .action_with(ActionDefinition::bounded_catalog("duplicateSelection", LocalizedLabel::native("Duplicate Selection", "Auswahl duplizieren"), ActionKind::Mutation).category("create"))
             .action_with(ActionDefinition::bounded_catalog("exportFixture", LocalizedLabel::native("Export", "Exportieren"), ActionKind::Shell).category("file"))
             .action_with(ActionDefinition::bounded_catalog("importFixture", LocalizedLabel::native("Import", "Importieren"), ActionKind::Mutation).in_palette(false))
@@ -8489,8 +8491,10 @@ pub fn create_puzzle3d_app() -> semio_framework_plugin::AppDefinition {
             // 2026-09-09 21:05) where they name nothing and do nothing. The attraction's own row in
             // `puzzle3d_context_menu_items` is unaffected — it supplies the id.
             .action_with(ActionDefinition::bounded_catalog("deleteAttraction", puzzle3d_localized_phrase(|l| l.attraction, |w| format!("Delete {w}"), |w| format!("{w} löschen")), ActionKind::Mutation).category("targets").in_palette(false))
+            .action_destructive("deleteAttraction")
             .mutation("addTargetVolume", puzzle3d_localized_phrase(|l| l.target_volume, |w| format!("Add {w}"), |w| format!("{w} hinzufügen")))
             .action_with(ActionDefinition::bounded_catalog("deleteTargetVolume", LocalizedLabel::native("Delete Target Volume", "Zielvolumen löschen"), ActionKind::Mutation).category("targets").in_palette(false))
+            .action_destructive("deleteTargetVolume")
             .action_with(ActionDefinition::bounded_catalog("setTargetVolumeFlag", LocalizedLabel::native("Set Target Volume Flag", "Zielvolumenmarkierung festlegen"), ActionKind::Mutation).category("targets").in_palette(false))
             .mutation("addBrushObject", puzzle3d_localized_phrase(|l| l.object, |w| format!("Add Brush {w}"), |w| format!("Pinsel-{w} hinzufügen")))
             .mutation("acceptSuggestion", LocalizedLabel::native("Accept Suggestion", "Vorschlag annehmen"))
@@ -8532,6 +8536,7 @@ pub fn create_puzzle3d_app() -> semio_framework_plugin::AppDefinition {
             .action_with(ActionDefinition::bounded_catalog("openVortexSuggestions", puzzle3d_localized_phrase(|l| l.vortex, |w| format!("Open {w} Suggestions"), |w| format!("{w}-Vorschläge öffnen")), ActionKind::View).category("tools"))
             .view_action("closeVortexSuggestions", puzzle3d_localized_phrase(|l| l.vortex, |w| format!("Close {w} Suggestions"), |w| format!("{w}-Vorschläge schließen")))
             .view_action("hoverSuggestion", LocalizedLabel::native("Hover Suggestion", "Vorschlag überfahren"))
+            .action_audience("hoverSuggestion", semio_framework_plugin::CapabilityAudience::Input)
             .view_action("targetBrushSuggestions", LocalizedLabel::native("Target Brush Suggestions", "Pinselvorschläge ausrichten"))
             .view_action("registerBrushMesh", LocalizedLabel::native("Register Brush Mesh", "Pinsel-Mesh registrieren"))
             .action_with(ActionDefinition::new("worldPointerDown", LocalizedLabel::native("World Pointer Down", "Welt-Zeiger gedrückt"), ActionKind::View, "mouse-pointer"))

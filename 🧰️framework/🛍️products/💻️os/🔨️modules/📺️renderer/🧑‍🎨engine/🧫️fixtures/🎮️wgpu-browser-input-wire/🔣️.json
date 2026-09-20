@@ -1,107 +1,525 @@
 {
   "title": "wgpu browser input wire",
-  "why": "One row per input the wgpu browser shell admits, pinned across all three hops it crosses: the DOM event a listener on #semio-wgpu-canvas observes, the wire event the UI isolate transfers to the frame Worker, and the DispatchEvent the Worker projects it onto before Ui::dispatch_event sees it. The middle hop is where a browser-only mistake hides: coordinates are NOT scaled (offset* are CSS pixels and the renderer lays out, hit-tests and paints in the same logical pixels — only a resize carries the physical surface extent plus its dpr), the wire spells its fields in camelCase while Rust spells them in snake_case, and `button` is a name, not a DOM integer.",
+  "why": "One row per input the wgpu browser shell admits, pinned across all three hops it crosses: the DOM event a listener on #semio-wgpu-canvas observes, the wire event the UI isolate transfers to the frame Worker, and the DispatchEvent the Worker projects it onto before Ui::dispatch_event sees it. Pointer and wheel rows carry their required event-time modifier snapshot so gestures remain correct when a modifier was pressed outside the renderer root or released between coalesced samples. Coordinates are NOT scaled (offset* are CSS pixels and the renderer lays out, hit-tests and paints in the same logical pixels — only a resize carries the physical surface extent plus its dpr), the wire spells its fields in camelCase while Rust spells them in snake_case, and button is a name, not a DOM integer.",
   "consumers": [
     "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🎮️wgpu-browser-input-wire/🦀️.rs",
     "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🎮️wgpu-browser-input-wire/🟦️.ts"
   ],
   "rows": [
     {
+      "id": "pointer-cancel-retires-touch-capture",
+      "why": "Cancellation is lossless and identifies the captured pointer without manufacturing a release commit.",
+      "dom": { "type": "pointercancel", "pointerId": 7, "pointerType": "touch", "offsetX": 42, "offsetY": 24, "devicePixelRatio": 2, "shift": false, "ctrl": false, "alt": false, "meta": false },
+      "wire": { "kind": "pointer-cancel", "pointerId": 7, "pointerKind": "touch", "x": 42, "y": 24, "shift": false, "ctrl": false, "alt": false, "meta": false },
+      "dispatch": { "kind": "pointer-cancel", "pointerId": 7, "pointerKind": "touch", "pressure": null, "tilt": null }
+    },
+    {
       "id": "pointer-move-over-a-tree-row",
       "why": "The hover that must reach hit_test: page point 160.696,138 is the Generations window's Add Generation row derived from the shell's own dock plan.",
-      "dom": { "type": "pointermove", "pointerId": 1, "pointerType": "mouse", "offsetX": 160.696, "offsetY": 138, "devicePixelRatio": 1 },
-      "wire": { "kind": "pointer-move", "pointerId": 1, "pointerKind": "mouse", "x": 160.696, "y": 138 },
-      "dispatch": { "kind": "pointer-move", "pointerId": 1, "pointerKind": "mouse", "x": 160.696, "y": 138, "pressure": null, "tilt": null }
+      "dom": {
+        "type": "pointermove",
+        "pointerId": 1,
+        "pointerType": "mouse",
+        "offsetX": 160.696,
+        "offsetY": 138,
+        "devicePixelRatio": 1,
+        "shift": true,
+        "ctrl": false,
+        "alt": false,
+        "meta": false
+      },
+      "wire": {
+        "kind": "pointer-move",
+        "pointerId": 1,
+        "pointerKind": "mouse",
+        "x": 160.696,
+        "y": 138,
+        "shift": true,
+        "ctrl": false,
+        "alt": false,
+        "meta": false
+      },
+      "dispatch": {
+        "kind": "pointer-move",
+        "pointerId": 1,
+        "pointerKind": "mouse",
+        "x": 160.696,
+        "y": 138,
+        "pressure": null,
+        "tilt": null,
+        "shift": true,
+        "ctrl": false,
+        "alt": false,
+        "meta": false
+      }
     },
     {
       "id": "pointer-move-on-a-retina-surface",
       "why": "ZERO devicePixelRatio multiplications: a CSS-pixel offset of 160.5 on a dpr-2 surface stays 160.5, because the renderer's layout, chrome constants and hit registry are all logical pixels — exactly like the React host's DOM. Scaling here was the HiDPI placement bug (ticket 26/09/17/WGPU-RENDERER-REACT-PARITY packet W1g).",
-      "dom": { "type": "pointermove", "pointerId": 1, "pointerType": "mouse", "offsetX": 160.5, "offsetY": 69, "devicePixelRatio": 2 },
-      "wire": { "kind": "pointer-move", "pointerId": 1, "pointerKind": "mouse", "x": 160.5, "y": 69 },
-      "dispatch": { "kind": "pointer-move", "pointerId": 1, "pointerKind": "mouse", "x": 160.5, "y": 69, "pressure": null, "tilt": null }
+      "dom": {
+        "type": "pointermove",
+        "pointerId": 1,
+        "pointerType": "mouse",
+        "offsetX": 160.5,
+        "offsetY": 69,
+        "devicePixelRatio": 2,
+        "shift": false,
+        "ctrl": false,
+        "alt": false,
+        "meta": false
+      },
+      "wire": {
+        "kind": "pointer-move",
+        "pointerId": 1,
+        "pointerKind": "mouse",
+        "x": 160.5,
+        "y": 69,
+        "shift": false,
+        "ctrl": false,
+        "alt": false,
+        "meta": false
+      },
+      "dispatch": {
+        "kind": "pointer-move",
+        "pointerId": 1,
+        "pointerKind": "mouse",
+        "x": 160.5,
+        "y": 69,
+        "pressure": null,
+        "tilt": null,
+        "shift": false,
+        "ctrl": false,
+        "alt": false,
+        "meta": false
+      }
     },
     {
       "id": "pointer-down-primary-on-a-tree-row",
       "why": "DOM button 0 is the primary button; the wire never carries the integer.",
-      "dom": { "type": "pointerdown", "pointerId": 1, "pointerType": "mouse", "offsetX": 160.696, "offsetY": 138, "button": 0, "devicePixelRatio": 1 },
-      "wire": { "kind": "pointer-down", "pointerId": 1, "pointerKind": "mouse", "x": 160.696, "y": 138, "button": "primary" },
-      "dispatch": { "kind": "pointer-down", "pointerId": 1, "pointerKind": "mouse", "x": 160.696, "y": 138, "pressure": null, "tilt": null, "button": "primary" }
+      "dom": {
+        "type": "pointerdown",
+        "pointerId": 1,
+        "pointerType": "mouse",
+        "offsetX": 160.696,
+        "offsetY": 138,
+        "button": 0,
+        "devicePixelRatio": 1,
+        "shift": true,
+        "ctrl": false,
+        "alt": false,
+        "meta": false
+      },
+      "wire": {
+        "kind": "pointer-down",
+        "pointerId": 1,
+        "pointerKind": "mouse",
+        "x": 160.696,
+        "y": 138,
+        "button": "primary",
+        "shift": true,
+        "ctrl": false,
+        "alt": false,
+        "meta": false
+      },
+      "dispatch": {
+        "kind": "pointer-down",
+        "pointerId": 1,
+        "pointerKind": "mouse",
+        "x": 160.696,
+        "y": 138,
+        "pressure": null,
+        "tilt": null,
+        "button": "primary",
+        "shift": true,
+        "ctrl": false,
+        "alt": false,
+        "meta": false
+      }
     },
     {
       "id": "pointer-up-primary-on-a-tree-row",
       "why": "The activation half of a click — a row activates on the up, so a dropped pointer-up looks exactly like a dropped pointer-down.",
-      "dom": { "type": "pointerup", "pointerId": 1, "pointerType": "mouse", "offsetX": 160.696, "offsetY": 138, "button": 0, "devicePixelRatio": 1 },
-      "wire": { "kind": "pointer-up", "pointerId": 1, "pointerKind": "mouse", "x": 160.696, "y": 138, "button": "primary" },
-      "dispatch": { "kind": "pointer-up", "pointerId": 1, "pointerKind": "mouse", "x": 160.696, "y": 138, "pressure": null, "tilt": null, "button": "primary" }
+      "dom": {
+        "type": "pointerup",
+        "pointerId": 1,
+        "pointerType": "mouse",
+        "offsetX": 160.696,
+        "offsetY": 138,
+        "button": 0,
+        "devicePixelRatio": 1,
+        "shift": false,
+        "ctrl": false,
+        "alt": false,
+        "meta": false
+      },
+      "wire": {
+        "kind": "pointer-up",
+        "pointerId": 1,
+        "pointerKind": "mouse",
+        "x": 160.696,
+        "y": 138,
+        "button": "primary",
+        "shift": false,
+        "ctrl": false,
+        "alt": false,
+        "meta": false
+      },
+      "dispatch": {
+        "kind": "pointer-up",
+        "pointerId": 1,
+        "pointerKind": "mouse",
+        "x": 160.696,
+        "y": 138,
+        "pressure": null,
+        "tilt": null,
+        "button": "primary",
+        "shift": false,
+        "ctrl": false,
+        "alt": false,
+        "meta": false
+      }
     },
     {
       "id": "pointer-down-secondary",
       "why": "DOM button 2 is the context button.",
-      "dom": { "type": "pointerdown", "pointerId": 1, "pointerType": "mouse", "offsetX": 400, "offsetY": 200, "button": 2, "devicePixelRatio": 1 },
-      "wire": { "kind": "pointer-down", "pointerId": 1, "pointerKind": "mouse", "x": 400, "y": 200, "button": "secondary" },
-      "dispatch": { "kind": "pointer-down", "pointerId": 1, "pointerKind": "mouse", "x": 400, "y": 200, "pressure": null, "tilt": null, "button": "secondary" }
+      "dom": {
+        "type": "pointerdown",
+        "pointerId": 1,
+        "pointerType": "mouse",
+        "offsetX": 400,
+        "offsetY": 200,
+        "button": 2,
+        "devicePixelRatio": 1,
+        "shift": false,
+        "ctrl": true,
+        "alt": false,
+        "meta": true
+      },
+      "wire": {
+        "kind": "pointer-down",
+        "pointerId": 1,
+        "pointerKind": "mouse",
+        "x": 400,
+        "y": 200,
+        "button": "secondary",
+        "shift": false,
+        "ctrl": true,
+        "alt": false,
+        "meta": true
+      },
+      "dispatch": {
+        "kind": "pointer-down",
+        "pointerId": 1,
+        "pointerKind": "mouse",
+        "x": 400,
+        "y": 200,
+        "pressure": null,
+        "tilt": null,
+        "button": "secondary",
+        "shift": false,
+        "ctrl": true,
+        "alt": false,
+        "meta": true
+      }
     },
     {
       "id": "pointer-down-middle",
       "why": "DOM button 1 is the middle button — the pan chord in a 3d preview.",
-      "dom": { "type": "pointerdown", "pointerId": 1, "pointerType": "mouse", "offsetX": 400, "offsetY": 200, "button": 1, "devicePixelRatio": 1 },
-      "wire": { "kind": "pointer-down", "pointerId": 1, "pointerKind": "mouse", "x": 400, "y": 200, "button": "middle" },
-      "dispatch": { "kind": "pointer-down", "pointerId": 1, "pointerKind": "mouse", "x": 400, "y": 200, "pressure": null, "tilt": null, "button": "middle" }
+      "dom": {
+        "type": "pointerdown",
+        "pointerId": 1,
+        "pointerType": "mouse",
+        "offsetX": 400,
+        "offsetY": 200,
+        "button": 1,
+        "devicePixelRatio": 1,
+        "shift": false,
+        "ctrl": false,
+        "alt": true,
+        "meta": false
+      },
+      "wire": {
+        "kind": "pointer-down",
+        "pointerId": 1,
+        "pointerKind": "mouse",
+        "x": 400,
+        "y": 200,
+        "button": "middle",
+        "shift": false,
+        "ctrl": false,
+        "alt": true,
+        "meta": false
+      },
+      "dispatch": {
+        "kind": "pointer-down",
+        "pointerId": 1,
+        "pointerKind": "mouse",
+        "x": 400,
+        "y": 200,
+        "pressure": null,
+        "tilt": null,
+        "button": "middle",
+        "shift": false,
+        "ctrl": false,
+        "alt": true,
+        "meta": false
+      }
     },
     {
       "id": "pen-pointer-carries-pressure-and-tilt",
       "why": "Pressure and tilt survive the crossing, and a tilt pair is present only when BOTH axes are.",
-      "dom": { "type": "pointermove", "pointerId": 7, "pointerType": "pen", "offsetX": 10, "offsetY": 20, "pressure": 0.5, "tiltX": 12, "tiltY": -4, "devicePixelRatio": 1 },
-      "wire": { "kind": "pointer-move", "pointerId": 7, "pointerKind": "pen", "x": 10, "y": 20, "pressure": 0.5, "tiltX": 12, "tiltY": -4 },
-      "dispatch": { "kind": "pointer-move", "pointerId": 7, "pointerKind": "pen", "x": 10, "y": 20, "pressure": 0.5, "tilt": [12, -4] }
+      "dom": {
+        "type": "pointermove",
+        "pointerId": 7,
+        "pointerType": "pen",
+        "offsetX": 10,
+        "offsetY": 20,
+        "pressure": 0.5,
+        "tiltX": 12,
+        "tiltY": -4,
+        "devicePixelRatio": 1,
+        "shift": true,
+        "ctrl": false,
+        "alt": true,
+        "meta": false
+      },
+      "wire": {
+        "kind": "pointer-move",
+        "pointerId": 7,
+        "pointerKind": "pen",
+        "x": 10,
+        "y": 20,
+        "pressure": 0.5,
+        "tiltX": 12,
+        "tiltY": -4,
+        "shift": true,
+        "ctrl": false,
+        "alt": true,
+        "meta": false
+      },
+      "dispatch": {
+        "kind": "pointer-move",
+        "pointerId": 7,
+        "pointerKind": "pen",
+        "x": 10,
+        "y": 20,
+        "pressure": 0.5,
+        "tilt": [
+          12,
+          -4
+        ],
+        "shift": true,
+        "ctrl": false,
+        "alt": true,
+        "meta": false
+      }
     },
     {
       "id": "touch-pointer-without-pressure",
       "why": "A zero DOM pressure is absent on the wire, not a 0.0 the renderer would read as a released contact.",
-      "dom": { "type": "pointermove", "pointerId": 3, "pointerType": "touch", "offsetX": 10, "offsetY": 20, "pressure": 0, "devicePixelRatio": 1 },
-      "wire": { "kind": "pointer-move", "pointerId": 3, "pointerKind": "touch", "x": 10, "y": 20 },
-      "dispatch": { "kind": "pointer-move", "pointerId": 3, "pointerKind": "touch", "x": 10, "y": 20, "pressure": null, "tilt": null }
+      "dom": {
+        "type": "pointermove",
+        "pointerId": 3,
+        "pointerType": "touch",
+        "offsetX": 10,
+        "offsetY": 20,
+        "pressure": 0,
+        "devicePixelRatio": 1,
+        "shift": false,
+        "ctrl": false,
+        "alt": false,
+        "meta": false
+      },
+      "wire": {
+        "kind": "pointer-move",
+        "pointerId": 3,
+        "pointerKind": "touch",
+        "x": 10,
+        "y": 20,
+        "shift": false,
+        "ctrl": false,
+        "alt": false,
+        "meta": false
+      },
+      "dispatch": {
+        "kind": "pointer-move",
+        "pointerId": 3,
+        "pointerKind": "touch",
+        "x": 10,
+        "y": 20,
+        "pressure": null,
+        "tilt": null,
+        "shift": false,
+        "ctrl": false,
+        "alt": false,
+        "meta": false
+      }
     },
     {
       "id": "wheel-over-the-preview",
       "why": "The orbit gesture. The position stays a CSS pixel like any pointer, and the deltas are already device-independent scroll units — a dpr-2 surface changes neither.",
-      "dom": { "type": "wheel", "offsetX": 250.88, "offsetY": 406.8, "deltaX": 0, "deltaY": 120, "devicePixelRatio": 2 },
-      "wire": { "kind": "wheel", "x": 250.88, "y": 406.8, "deltaX": 0, "deltaY": 120 },
-      "dispatch": { "kind": "scroll", "x": 250.88, "y": 406.8, "deltaX": 0, "deltaY": 120 }
+      "dom": {
+        "type": "wheel",
+        "offsetX": 250.88,
+        "offsetY": 406.8,
+        "deltaX": 0,
+        "deltaY": 120,
+        "devicePixelRatio": 2,
+        "shift": false,
+        "ctrl": true,
+        "alt": true,
+        "meta": false
+      },
+      "wire": {
+        "kind": "wheel",
+        "x": 250.88,
+        "y": 406.8,
+        "deltaX": 0,
+        "deltaY": 120,
+        "shift": false,
+        "ctrl": true,
+        "alt": true,
+        "meta": false
+      },
+      "dispatch": {
+        "kind": "scroll",
+        "x": 250.88,
+        "y": 406.8,
+        "deltaX": 0,
+        "deltaY": 120,
+        "shift": false,
+        "ctrl": true,
+        "alt": true,
+        "meta": false
+      }
     },
     {
       "id": "key-down-f-fits-the-graph",
       "why": "The shell's fit chord: a bare single-character key reaches the shell verbatim, lower case.",
-      "dom": { "type": "keydown", "key": "f", "shift": false, "ctrl": false, "alt": false, "meta": false },
-      "wire": { "kind": "key-down", "key": "f", "shift": false, "ctrl": false, "alt": false, "meta": false },
-      "dispatch": { "kind": "key-down", "key": "f", "shift": false, "ctrl": false, "alt": false, "meta": false }
+      "dom": {
+        "type": "keydown",
+        "key": "f",
+        "shift": false,
+        "ctrl": false,
+        "alt": false,
+        "meta": false
+      },
+      "wire": {
+        "kind": "key-down",
+        "key": "f",
+        "shift": false,
+        "ctrl": false,
+        "alt": false,
+        "meta": false
+      },
+      "dispatch": {
+        "kind": "key-down",
+        "key": "f",
+        "shift": false,
+        "ctrl": false,
+        "alt": false,
+        "meta": false
+      }
     },
     {
       "id": "key-down-meta-z-undoes",
       "why": "⌘Z: the modifier flags ride the same event rather than a separate chord vocabulary.",
-      "dom": { "type": "keydown", "key": "z", "shift": false, "ctrl": false, "alt": false, "meta": true },
-      "wire": { "kind": "key-down", "key": "z", "shift": false, "ctrl": false, "alt": false, "meta": true },
-      "dispatch": { "kind": "key-down", "key": "z", "shift": false, "ctrl": false, "alt": false, "meta": true }
+      "dom": {
+        "type": "keydown",
+        "key": "z",
+        "shift": false,
+        "ctrl": false,
+        "alt": false,
+        "meta": true
+      },
+      "wire": {
+        "kind": "key-down",
+        "key": "z",
+        "shift": false,
+        "ctrl": false,
+        "alt": false,
+        "meta": true
+      },
+      "dispatch": {
+        "kind": "key-down",
+        "key": "z",
+        "shift": false,
+        "ctrl": false,
+        "alt": false,
+        "meta": true
+      }
     },
     {
       "id": "key-down-tab-moves-focus",
       "why": "A named key crosses under its DOM name, not a code.",
-      "dom": { "type": "keydown", "key": "Tab", "shift": false, "ctrl": false, "alt": false, "meta": false },
-      "wire": { "kind": "key-down", "key": "Tab", "shift": false, "ctrl": false, "alt": false, "meta": false },
-      "dispatch": { "kind": "key-down", "key": "Tab", "shift": false, "ctrl": false, "alt": false, "meta": false }
+      "dom": {
+        "type": "keydown",
+        "key": "Tab",
+        "shift": false,
+        "ctrl": false,
+        "alt": false,
+        "meta": false
+      },
+      "wire": {
+        "kind": "key-down",
+        "key": "Tab",
+        "shift": false,
+        "ctrl": false,
+        "alt": false,
+        "meta": false
+      },
+      "dispatch": {
+        "kind": "key-down",
+        "key": "Tab",
+        "shift": false,
+        "ctrl": false,
+        "alt": false,
+        "meta": false
+      }
     },
     {
       "id": "key-up-f",
       "why": "Releases are carried too — the shell's key state would latch otherwise.",
-      "dom": { "type": "keyup", "key": "f", "shift": false, "ctrl": false, "alt": false, "meta": false },
-      "wire": { "kind": "key-up", "key": "f", "shift": false, "ctrl": false, "alt": false, "meta": false },
-      "dispatch": { "kind": "key-up", "key": "f", "shift": false, "ctrl": false, "alt": false, "meta": false }
+      "dom": {
+        "type": "keyup",
+        "key": "f",
+        "shift": false,
+        "ctrl": false,
+        "alt": false,
+        "meta": false
+      },
+      "wire": {
+        "kind": "key-up",
+        "key": "f",
+        "shift": false,
+        "ctrl": false,
+        "alt": false,
+        "meta": false
+      },
+      "dispatch": {
+        "kind": "key-up",
+        "key": "f",
+        "shift": false,
+        "ctrl": false,
+        "alt": false,
+        "meta": false
+      }
     },
     {
       "id": "resize-is-metrics-not-a-dispatch",
       "why": "A surface resize crosses the same wire but is NOT a DispatchEvent: the Worker hands it to handle_metrics. It is the ONE event that carries physical pixels — the GPU surface extent — beside the dpr the renderer divides by to get the logical extent layout uses.",
-      "dom": { "type": "resize", "clientWidth": 717, "clientHeight": 418, "devicePixelRatio": 2 },
-      "wire": { "kind": "resize", "width": 1434, "height": 836, "dpr": 2 },
+      "dom": {
+        "type": "resize",
+        "clientWidth": 717,
+        "clientHeight": 418,
+        "devicePixelRatio": 2
+      },
+      "wire": {
+        "kind": "resize",
+        "width": 1434,
+        "height": 836,
+        "dpr": 2
+      },
       "dispatch": null
     }
   ]

@@ -89,7 +89,7 @@ pub enum XlsxStrictMutation {
 /// 🧾️ Kebab-case spelling of every `XlsxStrictMutation` variant, in declaration order — the exhaustive
 /// mutation catalog `xlsx-ecma-376-strict` (`../../🔣️oracle.json`) is measured against
 /// this exact list. `kinds_match_enum_and_catalog` proves it never drifts from either side.
-pub const KINDS: &[&str] = &["no-mutation", "set-snapshot", "set-main-namespace", "set-relationships-namespace", "set-conformance-attribute", "remove-conformance-attribute", "insert-vml-part", "remove-vml-part", "set-worksheet-content-type"];
+pub const KINDS: &[&str] = &["set-snapshot", "set-main-namespace", "set-relationships-namespace", "set-conformance-attribute", "remove-conformance-attribute", "insert-vml-part", "remove-vml-part", "set-worksheet-content-type"];
 //#endregion 🔖️Mutations
 
 //#region 🔖️Apply

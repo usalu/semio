@@ -9,8 +9,8 @@ use semio_framework_plugin::{ExecutionMode, Plugin, PluginApp};
 semio_framework_dispatch_macros::dyn_enum_close! {
     /// 🗃️ Closed runtime app fleet for the playbook editor and viewer surfaces.
     pub enum PlaybookApps: PluginApp {
-        Editor(VcsArtifactApp<EditorApp<crate::editor::playbook::PlaybookPlayApp>>),
-        Viewer(VcsArtifactApp<ViewerApp<crate::viewer::playbook::PlaybookViewer>>),
+        Editor(VcsArtifactApp<EditorApp<crate::editor::playbook::PlaybookPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>),
+        Viewer(VcsArtifactApp<ViewerApp<crate::viewer::playbook::PlaybookViewer>, semio_s_artifact_stdio_semio::SemioMembers>),
     }
 }
 //#endregion 🗃️Apps

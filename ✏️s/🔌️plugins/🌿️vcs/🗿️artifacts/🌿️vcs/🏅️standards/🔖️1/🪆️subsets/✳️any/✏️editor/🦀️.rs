@@ -9,6 +9,7 @@
 //! `definition()` per node.
 
 use crate::editor::vcs::commands::edit as edit_command;
+use crate::editor::vcs::commands::example::set_active_example;
 use crate::editor::vcs::commands::{canvas_pointer_down, canvas_pointer_move, canvas_pointer_up, canvas_wheel, increment_counter, no_operation, patch_snapshot, text_edit};
 use crate::editor::vcs::config::{VcsDemoConfig, VcsDemoConfigMutation};
 use crate::editor::vcs::modes::edit;
@@ -96,6 +97,21 @@ pub use semio_framework_plugin::ui_node_list;
 pub const VCS_INTERACTION_HISTORY: &str = "history";
 //#endregion 🔖️Interaction
 
+//#region 📚️ExampleDocument
+pub const VCS_APP_ID: &str = "s.vcs.vcs@1/*#editor";
+
+/// 🧬️ Whole-document replace is banned from the `Mutation` enum, so the example switch builds an
+/// `Effect::LoadDocument` — the same lane `🗒️note`/`✒️writer`/`🏛️architect` use. The spr comes from
+/// `store::empty_document_spr`, never from a minted `ArtifactEnvelope`: an envelope is a terminal
+/// store shell whose `Drop` asserts its bounded retirement authority detached every nested owner
+/// first, so building the effect that way panics (ticket 26/09/18, B1a fix #7).
+pub fn vcs_example_document_effect() -> semio_framework_plugin::Effect {
+    let pack = <VcsSnapshot as store::ArtifactPack>::encode_pack(&crate::examples::demo::snapshot());
+    let spr = semio_framework_plugin::resolve_ready(store::empty_document_spr(VCS_APP_ID, VCS_DOCUMENT_SCHEMA));
+    semio_framework_plugin::Effect::LoadDocument { pack, spr }
+}
+//#endregion 📚️ExampleDocument
+
 //#region 🔖️Commands
 semio_framework_plugin::app_commands! {
     /// 🎯️ `VcsPlayApp::Command` — the SOLE dispatch surface for the vcs demo app's own behavior. The six
@@ -114,6 +130,7 @@ semio_framework_plugin::app_commands! {
         "canvasPointerMove" as "canvas-pointer-move" => canvas_pointer_move::CanvasPointerMove,
         "canvasPointerUp" as "canvas-pointer-up" => canvas_pointer_up::CanvasPointerUp,
         "canvasWheel" as "canvas-wheel" => canvas_wheel::CanvasWheel,
+        "setActiveExample" as "set-active-example" => set_active_example::SetActiveExample,
     }
 }
 //#endregion 🔖️Commands
@@ -142,7 +159,7 @@ semio_framework_plugin::app_commands! {
 pub struct VcsPlayApp;
 
 //#region 🧵️RetainedCommands
-const VCS_BOUNDED_TOOL_IDS: &[&str] = &["incrementCounter", "patchSnapshot", "noMutation", "canvasPointerDown", "canvasPointerMove", "canvasPointerUp", "canvasWheel"];
+const VCS_BOUNDED_TOOL_IDS: &[&str] = &["incrementCounter", "patchSnapshot", "noMutation", "canvasPointerDown", "canvasPointerMove", "canvasPointerUp", "canvasWheel", "setActiveExample"];
 const VCS_RESUMABLE_TOOL_IDS: &[&str] = &["textEdit", "edit"];
 const VCS_BOUNDED_PAYLOAD_SCHEMA: &str = "vcs.vcs.tool-command.v1";
 const VCS_BOUNDED_RAW_BYTES: usize = 8_192;
@@ -158,6 +175,7 @@ const VCS_BOUNDED_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] = &[
     ArtifactToolPublicationContract { tool_id: "canvasPointerMove", lanes: &[ArtifactToolPublicationLane::HostOnly] },
     ArtifactToolPublicationContract { tool_id: "canvasPointerUp", lanes: &[ArtifactToolPublicationLane::HostOnly] },
     ArtifactToolPublicationContract { tool_id: "canvasWheel", lanes: &[ArtifactToolPublicationLane::HostOnly] },
+    ArtifactToolPublicationContract { tool_id: "setActiveExample", lanes: &[ArtifactToolPublicationLane::HostOnly] },
 ];
 const VCS_RESUMABLE_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] =
     &[ArtifactToolPublicationContract { tool_id: "textEdit", lanes: &[ArtifactToolPublicationLane::Artifact] }, ArtifactToolPublicationContract { tool_id: "edit", lanes: &[ArtifactToolPublicationLane::Artifact] }];
@@ -176,6 +194,8 @@ fn vcs_bounded_extent(command: &VcsCommand, _snapshot: &VcsSnapshot, _interactio
         // 🧵️ A batched move carries `samples.len()` pairs of f64 (design L4) — priced, never dropped.
         VcsCommand::CanvasPointerMove(payload) => payload.samples.len().checked_mul(2 * size_of::<f64>())?,
         VcsCommand::PatchSnapshot(payload) => payload.field.len().checked_add(payload.value.len())?,
+        VcsCommand::SetActiveExample(payload) if payload.example_id.len() <= 256 => 0,
+        VcsCommand::SetActiveExample(_) => return None,
         VcsCommand::TextEdit(_) | VcsCommand::Edit(_) => return None,
     };
     (bytes <= VCS_BOUNDED_RAW_BYTES).then_some(VCS_BOUNDED_WORK_ITEMS)
@@ -774,6 +794,7 @@ impl VcsBoundedProofs {
             "canvasPointerMove" => ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
             "canvasPointerUp" => ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
             "canvasWheel" => ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
+            "setActiveExample" => ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
         }
     }
 }
@@ -824,6 +845,18 @@ impl ArtifactEditor for VcsPlayApp {
 
     fn build_document_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
         Some(semio_framework_plugin::bounded_document_store_disposer::<Self::Snapshot, Self::Mutation>())
+    }
+
+    /// 📥️ Without this the host refuses every archive this app hands back
+    /// (`artifact-store.persisted-initializer-refused`), which is exactly what a `setActiveExample`
+    /// `Effect::LoadDocument` is: the trait default owns no retained initialization authority, so
+    /// `loadDocumentArchive` fails after the guest has already accepted the verb.
+    fn build_document_store_initialization_job(
+        envelope: store::ArtifactEnvelope<Self::Snapshot, Self::Mutation>,
+        operation: semio_framework_job::OperationId,
+        generation: semio_framework_job::Generation,
+    ) -> Result<semio_framework_plugin::ArtifactStoreInitializationJob<Self::Snapshot, Self::Mutation>, store::ArtifactEnvelope<Self::Snapshot, Self::Mutation>> {
+        Ok(semio_framework_plugin::bounded_document_store_initialization_job(envelope, VCS_DOCUMENT_SCHEMA, operation, generation))
     }
 
     fn build_config_store_owners() -> Option<store::DocumentStoreOwners<Self::Config, Self::ConfigMutation>> {
@@ -930,6 +963,7 @@ impl ArtifactEditor for VcsPlayApp {
         let pointer_cancelled = || args.get("cancelled").and_then(dsl::DslValue::as_bool).unwrap_or(false);
         match action {
             "incrementCounter" => Ok(VcsCommand::IncrementCounter(increment_counter::IncrementCounter {})),
+            "setActiveExample" => Ok(VcsCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: text_arg("exampleId") })),
             "patchSnapshot" => {
                 let field = text_arg("field");
                 let value = text_arg("value");
@@ -1007,9 +1041,17 @@ pub fn create_vcs_app() -> semio_framework_plugin::AppDefinition {
             .mutation("edit", LocalizedLabel::native("Edit", "Bearbeiten"))
             .view_action("noMutation", LocalizedLabel::native("No-operation", "Keine Aktion"))
             .action_with(semio_framework_plugin::ActionDefinition::new("canvasPointerDown", LocalizedLabel::native("Canvas Pointer Down", "Leinwand-Zeiger gedrückt"), semio_framework_plugin::ActionKind::View, "mouse-pointer"))
+            .action_audience("canvasPointerDown", semio_framework_plugin::CapabilityAudience::Input)
             .action_with(semio_framework_plugin::ActionDefinition::new("canvasPointerMove", LocalizedLabel::native("Canvas Pointer Move", "Leinwand-Zeiger bewegt"), semio_framework_plugin::ActionKind::View, "mouse-pointer"))
+            .action_audience("canvasPointerMove", semio_framework_plugin::CapabilityAudience::Input)
             .action_with(semio_framework_plugin::ActionDefinition::new("canvasPointerUp", LocalizedLabel::native("Canvas Pointer Up", "Leinwand-Zeiger losgelassen"), semio_framework_plugin::ActionKind::View, "mouse-pointer"))
+            .action_audience("canvasPointerUp", semio_framework_plugin::CapabilityAudience::Input)
             .view_action("canvasWheel", LocalizedLabel::native("Canvas Wheel", "Leinwand-Mausrad"))
+            .action_audience("canvasWheel", semio_framework_plugin::CapabilityAudience::Input)
+            // 📚️ The playground navbar dispatches `setActiveExample` for its fixture combobox on
+            // boot; without an app-level declaration the shell drops it before dispatch and the
+            // example picker never renders at all.
+            .action_with(semio_framework_plugin::ActionDefinition::new("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"), semio_framework_plugin::ActionKind::Mutation, "panel-left"))
             .action_interactive_job("incrementCounter", InteractiveJobClassification::Migrated)
             .action_interactive_job("patchSnapshot", InteractiveJobClassification::Migrated)
             .action_interactive_job("noMutation", InteractiveJobClassification::Migrated)
@@ -1019,6 +1061,8 @@ pub fn create_vcs_app() -> semio_framework_plugin::AppDefinition {
             .action_interactive_job("canvasWheel", InteractiveJobClassification::Migrated)
             .action_interactive_job("textEdit", InteractiveJobClassification::Migrated)
             .action_interactive_job("edit", InteractiveJobClassification::Migrated)
+            .action_interactive_job("setActiveExample", InteractiveJobClassification::Migrated)
+            .action_args("setActiveExample", vec![semio_framework_plugin::ActionArgDef::select("exampleId", LocalizedLabel::native("Example", "Beispiel"), vec![semio_framework_plugin::ActionArgOption::new(crate::examples::demo::ID, crate::examples::demo::label())])])
             .keybinding("mod+z", "undo")
             .keybinding("mod+shift+z", "redo")
             .default_layout(edit::layout())
@@ -1064,3 +1108,11 @@ pub fn create_vcs_app() -> semio_framework_plugin::AppDefinition {
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 pub(crate) mod unit_tests;
 //#endregion 🧪️UnitTests
+
+//#region 🪢️TaxonomyMounts
+#[path = "📚️examples/🎬️demo-session/🦀️.rs"]
+pub mod demo_session;
+#[cfg(test)]
+#[path = "📚️examples/🎬️demo-session/🧪️tests/🧩️example/🦀️.rs"]
+mod example;
+//#endregion 🪢️TaxonomyMounts

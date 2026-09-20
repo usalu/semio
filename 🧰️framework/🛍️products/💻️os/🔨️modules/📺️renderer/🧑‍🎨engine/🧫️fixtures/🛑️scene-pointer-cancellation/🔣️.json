@@ -1,0 +1,91 @@
+{
+  "schemaVersion": 1,
+  "owner": {
+    "identity": ["surfaceId", "generation", "pointerId"],
+    "match": "all-fields",
+    "zeroGeneration": "invalid",
+    "staleGeneration": "ignore",
+    "replacement": "cancel-old-before-reuse",
+    "afterCancel": "next-down-accepted"
+  },
+  "cases": [
+    {
+      "family": "nodeGraph",
+      "gesture": "wire-drag",
+      "reactStatus": "reference",
+      "terminal": "discard",
+      "invokeNormalPointerUp": false,
+      "retire": { "capture": true, "queuedIntent": true, "inProgressIntent": true },
+      "preservePublished": ["selection", "camera"],
+      "discardTransient": ["wire-preview", "node-drag-preview", "queued-mutation-terminal"],
+      "publishOnCancel": [],
+      "nextDown": "accepted",
+      "source": "🧱️elements/🕸️NodeGraph/🟦️.tsx"
+    },
+    {
+      "family": "board2d",
+      "gesture": "node-or-link-drag",
+      "reactStatus": "reference",
+      "terminal": "discard",
+      "invokeNormalPointerUp": false,
+      "retire": { "capture": true, "queuedIntent": true, "inProgressIntent": true },
+      "preservePublished": ["selection", "camera"],
+      "discardTransient": ["node-drag-preview", "link-preview", "brush-preview", "action-claim", "queued-mutation-terminal"],
+      "publishOnCancel": [],
+      "nextDown": "accepted",
+      "source": "🧱️elements/🖥️Board2dHost/🟦️.tsx"
+    },
+    {
+      "family": "ink",
+      "gesture": "pencil-stroke",
+      "reactStatus": "reference",
+      "terminal": "discard",
+      "invokeNormalPointerUp": false,
+      "retire": { "capture": true, "queuedIntent": true, "inProgressIntent": true },
+      "preservePublished": ["selection", "camera"],
+      "discardTransient": ["stroke-preview", "marquee", "queued-mutation-terminal"],
+      "publishOnCancel": [],
+      "nextDown": "accepted",
+      "source": "🧱️elements/🖋️InkCanvasHost/🟦️.tsx"
+    },
+    {
+      "family": "tiledMap",
+      "gesture": "middle-pan",
+      "reactStatus": "reference",
+      "terminal": "commit-navigation",
+      "invokeNormalPointerUp": true,
+      "retire": { "capture": true, "queuedIntent": true, "inProgressIntent": true },
+      "preservePublished": ["selection", "camera"],
+      "discardTransient": ["marquee", "queued-mutation-terminal"],
+      "publishOnCancel": ["camera"],
+      "nextDown": "accepted",
+      "source": "🧱️elements/🧭️TiledMapHost/🟦️.tsx"
+    },
+    {
+      "family": "paint2d",
+      "gesture": "brush-or-marquee",
+      "reactStatus": "reference",
+      "terminal": "discard",
+      "invokeNormalPointerUp": false,
+      "retire": { "capture": true, "queuedIntent": true, "inProgressIntent": true },
+      "preservePublished": ["selection", "camera"],
+      "discardTransient": ["brush-preview", "marquee", "navigator-pan", "queued-mutation-terminal"],
+      "publishOnCancel": [],
+      "nextDown": "accepted",
+      "source": "🧱️elements/🖌️Paint2dHost/🟦️.tsx"
+    },
+    {
+      "family": "textEditor",
+      "gesture": "selection-drag",
+      "reactStatus": "reference",
+      "terminal": "discard",
+      "invokeNormalPointerUp": false,
+      "retire": { "capture": true, "queuedIntent": true, "inProgressIntent": true },
+      "preservePublished": ["selection", "camera"],
+      "discardTransient": ["selection-drag-preview", "queued-mutation-terminal"],
+      "publishOnCancel": [],
+      "nextDown": "accepted",
+      "source": "🧱️elements/✏️TextEditor/🟦️.tsx"
+    }
+  ]
+}

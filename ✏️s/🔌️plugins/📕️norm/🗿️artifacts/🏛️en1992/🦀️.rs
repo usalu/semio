@@ -745,3 +745,11 @@ pub mod viewer {
         }
     }
 }
+
+//#region 🪢️TaxonomyMounts
+#[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🛢️liquid-retaining-fem-anchor/🦀️.rs"]
+pub mod liquid_retaining_fem_anchor;
+#[cfg(test)]
+#[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🛢️liquid-retaining-fem-anchor/🧪️tests/🧩️example/🦀️.rs"]
+mod example;
+//#endregion 🪢️TaxonomyMounts

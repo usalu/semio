@@ -49,7 +49,7 @@ describe("gis map inference bridge — neutral fixture and closed wire shapes", 
     const { authority, compared } = proveOsMirrorsHubApprovalAuthority(repoRoot);
     expect(compared).toBe(4);
     expect(authority).toBe("🌎️hub/💡️inference/🧬️schema/🔣️.json");
-    const hub = JSON.parse(readFileSync(resolve(repoRoot, authority), "utf8")) as { $defs: Record<string, { $ref?: string; pattern?: string }> };
+    const hub = JSON.parse(readFileSync(resolve(repoRoot, authority), "utf8")) as { $defs: Record<string, { $ref?: string; pattern?: string; properties?: Record<string, { $ref?: string }> }> };
     const { $schema, ...mirror } = approvalRequestSchema as { $schema: string; properties: Record<string, { pattern?: string }> };
     expect($schema).toBe("http://json-schema.org/draft-07/schema#");
     // 🔗️ hub names the two hex patterns; the mirror inlines them — same value space, checked here

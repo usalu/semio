@@ -170,6 +170,19 @@
       "expectedUnmounted": [
         "🚪️io/🧪️tests/🔬️orphan/🦀️.rs"
       ]
+    },
+    {
+      "id": "escaped-quote-char-literal-before-a-mount",
+      "files": {
+        "📦️packages/🦀️rust/Cargo.toml": "[package]\nname = \"taxonomy_mount_fixture\"\nversion = \"0.0.0\"\nedition = \"2021\"\n[lib]\npath = \"🦀️.rs\"\n",
+        "📦️packages/🦀️rust/🦀️.rs": "#[path = \"../../🦀️.rs\"]\npub mod owner;\n",
+        "🦀️.rs": "#[path = \"🚪️io/🦀️.rs\"]\npub mod io;\n",
+        "🚪️io/🦀️.rs": "pub fn quote(out: &mut String) {\n    out.push('\\\"');\n    out.push(b'\\\"' as char);\n}\n#[path = \"🧪️tests/🔬️unit/🦀️.rs\"]\npub mod checks;\n",
+        "🚪️io/🧪️tests/🔬️unit/🦀️.rs": "pub fn quoted() -> String {\n    let mut out = String::new();\n    super::quote(&mut out);\n    out\n}\n"
+      },
+      "expectedCodes": [],
+      "rustcSuccess": true,
+      "expectedUnmounted": []
     }
   ]
 }

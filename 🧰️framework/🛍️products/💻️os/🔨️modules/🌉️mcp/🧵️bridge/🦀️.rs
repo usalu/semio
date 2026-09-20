@@ -1614,9 +1614,18 @@ impl std::fmt::Display for ShellConnectionId {
 struct ConnectionEntry {
     generation: u64,
     outbox: Arc<BridgeOutbox>,
+    /// 🚩️ The flags this shell declared in its own `Hello`. `relay_app_commands` is what
+    /// `🐚️channel::SessionChannelBinding` reads to decide whether the artifact verbs of a session
+    /// may execute IN this shell: a shell that does not claim the relay is never handed one.
+    flags: BridgeFlags,
     last_shell_state: Option<ShellToGateway>,
     last_instances: Option<Vec<BridgeInstanceRef>>,
     last_command_result: Option<(u64, bool, Option<String>)>,
+    /// 🗿️ The shell's most recent `AppFrames` reply, by correlation id — `(in_reply_to,
+    /// instance_id, frames)`. Read by `ShellArtifactChannel::exchange`, which only ever accepts the
+    /// entry whose `in_reply_to` equals the `seq` it minted, exactly as `ui_focus`/`ui_reveal`
+    /// already do with `last_command_result`.
+    last_app_frames: Option<(u64, String, Vec<Vec<u8>>)>,
     last_approval: Option<(String, ApprovalDecision, Option<String>)>,
     /// 💬️ Human turns this shell typed at the agent, oldest first, capped at
     /// [`BRIDGE_AGENT_INBOX_MAX_ITEMS`]. Read-once: `take_agent_messages` drains it, so the
@@ -2466,8 +2475,18 @@ impl BridgeHandle {
             .connections
             .lock()
             .expect("bridge connections lock poisoned")
-            .insert(id, ConnectionEntry { generation: id.0, outbox: Arc::clone(&outbox), last_shell_state: None, last_instances: None, last_command_result: None, last_approval: None, agent_inbox: std::collections::VecDeque::new() });
+            .insert(id, ConnectionEntry { generation: id.0, outbox: Arc::clone(&outbox), flags: BridgeFlags::NONE, last_shell_state: None, last_instances: None, last_command_result: None, last_app_frames: None, last_approval: None, agent_inbox: std::collections::VecDeque::new() });
         (id, BridgeOutboxReceiver(outbox))
+    }
+
+    /// 🚩️ Records the flags one shell declared in its `Hello`. `Hello` is handled inline by the
+    /// read loop (it is the frame that mints the connection in the first place, so it can never
+    /// reach [`BridgeHandle::record`]) — this is the one seam that carries its payload into the
+    /// connection state instead of dropping it.
+    pub(crate) fn record_hello(&self, id: ShellConnectionId, flags: BridgeFlags) {
+        if let Some(entry) = self.inner.connections.lock().expect("bridge connections lock poisoned").get_mut(&id) {
+            entry.flags = flags;
+        }
     }
 
     pub(crate) fn unregister(&self, id: ShellConnectionId) {
@@ -2494,6 +2513,7 @@ impl BridgeHandle {
             ShellToGateway::ShellState { .. } | ShellToGateway::ShellStatePatch { .. } => entry.last_shell_state = Some(frame),
             ShellToGateway::Instances { entries } => entry.last_instances = Some(entries),
             ShellToGateway::ShellCommandResult { in_reply_to, ok, fault } => entry.last_command_result = Some((in_reply_to, ok, fault)),
+            ShellToGateway::AppFrames { in_reply_to, instance_id, frames } => entry.last_app_frames = Some((in_reply_to, instance_id, frames)),
             ShellToGateway::Approval { approval_id, decision, note } => entry.last_approval = Some((approval_id, decision, note)),
             ShellToGateway::AgentMessage { message_id, text } => {
                 if entry.agent_inbox.len() == BRIDGE_AGENT_INBOX_MAX_ITEMS {
@@ -2501,7 +2521,7 @@ impl BridgeHandle {
                 }
                 entry.agent_inbox.push_back(AgentInboxMessage { message_id, text, received_at_ms: bridge_wall_now_ms() });
             }
-            ShellToGateway::Hello { .. } | ShellToGateway::Ping | ShellToGateway::Bye | ShellToGateway::AppFrames { .. } | ShellToGateway::AgentCancel { .. } => {}
+            ShellToGateway::Hello { .. } | ShellToGateway::Ping | ShellToGateway::Bye | ShellToGateway::AgentCancel { .. } => {}
         }
     }
 
@@ -2627,6 +2647,19 @@ impl BridgeHandle {
 
     pub fn last_instances(&self, id: ShellConnectionId) -> Option<Vec<BridgeInstanceRef>> {
         self.inner.connections.lock().expect("bridge connections lock poisoned").get(&id).and_then(|entry| entry.last_instances.clone())
+    }
+
+    /// 🚩️ The flags the shell on `id` declared in its `Hello` — `BridgeFlags::NONE` for a
+    /// connection that no longer exists, which is the same answer as "claims nothing".
+    pub fn shell_flags(&self, id: ShellConnectionId) -> BridgeFlags {
+        self.inner.connections.lock().expect("bridge connections lock poisoned").get(&id).map_or(BridgeFlags::NONE, |entry| entry.flags)
+    }
+
+    /// 🗿️ The shell's most recent `AppFrames` reply on `id`. The caller MUST check `in_reply_to`
+    /// against the `seq` it sent — a stale reply from an earlier exchange is otherwise
+    /// indistinguishable from its own.
+    pub fn last_app_frames(&self, id: ShellConnectionId) -> Option<(u64, String, Vec<Vec<u8>>)> {
+        self.inner.connections.lock().expect("bridge connections lock poisoned").get(&id).and_then(|entry| entry.last_app_frames.clone())
     }
 
     pub fn last_command_result(&self, id: ShellConnectionId) -> Option<(u64, bool, Option<String>)> {

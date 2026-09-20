@@ -8,7 +8,7 @@ import Ajv from "ajv";
 import { requireMcpBinary } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🟦️.ts";
 import { canonicalJson } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🟦️.ts";
 import { cargoTargetDirectory } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🟦️.ts";
-import { buildCargoArtifacts } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🏗️native-build/🟦️.ts";
+import { buildCargoArtifacts, packageNativeRelease, signExecutableForDistribution, workspaceCargoVersion } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🏗️native-build/🟦️.ts";
 import { repoCacheDirectory } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🟦️.ts";
 import { blake3Hex } from "../../../🧰️framework/🔨️modules/🔏️hash/🟦️.ts";
 import {
@@ -18,7 +18,9 @@ import {
   encodeClientFrame,
   encodePresencePeer,
   encodeServerFrame,
+  PRESENCE_PRINCIPAL_KINDS,
   type ArtifactPresencePeer,
+  type ArtifactPresencePrincipalKind,
   type WireFrontierSummary,
   type WireMutationEnvelope,
 } from "../../../🧰️framework/🔨️modules/📡️replication/🟦️.ts";
@@ -895,7 +897,7 @@ async function publishCheckpointPublicationProcessPairV1(
     [pack, fixture.payload.pack],
     [spr, fixture.payload.spr],
   ] as const) {
-    const response = await fetch(`http://127.0.0.1:${run.port}/spaces/${encodeURIComponent(spaceId)}/blobs/${record.sha256}`, {
+    const response = await fetch(`http://127.0.0.1:${run.port}/spaces/${encodeURIComponent(spaceId)}/blobs/${blake3Hex(new Uint8Array(bytes))}`, {
       method: "PUT",
       headers: { authorization: `Bearer ${capability}`, "content-type": "application/octet-stream" },
       body: bytes,
@@ -911,8 +913,8 @@ async function publishCheckpointPublicationProcessPairV1(
       expectedDocumentFrontier: { headSeq: frontier.head_edit_ordinal, commitSeq: frontier.last_commit_seq, epoch: 0 },
       expectedCurrent,
       baselineFrontier: { documentId: fixture.documentId, headEditOrdinal: frontier.head_edit_ordinal, headEditId: frontier.head_edit_id, lastCommitSeq: frontier.last_commit_seq, chainSha256 },
-      pack: { sha256: fixture.payload.pack.sha256, byteLength: pack.byteLength },
-      spr: { sha256: fixture.payload.spr.sha256, byteLength: spr.byteLength },
+      pack: { sha256: fixture.payload.pack.sha256, blake3: blake3Hex(new Uint8Array(pack)), byteLength: pack.byteLength },
+      spr: { sha256: fixture.payload.spr.sha256, blake3: blake3Hex(new Uint8Array(spr)), byteLength: spr.byteLength },
     }),
   );
   const url = `http://127.0.0.1:${run.port}/spaces/${encodeURIComponent(spaceId)}/documents/${encodeURIComponent(fixture.documentId)}/checkpoint-publications`;
@@ -3830,20 +3832,19 @@ function documentOpenNeutralText(value: unknown, maximum = 256): string {
   return value;
 }
 
-function documentOpenNeutralDialect(value: unknown, artifactKind: unknown): Record<string, string> {
+function documentOpenNeutralDialect(value: unknown): Record<string, string> {
   const dialect = documentOpenNeutralObject(value, ["artifactKind", "standard", "subset"]);
   for (const value of Object.values(dialect)) {
     const text = documentOpenNeutralText(value);
     if (text.trim() !== text) throw new Error("dialect-text");
   }
-  if (dialect.artifactKind !== artifactKind) throw new Error("dialect-kind");
   return dialect as Record<string, string>;
 }
 
 function documentOpenNeutralParentDialect(value: unknown): Record<string, string> {
   const row = documentOpenNeutralObject(value, ["package", "artifact", "parentDialect", "surface", "browserActor", "grant"]);
-  const artifact = documentOpenNeutralObject(row.artifact, ["kind", "schema", "packSchemaHash"]);
-  return documentOpenNeutralDialect(row.parentDialect, artifact.kind);
+  documentOpenNeutralObject(row.artifact, ["kind", "schema", "packSchemaHash"]);
+  return documentOpenNeutralDialect(row.parentDialect);
 }
 
 /** 🌌️ Independent actor admission for complete plan and lease corpus consumers. */
@@ -3990,7 +3991,7 @@ function documentOpenNeutralStructure(candidate: Record<string, any>, nowMs: num
   documentOpenNeutralText(artifact.kind);
   documentOpenNeutralText(artifact.schema);
   hash(artifact.packSchemaHash);
-  documentOpenNeutralDialect(root.parentDialect, artifact.kind);
+  documentOpenNeutralDialect(root.parentDialect);
   const surface = documentOpenNeutralObject(root.surface, ["surfaceId", "appId", "windowKindId", "role", "rendererTarget"]);
   documentOpenNeutralText(surface.surfaceId);
   documentOpenNeutralText(surface.appId);
@@ -4111,7 +4112,7 @@ async function proveDocumentOpenPlanFixture(repoRoot: string): Promise<void> {
     !productionSource.includes("issue_document_plan_socket_grant") ||
     !productionSource.includes("authority_for_authenticated_exchange") ||
     !productionSource.includes("document_plan_socket_validity") ||
-    !productionSource.includes("checkpoint != authority.checkpoint") ||
+    !productionSource.includes("checkpoint.as_ref() != Some(&authority.checkpoint)") ||
     productionSource.includes("post(issue_document_socket_grant)")
   )
     throw new Error("document-open catalog-gated issuer and exchange activation boundary drifted");
@@ -4127,7 +4128,6 @@ async function proveDocumentOpenPlanFixture(repoRoot: string): Promise<void> {
     const rows = structuredClone(fixture.catalogRows);
     const key = field.split(".")[1]!;
     rows[0].parentDialect[key] += "-foreign";
-    if (key === "artifactKind") rows[0].artifact.kind = rows[0].parentDialect[key];
     if (createHash("sha256").update(documentOpenCatalogEncoding(rows)).digest("hex") === fixture.catalogEncoding.expectedGenerationId) throw new Error(`document-open catalog lost ${field}`);
   }
   for (const mutation of fixture.parentDialectNegativeMutations) {
@@ -7782,9 +7782,16 @@ function trustedBootstrapDescriptorClaims(bytes: Uint8Array): TrustedBootstrapDe
   if (!Buffer.from(encodePackValue(decoded)).equals(Buffer.from(bytes))) throw new Error("trusted descriptor dependency Pack is not canonical or has duplicate fields");
   const descriptor = packValueToExactJson(decoded) as Record<string, unknown>;
   const manifest = descriptor?.manifest as Record<string, unknown>;
-  if (!manifest || typeof manifest !== "object" || Array.isArray(manifest) || !Array.isArray(manifest.dependencies) || manifest.dependencies.length > 128) throw new Error("trusted descriptor manifest dependency vector is missing or unbounded");
+  if (!manifest || typeof manifest !== "object" || Array.isArray(manifest)) throw new Error("trusted descriptor manifest is missing");
+  // 🔗️ `PluginManifest.dependencies` is `#[value(default, skip_serializing_if = "Vec::is_empty")]`
+  // (`🛂️manifest/🦀️.rs:4418`), so a plugin that depends on nothing — `semio-s-plugin-stdio` is exactly
+  // that — emits a descriptor with NO `dependencies` key at all. Requiring the key present rejected
+  // every dependency-free package, which is the whole trusted bootstrap set. Absent means the empty
+  // vector, which is what the encoder's own contract says; the 128 bound still applies to a present one.
+  const declaredDependencies = manifest.dependencies === undefined ? [] : manifest.dependencies;
+  if (!Array.isArray(declaredDependencies) || declaredDependencies.length > 128) throw new Error("trusted descriptor manifest dependency vector is missing or unbounded");
   const identity = trustedBootstrapIdentity({ pluginId: manifest.pluginId, packageId: descriptor.packageId, version: manifest.version });
-  const directDependencies = manifest.dependencies.map((value) => {
+  const directDependencies = declaredDependencies.map((value) => {
     const row = documentOpenNeutralObject(value, ["pluginId", "version"]);
     if (typeof row.pluginId !== "string" || row.pluginId.length === 0 || Buffer.byteLength(row.pluginId, "utf8") > 256 || row.pluginId.trim() !== row.pluginId || Buffer.from(row.pluginId, "utf8").toString("utf8") !== row.pluginId || /\p{Cc}/u.test(row.pluginId) || typeof row.version !== "string" || !row.version.startsWith("=")) throw new Error("trusted descriptor dependency is not exact and bounded");
     trustedBootstrapVersion(row.version.slice(1));
@@ -8404,7 +8411,7 @@ async function proveTrustedGisPublicationFixture(repoRoot: string, fixture: Reco
     return source.slice(first, last);
   };
   const candidate = body("\nasync function validateAndPublishTrustedStdioGisCandidate", "\n/** ✉️ Independent bounded canonical envelope oracle");
-  const proof = "await proveTrustedGisColdMapComponentV1(repoRoot, receipt, validation.cargoTargetDir, validationRoot);";
+  const proof = "await proveTrustedGisColdMapComponentV1(repoRoot, receipt, validation.cargoTargetDir);";
   const stage = "stageTrustedBootstrapCandidateCurrent(candidateDataRoot, receipt, () => {});";
   const conforms = (value: string): boolean => value.includes(proof)
     && value.indexOf(proof) < value.indexOf(stage)
@@ -9620,7 +9627,7 @@ function trustedBootstrapReadCurrentBundle(current: TrustedBootstrapMaterializat
 }
 
 /** 🌉️ Executes the cold-map laws against the exact verified GIS bytes retained by one generation. */
-async function proveTrustedGisColdMapComponentV1(repoRoot: string, current: TrustedBootstrapMaterializationV1, cargoTargetDir: string, artifactRoot: string): Promise<void> {
+async function proveTrustedGisColdMapComponentV1(repoRoot: string, current: TrustedBootstrapMaterializationV1, cargoTargetDir: string): Promise<void> {
   const control = trustedBootstrapBuildControl(buildBudgetMs());
   const check = () => {
     if (control.control.cancelled() || control.control.remainingMs() <= 0) throw new Error("trusted GIS cold-map law cancelled");
@@ -9668,11 +9675,11 @@ async function proveTrustedGisColdMapComponentV1(repoRoot: string, current: Trus
         {
           package: "semio-s-plugin-gis",
           target: { kind: "test", name: "component_cold_map_patch" },
-          cargoArgs: ["--no-default-features"],
+          cargoArgs: ["--no-default-features", "--features", "component-receipt-acceptance"],
           laws: ["genuine_gis_component_cold_loads_and_patches_the_exact_tiled_map_surface", "genuine_gis_component_rejects_stale_cold_authority_before_loading"],
         },
       ],
-      artifactDir: join(artifactRoot, "gis-component-cold-map-patch-exact"),
+      artifactDir: repoCacheDirectory(repoRoot, "hub", "trusted-gis-cold-map", current.generationId),
       env: {
         ...process.env,
         RUST_MIN_STACK: process.env.SEMIO_BUILD_RUST_MIN_STACK ?? "33554432",
@@ -10201,27 +10208,42 @@ async function proveTrustedStdioGisCandidatePlan(run: LocalHubRun, receipt: Trus
   const createdBody = created.status === 202 ? (JSON.parse(created.text) as Record<string, any>) : undefined;
   const spaceId = createdBody?.events?.find((candidate: any) => candidate?.body?.kind === "space.created")?.body?.spaceId;
   if (typeof spaceId !== "string" || spaceId.length === 0) throw new Error("trusted stdio+GIS candidate could not create its private probe space");
-  const documentId = `trusted-gis-map-${randomBytes(8).toString("hex")}`;
-  const descriptor = {
-    spaceId,
-    documentId,
-    artifactKind: target.artifactKind,
-    artifactSchema: target.artifactSchema,
-    owner: { pluginId: selected.pluginId, packageId: selected.packageId, version: selected.version, packageHash: selected.component.sha256 },
-    packSchemaHash: target.packSchemaHash,
-    bootstrapVersion: 1,
-    bootstrapFrontier: { headSeq: 0, commitSeq: 0, epoch: 0 },
-    bootstrapSnapshotHash: "11".repeat(32),
-  };
-  const announced = await postLiveDirectoryCommand(run, envelope.capability, liveDirectoryCommandRequestId(), { kind: "announce-document", descriptor });
-  if (announced.status !== 202) throw new Error(`trusted stdio+GIS candidate could not announce its GIS Map probe: ${announced.status}`);
+  // 🌱️ The probe document is created through the Hub's OWN server-owned creation transaction, the
+  // same one `createCheckpointPublicationProcessGenesis` drives. A bare `announce-document` registers
+  // a descriptor and nothing else: the open-plan issuer also requires an ACTIVE ARTIFACT CHECKPOINT
+  // (`🏗️bootstrap/🦀️.rs:3099-3104`), so it answered `404 not-found` for every announced-only document
+  // and this proof could never have passed. The creation transaction establishes the genesis
+  // checkpoint, which is also what a real client does before it opens anything.
+  const creationRoute = `/spaces/${encodeURIComponent(spaceId)}/artifact-creations`;
+  const creationRequest = sealSpaceArtifactCreateV1({ requestId: randomBytes(16).toString("hex"), expectedCatalogGenerationId: receipt.generationId, kindId: target.artifactKind, name: "Trusted GIS Bootstrap Probe Map" });
+  const accepted = await fetch(`http://127.0.0.1:${run.port}${creationRoute}`, { method: "POST", headers, signal: AbortSignal.timeout(5_000), body: JSON.stringify(creationRequest) });
+  let creation = parseSpaceArtifactCreationStatusJsonV1(await accepted.text());
+  if (![200, 202].includes(accepted.status) || creation.requestId !== creationRequest.requestId || creation.spaceId !== spaceId || creation.catalogGenerationId !== creationRequest.expectedCatalogGenerationId)
+    throw new Error(`trusted stdio+GIS candidate could not create its GIS Map probe: ${accepted.status}`);
+  const creationDeadline = Date.now() + 120_000;
+  while (creation.phase !== "ready") {
+    if (!["accepted", "preparing", "indeterminate"].includes(creation.phase) || Date.now() >= creationDeadline) throw new Error(`trusted stdio+GIS candidate creation reached ${creation.phase} before Ready`);
+    await Bun.sleep(20);
+    const polled = await fetch(`http://127.0.0.1:${run.port}${creationRoute}/${encodeURIComponent(creationRequest.requestId)}`, { headers: { authorization: headers.authorization }, signal: AbortSignal.timeout(5_000) });
+    if (polled.status !== 200 && polled.status !== 202) throw new Error(`trusted stdio+GIS candidate creation status failed: ${polled.status}`);
+    creation = parseSpaceArtifactCreationStatusJsonV1(await polled.text());
+    if (creation.catalogGenerationId !== creationRequest.expectedCatalogGenerationId) throw new Error("trusted stdio+GIS candidate creation crossed its selected catalog generation");
+  }
+  if (creation.ready?.kindId !== target.artifactKind || creation.ready.artifactSchema !== target.artifactSchema || !/^artifact-[0-9a-f]{32}$/u.test(creation.ready.artifactId))
+    throw new Error("trusted stdio+GIS candidate creation Ready coordinates differ from the selected GIS target");
+  const documentId = creation.ready.artifactId;
   const response = await fetch(`http://127.0.0.1:${run.port}/spaces/${encodeURIComponent(spaceId)}/documents/${encodeURIComponent(documentId)}/open-plan`, {
     method: "POST",
     headers,
     signal: AbortSignal.timeout(2_000),
     body: JSON.stringify({ schema: "semio.hub.document-open-intent/v1", version: 1, scope: { spaceId, documentId }, requestedSurfaceId: target.surfaceId, clientInstanceId: "trusted-bootstrap-candidate" }),
   });
-  const plan = parseDocumentOpenPlanV1(await response.json().catch(() => undefined), Date.now());
+  // 🩺️ The refusal body is a two-field `document-open-plan-error/v1`, so parsing it first reported
+  // every hub refusal as the parser's generic `document-open.invalid-fields` and threw the actual
+  // `code` away. Read the status FIRST and name the code.
+  const planText = await response.text();
+  if (!response.ok) throw new Error(`trusted stdio+GIS candidate was refused its GIS Map plan: ${response.status} ${planText.slice(0, 256)}`);
+  const plan = parseDocumentOpenPlanV1(JSON.parse(planText), Date.now());
   if (
     !response.ok ||
     plan.scope.spaceId !== spaceId ||
@@ -10344,7 +10366,7 @@ async function validateAndPublishTrustedStdioGisCandidate(repoRoot: string, hubR
   if (!isAbsolute(validation.binaryPath) || !isAbsolute(validation.cargoTargetDir) || dirname(dirname(validation.binaryPath)) !== validation.cargoTargetDir) throw new Error("trusted candidate validation must use its exact Hub build target");
   const expectedCurrent = trustedBootstrapReadCurrentPointer(dataRoot);
   const validationRoot = trustedBootstrapValidationRoot(dataRoot);
-  await proveTrustedGisColdMapComponentV1(repoRoot, receipt, validation.cargoTargetDir, validationRoot);
+  await proveTrustedGisColdMapComponentV1(repoRoot, receipt, validation.cargoTargetDir);
   const profile: LocalProfile = { profileId: "trusted-bootstrap-probe", subject: "trusted-bootstrap-subject", displayName: "Trusted Bootstrap Probe", allowedClientClasses: ["native"] };
   const candidateDataRoot = join(validationRoot, "candidate-data");
   stageTrustedBootstrapCandidateCurrent(candidateDataRoot, receipt, () => {});
@@ -12065,6 +12087,24 @@ class BuildScript extends BundleScript {
   async run(args: string[]): Promise<void> {
     if (args.length) throw new Error("Select build through Nx without additional arguments");
     await buildCargoArtifacts(join(this.root, "Cargo.toml"), ["--release", "--bin", "os-hub"], this.repoRoot, { output: "dist/build" });
+    signExecutableForDistribution(join(this.root, "dist", "build", process.platform === "win32" ? "os-hub.exe" : "os-hub"));
+  }
+}
+
+/** 🚚️ Packages `build`'s staged release binary as a versioned, checksummed tarball under
+ * `dist/publish` — the missing link between "a release binary compiles" and "an operator can be
+ * handed one". Local artifact only: nothing is uploaded or pushed anywhere, and where the tarball
+ * goes next is a deployment decision this repository does not take. Reached through the root
+ * `bun ./📜️script.ts publish os-hub`. */
+class PublishScript extends BundleScript {
+  run(args: string[]): void {
+    if (args.length) throw new Error("Select publish through Nx without additional arguments");
+    packageNativeRelease({
+      binary: join(this.root, "dist", "build", process.platform === "win32" ? "os-hub.exe" : "os-hub"),
+      name: "os-hub",
+      version: workspaceCargoVersion(this.repoRoot),
+      output: join(this.root, "dist", "publish"),
+    });
   }
 }
 
@@ -14420,6 +14460,8 @@ async function proveCheckpointPublicationCommandV1(repoRoot: string): Promise<nu
     mutate((candidate) => (candidate.backend = "filesystem")),
     mutate((candidate) => (candidate.pack.storageKey = "/private/caller-path")),
     mutate((candidate) => (candidate.pack.sha256 = "A".repeat(64))),
+    mutate((candidate) => delete candidate.pack.blake3),
+    mutate((candidate) => (candidate.pack.blake3 = "0".repeat(64))),
     mutate((candidate) => (candidate.pack.sha256 = "0".repeat(64))),
     mutate((candidate) => (candidate.expectedDocumentFrontier.commitSeq = candidate.expectedDocumentFrontier.headSeq + 1)),
     mutate((candidate) => (candidate.expectedDocumentFrontier.epoch = Number.MAX_SAFE_INTEGER + 1)),
@@ -14471,11 +14513,18 @@ function proveSpaceArtifactCreationContractV1(repoRoot: string): number {
   const fixture = JSON.parse(readFileSync(join(base, "🔣️.json"), "utf8"));
   const validate = hubSchemaExport(repoRoot, "schema://os.directory/SpaceArtifactCreationV1");
   let checks = 0;
+  /** 🪢 `kindId` (manifest taxonomy space: `2d.note`, `stdio.json`) and `dialect.artifactKind` /
+   * `parentDialect.artifactKind` (plugin dialect space: `s.note.note`, `s.stdio.json`) are two id
+   * spaces that coincide for `gis` alone, so this independent re-derivation bounds each field on its
+   * own exactly as `SpaceArtifactCreationKindV1::validate` and `SpaceArtifactCreationReadyV1::validate`
+   * now do; the binding between the spaces is declared by the trusted catalog, which derives both
+   * from one `VerifiedDocumentOpenSelectionV1`. */
+  const creationIdentity = (value: unknown): boolean => typeof value === "string" && value.length > 0 && value.length <= 256 && /^[A-Za-z0-9][A-Za-z0-9._:/-]*$/u.test(value);
   for (const row of [...fixture.requests, ...fixture.statuses, ...fixture.catalogs]) {
     const value = row.value;
     const independent = validate(value)
-      && (value.phase !== "ready" || value.ready.kindId === value.ready.parentDialect.artifactKind)
-      && (value.kinds === undefined || value.kinds.every((kind: any, index: number) => kind.kindId === kind.dialect.artifactKind && (index === 0 || value.kinds[index - 1].kindId < kind.kindId)));
+      && (value.phase !== "ready" || creationIdentity(value.ready.parentDialect.artifactKind))
+      && (value.kinds === undefined || value.kinds.every((kind: any, index: number) => creationIdentity(kind.dialect.artifactKind) && (index === 0 || value.kinds[index - 1].kindId < kind.kindId)));
     if (Boolean(independent) !== row.accepted) throw new Error(`creation schema disagrees at ${row.id}`);
     let own = false;
     try {
@@ -14543,7 +14592,7 @@ function proveSpaceArtifactCreationContractV1(repoRoot: string): number {
       if (body.kind !== "document.indexed") continue;
       const descriptor = descriptors.get(JSON.stringify([body.scope.spaceId, body.scope.documentId]));
       const expected = descriptor ? Array.from(createHash("sha256").update(descriptorDigestEncodingV1(descriptor)).digest()) : null;
-      backendAccepted &&= Boolean(validateIndex(body) && descriptor && event.userId && event.spaceId === body.scope.spaceId && validDocumentIndexEntryV1(body.entry) && descriptor.artifactKind === body.entry.dialect.artifactKind && JSON.stringify(expected) === JSON.stringify(body.descriptorDigestV1));
+      backendAccepted &&= Boolean(validateIndex(body) && descriptor && event.userId && event.spaceId === body.scope.spaceId && validDocumentIndexEntryV1(body.entry) && JSON.stringify(expected) === JSON.stringify(body.descriptorDigestV1));
     }
     if (backendAccepted !== row.backendAccepted) throw new Error(`document index independent SHA256 authority differs: ${row.id}`);
   }
@@ -15304,7 +15353,7 @@ async function provePresenceNormalizationFixture(repoRoot: string): Promise<numb
     return Array.from(bytes);
   };
   const independentEncode = (peer: ArtifactPresencePeer): Buffer => {
-    const fields = [peer.label, peer.presencePack, peer.userId, peer.role, peer.dragGhostJson, peer.interaction, peer.color, peer.surface, peer.views.length ? peer.views : undefined, peer.ui, peer.toolRun];
+    const fields = [peer.label, peer.presencePack, peer.userId, peer.role, peer.dragGhostJson, peer.interaction, peer.color, peer.surface, peer.views.length ? peer.views : undefined, peer.ui, peer.toolRun, peer.principalKind];
     const flags = fields.reduce<number>((mask, value, index) => (value === undefined ? mask : mask | (1 << index)), 0);
     const out = [...text(peer.actor), ...integer(flags), ...integer(peer.connectedAtMs)];
     for (const [index, value] of fields.entries()) {
@@ -15345,7 +15394,7 @@ async function provePresenceNormalizationFixture(repoRoot: string): Promise<numb
         const states = ["starting", "running", "paused", "complete", "finalizing", "finalized", "aborting", "aborted", "faulted"];
         out.push(...text(toolRun.toolId), states.indexOf(toolRun.state), ...integer(toolRun.stage), ...integer(toolRun.completed), toolRun.total === undefined ? 0 : 1);
         if (toolRun.total !== undefined) out.push(...integer(toolRun.total));
-      }
+      } else if (index === 11) out.push(PRESENCE_PRINCIPAL_KINDS.indexOf(value as ArtifactPresencePrincipalKind));
     }
     return Buffer.from(out);
   };
@@ -15370,6 +15419,7 @@ async function provePresenceNormalizationFixture(repoRoot: string): Promise<numb
         views: input.views,
         ui: input.ui,
         toolRun: input.toolRun,
+        principalKind: admitted.principalKind ?? "human",
       };
       normalized = independentEncode(output);
       if (!normalized.equals(Buffer.from(encodePresencePeer(output)))) throw new Error("output canonical oracle mismatch");
@@ -15392,7 +15442,7 @@ async function provePresenceNormalizationFixture(repoRoot: string): Promise<numb
     !ingress.includes("self.refresh_presence(")
   )
     throw new Error("Hub lacks canonical admitted presence reconstruction");
-  for (const field of ["tool_run: input.tool_run", "connected_at_ms: slot.connected_at_ms", "label: slot.label.clone()", "user_id: slot.user_id.clone()", "role: slot.role.clone()", "color: Some(slot.color)", "surface: slot.document_surface.clone()"])
+  for (const field of ["tool_run: input.tool_run", "connected_at_ms: slot.connected_at_ms", "label: slot.label.clone()", "user_id: slot.user_id.clone()", "role: slot.role.clone()", "color: Some(slot.color)", "surface: slot.document_surface.clone()", "principal_kind: Some(slot.principal_kind)"])
     if (!ingress.includes(field)) throw new Error(`Hub presence authority missing: ${field}`);
   if (!hub.includes("state.refresh_document_presence(") || !hub.includes("socket_grant.document_plan.as_ref().map(|plan| plan.surface.surface_id.clone())")) throw new Error("presence ingress must use the admitted plan surface");
   return fixture.vectors.length;
@@ -16692,6 +16742,7 @@ const router = new ScriptRouter(import.meta.dir)
   .register("local-bootstrap-launch-check", LocalBootstrapLaunchCheckScript)
   .register("build", BuildScript)
   .register("build-dev", BuildDevScript)
+  .register("publish", PublishScript)
   .register("dev", DevScript)
   .register("secure-local-smoke", SecureLocalSmokeScript);
 

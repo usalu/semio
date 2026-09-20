@@ -1,13 +1,35 @@
-
 use super::{
-    ClipRegion, DrawList, FixedMeshGpuRegistry, FixedRasterTextureRegistry, MESH_GPU_KEEP_VERSION_CAPACITY, MESH_GPU_TABLE_CAPACITY, MeshGpuEntry, MeshGpuKey, RASTER_TEXTURE_ITEM_BYTE_CAPACITY, RASTER_TEXTURE_KEY_BYTES,
-    RASTER_TEXTURE_PROBE_CAPACITY, RASTER_TEXTURE_TABLE_CAPACITY, RasterTextureAdmission, RasterTextureCleanupStep, RasterTextureEntry, RasterTextureKey, RasterTextureReservation, RasterTextureReservationCloseCursor,
-    RasterTextureReservationRetirement, RasterTextureStageClaim, RasterTextureUploadCloseCursor, RasterTextureUploadCursor, RasterTextureWitness, RasterTextureWitnessSlot, ScissorRect, WORLD_GLOBALS_SLOT_SIZE, claim_raster_stage_tuple,
-    content_stencil_state, ear_clip_polygon, mask_instances, mask_stencil_state, mesh_content_version, raster_texture_bytes, raster_witness_is_stale,
+    claim_raster_stage_tuple, content_stencil_state, ear_clip_polygon, mask_instances, mask_stencil_state, mesh_content_version, raster_texture_bytes, raster_witness_is_stale, ClipRegion, DrawList, FixedMeshGpuRegistry, FixedRasterTextureRegistry,
+    MeshGpuEntry, MeshGpuKey, RasterTextureAdmission, RasterTextureCleanupStep, RasterTextureEntry, RasterTextureKey, RasterTextureReservation, RasterTextureReservationCloseCursor, RasterTextureReservationRetirement, RasterTextureStageClaim,
+    RasterTextureUploadCloseCursor, RasterTextureUploadCursor, RasterTextureWitness, RasterTextureWitnessSlot, RasterUploadPixels, ScissorRect, MESH_GPU_KEEP_VERSION_CAPACITY, MESH_GPU_TABLE_CAPACITY, RASTER_TEXTURE_ITEM_BYTE_CAPACITY, RASTER_TEXTURE_KEY_BYTES,
+    RASTER_TEXTURE_PROBE_CAPACITY, RASTER_TEXTURE_TABLE_CAPACITY, WORLD_GLOBALS_SLOT_SIZE,
 };
 use crate::wgpu::geometry::Rect;
 use crate::wgpu::kernel_3d_scene::ScenePass3d;
 use crate::wgpu::theme::Rgba;
+
+fn raster_identity(seed: u64) -> crate::wgpu::prepared::RasterContentIdentity {
+    crate::wgpu::prepared::RasterContentIdentity::revision(1, 1, [seed; 6]).expect("bounded raster identity")
+}
+
+#[test]
+fn scene_raster_profiles_keep_the_verified_srgb_storage_contract() {
+    use crate::wgpu::raster_ownership::{SceneRasterBegin, SceneRasterDescriptor, SceneRasterMeshSeal, SceneRasterPool, SceneRasterProfile, SceneRasterWriteMode};
+
+    for (revision, profile, mesh) in [
+        (1, SceneRasterProfile::ReferenceImageMapNoColorSpace, None),
+        (2, SceneRasterProfile::ReferenceCanvasSrgb, None),
+        (3, SceneRasterProfile::MeshPaintMapNoColorSpace, Some(SceneRasterMeshSeal { mesh_revision: 1, uv_revision: 1, uv_count: 1 })),
+    ] {
+        let pool = SceneRasterPool::new();
+        let descriptor = SceneRasterDescriptor { width: 1, height: 1, source_digest: [revision, revision], source_revision: revision, profile, mesh };
+        let SceneRasterBegin::Writer(writer) = pool.begin(descriptor, revision, SceneRasterWriteMode::Streamed) else { panic!("profile writer") };
+        let writer = pool.push(writer, &[127, 189, 214, 255]).expect("profile pixels");
+        let lease = pool.seal(writer).expect("profile seal");
+        let pixels = RasterUploadPixels::Scene(&lease);
+        assert_eq!(pixels.texture_format(), wgpu::TextureFormat::Rgba8UnormSrgb);
+    }
+}
 
 #[test]
 fn fixed_mesh_gpu_registry_rejects_capacity_plus_one_and_returns_exact_owner() {
@@ -48,12 +70,22 @@ fn fixed_raster_registry_rejects_capacity_plus_one_with_exact_handback() {
     let mut registry = FixedRasterTextureRegistry::default();
     for index in 0..RASTER_TEXTURE_TABLE_CAPACITY {
         let key = raster_key_for_start(index, 0);
-        registry.insert(RasterTextureEntry { key, witness: RasterTextureWitness { scene_revision: 1, preview_generation: 1, operation: index as u64 }, bytes: 1, value: Box::new(index) }).ok().expect("fixed raster slot");
+        registry
+            .insert(RasterTextureEntry { key, witness: RasterTextureWitness { scene_revision: 1, preview_generation: 1, operation: index as u64 }, content_identity: raster_identity(index as u64), bytes: 1, cpu_release: None, gpu_resident: None, value: Box::new(index) })
+            .ok()
+            .expect("fixed raster slot");
     }
     let rejected = Box::new(RASTER_TEXTURE_TABLE_CAPACITY);
     let rejected_pointer = (&*rejected) as *const usize;
-    let rejected = match registry.insert(RasterTextureEntry { key: RasterTextureKey::new("overflow").expect("bounded raster key"), witness: RasterTextureWitness { scene_revision: 2, preview_generation: 2, operation: 1 }, bytes: 1, value: rejected })
-    {
+    let rejected = match registry.insert(RasterTextureEntry {
+        key: RasterTextureKey::new("overflow").expect("bounded raster key"),
+        witness: RasterTextureWitness { scene_revision: 2, preview_generation: 2, operation: 1 },
+        content_identity: raster_identity(257),
+        bytes: 1,
+        cpu_release: None,
+        gpu_resident: None,
+        value: rejected,
+    }) {
         Err(rejected) => rejected,
         Ok(_) => panic!("raster capacity plus one was accepted"),
     };
@@ -67,19 +99,40 @@ fn fixed_raster_registry_probe_saturation_and_replacement_preserve_owners() {
     let mut registry = FixedRasterTextureRegistry::default();
     for ordinal in 0..RASTER_TEXTURE_PROBE_CAPACITY {
         let key = raster_key_for_start(start, ordinal);
-        registry.insert(RasterTextureEntry { key, witness: RasterTextureWitness { scene_revision: 7, preview_generation: ordinal as u64, operation: ordinal as u64 + 1 }, bytes: 1, value: Box::new(ordinal) }).ok().expect("probe slot");
+        registry
+            .insert(RasterTextureEntry {
+                key,
+                witness: RasterTextureWitness { scene_revision: 7, preview_generation: ordinal as u64, operation: ordinal as u64 + 1 },
+                content_identity: raster_identity(ordinal as u64),
+                bytes: 1,
+                cpu_release: None,
+                gpu_resident: None,
+                value: Box::new(ordinal),
+            })
+            .ok()
+            .expect("probe slot");
     }
     let rejected_owner = Box::new(99usize);
     let rejected_pointer = (&*rejected_owner) as *const usize;
-    let rejected =
-        match registry.insert(RasterTextureEntry { key: raster_key_for_start(start, RASTER_TEXTURE_PROBE_CAPACITY), witness: RasterTextureWitness { scene_revision: 8, preview_generation: 0, operation: 1 }, bytes: 1, value: rejected_owner }) {
-            Err(rejected) => rejected,
-            Ok(_) => panic!("probe capacity plus one was accepted"),
-        };
+    let rejected = match registry.insert(RasterTextureEntry {
+        key: raster_key_for_start(start, RASTER_TEXTURE_PROBE_CAPACITY),
+        witness: RasterTextureWitness { scene_revision: 8, preview_generation: 0, operation: 1 },
+        content_identity: raster_identity(99),
+        bytes: 1,
+        cpu_release: None,
+        gpu_resident: None,
+        value: rejected_owner,
+    }) {
+        Err(rejected) => rejected,
+        Ok(_) => panic!("probe capacity plus one was accepted"),
+    };
     assert_eq!((&*rejected.value) as *const usize, rejected_pointer);
     let replacement_key = raster_key_for_start(start, 0);
-    let previous =
-        registry.insert(RasterTextureEntry { key: replacement_key, witness: RasterTextureWitness { scene_revision: 9, preview_generation: 3, operation: 77 }, bytes: 1, value: Box::new(777usize) }).ok().flatten().expect("exact replaced owner");
+    let previous = registry
+        .insert(RasterTextureEntry { key: replacement_key, witness: RasterTextureWitness { scene_revision: 9, preview_generation: 3, operation: 77 }, content_identity: raster_identity(777), bytes: 1, cpu_release: None, gpu_resident: None, value: Box::new(777usize) })
+        .ok()
+        .flatten()
+        .expect("exact replaced owner");
     assert_eq!(*previous.value, 0);
     let current = registry.get(replacement_key.as_str()).expect("replacement generation");
     assert_eq!((current.witness.scene_revision, current.witness.preview_generation, current.witness.operation, *current.value), (9, 3, 77, 777));
@@ -90,8 +143,8 @@ fn raster_key_and_byte_credits_reject_exact_plus_one() {
     let key = "k".repeat(RASTER_TEXTURE_KEY_BYTES);
     assert!(RasterTextureKey::new(&key).is_ok());
     assert!(RasterTextureKey::new(&(key + "x")).is_err());
-    assert_eq!(raster_texture_bytes(2048, 2048), Some(RASTER_TEXTURE_ITEM_BYTE_CAPACITY));
-    assert!(raster_texture_bytes(2048, 2049).is_some_and(|bytes| bytes > RASTER_TEXTURE_ITEM_BYTE_CAPACITY));
+    assert_eq!(raster_texture_bytes(4096, 4096), Some(RASTER_TEXTURE_ITEM_BYTE_CAPACITY));
+    assert!(raster_texture_bytes(4096, 4097).is_some_and(|bytes| bytes > RASTER_TEXTURE_ITEM_BYTE_CAPACITY));
 }
 
 #[test]
@@ -122,6 +175,7 @@ fn raster_reservation_cancel_retires_one_exact_root_or_scalar_per_grant() {
     let reservation = RasterTextureReservation {
         key: RasterTextureKey::new("cancelled").expect("bounded key"),
         witness: RasterTextureWitness { scene_revision: 3, preview_generation: 5, operation: 7 },
+        content_identity: raster_identity(7),
         width: 16,
         height: 8,
         bytes: 512,
@@ -130,7 +184,7 @@ fn raster_reservation_cancel_retires_one_exact_root_or_scalar_per_grant() {
     };
     let mut retirement = RasterTextureReservationRetirement::new(reservation);
     assert_eq!(retirement.step(), RasterTextureCleanupStep::Pending { released_roots: 1, released_scalars: 0 });
-    for _ in 0..8 {
+    for _ in 0..9 {
         assert_eq!(retirement.step(), RasterTextureCleanupStep::Pending { released_roots: 0, released_scalars: 1 });
     }
     assert_eq!(retirement.step(), RasterTextureCleanupStep::Complete);
@@ -140,8 +194,9 @@ fn raster_reservation_cancel_retires_one_exact_root_or_scalar_per_grant() {
 fn raster_matching_cancel_retains_both_reservation_and_admission_to_terminal() {
     let witness = RasterTextureWitness { scene_revision: 61, preview_generation: 67, operation: 71 };
     let key = RasterTextureKey::new("matching-cancel").expect("bounded key");
-    let reservation = RasterTextureReservation { key, witness, width: 32, height: 8, bytes: 1024, staged_index: 73, nonce: 79 };
-    let admission = RasterTextureAdmission { key, witness, width: 32, height: 8, bytes: 1024, staged_index: 73, nonce: 79 };
+    let content_identity = raster_identity(71);
+    let reservation = RasterTextureReservation { key, witness, content_identity, width: 32, height: 8, bytes: 1024, staged_index: 73, nonce: 79 };
+    let admission = RasterTextureAdmission { key, witness, content_identity, width: 32, height: 8, bytes: 1024, staged_index: 73, nonce: 79 };
     let mut close = RasterTextureReservationCloseCursor::cancelled(reservation, admission);
     let mut released_roots = 0;
     let mut released_scalars = 0;
@@ -159,7 +214,7 @@ fn raster_matching_cancel_retains_both_reservation_and_admission_to_terminal() {
             RasterTextureCleanupStep::Complete => break,
         }
     }
-    assert_eq!((released_roots, released_scalars), (2, 16));
+    assert_eq!((released_roots, released_scalars), (2, 18));
     assert!(close.terminal_is_empty());
 }
 
@@ -168,8 +223,9 @@ fn raster_gpu_allocation_claim_rejects_missing_aba_candidate_and_occupied_slot()
     fn authorities(nonce: u64) -> (RasterTextureReservation, RasterTextureAdmission, RasterTextureWitness) {
         let witness = RasterTextureWitness { scene_revision: 17, preview_generation: 19, operation: 23 };
         let key = RasterTextureKey::new("claimed").expect("bounded key");
-        let reservation = RasterTextureReservation { key, witness, width: 32, height: 16, bytes: 2048, staged_index: 29, nonce };
-        let admission = RasterTextureAdmission { key, witness, width: 32, height: 16, bytes: 2048, staged_index: 29, nonce };
+        let content_identity = raster_identity(nonce);
+        let reservation = RasterTextureReservation { key, witness, content_identity, width: 32, height: 16, bytes: 2048, staged_index: 29, nonce };
+        let admission = RasterTextureAdmission { key, witness, content_identity, width: 32, height: 16, bytes: 2048, staged_index: 29, nonce };
         (reservation, admission, witness)
     }
 
@@ -215,10 +271,11 @@ fn raster_interrupted_upload_close_is_truthful_before_first_and_mid_page() {
     for row in [0, 7] {
         let witness = RasterTextureWitness { scene_revision: 41, preview_generation: 43, operation: 47 };
         let key = RasterTextureKey::new("interrupted").expect("bounded key");
-        let reservation = RasterTextureReservation { key, witness, width: 64, height: 64, bytes: 16 * 1024, staged_index: 53, nonce: 59 };
-        let admission = RasterTextureAdmission { key, witness, width: 64, height: 64, bytes: 16 * 1024, staged_index: 53, nonce: 59 };
+        let content_identity = raster_identity(59);
+        let reservation = RasterTextureReservation { key, witness, content_identity, width: 64, height: 64, bytes: 16 * 1024, staged_index: 53, nonce: 59 };
+        let admission = RasterTextureAdmission { key, witness, content_identity, width: 64, height: 64, bytes: 16 * 1024, staged_index: 53, nonce: 59 };
         let claim = RasterTextureStageClaim { reservation, candidate: witness, staged_index: 53, staged_nonce: 59 };
-        let mut close = RasterTextureUploadCloseCursor::new(RasterTextureUploadCursor { admission: Some(admission), row, texture: None, view: None, bind_group: None, allocation_claim: Some(claim) });
+        let mut close = RasterTextureUploadCloseCursor::new(RasterTextureUploadCursor { admission: Some(admission), row, texture: None, view: None, bind_group: None, allocation_claim: Some(claim), cpu_release: None });
         let mut steps = 0;
         loop {
             steps += 1;
@@ -351,7 +408,7 @@ fn ear_clip_produces_triangles() {
 
 #[test]
 fn world_globals_slot_size_is_aligned() {
-    const { assert!(WORLD_GLOBALS_SLOT_SIZE >= 80) };
+    const { assert!(WORLD_GLOBALS_SLOT_SIZE >= 240) };
     assert_eq!(WORLD_GLOBALS_SLOT_SIZE % 256, 0);
 }
 
@@ -381,12 +438,44 @@ fn mesh_instances_without_lines_are_valid_world_pass() {
         draws: vec![SceneDraw3d {
             mesh_key: "box".into(),
             mesh_version: 1,
-            instances: vec![Instance3d { id: "preview".into(), model: Instance3d::model_from_trs([0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 1.0], [1.0, 1.0, 1.0]), color: [0.7, 0.7, 0.75, 1.0], selected: false, hovered: false }],
+            instances: vec![Instance3d { id: "preview".into(), model: Instance3d::model_from_trs([0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 1.0], [1.0, 1.0, 1.0]), color: [0.7, 0.7, 0.75, 1.0], selected: false, hovered: false, material: Default::default() }],
+            shadow_role: Default::default(),
         }],
         ..Default::default()
     };
     assert!(!pass.draws[0].instances.is_empty());
     assert!(pass.line_draws.is_empty());
+}
+
+#[test]
+fn world_mesh_instance_packs_policy_and_standard_material_without_stride_growth() {
+    let gpu = super::World3dGpuInstance::from_instance([0.0; 16], [1.0; 4], true, 0.2, 0.63, 0.27, true);
+    assert_eq!(std::mem::size_of::<super::World3dGpuInstance>(), 96);
+    assert_eq!(gpu.flags, [3.0, 0.2, 0.63, 0.27]);
+}
+
+#[test]
+fn offscreen_shadow_channel_is_measured_and_progressively_retired() {
+    use crate::wgpu::kernel_3d_scene::{Instance3d, SceneDraw3d, ScenePass3d, SceneShadowRole3d};
+    let mut draw = DrawList::default();
+    draw.push_scene_pass(ScenePass3d {
+        shadow_draws: vec![SceneDraw3d {
+            mesh_key: "offscreen-caster".into(),
+            mesh_version: 7,
+            instances: vec![Instance3d { id: "caster".into(), model: Instance3d::model_from_trs([0.0; 3], [0.0, 0.0, 0.0, 1.0], [1.0; 3]), color: [1.0; 4], selected: false, hovered: false, material: Default::default() }],
+            shadow_role: SceneShadowRole3d { casts: true, receives: true },
+        }],
+        ..Default::default()
+    });
+    let (items, bytes) = draw.prepared_output_usage();
+    assert!(items >= 1 + "offscreen-caster".len() + "caster".len());
+    assert!(bytes >= std::mem::size_of::<ScenePass3d>() + std::mem::size_of::<SceneDraw3d>() + std::mem::size_of::<Instance3d>() + "offscreen-caster".len() + "caster".len());
+    let mut steps = 0;
+    while !draw.retire_step() {
+        steps += 1;
+        assert!(steps < 256, "shadow-channel retirement remains scalar and terminal");
+    }
+    assert!(draw.scene_passes.is_empty());
 }
 
 #[test]
@@ -398,7 +487,7 @@ fn mesh_content_version_changes_with_indices() {
 
 #[test]
 fn overlay_layers_collected_separately_from_backdrop_ui() {
-    use super::{LayerBatchFilter, build_layer_batches, build_overlay_layer_batches};
+    use super::{build_layer_batches, build_overlay_layer_batches, LayerBatchFilter};
     let mut draw = DrawList::default();
     draw.push_solid([0.0, 0.0, 100.0, 100.0], Rgba::new(0.1, 0.1, 0.1, 1.0));
     draw.push_glyph_overlay([10.0, 10.0, 20.0, 12.0], Rgba::new(1.0, 1.0, 1.0, 1.0), [0.0, 0.0, 0.1, 0.1]);
@@ -414,16 +503,18 @@ fn overlay_layers_collected_separately_from_backdrop_ui() {
 
 #[test]
 fn overlay_rasters_are_collected_separately_without_changing_the_texture_identity() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔽️retained-select-overlay-raster/🔣️.json")).expect("retained Select/overlay raster fixture");
+    let key = fixture["image"]["sharedKey"].as_str().expect("shared raster key");
     let mut draw = DrawList::default();
-    draw.push_raster_quad("plain", [1.0, 2.0, 3.0, 4.0], [0.0, 0.0, 1.0, 1.0], 1.0);
+    draw.push_raster_quad(key, [1.0, 2.0, 3.0, 4.0], [0.0, 0.0, 1.0, 1.0], 1.0);
     draw.begin_overlay_route();
-    draw.push_raster_quad("dialog", [5.0, 6.0, 7.0, 8.0], [0.0, 0.0, 1.0, 1.0], 1.0);
+    draw.push_raster_quad(key, [5.0, 6.0, 7.0, 8.0], [0.0, 0.0, 1.0, 1.0], 1.0);
     draw.end_overlay_route();
 
     assert_eq!(draw.layers[0].raster_instances.len(), 1, "an in-flow image remains in the scene raster lane");
     assert_eq!(draw.layers[0].overlay_raster_instances.len(), 1, "a dialog/popover image follows its overlay route");
-    assert_eq!(draw.layers[0].raster_instances[0].0, "plain");
-    assert_eq!(draw.layers[0].overlay_raster_instances[0].0, "dialog", "routing changes only ordering, never the upload key");
+    assert_eq!(draw.layers[0].raster_instances[0].0, key);
+    assert_eq!(draw.layers[0].overlay_raster_instances[0].0, key, "routing changes only ordering, never the upload key");
     assert_eq!(draw.layers[0].overlay_raster_instances[0].1.rect, [5.0, 6.0, 7.0, 8.0]);
 }
 
@@ -448,7 +539,7 @@ fn glass_content_layers_tagged_with_foreground_of() {
 
 #[test]
 fn glass_foreground_layers_excluded_from_backdrop_batches() {
-    use super::{LayerBatchFilter, Theme, build_layer_batches};
+    use super::{build_layer_batches, LayerBatchFilter, Theme};
     use crate::wgpu::theme::Level;
     let theme = Theme::default();
     let mut draw = DrawList::default();

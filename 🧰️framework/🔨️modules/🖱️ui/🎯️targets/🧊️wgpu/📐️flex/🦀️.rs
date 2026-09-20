@@ -7,8 +7,8 @@
 //! **Two layout dialects meet here, and the difference is deliberate.** A node whose `LayoutSpec`
 //! was AUTHORED (a `UiNodeRecord` carrying `record.layout`, the same value React's `layoutSpecStyle`
 //! reads — `os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🗣️Interpreter/🟦️.tsx`) is laid out by
-//! plain CSS rules: direction/align/justify/wrap/gap/padding/grow/basis, real grid tracks, real
-//! out-of-flow overlay/absolute positioning. A node that came off the LEGACY declarative `UiNode`
+//! plain CSS rules: direction/align/justify/wrap/gap/padding/grow/basis, real grid tracks, in-flow
+//! overlay positioning contexts, and out-of-flow absolute positioning. A node that came off the LEGACY declarative `UiNode`
 //! path (in-crate chrome: `shell`, the wgpu `Interpreter`/`Shell` elements — content with no React
 //! counterpart at all) keeps the pre-parity rule that every child of a `Stack`/`Field` grows into the
 //! leftover main-axis space, because that chrome carries no `grow` information to replace it with.
@@ -35,19 +35,40 @@ pub(crate) enum LayoutNodeKind {
     /// (`UiStackNode`'s `direction`/`gap`/`padding` strings, already resolved through the shared
     /// `SpaceToken` ramp by `layout::gap_for_token`/`padding_for_token`); an authored `LayoutSpec`
     /// supersedes all three.
-    Stack { horizontal: bool, gap: f32, padding: f32 },
-    Field { top: f32 },
-    Section { gap: f32 },
+    Stack {
+        horizontal: bool,
+        gap: f32,
+        padding: f32,
+    },
+    Field {
+        top: f32,
+    },
+    Section {
+        gap: f32,
+    },
     /// 🌳️ A `Tree`, measured from its own spec through `layout`'s shared row geometry rather than
     /// from arena children — a tree's rows carry no children of their own, so aggregating them
     /// measured a whole tree as the sum of its rows' padding.
-    Tree { height: f32 },
-    TreeSection { header: f32, height: f32 },
+    Tree {
+        height: f32,
+        reversed: bool,
+    },
+    TreeSection {
+        header: f32,
+        height: f32,
+        expanded: bool,
+        reversed: bool,
+    },
     /// 🌳️ `row` is this row's own band (the y a nested row starts at) and `expanded` says whether
     /// its nested rows are REACHED at all — the arena mounts a collapsed branch's children, and the
     /// painter draws none of them, so an unreached row must resolve to nothing rather than overlap
     /// the row that visually follows it.
-    TreeRow { row: f32, height: f32, expanded: bool },
+    TreeRow {
+        row: f32,
+        height: f32,
+        expanded: bool,
+        reversed: bool,
+    },
     /// 🎛️ A value-carrying control: one control row tall on its own, so a container that sizes its
     /// children by intrinsic height (a `Section`) never collapses it to zero.
     ///
@@ -60,7 +81,17 @@ pub(crate) enum LayoutNodeKind {
     /// button published a zero-area rect, `retained_hit_registration` refused it, and the surface's
     /// whole pointer registry came back empty while the panel painted and kept keyboard focus
     /// (ticket 26/09/17/WGPU-RENDERER-REACT-PARITY, the ToolRun panel's `[STATS] … targets []`).
-    Control { height: f32, label_padding: Option<f32> },
+    Control {
+        height: f32,
+        label_padding: Option<f32>,
+    },
+    /// 🔽️ A synthesized Select option whose rect is owned by popup placement, outside document
+    /// flow. The retained interaction sync writes this parent-relative physical rect before a
+    /// refreshed document can schedule layout; carrying it through the solver prevents the option
+    /// from reflowing as an ordinary Button child while it owns pointer capture.
+    OverlayRow {
+        rect: FlexRect,
+    },
     /// 🧩️ HOST-PROVIDED content: a leaf whose pixels this engine does not author at all. It reserves
     /// the box its host declared and fills its parent's width, so an arbitrary host-painted surface
     /// (React's `Tree` `emptyState` escape hatch — an agent chat transcript, a marketplace list) can
@@ -68,7 +99,9 @@ pub(crate) enum LayoutNodeKind {
     /// `UiNode`s. Unlike [`LayoutNodeKind::Leaf`] it is never measured from children (it has none) and
     /// never collapses to zero; unlike [`LayoutNodeKind::Control`] its height is the HOST's number, not
     /// the theme's control row.
-    HostContent { height: f32 },
+    HostContent {
+        height: f32,
+    },
     /// 🎞️ An ENGINE surface (`UiNode::ComponentScene`): a leaf whose pixels an engine paints into the
     /// box this solver hands it. It has no content to measure and no intrinsic size, so as a plain
     /// [`LayoutNodeKind::Leaf`] it solved to height ZERO inside every authored container — an
@@ -171,6 +204,7 @@ pub(crate) struct FlowStyle {
     /// 🌱️ Legacy dialect only: every child of this container grows into the leftover main axis (see
     /// this file's header). An authored `LayoutSpec` carries each child's own `grow` instead.
     pub grows_children: bool,
+    pub reverse: bool,
 }
 
 impl Default for FlowStyle {
@@ -194,6 +228,7 @@ impl Default for FlowStyle {
             clips: false,
             text: false,
             grows_children: false,
+            reverse: false,
         }
     }
 }
@@ -235,10 +270,7 @@ fn flow_from_spec(spec: &LayoutSpec) -> FlowStyle {
             ..FlowStyle::default()
         },
         LayoutSpec::Grid(grid) => FlowStyle { kind: FlowKind::Grid, gap_main: grid.row_gap.px(), gap_cross: grid.column_gap.px(), padding: grid.padding.px(), align: grid.align, justify: grid.justify, ..FlowStyle::default() },
-        LayoutSpec::Overlay(overlay) => {
-            let inset = overlay.inset.px();
-            FlowStyle { absolute: true, inset: [Some(inset.top), Some(inset.right), Some(inset.bottom), Some(inset.left)], ..FlowStyle::default() }
-        }
+        LayoutSpec::Overlay(overlay) => FlowStyle { padding: overlay.inset.px(), ..FlowStyle::default() },
         LayoutSpec::Scroll(scroll) => FlowStyle { padding: scroll.padding.px(), width: dim_of(scroll.sizing), clips: true, ..FlowStyle::default() },
         LayoutSpec::Absolute(absolute) => FlowStyle { absolute: true, width: dim_of(absolute.sizing_width), height: dim_of(absolute.sizing_height), ..FlowStyle::default() },
     }
@@ -255,16 +287,21 @@ fn flow_from_spec(spec: &LayoutSpec) -> FlowStyle {
 /// the solved rect and this engine reserves it without measuring anything of its own.
 fn flow_for(kind: LayoutNodeKind, parent_kind: Option<LayoutNodeKind>, authored: Option<&LayoutSpec>, metrics: &TreeRowMetrics) -> FlowStyle {
     if matches!(parent_kind, Some(LayoutNodeKind::TreeRow { .. })) && !matches!(kind, LayoutNodeKind::TreeRow { .. }) {
-        let rect = crate::wgpu::layout::tree_row_control_rect(0.0, metrics);
-        return FlowStyle {
-            absolute: true,
-            inset: [Some(rect.y), Some(metrics.gap), None, None],
-            width: Dim::Length(metrics.control_width),
-            height: Dim::Length(metrics.control_height),
-            ..FlowStyle::default()
+        let control_height = match kind {
+            LayoutNodeKind::Control { height, .. } => height,
+            _ => metrics.control_height,
         };
+        let rect = crate::wgpu::layout::tree_row_control_rect_with_height(0.0, control_height, metrics);
+        return FlowStyle { absolute: true, inset: [Some(rect.y), Some(metrics.gap), None, None], width: Dim::Length(metrics.control_width), height: Dim::Length(control_height), ..FlowStyle::default() };
     }
-    let band = |height: f32, top: f32| FlowStyle { height: Dim::Length(height), padding: EdgePx { top, ..EdgePx::default() }, clips: true, ..FlowStyle::default() };
+    let band = |height: f32, header: f32, reverse: bool| FlowStyle {
+        height: Dim::Length(height),
+        shrink: 0.0,
+        padding: if reverse { EdgePx { bottom: header, ..EdgePx::default() } } else { EdgePx { top: header, ..EdgePx::default() } },
+        clips: true,
+        reverse,
+        ..FlowStyle::default()
+    };
     match kind {
         LayoutNodeKind::Text => FlowStyle { text: true, ..authored.map_or_else(FlowStyle::default, flow_from_spec) },
         LayoutNodeKind::Leaf => authored.map_or_else(FlowStyle::default, flow_from_spec),
@@ -274,9 +311,9 @@ fn flow_for(kind: LayoutNodeKind, parent_kind: Option<LayoutNodeKind>, authored:
         },
         LayoutNodeKind::Field { top } => FlowStyle { padding: EdgePx { top, ..EdgePx::default() }, ..FlowStyle::default() },
         LayoutNodeKind::Section { gap } => FlowStyle { gap_main: gap, padding: EdgePx { top: SECTION_HEADER_HEIGHT, ..EdgePx::default() }, ..FlowStyle::default() },
-        LayoutNodeKind::Tree { height } => band(height, 0.0),
-        LayoutNodeKind::TreeSection { header, height } => band(height, header),
-        LayoutNodeKind::TreeRow { row, height, .. } => band(height, row),
+        LayoutNodeKind::Tree { height, reversed } => band(height, 0.0, reversed),
+        LayoutNodeKind::TreeSection { header, height, reversed, .. } => band(height, header, reversed),
+        LayoutNodeKind::TreeRow { row, height, reversed, .. } => band(height, row, reversed),
         LayoutNodeKind::Control { height, label_padding } => {
             let mut flow = authored.map_or_else(FlowStyle::default, flow_from_spec);
             flow.min_height = height;
@@ -286,6 +323,15 @@ fn flow_for(kind: LayoutNodeKind, parent_kind: Option<LayoutNodeKind>, authored:
             }
             flow
         }
+        LayoutNodeKind::OverlayRow { rect } => FlowStyle {
+            absolute: true,
+            inset: [Some(rect.y), None, None, Some(rect.x)],
+            width: Dim::Length(rect.width),
+            height: Dim::Length(rect.height),
+            shrink: 0.0,
+            text: true,
+            ..FlowStyle::default()
+        },
         LayoutNodeKind::HostContent { height } => FlowStyle { height: Dim::Length(height), min_height: height, clips: true, ..authored.map_or_else(FlowStyle::default, flow_from_spec) },
         LayoutNodeKind::EngineSurface => {
             let mut flow = authored.map_or_else(FlowStyle::default, flow_from_spec);
@@ -496,6 +542,10 @@ impl FlexTree {
         self.resolved.get(index).copied()
     }
 
+    pub(crate) fn intrinsic(&self, index: usize) -> Option<(f32, f32)> {
+        self.intrinsic.get(index).copied()
+    }
+
     /// 📏️ Node `index`'s intrinsic (max-content) size, from its `children`'s already-measured intrinsic
     /// sizes — the bottom-up half. `children` must be in document order, and every one of them must be
     /// measured already (reverse admission order guarantees it).
@@ -596,7 +646,7 @@ impl FlexTree {
         let placed: f32 = self.main.iter().sum();
         let remaining = (content_main - placed - gaps).max(0.0);
         let (lead, between) = distribute(flow.justify, remaining, count);
-        let mut cursor = main_start + lead;
+        let mut cursor = if flow.reverse { outer_main - main_end - lead } else { main_start + lead };
         for (ordinal, &child) in children.iter().enumerate() {
             let (Some(child_flow), Some(&main), Some(&cross)) = (self.flows.get(child).copied(), self.main.get(ordinal), self.cross.get(ordinal)) else { return false };
             let rect = if child_flow.absolute {
@@ -607,8 +657,15 @@ impl FlexTree {
                     Align::End => content_cross - cross,
                     Align::Start | Align::Stretch | Align::Baseline => 0.0,
                 };
+                if flow.reverse {
+                    cursor -= main;
+                }
                 let (x, y, width, height) = if flow.row { (cursor, cross_start + offset, main, cross) } else { (cross_start + offset, cursor, cross, main) };
-                cursor += main + flow.gap_main + between;
+                if flow.reverse {
+                    cursor -= flow.gap_main + between;
+                } else {
+                    cursor += main + flow.gap_main + between;
+                }
                 FlexRect { x, y, width, height }
             };
             match self.resolved.get_mut(child) {
@@ -742,8 +799,7 @@ impl FlowStyle {
     }
 
     /// 📌️ An out-of-flow child's rect inside `owner`: each side comes from its own inset, its size
-    /// from its own sizing, and — when both insets on an axis are given — from the span between them,
-    /// which is how React's `position: absolute; inset: …` overlay stretches inside its box.
+    /// from its own sizing, and — when both insets on an axis are given — from the span between them.
     fn absolute_rect(self, owner: FlexRect, intrinsic: (f32, f32)) -> FlexRect {
         let span = |size: Dim, start: Option<f32>, end: Option<f32>, available: f32, fallback: f32| {
             size.resolve(available).unwrap_or_else(|| match (start, end) {

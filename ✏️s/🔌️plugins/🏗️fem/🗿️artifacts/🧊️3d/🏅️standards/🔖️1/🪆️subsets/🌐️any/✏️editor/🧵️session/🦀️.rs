@@ -2947,7 +2947,6 @@ impl MountedState {
     }
 
     fn fail(&mut self, detail: Vec<u8>) -> JobStep {
-        eprintln!("[DEBUG] fem3d session fault: {}", String::from_utf8_lossy(&detail));
         JobStep::Failed(if detail.capacity() <= FAULT_BYTES { detail } else { b"fem3d.visual-fault-capacity".to_vec() })
     }
 

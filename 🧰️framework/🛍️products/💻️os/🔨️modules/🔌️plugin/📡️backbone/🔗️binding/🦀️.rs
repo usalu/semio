@@ -33,7 +33,33 @@ pub struct DocumentBackboneBindingCommandV1 {
     pub uri: String,
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, ToValue)]
+impl DocumentBackboneBindingCommandV1 {
+    pub fn encode(&self) -> Result<Vec<u8>, String> {
+        if self.uri.is_empty() || self.uri.len() > DOCUMENT_BACKBONE_BINDING_URI_MAXIMUM_BYTES {
+            return Err("plugin.document-backbone.binding-fields".into());
+        }
+        let operation = match self.operation {
+            DocumentBackboneBindingOperationV1::Bind => "bind",
+            DocumentBackboneBindingOperationV1::Retire => "retire",
+        };
+        let bytes = store::pack_rt::encode_wire_value(
+            &DocumentBackboneBindingWireV1 {
+                schema: DOCUMENT_BACKBONE_BINDING_SCHEMA_V1.into(),
+                operation: operation.into(),
+                instance_id: self.instance_id,
+                binding_generation: self.binding_generation,
+                uri: self.uri.clone(),
+            }
+            .to_value(),
+        );
+        if bytes.len() > DOCUMENT_BACKBONE_BINDING_CONTROL_MAXIMUM_BYTES {
+            return Err("plugin.document-backbone.binding-capacity".into());
+        }
+        Ok(bytes)
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, serde::Deserialize, serde::Serialize, FromValue, ToValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 struct DocumentBackboneBindingReceiptWireV1 {
@@ -121,6 +147,41 @@ pub fn decode_document_backbone_binding_command_v1(payload: &[u8]) -> Result<Opt
         return Err("plugin.document-backbone.binding-fields".into());
     }
     Ok(Some(DocumentBackboneBindingCommandV1 { operation, instance_id: wire.instance_id, binding_generation: wire.binding_generation, uri: wire.uri }))
+}
+
+pub fn require_document_backbone_binding_receipt_v1(payload: &[u8], command: &DocumentBackboneBindingCommandV1) -> Result<(), String> {
+    if payload.is_empty() || payload.len() > DOCUMENT_BACKBONE_BINDING_CONTROL_MAXIMUM_BYTES {
+        return Err("plugin.document-backbone.receipt-bytes".into());
+    }
+    let value = store::pack_rt::decode_wire_value(payload).map_err(|_| "plugin.document-backbone.receipt-codec".to_string())?;
+    if store::pack_rt::encode_wire_value(&value) != payload {
+        return Err("plugin.document-backbone.receipt-noncanonical".into());
+    }
+    let receipt = DocumentBackboneBindingReceiptWireV1::from_value(value).map_err(|error| error.to_string())?;
+    if receipt.schema != DOCUMENT_BACKBONE_BINDING_RECEIPT_SCHEMA_V1
+        || receipt.instance_id != command.instance_id
+        || receipt.binding_generation != command.binding_generation
+        || receipt.uri != command.uri
+    {
+        return Err("plugin.document-backbone.receipt-owner".into());
+    }
+    let expected = match command.operation {
+        DocumentBackboneBindingOperationV1::Bind => "bound",
+        DocumentBackboneBindingOperationV1::Retire => "retired",
+    };
+    match receipt.operation.as_str() {
+        operation if operation == expected && receipt.code.is_none() => Ok(()),
+        "refused" => Err(receipt
+            .code
+            .filter(|code| {
+                !code.is_empty()
+                    && code.len() <= DOCUMENT_BACKBONE_BINDING_CODE_MAXIMUM_BYTES
+                    && code.as_bytes().first().is_some_and(u8::is_ascii_lowercase)
+                    && code.as_bytes().iter().all(|byte| byte.is_ascii_lowercase() || byte.is_ascii_digit() || matches!(byte, b'.' | b'-'))
+            })
+            .ok_or_else(|| "plugin.document-backbone.receipt-code".to_string())?),
+        _ => Err("plugin.document-backbone.receipt-operation".into()),
+    }
 }
 
 pub fn decide_document_backbone_binding_v1(state: &DocumentBackboneBindingStateV1, command: &DocumentBackboneBindingCommandV1) -> DocumentBackboneBindingDecisionV1 {

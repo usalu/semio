@@ -1,5 +1,4 @@
 {
-  "ChangeTowerMEdKnm": {
-    "newTowerMEdKnm": 1562.5
-  }
+  "mutation": "changeTowerMEdKnm",
+  "newTowerMEdKnm": 1562.5
 }

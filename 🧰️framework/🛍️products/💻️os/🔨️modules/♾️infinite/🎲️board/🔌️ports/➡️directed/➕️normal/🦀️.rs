@@ -2520,6 +2520,7 @@ pub mod board_host {
         pending_delete_operation: Option<BoardDeleteOperation>,
         pending_pointer_commit: Option<BoardPointerCommitOperation>,
         queued_pointer_commit: Option<BoardPointerPlan>,
+        cancelled_pointer_plan_retirement: Option<BoardPointerPlanRetirement>,
         pointer_publication: Option<BoardPointerPublication>,
         close_phase: BoardHostClosePhase,
         close_entity_retirement: Option<BoardEntityRetirement>,
@@ -3679,6 +3680,7 @@ pub mod board_host {
                 pending_delete_operation: None,
                 pending_pointer_commit: None,
                 queued_pointer_commit: None,
+                cancelled_pointer_plan_retirement: None,
                 pointer_publication: None,
                 close_phase: BoardHostClosePhase::Events,
                 close_entity_retirement: None,
@@ -12152,6 +12154,37 @@ pub mod board_host {
             self.pointer_publication.as_ref()
         }
 
+        pub fn begin_pointer_cancel(&mut self) {
+            let revision = self.interaction_revision.wrapping_add(1);
+            self.interaction_revision = revision;
+            if let Some(operation) = self.pending_pointer_commit.as_mut() {
+                operation.cancelling = true;
+                operation.plan.revision = revision;
+            }
+            if self.cancelled_pointer_plan_retirement.is_none() {
+                self.cancelled_pointer_plan_retirement = self.queued_pointer_commit.take().map(BoardPointerPlanRetirement::new);
+            }
+        }
+
+        pub fn step_pointer_cancel(&mut self, context: &mut semio_framework_job::StepContext<'_>) -> bool {
+            if self.pending_pointer_commit.is_some() {
+                let _ = self.step_pointer_commit(context);
+                return false;
+            }
+            let Some(retirement) = self.cancelled_pointer_plan_retirement.as_mut() else {
+                return true;
+            };
+            if retirement.close_step() {
+                self.cancelled_pointer_plan_retirement = None;
+            }
+            context.consume_fuel(1);
+            false
+        }
+
+        pub fn pointer_cancel_pending(&self) -> bool {
+            self.cancelled_pointer_plan_retirement.is_some() || self.pending_pointer_commit.as_ref().is_some_and(|operation| operation.cancelling)
+        }
+
         pub fn close_pointer_authority_step(&mut self, context: &mut semio_framework_job::StepContext<'_>) -> bool {
             if let Some(operation) = self.pending_pointer_commit.as_mut() {
                 if operation.cursor == 0 {
@@ -12161,6 +12194,13 @@ pub mod board_host {
                 return false;
             }
             if self.queued_pointer_commit.take().is_some() {
+                context.consume_fuel(1);
+                return false;
+            }
+            if let Some(retirement) = self.cancelled_pointer_plan_retirement.as_mut() {
+                if retirement.close_step() {
+                    self.cancelled_pointer_plan_retirement = None;
+                }
                 context.consume_fuel(1);
                 return false;
             }
@@ -12174,7 +12214,7 @@ pub mod board_host {
         }
 
         pub fn pointer_authority_terminal_is_empty(&self) -> bool {
-            self.pending_pointer_commit.is_none() && self.queued_pointer_commit.is_none() && self.pointer_publication.is_none()
+            self.pending_pointer_commit.is_none() && self.queued_pointer_commit.is_none() && self.cancelled_pointer_plan_retirement.is_none() && self.pointer_publication.is_none()
         }
 
         pub fn commit_pointer(&mut self, plan: &BoardPointerPlan) -> bool {
@@ -12786,6 +12826,53 @@ pub mod board_host {
             if matches!(self.interaction, Interaction::None) {
                 self.set_hovered_id(None);
             }
+        }
+
+        pub fn pointer_cancel_screen(&mut self) -> bool {
+            self.begin_pointer_cancel();
+            let cancelled_region = self.cancel_region_paint() | self.cancel_region_drag() | self.cancel_transform_drag();
+            let cancelled_brush = self.brush_preview.is_some() || self.brush_slot_source_id.is_some();
+            self.brush_slot_suggestions_active = false;
+            self.brush_slot_source_id = None;
+            self.brush_candidates.clear();
+            self.brush_candidate_index = 0;
+            self.brush_preview = None;
+            self.brush_preview_emit_key = None;
+            self.brush_candidates_emit_key = None;
+            let interaction = std::mem::take(&mut self.interaction);
+            let cancelled_interaction = !matches!(interaction, Interaction::None);
+            match interaction {
+                Interaction::DragNodes { start_positions, .. } => {
+                    for (id, (x, y)) in start_positions {
+                        if let Some(node) = self.nodes.get_mut(&id) {
+                            node.x = x;
+                            node.y = y;
+                        }
+                    }
+                    self.bump_content_scene_generation();
+                }
+                Interaction::SelectionPending { initial_ids, .. } | Interaction::Selection { initial_ids, .. } => {
+                    self.selection = initial_ids;
+                    self.preselect.clear();
+                    self.preselect_removed.clear();
+                    self.last_preselect_emit_sig = None;
+                    self.last_select_emit_sig = None;
+                    self.sync_selection_flags_to_objects();
+                    self.set_selection_screen_preview(None);
+                    self.bump_content_scene_generation();
+                }
+                Interaction::LinkAtSourceHandle { .. }
+                | Interaction::LinkDragSnap { .. }
+                | Interaction::LinkTargetNode { .. }
+                | Interaction::ExternalLinkPreview { .. } => {
+                    self.link_screen_preview = None;
+                    self.link_compat_nodes_emit_key = None;
+                    self.link_target_ring_emit_key = None;
+                    self.bump_content_scene_generation();
+                }
+                Interaction::Pan { .. } | Interaction::None => {}
+            }
+            cancelled_region || cancelled_brush || cancelled_interaction
         }
 
         /// @emoji ↩️ Aborts an in‑flight rectangle/lasso drag and restores the selection snapshot from when the gesture began.

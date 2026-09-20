@@ -67,6 +67,20 @@
         "command": "bun ./📜️script.ts build"
       }
     },
+    "publish": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [
+        "{projectRoot}/dist/publish"
+      ],
+      "dependsOn": [
+        "build"
+      ],
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts publish"
+      }
+    },
     "build-dev": {
       "executor": "nx:run-commands",
       "cache": true,

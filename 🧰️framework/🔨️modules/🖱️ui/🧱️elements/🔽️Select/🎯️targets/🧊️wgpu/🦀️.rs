@@ -214,6 +214,62 @@ pub(crate) fn select_scrolled_row_window(items: usize, theme: &Theme, painted_he
     let visible = select_visible_rows(items, theme, painted_height).saturating_add(1);
     (first, (first + visible).min(items))
 }
+
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub(crate) struct SelectPopupGeometry {
+    pub menu: Rect,
+    pub up: Option<Rect>,
+    pub down: Option<Rect>,
+    pub scroll: f32,
+    pub first_row: usize,
+    pub last_row: usize,
+}
+
+impl SelectPopupGeometry {
+    /// 🧭️ Projects window-local popup geometry into a frame without changing router authority.
+    pub(crate) fn translated(self, x: f32, y: f32) -> Self {
+        let translate = |rect: Rect| Rect::new(rect.x + x, rect.y + y, rect.w, rect.h);
+        Self { menu: translate(self.menu), up: self.up.map(translate), down: self.down.map(translate), ..self }
+    }
+}
+
+pub(crate) fn select_popup_geometry(trigger: Rect, items: usize, theme: &Theme, viewport_h: f32, offset: f32, direction: f32) -> SelectPopupGeometry {
+    let natural = select_menu_height(items, theme);
+    let menu_h = select_menu_painted_height(items, theme, trigger.y, trigger.h, viewport_h);
+    let menu_top = select_menu_top(trigger.y, trigger.h, natural, viewport_h);
+    let menu = Rect::new(trigger.x, trigger.y + menu_top, trigger.w, menu_h);
+    let scroll = select_scrolled_offset(items, theme, menu_h, offset, direction);
+    let (first_row, last_row) = select_scrolled_row_window(items, theme, menu_h, scroll);
+    let scrolls = select_visible_rows(items, theme, menu_h) < items;
+    let (up, down) = if scrolls {
+        let button_h = select_scroll_button_height(theme).min(menu.h);
+        (Some(Rect::new(menu.x, menu.y, menu.w, button_h)), Some(Rect::new(menu.x, menu.y + menu.h - button_h, menu.w, button_h)))
+    } else {
+        (None, None)
+    };
+    SelectPopupGeometry { menu, up, down, scroll, first_row, last_row }
+}
+
+pub(crate) fn select_popup_row_rect(trigger: Rect, index: usize, popup: SelectPopupGeometry, theme: &Theme) -> Rect {
+    let relative = select_row_rect(trigger.w, index, popup.menu.y - trigger.y, theme);
+    Rect::new(trigger.x + relative.x, trigger.y + relative.y - popup.scroll, relative.w, relative.h)
+}
+
+pub(crate) fn select_popup_row_hit_rect(trigger: Rect, index: usize, popup: SelectPopupGeometry, theme: &Theme) -> Rect {
+    let row = select_popup_row_rect(trigger, index, popup, theme);
+    let top = popup.up.map_or(popup.menu.y, |button| button.y + button.h);
+    let bottom = popup.down.map_or(popup.menu.y + popup.menu.h, |button| button.y);
+    let y = row.y.max(top);
+    let edge = (row.y + row.h).min(bottom);
+    Rect::new(row.x.max(popup.menu.x), y, (row.x + row.w).min(popup.menu.x + popup.menu.w).max(row.x.max(popup.menu.x)) - row.x.max(popup.menu.x), (edge - y).max(0.0))
+}
+
+pub(crate) fn select_scroll_direction_at(popup: SelectPopupGeometry, x: f32, y: f32) -> Option<f32> {
+    if popup.up.is_some_and(|rect| rect.contains(x, y)) {
+        return Some(-1.0);
+    }
+    popup.down.filter(|rect| rect.contains(x, y)).map(|_| 1.0)
+}
 //#endregion 🔼️ScrollSlots
 
 /// 📐️ One popup row's `(x, y, w, h)` relative to the trigger's own top-left, given the popup top
@@ -328,19 +384,35 @@ pub(crate) fn select_moved_index(active: Option<usize>, len: usize, movement: Se
 /// `ß`, `×`, `÷`, `Ð`, `Þ`) map to themselves, exactly as NFKD leaves them.
 const LATIN1_BASE: &str = "AAAAAAÆCEEEEIIIIÐNOOOOO×ØUUUUYÞßaaaaaaæceeeeiiiiðnooooo÷øuuuuyþy";
 
-/// 🔤️ React's `normalizeSelectText` (`🟦️.tsx:194-200`): case-folded, whitespace-collapsed, combining
-/// marks dropped. Full NFKD would need a Unicode table this crate deliberately does not depend on,
-/// so this drops already-decomposed marks (`U+0300..=U+036F`) and folds the precomposed Latin-1
-/// letters through [`LATIN1_BASE`]; anything outside those two cases compares as itself, which is
-/// also what NFKD does for it.
-pub(crate) fn normalize_select_text(value: &str) -> String {
+fn is_normalization_mark(value: char) -> bool {
+    matches!(value, '\u{0300}'..='\u{036f}' | '\u{0483}'..='\u{0489}' | '\u{1ab0}'..='\u{1aff}' | '\u{1dc0}'..='\u{1dff}' | '\u{20d0}'..='\u{20f0}' | '\u{fe20}'..='\u{fe2f}')
+}
+
+fn push_nfkd_base(value: char, out: &mut String) {
+    match value {
+        '\u{ff01}'..='\u{ff5e}' => out.extend(char::from_u32(value as u32 - 0xfee0).expect("fullwidth ASCII maps into ASCII").to_lowercase()),
+        '\u{fb00}' => out.push_str("ff"),
+        '\u{fb01}' => out.push_str("fi"),
+        '\u{fb02}' => out.push_str("fl"),
+        '\u{fb03}' => out.push_str("ffi"),
+        '\u{fb04}' => out.push_str("ffl"),
+        '\u{fb05}' | '\u{fb06}' => out.push_str("st"),
+        _ => out.extend((value as u32).checked_sub(0xc0).filter(|_| value <= '\u{00ff}').and_then(|index| LATIN1_BASE.chars().nth(index as usize)).unwrap_or(value).to_lowercase()),
+    }
+}
+
+/// 🔤️ The shared bounded normalization owner for Select typeahead and the shell palettes. It
+/// projects the shipped EN/DE NFKD repertoire, strips Unicode mark ranges, folds case, optionally
+/// collapses whitespace, and applies the consumer's scalar limit. The neutral ShellSearch fixture
+/// pins precomposed/decomposed German, fullwidth compatibility forms and presentation ligatures.
+pub fn normalize_nfkd_text(value: &str, collapse_whitespace: bool, limit: usize) -> String {
     let mut out = String::with_capacity(value.len());
     let mut pending_space = false;
-    for char in value.chars() {
-        if matches!(char, '\u{0300}'..='\u{036f}') {
+    for value in value.chars() {
+        if is_normalization_mark(value) {
             continue;
         }
-        if char.is_whitespace() {
+        if collapse_whitespace && value.is_whitespace() {
             pending_space = !out.is_empty();
             continue;
         }
@@ -348,10 +420,14 @@ pub(crate) fn normalize_select_text(value: &str) -> String {
             out.push(' ');
             pending_space = false;
         }
-        let folded = (char as u32).checked_sub(0xC0).filter(|_| char <= '\u{00ff}').and_then(|index| LATIN1_BASE.chars().nth(index as usize)).unwrap_or(char);
-        out.extend(folded.to_lowercase());
+        push_nfkd_base(value, &mut out);
     }
-    out
+    out.trim().chars().take(limit).collect()
+}
+
+/// 🔤️ React's `normalizeSelectText` (`🟦️.tsx:194-200`).
+pub(crate) fn normalize_select_text(value: &str) -> String {
+    normalize_nfkd_text(value, true, usize::MAX)
 }
 
 /// 🔤️ The first row at or after the one following `active` whose label starts with `query` — the
@@ -419,10 +495,6 @@ pub(crate) fn render_select<E: Clone, T: SelectItemView>(id: &str, value: &str, 
 /// scroll buttons — comes from `🔖️Geometry` above, shared with the retained path.
 pub(crate) fn render_select_menu<E: Clone, T: SelectItemView>(id: &str, value: &str, items: &[T], bounds: Rect, ctx: &mut WidgetContext<'_, E>) {
     let viewport_h = ctx.viewport_height;
-    let menu_h = select_menu_painted_height(items.len(), ctx.theme, bounds.y, bounds.h, viewport_h);
-    let menu_top = select_menu_top(bounds.y, bounds.h, select_menu_height(items.len(), ctx.theme), viewport_h);
-    let menu = Rect::new(bounds.x, bounds.y + menu_top, bounds.w, menu_h);
-    let scrolls = select_visible_rows(items.len(), ctx.theme, menu_h) < items.len();
     let inset = ctx.theme.padding_standard;
     let font_size = ctx.theme.font_size_body;
     // 🔼️ Resolve this frame's scroll offset BEFORE anything paints: take whatever direction the
@@ -432,19 +504,18 @@ pub(crate) fn render_select_menu<E: Clone, T: SelectItemView>(id: &str, value: &
     let pending = ctx.scroll_offsets.remove(&select_scroll_pending_key(id)).unwrap_or(0.0);
     let scroll_key = select_scroll_key(id);
     let stored = ctx.scroll_offsets.get(&scroll_key).copied().unwrap_or(0.0);
-    let scroll = select_scrolled_offset(items.len(), ctx.theme, menu_h, stored, pending);
-    if scroll == 0.0 {
+    let popup = select_popup_geometry(bounds, items.len(), ctx.theme, viewport_h, stored, pending);
+    if popup.scroll == 0.0 {
         ctx.scroll_offsets.remove(&scroll_key);
     } else {
-        ctx.scroll_offsets.insert(scroll_key, scroll);
+        ctx.scroll_offsets.insert(scroll_key, popup.scroll);
     }
-    let (first_row, last_row) = select_scrolled_row_window(items.len(), ctx.theme, menu_h, scroll);
     let mut render_rows = |draw: &mut crate::wgpu::draw::DrawList| {
-        draw.push_glass([menu.x, menu.y, menu.w, menu.h], ctx.theme.border_radius, ctx.theme.glass(Level::Menu));
-        draw.push_scissor(menu);
-        for (index, item) in items.iter().enumerate().take(last_row).skip(first_row) {
-            let relative = select_row_rect(bounds.w, index, menu_top, ctx.theme);
-            let row = Rect::new(bounds.x + relative.x, bounds.y + relative.y - scroll, relative.w, relative.h);
+        let glass = draw.push_glass([popup.menu.x, popup.menu.y, popup.menu.w, popup.menu.h], ctx.theme.border_radius, ctx.theme.glass(Level::Menu));
+        draw.begin_glass_content(glass);
+        draw.push_scissor(popup.menu);
+        for (index, item) in items.iter().enumerate().take(popup.last_row).skip(popup.first_row) {
+            let row = select_popup_row_rect(bounds, index, popup, ctx.theme);
             let row_hovered = ctx.input.hit_at(ctx.input.pointer_x, ctx.input.pointer_y).and_then(|h| h.control_id.as_deref()) == Some(&format!("{id}.item.{}", item.value()));
             if row_hovered || item.value() == value {
                 draw.push_rounded([row.x, row.y, row.w, row.h], ctx.theme.row_hover, ctx.theme.border_radius);
@@ -455,12 +526,9 @@ pub(crate) fn render_select_menu<E: Clone, T: SelectItemView>(id: &str, value: &
         draw.pop_scissor();
         // 🔼️ The chevrons paint and register LAST so their bands win the hit resolve (`HitRegistry`
         // resolves the most recently registered target first) over the rows they sit on top of.
-        if scrolls {
-            let button_h = select_scroll_button_height(ctx.theme);
+        if let (Some(up), Some(down)) = (popup.up, popup.down) {
             let chevron = crate::wgpu::chrome::SIZE_TINY;
-            let center_x = menu.x + (menu.w - chevron) * 0.5;
-            let up = Rect::new(menu.x, menu.y, menu.w, button_h);
-            let down = Rect::new(menu.x, menu.y + menu.h - button_h, menu.w, button_h);
+            let center_x = popup.menu.x + (popup.menu.w - chevron) * 0.5;
             if let Some(icons) = ctx.icons {
                 crate::wgpu::chrome::push_icon(draw, icons, "chevron-up", center_x, up.y + inset, chevron, ctx.theme.text_muted);
                 crate::wgpu::chrome::push_icon(draw, icons, "chevron-down", center_x, down.y + inset, chevron, ctx.theme.text_muted);
@@ -468,6 +536,7 @@ pub(crate) fn render_select_menu<E: Clone, T: SelectItemView>(id: &str, value: &
             ctx.input.register_hit(HitTarget { rect: up, event: None, control_id: Some(select_scroll_control_id(id, true)), kind: HitKind::DropdownItem, drag_axis: None, drag_data: None });
             ctx.input.register_hit(HitTarget { rect: down, event: None, control_id: Some(select_scroll_control_id(id, false)), kind: HitKind::DropdownItem, drag_axis: None, drag_data: None });
         }
+        draw.end_glass_content();
     };
     if let Some(overlay) = ctx.overlay.as_deref_mut() {
         render_rows(overlay);
@@ -482,6 +551,15 @@ pub(crate) fn render_select_menu<E: Clone, T: SelectItemView>(id: &str, value: &
 pub fn arm_select_scroll(scroll_offsets: &mut std::collections::HashMap<String, f32>, control_id: &str) -> bool {
     let Some((id, direction)) = select_scroll_control_parts(control_id) else { return false };
     scroll_offsets.insert(select_scroll_pending_key(id), direction);
+    true
+}
+
+pub(crate) fn arm_retained_select_scroll_at(tree: &mut crate::wgpu::tree::UiTree, id: crate::wgpu::arena::NodeId, x: f32, y: f32) -> bool {
+    let direction = tree.node(id).and_then(|node| node.state.select_popup).and_then(|popup| select_scroll_direction_at(popup, x, y));
+    let Some(direction) = direction else { return false };
+    let Some(node) = tree.node_mut(id) else { return false };
+    node.state.scroll_offset.0 = direction;
+    tree.mark_dirty(id, crate::wgpu::tree::NodeFlags::DIRTY_PAINT);
     true
 }
 

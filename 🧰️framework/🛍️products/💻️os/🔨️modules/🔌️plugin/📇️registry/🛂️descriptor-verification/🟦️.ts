@@ -69,13 +69,12 @@ export function auditInteractiveJobClassificationDrift(pluginId: string, ownerRo
   const drift: string[] = [];
   const manifest = descriptor.manifest as { apps?: readonly Record<string, any>[] } | undefined;
   for (const app of manifest?.apps ?? []) {
-    for (const windowKind of (app.windowKinds ?? []) as readonly Record<string, any>[]) {
-      for (const action of (windowKind.actions ?? []) as readonly Record<string, any>[]) {
-        const committed = action.semantics?.execution?.interactiveJob as string | undefined;
-        if (!committed || committed === "unclassified") continue;
-        const source = declared.get(String(action.id));
-        if (source && !source.has(committed)) drift.push(`${pluginId}: ${app.id}#${action.id} is committed as ${JSON.stringify(committed)} but its Rust declares ${[...source].sort().map((value) => JSON.stringify(value)).join(", ")} — re-run \`describe\` for this owner`);
-      }
+    const rows = [...((app.actions ?? []) as readonly Record<string, any>[]), ...((app.windowKinds ?? []) as readonly Record<string, any>[]).flatMap((windowKind) => (windowKind.actions ?? []) as readonly Record<string, any>[])];
+    for (const action of rows) {
+      const committed = action.semantics?.execution?.interactiveJob as string | undefined;
+      if (!committed || committed === "unclassified") continue;
+      const source = declared.get(String(action.id));
+      if (source && !source.has(committed)) drift.push(`${pluginId}: ${app.id}#${action.id} is committed as ${JSON.stringify(committed)} but its Rust declares ${[...source].sort().map((value) => JSON.stringify(value)).join(", ")} — re-run \`describe\` for this owner`);
     }
   }
   return drift;

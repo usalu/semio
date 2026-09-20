@@ -1,5 +1,4 @@
 {
-  "ChangeRetrofitGammaEl": {
-    "newRetrofitGammaEl": 1.25
-  }
+  "mutation": "changeRetrofitGammaEl",
+  "newRetrofitGammaEl": 1.25
 }

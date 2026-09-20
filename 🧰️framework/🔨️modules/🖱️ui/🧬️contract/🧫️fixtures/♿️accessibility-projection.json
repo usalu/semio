@@ -126,7 +126,7 @@
   "expected": [
     { "nodeId": 0, "key": "#root", "depth": 0, "role": "region", "label": "Generation parameters", "description": null, "live": "off", "shortcut": null, "hidden": false, "disabled": false, "focusable": false, "actionable": false },
     { "nodeId": 1, "key": "#field", "depth": 1, "role": "group", "label": null, "description": null, "live": "off", "shortcut": null, "hidden": false, "disabled": false, "focusable": false, "actionable": false },
-    { "nodeId": 2, "key": "#width", "depth": 2, "role": "spinbutton", "label": "Width", "description": "Millimetres along X", "live": "off", "shortcut": "Alt+W", "hidden": false, "disabled": false, "focusable": true, "actionable": true },
+    { "nodeId": 2, "key": "#width", "depth": 2, "role": "spinbutton", "label": "Width", "description": "Millimetres along X", "live": "off", "shortcut": "Alt+W", "hidden": false, "disabled": false, "focusable": true, "actionable": true, "valueNow": 12, "valueText": "12" },
     { "nodeId": 3, "key": "#ornament", "depth": 1, "role": "img", "label": null, "description": null, "live": "off", "shortcut": null, "hidden": true, "disabled": false, "focusable": false, "actionable": false },
     { "nodeId": 4, "key": "#status", "depth": 1, "role": "paragraph", "label": "Evaluation status", "description": null, "live": "polite", "shortcut": null, "hidden": false, "disabled": false, "focusable": false, "actionable": false },
     { "nodeId": 5, "key": "#card", "depth": 1, "role": "button", "label": "Open generation", "description": null, "live": "off", "shortcut": null, "hidden": false, "disabled": true, "focusable": true, "actionable": true },

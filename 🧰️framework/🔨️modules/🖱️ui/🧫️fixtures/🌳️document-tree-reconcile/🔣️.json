@@ -328,6 +328,60 @@
       ]
     }
   },
+  "actionScope": {
+    "documentController": "s.puzzle.puzzle3d@1/*#editor",
+    "bindingController": "framework",
+    "selectRecord": {
+      "id": 8,
+      "key": "framework.settings.general.locale",
+      "component": {
+        "type": "select",
+        "value": "en",
+        "items": [
+          {
+            "value": "en",
+            "label": "English"
+          },
+          {
+            "value": "de",
+            "label": "Deutsch"
+          }
+        ]
+      },
+      "layout": {
+        "kind": "leaf",
+        "width": "fill",
+        "height": "hug"
+      },
+      "style": {},
+      "activity": "idle",
+      "accessibility": {},
+      "bindings": [
+        {
+          "trigger": "change",
+          "action": {
+            "scope": "framework",
+            "name": "setLocale",
+            "version": 1
+          },
+          "args": {
+            "windowId": "framework.settings.general"
+          }
+        }
+      ],
+      "children": []
+    },
+    "chosenItem": "de",
+    "expectedAction": {
+      "controllerId": "framework",
+      "action": "setLocale",
+      "args": {
+        "windowId": "framework.settings.general",
+        "value": "de"
+      }
+    },
+    "reactTwin": "uiIntentToActionDescriptor"
+  },
   "ingressGeneration": {
     "rule": "A surface's document is admitted by its ingress generation alone: `document_status` answers Published while it equals the published one, and `begin_document` refuses StaleGeneration unless it is strictly greater. A producer therefore mints one counter per surface, held still while that surface's own revision holds still.",
     "cases": [

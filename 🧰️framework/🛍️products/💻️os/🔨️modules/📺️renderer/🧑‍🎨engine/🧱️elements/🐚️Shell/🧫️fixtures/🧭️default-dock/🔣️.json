@@ -1,5 +1,5 @@
 {
-  "$comment": "🧭️ The default dock skeleton both renderers must compute from the same sources: React's 🧭️DockAssembly (🏛️ShellHost/🟦️.tsx) and wgpu's ShellState::default_dock (🐚️Shell/🎯️targets/🧊️wgpu/🦀️.rs). `app` declares the panel tabs the fixture app contributes, one per PanelGroup, and `expected` is dock_skeleton_of(default_dock) for exactly that app with one sync backbone attached and the four os command categories resolvable. `trees` is React's PanelTreeUnit id list (🧭️PanelTabBar/🟦️.tsx's panelTabNodeToSkeleton): every leaf carries the single `<leafId>.tree` unit singleTreeLeaf mints, and a branch carries none.",
+  "$comment": "🧭️ The default dock skeleton both renderers must compute from the same sources: React's 🧭️DockAssembly (🏛️ShellHost/🟦️.tsx) and wgpu's ShellState::default_dock (🐚️Shell/🎯️targets/🧊️wgpu/🦀️.rs). `app` declares the panel tabs the fixture app contributes, one per PanelGroup, and `expected` is dock_skeleton_of(default_dock) for exactly that app with one sync backbone attached and the five os command categories resolvable. `trees` is React's PanelTreeUnit id list (🧭️PanelTabBar/🟦️.tsx's panelTabNodeToSkeleton): every leaf carries the single `<leafId>.tree` unit singleTreeLeaf mints, and a branch carries none.",
   "app": {
     "id": "fixture-app",
     "panelTabs": [
@@ -43,6 +43,7 @@
           ]
         },
         { "id": "framework.marketplace", "trees": ["framework.marketplace.tree"] },
+        { "id": "os.task-manager", "trees": ["os.task-manager.tree"] },
         { "id": "framework.panel.history", "trees": ["framework.panel.history.tree"] }
       ],
       "bottom-middle": [
@@ -52,7 +53,8 @@
             { "id": "command.category.window", "trees": ["command.category.window.tree"] },
             { "id": "command.category.appearance", "trees": ["command.category.appearance.tree"] },
             { "id": "command.category.layout", "trees": ["command.category.layout.tree"] },
-            { "id": "command.category.language", "trees": ["command.category.language.tree"] }
+            { "id": "command.category.language", "trees": ["command.category.language.tree"] },
+            { "id": "command.category.general", "trees": ["command.category.general.tree"] }
           ]
         }
       ],
@@ -72,7 +74,7 @@
   },
   "mobilePanelTabs": {
     "$comment": "📱️ React's mobilePanelTabs flattens every anchor's ROOT tabs in anchorOrder, then appends the synthetic framework.mobile.app leaf when the navbar's example/mode/role clusters have no room. This fixture app declares neither an example nor a second mode, so that leaf is absent.",
-    "ids": ["fixture.workbench", "fixture.details", "framework.chat", "framework.settings", "framework.marketplace", "framework.panel.history", "framework.category.command", "framework.category.display", "fixture.display", "s-sync-status"]
+    "ids": ["fixture.workbench", "fixture.details", "framework.chat", "framework.settings", "framework.marketplace", "os.task-manager", "framework.panel.history", "framework.category.command", "framework.category.display", "fixture.display", "s-sync-status"]
   },
   "chromeBands": {
     "$comment": "🧭️ Which SIDE of the navbar and footer each chrome-hosted anchor's folded root tab row occupies, and in which direction it reads. React's navbarItems (🏛️ShellHost/🟦️.tsx:10087-10100) open with top-left at the leading edge, then a fill, then top-right, then the ms-auto Fullscreen cluster; footerItems (:10613-10635) run bottom-left leading, bottom-middle `centered: true`, a fill, the presence pill, then bottom-right at the trailing edge. Every band reads left-to-right in the anchor's own declared tab order. `top-middle` is the one declared divergence: React carries it inside the centred logo/example/mode/role group, which this renderer still left-packs, so it heads the trailing band here — unobservable while the default dock leaves that anchor empty.",

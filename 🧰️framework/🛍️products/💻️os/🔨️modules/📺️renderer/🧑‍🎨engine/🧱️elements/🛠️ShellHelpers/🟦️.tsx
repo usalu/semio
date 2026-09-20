@@ -168,6 +168,7 @@ import React, {
     useState
 } from "react";
 import { hopTrace } from "../../../../../../../🔨️modules/⏱️trace/🟦️.ts";
+import type { SelectionMode } from "../../../../../../../🔨️modules/🛂️manifest/🟦️.ts";
 import { type ContinuationCancel, type ContinuationScheduler, hostContinuations } from "../../../../../../../🔨️modules/⏳️async/🪃️continuation/🟦️.ts";
 import { IMPORT_CHUNK_BYTES, type ImportChunk, importChunkArguments, importPayloadChunks, mediaExportBytes, mergeUiDirtyScopes, uiDirtyScopeWantsCatalogue, uiDirtyScopeWantsPanelBody, uiDirtyScopeWantsSection, uiDirtyScopeWantsWindowBody, type UiDirtySection } from "../../../../../../../🔨️modules/🎠️kernel/🟦️.ts";
 import { wireMediaExportEncoding } from "../../../../../../../🔨️modules/🎭️actor/🖼️wire-turn/🟦️.ts";
@@ -349,9 +350,16 @@ export type UndeclaredActionDiagnostic = {
  * palette entry or a keybinding may dispatch a window-owned action from anywhere) or when it is one of the
  * framework's own reserved verbs. Pure, so the message is testable without a session
  * (ticket 26/09/09/PROCEDURAL-3D-END-TO-END). */
-export function undeclaredActionDiagnostic(appId: string, action: string, windowKinds: readonly WindowKindActionDeclaration[], windowKindId?: string | null): UndeclaredActionDiagnostic | null {
+export function undeclaredActionDiagnostic(
+  appId: string,
+  action: string,
+  windowKinds: readonly WindowKindActionDeclaration[],
+  windowKindId?: string | null,
+  appActions: readonly { readonly id: string }[] = [],
+): UndeclaredActionDiagnostic | null {
   if (FRAMEWORK_RESERVED_ACTION_IDS.has(action)) return null;
   if (windowKinds.some((kind) => (kind.actions ?? []).some((entry) => entry.id === action))) return null;
+  if (appActions.some((entry) => entry.id === action)) return null;
   const windowKindIds = windowKinds.map((kind) => kind.id);
   const from = windowKindId ? ` dispatched from window kind "${windowKindId}"` : "";
   return {
@@ -400,8 +408,8 @@ export function isShellOwnedCommandId(commandId: string): boolean {
 export const SET_ACTIVE_EXAMPLE_ACTION_ID = "setActiveExample";
 
 /** 📚️ Whether an app can switch its document to an example at all — only then may the shell offer its examples or announce a boot example. */
-export function appSwitchesExamples(appId: string, windowKinds: readonly WindowKindActionDeclaration[]): boolean {
-  return undeclaredActionDiagnostic(appId, SET_ACTIVE_EXAMPLE_ACTION_ID, windowKinds) === null;
+export function appSwitchesExamples(appId: string, windowKinds: readonly WindowKindActionDeclaration[], appActions: readonly { readonly id: string }[] = []): boolean {
+  return undeclaredActionDiagnostic(appId, SET_ACTIVE_EXAMPLE_ACTION_ID, windowKinds, null, appActions) === null;
 }
 
 /** 🎨️ Builds the `setActiveExample` descriptor the navbar example picker dispatches through the standard
@@ -448,7 +456,9 @@ export type LeftoverInteractionViewV1 = {
   readonly gumballAnchorId: string | null;
   readonly selection: Readonly<Record<string, { readonly granularity: string; readonly ids: readonly string[]; readonly anchorId?: string }>>;
   readonly hover: Readonly<Record<string, { readonly channel: string; readonly ids: readonly string[] }>>;
-  readonly activeMode: Readonly<Record<string, string>>;
+  /** 🧭️ `SelectionMode`, not `string`: this view is built from — and handed straight back to — the
+   * shell's own `InteractionState`, whose `activeMode` the interaction module declares as that union. */
+  readonly activeMode: Readonly<Record<string, SelectionMode>>;
   readonly activeGranularity: Readonly<Record<string, string>>;
   readonly activeUtility?: string | null;
   /** 🪟️ The window INSTANCE the action that produced this leftover addressed, straight from the
@@ -457,6 +467,14 @@ export type LeftoverInteractionViewV1 = {
   readonly windowId: string | null;
   readonly selectionCleared?: boolean;
 };
+
+/** 🧭️ The guest encodes `activeMode` as free text; only the two the interaction module declares are a
+ * `SelectionMode`, and anything else is dropped rather than smuggled into the shell's own state. */
+function leftoverSelectionModeRecord(value: unknown): Record<string, SelectionMode> {
+  const isSelectionMode = (mode: unknown): mode is SelectionMode => mode === "single" || mode === "multiple";
+  if (!value || typeof value !== "object" || Array.isArray(value)) return {};
+  return Object.fromEntries(Object.entries(value as Record<string, unknown>).filter((entry): entry is [string, SelectionMode] => isSelectionMode(entry[1])));
+}
 
 function leftoverStringRecord(value: unknown): Record<string, string> {
   if (!value || typeof value !== "object" || Array.isArray(value)) return {};
@@ -519,7 +537,7 @@ export function interactionViewFromLeftoverOutput(output: unknown): LeftoverInte
     windowId: typeof view.windowId === "string" && view.windowId.length > 0 ? view.windowId : null,
     selection: leftoverSelectionRecord(view.selection),
     hover: leftoverHoverRecord(view.hover),
-    activeMode: leftoverStringRecord(view.activeMode),
+    activeMode: leftoverSelectionModeRecord(view.activeMode),
     activeGranularity: leftoverStringRecord(view.activeGranularity),
     ...(typeof view.activeUtility === "string" ? { activeUtility: view.activeUtility } : {}),
     ...(view.selectionCleared === true ? { selectionCleared: true } : {}),
@@ -685,7 +703,9 @@ export function downloadMediaExport(filename: string, mimeType: string, data: st
 /** @emoji 📥️ Host delivery of already-assembled bytes — the blob-and-anchor half of {@link downloadMediaExport}, reached by the segmented lane once its chunks are drained. */
 export function downloadMediaExportBytes(filename: string, mimeType: string, bytes: Uint8Array): void {
   if (typeof document === "undefined") return;
-  const blob = new Blob([bytes], { type: mimeType });
+  // 🧭️ `slice()` because a `Uint8Array` may be backed by a `SharedArrayBuffer`, which is not a
+  // `BlobPart`; it answers a fresh `Uint8Array<ArrayBuffer>`, and `Blob` copies its parts anyway.
+  const blob = new Blob([bytes.slice()], { type: mimeType });
   const url = URL.createObjectURL(blob);
   const anchor = document.createElement("a");
   anchor.href = url;
@@ -4119,11 +4139,16 @@ export function chordUsesCanonicalKeyTokens(chord: string): boolean {
 export function keyboardEventMatchesChord(event: KeyboardEventLike, chord: string): boolean {
   const parts = chord.split("+").map((part) => part.trim());
   const key = parts[parts.length - 1] ?? "";
-  const needsCtrl = parts.includes("ctrl") || parts.includes("meta") || parts.includes("mod");
+  const needsMod = parts.includes("mod");
+  const needsCtrl = parts.includes("ctrl") || parts.includes("control");
+  const needsMeta = parts.includes("meta");
   const needsShift = parts.includes("shift");
   const needsAlt = parts.includes("alt");
-  const hasCtrl = event.ctrlKey || event.metaKey;
-  if (needsCtrl !== hasCtrl) return false;
+  if (needsMod && !needsCtrl && !needsMeta) {
+    if (event.ctrlKey === event.metaKey) return false;
+  } else if (event.ctrlKey !== needsCtrl || event.metaKey !== needsMeta) {
+    return false;
+  }
   if (needsShift !== event.shiftKey) return false;
   if (needsAlt !== event.altKey) return false;
   return event.key.toLowerCase() === key.toLowerCase();
@@ -4323,9 +4348,24 @@ export type WindowActionPaneProps = {
 export function WindowActionPane(props: WindowActionPaneProps): ReactElement {
   const { windowId, controllerId, actions, expandedActionId, stagedArgsByKey, disabled, onExpandedChange, onStageArg, onResetArgs, onExecute, appLabelsOverlay } = props;
   const sections = buildActionCategoryTree(windowId, controllerId, actions, expandedActionId, stagedArgsByKey, disabled, onExpandedChange, onStageArg, onResetArgs, onExecute, appLabelsOverlay);
+  // 📜️ The rail is its OWN scroll container, not a block that grows past the pane.
+  //
+  // `Tree` clips itself (`data-slot="tree"` carries `overflow-hidden`), so a rail taller than the pane
+  // hid its own last rows instead of handing them to the pane body's scroller: measured on generation3d
+  // at 1600×1000 with 32 rows and the app panels raised, `[data-slot="tree"]` rendered 960 px tall inside
+  // a 901 px pane body and the expanded `addWidget` form's `kind` combobox sat at y=1038, below the
+  // 1000 px viewport — `click` timed out in the shared bar probe and the verb dispatched with no staged
+  // argument (ticket 26/09/18, B3c §4.3's reproduction, re-measured by FL1 in `🗑️generated/fl1-*-rail-*.txt`).
+  // `min-h-0 flex-1` lets the pane body shrink this box to the band it actually has, and `overflow-y-auto`
+  // makes the rows past that band reachable — by wheel, by keyboard focus, and by a probe's
+  // `scrollIntoViewIfNeeded`. `shrink-0` on the tree is the other half and not optional: as a flex item the
+  // tree would otherwise be shrunk to the band too and clip the very rows this is trying to reach (measured
+  // in between: pane 862, tree offsetHeight 862 with scrollHeight 960, nothing scrollable anywhere).
+  // A pane whose body has no definite height is unchanged: `flex-1` has nothing to shrink against and the
+  // rail renders exactly as before.
   return (
-    <div data-slot="window-action-pane" className="flex min-w-0 flex-col">
-      <Tree sections={sections} showLines={false} sortableSections={false} />
+    <div data-slot="window-action-pane" className="flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto overscroll-contain">
+      <Tree className="shrink-0" sections={sections} showLines={false} sortableSections={false} />
     </div>
   );
 }

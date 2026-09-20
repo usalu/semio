@@ -1136,6 +1136,33 @@ impl<P: GraphPortModel, D: Directedness> GraphEngine<P, D> {
         cancelled
     }
 
+    pub fn pointer_cancel_screen(&mut self) -> bool {
+        let interaction = std::mem::replace(&mut self.interaction, InteractionMode::Idle);
+        let cancelled = !matches!(interaction, InteractionMode::Idle);
+        match interaction {
+            InteractionMode::DragNode { .. } | InteractionMode::DragNodes { .. } => {
+                for (id, start) in &self.drag_start_positions {
+                    if let Some(node) = self.nodes.get_mut(id) {
+                        node.center = *start;
+                    }
+                }
+            }
+            InteractionMode::SelectionPending { .. } | InteractionMode::AreaSelect { .. } => {
+                self.selection = self.area_initial.clone();
+            }
+            InteractionMode::DrawEdge { .. } | InteractionMode::Pan { .. } | InteractionMode::Idle => {}
+        }
+        self.proximity_connection = None;
+        self.drag_start_positions.clear();
+        self.clear_preselect();
+        self.area_points.clear();
+        self.area_screen_points.clear();
+        self.selection_preview_points.clear();
+        self.selection_preview_crossing = false;
+        self.events.clear();
+        cancelled
+    }
+
     pub fn select_all(&mut self) {
         self.selection = Selection::default();
         if self.selection_options.select_nodes {

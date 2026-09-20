@@ -13,9 +13,65 @@
 //! from E1's own placeholder.
 
 use semio_framework::{
-    io, kernel, AppDefinition, ComposerEntryDescriptor, ContributedInferenceMetadata, ContributionSet, ExecutionProtocol, FileTypeContribution, IoEntryDescriptor, IoEntryDirection, PackageDescriptor, PackageHashes, PackageRole, PanelTabDefinition,
-    PluginManifest,
+    io, kernel, AppDefinition, AssetDeclaration, ComposerEntryDescriptor, ContributedInferenceMetadata, ContributionSet, ExecutionProtocol, FileTypeContribution, IoEntryDescriptor, IoEntryDirection, MediaClass, MediaForm, MediaType, PackageDescriptor,
+    PackageHashes, PackageRole, PanelTabDefinition, PluginManifest,
 };
+
+/// 📚️ The largest example document body a descriptor still carries inline.
+///
+/// A descriptor is a catalog document bounded at 4 MiB
+/// (`DOCUMENT_EXECUTION_TARGET_DESCRIPTOR_MAX_BYTES`, `📇️directory/🧬️schema/🦀️.rs`), and
+/// `ExampleDefinition.artifact_json` is the one field inside it that is unbounded by construction:
+/// it is a whole authored document. Measured over all 46 committed descriptors on 2026-09-20
+/// (`🎫️…/🗑️generated/ex1-example-body-census.txt`), the largest legitimate inline body is
+/// `🌍️gis`'s 118 153 B, while `🧩️puzzle`'s `capsule-dream` is **3 577 295 B — 84.9 % of that
+/// descriptor**, and is the sole reason `🧩️puzzle` is the one package in the tree over the bound.
+/// 256 KiB sits 2.2× above the largest real inline body and 14× below the one that breaks the
+/// bound, so it separates the two populations that exist rather than splitting either of them.
+/// A body above it travels as a referenced [`AssetDeclaration`] instead — name, media type, exact
+/// size and SHA-256 of the body it replaces.
+pub const DESCRIPTOR_INLINE_EXAMPLE_MAX_BYTES: usize = 256 * 1024;
+
+/// 🏷️ One asset name component: everything outside `[0-9A-Za-z._-]` folds to `-` so a dialect
+/// coordinate (`s.puzzle.5d@1/*`) and an example id yield a single stable path segment.
+fn asset_name_segment(raw: &str) -> String {
+    raw.chars().map(|character| if character.is_ascii_alphanumeric() || character == '.' || character == '_' || character == '-' { character } else { '-' }).collect()
+}
+
+/// 📦️ Moves every example body over [`DESCRIPTOR_INLINE_EXAMPLE_MAX_BYTES`] out of the manifest and
+/// into `assets` as a referenced declaration, leaving the row itself (id, label, icon, dialect)
+/// intact so every picker still resolves it. The declaration's media type is the owning app's own
+/// `AppIo.artifact_media_type` — the example IS a document of that artifact — falling back to a
+/// structured text document when no app in the package claims the example's dialect.
+///
+/// 🐛️ `📓️ds1-stdio-descriptor-bound.md` §9 item 5 / `📓️a3-descriptor-regeneration.md` §3: a
+/// descriptor that inlines whole documents is unbounded by construction, and the first package to
+/// prove it (`🧩️puzzle`) can no longer be described at all. Splitting here — inside the guest's own
+/// `describe`, not in the emitter — is what keeps `descriptor_is_fresh` a byte comparison against
+/// exactly what `describe_plugin()` returns.
+fn externalize_oversized_example_bodies(manifest: &mut PluginManifest, assets: &mut Vec<AssetDeclaration>) {
+    let media_types: Vec<(_, MediaType)> = manifest.apps.iter().map(|app| (app.dialect.clone(), app.io.artifact_media_type)).collect();
+    for example in &mut manifest.examples {
+        if example.artifact_json.len() <= DESCRIPTOR_INLINE_EXAMPLE_MAX_BYTES {
+            continue;
+        }
+        let body = std::mem::take(&mut example.artifact_json);
+        let media_type = media_types.iter().find(|(dialect, _)| *dialect == example.dialect).map_or(MediaType { class: MediaClass::Text, form: MediaForm::Any }, |(_, media_type)| *media_type);
+        let name = format!(
+            "📚️examples/{}.{}.{}/{}.json",
+            asset_name_segment(&example.dialect.artifact_kind),
+            asset_name_segment(&example.dialect.standard),
+            asset_name_segment(&example.dialect.subset),
+            asset_name_segment(&example.id)
+        );
+        let declaration = AssetDeclaration { name, media_type, size_bytes: body.len() as u64, sha256: semio_framework_hash::sha256_hex(body.as_bytes()) };
+        if let Some(existing) = assets.iter().position(|asset| asset.name == declaration.name) {
+            assets[existing] = declaration;
+        } else {
+            assets.push(declaration);
+        }
+    }
+}
 
 /// 🗂️ Whether `artifact_kind` is owned by `plugin_id` — every plugin's own IO `Dialect.artifact_kind`
 /// in the tree is the bare `"s.<plugin_id>"` coordinate (confirmed across every `const DIALECT:
@@ -134,9 +190,11 @@ fn encode_package_descriptor(descriptor: &PackageDescriptor) -> Vec<u8> {
 }
 
 async fn plugin_descriptor<PA: crate::app::PluginApp>(runtime: &crate::plugin_runtime::PluginRuntime<PA>) -> PackageDescriptor {
-    let manifest = crate::plugin_runtime::plugin_manifest(runtime).await;
+    let mut manifest = crate::plugin_runtime::plugin_manifest(runtime).await;
     let extras = crate::plugin_runtime::plugin_descriptor_extras(runtime).await;
     let contributions = plugin_contributions(runtime, &manifest).await;
+    let mut assets = extras.assets;
+    externalize_oversized_example_bodies(&mut manifest, &mut assets);
     PackageDescriptor {
         descriptor_version: 1,
         package_id: extras.package_id,
@@ -149,7 +207,7 @@ async fn plugin_descriptor<PA: crate::app::PluginApp>(runtime: &crate::plugin_ru
         execution_protocol: ExecutionProtocol { app_channel_version: protocol::CHANNEL_VERSION },
         quotas: extras.quotas,
         contributions,
-        assets: extras.assets,
+        assets,
         hashes: PackageHashes { wasm_sha256: String::new(), core_wasm_sha256: String::new(), descriptor_sha256: String::new() },
     }
 }
@@ -265,3 +323,7 @@ pub async fn describe_extension() -> Vec<u8> {
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
+
+#[cfg(test)]
+#[path = "🧪️tests/🔬️example-assets/🦀️.rs"]
+mod example_asset_tests;

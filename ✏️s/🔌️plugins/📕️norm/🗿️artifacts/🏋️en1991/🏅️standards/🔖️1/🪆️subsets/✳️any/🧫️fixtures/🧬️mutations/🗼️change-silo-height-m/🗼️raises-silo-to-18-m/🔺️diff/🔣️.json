@@ -26,7 +26,7 @@
   "hoistClass": null,
   "hoistingSpeedMS": null,
   "siloBulkDensityKnM3": null,
-  "siloHeightM": 18,
+  "siloHeightM": 18.0,
   "siloHydraulicRadiusM": null,
   "siloMu": null,
   "siloK": null,

@@ -212,6 +212,7 @@ pub fn create_en1992_app() -> semio_framework_plugin::AppDefinition {
             .panel_tab_def(catalogue_panel::definition())
             .panel_tab_def(inspection_panel::definition())
             .mutation("setSnapshot", LocalizedLabel::native("Set Snapshot", "Dokument setzen"))
+            .action_destructive("setSnapshot")
             .action_with(semio_framework_plugin::ActionDefinition::new("evaluate", LocalizedLabel::native("Evaluate", "Auswerten"), semio_framework_plugin::ActionKind::View, "hash"))
             .view_action("setSelectedCheckIndex", LocalizedLabel::native("Set Selected Check", "AusgewÃ¤hlte PrÃ¼fung setzen"))
             .action_interactive_job("setSnapshot", InteractiveJobClassification::Migrated)
@@ -234,3 +235,10 @@ pub fn create_en1992_app() -> semio_framework_plugin::AppDefinition {
 pub(crate) mod unit_tests;
 //#endregion ð§ªï¸UnitTests
 
+//#region 🪢️TaxonomyMounts
+#[path = "📚️examples/🎬️demo-session/🦀️.rs"]
+pub mod demo_session;
+#[cfg(test)]
+#[path = "📚️examples/🎬️demo-session/🧪️tests/🧩️example/🦀️.rs"]
+mod example;
+//#endregion 🪢️TaxonomyMounts

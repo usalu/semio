@@ -1,5 +1,4 @@
 {
-  "ChangeRetrofitLimitState": {
-    "newRetrofitLimitState": "near_collapse"
-  }
+  "mutation": "changeRetrofitLimitState",
+  "newRetrofitLimitState": "near_collapse"
 }

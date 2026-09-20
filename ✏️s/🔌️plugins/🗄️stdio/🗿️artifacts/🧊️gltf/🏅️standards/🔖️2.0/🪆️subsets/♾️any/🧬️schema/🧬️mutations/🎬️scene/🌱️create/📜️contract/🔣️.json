@@ -3,10 +3,10 @@
   "vectors": [
     {
       "name": "insertsAtZeroAndRemapsDefaultScene",
-      "base": { "scene": 0, "scenes": [{ "nodes": [] }] },
+      "base": { "scene": 0, "scenes": [{  }] },
       "payload": { "position": 0 },
-      "after": { "scene": 1, "scenes": [{ "nodes": [] }, { "nodes": [] }] },
-      "undo": { "scene": 0, "scenes": [{ "nodes": [] }] },
+      "after": { "scene": 1, "scenes": [{  }, {  }] },
+      "undo": { "scene": 0, "scenes": [{  }] },
       "diff": {
         "id": "s.stdio.gltf.mutation.create-scene.v1",
         "version": 1,
@@ -15,8 +15,8 @@
         "position": 0,
         "expectedSceneCount": 1,
         "expectedDefaultSceneBefore": 0,
-        "expectedScenesBefore": [{ "nodes": [] }],
-        "scene": { "nodes": [] }
+        "expectedScenesBefore": [{  }],
+        "scene": {  }
       },
       "inverse": {
         "id": "s.stdio.gltf.mutation.create-scene.v1",
@@ -25,15 +25,15 @@
         "touchedPaths": ["document/scenes/0", "document/scene"],
         "position": 0,
         "expectedSceneCountAfter": 2,
-        "expectedScene": { "nodes": [] },
-        "expectedScenesAfter": [{ "nodes": [] }, { "nodes": [] }],
+        "expectedScene": {  },
+        "expectedScenesAfter": [{  }, {  }],
         "defaultSceneBefore": 0,
         "expectedDefaultSceneAfter": 1
       },
       "malformedPayload": { "encoded": "{", "code": "gltf.mutation.malformed-payload" },
       "rejections": {
         "outOfRangePosition": { "payload": { "position": 2 }, "code": "gltf.mutation.insert-out-of-range" },
-        "invalidDefaultReference": { "base": { "scene": 1, "scenes": [{ "nodes": [] }] }, "code": "gltf.mutation.reference-out-of-range" },
+        "invalidDefaultReference": { "base": { "scene": 1, "scenes": [{  }] }, "code": "gltf.mutation.reference-out-of-range" },
         "staleDiffReplay": { "code": "gltf.mutation.stale-diff" },
         "staleDefaultScene": { "code": "gltf.mutation.stale-diff" },
         "staleInsertionAnchor": { "scene": { "nodes": [0] }, "code": "gltf.mutation.stale-diff" },
@@ -48,7 +48,7 @@
       "name": "appendsWithoutDefaultScene",
       "base": { "scene": null, "scenes": [{ "nodes": [1] }, { "nodes": [2] }] },
       "payload": { "position": 2 },
-      "after": { "scene": null, "scenes": [{ "nodes": [1] }, { "nodes": [2] }, { "nodes": [] }] },
+      "after": { "scene": null, "scenes": [{ "nodes": [1] }, { "nodes": [2] }, {  }] },
       "undo": { "scene": null, "scenes": [{ "nodes": [1] }, { "nodes": [2] }] },
       "diff": {
         "id": "s.stdio.gltf.mutation.create-scene.v1",
@@ -59,7 +59,7 @@
         "expectedSceneCount": 2,
         "expectedDefaultSceneBefore": null,
         "expectedScenesBefore": [{ "nodes": [1] }, { "nodes": [2] }],
-        "scene": { "nodes": [] }
+        "scene": {  }
       },
       "inverse": {
         "id": "s.stdio.gltf.mutation.create-scene.v1",
@@ -68,8 +68,8 @@
         "touchedPaths": ["document/scenes/2"],
         "position": 2,
         "expectedSceneCountAfter": 3,
-        "expectedScene": { "nodes": [] },
-        "expectedScenesAfter": [{ "nodes": [1] }, { "nodes": [2] }, { "nodes": [] }],
+        "expectedScene": {  },
+        "expectedScenesAfter": [{ "nodes": [1] }, { "nodes": [2] }, {  }],
         "defaultSceneBefore": null,
         "expectedDefaultSceneAfter": null
       },
@@ -80,7 +80,7 @@
       "name": "rejectsDistantSceneStaleness",
       "base": { "scene": 0, "scenes": [{ "nodes": [1] }, { "nodes": [2] }, { "nodes": [3] }] },
       "payload": { "position": 1 },
-      "after": { "scene": 0, "scenes": [{ "nodes": [1] }, { "nodes": [] }, { "nodes": [2] }, { "nodes": [3] }] },
+      "after": { "scene": 0, "scenes": [{ "nodes": [1] }, {  }, { "nodes": [2] }, { "nodes": [3] }] },
       "undo": { "scene": 0, "scenes": [{ "nodes": [1] }, { "nodes": [2] }, { "nodes": [3] }] },
       "diff": {
         "id": "s.stdio.gltf.mutation.create-scene.v1",
@@ -91,7 +91,7 @@
         "expectedSceneCount": 3,
         "expectedDefaultSceneBefore": 0,
         "expectedScenesBefore": [{ "nodes": [1] }, { "nodes": [2] }, { "nodes": [3] }],
-        "scene": { "nodes": [] }
+        "scene": {  }
       },
       "inverse": {
         "id": "s.stdio.gltf.mutation.create-scene.v1",
@@ -100,8 +100,8 @@
         "touchedPaths": ["document/scenes/1"],
         "position": 1,
         "expectedSceneCountAfter": 4,
-        "expectedScene": { "nodes": [] },
-        "expectedScenesAfter": [{ "nodes": [1] }, { "nodes": [] }, { "nodes": [2] }, { "nodes": [3] }],
+        "expectedScene": {  },
+        "expectedScenesAfter": [{ "nodes": [1] }, {  }, { "nodes": [2] }, { "nodes": [3] }],
         "defaultSceneBefore": 0,
         "expectedDefaultSceneAfter": 0
       },

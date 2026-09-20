@@ -31,7 +31,7 @@ async fn set_active_example_empty_then_reuse_round_trips_document() {
 #[semio_framework_async_macros::async_test]
 async fn set_active_example_is_operation_under_registry_kind_discipline() {
     let definition = crate::editor::gis2d::create_gis2d_app();
-    let action = definition.window_kinds.iter().flat_map(|window| window.actions.iter()).find(|action| action.id == "setActiveExample").expect("setActiveExample declared");
+    let action = definition.window_kinds.iter().flat_map(|window| semio_framework::window_kind_actions(&definition, window)).find(|action| action.id == "setActiveExample").expect("setActiveExample declared");
     assert!(matches!(action.kind, semio_framework_plugin::ActionKind::Mutation), "loading an example emits document-mutating operations, so it is a Mutation");
     assert!(!action.args.is_empty(), "the palette stages the example choice via a declared select arg");
 
@@ -63,7 +63,7 @@ async fn the_example_catalogue_resolves_declared_ids_and_faults_on_the_rest() {
 #[semio_framework_async_macros::async_test]
 async fn the_manifest_stages_exactly_the_catalogue_ids() {
     let definition = crate::editor::gis2d::create_gis2d_app();
-    let action = definition.window_kinds.iter().flat_map(|window| window.actions.iter()).find(|action| action.id == "setActiveExample").expect("setActiveExample declared");
+    let action = definition.window_kinds.iter().flat_map(|window| semio_framework::window_kind_actions(&definition, window)).find(|action| action.id == "setActiveExample").expect("setActiveExample declared");
     let arg = action.args.iter().find(|arg| arg.id == "exampleId").expect("the example choice is a declared arg");
     let semio_framework_plugin::ArgSchema::String { options, .. } = &arg.schema else { panic!("exampleId is staged as a string choice: {arg:?}") };
     let staged: Vec<&str> = options.iter().map(|option| option.value.as_str()).collect();

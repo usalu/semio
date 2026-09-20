@@ -127,7 +127,12 @@ async fn carried_short_tag_round_trips() {
 #[semio_framework_async_macros::async_test]
 async fn multi_ifd_round_trip_preserves_every_ifd() {
     let (w, h) = (2u32, 2u32);
-    let rgba = vec![7u8; (w * h * 4) as usize];
+    // 🎨 Opaque raster on purpose: this encoder canonicalizes IFD 0 to chunky 8-bit RGB
+    // (`SamplesPerPixel` 3 — see the module doc and `rgba_to_rgb`), exactly like png's encoder
+    // canonicalizes color type, so alpha is layout the codec regenerates rather than a channel it
+    // stores. A raster whose alpha is anything but 255 could never survive ANY round trip here, and
+    // measuring that instead of the multi-IFD chain is what this case is NOT about.
+    let rgba: Vec<u8> = (0..w * h).flat_map(|_| [7u8, 7, 7, 255]).collect();
     let ifd1 = TiffIfd { pixels: Vec::new(), entries: vec![TiffTag { tag: 270, kind: TiffFieldType::Ascii, values: TiffValues::Ascii("second page".into()) }] };
     let snap = TiffSnapshot { schema: STDIO_TIFF_DOCUMENT_SCHEMA.into(), byte_order: TiffByteOrder::LittleEndian, ifds: vec![ifd0_snapshot(w, h).await, ifd1], pixels: rgba.clone() };
     let encoded = encode_tiff(&snap).expect("encode multi-ifd");
@@ -149,7 +154,9 @@ async fn multi_ifd_round_trip_preserves_every_ifd() {
 #[semio_framework_async_macros::async_test]
 async fn secondary_ifd_raster_and_its_required_strip_tags_survive_the_codec() {
     let (w, h) = (2u32, 2u32);
-    let rgba = vec![7u8; (w * h * 4) as usize];
+    // 🎨 Opaque raster for the same reason as `multi_ifd_round_trip_preserves_every_ifd` above:
+    // IFD 0's raster is canonicalized to chunky RGB, so alpha never round-trips by design.
+    let rgba: Vec<u8> = (0..w * h).flat_map(|_| [7u8, 7, 7, 255]).collect();
     let page2: Vec<u8> = (0u8..12).collect(); // 2x2 chunky RGB = 12 bytes
     let ifd1 = TiffIfd {
         entries: vec![
@@ -362,6 +369,21 @@ mod conformance_laws {
 
         let native = encode_tiff(&demo).expect("encode native tiff");
         assert_eq!(native.as_slice(), include_bytes!("../../../📚️examples/🎬️demo/🖼️assets/🧪️example/🖼️.tiff"), "encode_tiff(demo) drifted from 🖼️example.tiff");
+    }
+
+    /// 🏭️ Regenerates the two shipped demo fixtures from `demo_tiff_snapshot()` with the crate's
+    /// OWN printer/packer (never by hand), the twin of `zzz_write_native_tiff_fixture` below.
+    /// `demo_tiff_snapshot()` is `decode_tiff(encode_tiff(seed))`, so it moves with the codec: the
+    /// committed pair predated the TIFF6 §Baseline `BitsPerSample = [8, 8, 8]` fix (one COUNT entry
+    /// per sample, which also shifts `StripOffsets` by the six bytes that value now takes
+    /// out-of-line), which is exactly the drift `fixture_honesty_law` above reported.
+    #[semio_framework_async_macros::async_test]
+    #[ignore]
+    async fn zzz_write_dsl_and_pack_fixtures() {
+        let demo = demo_tiff_snapshot();
+        let assets = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🏅️standards/🔖️6.0/🪆️subsets/🧾️document/📚️examples/🎬️demo/🖼️assets");
+        std::fs::write(assets.join("🗣️.dsl.semio"), store::ArtifactDsl::print_dsl(&demo)).expect("write 🗣️.dsl.semio");
+        std::fs::write(assets.join("🎒️.pack.semio"), store::ArtifactPack::encode_pack(&demo)).expect("write 🎒️.pack.semio");
     }
 
     #[semio_framework_async_macros::async_test]

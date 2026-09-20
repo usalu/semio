@@ -42,6 +42,8 @@ impl protocol::OpBinary for ImperativeViewCommand {
 pub struct ImperativeViewer;
 
 impl ArtifactViewer for ImperativeViewer {
+    /// 🧩️ The same member roster the editor declares — see `ImperativePlayApp`'s `Members`.
+    type Members = semio_s_artifact_stdio_semio::SemioMembers;
     type Snapshot = ProcedureSnapshot;
     type Mutation = crate::mutations::ProcedureMutation;
     type Config = NoConfig;

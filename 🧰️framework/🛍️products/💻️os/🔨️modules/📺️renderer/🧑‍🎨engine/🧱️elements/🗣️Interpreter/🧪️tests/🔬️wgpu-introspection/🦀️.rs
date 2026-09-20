@@ -54,32 +54,37 @@ fn focus_path_is_recorded_for_the_focused_node() {
     assert_eq!(focus_path, Some("stack[0]#root/text[0]".to_string()));
 }
 
-/// ♿️ LAW: `dumpAccessibility()` with no window named answers EVERY live window, not the largest.
-///
-/// The accessibility dump is this target's production accessibility path, not a diagnostic: the
-/// host mirrors exactly what it answers into the ARIA subtree beside the canvas, so a selection
-/// rule that picks one window makes every other window unreachable to a reader. On generation3d the
-/// "largest viewport" rule announced `procedural-main` alone and dropped `procedural-preview` and
-/// both measure panels — 26 of 64 announced nodes (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
 #[test]
-fn the_accessibility_dump_announces_every_live_window_unless_one_is_named() {
+fn the_accessibility_dump_announces_visible_windows_and_keeps_named_diagnostics() {
+    let law: serde_json::Value = serde_json::from_str(include_str!("../../../../🧫️fixtures/♿️wgpu-accessibility-visibility/🔣️.json")).expect("visibility fixture parses");
     let mut engine = ui_wgpu::wgpu::Ui::new();
-    engine.set_viewport("procedural-main", 975.0, 814.0);
-    engine.set_viewport("procedural-preview", 459.0, 814.0);
-    engine.set_viewport("procedural-main/framework.section.measures", 300.0, 807.0);
+    for window_id in law["liveWindows"].as_array().expect("live windows") {
+        engine.set_viewport(window_id.as_str().expect("window id"), 400.0, 300.0);
+    }
+    begin_accessibility_visible_documents();
+    for window_id in law["visibleWindows"].as_array().expect("visible windows") {
+        note_accessibility_visible_document(window_id.as_str().expect("visible window id"));
+    }
+    publish_accessibility_visible_documents();
+    note_chrome_accessibility(vec![serde_json::from_value(serde_json::json!({ "nodeId": 1, "key": "shell", "role": "button", "depth": 0, "live": "off" })).expect("chrome accessibility row")]);
 
     let all = build_accessibility_dump(&engine, None);
-    let announced: std::collections::BTreeSet<&str> = all.windows.iter().map(|window| window.window_id.as_str()).collect();
-    assert_eq!(announced, ["procedural-main", "procedural-main/framework.section.measures", "procedural-preview"].into_iter().collect::<std::collections::BTreeSet<_>>(), "an unnamed dump announces every live window");
+    let announced: Vec<_> = all.windows.iter().map(|window| window.window_id.as_str()).collect();
+    assert_eq!(announced, law["unnamedPublished"].as_array().unwrap().iter().map(|id| id.as_str().unwrap()).collect::<Vec<_>>(), "an unnamed dump follows the last complete visible-document publication");
     assert_eq!(all.window_id, None, "no window was named, so none is echoed");
 
-    let named = build_accessibility_dump(&engine, Some("procedural-preview"));
-    assert_eq!(named.windows.iter().map(|window| window.window_id.as_str()).collect::<Vec<_>>(), vec!["procedural-preview"], "a named dump answers exactly that window");
-    assert_eq!(named.window_id.as_deref(), Some("procedural-preview"));
+    let requested = law["requestedDiagnostic"]["requested"].as_str().unwrap();
+    let named = build_accessibility_dump(&engine, Some(requested));
+    assert_eq!(named.windows.iter().map(|window| window.window_id.as_str()).collect::<Vec<_>>(), law["requestedDiagnostic"]["published"].as_array().unwrap().iter().map(|id| id.as_str().unwrap()).collect::<Vec<_>>(), "a named diagnostic remains available for an inactive retained document");
+    assert_eq!(named.window_id.as_deref(), Some(requested));
     assert_eq!(named.window_ids.len(), 3, "and still names every window a caller could ask for instead");
+    assert!(!accessibility_window_is_visible(law["hiddenEvent"]["windowId"].as_str().unwrap()), "the same publication rejects events for an inactive document");
 
     let absent = build_accessibility_dump(&engine, Some("never-mounted"));
     assert!(absent.windows.is_empty(), "a window that is not live announces nothing, so a reader can tell it from an empty one");
+    begin_accessibility_visible_documents();
+    publish_accessibility_visible_documents();
+    note_chrome_accessibility(Vec::new());
 }
 
 #[test]

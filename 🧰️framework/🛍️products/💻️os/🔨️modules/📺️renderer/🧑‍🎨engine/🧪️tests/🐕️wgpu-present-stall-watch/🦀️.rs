@@ -13,6 +13,7 @@ mod present_stall_watch_tests {
             "Fullscreen" => AppPresentPhase::Fullscreen,
             "Engine" => AppPresentPhase::Engine,
             "BeginGpu" => AppPresentPhase::BeginGpu,
+            "Ownership" => AppPresentPhase::Ownership,
             "Uploads" => AppPresentPhase::Uploads,
             "Stage" => AppPresentPhase::Stage,
             "Render" => AppPresentPhase::Render,
@@ -37,7 +38,7 @@ mod present_stall_watch_tests {
         });
         let upload = row[4].as_array().expect("fixture upload progress");
         let upload = (upload[0].as_u64().expect("mesh vertex") as u32, upload[1].as_u64().expect("mesh index") as u32, upload[2].as_u64().expect("atlas page") as usize);
-        (phase(row[0].as_str().expect("phase tag")), row[1].as_u64().expect("engine index") as usize, row[2].as_u64().expect("upload index") as usize, gpu, upload)
+        (phase(row[0].as_str().expect("phase tag")), row[1].as_u64().expect("engine index") as usize, row[2].as_u64().expect("upload index") as usize, gpu, upload, 0)
     }
 
     #[test]
@@ -67,16 +68,16 @@ mod present_stall_watch_tests {
     #[test]
     fn a_cursor_that_moves_after_the_ceiling_rearms_the_watchdog() {
         let mut watch = AppPresentStallWatch::default();
-        let frozen: AppPresentProgress = (AppPresentPhase::Engine, 0usize, 0usize, None, (0, 0, 0));
+        let frozen: AppPresentProgress = (AppPresentPhase::Engine, 0usize, 0usize, None, (0, 0, 0), 0);
         let mut reports = 0;
         for _ in 0..(APP_PRESENT_STALL_STEPS * 2) {
             reports += usize::from(note_present_stall_signature(&mut watch, frozen).is_some());
         }
         assert_eq!(reports, 1);
-        assert!(note_present_stall_signature(&mut watch, (AppPresentPhase::Engine, 1, 0, None, (0, 0, 0))).is_none(), "one moved index rearms the watchdog");
+        assert!(note_present_stall_signature(&mut watch, (AppPresentPhase::Engine, 1, 0, None, (0, 0, 0), 0)).is_none(), "one moved index rearms the watchdog");
         assert_eq!(watch.steps, 0);
         for _ in 0..(APP_PRESENT_STALL_STEPS * 2) {
-            reports += usize::from(note_present_stall_signature(&mut watch, (AppPresentPhase::Engine, 1, 0, None, (0, 0, 0))).is_some());
+            reports += usize::from(note_present_stall_signature(&mut watch, (AppPresentPhase::Engine, 1, 0, None, (0, 0, 0), 0)).is_some());
         }
         assert_eq!(reports, 2, "a second freeze is reported once on its own ceiling");
     }

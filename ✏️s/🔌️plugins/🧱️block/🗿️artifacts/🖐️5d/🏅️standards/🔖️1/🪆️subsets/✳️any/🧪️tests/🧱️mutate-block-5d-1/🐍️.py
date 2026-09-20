@@ -62,7 +62,7 @@ GRIP_KIND_FIELDS = {"rename-grip-kind": ("name", "newName"), "change-grip-kind-l
 """🎨 The four grip-kind setters. All four stay in this document: unlike `s.block.3d`, this subset
 declares no composed catalogue child, so `rename-grip-kind` is an ordinary local setter."""
 
-GRIP_FIELDS = {"change-grip-grip-kind": ("gripKind", "newGripKind"), "resize-grip-3d": ("radius3d", "newRadius3d")}
+GRIP_FIELDS = {"change-grip-grip-kind": ("gripKind", "newGripKind"), "resize-grip3d": ("radius3d", "newRadius3d")}
 """📍 The two single-field grip setters."""
 
 COLLECTIONS = {"create-representation": ("representations", "representation"), "create-grip-kind": ("gripKinds", "gripKind"), "create-grip": ("grips", "grip"), "add-compatibility-rule": ("compatibility", "rule"), "add-attribute": ("attributes", "attribute"), "add-author": ("authors", "author")}
@@ -79,8 +79,8 @@ KINDS = (
     "change-part-kind-description",
     "change-part-kind-icon",
     "change-part-kind-unit",
-    "update-part-2d",
-    "update-part-3d",
+    "update-part2d",
+    "update-part3d",
     "create-representation",
     "delete-representation",
     "rename-representation",
@@ -99,9 +99,9 @@ KINDS = (
     "change-grip-kind-default-rope-kind",
     "create-grip",
     "delete-grip",
-    "move-grip-2d",
-    "move-grip-3d",
-    "resize-grip-3d",
+    "move-grip2d",
+    "move-grip3d",
+    "resize-grip3d",
     "change-grip-grip-kind",
     "add-compatibility-rule",
     "remove-compatibility-rule",
@@ -189,9 +189,9 @@ def apply_mutation(document, kind, payload):
     if kind in PART_KIND_FIELDS:
         field, argument = PART_KIND_FIELDS[kind]
         document["partKind"][field] = payload[argument]
-    elif kind == "update-part-2d":
+    elif kind == "update-part2d":
         document["2d"] = rebuilt(PART_2D_FIELDS, payload)
-    elif kind == "update-part-3d":
+    elif kind == "update-part3d":
         document["3d"] = rebuilt(PART_3D_FIELDS, payload)
     elif kind in COLLECTIONS:
         member, argument = COLLECTIONS[kind]
@@ -217,11 +217,11 @@ def apply_mutation(document, kind, payload):
     elif kind in GRIP_KIND_FIELDS:
         field, argument = GRIP_KIND_FIELDS[kind]
         document["gripKinds"][located(document["gripKinds"], payload["id"], kind, "mutate")][field] = payload[argument]
-    elif kind == "move-grip-2d":
+    elif kind == "move-grip2d":
         record = document["grips"][located(document["grips"], payload["id"], kind, "mutate")]
         record["angle"] = payload["newAngle"]
         record["radius2d"] = payload["newRadius2d"]
-    elif kind == "move-grip-3d":
+    elif kind == "move-grip3d":
         record = document["grips"][located(document["grips"], payload["id"], kind, "mutate")]
         record["position"] = copy.deepcopy(payload["newPosition"])
         record["direction"] = copy.deepcopy(payload["newDirection"])
@@ -255,9 +255,9 @@ def inverse_mutation(document, kind, payload):
     if kind in PART_KIND_FIELDS:
         field, argument = PART_KIND_FIELDS[kind]
         return [(kind, {argument: document["partKind"][field]})]
-    if kind == "update-part-2d":
+    if kind == "update-part2d":
         return [(kind, arguments_for(PART_2D_FIELDS, document["2d"]))]
-    if kind == "update-part-3d":
+    if kind == "update-part3d":
         return [(kind, arguments_for(PART_3D_FIELDS, document["3d"]))]
     if kind in COLLECTIONS:
         member, argument = COLLECTIONS[kind]
@@ -287,10 +287,10 @@ def inverse_mutation(document, kind, payload):
     if kind in GRIP_KIND_FIELDS:
         field, argument = GRIP_KIND_FIELDS[kind]
         return [(kind, {"id": payload["id"], argument: document["gripKinds"][located(document["gripKinds"], payload["id"], kind, "inverse")][field]})]
-    if kind == "move-grip-2d":
+    if kind == "move-grip2d":
         record = document["grips"][located(document["grips"], payload["id"], kind, "inverse")]
         return [(kind, {"id": payload["id"], "newAngle": record["angle"], "newRadius2d": record["radius2d"]})]
-    if kind == "move-grip-3d":
+    if kind == "move-grip3d":
         record = document["grips"][located(document["grips"], payload["id"], kind, "inverse")]
         return [(kind, {"id": payload["id"], "newPosition": copy.deepcopy(record["position"]), "newDirection": copy.deepcopy(record["direction"])})]
     if kind in GRIP_FIELDS:

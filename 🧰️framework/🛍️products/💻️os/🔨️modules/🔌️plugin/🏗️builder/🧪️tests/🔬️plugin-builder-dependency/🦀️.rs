@@ -46,7 +46,7 @@ async fn contribution(target_artifact_kind: &str) -> ArtifactContribution {
 async fn dependency_gating_rejects_a_contribution_onto_a_non_dependency() {
     let error = Plugin::<crate::app::NoPluginApp>::builder("builder-test-contributor-missing-dep")
         .label("Builder Test Contributor Missing Dep")
-        .version("0.1.0")
+        .version("0.1.0").package_id("semio:builder-test-contributor-missing-dep")
         .contributes(contribution("s.builder-test-dep-target.thing").await)
         .try_build()
         .err()
@@ -59,7 +59,7 @@ async fn dependency_gating_rejects_a_contribution_onto_a_non_dependency() {
 async fn a_direct_dependency_permits_its_contribution_and_lands_on_the_manifest() {
     let plugin = Plugin::<crate::app::NoPluginApp>::builder("builder-test-contributor-ok")
         .label("Builder Test Contributor Ok")
-        .version("0.1.0")
+        .version("0.1.0").package_id("semio:builder-test-contributor-ok")
         .depends_on("builder-test-dep-target-ok", semio_framework::VersionReq::Any)
         .contributes(contribution("s.builder-test-dep-target-ok.thing").await)
         .try_build()
@@ -79,7 +79,7 @@ async fn host_media_contributions_are_idempotent_and_execute_only_at_runtime() {
     let bridge = HostMediaHandlerDeclaration::mesh_import("builder-test.media.mesh-import", kind.clone(), kind.schema.clone(), counting_mesh_importer).expect("typed bridge declaration");
     let plugin = Plugin::<crate::app::NoPluginApp>::builder("builder-test-media")
         .label("Builder Test Media")
-        .version("0.1.0")
+        .version("0.1.0").package_id("semio:builder-test-media")
         .artifact_kind(kind.clone())
         .host_media_handler(bridge.clone())
         .host_media_handler(bridge)
@@ -101,7 +101,7 @@ async fn host_media_conflicts_reject_the_whole_candidate_before_execution() {
     let second = HostMediaHandlerDeclaration::mesh_import("builder-test.media.second", kind.clone(), kind.schema.clone(), alternate_mesh_importer).expect("second bridge");
     let error = Plugin::<crate::app::NoPluginApp>::builder("builder-test-media-conflict")
         .label("Builder Test Media Conflict")
-        .version("0.1.0")
+        .version("0.1.0").package_id("semio:builder-test-media-conflict")
         .artifact_kind(kind)
         .host_media_handler(first)
         .host_media_handler(second)
@@ -119,7 +119,7 @@ async fn flow_extension_descriptors_are_idempotent_and_conflict_rejecting() {
     let declaration = FlowExtensionDeclaration::new("builder-test.flow.contribution", manifest.clone(), executable.clone()).expect("flow declaration");
     let plugin = Plugin::<crate::app::NoPluginApp>::builder("builder-test-flow")
         .label("Builder Test Flow")
-        .version("0.1.0")
+        .version("0.1.0").package_id("semio:builder-test-flow")
         .flow_extension(declaration.clone())
         .flow_extension(declaration)
         .try_build()
@@ -128,7 +128,7 @@ async fn flow_extension_descriptors_are_idempotent_and_conflict_rejecting() {
     let conflict = FlowExtensionDeclaration::new("builder-test.flow.other", manifest, executable).expect("conflicting target descriptor");
     let error = Plugin::<crate::app::NoPluginApp>::builder("builder-test-flow-conflict")
         .label("Builder Test Flow Conflict")
-        .version("0.1.0")
+        .version("0.1.0").package_id("semio:builder-test-flow-conflict")
         .flow_extension(
             plugin
                 .flow_extensions()

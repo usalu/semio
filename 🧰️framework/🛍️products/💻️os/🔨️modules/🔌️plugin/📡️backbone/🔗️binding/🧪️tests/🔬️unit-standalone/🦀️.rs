@@ -52,3 +52,25 @@ async fn document_backbone_binding_reducer_preserves_generation_and_live_owner()
     let retired = DocumentBackboneBindingStateV1 { generation: 1, uri: None };
     assert!(matches!(decide_document_backbone_binding_v1(&retired, &replacement), DocumentBackboneBindingDecisionV1::Bind(_)));
 }
+
+#[test]
+fn document_backbone_binding_command_and_receipt_round_trip_exact_owner() {
+    let command = DocumentBackboneBindingCommandV1 {
+        operation: DocumentBackboneBindingOperationV1::Bind,
+        instance_id: 7,
+        binding_generation: 3,
+        uri: "actor://v1:7:3:space-amap".into(),
+    };
+    let encoded = command.encode().expect("canonical binding command encodes");
+    assert_eq!(decode_document_backbone_binding_command_v1(&encoded).expect("command decodes"), Some(command.clone()));
+    require_document_backbone_binding_receipt_v1(&DocumentBackboneBindingReceiptV1::bound(&command).encode(), &command).expect("exact bound receipt is accepted");
+    let stale = DocumentBackboneBindingCommandV1 { binding_generation: 2, ..command.clone() };
+    assert_eq!(
+        require_document_backbone_binding_receipt_v1(&DocumentBackboneBindingReceiptV1::bound(&stale).encode(), &command),
+        Err("plugin.document-backbone.receipt-owner".into())
+    );
+    assert_eq!(
+        require_document_backbone_binding_receipt_v1(&DocumentBackboneBindingReceiptV1::refused(&command, "plugin.document-backbone.binding-live").encode(), &command),
+        Err("plugin.document-backbone.binding-live".into())
+    );
+}

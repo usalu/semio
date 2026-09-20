@@ -35,6 +35,14 @@ pub fn fem3d_boot_snapshot() -> Fem3dSnapshot {
         .unwrap_or_else(|_| crate::standards::v1::subsets::any::schema::empty_fem3d_snapshot())
 }
 
+/// 🎬️ The bundled `demo` fixture — the only built-in document that carries nodes, elements, solids,
+/// supports and both load cases at once, so it is the document every law about concrete entity ids
+/// (`n20_l1`, `sol1`, `steel`, `hea200`, …) is stated over. Distinct from [`fem3d_boot_snapshot`]
+/// since the boot document became the `concrete-forest` example (frames only, no solids).
+pub fn fem3d_demo_snapshot() -> Fem3dSnapshot {
+    parse_dsl(FEM3D_EXAMPLE_TEXT).expect("the bundled demo fixture parses")
+}
+
 // #region 🧪️Tests
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]

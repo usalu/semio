@@ -44,8 +44,8 @@ impl FlowSnapshot {
     /// codecs — reads the live widgets/synapses/layout off the working-scene cache (see
     /// `flow_working_scene`'s doc comment for the staleness gap this bridges).
     pub fn to_host_snapshot(&self) -> semio_framework_artifact_flow_flow::FlowHostSnapshot {
-        let scene = flow_working_scene(self);
-        semio_framework_artifact_flow_flow::FlowHostSnapshot { schema: self.schema.clone(), camera: default_window_camera(), widgets: scene.widgets, synapses: scene.synapses, layout: scene.layout }
+        let (widgets, synapses, layout) = flow_working_scene(self).into_parts();
+        semio_framework_artifact_flow_flow::FlowHostSnapshot { schema: self.schema.clone(), camera: default_window_camera(), widgets, synapses, layout }
     }
 }
 

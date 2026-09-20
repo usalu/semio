@@ -1,6 +1,7 @@
-/** 📨️ Supplies a monotonic clock and a synchronous sink that consumes/copies bytes before returning. */
+/** 📨️ Supplies a monotonic clock, a wall clock and a synchronous sink that consumes/copies bytes before returning. */
 export interface BrowserWasiPort {
   nowNs(): bigint;
+  wallNs(): bigint;
   write(channel: "stdout" | "stderr", bytes: Uint8Array): void;
   exit?(status: "ok" | "err"): void;
 }
@@ -49,7 +50,8 @@ export function createGuestLogLineSink(emit: (line: GuestLogLine) => void) {
 export const browserWasiInterfaces = Object.freeze([
   "wasi:cli/environment@0.2.0", "wasi:cli/exit@0.2.0", "wasi:cli/stdin@0.2.0", "wasi:cli/stdout@0.2.0", "wasi:cli/stderr@0.2.0",
   "wasi:cli/terminal-input@0.2.0", "wasi:cli/terminal-output@0.2.0", "wasi:cli/terminal-stdin@0.2.0", "wasi:cli/terminal-stdout@0.2.0", "wasi:cli/terminal-stderr@0.2.0",
-  "wasi:clocks/monotonic-clock@0.2.0", "wasi:io/error@0.2.0", "wasi:io/poll@0.2.0", "wasi:io/streams@0.2.0",
+  "wasi:clocks/monotonic-clock@0.2.0", "wasi:clocks/wall-clock@0.2.0", "wasi:io/error@0.2.0", "wasi:io/poll@0.2.0", "wasi:io/streams@0.2.0",
+  "wasi:random/insecure-seed@0.2.9",
 ]);
 
 /** 🧭️ Owns a bounded Preview2 profile without ambient process, filesystem or network authority. */
@@ -72,6 +74,14 @@ export function createBrowserWasiActivation(port: BrowserWasiPort, signal?: Abor
     lastNow = value;
     return value;
   };
+  const wall = () => {
+    check();
+    const value = u64(port.wallNs());
+    check();
+    return { seconds: value / 1000000000n, nanoseconds: Number(value % 1000000000n) };
+  };
+  const words = crypto.getRandomValues(new BigUint64Array(2));
+  const seed = Object.freeze([words[0], words[1]]) as readonly [bigint, bigint];
   const readyIndices = (pollables: Pollable[]) => Uint32Array.from(pollables.flatMap((pollable, index) => pollable.ready() ? [index] : []));
   const notify = () => {
     for (const waiter of waiters) {
@@ -260,10 +270,12 @@ export function createBrowserWasiActivation(port: BrowserWasiPort, signal?: Abor
     "wasi:cli/terminal-stdin@0.2.0": Object.freeze({ getTerminalStdin() { check(); return undefined; } }),
     "wasi:cli/terminal-stdout@0.2.0": Object.freeze({ getTerminalStdout() { check(); return undefined; } }),
     "wasi:cli/terminal-stderr@0.2.0": Object.freeze({ getTerminalStderr() { check(); return undefined; } }),
-    "wasi:clocks/monotonic-clock@0.2.0": Object.freeze({ now, resolution() { check(); return 1000000n; }, subscribeInstant(instant: bigint) { return new Pollable(admission, undefined, u64(instant)); }, subscribeDuration(duration: bigint) { return new Pollable(admission, undefined, now() + u64(duration)); } }),
+    "wasi:clocks/monotonic-clock@0.2.0": Object.freeze({ now, resolution() { check(); return 1000000n; }, subscribeInstant(instant: unknown) { return new Pollable(admission, undefined, u64(instant)); }, subscribeDuration(duration: unknown) { return new Pollable(admission, undefined, now() + u64(duration)); } }),
+    "wasi:clocks/wall-clock@0.2.0": Object.freeze({ now: wall, resolution() { check(); return { seconds: 0n, nanoseconds: 1000000 }; } }),
     "wasi:io/error@0.2.0": Object.freeze({ Error: WasiIoError }),
     "wasi:io/poll@0.2.0": Object.freeze({ Pollable, poll }),
     "wasi:io/streams@0.2.0": Object.freeze({ InputStream, OutputStream }),
+    "wasi:random/insecure-seed@0.2.9": Object.freeze({ insecureSeed() { check(); return seed; } }),
   });
   signal?.addEventListener("abort", onAbort, { once: true });
   if (signal?.aborted) void close();

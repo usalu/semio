@@ -4,8 +4,11 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, it, vi } from "vitest";
 import {
   BrowserFrameTransport,
+  FRAME_WORKER_ACCESSIBILITY_ID_BYTES,
   FRAME_WORKER_BYTE_CAPACITY,
   FRAME_WORKER_INTROSPECTION_CAPACITY,
+  FRAME_WORKER_HUB_DOCUMENT_CAPACITY,
+  FRAME_WORKER_IMAGE_DECODE_BYTE_CAPACITY,
   FRAME_WORKER_LOSSLESS_ITEM_CAPACITY,
   FRAME_WORKER_MESSAGE_BYTE_CAPACITY,
   FRAME_WORKER_POINTER_CAPACITY,
@@ -22,7 +25,7 @@ import {
   evaluateBrowserBootLiveness,
 } from "../../🎯️targets/🧊️wgpu/🫀️boot-liveness/🟦️.ts";
 import { evictCachedRendererModule, readCachedRendererModule, rendererArtifactTag, writeCachedRendererModule } from "../../🎯️targets/🧊️wgpu/🗄️wasm-module-cache/🟦️.ts";
-import { resolveWgpuBootDescriptor, resolveWgpuHostPlatform, type WgpuBootDescriptor, type WgpuHostAppearance } from "../../🎯️targets/🧊️wgpu/🧭️boot-descriptor/🟦️.ts";
+import { resolveWgpuBootDescriptor, resolveWgpuHostPlatform, type WgpuBootDescriptor, type WgpuHostAppearance, type WgpuHostStorageSnapshot } from "../../🎯️targets/🧊️wgpu/🧭️boot-descriptor/🟦️.ts";
 import { stubFetch } from "../../../../../🧪️tests/🌐️fetch-stub/🟦️.ts";
 
 /** @emoji 🧭️ One resolved boot descriptor for a fixture transport — the shared resolver, never a hand
@@ -35,16 +38,20 @@ function testBootDescriptor(variant: string): WgpuBootDescriptor {
 /** @emoji 🌓️ The appearance a realm that read nothing publishes — React's own no-window default. */
 const TEST_HOST_APPEARANCE: WgpuHostAppearance = { preference: "", systemDark: false };
 const TEST_HOST_PLATFORM = "MacIntel";
+/** @emoji 🗄️ The storage snapshot a realm that persisted nothing publishes. */
+const TEST_HOST_STORAGE: WgpuHostStorageSnapshot = {};
 
 class FakeWorker implements BrowserFrameWorkerPort {
   onmessage: ((event: MessageEvent<BrowserFrameWorkerMessage>) => void) | null = null;
   onmessageerror: ((event: MessageEvent) => void) | null = null;
   onerror: ((event: ErrorEvent) => void) | null = null;
   readonly messages: BrowserFrameUiMessage[] = [];
+  readonly transfers: Transferable[][] = [];
   terminated = false;
 
-  postMessage(message: BrowserFrameUiMessage): void {
+  postMessage(message: BrowserFrameUiMessage, transfer: Transferable[] = []): void {
     this.messages.push(message);
+    this.transfers.push(transfer);
   }
 
   terminate(): void {
@@ -70,6 +77,7 @@ function transport(worker: FakeWorker, hooks: { directives?: number[]; faults?: 
       descriptor: testBootDescriptor("s"),
       appearance: TEST_HOST_APPEARANCE,
       platform: TEST_HOST_PLATFORM,
+      storage: TEST_HOST_STORAGE,
     },
     setTimer: () => 1,
     clearTimer: () => {},
@@ -95,10 +103,10 @@ describe("browser frame worker transport", () => {
     const worker = new FakeWorker();
     const subject = transport(worker);
     worker.reply({ kind: "booted", lifecycle: 1 });
-    subject.enqueueReplaceable({ kind: "pointer-move", pointerId: 7, pointerKind: "mouse", x: 1, y: 2 });
-    subject.enqueueReplaceable({ kind: "pointer-move", pointerId: 7, pointerKind: "mouse", x: 3, y: 4 });
-    subject.enqueueReplaceable({ kind: "wheel", x: 3, y: 4, deltaX: 1, deltaY: 2 });
-    subject.enqueueReplaceable({ kind: "wheel", x: 4, y: 5, deltaX: 3, deltaY: 4 });
+    subject.enqueueReplaceable({ kind: "pointer-move", pointerId: 7, pointerKind: "mouse", x: 1, y: 2, shift: true, ctrl: false, alt: false, meta: false });
+    subject.enqueueReplaceable({ kind: "pointer-move", pointerId: 7, pointerKind: "mouse", x: 3, y: 4, shift: false, ctrl: false, alt: false, meta: false });
+    subject.enqueueReplaceable({ kind: "wheel", x: 3, y: 4, deltaX: 1, deltaY: 2, shift: false, ctrl: true, alt: false, meta: false });
+    subject.enqueueReplaceable({ kind: "wheel", x: 4, y: 5, deltaX: 3, deltaY: 4, shift: false, ctrl: false, alt: true, meta: false });
     subject.enqueueReplaceable({ kind: "resize", width: 10, height: 20, dpr: 1 });
     subject.enqueueReplaceable({ kind: "resize", width: 30, height: 40, dpr: 2 });
     expect(subject.flush(11)).toBe(true);
@@ -106,9 +114,40 @@ describe("browser frame worker transport", () => {
     expect(batch?.kind).toBe("batch");
     if (batch?.kind !== "batch") return;
     expect(batch.replaceable).toHaveLength(3);
-    expect(batch.replaceable).toContainEqual(expect.objectContaining({ kind: "pointer-move", x: 3, y: 4 }));
-    expect(batch.replaceable).toContainEqual(expect.objectContaining({ kind: "wheel", x: 4, y: 5, deltaX: 4, deltaY: 6 }));
+    expect(batch.replaceable).toContainEqual(expect.objectContaining({ kind: "pointer-move", x: 3, y: 4, shift: false }));
+    expect(batch.replaceable).toContainEqual(expect.objectContaining({ kind: "wheel", x: 4, y: 5, deltaX: 4, deltaY: 6, ctrl: false, alt: true }));
     expect(batch.replaceable).toContainEqual(expect.objectContaining({ kind: "resize", width: 30, height: 40, dpr: 2 }));
+  });
+
+  it("coalesces Hub status by document, refuses only a new key at capacity, and releases admission after transfer", () => {
+    const worker = new FakeWorker();
+    const subject = transport(worker);
+    worker.reply({ kind: "booted", lifecycle: 1 });
+    const key = "hub:space-a/document-a";
+    expect(subject.publishHubDocumentStatus(key, { kind: "connecting" })).toBe(true);
+    expect(subject.publishHubDocumentStatus(key, { kind: "live", peerCount: 4 })).toBe(true);
+    expect(subject.publishHubDocumentStatus(key, null)).toBe(true);
+    for (let index = 1; index < FRAME_WORKER_HUB_DOCUMENT_CAPACITY; index++) expect(subject.publishHubDocumentStatus(`hub:space-${index}/document`, { kind: "connecting" })).toBe(true);
+    const refused = "hub:overflow/document";
+    expect(subject.publishHubDocumentStatus(refused, { kind: "live", peerCount: 9 })).toBe(false);
+    expect(subject.status).toBe("ready");
+    expect(subject.flush(1)).toBe(true);
+    const first = worker.messages.at(-1);
+    expect(first?.kind).toBe("batch");
+    if (first?.kind !== "batch") return;
+    expect(first.lossless.filter((event) => "documentKey" in event && event.documentKey === key)).toEqual([expect.objectContaining({ kind: "hub-document-close" })]);
+    expect(subject.publishHubDocumentStatus(refused, { kind: "live", peerCount: 9 })).toBe(true);
+    worker.reply({ kind: "frame", lifecycle: 1, sequence: first.sequence, generation: first.generation, cursor: "default", fullscreen: null, requestFrame: false, progress: 1, workerDurationMs: 1, workerExecutingMs: 1, workerStepVerdict: "admitted" });
+    const delivered: unknown[] = [...first.lossless];
+    let sequence = first.sequence;
+    while (subject.flush(++sequence)) {
+      const batch = worker.messages.at(-1);
+      if (batch?.kind !== "batch") break;
+      delivered.push(...batch.lossless);
+      worker.reply({ kind: "frame", lifecycle: 1, sequence: batch.sequence, generation: batch.generation, cursor: "default", fullscreen: null, requestFrame: false, progress: 1, workerDurationMs: 1, workerExecutingMs: 1, workerStepVerdict: "admitted" });
+    }
+    expect(delivered.filter((event) => typeof event === "object" && event !== null && "documentKey" in event && event.documentKey === key)).toEqual([expect.objectContaining({ kind: "hub-document-close" })]);
+    expect(delivered).toContainEqual(expect.objectContaining({ kind: "hub-document-status", documentKey: refused, remote: { kind: "live", peerCount: 9 } }));
   });
 
   it("fails closed rather than dropping a lossless event when item credits are exhausted", () => {
@@ -123,6 +162,42 @@ describe("browser frame worker transport", () => {
     expect(faults).toEqual(["lossless-overflow"]);
     expect(worker.terminated).toBe(false);
     expect(worker.messages.at(-1)?.kind).toBe("close");
+  });
+
+  it("transfers node-addressed accessibility focus activation and value events exactly once", () => {
+    const fixture = JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../../🧫️fixtures/♿️wgpu-accessibility-interaction/🔣️.json"), "utf8")) as { readonly events: readonly { readonly wire: Parameters<BrowserFrameTransport["enqueueLossless"]>[0] }[] };
+    const worker = new FakeWorker();
+    const subject = transport(worker);
+    worker.reply({ kind: "booted", lifecycle: 1 });
+    for (const row of fixture.events) expect(subject.enqueueLossless(row.wire)).toBe(true);
+    expect(subject.flush(23)).toBe(true);
+    const batch = worker.messages.at(-1);
+    expect(batch?.kind).toBe("batch");
+    if (batch?.kind !== "batch") return;
+    expect(batch.lossless.map((event) => {
+      const { timestampMs: _, ...wire } = event as typeof event & { readonly timestampMs: number };
+      return wire;
+    })).toEqual(fixture.events.map((row) => row.wire));
+    for (const event of batch.lossless) {
+      if (!event.kind.startsWith("accessibility-")) continue;
+      expect(event).not.toHaveProperty("x");
+      expect(event).not.toHaveProperty("y");
+    }
+  });
+
+  it("rejects accessibility addresses and values outside their fixed transport credits", () => {
+    const address = { windowId: "procedural-main", windowGeneration: 7, nodeId: 2, nodeKey: "#apply" };
+    for (const event of [
+      { kind: "accessibility-focus" as const, ...address, nodeKey: "é".repeat(FRAME_WORKER_ACCESSIBILITY_ID_BYTES / 2 + 1) },
+      { kind: "accessibility-activate" as const, ...address, windowId: "bad\u0000window" },
+      { kind: "accessibility-value" as const, ...address, value: "x".repeat(1025) },
+    ]) {
+      const worker = new FakeWorker();
+      const subject = transport(worker);
+      expect(subject.enqueueLossless(event)).toBe(false);
+      expect(subject.fault?.code).toBe("lossless-overflow");
+      expect(worker.messages.map((message) => message.kind)).toEqual(["boot", "close"]);
+    }
   });
 
   it("fails closed on byte-credit exhaustion", () => {
@@ -155,6 +230,18 @@ describe("browser frame worker transport", () => {
     expect(JSON.stringify(batch).length).toBeLessThan(FRAME_WORKER_MESSAGE_BYTE_CAPACITY);
   });
 
+  it("preserves the image-data-url paste target through the bounded text stream", () => {
+    const worker = new FakeWorker();
+    const subject = transport(worker);
+    worker.reply({ kind: "booted", lifecycle: 1 });
+    expect(subject.enqueueLossless({ kind: "paste-image-data-url", text: "data:image/png;base64,iVBORw0KGgo=" })).toBe(true);
+    expect(subject.flush(1)).toBe(true);
+    const batch = worker.messages.at(-1);
+    expect(batch?.kind).toBe("batch");
+    if (batch?.kind !== "batch") return;
+    expect(batch.lossless).toContainEqual(expect.objectContaining({ kind: "text-chunk", target: "paste-image-data-url", final: true }));
+  });
+
   it("never slices an astral code point across Worker messages", () => {
     const worker = new FakeWorker();
     const subject = transport(worker);
@@ -183,9 +270,9 @@ describe("browser frame worker transport", () => {
     const worker = new FakeWorker();
     const subject = transport(worker);
     for (let pointerId = 0; pointerId < FRAME_WORKER_POINTER_CAPACITY; pointerId++) {
-      expect(subject.enqueueReplaceable({ kind: "pointer-move", pointerId, pointerKind: "touch", x: pointerId, y: 0 })).toBe(true);
+      expect(subject.enqueueReplaceable({ kind: "pointer-move", pointerId, pointerKind: "touch", x: pointerId, y: 0, shift: false, ctrl: false, alt: false, meta: false })).toBe(true);
     }
-    expect(subject.enqueueReplaceable({ kind: "pointer-move", pointerId: FRAME_WORKER_POINTER_CAPACITY, pointerKind: "touch", x: 0, y: 0 })).toBe(false);
+    expect(subject.enqueueReplaceable({ kind: "pointer-move", pointerId: FRAME_WORKER_POINTER_CAPACITY, pointerKind: "touch", x: 0, y: 0, shift: false, ctrl: false, alt: false, meta: false })).toBe(false);
     expect(subject.fault?.code).toBe("replaceable-overflow");
   });
 
@@ -261,7 +348,7 @@ describe("browser frame worker transport", () => {
     let now = 0;
     const subject = new BrowserFrameTransport({
       worker,
-      boot: { bindingsModuleUrl: "renderer.js", bindingsWasmUrl: "renderer.wasm", canvas: {} as OffscreenCanvas, width: 1, height: 1, dpr: 1, locale: "en", descriptor: testBootDescriptor("s"), appearance: TEST_HOST_APPEARANCE, platform: TEST_HOST_PLATFORM },
+      boot: { bindingsModuleUrl: "renderer.js", bindingsWasmUrl: "renderer.wasm", canvas: {} as OffscreenCanvas, width: 1, height: 1, dpr: 1, locale: "en", descriptor: testBootDescriptor("s"), appearance: TEST_HOST_APPEARANCE, platform: TEST_HOST_PLATFORM, storage: TEST_HOST_STORAGE },
       now: () => now,
       setTimer: () => 1,
       clearTimer: () => {},
@@ -281,7 +368,7 @@ describe("browser frame worker transport", () => {
     const faults: string[] = [];
     const subject = new BrowserFrameTransport({
       worker,
-      boot: { bindingsModuleUrl: "renderer.js", bindingsWasmUrl: "renderer.wasm", canvas: {} as OffscreenCanvas, width: 1, height: 1, dpr: 1, locale: "en", descriptor: testBootDescriptor("s"), appearance: TEST_HOST_APPEARANCE, platform: TEST_HOST_PLATFORM },
+      boot: { bindingsModuleUrl: "renderer.js", bindingsWasmUrl: "renderer.wasm", canvas: {} as OffscreenCanvas, width: 1, height: 1, dpr: 1, locale: "en", descriptor: testBootDescriptor("s"), appearance: TEST_HOST_APPEARANCE, platform: TEST_HOST_PLATFORM, storage: TEST_HOST_STORAGE },
       now: () => 0,
       setTimer: () => 1,
       clearTimer: () => {},
@@ -304,7 +391,7 @@ describe("browser frame worker transport", () => {
     };
     const subject = new BrowserFrameTransport({
       worker,
-      boot: { bindingsModuleUrl: "renderer.js", bindingsWasmUrl: "renderer.wasm", canvas: {} as OffscreenCanvas, width: 1, height: 1, dpr: 1, locale: "en", descriptor: testBootDescriptor("s"), appearance: TEST_HOST_APPEARANCE, platform: TEST_HOST_PLATFORM },
+      boot: { bindingsModuleUrl: "renderer.js", bindingsWasmUrl: "renderer.wasm", canvas: {} as OffscreenCanvas, width: 1, height: 1, dpr: 1, locale: "en", descriptor: testBootDescriptor("s"), appearance: TEST_HOST_APPEARANCE, platform: TEST_HOST_PLATFORM, storage: TEST_HOST_STORAGE },
       now: () => now,
       setTimer: () => 1,
       clearTimer: () => {},
@@ -341,6 +428,40 @@ describe("browser frame worker transport", () => {
     expect(faults).toEqual([]);
   });
 
+  it("admits one page image decode, refuses a concurrent source, and cancels the exact live request", async () => {
+    let rejectDecode: ((error: Error) => void) | undefined;
+    class PendingImage {
+      decoding = "auto";
+      private value = "";
+      get src(): string { return this.value; }
+      set src(value: string) {
+        this.value = value;
+        if (value === "") rejectDecode?.(new DOMException("cancelled", "AbortError"));
+      }
+      decode(): Promise<void> {
+        return new Promise((_, reject) => { rejectDecode = reject; });
+      }
+    }
+    vi.stubGlobal("Image", PendingImage);
+    vi.spyOn(URL, "createObjectURL").mockReturnValue("blob:reference");
+    vi.spyOn(URL, "revokeObjectURL").mockImplementation(() => {});
+    try {
+      const worker = new FakeWorker();
+      const subject = transport(worker);
+      worker.reply({ kind: "booted", lifecycle: 1 });
+      const dimensions = { width: 2, height: 3, orientation: 1, mediaType: "image/svg+xml" as const };
+      worker.reply({ kind: "image-decode", lifecycle: 1, requestId: 7, source: new Uint8Array([1]), dimensions });
+      worker.reply({ kind: "image-decode", lifecycle: 1, requestId: 8, source: new Uint8Array(FRAME_WORKER_IMAGE_DECODE_BYTE_CAPACITY + 1), dimensions });
+      await vi.waitFor(() => expect(worker.messages.some((message) => message.kind === "image-decode-result" && message.requestId === 8 && message.bitmap === null && message.detail === "reference-image-decode-credits")).toBe(true));
+      worker.reply({ kind: "image-decode-cancel", lifecycle: 1, requestId: 7 });
+      await vi.waitFor(() => expect(worker.messages.some((message) => message.kind === "image-decode-result" && message.requestId === 7 && message.bitmap === null && message.detail?.startsWith("AbortError:") === true)).toBe(true));
+      subject.close();
+    } finally {
+      vi.unstubAllGlobals();
+      vi.restoreAllMocks();
+    }
+  });
+
   /** ♿️ LAW: the two host channels are not interchangeable. `onDirectives` is the FRAME channel and
    * fires for every accepted frame; `onUiTurn` is the BUDGET channel and fires only for a turn that
    * breached its ceiling. A healthy shell overruns once at boot and never again, so anything hung on
@@ -366,15 +487,65 @@ describe("browser frame worker transport", () => {
   it("refreshes the accessibility mirror from the frame channel, never from the overrun channel", () => {
     const root = dirname(fileURLToPath(import.meta.url));
     const bootSource = readFileSync(join(root, "../../🎯️targets/🧊️wgpu/🚀️browser-boot/🟦️.ts"), "utf8");
+    const mirrorSource = readFileSync(join(root, "../../🎯️targets/🧊️wgpu/♿️accessibility-mirror/🟦️.ts"), "utf8");
     const directiveHook = bootSource.slice(bootSource.indexOf("onDirectives: ({ cursor, fullscreen })"), bootSource.indexOf("onFault:"));
     const turnHook = bootSource.slice(bootSource.indexOf("onUiTurn: (outcome)"), bootSource.indexOf("onReady: () =>"));
     expect(directiveHook).toContain("accessibility?.refresh()");
     expect(turnHook).not.toContain("accessibility");
-    const refresh = bootSource.slice(bootSource.indexOf("const refresh = (): void =>"), bootSource.indexOf("return {\n    refresh,"));
+    const refresh = mirrorSource.slice(mirrorSource.indexOf("const refresh = (): void =>"), mirrorSource.indexOf("return { refresh,"));
     expect(refresh).toContain("window.setTimeout");
     expect(refresh).not.toMatch(/\n\s*void pull\(\);\n\s*return;/);
-    expect(bootSource).toContain("paint(dump.windows ?? [])");
-    expect(bootSource).toContain('element.dataset.window = surface.windowId');
+    expect(mirrorSource).toContain("paint(dump.windows ?? [])");
+    expect(mirrorSource).toContain('element.dataset.window = surface.windowId');
+    expect(mirrorSource).toContain("parent.appendChild(projected.description)");
+    expect(mirrorSource).not.toContain("element.appendChild(description)");
+  });
+
+  it("wakes the frame owner after a handled reference refusal so the next asset is polled", () => {
+    const root = dirname(fileURLToPath(import.meta.url));
+    const workerSource = readFileSync(join(root, "../../🎯️targets/🧊️wgpu/🎞️frame-worker/🟦️.ts"), "utf8");
+    const pump = workerSource.slice(workerSource.indexOf("async function pumpAsset"), workerSource.indexOf("function progress"));
+    const caught = pump.slice(pump.lastIndexOf("  } catch (error) {"), pump.lastIndexOf("  } finally {"));
+    const reject = caught.indexOf('ownedStep("asset-reject"');
+    const wake = caught.indexOf('post({ kind: "wake", lifecycle })');
+    expect(reject).toBeGreaterThan(-1);
+    expect(wake).toBeGreaterThan(reject);
+    expect(caught.match(/post\(\{ kind: "wake", lifecycle \}\)/g)).toHaveLength(1);
+    expect(caught).toContain("activeRequest?.referenceImage && !closing && !closed && !failed");
+  });
+
+  it("streams decoded references as cancellable row-aligned strips before the exact seal", () => {
+    const root = dirname(fileURLToPath(import.meta.url));
+    const workerSource = readFileSync(join(root, "../../🎯️targets/🧊️wgpu/🎞️frame-worker/🟦️.ts"), "utf8");
+    const decoderSource = readFileSync(join(root, "../../🎯️targets/🧊️wgpu/🖼️reference-image-decode/🟦️.ts"), "utf8");
+    const rustSource = readFileSync(join(root, "../../🎯️targets/🧊️wgpu/🌐️browser-worker/🦀️.rs"), "utf8");
+    const pump = workerSource.slice(workerSource.indexOf("async function pumpAsset"), workerSource.indexOf("function progress"));
+    const begin = pump.indexOf('ownedStep("reference-image-begin"');
+    const stage = pump.indexOf("referenceImageBitmapForStage(");
+    const push = pump.indexOf("streamReferenceImageBitmapRows(");
+    const seal = pump.indexOf('ownedStep("reference-image-seal"');
+    expect(begin).toBeGreaterThan(-1);
+    expect(stage).toBeGreaterThan(begin);
+    expect(push).toBeGreaterThan(stage);
+    expect(seal).toBeGreaterThan(push);
+    expect(pump).toContain("stageMode !== 1 && stageMode !== 2");
+    expect(workerSource).not.toContain("ReferenceImageDecodeCache");
+    expect(pump.indexOf('ownedStep("reference-image-begin"')).toBeLessThan(pump.indexOf('monitoredSuspension("reference-image-decode"'));
+    expect(pump).toContain('monitoredSuspension("reference-image-page-decode"');
+    expect(pump.match(/streamReferenceImageBitmapRows\(/g)).toHaveLength(1);
+    expect(pump).toContain("runtime!.pushReferenceImageRows(offset, pixels)");
+    expect(pump).toContain('(operation) => ownedStep("reference-image-row-strip", operation)');
+    expect(pump).toContain('post({ kind: "wake", lifecycle })');
+    expect(pump).toContain("await macrotask()");
+    expect(decoderSource).toContain("new OffscreenCanvas(width, Math.min(height, rowsPerStrip))");
+    expect(decoderSource).toContain('context.getImageData(0, 0, width, rows, { colorSpace: "srgb" })');
+    expect(decoderSource).toContain("pixels.byteLength > REFERENCE_IMAGE_READBACK_BYTE_CAPACITY");
+    expect(decoderSource).toContain("if (stageMode === 2) return undefined");
+    expect(decoderSource).not.toContain("getImageData(0, 0, width, height");
+    expect(decoderSource).not.toContain("Uint8Array.from(context.getImageData");
+    for (const binding of ["beginReferenceImage", "pushReferenceImageRows", "sealReferenceImage"]) expect(rustSource).toContain(`js_name = ${binding}`);
+    expect(rustSource).toContain("Result<u8, JsValue>");
+    expect(workerSource).not.toContain("stageReferenceImage");
   });
 
   it("publishes the introspection hooks on the UI isolate only after the Worker reports booted", () => {
@@ -502,7 +673,7 @@ function bootHarness(tongue: "en" | "de" = "en") {
   let nowMs = 0;
   const subject = new BrowserFrameTransport({
     worker,
-    boot: { bindingsModuleUrl: "renderer.js", bindingsWasmUrl: "renderer_bg.wasm", canvas: {} as OffscreenCanvas, width: 8, height: 8, dpr: 1, locale: tongue, descriptor: testBootDescriptor("generation3d"), appearance: TEST_HOST_APPEARANCE, platform: TEST_HOST_PLATFORM },
+    boot: { bindingsModuleUrl: "renderer.js", bindingsWasmUrl: "renderer_bg.wasm", canvas: {} as OffscreenCanvas, width: 8, height: 8, dpr: 1, locale: tongue, descriptor: testBootDescriptor("generation3d"), appearance: TEST_HOST_APPEARANCE, platform: TEST_HOST_PLATFORM, storage: TEST_HOST_STORAGE },
     now: () => nowMs,
     setTimer: (callback, delayMs) => {
       const id = nextTimerId++;
@@ -641,7 +812,7 @@ describe("wgpu boot liveness watchdog, replayed on a third-party clock", () => {
       const faults: string[] = [];
       const subject = new BrowserFrameTransport({
         worker,
-        boot: { bindingsModuleUrl: "renderer.js", bindingsWasmUrl: "renderer_bg.wasm", canvas: {} as OffscreenCanvas, width: 8, height: 8, dpr: 1, locale: "en", descriptor: testBootDescriptor("generation3d"), appearance: TEST_HOST_APPEARANCE, platform: TEST_HOST_PLATFORM },
+        boot: { bindingsModuleUrl: "renderer.js", bindingsWasmUrl: "renderer_bg.wasm", canvas: {} as OffscreenCanvas, width: 8, height: 8, dpr: 1, locale: "en", descriptor: testBootDescriptor("generation3d"), appearance: TEST_HOST_APPEARANCE, platform: TEST_HOST_PLATFORM, storage: TEST_HOST_STORAGE },
         now: () => Date.now(),
         setTimer: (callback, delayMs) => setTimeout(callback, delayMs) as unknown as number,
         clearTimer: (handle) => clearTimeout(handle),

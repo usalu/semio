@@ -10,9 +10,13 @@
 //!
 //! 🩹️ Ticket `26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS`: no longer
 //! routes through `serde_json::from_value` — `Puzzle5dSnapshot` only derives `Deserialize` under
-//! `#[cfg(test)]` now. `to_serde_value()`'s `serde_json::Value` converts into `dsl::DslValue` via
-//! its own `From` bridge, then `dsl::FromValue::from_value` (first-party) hydrates the typed
-//! snapshot — same shape the sibling `block5d` leaf already uses.
+//! `#[cfg(test)]` now. The number lexemes cross into `dsl::DslValue` through stdio's own
+//! first-party `to_pack_value()` bridge, then `dsl::FromValue::from_value` hydrates the typed
+//! snapshot — same shape the sibling `block5d` leaf already uses. NOT through
+//! `to_serde_value()`: `serde_json`'s default (no `float_roundtrip`) number parser reconstructs an
+//! f64 as `significand as f64 * 10^exponent`, which is off by one ULP for any 17-significant-digit
+//! literal (`0.42839899821678995` came back as `0.4283989982167899`) and made every example whose
+//! geometry needs full f64 precision fail its lossless-round-trip oracle.
 use crate::Puzzle5dSnapshot;
 use semio_s_artifact_stdio_json::schema::snapshot::parse_json_text;
 use semio_s_artifact_stdio_json::{JsonSnapshot, STDIO_JSON_DOCUMENT_SCHEMA};
@@ -21,7 +25,7 @@ pub fn register() {}
 
 pub fn deserialize(from: &JsonSnapshot) -> Result<Puzzle5dSnapshot, store::TextError> {
     let _ = STDIO_JSON_DOCUMENT_SCHEMA;
-    let raw: dsl::DslValue = from.to_serde_value().into();
+    let raw: dsl::DslValue = dsl::json::to_dsl_value(&from.to_pack_value());
     let snap: Puzzle5dSnapshot = dsl::FromValue::from_value(raw).map_err(|e| store::TextError::new(format!("puzzle5d<-json: {e}"), dsl::TextSpan::at(1, 1)))?;
     Ok(snap)
 }

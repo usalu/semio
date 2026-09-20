@@ -179,6 +179,19 @@ impl MutationDiff<Block3dSnapshot> for Block3dDiff {
         take!(authors);
         take!(camera3d);
         take!(meta);
+        /// 🩹 Two edits touching the same item coalesce into ONE patch entry: `apply` refuses a
+        /// collection whose `patched` list names the same id twice
+        /// (`mutation.apply.duplicate-target`), so a plain `extend` breaks the diff-absorb law the
+        /// moment one gesture patches the same row twice. Every patch here is a whole-item
+        /// `replacement`, so the later entry simply supersedes the earlier one.
+        fn absorb_patches<E>(target: &mut Vec<E>, incoming: Vec<E>, id_of: impl Fn(&E) -> &str) {
+            for entry in incoming {
+                match target.iter().position(|existing| id_of(existing) == id_of(&entry)) {
+                    Some(position) => target[position] = entry,
+                    None => target.push(entry),
+                }
+            }
+        }
         fn absorb_col<D: Default>(target: &mut Option<D>, incoming: Option<D>, merge: impl FnOnce(&mut D, D)) {
             if let Some(src) = incoming {
                 match target {
@@ -192,7 +205,7 @@ impl MutationDiff<Block3dSnapshot> for Block3dDiff {
                 absorb_col(&mut self.$field, other.$field, |dst, src| {
                     dst.removed.extend(src.removed);
                     dst.added.extend(src.added);
-                    dst.patched.extend(src.patched);
+                    absorb_patches(&mut dst.patched, src.patched, |entry| entry.id.as_str());
                     if src.reordered.is_some() {
                         dst.reordered = src.reordered;
                     }

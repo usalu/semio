@@ -8,16 +8,21 @@ use crate::framework_surface_terrain::TerrainSessionCore;
 // wgpu-tier split): `draw_text`/`WidgetContext`/the paint half of `gizmo` are genuinely GPU-adjacent
 // (font/icon atlases) and are imported locally inside `render_world_3d`, the one function that is
 // itself `#[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]`-gated instead.
+#[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
+use ui_wgpu::wgpu::{
+    aabb_intersects_frustum, directional_shadow_frustum_planes, directional_shadow_view_projection, frustum_planes, grid_placement_anchor, paint_selection_marquee, transform_aabb, LineDraw3d, SceneLighting3d, SceneMaterial3d,
+    Mat4Math, SceneMaterialDraw3d, SceneMaterialKind3d, ScenePass3d, SceneShadow3d, SceneShadowRole3d, TexturedDraw3d, TexturedInstance3d, ICON_SHADOW_MAP_SIZE, WORLD_SHADOW_MAP_SIZE,
+};
+use ui_wgpu::wgpu::{
+    axis_rotate_angle, camera_grid_fade_distance, gumball_extent, gumball_eye, gumball_project_ray_onto_axis, interpolate_mesh_uv, lod_from_camera_distance, lod_grid_fade_alpha, lod_grid_step_world, lod_orbit_distance_for_camera,
+    marquee_is_crossing_from_path, mesh3d_abort, mesh3d_abort_step, mesh3d_allocate_step, mesh3d_begin, mesh3d_begin_close, mesh3d_close_step, mesh3d_seal, mesh3d_terminal_is_empty, mesh3d_write_u32, mesh3d_write_vec3, mesh3d_write_vec4,
+    quat_from_basis, ray_aabb_slab, ray_plane_point, ray_segment_distance, rotate_vector, world3d_snapshot_claim_draw_permit, world3d_snapshot_with_page, ActionDescriptor, Camera3d, CameraProjection3d, HitKind, HitTarget, Instance3d, LineVertex3d,
+    LocalizedLabel, Mat4, Mesh3dField, Mesh3dLease, Mesh3dSchema, Mesh3dWriteToken, OrbitController, PointerModifiers, PreparedRasterProducer, PreparedRasterRejected, PreparedRenderEviction, PreparedRenderUpload, Rect, Rgba, SceneColorSource3d, SceneDraw3d,
+    SceneRasterBegin, SceneRasterDescriptor, SceneRasterIdentity, SceneRasterLease, SceneRasterMeshSeal, SceneRasterPool, SceneRasterProfile, SceneRasterWriteMode,
+    UiComponentSceneNode, Vec3, World3dSnapshotDrawPermit, World3dSnapshotFault, World3dSnapshotItem, World3dSnapshotLease, World3dSnapshotPageKind,
+};
 #[cfg(test)]
 use ui_wgpu::wgpu::{screen_select_components, screen_select_instances};
-#[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
-use ui_wgpu::wgpu::{LineDraw3d, ScenePass3d, TexturedDraw3d, TexturedInstance3d, aabb_intersects_frustum, frustum_planes, grid_placement_anchor, paint_selection_marquee, transform_aabb};
-use ui_wgpu::wgpu::{
-    axis_rotate_angle, camera_grid_fade_distance, gumball_extent, gumball_eye, gumball_project_ray_onto_axis, interpolate_mesh_uv, lod_from_camera_distance, lod_grid_fade_alpha, lod_grid_step_world, lod_orbit_distance_for_camera, CameraProjection3d,
-    marquee_is_crossing_from_path, mesh3d_abort, mesh3d_abort_step, mesh3d_allocate_step, mesh3d_begin, mesh3d_begin_close, mesh3d_close_step, mesh3d_seal, mesh3d_terminal_is_empty, mesh3d_write_u32, mesh3d_write_vec3, mesh3d_write_vec4, quat_from_basis, ray_aabb_slab, ray_plane_point, ray_segment_distance, rotate_vector, world3d_snapshot_claim_draw_permit, world3d_snapshot_with_page, ActionDescriptor, Camera3d, HitKind, HitTarget, Instance3d, LineVertex3d, LocalizedLabel, Mat4, Mesh3dField, Mesh3dLease, Mesh3dSchema,
-    Mesh3dWriteToken, OrbitController, PointerModifiers, PreparedRasterProducer, PreparedRasterRejected, PreparedRenderEviction, PreparedRenderUpload, Rect, Rgba, SceneDraw3d, UiComponentSceneNode,
-    Vec3, World3dSnapshotDrawPermit, World3dSnapshotFault, World3dSnapshotItem, World3dSnapshotLease, World3dSnapshotPageKind,
-};
 
 //#region 📦️PreparedWorldResources
 const WORLD3D_FRAME_RESOURCE_CAPACITY: usize = 256;
@@ -52,6 +57,7 @@ impl World3dBuildRejected {
         match self {
             Self::Upload(PreparedRenderUpload::GlyphAtlasPages { pixels } | PreparedRenderUpload::IconAtlasPages { pixels }) => pixels.terminal_is_empty(),
             Self::Upload(PreparedRenderUpload::RasterPages { key, .. }) => key.is_empty(),
+            Self::Upload(PreparedRenderUpload::SceneRaster { key, .. }) => key.is_empty(),
             Self::Upload(PreparedRenderUpload::Mesh { key, .. }) => key.is_empty(),
             Self::RasterProducer(producer) => producer.terminal_is_empty(),
             Self::RasterAdmission(rejected) => rejected.terminal_is_empty(),
@@ -235,40 +241,21 @@ impl World3dBuildContext {
     /// pixels means the world state can hand them over exactly ONCE — the same one-shot semantics the
     /// chrome lane's `queue_decoded_raster_upload` has always had — and the producer, not the world,
     /// owns their bounded retirement from then on.
-    pub fn ensure_world_plane_texture(&mut self, key: &str, pixels: Vec<u8>, width: u32, height: u32) {
+    pub fn ensure_world_plane_texture(&mut self, key: &str, lease: SceneRasterLease) {
         if self.raster_requests[..self.raster_request_len].iter().flatten().any(|candidate| candidate == key) {
             return;
         }
-        let producer = match PreparedRasterProducer::try_admit(key.to_string(), pixels, width, height) {
-            Ok((producer, _)) => producer,
-            Err(mut rejected) => {
-                // 🖼️ A refused raster ADMISSION is back-pressure, not a frame fault. The process-wide
-                // raster ledger is shared by every surface and every frame still in flight, so a
-                // relayout burst can legitimately exhaust it for one frame — and this lane re-offers
-                // its underlay on the next one anyway. Reporting it as a build fault killed the page
-                // instead: closing a dock window tore the whole wgpu shell down with
-                // `frame world resource admission exceeded fixed credits` (ticket
-                // 26/09/17/WGPU-RENDERER-REACT-PARITY, `📓️w9c-behaviour-parity-run-2.md` §1).
-                //
-                // 🧯️ The refusal owns the source bytes and a ledger credit, so it is retired HERE to
-                // terminal — abandoning it would leak the credit and the exhaustion would be permanent.
-                let mut steps = 0_u32;
-                while steps < WORLD_RASTER_REFUSAL_CLOSE_STEPS && !rejected.close_step() {
-                    steps += 1;
-                }
-                return;
-            }
-        };
-        if self.raster_request_len == WORLD3D_FRAME_RESOURCE_CAPACITY || self.raster_producer_len == WORLD3D_FRAME_RESOURCE_CAPACITY {
+        let upload = PreparedRenderUpload::SceneRaster { key: key.to_string(), lease };
+        if self.raster_request_len == WORLD3D_FRAME_RESOURCE_CAPACITY || self.upload_len == WORLD3D_FRAME_RESOURCE_CAPACITY {
             if self.rejected.is_none() {
-                self.rejected = Some(World3dBuildRejected::RasterProducer(producer));
+                self.rejected = Some(World3dBuildRejected::Upload(upload));
             }
             return;
         }
         self.raster_requests[self.raster_request_len] = Some(key.to_string());
         self.raster_request_len += 1;
-        self.raster_producers[self.raster_producer_len] = Some(producer);
-        self.raster_producer_len += 1;
+        self.uploads[self.upload_len] = Some(upload);
+        self.upload_len += 1;
     }
 
     pub fn evict_mesh(&mut self, key: &str) {
@@ -398,7 +385,6 @@ fn action_args(value: serde_json::Value) -> Option<semio_framework::DslValue> {
 
 //#region SceneRecords
 
-
 fn dsl_id_to_string(value: &semio_framework::DslValue) -> Option<String> {
     value.as_str().map(str::to_string).or_else(|| value.as_f64().map(|n| if n.fract() == 0.0 { format!("{}", n as u64) } else { n.to_string() }))
 }
@@ -406,7 +392,6 @@ fn dsl_id_to_string(value: &semio_framework::DslValue) -> Option<String> {
 fn dsl_string_vec(value: &semio_framework::DslValue) -> Vec<String> {
     value.as_array().map(|items| items.iter().filter_map(dsl_id_to_string).collect()).unwrap_or_default()
 }
-
 
 #[derive(Clone, Debug, Deserialize, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
 #[serde(rename_all = "camelCase")]
@@ -416,7 +401,6 @@ struct WorldMeshLodEntry {
     lod: f64,
     url: String,
 }
-
 
 #[derive(Clone, Debug, Deserialize, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
 #[serde(rename_all = "camelCase")]
@@ -437,6 +421,9 @@ struct WorldLodRecord {
     #[serde(default = "default_grid_factor")]
     #[value(default = "default_grid_factor")]
     grid_factor: f64,
+    #[serde(default)]
+    #[value(default)]
+    grid_snap_enabled: bool,
     #[serde(default = "default_true")]
     #[value(default = "default_true")]
     show_grid: bool,
@@ -471,7 +458,6 @@ fn default_grid_factor() -> f64 {
     10.0
 }
 
-
 #[derive(Clone, Debug, Default, Deserialize, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
@@ -490,7 +476,6 @@ struct WorldSelectionTargets {
 fn default_true() -> bool {
     true
 }
-
 
 #[derive(Clone, Debug, Deserialize, Default, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
 #[serde(rename_all = "camelCase")]
@@ -514,11 +499,61 @@ struct WorldVortexRecord {
 #[value(rename_all = "camelCase")]
 struct WorldAttractionRecord {
     #[value(default)]
+    id: Option<String>,
+    #[value(default)]
     from: Option<[f64; 3]>,
     #[value(default)]
     to: Option<[f64; 3]>,
     #[value(default)]
     color: Option<String>,
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub struct WorldTutorialGeometry {
+    pub point: [f32; 2],
+    pub polyline: Option<Vec<[f32; 2]>>,
+}
+
+/// 👻️ Projects one tutorial scene point through the live world camera into surface-local pixels.
+pub fn world3d_tutorial_scene_point(state: &World3dState, position: [f64; 3]) -> Option<[f32; 2]> {
+    let camera = state.orbit.to_camera();
+    let view_projection = camera.view_proj(state.bounds.w.max(1.0), state.bounds.h.max(1.0));
+    ui_wgpu::wgpu::project_point(view_projection, Vec3::new(position[0] as f32, position[1] as f32, position[2] as f32), state.bounds.w.max(1.0), state.bounds.h.max(1.0))
+}
+
+/// 👻️ Resolves the world host's semantic pick vocabulary from its retained live scene geometry.
+pub fn world3d_tutorial_entity_geometry(state: &World3dState, domain: &str, entity: &str) -> Option<WorldTutorialGeometry> {
+    let center = [state.bounds.w * 0.5, state.bounds.h * 0.5];
+    let nearest = |points: Vec<[f64; 3]>| {
+        points
+            .into_iter()
+            .filter_map(|position| world3d_tutorial_scene_point(state, position).map(|point| (point, (point[0] - center[0]).hypot(point[1] - center[1]))))
+            .min_by(|left, right| left.1.total_cmp(&right.1))
+            .map(|(point, _)| WorldTutorialGeometry { point, polyline: None })
+    };
+    match domain {
+        "vortex" => {
+            if entity == "*" {
+                return nearest(state.vortices.iter().filter_map(|vortex| vortex.position).collect());
+            }
+            let position = state.vortices.iter().find(|vortex| vortex.full_id == entity)?.position?;
+            world3d_tutorial_scene_point(state, position).map(|point| WorldTutorialGeometry { point, polyline: None })
+        }
+        "object" => {
+            if entity == "*" {
+                return nearest(state.instance_positions.values().copied().collect());
+            }
+            let position = *state.instance_positions.get(entity)?;
+            world3d_tutorial_scene_point(state, position).map(|point| WorldTutorialGeometry { point, polyline: None })
+        }
+        "attraction" => {
+            let attraction = if entity == "*" { state.attractions.iter().find(|attraction| attraction.from.is_some() && attraction.to.is_some()) } else { state.attractions.iter().find(|attraction| attraction.id.as_deref() == Some(entity)) }?;
+            let from = world3d_tutorial_scene_point(state, attraction.from?)?;
+            let to = world3d_tutorial_scene_point(state, attraction.to?)?;
+            Some(WorldTutorialGeometry { point: [(from[0] + to[0]) * 0.5, (from[1] + to[1]) * 0.5], polyline: Some(vec![from, to]) })
+        }
+        _ => None,
+    }
 }
 
 #[derive(Clone, Debug, Deserialize, Default, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
@@ -540,11 +575,17 @@ struct WorldTargetVolumeRecord {
 #[value(rename_all = "camelCase")]
 struct WorldReferenceRecord {
     #[value(default)]
+    id: Option<String>,
+    #[value(default)]
     url: Option<String>,
     #[value(default)]
     origin: Option<[f64; 3]>,
     #[value(default)]
     width_world: Option<f64>,
+    #[value(default)]
+    locked: Option<bool>,
+    #[value(default)]
+    opacity: Option<f64>,
     #[value(default)]
     hidden: Option<bool>,
 }
@@ -780,7 +821,13 @@ impl dsl::ToValue for WorldBrushPreviewRecord {
             ("sourceVortexIndex".to_string(), dsl::ToValue::to_value(&self.source_vortex_index)),
             ("color".to_string(), dsl::ToValue::to_value(&self.color)),
         ];
-        entries.push(("scale".to_string(), match &self.scale { Some(scale) => dsl::DslValue::from(scale), None => dsl::DslValue::Null }));
+        entries.push((
+            "scale".to_string(),
+            match &self.scale {
+                Some(scale) => dsl::DslValue::from(scale),
+                None => dsl::DslValue::Null,
+            },
+        ));
         dsl::DslValue::object(entries)
     }
 }
@@ -808,11 +855,8 @@ impl dsl::FromValue for WorldBrushPreviewRecord {
     }
 }
 
-
 //#region Environment
-/// ☀️ Directional sun light — `enabled` gates whether `azimuth`/`elevation` (degrees, horizontal
-/// coordinate system) replace the renderer's default `light_dir`; `intensity`/`color` have no
-/// representable channel in `ScenePass3d` (single direction vector, no color/intensity) yet.
+/// ☀️ Directional sun light in the same horizontal coordinate system React uses.
 #[derive(Clone, Debug, Deserialize, Default, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
@@ -823,20 +867,16 @@ struct WorldEnvironmentSunRecord {
     azimuth: Option<f64>,
     #[value(default)]
     elevation: Option<f64>,
-    #[allow(dead_code)] // 🔌️ no per-light intensity channel in ScenePass3d yet; wiring gap, see report.
     #[value(default)]
     intensity: Option<f64>,
-    #[allow(dead_code)] // 🔌️ no per-light color channel in ScenePass3d yet; wiring gap, see report.
     #[value(default)]
     color: Option<String>,
 }
 
-/// 💡️ Ambient light — parsed for scene-shape completeness; `ScenePass3d` has no ambient
-/// color/intensity channel to apply it to (wiring gap, see report).
+/// 💡️ Ambient light carried into the scene pass and GPU globals.
 #[derive(Clone, Debug, Deserialize, Default, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
-#[allow(dead_code)]
 struct WorldEnvironmentAmbientRecord {
     #[value(default)]
     intensity: Option<f64>,
@@ -844,12 +884,10 @@ struct WorldEnvironmentAmbientRecord {
     color: Option<String>,
 }
 
-/// 🌑️ Shadow toggle — dead in the React reference too (no shadow-map consumer there either);
-/// kept for scene-shape completeness only.
+/// 🌑️ Directional shadow controls shared by World3d and IconRender.
 #[derive(Clone, Debug, Deserialize, Default, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
-#[allow(dead_code)]
 struct WorldEnvironmentShadowRecord {
     #[value(default)]
     enabled: Option<bool>,
@@ -859,35 +897,26 @@ struct WorldEnvironmentShadowRecord {
     softness: Option<f64>,
 }
 
-/// 🎨️ Neutral-instance material override — `color` becomes the base-color fallback for instances
-/// without an explicit per-instance color (mirrors the React reference's "only applies when the
-/// instance isn't selected/hovered" rule, since Rust's selection/hover highlighting is a separate
-/// boolean layered on top rather than a color premix). `metalness`/`roughness`/`emissive*` have no
-/// PBR channel on `Instance3d` yet (wiring gap, see report).
+/// 🎨️ Neutral-instance material override. Selection and hover keep their semantic base/emissive
+/// rows while sharing the material's metalness and roughness, as React's `GlbInstanceMesh` does.
 #[derive(Clone, Debug, Deserialize, Default, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 struct WorldEnvironmentMaterialRecord {
     #[value(default)]
     color: Option<String>,
-    #[allow(dead_code)]
     #[value(default)]
     metalness: Option<f64>,
-    #[allow(dead_code)]
     #[value(default)]
     roughness: Option<f64>,
-    #[allow(dead_code)]
     #[value(default)]
     emissive: Option<String>,
-    #[allow(dead_code)]
     #[value(default)]
     emissive_intensity: Option<f64>,
 }
 
 /// 🌍️ `World3dScene.environmentJson` mirror — see `world-3d-host.tsx`'s `WorldEnvironmentRecord`.
-/// Only `background` (canvas clear color), `sun` (light direction), and `material.color` (neutral
-/// instance base-color fallback) are representable in this renderer today; the rest is parsed for
-/// forward-compat and documented per-field above.
+/// Every visible light/material field is resolved into [`ScenePass3d`] before GPU preparation.
 #[derive(Clone, Debug, Deserialize, Default, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
@@ -1387,7 +1416,7 @@ impl WorldDrawRebuildCursor {
         Ok(())
     }
 
-    fn admit_instance(&mut self, draw: u16, id: &str, model: Mat4, color: [f32; 4], selected: bool, hovered: bool) -> Result<(), WorldDynamicFault> {
+    fn admit_instance(&mut self, draw: u16, id: &str, model: Mat4, color: [f32; 4], color_source: SceneColorSource3d, selected: bool, hovered: bool) -> Result<(), WorldDynamicFault> {
         if self.publishing || self.faulted || id.len() > WORLD_DYNAMIC_ID_BYTE_CAPACITY {
             return Err(if id.len() > WORLD_DYNAMIC_ID_BYTE_CAPACITY { WorldDynamicFault::IdCapacity } else { WorldDynamicFault::Closing });
         }
@@ -1402,7 +1431,7 @@ impl WorldDrawRebuildCursor {
         if draft.admitted == draft.slots.len() {
             return Err(WorldDynamicFault::InstanceCapacity);
         }
-        let instance = Instance3d { id: id.to_owned(), model, color, selected, hovered };
+        let instance = Instance3d { id: id.to_owned(), model, color, selected, hovered, material: ui_wgpu::wgpu::SceneInstanceMaterial3d { color_source, ..Default::default() } };
         draft.push(instance).map_err(|_| WorldDynamicFault::InstanceCapacity)?;
         self.admitted_instances += 1;
         self.admitted_bytes = next as u32;
@@ -1472,10 +1501,15 @@ impl Drop for WorldDrawRegistry {
     }
 }
 
+/// 🖼️ Bounded identity and lease metadata; dropping it releases one token while the pool retains pixel storage.
+#[derive(Debug)]
+struct WorldSceneRaster {
+    identity: SceneRasterIdentity,
+    pending: Mutex<Option<SceneRasterLease>>,
+}
+
 enum WorldOpaqueOwner {
     Draw(WorldDynamicEntry<SceneDraw3d>),
-    ReferencePixels(WorldDynamicEntry<(u32, u32, Vec<u8>)>),
-    PaintPixels(WorldDynamicEntry<(u32, u32, Vec<u8>)>),
 }
 
 struct WorldOpaqueQuarantine<const N: usize> {
@@ -1513,6 +1547,11 @@ impl<const N: usize> WorldOpaqueQuarantine<N> {
 }
 
 static WORLD_OPAQUE_QUARANTINE: LazyLock<Mutex<WorldOpaqueQuarantine<WORLD_OPAQUE_QUARANTINE_CAPACITY>>> = LazyLock::new(|| Mutex::new(WorldOpaqueQuarantine::default()));
+static WORLD_SCENE_RASTER_POOL: LazyLock<SceneRasterPool> = LazyLock::new(SceneRasterPool::new);
+
+pub fn world_scene_raster_pool() -> SceneRasterPool {
+    WORLD_SCENE_RASTER_POOL.clone()
+}
 
 fn quarantine_world_owner(owner: WorldOpaqueOwner) -> Result<WorldDynamicToken, WorldOpaqueOwner> {
     let Ok(mut quarantine) = WORLD_OPAQUE_QUARANTINE.lock() else {
@@ -1602,7 +1641,7 @@ pub struct World3dState {
     #[cfg(test)]
     gumball_preview_scale: Vec3,
     pending_image_urls: HashSet<String>,
-    reference_pixels: WorldDynamicRegistry<(u32, u32, Vec<u8>), WORLD_DYNAMIC_PIXEL_CAPACITY>,
+    reference_pixels: WorldDynamicRegistry<WorldSceneRaster, WORLD_DYNAMIC_PIXEL_CAPACITY>,
     granularity: String,
     component_ids: Vec<String>,
     interaction_mode: String,
@@ -1617,7 +1656,7 @@ pub struct World3dState {
     active_object_id: Option<String>,
     #[cfg(test)]
     press_object_id: Option<String>,
-    mesh_paint_textures: WorldDynamicRegistry<(u32, u32, Vec<u8>), WORLD_DYNAMIC_PIXEL_CAPACITY>,
+    mesh_paint_textures: WorldDynamicRegistry<WorldSceneRaster, WORLD_DYNAMIC_PIXEL_CAPACITY>,
     lod: WorldLodRecord,
     chunking: Option<WorldChunkingRecord>,
     visible_chunks: HashSet<(i64, i64, i64)>,
@@ -1672,11 +1711,12 @@ pub struct World3dState {
     scene_bridge_generation: u64,
     scene_bridge_digest: Option<u64>,
     scene_camera_digest: Option<u64>,
-    /// 🎯️ The `fit` revision this surface last FRAMED, and the last one it SAW. The two differ while a
-    /// document is on screen whose delivery has not published an extent yet (a freshly switched example
-    /// before its first mesh arrives), which is precisely the window the boot framing must still fire in.
-    fit_framed_revision: Option<u32>,
-    fit_seen_revision: Option<u32>,
+    /// 🎯️ React's retained `WorldAutoFit` request, ownership key, applied key, and bounded live-geometry
+    /// measurement. A missing published extent stays owed until rendered mesh bounds exist.
+    fit_request: Option<World3dCameraFitRequest>,
+    fit_owner: Option<World3dCameraFitOwner>,
+    fit_applied_key: Option<u64>,
+    fit_bounds_cursor: Option<World3dCameraBoundsCursor>,
     /// 📷️ The content extent React's `WorldProjectionContentFrame` last framed a PARALLEL pane on,
     /// so it re-frames when a tool grows the scene and never twice for the same one.
     projection_frame_key: Option<u64>,
@@ -1718,6 +1758,7 @@ pub struct World3dState {
     face_overlay_applied_revision: u64,
     face_overlay_applied_draw_generation: u64,
     draw_generation: u64,
+    geometry_generation: u64,
     draw_rebuild: Option<WorldDrawRebuildCursor>,
     retired_draws: Option<WorldDrawRegistry>,
     asset_generation: u64,
@@ -1945,7 +1986,16 @@ impl World3dState {
             #[cfg(test)]
             press_object_id: None,
             mesh_paint_textures: WorldDynamicRegistry::default(),
-            lod: WorldLodRecord { automatic: true, manual: default_manual_lod(), distance_reference: default_distance_reference(), depth_variable: false, grid_factor: default_grid_factor(), show_grid: true, grid_datum: Some([0.0, 0.0, 0.0]) },
+            lod: WorldLodRecord {
+                automatic: true,
+                manual: default_manual_lod(),
+                distance_reference: default_distance_reference(),
+                depth_variable: false,
+                grid_factor: default_grid_factor(),
+                grid_snap_enabled: false,
+                show_grid: true,
+                grid_datum: Some([0.0, 0.0, 0.0]),
+            },
             chunking: None,
             visible_chunks: HashSet::new(),
             #[cfg(test)]
@@ -1983,8 +2033,10 @@ impl World3dState {
             scene_bridge_generation: 0,
             scene_bridge_digest: None,
             scene_camera_digest: None,
-            fit_framed_revision: None,
-            fit_seen_revision: None,
+            fit_request: None,
+            fit_owner: None,
+            fit_applied_key: None,
+            fit_bounds_cursor: None,
             projection_frame_key: None,
             projection_frame_zoom: None,
             projection_orientation: ui_wgpu::wgpu::WorldProjectionOrientation::Free,
@@ -2013,6 +2065,7 @@ impl World3dState {
             face_overlay_applied_revision: u64::MAX,
             face_overlay_applied_draw_generation: u64::MAX,
             draw_generation: 0,
+            geometry_generation: 0,
             draw_rebuild: None,
             retired_draws: None,
             asset_generation: 0,
@@ -2179,11 +2232,7 @@ pub fn world_navigation_snapshot(state: &World3dState) -> WorldNavigationSnapsho
 pub fn classify_world_navigation_gestures(before: WorldNavigationSnapshot, after: WorldNavigationSnapshot) -> [bool; 3] {
     let reference = world_navigation_distance(before.position, before.target).max(1.0);
     let pan = world_navigation_distance(before.target, after.target) > WORLD_NAVIGATION_PAN_RATIO * reference;
-    let zoom_delta = if before.parallel {
-        (after.zoom / if before.zoom == 0.0 { 1.0 } else { before.zoom } - 1.0).abs()
-    } else {
-        (world_navigation_distance(after.position, after.target) / reference - 1.0).abs()
-    };
+    let zoom_delta = if before.parallel { (after.zoom / if before.zoom == 0.0 { 1.0 } else { before.zoom } - 1.0).abs() } else { (world_navigation_distance(after.position, after.target) / reference - 1.0).abs() };
     let zoom = zoom_delta > WORLD_NAVIGATION_ZOOM_RATIO;
     let before_direction = world_navigation_direction(before.target, before.position);
     let after_direction = world_navigation_direction(after.target, after.position);
@@ -2207,6 +2256,7 @@ impl World3dDynamicRetirement {
         state.reference_pixels.begin_close();
         state.mesh_paint_textures.begin_close();
         state.asset_io.begin_close();
+        state.fit_bounds_cursor = None;
         Self { phase: 0, blocked: None }
     }
 
@@ -2276,22 +2326,14 @@ impl World3dDynamicRetirement {
                     self.phase = 4;
                     return false;
                 };
-                if let Err(owner) = quarantine_world_owner(WorldOpaqueOwner::ReferencePixels(entry)) {
-                    let WorldOpaqueOwner::ReferencePixels(entry) = owner else { unreachable!("reference pixel quarantine owner") };
-                    state.reference_pixels.restore(entry);
-                    self.blocked = Some(WorldDynamicFault::QuarantineCapacity);
-                }
+                drop(entry);
             }
             4 => {
                 let Some(entry) = state.mesh_paint_textures.take_one() else {
                     self.phase = 5;
                     return false;
                 };
-                if let Err(owner) = quarantine_world_owner(WorldOpaqueOwner::PaintPixels(entry)) {
-                    let WorldOpaqueOwner::PaintPixels(entry) = owner else { unreachable!("paint pixel quarantine owner") };
-                    state.mesh_paint_textures.restore(entry);
-                    self.blocked = Some(WorldDynamicFault::QuarantineCapacity);
-                }
+                drop(entry);
             }
             _ => return true,
         }
@@ -2390,6 +2432,7 @@ pub fn world3d_dynamic_retirement_terminal_is_empty(state: &World3dState) -> boo
         && state.face_overlay_generation.is_none()
         && state.face_overlay_retired_generation.is_none()
         && state.face_overlay_colors.iter().all(Option::is_none)
+        && state.fit_bounds_cursor.is_none()
         && world3d_draw_rebuild_terminal_is_empty(state)
         && state.meshes.is_empty()
         && state.mesh_versions.is_empty()
@@ -2422,6 +2465,7 @@ pub fn world3d_cursor_work_pending(state: &World3dState) -> bool {
         || state.dynamic_retirement.is_some()
         || state.scene_bridge_retired.is_some()
         || state.scene_bridge_lease.is_some_and(|lease| state.snapshot_lease != Some(lease))
+        || world3d_camera_fit_work_pending(state)
 }
 
 //#endregion 🧹️World3dDynamicRetirement
@@ -2456,10 +2500,23 @@ pub fn world3d_draw_rebuild_admit_draw(state: &mut World3dState, mesh_key: &str,
 }
 
 pub fn world3d_draw_rebuild_admit_instance(state: &mut World3dState, draw: u16, id: &str, model: Mat4, color: [f32; 4], selected: bool, hovered: bool) -> Result<(), WorldDynamicFault> {
+    world3d_draw_rebuild_admit_retained_instance(state, draw, id, model, color, SceneColorSource3d::Authored, selected, hovered)
+}
+
+fn world3d_draw_rebuild_admit_retained_instance(
+    state: &mut World3dState,
+    draw: u16,
+    id: &str,
+    model: Mat4,
+    color: [f32; 4],
+    color_source: SceneColorSource3d,
+    selected: bool,
+    hovered: bool,
+) -> Result<(), WorldDynamicFault> {
     let Some(cursor) = state.draw_rebuild.as_mut() else {
         return Err(WorldDynamicFault::StaleToken);
     };
-    cursor.admit_instance(draw, id, model, color, selected, hovered)
+    cursor.admit_instance(draw, id, model, color, color_source, selected, hovered)
 }
 
 pub fn world3d_draw_rebuild_seal(state: &mut World3dState) -> Result<(), WorldDynamicFault> {
@@ -2522,7 +2579,7 @@ pub fn step_world3d_draw_rebuild(state: &mut World3dState, context: &mut semio_f
     }
     if cursor.publish_draw < cursor.descriptor.draw_count {
         let draft = cursor.drafts[usize::from(cursor.publish_draw)].as_ref().expect("sealed draw draft");
-        cursor.output = Some(SceneDraw3d { mesh_key: draft.mesh_key.clone(), mesh_version: draft.mesh_version, instances: Vec::with_capacity(draft.admitted) });
+        cursor.output = Some(SceneDraw3d { mesh_key: draft.mesh_key.clone(), mesh_version: draft.mesh_version, instances: Vec::with_capacity(draft.admitted), shadow_role: Default::default() });
         state.draw_rebuild = Some(cursor);
         context.consume_fuel(1);
         return WorldDrawRebuildStep::Pending;
@@ -2799,6 +2856,7 @@ struct WorldInteractionObjectSlot {
 
 struct WorldInteractionObjectRegistry {
     slots: Box<[Option<WorldInteractionObjectSlot>; WORLD_INTERACTION_OBJECT_CAPACITY]>,
+    occupied: [u64; WORLD_INTERACTION_OBJECT_CAPACITY.div_ceil(64)],
     epochs: Box<[u64; WORLD_INTERACTION_OBJECT_CAPACITY]>,
     instance_order: Box<[Option<WorldInteractionObjectToken>; WORLD_INTERACTION_OBJECT_CAPACITY]>,
     instance_len: u16,
@@ -2808,14 +2866,7 @@ struct WorldInteractionObjectRegistry {
 
 impl Default for WorldInteractionObjectRegistry {
     fn default() -> Self {
-        Self {
-            slots: semio_framework_async::boxed_fixed_slots(|| None),
-            epochs: semio_framework_async::boxed_fixed_slots(|| 0),
-            instance_order: semio_framework_async::boxed_fixed_slots(|| None),
-            instance_len: 0,
-            revision: u64::MAX,
-            faulted: false,
-        }
+        Self { slots: semio_framework_async::boxed_fixed_slots(|| None), occupied: [0; WORLD_INTERACTION_OBJECT_CAPACITY.div_ceil(64)], epochs: semio_framework_async::boxed_fixed_slots(|| 0), instance_order: semio_framework_async::boxed_fixed_slots(|| None), instance_len: 0, revision: u64::MAX, faulted: false }
     }
 }
 
@@ -2878,7 +2929,22 @@ impl WorldInteractionObjectRegistry {
         };
         self.epochs[slot] = generation;
         self.slots[slot] = Some(WorldInteractionObjectSlot { id, kind, generation, revision, mesh, model, values });
+        self.occupied[slot / 64] |= 1u64 << (slot % 64);
         Some(WorldInteractionObjectToken { slot: slot as u16, generation, revision })
+    }
+
+    /// 🧭️ Finds the next occupied slot in at most sixteen bitmap words, preserving stable slot order.
+    fn next_occupied(&self, start: u16) -> Option<(usize, &WorldInteractionObjectSlot)> {
+        let mut word = usize::from(start) / 64;
+        let mut bits = *self.occupied.get(word)? & (u64::MAX << (usize::from(start) % 64));
+        loop {
+            if bits != 0 {
+                let slot = word * 64 + bits.trailing_zeros() as usize;
+                return self.slots.get(slot)?.as_ref().map(|entry| (slot, entry));
+            }
+            word += 1;
+            bits = *self.occupied.get(word)?;
+        }
     }
 
     fn resolve(&self, token: WorldInteractionObjectToken) -> Option<&WorldInteractionObjectSlot> {
@@ -3031,7 +3097,7 @@ impl WorldInteractionRegistryBuildCursor {
                     return WorldInteractionStep::Pending;
                 };
                 self.reference += 1;
-                if reference.hidden.unwrap_or(false) {
+                if reference.hidden.unwrap_or(false) || reference.locked.unwrap_or(false) {
                     context.consume_fuel(1);
                     return WorldInteractionStep::Pending;
                 }
@@ -3043,7 +3109,8 @@ impl WorldInteractionRegistryBuildCursor {
                 let width = reference.width_world.unwrap_or(1.0) as f32;
                 let aspect = reference_image_aspect(state, url);
                 let values = [origin[0] as f32, origin[1] as f32, origin[2] as f32, width, width / aspect, 0.0, 0.0, 0.0];
-                if state.interaction_objects.admit(self.revision, WorldInteractionObjectKind::Reference, url, None, Mat4::identity(), values).is_none() {
+                let id = reference.id.as_deref().unwrap_or(url);
+                if state.interaction_objects.admit(self.revision, WorldInteractionObjectKind::Reference, id, None, Mat4::identity(), values).is_none() {
                     self.faulted = true;
                     return WorldInteractionStep::Fault;
                 }
@@ -3249,7 +3316,6 @@ struct WorldFlatAction {
     kind: WorldFlatActionKind,
     strings: [Option<WorldInteractionSpan>; 8],
     numbers: [f64; 10],
-
 }
 
 pub struct WorldInteractionPlan {
@@ -4477,7 +4543,24 @@ impl WorldRayPickCursor {
         let (local_x, local_y, viewport) = pointer_in_pick_rect(state, x, y)?;
         let camera = state.orbit.to_camera();
         let (origin, direction) = camera.ray_from_screen(local_x, local_y, viewport.w, viewport.h);
-        Some(Self { revision: state.interaction_revision, generation, purpose, origin, direction, draw: 0, instance: 0, triangle: 0, mesh: None, mesh_probe: 0, merge: 0, best: None, pick_target: 0, best_target: None, complete: false, faulted: false })
+        Some(Self {
+            revision: state.interaction_revision,
+            generation,
+            purpose,
+            origin,
+            direction,
+            draw: 0,
+            instance: 0,
+            triangle: 0,
+            mesh: None,
+            mesh_probe: 0,
+            merge: 0,
+            best: None,
+            pick_target: 0,
+            best_target: None,
+            complete: false,
+            faulted: false,
+        })
     }
 
     /// ⏭️ Advances past a draw the ray cannot test — one whose mesh the guest has not published yet.
@@ -4659,8 +4742,7 @@ impl WorldRayPickCursor {
                     let mut plan = WorldInteractionPlan::new(self.revision, generation);
                     let controller = plan.push_string(&state.controller_id).ok_or(WorldInteractionStep::Fault)?;
                     let domain = plan.push_string(resolved_domain_id(state)).ok_or(WorldInteractionStep::Fault)?;
-                    let merge = plan.push_string(world_merge_wire_label(self.merge))
-                        .ok_or(WorldInteractionStep::Fault)?;
+                    let merge = plan.push_string(world_merge_wire_label(self.merge)).ok_or(WorldInteractionStep::Fault)?;
                     let method = plan.push_string(selection_method_wire_str(SelectionMethod::Pick)).ok_or(WorldInteractionStep::Fault)?;
                     let action = WorldFlatAction { kind: WorldFlatActionKind::Select, strings: [Some(controller), None, None, Some(domain), None, Some(merge), Some(method), None], numbers: [0.0; 10] };
                     plan.push_action(action).then_some(plan).ok_or(WorldInteractionStep::Fault).map(Some)
@@ -4745,11 +4827,7 @@ impl WorldRayPickCursor {
                     numbers: [bare, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
                 }
             }
-            _ => WorldFlatAction {
-                kind: WorldFlatActionKind::Hover,
-                strings: [Some(controller), Some(surface), Some(object), Some(domain), Some(granularity), None, None, None],
-                numbers: [bare, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
-            },
+            _ => WorldFlatAction { kind: WorldFlatActionKind::Hover, strings: [Some(controller), Some(surface), Some(object), Some(domain), Some(granularity), None, None, None], numbers: [bare, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0] },
         };
         plan.push_action(action).then_some(plan).ok_or(WorldInteractionStep::Fault).map(Some)
     }
@@ -4775,6 +4853,7 @@ enum WorldObjectPickPurpose {
     VortexHover,
     VortexSelect,
     ReferenceHover,
+    ReferenceSelect,
 }
 
 struct WorldObjectPickCursor {
@@ -4811,17 +4890,12 @@ impl WorldObjectPickCursor {
         if self.complete {
             return WorldInteractionStep::Complete;
         }
-        let index = usize::from(self.slot);
-        let Some(entry) = state.interaction_objects.slots.get(index) else {
+        let Some((index, entry)) = state.interaction_objects.next_occupied(self.slot) else {
             self.complete = true;
             context.consume_fuel(1);
             return WorldInteractionStep::Pending;
         };
-        self.slot += 1;
-        let Some(entry) = entry else {
-            context.consume_fuel(1);
-            return WorldInteractionStep::Pending;
-        };
+        self.slot = index as u16 + 1;
         if entry.revision != self.revision {
             context.consume_fuel(1);
             return WorldInteractionStep::Pending;
@@ -4832,7 +4906,7 @@ impl WorldObjectPickCursor {
                 let radius = entry.values[6].max(0.0);
                 ray_aabb_slab(self.origin, self.direction, [center.x - radius, center.y - radius, center.z - radius], [center.x + radius, center.y + radius, center.z + radius])
             }
-            (WorldObjectPickPurpose::ReferenceHover, WorldInteractionObjectKind::Reference) => {
+            (WorldObjectPickPurpose::ReferenceHover | WorldObjectPickPurpose::ReferenceSelect, WorldInteractionObjectKind::Reference) => {
                 let center = Vec3::new(entry.values[0], entry.values[1], entry.values[2]);
                 ray_plane_point(self.origin, self.direction, center, Vec3::new(0.0, 0.0, 1.0)).and_then(|hit| {
                     let offset = hit.sub(center);
@@ -4874,23 +4948,37 @@ impl WorldObjectPickCursor {
                     return Ok(None);
                 };
                 let hit = plan.push_string(entry.id.as_str()).ok_or(WorldInteractionStep::Fault)?;
-                let merge = plan.push_string(world_merge_wire_label(self.merge))
-                    .ok_or(WorldInteractionStep::Fault)?;
+                let merge = plan.push_string(world_merge_wire_label(self.merge)).ok_or(WorldInteractionStep::Fault)?;
                 WorldFlatAction { kind: WorldFlatActionKind::VortexSelect, strings: [Some(controller), Some(surface), Some(hit), Some(merge), None, None, None, None], numbers: [0.0; 10] }
             }
             WorldObjectPickPurpose::ReferenceHover => {
-                let hit = entry.map(|entry| plan.push_joined(&["reference:", entry.id.as_str()]).ok_or(WorldInteractionStep::Fault)).transpose()?;
+                let hit = entry.map(|entry| plan.push_string(entry.id.as_str()).ok_or(WorldInteractionStep::Fault)).transpose()?;
                 if hit.is_none() && state.local_hover_id.is_none() {
                     return Ok(None);
                 }
                 let domain = plan.push_string(resolved_domain_id(state)).ok_or(WorldInteractionStep::Fault)?;
                 let granularity = match hit {
-                    Some(_) => Some(plan.push_string(resolved_domain_granularity_id(state)).ok_or(WorldInteractionStep::Fault)?),
+                    Some(_) => Some(plan.push_string("reference").ok_or(WorldInteractionStep::Fault)?),
                     None => None,
                 };
                 WorldFlatAction {
                     kind: WorldFlatActionKind::Hover,
                     strings: [Some(controller), Some(surface), hit, Some(domain), granularity, None, None, None],
+                    numbers: [if state.bound_domain_id.is_some() { 1.0 } else { 0.0 }, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                }
+            }
+            WorldObjectPickPurpose::ReferenceSelect => {
+                let hit = entry.map(|entry| plan.push_string(entry.id.as_str()).ok_or(WorldInteractionStep::Fault)).transpose()?;
+                let domain = plan.push_string(resolved_domain_id(state)).ok_or(WorldInteractionStep::Fault)?;
+                let granularity = match hit {
+                    Some(_) => Some(plan.push_string("reference").ok_or(WorldInteractionStep::Fault)?),
+                    None => None,
+                };
+                let merge = plan.push_string(world_merge_wire_label(self.merge)).ok_or(WorldInteractionStep::Fault)?;
+                let method = plan.push_string(selection_method_wire_str(SelectionMethod::Pick)).ok_or(WorldInteractionStep::Fault)?;
+                WorldFlatAction {
+                    kind: WorldFlatActionKind::Select,
+                    strings: [Some(controller), Some(surface), hit, Some(domain), granularity, Some(merge), Some(method), None],
                     numbers: [if state.bound_domain_id.is_some() { 1.0 } else { 0.0 }, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
                 }
             }
@@ -5088,13 +5176,7 @@ impl WorldComponentPickCursor {
         let surface = plan.push_string(&state.surface_id).ok_or(WorldInteractionStep::Fault)?;
         let object_span = object.map(|(entry, _)| plan.push_string(entry.id.as_str()).ok_or(WorldInteractionStep::Fault)).transpose()?;
         let mode = plan.push_string(self.kind.as_str()).ok_or(WorldInteractionStep::Fault)?;
-        let merge = if self.purpose == WorldComponentPickPurpose::Select {
-            Some(
-                plan.push_string(world_merge_wire_label(self.merge)).ok_or(WorldInteractionStep::Fault)?,
-            )
-        } else {
-            None
-        };
+        let merge = if self.purpose == WorldComponentPickPurpose::Select { Some(plan.push_string(world_merge_wire_label(self.merge)).ok_or(WorldInteractionStep::Fault)?) } else { None };
         let action = WorldFlatAction {
             kind: if self.purpose == WorldComponentPickPurpose::Hover { WorldFlatActionKind::ComponentHover } else { WorldFlatActionKind::ComponentSelect },
             strings: [Some(controller), Some(surface), object_span, Some(mode), merge, None, None, None],
@@ -5124,7 +5206,6 @@ impl WorldComponentKind {
         }
     }
 }
-
 
 const WORLD_GUMBALL_SELECTED_CAPACITY: usize = 64;
 
@@ -6532,6 +6613,13 @@ impl WorldInteractionAuthority {
                         context.consume_fuel(1);
                         WorldInteractionAuthorityStep::Pending
                     }
+                    WorldInteractionStep::Complete if cursor.purpose == WorldRayPickPurpose::Instance && cursor.best.is_none() && cursor.best_target.is_none() => {
+                        let mut reference = WorldObjectPickCursor::from_ray(cursor.revision, cursor.generation, WorldObjectPickPurpose::ReferenceSelect, cursor.origin, cursor.direction);
+                        reference.merge = cursor.merge;
+                        self.active = Some(WorldInteractionActive::ObjectPick { cursor: reference, retirement: None });
+                        context.consume_fuel(1);
+                        WorldInteractionAuthorityStep::Pending
+                    }
                     WorldInteractionStep::Complete => match cursor.finish_plan(state, generation) {
                         Ok(Some(plan)) => {
                             self.active = Some(WorldInteractionActive::Plan { plan, retirement: None });
@@ -6984,18 +7072,7 @@ fn plan_world3d_camera_settle(state: &World3dState, generation: u64) -> Option<W
     let sync = WorldFlatAction {
         kind: WorldFlatActionKind::Camera,
         strings: [Some(controller), Some(surface), None, None, None, None, None, None],
-        numbers: [
-            camera.position.x as f64,
-            camera.position.y as f64,
-            camera.position.z as f64,
-            camera.target.x as f64,
-            camera.target.y as f64,
-            camera.target.z as f64,
-            world3d_camera_zoom(&camera),
-            0.0,
-            0.0,
-            0.0,
-        ],
+        numbers: [camera.position.x as f64, camera.position.y as f64, camera.position.z as f64, camera.target.x as f64, camera.target.y as f64, camera.target.z as f64, world3d_camera_zoom(&camera), 0.0, 0.0, 0.0],
     };
     plan.push_action(sync).then_some(plan)
 }
@@ -7119,7 +7196,8 @@ fn push_interaction_targets(builder: &mut ui_wgpu::wgpu::BoundedActionBuilder, s
     if bare_id {
         builder.string_joined(Some("targets"), &[INTERACTION_TARGETS_ARRAY_OPEN, INTERACTION_TARGETS_OPEN, granularity, INTERACTION_TARGETS_MIDDLE, object, INTERACTION_TARGETS_TAIL, INTERACTION_TARGETS_ARRAY_CLOSE])
     } else {
-        builder.string_joined(Some("targets"), &[INTERACTION_TARGETS_ARRAY_OPEN, INTERACTION_TARGETS_OPEN, granularity, INTERACTION_TARGETS_MIDDLE, surface, WORLD_ITEM_PATH_DELIMITER, object, INTERACTION_TARGETS_TAIL, INTERACTION_TARGETS_ARRAY_CLOSE])
+        builder
+            .string_joined(Some("targets"), &[INTERACTION_TARGETS_ARRAY_OPEN, INTERACTION_TARGETS_OPEN, granularity, INTERACTION_TARGETS_MIDDLE, surface, WORLD_ITEM_PATH_DELIMITER, object, INTERACTION_TARGETS_TAIL, INTERACTION_TARGETS_ARRAY_CLOSE])
     }
 }
 
@@ -7189,7 +7267,7 @@ pub fn publish_world3d_plan_step(
             builder.end_container()?;
             reservation.publish_with(|| {
                 state.camera_sync = WorldCameraSync { hover_owed: true, at: state.camera_sync.at, ..WorldCameraSync::default() };
-                state.interaction_revision = state.interaction_revision.wrapping_add(1);
+                advance_world3d_view_revision(state);
             })?;
         }
         WorldFlatActionKind::CameraLocal => {
@@ -7208,7 +7286,7 @@ pub fn publish_world3d_plan_step(
             }
             state.camera_user_moved = true;
             state.camera_sync.owed = true;
-            state.interaction_revision = state.interaction_revision.wrapping_add(1);
+            advance_world3d_view_revision(state);
         }
         WorldFlatActionKind::Navigation => {
             let controller = plan.string(action.strings[0].expect("navigation controller span"));
@@ -7612,7 +7690,16 @@ const WORLD_LOD_EPSILON: f64 = 0.01;
 const WORLD_GRID_MAX_DIVISIONS: i32 = 512;
 
 fn default_lod_record() -> WorldLodRecord {
-    WorldLodRecord { automatic: true, manual: default_manual_lod(), distance_reference: default_distance_reference(), depth_variable: false, grid_factor: default_grid_factor(), show_grid: true, grid_datum: Some([0.0, 0.0, 0.0]) }
+    WorldLodRecord {
+        automatic: true,
+        manual: default_manual_lod(),
+        distance_reference: default_distance_reference(),
+        depth_variable: false,
+        grid_factor: default_grid_factor(),
+        grid_snap_enabled: false,
+        show_grid: true,
+        grid_datum: Some([0.0, 0.0, 0.0]),
+    }
 }
 
 fn scene_lod(state: &World3dState) -> f64 {
@@ -7780,22 +7867,28 @@ pub fn resolve_mesh_style(state: MeshStyleState) -> MeshStyleKind {
     MeshStyleKind::Neutral
 }
 
-/// 🎨️ One instance's [`mesh_style_paint`] row, BAKED into its colour.
-///
-/// ⚖️ React does not tint a styled mesh — `GlbInstanceMesh` builds a whole new
-/// `MeshStandardMaterial` whose `color` IS the row's fill and whose `emissiveIntensity` is the
-/// row's (`🌐️World3dHost/🟦️.tsx`). `WORLD3D_SHADER` reads the emissive half off the instance's
-/// own selected/hovered flags; the fill and the opacity have to happen here, because the shader
-/// knows no theme. A `neutral` instance keeps the colour the producer authored — React's neutral
-/// row is `var(--panel)` only for a mesh with no authored material, and every wgpu instance
-/// carries one.
-fn world3d_style_paint(theme: &ui_wgpu::wgpu::Theme, style: MeshStyleState, mut instance: Instance3d) -> Instance3d {
+/// 🎨️ Resolves React's retained material row while keeping semantic, authored, and environment
+/// colour authority distinct across live theme changes.
+fn world3d_style_paint(theme: &ui_wgpu::wgpu::Theme, style: MeshStyleState, has_vertex_colors: bool, mut instance: Instance3d) -> Instance3d {
     let kind = resolve_mesh_style(style);
+    let preserve_vertex_color = has_vertex_colors && matches!(kind, MeshStyleKind::Neutral | MeshStyleKind::Disabled);
+    instance.material.preserve_vertex_color = preserve_vertex_color;
     if kind == MeshStyleKind::Neutral {
+        if preserve_vertex_color {
+            instance.color = [1.0, 1.0, 1.0, instance.color[3]];
+        } else if instance.material.color_source == SceneColorSource3d::SemanticNeutral {
+            instance.color = [theme.panel.r, theme.panel.g, theme.panel.b, instance.color[3] * theme.panel.a];
+        }
+        instance.material.emissive_intensity = 0.0;
         return instance;
     }
     let paint = mesh_style_paint(theme, kind);
-    instance.color = [paint.fill[0], paint.fill[1], paint.fill[2], instance.color[3] * paint.opacity];
+    instance.color = if preserve_vertex_color {
+        [1.0, 1.0, 1.0, instance.color[3] * paint.opacity]
+    } else {
+        [paint.fill[0], paint.fill[1], paint.fill[2], instance.color[3] * paint.opacity]
+    };
+    instance.material.emissive_intensity = paint.emissive_intensity;
     instance
 }
 
@@ -7818,6 +7911,72 @@ fn world3d_style_paint(theme: &ui_wgpu::wgpu::Theme, style: MeshStyleState, mut 
 /// mesh is still landing, exactly as React renders nothing until its loader resolves.
 fn retain_ensured_world_draws(gpu: &World3dBuildContext, draws: &mut Vec<SceneDraw3d>) {
     draws.retain(|draw| gpu.has_mesh_request(&draw.mesh_key, draw.mesh_version));
+}
+
+fn retain_ensured_world_material_draws(gpu: &World3dBuildContext, draws: &mut Vec<SceneMaterialDraw3d>) {
+    draws.retain(|draw| gpu.has_mesh_request(&draw.mesh_key, draw.mesh_version));
+}
+
+#[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
+struct WorldTranslucentMaterialItem {
+    source: usize,
+    depth: f32,
+    ordinal: usize,
+    instance: Instance3d,
+}
+
+#[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
+fn world3d_translucent_projected_depth(mesh: Mesh3dLease, instance: &Instance3d, view_proj: Mat4) -> Option<f32> {
+    let (minimum, maximum) = mesh.aabb().ok()?;
+    let center = Vec3 { x: (minimum[0] + maximum[0]) * 0.5, y: (minimum[1] + maximum[1]) * 0.5, z: (minimum[2] + maximum[2]) * 0.5 };
+    let depth = view_proj.transform_point_m(instance.model.transform_point_m(center)).z;
+    depth.is_finite().then_some(depth)
+}
+
+/// 🫧 Orders transparent material objects by Three's projected transformed bounding-sphere centre,
+/// preserving producer insertion order for exact depth ties without allocating inside the sort.
+#[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
+fn sort_world3d_translucent_material_draws(
+    meshes: &WorldDynamicRegistry<Mesh3dLease, WORLD_DYNAMIC_MESH_CAPACITY>,
+    view_proj: Mat4,
+    draws: &mut Vec<SceneMaterialDraw3d>,
+) {
+    let mut retained = Vec::with_capacity(draws.len());
+    let mut sources = Vec::new();
+    let mut items = Vec::new();
+    let mut ordinal = 0usize;
+    for draw in std::mem::take(draws) {
+        if !draw.translucent {
+            retained.push(draw);
+            continue;
+        }
+        let SceneMaterialDraw3d { mesh_key, mesh_version, instances, material, translucent } = draw;
+        let mesh = meshes.get(&mesh_key).copied();
+        let source = sources.len();
+        sources.push(SceneMaterialDraw3d { mesh_key, mesh_version, instances: Vec::new(), material, translucent });
+        for instance in instances {
+            let depth = mesh.and_then(|mesh| world3d_translucent_projected_depth(mesh, &instance, view_proj)).unwrap_or(f32::NEG_INFINITY);
+            items.push(WorldTranslucentMaterialItem { source, depth, ordinal, instance });
+            ordinal += 1;
+        }
+    }
+    items.sort_unstable_by(|a, b| b.depth.total_cmp(&a.depth).then_with(|| a.ordinal.cmp(&b.ordinal)));
+    let mut active_source = None;
+    for item in items {
+        if active_source != Some(item.source) {
+            let source = &sources[item.source];
+            retained.push(SceneMaterialDraw3d {
+                mesh_key: source.mesh_key.clone(),
+                mesh_version: source.mesh_version,
+                instances: Vec::new(),
+                material: source.material.clone(),
+                translucent: true,
+            });
+            active_source = Some(item.source);
+        }
+        retained.last_mut().expect("a sorted material run owns a draw").instances.push(item.instance);
+    }
+    *draws = retained;
 }
 
 fn sync_mesh_pool(state: &mut World3dState, needed_mesh_keys: &HashSet<String>, gpu: &mut World3dBuildContext) {
@@ -7918,6 +8077,79 @@ fn environment_light_dir(environment: &WorldEnvironmentRecord) -> [f32; 3] {
     } else {
         direction.normalize().to_array()
     }
+}
+
+/// 🌞️ Resolves React's ambient plus configured-sun branch into one backend-neutral pass record.
+fn environment_scene_lighting(environment: &WorldEnvironmentRecord) -> SceneLighting3d {
+    let ambient = environment.ambient.as_ref();
+    let sun = environment.sun.as_ref();
+    let ambient_rgba = parse_color(ambient.and_then(|light| light.color.as_deref()).unwrap_or("#ffffff"));
+    let sun_rgba = parse_color(sun.and_then(|light| light.color.as_deref()).unwrap_or("#ffffff"));
+    SceneLighting3d {
+        ambient_color: ambient_rgba[..3].try_into().expect("fixed rgba prefix"),
+        ambient_intensity: ambient.and_then(|light| light.intensity).unwrap_or(1.15) as f32,
+        sun_color: sun_rgba[..3].try_into().expect("fixed rgba prefix"),
+        sun_intensity: sun.and_then(|light| light.intensity).unwrap_or(0.85) as f32,
+        sun_enabled: sun.and_then(|light| light.enabled) == Some(true),
+    }
+}
+
+/// 🎨️ Resolves the neutral `MeshStandardMaterial` parameters. Environment emissive is a neutral
+/// color override in World3d, so it is active only beside `material.color`; IconRender supplies its
+/// own neutral default color whenever a material record exists.
+fn environment_scene_material(environment: &WorldEnvironmentRecord) -> SceneMaterial3d {
+    let Some(material) = environment.material.as_ref() else {
+        return SceneMaterial3d::default();
+    };
+    let emissive = material.color.as_ref().and(material.emissive.as_deref()).map(parse_color).map(|rgba| rgba[..3].try_into().expect("fixed rgba prefix")).unwrap_or([0.0; 3]);
+    SceneMaterial3d { metalness: material.metalness.unwrap_or(0.0) as f32, roughness: material.roughness.unwrap_or(1.0) as f32, emissive, emissive_intensity: if emissive == [0.0; 3] { 0.0 } else { material.emissive_intensity.unwrap_or(1.0) as f32 } }
+}
+
+/// 🌑️ The two React shadow-map consumers and the SVG/material-absent exclusion path.
+#[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum World3dShadowProfile {
+    World,
+    IconPng,
+    Unshadowed,
+}
+
+#[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum World3dShadowGeometry {
+    Glb,
+    Terrain,
+    Paint,
+}
+
+#[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
+fn world3d_shadow_role(geometry: World3dShadowGeometry, enabled: bool) -> SceneShadowRole3d {
+    if !enabled {
+        return SceneShadowRole3d::default();
+    }
+    match geometry {
+        World3dShadowGeometry::Glb => SceneShadowRole3d { casts: true, receives: true },
+        World3dShadowGeometry::Terrain => SceneShadowRole3d { casts: false, receives: true },
+        World3dShadowGeometry::Paint => SceneShadowRole3d::default(),
+    }
+}
+
+#[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
+impl World3dShadowProfile {
+    fn map_size(self) -> u32 {
+        match self {
+            Self::World | Self::Unshadowed => WORLD_SHADOW_MAP_SIZE,
+            Self::IconPng => ICON_SHADOW_MAP_SIZE,
+        }
+    }
+}
+
+/// 🌑️ Resolves only the controls React consumes: enabled plus the consumer's map profile.
+#[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
+fn environment_scene_shadow(environment: &WorldEnvironmentRecord, light_dir: [f32; 3], profile: World3dShadowProfile) -> SceneShadow3d {
+    let record = environment.shadow.as_ref();
+    let enabled = profile != World3dShadowProfile::Unshadowed && record.and_then(|shadow| shadow.enabled) == Some(true) && environment.sun.as_ref().and_then(|sun| sun.enabled) == Some(true);
+    SceneShadow3d { enabled, map_size: profile.map_size(), view_proj: directional_shadow_view_projection(light_dir) }
 }
 
 /// 🖼️ Resolves the canvas clear color from `environment.background`, falling back to the ambient
@@ -8485,7 +8717,8 @@ fn sync_terrain(state: &mut World3dState, gpu: &mut World3dBuildContext, camera:
             Some(SceneDraw3d {
                 mesh_key: tile.mesh_key.clone(),
                 mesh_version: tile.mesh_version,
-                instances: vec![Instance3d { id: format!("terrain-{}", tile.mesh_key), model: Mat4::identity(), color: [1.0, 1.0, 1.0, 1.0], selected: false, hovered: false }],
+                instances: vec![Instance3d { id: format!("terrain-{}", tile.mesh_key), model: Mat4::identity(), color: [1.0, 1.0, 1.0, 1.0], selected: false, hovered: false, material: Default::default() }],
+                shadow_role: Default::default(),
             })
         })
         .collect()
@@ -9325,6 +9558,58 @@ fn append_box_wireframe_lines(lines: &mut Vec<LineVertex3d>, min: Vec3, max: Vec
     }
 }
 
+const WORLD_REFERENCE_LOCKED_OPACITY_SCALE: f32 = 0.35;
+const WORLD_REFERENCE_SELECTED_CONTENT_OPACITY_SCALE: f32 = 0.5;
+const WORLD_REFERENCE_OUTLINE_SCALE: f32 = 1.002;
+
+#[derive(Clone, Copy)]
+struct WorldReferenceVisual {
+    background: [f32; 4],
+    content_opacity: f32,
+    outline: Option<[f32; 4]>,
+}
+
+fn world_reference_state_id_matches(value: &str, id: &str) -> bool {
+    value == id || value.strip_prefix("reference:") == Some(id)
+}
+
+fn world_reference_visual(state: &World3dState, reference: &WorldReferenceRecord, theme: &ui_wgpu::wgpu::Theme) -> WorldReferenceVisual {
+    let id = reference.id.as_deref().or(reference.url.as_deref()).unwrap_or_default();
+    let locked = reference.locked.unwrap_or(false);
+    let selected = !locked && state.selected_ids.iter().any(|value| world_reference_state_id_matches(value, id));
+    let hovered = !locked && state.local_hover_id.as_deref().is_some_and(|value| world_reference_state_id_matches(value, id));
+    let base = (reference.opacity.unwrap_or(1.0) as f32).clamp(0.0, 1.0) * if locked { WORLD_REFERENCE_LOCKED_OPACITY_SCALE } else { 1.0 };
+    if selected {
+        return WorldReferenceVisual {
+            background: [theme.selected.r, theme.selected.g, theme.selected.b, theme.selected.a],
+            content_opacity: base * WORLD_REFERENCE_SELECTED_CONTENT_OPACITY_SCALE,
+            outline: Some([theme.celebrate[0].r, theme.celebrate[0].g, theme.celebrate[0].b, 1.0]),
+        };
+    }
+    if hovered {
+        return WorldReferenceVisual {
+            background: [theme.row_hover.r, theme.row_hover.g, theme.row_hover.b, theme.row_hover.a],
+            content_opacity: base,
+            outline: Some([theme.celebrate[1].r, theme.celebrate[1].g, theme.celebrate[1].b, 0.9]),
+        };
+    }
+    WorldReferenceVisual { background: [0.0; 4], content_opacity: base, outline: None }
+}
+
+fn append_world_reference_outline(lines: &mut Vec<LineVertex3d>, origin: [f64; 3], width: f32, height: f32, color: [f32; 4]) {
+    let half_width = width * 0.5 * WORLD_REFERENCE_OUTLINE_SCALE;
+    let half_height = height * 0.5 * WORLD_REFERENCE_OUTLINE_SCALE;
+    let center = Vec3::new(origin[0] as f32, origin[1] as f32, origin[2] as f32);
+    let bottom_left = center.add(Vec3::new(-half_width, -half_height, 0.0));
+    let bottom_right = center.add(Vec3::new(half_width, -half_height, 0.0));
+    let top_right = center.add(Vec3::new(half_width, half_height, 0.0));
+    let top_left = center.add(Vec3::new(-half_width, half_height, 0.0));
+    push_line_segment(lines, bottom_left, bottom_right, color);
+    push_line_segment(lines, bottom_right, top_right, color);
+    push_line_segment(lines, top_right, top_left, color);
+    push_line_segment(lines, top_left, bottom_left, color);
+}
+
 /// 🎨️ Resolves one `pick_targets_json` style reference — a theme TOKEN id or a `#rrggbb` literal —
 /// against this appearance. The token set is the CAD picking engine's `SpatialScenePalette`
 /// (`✏️editor/⚙️engine/🧲️picking/🦀️.rs:1108`), resolved through the same CSS chain React does
@@ -10009,7 +10294,7 @@ fn append_component_face_translucent_overlays(state: &mut World3dState, gpu: &mu
         let Some(mesh) = state.meshes.get(&mesh_key) else { continue };
         let mesh_version = *state.mesh_versions.get(&mesh_key).unwrap_or(&0);
         gpu.ensure_mesh(&mesh_key, mesh_version, *mesh);
-        translucent.push(SceneDraw3d { mesh_key, mesh_version, instances: vec![Instance3d { id: format!("face-overlay-{index}"), model: Mat4::identity(), color, selected: false, hovered: false }] });
+        translucent.push(SceneDraw3d { mesh_key, mesh_version, instances: vec![Instance3d { id: format!("face-overlay-{index}"), model: Mat4::identity(), color, selected: false, hovered: false, material: Default::default() }], shadow_role: Default::default() });
     }
 }
 
@@ -10125,11 +10410,7 @@ fn append_gumball_geometry(
     // 🎛️ Same gate the PICK uses (`world3d_gumball_config`), so a handle can never be drawn without
     // being pickable or picked without being drawn — React resolves both from one `gumballConfig`.
     let config = world3d_gumball_config(state);
-    let axis_colors = [
-        (GumballHandle::MoveX, Vec3::new(1.0, 0.0, 0.0), [0.92, 0.25, 0.25, 1.0]),
-        (GumballHandle::MoveY, Vec3::new(0.0, 1.0, 0.0), [0.25, 0.85, 0.35, 1.0]),
-        (GumballHandle::MoveZ, Vec3::new(0.0, 0.0, 1.0), [0.35, 0.55, 0.95, 1.0]),
-    ];
+    let axis_colors = [(GumballHandle::MoveX, Vec3::new(1.0, 0.0, 0.0), [0.92, 0.25, 0.25, 1.0]), (GumballHandle::MoveY, Vec3::new(0.0, 1.0, 0.0), [0.25, 0.85, 0.35, 1.0]), (GumballHandle::MoveZ, Vec3::new(0.0, 0.0, 1.0), [0.35, 0.55, 0.95, 1.0])];
     for (handle, axis, color) in axis_colors {
         if !config.admits(handle) {
             continue;
@@ -10139,11 +10420,9 @@ fn append_gumball_geometry(
         lines.push(LineVertex3d { position: end.to_array(), color });
     }
     let ring_segments = 48usize;
-    for (handle, normal, color) in [
-        (GumballHandle::RotateX, Vec3::new(1.0, 0.0, 0.0), [0.92, 0.25, 0.25, 0.85]),
-        (GumballHandle::RotateY, Vec3::new(0.0, 1.0, 0.0), [0.25, 0.85, 0.35, 0.85]),
-        (GumballHandle::RotateZ, Vec3::new(0.0, 0.0, 1.0), [0.35, 0.55, 0.95, 0.85]),
-    ] {
+    for (handle, normal, color) in
+        [(GumballHandle::RotateX, Vec3::new(1.0, 0.0, 0.0), [0.92, 0.25, 0.25, 0.85]), (GumballHandle::RotateY, Vec3::new(0.0, 1.0, 0.0), [0.25, 0.85, 0.35, 0.85]), (GumballHandle::RotateZ, Vec3::new(0.0, 0.0, 1.0), [0.35, 0.55, 0.95, 0.85])]
+    {
         if !config.admits(handle) {
             continue;
         }
@@ -10170,11 +10449,7 @@ fn append_gumball_geometry(
         // the reserved tool job that applies a selection (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
         gpu.ensure_mesh(GUMBALL_PLANE_MESH, mesh_version, *plane);
         let half = extent * 0.35;
-        let plane_specs = [
-            (GumballHandle::MoveXY, Vec3::new(0.0, 0.0, 1.0), [half, half, 1.0]),
-            (GumballHandle::MoveYZ, Vec3::new(1.0, 0.0, 0.0), [1.0, half, half]),
-            (GumballHandle::MoveXZ, Vec3::new(0.0, 1.0, 0.0), [half, 1.0, half]),
-        ];
+        let plane_specs = [(GumballHandle::MoveXY, Vec3::new(0.0, 0.0, 1.0), [half, half, 1.0]), (GumballHandle::MoveYZ, Vec3::new(1.0, 0.0, 0.0), [1.0, half, half]), (GumballHandle::MoveXZ, Vec3::new(0.0, 1.0, 0.0), [half, 1.0, half])];
         for (handle, normal, scale) in plane_specs {
             if !config.admits(handle) {
                 continue;
@@ -10192,7 +10467,8 @@ fn append_gumball_geometry(
             translucent.push(SceneDraw3d {
                 mesh_key: GUMBALL_PLANE_MESH.into(),
                 mesh_version,
-                instances: vec![Instance3d { id: GUMBALL_PLANE_MESH.into(), model: Instance3d::model_from_trs(pivot.to_array(), rotation, scale), color: [0.75, 0.8, 0.9, 0.22], selected: false, hovered: false }],
+                instances: vec![Instance3d { id: GUMBALL_PLANE_MESH.into(), model: Instance3d::model_from_trs(pivot.to_array(), rotation, scale), color: [0.75, 0.8, 0.9, 0.22], selected: false, hovered: false, material: Default::default() }],
+                shadow_role: Default::default(),
             });
         }
     }
@@ -10369,7 +10645,21 @@ fn gumball_commit_action(state: &World3dState) -> Option<ActionDescriptor> {
 /// identity whatever its camera carries; a parallel one reports the live frustum scale, which is the
 /// only number its wheel ever moves ([`OrbitController::zoom`]).
 fn world3d_camera_zoom(camera: &Camera3d) -> f64 {
-    if camera.projection.is_parallel() { f64::from(camera.zoom) } else { 1.0 }
+    if camera.projection.is_parallel() {
+        f64::from(camera.zoom)
+    } else {
+        1.0
+    }
+}
+
+/// 📦️ Advances camera/view ownership without invalidating a sealed content publication. Snapshot
+/// apply exposes its lease one transaction before the retained draw swap; camera reports, initial
+/// templates, and projection framing may all legitimately land in that interval.
+fn advance_world3d_view_revision(state: &mut World3dState) {
+    state.interaction_revision = state.interaction_revision.wrapping_add(1);
+    if let Some(rebuild) = state.draw_rebuild.as_mut() {
+        rebuild.descriptor.revision = state.interaction_revision;
+    }
 }
 
 /// 🔀️ Applies this pane's `Projection` switch to its orbit; `true` when the family actually moved,
@@ -10386,14 +10676,10 @@ pub fn apply_world3d_projection(state: &mut World3dState, projection: CameraProj
     if state.orbit.projection == projection {
         return false;
     }
-    state.orbit.zoom = if projection.is_parallel() {
-        ui_wgpu::wgpu::world_projection_matched_ortho_zoom(state.orbit.fov_y.to_degrees(), state.orbit.distance, state.bounds.h)
-    } else {
-        1.0
-    };
+    state.orbit.zoom = if projection.is_parallel() { ui_wgpu::wgpu::world_projection_matched_ortho_zoom(state.orbit.fov_y.to_degrees(), state.orbit.distance, state.bounds.h) } else { 1.0 };
     state.orbit.projection = projection;
     state.camera_user_moved = true;
-    state.interaction_revision = state.interaction_revision.wrapping_add(1);
+    advance_world3d_view_revision(state);
     true
 }
 
@@ -10418,7 +10704,46 @@ pub fn apply_world3d_projection_spec(state: &mut World3dState, projection: Camer
     state.projection_frame_owed = true;
     state.projection_frame_key = None;
     state.projection_frame_zoom = None;
-    state.interaction_revision = state.interaction_revision.wrapping_add(1);
+    advance_world3d_view_revision(state);
+    true
+}
+
+/// 📐️ Applies a display-template seed once, after the delivered camera has landed. React's pending
+/// window template seeds `WorldProjectionRig` before `WorldAutoFit`; keeping the live distance and
+/// target here is equivalent for the fit because it consumes only this look direction, then replaces
+/// both with the measured rendered bounds.
+///
+/// 📦️ The snapshot lease becomes resident one transaction before its sealed draw rebuild publishes.
+/// Shell applies this camera-only template in that interval, so the live rebuild carries the new
+/// view-state revision instead of losing the document and its GLB request ledger as stale.
+pub fn apply_world3d_initial_projection_seed(
+    state: &mut World3dState,
+    projection: CameraProjection3d,
+    orientation: ui_wgpu::wgpu::WorldProjectionOrientation,
+    oblique_off_axis: bool,
+    direction: [f32; 3],
+    up: [f32; 3],
+) -> bool {
+    if state.projection_selected || state.snapshot_lease.is_none() {
+        return false;
+    }
+    let direction = Vec3::new(direction[0], direction[1], direction[2]);
+    let length = direction.length();
+    if !length.is_finite() || length <= 1e-6 || up.into_iter().any(|value| !value.is_finite()) {
+        return false;
+    }
+    let direction = direction.scale(1.0 / length);
+    state.orbit.yaw = direction.y.atan2(direction.x);
+    state.orbit.pitch = direction.z.clamp(-1.0, 1.0).asin();
+    state.orbit.up = Vec3::new(up[0], up[1], up[2]);
+    state.orbit.projection = projection;
+    state.projection_orientation = orientation;
+    state.projection_oblique_off_axis = oblique_off_axis;
+    state.projection_selected = true;
+    state.projection_frame_owed = projection.is_parallel();
+    state.projection_frame_key = None;
+    state.projection_frame_zoom = None;
+    advance_world3d_view_revision(state);
     true
 }
 
@@ -10492,6 +10817,7 @@ pub fn publish_world3d_mesh_lease(state: &mut World3dState, id: String, mesh: Me
     if let Some(previous_mesh) = previous_mesh {
         state.dynamic_mesh_close = Some(previous_mesh);
     }
+    state.geometry_generation = state.geometry_generation.wrapping_add(1).max(1);
     Ok(())
 }
 
@@ -10541,45 +10867,43 @@ fn retire_world_mesh(state: &mut World3dState, id: &str) -> bool {
     };
     state.dynamic_mesh_close = Some(entry);
     drop(state.mesh_versions.remove(id));
+    state.geometry_generation = state.geometry_generation.wrapping_add(1).max(1);
     true
 }
 
-fn publish_world_pixels(state: &mut World3dState, id: String, value: (u32, u32, Vec<u8>), paint: bool) -> bool {
+fn publish_world_raster(state: &mut World3dState, id: String, lease: SceneRasterLease, paint: bool) -> bool {
+    let value = WorldSceneRaster { identity: lease.identity(), pending: Mutex::new(Some(lease)) };
     let registry = if paint { &mut state.mesh_paint_textures } else { &mut state.reference_pixels };
     match registry.insert(id, value) {
-        Ok((token, None)) => {
-            let _ = token;
+        Ok((_, previous)) => {
+            drop(previous);
             true
         }
-        Ok((token, Some(previous))) => {
-            let owner = if paint { WorldOpaqueOwner::PaintPixels(previous) } else { WorldOpaqueOwner::ReferencePixels(previous) };
-            match quarantine_world_owner(owner) {
-                Ok(_) => true,
-                Err(owner) => {
-                    let previous = match owner {
-                        WorldOpaqueOwner::PaintPixels(entry) | WorldOpaqueOwner::ReferencePixels(entry) => entry,
-                        _ => unreachable!("pixel replacement owner"),
-                    };
-                    let replacement = registry.remove_token(token).expect("new pixel token remains current while replacement is published");
-                    registry.restore(previous);
-                    let replacement = if paint { WorldOpaqueOwner::PaintPixels(replacement) } else { WorldOpaqueOwner::ReferencePixels(replacement) };
-                    retain_world_blocked_owner(state, replacement);
-                    mark_world_dynamic_fault(state, WorldDynamicFault::QuarantineCapacity);
-                    false
-                }
-            }
-        }
         Err(rejected) => {
-            let owner = WorldDynamicEntry { id: rejected.id, epoch: 0, value: rejected.value };
-            let owner = if paint { WorldOpaqueOwner::PaintPixels(owner) } else { WorldOpaqueOwner::ReferencePixels(owner) };
             let fault = rejected.fault;
-            if let Err(owner) = quarantine_world_owner(owner) {
-                retain_world_blocked_owner(state, owner);
-            }
+            drop(rejected);
             mark_world_dynamic_fault(state, fault);
             false
         }
     }
+}
+
+#[derive(Debug)]
+/// 🎨️ Generation-owned pooled paint raster published after asynchronous image decoding.
+pub struct DecodedMeshPaintImage {
+    pub raster: SceneRasterLease,
+}
+
+/// 🎨️ Publishes exact decoded paint pixels for a resident mesh with one UV per vertex.
+pub fn apply_decoded_mesh_paint_image(state: &mut World3dState, mesh_key: &str, decoded: DecodedMeshPaintImage) -> bool {
+    let descriptor = decoded.raster.identity().descriptor();
+    let mesh_version = state.mesh_versions.get(mesh_key).copied().unwrap_or(0);
+    let mesh_seal_is_current = state.meshes.get(mesh_key).and_then(|mesh| mesh.schema().ok()).is_some_and(|schema| {
+        schema.uvs == schema.vertices
+            && schema.uvs > 0
+            && descriptor.mesh.is_some_and(|seal| seal.mesh_revision == mesh_version && seal.uv_revision == mesh_version && seal.uv_count == schema.uvs)
+    });
+    descriptor.profile == SceneRasterProfile::MeshPaintMapNoColorSpace && mesh_seal_is_current && publish_world_raster(state, mesh_key.to_string(), decoded.raster, true)
 }
 
 /// 🖼️ Offers ONE reference underlay's decoded payload to the frame, KEEPING the state's own copy.
@@ -10600,29 +10924,40 @@ fn publish_world_pixels(state: &mut World3dState, id: String, value: (u32, u32, 
 /// ⏭️ The honest end state is an upload ACK from the raster table — the worker cannot see `live`, so
 /// it cannot know the texture is resident and must keep offering. Until that exists, the table's own
 /// key-dedupe absorbs the repeat.
-fn reference_underlay_upload(state: &World3dState, url: &str) -> Option<(u32, u32, Vec<u8>)> {
-    let (width, height, pixels) = state.reference_pixels.get(url)?;
-    (!pixels.is_empty()).then(|| (*width, *height, pixels.clone()))
+fn world_raster_upload_in_pool(state: &World3dState, id: &str, gpu_key: &str, paint: bool, pool: &SceneRasterPool) -> Option<SceneRasterLease> {
+    let registry = if paint { &state.mesh_paint_textures } else { &state.reference_pixels };
+    let raster = registry.get(id)?;
+    if pool.gpu_resident(gpu_key, raster.identity) {
+        raster.pending.lock().ok()?.take();
+        return None;
+    }
+    raster.pending.lock().ok()?.take().or_else(|| pool.acquire(raster.identity).ok())
+}
+
+fn world_raster_upload(state: &World3dState, id: &str, gpu_key: &str, paint: bool) -> Option<SceneRasterLease> {
+    world_raster_upload_in_pool(state, id, gpu_key, paint, &world_scene_raster_pool())
+}
+
+fn world_reference_raster_ready_in_pool(state: &World3dState, url: &str, pool: &SceneRasterPool) -> bool {
+    let Some(raster) = state.reference_pixels.get(url) else { return false };
+    if raster.pending.lock().is_ok_and(|pending| pending.is_some()) {
+        return true;
+    }
+    pool.cpu_resident(raster.identity) || pool.gpu_resident(url, raster.identity)
+}
+
+fn world_reference_raster_ready(state: &World3dState, url: &str) -> bool {
+    world_reference_raster_ready_in_pool(state, url, &world_scene_raster_pool())
+}
+
+fn reference_underlay_upload(state: &World3dState, url: &str) -> Option<SceneRasterLease> {
+    world_raster_upload(state, url, url, false)
 }
 
 fn retire_world_pixels(state: &mut World3dState, id: &str, paint: bool) -> bool {
     let registry = if paint { &mut state.mesh_paint_textures } else { &mut state.reference_pixels };
-    let Some(entry) = registry.remove(id) else {
-        return true;
-    };
-    let owner = if paint { WorldOpaqueOwner::PaintPixels(entry) } else { WorldOpaqueOwner::ReferencePixels(entry) };
-    match quarantine_world_owner(owner) {
-        Ok(_) => true,
-        Err(owner) => {
-            let entry = match owner {
-                WorldOpaqueOwner::PaintPixels(entry) | WorldOpaqueOwner::ReferencePixels(entry) => entry,
-                _ => unreachable!("pixel retirement owner"),
-            };
-            registry.restore(entry);
-            mark_world_dynamic_fault(state, WorldDynamicFault::QuarantineCapacity);
-            false
-        }
-    }
+    drop(registry.remove(id));
+    true
 }
 
 const WORLD3D_PREPARED_STATUS_BYTES: usize = 192;
@@ -10839,9 +11174,7 @@ pub fn step_world3d_snapshot(state: &mut World3dState, context: &mut semio_frame
                 return World3dSnapshotApplyStep::Fault;
             };
             if ordinal == 0 {
-                let byte_count = total_bytes
-                    .checked_add(u32::from(total_draws).saturating_mul(size_of::<SceneDraw3d>() as u32))
-                    .and_then(|bytes| bytes.checked_add(total_instances.checked_mul(size_of::<Instance3d>() as u32)?));
+                let byte_count = total_bytes.checked_add(u32::from(total_draws).saturating_mul(size_of::<SceneDraw3d>() as u32)).and_then(|bytes| bytes.checked_add(total_instances.checked_mul(size_of::<Instance3d>() as u32)?));
                 let permit = byte_count.ok_or(World3dSnapshotFault::Capacity).and_then(|_| world3d_snapshot_claim_draw_permit(cursor.lease, total_draws, total_instances, total_bytes));
                 let (Some(byte_count), Ok(permit)) = (byte_count, permit) else {
                     state.snapshot_fault = Some(World3dSnapshotFault::Capacity);
@@ -10887,7 +11220,7 @@ pub fn step_world3d_snapshot(state: &mut World3dState, context: &mut semio_frame
             let scale = [item.numbers[7] as f32, item.numbers[8] as f32, item.numbers[9] as f32];
             let color = [item.numbers[10] as f32, item.numbers[11] as f32, item.numbers[12] as f32, item.numbers[13] as f32];
             let model = Instance3d::model_from_trs(position, rotation, scale);
-            if world3d_draw_rebuild_admit_instance(state, cursor.draw_index, id, model, color, false, false).is_err() {
+            if world3d_draw_rebuild_admit_retained_instance(state, cursor.draw_index, id, model, color, SceneColorSource3d::from_snapshot_flag(item.flags), false, false).is_err() {
                 state.snapshot_fault = Some(World3dSnapshotFault::Capacity);
                 cursor.faulted = true;
                 state.snapshot_apply = Some(cursor);
@@ -11015,6 +11348,13 @@ fn declare_scene_mesh_source(state: &mut World3dState, id: &str, url: Option<&st
 /// [`declare_scene_mesh_source`].
 fn scene_mesh_awaits_its_asset(state: &World3dState, mesh_key: &str) -> bool {
     state.mesh_source_urls.contains_key(mesh_key)
+}
+
+/// 🎨️ Resolves the standard-material pair React assigns after geometry provenance is known:
+/// inline/procedural meshes use `0/1`, while `GlbInstanceMesh` uses the environment override.
+#[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
+fn world3d_standard_material_for_mesh(state: &World3dState, mesh_key: &str, environment: SceneMaterial3d) -> [f32; 2] {
+    if state.mesh_source_urls.contains_key(mesh_key) { [environment.metalness, environment.roughness] } else { [0.0, 1.0] }
 }
 
 /// 🌉️ One `World3dScene.meshes_json` entry. Three mutually exclusive ways a producer names one
@@ -11159,11 +11499,7 @@ struct World3dSceneProjectionOrientationRecord {
 impl World3dSceneCameraRecord {
     /// 📐️ React's `worldProjectionFamily` over the delivered spec.
     fn projection(&self) -> CameraProjection3d {
-        self.projection
-            .as_ref()
-            .and_then(|spec| spec.mode.as_ref())
-            .and_then(|mode| mode.kind.as_deref())
-            .map_or(CameraProjection3d::Perspective, CameraProjection3d::from_mode_kind)
+        self.projection.as_ref().and_then(|spec| spec.mode.as_ref()).and_then(|mode| mode.kind.as_deref()).map_or(CameraProjection3d::Perspective, CameraProjection3d::from_mode_kind)
     }
 
     /// 📐️ React's `worldProjectionPerspectiveFov` fallback chain: the record's own `fov`, else the
@@ -11244,7 +11580,7 @@ fn sync_world3d_projection_content_frame(state: &mut World3dState) {
     state.projection_frame_zoom = Some(framed.zoom);
     state.projection_frame_owed = false;
     state.orbit = framed;
-    state.interaction_revision = state.interaction_revision.wrapping_add(1);
+    advance_world3d_view_revision(state);
 }
 
 /// 📦️ React's `worldSceneContentBounds` — instance positions and visible reference footprints, with
@@ -11290,37 +11626,239 @@ fn world3d_content_bounds_key(minimum: [f32; 3], maximum: [f32; 3]) -> u64 {
     key
 }
 
-/// 🎯️ Frames this surface's orbit on the producer's published extent, ONCE per fit revision.
-///
-/// ⚖️ Three conditions, and each one is a defect this surface shipped: without the extent it frames
-/// nothing (the wgpu world has no scene graph to measure, unlike its React twin); without the
-/// revision it re-frames on every re-evaluation; without the latch it takes back a camera the user
-/// moved. A new revision clears the latch, because a new document is a framing the user has not
-/// refused yet (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️boot-camera-framing-2026-09-15.md`).
+#[derive(Clone, Copy, Debug, PartialEq)]
+struct World3dCameraFitRequest {
+    revision: u32,
+    padding: f32,
+    bounds: Option<([f32; 3], [f32; 3])>,
+}
+
+const WORLD3D_RENDERED_OUTLINE_SCALE: f32 = 1.001;
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+struct World3dCameraFitOwner {
+    revision: u32,
+    camera_digest: Option<u64>,
+}
+
+#[derive(Clone, Copy, Debug)]
+struct World3dCameraBoundsCursor {
+    key: u64,
+    draw_generation: u64,
+    geometry_generation: u64,
+    draw: u16,
+    instance: u32,
+    corner: u8,
+    minimum: [f32; 3],
+    maximum: [f32; 3],
+    any: bool,
+}
+
+impl World3dCameraBoundsCursor {
+    fn new(key: u64, draw_generation: u64, geometry_generation: u64) -> Self {
+        Self { key, draw_generation, geometry_generation, draw: 0, instance: 0, corner: 0, minimum: [f32::INFINITY; 3], maximum: [f32::NEG_INFINITY; 3], any: false }
+    }
+
+    /// 💤️ A completed empty generation parks on the draw index no bounded registry can publish.
+    /// Reusing this existing scalar preserves the cursor's `Option` niche and the measured surface
+    /// table receipt; another boolean enlarged every admitted World state by eight bytes.
+    fn empty_generation(self) -> bool {
+        self.draw == u16::MAX
+    }
+
+    fn expand(&mut self, point: Vec3) {
+        for (axis, value) in [point.x, point.y, point.z].into_iter().enumerate() {
+            self.minimum[axis] = self.minimum[axis].min(value);
+            self.maximum[axis] = self.maximum[axis].max(value);
+        }
+        self.any = true;
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum World3dCameraFitStep {
+    Idle,
+    Pending,
+    Applied,
+    Stale,
+}
+
+fn world3d_camera_fit_key(owner: World3dCameraFitOwner, bounds: Option<([f32; 3], [f32; 3])>) -> u64 {
+    let mut key = 0xcbf2_9ce4_8422_2325_u64;
+    for value in [u64::from(owner.revision), owner.camera_digest.unwrap_or(0), u64::from(owner.camera_digest.is_some())] {
+        key ^= value;
+        key = key.wrapping_mul(0x0000_0100_0000_01b3);
+    }
+    if let Some((minimum, maximum)) = bounds {
+        for value in minimum.into_iter().chain(maximum) {
+            let rounded = (value * 1e3).round() / 1e3;
+            key ^= u64::from(if rounded == 0.0 { 0.0_f32.to_bits() } else { rounded.to_bits() });
+            key = key.wrapping_mul(0x0000_0100_0000_01b3);
+        }
+    }
+    key
+}
+
+fn valid_world3d_camera_bounds(minimum: [f32; 3], maximum: [f32; 3]) -> bool {
+    (0..3).all(|axis| minimum[axis].is_finite() && maximum[axis].is_finite() && maximum[axis] >= minimum[axis])
+        && ((maximum[0] - minimum[0]).powi(2) + (maximum[1] - minimum[1]).powi(2) + (maximum[2] - minimum[2]).powi(2)).sqrt() > 0.0
+}
+
+fn apply_world3d_camera_fit(state: &mut World3dState, key: u64, request: World3dCameraFitRequest, minimum: [f32; 3], maximum: [f32; 3]) -> World3dCameraFitStep {
+    if !valid_world3d_camera_bounds(minimum, maximum) {
+        state.fit_bounds_cursor = None;
+        return World3dCameraFitStep::Idle;
+    }
+    state.orbit = ui_wgpu::wgpu::frame_orbit_to_bounds(&state.orbit, minimum, maximum, state.bounds.w, state.bounds.h, request.padding);
+    state.fit_applied_key = Some(key);
+    state.fit_bounds_cursor = None;
+    advance_world3d_view_revision(state);
+    World3dCameraFitStep::Applied
+}
+
+/// 🎯️ Retains React's `WorldAutoFit` request. The actual frame waits for the delivered camera and
+/// resident draw geometry, then advances through [`step_world3d_camera_fit`] without a traversal burst.
 fn sync_world3d_scene_fit(state: &mut World3dState, fit_json: Option<&str>) {
-    let Some(fit) = fit_json.and_then(|json| serde_json::from_str::<World3dSceneFitRecord>(json).ok()).filter(|fit| fit.enabled) else { return };
-    if state.fit_seen_revision != Some(fit.revision) {
-        state.fit_seen_revision = Some(fit.revision);
+    let request = fit_json
+        .and_then(|json| serde_json::from_str::<World3dSceneFitRecord>(json).ok())
+        .filter(|fit| fit.enabled)
+        .map(|fit| World3dCameraFitRequest {
+            revision: fit.revision,
+            padding: fit.padding.unwrap_or(f64::from(ui_wgpu::wgpu::WORLD_FRAME_BOUNDS_MARGIN)).max(1.0) as f32,
+            bounds: fit
+                .bounds_min
+                .zip(fit.bounds_max)
+                .map(|(minimum, maximum)| (minimum.map(|value| value as f32), maximum.map(|value| value as f32)))
+                .filter(|(minimum, maximum)| valid_world3d_camera_bounds(*minimum, *maximum)),
+        });
+    if state.fit_request != request {
+        state.fit_request = request;
+        state.fit_bounds_cursor = None;
+    }
+    if request.is_none() {
+        state.fit_owner = None;
+        state.fit_applied_key = None;
+    }
+}
+
+/// ⏰️ Whether the fit lane owes another frame. An empty measurement sleeps on the exact residency
+/// generations it inspected; a later mesh publication or draw seal differs and wakes it once.
+fn world3d_camera_fit_work_pending(state: &World3dState) -> bool {
+    let Some(request) = state.fit_request else { return false };
+    let owner = World3dCameraFitOwner { revision: request.revision, camera_digest: state.scene_camera_digest };
+    if state.fit_owner != Some(owner) {
+        return true;
+    }
+    if state.fit_applied_key == Some(world3d_camera_fit_key(owner, request.bounds)) || state.camera_user_moved {
+        return false;
+    }
+    if request.bounds.is_some() {
+        return true;
+    }
+    !state.fit_bounds_cursor.is_some_and(|cursor| {
+        cursor.empty_generation() && cursor.key == world3d_camera_fit_key(owner, None) && cursor.draw_generation == state.draw_generation && cursor.geometry_generation == state.geometry_generation
+    })
+}
+
+/// 📦️ Advances at most one retained draw transition or one transformed mesh-AABB corner. This is
+/// Three's `Box3.setFromObject(instancesGroup)` expressed over the resident WGPU draw registry.
+pub fn step_world3d_camera_fit(state: &mut World3dState) -> World3dCameraFitStep {
+    if state.dynamic_retirement.is_some() {
+        state.fit_bounds_cursor = None;
+        return World3dCameraFitStep::Idle;
+    }
+    let Some(request) = state.fit_request else { return World3dCameraFitStep::Idle };
+    let owner = World3dCameraFitOwner { revision: request.revision, camera_digest: state.scene_camera_digest };
+    if state.fit_owner != Some(owner) {
+        state.fit_owner = Some(owner);
+        state.fit_bounds_cursor = None;
         state.camera_user_moved = false;
     }
-    if state.fit_framed_revision == Some(fit.revision) || state.camera_user_moved {
-        return;
+    let key = world3d_camera_fit_key(owner, request.bounds);
+    if state.fit_applied_key == Some(key) || state.camera_user_moved {
+        state.fit_bounds_cursor = None;
+        return World3dCameraFitStep::Idle;
     }
-    let (Some(minimum), Some(maximum)) = (fit.bounds_min, fit.bounds_max) else { return };
-    if (0..3).any(|axis| !minimum[axis].is_finite() || !maximum[axis].is_finite() || maximum[axis] < minimum[axis]) {
-        return;
+    if state.scene_bridge.is_some()
+        || state.snapshot_apply.is_some()
+        || state.draw_rebuild.is_some()
+        || state.retired_draws.is_some()
+        || state.scene_bridge_lease.is_some_and(|lease| state.snapshot_lease != Some(lease))
+    {
+        return World3dCameraFitStep::Pending;
     }
-    let margin = fit.padding.unwrap_or(f64::from(ui_wgpu::wgpu::WORLD_FRAME_BOUNDS_MARGIN)) as f32;
-    state.orbit = ui_wgpu::wgpu::frame_orbit_to_bounds(
-        &state.orbit,
-        [minimum[0] as f32, minimum[1] as f32, minimum[2] as f32],
-        [maximum[0] as f32, maximum[1] as f32, maximum[2] as f32],
-        state.bounds.w,
-        state.bounds.h,
-        margin,
-    );
-    state.fit_framed_revision = Some(fit.revision);
-    state.interaction_revision = state.interaction_revision.wrapping_add(1);
+    if let Some((minimum, maximum)) = request.bounds {
+        return apply_world3d_camera_fit(state, key, request, minimum, maximum);
+    }
+    let mut cursor = state.fit_bounds_cursor.take().unwrap_or_else(|| World3dCameraBoundsCursor::new(key, state.draw_generation, state.geometry_generation));
+    if cursor.key != key || cursor.draw_generation != state.draw_generation || cursor.geometry_generation != state.geometry_generation {
+        let completed_empty_generation = cursor.empty_generation();
+        cursor = World3dCameraBoundsCursor::new(key, state.draw_generation, state.geometry_generation);
+        if !completed_empty_generation {
+            state.fit_bounds_cursor = Some(cursor);
+            return World3dCameraFitStep::Stale;
+        }
+    }
+    if usize::from(cursor.draw) >= usize::from(state.draws.len) {
+        if cursor.any {
+            return apply_world3d_camera_fit(state, key, request, cursor.minimum, cursor.maximum);
+        }
+        cursor.draw = u16::MAX;
+        state.fit_bounds_cursor = Some(cursor);
+        return World3dCameraFitStep::Idle;
+    }
+    let Some(draw) = state.draws.get(usize::from(cursor.draw)) else {
+        cursor.draw += 1;
+        cursor.instance = 0;
+        cursor.corner = 0;
+        state.fit_bounds_cursor = Some(cursor);
+        return World3dCameraFitStep::Pending;
+    };
+    let Some(mesh) = state.meshes.get(&draw.mesh_key).copied() else {
+        cursor.draw += 1;
+        cursor.instance = 0;
+        cursor.corner = 0;
+        state.fit_bounds_cursor = Some(cursor);
+        return World3dCameraFitStep::Pending;
+    };
+    let Ok((local_minimum, local_maximum)) = mesh.aabb() else {
+        cursor.draw += 1;
+        cursor.instance = 0;
+        cursor.corner = 0;
+        state.fit_bounds_cursor = Some(cursor);
+        return World3dCameraFitStep::Pending;
+    };
+    let Some(instance) = draw.instances.get(cursor.instance as usize) else {
+        cursor.draw += 1;
+        cursor.instance = 0;
+        cursor.corner = 0;
+        state.fit_bounds_cursor = Some(cursor);
+        return World3dCameraFitStep::Pending;
+    };
+    let corner = cursor.corner;
+    let rendered_scale = if state.show_edges
+        && !state.provisional_instance_ids.contains(&instance.id)
+        && mesh.schema().is_ok_and(|schema| schema.edges == 0)
+    {
+        WORLD3D_RENDERED_OUTLINE_SCALE
+    } else {
+        1.0
+    };
+    let point = instance.model.transform_point(Vec3::new(
+        (if corner & 1 == 0 { local_minimum[0] } else { local_maximum[0] }) * rendered_scale,
+        (if corner & 2 == 0 { local_minimum[1] } else { local_maximum[1] }) * rendered_scale,
+        (if corner & 4 == 0 { local_minimum[2] } else { local_maximum[2] }) * rendered_scale,
+    ));
+    if point.x.is_finite() && point.y.is_finite() && point.z.is_finite() {
+        cursor.expand(point);
+    }
+    cursor.corner += 1;
+    if cursor.corner == 8 {
+        cursor.corner = 0;
+        cursor.instance += 1;
+    }
+    state.fit_bounds_cursor = Some(cursor);
+    World3dCameraFitStep::Pending
 }
 
 /// 🎯️ `World3dScene.selection_json` — both the plain-instance half (`ids`/`hoveredId`, what the
@@ -11764,17 +12302,18 @@ fn world3d_scene_bridge_has_pages(state: &World3dState, cursor: &World3dSceneBri
     if cursor.camera_changed && cursor.camera.is_some() {
         return true;
     }
-    cursor
-        .meshes
-        .iter()
-        .any(|mesh| (state.meshes.contains_key(&mesh.id) || scene_mesh_awaits_its_asset(state, &mesh.id)) && cursor.instances.iter().any(|instance| instance.mesh_id == mesh.id))
+    cursor.meshes.iter().any(|mesh| (state.meshes.contains_key(&mesh.id) || scene_mesh_awaits_its_asset(state, &mesh.id)) && cursor.instances.iter().any(|instance| instance.mesh_id == mesh.id))
 }
 
 fn publish_world3d_scene_bridge_snapshot(state: &mut World3dState, cursor: &World3dSceneBridgeCursor) -> Result<World3dSnapshotLease, World3dSnapshotFault> {
-    let neutral = scene_bridge_neutral_color(state);
+    let (neutral, neutral_source) = scene_bridge_neutral_color(state);
     state.instance_interaction_ids.clear();
     for instance in cursor.instances.iter().filter(|instance| instance.interaction_id.as_deref().is_some_and(|target| target != instance.id)) {
         state.instance_interaction_ids.insert(instance.id.clone(), instance.interaction_id.clone().expect("instance interaction id filtered above"));
+    }
+    state.instance_positions.clear();
+    for instance in &cursor.instances {
+        state.instance_positions.insert(instance.id.clone(), instance.position.unwrap_or([0.0; 3]));
     }
     state.provisional_instance_ids = cursor.instances.iter().filter(|instance| instance.provisional).map(|instance| instance.id.clone()).collect();
     state.highlighted_instance_ids = cursor.instances.iter().filter(|instance| instance.highlighted).map(|instance| instance.id.clone()).collect();
@@ -11820,7 +12359,7 @@ fn publish_world3d_scene_bridge_snapshot(state: &mut World3dState, cursor: &Worl
                 let position = instance.position.unwrap_or([0.0; 3]);
                 let rotation = instance.rotation.unwrap_or([0.0, 0.0, 0.0, 1.0]);
                 let scale = instance.scale.unwrap_or([1.0; 3]);
-                let mut color = instance.color.as_deref().map_or(neutral, parse_color);
+                let (mut color, color_source) = instance.color.as_deref().map_or((neutral, neutral_source), |color| (parse_color(color), SceneColorSource3d::Authored));
                 // 🌫️ Locked dimming rides the authored colour's alpha, so it survives the snapshot
                 // page (which carries a colour, not a style) and composes with whatever
                 // `MESH_STYLE_PAINT` row the instance later resolves to.
@@ -11829,25 +12368,9 @@ fn publish_world3d_scene_bridge_snapshot(state: &mut World3dState, cursor: &Worl
                 }
                 page.push_item(World3dSnapshotItem {
                     strings: [Some(span), None, None, None],
-                    numbers: [
-                        position[0],
-                        position[1],
-                        position[2],
-                        rotation[0],
-                        rotation[1],
-                        rotation[2],
-                        rotation[3],
-                        scale[0],
-                        scale[1],
-                        scale[2],
-                        f64::from(color[0]),
-                        f64::from(color[1]),
-                        f64::from(color[2]),
-                        f64::from(color[3]),
-                        0.0,
-                        0.0,
-                    ],
+                    numbers: [position[0], position[1], position[2], rotation[0], rotation[1], rotation[2], rotation[3], scale[0], scale[1], scale[2], f64::from(color[0]), f64::from(color[1]), f64::from(color[2]), f64::from(color[3]), 0.0, 0.0],
                     number_len: 14,
+                    flags: color_source.snapshot_flag(),
                     ..Default::default()
                 })?;
             }
@@ -11862,24 +12385,7 @@ fn publish_world3d_scene_bridge_snapshot(state: &mut World3dState, cursor: &Worl
         let parallel = camera.projection().is_parallel();
         let mut page = ui_wgpu::wgpu::World3dSnapshotPage::new(World3dSnapshotPageKind::Camera);
         page.push_item(World3dSnapshotItem {
-            numbers: [
-                position[0],
-                position[1],
-                position[2],
-                target[0],
-                target[1],
-                target[2],
-                up[0],
-                up[1],
-                up[2],
-                camera.fov_degrees(),
-                camera.zoom.unwrap_or(1.0),
-                if parallel { 1.0 } else { 0.0 },
-                0.0,
-                0.0,
-                0.0,
-                0.0,
-            ],
+            numbers: [position[0], position[1], position[2], target[0], target[1], target[2], up[0], up[1], up[2], camera.fov_degrees(), camera.zoom.unwrap_or(1.0), if parallel { 1.0 } else { 0.0 }, 0.0, 0.0, 0.0, 0.0],
             number_len: 12,
             ..Default::default()
         })?;
@@ -11893,16 +12399,8 @@ fn publish_world3d_scene_bridge_snapshot(state: &mut World3dState, cursor: &Worl
     let item_count = u32::try_from(pages.iter().map(ui_wgpu::wgpu::World3dSnapshotPage::item_count).sum::<usize>()).map_err(|_| World3dSnapshotFault::Capacity)?;
     let byte_count = u32::try_from(pages.iter().map(ui_wgpu::wgpu::World3dSnapshotPage::byte_count).sum::<usize>()).map_err(|_| World3dSnapshotFault::Capacity)?;
     state.scene_bridge_generation = state.scene_bridge_generation.wrapping_add(1).max(1);
-    let descriptor = ui_wgpu::wgpu::World3dSnapshotDescriptor {
-        revision: state.interaction_revision,
-        generation: state.scene_bridge_generation,
-        page_count,
-        item_count,
-        byte_count,
-        draw_count,
-        draw_instance_count: instance_total,
-        draw_byte_count: draw_bytes,
-    };
+    let descriptor =
+        ui_wgpu::wgpu::World3dSnapshotDescriptor { revision: state.interaction_revision, generation: state.scene_bridge_generation, page_count, item_count, byte_count, draw_count, draw_instance_count: instance_total, draw_byte_count: draw_bytes };
     let token = ui_wgpu::wgpu::world3d_snapshot_begin(descriptor)?;
     for page in pages {
         if let Err(rejected) = ui_wgpu::wgpu::world3d_snapshot_admit_page(token, page) {
@@ -11922,9 +12420,13 @@ fn publish_world3d_scene_bridge_snapshot(state: &mut World3dState, cursor: &Worl
 /// 🎨️ The base color an instance without its own `color` paints with: the scene environment's
 /// neutral material override when it declares one, else a theme-independent neutral the shaded pass
 /// lights (the React reference resolves the same fallback from its `neutral` mesh-style palette).
-fn scene_bridge_neutral_color(state: &World3dState) -> [f32; 4] {
-    const NEUTRAL: [f32; 4] = [0.78, 0.79, 0.82, 1.0];
-    state.environment.material.as_ref().and_then(|material| material.color.as_deref()).map_or(NEUTRAL, parse_color)
+fn scene_bridge_neutral_color(state: &World3dState) -> ([f32; 4], SceneColorSource3d) {
+    state
+        .environment
+        .material
+        .as_ref()
+        .and_then(|material| material.color.as_deref())
+        .map_or(([1.0; 4], SceneColorSource3d::SemanticNeutral), |color| (parse_color(color), SceneColorSource3d::Environment))
 }
 
 /// 🎯️ Applies the scene's own selection document to this world's live selection/hover channels —
@@ -11985,31 +12487,13 @@ fn sync_world3d_scene_document_lanes(state: &mut World3dState, world: &ui_wgpu::
         return;
     }
     state.scene_document_lanes_digest = Some(digest);
-    state.vortices = world
-        .vortices_json
-        .as_deref()
-        .map(|json| serde_json::from_str(json).unwrap_or_default())
-        .unwrap_or_default();
-    state.attractions = world
-        .attractions_json
-        .as_deref()
-        .map(|json| serde_json::from_str(json).unwrap_or_default())
-        .unwrap_or_default();
-    state.target_volumes = world
-        .target_volumes_json
-        .as_deref()
-        .map(|json| serde_json::from_str(json).unwrap_or_default())
-        .unwrap_or_default();
-    state.references = world
-        .references_json
-        .as_deref()
-        .map(|json| serde_json::from_str(json).unwrap_or_default())
-        .unwrap_or_default();
-    state.engagement_preview = world
-        .engagement_preview_json
-        .as_deref()
-        .map(|json| serde_json::from_str(json).unwrap_or_default())
-        .unwrap_or_default();
+    state.vortices = world.vortices_json.as_deref().map(|json| serde_json::from_str(json).unwrap_or_default()).unwrap_or_default();
+    state.attractions = world.attractions_json.as_deref().map(|json| serde_json::from_str(json).unwrap_or_default()).unwrap_or_default();
+    state.target_volumes = world.target_volumes_json.as_deref().map(|json| serde_json::from_str(json).unwrap_or_default()).unwrap_or_default();
+    let references: Vec<WorldReferenceRecord> = world.references_json.as_deref().map(|json| serde_json::from_str(json).unwrap_or_default()).unwrap_or_default();
+    reconcile_world3d_reference_urls(state, &references);
+    state.references = references;
+    state.engagement_preview = world.engagement_preview_json.as_deref().map(|json| serde_json::from_str(json).unwrap_or_default()).unwrap_or_default();
     // 🧲️ Caps applied at PARSE time (see `world_pick_targets_from_json`), so no later reader has to
     // know the bound and the retained set can never exceed it however large the lane arrives.
     state.pick_targets = world.pick_targets_json.as_deref().map(world_pick_targets_from_json).unwrap_or_default();
@@ -12017,6 +12501,24 @@ fn sync_world3d_scene_document_lanes(state: &mut World3dState, world: &ui_wgpu::
         state.pick_hover_key = None;
     }
     state.interaction_revision = state.interaction_revision.wrapping_add(1);
+}
+
+fn reconcile_world3d_reference_urls(state: &mut World3dState, references: &[WorldReferenceRecord]) {
+    let removed: Vec<String> = state.reference_pixels.keys().filter(|url| !references.iter().any(|reference| reference.url.as_deref() == Some(url.as_str()))).cloned().collect();
+    for url in removed {
+        if !retire_world_pixels(state, &url, false) {
+            break;
+        }
+    }
+    state.pending_image_urls.retain(|url| references.iter().any(|reference| reference.url.as_ref() == Some(url)));
+    state.asset_io.cancel_reference_image_urls_except(references);
+}
+
+/// 🖼️ Whether the active document still owns `url`; a decoded response must answer this in addition
+/// to the pane-generation guard because the same live pane may replace its reference while bytes are
+/// in flight.
+pub fn world3d_reference_url_is_current(state: &World3dState, url: &str) -> bool {
+    state.references.iter().any(|reference| reference.url.as_deref() == Some(url))
 }
 //#endregion 🌉️World3dSceneBridge
 
@@ -12105,7 +12607,7 @@ fn append_tool_run_trace_draws(state: &mut World3dState, gpu: &mut World3dBuildC
         let mesh_version = *state.mesh_versions.get(&mesh_key).unwrap_or(&0);
         if let Some(mesh) = state.meshes.get(&mesh_key).copied() {
             gpu.ensure_mesh(&mesh_key, mesh_version, mesh);
-            translucent_draws.push(SceneDraw3d { mesh_key, mesh_version, instances: draw.instances });
+            translucent_draws.push(SceneDraw3d { mesh_key, mesh_version, instances: draw.instances, shadow_role: Default::default() });
         }
     }
 }
@@ -12137,8 +12639,7 @@ fn apply_runtime_draw_flags(state: &mut World3dState) {
         for instance in &mut draw.instances {
             let mesh_selected = granularity == "mesh" && object_index_map.get(&instance.id).is_some_and(|object_index| component_ids.contains(&object_index.to_string()));
             let target_id = interaction_ids.get(&instance.id).map_or(instance.id.as_str(), String::as_str);
-            let local_hovered =
-                if component_mode { false } else { local_hover_id.as_deref() == Some(instance.id.as_str()) || local_hover_id.as_deref() == Some(target_id) || hovered_component_object_id.as_deref() == Some(instance.id.as_str()) };
+            let local_hovered = if component_mode { false } else { local_hover_id.as_deref() == Some(instance.id.as_str()) || local_hover_id.as_deref() == Some(target_id) || hovered_component_object_id.as_deref() == Some(instance.id.as_str()) };
             let local_selected = selected_ids.contains(&instance.id) || selected_ids.contains(target_id) || mesh_selected;
             // 🎨️ Selection/hover flags must follow the live selection snapshot — OR-ing with the
             // instancesJson bits left deselected meshes painted selected until a later hover rebuild.
@@ -12154,12 +12655,20 @@ fn apply_runtime_draw_flags(state: &mut World3dState) {
 // crate reachable through `wgpu-engine`), so this one function stays excluded from
 // `wasm32-wasip2`: `target_arch = "wasm32"` is TRUE for wasip2 too, hence `not(target_env = "p2")`.
 #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
-pub fn render_world_3d(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut ui_wgpu::wgpu::widgets::WidgetContext<'_, ActionDescriptor>, state: &mut World3dState, gpu: &mut World3dBuildContext) {
+pub fn render_world_3d(
+    scene: &UiComponentSceneNode,
+    bounds: Rect,
+    ctx: &mut ui_wgpu::wgpu::widgets::WidgetContext<'_, ActionDescriptor>,
+    state: &mut World3dState,
+    gpu: &mut World3dBuildContext,
+    shadow_profile: World3dShadowProfile,
+) {
     use ui_wgpu::wgpu::widgets::{draw_text, gizmo as gpu_gizmo};
     let theme = ctx.theme;
     step_world_placeholder_mesh(state);
     state.pick_bounds = ctx.pick_clip.unwrap_or(bounds);
     sync_world3d_state(state, scene, bounds);
+    let _ = step_world3d_camera_fit(state);
     apply_terrain_style_if_changed(state, gpu);
     let current_lod = scene_lod(state);
     let lod_changed = state.resolved_lod_pick.is_none_or(|previous| (previous - current_lod).abs() > WORLD_LOD_EPSILON);
@@ -12171,12 +12680,20 @@ pub fn render_world_3d(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut ui_
     ctx.draw.push_solid([inner.x, inner.y, inner.w, inner.h], environment_clear_color(&state.environment, theme.canvas_clear));
     let camera = state.orbit.to_camera();
     let light_dir = environment_light_dir(&state.environment);
-    let terrain_draws = sync_terrain(state, gpu, &camera);
+    let lighting = environment_scene_lighting(&state.environment);
+    let neutral_material = environment_scene_material(&state.environment);
+    let shadow = environment_scene_shadow(&state.environment, light_dir, shadow_profile);
+    let mut terrain_draws = sync_terrain(state, gpu, &camera);
+    for draw in &mut terrain_draws {
+        draw.shadow_role = world3d_shadow_role(World3dShadowGeometry::Terrain, shadow.enabled);
+    }
     update_visible_chunks(state, camera.position);
     let view_proj = camera.view_proj(inner.w, inner.h);
     let planes = frustum_planes(view_proj);
+    let shadow_planes = directional_shadow_frustum_planes(light_dir);
     let mut culled_draws = Vec::new();
-    let mut provisional_draws = Vec::new();
+    let mut material_draws = Vec::new();
+    let mut shadow_draws = Vec::new();
     let mut culled_count = 0u32;
     let mut needed_mesh_keys = HashSet::new();
     offer_missing_mesh_fetches(state);
@@ -12186,46 +12703,96 @@ pub fn render_world_3d(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut ui_
         };
         let Ok((mesh_min, mesh_max)) = mesh.aabb() else { continue };
         let mesh_version = *state.mesh_versions.get(&draw.mesh_key).unwrap_or(&0);
-        let instances: Vec<Instance3d> = draw
-            .instances
-            .iter()
-            .enumerate()
-            .filter_map(|(instance_index, instance)| {
-                let style = MeshStyleState {
-                    disabled: state.disabled_instance_ids.contains(&instance.id),
-                    provisional: state.provisional_instance_ids.contains(&instance.id),
-                    celebrating: state.celebrating_instance_ids.contains(&instance.id),
-                    selected: instance.selected,
-                    highlighted: state.highlighted_instance_ids.contains(&instance.id),
-                    hovered: instance.hovered,
-                };
-                let mut instance = world3d_style_paint(theme, style, instance.clone());
-                instance.model = retained_gumball_preview_model(state, draw_index, instance_index, instance.model);
-                let position = state.instance_positions.get(&instance.id).copied().unwrap_or([0.0, 0.0, 0.0]);
-                if !instance_chunk_visible(state, position) {
-                    return None;
+        let mut instances = Vec::new();
+        let mut painted_instances = Vec::new();
+        let mut celebration_instances = Vec::new();
+        let mut shadow_instances = Vec::new();
+        let schema = mesh.schema().ok();
+        let has_vertex_colors = schema.is_some_and(|schema| schema.colors > 0);
+        let paint_texture = schema.filter(|schema| schema.uvs == schema.vertices && schema.uvs > 0).and_then(|_| state.mesh_paint_textures.get(&draw.mesh_key)).map(|raster| raster.identity);
+        let [metalness, roughness] = world3d_standard_material_for_mesh(state, &draw.mesh_key, neutral_material);
+        for (instance_index, source) in draw.instances.iter().enumerate() {
+            let style = MeshStyleState {
+                disabled: state.disabled_instance_ids.contains(&source.id),
+                provisional: state.provisional_instance_ids.contains(&source.id),
+                celebrating: state.celebrating_instance_ids.contains(&source.id),
+                selected: source.selected,
+                highlighted: state.highlighted_instance_ids.contains(&source.id),
+                hovered: source.hovered,
+            };
+            let mut instance = world3d_style_paint(theme, style, has_vertex_colors, source.clone());
+            let style_kind = resolve_mesh_style(style);
+            instance.material.metalness = metalness;
+            instance.material.roughness = roughness;
+            instance.model = retained_gumball_preview_model(state, draw_index, instance_index, instance.model);
+            let position = state.instance_positions.get(&instance.id).copied().unwrap_or([0.0, 0.0, 0.0]);
+            if !instance_chunk_visible(state, position) {
+                continue;
+            }
+            let (min, max) = transform_aabb(instance.model, mesh_min, mesh_max);
+            if shadow.enabled && aabb_intersects_frustum(&shadow_planes, min, max) {
+                shadow_instances.push(instance.clone());
+            }
+            if aabb_intersects_frustum(&planes, min, max) {
+                if style_kind == MeshStyleKind::Celebrated && !instance.material.preserve_vertex_color {
+                    celebration_instances.push(instance);
+                } else if paint_texture.is_some() {
+                    painted_instances.push(instance);
+                } else {
+                    instances.push(instance);
                 }
-                let (min, max) = transform_aabb(instance.model, mesh_min, mesh_max);
-                let visible = aabb_intersects_frustum(&planes, min, max);
-                if !visible {
-                    culled_count += 1;
-                }
-                visible.then_some(instance)
-            })
-            .collect();
-        let (provisional, instances): (Vec<Instance3d>, Vec<Instance3d>) = instances.into_iter().partition(|instance| state.provisional_instance_ids.contains(&instance.id));
-        if !instances.is_empty() || !provisional.is_empty() {
+            } else {
+                culled_count += 1;
+            }
+        }
+        if !instances.is_empty() || !painted_instances.is_empty() || !celebration_instances.is_empty() || !shadow_instances.is_empty() {
             needed_mesh_keys.insert(draw.mesh_key.clone());
             gpu.ensure_mesh(&draw.mesh_key, mesh_version, mesh);
         }
-        if !provisional.is_empty() {
-            // 🟩️ The colour is already the `provisional` row of [`mesh_style_paint`], which outranks
-            // `selected`/`hovered` exactly as React's `resolveMeshStyle` ladder does — the flags are
-            // cleared so `WORLD3D_SHADER`'s emissive terms do not fight the row that won.
-            provisional_draws.push(SceneDraw3d { mesh_key: draw.mesh_key.clone(), mesh_version, instances: provisional.into_iter().map(|instance| Instance3d { selected: false, hovered: false, ..instance }).collect() });
+        if paint_texture.is_some() && !painted_instances.is_empty() {
+            let texture_key = format!("mesh-paint:{}", draw.mesh_key);
+            if let Some(lease) = world_raster_upload(state, &draw.mesh_key, &texture_key, true) {
+                gpu.ensure_world_plane_texture(&texture_key, lease);
+            }
         }
-        if !instances.is_empty() {
-            culled_draws.push(SceneDraw3d { mesh_key: draw.mesh_key.clone(), mesh_version, instances });
+        let glb_shadow_role = world3d_shadow_role(World3dShadowGeometry::Glb, shadow.enabled);
+        if !shadow_instances.is_empty() {
+            shadow_draws.push(SceneDraw3d { mesh_key: draw.mesh_key.clone(), mesh_version, instances: shadow_instances, shadow_role: glb_shadow_role });
+        }
+        let instances = instances.into_iter().map(|instance| {
+            if state.provisional_instance_ids.contains(&instance.id) {
+                Instance3d { selected: false, hovered: false, ..instance }
+            } else {
+                instance
+            }
+        });
+        let (translucent, opaque): (Vec<_>, Vec<_>) = instances.partition(|instance| instance.color[3] < 1.0);
+        if !opaque.is_empty() {
+            culled_draws.push(SceneDraw3d { mesh_key: draw.mesh_key.clone(), mesh_version, instances: opaque, shadow_role: glb_shadow_role });
+        }
+        if !translucent.is_empty() {
+            material_draws.push(SceneMaterialDraw3d { mesh_key: draw.mesh_key.clone(), mesh_version, instances: translucent, material: SceneMaterialKind3d::Standard, translucent: true });
+        }
+        if !painted_instances.is_empty() {
+            let texture_key = format!("mesh-paint:{}", draw.mesh_key);
+            let (opaque, translucent): (Vec<_>, Vec<_>) = painted_instances.into_iter().partition(|instance| instance.color[3] >= 1.0);
+            if !opaque.is_empty() {
+                material_draws.push(SceneMaterialDraw3d { mesh_key: draw.mesh_key.clone(), mesh_version, instances: opaque, material: SceneMaterialKind3d::Painted { texture_key: texture_key.clone() }, translucent: false });
+            }
+            if !translucent.is_empty() {
+                material_draws.push(SceneMaterialDraw3d { mesh_key: draw.mesh_key.clone(), mesh_version, instances: translucent, material: SceneMaterialKind3d::Painted { texture_key }, translucent: true });
+            }
+        }
+        if !celebration_instances.is_empty() {
+            let stops = mesh_style_paint(theme, MeshStyleKind::Celebrated).conic.expect("celebrated style owns the conic triad");
+            let angle = (ctx.draw.clock_seconds() / CELEBRATE_CONIC_SPIN_SECONDS).rem_euclid(1.0) * std::f32::consts::TAU;
+            let (opaque, translucent): (Vec<_>, Vec<_>) = celebration_instances.into_iter().partition(|instance| instance.color[3] >= 1.0);
+            if !opaque.is_empty() {
+                material_draws.push(SceneMaterialDraw3d { mesh_key: draw.mesh_key.clone(), mesh_version, instances: opaque, material: SceneMaterialKind3d::Celebration { stops, angle }, translucent: false });
+            }
+            if !translucent.is_empty() {
+                material_draws.push(SceneMaterialDraw3d { mesh_key: draw.mesh_key.clone(), mesh_version, instances: translucent, material: SceneMaterialKind3d::Celebration { stops, angle }, translucent: true });
+            }
         }
     }
     sync_mesh_pool(state, &needed_mesh_keys, gpu);
@@ -12255,12 +12822,11 @@ pub fn render_world_3d(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut ui_
         let mesh_version = *state.mesh_versions.get(VERTEX_MARKER_MESH).unwrap_or(&0);
         if let Some(mesh) = state.meshes.get(VERTEX_MARKER_MESH) {
             gpu.ensure_mesh(VERTEX_MARKER_MESH, mesh_version, *mesh);
-            extra_draws.push(SceneDraw3d { mesh_key: VERTEX_MARKER_MESH.into(), mesh_version, instances: vertex_instances });
+            extra_draws.push(SceneDraw3d { mesh_key: VERTEX_MARKER_MESH.into(), mesh_version, instances: vertex_instances, shadow_role: Default::default() });
         }
     }
     let mut translucent_draws = Vec::new();
     append_component_face_translucent_overlays(state, gpu, &mut translucent_draws);
-    translucent_draws.append(&mut provisional_draws);
     append_tool_run_trace_draws(state, gpu, theme, &mut translucent_draws);
     if let Some(preview) = state.catalogue_drop_preview.clone() {
         let mesh_id = ghost_mesh_id(state, preview.mesh_url.as_deref());
@@ -12283,7 +12849,8 @@ pub fn render_world_3d(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut ui_
                     },
                     selected: false,
                     hovered: false,
-                }],
+                 material: Default::default() }],
+                shadow_role: Default::default(),
             });
         }
     }
@@ -12315,7 +12882,8 @@ pub fn render_world_3d(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut ui_
                         },
                         selected: false,
                         hovered: false,
-                    }],
+                     material: Default::default() }],
+                    shadow_role: Default::default(),
                 });
             }
         }
@@ -12330,25 +12898,30 @@ pub fn render_world_3d(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut ui_
         .iter()
         .filter(|reference| !reference.hidden.unwrap_or(false))
         .filter_map(|reference| reference.url.clone())
-        .filter(|url| !state.reference_pixels.contains_key(url))
+        .filter(|url| !world_reference_raster_ready(state, url))
         .filter(|url| !state.asset_url_misses.contains(url))
         .collect();
     for url in reference_image_urls {
         let _ = reserve_world3d_asset_request(state, WorldAssetRequestKind::ReferenceImage, &url);
     }
-    let visible_references: Vec<(String, [f64; 3], f32)> = state
-        .references
-        .iter()
-        .filter(|reference| !reference.hidden.unwrap_or(false))
-        .filter_map(|reference| reference.url.as_deref().map(|url| (url.to_string(), reference.origin.unwrap_or([0.0, 0.0, 0.0]), reference.width_world.unwrap_or(1.0) as f32)))
-        .collect();
-    for (url, origin, width) in visible_references {
-        let url = url.as_str();
-        let aspect = reference_image_aspect(state, url);
-        let height = width / aspect.max(0.01);
-        textured_instances.push(TexturedInstance3d { texture_key: url.to_string(), model: Instance3d::model_from_trs([origin[0] as f32, origin[1] as f32, origin[2] as f32], [0.0, 0.0, 0.0, 1.0], [width, height, 1.0]), tint: [1.0, 1.0, 1.0, 0.85] });
-        if let Some((pixel_w, pixel_h, pixels)) = reference_underlay_upload(state, url) {
-            gpu.ensure_world_plane_texture(url, pixels, pixel_w, pixel_h);
+    let visible_references: Vec<WorldReferenceRecord> = state.references.iter().filter(|reference| !reference.hidden.unwrap_or(false)).cloned().collect();
+    for reference in visible_references {
+        let Some(url) = reference.url.as_deref() else { continue };
+        let origin = reference.origin.unwrap_or([0.0, 0.0, 0.0]);
+        let width = reference.width_world.unwrap_or(1.0) as f32;
+        let [width, height] = world_reference_plane_size(state, url, width);
+        let visual = world_reference_visual(state, &reference, theme);
+        textured_instances.push(TexturedInstance3d {
+            texture_key: url.to_string(),
+            model: Instance3d::model_from_trs([origin[0] as f32, origin[1] as f32, origin[2] as f32], [0.0, 0.0, 0.0, 1.0], [width, height, 1.0]),
+            background: visual.background,
+            appearance: [visual.content_opacity, 0.0, 0.0, 0.0],
+        });
+        if let Some(outline) = visual.outline {
+            append_world_reference_outline(&mut line_vertices, origin, width, height, outline);
+        }
+        if let Some(lease) = reference_underlay_upload(state, url) {
+            gpu.ensure_world_plane_texture(url, lease);
         }
     }
     if !textured_instances.is_empty() {
@@ -12360,17 +12933,30 @@ pub fn render_world_3d(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut ui_
     if !state.selected_ids.is_empty() && state.active_utility == "select" && world3d_offers_transform_gumball(state) {
         append_gumball_geometry(&mut line_vertices, &mut translucent_draws, gpu, state, &camera, &state.meshes, &state.mesh_versions);
     }
+    let paint_shadow_role = world3d_shadow_role(World3dShadowGeometry::Paint, shadow.enabled);
+    for draw in extra_draws.iter_mut().chain(translucent_draws.iter_mut()).filter(|draw| draw.shadow_role == SceneShadowRole3d::default()) {
+        draw.shadow_role = paint_shadow_role;
+    }
     culled_draws.extend(extra_draws);
     culled_draws.extend(terrain_draws);
+    sort_world3d_translucent_material_draws(&state.meshes, view_proj, &mut material_draws);
+    retain_ensured_world_draws(gpu, &mut shadow_draws);
     retain_ensured_world_draws(gpu, &mut culled_draws);
     retain_ensured_world_draws(gpu, &mut translucent_draws);
+    retain_ensured_world_material_draws(gpu, &mut material_draws);
     ctx.draw.push_scene_pass(ScenePass3d {
         viewport: [inner.x, inner.y, inner.w, inner.h],
         view_proj: view_proj.to_cols_array(),
+        camera_position: camera.position.to_array(),
         light_dir,
+        lighting,
+        neutral_material,
+        shadow,
+        shadow_draws,
         draws: culled_draws,
         line_draws: if line_vertices.is_empty() { Vec::new() } else { vec![LineDraw3d { vertices: line_vertices }] },
         translucent_draws,
+        material_draws,
         textured_draws,
         ..Default::default()
     });
@@ -13636,15 +14222,15 @@ fn append_vortex_arrow_draws(state: &mut World3dState, gpu: &mut World3dBuildCon
             color,
             selected: false,
             hovered,
-        });
+         material: Default::default() });
         shaft_instances.push(Instance3d {
             id: format!("{id}:shaft"),
             model: Instance3d::model_from_trs(layout.shaft_center, layout.rotation, [layout.shaft_radius * 2.0, layout.shaft_length, layout.shaft_radius * 2.0]),
             color,
             selected: false,
             hovered,
-        });
-        head_instances.push(Instance3d { id: format!("{id}:head"), model: Instance3d::model_from_trs(layout.head_base, layout.rotation, [layout.shaft_radius * 3.6, layout.head_length, layout.shaft_radius * 3.6]), color, selected: false, hovered });
+         material: Default::default() });
+        head_instances.push(Instance3d { id: format!("{id}:head"), model: Instance3d::model_from_trs(layout.head_base, layout.rotation, [layout.shaft_radius * 3.6, layout.head_length, layout.shaft_radius * 3.6]), color, selected: false, hovered , material: Default::default() });
     }
     ensure_primitive_mesh(state, "vortex-marker");
     ensure_primitive_mesh(state, VORTEX_ARROW_SHAFT_MESH);
@@ -13653,7 +14239,7 @@ fn append_vortex_arrow_draws(state: &mut World3dState, gpu: &mut World3dBuildCon
         let mesh_version = *state.mesh_versions.get(mesh_key).unwrap_or(&0);
         if let Some(mesh) = state.meshes.get(mesh_key).copied() {
             gpu.ensure_mesh(mesh_key, mesh_version, mesh);
-            extra_draws.push(SceneDraw3d { mesh_key: mesh_key.into(), mesh_version, instances });
+            extra_draws.push(SceneDraw3d { mesh_key: mesh_key.into(), mesh_version, instances, shadow_role: Default::default() });
         }
     }
 }
@@ -13682,8 +14268,7 @@ fn pick_vortex_at(state: &World3dState, x: f32, y: f32, _inner: Rect) -> Option<
 }
 
 /// 🖼️ Ray-vs-quad hit test against visible reference-image planes, returning the closest hit
-/// reference's `url` (used as its hover/context-menu identifier, since `WorldReferenceRecord` has
-/// no separate id field). References are flat rectangles lying in the local XY plane (normal +Z,
+/// reference's authored `id`. References are flat rectangles lying in the local XY plane (normal +Z,
 /// width along X, height along Y) centered at `origin` — matching this renderer's Z-up convention.
 #[cfg(test)]
 fn pick_reference_at(state: &World3dState, x: f32, y: f32, _inner: Rect) -> Option<String> {
@@ -13694,7 +14279,7 @@ fn pick_reference_at(state: &World3dState, x: f32, y: f32, _inner: Rect) -> Opti
     let plane_normal = Vec3::new(0.0, 0.0, 1.0);
     let mut best: Option<(f32, String)> = None;
     for reference in &state.references {
-        if reference.hidden.unwrap_or(false) {
+        if reference.hidden.unwrap_or(false) || reference.locked.unwrap_or(false) {
             continue;
         }
         let Some(url) = reference.url.as_deref() else {
@@ -13714,10 +14299,10 @@ fn pick_reference_at(state: &World3dState, x: f32, y: f32, _inner: Rect) -> Opti
         }
         let distance = origin.sub(hit).length();
         if best.as_ref().is_none_or(|(best_distance, _)| distance < *best_distance) {
-            best = Some((distance, url.to_string()));
+            best = Some((distance, reference.id.as_deref().unwrap_or(url).to_string()));
         }
     }
-    best.map(|(_, url)| url)
+    best.map(|(_, id)| id)
 }
 
 /// 📍️ One instance's own world ORIGIN — the translation column of its model matrix. Production since
@@ -13798,13 +14383,9 @@ pub fn world3d_relocate_drag_target(pressed_id: Option<&str>, selected_ids: &[St
 /// added to the grabbed object's own origin and snapped exactly like a catalogue drop; a drag that
 /// lands within [`WORLD_RELOCATE_EPSILON`] of where it started answers `None`, so a click without
 /// travel never writes a document edit.
-pub fn world3d_relocate_dispatch_args(session: &World3dRelocateSession, to: [f32; 3], grid_factor: f64) -> Option<[f64; 3]> {
-    let moved = [
-        session.origin[0] + (to[0] - session.from[0]),
-        session.origin[1] + (to[1] - session.from[1]),
-        session.origin[2] + (to[2] - session.from[2]),
-    ];
-    let position = snap_world_point_to_grid(moved, grid_factor);
+pub fn world3d_relocate_dispatch_args(session: &World3dRelocateSession, to: [f32; 3], grid_snap_enabled: bool, grid_factor: f64) -> Option<[f64; 3]> {
+    let moved = [session.origin[0] + (to[0] - session.from[0]), session.origin[1] + (to[1] - session.from[1]), session.origin[2] + (to[2] - session.from[2])];
+    let position = snap_world_point_to_grid(moved, grid_snap_enabled, grid_factor);
     let unchanged = (0..3).all(|axis| (position[axis] - f64::from(session.origin[axis])).abs() < WORLD_RELOCATE_EPSILON);
     (!unchanged).then_some(position)
 }
@@ -13844,9 +14425,11 @@ pub fn world3d_update_relocate_drag(state: &mut World3dState, x: f32, y: f32) ->
     let Some(session) = state.relocate.clone() else {
         return false;
     };
-    let origin = world3d_ground_plane_pick(state, x, y, session.origin[2])
-        .and_then(|to| world3d_relocate_dispatch_args(&session, to, state.lod.grid_factor))
-        .unwrap_or([f64::from(session.origin[0]), f64::from(session.origin[1]), f64::from(session.origin[2])]);
+    let origin = world3d_ground_plane_pick(state, x, y, session.origin[2]).and_then(|to| world3d_relocate_dispatch_args(&session, to, state.lod.grid_snap_enabled, state.lod.grid_factor)).unwrap_or([
+        f64::from(session.origin[0]),
+        f64::from(session.origin[1]),
+        f64::from(session.origin[2]),
+    ]);
     let object_kind = state.relocate.as_ref().map(|session| session.object_id.clone()).unwrap_or_default();
     state.catalogue_drop_preview = Some(WorldCatalogueDropPreviewRecord { object_kind, mesh_url: world3d_mesh_url_for_object(state, &session.object_id), origin });
     true
@@ -13860,7 +14443,7 @@ pub fn world3d_end_relocate_drag(state: &mut World3dState, to: Option<(f32, f32)
     state.catalogue_drop_preview = None;
     let (x, y) = to?;
     let point = world3d_ground_plane_pick(state, x, y, session.origin[2])?;
-    let position = world3d_relocate_dispatch_args(&session, point, state.lod.grid_factor)?;
+    let position = world3d_relocate_dispatch_args(&session, point, state.lod.grid_snap_enabled, state.lod.grid_factor)?;
     Some((session.object_id, position))
 }
 
@@ -13898,17 +14481,13 @@ fn plan_world3d_relocate(state: &World3dState, generation: u64, object_id: &str,
     let controller = plan.push_string(&state.controller_id)?;
     let surface = plan.push_string(&state.surface_id)?;
     let object = plan.push_string(object_id)?;
-    let action = WorldFlatAction {
-        kind: WorldFlatActionKind::Relocate,
-        strings: [Some(controller), Some(surface), Some(object), None, None, None, None, None],
-        numbers: [position[0], position[1], position[2], 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
-    };
+    let action = WorldFlatAction { kind: WorldFlatActionKind::Relocate, strings: [Some(controller), Some(surface), Some(object), None, None, None, None, None], numbers: [position[0], position[1], position[2], 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0] };
     plan.push_action(action).then_some(plan)
 }
 //#endregion WorldRelocateGesture
 
-fn snap_world_point_to_grid(point: [f32; 3], grid_factor: f64) -> [f64; 3] {
-    if grid_factor <= 0.0 {
+fn snap_world_point_to_grid(point: [f32; 3], grid_snap_enabled: bool, grid_factor: f64) -> [f64; 3] {
+    if !grid_snap_enabled || grid_factor <= 0.0 {
         return [point[0] as f64, point[1] as f64, point[2] as f64];
     }
     let snap = |value: f32| (value as f64 / grid_factor).round() * grid_factor;
@@ -13921,7 +14500,7 @@ pub fn world3d_update_catalogue_drop_preview(state: &mut World3dState, client_x:
         state.catalogue_drop_preview = None;
         return;
     };
-    let origin = snap_world_point_to_grid(hit, state.lod.grid_factor);
+    let origin = snap_world_point_to_grid(hit, state.lod.grid_snap_enabled, state.lod.grid_factor);
     state.catalogue_drop_preview = Some(WorldCatalogueDropPreviewRecord { object_kind: object_kind.to_string(), mesh_url: mesh_url.filter(|url| !url.is_empty()).map(str::to_string), origin });
 }
 
@@ -13932,7 +14511,7 @@ pub fn world3d_clear_catalogue_drop_preview(state: &mut World3dState) {
 
 /// 🎯️ Grid-snapped ground origin for committing a catalogue drop on a wgpu `World3d` pane.
 pub fn world3d_catalogue_drop_origin(state: &World3dState, client_x: f32, client_y: f32) -> Option<[f64; 3]> {
-    world3d_ground_plane_pick(state, client_x, client_y, 0.0).map(|hit| snap_world_point_to_grid(hit, state.lod.grid_factor))
+    world3d_ground_plane_pick(state, client_x, client_y, 0.0).map(|hit| snap_world_point_to_grid(hit, state.lod.grid_snap_enabled, state.lod.grid_factor))
 }
 
 fn preview_scale(scale: Option<&serde_json::Value>) -> [f32; 3] {
@@ -13943,7 +14522,18 @@ fn preview_scale(scale: Option<&serde_json::Value>) -> [f32; 3] {
 }
 
 fn reference_image_aspect(state: &World3dState, url: &str) -> f32 {
-    state.reference_pixels.get(url).map_or(1.0, |(width, height, _)| *width as f32 / (*height).max(1) as f32).max(0.01)
+    state
+        .reference_pixels
+        .get(url)
+        .map_or(1.0, |raster| {
+            let descriptor = raster.identity.descriptor();
+            descriptor.width as f32 / descriptor.height.max(1) as f32
+        })
+        .max(0.01)
+}
+
+fn world_reference_plane_size(state: &World3dState, url: &str, width: f32) -> [f32; 2] {
+    [width, width / reference_image_aspect(state, url)]
 }
 
 /// 👻️ Mesh key for `BrushPreviewGhost`: the real GLB's resolved id when a `meshUrl` is given
@@ -14003,7 +14593,11 @@ fn parse_color(value: &str) -> [f32; 4] {
 /// write and every wire colour came out washed out against React, whose `new Color(hex)` linearizes
 /// through `ColorManagement` exactly like this. `Theme` was always linear; only this reader was not.
 fn srgb_to_linear(channel: f32) -> f32 {
-    if channel <= 0.04045 { channel / 12.92 } else { ((channel + 0.055) / 1.055).powf(2.4) }
+    if channel <= 0.04045 {
+        channel / 12.92
+    } else {
+        ((channel + 0.055) / 1.055).powf(2.4)
+    }
 }
 
 //#region 📡️WorldAssetIoAuthority
@@ -14251,6 +14845,7 @@ struct WorldAssetClaim {
     reserved_bytes: usize,
     in_flight: bool,
     fetch_complete: bool,
+    cancelled: bool,
     owner: Option<WorldAssetFetchOwner>,
 }
 
@@ -14282,7 +14877,7 @@ impl WorldAssetIoAuthority {
         }
         if let Some((slot, claim)) = self.slots.iter().enumerate().find_map(|(slot, claim)| {
             let claim = claim.as_ref()?;
-            (claim.kind == kind && usize::from(claim.url_len) == url.len() && &claim.url_bytes[..url.len()] == url.as_bytes()).then_some((slot, claim))
+            (!claim.cancelled && claim.kind == kind && usize::from(claim.url_len) == url.len() && &claim.url_bytes[..url.len()] == url.as_bytes()).then_some((slot, claim))
         }) {
             if claim.revision != revision {
                 return Err(WorldAssetFault::Stale);
@@ -14313,13 +14908,13 @@ impl WorldAssetIoAuthority {
             sealed: false,
             closing: false,
         };
-        self.slots[slot] = Some(WorldAssetClaim { epoch: token.epoch, generation, revision, kind, url_len: url.len() as u16, url_bytes, reserved_bytes: byte_credits, in_flight: false, fetch_complete: false, owner: Some(owner) });
+        self.slots[slot] = Some(WorldAssetClaim { epoch: token.epoch, generation, revision, kind, url_len: url.len() as u16, url_bytes, reserved_bytes: byte_credits, in_flight: false, fetch_complete: false, cancelled: false, owner: Some(owner) });
         self.reserved_bytes = next;
         Ok(token)
     }
 
     pub fn take_next(&mut self) -> Option<WorldAssetFetchOwner> {
-        let claim = self.slots.iter_mut().flatten().find(|claim| !claim.in_flight && !claim.fetch_complete && claim.owner.is_some())?;
+        let claim = self.slots.iter_mut().flatten().find(|claim| !claim.cancelled && !claim.in_flight && !claim.fetch_complete && claim.owner.is_some())?;
         claim.in_flight = true;
         claim.owner.take()
     }
@@ -14327,7 +14922,7 @@ impl WorldAssetIoAuthority {
     pub fn reserve_response(&mut self, owner: &mut WorldAssetFetchOwner, byte_credits: usize) -> Result<(), WorldAssetFault> {
         let slot = usize::from(owner.token.slot);
         let claim = self.slots.get_mut(slot).and_then(Option::as_mut).ok_or(WorldAssetFault::Stale)?;
-        if claim.epoch != owner.token.epoch || claim.generation != owner.generation || claim.revision != owner.revision || !claim.in_flight || claim.reserved_bytes != 0 || owner.reserved_bytes != 0 {
+        if claim.cancelled || claim.epoch != owner.token.epoch || claim.generation != owner.generation || claim.revision != owner.revision || !claim.in_flight || claim.reserved_bytes != 0 || owner.reserved_bytes != 0 {
             return Err(WorldAssetFault::Stale);
         }
         let next = self.reserved_bytes.checked_add(byte_credits).ok_or(WorldAssetFault::ByteCapacity)?;
@@ -14341,13 +14936,16 @@ impl WorldAssetIoAuthority {
     }
 
     #[expect(clippy::result_large_err, reason = "Rejected transfer returns the exact admitted owner for bounded retirement without allocating on the failure path.")]
-    pub fn return_owner(&mut self, owner: WorldAssetFetchOwner) -> Result<(), WorldAssetFetchOwner> {
+    pub fn return_owner(&mut self, mut owner: WorldAssetFetchOwner) -> Result<(), WorldAssetFetchOwner> {
         let slot = usize::from(owner.token.slot);
         let Some(claim) = self.slots.get_mut(slot).and_then(Option::as_mut) else {
             return Err(owner);
         };
         if claim.epoch != owner.token.epoch || claim.generation != owner.generation || claim.revision != owner.revision || !claim.in_flight || claim.owner.is_some() {
             return Err(owner);
+        }
+        if claim.cancelled {
+            owner.begin_close();
         }
         claim.in_flight = false;
         claim.fetch_complete = owner.sealed || owner.closing;
@@ -14358,7 +14956,14 @@ impl WorldAssetIoAuthority {
     pub fn seal_response(&mut self, owner: &mut WorldAssetFetchOwner) -> Result<(), WorldAssetFault> {
         let slot = usize::from(owner.token.slot);
         let claim = self.slots.get_mut(slot).and_then(Option::as_mut).ok_or(WorldAssetFault::Stale)?;
-        if claim.epoch != owner.token.epoch || claim.generation != owner.generation || claim.revision != owner.revision || !claim.in_flight || claim.reserved_bytes != owner.reserved_bytes || owner.received_bytes > owner.reserved_bytes {
+        if claim.cancelled
+            || claim.epoch != owner.token.epoch
+            || claim.generation != owner.generation
+            || claim.revision != owner.revision
+            || !claim.in_flight
+            || claim.reserved_bytes != owner.reserved_bytes
+            || owner.received_bytes > owner.reserved_bytes
+        {
             return Err(WorldAssetFault::Stale);
         }
         owner.seal()?;
@@ -14372,7 +14977,7 @@ impl WorldAssetIoAuthority {
     pub fn take_completed(&mut self, token: WorldAssetRequestToken, generation: u64, revision: u64) -> Result<WorldAssetFetchOwner, WorldAssetFault> {
         let slot = usize::from(token.slot);
         let claim = self.slots.get_mut(slot).and_then(Option::as_mut).ok_or(WorldAssetFault::Stale)?;
-        if claim.epoch != token.epoch || claim.generation != generation || claim.revision != revision || claim.in_flight || !claim.fetch_complete || claim.owner.as_ref().is_none_or(|owner| !owner.sealed) {
+        if claim.cancelled || claim.epoch != token.epoch || claim.generation != generation || claim.revision != revision || claim.in_flight || !claim.fetch_complete || claim.owner.as_ref().is_none_or(|owner| !owner.sealed) {
             return Err(WorldAssetFault::Stale);
         }
         claim.in_flight = true;
@@ -14383,14 +14988,14 @@ impl WorldAssetIoAuthority {
     /// non-consuming twin of [`Self::take_next_completed_step`]. See also
     /// [`WorldAssetFetchOwner::is_sealed`].
     pub fn has_completed_step(&self) -> bool {
-        self.slots.iter().flatten().any(|claim| !claim.in_flight && claim.fetch_complete && claim.owner.as_ref().is_some_and(|owner| owner.sealed))
+        self.slots.iter().flatten().any(|claim| !claim.cancelled && !claim.in_flight && claim.fetch_complete && claim.owner.as_ref().is_some_and(|owner| owner.sealed))
     }
 
     pub fn take_next_completed_step(&mut self) -> Option<WorldAssetFetchOwner> {
         let slot = usize::from(self.completed_cursor);
         self.completed_cursor = ((slot + 1) % WORLD_ASSET_REQUEST_CAPACITY) as u8;
         let claim = self.slots[slot].as_mut()?;
-        if claim.in_flight || !claim.fetch_complete || claim.owner.as_ref().is_none_or(|owner| !owner.sealed) {
+        if claim.cancelled || claim.in_flight || !claim.fetch_complete || claim.owner.as_ref().is_none_or(|owner| !owner.sealed) {
             return None;
         }
         claim.in_flight = true;
@@ -14416,7 +15021,26 @@ impl WorldAssetIoAuthority {
         if self.closing {
             return true;
         }
-        self.slots.get(usize::from(token.slot)).and_then(Option::as_ref).is_none_or(|claim| claim.epoch != token.epoch || claim.generation != token.generation || claim.revision != token.revision)
+        self.slots.get(usize::from(token.slot)).and_then(Option::as_ref).is_none_or(|claim| claim.cancelled || claim.epoch != token.epoch || claim.generation != token.generation || claim.revision != token.revision)
+    }
+
+    fn cancel_reference_image_urls_except(&mut self, references: &[WorldReferenceRecord]) {
+        for claim in self.slots.iter_mut().flatten() {
+            if claim.kind != WorldAssetRequestKind::ReferenceImage {
+                continue;
+            }
+            let url = std::str::from_utf8(&claim.url_bytes[..usize::from(claim.url_len)]).expect("asset URLs originate from UTF-8");
+            if references.iter().any(|reference| reference.url.as_deref() == Some(url)) {
+                continue;
+            }
+            claim.cancelled = true;
+            if !claim.in_flight {
+                if let Some(owner) = claim.owner.as_mut() {
+                    owner.begin_close();
+                }
+                claim.fetch_complete = true;
+            }
+        }
     }
 
     pub fn retire_cancelled_step(&mut self) -> bool {
@@ -14895,11 +15519,7 @@ fn world_brush_mesh_next_page(state: &mut World3dState) -> Option<ActionDescript
 /// 🥽️ Whether this surface still owes the guest a `registerBrushMesh` — the per-frame predicate the
 /// renderer's frame gate reads, so a surface mid-run keeps its own frames coming.
 pub fn world3d_brush_mesh_announce_pending(state: &World3dState) -> bool {
-    state.brush_mesh_run.is_some()
-        || state
-            .mesh_source_urls
-            .iter()
-            .any(|(mesh_key, url)| state.meshes.contains_key(mesh_key.as_str()) && state.brush_mesh_announced.get(url) != Some(&world_brush_mesh_revision(url)))
+    state.brush_mesh_run.is_some() || state.mesh_source_urls.iter().any(|(mesh_key, url)| state.meshes.contains_key(mesh_key.as_str()) && state.brush_mesh_announced.get(url) != Some(&world_brush_mesh_revision(url)))
 }
 //#endregion 🥽️WorldBrushMeshAnnounce
 
@@ -14918,7 +15538,8 @@ pub fn world3d_brush_mesh_announce_pending(state: &World3dState) -> bool {
 /// a dropped feature, and it is what keeps a 2275×2560 scan (23 296 000 bytes) from being refused at
 /// raster admission, which the frame reports as a BUILD FAULT that quarantines the whole surface
 /// (ticket 26/09/17/WGPU-RENDERER-REACT-PARITY, `📓️w3a-asset-decoder-boot-fault.md`).
-const WORLD_REFERENCE_TEXTURE_BYTES: usize = ui_wgpu::wgpu::PREPARED_RASTER_ITEM_BYTES / 2;
+const WORLD_REFERENCE_TEXTURE_BYTES: usize = ui_wgpu::wgpu::SCENE_RASTER_ITEM_BYTES;
+const WORLD_REFERENCE_SOURCE_PIXELS: u64 = 64 * 1024 * 1024 / 4;
 
 /// 🖼️ `image` scaled to at most [`WORLD_REFERENCE_TEXTURE_BYTES`] of RGBA, aspect preserved.
 fn bounded_reference_image(image: image::DynamicImage) -> image::DynamicImage {
@@ -14933,18 +15554,77 @@ fn bounded_reference_image(image: image::DynamicImage) -> image::DynamicImage {
     image.resize(width, height, image::imageops::FilterType::Triangle)
 }
 
-pub fn apply_reference_image_bytes(state: &mut World3dState, url: &str, bytes: &[u8]) {
-    let reader = image::ImageReader::new(std::io::Cursor::new(bytes)).with_guessed_format().ok();
-    let Some(reader) = reader else {
-        return;
-    };
-    if let Ok(image) = reader.decode() {
-        let rgba = bounded_reference_image(image).to_rgba8();
-        if !publish_world_pixels(state, url.to_string(), (rgba.width(), rgba.height(), rgba.into_raw()), false) {
-            return;
-        }
-        state.pending_image_urls.remove(url);
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct DecodedReferenceImage {
+    pub width: u32,
+    pub height: u32,
+    pub source_digest: [u64; 2],
+    pub pixels: Vec<u8>,
+}
+
+pub fn decode_reference_image_bytes(bytes: &[u8]) -> Option<DecodedReferenceImage> {
+    use image::ImageDecoder as _;
+
+    let reader = image::ImageReader::new(std::io::Cursor::new(bytes)).with_guessed_format().ok()?;
+    let mut decoder = reader.into_decoder().ok()?;
+    let (source_width, source_height) = decoder.dimensions();
+    if u64::from(source_width).checked_mul(u64::from(source_height))? > WORLD_REFERENCE_SOURCE_PIXELS {
+        return None;
     }
+    let orientation = decoder.orientation().unwrap_or(image::metadata::Orientation::NoTransforms);
+    let mut decoded = image::DynamicImage::from_decoder(decoder).ok()?;
+    decoded.apply_orientation(orientation);
+    let rgba = bounded_reference_image(decoded).to_rgba8();
+    let digest = semio_framework_hash::Sha256::digest(bytes);
+    let source_digest = [u64::from_be_bytes(digest[..8].try_into().ok()?), u64::from_be_bytes(digest[8..16].try_into().ok()?)];
+    Some(DecodedReferenceImage { width: rgba.width(), height: rgba.height(), source_digest, pixels: rgba.into_raw() })
+}
+
+pub fn apply_decoded_reference_image(state: &mut World3dState, url: &str, decoded: DecodedReferenceImage) -> bool {
+    let expected = usize::try_from(decoded.width)
+        .ok()
+        .and_then(|width| usize::try_from(decoded.height).ok().and_then(|height| width.checked_mul(height)))
+        .and_then(|pixels| pixels.checked_mul(4));
+    if expected != Some(decoded.pixels.len()) || decoded.pixels.len() > WORLD_REFERENCE_TEXTURE_BYTES || !world3d_reference_url_is_current(state, url) {
+        if !world3d_reference_url_is_current(state, url) {
+            state.pending_image_urls.remove(url);
+        }
+        return false;
+    }
+    let descriptor = SceneRasterDescriptor { width: decoded.width, height: decoded.height, source_digest: decoded.source_digest, source_revision: 1, profile: SceneRasterProfile::ReferenceImageMapNoColorSpace, mesh: None };
+    let owner = decoded.source_digest[0].wrapping_add(decoded.source_digest[1]).max(1);
+    let pool = world_scene_raster_pool();
+    let lease = match pool.begin(descriptor, owner, SceneRasterWriteMode::Moved) {
+        SceneRasterBegin::Reused(lease) => lease,
+        SceneRasterBegin::Writer(writer) => match pool.prepare_moved(writer, decoded.pixels).and_then(|prepared| pool.seal_prepared_moved(prepared)) {
+            Ok(lease) => lease,
+            Err((_pixels, _fault)) => {
+                let _ = pool.cancel(writer);
+                return false;
+            }
+        },
+        SceneRasterBegin::Backpressure(_) | SceneRasterBegin::Refused(_) => return false,
+    };
+    apply_decoded_reference_raster(state, url, lease)
+}
+
+pub fn apply_decoded_reference_raster(state: &mut World3dState, url: &str, lease: SceneRasterLease) -> bool {
+    let descriptor = lease.identity().descriptor();
+    if descriptor.profile != SceneRasterProfile::ReferenceImageMapNoColorSpace || !world3d_reference_url_is_current(state, url) {
+        if !world3d_reference_url_is_current(state, url) {
+            state.pending_image_urls.remove(url);
+        }
+        return false;
+    }
+    if !publish_world_raster(state, url.to_string(), lease, false) {
+        return false;
+    }
+    state.pending_image_urls.remove(url);
+    true
+}
+
+pub fn apply_reference_image_bytes(state: &mut World3dState, url: &str, bytes: &[u8]) -> bool {
+    decode_reference_image_bytes(bytes).is_some_and(|decoded| apply_decoded_reference_image(state, url, decoded))
 }
 
 #[cfg(test)]
@@ -14956,6 +15636,11 @@ mod tests;
 #[cfg(test)]
 #[path = "🧪️tests/🖱️pointer-gestures/🦀️.rs"]
 mod pointer_gesture_tests;
+
+/// 🧲️ Grid-snap input and active-document reference ownership over one shared neutral fixture.
+#[cfg(test)]
+#[path = "🧪️tests/🧲️scene-input-residency/🦀️.rs"]
+mod scene_input_residency_tests;
 
 /// 📜️ The ORDERED action journal one probe gesture publishes, against React's own measured
 /// sequences in `🌐️World3dHost/🧫️fixtures/📜️journal-sequences.json`.

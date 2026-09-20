@@ -1,4 +1,3 @@
-
 use super::*;
 
 fn column(id: &str, lane: usize, parent: Option<&str>) -> HistoryColumnJson {
@@ -135,9 +134,7 @@ fn row_press_dispatches_checkout_checkpoint_for_the_row_under_the_pointer() {
         board2d: None,
         icon_render: None,
         ink_canvas: None,
-        graph_timeline: Some(ui_wgpu::wgpu::GraphTimelineScene {
-            columns_json: json!([{ "checkpointId": "b", "lane": 0, "parentCheckpointId": "a" }, { "checkpointId": "a", "lane": 0 }]).to_string(),
-        }),
+        graph_timeline: Some(ui_wgpu::wgpu::GraphTimelineScene { columns_json: json!([{ "checkpointId": "b", "lane": 0, "parentCheckpointId": "a" }, { "checkpointId": "a", "lane": 0 }]).to_string() }),
         diff_view: None,
         event_feed: None,
         block_list: None,

@@ -1134,9 +1134,10 @@ export function testLevelAtLeast(level: TestLevel): boolean {
  * 🎚️Level-gates one Vitest case factory: `atTestLevel(it, "long")` runs the case from `long` upwards and
  * reports it as skipped below that, so a case that outgrows its level's wall-clock budget moves level
  * instead of being deleted or silently killed. Structurally typed on `runIf` so this library never
- * depends on Vitest's own types.
+ * depends on Vitest's own types — and typed by what `runIf` RETURNS rather than by the factory itself,
+ * because Vitest's `TestAPI.runIf` yields the chainable API, not another `TestAPI`.
  */
-export function atTestLevel<Case extends { runIf(condition: boolean): Case }>(factory: Case, level: TestLevel): Case {
+export function atTestLevel<Gated>(factory: { runIf(condition: boolean): Gated }, level: TestLevel): Gated {
   return factory.runIf(testLevelAtLeast(level));
 }
 

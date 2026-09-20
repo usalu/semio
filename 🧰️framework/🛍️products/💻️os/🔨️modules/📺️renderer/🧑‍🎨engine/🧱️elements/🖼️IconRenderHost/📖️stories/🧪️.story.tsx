@@ -65,6 +65,10 @@ function IconRenderStoryHost({ format }: { readonly format: IconRenderRequest["f
 const meta = {
   title: "🛠️framework🔌️hosts/IconRenderHost",
   component: IconRenderStoryHost,
+  // 🧭️ The host's `format` prop is required, so every story — including the toolbar-driven one that
+  // reads the global instead — has to carry it. Declaring it once here is what lets a story state
+  // only what it changes.
+  args: { format: "png" },
   parameters: { layout: "fullscreen" },
   tags: ["autodocs"],
 } satisfies Meta<typeof IconRenderStoryHost>;

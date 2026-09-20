@@ -55,3 +55,15 @@ Feature: Resolve conflicting utilities by last-winner
       | hover:px-single hover:px-tiny      | hover:px-tiny                      |
       | focus:h-medium hover:h-large       | focus:h-medium hover:h-large       |
     Then every composition matches its specified result
+
+  @id-independent-inset-edges-survive
+  @level-fundamental
+  @mode-regression
+  Scenario: Independent inset edges survive while the last utility on one edge wins
+    Given the composed class list and its specified result
+      | input                                      | expected                                   |
+      | top-[50%] left-[50%]                      | top-[50%] left-[50%]                      |
+      | top-0 right-1 bottom-2 left-3              | top-0 right-1 bottom-2 left-3              |
+      | top-0 top-[50%] left-0 left-[50%]          | top-[50%] left-[50%]                      |
+      | inset-y-0 top-[50%] left-[50%]             | inset-y-0 top-[50%] left-[50%]            |
+    Then every composition matches its specified result

@@ -106,7 +106,6 @@ pub enum PptxStrictMutation {
 /// mutation catalog `pptx-ecma-376-strict` (`../../🔣️oracle.json`) is measured against
 /// this exact list. `kinds_match_enum_and_catalog` proves it never drifts from either side.
 pub const KINDS: &[&str] = &[
-    "no-mutation",
     "set-snapshot",
     "set-main-namespace",
     "set-drawing-namespace",

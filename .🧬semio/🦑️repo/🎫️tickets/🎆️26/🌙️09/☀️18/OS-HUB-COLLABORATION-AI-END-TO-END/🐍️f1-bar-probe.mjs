@@ -28,6 +28,8 @@ const port = process.env.SEMIO_F1_PORT ?? "6090";
 const variant = process.env.SEMIO_F1_VARIANT ?? plugin;
 const seconds = Number(process.env.SEMIO_F1_SECONDS ?? 120);
 const wanted = (process.env.SEMIO_F1_ACTIONS ?? "").split(",").map((entry) => entry.trim()).filter(Boolean);
+const gesture = process.env.SEMIO_F1_GESTURE ?? "none";
+const gestureText = process.env.SEMIO_F1_GESTURE_TEXT ?? "semio";
 const prefix = process.env.SEMIO_F1_PREFIX ?? "f1";
 const ticketDir = dirname(fileURLToPath(import.meta.url));
 const outDir = join(ticketDir, "🗑️generated");
@@ -140,7 +142,7 @@ try {
 step("boot", boot ? { ready: boot.ready, shellError: boot.shellError, title: boot.title, panes: boot.panes, windowKinds: boot.windowKinds, combobox: boot.combobox, history: boot.history, bodyHead: boot.body.slice(0, 600) } : { bootFailure });
 
 const exampleRendered = Boolean(boot?.combobox?.length) && boot.panes.some((pane) => pane.chars > 0 || pane.svg > 0 || pane.canvases > 0);
-const interaction = { attempted: false, dispatched: false, action: null, undo: null, redo: null };
+const interaction = { attempted: false, dispatched: false, action: null, undo: null, redo: null, gesture: null };
 
 if (boot?.ready && !boot.shellError) {
   // 📜️ `framework.history.undo` only exists while the History panel tab is mounted, so open it
@@ -255,6 +257,47 @@ if (boot?.ready && !boot.shellError) {
     await page.waitForTimeout(400);
   }
   step("invoke-action", { tried, reservedRowsSkipped: candidates.filter((id) => RESERVED.has(id.replace(/^action\./, ""))), dispatched: interaction.dispatched, action: interaction.action, undo: interaction.undo, redo: interaction.redo });
+
+  // ⌨️ Apps whose real mutating UI is a CANVAS gesture rather than an Actions-pane row (✒️writer's
+  // editor is painted into a canvas, so `textEdit` has no pane row by construction) get one typed
+  // keystroke into the document surface. This is still "a real document mutation through the UI" —
+  // it is the app's only one — and it goes through the same ledger witness.
+  if (!interaction.dispatched && gesture === "canvas") {
+    const mark = lines.length;
+    const baseView = await shell();
+    const baseEntries = appEntries(baseView).length;
+    const baseSignature = signature(baseView);
+    const canvas = page.locator('[data-surface-id] canvas').first();
+    const box = (await canvas.count()) ? await canvas.boundingBox() : null;
+    let typed = "no-canvas";
+    if (box) {
+      await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
+      await page.waitForTimeout(800);
+      await page.keyboard.type(gestureText, { delay: 60 });
+      typed = `typed ${JSON.stringify(gestureText)}`;
+    }
+    const after = await settle((view) => appEntries(view).length > baseEntries || faultsSince(mark).some((line) => /refused|dropped action/.test(line)), 16);
+    interaction.gesture = { typed, entriesBefore: baseEntries, entriesAfter: appEntries(after).length, actionIds: after.history?.actionIds ?? [], signatureMoved: signature(after) !== baseSignature, faults: faultsSince(mark) };
+    if (appEntries(after).length > baseEntries) {
+      interaction.dispatched = true;
+      interaction.action = `canvas-gesture:${appEntries(after).slice(-1)[0] ?? "?"}`;
+      const undoMark = lines.length;
+      await expandAncestors("framework.history.undo");
+      const beforeUndo = await shell();
+      const undoClicks = [await clickUndoButton()];
+      await page.waitForTimeout(900);
+      const undone = await settle((view) => Boolean(view.history?.canRedo) && signature(view) === baseSignature, 12);
+      interaction.undo = { clicked: "framework.history.undo", undoClicks, appEntriesBefore: appEntries(beforeUndo).length, appEntriesAfter: appEntries(undone).length, cursorBefore: beforeUndo.history?.cursor ?? null, cursorAfter: undone.history?.cursor ?? null, canRedo: undone.history?.canRedo ?? null, signatureRestored: signature(undone) === baseSignature, faults: faultsSince(undoMark) };
+      const redoMark = lines.length;
+      const postMutationSignature = signature(after);
+      await expandAncestors("framework.history.redo");
+      const redoClicks = [await clickRedoButton()];
+      await page.waitForTimeout(900);
+      const redone = await settle((view) => signature(view) === postMutationSignature, 12);
+      interaction.redo = { clicked: "framework.history.redo", redoClicks, appEntriesAfter: appEntries(redone).length, canUndo: redone.history?.canUndo ?? null, canRedo: redone.history?.canRedo ?? null, signatureReapplied: signature(redone) === postMutationSignature, faults: faultsSince(redoMark) };
+    }
+    step("canvas-gesture", interaction.gesture, mark);
+  }
 }
 
 const final = boot ? await shell().catch(() => null) : null;

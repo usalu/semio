@@ -485,8 +485,17 @@ impl<PA: crate::app::PluginApp> NativeLifecycleRegistry<PA> {
 }
 
 impl<PA: crate::app::PluginApp> Drop for NativeLifecycleRegistry<PA> {
+    /// 🧹️ The teardown contract: every lifetime this registry handed out reached its terminal exact
+    /// ACK before the registry itself went away. It is asserted only on the ORDINARY drop path.
+    /// While the thread is already unwinding, a panic raised here is a panic inside a destructor
+    /// during cleanup — a non-unwinding panic that `SIGABRT`s the whole process. In a test binary
+    /// that turns one failed law into a silent cancellation of every law scheduled after it (this
+    /// is exactly how a single red retention reading took `plugin_builder_contract_tests` down with
+    /// it), and in the host it replaces a typed fault with a dead process. The unfinished lifetime
+    /// is a consequence of whatever is already unwinding, never the first cause, so the original
+    /// panic is the one that must reach the operator.
     fn drop(&mut self) {
-        assert!(self.slots.iter().next().is_none(), "runtime lifetimes require terminal exact ACK before teardown");
+        assert!(self.slots.iter().next().is_none() || std::thread::panicking(), "runtime lifetimes require terminal exact ACK before teardown");
     }
 }
 

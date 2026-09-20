@@ -70,7 +70,18 @@ describe("MapRenderer idle appearance updates", () => {
     const callback = ts.transpileModule(`const callback = ${initializer};`, { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText;
     const pointer = { current: { leftDown: true, middleDown: true } };
     const panningRef = { current: true };
-    const cancel = new Function("rendererRef", "pointer", "panningRef", "resetMarquee", "canvas", "mirrorSessionCameraToReact", "clientToLocal", `${callback}\nreturn callback;`)({ current: renderer }, pointer, panningRef, vi.fn(), { hasPointerCapture: () => false }, vi.fn(), () => repaintFixture.cancelledPan.point);
+    const resetMarquee = vi.fn();
+    const releasePointerCapture = vi.fn();
+    const mirrorSessionCameraToReact = vi.fn();
+    const cancel = new Function("rendererRef", "pointer", "panningRef", "resetMarquee", "canvas", "mirrorSessionCameraToReact", "clientToLocal", `${callback}\nreturn callback;`)(
+      { current: renderer },
+      pointer,
+      panningRef,
+      resetMarquee,
+      { hasPointerCapture: () => true, releasePointerCapture },
+      mirrorSessionCameraToReact,
+      () => repaintFixture.cancelledPan.point,
+    );
     const target = new EventTarget();
     target.addEventListener(repaintFixture.cancelledPan.event, cancel);
     try {
@@ -81,9 +92,13 @@ describe("MapRenderer idle appearance updates", () => {
       Object.defineProperty(event, "pointerId", { value: repaintFixture.cancelledPan.pointerId });
       target.dispatchEvent(event);
       await vi.advanceTimersByTimeAsync(repaintFixture.settleMs);
+      expect(pointer.current.leftDown).toBe(false);
       expect(pointer.current.middleDown).toBe(false);
       expect(panningRef.current).toBe(false);
       expect(pointerUpScreen).toHaveBeenCalledExactlyOnceWith(repaintFixture.cancelledPan.point.x, repaintFixture.cancelledPan.point.y);
+      expect(resetMarquee).toHaveBeenCalledOnce();
+      expect(releasePointerCapture).toHaveBeenCalledExactlyOnceWith(repaintFixture.cancelledPan.pointerId);
+      expect(mirrorSessionCameraToReact).toHaveBeenCalledOnce();
       const frames = renderFrame.mock.calls.length;
       await vi.advanceTimersByTimeAsync(repaintFixture.settleMs);
       expect(renderFrame).toHaveBeenCalledTimes(frames);

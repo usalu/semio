@@ -58,7 +58,10 @@ pub enum ScenePaintCursorError {
 
 impl std::fmt::Display for ScenePaintCursorError {
     fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        formatter.write_str(match self { Self::NodeMismatch => "scene paint cursor belongs to another node", Self::CounterExhausted => "scene paint cursor counter exhausted" })
+        formatter.write_str(match self {
+            Self::NodeMismatch => "scene paint cursor belongs to another node",
+            Self::CounterExhausted => "scene paint cursor counter exhausted",
+        })
     }
 }
 

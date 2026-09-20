@@ -33,7 +33,7 @@ class PreviewGeneratedScript extends BundleScript {
 
 //#region 💡️InferencePortCheck
 /** 💡️ One rendered phase of the host-owned inference port, restated independently of production. */
-type OraclePreview = { schema: string; jobId: string; proposalHash: string; regionId: string; ring: readonly (readonly [number, number])[] };
+type OraclePreview = { schema: "semio.hub.gis-map-inference-preview/v1"; jobId: string; proposalHash: string; regionId: string; ring: readonly [readonly [number, number], readonly [number, number], readonly [number, number], readonly [number, number], readonly [number, number]] };
 type OracleStatus = { phase: string; jobId: string | null; cursor: number; completed: number; total: number; proposalHash: string | null; preview?: OraclePreview; cancelRequested: boolean; code: string | null };
 
 /** 🎬️ One closed input the port's state machine accepts, as the neutral corpus spells it. */

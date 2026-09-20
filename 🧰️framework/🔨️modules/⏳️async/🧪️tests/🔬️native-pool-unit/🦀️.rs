@@ -33,6 +33,30 @@ mod tests {
         assert_eq!(pool.shutdown(), Ok(()));
     }
 
+    /// ⚖️ A mandatory admission waits for its selected queue's ownership and preserves the exact job;
+    /// the explicitly nonblocking `try_submit` remains the API that reports transient contention.
+    #[test]
+    fn mandatory_submit_linearizes_after_queue_ownership_is_released() {
+        let pool = WorkerPool::new(WorkerPoolConfig::new(ProcessKind::HeadlessBatch, 1));
+        let queue = pool.inner.workers[0].queues[Lane::Io.index()].lock().expect("test owns the selected queue");
+        let refusal = pool.try_submit(Lane::Io, Box::new(|| {})).expect_err("try_submit refuses concurrent queue ownership");
+        assert_eq!(refusal.kind(), WorkerSubmitErrorKind::Contended);
+
+        let submit_pool = pool.clone();
+        let (admitted_tx, admitted_rx) = std::sync::mpsc::channel();
+        let (ran_tx, ran_rx) = std::sync::mpsc::channel();
+        let submitting = thread::spawn(move || {
+            submit_pool.submit(Lane::Io, Box::new(move || ran_tx.send(()).expect("job receiver remains live")));
+            admitted_tx.send(()).expect("admission receiver remains live");
+        });
+        assert_eq!(admitted_rx.try_recv(), Err(std::sync::mpsc::TryRecvError::Empty), "mandatory submit cannot report admission before it owns the queue");
+        drop(queue);
+        admitted_rx.recv_timeout(Duration::from_secs(5)).expect("mandatory submit acquires the released queue");
+        ran_rx.recv_timeout(Duration::from_secs(5)).expect("the exact submitted job runs");
+        submitting.join().expect("submitting thread remains live");
+        assert_eq!(pool.shutdown(), Ok(()));
+    }
+
     #[test]
     fn worker_pool_use_acquire_and_shutdown_linearize_exactly_once() {
         let pool = WorkerPool::new(WorkerPoolConfig::new(ProcessKind::HeadlessBatch, 1));
@@ -282,5 +306,53 @@ mod tests {
         }
         release_tx.send(()).unwrap();
         pool.shutdown();
+    }
+
+    /// 🪜️ A pool worker owns [`WORKER_STACK_BYTES`], not `std::thread`'s default.
+    ///
+    /// This is the one regression that no ordinary assertion can catch: every repo test runner
+    /// floors `RUST_MIN_STACK` between 32 and 256 MiB (`⏳️async/📦️packages/🦀️rust/📜️script.ts`,
+    /// `🔌️plugin/📦️packages/🦀️rust/📜️script.ts`), so a thread spawned with NO `stack_size` looks
+    /// enormous in every gate and is 2 MiB in the shipped binary — which is exactly how the hub came
+    /// to abort on its first document socket (ticket 26/09/18 slice HS1: the artifact-engine mount
+    /// chain reserves 8,506,832 B). `Builder::stack_size` overrides `RUST_MIN_STACK` in both
+    /// directions, so this law sees the production number whatever the runner exports.
+    ///
+    /// It consumes 24 MiB inside a real pool job — past both the 2 MiB `std::thread` default and the
+    /// 21,520,944 B peak HS1 measured on the artifact-engine turn chain, and comfortably inside the
+    /// stated budget — and the consumption is genuine: each level keeps a 64 KiB array alive across
+    /// its recursive call and writes through `black_box`, so nothing is elided or merged. If the
+    /// `stack_size` call is ever dropped the process ABORTS here with `has overflowed its stack`
+    /// rather than reporting a soft failure; that is the intended signal, and it is the same fatal
+    /// runtime error the hub printed in production.
+    #[test]
+    fn native_pool_workers_own_the_stated_worker_stack() {
+        #[inline(never)]
+        fn consume(level: u32) -> u64 {
+            let mut page = [0u64; 8 * 1024];
+            page[0] = u64::from(level);
+            page[page.len() - 1] = u64::from(level);
+            let deeper = if level == 0 { 0 } else { consume(level - 1) };
+            std::hint::black_box(&page);
+            page[0] ^ page[page.len() - 1] ^ deeper
+        }
+
+        const LEVEL_BYTES: usize = 8 * 1024 * core::mem::size_of::<u64>();
+        const PROBED_BYTES: usize = 24 * 1024 * 1024;
+        assert!(PROBED_BYTES < WORKER_STACK_BYTES, "🪜️ the probe must stay inside the worker budget it is proving");
+        let pool = WorkerPool::new(WorkerPoolConfig::new(ProcessKind::HeadlessBatch, 1));
+        let (done_tx, done_rx) = std::sync::mpsc::sync_channel(1);
+        pool.submit(
+            Lane::UserVisible,
+            Box::new(move || {
+                let name = std::thread::current().name().map(str::to_string);
+                let reached = consume((PROBED_BYTES / LEVEL_BYTES) as u32);
+                done_tx.send((name, reached)).unwrap();
+            }),
+        );
+        let (name, reached) = done_rx.recv_timeout(Duration::from_secs(30)).expect("🪜️ the probing job must return from a worker that owns the stated stack");
+        assert_eq!(reached, 0, "🪜️ every probed level must fold to zero, proving each frame was really written");
+        assert!(name.is_some_and(|name| name.starts_with("semio-pool-worker-")), "🪜️ the probe must have run on a pool worker, not inline");
+        let _ = pool.shutdown();
     }
 }

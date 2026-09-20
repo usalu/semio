@@ -15,7 +15,11 @@ fn identity_from(value: &Value) -> ToolRunIdentity {
     for (index, byte) in base_revision.iter_mut().enumerate() {
         *byte = u8::from_str_radix(&hex[index * 2..index * 2 + 2], 16).expect("hex");
     }
-    ToolRunIdentity { id: ToolRunId { app_instance_id: value["id"]["appInstanceId"].as_u64().expect("appInstanceId") as u32, run: value["id"]["run"].as_u64().expect("run") }, generation: value["generation"].as_u64().expect("generation") as u32, base_revision }
+    ToolRunIdentity {
+        id: ToolRunId { app_instance_id: value["id"]["appInstanceId"].as_u64().expect("appInstanceId") as u32, run: value["id"]["run"].as_u64().expect("run") },
+        generation: value["generation"].as_u64().expect("generation") as u32,
+        base_revision,
+    }
 }
 
 fn floats<const N: usize>(value: &Value) -> [f32; N] {
@@ -29,7 +33,9 @@ fn op_from(value: &Value) -> ToolRunTraceOp {
         _ => {
             let subject = &value["subject"];
             let subject = match subject["kind"].as_str().expect("kind") {
-                "instance3d" => ToolRunTraceSubject::Instance3d { mesh: subject["mesh"].as_u64().expect("mesh") as u32, position: floats(&subject["position"]), rotation: floats(&subject["rotation"]), scale: subject["scale"].as_f64().expect("scale") as f32 },
+                "instance3d" => {
+                    ToolRunTraceSubject::Instance3d { mesh: subject["mesh"].as_u64().expect("mesh") as u32, position: floats(&subject["position"]), rotation: floats(&subject["rotation"]), scale: subject["scale"].as_f64().expect("scale") as f32 }
+                }
                 "placement2d" => ToolRunTraceSubject::Placement2d { shape: subject["shape"].as_u64().expect("shape") as u32, position: floats(&subject["position"]), rotation: subject["rotation"].as_f64().expect("rotation") as f32 },
                 _ => ToolRunTraceSubject::Entity { entity: subject["entity"].as_u64().expect("entity") },
             };
@@ -77,7 +83,8 @@ fn the_layer_reproduces_every_fixture_residency_case_through_the_lane() {
             store.apply_ops(&ops);
             deliver(&store, &mut layer, 1);
         }
-        let expected: BTreeMap<u64, ToolRunVerdict> = case["resident"].as_array().expect("resident").iter().map(|row| (row["key"].as_u64().expect("key"), ToolRunVerdict::parse(row["verdict"].as_str().expect("verdict")).expect("verdict name"))).collect();
+        let expected: BTreeMap<u64, ToolRunVerdict> =
+            case["resident"].as_array().expect("resident").iter().map(|row| (row["key"].as_u64().expect("key"), ToolRunVerdict::parse(row["verdict"].as_str().expect("verdict")).expect("verdict name"))).collect();
         let actual: BTreeMap<u64, ToolRunVerdict> = resident_of_layer(&layer).into_iter().map(|(key, (verdict, _))| (key, verdict)).collect();
         assert_eq!(actual, expected, "{}", case["name"]);
         assert_eq!(resident_of_layer(&layer), resident_of_store(&store), "{}", case["name"]);
@@ -197,7 +204,10 @@ fn draws_are_one_instanced_batch_per_mesh_and_verdict_with_counts_equal_to_resid
 
     let rejected_hidden = layer.draws(&palette, ToolRunTraceVisibility { rejected: false, ..Default::default() });
     assert!(rejected_hidden.iter().all(|draw| !draw.verdict.is_rejected()));
-    assert_eq!(rejected_hidden.iter().map(|draw| draw.instances.len()).sum::<usize>(), layer.count(ToolRunVerdict::Testing) + layer.count(ToolRunVerdict::Success) - layer.batches().filter(|(key, _)| key.family == ToolRunTraceFamily::Entity && !key.verdict().is_rejected()).map(|(_, batch)| batch.keys.len()).sum::<usize>());
+    assert_eq!(
+        rejected_hidden.iter().map(|draw| draw.instances.len()).sum::<usize>(),
+        layer.count(ToolRunVerdict::Testing) + layer.count(ToolRunVerdict::Success) - layer.batches().filter(|(key, _)| key.family == ToolRunTraceFamily::Entity && !key.verdict().is_rejected()).map(|(_, batch)| batch.keys.len()).sum::<usize>()
+    );
 }
 
 #[test]

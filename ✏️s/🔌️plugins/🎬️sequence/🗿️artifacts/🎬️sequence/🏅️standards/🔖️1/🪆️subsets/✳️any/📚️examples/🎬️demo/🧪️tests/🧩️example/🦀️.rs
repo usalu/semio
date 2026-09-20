@@ -11,7 +11,7 @@ async fn inference_determinism_law() {
     use crate::SequenceSnapshot;
     use protocol::Inference;
 
-    let snapshot = SequenceSnapshot::default();
+    let snapshot = neural_engine::ColdOwner::new(SequenceSnapshot::default());
     assert_eq!(SequenceInference::infer(&snapshot), SequenceInference::infer(&snapshot));
 }
 
@@ -21,6 +21,7 @@ async fn inference_default_law() {
     use crate::SequenceSnapshot;
     use protocol::Inference;
 
-    assert_eq!(SequenceInference::infer(&SequenceSnapshot::default()), SequenceInference::default());
+    let snapshot = neural_engine::ColdOwner::new(SequenceSnapshot::default());
+    assert_eq!(SequenceInference::infer(&snapshot), SequenceInference::default());
 }
 //#endregion 🧪️InferenceLaws

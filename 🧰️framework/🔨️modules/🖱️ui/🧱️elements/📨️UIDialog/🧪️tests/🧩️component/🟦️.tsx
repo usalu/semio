@@ -24,12 +24,12 @@ const definition: UIDialogProps["dialog"] = {
   id: "createArtifact", title: localized("title"), body: localized("description"),
   args: [
     { id: "name", label: localized("field"), required: true, schema: { kind: "string", options: [] } },
-    { id: "kindChoice", label: localized("kind"), required: true, default: "map", schema: { kind: "string", options: [{ value: "map", label: { native: { en: "Map", de: "Karte" } } }] } },
+    { id: "kindChoice", label: localized("kind"), required: true, default: "map", schema: { kind: "string", options: [{ value: "map", label: { native: { en: "Map", de: "Karte" } } }, { value: "terrain", label: { native: { en: "Terrain", de: "Gelände" } } }] } },
   ],
   submitAction: "createArtifact", submitLabel: localized("submit"), cancelAction: "cancelArtifact", cancelLabel: localized("cancel"),
 };
 const renderField: UIDialogProps["renderField"] = (def, value, change, field) => def.id === "kindChoice"
-  ? <select id={field?.id} aria-labelledby={field?.labelledBy} required={field?.required} value={String(value ?? "")} onChange={event => change(event.target.value)}><option value="map">Map</option></select>
+  ? <select id={field?.id} aria-labelledby={field?.labelledBy} required={field?.required} value={String(value ?? "")} onChange={event => change(event.target.value)}><option value="map">Map</option><option value="terrain">Terrain</option></select>
   : <input id={field?.id} aria-labelledby={field?.labelledBy} required={field?.required} value={String(value ?? "")} onChange={event => change(event.target.value)} />;
 
 describe("UIDialog accessibility", () => {

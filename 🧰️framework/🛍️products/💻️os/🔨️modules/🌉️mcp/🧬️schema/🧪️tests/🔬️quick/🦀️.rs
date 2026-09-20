@@ -67,6 +67,8 @@ fn search_hit_example() -> serde_json::Value {
         score: 0.92,
         plugin_id: "cad".into(),
         app_id: "viewport".into(),
+        audience: "agent".into(),
+        artifact_kind: "s.cad.cad".into(),
     })
     .unwrap()
 }
@@ -83,6 +85,7 @@ fn context_summary_example() -> serde_json::Value {
         active_artifact_id: Some("cad-1".into()),
         catalog_hash: "blake3:abc".into(),
         locale: "en".into(),
+        channel: "headless".into(),
     })
     .unwrap()
 }

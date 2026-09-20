@@ -44,43 +44,45 @@ fn number_json(value: f64) -> pack::json::Value {
 /// `box_minus_cylinder_bore_exact_volume_and_validates` case, so the exact engine is genuinely
 /// exercised (neither the containment shortcut nor the axis-box shortcut applies) and the result
 /// is known-good topology rather than an accidental validation failure.
-async fn bored_box_operands(registry: &neural_engine::ColdOwner<Registry>) -> (Dictionary, Dictionary) {
-    // 🧹️ Every neural `Dictionary` this helper owns is retired explicitly, and the two OUT
+async fn bored_box_operands(registry: &neural_engine::ColdOwner<Registry>) -> (neural_engine::ColdOwner<Dictionary>, neural_engine::ColdOwner<Dictionary>) {
+    // 🧹️ Every neural `Dictionary` this helper owns crosses a cold boundary — `dispatch_cold`
+    // retires the input it is handed and answers inside a `ColdOwner` — and the two OUT
     // dictionaries are RETURNED rather than dropped here: a dictionary that is the last owner of
     // its own pairs panics on drop by design.
-    let box_input = Dictionary::new()
-        .insert("width", Value::Dictionary(number_dictionary(4.0)))
-        .insert("depth", Value::Dictionary(number_dictionary(4.0)))
-        .insert("height", Value::Dictionary(number_dictionary(2.0)));
-    let box_prim = registry.dispatch("brep.prim3d.box", &box_input).expect("box");
-    neural_engine::ColdRetire::retire_cold(box_input);
+    let box_prim = registry
+        .dispatch_cold(
+            "brep.prim3d.box",
+            Dictionary::new()
+                .insert("width", Value::Dictionary(number_dictionary(4.0)))
+                .insert("depth", Value::Dictionary(number_dictionary(4.0)))
+                .insert("height", Value::Dictionary(number_dictionary(2.0))),
+        )
+        .expect("box");
     let box_out = translated(registry, &box_prim, "solid", [-2.0, -2.0, -0.5]).await;
-    neural_engine::ColdRetire::retire_cold(box_prim);
-    let cylinder_input = Dictionary::new().insert("radius", Value::Dictionary(number_dictionary(0.5))).insert("height", Value::Dictionary(number_dictionary(4.0)));
-    let cylinder_prim = registry.dispatch("brep.prim3d.cylinder", &cylinder_input).expect("cylinder");
-    neural_engine::ColdRetire::retire_cold(cylinder_input);
+    let cylinder_prim = registry
+        .dispatch_cold("brep.prim3d.cylinder", Dictionary::new().insert("radius", Value::Dictionary(number_dictionary(0.5))).insert("height", Value::Dictionary(number_dictionary(4.0))))
+        .expect("cylinder");
     let cylinder_out = translated(registry, &cylinder_prim, "solid", [0.0, 0.0, -2.0]).await;
-    neural_engine::ColdRetire::retire_cold(cylinder_prim);
     (box_out, cylinder_out)
 }
 
 /// ➡️ One `brep.xform.translate` hop, so the two operands actually overlap the way the kernel
 /// suite's own bored-box case does.
-async fn translated(registry: &neural_engine::ColdOwner<Registry>, out: &Dictionary, channel: &str, offset: [f64; 3]) -> Dictionary {
+async fn translated(registry: &neural_engine::ColdOwner<Registry>, out: &Dictionary, channel: &str, offset: [f64; 3]) -> neural_engine::ColdOwner<Dictionary> {
     let geometry = channel_payload(out, channel).await;
-    let input = Dictionary::new().insert("geometry", Value::Dictionary(geometry)).insert("offset", Value::Dictionary(vector_dictionary(offset)));
-    let moved = registry.dispatch("brep.xform.translate", &input).expect("translate");
-    neural_engine::ColdRetire::retire_cold(input);
-    moved
+    registry
+        .dispatch_cold("brep.xform.translate", Dictionary::new().insert("geometry", Value::Dictionary(geometry.into_inner())).insert("offset", Value::Dictionary(vector_dictionary(offset))))
+        .expect("translate")
 }
 
 /// 🧹️ Retires the four neural dictionaries one operand pair owns — children first, so each release
-/// still has a live sharer above it, then the two owning OUT dictionaries.
-fn retire_operands(a: Dictionary, b: Dictionary, box_out: Dictionary, cylinder_out: Dictionary) {
-    neural_engine::ColdRetire::retire_cold(a);
-    neural_engine::ColdRetire::retire_cold(b);
-    neural_engine::ColdRetire::retire_cold(box_out);
-    neural_engine::ColdRetire::retire_cold(cylinder_out);
+/// still has a live sharer above it, then the two owning OUT dictionaries. Each is already inside
+/// its cold boundary, so consuming the owner here IS the retirement.
+fn retire_operands(a: neural_engine::ColdOwner<Dictionary>, b: neural_engine::ColdOwner<Dictionary>, box_out: neural_engine::ColdOwner<Dictionary>, cylinder_out: neural_engine::ColdOwner<Dictionary>) {
+    drop(a);
+    drop(b);
+    drop(box_out);
+    drop(cylinder_out);
 }
 
 /// 🧾️ The `evaluate` request body for one cut of `a` by `b`, at the given budget.

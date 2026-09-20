@@ -373,7 +373,13 @@ async fn document_open_plan_v1_matches_language_neutral_fixture() {
     assert_eq!(hex_lower(&descriptor_digest_v1(&fixture.descriptor).expect("descriptor hashes").0), fixture.descriptor_digest_v1);
     assert_eq!(fixture.intent.validate(), Ok(()));
     assert_eq!(fixture.valid_plan.validate(fixture.now_ms), Ok(()));
-    assert_eq!(fixture.valid_plan.parent_dialect.artifact_kind, fixture.valid_plan.artifact.kind);
+    let mut two_space = fixture.valid_plan.clone();
+    two_space.parent_dialect.artifact_kind = "s.note.note".into();
+    two_space.artifact.kind = "2d.note".into();
+    assert_eq!(two_space.validate(fixture.now_ms), Ok(()));
+    let mut unbounded_dialect_kind = fixture.valid_plan.clone();
+    unbounded_dialect_kind.parent_dialect.artifact_kind = String::new();
+    assert_eq!(unbounded_dialect_kind.validate(fixture.now_ms), Err(DocumentOpenPlanErrorCodeV1::Denied));
     assert_eq!(fixture.exchange_intent.validate(), Ok(()));
 
     let mut overlong = fixture.valid_plan.clone();

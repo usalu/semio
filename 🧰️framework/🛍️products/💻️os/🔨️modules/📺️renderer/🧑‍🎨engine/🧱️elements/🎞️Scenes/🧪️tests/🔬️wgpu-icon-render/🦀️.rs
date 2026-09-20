@@ -1,9 +1,8 @@
-
 use super::*;
 
 #[test]
 fn frame_border_is_two_px_and_badge_uses_background_token() {
-    let request: IconRenderRequestFields = serde_json::from_str(r#"{"assetUrl":"mesh://x","camera":{"position":[0,0,5],"target":[0,0,0]},"width":64.0,"height":64.0,"shape":"rectangle"}"#).unwrap();
+    let request: IconRenderRequestFields = serde_json::from_str(r#"{"assetUrl":"mesh://x","format":"png","camera":{"position":[0,0,5],"target":[0,0,0]},"width":64.0,"height":64.0,"shape":"rectangle"}"#).unwrap();
     let bounds = Rect::new(0.0, 0.0, 200.0, 200.0);
     let frame = Rect::new(20.0, 20.0, 160.0, 160.0);
 
@@ -44,6 +43,40 @@ fn icon_render_status_reports_rendering_until_the_subject_mesh_is_resident() {
     assert_eq!(icon_render_status(true, false), IconRenderStatus::Ready, "a published lease means the frame draws real geometry");
     assert_eq!(icon_render_status(false, true), IconRenderStatus::Failed, "a recorded fault with no lease is React's error arm");
     assert_eq!(icon_render_status(true, true), IconRenderStatus::Ready, "residency wins: the shot IS on screen whatever else faulted");
+}
+
+#[test]
+fn icon_render_maps_the_shared_lighting_fixture_to_the_world_environment() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../♾️infinite/🌍️world/🧫️fixtures/🌞️scene-lighting/🔣️.json")).unwrap();
+    let request: IconRenderRequestFields = serde_json::from_value(fixture["iconRenderRequest"].clone()).unwrap();
+    let environment: serde_json::Value = serde_json::from_str(&icon_render_environment_json(&request)).unwrap();
+    assert_eq!(environment["ambient"], fixture["worldEnvironment"]["ambient"]);
+    assert_eq!(environment["sun"]["enabled"], fixture["worldEnvironment"]["sun"]["enabled"]);
+    assert_eq!(environment["sun"]["color"], fixture["worldEnvironment"]["sun"]["color"]);
+    for field in ["azimuth", "elevation", "intensity"] {
+        assert_eq!(environment["sun"][field].as_f64(), fixture["worldEnvironment"]["sun"][field].as_f64(), "sun.{field} carries the fixture's numeric value");
+    }
+    assert_eq!(environment["shadow"], serde_json::json!({ "enabled": true }));
+    assert_eq!(environment["material"], fixture["worldEnvironment"]["material"]);
+}
+
+#[test]
+fn icon_shadow_profile_matches_react_png_material_and_svg_exclusions() {
+    let request = |format: &str, material: serde_json::Value| {
+        serde_json::from_value::<IconRenderRequestFields>(serde_json::json!({
+            "assetUrl": "mesh://x",
+            "format": format,
+            "camera": { "position": [0, 0, 5], "target": [0, 0, 0] },
+            "width": 64,
+            "height": 64,
+            "material": material,
+        }))
+        .unwrap()
+    };
+    let material = serde_json::json!({ "color": "#ffffff" });
+    assert_eq!(icon_render_shadow_profile(&request("png", material.clone())), infinite_world::world::World3dShadowProfile::IconPng);
+    assert_eq!(icon_render_shadow_profile(&request("png", serde_json::Value::Null)), infinite_world::world::World3dShadowProfile::Unshadowed);
+    assert_eq!(icon_render_shadow_profile(&request("svg", material)), infinite_world::world::World3dShadowProfile::Unshadowed);
 }
 
 /// 🖼️ The status line is centred INSIDE the shot frame, like React's text inside `IconShotFrame`.

@@ -1,35 +1,35 @@
 //! 🧮️ 🧵️ Flow play app commands command — `evaluate`.
 
-use crate::editor::flow::modes::edit::windows::main::config::FlowMainWindowConfig;
-use semio_framework_plugin::NoConfig;
-use semio_framework_plugin::NoConfigMutation;
+use crate::editor::flow::commands::flow_eval_tick::{eval_tick_effect, may_rearm};
 use crate::editor::flow::host_from_snapshot;
+use crate::editor::flow::modes::edit::windows::main::config::FlowMainWindowConfig;
+use crate::editor::flow::modes::edit::windows::main::FLOW_PLAY_WINDOW_MAIN;
 use crate::{op::FlowMutation, FlowSnapshot};
 use flow::FlowEvalSession;
-use semio_framework_plugin::{ArtifactView, ConfigView, Effect, Emit, Fault};
+use semio_framework_plugin::NoConfig;
+use semio_framework_plugin::NoConfigMutation;
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 
-//#region 🔖️Constants
-/// 🧵️ The self-chaining action id of the off-main-thread evaluation loop — dispatched as a
-/// `Effect` by `evaluate_result`/`flow_eval_tick::handle` and by `FlowPlayApp::pending_effects`.
-pub const FLOW_EVAL_TICK_ACTION: &str = "flowEvalTick";
-
-/// 🧵️ The `Effect` that arms/continues the off-main-thread `flowEvalTick` chain.
-pub fn eval_tick_effect() -> Effect {
-    Effect::DispatchAction { req: semio_framework_plugin::RequestId(105), action: FLOW_EVAL_TICK_ACTION.into(), args: None, delay_ms: 0 }
-}
-//#endregion 🔖️Constants
-
 //#region 🔖️Arm
-/// 🧵️ Probes/arms the `flowEvalTick` chain via `FlowEvalSession::sync` — shared by `FlowCommand::Evaluate`,
-/// the `auto-evaluate` extension effect, and `FlowPlayApp::pending_effects`. The probe host is retired,
+/// 🧵️ Probes/arms `window_id`'s `flowEvalTick` chain — shared by `FlowCommand::Evaluate`, the
+/// `auto-evaluate` extension effect, and `FlowPlayApp::pending_effects`. The probe host is retired,
 /// never dropped: its layout `OrderedMap` aborts the guest on a bare drop.
-pub fn evaluate_result(snapshot: &FlowSnapshot, config: &FlowMainWindowConfig, session: &mut FlowEvalSession) -> Emit<FlowMutation, NoConfigMutation> {
+///
+/// 🔒️ `FlowEvalSession::sync` answers whether the graph has uncomputed nodes; the session's per-window
+/// latch answers whether anything already owes a hop for them. BOTH are required: the probe used to be
+/// the only gate, and because `pending_effects` rebuilt a throwaway session per poll the gate was
+/// always open — every host refresh minted another hop for the same unchanged snapshot.
+pub fn evaluate_result(snapshot: &FlowSnapshot, config: &FlowMainWindowConfig, session: &mut FlowEvalSession, window_id: &str, window_kind_id: &str) -> Emit<FlowMutation, NoConfigMutation> {
     let host = host_from_snapshot(snapshot, config, session);
-    let armed = session.sync(&host);
+    let pending = session.sync(&host);
+    let servable = may_rearm(&host.host_snapshot);
     host.retire_cold();
-    if armed {
-        Emit { effects: vec![eval_tick_effect()], ..Default::default() }
+    if pending {
+        session.note_window_tick_outcome(window_id, true);
+    }
+    if servable && session.arm_owed_window_tick(window_id) {
+        Emit { effects: vec![eval_tick_effect(window_id, window_kind_id)], ..Default::default() }
     } else {
         Emit::default()
     }
@@ -49,7 +49,7 @@ pub fn evaluate_result(snapshot: &FlowSnapshot, config: &FlowMainWindowConfig, s
 pub struct Evaluate {}
 
 pub fn handle(_payload: &Evaluate, doc: &ArtifactView<'_, FlowSnapshot>, cfg: &ConfigView<'_, NoConfig>, session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, NoConfigMutation>, Fault> {
-    Ok(evaluate_result(doc.snapshot, &crate::editor::flow::modes::edit::windows::main::config::current(cfg), session))
+    Ok(evaluate_result(doc.snapshot, &crate::editor::flow::modes::edit::windows::main::config::current(cfg), session, FLOW_PLAY_WINDOW_MAIN, FLOW_PLAY_WINDOW_MAIN))
 }
 
 //#region 🧪️Tests

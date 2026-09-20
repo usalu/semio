@@ -982,6 +982,7 @@ pub fn create_wfc3d_editor() -> semio_framework_plugin::AppDefinition {
         })
         .window_kind_interactions(graph::WFC_GRAPH_WINDOW, vec![InteractionRef::new(WFC_3D_INTERACTION_GRAPH)])
         .action_with(ActionDefinition::new("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"), ActionKind::Mutation, "panel-left"))
+        .action_destructive("setActiveExample")
         .action_args("setActiveExample", vec![
             ActionArgDef::select("exampleId", LocalizedLabel::native("Example", "Beispiel"), vec![
                 ActionArgOption::new(crate::examples::two_room_corridor::ID, crate::examples::two_room_corridor::label()),
@@ -998,10 +999,12 @@ pub fn create_wfc3d_editor() -> semio_framework_plugin::AppDefinition {
         .action_interactive_job(WFC_3D_NODE_GRAPH_VIEWPORT, semio_framework::InteractiveJobClassification::Migrated)
         .action_with(wfc3d_action("create-tile", "Create Tile", "Kachel erstellen", ActionKind::Mutation))
         .action_with(wfc3d_action("delete-tile", "Delete Tile", "Kachel löschen", ActionKind::Mutation))
+        .action_destructive("delete-tile")
         .action_with(wfc3d_action("change-tile-weight", "Change Tile Weight", "Kachelgewicht ändern", ActionKind::Mutation))
         .action_with(wfc3d_action("change-tile-media", "Reset Tile Media", "Kachelmedium zurücksetzen", ActionKind::Mutation))
         .action_with(wfc3d_action("create-rule", "Create Rule", "Regel erstellen", ActionKind::Mutation))
         .action_with(wfc3d_action("delete-rule", "Delete Rule", "Regel löschen", ActionKind::Mutation))
+        .action_destructive("delete-rule")
         .action_with(wfc3d_action("change-camera", "Change Camera", "Kamera ändern", ActionKind::View))
         .action_with(wfc3d_action("change-active-tile", "Arm Tile", "Kachel aktivieren", ActionKind::View))
         .action_interactive_job("create-tile", semio_framework::InteractiveJobClassification::Migrated)

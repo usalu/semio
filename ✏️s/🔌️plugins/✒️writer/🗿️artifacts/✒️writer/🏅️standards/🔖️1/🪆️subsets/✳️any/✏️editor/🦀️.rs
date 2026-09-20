@@ -220,7 +220,7 @@ semio_framework_plugin::app_commands! {
         "setCamera" as "camera" => set_camera::SetCamera,
         "requestCompletions" as "request-completions" => request_completions::RequestCompletions,
         "lintDocument" as "lint-document" => lint_document::LintDocument,
-        "setEditorSelection" as "editor-selection" => set_editor_selection::SetEditorSelection,
+        "textSelect" as "editor-selection" => set_editor_selection::SetEditorSelection,
         "toggleLineNumbers" as "toggle-line-numbers" => toggle_line_numbers::ToggleLineNumbers,
         "setEditorSetting" as "font-px" => set_font_px::SetFontPx,
         "setEditorSetting" as "line-height" => set_line_height::SetLineHeight,
@@ -299,7 +299,7 @@ const WRITER_COMMAND_TOOL_IDS: &[&str] = &[
     "setCamera",
     "requestCompletions",
     "lintDocument",
-    "setEditorSelection",
+    "textSelect",
     "toggleLineNumbers",
     "setEditorSetting",
     "engagementInput",
@@ -833,7 +833,7 @@ impl ArtifactOwnedToolJobFactory for WriterCommandJobFactory {
         semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setCamera", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::WindowConfig] },
         semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "requestCompletions", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly] },
         semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "lintDocument", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::WindowTransient] },
-        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setEditorSelection", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::WindowTransient] },
+        semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "textSelect", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::WindowTransient] },
         semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "toggleLineNumbers", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::WindowConfig] },
         semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setEditorSetting", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::WindowConfig] },
         semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "engagementInput", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::WindowTransient] },
@@ -1109,7 +1109,7 @@ impl ArtifactEditor for WriterPlayApp {
             "setCamera",
             "requestCompletions",
             "lintDocument",
-            "setEditorSelection",
+            "textSelect",
             "toggleLineNumbers",
             "setEditorSetting",
             "engagementInput",
@@ -1183,7 +1183,7 @@ impl ArtifactEditor for WriterPlayApp {
             }
             "requestCompletions" => Ok(WriterCommand::RequestCompletions(request_completions::RequestCompletions {})),
             "lintDocument" => Ok(WriterCommand::LintDocument(lint_document::LintDocument {})),
-            "setEditorSelection" => Ok(WriterCommand::SetEditorSelection(set_editor_selection::SetEditorSelection { start: number_arg(&["start"]).unwrap_or_default() as usize, end: number_arg(&["end"]).unwrap_or_default() as usize })),
+            "textSelect" => Ok(WriterCommand::SetEditorSelection(set_editor_selection::SetEditorSelection { start: number_arg(&["start"]).unwrap_or_default() as usize, end: number_arg(&["end"]).unwrap_or_default() as usize })),
             "toggleLineNumbers" => Ok(WriterCommand::ToggleLineNumbers(toggle_line_numbers::ToggleLineNumbers {})),
             "setEditorSetting" => {
                 let value = number_arg(&["value"]).unwrap_or_default() as u32;
@@ -1381,6 +1381,7 @@ pub fn create_writer_app() -> semio_framework_plugin::AppDefinition {
             .action_with(ActionDefinition::bounded_catalog("lintDocument", LocalizedLabel::native("Lint Document", "Dokument prüfen"), ActionKind::View).with_category("tools"))
             // 🔧️ P1 example switch (whole-document load) with a staged example choice.
             .action_with(ActionDefinition::new("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"), ActionKind::Mutation, "panel-left"))
+            .action_destructive("setActiveExample")
             // 🙈️ Internal document operations — text edits (coalesced), aliases, camera, rename, engagement,
             // and dev-only whole-document JSON setters.
             .action_with(writer_hidden_operation("textEdit", LocalizedLabel::native("Edit Text", "Text bearbeiten"), "typography"))
@@ -1388,16 +1389,27 @@ pub fn create_writer_app() -> semio_framework_plugin::AppDefinition {
             .action_with(writer_hidden_view("setCamera", LocalizedLabel::native("Set Camera", "Kamera festlegen"), "camera"))
             .action_with(writer_hidden_operation("commitRename", LocalizedLabel::native("Commit Rename", "Umbenennung übernehmen"), "sparkles").with_category("transform"))
             .action_with(writer_hidden_operation("engagementSubmit", LocalizedLabel::native("Engagement Submit", "Eingabe bestätigen"), "sparkles"))
+            .action_audience("engagementSubmit", semio_framework_plugin::CapabilityAudience::Input)
             .action_with(writer_hidden_operation("setSnapshot", LocalizedLabel::native("Set Document", "Dokument festlegen"), "sparkles"))
+            .action_destructive("setSnapshot")
             .action_with(writer_hidden_operation("openDocument", LocalizedLabel::native("Open Document", "Dokument öffnen"), "folder-open"))
             .action_with(writer_hidden_operation("setSnapshotJson", LocalizedLabel::native("Set Document JSON", "Dokument-JSON festlegen"), "sparkles"))
+            .action_destructive("setSnapshotJson")
             .action_with(writer_hidden_operation("setFixtureJson", LocalizedLabel::native("Set Fixture JSON", "Fixture-JSON festlegen"), "sparkles"))
+            .action_destructive("setFixtureJson")
             // 🙈️ Internal View measures — editor caret/range, completions, editor settings. AST
             // selection/hover no longer declared here: the framework auto-injects
             // interactionSelect/interactionHover/clearSelection/selectAll/setSelectionMode/
             // setInteractionGranularity for every domain declared via `.interaction(...)` below.
             .action_with(writer_hidden_view("requestCompletions", LocalizedLabel::native("Request Completions", "Vervollständigungen anfordern"), "typography").with_category("tools"))
-            .action_with(writer_hidden_view("setEditorSelection", LocalizedLabel::native("Set Editor Selection", "Editor-Auswahl festlegen"), "eye"))
+            // ✍️ The framework's text-editor surface dispatches a FIXED id set
+            // (`🧰️framework/🔨️modules/🖱️ui/🎬️scene/🟦️.ts:924` `textEditorActions`), and its caret handler
+            // emits `textSelect` with `{start, end}`. This app used to name the very same
+            // window-transient selection verb `setEditorSelection`, so every caret move was dropped
+            // before dispatch ("no window kind declares it") — one console error plus a refusal
+            // warning per keystroke. The id is the framework's; the `editor-selection` wire keyword
+            // and the `SetEditorSelection` payload stay this app's own vocabulary.
+            .action_with(writer_hidden_view("textSelect", LocalizedLabel::native("Select Editor Text", "Editor-Text auswählen"), "text-cursor"))
             .action_with(writer_hidden_view("toggleLineNumbers", LocalizedLabel::native("Toggle Line Numbers", "Zeilennummern umschalten"), "eye"))
             .action_with(writer_hidden_view("setEditorSetting", LocalizedLabel::native("Set Editor Setting", "Editor-Einstellung festlegen"), "eye"))
             .action_with(writer_hidden_view("engagementInput", LocalizedLabel::native("Engagement Input", "Eingabe"), "hand"))
@@ -1406,7 +1418,7 @@ pub fn create_writer_app() -> semio_framework_plugin::AppDefinition {
             .action_interactive_job("setCamera", InteractiveJobClassification::Migrated)
             .action_interactive_job("requestCompletions", InteractiveJobClassification::Migrated)
             .action_interactive_job("lintDocument", InteractiveJobClassification::Migrated)
-            .action_interactive_job("setEditorSelection", InteractiveJobClassification::Migrated)
+            .action_interactive_job("textSelect", InteractiveJobClassification::Migrated)
             .action_interactive_job("toggleLineNumbers", InteractiveJobClassification::Migrated)
             .action_interactive_job("setEditorSetting", InteractiveJobClassification::Migrated)
             .action_interactive_job("engagementInput", InteractiveJobClassification::Migrated)
@@ -1466,3 +1478,10 @@ pub fn create_writer_app() -> semio_framework_plugin::AppDefinition {
 pub(crate) mod unit_tests;
 //#endregion 🧪️UnitTests
 
+//#region 🪢️TaxonomyMounts
+#[path = "📚️examples/🎬️demo-session/🦀️.rs"]
+pub mod demo_session;
+#[cfg(test)]
+#[path = "📚️examples/🎬️demo-session/🧪️tests/🧩️example/🦀️.rs"]
+mod example;
+//#endregion 🪢️TaxonomyMounts

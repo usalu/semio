@@ -7,7 +7,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
   // 📍️ Every fixture below is spelled relative to `💻️os/🟦️.ts` (the worker lived beside it as `🧵️backbone-worker.ts`
   // until 2026-09-12); the worker now registers from `🔨️modules/🏪️store/👷️worker/🟦️.ts`, so rebase its URL.
   const source: TestSource = decodeURIComponent(registrar.url).endsWith("/👷️worker/🟦️.ts") ? { directory: registrar.directory, url: new URL("../../../🟦️.ts", registrar.url).href } : registrar;
-  const { ARTIFACT_BOOTSTRAP_DIAGNOSTIC_MAX_BYTES, ArtifactBootstrapAssembler, DIRECTORY_COMMAND_TRANSPORT_CAPACITY, DOCUMENT_EXECUTION_PROTOCOL_APP_CHANNEL_VERSION_V1, DOCUMENT_EXECUTION_TARGET_STATUS_TEXT_V1, DirectoryClient, DirectoryEventPageBootstrapV1, DocumentExecutionTargetLease, HUB_RECONNECT_MAX_MS, IDENTITY_CONFIG_SCHEMA, PENDING_MUTATIONS_QUEUE_LIMIT, SANITY_POLL_MIN_MS, SSE_RECONNECT_MAX_MS, SUSTAINED_HEALTHY_MS, VerifiedColdDocumentPair, abortArtifactBootstrap, acceptBrowserSessionAuthority, artifactBootstrapFailure, artifactState, artifacts, bindInferenceApprovalUndoToMountedPair, browserActorChildCapacity, browserBrokerFetch, browserBrokerProofDigest, browserDirectoryRequest, browserExecutionTargetAssetRequest, bytesHex, clearLocalBrowserBrokerProof, closeArtifact, closeArtifactRuntime, closeDirectory, connectHubOnce, decodeBackboneWorkerRequest, decodeBackboneWorkerResponse, decodeClientFrame, decodePackPayload, decodePackValue, decodeServerFrame, directoryAdministration, directoryClient, directoryCommandOperations, directoryCommandQueue, directoryCommandSha256, directorySessionEpoch, directoryWorkerEpoch, dispatchBackboneWorkerRequest, documentExecutionOwners, documentExecutionTargetLeaseMintToken, documentExecutionTargetStatusRoleV1, documentOpenPlanAuthority, documentRuntimeKeyForConfig, documentRuntimeKeyV1, driveInferencePort, dropDocumentExecutionTargetLease, dropVerifiedColdDocumentPair, emitEvent, encodeActorUiPatchReceipt, encodeBackboneMessage, encodeBackboneWorkerRequest, encodeBackboneWorkerResponse, encodeDocumentBackboneEnvelopeBatchExact, encodePackValue, encodeServerFrame, executionTargetHex, executionTargetSha256Hex, executionTargetStatusObserver, extractServerCommandsDocumentBackboneBatchExact, flushDirectoryQueue, foldIdentityEvent, fromWireEnvelope, handleHubFrame, handleTsRequest, hexBytes, hubBinding, identityActorConfig, idleGisMapInferencePortStatusV1, inferenceApprovalUndoEpoch, inferenceApprovalUndoOwner, installLocalBrowserBrokerProof, localBrowserBrokerProofExpiresAtMs, localBrowserBrokerQueued, openArtifact, ownedArrayBuffer, parseDocumentBackboneMessage, parseDocumentExecutionTargetLeaseFieldsV1, parseGisMapInferenceApprovalReceiptV1, queueOutbox, readExecutionTargetBody, reissueInferenceApprovalUndoForRebootstrap, relayMutationsToHub, requestDocumentSocketAuthority, reserveDocumentBrowserActorChild, retainInferenceApprovalUndo, revokeDirectoryAdministrationForScope, rollbackEnvelope, sameLeaseFieldsV1, scopedDirectoryStreams, sealDirectoryCommandReceiptV1, sealDirectoryCommandRequestV1, settleDirectoryCommand, socketGrantTestIssue, spaceArtifactCreationCatalogOperations, spaceArtifactCreationOperations, spaceArtifactCreationTestFetch, stampSession, toWireEnvelope, undoInferenceApproval, verifiedColdDocumentPairMintToken, verifyBrowserActorDescribeV1, workerPostTestSink } = dependencies;
+  const { ARTIFACT_BOOTSTRAP_DIAGNOSTIC_MAX_BYTES, ArtifactBootstrapAssembler, DIRECTORY_COMMAND_TRANSPORT_CAPACITY, DOCUMENT_EXECUTION_PROTOCOL_APP_CHANNEL_VERSION_V1, DOCUMENT_EXECUTION_TARGET_STATUS_TEXT_V1, DirectoryClient, DirectoryEventPageBootstrapV1, DocumentExecutionTargetLease, HUB_RECONNECT_MAX_MS, IDENTITY_CONFIG_SCHEMA, PENDING_MUTATIONS_QUEUE_LIMIT, SANITY_POLL_MIN_MS, SSE_RECONNECT_MAX_MS, SUSTAINED_HEALTHY_MS, VerifiedColdDocumentPair, abortArtifactBootstrap, artifactBootstrapFailure, artifactState, artifacts, bindInferenceApprovalUndoToMountedPair, browserActorChildCapacity, hubSessionFetch, browserDirectoryRequest, browserExecutionTargetAssetRequest, bytesHex, clearHubSessionCapability, closeArtifact, closeArtifactRuntime, closeDirectory, connectHubOnce, decodeBackboneWorkerRequest, decodeBackboneWorkerResponse, decodeClientFrame, decodePackPayload, decodePackValue, decodeServerFrame, directoryAdministration, directoryClient, directoryCommandOperations, directoryCommandQueue, directoryCommandSha256, directorySessionEpoch, directoryWorkerEpoch, dispatchBackboneWorkerRequest, documentExecutionOwners, documentExecutionTargetLeaseMintToken, documentExecutionTargetStatusRoleV1, documentOpenPlanAuthority, documentRuntimeKeyForConfig, documentRuntimeKeyV1, driveInferencePort, dropDocumentExecutionTargetLease, dropVerifiedColdDocumentPair, emitEvent, encodeActorUiPatchReceipt, encodeBackboneMessage, encodeBackboneWorkerRequest, encodeBackboneWorkerResponse, encodeDocumentBackboneEnvelopeBatchExact, encodePackValue, encodeServerFrame, executionTargetHex, executionTargetSha256Hex, executionTargetStatusObserver, extractServerCommandsDocumentBackboneBatchExact, flushDirectoryQueue, foldIdentityEvent, fromWireEnvelope, handleHubFrame, handleTsRequest, hubBinding, identityActorConfig, idleGisMapInferencePortStatusV1, inferenceApprovalUndoEpoch, inferenceApprovalUndoOwner, installHubSessionCapability, openArtifact, ownedArrayBuffer, parseDocumentBackboneMessage, parseDocumentExecutionTargetLeaseFieldsV1, parseGisMapInferenceApprovalReceiptV1, queueOutbox, readExecutionTargetBody, reissueInferenceApprovalUndoForRebootstrap, relayMutationsToHub, requestDocumentSocketAuthority, reserveDocumentBrowserActorChild, retainInferenceApprovalUndo, revokeDirectoryAdministrationForScope, rollbackEnvelope, sameLeaseFieldsV1, scopedDirectoryStreams, sealDirectoryCommandReceiptV1, sealDirectoryCommandRequestV1, settleDirectoryCommand, socketGrantTestIssue, spaceArtifactCreationCatalogOperations, spaceArtifactCreationOperations, spaceArtifactCreationTestFetch, stampSession, toWireEnvelope, undoInferenceApproval, verifiedColdDocumentPairMintToken, verifyBrowserActorDescribeV1, workerPostTestSink } = dependencies;
   const { testSeams } = dependencies;
   const { DOCUMENT_BACKBONE_RETENTION_LIMITS, handleAck } = dependencies;
   vitest.it("retains the preceding inference job when a successor opening is refused", async () => {
@@ -23,14 +23,37 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         : kind === "inference-propose" ? { kind, operationEpoch: 21, requestId: "request-a" }
         : kind === "inference-history-undo" ? { kind, historyEpoch: 21, clientInstanceId: "12345678-1234-4123-8123-123456789abc", scope: fixture.request.scope }
         : { kind, operationEpoch: 21 };
-      dispatchBackboneWorkerRequest(request, { handleRequestBytes: () => { routes.push("rust"); } }, () => { routes.push("typescript"); });
+      dispatchBackboneWorkerRequest(request, { handleRequestBytes: () => { routes.push("rust"); }, postReady: () => { routes.push("rust-ready"); } }, () => { routes.push("typescript"); });
       vitest.expect(equal(routes, ["typescript"])).toBe(true);
     }
     const seams = dependencies.testSeams;
     const previous = seams.inferencePort;
     const sink = seams.workerPostTestSink;
     const messages: unknown[] = [];
-    const retained = { operationEpoch: 20, scope: fixture.request.scope, abort: new AbortController(), status: { ...idleGisMapInferencePortStatusV1(), phase: "running", jobId: "1".repeat(32) }, turns: 0, pollTimer: null, inFlight: false, cancelSent: false, closed: false };
+    // 🧭️ A real `InferenceOperationV1`, not a partial double: its lease fields come from the committed
+    // browser-document-open corpus through the production parser, so the retained port this test holds
+    // is the same shape the worker mints.
+    const leaseFields = parseDocumentExecutionTargetLeaseFieldsV1(
+      (JSON.parse(readFileSync(new URL("./🧫️fixtures/📇️directory/🌐️browser-document-open-v1.json", source.url), "utf8")) as { installedTarget: unknown }).installedTarget,
+    );
+    const retained: InferenceOperationV1 = {
+      operationEpoch: 20,
+      scope: fixture.request.scope,
+      abort: new AbortController(),
+      sessionEpoch: testSeams.directorySessionEpoch,
+      sessionFence: { token: {}, sessionBindingSha256: "0".repeat(64), authorizationGeneration: 1 },
+      clientInstanceId: "12345678-1234-4123-8123-123456789abc",
+      leaseFields,
+      request: null,
+      closeRequested: false,
+      reconcileRequired: false,
+      status: { ...idleGisMapInferencePortStatusV1(), phase: "running", jobId: "1".repeat(32) },
+      turns: 0,
+      pollTimer: null,
+      inFlight: false,
+      cancelSent: false,
+      closed: false,
+    };
     try {
       seams.inferencePort = retained;
       seams.workerPostTestSink = (message: unknown) => { messages.push(message); };
@@ -44,11 +67,14 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     }
   });
   type ActorInstanceLifetime = import("../../../../🔨️modules/🎭️actor/🚪️lifetime/🟦️.ts").ActorInstanceLifetime;
+  /** 🎫️ One well-formed session capability, exactly the shape `POST /auth/sessions` mints. */
+  const WORKER_LAW_CAPABILITY = `session.v1.${"c".repeat(32)}.${"4".repeat(64)}`;
+  const WORKER_LAW_CAPABILITY_TWO = `session.v1.${"d".repeat(32)}.${"5".repeat(64)}`;
   vitest.it("binds acknowledged Shell session reads through the actual worker broker", async () => {
     const { readFileSync } = await import("node:fs");
     const { default: Ajv } = await import("ajv");
     const { default: equal } = await import("fast-deep-equal");
-    const { BrowserBrokerPortClientV1 } = await import("../../🔨️modules/📇️directory/🪪️session-refresh/🌐️broker-port/🟦️.ts");
+    const { HubSessionPortClientV1 } = await import("../../🔨️modules/📇️directory/🪪️session-refresh/🪪️session-port/🟦️.ts");
     const directory = "./🔨️modules/📇️directory/🧬️schema/🪪️session-authority-v1/";
     const corpus = JSON.parse(readFileSync(new URL(directory + "🔣️.json", source.url), "utf8"));
     const schema = JSON.parse(readFileSync(new URL(directory + "🧬️.schema.json", source.url), "utf8"));
@@ -56,31 +82,30 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     const authorities = corpus.rows.filter((row: { accepted: boolean }) => row.accepted).map((row: { value: unknown }) => row.value);
     const originalFetch = globalThis.fetch;
     const channel = new MessageChannel();
-    const calls: Array<{ path: string; hasProof: boolean; hasSuccessor: boolean }> = [];
-    clearLocalBrowserBrokerProof();
-    testSeams.attachLocalBrokerPort(channel.port2);
-    const client = new BrowserBrokerPortClientV1(channel.port1, "4".repeat(64));
+    const calls: Array<{ path: string; bearer: string }> = [];
+    clearHubSessionCapability();
+    testSeams.attachHubSessionPort(channel.port2);
+    const client = new HubSessionPortClientV1(channel.port1, WORKER_LAW_CAPABILITY);
     try {
       for (const authority of authorities) {
         vitest.expect(validate(authority)).toBe(true);
         const body = JSON.stringify(authority);
         globalThis.fetch = stubFetch(vitest.vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
           const headers = new Headers(init?.headers);
-          calls.push({ path: String(input), hasProof: /^[0-9a-f]{64}$/u.test(headers.get("x-semio-browser-broker") ?? ""), hasSuccessor: /^[0-9a-f]{64}$/u.test(headers.get("x-semio-browser-broker-next") ?? "") });
-          return new Response(body, { status: 200, headers: { "x-semio-browser-broker-advanced": "1", "content-length": String(new TextEncoder().encode(body).byteLength) } });
+          calls.push({ path: String(input), bearer: headers.get("authorization") ?? "" });
+          return new Response(body, { status: 200, headers: { "content-length": String(new TextEncoder().encode(body).byteLength) } });
         }));
         const response = await client.me();
         vitest.expect(equal(response, { status: 200, body })).toBe(true);
         vitest.expect(equal(testSeams.browserSessionAuthority, authority)).toBe(true);
       }
-      vitest.expect(equal(calls, authorities.map(() => ({ path: "/_semio/hub/auth/sessions/me", hasProof: true, hasSuccessor: true })))).toBe(true);
-      console.log("[DEBUG] acknowledged Shell session reads installed only canonical worker broker authority");
+      vitest.expect(equal(calls, authorities.map(() => ({ path: "/_semio/hub/auth/sessions/me", bearer: `Bearer ${WORKER_LAW_CAPABILITY}` })))).toBe(true);
     } finally {
       client.close();
-      testSeams.detachLocalBrokerPort();
+      testSeams.detachHubSessionPort();
       channel.port1.close();
       channel.port2.close();
-      clearLocalBrowserBrokerProof();
+      clearHubSessionCapability();
       globalThis.fetch = originalFetch;
     }
   });
@@ -89,13 +114,13 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     const { setImmediate: immediate } = await import("node:timers/promises");
     const { default: Ajv } = await import("ajv");
     const { default: equal } = await import("fast-deep-equal");
-    const directory = "./🔨️modules/📇️directory/🪪️session-refresh/🌐️broker-port/";
+    const directory = "./🔨️modules/📇️directory/🪪️session-refresh/🪪️session-port/";
     const fixture = JSON.parse(readFileSync(new URL(directory + "🔣️.json", source.url), "utf8"));
     const schema = JSON.parse(readFileSync(new URL(directory + "🧬️.schema.json", source.url), "utf8"));
     vitest.expect(new Ajv({ strict: true }).compile(schema)(fixture)).toBe(true);
-    const { BrowserBrokerPortClientV1, BROWSER_BROKER_CLIENT_TIMEOUT_MS, BROWSER_BROKER_CLIENT_INITIALIZATION_TIMEOUT_MS, BROWSER_BROKER_CLIENT_MAX_PENDING } = await import("../../🔨️modules/📇️directory/🪪️session-refresh/🌐️broker-port/🟦️.ts");
-    vitest.expect(equal([BROWSER_BROKER_CLIENT_TIMEOUT_MS, BROWSER_BROKER_CLIENT_MAX_PENDING], [fixture.timeoutMs, fixture.maximumPending])).toBe(true);
-    vitest.expect(BROWSER_BROKER_CLIENT_INITIALIZATION_TIMEOUT_MS).toBe(fixture.initializationTimeoutMs);
+    const { HubSessionPortClientV1, HUB_SESSION_PORT_CLIENT_TIMEOUT_MS, HUB_SESSION_PORT_CLIENT_INITIALIZATION_TIMEOUT_MS, HUB_SESSION_PORT_CLIENT_MAX_PENDING } = await import("../../🔨️modules/📇️directory/🪪️session-refresh/🪪️session-port/🟦️.ts");
+    vitest.expect(equal([HUB_SESSION_PORT_CLIENT_TIMEOUT_MS, HUB_SESSION_PORT_CLIENT_MAX_PENDING], [fixture.timeoutMs, fixture.maximumPending])).toBe(true);
+    vitest.expect(HUB_SESSION_PORT_CLIENT_INITIALIZATION_TIMEOUT_MS).toBe(fixture.initializationTimeoutMs);
     vitest.expect(fixture.initializationTimeoutMs + fixture.timeoutMs * 2).toBeLessThan(fixture.bootstrapTimeoutMs);
     vitest.vi.useFakeTimers();
     try {
@@ -115,7 +140,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
           }
         };
         channel.port2.start();
-        const client = new BrowserBrokerPortClientV1(channel.port1, "4".repeat(64));
+        const client = new HubSessionPortClientV1(channel.port1, WORKER_LAW_CAPABILITY);
         const abort = new AbortController();
         const response = client.me(abort.signal).then((value) => ({ kind: "accepted", value }), () => ({ kind: "refused" }));
         try {
@@ -152,17 +177,17 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     const { setImmediate: immediate } = await import("node:timers/promises");
     const { default: Ajv } = await import("ajv");
     const { default: equal } = await import("fast-deep-equal");
-    const directory = "./🔨️modules/📇️directory/🪪️session-refresh/🌐️broker-port/";
+    const directory = "./🔨️modules/📇️directory/🪪️session-refresh/🪪️session-port/";
     const fixture = JSON.parse(readFileSync(new URL(directory + "🔣️.json", source.url), "utf8"));
     const schema = JSON.parse(readFileSync(new URL(directory + "🧬️.schema.json", source.url), "utf8"));
     vitest.expect(new Ajv({ strict: true }).compile(schema)(fixture)).toBe(true);
-    const { BrowserBrokerPortClientV1 } = await import("../../🔨️modules/📇️directory/🪪️session-refresh/🌐️broker-port/🟦️.ts");
+    const { HubSessionPortClientV1 } = await import("../../🔨️modules/📇️directory/🪪️session-refresh/🪪️session-port/🟦️.ts");
     const originalFetch = globalThis.fetch;
     try {
       for (const row of fixture.close.cases) {
-        clearLocalBrowserBrokerProof();
+        clearHubSessionCapability();
         const channel = new MessageChannel();
-        testSeams.attachLocalBrokerPort(channel.port2);
+        testSeams.attachHubSessionPort(channel.port2);
         let readStarted = false;
         let requestSignal: AbortSignal | undefined;
         let resolveStarted!: () => void;
@@ -173,33 +198,32 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
           resolveStarted();
           return new Promise<Response>((_resolve, reject) => requestSignal?.addEventListener("abort", () => reject(new Error("cancelled")), { once: true }));
         }));
-        const client = new BrowserBrokerPortClientV1(channel.port1, row.id === "before-read" ? "8".repeat(64) : "9".repeat(64));
+        const client = new HubSessionPortClientV1(channel.port1, row.id === "before-read" ? WORKER_LAW_CAPABILITY : WORKER_LAW_CAPABILITY_TWO);
         try {
           if (row.id === "before-read") {
             client.close();
-            await vitest.expect(client.me()).rejects.toThrow("browser broker unavailable");
+            await vitest.expect(client.me()).rejects.toThrow("hub session unavailable");
           } else {
             await immediate();
             const pending = client.me();
             await started;
             client.close();
-            await vitest.expect(pending).rejects.toThrow("browser broker closed");
+            await vitest.expect(pending).rejects.toThrow("hub session closed");
           }
           await immediate();
           await immediate();
           vitest.expect(equal({ id: row.id, readStarted }, row)).toBe(true);
-          vitest.expect(testSeams.localBrowserBrokerProofExpiresAtMs).toBe(0);
+          vitest.expect(testSeams.browserSessionAuthority).toBe(null);
           if (row.readStarted) vitest.expect(requestSignal?.aborted).toBe(true);
         } finally {
           client.close();
-          testSeams.detachLocalBrokerPort();
+          testSeams.detachHubSessionPort();
           channel.port1.close();
           channel.port2.close();
         }
       }
-      console.log("[DEBUG] session authority cancellation cleared the exact private broker proof before and during reads");
     } finally {
-      clearLocalBrowserBrokerProof();
+      clearHubSessionCapability();
       globalThis.fetch = originalFetch;
     }
   });
@@ -211,7 +235,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     const fixture = JSON.parse(readFileSync(new URL(directory + "🔣️.json", source.url), "utf8"));
     const schema = JSON.parse(readFileSync(new URL(directory + "🧬️.schema.json", source.url), "utf8"));
     vitest.expect(new Ajv({ strict: true }).compile(schema)(fixture)).toBe(true);
-    const { directorySessionAuthorityIsCurrentV1, directorySessionAuthorityTextV1, startDirectorySessionRefreshV1, DIRECTORY_SESSION_REFRESH_INTERVAL_MS, DIRECTORY_SESSION_AUTHORITY_TEXT_V1 } = await import("../../🔨️modules/📇️directory/🪪️session-refresh/🟦️.ts");
+    const { directorySessionAuthorityIsCurrentV1, directorySessionAuthorityTextV1, directorySessionRefreshRetryDelayMsV1, startDirectorySessionRefreshV1, DIRECTORY_SESSION_REFRESH_INTERVAL_MS, DIRECTORY_SESSION_AUTHORITY_TEXT_V1 } = await import("../../🔨️modules/📇️directory/🪪️session-refresh/🟦️.ts");
     const corpus = JSON.parse(readFileSync(new URL("./🔨️modules/📇️directory/🧬️schema/🪪️session-authority-v1/🔣️.json", source.url), "utf8"));
     const first = corpus.rows[0].value;
     const second = corpus.rows[1].value;
@@ -268,10 +292,8 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         const failed = startDirectorySessionRefreshV1({
           read: async () => {
             reads += 1;
-            if (refusal === "transport") throw new Error("offline");
-            const status = refusal === "http-401" ? 401 : refusal === "http-428" ? 428 : refusal === "non-200" ? 201 : 200;
-            const body = refusal === "invalid-body" ? "{}" : JSON.stringify(refusal === "expired" ? { ...first, expiresAt: Date.now() } : first);
-            return { status, body };
+            const status = refusal === "http-401" ? 401 : refusal === "http-403" ? 403 : 200;
+            return { status, body: JSON.stringify(refusal === "expired" ? { ...first, expiresAt: Date.now() } : first) };
           },
           onAuthority: (value) => { accepted.push(value); },
           onUnavailable: () => { refused += 1; },
@@ -280,8 +302,67 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         await failed.refresh();
         await vitest.vi.advanceTimersByTimeAsync(fixture.proofTtlMs);
         await failed.refresh();
-        vitest.expect(equal({ accepted, refused, reads }, { accepted: [], refused: 1, reads: 1 + fixture.unavailableRetries })).toBe(true);
+        vitest.expect(equal({ refusal, accepted, refused, reads }, { refusal, accepted: [], refused: 1, reads: 1 + fixture.unavailableRetries })).toBe(true);
       }
+      // 🔁️ A failure the hub did not pronounce on keeps the session: the loop retries on the fixture's
+      // own backoff, reports the degraded window's two edges exactly once each, and the authority that
+      // was already observed is never retired. This is the law the live two-user run needed — the first
+      // shell used to be signed out for ever by one queued `me` while a second context booted.
+      for (const transient of fixture.transientFailures) {
+        const accepted: unknown[] = [];
+        const degradedEdges: boolean[] = [];
+        let refused = 0;
+        let reads = 0;
+        let failing = false;
+        const riding = startDirectorySessionRefreshV1({
+          read: async () => {
+            reads += 1;
+            if (!failing) return { status: 200, body: JSON.stringify({ ...first, expiresAt: Date.now() + fixture.proofTtlMs * 100 }) };
+            if (transient === "transport") throw new Error("offline");
+            const status = transient === "http-428" ? 428 : transient === "http-503" ? 503 : transient === "non-200" ? 201 : 200;
+            return { status, body: transient === "invalid-body" ? "<html>proxy error</html>" : JSON.stringify({ ...first, expiresAt: Date.now() + fixture.proofTtlMs * 100 }) };
+          },
+          onAuthority: (value) => { accepted.push(value); },
+          onUnavailable: () => { refused += 1; },
+          onDegraded: (value) => { degradedEdges.push(value); },
+        });
+        owners.push(riding);
+        await riding.refresh();
+        vitest.expect(accepted.length).toBe(1);
+        failing = true;
+        const readsBeforeLoss = reads;
+        for (const [index, delay] of fixture.retryDelaysMs.entries()) {
+          await vitest.vi.advanceTimersByTimeAsync(index === 0 ? fixture.intervalMs : 0);
+          await vitest.vi.advanceTimersByTimeAsync(delay);
+          vitest.expect(reads, `${transient} retry ${index}`).toBe(readsBeforeLoss + index + 2);
+        }
+        vitest.expect(equal({ transient, refused, accepted: accepted.length, degradedEdges }, { transient, refused: 0, accepted: 1, degradedEdges: [true] })).toBe(true);
+        failing = false;
+        await vitest.vi.advanceTimersByTimeAsync(fixture.retryDelaysMs[fixture.retryDelaysMs.length - 1]);
+        vitest.expect(equal({ transient, refused, accepted: accepted.length, degradedEdges }, { transient, refused: 0, accepted: 2, degradedEdges: [true, false] })).toBe(true);
+        riding.close();
+      }
+      // ⌛️ Riding out a loss is bounded by the session's OWN deadline: once the last observed authority
+      // has expired there is nothing left to ride out, and the next transient failure retires it.
+      {
+        let refused = 0;
+        let expired = false;
+        const expiring = startDirectorySessionRefreshV1({
+          read: async () => {
+            if (expired) throw new Error("offline");
+            return { status: 200, body: JSON.stringify({ ...first, expiresAt: Date.now() + fixture.intervalMs }) };
+          },
+          onAuthority: () => undefined,
+          onUnavailable: () => { refused += 1; },
+        });
+        owners.push(expiring);
+        await expiring.refresh();
+        expired = true;
+        await vitest.vi.advanceTimersByTimeAsync(fixture.intervalMs * 2);
+        vitest.expect(refused).toBe(1);
+      }
+      for (const [attempt, delay] of fixture.retryDelaysMs.entries()) vitest.expect(directorySessionRefreshRetryDelayMsV1(attempt + 1)).toBe(delay);
+      vitest.expect(() => directorySessionRefreshRetryDelayMsV1(0)).toThrow("directory.session-authority.retry-attempt-invalid");
       for (const cancellation of fixture.cancellation) {
         const parent = new AbortController();
         let releaseRead: (() => void) | undefined;
@@ -366,8 +447,8 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     spaceArtifactCreationOperations.clear();
     testSeams.spaceArtifactCreationTestFetch = null;
     testSeams.workerPostTestSink = null;
-    clearLocalBrowserBrokerProof();
-    installLocalBrowserBrokerProof("4".repeat(64));
+    clearHubSessionCapability();
+    installHubSessionCapability(WORKER_LAW_CAPABILITY);
     testSeams.socketGrantTestIssue = async () => ({
       schema: "semio.hub.socket-grant/v1",
       protocol: "semio.socket.v1",
@@ -575,12 +656,12 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       const urls: string[] = [];
       (globalThis as unknown as { fetch: unknown }).fetch = async (input: string) => {
         urls.push(input);
-        return new Response("{}", { status: 200, headers: { "x-semio-browser-broker-advanced": "1" } });
+        return new Response("{}", { status: 200 });
       };
       try {
-        await browserDirectoryRequest("/_semio/hub/directory/event-page/v1?after=3", {}, { timeoutMs: 1_000 });
-        await expect(browserDirectoryRequest("/_semio/hub/directory/event-page/v1?after=03", {}, { timeoutMs: 1_000 })).rejects.toThrow("directory operation denied");
-        await expect(browserDirectoryRequest("/_semio/hub/directory/event-page/v1?after=9007199254740992", {}, { timeoutMs: 1_000 })).rejects.toThrow("directory operation denied");
+        await browserDirectoryRequest("/directory/event-page/v1?after=3", {}, { timeoutMs: 1_000 });
+        await expect(browserDirectoryRequest("/directory/event-page/v1?after=03", {}, { timeoutMs: 1_000 })).rejects.toThrow("directory operation denied");
+        await expect(browserDirectoryRequest("/directory/event-page/v1?after=9007199254740992", {}, { timeoutMs: 1_000 })).rejects.toThrow("directory operation denied");
         expect(urls).toEqual(["/_semio/hub/directory/event-page/v1?after=3"]);
         const typescriptRequests: BackboneWorkerRequest[] = [];
         const rustRequests: BackboneWorkerRequest[] = [];
@@ -594,102 +675,116 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     });
   });
 
-  describe("browser broker proof ratchet", () => {
-    it("advances only on an explicit acknowledgement and domain-binds the next proof digest", async () => {
+  describe("hub session capability lane", () => {
+    const CAPABILITY_ONE = `session.v1.${"a".repeat(32)}.${"1".repeat(64)}`;
+    const CAPABILITY_TWO = `session.v1.${"b".repeat(32)}.${"2".repeat(64)}`;
+
+    it("sends the human's own bearer on every hub call and never any other credential", async () => {
       const originalFetch = globalThis.fetch;
-      const requests: Headers[] = [];
-      (globalThis as unknown as { fetch: unknown }).fetch = async (_input: unknown, init?: RequestInit) => {
-        requests.push(new Headers(init?.headers));
-        return new Response("{}", { status: 200, headers: { "x-semio-browser-broker-advanced": "1" } });
+      const requests: Array<{ url: string; headers: Headers }> = [];
+      (globalThis as unknown as { fetch: unknown }).fetch = async (input: unknown, init?: RequestInit) => {
+        requests.push({ url: String(input), headers: new Headers(init?.headers) });
+        return new Response("{}", { status: 200 });
       };
       try {
-        await browserBrokerFetch("/_semio/hub/auth/sessions/me", { method: "GET" }, { timeoutMs: 1_000 });
-        await browserBrokerFetch("/_semio/hub/auth/sessions/me", { method: "GET" }, { timeoutMs: 1_000 });
-        const firstNextDigest = requests[0]!.get("x-semio-browser-broker-next");
-        const secondCurrent = hexBytes(requests[1]!.get("x-semio-browser-broker") ?? "");
-        expect(secondCurrent).toBeDefined();
-        expect(bytesHex(await browserBrokerProofDigest(secondCurrent!))).toBe(firstNextDigest);
-        expect(requests[0]!.get("x-semio-browser-broker")).not.toBe(requests[1]!.get("x-semio-browser-broker"));
+        installHubSessionCapability(CAPABILITY_ONE);
+        await hubSessionFetch("/auth/sessions/me", { method: "GET" }, { timeoutMs: 1_000 });
+        await hubSessionFetch("/directory/spaces", { method: "GET" }, { timeoutMs: 1_000 });
+        expect(requests.map((request) => request.url)).toEqual(["/_semio/hub/auth/sessions/me", "/_semio/hub/directory/spaces"]);
+        for (const request of requests) {
+          expect(request.headers.get("authorization")).toBe(`Bearer ${CAPABILITY_ONE}`);
+          expect(request.headers.get("x-semio-browser-broker")).toBeNull();
+          expect(request.headers.get("x-semio-browser-broker-next")).toBeNull();
+        }
       } finally {
-        clearLocalBrowserBrokerProof();
+        clearHubSessionCapability();
         (globalThis as unknown as { fetch: unknown }).fetch = originalFetch;
       }
     });
 
-    it("requires explicit rebootstrap after a lost acknowledgement, 401, or cancel-after-send", async () => {
+    it("refuses every hub call without a capability, and drops the capability the hub answers 401 for", async () => {
       const originalFetch = globalThis.fetch;
       let calls = 0;
       try {
+        clearHubSessionCapability();
+        (globalThis as unknown as { fetch: unknown }).fetch = async () => {
+          calls += 1;
+          return new Response("{}", { status: 200 });
+        };
+        await expect(hubSessionFetch("/auth/sessions/me", { method: "GET" }, { timeoutMs: 1_000 })).rejects.toThrow("hub session rebootstrap required");
+        expect(calls).toBe(0);
+
+        installHubSessionCapability(CAPABILITY_ONE);
+        (globalThis as unknown as { fetch: unknown }).fetch = async () => {
+          calls += 1;
+          return new Response("unauthorized", { status: 401 });
+        };
+        await expect(hubSessionFetch("/auth/sessions/me", { method: "GET" }, { timeoutMs: 1_000 })).rejects.toThrow("hub session rebootstrap required");
+        expect(calls).toBe(1);
+        await expect(hubSessionFetch("/auth/sessions/me", { method: "GET" }, { timeoutMs: 1_000 })).rejects.toThrow("hub session rebootstrap required");
+        expect(calls).toBe(1);
+
+        installHubSessionCapability(CAPABILITY_TWO);
         (globalThis as unknown as { fetch: unknown }).fetch = async () => {
           calls += 1;
           throw new Error("transport detail must be redacted");
         };
-        await expect(browserBrokerFetch("/_semio/hub/auth/sessions/me", { method: "GET" }, { timeoutMs: 1_000 })).rejects.toThrow("browser broker rebootstrap required");
-        await expect(browserBrokerFetch("/_semio/hub/auth/sessions/me", { method: "GET" }, { timeoutMs: 1_000 })).rejects.toThrow("browser broker rebootstrap required");
-        expect(calls).toBe(1);
-
-        installLocalBrowserBrokerProof("6".repeat(64));
-        (globalThis as unknown as { fetch: unknown }).fetch = async () => {
-          calls += 1;
-          return new Response("unauthorized", { status: 401, headers: { "x-semio-browser-broker-advanced": "1" } });
-        };
-        await expect(browserBrokerFetch("/_semio/hub/auth/sessions/me", { method: "GET" }, { timeoutMs: 1_000 })).rejects.toThrow("browser broker rebootstrap required");
-
-        installLocalBrowserBrokerProof("7".repeat(64));
-        const abort = new AbortController();
-        (globalThis as unknown as { fetch: unknown }).fetch = async (_input: unknown, init?: RequestInit) => {
-          calls += 1;
-          await new Promise<void>((_resolve, reject) => init?.signal?.addEventListener("abort", () => reject(new Error("cancelled")), { once: true }));
-          return new Response("{}");
-        };
-        const pending = browserBrokerFetch("/_semio/hub/auth/sessions/me", { method: "GET" }, { timeoutMs: 1_000, signal: abort.signal });
-        for (let turn = 0; calls < 3 && turn < 100; turn += 1) await new Promise((resolve) => setTimeout(resolve, 0));
-        expect(calls).toBe(3);
-        abort.abort();
-        await expect(pending).rejects.toThrow("browser broker rebootstrap required");
-        await expect(browserBrokerFetch("/_semio/hub/auth/sessions/me", { method: "GET" }, { timeoutMs: 1_000 })).rejects.toThrow("browser broker rebootstrap required");
+        await expect(hubSessionFetch("/auth/sessions/me", { method: "GET" }, { timeoutMs: 1_000 })).rejects.toThrow("hub session unreachable");
+        expect(calls).toBe(2);
+        await hubSessionFetchSucceeds();
       } finally {
-        clearLocalBrowserBrokerProof();
+        clearHubSessionCapability();
         (globalThis as unknown as { fetch: unknown }).fetch = originalFetch;
+      }
+
+      async function hubSessionFetchSucceeds(): Promise<void> {
+        (globalThis as unknown as { fetch: unknown }).fetch = async () => new Response("{}", { status: 200 });
+        const response = await hubSessionFetch("/auth/sessions/me", { method: "GET" }, { timeoutMs: 1_000 });
+        expect(response.status).toBe(200);
       }
     });
 
-    it("rejects expired, duplicate-initialized, and over-capacity broker work without exposing proof", async () => {
+    it("refuses a malformed capability, is idempotent for the same one, and bounds its own queue", async () => {
       const originalFetch = globalThis.fetch;
-      const originalQueued = testSeams.localBrowserBrokerQueued;
-      let observedCurrent = "";
+      const originalQueued = testSeams.hubSessionQueued;
+      let sentAuthorization = "";
       (globalThis as unknown as { fetch: unknown }).fetch = async (_input: unknown, init?: RequestInit) => {
-        observedCurrent = new Headers(init?.headers).get("x-semio-browser-broker") ?? "";
-        return new Response("missing acknowledgement", { status: 200 });
+        sentAuthorization = new Headers(init?.headers).get("authorization") ?? "";
+        return new Response("{}", { status: 200 });
       };
       try {
-        expect(installLocalBrowserBrokerProof("8".repeat(64))).toBe(false);
-        await expect(browserBrokerFetch("/_semio/hub/auth/sessions/me", { method: "GET" }, { timeoutMs: 1_000 })).rejects.toThrow("browser broker rebootstrap required");
-        expect(observedCurrent).toBe("4".repeat(64));
+        clearHubSessionCapability();
+        for (const rejected of ["", "session.v1", "4".repeat(64), `session.v1.${"a".repeat(32)}.${"1".repeat(63)}`, `Bearer session.v1.${"a".repeat(32)}.${"1".repeat(64)}`]) {
+          expect(installHubSessionCapability(rejected)).toBe(false);
+        }
+        await expect(hubSessionFetch("/auth/sessions/me", { method: "GET" }, { timeoutMs: 1_000 })).rejects.toThrow("hub session rebootstrap required");
 
-        installLocalBrowserBrokerProof("9".repeat(64));
-        testSeams.localBrowserBrokerProofExpiresAtMs = Date.now() - 1;
-        await expect(browserBrokerFetch("/_semio/hub/auth/sessions/me", { method: "GET" }, { timeoutMs: 1_000 })).rejects.toThrow("browser broker rebootstrap required");
+        expect(installHubSessionCapability(CAPABILITY_ONE)).toBe(true);
+        expect(installHubSessionCapability(CAPABILITY_ONE)).toBe(true);
+        await hubSessionFetch("/auth/sessions/me", { method: "GET" }, { timeoutMs: 1_000 });
+        expect(sentAuthorization).toBe(`Bearer ${CAPABILITY_ONE}`);
 
-        installLocalBrowserBrokerProof("a".repeat(64));
-        testSeams.localBrowserBrokerQueued = 64;
-        await expect(browserBrokerFetch("/_semio/hub/auth/sessions/me", { method: "GET" }, { timeoutMs: 1_000 })).rejects.toThrow("browser broker capacity exceeded");
-        expect(observedCurrent).not.toContain("a".repeat(64));
+        testSeams.hubSessionQueued = 64;
+        await expect(hubSessionFetch("/auth/sessions/me", { method: "GET" }, { timeoutMs: 1_000 })).rejects.toThrow("hub session capacity exceeded");
+        expect(sentAuthorization).toBe(`Bearer ${CAPABILITY_ONE}`);
       } finally {
-        testSeams.localBrowserBrokerQueued = originalQueued;
-        clearLocalBrowserBrokerProof();
+        testSeams.hubSessionQueued = originalQueued;
+        clearHubSessionCapability();
         (globalThis as unknown as { fetch: unknown }).fetch = originalFetch;
       }
     });
 
-    it("keeps the private port and proof names out of malicious plugin shard source and transfers before activation", async () => {
+    it("keeps the private session port out of malicious plugin shard source, and leaves no broker-proof lane behind", async () => {
       const { readFile } = await import("node:fs/promises");
       const pluginShard = await readFile(new URL("./🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/🟦️.ts", source.url), "utf8");
       const shellHost = await readFile(new URL("./🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🟦️.tsx", source.url), "utf8");
-      expect(pluginShard).not.toContain("semio-browser-broker-port");
-      expect(pluginShard).not.toContain("x-semio-browser-broker");
-      expect(shellHost.indexOf("const worker = ensureBackboneWorker();")).toBeLessThan(shellHost.indexOf("void (async () => {\n      const outcome = await installPlugin"));
-      expect(shellHost.indexOf("window.history.replaceState")).toBeLessThan(shellHost.indexOf("loadPluginModuleResilient"));
+      const worker = await readFile(new URL("./🔨️modules/🏪️store/👷️worker/🟦️.ts", source.url), "utf8");
+      expect(pluginShard).not.toContain("semio-hub-session-port");
+      expect(pluginShard).not.toContain("authorization");
+      for (const retired of ["semio-browser-broker-port", "x-semio-browser-broker", "#semio-broker=", "localBrowserBrokerProof"]) {
+        expect(shellHost).not.toContain(retired);
+        expect(worker).not.toContain(retired);
+      }
     });
   });
 
@@ -1163,10 +1258,11 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
           if (deadline === null) throw new Error("rebootstrap watchdog missing");
           const activeSocket = { close: () => activeCloses++ } as unknown as WebSocket;
           state.socket = activeSocket;
-          const welcome = structuredClone(decodeFixtureFrame(fixture.wire.inlineWelcomeHex));
-          if (!("Welcome" in welcome)) throw new Error("welcome fixture missing");
-          if (outcome === "none") welcome.Welcome.bootstrap = "None";
-          if (outcome === "tail") welcome.Welcome.bootstrap = "Tail";
+          const decoded = structuredClone(decodeFixtureFrame(fixture.wire.inlineWelcomeHex));
+          if (!("Welcome" in decoded)) throw new Error("welcome fixture missing");
+          // 🧭️ `bootstrap` is readonly on the decoded frame — the variant is chosen by rebuilding the
+          // frame, which is also what the wire does, rather than by writing over a decoded one.
+          const welcome = outcome === "success" ? decoded : { Welcome: { ...decoded.Welcome, bootstrap: outcome === "none" ? ("None" as const) : ("Tail" as const) } };
           await handleHubFrame(state, welcome, null, activeSocket);
           if (outcome === "success") {
             expect(state.artifactRebootstrapRequired).toBe(false);
@@ -2361,6 +2457,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
           scope,
           clientInstanceId: state.openClientInstanceId,
           sessionEpoch: testSeams.directorySessionEpoch,
+          sessionFence: { token: {}, sessionBindingSha256: "c".repeat(64), authorizationGeneration: 1 },
           receipt: {
             schema: "semio.hub.inference-approval-receipt/v1",
             jobId: "1".repeat(32),
@@ -2384,6 +2481,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
           retryable: true,
         };
         const revokedOwner = testSeams.inferenceApprovalUndoOwner;
+        if (revokedOwner === null) throw new Error("inference approval undo owner missing before revocation");
         socket.triggerClose(4401);
         await Promise.resolve();
         await vi.advanceTimersByTimeAsync(HUB_RECONNECT_MAX_MS * 2);
@@ -2476,7 +2574,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       const proofs: string[] = [];
       (globalThis as unknown as { fetch: unknown }).fetch = async (input: string, init?: { method?: string; headers?: Record<string, string> }) => {
         requests.push(`${init?.method ?? "GET"} ${input}`);
-        proofs.push(init?.headers?.["x-semio-browser-broker"] ?? "");
+        proofs.push(init?.headers?.["authorization"] ?? "");
         const status = statuses.shift() ?? 200;
         const body = bodies.shift() ?? "";
         await gates.shift();
@@ -2484,20 +2582,20 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
           ok: status < 400,
           status,
           statusText: "",
-          headers: new Headers({ "content-type": "application/json", "content-length": String(new TextEncoder().encode(body).length), "x-semio-browser-broker-advanced": "1" }),
+          headers: new Headers({ "content-type": "application/json", "content-length": String(new TextEncoder().encode(body).length) }),
           body: new Response(body).body,
           text: async () => body,
           json: async () => JSON.parse(body),
         };
       };
-      clearLocalBrowserBrokerProof();
-      installLocalBrowserBrokerProof("b".repeat(64));
+      clearHubSessionCapability();
+      installHubSessionCapability(WORKER_LAW_CAPABILITY);
       if (options.authority !== "none") {
         const { readFileSync } = await import("node:fs");
         const fixture = JSON.parse(readFileSync(new URL("./🔨️modules/📇️directory/🧬️schema/🪪️session-authority-v1/🔣️.json", source.url), "utf8"));
         const authority = fixture.rows.find((row: { accepted: boolean }) => row.accepted).value;
         bodies.push(JSON.stringify(authority));
-        await browserBrokerFetch("/_semio/hub/auth/sessions/me", { method: "GET" }, { timeoutMs: 1000, accept: testSeams.acceptBrowserSessionAuthority });
+        await hubSessionFetch("/_semio/hub/auth/sessions/me", { method: "GET" }, { timeoutMs: 1000, accept: testSeams.acceptBrowserSessionAuthority });
         requests.length = 0;
         bodies.length = 0;
         statuses.length = 0;
@@ -2529,7 +2627,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
             testSeams.inferencePort = null;
           }
           closeArtifact(DOCUMENT, SPACE);
-          clearLocalBrowserBrokerProof();
+          clearHubSessionCapability();
           testSeams.workerPostTestSink = original;
           testSeams.socketGrantTestIssue = originalIssue;
           (globalThis as unknown as { fetch: unknown }).fetch = originalFetch;
@@ -2596,8 +2694,8 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         expect(absent.posted.at(-1)).toEqual({ kind: "inference-port-opened", operationEpoch: 81, scope, outcome: "refused", code: fixture.retainedClosing.authorityFence.openingCode });
         handleTsRequest({ kind: "inference-propose", operationEpoch: 81, requestId: fixture.retainedClosing.requestId });
         expect(absent.requests).toEqual(fixture.retainedClosing.authorityFence.successorRoutes);
-        clearLocalBrowserBrokerProof();
-        expect(installLocalBrowserBrokerProof(fixture.retainedClosing.successorProof)).toBe(true);
+        clearHubSessionCapability();
+        expect(installHubSessionCapability(fixture.retainedClosing.successorCapability)).toBe(true);
         expect(testSeams.browserSessionOperationFence).not.toBe(fence);
         expect(absent.requests).toEqual(fixture.retainedClosing.authorityFence.successorRoutes);
       } finally {
@@ -2614,8 +2712,8 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         const operation = testSeams.inferencePort;
         expect(operation?.status.phase).toBe(fixture.retainedClosing.unknownPhase);
         const requestCount = retained.requests.length;
-        clearLocalBrowserBrokerProof();
-        expect(installLocalBrowserBrokerProof(fixture.retainedClosing.successorProof)).toBe(true);
+        clearHubSessionCapability();
+        expect(installHubSessionCapability(fixture.retainedClosing.successorCapability)).toBe(true);
         await driveInferencePort(82);
         expect(retained.requests).toHaveLength(requestCount);
         handleTsRequest({ kind: "inference-open", operationEpoch: 83, scope });
@@ -2827,20 +2925,20 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         let release: () => void = () => undefined;
         harness.gates.push(new Promise<void>((resolve) => { release = resolve; }));
         harness.bodies.push("{}");
-        const pending = browserBrokerFetch("/_semio/hub/auth/sessions/me", { method: "GET" }, { timeoutMs: 1000, admit: () => testSeams.directorySessionEpoch === epoch });
+        const pending = hubSessionFetch("/_semio/hub/auth/sessions/me", { method: "GET" }, { timeoutMs: 1000, admit: () => testSeams.directorySessionEpoch === epoch });
         const rejected = expect(pending).rejects.toThrow();
         for (let turn = 0; harness.requests.length === 0 && turn < 100; turn += 1) await new Promise((resolve) => setTimeout(resolve, 0));
         expect(harness.requests).toHaveLength(1);
         testSeams.directorySessionEpoch += 1;
-        clearLocalBrowserBrokerProof();
-        expect(installLocalBrowserBrokerProof(fixture.successorProof)).toBe(true);
+        clearHubSessionCapability();
+        expect(installHubSessionCapability(fixture.successorCapability)).toBe(true);
         release();
         await rejected;
         harness.bodies.push("{}");
-        await browserBrokerFetch("/_semio/hub/auth/sessions/me", { method: "GET" }, { timeoutMs: 1000 });
+        await hubSessionFetch("/_semio/hub/auth/sessions/me", { method: "GET" }, { timeoutMs: 1000 });
         expect(harness.proofs).toHaveLength(2);
-        expect(harness.proofs[0]).toMatch(/^[0-9a-f]{64}$/u);
-        expect(equal(harness.proofs[1], fixture.successorProof)).toBe(true);
+        expect(harness.proofs[0]).toBe(`Bearer ${WORKER_LAW_CAPABILITY}`);
+        expect(equal(harness.proofs[1], `Bearer ${fixture.successorCapability}`)).toBe(true);
         console.log("[DEBUG] old inference response preserved successor broker proof");
       } finally { testSeams.directorySessionEpoch = epoch; harness.release(); }
     });
@@ -2870,7 +2968,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       const retained = JSON.parse(readFileSync(new URL("./🧫️fixtures/💡️gis-map-inference-port-v1/🔣️.json", source.url), "utf8")).retainedClosing;
       const harness = await inferenceHarness({ lease: "editor" });
       const channel = new MessageChannel();
-      testSeams.attachLocalBrokerPort(channel.port1);
+      testSeams.attachHubSessionPort(channel.port1);
       const me = async (value: unknown): Promise<{ status: number; body: string }> => {
         harness.bodies.push(JSON.stringify(value));
         return await new Promise((resolve, reject) => {
@@ -2890,19 +2988,22 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         handleTsRequest({ kind: "inference-propose", operationEpoch: retained.operationEpoch + 5, requestId: retained.requestId });
         await settleInferenceTurns();
         const original = testSeams.inferencePort;
-        expect(original?.request?.requestId).toBe(retained.requestId);
+        if (original === null) throw new Error("inference port retired before the broker replacement");
+        const originalRequest = original.request;
+        if (originalRequest === null) throw new Error("retained inference port carries no request");
+        expect(originalRequest.requestId).toBe(retained.requestId);
         expect((await me(authorities[1])).status).toBe(200);
         expect(testSeams.directorySessionEpoch).toBe(epoch + 1);
         expect(equal(testSeams.browserSessionAuthority, authorities[1])).toBe(true);
         expect(artifactState(DOCUMENT, SPACE)).toBeUndefined();
         expect(testSeams.inferencePort).toBe(original);
         expect(original.status.phase).toBe("indeterminate");
-        expect(original.request.requestId).toBe(retained.requestId);
+        expect(originalRequest.requestId).toBe(retained.requestId);
         await driveInferencePort(original.operationEpoch);
         expect(harness.requests.filter((entry: string) => entry.endsWith("/jobs"))).toHaveLength(1);
         expect(harness.requests.filter((entry: string) => entry.endsWith("/cancel") || entry.endsWith("/reconcile"))).toHaveLength(0);
         console.log("[DEBUG] authenticated broker replacement retained the original request without replay under its successor");
-      } finally { testSeams.detachLocalBrokerPort(); channel.port1.close(); channel.port2.close(); harness.release(); }
+      } finally { testSeams.detachHubSessionPort(); channel.port1.close(); channel.port2.close(); harness.release(); }
     });
 
     it("requires verified session authority to physically reopen a fresh document owner", async () => {
@@ -2920,7 +3021,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         const original = harness.state;
         const originalClientInstanceId = original.openClientInstanceId;
         harness.bodies.push(JSON.stringify(authorities[1]));
-        await browserBrokerFetch("/_semio/hub/auth/sessions/me", { method: "GET" }, { timeoutMs: 1000, accept: testSeams.acceptBrowserSessionAuthority });
+        await hubSessionFetch("/_semio/hub/auth/sessions/me", { method: "GET" }, { timeoutMs: 1000, accept: testSeams.acceptBrowserSessionAuthority });
         const absentBeforeReopen = artifactState(DOCUMENT, SPACE) === undefined;
         const successorClientInstanceId = "12345678-1234-4123-8123-123456789abd";
         openArtifact({ documentId: DOCUMENT, schema: "gis.map", bindings: [{ kind: "hub", baseUrl: "http://hub.test", spaceId: SPACE }], actor: "caller", clientInstanceId: successorClientInstanceId });
@@ -2955,7 +3056,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       for (const scenario of retained.directoryPageBinding) {
       const harness = await inferenceHarness({ lease: "editor" });
         const channel = new MessageChannel();
-        testSeams.attachLocalBrokerPort(channel.port1);
+        testSeams.attachHubSessionPort(channel.port1);
         try {
           harness.bodies.push(JSON.stringify(authority));
           const ready = new Promise<{ status: number }>((resolve, reject) => {
@@ -2984,7 +3085,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
             expect(harness.posted.some((message: BackboneWorkerResponse) => message.kind === "directory-bootstrap-failed" && message.code === "unauthorized" && !message.retryable)).toBe(true);
           }
           console.log(`[DEBUG] Directory bootstrap ${scenario} matched the authenticated authority before presentation`);
-        } finally { testSeams.detachLocalBrokerPort(); channel.port1.close(); channel.port2.close(); harness.release(); }
+        } finally { testSeams.detachHubSessionPort(); channel.port1.close(); channel.port2.close(); harness.release(); }
       }
     });
 
@@ -2997,7 +3098,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       for (const scenario of retained.authorityRetirement) {
       const harness = await inferenceHarness({ lease: "editor" });
         const channel = new MessageChannel();
-        testSeams.attachLocalBrokerPort(channel.port1);
+        testSeams.attachHubSessionPort(channel.port1);
         const read = async (body: unknown): Promise<{ status: number; body: string }> => {
           harness.bodies.push(JSON.stringify(body));
           return await new Promise((resolve, reject) => {
@@ -3027,21 +3128,33 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
             for (let turn = 0; !heldBody.current?.locked && turn < 100; turn += 1) await new Promise((resolve) => setTimeout(resolve, 0));
             expect(harness.requests).toHaveLength(2);
             expect(heldBody.current?.locked).toBe(true);
-            clearLocalBrowserBrokerProof();
-            expect(installLocalBrowserBrokerProof(retained.successorProof)).toBe(true);
+            clearHubSessionCapability();
+            expect(installHubSessionCapability(retained.successorCapability)).toBe(true);
             release();
           }
-          expect((await pending).status).toBe(428);
-          expect(testSeams.browserSessionAuthority).toBeNull();
-          expect(testSeams.directorySessionEpoch).toBe(epoch + 1);
-          expect(artifactState(DOCUMENT, SPACE)).toBeUndefined();
+          // 🚪️ The session port's own two refusal statuses (`👷️worker/🟦️.ts:838`): `401` when the hub
+          // itself said the capability is gone, `503` for every other refused revalidation. The
+          // broker-era `428` this asserted has no producer left anywhere in the worker.
+          expect((await pending).status).toBe(scenario === "http-401" ? 401 : 503);
+          // 🪪️ Retirement follows the HUB's authority over the session, not the shape of one answer.
+          // `401` is the hub saying this capability is gone, and a capability replaced mid-flight is
+          // the human's own switch — both retire every owner, bump the session epoch and drop the
+          // open artifacts. A `201` or an unparsable body is the link failing to CONFIRM the session,
+          // which says nothing about it: the read is refused (`503`, so the caller retries) and the
+          // authority the worker already accepted is kept. This is the same law the shell's own
+          // revalidation loop follows one layer up (`🪪️session-refresh/🟦️.ts`, ticket 26/09/18 C1c
+          // §S5.2) — before that slice both layers signed a shell out for ever on one hiccup.
+          const retires = scenario === "http-401" || scenario === "old-body-after-proof-replacement";
+          expect(testSeams.browserSessionAuthority === null).toBe(retires);
+          expect(testSeams.directorySessionEpoch).toBe(epoch + (retires ? 1 : 0));
+          expect(artifactState(DOCUMENT, SPACE) === undefined).toBe(retires);
           if (scenario === "old-body-after-proof-replacement") {
             harness.bodies.push("{}");
-            await browserBrokerFetch("/_semio/hub/auth/sessions/me", { method: "GET" }, { timeoutMs: 1000 });
-            expect(equal(harness.proofs.at(-1), retained.successorProof)).toBe(true);
+            await hubSessionFetch("/_semio/hub/auth/sessions/me", { method: "GET" }, { timeoutMs: 1000 });
+            expect(equal(harness.proofs.at(-1), `Bearer ${retained.successorCapability}`)).toBe(true);
           }
           console.log(`[DEBUG] session authority ${scenario} retired only its original owner`);
-        } finally { release(); testSeams.detachLocalBrokerPort(); channel.port1.close(); channel.port2.close(); harness.release(); }
+        } finally { release(); testSeams.detachHubSessionPort(); channel.port1.close(); channel.port2.close(); harness.release(); }
       }
     });
 
@@ -3060,21 +3173,21 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       const stream = new ReadableStream<Uint8Array>({ async start(controller) { await gate; if (!cancelled) { controller.enqueue(new TextEncoder().encode(body)); controller.close(); } }, cancel() { cancelled = true; } });
       const request = { kind: "request", operation: "me", requestId: crypto.randomUUID() };
       try {
-        testSeams.attachLocalBrokerPort(prior.port1);
-        (globalThis as unknown as { fetch: unknown }).fetch = async () => ({ ok: true, status: 200, statusText: "", headers: new Headers({ "x-semio-browser-broker-advanced": "1", "content-length": String(new TextEncoder().encode(body).length) }), body: stream });
+        testSeams.attachHubSessionPort(prior.port1);
+        (globalThis as unknown as { fetch: unknown }).fetch = async () => ({ ok: true, status: 200, statusText: "", headers: new Headers({ "content-length": String(new TextEncoder().encode(body).length) }), body: stream });
         prior.port2.postMessage(request);
         for (let turn = 0; !stream.locked && turn < 100; turn += 1) await new Promise((resolve) => setTimeout(resolve, 0));
         expect(stream.locked).toBe(true);
-        testSeams.attachLocalBrokerPort(successor.port1);
+        testSeams.attachHubSessionPort(successor.port1);
         for (let turn = 0; !cancelled && turn < 100; turn += 1) await new Promise((resolve) => setTimeout(resolve, 0));
         expect(cancelled).toBe(true);
         release();
         await settleInferenceTurns();
         expect(equal(testSeams.browserSessionAuthority, null), retained.portReplacement).toBe(true);
         expect(cancelled).toBe(true);
-        expect(installLocalBrowserBrokerProof(retained.successorProof)).toBe(true);
+        expect(installHubSessionCapability(retained.successorCapability)).toBe(true);
         console.log("[DEBUG] broker port replacement cancelled old body ownership before successor authorization");
-      } finally { release(); testSeams.detachLocalBrokerPort(); prior.port1.close(); prior.port2.close(); successor.port1.close(); successor.port2.close(); harness.release(); }
+      } finally { release(); testSeams.detachHubSessionPort(); prior.port1.close(); prior.port2.close(); successor.port1.close(); successor.port2.close(); harness.release(); }
     });
 
     it("never dispatches an old queued request under a replacement broker admission", async () => {
@@ -3086,23 +3199,23 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       try {
         harness.gates.push(new Promise<void>((resolve) => { release = resolve; }));
         harness.bodies.push("{}");
-        const first = browserBrokerFetch("/_semio/hub/auth/sessions/me", { method: "GET" }, { timeoutMs: 1000 });
+        const first = hubSessionFetch("/_semio/hub/auth/sessions/me", { method: "GET" }, { timeoutMs: 1000 });
         const firstRejected = expect(first).rejects.toThrow();
         for (let turn = 0; harness.requests.length === 0 && turn < 100; turn += 1) await new Promise((resolve) => setTimeout(resolve, 0));
         expect(harness.requests).toHaveLength(1);
-        const queued = browserBrokerFetch("/_semio/hub/auth/sessions/me", { method: "GET" }, { timeoutMs: 1000 });
+        const queued = hubSessionFetch("/_semio/hub/auth/sessions/me", { method: "GET" }, { timeoutMs: 1000 });
         const queuedOutcome = queued.then(() => "dispatched", () => fixture.brokerReplacement);
-        clearLocalBrowserBrokerProof();
-        expect(installLocalBrowserBrokerProof(fixture.successorProof)).toBe(true);
+        clearHubSessionCapability();
+        expect(installHubSessionCapability(fixture.successorCapability)).toBe(true);
         release();
         await firstRejected;
         expect(await queuedOutcome).toBe(fixture.brokerReplacement);
         expect(equal(harness.requests.length, 1)).toBe(true);
         harness.bodies.push("{}");
-        await browserBrokerFetch("/_semio/hub/auth/sessions/me", { method: "GET" }, { timeoutMs: 1000 });
+        await hubSessionFetch("/_semio/hub/auth/sessions/me", { method: "GET" }, { timeoutMs: 1000 });
         expect(harness.proofs).toHaveLength(2);
-        expect(harness.proofs[0]).toMatch(/^[0-9a-f]{64}$/u);
-        expect(equal(harness.proofs[1], fixture.successorProof)).toBe(true);
+        expect(harness.proofs[0]).toBe(`Bearer ${WORKER_LAW_CAPABILITY}`);
+        expect(equal(harness.proofs[1], `Bearer ${fixture.successorCapability}`)).toBe(true);
         console.log("[DEBUG] replacement broker admission denied old queued work and preserved its fresh proof");
       } finally { release(); harness.release(); }
     });
@@ -3123,13 +3236,13 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
           let release: () => void = () => undefined;
           harness.gates.push(new Promise<void>((resolve) => { release = resolve; }));
           harness.bodies.push("{}");
-          const blocker = browserBrokerFetch("/_semio/hub/auth/sessions/me", { method: "GET" }, { timeoutMs: 1000 });
+          const blocker = hubSessionFetch("/_semio/hub/auth/sessions/me", { method: "GET" }, { timeoutMs: 1000 });
           for (let turn = 0; harness.requests.length < 2 && turn < 100; turn += 1) await new Promise((resolve) => setTimeout(resolve, 0));
           expect(harness.requests).toHaveLength(2);
           let rejected: Promise<unknown> | undefined;
           if (scenario === "abort") {
             const abort = new AbortController();
-            rejected = expect(browserBrokerFetch("/_semio/hub/auth/sessions/me", { method: "GET" }, { timeoutMs: 1000, signal: abort.signal })).rejects.toThrow();
+            rejected = expect(hubSessionFetch("/_semio/hub/auth/sessions/me", { method: "GET" }, { timeoutMs: 1000, signal: abort.signal })).rejects.toThrow();
             abort.abort();
           } else {
             handleTsRequest({ kind: "inference-cancel", operationEpoch });
@@ -3141,7 +3254,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
           await settleInferenceTurns();
           expect(equal(harness.requests.length, 2)).toBe(true);
           harness.bodies.push("{}");
-          await browserBrokerFetch("/_semio/hub/auth/sessions/me", { method: "GET" }, { timeoutMs: 1000 });
+          await hubSessionFetch("/_semio/hub/auth/sessions/me", { method: "GET" }, { timeoutMs: 1000 });
           expect(harness.requests).toHaveLength(3);
           console.log(`[DEBUG] queued inference ${scenario} preserved the active broker proof`);
         } finally { testSeams.directorySessionEpoch = epoch; harness.release(); }
@@ -3323,17 +3436,28 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       }
     }
 
-    class FakeHubWebSocket {
+    /** 🕸️ `implements WebSocket` on purpose: the worker types `state.socket` and every `handleHubFrame`
+     * argument as the DOM `WebSocket`, so a fake that merely resembles one has to be forced in at each
+     * call site. Declaring the interface makes the compiler name a member the worker could reach and
+     * this fake has not implemented, which is the whole point of the double. The members below the
+     * `sent` ledger are the ones the worker never calls; they exist so the type is honest. */
+    class FakeHubWebSocket implements WebSocket {
       static readonly CONNECTING = 0;
       static readonly OPEN = 1;
       static readonly CLOSING = 2;
       static readonly CLOSED = 3;
       static instances: FakeHubWebSocket[] = [];
+      readonly CONNECTING = 0 as const;
+      readonly OPEN = 1 as const;
+      readonly CLOSING = 2 as const;
+      readonly CLOSED = 3 as const;
       readonly url: string;
       readonly protocol = "semio.socket.v1";
       readonly protocols: string | string[] | undefined;
+      readonly extensions = "";
+      readonly bufferedAmount = 0;
       readyState = FakeHubWebSocket.CONNECTING;
-      binaryType = "blob";
+      binaryType: BinaryType = "blob";
       readonly sent: Uint8Array[] = [];
       onopen: (() => void) | null = null;
       onmessage: ((event: { data: ArrayBuffer }) => void) | null = null;
@@ -3346,6 +3470,15 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       }
       send(data: Uint8Array): void {
         this.sent.push(data);
+      }
+      addEventListener(): void {
+        throw new Error("fake hub socket: the worker dials through the on* handlers, never addEventListener");
+      }
+      removeEventListener(): void {
+        throw new Error("fake hub socket: the worker dials through the on* handlers, never removeEventListener");
+      }
+      dispatchEvent(): boolean {
+        throw new Error("fake hub socket: the worker never dispatches synthetic events");
       }
       open(): void {
         this.readyState = FakeHubWebSocket.OPEN;
@@ -3378,6 +3511,15 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
           timestamp,
         }]),
       });
+    }
+
+    /** 🚚️ The backing buffer of a view the worker transfers, refusing a shared one.
+     * `Uint8Array.buffer` is an `ArrayBufferLike`, and a `SharedArrayBuffer` is not `Transferable`;
+     * `instanceof` is what turns that into a checked narrowing rather than an assertion. */
+    function transferableBuffer(bytes: Uint8Array): ArrayBuffer {
+      const buffer = bytes.buffer;
+      if (!(buffer instanceof ArrayBuffer)) throw new Error("worker transfer requires a non-shared buffer");
+      return buffer;
     }
 
     function installVerifiedDocumentBackbonePair(state: ArtifactState): WireFrontierSummary {
@@ -3586,7 +3728,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         const body = String(init?.body ?? "");
         requests.push({ url, headers: new Headers(init?.headers), body });
         const response = requests.length === 1 ? current.plan : current.grant;
-        return Response.json(response, { headers: { "x-semio-browser-broker-advanced": "1" } });
+        return Response.json(response);
       };
       try {
         openArtifact({
@@ -3605,8 +3747,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         expect(intent.clientInstanceId).toMatch(/^[0-9a-f-]{36}$/u);
         expect(requests[0]!.body).not.toContain(current.plan.receipt);
         expect(JSON.parse(requests[1]!.body)).toEqual({ schema: "semio.hub.document-plan-socket-grant-intent/v1", version: 1, planReceipt: current.plan.receipt });
-        expect(requests[0]!.headers.get("x-semio-browser-broker")).not.toBe(requests[1]!.headers.get("x-semio-browser-broker"));
-        expect(requests.every(({ headers }) => /^[0-9a-f]{64}$/u.test(headers.get("x-semio-browser-broker") ?? "") && /^[0-9a-f]{64}$/u.test(headers.get("x-semio-browser-broker-next") ?? ""))).toBe(true);
+        expect(requests.every(({ headers }) => headers.get("authorization") === `Bearer ${WORKER_LAW_CAPABILITY}`)).toBe(true);
         expect(socket.url).toBe(`ws://hub.test${fixture.expected.webSocketPath}`);
         expect(socket.protocols).toEqual([fixture.expected.protocol, current.grant.grant]);
         for (const forbidden of fixture.expected.forbiddenSocketFragments) expect(socket.url).not.toContain(forbidden);
@@ -3628,7 +3769,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         expect(state.pendingSocketActorId).toBeNull();
       } finally {
         closeArtifact(fixture.intent.scope.documentId, fixture.intent.scope.spaceId);
-        clearLocalBrowserBrokerProof();
+        clearHubSessionCapability();
         (globalThis as unknown as { fetch: unknown }).fetch = originalFetch;
         (globalThis as unknown as { WebSocket: unknown }).WebSocket = originalWebSocket;
       }
@@ -3645,7 +3786,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       let effects = 0;
       (globalThis as unknown as { fetch: unknown }).fetch = async () => {
         effects += 1;
-        return Response.json(effects === 1 ? current.plan : current.grant, { headers: { "x-semio-browser-broker-advanced": "1" } });
+        return Response.json(effects === 1 ? current.plan : current.grant);
       };
       try {
         openArtifact({
@@ -3667,7 +3808,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         expect(state.pendingSocketActorId).toBeNull();
       } finally {
         closeArtifact(fixture.intent.scope.documentId, fixture.intent.scope.spaceId);
-        clearLocalBrowserBrokerProof();
+        clearHubSessionCapability();
         (globalThis as unknown as { fetch: unknown }).fetch = originalFetch;
         (globalThis as unknown as { WebSocket: unknown }).WebSocket = originalWebSocket;
       }
@@ -3721,7 +3862,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     }
 
     function executionTargetBodyResponse(bytes: Uint8Array, declaredLength = bytes.byteLength): Response {
-      return new Response(ownedArrayBuffer(bytes), { headers: { "content-length": String(declaredLength), "x-semio-browser-broker-advanced": "1" } });
+      return new Response(ownedArrayBuffer(bytes), { headers: { "content-length": String(declaredLength) } });
     }
 
     type ExecutionTargetHarness = {
@@ -3737,11 +3878,13 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       const authority = authorityFixture.rows.find((row: { accepted: boolean }) => row.accepted).value;
       const body = JSON.stringify(authority);
       const priorFetch = globalThis.fetch;
-      clearLocalBrowserBrokerProof();
-      expect(installLocalBrowserBrokerProof(proof)).toBe(true);
-      globalThis.fetch = stubFetch(async () => new Response(body, { status: 200, headers: { "content-length": String(new TextEncoder().encode(body).byteLength), "x-semio-browser-broker-advanced": "1" } }));
+      clearHubSessionCapability();
+      // 🧭️ `HUB_SESSION_CAPABILITY_PATTERN_V1` is `session.v1.<32 hex>.<64 hex>`; the callers below name
+      // only the 64-hex proof half, so the capability is minted here rather than at every call site.
+      expect(installHubSessionCapability(`session.v1.${"1".repeat(32)}.${proof}`)).toBe(true);
+      globalThis.fetch = stubFetch(async () => new Response(body, { status: 200, headers: { "content-length": String(new TextEncoder().encode(body).byteLength) } }));
       try {
-        await browserBrokerFetch("/_semio/hub/auth/sessions/me", { method: "GET" }, { timeoutMs: 1_000, accept: testSeams.acceptBrowserSessionAuthority });
+        await hubSessionFetch("/_semio/hub/auth/sessions/me", { method: "GET" }, { timeoutMs: 1_000, accept: testSeams.acceptBrowserSessionAuthority });
       } finally {
         globalThis.fetch = priorFetch;
       }
@@ -3777,7 +3920,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         release: () => {
           testSeams.executionTargetStatusObserver = null;
           closeArtifact(fixture.intent.scope.documentId);
-          clearLocalBrowserBrokerProof();
+          clearHubSessionCapability();
           (globalThis as unknown as { fetch: unknown }).fetch = originalFetch;
         },
       };
@@ -3811,12 +3954,12 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         const body = JSON.parse(String(init?.body));
         requests.push({ stage, body });
         expect(init?.method).toBe("POST");
-        if (stage === "open-plan") return Response.json(plan, { headers: { "x-semio-browser-broker-advanced": "1" } });
-        if (stage === "manifest") return Response.json(fixture.manifest, { headers: { "x-semio-browser-broker-advanced": "1" } });
+        if (stage === "open-plan") return Response.json(plan);
+        if (stage === "manifest") return Response.json(fixture.manifest);
         if (stage === "component") return executionTargetBodyResponse(executionTargetBytes(fixture.componentHex));
         if (stage === "descriptor") return executionTargetBodyResponse(executionTargetBytes(fixture.descriptorHex));
         expect(stage).toBe("socket-grants");
-        return Response.json(grant, { headers: { "x-semio-browser-broker-advanced": "1" } });
+        return Response.json(grant);
       });
       try {
         handleTsRequest({
@@ -3859,7 +4002,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         closeArtifactRuntime(runtimeKey);
         closeArtifact("local-first-opening");
         closeArtifact("unselected-first-opening", scope.spaceId);
-        clearLocalBrowserBrokerProof();
+        clearHubSessionCapability();
         globalThis.fetch = originalFetch;
         (globalThis as unknown as { WebSocket: unknown }).WebSocket = originalSocket;
         testSeams.workerPostTestSink = originalPost;
@@ -3884,17 +4027,17 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
           const plan = { ...structuredClone(fixture.plan), expiresAtUnixMs: Date.now() + 30_000 };
           if (row.id === "foreign-plan-scope") plan.scope = { ...plan.scope, spaceId: "foreign-space" };
           FakeHubWebSocket.instances = [];
-          clearLocalBrowserBrokerProof();
-          installLocalBrowserBrokerProof("a".repeat(64));
+          clearHubSessionCapability();
+          installHubSessionCapability("a".repeat(64));
           testSeams.executionTargetStatusObserver = (status) => statuses.push(status);
           testSeams.workerPostTestSink = () => {};
           globalThis.fetch = stubFetch(async (input) => {
             const stage = String(input).split("/").at(-1)!;
             stages.push(stage);
-            if (stage === "open-plan") return Response.json(plan, { headers: { "x-semio-browser-broker-advanced": "1" } });
+            if (stage === "open-plan") return Response.json(plan);
             if (stage === "manifest") {
               if (row.id === "cancel-at-manifest") artifacts.get(runtimeKey)!.docAbort.abort();
-              return Response.json(fixture.manifest, { headers: { "x-semio-browser-broker-advanced": "1" } });
+              return Response.json(fixture.manifest);
             }
             if (stage === "component") {
               const bytes = executionTargetBytes(fixture.componentHex);
@@ -3927,7 +4070,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
             closeArtifactRuntime(runtimeKey);
             await new Promise((resolve) => setTimeout(resolve, 0));
             testSeams.executionTargetStatusObserver = null;
-            clearLocalBrowserBrokerProof();
+            clearHubSessionCapability();
           }
         }
       } finally {
@@ -3944,11 +4087,11 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       const plan = { ...structuredClone(fixture.plan), expiresAtUnixMs: Date.now() + 30_000 };
       const grant = { ...fixture.socketGrant, expiresAtMs: Date.now() + 25_000 };
       const harness = await executionTargetHarness(fixture, (url) => {
-        if (url.endsWith("/open-plan")) return Response.json(plan, { headers: { "x-semio-browser-broker-advanced": "1" } });
-        if (url.endsWith("/execution-target/manifest")) return Response.json(fixture.manifest, { headers: { "x-semio-browser-broker-advanced": "1" } });
+        if (url.endsWith("/open-plan")) return Response.json(plan);
+        if (url.endsWith("/execution-target/manifest")) return Response.json(fixture.manifest);
         if (url.endsWith("/execution-target/component")) return executionTargetBodyResponse(component);
         if (url.endsWith("/execution-target/descriptor")) return executionTargetBodyResponse(descriptor);
-        return Response.json(grant, { headers: { "x-semio-browser-broker-advanced": "1" } });
+        return Response.json(grant);
       });
       try {
         expect(fixture.plan.surface.rendererTarget).toBe("wasm");
@@ -4008,14 +4151,14 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
           };
         }
         const harness = await executionTargetHarness(fixture, (url, requests) => {
-          if (url.endsWith("/open-plan")) return Response.json(vector.kind === "stale-plan" ? { ...plan, catalog: { generationId: fixture.expected.rotation.generationB } } : plan, { headers: { "x-semio-browser-broker-advanced": "1" } });
+          if (url.endsWith("/open-plan")) return Response.json(vector.kind === "stale-plan" ? { ...plan, catalog: { generationId: fixture.expected.rotation.generationB } } : plan);
           if (url.endsWith("/execution-target/manifest")) {
             if (vector.kind === "cancel" && vector.stage === "manifest") requests.length > 0 && harnessAbort();
-            return Response.json(manifest, { headers: { "x-semio-browser-broker-advanced": "1" } });
+            return Response.json(manifest);
           }
           if (url.endsWith("/execution-target/component")) {
             if (vector.kind === "cancel" && (vector.stage === "component" || vector.stage === "verify")) harnessAbort();
-            if (vector.kind === "missing-body" && vector.stage === "component") return new Response(null, { status: 204, headers: { "x-semio-browser-broker-advanced": "1" } });
+            if (vector.kind === "missing-body" && vector.stage === "component") return new Response(null, { status: 204 });
             if (vector.kind === "component-max-plus-one") return executionTargetBodyResponse(component, fixture.expected.componentMaxBytes + 1);
             if (vector.kind === "component-truncated") return executionTargetBodyResponse(component.subarray(0, component.length - 1), component.length);
             if (vector.kind === "component-extra-byte") return executionTargetBodyResponse(new Uint8Array([...component, 7]), component.length);
@@ -4029,7 +4172,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
           }
           if (url.endsWith("/execution-target/descriptor")) {
             if (vector.kind === "cancel" && vector.stage === "descriptor") harnessAbort();
-            if (vector.kind === "missing-body" && vector.stage === "descriptor") return new Response(null, { status: 204, headers: { "x-semio-browser-broker-advanced": "1" } });
+            if (vector.kind === "missing-body" && vector.stage === "descriptor") return new Response(null, { status: 204 });
             if (vector.kind === "descriptor-max-plus-one") return executionTargetBodyResponse(descriptor, fixture.expected.descriptorMaxBytes + 1);
             if (vector.kind === "descriptor-trailing-byte") return executionTargetBodyResponse(new Uint8Array([...descriptor, 0]));
             if (vector.kind === "descriptor-noncanonical") return executionTargetBodyResponse(encodePackValue({ descriptorVersion: 1, packageId: "semio:gis" }));
@@ -4042,7 +4185,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
             }
             return executionTargetBodyResponse(servedDescriptor);
           }
-          return Response.json({ ...fixture.socketGrant, expiresAtMs: Date.now() + 25_000 }, { headers: { "x-semio-browser-broker-advanced": "1" } });
+          return Response.json({ ...fixture.socketGrant, expiresAtMs: Date.now() + 25_000 });
         });
         function harnessAbort(): void {
           harness.state.docAbort.abort();
@@ -4204,7 +4347,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
           }
         };
         const harness = await executionTargetHarness(fixture, (url) => {
-          const headers: Record<string, string> = { "x-semio-browser-broker-advanced": "1" };
+          const headers: Record<string, string> = {};
           const pendingStage = row.name.replace("-pending-abort", "");
           if (row.name.includes("-pending-abort") && url.endsWith("/" + pendingStage)) {
             pendingChunk =
@@ -4567,16 +4710,16 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
             }
             if (status.code === "renderer-unavailable") bodyProgress.delete(status.spaceId);
           };
-          clearLocalBrowserBrokerProof();
-          installLocalBrowserBrokerProof("a".repeat(64));
+          clearHubSessionCapability();
+          installHubSessionCapability("a".repeat(64));
           globalThis.fetch = stubFetch(async (input, init) => {
             const url = String(input);
             requests.push({ url, method: String(init?.method ?? "GET"), body: String(init?.body ?? "") });
             const record = records.find((record) => url.includes("/spaces/" + encodeURIComponent(record.fixture.intent.scope.spaceId) + "/"));
             if (!record) throw new Error("unowned session fixture request");
             const current = record.fixture;
-            if (url.endsWith("/open-plan")) return Response.json(current.plan, { headers: { "x-semio-browser-broker-advanced": "1" } });
-            if (url.endsWith("/execution-target/manifest")) return Response.json(current.manifest, { headers: { "x-semio-browser-broker-advanced": "1" } });
+            if (url.endsWith("/open-plan")) return Response.json(current.plan);
+            if (url.endsWith("/execution-target/manifest")) return Response.json(current.manifest);
             if (url.endsWith("/execution-target/component")) return executionTargetBodyResponse(component);
             if (url.endsWith("/execution-target/descriptor")) return executionTargetBodyResponse(descriptor);
             if (url.endsWith("/execution-target/browser-actor")) {
@@ -4596,11 +4739,11 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
                 });
                 streams.push(retained);
                 if (row.name === "scope-change-at-headers") record.state.config = { ...record.state.config, schema: "foreign-schema" };
-                return new Response(retained.stream, { headers: { "content-length": "3", "x-semio-browser-broker-advanced": "1" } });
+                return new Response(retained.stream, { headers: { "content-length": "3" } });
               }
               return executionTargetBodyResponse(row.name === "body-hash-mismatch" ? new Uint8Array([0, 0, 0]) : actor);
             }
-            return Response.json(current.socketGrant, { headers: { "x-semio-browser-broker-advanced": "1" } });
+            return Response.json(current.socketGrant);
           });
           const setup = async (spaceId: string) => {
             const current = { ...structuredClone(fixture), socketGrant: { ...structuredClone(fixture.socketGrant), expiresAtMs: Date.now() + 25000 } };
@@ -4691,7 +4834,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
             for (const record of records) {
               const outcome = record.state.browserActorReservation?.retirementOutcome;
               closeArtifactRuntime(record.state.runtimeKey);
-              if (outcome !== undefined) retirementOutcomes.push(outcome);
+              if (outcome !== undefined && outcome !== null) retirementOutcomes.push(outcome);
               await record.connected.catch(() => {});
             }
             await Promise.all(retirementOutcomes);
@@ -4699,7 +4842,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
             for (const worker of workers) expect(worker.terminations).toBe(1);
             expect(browserActorChildCapacity()).toEqual({ actors: 0, bytes: 0 });
             testSeams.executionTargetStatusObserver = null;
-            clearLocalBrowserBrokerProof();
+            clearHubSessionCapability();
           }
         }
         console.log("document-session-activation: socket-path=1 neutral=" + corpus.cases.length + " worker=mocked final-capacity=0");
@@ -4986,10 +5129,10 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
               effects.push(actionFixture.publication.hostEffect);
             }
             if (commandBackbone !== null) effects.push({ tag: "send-message", val: { target: { tag: "backbone", val: `actor://${state.runtimeKey}` }, payload: commandBackbone } });
-            const resultTransfers: ArrayBuffer[] = initialScene ? [nodeBytes!.buffer, patchReceiptBytes!.buffer] : patchReceiptBytes ? [patchReceiptBytes.buffer] : [];
-            if (controlReceipt !== null) resultTransfers.push(controlReceipt.buffer);
-            if (actionPublication !== null) resultTransfers.push(actionPublication.buffer);
-            if (commandBackbone !== null) resultTransfers.push(commandBackbone.buffer);
+            const resultTransfers: ArrayBuffer[] = initialScene ? [transferableBuffer(nodeBytes!), transferableBuffer(patchReceiptBytes!)] : patchReceiptBytes ? [transferableBuffer(patchReceiptBytes)] : [];
+            if (controlReceipt !== null) resultTransfers.push(transferableBuffer(controlReceipt));
+            if (actionPublication !== null) resultTransfers.push(transferableBuffer(actionPublication));
+            if (commandBackbone !== null) resultTransfers.push(transferableBuffer(commandBackbone));
             this.port.postMessage(
               {
                 ...this.binding,
@@ -5036,15 +5179,15 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
           this.port?.close();
         }
       }
-      clearLocalBrowserBrokerProof();
-      installLocalBrowserBrokerProof("d".repeat(64));
+      clearHubSessionCapability();
+      installHubSessionCapability("d".repeat(64));
       const authorityFixture = JSON.parse(await (await import("node:fs/promises")).readFile(new URL("./🔨️modules/📇️directory/🧬️schema/🪪️session-authority-v1/🔣️.json", source.url), "utf8"));
       const authority = authorityFixture.rows.find((row: { accepted: boolean }) => row.accepted).value;
       const authorityBody = JSON.stringify(authority);
-      globalThis.fetch = stubFetch(async () => new Response(authorityBody, { status: 200, headers: { "content-length": String(new TextEncoder().encode(authorityBody).byteLength), "x-semio-browser-broker-advanced": "1" } }));
-      await browserBrokerFetch("/_semio/hub/auth/sessions/me", { method: "GET" }, { timeoutMs: 1000, accept: testSeams.acceptBrowserSessionAuthority });
+      globalThis.fetch = stubFetch(async () => new Response(authorityBody, { status: 200, headers: { "content-length": String(new TextEncoder().encode(authorityBody).byteLength) } }));
+      await hubSessionFetch("/_semio/hub/auth/sessions/me", { method: "GET" }, { timeoutMs: 1000, accept: testSeams.acceptBrowserSessionAuthority });
       const sessionFence = testSeams.captureBrowserSessionOperationFence();
-      expect(sessionFence).not.toBeNull();
+      if (sessionFence === null) throw new Error("browser session operation fence missing after an accepted authority");
       globalThis.fetch = stubFetch(async (input) => {
         expect(String(input).endsWith("/execution-target/browser-actor")).toBe(true);
         return executionTargetBodyResponse(actorBytes);
@@ -5068,7 +5211,9 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       fields.surface = { ...fields.surface, role: "editor" };
       fields.package = { ...fields.package, descriptorByteSha256 };
       fields.descriptor = { sha256: descriptorByteSha256, byteLength: descriptor.byteLength };
-      fields.browserActor = { ...fields.browserActor, sourceDescriptorByteSha256: descriptorByteSha256 };
+      // 🧭️ Only the closed-browser-actor variant of the lease carries a source descriptor digest; the
+      // `{ kind: "none" }` variant has no such field to rewrite.
+      if (fields.browserActor.kind !== "none") fields.browserActor = { ...fields.browserActor, sourceDescriptorByteSha256: descriptorByteSha256 };
       fields.checkpoint = {
         ...fields.checkpoint!,
         aggregateSha256: exact.aggregateSha256,
@@ -5303,7 +5448,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         expect(actionApplied.ok).toBe(true);
         handleTsRequest({
           kind: "browser-actor-ui-patch-result",
-          clientInstanceId: actionPatch.clientInstanceId,
+          clientInstanceId: state.openClientInstanceId,
           scope: actionPatch.scope,
           verifiedSurfaceId: actionPatch.verifiedSurfaceId,
           activationGeneration: actionPatch.activationGeneration,
@@ -5458,7 +5603,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
               replayed: false,
               frontier: { ...approvalReceipt.undo.expectedCurrent, headEditOrdinal: approvalReceipt.undo.expectedCurrent.headEditOrdinal + 1, headEditId: "undo-edit" },
             },
-            { headers: { "x-semio-browser-broker-advanced": "1" } },
+            {},
           ),
         );
         await pendingUndo;
@@ -5523,7 +5668,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         expect(browserActorChildCapacity()).toEqual({ actors: 0, bytes: 0 });
         testSeams.executionTargetStatusObserver = null;
         testSeams.workerPostTestSink = null;
-        clearLocalBrowserBrokerProof();
+        clearHubSessionCapability();
         globalThis.fetch = originalFetch;
         (globalThis as unknown as { Worker: unknown }).Worker = originalWorker;
       }
@@ -5535,11 +5680,11 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       const descriptor = executionTargetBytes(fixture.descriptorHex);
       const plan = { ...structuredClone(fixture.plan), expiresAtUnixMs: Date.now() + 30_000 };
       const harness = await executionTargetHarness(fixture, (url) => {
-        if (url.endsWith("/open-plan")) return Response.json(plan, { headers: { "x-semio-browser-broker-advanced": "1" } });
-        if (url.endsWith("/execution-target/manifest")) return Response.json(fixture.manifest, { headers: { "x-semio-browser-broker-advanced": "1" } });
+        if (url.endsWith("/open-plan")) return Response.json(plan);
+        if (url.endsWith("/execution-target/manifest")) return Response.json(fixture.manifest);
         if (url.endsWith("/execution-target/component")) return executionTargetBodyResponse(component);
         if (url.endsWith("/execution-target/descriptor")) return executionTargetBodyResponse(descriptor);
-        return Response.json({ ...fixture.socketGrant, expiresAtMs: Date.now() + 25_000 }, { headers: { "x-semio-browser-broker-advanced": "1" } });
+        return Response.json({ ...fixture.socketGrant, expiresAtMs: Date.now() + 25_000 });
       });
       const events: ArtifactEvent[] = [];
       const originalPostMessage = (globalThis as unknown as { postMessage?: unknown }).postMessage;
@@ -5605,7 +5750,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         let effects = 0;
         (globalThis as unknown as { fetch: unknown }).fetch = async () => {
           effects += 1;
-          return Response.json(current.plan, { headers: { "x-semio-browser-broker-advanced": "1" } });
+          return Response.json(current.plan);
         };
         const unavailable = await rejection(requestDocumentSocketAuthority(state, { kind: "hub", baseUrl: "http://hub.test", spaceId: fixture.intent.scope.spaceId }));
         expect(unavailable.message).toBe("document open: installed target unavailable");
@@ -5613,7 +5758,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
 
         (globalThis as unknown as { fetch: unknown }).fetch = async () => {
           effects += 1;
-          return Response.json({ ...structuredClone(current.plan), scope: { ...current.plan.scope, spaceId: "foreign" } }, { headers: { "x-semio-browser-broker-advanced": "1" } });
+          return Response.json({ ...structuredClone(current.plan), scope: { ...current.plan.scope, spaceId: "foreign" } });
         };
         const mismatch = await rejection(requestDocumentSocketAuthority(state, binding));
         expect(mismatch.message).toBe("document open: invalid plan");
@@ -5624,7 +5769,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         effects = 0;
         (globalThis as unknown as { fetch: unknown }).fetch = async () => {
           effects += 1;
-          return new Response("{}", { headers: { "content-length": String(fixture.expected.responseMaxBytes + 1), "x-semio-browser-broker-advanced": "1" } });
+          return new Response("{}", { headers: { "content-length": String(fixture.expected.responseMaxBytes + 1) } });
         };
         const oversized = await rejection(requestDocumentSocketAuthority(state, binding));
         expect(oversized.message).toBe("document open: invalid plan");
@@ -5635,7 +5780,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         (globalThis as unknown as { fetch: unknown }).fetch = async () => {
           effects += 1;
           state.docAbort.abort();
-          return Response.json(current.plan, { headers: { "x-semio-browser-broker-advanced": "1" } });
+          return Response.json(current.plan);
         };
         const cancelled = await rejection(requestDocumentSocketAuthority(state, binding));
         expect(cancelled.message).toBe("document open: cancelled");
@@ -5644,7 +5789,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         expect(FakeHubWebSocket.instances).toHaveLength(0);
       } finally {
         closeArtifact(fixture.intent.scope.documentId);
-        clearLocalBrowserBrokerProof();
+        clearHubSessionCapability();
         (globalThis as unknown as { fetch: unknown }).fetch = originalFetch;
       }
     });
@@ -5835,7 +5980,9 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       const duringBootstrap = { ...first, id: "edit-during-bootstrap" };
       const posted: BackboneWorkerResponse[] = [];
       testSeams.workerPostTestSink = (message) => posted.push(message);
-      let releaseMirrorRetirement: (() => void) | null = null;
+      // 🧭️ A holder, not a `let`: TypeScript narrows a local that is only ever assigned inside a
+      // callback down to its initializer, which makes the optional call below a call on `never`.
+      const mirrorRetirement: { release: (() => void) | null } = { release: null };
       try {
         openArtifact({ documentId, schema: "demo/v1", bindings: [{ kind: "hub", baseUrl: "http://hub.test", spaceId: "space-1" }], actor: "caller" });
         await flushSocketGrantTurns();
@@ -5857,7 +6004,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         expect(state.pendingDocumentBackboneBytes).toBe(firstMessage.byteLength);
         state.canonicalFolderMirror = { binding: { kind: "folder", path: "/tmp/rebootstrap-raw" }, documentId, epoch: 1, capability: "a".repeat(64) };
         (globalThis as unknown as { fetch: unknown }).fetch = async () => {
-          await new Promise<void>((resolve) => { releaseMirrorRetirement = resolve; });
+          await new Promise<void>((resolve) => { mirrorRetirement.release = resolve; });
           return new Response(null, { status: 204 });
         };
         const rebootstrap = handleHubFrame(
@@ -5898,7 +6045,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         expect(state.frontier).toEqual(frontier);
         expect(state.outbox.map((envelope) => envelope.id)).toEqual([first.id]);
 
-        releaseMirrorRetirement?.();
+        mirrorRetirement.release?.();
         await rebootstrap;
         expect(state.currentPack).toBeNull();
         expect(state.currentSpr).toBeNull();
@@ -5922,7 +6069,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         if (typeof replay === "string" || !("Commands" in replay)) throw new Error("expected replayed Commands frame");
         expect(replay.Commands.envelopes.map((envelope) => envelope.mutation_id)).toEqual([first.id]);
       } finally {
-        releaseMirrorRetirement?.();
+        mirrorRetirement.release?.();
         closeArtifact(documentId, "space-1");
         testSeams.workerPostTestSink = null;
         (globalThis as unknown as { fetch: unknown }).fetch = originalFetch;

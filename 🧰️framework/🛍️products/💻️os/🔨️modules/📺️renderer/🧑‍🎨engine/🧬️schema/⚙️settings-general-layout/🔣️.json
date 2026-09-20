@@ -1,0 +1,243 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "tree", "bottomPanel", "stableGeneral", "upFlowDisclosure", "inlineControls", "selectCommit", "retainedPreferencePublication"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "tree": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["nodeType", "sections", "controls"],
+      "properties": {
+        "nodeType": { "const": "tree" },
+        "sections": {
+          "type": "array",
+          "minItems": 3,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "defaultOpen", "itemIds"],
+            "properties": {
+              "id": { "type": "string", "pattern": "^framework\\.settings\\." },
+              "defaultOpen": { "type": "boolean" },
+              "itemIds": { "type": "array", "items": { "type": "string", "minLength": 1 }, "uniqueItems": true }
+            }
+          }
+        },
+        "controls": {
+          "type": "array",
+          "minItems": 9,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["rowId", "controlId", "kind", "action"],
+            "properties": {
+              "rowId": { "type": "string", "minLength": 1 },
+              "controlId": { "type": "string", "minLength": 1 },
+              "kind": { "enum": ["select", "input", "button"] },
+              "action": { "type": "string", "minLength": 1 }
+            }
+          }
+        }
+      }
+    },
+    "bottomPanel": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["panel", "tabRows", "rowHeight", "contentInset", "expected"],
+      "properties": {
+        "panel": { "$ref": "#/definitions/rect" },
+        "tabRows": { "type": "integer", "minimum": 1 },
+        "rowHeight": { "type": "number", "exclusiveMinimum": 0 },
+        "contentInset": { "type": "number", "minimum": 0 },
+        "expected": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["content", "rootTabY", "leafTabY", "dividerY"],
+          "properties": {
+            "content": { "$ref": "#/definitions/rect" },
+            "rootTabY": { "type": "number" },
+            "leafTabY": { "type": "number" },
+            "dividerY": { "type": "number" }
+          }
+        }
+      }
+    },
+    "stableGeneral": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["screen", "anchor", "rootKind", "controlId", "minimumUnusedBandHeight", "react"],
+      "properties": {
+        "screen": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["width", "height"],
+          "properties": {
+            "width": { "type": "number", "exclusiveMinimum": 0 },
+            "height": { "type": "number", "exclusiveMinimum": 0 }
+          }
+        },
+        "anchor": { "const": "bottom-right" },
+        "rootKind": { "const": "tree" },
+        "controlId": { "type": "string", "pattern": "^framework\\.settings\\." },
+        "minimumUnusedBandHeight": { "type": "number", "exclusiveMinimum": 0 },
+        "react": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["bondedEdge", "extentProperty", "viewportJustification"],
+          "properties": {
+            "bondedEdge": { "const": "bottom" },
+            "extentProperty": { "const": "maxHeight" },
+            "viewportJustification": { "const": "justify-end" }
+          }
+        }
+      }
+    },
+    "upFlowDisclosure": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["flow", "sectionRect", "headerHeight", "childRect", "expectedHeaderRect", "react"],
+      "properties": {
+        "flow": { "const": "up" },
+        "sectionRect": { "$ref": "#/definitions/rect" },
+        "headerHeight": { "type": "number", "exclusiveMinimum": 0 },
+        "childRect": { "$ref": "#/definitions/rect" },
+        "expectedHeaderRect": { "$ref": "#/definitions/rect" },
+        "react": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["direction", "order"],
+          "properties": {
+            "direction": { "const": "up" },
+            "order": {
+              "type": "array",
+              "items": [{ "const": "sectionContent" }, { "const": "sectionTrigger" }],
+              "additionalItems": false,
+              "minItems": 2,
+              "maxItems": 2
+            }
+          }
+        }
+      }
+    },
+    "inlineControls": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["uiSpacingPx", "valueColumnUiSpacing", "smallControlHeightUiSpacing", "defaultControlHeightUiSpacing", "expectedValueColumnWidthPx", "cases", "react"],
+      "properties": {
+        "uiSpacingPx": { "type": "number", "exclusiveMinimum": 0 },
+        "valueColumnUiSpacing": { "type": "number", "exclusiveMinimum": 0 },
+        "smallControlHeightUiSpacing": { "type": "number", "exclusiveMinimum": 0 },
+        "defaultControlHeightUiSpacing": { "type": "number", "exclusiveMinimum": 0 },
+        "expectedValueColumnWidthPx": { "type": "number", "exclusiveMinimum": 0 },
+        "cases": {
+          "type": "array",
+          "minItems": 5,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["kind", "controlId", "widthMode", "heightMode", "expectedWidthPx", "expectedHeightPx"],
+            "properties": {
+              "kind": { "enum": ["select", "input", "numberStepper", "toggle", "button"] },
+              "controlId": { "type": "string", "minLength": 1 },
+              "widthMode": { "enum": ["fill", "fit"] },
+              "heightMode": { "enum": ["small", "default"] },
+              "expectedWidthPx": { "type": ["number", "null"], "minimum": 0 },
+              "expectedHeightPx": { "type": "number", "exclusiveMinimum": 0 }
+            }
+          }
+        },
+        "react": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["gridTemplateColumns", "fillAttribute", "fitAttribute"],
+          "properties": {
+            "gridTemplateColumns": { "type": "string", "minLength": 1 },
+            "fillAttribute": { "const": "fill" },
+            "fitAttribute": { "const": "fit" }
+          }
+        }
+      }
+    },
+    "selectCommit": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["controlId", "initialValue", "optionControlId", "nextValue", "action", "expectedQueuedActions", "expectedOpenOptionsAfterCommit"],
+      "properties": {
+        "controlId": { "const": "framework.settings.appearance" },
+        "initialValue": { "type": "string", "minLength": 1 },
+        "optionControlId": { "type": "string", "minLength": 1 },
+        "nextValue": { "type": "string", "minLength": 1 },
+        "action": { "const": "setAppearance" },
+        "expectedQueuedActions": { "const": 1 },
+        "expectedOpenOptionsAfterCommit": { "const": 0 }
+      }
+    },
+    "retainedPreferencePublication": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["surfaceId", "requiresGuestRefresh", "cases", "driverWorkflow"],
+      "properties": {
+        "surfaceId": { "const": "framework.settings.general" },
+        "requiresGuestRefresh": { "const": false },
+        "cases": {
+          "type": "array",
+          "minItems": 6,
+          "maxItems": 6,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["action", "controlId", "initialValue", "nextValue"],
+            "properties": {
+              "action": { "enum": ["setAppearance", "setLocale", "setLayout", "setTerminology", "setMergePolicy", "setDriver"] },
+              "controlId": { "type": "string", "pattern": "^framework\\.settings\\." },
+              "initialValue": { "type": "string" },
+              "nextValue": { "type": "string", "minLength": 1 }
+            }
+          }
+        },
+        "driverWorkflow": {
+          "type": "array",
+          "minItems": 4,
+          "maxItems": 4,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["action", "arguments", "observations"],
+            "properties": {
+              "action": { "enum": ["setDriverField", "setDriverSaveLabel", "saveDriver", "deleteDriver"] },
+              "arguments": { "type": "object", "maxProperties": 2, "additionalProperties": { "type": "string" } },
+              "observations": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": ["controlId", "expectedState"],
+                  "properties": {
+                    "controlId": { "type": "string", "pattern": "^framework\\.settings\\." },
+                    "expectedState": { "type": "string", "pattern": "^(select:.*|input:.*|button:(enabled|disabled)|absent)$" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "rect": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["x", "y", "w", "h"],
+      "properties": {
+        "x": { "type": "number" },
+        "y": { "type": "number" },
+        "w": { "type": "number", "minimum": 0 },
+        "h": { "type": "number", "minimum": 0 }
+      }
+    }
+  }
+}

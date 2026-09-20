@@ -1,4 +1,3 @@
-
 use super::*;
 
 fn row(name: &str, payload: Value) -> BoardEventRow {

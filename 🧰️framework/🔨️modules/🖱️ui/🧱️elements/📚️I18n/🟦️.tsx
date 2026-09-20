@@ -241,6 +241,8 @@ export type UiTranslationSchema = {
           readonly map: UiLabelValue;
           readonly canvas: UiLabelValue;
           readonly chrome: UiLabelValue;
+          readonly outcome: UiLabelValue;
+          readonly diagram: UiLabelValue;
         };
         /** ♿️ Live WCAG 2.2 contrast verdict for a USER-customized appearance paint, measured against
          * that appearance's own foreground. The generated default palette is asserted ≥ AA by
@@ -460,6 +462,11 @@ export type UiTranslationSchema = {
       readonly steps: UiLabelValue;
       readonly addStep: UiLabelValue;
     };
+    readonly tableStepper: {
+      readonly decrement: UiLabelValue;
+      readonly increment: UiLabelValue;
+      readonly value: UiLabelValue;
+    };
     readonly ring: {
       readonly demo: UiLabelValue;
     };
@@ -616,6 +623,9 @@ export type UiTranslationSchema = {
       readonly role: {
         readonly author: UiLabelValue;
         readonly spectator: UiLabelValue;
+      };
+      readonly kind: {
+        readonly agent: UiLabelValue;
       };
     };
   };

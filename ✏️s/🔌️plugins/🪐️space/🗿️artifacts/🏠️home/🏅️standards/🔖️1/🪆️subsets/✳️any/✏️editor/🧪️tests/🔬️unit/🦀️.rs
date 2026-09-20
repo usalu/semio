@@ -35,6 +35,7 @@ fn every_migrated_home_route_has_an_exact_scalar_boundary() {
         (HomeCommand::ShareSpace(share_space::ShareSpace { space_id: scalar(4094), email: "e".into(), role: "r".into() }), HomeCommand::ShareSpace(share_space::ShareSpace { space_id: scalar(4095), email: "e".into(), role: "r".into() })),
         (HomeCommand::ManageSpace(manage_space::ManageSpace { space_id: scalar(4096) }), HomeCommand::ManageSpace(manage_space::ManageSpace { space_id: scalar(4097) })),
         (HomeCommand::CopyInviteLink(copy_invite_link::CopyInviteLink { space_id: scalar(4095), role: "r".into(), ttl_secs: u64::MAX }), HomeCommand::CopyInviteLink(copy_invite_link::CopyInviteLink { space_id: scalar(4096), role: "r".into(), ttl_secs: u64::MAX })),
+        (HomeCommand::CreateStudio(create_studio::CreateStudio { name: scalar(4095), kind: "k".into(), folder_path: None }), HomeCommand::CreateStudio(create_studio::CreateStudio { name: scalar(4096), kind: "k".into(), folder_path: None })),
     ];
     let snapshot = SHomeSnapshot::default();
     let interaction = protocol::InteractionState::default();
@@ -45,6 +46,13 @@ fn every_migrated_home_route_has_an_exact_scalar_boundary() {
     for zero in [HomeCommand::GoHome(go_home::GoHome {}), HomeCommand::PresenceHeartbeat(presence_heartbeat::PresenceHeartbeat {})] {
         assert_eq!(home_retained_extent(&zero, &snapshot, &interaction), Some(1), "{} carries no scalar payload", zero.command_id());
     }
+    // 📏️ The one route judged against the RETAINED WIRE budget instead of the scalar one: a sealed
+    // directory page is a `HostOnly` machine payload the hub already bounds with `hasMore`, and a
+    // 4 KiB cap would refuse an ordinary page of a dozen spaces (ticket 26/09/18 S4).
+    let page = |bytes: usize| HomeCommand::ApplyDirectoryEventPage(apply_directory_event_page::ApplyDirectoryEventPage { page_json: scalar(bytes) });
+    assert_eq!(home_retained_extent(&page(HOME_RETAINED_SCALAR_BYTES + 1), &snapshot, &interaction), Some(1), "a page beyond the scalar cap is still admitted");
+    assert_eq!(home_retained_extent(&page(HOME_RETAINED_RAW_BYTES), &snapshot, &interaction), Some(1), "the exact retained wire budget is admitted");
+    assert_eq!(home_retained_extent(&page(HOME_RETAINED_RAW_BYTES + 1), &snapshot, &interaction), None, "one byte beyond the retained wire budget is refused");
 }
 
 #[test]
@@ -138,26 +146,39 @@ async fn space_document_persists_through_backbone_port() {
 /// KNOWN directory event (deterministic, independent of the global catalog) and assert on the
 /// locale-correct COLUMN HEADERS instead — the real thing "labels resolve to the right locale" means
 /// for a table.
+/// 🙋️ `space.created` alone leaves `DirectorySpace.members` EMPTY (`📇️directory/🦀️.rs:98-118`), so a
+/// fixture folded from it gives every caller `role: None` and no row can offer a role-scoped
+/// affordance. The membership event is folded too, making `u1` the author and `u2` a stranger — which
+/// is what the role law below actually needs to be able to distinguish (ticket 26/09/18, S3: that law
+/// asserted `manageSpace` against a memberless fixture and had never run, because the assertion above
+/// it stopped the test first).
 async fn config_with_one_folded_space() -> HomeConfig {
-    let event_json = pack::json!({
+    let created = pack::json!({
         "seq": 1, "id": "evt-1", "hlc": {"physicalMs": 0, "logical": 0}, "actor": {"kind": "user", "id": "u"}, "spaceId": "sp-1",
         "body": {"kind": "space.created", "spaceId": "sp-1", "name": "Fixture", "spaceKind": "atelier", "visibility": "private", "ownerUserId": "u1"},
         "recordedAtMs": 1000
     })
     .to_string();
+    let member = pack::json!({
+        "seq": 2, "id": "evt-2", "hlc": {"physicalMs": 0, "logical": 1}, "actor": {"kind": "user", "id": "u"}, "spaceId": "sp-1",
+        "body": {"kind": "member.upserted", "spaceId": "sp-1", "userId": "u1", "role": "author"},
+        "recordedAtMs": 1001
+    })
+    .to_string();
     let base = HomeConfig::default();
-    protocol::Mutation::diff(&HomeConfigMutation::FoldDirectoryEvent { event_json }, &base).diff().clone()
+    let created = protocol::Mutation::diff(&HomeConfigMutation::FoldDirectoryEvent { event_json: created }, &base).diff().clone();
+    protocol::Mutation::diff(&HomeConfigMutation::FoldDirectoryEvent { event_json: member }, &created).diff().clone()
 }
 
 #[semio_framework_async_macros::async_test]
 async fn home_labels_resolve_native_english_by_default() {
     let history = empty_history();
     let home_doc = SHomeSnapshot { schema: "s.home".into(), catalog_generation: 0 };
-    let home_view = ArtifactView::new(&home_doc, &history);
+    let home = ArtifactView::new(&home_doc, &history);
     let config = config_with_one_folded_space().await;
     let cfg = ConfigView { snapshot: &config, window: None };
     let view_state = home_view("u1", semio_framework_plugin::Locale::En);
-    let home_node = HomeApp::render(crate::editor::home::modes::explore::windows::main::S_HOME_BODY, &home_view, &cfg, &view_state).expect("English Home assembly");
+    let home_node = HomeApp::render(crate::editor::home::modes::explore::windows::main::S_HOME_BODY, &home, &cfg, &view_state).expect("English Home assembly");
     let json = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(home_node).expect("English Home tree projection");
     assert!(json.contains("Updated"), "English column header must resolve: {json}");
     assert!(json.contains("Fixture"), "the folded space's name must render: {json}");
@@ -167,25 +188,32 @@ async fn home_labels_resolve_native_english_by_default() {
 async fn home_labels_resolve_native_german_locale() {
     let history = empty_history();
     let home_doc = SHomeSnapshot { schema: "s.home".into(), catalog_generation: 0 };
-    let home_view = ArtifactView::new(&home_doc, &history);
+    let home = ArtifactView::new(&home_doc, &history);
     let config = config_with_one_folded_space().await;
     let cfg = ConfigView { snapshot: &config, window: None };
     let view_state = home_view("u1", semio_framework_plugin::Locale::De);
-    let home_node = HomeApp::render(crate::editor::home::modes::explore::windows::main::S_HOME_BODY, &home_view, &cfg, &view_state).expect("German Home assembly");
+    let home_node = HomeApp::render(crate::editor::home::modes::explore::windows::main::S_HOME_BODY, &home, &cfg, &view_state).expect("German Home assembly");
     let json = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(home_node).expect("German Home tree projection");
     assert!(json.contains("Aktualisiert"), "German column header must resolve: {json}");
     assert!(json.contains("Fixture"), "the folded space's name must render: {json}");
 }
 
+/// 🪪️ Signed out is a STATE: the landing window must publish for a visitor with no identity — that is
+/// the ordinary first paint of a hub-configured shell — and the projection is the assertion, because a
+/// tree that merely builds and is then refused by the UI document publishes nothing at all (ticket
+/// 26/09/18: S2 §3.4 removed the refusal, S3 removed the `DuplicateSiblingKey` underneath it).
+/// Identity still decides the ROWS and the role-scoped affordances, which is the other half here.
 #[semio_framework_async_macros::async_test]
-async fn home_render_requires_current_host_identity_and_changes_roles_with_it() {
+async fn home_render_publishes_signed_out_and_changes_roles_with_the_identity() {
     let history = empty_history();
     let home_doc = SHomeSnapshot::default();
     let home = ArtifactView::new(&home_doc, &history);
     let config = config_with_one_folded_space().await;
     let cfg = ConfigView { snapshot: &config, window: None };
-    let missing = HomeApp::render(crate::editor::home::modes::explore::windows::main::S_HOME_BODY, &home, &cfg, &semio_framework_plugin::ViewModel::default()).unwrap_err();
-    assert_eq!(missing.code, "s.home.session-identity-required");
+    let anonymous = HomeApp::render(crate::editor::home::modes::explore::windows::main::S_HOME_BODY, &home, &cfg, &semio_framework_plugin::ViewModel::default()).expect("signed-out render");
+    let anonymous_json = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(anonymous).expect("signed-out projection");
+    assert!(anonymous_json.contains("s-home-create-space"), "the signed-out landing window still publishes its own body: {anonymous_json}");
+    assert!(!anonymous_json.contains("manageSpace"), "a signed-out visitor owns no space and gets no administration affordance: {anonymous_json}");
     let author = HomeApp::render(crate::editor::home::modes::explore::windows::main::S_HOME_BODY, &home, &cfg, &home_view("u1", semio_framework_plugin::Locale::En)).expect("author render");
     let author_json = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(author).expect("author projection");
     let foreign = HomeApp::render(crate::editor::home::modes::explore::windows::main::S_HOME_BODY, &home, &cfg, &home_view("u2", semio_framework_plugin::Locale::En)).expect("foreign render");

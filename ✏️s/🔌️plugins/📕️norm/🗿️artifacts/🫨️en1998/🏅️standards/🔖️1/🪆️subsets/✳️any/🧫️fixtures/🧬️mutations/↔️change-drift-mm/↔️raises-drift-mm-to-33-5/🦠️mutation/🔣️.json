@@ -1,5 +1,4 @@
 {
-  "ChangeDriftMm": {
-    "newDriftMm": 33.5
-  }
+  "mutation": "changeDriftMm",
+  "newDriftMm": 33.5
 }

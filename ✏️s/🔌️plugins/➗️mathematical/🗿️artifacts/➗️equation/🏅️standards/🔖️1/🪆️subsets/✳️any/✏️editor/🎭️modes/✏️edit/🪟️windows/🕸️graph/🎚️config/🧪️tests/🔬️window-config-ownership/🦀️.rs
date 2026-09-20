@@ -68,8 +68,8 @@ fn equation_graph_window_config_retained_publications_isolate_and_reload_two_win
                 let view = ViewModel { window_instances: [left_id, right_id].into_iter().map(|id| ViewWindowInstance { id: id.into(), window_kind_id: EquationGraphWindowConfigOwner::WINDOW_KIND_ID.into() }).collect(), ..Default::default() };
                 let left = view.for_window_instance(left_id).unwrap();
                 let right = view.for_window_instance(right_id).unwrap();
-                let mut app = Box::new(artifact_app_laws::new_app_with_registry::<EditorApp<EquationPlayApp>>(equation_app_manifest_for_tests).await);
-                let mut reopened = Box::new(artifact_app_laws::new_app_with_registry::<EditorApp<EquationPlayApp>>(equation_app_manifest_for_tests).await);
+                let mut app = Box::new(artifact_app_laws::new_app_with_registry_and_members::<EditorApp<EquationPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(equation_app_manifest_for_tests).await);
+                let mut reopened = Box::new(artifact_app_laws::new_app_with_registry_and_members::<EditorApp<EquationPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(equation_app_manifest_for_tests).await);
                 app.bind_instance_id(1).await;
                 reopened.bind_instance_id(2).await;
                 let outcome: Result<(), String> = async {

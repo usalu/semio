@@ -57,7 +57,8 @@ fn item(value: &Value) -> UiTreeItemNode {
 }
 
 fn section(value: &Value) -> UiTreeSectionNode {
-    UiTreeSectionNode { window: None,
+    UiTreeSectionNode {
+        window: None,
         id: value["id"].as_str().expect("section id").to_string(),
         label: value["label"].as_str().map(Label::data),
         default_open: Some(true),
@@ -67,25 +68,19 @@ fn section(value: &Value) -> UiTreeSectionNode {
 }
 
 fn tree_node(value: &Value) -> UiNode {
-    UiNode::Tree(UiTreeNode {
-        sections: value["sections"].as_array().expect("sections").iter().map(section).collect(),
-        presence: UiPresence::default(),
-        drop_action: None,
-        menu: None,
-        interaction_domain: None,
-    })
+    UiNode::Tree(UiTreeNode { sections: value["sections"].as_array().expect("sections").iter().map(section).collect(), presence: UiPresence::default(), drop_action: None, menu: None, interaction_domain: None })
 }
 
 /// 📐️ Mounts the case's authored tree and runs the REAL retained layout end to end — admit, shape,
 /// measure, arrange, publish — so every rect asserted below is one `events::hit_test` reads.
-fn laid_out(case: &Value) -> (UiTree, NodeId) {
+fn laid_out_with_flow(case: &Value, block_reversed: bool) -> (UiTree, NodeId) {
     let width = case["treeWidth"].as_f64().expect("treeWidth") as f32;
     let height = case["treeHeight"].as_f64().expect("treeHeight") as f32;
     let mut tree = UiTree::new();
     tree.apply_tree(&tree_node(&case["tree"]));
     let root = tree.root.unwrap_or_else(|| panic!("tree row law root"));
     let identity = MountedLayoutIdentity { surface: UiSurfaceToken::new(1, 1), generation: 5, revision: 7, theme_revision: 11, viewport_revision: 13 };
-    let mut job = MountedLayoutJob::try_new(&tree, root, identity, Theme::default(), width, height).unwrap_or_else(|fault| panic!("tree row law job: {fault:?}"));
+    let mut job = MountedLayoutJob::try_new(&tree, root, identity, Theme::default(), width, height, block_reversed).unwrap_or_else(|fault| panic!("tree row law job: {fault:?}"));
     let cancel = semio_framework_job::CancelToken::root_now();
     let mut preview = 0;
     while !job.is_admitted() {
@@ -105,6 +100,10 @@ fn laid_out(case: &Value) -> (UiTree, NodeId) {
         }
     }
     (tree, root)
+}
+
+fn laid_out(case: &Value) -> (UiTree, NodeId) {
+    laid_out_with_flow(case, false)
 }
 
 fn child_by_key(tree: &UiTree, parent: NodeId, key: &str) -> NodeId {
@@ -186,4 +185,19 @@ fn the_defect_geometry_is_refused() {
     let add = child_by_key(&tree, actions, "add-generation");
     let (_, _, _, height) = tree.mounted_layout(add).expect("add-generation layout");
     assert!(height >= Theme::default().tree_row_height, "row measured {height}, the defect published 6.4");
+}
+
+#[test]
+fn upward_flow_reverses_sections_and_rows_while_leaving_section_triggers_on_the_block_end() {
+    let law = law();
+    let entry = case(&law, "two-sections-stack-in-order");
+    let (tree, root) = laid_out_with_flow(entry, true);
+    let generations = child_by_key(&tree, root, "generations");
+    let actions = child_by_key(&tree, root, "actions");
+    let gen_a = child_by_key(&tree, generations, "gen-a");
+    let gen_b = child_by_key(&tree, generations, "gen-b");
+    assert_eq!(tree.mounted_layout(actions).expect("actions layout").1, 0.0, "last authored section paints at the upward flow start");
+    assert_eq!(tree.mounted_layout(generations).expect("generations layout").1, Theme::default().tree_row_height, "first authored section follows it");
+    assert_eq!(tree.mounted_layout(gen_b).expect("gen-b layout").1, 0.0, "last authored row paints first inside the section");
+    assert_eq!(tree.mounted_layout(gen_a).expect("gen-a layout").1, Theme::default().tree_row_height, "the first authored row remains directly above the section trigger band");
 }

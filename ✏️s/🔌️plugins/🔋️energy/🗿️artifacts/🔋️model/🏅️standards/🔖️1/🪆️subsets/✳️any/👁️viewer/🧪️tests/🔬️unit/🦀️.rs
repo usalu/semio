@@ -29,11 +29,11 @@ async fn viewer_declares_every_window() {
 async fn viewer_declares_no_dispatchable_action() {
     let def = create_energy_model_viewer();
     for window in &def.window_kinds {
-        for action in &window.actions {
+        for action in semio_framework::window_kind_actions(&def, window) {
             assert!(!matches!(action.kind, semio_framework_plugin::ActionKind::Mutation), "viewer window {} declares the mutating action {}", window.id, action.id);
         }
     }
-    assert!(!def.window_kinds.iter().any(|window| window.actions.iter().any(|action| action.id == "set-node" || action.id == "set-cell")), "a viewer window carries a kit edit action");
+    assert!(!def.window_kinds.iter().any(|window| semio_framework::window_kind_actions(&def, window).iter().any(|action| action.id == "set-node" || action.id == "set-cell")), "a viewer window carries a kit edit action");
 }
 
 //#region 🎥️ViewerCamera

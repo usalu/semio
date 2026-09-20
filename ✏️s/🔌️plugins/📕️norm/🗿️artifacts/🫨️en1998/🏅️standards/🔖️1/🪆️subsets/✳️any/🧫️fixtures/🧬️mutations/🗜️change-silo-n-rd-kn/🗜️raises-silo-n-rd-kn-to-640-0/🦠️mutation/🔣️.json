@@ -1,5 +1,4 @@
 {
-  "ChangeSiloNRdKn": {
-    "newSiloNRdKn": 640.0
-  }
+  "mutation": "changeSiloNRdKn",
+  "newSiloNRdKn": 640.0
 }

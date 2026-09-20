@@ -1,21 +1,80 @@
 import { join } from "node:path";
 import { readFileSync } from "node:fs";
-import { createRequire } from "node:module";
+import Ajv from "ajv";
 import { WORKSPACE_ROOT, toolJobRustBlock, toolJobImmutableOperationRootsExact, toolJobPeerCommitAuthorityExact, toolJobPeerInteractionRootsExact } from "../../../../../../../../../../../../../📜️script.ts";
+
+/** 🧱️ One retirement unit a CAD presence lane contributes, or `null` when the lane is absent. */
+type CadPresenceRetirementPart = { readonly unit: string; readonly repeat: number } | null;
+
+/** 📐️ `🧫️fixtures/♻️retirement/🔣️.json` — the CAD-owned presence byte laws. */
+interface CadPresenceRetirementFixture {
+  readonly grant: { readonly maximumItems: number; readonly maximumBytes: number };
+  readonly cases: readonly {
+    readonly name: string;
+    readonly activeUtility?: CadPresenceRetirementPart;
+    readonly engagementStep?: CadPresenceRetirementPart;
+    readonly engagementPane?: CadPresenceRetirementPart;
+    readonly expectedBytes: number;
+  }[];
+  readonly storeCases: readonly {
+    readonly name: string;
+    readonly local: string;
+    readonly peers: readonly { readonly presence: string; readonly actor: string }[];
+    readonly expectedBytes: number;
+  }[];
+}
+
+/** 🏪️ `🏪️store/👥️presence/🧫️fixtures/🧹️retirement.json` — the framework-side roster ownership laws. */
+interface PresenceStoreRetirementFixture {
+  readonly maximumItems: number;
+  readonly maximumBytes: number;
+  readonly cases: readonly { readonly name: string; readonly peers: readonly { readonly actor: string }[]; readonly expectedSnapshots: number; readonly expectedActorBytes: number }[];
+  readonly overlap: {
+    readonly first: readonly { readonly actor: string; readonly value: number }[];
+    readonly second: readonly { readonly actor: string; readonly value: number }[];
+    readonly expectedPeerSnapshots: number;
+    readonly expectedActorBytes: number;
+  };
+  readonly localCapture: { readonly value: number; readonly expectedValueWhileOpen: number; readonly expectedWorkerTerminal: boolean };
+  readonly localReplacements: { readonly values: readonly number[] };
+  readonly closeFactoryBinding: { readonly expectedLocal: number; readonly expectedPeer: number; readonly expectedForeign: number };
+  readonly readerReturn: { readonly eventOrder: readonly string[] };
+}
+
+/** 🛂️ `🏪️store/👥️presence/🧫️fixtures/🛂️peer-admission.json` — the peer actor admission byte laws. */
+interface PresencePeerAdmissionFixture {
+  readonly maximumItems: number;
+  readonly maximumBytes: number;
+  readonly cases: readonly {
+    readonly name: string;
+    readonly actor: { readonly unit: string; readonly repeat: number; readonly minimumCapacity: number };
+    readonly state: string;
+    readonly accepted: boolean;
+    readonly expectedActorBytes: number;
+  }[];
+  readonly factoryBinding: { readonly expectedOriginalRetirements: number; readonly expectedForeignRetirements: number };
+  readonly requiresCapacitySizedByteGrant: boolean;
+}
+
+/** 📌️ `🏪️store/👥️presence/🧫️fixtures/📌️peer-commit.json` — the peer-commit freshness laws. */
+interface PresencePeerCommitFixture {
+  readonly maximumItems: number;
+  readonly maximumBytes: number;
+  readonly cases: readonly { readonly name: string; readonly sameStore: boolean; readonly sameFactory: boolean; readonly stale: boolean; readonly accepted: boolean; readonly expectedSnapshots: number }[];
+}
 
 /** 🧹️ Cross-checks CAD domain retirement byte counts independently of its Rust ownership cursor. */
 export function cadPresenceRetirementSelfTests(): number {
   const base = join(WORKSPACE_ROOT, "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence");
-  const fixture = JSON.parse(readFileSync(join(base, "🧫️fixtures/♻️retirement/🔣️.json"), "utf8"));
+  const fixture: unknown = JSON.parse(readFileSync(join(base, "🧫️fixtures/♻️retirement/🔣️.json"), "utf8"));
   const schema = JSON.parse(readFileSync(join(base, "🧬️schema/🔣️.json"), "utf8"));
-  const Ajv = createRequire(import.meta.url)("ajv");
   const ajv = new Ajv({ strict: true, allErrors: true }).addKeyword({ keyword: "x-semio-formats", metaSchema: { type: "array", items: { type: "string" } } });
   ajv.addKeyword({ keyword: "x-semio-state", metaSchema: { type: "string" } });
-  const validate = ajv.addSchema(schema).compile({ $ref: `${schema.$id}#/$defs/CadPresenceRetirementLaws` });
+  const validate = ajv.addSchema(schema).compile<CadPresenceRetirementFixture>({ $ref: `${schema.$id}#/$defs/CadPresenceRetirementLaws` });
   if (!validate(fixture)) throw new Error(`CAD presence retirement schema: ${JSON.stringify(validate.errors)}`);
   const counts = new Map<string, number>();
   for (const law of fixture.cases) {
-    const bytes = [law.activeUtility, law.engagementStep, law.engagementPane].reduce((sum, part) => sum + (part === null ? 0 : Buffer.byteLength(part.unit.repeat(part.repeat), "utf8")), 0);
+    const bytes = [law.activeUtility, law.engagementStep, law.engagementPane].reduce((sum, part) => sum + (part === null || part === undefined ? 0 : Buffer.byteLength(part.unit.repeat(part.repeat), "utf8")), 0);
     if (counts.has(law.name) || bytes !== law.expectedBytes) throw new Error(`CAD presence byte oracle: ${law.name}`);
     counts.set(law.name, bytes);
   }
@@ -28,9 +87,9 @@ export function cadPresenceRetirementSelfTests(): number {
     if (validate(hostile)) throw new Error("CAD presence schema accepted an enlarged production grant");
   }
   const storeBase = join(WORKSPACE_ROOT, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👥️presence");
-  const storeFixture = JSON.parse(readFileSync(join(storeBase, "🧫️fixtures/🧹️retirement.json"), "utf8"));
+  const storeFixture: unknown = JSON.parse(readFileSync(join(storeBase, "🧫️fixtures/🧹️retirement.json"), "utf8"));
   const storeSchema = JSON.parse(readFileSync(join(storeBase, "🧬️schema/🧹️retirement.schema.json"), "utf8"));
-  const validateStore = new Ajv({ strict: true, allErrors: true }).compile(storeSchema);
+  const validateStore = new Ajv({ strict: true, allErrors: true }).compile<PresenceStoreRetirementFixture>(storeSchema);
   if (!validateStore(storeFixture)) throw new Error(`presence Store retirement schema: ${JSON.stringify(validateStore.errors)}`);
   for (const law of storeFixture.cases) {
     if (law.expectedSnapshots !== law.peers.length + 1 || law.expectedActorBytes !== law.peers.reduce((sum, peer) => sum + Buffer.byteLength(peer.actor, "utf8"), 0)) throw new Error(`presence Store retirement oracle: ${law.name}`);
@@ -119,7 +178,7 @@ export function cadPresenceRetirementSelfTests(): number {
   ];
   for (const [store, retirement, cad] of localHostiles) if (exactLocal(store, retirement, cad)) throw new Error("presence local guard accepted a raw alias, foreign factory, lost returned owner or shared wait");
   const closeBinding = storeFixture.closeFactoryBinding;
-  const closeCounts = ["local", "peer"].reduce((counts, lane) => ({ ...counts, [lane]: counts[lane] + 1 }), { local: 0, peer: 0, foreign: 0 });
+  const closeCounts = (["local", "peer"] as const).reduce((counts, lane) => ({ ...counts, [lane]: counts[lane] + 1 }), { local: 0, peer: 0, foreign: 0 });
   if (JSON.stringify(closeCounts) !== JSON.stringify({ local: closeBinding.expectedLocal, peer: closeBinding.expectedPeer, foreign: closeBinding.expectedForeign })) throw new Error("Presence close factory oracle substituted an installed owner");
   const closeSchemaHostiles = [
     { ...storeFixture, closeFactoryBinding: { ...closeBinding, expectedForeign: 2 } },
@@ -151,9 +210,9 @@ export function cadPresenceRetirementSelfTests(): number {
   ];
   for (const hostile of closeSourceHostiles) if (hostile === retirementSource || exactCloseFactories(hostile)) throw new Error("Presence close guard admitted factory substitution or wrong returned-read retirement");
   const closeFactoryChecks = 2 + closeSchemaHostiles.length + closeSourceHostiles.length;
-  const commitFixture = JSON.parse(readFileSync(join(storeBase, "🧫️fixtures/📌️peer-commit.json"), "utf8"));
+  const commitFixture: unknown = JSON.parse(readFileSync(join(storeBase, "🧫️fixtures/📌️peer-commit.json"), "utf8"));
   const commitSchema = JSON.parse(readFileSync(join(storeBase, "🧬️schema/📌️peer-commit.schema.json"), "utf8"));
-  const validateCommit = new Ajv({ strict: true, allErrors: true }).compile(commitSchema);
+  const validateCommit = new Ajv({ strict: true, allErrors: true }).compile<PresencePeerCommitFixture>(commitSchema);
   if (!validateCommit(commitFixture)) throw new Error("Presence peer commit fixture violates strict schema");
   for (const law of commitFixture.cases) if (law.accepted !== (law.sameStore && law.sameFactory && !law.stale) || law.expectedSnapshots !== 3 + Number(law.stale)) throw new Error(`Presence peer commit independent identity oracle: ${law.name}`);
   const commitSchemaHostiles = [{ ...commitFixture, maximumBytes: 8192 }, { ...commitFixture, cases: commitFixture.cases.map(law => ({ ...law, accepted: true })) }];
@@ -169,9 +228,9 @@ export function cadPresenceRetirementSelfTests(): number {
   ];
   for (const [store, retirement] of commitSourceHostiles) if (exactPeerCommit(store, retirement)) throw new Error("Presence peer commit guard admitted foreign/stale publication or lost base ownership");
   const commitChecks = 2 + commitFixture.cases.length + commitSchemaHostiles.length + commitSourceHostiles.length;
-  const peerFixture = JSON.parse(readFileSync(join(storeBase, "🧫️fixtures/🛂️peer-admission.json"), "utf8"));
+  const peerFixture: unknown = JSON.parse(readFileSync(join(storeBase, "🧫️fixtures/🛂️peer-admission.json"), "utf8"));
   const peerSchema = JSON.parse(readFileSync(join(storeBase, "🧬️schema/🛂️peer-admission.schema.json"), "utf8"));
-  const validatePeer = new Ajv({ strict: true, allErrors: true }).compile(peerSchema);
+  const validatePeer = new Ajv({ strict: true, allErrors: true }).compile<PresencePeerAdmissionFixture>(peerSchema);
   if (!validatePeer(peerFixture)) throw new Error(`peer admission fixture schema: ${JSON.stringify(validatePeer.errors)}`);
   for (const law of peerFixture.cases) {
     const bytes = Buffer.byteLength(law.actor.unit.repeat(law.actor.repeat), "utf8");

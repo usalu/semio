@@ -1,4 +1,8 @@
-//! 🪪️ Actual builder admission laws; each registered law runs in an isolated test process.
+//! 🪪️ Actual builder admission laws. Every law in this file shares ONE test process with
+//! `strict_artifact_identity_owned_tree_and_definition_channels_publish`, which legitimately and
+//! irreversibly publishes the `s.testkit.w1c-fixture` tree into the process-global schema, codec, io
+//! and format registries. A rejection law therefore differences [`publication_witness`] around its
+//! candidate instead of asserting an absolute emptiness that its sibling's success would break.
 
 use crate::app::{declarations::fixture, ArtifactCapability, ArtifactCapabilityKind, ArtifactDeclaration, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, Plugin};
 use store::os_io::ArtifactKindId;
@@ -17,46 +21,57 @@ fn declaration(kind: &str) -> ArtifactDeclaration {
     ArtifactDeclaration::builder(definition(kind).capability(capability).unwrap()).schema(schema).try_build().expect("inert declaration")
 }
 
-async fn assert_no_publication() {
+/// 🪪️ Exactly what the `s.testkit.w1c-fixture` tree would publish, read out of the four
+/// process-global registries a declaration reaches. A rejected candidate must leave this reading
+/// identical — that is the law, and unlike an absolute "nothing is registered" it holds whether or
+/// not this binary has already run the sibling law that publishes the same tree for real.
+async fn publication_witness() -> Vec<bool> {
+    let mut witness = Vec::new();
     for (id, codec) in [("s.testkit.w1c-fixture@1/*", "semio.testkit.w1c-fixture.std1-any/v1"), ("s.testkit.w1c-fixture@1/strict", "semio.testkit.w1c-fixture.std1-strict/v1"), ("s.testkit.w1c-fixture@2/*", "semio.testkit.w1c-fixture.std2-any/v1")] {
-        assert!(!semio_framework_schema::artifact_schema_descriptor_registered(id));
-        assert!(store::document_codec(codec).await.expect("registry available").is_none());
+        witness.push(semio_framework_schema::artifact_schema_descriptor_registered(id));
+        witness.push(store::document_codec(codec).await.expect("registry available").is_some());
     }
-    assert!(semio_framework::io::io_mechanism::io_entries().iter().all(|row| row.from.artifact_kind != "s.testkit.w1c-fixture" && row.into.artifact_kind != "s.testkit.w1c-fixture"));
-    assert!(semio_framework::io::format_descriptor("s.testkit.w1c-fixture@1").expect("registry available").is_none());
+    witness.push(semio_framework::io::io_mechanism::io_entries().iter().any(|row| row.from.artifact_kind == "s.testkit.w1c-fixture" || row.into.artifact_kind == "s.testkit.w1c-fixture"));
+    witness.push(semio_framework::io::format_descriptor("s.testkit.w1c-fixture@1").expect("registry available").is_some());
+    witness
+}
+
+/// 🚫️ The rejected candidate published nothing it did not already find.
+async fn assert_published_nothing(before: &[bool]) {
+    assert_eq!(publication_witness().await, before, "a rejected candidate must reach no registry");
 }
 
 #[semio_framework_async_macros::async_test]
 async fn strict_artifact_identity_all_builder_channels_reject_before_publication() {
-    assert_no_publication().await;
+    let before = publication_witness().await;
     for (kind, code) in [("s.fixture", "plugin-assembly.artifact-kind"), ("s.other.document", "plugin-assembly.artifact-owner")] {
         let old = Plugin::<fixture::FixtureApps>::builder("testkit").label("Admission").version("0.1.0").package_id("semio:testkit").artifact(declaration(kind)).try_build();
         assert_eq!(old.err().expect("old declaration denied").code, code);
         let only = Plugin::<fixture::FixtureApps>::builder("testkit").label("Admission").version("0.1.0").package_id("semio:testkit").artifact_definition(definition(kind)).try_build();
         assert_eq!(only.err().expect("definition-only denied").code, code);
-        assert_no_publication().await;
+        assert_published_nothing(&before).await;
     }
     let mut foreign = fixture::build_declaration();
     foreign.kind = ArtifactKindId::parse("s.other.document").expect("canonical foreign kind");
     let tree = Plugin::builder("testkit").label("Admission").version("0.1.0").package_id("semio:testkit").declare_artifact(foreign).try_build();
     assert_eq!(tree.err().expect("foreign tree denied").code, "plugin-assembly.artifact-owner");
-    assert_no_publication().await;
+    assert_published_nothing(&before).await;
     let mut foreign_subset = fixture::build_declaration();
     foreign_subset.standards[0].subsets[0].dialect.artifact_kind = "s.other.document";
     let tree = Plugin::builder("testkit").label("Admission").version("0.1.0").package_id("semio:testkit").declare_artifact(foreign_subset).try_build();
     assert_eq!(tree.err().expect("foreign subset denied").code, "plugin-assembly.artifact-owner");
-    assert_no_publication().await;
+    assert_published_nothing(&before).await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn strict_artifact_identity_mixed_channels_publish_nothing() {
-    assert_no_publication().await;
+    let before = publication_witness().await;
     let old = Plugin::builder("testkit").label("Admission").version("0.1.0").package_id("semio:testkit").declare_artifact(fixture::build_declaration()).artifact(declaration("s.other.document")).try_build();
     assert_eq!(old.err().expect("mixed old denied").code, "plugin-assembly.artifact-owner");
-    assert_no_publication().await;
+    assert_published_nothing(&before).await;
     let only = Plugin::builder("testkit").label("Admission").version("0.1.0").package_id("semio:testkit").declare_artifact(fixture::build_declaration()).artifact_definition(definition("s.other.document")).try_build();
     assert_eq!(only.err().expect("mixed definition denied").code, "plugin-assembly.artifact-owner");
-    assert_no_publication().await;
+    assert_published_nothing(&before).await;
 }
 
 #[test]

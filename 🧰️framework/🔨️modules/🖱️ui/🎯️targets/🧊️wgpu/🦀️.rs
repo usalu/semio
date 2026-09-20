@@ -125,6 +125,9 @@ pub mod gpu;
 #[path = "🎟️prepared/🦀️.rs"]
 pub mod prepared;
 
+#[path = "🖼️raster-ownership/🦀️.rs"]
+pub mod raster_ownership;
+
 /// 🧩️ Target-neutral pointer and keyboard input, with retained engine registrations gated by `wgpu-engine`.
 #[path = "📥️input/🦀️.rs"]
 pub mod input;
@@ -244,24 +247,26 @@ pub mod host;
 // 🧩️ Always available: declarative component types + engine-agnostic primitives (default features).
 pub use component::layout::{
     build_shell_context_menu_specs, collect_window_kind_ids_from_layout, create_default_layout, create_named_layout, create_stack_layout, create_tab_stack_layout, create_window_layout, default_viewport_engagement, even_window_layout,
-    framework_panel_tab_label, merge_named_layouts, organize_context_menu, partition_window_measures, ribbon_parent_label, ActionDescriptor, MeasureSelectItem, NamedLayout,
-    ShellMenuAction, StyleSpec, WindowEngagement, WindowEngagementControl,
-    WindowEngagementInput, WindowEngagementOption, WindowEngagementPossible, WindowEngagementRingOption, WindowEngagementSelectItem, WindowEngagementSlot, WindowEngagementStatus, WindowEngagementToggleGroupOption, WindowLayout, WindowLayoutAxisNode, WindowLayoutChild, WindowLayoutRoot, WindowLayoutStackNode, WindowLayoutWindowNode,
-    WindowMeasure, WindowOptions, WindowStackCorner, FRAMEWORK_HISTORY_BODY_KEY, FRAMEWORK_PANEL_TAB_ARTIFACT_ICON_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL, FRAMEWORK_PANEL_TAB_CATALOGUE_ICON_ID,
-    FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_HISTORY_ICON_ID, FRAMEWORK_PANEL_TAB_HISTORY_ID, FRAMEWORK_PANEL_TAB_HISTORY_LABEL, FRAMEWORK_PANEL_TAB_TOOL_RUN_ICON_ID, FRAMEWORK_PANEL_TAB_TOOL_RUN_ID, FRAMEWORK_PANEL_TAB_TOOL_RUN_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ICON_ID,
-    FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, FRAMEWORK_PANEL_TAB_PARAMETERS_ICON_ID, FRAMEWORK_PANEL_TAB_PARAMETERS_ID, FRAMEWORK_PANEL_TAB_PARAMETERS_LABEL, RIBBON_PARENT_CATEGORIES,
+    framework_panel_tab_label, merge_named_layouts, organize_context_menu, partition_window_measures, ribbon_parent_label, ActionDescriptor, MeasureSelectItem, NamedLayout, ShellMenuAction, StyleSpec, WindowEngagement, WindowEngagementControl,
+    WindowEngagementInput, WindowEngagementOption, WindowEngagementPossible, WindowEngagementRingOption, WindowEngagementSelectItem, WindowEngagementSlot, WindowEngagementStatus, WindowEngagementToggleGroupOption, WindowLayout, WindowLayoutAxisNode,
+    WindowLayoutChild, WindowLayoutRoot, WindowLayoutStackNode, WindowLayoutWindowNode, WindowMeasure, WindowOptions, WindowStackCorner, FRAMEWORK_HISTORY_BODY_KEY, FRAMEWORK_PANEL_TAB_ARTIFACT_ICON_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_ID,
+    FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL, FRAMEWORK_PANEL_TAB_CATALOGUE_ICON_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_HISTORY_ICON_ID, FRAMEWORK_PANEL_TAB_HISTORY_ID,
+    FRAMEWORK_PANEL_TAB_HISTORY_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ICON_ID, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, FRAMEWORK_PANEL_TAB_PARAMETERS_ICON_ID, FRAMEWORK_PANEL_TAB_PARAMETERS_ID,
+    FRAMEWORK_PANEL_TAB_PARAMETERS_LABEL, FRAMEWORK_PANEL_TAB_TOOL_RUN_ICON_ID, FRAMEWORK_PANEL_TAB_TOOL_RUN_ID, FRAMEWORK_PANEL_TAB_TOOL_RUN_LABEL, RIBBON_PARENT_CATEGORIES,
 };
 pub use component::ui::*;
 pub use component::utilities::{utility_button, utility_collection, utility_separator, utility_toggle, UtilityCategory, UtilityNode};
 pub use geometry::Rect;
 #[cfg(feature = "wgpu")]
-pub use presence_bar::{build_presence_bar, build_presence_bar_localized, presence_bar_chip_text, presence_color, presence_css_var, presence_empty_label, presence_overflow_label, PresenceAppearance, PresenceHsl, PresencePeerRow, PresenceRole, PRESENCE_BAR_DEFAULT_MAX};
+pub use presence_bar::{
+    build_presence_bar, build_presence_bar_localized, presence_bar_chip_text, presence_color, presence_css_var, presence_empty_label, presence_overflow_label, PresenceAppearance, PresenceHsl, PresencePeerRow, PresenceRole, PRESENCE_BAR_DEFAULT_MAX,
+};
 pub use theme::{shell_floor_paints, GlassStyle, Level, Rgba, SurfaceFill, SurfaceScope, Theme};
 // 🧩️ `DrawList`'s CPU draw-command accumulator + the two selection-marquee paint helpers that push
 // into it, plus the orbit-view-gizmo placement/hit-test math — all target-neutral, split out of the
 // `wgpu-engine`-only `draw`/`widgets` modules into `draw_types` so `wasm32-wasip2` program
 // components can build a `DrawList` and hit-test the gizmo without linking real `wgpu`.
-pub use draw_types::{gizmo, mesh_content_version, paint_selection_marquee, DrawList};
+pub use draw_types::{gizmo, mesh_content_version, paint_selection_marquee, DrawList, RasterKeepCursorV1, RasterKeepStepV1};
 
 // 🖥️ Retained-mode engine surface (feature = "wgpu-engine" only).
 #[cfg(feature = "wgpu-engine")]
@@ -273,7 +278,7 @@ pub use cursor::apply_window_cursor;
 #[cfg(feature = "wgpu-engine")]
 pub use cursor::{resolve_semio_cursor, CursorDragState, SemioCursor};
 #[cfg(feature = "wgpu-engine")]
-pub use draw::{ear_clip_polygon, IconAtlas, MeshGpuTable, RasterTextureAdmission, RasterTextureStageFault, RasterTextureTable, RasterTextureWitness, MESH_GPU_KEEP_VERSION_CAPACITY};
+pub use draw::{ear_clip_polygon, IconAtlas, MeshGpuTable, RasterKeepSetV1, RasterResidencyLedger, RasterTextureAdmission, RasterTextureStageFault, RasterTextureTable, RasterTextureWitness, MESH_GPU_KEEP_VERSION_CAPACITY};
 #[cfg(feature = "wgpu-engine")]
 pub use tree::{EditState, LayoutBucket, Node, NodeFlags, NodeKey, PaintBucket, UiTree, WidgetSpec, WidgetState};
 // 🪟️🫳️🖱️ W2 wiring: `w1d-events-overlay`'s overlay/drag-drop/scroll types, previously reachable only
@@ -283,9 +288,9 @@ pub use tree::{EditState, LayoutBucket, Node, NodeFlags, NodeKey, PaintBucket, U
 // now part of the crate's curated public API like every other `events` type already was.
 #[cfg(feature = "wgpu-engine")]
 pub use events::{
-    overlay_rect, resolve_anchored_placement, resolve_centered_placement, resolve_overlay_placement, resolve_overlay_placement_side, resolve_select_inline_left, AnchoredPlacement, CaptureKind,
-    DismissPolicy, DragGhost, DragPayload, DragSession, EventModifiers, ImeEvent, OpenOverlay, OverlayAlign, OverlayAnchor, OverlayKind, OverlayPlacement, OverlayRect, OverlaySide, PointerButton,
-    ResolvedOverlayPlacement, ScrollAxis, TooltipStep, UiCommand, UiEvent, TOOLTIP_DWELL_SECONDS, TOOLTIP_HOVER_OUT_SECONDS,
+    overlay_rect, resolve_anchored_placement, resolve_centered_placement, resolve_overlay_placement, resolve_overlay_placement_side, resolve_select_inline_left, AccessibilityUiEvent, AnchoredPlacement, CaptureKind, DismissPolicy, DragGhost, DragPayload, DragSession,
+    EventModifiers, ImeEvent, OpenOverlay, OverlayAlign, OverlayAnchor, OverlayKind, OverlayPlacement, OverlayRect, OverlaySide, PointerButton, ResolvedOverlayPlacement, ScrollAxis, TooltipStep, UiCommand, UiEvent, TOOLTIP_DWELL_SECONDS,
+    TOOLTIP_HOVER_OUT_SECONDS,
 };
 #[cfg(feature = "wgpu-engine")]
 pub use scene_slots::{SceneHost, ScenePaintCursor, ScenePaintCursorError, ScenePaintStep, SceneSlot, SlotContent};
@@ -296,13 +301,14 @@ pub use shell::{Shell, ShellEvent};
 // this is the actual public entry point a host drives per tick, per `report-w0-engine-facade.md`'s
 // own closing wiring request.
 pub use action::{
-    checked_action_string_bytes, intent_is_stale, BoundedAction, BoundedActionBatchReservation, BoundedActionBuilder, BoundedActionClaim, BoundedActionClaimBatch, BoundedActionFault, BoundedActionQueue,
-    BoundedActionReservation, BoundedClaimedActionDraft, BoundedClaimedActionReservation, PreparedClaimedAction, PreparedClaimedActionBatch, UiIntentAddress, UiIntentAdmission, UiIntentBindings, UiIntentCommand,
-    UiIntentSequencer, ACTION_ITEM_BYTE_CAPACITY, ACTION_STRING_BYTE_CAPACITY, INTENT_DELTA_FIELD, INTENT_VALUE_FIELD,
+    checked_action_string_bytes, intent_is_stale, BoundedAction, BoundedActionBatchReservation, BoundedActionBuilder, BoundedActionClaim, BoundedActionClaimBatch, BoundedActionFault, BoundedActionQueue, BoundedActionReservation,
+    BoundedClaimedActionDraft, BoundedClaimedActionReservation, PreparedClaimedAction, PreparedClaimedActionBatch, UiIntentAddress, UiIntentAdmission, UiIntentBindings, UiIntentCommand, UiIntentSequencer, ACTION_ITEM_BYTE_CAPACITY,
+    ACTION_STRING_BYTE_CAPACITY, INTENT_DELTA_FIELD, INTENT_VALUE_FIELD,
 };
 #[cfg(feature = "wgpu-engine")]
 pub use chrome::{
-    chrome_item_bg, chrome_item_text, item_bg, item_text, measure_action_item, push_chrome_border, push_chrome_group_border, push_control_border, push_icon, push_window_cap_border, UiDriverChrome, UiDriverLabels, UiDriverTooltips, ICON_TINY, ICON_TREE_ROW, SIZE_TINY,
+    chrome_item_bg, chrome_item_text, item_bg, item_text, measure_action_item, push_chrome_border, push_chrome_group_border, push_control_border, push_icon, push_window_cap_border, UiDriverChrome, UiDriverDrag, UiDriverLabels, UiDriverTooltips,
+    ICON_TINY, ICON_TREE_ROW, SIZE_TINY,
 };
 #[cfg(feature = "wgpu-engine")]
 pub use engine::{SurfaceLane, Ui, UiFrameStep, UiLayoutStep, UiOverlayPlacement, UiSceneHit};
@@ -319,22 +325,27 @@ pub use gpu::PreparedGpuPresentCursor;
 #[cfg(all(feature = "wgpu-engine", target_arch = "wasm32", not(target_os = "wasi")))]
 pub use host::{clipboard_read_text, clipboard_write_text, dispatch_window_event, modifiers_from_winit, pointer_coords, WindowInputState};
 #[cfg(all(feature = "wgpu-engine", not(target_arch = "wasm32"), not(target_os = "wasi")))]
-pub use host::{dispatch_window_event, modifiers_from_winit, pointer_coords, ClipboardIoJob, WindowInputState};
-pub use input::{DragAxis, DragState, HitKind, HitTarget, InputState, KeyAction, PointerCallbacks, PointerModifiers, TreeDragState, TreeDropPosition};
+pub use host::{dispatch_window_event, modifiers_from_winit, pointer_coords, ClipboardContent, ClipboardIoJob, WindowInputState};
 #[cfg(feature = "wgpu-engine")]
 pub use input::RetainedHitRegistration;
+pub use input::{DragAxis, DragState, HitKind, HitTarget, InputState, KeyAction, PointerCallbacks, PointerModifiers, TreeDragState, TreeDropPosition};
 #[cfg(feature = "wgpu-engine")]
 pub use paint::{
     admit_ui_image, close_ui_image_ledger_step, paint_overlay_backdrop, paint_overlay_surface, paint_retained_glyph_step, paint_retained_glyph_step_flowed, paint_retained_glyph_step_weighted, paint_tooltip, skeleton_blocks, skeleton_kind,
-    skeleton_replaces_content, take_ui_image_upload, tooltip_surface_size, ui_image_content_rect, ui_image_natural_size, RetainedGlyphCursor, RetainedGlyphStep, RetainedTextFlow, SkeletonKind, UiImageAdmission, UiImageUpload,
-    OVERLAY_BACKDROP_ALPHA, RETAINED_NODE_TEXT_MAX_BYTES, SKELETON_MAX_BLOCKS, UI_IMAGE_LEDGER_ENTRIES, UI_IMAGE_MAX_BOX_HEIGHT, UI_IMAGE_MAX_DIMENSION, UI_IMAGE_SOURCE_MAX_BYTES,
+    skeleton_replaces_content, take_ui_image_upload, tooltip_surface_size, ui_image_content_rect, ui_image_natural_size, RetainedGlyphCursor, RetainedGlyphStep, RetainedTextFlow, SkeletonKind, UiImageAdmission, UiImageUpload, OVERLAY_BACKDROP_ALPHA,
+    RETAINED_NODE_TEXT_MAX_BYTES, SKELETON_MAX_BLOCKS, UI_IMAGE_LEDGER_ENTRIES, UI_IMAGE_MAX_BOX_HEIGHT, UI_IMAGE_MAX_DIMENSION, UI_IMAGE_SOURCE_MAX_BYTES,
 };
 #[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
 pub use prepared::OffscreenPresentToken;
 pub use prepared::{
-    PreparedAtlasPages, PreparedPresenterWitness, PreparedRasterGeneration, PreparedRasterPages, PreparedRasterProducer, PreparedRasterProducerStep, PreparedRasterRejected, PreparedRasterReservation, PreparedRenderEviction, PreparedRenderGate,
-    PreparedRenderInput, PreparedRenderInputRejected, PreparedRenderJob, PreparedRenderJobRejected, PreparedRenderLimits, PreparedRenderPacket, PreparedRenderReceiver, PreparedRenderRejection, PreparedRenderReplacement, PreparedRenderUpload,
-    PreparedRenderUsage, RenderDirective, UiPresentToken, PREPARED_RASTER_ITEM_BYTES, PREPARED_RASTER_PAGE_BYTES,
+    PreparedAtlasPages, PreparedPresenterWitness, PreparedRasterGeneration, PreparedRasterKeepCursorV1, PreparedRasterKeepStepV1, PreparedRasterPages, PreparedRasterProducer, PreparedRasterProducerStep, PreparedRasterRejected,
+    PreparedRasterReservation, PreparedRenderEviction, PreparedRenderGate, PreparedRenderInput, PreparedRenderInputRejected, PreparedRenderJob, PreparedRenderJobRejected, PreparedRenderLimits, PreparedRenderPacket, PreparedRenderReceiver,
+    PreparedRenderRejection, PreparedRenderReplacement, PreparedRenderUpload, PreparedRenderUsage, RasterContentIdentity, RenderDirective, UiPresentToken, PREPARED_RASTER_ITEM_BYTES, PREPARED_RASTER_PAGE_BYTES,
+};
+pub use raster_ownership::{
+    SceneRasterBegin, SceneRasterDescriptor, SceneRasterGpuWitness, SceneRasterIdentity, SceneRasterLease, SceneRasterMeshSeal, SceneRasterMovedPixels, SceneRasterPool, SceneRasterPoolLimits, SceneRasterProfile, SceneRasterReleaseWitness, SceneRasterWriteMode,
+    SceneRasterWriter,
+    SCENE_RASTER_GPU_RESIDENT_BYTES, SCENE_RASTER_ITEM_BYTES, SCENE_RASTER_LEASE_CAPACITY, SCENE_RASTER_POOL_BYTES, SCENE_RASTER_POOL_SLOTS, SCENE_RASTER_TRANSFER_BYTES,
 };
 // 🎬️ Relocated out of this crate into `semio-framework-ui-scene`'s `math` module (ticket
 // 26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME packet `scene-surface`; previously relocated
@@ -349,12 +360,16 @@ pub use prepared::{
 pub use ui_scene::math as kernel_3d_scene;
 
 pub use kernel_3d_scene::{
-    aabb_intersects_frustum, axis_rotate_angle, camera_grid_fade_distance, frame_distance_for_radius, frame_orbit_to_bounds, frustum_planes, grid_placement_anchor, gumball_axis_drag_plane_normal, gumball_extent, gumball_eye, gumball_project_ray_onto_axis, interpolate_mesh_uv, lod_from_camera_distance,
-    lod_grid_fade_alpha, lod_progressive_grid_layers, marquee_is_crossing_from_path, mesh3d_abort, mesh3d_abort_step, mesh3d_allocate_step, mesh3d_begin, mesh3d_begin_close, mesh3d_close_step, mesh3d_read_write_u32, mesh3d_read_write_vec3, mesh3d_seal,
-    mesh3d_terminal_is_empty, mesh3d_update_vec3, mesh3d_write_edge, mesh3d_write_u32, mesh3d_write_vec2, mesh3d_write_vec3, mesh3d_write_vec4, pick_closest_mesh_url, point_in_polygon, project_point, quat_from_basis, ray_aabb_slab,
-    ray_pick_instance, ray_pick_mesh_detail, ray_plane_point, ray_segment_distance, rect_contains, rotate_vector, screen_segment_distance, screen_select_components, screen_select_instances, transform_aabb, vec3_from_f64, Camera3d, Instance3d,
-    LineDraw3d, LineVertex3d, Mat4, Mat4Math, Mesh3dFault, Mesh3dField, Mesh3dItem, Mesh3dItemCursor, Mesh3dLease, Mesh3dPageCursor, Mesh3dSchema, Mesh3dWriteToken, OrbitController, SceneDraw3d, ScenePass3d, TexturedDraw3d, TexturedInstance3d, Vec3,
-    Vec3Math, WORLD_FRAME_BOUNDS_MARGIN,
+    aabb_intersects_frustum, axis_rotate_angle, camera_grid_fade_distance, directional_shadow_frustum_planes, directional_shadow_texture_matrix, directional_shadow_view_projection, frame_distance_for_radius, frame_orbit_to_bounds,
+    frustum_planes, grid_placement_anchor,
+    gumball_axis_drag_plane_normal, gumball_extent, gumball_eye, gumball_project_ray_onto_axis, interpolate_mesh_uv, lod_from_camera_distance, lod_grid_fade_alpha, lod_progressive_grid_layers, marquee_is_crossing_from_path, mesh3d_abort,
+    mesh3d_abort_step, mesh3d_allocate_step, mesh3d_begin, mesh3d_begin_close, mesh3d_close_step, mesh3d_read_write_u32, mesh3d_read_write_vec3, mesh3d_seal, mesh3d_terminal_is_empty, mesh3d_update_vec3, mesh3d_write_edge, mesh3d_write_u32,
+    mesh3d_write_vec2, mesh3d_write_vec3, mesh3d_write_vec4, pick_closest_mesh_url, point_in_polygon, project_point, quat_from_basis, ray_aabb_slab, ray_pick_instance, ray_pick_mesh_detail, ray_plane_point, ray_segment_distance, rect_contains,
+    rotate_vector, screen_segment_distance, screen_select_components, screen_select_instances, transform_aabb, vec3_from_f64, Camera3d, Instance3d, LineDraw3d, LineVertex3d, Mat4, Mat4Math, Mesh3dFault, Mesh3dField, Mesh3dItem, Mesh3dItemCursor,
+    Mesh3dLease, Mesh3dPageCursor, Mesh3dSchema, Mesh3dWriteToken, OrbitController, SceneColorSource3d, SceneDraw3d, SceneInstanceMaterial3d, SceneLighting3d, SceneMaterial3d, SceneMaterialDraw3d, SceneMaterialKind3d, ScenePass3d, SceneShadow3d,
+    SceneShadowRole3d, TexturedDraw3d,
+    TexturedInstance3d, Vec3, Vec3Math,
+    ICON_SHADOW_MAP_SIZE, WORLD_FRAME_BOUNDS_MARGIN, WORLD_SHADOW_FAR, WORLD_SHADOW_HALF_EXTENT, WORLD_SHADOW_LIGHT_DISTANCE, WORLD_SHADOW_MAP_SIZE, WORLD_SHADOW_NEAR,
 };
 pub use kernel_3d_scene::{
     adaptive_orbit_camera_far, camera_grid_visible_radius, frame_projection_orbit_to_bounds, lod_grid_step_world, lod_orbit_distance_for_camera, world_projection_matched_ortho_zoom, world_projection_matched_perspective_distance,
@@ -367,13 +382,13 @@ pub use layout::{gap_for_token, layout_horizontal, layout_vertical, padding_for_
 pub use text::{faux_bold_offset, fetch_font_bytes, FontAtlas, TextWeight};
 #[cfg(feature = "wgpu-engine")]
 pub use widgets::{
-    draw_icon, draw_text, draw_text_overlay, draw_text_weighted, draw_text_wrapped, measure_widget, render_scroll_region, render_widget, wrap_text, ControlNode, InputMeta, KeyValueEntry, RingMeta, SelectItem, SliderMeta,
-    StepperMeta, TreeItem, TreeItemAction, TreeSection, WidgetContext, WidgetInteractionMaps, WidgetNode,
+    draw_icon, draw_text, draw_text_overlay, draw_text_weighted, draw_text_wrapped, measure_widget, render_scroll_region, render_widget, wrap_text, ControlNode, InputMeta, KeyValueEntry, RingMeta, SelectItem, SliderMeta, StepperMeta, TreeItem,
+    TreeItemAction, TreeSection, WidgetContext, WidgetInteractionMaps, WidgetNode,
 };
 // 🔼️ The two seams a host's own press/close handling needs to make a long `Select`'s scroll
 // chevrons work (ticket 26/09/17 packet W15a) — the arithmetic itself stays private to the element.
 #[cfg(feature = "wgpu-engine")]
-pub use select::{arm_select_scroll, clear_select_scroll};
+pub use select::{arm_select_scroll, clear_select_scroll, normalize_nfkd_text};
 // #endregion re-exports
 
 // ⚖️ Structural law over the wgpu unit-test wiring itself — see the case file's own docstring. It

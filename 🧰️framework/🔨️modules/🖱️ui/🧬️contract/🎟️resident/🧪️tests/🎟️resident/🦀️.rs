@@ -70,7 +70,7 @@ fn retained_resident_permit_preserves_existing_capacity_and_paired_final_return(
     assert_eq!(UiResidentPermit::snapshot().unwrap(), empty_snapshot());
     assert_eq!(UI_RESIDENT_DOCUMENT_BYTES, data["documentBytes"].as_u64().unwrap() as usize);
     assert_eq!(UI_RESIDENT_AGGREGATE_BYTES, data["aggregateBytes"].as_u64().unwrap() as usize);
-    assert_eq!(UI_RESIDENT_SLOTS * UI_RESIDENT_DOCUMENT_BYTES, UI_RESIDENT_AGGREGATE_BYTES, "the aggregate must fund every slot the ledger admits at one full document each");
+    assert_eq!(UI_RESIDENT_SLOTS * UI_RESIDENT_DOCUMENT_BYTES, UI_RESIDENT_AGGREGATE_BYTES, "the aggregate uses the declared per-slot record-byte baseline");
     let mut remaining = UI_RESIDENT_AGGREGATE_BYTES - empty_snapshot().bytes;
     let mut full = std::iter::from_fn(|| (remaining > 0).then(|| {
         let bytes = remaining.min(UI_RESIDENT_SURFACE_BYTES);

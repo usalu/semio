@@ -11,13 +11,21 @@ import ts from "typescript";
 import { loadTaxonomy, parseCanonicalWgpuPackageCatalog, parseSemanticPackageBrowserProfile } from "../../../../../../🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts";
 import browserAuthorityFixture from "../../🧫️fixtures/🧊️wgpu-browser-entry-authority/🔣️.json";
 import rendererSchema from "../../../🧬️schema/🔣️.json";
-import { renderFrameWorker } from "../../🎯️targets/🧊️wgpu/🎞️frame-worker/🏗️builder/🟦️.ts";
-import { assertPinnedBunVersion, decodeAstralEscapes, renderBrowserEntry } from "../../🎯️targets/🧊️wgpu/⚙️browser-build/🟦️.ts";
+import { assertPinnedBunVersion, decodeAstralEscapes } from "../../🎯️targets/🧊️wgpu/⚙️browser-build/🟦️.ts";
 import { decodeInvocationPayloads, pluginHandleForBridge, reconcileRetainedWindowPatch, retireWgpuOwnedUiInstanceLifecycle, settleFailedInstanceOpen, WgpuOwnedUiInstanceRoute, type WgpuPluginHandle } from "../../🎯️targets/🧊️wgpu/🐚️plugin-bridge/🟦️.ts";
 import { resolvePlaygroundBoot } from "@semio-tech/framework";
 import { PLUGIN_CATALOG } from "../../../../🔌️plugin/📇️registry/🟦️.ts";
 import bootSelectionFixture from "../../🧫️fixtures/🔬️wgpu-shell-boot-selection/🔣️.json";
 import { coerceTurnResult } from "../../../../../../../🔨️modules/🎭️actor/🖼️wire-turn/🟦️.ts";
+
+const browserBuildModule = new URL("../../🎯️targets/🧊️wgpu/⚙️browser-build/🟦️.ts", import.meta.url).href;
+const frameWorkerModule = new URL("../../🎯️targets/🧊️wgpu/🎞️frame-worker/🏗️builder/🟦️.ts", import.meta.url).href;
+
+/** 🥖️ Executes toolchain laws in the installed Bun process while Vitest owns its Node worker. */
+function bunOracle<T>(body: string, input: unknown = null, context: { readonly cwd?: string; readonly env?: Record<string, string> } = {}): T {
+  const source = `const input = JSON.parse(require("node:fs").readFileSync(0, "utf8")); console.log(JSON.stringify(await (async () => { ${body} })()));`;
+  return JSON.parse(execFileSync("bun", ["--eval", source], { input: JSON.stringify(input), encoding: "utf8", cwd: context.cwd, env: { ...process.env, ...context.env }, maxBuffer: 32 * 1024 * 1024 })) as T;
+}
 
 function fakeHandle(overrides: Partial<WgpuPluginHandle> = {}): WgpuPluginHandle {
   return {
@@ -26,11 +34,21 @@ function fakeHandle(overrides: Partial<WgpuPluginHandle> = {}): WgpuPluginHandle
     createApp: async () => 1,
     destroyApp: async () => {},
     readWindowConfigPacks: async () => [],
+    loadWindowConfigPack: async () => {},
     handleAction: async () => ({ output: null, mutations: [], inverseGroup: { invocationId: "", mutations: [], inverseMutations: [] } }),
     handleCommand: async () => ({ output: null, mutations: [], inverseGroup: { invocationId: "", mutations: [], inverseMutations: [] } }),
     render: async () => ({ type: "text", value: "hello" }),
     renderDocument: async () => "document",
     contextMenu: async () => [],
+    captureExtensionCompletion: (instanceId, req) => ({
+      instanceId,
+      req,
+      assertActive: () => {},
+      complete: async () => ({ output: null, mutations: [], inverseGroup: { invocationId: "", mutations: [], inverseMutations: [] } }),
+    }),
+    invoke: async () => new Uint8Array(),
+    dispatchInvokeExtension: async () => ({ output: null, mutations: [], inverseGroup: { invocationId: "", mutations: [], inverseMutations: [] } }),
+    pushScopedContributions: async () => ({ output: null, mutations: [], inverseGroup: { invocationId: "", mutations: [], inverseMutations: [] } }),
     dispose: async () => {},
     ...overrides,
   };
@@ -72,7 +90,7 @@ describe("framework renderer wgpu plugin bridge", () => {
    * 26/09/09/PROCEDURAL-3D-END-TO-END). An integer carrier must survive the bridge as an integer, and a
    * float that happens to be whole must stay a float. */
   it("carries integer and float view-state fields across the bridge without collapsing either onto the other", async () => {
-    const { encodePackValue, packUInt, packValueToBase64, isPackInteger, decodePackValue } = await import("@semio-tech/framework-os");
+    const { encodePackValue, packUInt, packValueToBase64, isPackInteger, isPackMap, decodePackValue } = await import("@semio-tech/framework-os");
     let seenViewState: unknown;
     const bridge = pluginHandleForBridge(
       fakeHandle({
@@ -89,7 +107,13 @@ describe("framework renderer wgpu plugin bridge", () => {
     expect(seen.ratio).toBe(1);
     expect(decodePackValue(encodePackValue(seen))).toEqual(cursor);
     const viaJson = { toolRunTraceCursorByWindowId: { "procedural-preview": { run: 1, generation: 0, page: 0 } }, ratio: 1 };
-    expect(isPackInteger(decodePackValue(encodePackValue(viaJson)).toolRunTraceCursorByWindowId["procedural-preview"].run)).toBe(false);
+    const decodedCursor = decodePackValue(encodePackValue(viaJson));
+    if (!isPackMap(decodedCursor)) throw new Error("decoded cursor is not a pack map");
+    const decodedWindows = decodedCursor.toolRunTraceCursorByWindowId;
+    if (decodedWindows === undefined || !isPackMap(decodedWindows)) throw new Error("decoded cursor windows is not a pack map");
+    const decodedWindow = decodedWindows["procedural-preview"];
+    if (decodedWindow === undefined || !isPackMap(decodedWindow)) throw new Error("decoded cursor window is not a pack map");
+    expect(isPackInteger(decodedWindow.run)).toBe(false);
   });
 
   /** 🔢️ The INVOCATION crosses this seam as PACK too, and for the same reason: `JSON.parse` collapses
@@ -99,7 +123,7 @@ describe("framework renderer wgpu plugin bridge", () => {
    * unsigned arm, so `Import Document…` could not have landed a single chunk on this target no matter
    * how the picker behaved (ticket 26/09/09/PROCEDURAL-3D-END-TO-END). */
   it("carries an integer action argument across the bridge as an integer — the import chunk envelope the guest decodes as u32", async () => {
-    const { encodePackValue, packUInt, packValueToBase64, isPackInteger, decodePackValue } = await import("@semio-tech/framework-os");
+    const { encodePackValue, packUInt, packValueToBase64, isPackInteger, isPackMap, decodePackValue } = await import("@semio-tech/framework-os");
     let seenInvocation: unknown;
     const bridge = pluginHandleForBridge(
       fakeHandle({
@@ -119,7 +143,11 @@ describe("framework renderer wgpu plugin bridge", () => {
     expect(isPackInteger(seen.arguments.chunkCount)).toBe(true);
     expect(decodePackValue(encodePackValue(seen))).toEqual(invocation);
     const viaJson = { ...invocation, arguments: { ...invocation.arguments, chunk: 0, chunkCount: 1 } };
-    expect(isPackInteger(decodePackValue(encodePackValue(viaJson)).arguments.chunk)).toBe(false);
+    const decodedInvocation = decodePackValue(encodePackValue(viaJson));
+    if (!isPackMap(decodedInvocation)) throw new Error("decoded invocation is not a pack map");
+    const decodedArguments = decodedInvocation.arguments;
+    if (decodedArguments === undefined || !isPackMap(decodedArguments)) throw new Error("decoded invocation arguments is not a pack map");
+    expect(isPackInteger(decodedArguments.chunk)).toBe(false);
   });
 
   it("bridges render() through a pack-encoded view state", async () => {
@@ -289,7 +317,7 @@ describe("framework renderer wgpu generated worker", () => {
     const catalog = parseCanonicalWgpuPackageCatalog(catalogBytes, contract.packageGeneration!.catalogSha256, contract.packageGeneration!.browserProfile, taxonomy);
     const manifest = `${catalog.ownerPath}/${catalog.packageRelativePath}/Cargo.toml`;
     for (const compile of [
-      (code: string) => new Bun.Transpiler({ loader: "ts" }).transformSync(code),
+      (code: string) => bunOracle<string>('return new Bun.Transpiler({ loader: "ts" }).transformSync(input);', code),
       (code: string) => ts.transpileModule(code, { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText,
     ]) for (const scenario of browserAuthorityFixture.activationCases) {
       const visited: string[] = [];
@@ -357,15 +385,26 @@ describe("framework renderer wgpu generated worker", () => {
     }
   });
 
+  it("owns the browser accessibility import in the neutral package authority", () => {
+    const profile = loadTaxonomy().generatorContracts["wgpu-frame-worker"]!.packageGeneration!.browserProfile;
+    for (const scenario of browserAuthorityFixture.browserImports) {
+      const path = join(dirname(fileURLToPath(import.meta.url)), "../../🎯️targets/🧊️wgpu", scenario.source);
+      const source = ts.createSourceFile(path, readFileSync(path, "utf8"), ts.ScriptTarget.Latest, true);
+      const declaration = source.statements.find((node) => ts.isImportDeclaration(node) && ts.isStringLiteral(node.moduleSpecifier) && node.moduleSpecifier.text === scenario.module);
+      expect(declaration?.getText(source)).toContain(scenario.binding);
+      expect(profile.sourceModulePaths).toContain(`${profile.ownerPath}/${scenario.target}`);
+    }
+  });
+
   it("fails closed unless the renderer uses the repository-pinned Bun runtime", () => {
-    expect(assertPinnedBunVersion()).toBe(Bun.version);
+    const actual = bunOracle<{ version: string; accepted: string }>("const { assertPinnedBunVersion } = await import(input); return { version: Bun.version, accepted: assertPinnedBunVersion() };", browserBuildModule);
+    expect(actual.accepted).toBe(actual.version);
     expect(() => assertPinnedBunVersion("0.0.0")).toThrow(/requires Bun/);
   });
 
   it("renders identical bytes twice with matching independent SHA-256 implementations", async () => {
     const bundleRoot = join(dirname(fileURLToPath(import.meta.url)), "../../🎯️targets/🧊️wgpu/📦️packages/🦀️rust");
-    const first = await renderFrameWorker(bundleRoot);
-    const second = await renderFrameWorker(bundleRoot);
+    const [first, second] = bunOracle<[{ path: string; content: string }, { path: string; content: string }]>("const { renderFrameWorker } = await import(input.module); return [await renderFrameWorker(input.bundleRoot), await renderFrameWorker(input.bundleRoot)];", { module: frameWorkerModule, bundleRoot });
     const subtle = Buffer.from(await crypto.subtle.digest("SHA-256", Buffer.from(first.content))).toString("hex");
     expect(second).toEqual(first);
     expect(createHash("sha256").update(first.content).digest("hex")).toBe(subtle);
@@ -382,22 +421,12 @@ describe("framework renderer wgpu generated worker", () => {
     ];
     const callerCwd = process.cwd();
     const renders: string[] = [];
-    try {
-      for (const context of contexts) {
-        const restored = Object.entries(context.env).map(([key, value]) => [key, process.env[key]] as const);
-        Object.assign(process.env, context.env);
-        process.chdir(context.cwd);
-        try {
-          renders.push((await renderFrameWorker(bundleRoot)).content);
-          expect(process.cwd()).toBe(context.cwd);
-        } finally {
-          for (const [key, value] of restored) if (value === undefined) delete process.env[key];
-            else process.env[key] = value;
-        }
-      }
-    } finally {
-      process.chdir(callerCwd);
+    for (const context of contexts) {
+      const rendered = bunOracle<{ content: string; cwd: string }>("const { renderFrameWorker } = await import(input.module); const rendered = await renderFrameWorker(input.bundleRoot); return { content: rendered.content, cwd: process.cwd() };", { module: frameWorkerModule, bundleRoot }, { cwd: context.cwd, env: { ...context.env, NX_WORKSPACE_ROOT: workspaceRoot } });
+      renders.push(rendered.content);
+      expect(rendered.cwd).toBe(context.cwd);
     }
+    expect(process.cwd()).toBe(callerCwd);
     for (const render of renders) expect(createHash("sha256").update(render).digest("hex")).toBe(createHash("sha256").update(renders[0]!).digest("hex"));
     expect(renders[0]).not.toMatch(/[0-9a-f]{64}/u);
   });
@@ -411,17 +440,19 @@ describe("framework renderer wgpu generated worker", () => {
     const configuration = ts.parseConfigFileTextToJson("devcontainer.json", readFileSync(join(repoRoot, ".devcontainer/devcontainer.json"), "utf8"));
     const nativeBootstrapPath = join(repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/🐚️.sh");
     const nativeBootstrap = readFileSync(nativeBootstrapPath, "utf8");
-    expect(pinnedVersion).toBe(Bun.version);
+    const bunVersion = bunOracle<string>("return Bun.version;");
+    expect(pinnedVersion).toBe(bunVersion);
     expect(/^ARG BUN_VERSION=(\d+\.\d+\.\d+)$/mu.exec(dockerfile)?.[1]).toBe(pinnedVersion);
     expect(configuration.error).toBeUndefined();
-    expect(configuration.config.postCreateCommand).toEqual(["bun", "nx", "run", "workspace:deps-javascript"]);
+    expect(configuration.config.postCreateCommand).toEqual(["bun", "nx", "run", "workspace:setup"]);
+    expect(JSON.parse(readFileSync(join(repoRoot, "📋️project.json"), "utf8")).targets.setup.dependsOn).toContain("deps-javascript");
     expect(dockerfile).not.toContain("bun.sh/install");
     expect(dockerfile).toContain("sha256sum -c -");
     expect([...dockerfile.matchAll(/bun_sha="([0-9a-f]{64})"/gu)]).toHaveLength(2);
     expect(dockerfile).toContain('test "$(bun --version)" = "$BUN_VERSION"');
     expect(nativeBootstrap).toContain('"packageManager"');
     expect(nativeBootstrap).toContain('bash -s "bun-v$required_version"');
-    expect(nativeBootstrap).not.toContain(Bun.version);
+    expect(nativeBootstrap).not.toContain(bunVersion);
     if (process.platform !== "win32") {
       execFileSync("bash", ["-n", nativeBootstrapPath]);
     }
@@ -462,7 +493,7 @@ describe("framework renderer wgpu generated worker", () => {
 
   it("renders an astral-emoji-bearing browser entry (🟦️.ts, which references the \"🎞️frame-worker.js\" filename by URL) with the emoji as literal UTF-8, not Bun's astral \\uXXXX surrogate-pair escapes — otherwise the reference scanner cannot see or rewrite it", async () => {
     const bundleRoot = dirname(fileURLToPath(import.meta.url));
-    const content = await renderBrowserEntry(join(bundleRoot, "../../🎯️targets/🧊️wgpu/🚀️browser-boot/🟦️.ts"));
+    const content = bunOracle<string>("const { renderBrowserEntry } = await import(input.module); return await renderBrowserEntry(input.entry);", { module: browserBuildModule, entry: join(bundleRoot, "../../🎯️targets/🧊️wgpu/🚀️browser-boot/🟦️.ts") });
     expect(content).toContain("🎞️frame-worker.js");
     expect(content).not.toMatch(/\\u[Dd][89abAB][0-9a-fA-F]{2}/);
   });

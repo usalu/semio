@@ -1,15 +1,19 @@
 use super::*;
 use crate::{part_1, part_4, part_5, Cardinality, LocalizedText, Names};
-use protocol::{Mutation, MutationDiff, SemanticMutation};
+use protocol::{Mutation, SemanticMutation};
 
+/// ↩️ Applies `operation` to `base`, then replays its inverse ON TOP OF the forward document —
+/// never against `base` again: an inverse `change-<field>` recomputed against `base` sees the
+/// value it is trying to restore already in place, trips the leaf's own `mutation.no-op` guard
+/// and yields an EMPTY diff, so the replay silently restored nothing.
 fn round_trip(base: &Iso16757Snapshot, operation: &Iso16757Mutation) -> Iso16757Snapshot {
-    let forward = operation.diff(base).diff().apply(base).expect("valid mutation diff");
-    let backwards = operation.inverse(base);
+    let (forward, _messages) = protocol::apply_mutation(base, operation).expect("valid mutation");
     let mut restored = forward.clone();
-    for back in &backwards {
-        restored = back.diff(base).diff().apply(&restored).expect("valid mutation diff");
+    for back in operation.inverse(base) {
+        let (next, _messages) = protocol::apply_mutation(&restored, &back).expect("valid inverse mutation");
+        restored = next;
     }
-    assert_eq!(&restored, base, "inverse must exactly restore the pre-operation fixture");
+    assert_eq!(&restored, base, "inverse(base) must restore the pre-mutation document");
     forward
 }
 

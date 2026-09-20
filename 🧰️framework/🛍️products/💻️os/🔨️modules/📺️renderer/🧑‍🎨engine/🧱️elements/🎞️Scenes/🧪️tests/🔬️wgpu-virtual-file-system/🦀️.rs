@@ -1,4 +1,3 @@
-
 use super::*;
 
 /// 🗂️ A configured `fileNodeKinds[kindId].icon` must win over the kind-name fallback table —
@@ -40,14 +39,7 @@ fn vfs_scene(surface_id: &str, rows: Value) -> UiComponentSceneNode {
         text_editor: None,
         table: None,
         paint_2d: None,
-        virtual_file_system: Some(ui_wgpu::wgpu::VirtualFileSystemScene {
-            schema_json: "{}".into(),
-            rows_json: rows.to_string(),
-            selected_row_ids_json: None,
-            hovered_row_id: None,
-            empty_message: None,
-            drag_drop_enabled: None,
-        }),
+        virtual_file_system: Some(ui_wgpu::wgpu::VirtualFileSystemScene { schema_json: "{}".into(), rows_json: rows.to_string(), selected_row_ids_json: None, hovered_row_id: None, empty_message: None, drag_drop_enabled: None }),
         tiled_map: None,
         board2d: None,
         icon_render: None,
@@ -116,13 +108,7 @@ fn ctrl_click_extends_the_selection_where_a_plain_click_replaces_it() {
     let theme = Theme::default();
     let bounds = Rect::new(0.0, 0.0, 400.0, 300.0);
     let ids_of = |hit: SceneListHit| {
-        hit.action
-            .expect("selectRows")
-            .args
-            .as_ref()
-            .and_then(|args| args.get("ids"))
-            .and_then(|ids| ids.as_array().map(|entries| entries.iter().filter_map(semio_framework::DslValue::as_str).map(str::to_string).collect::<Vec<_>>()))
-            .expect("ids")
+        hit.action.expect("selectRows").args.as_ref().and_then(|args| args.get("ids")).and_then(|ids| ids.as_array().map(|entries| entries.iter().filter_map(semio_framework::DslValue::as_str).map(str::to_string).collect::<Vec<_>>())).expect("ids")
     };
     let first = vfs_hit(&node, bounds, 120.0, vfs_row_center_y(0), &theme, true, SceneModifiers::default()).expect("row 0");
     assert_eq!(ids_of(first), vec!["n1".to_string()]);

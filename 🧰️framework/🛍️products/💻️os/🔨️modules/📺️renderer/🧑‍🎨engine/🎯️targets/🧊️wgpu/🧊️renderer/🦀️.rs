@@ -67,6 +67,24 @@ pub mod agent_bridge_door;
 #[path = "../../../🧱️elements/🛂️SpaceAdministration/🎯️targets/🧊️wgpu/🦀️.rs"]
 pub mod space_administration;
 
+//#region 🔐️HubElements
+// 🔐️ Ticket 26/09/18 slice WG6 (G8 items WG-6 and WG-5): the three os-renderer elements AU2/AU3
+// landed for React only — `🔐️HubSignIn`, `🏘️SpaceBrowser`, `🔗️HubConnection` — so a wgpu-rendered
+// shell had no hub identity of its own at all (its only identity was an inherited local-bootstrap
+// credential or a same-origin cookie). Declared in dependency order for readability only:
+// `hub_sign_in` and `space_browser` are pure contract twins with no renderer and no transport,
+// `hub_connection` composes them with the shell's own `DirectoryTransport` and builds the retained
+// workspace tree.
+#[path = "../../../🧱️elements/🔐️HubSignIn/🎯️targets/🧊️wgpu/🦀️.rs"]
+pub mod hub_sign_in;
+
+#[path = "../../../🧱️elements/🏘️SpaceBrowser/🎯️targets/🧊️wgpu/🦀️.rs"]
+pub mod space_browser;
+
+#[path = "../../../🧱️elements/🔗️HubConnection/🎯️targets/🧊️wgpu/🦀️.rs"]
+pub mod hub_connection;
+//#endregion 🔐️HubElements
+
 #[path = "../../../🧱️elements/⚙️EngineCanvas/🎯️targets/🧊️wgpu/🦀️.rs"]
 pub mod engine_canvas;
 
@@ -113,6 +131,9 @@ pub mod icon_atlas;
 // descriptor carried, and that is fixed at the source in `ui_wgpu`'s `UiIntentCommand::descriptor`.
 #[path = "../⏰️deadlines/🦀️.rs"]
 mod deadlines;
+
+#[path = "../⏱️frame-latency/🦀️.rs"]
+pub(crate) mod frame_latency;
 
 #[path = "../🏠️os-host/🦀️.rs"]
 mod os_host;
@@ -164,15 +185,16 @@ pub mod parallel_runtime;
 
 use infinite_world::world::{
     begin_world3d_dynamic_retirement, close_world3d_draw_rebuild_step, enqueue_world3d_event, finish_world3d_asset, publish_world3d_asset_mesh_lease, reserve_world3d_asset_response, retire_cancelled_world3d_asset_step, return_world3d_asset,
-    seal_world3d_asset_response, step_world3d_draw_rebuild, step_world3d_dynamic_retirement, step_world3d_interaction, step_world3d_scene_bridge, step_world3d_snapshot, take_next_completed_world3d_asset_step,
+    seal_world3d_asset_response, step_world3d_camera_fit, step_world3d_draw_rebuild, step_world3d_dynamic_retirement, step_world3d_interaction, step_world3d_scene_bridge, step_world3d_snapshot, take_next_completed_world3d_asset_step,
     take_next_world3d_asset, world3d_dynamic_retirement_terminal_is_empty, world3d_interaction_front_generation, World3dSceneBridgeStep, World3dSnapshotApplyStep, WorldAssetFault, WorldAssetFetchOwner, WorldAssetIoAuthority, WorldAssetMetadataId, WorldAssetRequestKind, WorldAssetRequestToken,
     WorldAssetResponsePage, WorldDrawRebuildStep, WorldDynamicFault, WorldInteractionAuthorityStep, WorldInteractionIntent, WORLD_ASSET_RESPONSE_PAGE_BYTES, WORLD_ASSET_RESPONSE_PAGE_CAPACITY,
 };
+use infinite_world::world::world3d_asset_cancellation_requested;
 #[cfg(not(target_arch = "wasm32"))]
-use infinite_world::world::{world3d_asset_cancellation_requested, WORLD_ASSET_RESPONSE_BYTE_CAPACITY};
+use infinite_world::world::WORLD_ASSET_RESPONSE_BYTE_CAPACITY;
 use infinite_world::world::{apply_world3d_terrain_tile_bytes, collect_world3d_asset_bytes, mark_world3d_asset_miss};
 #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
-use infinite_world::world::apply_reference_image_bytes;
+use infinite_world::world::{apply_decoded_reference_raster, world3d_reference_url_is_current, DecodedReferenceImage};
 use infinite_world::world::{world3d_hover_clear_is_owed, world3d_hover_is_published};
 use program_bridge::filter_plugins;
 #[cfg(not(target_arch = "wasm32"))]
@@ -180,11 +202,12 @@ use program_bridge::load_wasm_plugins;
 #[cfg(target_arch = "wasm32")]
 use program_bridge::parse_plugin_entries;
 use shell::{PointerCapture, PointerHitOwner, ShellState};
+use crate::scenes::AdmittedSurfaceToken;
 use std::cell::RefCell;
 use std::future::Future;
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::{Arc, Mutex, OnceLock};
-use ui_wgpu::wgpu::ActionDescriptor;
+use ui_wgpu::wgpu::{ActionDescriptor, SceneRasterBegin, SceneRasterDescriptor, SceneRasterLease, SceneRasterPool, SceneRasterProfile, SceneRasterWriteMode, SceneRasterWriter};
 // 🏚️ `dispatch_window_event`/`WindowInputState`/`schedule_frame` no longer imported here — they were
 // `SemioApp`/`start_frame_loop`-only (both deleted, packet os-host); `winit_app.rs` normalizes input
 // itself via `ui_host::event` instead. See the `OsHostDecomposition — SemioApp deletion` region above.
@@ -265,7 +288,7 @@ fn close_renderer_asset_step() -> bool {
 }
 
 pub(crate) enum RendererAssetFetchOwner {
-    World { surface: WorldAssetMetadataId, owner: WorldAssetFetchOwner },
+    World { surface: WorldAssetMetadataId, surface_token: AdmittedSurfaceToken, owner: WorldAssetFetchOwner },
     Shared(WorldAssetFetchOwner),
 }
 
@@ -461,7 +484,20 @@ impl RendererAssetFormatCursor {
     fn new(kind: WorldAssetRequestKind, prefix: &[u8], total_bytes: usize) -> Result<Self, &'static str> {
         match kind {
             WorldAssetRequestKind::Glb => Ok(Self::Glb(GlbStructureCursor::new(total_bytes))),
-            WorldAssetRequestKind::ReferenceImage | WorldAssetRequestKind::UiImage { .. } | WorldAssetRequestKind::MapTile { vector: false, .. } => {
+            WorldAssetRequestKind::ReferenceImage => {
+                if prefix.starts_with(b"\x89PNG\r\n\x1a\n") {
+                    Ok(Self::Png(PngStructureCursor::new(total_bytes)))
+                } else if prefix.starts_with(&[0xff, 0xd8, 0xff]) {
+                    Ok(Self::Jpeg(JpegStructureCursor::new(total_bytes)))
+                } else if renderer_asset_svg_prefix_is_valid(prefix) {
+                    Ok(Self::Svg(TextAssetStructureCursor::new(total_bytes, true, true)))
+                } else if renderer_asset_reference_prefix_is_valid(prefix) {
+                    Ok(Self::Opaque(TextAssetStructureCursor::new(total_bytes, false, false)))
+                } else {
+                    Err("reference image format was outside the React media contract")
+                }
+            }
+            WorldAssetRequestKind::UiImage { .. } | WorldAssetRequestKind::MapTile { vector: false, .. } => {
                 if prefix.starts_with(b"\x89PNG\r\n\x1a\n") {
                     Ok(Self::Png(PngStructureCursor::new(total_bytes)))
                 } else if prefix.starts_with(&[0xff, 0xd8, 0xff]) {
@@ -2754,8 +2790,8 @@ impl RendererAssetProbe {
                     && u32::from_le_bytes(prefix[4..8].try_into().expect("fixed GLB version bytes")) == 2
                     && usize::try_from(u32::from_le_bytes(prefix[8..12].try_into().expect("fixed GLB length bytes"))).ok() == Some(self.observed_bytes)
             }
-            WorldAssetRequestKind::ReferenceImage | WorldAssetRequestKind::UiImage { .. } => renderer_asset_image_prefix_is_valid(prefix),
-            WorldAssetRequestKind::MapTile { vector: false, .. } => renderer_asset_image_prefix_is_valid(prefix),
+            WorldAssetRequestKind::ReferenceImage => renderer_asset_reference_prefix_is_valid(prefix),
+            WorldAssetRequestKind::UiImage { .. } | WorldAssetRequestKind::MapTile { vector: false, .. } => renderer_asset_ui_image_prefix_is_valid(prefix),
             WorldAssetRequestKind::MapTile { vector: true, .. } | WorldAssetRequestKind::Terrain { .. } => self.observed_bytes != 0,
         };
         if !valid {
@@ -2829,13 +2865,29 @@ impl RendererAssetProbe {
     }
 }
 
-fn renderer_asset_image_prefix_is_valid(prefix: &[u8]) -> bool {
-    prefix.starts_with(b"\x89PNG\r\n\x1a\n")
-        || prefix.starts_with(&[0xff, 0xd8, 0xff])
-        || std::str::from_utf8(prefix).ok().is_some_and(|text| {
-            let text = text.trim_start_matches(|character: char| character.is_ascii_whitespace());
-            text.starts_with("<svg") || text.starts_with("<?xml")
-        })
+fn renderer_asset_svg_prefix_is_valid(prefix: &[u8]) -> bool {
+    std::str::from_utf8(prefix).ok().is_some_and(|text| {
+        let text = text.trim_start_matches(|character: char| character.is_ascii_whitespace());
+        text.starts_with("<svg") || text.starts_with("<?xml")
+    })
+}
+
+fn renderer_asset_ui_image_prefix_is_valid(prefix: &[u8]) -> bool {
+    prefix.starts_with(b"\x89PNG\r\n\x1a\n") || prefix.starts_with(&[0xff, 0xd8, 0xff]) || renderer_asset_svg_prefix_is_valid(prefix)
+}
+
+fn renderer_asset_reference_prefix_is_valid(prefix: &[u8]) -> bool {
+    renderer_asset_ui_image_prefix_is_valid(prefix)
+        || prefix.starts_with(b"GIF87a")
+        || prefix.starts_with(b"GIF89a")
+        || (prefix.len() >= 12 && &prefix[..4] == b"RIFF" && &prefix[8..12] == b"WEBP")
+        || prefix.starts_with(b"BM")
+        || prefix.starts_with(b"II*\0")
+        || prefix.starts_with(b"MM\0*")
+        || prefix.starts_with(b"II+\0")
+        || prefix.starts_with(b"MM\0+")
+        || prefix.starts_with(b"%PDF-")
+        || (prefix.len() >= 12 && &prefix[4..8] == b"ftyp")
 }
 //#endregion 📡️RendererAssetAuthority
 
@@ -3680,10 +3732,20 @@ pub(crate) mod kernel_runtime {
         }
     }
 
+    #[derive(Clone, Copy)]
+    enum QueuedKernelEventKind {
+        SurfaceVisible,
+        MessageShell,
+        MessageBackbone,
+    }
+
     struct QueuedKernelEvent {
+        kind: Option<QueuedKernelEventKind>,
         surface_visible: Option<String>,
         surface_body_key: Option<String>,
         surface_view_state: Option<Vec<u8>>,
+        message_endpoint: Option<String>,
+        message_payload: Option<Vec<u8>>,
     }
 
     impl QueuedKernelEvent {
@@ -3693,7 +3755,39 @@ pub(crate) mod kernel_runtime {
                 return Err(RejectedKernelEvents { events });
             }
             match events.pop_front().expect("one queued event is present") {
-                Event::SurfaceVisible { surface, body_key, view_state } => Ok(Self { surface_visible: Some(surface), surface_body_key: Some(body_key), surface_view_state: Some(view_state) }),
+                Event::SurfaceVisible { surface, body_key, view_state } => Ok(Self {
+                    kind: Some(QueuedKernelEventKind::SurfaceVisible),
+                    surface_visible: Some(surface),
+                    surface_body_key: Some(body_key),
+                    surface_view_state: Some(view_state),
+                    message_endpoint: None,
+                    message_payload: None,
+                }),
+                Event::Message { source: MessageEndpoint::Shell { instance }, payload }
+                    if !payload.is_empty()
+                        && payload.len() <= semio_framework_plugin::document_backbone_binding::DOCUMENT_BACKBONE_BINDING_CONTROL_MAXIMUM_BYTES =>
+                {
+                    Ok(Self {
+                        kind: Some(QueuedKernelEventKind::MessageShell),
+                        surface_visible: None,
+                        surface_body_key: None,
+                        surface_view_state: None,
+                        message_endpoint: Some(instance.0),
+                        message_payload: Some(payload),
+                    })
+                }
+                Event::Message { source: MessageEndpoint::Backbone { uri }, payload }
+                    if !payload.is_empty() && payload.len() <= store_sync::os_store::BACKBONE_HOT_MESSAGE_MAXIMUM_BYTES =>
+                {
+                    Ok(Self {
+                        kind: Some(QueuedKernelEventKind::MessageBackbone),
+                        surface_visible: None,
+                        surface_body_key: None,
+                        surface_view_state: None,
+                        message_endpoint: Some(uri),
+                        message_payload: Some(payload),
+                    })
+                }
                 rejected => {
                     events.push_front(rejected);
                     Err(RejectedKernelEvents { events })
@@ -3702,10 +3796,22 @@ pub(crate) mod kernel_runtime {
         }
 
         fn into_event(mut self) -> Event {
-            Event::SurfaceVisible {
-                surface: self.surface_visible.take().expect("queued surface-visible surface is present"),
-                body_key: self.surface_body_key.take().expect("queued surface-visible body key is present"),
-                view_state: self.surface_view_state.take().expect("queued surface-visible view state is present"),
+            match self.kind.take().expect("queued event kind is present") {
+                QueuedKernelEventKind::SurfaceVisible => Event::SurfaceVisible {
+                    surface: self.surface_visible.take().expect("queued surface-visible surface is present"),
+                    body_key: self.surface_body_key.take().expect("queued surface-visible body key is present"),
+                    view_state: self.surface_view_state.take().expect("queued surface-visible view state is present"),
+                },
+                QueuedKernelEventKind::MessageShell => Event::Message {
+                    source: MessageEndpoint::Shell {
+                        instance: semio_framework::kernel::PluginInstanceId(self.message_endpoint.take().expect("queued shell-message instance is present")),
+                    },
+                    payload: self.message_payload.take().expect("queued shell-message payload is present"),
+                },
+                QueuedKernelEventKind::MessageBackbone => Event::Message {
+                    source: MessageEndpoint::Backbone { uri: self.message_endpoint.take().expect("queued backbone-message uri is present") },
+                    payload: self.message_payload.take().expect("queued backbone-message payload is present"),
+                },
             }
         }
 
@@ -3724,16 +3830,38 @@ pub(crate) mod kernel_runtime {
                 drop(self.surface_body_key.take().expect("queued surface-visible body key is present"));
                 return (self.remaining_bytes() == 0, 1, length);
             }
-            let Some(length) = self.surface_view_state.as_ref().map(Vec::len) else { return (true, 0, 0) };
+            if let Some(length) = self.surface_view_state.as_ref().map(Vec::len) {
+                if length > maximum_bytes {
+                    return (false, 0, 0);
+                }
+                drop(self.surface_view_state.take().expect("queued surface-visible view state is present"));
+                return (self.remaining_bytes() == 0, 1, length);
+            }
+            if let Some(length) = self.message_endpoint.as_ref().map(String::len) {
+                if length > maximum_bytes {
+                    return (false, 0, 0);
+                }
+                drop(self.message_endpoint.take().expect("queued message endpoint is present"));
+                return (self.remaining_bytes() == 0, 1, length);
+            }
+            let Some(length) = self.message_payload.as_ref().map(Vec::len) else {
+                self.kind = None;
+                return (true, 0, 0);
+            };
             if length > maximum_bytes {
                 return (false, 0, 0);
             }
-            drop(self.surface_view_state.take().expect("queued surface-visible view state is present"));
+            drop(self.message_payload.take().expect("queued message payload is present"));
+            self.kind = None;
             (true, 1, length)
         }
 
         fn remaining_bytes(&self) -> usize {
-            self.surface_visible.as_ref().map_or(0, String::len) + self.surface_body_key.as_ref().map_or(0, String::len) + self.surface_view_state.as_ref().map_or(0, Vec::len)
+            self.surface_visible.as_ref().map_or(0, String::len)
+                + self.surface_body_key.as_ref().map_or(0, String::len)
+                + self.surface_view_state.as_ref().map_or(0, Vec::len)
+                + self.message_endpoint.as_ref().map_or(0, String::len)
+                + self.message_payload.as_ref().map_or(0, Vec::len)
         }
     }
 
@@ -5179,15 +5307,24 @@ pub(crate) mod kernel_runtime {
 
     //#region 🔖️KernelFuture — the leaf `Future` every `ProgramBridgeEntry` async method awaits
     #[derive(Default)]
+    struct ResponseState {
+        result: Option<KernelOutcome>,
+        waker: Option<Waker>,
+    }
+
+    #[derive(Default)]
     struct ResponseSlot {
-        result: Mutex<Option<KernelOutcome>>,
-        waker: Mutex<Option<Waker>>,
+        state: Mutex<ResponseState>,
     }
 
     impl ResponseSlot {
         fn deliver(&self, outcome: KernelOutcome) {
-            *self.result.lock().expect("response slot lock") = Some(outcome);
-            if let Some(waker) = self.waker.lock().expect("response slot lock").take() {
+            let waker = {
+                let mut state = self.state.lock().expect("response slot lock");
+                state.result = Some(outcome);
+                state.waker.take()
+            };
+            if let Some(waker) = waker {
                 waker.wake();
             }
         }
@@ -5213,12 +5350,17 @@ pub(crate) mod kernel_runtime {
                     return Poll::Pending;
                 }
             }
-            let mut result = this.slot.result.lock().expect("response slot lock");
-            if let Some(outcome) = result.take() {
+            let waker = cx.waker().clone();
+            let mut state = this.slot.state.lock().expect("response slot lock");
+            if let Some(outcome) = state.result.take() {
+                let previous = state.waker.take();
+                drop(state);
+                drop(previous);
                 return Poll::Ready(outcome);
             }
-            drop(result);
-            *this.slot.waker.lock().expect("response slot lock") = Some(cx.waker().clone());
+            let previous = state.waker.replace(waker);
+            drop(state);
+            drop(previous);
             Poll::Pending
         }
     }
@@ -5358,7 +5500,7 @@ pub(crate) mod kernel_runtime {
                 Ok(event) => event,
                 Err(owner) => {
                     self.queue.enqueue_retained(KernelRequest::CloseRejectedEvents { owner }, Arc::new(ResponseSlot::default())).await;
-                    return Err("only one fixed SurfaceVisible event is admitted per kernel request turn".to_string());
+                    return Err("only one bounded SurfaceVisible or document-backbone Message event is admitted per kernel request turn".to_string());
                 }
             };
             match self.submit(KernelRequest::Exchange { instance, event }).await {
@@ -8044,7 +8186,8 @@ pub(crate) mod kernel_runtime {
 
         fn run_turn(self: Arc<Self>) {
             self.notified.store(false, std::sync::atomic::Ordering::Release);
-            if let Some(mut future) = self.future.lock().expect("kernel pool future lock").take() {
+            let future = self.future.lock().expect("kernel pool future lock").take();
+            if let Some(mut future) = future {
                 let waker = Waker::from(self.clone());
                 let mut context = Context::from_waker(&waker);
                 if future.as_mut().poll(&mut context).is_pending() {
@@ -9386,6 +9529,7 @@ mod boot_axis_parity_tests;
 
 struct RuntimeDispatchCursor {
     events: ui_host::DrainedEvents,
+    generation: u64,
     phase: u8,
     discrete_index: usize,
 }
@@ -9393,20 +9537,25 @@ struct RuntimeDispatchCursor {
 impl RuntimeDispatchCursor {
     fn new(mut events: ui_host::DrainedEvents) -> Self {
         events.metrics = None;
-        Self { events, phase: 0, discrete_index: 0 }
+        Self { events, generation: frame_latency::latest_frame_generation(), phase: 0, discrete_index: 0 }
+    }
+
+    fn new_for_generation(mut events: ui_host::DrainedEvents, generation: u64) -> Self {
+        events.metrics = None;
+        Self { events, generation, phase: 0, discrete_index: 0 }
     }
 
     fn take_next(&mut self) -> Option<ui_render::DispatchEvent> {
         if self.phase == 0 {
             self.phase = 1;
             if let Some(sample) = self.events.pointer_move.take() {
-                return Some(ui_render::DispatchEvent::PointerMove { pointer: sample.pointer, x: sample.x, y: sample.y });
+                return Some(ui_render::DispatchEvent::PointerMove { pointer: sample.pointer, x: sample.x, y: sample.y, modifiers: sample.modifiers });
             }
         }
         if self.phase == 1 {
             self.phase = 2;
             if let Some(sample) = self.events.scroll.take() {
-                return Some(ui_render::DispatchEvent::Scroll { x: sample.x, y: sample.y, delta_x: sample.delta_x, delta_y: sample.delta_y });
+                return Some(ui_render::DispatchEvent::Scroll { x: sample.x, y: sample.y, delta_x: sample.delta_x, delta_y: sample.delta_y, modifiers: sample.modifiers });
             }
         }
         while self.discrete_index < self.events.discrete.len() {
@@ -9440,21 +9589,47 @@ impl RuntimeDispatchCursor {
 }
 
 /// 📦️ Fixed FIFO ownership for admitted frame actions; refusal returns the identical action.
+struct FrameActionBatchOwner {
+    slots: [Option<ActionDescriptor>; ui_wgpu::wgpu::action::ACTION_BATCH_ITEM_CAPACITY],
+    expected: u8,
+    len: u8,
+    source_remaining: u8,
+    fault: Option<&'static str>,
+}
+
+impl FrameActionBatchOwner {
+    fn new(expected: usize) -> Self {
+        let expected = u8::try_from(expected).expect("validated frame action batch capacity");
+        Self { slots: std::array::from_fn(|_| None), expected, len: 0, source_remaining: expected, fault: None }
+    }
+
+    fn remaining(&self) -> usize {
+        usize::from(self.expected.saturating_sub(self.len))
+    }
+}
+
 struct FrameActionOwners {
     slots: [Option<ActionDescriptor>; WORLD3D_DEADLINE_CAPACITY],
     head: usize,
     len: usize,
+    batch: Option<FrameActionBatchOwner>,
 }
 
 impl Default for FrameActionOwners {
     fn default() -> Self {
-        Self { slots: std::array::from_fn(|_| None), head: 0, len: 0 }
+        Self { slots: std::array::from_fn(|_| None), head: 0, len: 0, batch: None }
     }
+}
+
+enum FrameActionBatchStage {
+    Pending,
+    Published,
+    Fault,
 }
 
 impl FrameActionOwners {
     fn try_push(&mut self, action: ActionDescriptor) -> Result<(), ActionDescriptor> {
-        if self.len == self.slots.len() {
+        if self.batch.is_some() || self.len == self.slots.len() {
             return Err(action);
         }
         let Some(index) = self.head.checked_add(self.len).map(|index| index % self.slots.len()) else { return Err(action) };
@@ -9467,6 +9642,99 @@ impl FrameActionOwners {
         Ok(())
     }
 
+    fn begin_batch(&mut self, expected: usize) -> bool {
+        if self.batch.is_some()
+            || expected == 0
+            || expected > ui_wgpu::wgpu::action::ACTION_BATCH_ITEM_CAPACITY
+            || self.len.checked_add(expected).is_none_or(|len| len > self.slots.len())
+        {
+            return false;
+        }
+        self.batch = Some(FrameActionBatchOwner::new(expected));
+        true
+    }
+
+    fn staged_batch_remaining(&self) -> Option<usize> {
+        self.batch.as_ref().map(FrameActionBatchOwner::remaining)
+    }
+
+    fn stage_batch_action(&mut self, action: ActionDescriptor) -> FrameActionBatchStage {
+        let Some(batch) = self.batch.as_mut() else { return FrameActionBatchStage::Fault };
+        if batch.fault.is_some() {
+            return FrameActionBatchStage::Fault;
+        }
+        if batch.len == batch.expected || usize::from(batch.len) == batch.slots.len() {
+            batch.fault = Some("frame input action batch staging exceeded its reserved slice");
+            return FrameActionBatchStage::Fault;
+        }
+        batch.slots[usize::from(batch.len)] = Some(action);
+        batch.len += 1;
+        if batch.len != batch.expected {
+            return FrameActionBatchStage::Pending;
+        }
+        for offset in 0..usize::from(batch.expected) {
+            let Some(index) = self.head.checked_add(self.len).and_then(|index| index.checked_add(offset)).map(|index| index % self.slots.len()) else {
+                batch.fault = Some("frame input action batch target index overflowed");
+                return FrameActionBatchStage::Fault;
+            };
+            if self.slots[index].is_some() {
+                batch.fault = Some("frame input action batch target was occupied");
+                return FrameActionBatchStage::Fault;
+            }
+        }
+        let mut batch = self.batch.take().expect("validated frame action batch");
+        for offset in 0..usize::from(batch.expected) {
+            let index = (self.head + self.len + offset) % self.slots.len();
+            self.slots[index] = batch.slots[offset].take();
+        }
+        self.len += usize::from(batch.expected);
+        FrameActionBatchStage::Published
+    }
+
+    fn consume_batch_source(&mut self) -> bool {
+        let Some(batch) = self.batch.as_mut() else { return false };
+        let Some(source_remaining) = batch.source_remaining.checked_sub(1) else {
+            batch.fault = Some("frame input action batch consumed beyond its source slice");
+            return false;
+        };
+        batch.source_remaining = source_remaining;
+        true
+    }
+
+    fn fail_batch(&mut self, fault: &'static str) -> bool {
+        let Some(batch) = self.batch.as_mut() else { return false };
+        batch.fault = Some(fault);
+        batch.len > 0
+    }
+
+    fn retire_failed_batch_step(&mut self, input: &mut InputState<ActionDescriptor>) -> Option<Result<FrameInputActionStep, &'static str>> {
+        let batch = self.batch.as_mut()?;
+        let fault = batch.fault?;
+        if batch.len > 0 {
+            batch.len -= 1;
+            batch.slots[usize::from(batch.len)] = None;
+            return Some(Ok(FrameInputActionStep::Pending));
+        }
+        let source_remaining = usize::from(batch.source_remaining);
+        if source_remaining > 0 {
+            match input.take_action_batch_len_step() {
+                Ok(Some(remaining)) if remaining == source_remaining => {}
+                Err(_) => return Some(Ok(FrameInputActionStep::Pending)),
+                _ => return Some(Err("bounded frame input action batch source identity changed while retiring")),
+            }
+            match input.take_action_step() {
+                Ok(Some(_)) => {
+                    batch.source_remaining -= 1;
+                    return Some(Ok(FrameInputActionStep::Pending));
+                }
+                Err(_) => return Some(Ok(FrameInputActionStep::Pending)),
+                Ok(None) => return Some(Err("bounded frame input action batch lost its source owner while retiring")),
+            }
+        }
+        self.batch = None;
+        Some(Err(fault))
+    }
+
     fn pop_front(&mut self) -> Option<ActionDescriptor> {
         if self.len == 0 {
             return None;
@@ -9477,8 +9745,74 @@ impl FrameActionOwners {
         Some(action)
     }
 
+    fn close_step(&mut self) -> bool {
+        if let Some(batch) = self.batch.as_mut() {
+            if batch.len > 0 {
+                batch.len -= 1;
+                batch.slots[usize::from(batch.len)] = None;
+                return false;
+            }
+            self.batch = None;
+            return false;
+        }
+        self.pop_front().is_none()
+    }
+
     fn is_empty(&self) -> bool {
-        self.len == 0
+        self.len == 0 && self.batch.is_none()
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum FrameInputActionStep {
+    Empty,
+    Deferred,
+    Pending,
+    Transferred,
+}
+
+fn fail_frame_action_batch(input: &mut InputState<ActionDescriptor>, actions: &mut FrameActionOwners, fault: &'static str) -> Result<FrameInputActionStep, &'static str> {
+    if actions.fail_batch(fault) {
+        return Ok(FrameInputActionStep::Pending);
+    }
+    actions.retire_failed_batch_step(input).unwrap_or(Err(fault))
+}
+
+fn transfer_frame_input_action(input: &mut InputState<ActionDescriptor>, actions: &mut FrameActionOwners) -> Result<FrameInputActionStep, &'static str> {
+    if let Some(step) = actions.retire_failed_batch_step(input) {
+        return step;
+    }
+    let source_remaining = match input.take_action_batch_len_step() {
+        Ok(remaining) => remaining,
+        Err(_) if actions.staged_batch_remaining().is_some() => return fail_frame_action_batch(input, actions, "bounded frame input action batch source faulted"),
+        Err(_) => return Err("bounded frame input action authority faulted"),
+    };
+    if let Some(target_remaining) = actions.staged_batch_remaining() {
+        if source_remaining != Some(target_remaining) {
+            return fail_frame_action_batch(input, actions, "bounded frame input action batch identity changed while staged");
+        }
+    } else {
+        let Some(source_remaining) = source_remaining else { return Ok(FrameInputActionStep::Empty) };
+        if !actions.begin_batch(source_remaining) {
+            return Ok(FrameInputActionStep::Deferred);
+        }
+    }
+    let action = match input.take_action_step() {
+        Ok(Some(action)) => action,
+        Ok(None) => return fail_frame_action_batch(input, actions, "bounded frame input action batch lost its source owner"),
+        Err(_) => return fail_frame_action_batch(input, actions, "bounded frame input action batch source faulted"),
+    };
+    if !actions.consume_batch_source() {
+        return fail_frame_action_batch(input, actions, "bounded frame input action batch source accounting faulted");
+    }
+    let action = match action.into_descriptor() {
+        Ok(action) => action,
+        Err(_) => return fail_frame_action_batch(input, actions, "bounded frame input action failed materialization"),
+    };
+    match actions.stage_batch_action(action) {
+        FrameActionBatchStage::Pending => Ok(FrameInputActionStep::Pending),
+        FrameActionBatchStage::Published => Ok(FrameInputActionStep::Transferred),
+        FrameActionBatchStage::Fault => Ok(FrameInputActionStep::Pending),
     }
 }
 
@@ -9551,7 +9885,7 @@ impl FrameDeferredCursor {
     }
 
     fn close_step(&mut self) -> bool {
-        if self.actions.pop_front().is_some() {
+        if !self.actions.close_step() {
             return false;
         }
         if self.shell_maintenance {
@@ -9871,6 +10205,11 @@ impl RuntimeApply {
         let mut cursor_value = cursor.take().expect("dispatch cursor admitted above");
         let event = cursor_value.take_next().expect("non-empty dispatch cursor");
         mailbox.spawn_dispatch_reserved(async move {
+            let _latency = frame_latency::FrameLatencyTimer::start(
+                frame_latency::FrameLatencyAuthority::renderer_frame(cursor_value.generation),
+                frame_latency::FrameLatencyStage::DispatchApply,
+                1,
+            );
             winit_app::dispatch_normalized_event(&mut interaction, event).await;
             (interaction, cursor_value)
         });
@@ -9938,6 +10277,11 @@ impl RuntimeApply {
         };
         let Some(work) = cursor_value.take_next() else {
             runtime.return_interaction(interaction);
+            if !cursor_value.terminal_is_empty() {
+                cursor_value.closing = true;
+                *cursor = Some(cursor_value);
+                return false;
+            }
             return true;
         };
         if matches!(work, FrameDeferredWork::ShellMaintenance) {
@@ -10227,6 +10571,197 @@ fn enqueue_runtime_completion(completions: &Mutex<RuntimeCompletionQueue>, prese
     true
 }
 
+#[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
+enum StagedReferenceImage {
+    Writing { token: WorldAssetRequestToken, url: String, descriptor: SceneRasterDescriptor, writer: SceneRasterWriter },
+    Ready { token: WorldAssetRequestToken, url: String, lease: SceneRasterLease },
+}
+
+#[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
+struct StagedReferenceImageAuthority {
+    entries: std::collections::VecDeque<StagedReferenceImage>,
+}
+
+#[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
+impl StagedReferenceImageAuthority {
+    const BUSY: u8 = 0;
+    const WRITER: u8 = 1;
+    const REUSED: u8 = 2;
+
+    fn new() -> Self {
+        Self { entries: std::collections::VecDeque::with_capacity(4) }
+    }
+
+    fn begin(&mut self, pool: &SceneRasterPool, token: WorldAssetRequestToken, url: String, descriptor: SceneRasterDescriptor, owner: u64) -> Result<u8, &'static str> {
+        if let Some(entry) = self.entries.iter().find(|entry| match entry {
+            StagedReferenceImage::Writing { token: candidate, url: candidate_url, descriptor: candidate_descriptor, .. } => *candidate == token && candidate_url == &url && *candidate_descriptor == descriptor,
+            StagedReferenceImage::Ready { token: candidate, url: candidate_url, lease } => *candidate == token && candidate_url == &url && lease.identity().descriptor() == descriptor,
+        }) {
+            return Ok(match entry {
+                StagedReferenceImage::Writing { .. } => Self::BUSY,
+                StagedReferenceImage::Ready { .. } => Self::REUSED,
+            });
+        }
+        if self.entries.len() >= 4 {
+            return Ok(Self::BUSY);
+        }
+        let (entry, mode) = match pool.begin(descriptor, owner, SceneRasterWriteMode::Streamed) {
+            SceneRasterBegin::Writer(writer) => (StagedReferenceImage::Writing { token, url, descriptor, writer }, Self::WRITER),
+            SceneRasterBegin::Reused(lease) => (StagedReferenceImage::Ready { token, url, lease }, Self::REUSED),
+            SceneRasterBegin::Backpressure(_) => return Ok(Self::BUSY),
+            SceneRasterBegin::Refused(fault) => return Err(fault),
+        };
+        self.entries.push_back(entry);
+        Ok(mode)
+    }
+
+    fn push(&mut self, pool: &SceneRasterPool, token: WorldAssetRequestToken, offset: usize, bytes: &[u8]) -> Result<bool, &'static str> {
+        let Some(entry) = self.entries.iter_mut().find(|entry| matches!(entry, StagedReferenceImage::Writing { token: candidate, .. } if *candidate == token)) else {
+            return Ok(self.entries.iter().any(|entry| matches!(entry, StagedReferenceImage::Ready { token: candidate, .. } if *candidate == token)));
+        };
+        let StagedReferenceImage::Writing { writer, .. } = entry else { unreachable!("matched writing reference image") };
+        if writer.cursor() != offset {
+            return Err("reference image row cursor is stale");
+        }
+        *writer = pool.push(*writer, bytes)?;
+        Ok(true)
+    }
+
+    fn seal(&mut self, pool: &SceneRasterPool, token: WorldAssetRequestToken) -> Result<bool, &'static str> {
+        let Some(index) = self.entries.iter().position(|entry| matches!(entry, StagedReferenceImage::Writing { token: candidate, .. } if *candidate == token)) else {
+            return Ok(self.entries.iter().any(|entry| matches!(entry, StagedReferenceImage::Ready { token: candidate, .. } if *candidate == token)));
+        };
+        let Some(StagedReferenceImage::Writing { token, url, writer, .. }) = self.entries.remove(index) else { unreachable!("located writing reference image") };
+        match pool.seal(writer) {
+            Ok(lease) => {
+                self.entries.push_back(StagedReferenceImage::Ready { token, url, lease });
+                Ok(true)
+            }
+            Err(fault) => {
+                let _ = pool.cancel(writer);
+                Err(fault)
+            }
+        }
+    }
+
+    fn take(&mut self, token: WorldAssetRequestToken, url: &str) -> Option<SceneRasterLease> {
+        let index = self.entries.iter().position(|entry| matches!(entry, StagedReferenceImage::Ready { token: candidate, url: candidate_url, .. } if *candidate == token && candidate_url == url))?;
+        let Some(StagedReferenceImage::Ready { lease, .. }) = self.entries.remove(index) else { unreachable!("located ready reference image") };
+        Some(lease)
+    }
+
+    fn restore(&mut self, token: WorldAssetRequestToken, url: String, lease: SceneRasterLease) {
+        assert!(self.entries.len() < 4, "a just-taken reference raster restores into its exact stage slot");
+        self.entries.push_back(StagedReferenceImage::Ready { token, url, lease });
+    }
+
+    fn discard(&mut self, pool: &SceneRasterPool, token: WorldAssetRequestToken) {
+        let Some(index) = self.entries.iter().position(|entry| match entry {
+            StagedReferenceImage::Writing { token: candidate, .. } | StagedReferenceImage::Ready { token: candidate, .. } => *candidate == token,
+        }) else { return };
+        if let Some(StagedReferenceImage::Writing { writer, .. }) = self.entries.remove(index) {
+            let _ = pool.cancel(writer);
+        }
+    }
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+enum NativeReferenceDecodeOutput {
+    Ready(SceneRasterLease),
+    Waiting(DecodedReferenceImage),
+    Failed,
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+struct NativeReferenceDecodeJob {
+    token: WorldAssetRequestToken,
+    url: String,
+    input: Mutex<Option<Vec<u8>>>,
+    decoded: Mutex<Option<DecodedReferenceImage>>,
+    output: Mutex<Option<NativeReferenceDecodeOutput>>,
+    phase: std::sync::atomic::AtomicU8,
+    cancelled: AtomicBool,
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+impl NativeReferenceDecodeJob {
+    fn new(token: WorldAssetRequestToken, url: String, bytes: Vec<u8>) -> Self {
+        Self { token, url, input: Mutex::new(Some(bytes)), decoded: Mutex::new(None), output: Mutex::new(None), phase: std::sync::atomic::AtomicU8::new(0), cancelled: AtomicBool::new(false) }
+    }
+
+    fn try_schedule(self: &Arc<Self>, mailbox: RuntimeMailbox) -> bool {
+        if self.phase.compare_exchange(0, 1, Ordering::AcqRel, Ordering::Acquire).is_err() {
+            return false;
+        }
+        let scheduled = self.clone();
+        let pool = mailbox.0.scene_raster_pool.clone();
+        let job: semio_framework_async::Job = Box::new(move || {
+            let bytes = scheduled.input.lock().unwrap_or_else(|poisoned| poisoned.into_inner()).take();
+            let decoded = scheduled.decoded.lock().unwrap_or_else(|poisoned| poisoned.into_inner()).take().or_else(|| {
+                if scheduled.cancelled.load(Ordering::Acquire) { None } else { bytes.as_deref().and_then(infinite_world::world::decode_reference_image_bytes) }
+            });
+            let output = if scheduled.cancelled.load(Ordering::Acquire) {
+                NativeReferenceDecodeOutput::Failed
+            } else if let Some(decoded) = decoded {
+                let descriptor = SceneRasterDescriptor { width: decoded.width, height: decoded.height, source_digest: decoded.source_digest, source_revision: 1, profile: SceneRasterProfile::ReferenceImageMapNoColorSpace, mesh: None };
+                let owner = decoded.source_digest[0].wrapping_add(decoded.source_digest[1]).max(1);
+                match pool.begin(descriptor, owner, SceneRasterWriteMode::Moved) {
+                    SceneRasterBegin::Reused(lease) => NativeReferenceDecodeOutput::Ready(lease),
+                    SceneRasterBegin::Writer(writer) => match pool.prepare_moved(writer, decoded.pixels).and_then(|prepared| pool.seal_prepared_moved(prepared)) {
+                        Ok(lease) => NativeReferenceDecodeOutput::Ready(lease),
+                        Err((_pixels, _fault)) => {
+                            let _ = pool.cancel(writer);
+                            NativeReferenceDecodeOutput::Failed
+                        }
+                    },
+                    SceneRasterBegin::Backpressure(_) => NativeReferenceDecodeOutput::Waiting(decoded),
+                    SceneRasterBegin::Refused(_) => NativeReferenceDecodeOutput::Failed,
+                }
+            } else {
+                NativeReferenceDecodeOutput::Failed
+            };
+            *scheduled.output.lock().unwrap_or_else(|poisoned| poisoned.into_inner()) = Some(output);
+            scheduled.phase.store(2, Ordering::Release);
+            if let Some(waker) = mailbox.0.waker.lock().expect("runtime completion waker lock").as_ref() {
+                waker();
+            }
+        });
+        match renderer_worker_pool().try_submit(semio_framework_async::Lane::Maintenance, job) {
+            Ok(()) => true,
+            Err(error) => {
+                drop(error.into_job());
+                self.phase.store(0, Ordering::Release);
+                false
+            }
+        }
+    }
+
+    fn cancel(&self) {
+        self.cancelled.store(true, Ordering::Release);
+        if self.phase.compare_exchange(0, 2, Ordering::AcqRel, Ordering::Acquire).is_ok() {
+            self.input.lock().unwrap_or_else(|poisoned| poisoned.into_inner()).take();
+            self.decoded.lock().unwrap_or_else(|poisoned| poisoned.into_inner()).take();
+            *self.output.lock().unwrap_or_else(|poisoned| poisoned.into_inner()) = Some(NativeReferenceDecodeOutput::Failed);
+        }
+    }
+
+    fn take_output(&self) -> Option<NativeReferenceDecodeOutput> {
+        if self.phase.load(Ordering::Acquire) != 2 {
+            return None;
+        }
+        self.output.lock().unwrap_or_else(|poisoned| poisoned.into_inner()).take()
+    }
+
+    fn rearm(&self, decoded: DecodedReferenceImage) {
+        *self.decoded.lock().unwrap_or_else(|poisoned| poisoned.into_inner()) = Some(decoded);
+        self.phase.store(0, Ordering::Release);
+    }
+
+    fn restore_output(&self, output: NativeReferenceDecodeOutput) {
+        *self.output.lock().unwrap_or_else(|poisoned| poisoned.into_inner()) = Some(output);
+    }
+}
+
 struct RuntimeMailboxInner {
     runtime: Mutex<AppRuntime>,
     presentation_authority: RuntimePresentationAuthority,
@@ -10247,6 +10782,12 @@ struct RuntimeMailboxInner {
     world3d_asset_cursor: Mutex<usize>,
     world3d_asset_decode_cursor: Mutex<usize>,
     asset_probe: Mutex<Option<RendererAssetProbe>>,
+    #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
+    staged_reference_images: Mutex<StagedReferenceImageAuthority>,
+    #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
+    scene_raster_pool: SceneRasterPool,
+    #[cfg(not(target_arch = "wasm32"))]
+    native_reference_decode: Mutex<Option<Arc<NativeReferenceDecodeJob>>>,
     native_asset_fetching: AtomicBool,
     native_asset_blocked: Mutex<Option<RendererAssetFetchOwner>>,
     #[cfg(not(target_arch = "wasm32"))]
@@ -10404,6 +10945,12 @@ impl RuntimeMailbox {
             world3d_asset_cursor: Mutex::new(0),
             world3d_asset_decode_cursor: Mutex::new(0),
             asset_probe: Mutex::new(None),
+            #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
+            staged_reference_images: Mutex::new(StagedReferenceImageAuthority::new()),
+            #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
+            scene_raster_pool: infinite_world::world::world_scene_raster_pool(),
+            #[cfg(not(target_arch = "wasm32"))]
+            native_reference_decode: Mutex::new(None),
             native_asset_fetching: AtomicBool::new(false),
             native_asset_blocked: Mutex::new(None),
             #[cfg(not(target_arch = "wasm32"))]
@@ -10425,6 +10972,22 @@ impl RuntimeMailbox {
 
     fn try_lock(&self) -> std::sync::TryLockResult<std::sync::MutexGuard<'_, AppRuntime>> {
         self.0.try_lock()
+    }
+
+    pub(crate) fn publish_hub_document_status(&self, document_key: String, remote: crate::shell::ShellHubRemoteV1) -> bool {
+        let Ok(mut runtime) = self.try_lock() else { return false };
+        let Some(interaction) = runtime.interaction.as_mut() else { return false };
+        interaction.shell.publish_hub_document_status(document_key, remote);
+        self.0.presentation_authority.mark_scene_changed();
+        true
+    }
+
+    pub(crate) fn retire_hub_document_status(&self, document_key: &str) -> bool {
+        let Ok(mut runtime) = self.try_lock() else { return false };
+        let Some(interaction) = runtime.interaction.as_mut() else { return false };
+        interaction.shell.retire_hub_document_status(document_key);
+        self.0.presentation_authority.mark_scene_changed();
+        true
     }
 
     fn world_cursor_wake_authority(&self) -> infinite_world::world::WorldCursorWakeAuthority {
@@ -10470,6 +11033,9 @@ impl RuntimeMailbox {
             drop(runtime);
             return self.close_world_cursor_wake_step();
         };
+        if interaction.shell.advance_world3d_retirement_step() {
+            return false;
+        }
         let Ok(mut cursor) = self.0.world3d_close_cursor.try_lock() else {
             return false;
         };
@@ -10559,9 +11125,10 @@ impl RuntimeMailbox {
             return None;
         };
         *cursor += 1;
-        let owner = take_next_world3d_asset(interaction.shell.world3d_states.get_mut(&surface_id)?)?;
+        let surface_token = interaction.shell.world3d_states.token(&surface_id)?;
+        let owner = take_next_world3d_asset(interaction.shell.world3d_states.get_token_mut(surface_token)?)?;
         let surface = WorldAssetMetadataId::try_from_str(&surface_id).ok()?;
-        Some(RendererAssetFetchOwner::World { surface, owner })
+        Some(RendererAssetFetchOwner::World { surface, surface_token, owner })
     }
 
     /// 📡️ Admits the response byte credits one fetch declared. Same three-way answer as
@@ -10576,10 +11143,10 @@ impl RuntimeMailbox {
                     RendererAssetSealStep::Refused("shared asset authority refused the response credits")
                 }
             }
-            RendererAssetFetchOwner::World { surface, owner } => {
+            RendererAssetFetchOwner::World { surface: _, surface_token, owner } => {
                 let Ok(mut runtime) = self.try_lock() else { return RendererAssetSealStep::Busy };
                 let Some(interaction) = runtime.interaction.as_mut() else { return RendererAssetSealStep::Busy };
-                let Some(state) = interaction.shell.world3d_states.get_mut(surface.as_str()) else { return RendererAssetSealStep::Busy };
+                let Some(state) = interaction.shell.world3d_states.get_token_mut(*surface_token) else { return RendererAssetSealStep::Refused("the world surface generation retired") };
                 match reserve_world3d_asset_response(state, owner, byte_credits) {
                     Ok(()) => RendererAssetSealStep::Granted,
                     Err(_) => RendererAssetSealStep::Refused("the world asset authority refused the response credits"),
@@ -10600,18 +11167,19 @@ impl RuntimeMailbox {
             return None;
         };
         *cursor += 1;
-        let owner = take_next_completed_world3d_asset_step(interaction.shell.world3d_states.get_mut(&surface_id)?)?;
+        let surface_token = interaction.shell.world3d_states.token(&surface_id)?;
+        let owner = take_next_completed_world3d_asset_step(interaction.shell.world3d_states.get_token_mut(surface_token)?)?;
         let surface = WorldAssetMetadataId::try_from_str(&surface_id).ok()?;
-        Some(RendererAssetFetchOwner::World { surface, owner })
+        Some(RendererAssetFetchOwner::World { surface, surface_token, owner })
     }
 
     fn finish_renderer_asset_owner(&self, fetch: RendererAssetFetchOwner, rejection: Option<(&'static str, WorldAssetRequestKind, String)>) -> Result<(), RendererAssetFetchOwner> {
         match fetch {
             RendererAssetFetchOwner::Shared(owner) => finish_renderer_asset(owner).map_err(RendererAssetFetchOwner::Shared),
-            RendererAssetFetchOwner::World { surface, owner } => {
-                let Ok(mut runtime) = self.try_lock() else { return Err(RendererAssetFetchOwner::World { surface, owner }) };
-                let Some(interaction) = runtime.interaction.as_mut() else { return Err(RendererAssetFetchOwner::World { surface, owner }) };
-                let Some(state) = interaction.shell.world3d_states.get_mut(surface.as_str()) else { return Err(RendererAssetFetchOwner::World { surface, owner }) };
+            RendererAssetFetchOwner::World { surface, surface_token, owner } => {
+                let Ok(mut runtime) = self.try_lock() else { return Err(RendererAssetFetchOwner::World { surface, surface_token, owner }) };
+                let Some(interaction) = runtime.interaction.as_mut() else { return Err(RendererAssetFetchOwner::World { surface, surface_token, owner }) };
+                let Some(state) = interaction.shell.world3d_states.get_token_mut(surface_token) else { return Ok(()) };
                 if let Some((_, kind, url)) = rejection {
                     match kind {
                         WorldAssetRequestKind::Terrain { z, x, y } => {
@@ -10620,7 +11188,7 @@ impl RuntimeMailbox {
                         _ => mark_world3d_asset_miss(state, &url),
                     }
                 }
-                finish_world3d_asset(state, owner).map_err(|owner| RendererAssetFetchOwner::World { surface, owner })
+                finish_world3d_asset(state, owner).map_err(|owner| RendererAssetFetchOwner::World { surface, surface_token, owner })
             }
         }
     }
@@ -10681,10 +11249,19 @@ impl RuntimeMailbox {
                 probe.begin_close();
                 return true;
             }
-            let surface = match probe.owner() {
-                RendererAssetFetchOwner::World { surface, .. } => *surface,
+            let surface_token = match probe.owner() {
+                RendererAssetFetchOwner::World { surface_token, .. } => *surface_token,
                 RendererAssetFetchOwner::Shared(_) => return false,
             };
+            let generation_is_live = {
+                let Ok(runtime) = self.try_lock() else { return false };
+                let Some(interaction) = runtime.interaction.as_ref() else { return false };
+                interaction.shell.world3d_states.get_token(surface_token).is_some()
+            };
+            if !generation_is_live {
+                probe.begin_close();
+                return true;
+            }
             // 🏔️ DEM tiles land in the terrain session, not the mesh table: the banded tile meshes
             // are built by the next `sync_terrain_state` pass over the now-decodable tile.
             if let WorldAssetRequestKind::Terrain { z, x, y } = probe.owner().kind() {
@@ -10697,9 +11274,13 @@ impl RuntimeMailbox {
                         return true;
                     }
                 };
-                let Ok(mut runtime) = self.try_lock() else { return false };
-                let Some(interaction) = runtime.interaction.as_mut() else { return false };
-                let Some(state) = interaction.shell.world3d_states.get_mut(surface.as_str()) else { return false };
+                let Ok(mut runtime) = self.try_lock() else {
+                    return false;
+                };
+                let Some(interaction) = runtime.interaction.as_mut() else {
+                    return false;
+                };
+                let Some(state) = interaction.shell.world3d_states.get_token_mut(surface_token) else { probe.begin_close(); return true };
                 apply_world3d_terrain_tile_bytes(state, z, x, y, &bytes);
                 probe.begin_close();
                 return true;
@@ -10707,23 +11288,41 @@ impl RuntimeMailbox {
             #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
             if matches!(probe.owner().kind(), WorldAssetRequestKind::ReferenceImage) {
                 let url = probe.owner().url().to_string();
-                let bytes = match collect_world3d_asset_bytes(match probe.owner_mut() {
-                    RendererAssetFetchOwner::World { owner, .. } | RendererAssetFetchOwner::Shared(owner) => owner,
-                }) {
-                    Ok(bytes) => bytes,
-                    Err(_) => {
+                let token = probe.owner().owner().token();
+                let staged = self.take_staged_reference_image(token, &url);
+                if let Some(lease) = staged {
+                    let Ok(mut runtime) = self.try_lock() else {
+                        self.restore_staged_reference_image(token, url, lease);
+                        return false;
+                    };
+                    let Some(interaction) = runtime.interaction.as_mut() else {
+                        self.restore_staged_reference_image(token, url, lease);
+                        return false;
+                    };
+                    let Some(state) = interaction.shell.world3d_states.get_token_mut(surface_token) else {
                         probe.begin_close();
                         return true;
-                    }
-                };
-                let Ok(mut runtime) = self.try_lock() else { return false };
-                let Some(interaction) = runtime.interaction.as_mut() else { return false };
-                let Some(state) = interaction.shell.world3d_states.get_mut(surface.as_str()) else { return false };
-                log_debug_diagnostic(&format!("[DEBUG] reference image decode begin url={url} bytes={}", bytes.len()));
-                apply_reference_image_bytes(state, &url, &bytes);
-                log_debug_diagnostic(&format!("[DEBUG] reference image decode done url={url}"));
-                probe.begin_close();
-                return true;
+                    };
+                    let _ = apply_decoded_reference_raster(state, &url, lease);
+                    probe.begin_close();
+                    return true;
+                }
+                #[cfg(target_arch = "wasm32")]
+                {
+                    let Ok(mut runtime) = self.try_lock() else { return false };
+                    let Some(interaction) = runtime.interaction.as_mut() else { return false };
+                    let Some(state) = interaction.shell.world3d_states.get_token_mut(surface_token) else {
+                        probe.begin_close();
+                        return true;
+                    };
+                    mark_world3d_asset_miss(state, &url);
+                    probe.begin_close();
+                    return true;
+                }
+                #[cfg(not(target_arch = "wasm32"))]
+                {
+                    return self.pump_native_reference_decode(probe, surface_token, token, url);
+                }
             }
             let Some(lease) = probe.take_ready_mesh_lease() else { return false };
             let Ok(mut runtime) = self.try_lock() else {
@@ -10734,9 +11333,10 @@ impl RuntimeMailbox {
                 probe.restore_ready_mesh_lease(lease);
                 return false;
             };
-            let Some(state) = interaction.shell.world3d_states.get_mut(surface.as_str()) else {
+            let Some(state) = interaction.shell.world3d_states.get_token_mut(surface_token) else {
                 probe.restore_ready_mesh_lease(lease);
-                return false;
+                probe.begin_close();
+                return true;
             };
             match publish_world3d_asset_mesh_lease(state, probe.owner().url(), lease) {
                 Ok(()) => {
@@ -10818,11 +11418,11 @@ impl RuntimeMailbox {
     pub(crate) fn return_renderer_asset_owner(&self, fetch: RendererAssetFetchOwner) -> Result<(), RendererAssetFetchOwner> {
         match fetch {
             RendererAssetFetchOwner::Shared(owner) => return_renderer_asset(owner).map_err(RendererAssetFetchOwner::Shared),
-            RendererAssetFetchOwner::World { surface, owner } => {
-                let Ok(mut runtime) = self.try_lock() else { return Err(RendererAssetFetchOwner::World { surface, owner }) };
-                let Some(interaction) = runtime.interaction.as_mut() else { return Err(RendererAssetFetchOwner::World { surface, owner }) };
-                let Some(state) = interaction.shell.world3d_states.get_mut(surface.as_str()) else { return Err(RendererAssetFetchOwner::World { surface, owner }) };
-                return_world3d_asset(state, owner).map_err(|owner| RendererAssetFetchOwner::World { surface, owner })
+            RendererAssetFetchOwner::World { surface, surface_token, owner } => {
+                let Ok(mut runtime) = self.try_lock() else { return Err(RendererAssetFetchOwner::World { surface, surface_token, owner }) };
+                let Some(interaction) = runtime.interaction.as_mut() else { return Err(RendererAssetFetchOwner::World { surface, surface_token, owner }) };
+                let Some(state) = interaction.shell.world3d_states.get_token_mut(surface_token) else { return Err(RendererAssetFetchOwner::World { surface, surface_token, owner }) };
+                return_world3d_asset(state, owner).map_err(|owner| RendererAssetFetchOwner::World { surface, surface_token, owner })
             }
         }
     }
@@ -10849,10 +11449,10 @@ impl RuntimeMailbox {
                     RendererAssetSealStep::Refused("shared asset authority refused the seal witness")
                 }
             }
-            RendererAssetFetchOwner::World { surface, owner } => {
+            RendererAssetFetchOwner::World { surface: _, surface_token, owner } => {
                 let Ok(mut runtime) = self.0.runtime.try_lock() else { return RendererAssetSealStep::Busy };
                 let Some(interaction) = runtime.interaction.as_mut() else { return RendererAssetSealStep::Busy };
-                let Some(state) = interaction.shell.world3d_states.get_mut(surface.as_str()) else { return RendererAssetSealStep::Busy };
+                let Some(state) = interaction.shell.world3d_states.get_token_mut(*surface_token) else { return RendererAssetSealStep::Refused("the world surface generation retired") };
                 match seal_world3d_asset_response(state, owner) {
                     Ok(()) => RendererAssetSealStep::Granted,
                     Err(_) => RendererAssetSealStep::Refused("the world asset authority refused the seal witness"),
@@ -10864,6 +11464,17 @@ impl RuntimeMailbox {
     pub(crate) fn close_renderer_asset_step(&self) -> bool {
         #[cfg(not(target_arch = "wasm32"))]
         self.0.native_asset_http_cancel.cancel_now();
+        #[cfg(not(target_arch = "wasm32"))]
+        {
+            let mut decode = self.0.native_reference_decode.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
+            if let Some(job) = decode.as_ref() {
+                job.cancel();
+                if job.phase.load(Ordering::Acquire) != 2 {
+                    return false;
+                }
+                *decode = None;
+            }
+        }
         if !self.close_renderer_asset_probe_step() {
             return false;
         }
@@ -10885,14 +11496,172 @@ impl RuntimeMailbox {
         close_renderer_asset_step()
     }
 
-    #[cfg(not(target_arch = "wasm32"))]
-    fn renderer_asset_cancelled(&self, fetch: &RendererAssetFetchOwner) -> bool {
+    fn renderer_asset_current(&self, fetch: &RendererAssetFetchOwner) -> Option<bool> {
         match fetch {
-            RendererAssetFetchOwner::Shared(owner) => renderer_asset_io().lock().map_or(true, |authority| authority.cancellation_requested(owner.token())),
-            RendererAssetFetchOwner::World { surface, owner } => {
-                let Ok(mut runtime) = self.try_lock() else { return true };
-                let Some(interaction) = runtime.interaction.as_mut() else { return true };
-                interaction.shell.world3d_states.get(surface.as_str()).is_none_or(|state| world3d_asset_cancellation_requested(state, owner.token()))
+            RendererAssetFetchOwner::Shared(owner) => renderer_asset_io().lock().ok().map(|authority| !authority.cancellation_requested(owner.token())),
+            RendererAssetFetchOwner::World { surface: _, surface_token, owner } => {
+                let Ok(runtime) = self.try_lock() else { return None };
+                let interaction = runtime.interaction.as_ref()?;
+                Some(interaction.shell.world3d_states.get_token(*surface_token).is_some_and(|state| !world3d_asset_cancellation_requested(state, owner.token())))
+            }
+        }
+    }
+
+    pub(crate) fn renderer_asset_cancelled(&self, fetch: &RendererAssetFetchOwner) -> bool {
+        self.renderer_asset_current(fetch) != Some(true)
+    }
+
+    pub(crate) fn browser_renderer_asset_current(&self, fetch: &RendererAssetFetchOwner) -> bool {
+        self.renderer_asset_current(fetch) != Some(false)
+    }
+
+    pub(crate) fn reject_renderer_reference_image(&self, fetch: &RendererAssetFetchOwner) -> bool {
+        let RendererAssetFetchOwner::World { surface: _, surface_token, owner } = fetch else { return true };
+        let Ok(mut runtime) = self.try_lock() else { return false };
+        let Some(interaction) = runtime.interaction.as_mut() else { return false };
+        let Some(state) = interaction.shell.world3d_states.get_token_mut(*surface_token) else { return true };
+        if !world3d_asset_cancellation_requested(state, owner.token()) {
+            mark_world3d_asset_miss(state, owner.url());
+        }
+        true
+    }
+
+    #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
+    fn restore_staged_reference_image(&self, token: WorldAssetRequestToken, url: String, lease: SceneRasterLease) {
+        let mut staged = self.0.staged_reference_images.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
+        staged.restore(token, url, lease);
+    }
+
+    #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
+    pub(crate) fn begin_renderer_reference_image(&self, fetch: &RendererAssetFetchOwner, width: u32, height: u32, digest: &str) -> Result<u8, &'static str> {
+        if !matches!(fetch.kind(), WorldAssetRequestKind::ReferenceImage) || !self.browser_renderer_asset_current(fetch) {
+            return Err("reference image request retired");
+        }
+        if digest.len() != 64 || !digest.bytes().all(|byte| byte.is_ascii_hexdigit()) {
+            return Err("reference image source digest is invalid");
+        }
+        let source_digest = [u64::from_str_radix(&digest[..16], 16).map_err(|_| "reference image source digest is invalid")?, u64::from_str_radix(&digest[16..32], 16).map_err(|_| "reference image source digest is invalid")?];
+        let descriptor = SceneRasterDescriptor { width, height, source_digest, source_revision: 1, profile: SceneRasterProfile::ReferenceImageMapNoColorSpace, mesh: None };
+        if descriptor.byte_len().is_none_or(|bytes| bytes > ui_wgpu::wgpu::SCENE_RASTER_ITEM_BYTES) {
+            return Err("reference image exceeded fixed RGBA credits");
+        }
+        let owner = fetch.generation().wrapping_add(fetch.revision().rotate_left(17)).max(1);
+        let mut staged = self.0.staged_reference_images.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
+        staged.begin(&self.0.scene_raster_pool, fetch.owner().token(), fetch.url().to_string(), descriptor, owner)
+    }
+
+    #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
+    pub(crate) fn push_renderer_reference_image_rows(&self, fetch: &RendererAssetFetchOwner, offset: usize, pixels: &[u8]) -> Result<bool, &'static str> {
+        if !matches!(fetch.kind(), WorldAssetRequestKind::ReferenceImage) || !self.browser_renderer_asset_current(fetch) {
+            return Err("reference image request retired");
+        }
+        let mut staged = self.0.staged_reference_images.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
+        staged.push(&self.0.scene_raster_pool, fetch.owner().token(), offset, pixels)
+    }
+
+    #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
+    pub(crate) fn seal_renderer_reference_image(&self, fetch: &RendererAssetFetchOwner) -> Result<bool, &'static str> {
+        if !matches!(fetch.kind(), WorldAssetRequestKind::ReferenceImage) || !self.browser_renderer_asset_current(fetch) {
+            return Err("reference image request retired");
+        }
+        let mut staged = self.0.staged_reference_images.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
+        staged.seal(&self.0.scene_raster_pool, fetch.owner().token())
+    }
+
+    #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
+    pub(crate) fn discard_staged_reference_image(&self, token: WorldAssetRequestToken) {
+        let mut staged = self.0.staged_reference_images.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
+        staged.discard(&self.0.scene_raster_pool, token);
+    }
+
+    #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
+    fn take_staged_reference_image(&self, token: WorldAssetRequestToken, url: &str) -> Option<SceneRasterLease> {
+        let mut staged = self.0.staged_reference_images.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
+        staged.take(token, url)
+    }
+
+    #[cfg(not(target_arch = "wasm32"))]
+    fn pump_native_reference_decode(&self, probe: &mut RendererAssetProbe, surface_token: AdmittedSurfaceToken, token: WorldAssetRequestToken, url: String) -> bool {
+        let job = {
+            let mut slot = self.0.native_reference_decode.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
+            if let Some(job) = slot.as_ref() {
+                if job.token != token || job.url != url {
+                    self.record_frame_fault("native reference decode owner changed before terminal handback");
+                    return false;
+                }
+                job.clone()
+            } else {
+                let bytes = match collect_world3d_asset_bytes(match probe.owner_mut() {
+                    RendererAssetFetchOwner::World { owner, .. } | RendererAssetFetchOwner::Shared(owner) => owner,
+                }) {
+                    Ok(bytes) => bytes,
+                    Err(_) => {
+                        probe.begin_close();
+                        return true;
+                    }
+                };
+                let job = Arc::new(NativeReferenceDecodeJob::new(token, url.clone(), bytes));
+                *slot = Some(job.clone());
+                job
+            }
+        };
+        if self.renderer_asset_cancelled(probe.owner()) {
+            job.cancel();
+        }
+        match job.phase.load(Ordering::Acquire) {
+            0 => {
+                let scheduled = job.try_schedule(self.clone());
+                if !scheduled {
+                    if let Some(waker) = self.0.waker.lock().expect("runtime completion waker lock").as_ref() {
+                        waker();
+                    }
+                }
+                true
+            }
+            1 => false,
+            2 => {
+                let output = match job.take_output().unwrap_or(NativeReferenceDecodeOutput::Failed) {
+                    NativeReferenceDecodeOutput::Waiting(decoded) => {
+                        let _ = self.0.scene_raster_pool.maintenance_step();
+                        job.rearm(decoded);
+                        if let Some(waker) = self.0.waker.lock().expect("runtime completion waker lock").as_ref() {
+                            waker();
+                        }
+                        return true;
+                    }
+                    output => output,
+                };
+                let Ok(mut runtime) = self.try_lock() else {
+                    job.restore_output(output);
+                    return false;
+                };
+                let Some(interaction) = runtime.interaction.as_mut() else {
+                    job.restore_output(output);
+                    return false;
+                };
+                let Some(state) = interaction.shell.world3d_states.get_token_mut(surface_token) else {
+                    probe.begin_close();
+                    *self.0.native_reference_decode.lock().unwrap_or_else(|poisoned| poisoned.into_inner()) = None;
+                    return true;
+                };
+                if job.cancelled.load(Ordering::Acquire) || !world3d_reference_url_is_current(state, &url) {
+                    mark_world3d_asset_miss(state, &url);
+                } else {
+                    match output {
+                        NativeReferenceDecodeOutput::Ready(lease) => {
+                            let _ = apply_decoded_reference_raster(state, &url, lease);
+                        }
+                        NativeReferenceDecodeOutput::Failed => mark_world3d_asset_miss(state, &url),
+                        NativeReferenceDecodeOutput::Waiting(_) => unreachable!("waiting decode was rearmed above"),
+                    }
+                }
+                *self.0.native_reference_decode.lock().unwrap_or_else(|poisoned| poisoned.into_inner()) = None;
+                probe.begin_close();
+                true
+            }
+            _ => {
+                self.record_frame_fault("native reference decode entered an invalid phase");
+                false
             }
         }
     }
@@ -10907,8 +11676,14 @@ impl RuntimeMailbox {
 
     #[cfg(not(target_arch = "wasm32"))]
     fn pump_native_asset(&self) -> bool {
-        if self.0.native_asset_blocked.lock().unwrap_or_else(|poisoned| poisoned.into_inner()).is_some() {
-            return false;
+        {
+            let mut blocked = self.0.native_asset_blocked.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
+            if let Some(owner) = blocked.as_mut() {
+                if owner.close_step() {
+                    *blocked = None;
+                }
+                return true;
+            }
         }
         if self.0.native_asset_fetching.compare_exchange(false, true, Ordering::AcqRel, Ordering::Acquire).is_err() {
             return false;
@@ -12090,6 +12865,20 @@ pub(crate) enum FrameTransactionStage {
     PublishSnapshot,
 }
 
+impl FrameTransactionStage {
+    pub(crate) fn latency_stage(self) -> frame_latency::FrameLatencyStage {
+        match self {
+            Self::DrainProjectionDeltas => frame_latency::FrameLatencyStage::TransactionDrainProjectionDeltas,
+            Self::RouteIntents => frame_latency::FrameLatencyStage::TransactionRouteIntents,
+            Self::FlushEffects => frame_latency::FrameLatencyStage::TransactionFlushEffects,
+            Self::PresentSurface => frame_latency::FrameLatencyStage::TransactionPresentSurface,
+            Self::ReconcileTree => frame_latency::FrameLatencyStage::TransactionReconcileTree,
+            Self::BuildRenderPackets => frame_latency::FrameLatencyStage::TransactionBuildRenderPackets,
+            Self::PublishSnapshot => frame_latency::FrameLatencyStage::TransactionPublishSnapshot,
+        }
+    }
+}
+
 enum AppFrameTransactionPhase {
     SceneCamera,
     BrushMesh,
@@ -12133,6 +12922,7 @@ impl FrameTransaction {
     }
 
     pub(crate) fn step(&mut self, runtime: &RuntimeMailbox, handle: &AppHandle, context: &mut semio_framework_job::StepContext<'_>) -> AppFrameTransactionStep {
+        let _latency = frame_latency::FrameLatencyTimer::start(frame_latency::FrameLatencyAuthority::renderer_frame(self.generation.0), self.stage.latency_stage(), 1);
         context.set_stage(self.stage_label());
         if context.operation() != self.operation || context.generation() != self.generation || context.is_cancelled() || context.deadline_exceeded() {
             self.phase = AppFrameTransactionPhase::Terminal;
@@ -12189,6 +12979,26 @@ impl FrameTransaction {
         if !app.interaction_available() {
             self.phase = AppFrameTransactionPhase::Terminal;
             return AppFrameTransactionStep::Superseded;
+        }
+        if !matches!(self.phase, AppFrameTransactionPhase::InputEvents) && app.frame_actions.staged_batch_remaining().is_some() {
+            let transfer = {
+                let app = &mut *app;
+                let interaction = app.interaction.as_mut().expect("runtime interaction state is worker-owned");
+                transfer_frame_input_action(&mut interaction.input, &mut app.frame_actions)
+            };
+            return match transfer {
+                Ok(FrameInputActionStep::Pending | FrameInputActionStep::Transferred) => AppFrameTransactionStep::Pending,
+                Ok(FrameInputActionStep::Empty | FrameInputActionStep::Deferred) => {
+                    runtime.record_frame_fault("staged frame input action batch lost its runtime owner");
+                    self.phase = AppFrameTransactionPhase::Terminal;
+                    AppFrameTransactionStep::Fault
+                }
+                Err(fault) => {
+                    runtime.record_frame_fault(fault);
+                    self.phase = AppFrameTransactionPhase::Terminal;
+                    AppFrameTransactionStep::Fault
+                }
+            };
         }
         match self.phase {
             AppFrameTransactionPhase::SceneCamera => match self.scene_camera_cursor.step() {
@@ -12264,34 +13074,31 @@ impl FrameTransaction {
                 }
             }
             AppFrameTransactionPhase::InputEvents => {
-                let action = match app.input.take_action_step() {
-                    Ok(action) => action,
-                    Err(_) => {
-                        runtime.record_frame_fault("bounded frame input action authority faulted");
-                        self.phase = AppFrameTransactionPhase::Terminal;
-                        return AppFrameTransactionStep::Fault;
-                    }
+                let transfer = {
+                    let app = &mut *app;
+                    let interaction = app.interaction.as_mut().expect("runtime interaction state is worker-owned");
+                    transfer_frame_input_action(&mut interaction.input, &mut app.frame_actions)
                 };
-                if let Some(action) = action {
-                    if self.after_chrome.is_none() {
-                        runtime.record_frame_fault("frame input phase lost the retained chrome owner");
+                match transfer {
+                    Ok(FrameInputActionStep::Pending | FrameInputActionStep::Transferred) => {
+                        if self.after_chrome.is_none() {
+                            runtime.record_frame_fault("frame input phase lost the retained chrome owner");
+                            self.phase = AppFrameTransactionPhase::Terminal;
+                            return AppFrameTransactionStep::Fault;
+                        }
+                        return AppFrameTransactionStep::Pending;
+                    }
+                    Ok(FrameInputActionStep::Empty | FrameInputActionStep::Deferred) => {}
+                    Err(fault) => {
+                        runtime.record_frame_fault(fault);
                         self.phase = AppFrameTransactionPhase::Terminal;
                         return AppFrameTransactionStep::Fault;
                     }
-                    let Ok(action) = action.into_descriptor() else {
-                        runtime.record_frame_fault("bounded frame input action failed materialization");
-                        self.phase = AppFrameTransactionPhase::Terminal;
-                        return AppFrameTransactionStep::Fault;
-                    };
-                    log_debug(&format!("[DEBUG] frame input action controller={} action={} args={}", action.controller_id, action.action, action.args.as_ref().map_or_else(|| "none".into(), |args| dsl::os_pack::json::to_json_string(args))));
-                    if let Err(_action) = app.frame_actions.try_push(action) {
-                        runtime.record_frame_fault("frame input action credits exceeded");
-                        self.phase = AppFrameTransactionPhase::Terminal;
-                        return AppFrameTransactionStep::Fault;
-                    }
-                    return AppFrameTransactionStep::Pending;
                 }
                 if interpreter::drive_scene_interaction_step(&mut app.input) {
+                    return AppFrameTransactionStep::Pending;
+                }
+                if interpreter::drive_clipboard_io_step(&mut app.input) {
                     return AppFrameTransactionStep::Pending;
                 }
                 // 🌩️ ONE effect-flush ROUND, counted where the transaction actually enters the stage.
@@ -12488,6 +13295,7 @@ impl FrameTransaction {
                 }
                 match snapshot_step {
                     World3dSnapshotApplyStep::Idle | World3dSnapshotApplyStep::Complete => {
+                        step_world3d_camera_fit_after_snapshot(state);
                         self.world3d_authority_cursor += 1;
                         AppFrameTransactionStep::Pending
                     }
@@ -12567,7 +13375,7 @@ impl FrameTransaction {
                 let ctrl = app.modifiers.ctrl;
                 let owes_another_application = app.interaction.as_ref().is_some_and(|interaction| interaction.wheel.pending());
                 let Some(interaction) = app.interaction.as_mut() else { return AppFrameTransactionStep::Pending };
-                interaction.shell.handle_pointer_wheel(x, y, delta, &interaction.input);
+                interaction.shell.handle_pointer_wheel(x, y, delta, &mut interaction.input);
                 let propagates = interaction.shell.wheel_reaches_scene_surface(x, y, &interaction.input, &interaction.theme);
                 let gate = interaction.input.hit_at(x, y);
                 log_debug(&format!(
@@ -13199,7 +14007,7 @@ struct AppPresentStallWatch {
 /// shape alone aborts a healthy present: measured on 6118 as
 /// `os_host present stalled phase=Render engine=1 upload=1 gpu-cursor=true` at t≈4.4 s on EVERY
 /// example boot (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-type AppPresentProgress = (AppPresentPhase, usize, usize, Option<(u8, usize, usize, usize, u32)>, (u32, u32, usize));
+type AppPresentProgress = (AppPresentPhase, usize, usize, Option<(u8, usize, usize, usize, u32)>, (u32, u32, usize), usize);
 
 /// 🐕️ Consecutive non-advancing `Pending` answers after which a pending presentation is aborted
 /// rather than waited on. `present_step` is driven several times per frame transaction turn, so this
@@ -13243,6 +14051,7 @@ enum AppPresentPhase {
     Fullscreen,
     Engine,
     BeginGpu,
+    Ownership,
     Uploads,
     Stage,
     Render,
@@ -13253,6 +14062,25 @@ enum AppPresentPhase {
     Directives,
 }
 
+impl AppPresentPhase {
+    fn latency_stage(self) -> frame_latency::FrameLatencyStage {
+        match self {
+            Self::Fullscreen => frame_latency::FrameLatencyStage::PresenterFullscreen,
+            Self::Engine => frame_latency::FrameLatencyStage::PresenterEngine,
+            Self::BeginGpu => frame_latency::FrameLatencyStage::PresenterBeginGpu,
+            Self::Ownership => frame_latency::FrameLatencyStage::PresenterOwnership,
+            Self::Uploads => frame_latency::FrameLatencyStage::PresenterUploads,
+            Self::Stage => frame_latency::FrameLatencyStage::PresenterStage,
+            Self::Render => frame_latency::FrameLatencyStage::QueueSubmit,
+            Self::CloseGpu => frame_latency::FrameLatencyStage::PresenterCloseGpu,
+            Self::Acknowledge => frame_latency::FrameLatencyStage::PresenterAcknowledge,
+            Self::ProgressAcknowledge => frame_latency::FrameLatencyStage::PresenterProgressAcknowledge,
+            Self::Aborted => frame_latency::FrameLatencyStage::PresenterAborted,
+            Self::Directives => frame_latency::FrameLatencyStage::PresenterDirectives,
+        }
+    }
+}
+
 struct AppPresentCursor {
     frame: AppFramePresentation,
     phase: AppPresentPhase,
@@ -13260,6 +14088,8 @@ struct AppPresentCursor {
     upload: usize,
     witness: Option<ui_wgpu::wgpu::PreparedPresenterWitness>,
     raster_witness: Option<ui_wgpu::wgpu::RasterTextureWitness>,
+    raster_keep: ui_wgpu::wgpu::PreparedRasterKeepCursorV1,
+    raster_keep_steps: usize,
     gpu_cursor: Option<ui_wgpu::wgpu::PreparedGpuPresentCursor>,
 }
 
@@ -13271,6 +14101,8 @@ struct AppPresentedRetirement {
     acknowledged_upload_scan: usize,
     acknowledged_versions: [u64; ui_wgpu::wgpu::MESH_GPU_KEEP_VERSION_CAPACITY],
     acknowledged_version_count: usize,
+    release_previous_raster_ownership: bool,
+    unowned_rasters_retired: bool,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -13337,12 +14169,24 @@ impl AppPresentedRetirement {
             acknowledged_upload_scan: 0,
             acknowledged_versions: [0; ui_wgpu::wgpu::MESH_GPU_KEEP_VERSION_CAPACITY],
             acknowledged_version_count: 0,
+            release_previous_raster_ownership: false,
+            unowned_rasters_retired: false,
         }
     }
 
     fn abort(previous: ui_wgpu::wgpu::PreparedRenderPacket, witness: ui_wgpu::wgpu::RasterTextureWitness) -> Self {
         let raster = RasterCandidateRetirement::Abort(witness);
-        Self { previous: Some(previous), completed_frame: None, raster, acknowledged_eviction: 0, acknowledged_upload_scan: 0, acknowledged_versions: [0; ui_wgpu::wgpu::MESH_GPU_KEEP_VERSION_CAPACITY], acknowledged_version_count: 0 }
+        Self {
+            previous: Some(previous),
+            completed_frame: None,
+            raster,
+            acknowledged_eviction: 0,
+            acknowledged_upload_scan: 0,
+            acknowledged_versions: [0; ui_wgpu::wgpu::MESH_GPU_KEEP_VERSION_CAPACITY],
+            acknowledged_version_count: 0,
+            release_previous_raster_ownership: false,
+            unowned_rasters_retired: false,
+        }
     }
 
     fn commit(previous: Option<ui_wgpu::wgpu::PreparedRenderPacket>, witness: ui_wgpu::wgpu::RasterTextureWitness) -> Self {
@@ -13354,6 +14198,8 @@ impl AppPresentedRetirement {
             acknowledged_upload_scan: 0,
             acknowledged_versions: [0; ui_wgpu::wgpu::MESH_GPU_KEEP_VERSION_CAPACITY],
             acknowledged_version_count: 0,
+            release_previous_raster_ownership: true,
+            unowned_rasters_retired: false,
         }
     }
 
@@ -13416,6 +14262,18 @@ impl AppPresentedRetirement {
             self.previous = None;
             return Ok(false);
         }
+        if self.release_previous_raster_ownership {
+            gpu.release_previous_raster_ownership();
+            self.release_previous_raster_ownership = false;
+            return Ok(false);
+        }
+        if !self.unowned_rasters_retired {
+            if !gpu.retire_unowned_raster_step()? {
+                return Ok(false);
+            }
+            self.unowned_rasters_retired = true;
+            return Ok(false);
+        }
         if let Some(frame) = self.completed_frame.as_mut() {
             if !frame.close_step() {
                 return Ok(false);
@@ -13427,7 +14285,11 @@ impl AppPresentedRetirement {
     }
 
     fn terminal_is_empty(&self) -> bool {
-        self.raster == RasterCandidateRetirement::Complete && self.previous.is_none() && self.completed_frame.as_ref().is_none_or(AppFramePresentation::terminal_is_empty)
+        self.raster == RasterCandidateRetirement::Complete
+            && self.previous.is_none()
+            && !self.release_previous_raster_ownership
+            && self.unowned_rasters_retired
+            && self.completed_frame.as_ref().is_none_or(AppFramePresentation::terminal_is_empty)
     }
 }
 
@@ -13524,7 +14386,10 @@ impl AppPresenter {
     /// cursor has answered [`APP_PRESENT_STALL_STEPS`] consecutive non-advancing `Pending`s. See
     /// [`AppPresentStallWatch`].
     fn note_present_stall(watch: &mut AppPresentStallWatch, cursor: &AppPresentCursor, upload_progress: (u32, u32, usize)) -> Option<String> {
-        note_present_stall_signature(watch, (cursor.phase, cursor.engine, cursor.upload, cursor.gpu_cursor.as_ref().map(ui_wgpu::wgpu::PreparedGpuPresentCursor::progress), upload_progress))
+        note_present_stall_signature(
+            watch,
+            (cursor.phase, cursor.engine, cursor.upload, cursor.gpu_cursor.as_ref().map(ui_wgpu::wgpu::PreparedGpuPresentCursor::progress), upload_progress, cursor.raster_keep_steps),
+        )
     }
 
     pub(crate) fn close_cursor_wake_step(&mut self) -> bool {
@@ -13636,7 +14501,17 @@ impl AppPresenter {
         }
         let frame = produce()?;
         let cursor = frame.cursor;
-        self.pending = Some(AppPresentCursor { frame, phase: AppPresentPhase::BeginGpu, engine: 0, upload: 0, witness: None, raster_witness: None, gpu_cursor: None });
+        self.pending = Some(AppPresentCursor {
+            frame,
+            phase: AppPresentPhase::BeginGpu,
+            engine: 0,
+            upload: 0,
+            witness: None,
+            raster_witness: None,
+            raster_keep: ui_wgpu::wgpu::PreparedRasterKeepCursorV1::default(),
+            raster_keep_steps: 0,
+            gpu_cursor: None,
+        });
         Some(cursor)
     }
 
@@ -13659,6 +14534,28 @@ impl AppPresenter {
     /// acknowledgement`, ticket 26/09/09/PROCEDURAL-3D-END-TO-END): a superseded frame must be
     /// acknowledged and replaced by the next one, never turned into a surface fault.
     pub(crate) fn present_step(&mut self) -> Result<AppPresentStep, String> {
+        let owner = self
+            .pending
+            .as_ref()
+            .map(|cursor| (cursor.frame.generation.0, cursor.phase.latency_stage()))
+            .or_else(|| {
+                self.has_pending_presentation().then(|| {
+                    let generation = self
+                        .retirement
+                        .as_ref()
+                        .and_then(|retirement| retirement.completed_frame.as_ref())
+                        .map(|frame| frame.generation.0)
+                        .unwrap_or_else(frame_latency::latest_frame_generation);
+                    (generation, frame_latency::FrameLatencyStage::PresenterRetirement)
+                })
+            });
+        let _latency = owner.map(|(generation, stage)| {
+            frame_latency::FrameLatencyTimer::start(frame_latency::FrameLatencyAuthority::renderer_frame(generation), stage, 1)
+        });
+        self.present_step_inner()
+    }
+
+    fn present_step_inner(&mut self) -> Result<AppPresentStep, String> {
         #[cfg(not(target_arch = "wasm32"))]
         {
             let _ = RENDERER_IO_WAKE.swap(false, Ordering::AcqRel);
@@ -13810,7 +14707,33 @@ impl AppPresenter {
                     }
                 };
                 cursor.raster_witness = Some(witness);
-                cursor.phase = AppPresentPhase::Engine;
+                if let Err(error) = self.gpu.begin_raster_ownership(witness) {
+                    cursor.phase = AppPresentPhase::Aborted;
+                    return Err(format!("raster ownership admission: {error}"));
+                }
+                cursor.phase = AppPresentPhase::Ownership;
+                Ok(AppPresentStep::Pending)
+            }
+            AppPresentPhase::Ownership => {
+                let packet = cursor.frame.packet.as_ref().ok_or_else(|| "prepared frame packet was transferred before raster ownership publication".to_string())?;
+                let witness = cursor.raster_witness.ok_or_else(|| "raster operation witness was missing during ownership publication".to_string())?;
+                cursor.raster_keep_steps = cursor.raster_keep_steps.saturating_add(1);
+                match packet.raster_keep_step(&mut cursor.raster_keep) {
+                    ui_wgpu::wgpu::PreparedRasterKeepStepV1::Pending => {}
+                    ui_wgpu::wgpu::PreparedRasterKeepStepV1::Key(key) => {
+                        if let Err(error) = self.gpu.publish_raster_ownership(witness, key) {
+                            cursor.phase = AppPresentPhase::Aborted;
+                            return Err(error);
+                        }
+                    }
+                    ui_wgpu::wgpu::PreparedRasterKeepStepV1::Complete => {
+                        if let Err(error) = self.gpu.seal_raster_ownership(witness) {
+                            cursor.phase = AppPresentPhase::Aborted;
+                            return Err(error);
+                        }
+                        cursor.phase = AppPresentPhase::Engine;
+                    }
+                }
                 Ok(AppPresentStep::Pending)
             }
             AppPresentPhase::Uploads => {
@@ -14601,10 +15524,13 @@ impl AppRuntime {
             }
             FrameFinishPhase::Complete => {
                 let has_deferred = cursor.pump_sync || !self.frame_actions.is_empty() || cursor.flush_tutorial || cursor.shell_maintenance || cursor.settle;
-                // 🧾️ A refusal here COSTS NOTHING any more: the ledger is the runtime's, so it simply
-                // stays put and the next frame that completes installs it.
                 if has_deferred && self.pending_frame_deferred.is_some() {
-                    return FrameFinishBoundaryStep::Fault("frame completion found an unclosed deferred owner");
+                    let mut deferred = self.pending_frame_deferred.take();
+                    let handle = runtime.downgrade();
+                    if !RuntimeApply::start_frame_deferred(&mut deferred, self, &handle) {
+                        self.pending_frame_deferred = deferred;
+                        return FrameFinishBoundaryStep::Pending;
+                    }
                 }
                 let Some(input) = partial.resource_input.take() else {
                     return FrameFinishBoundaryStep::Fault("frame completion lost resource input");
@@ -14747,8 +15673,14 @@ impl AppInteractionState {
     }
 
     async fn handle_key(&mut self, action: KeyAction, modifiers: PointerModifiers) {
+        if interpreter::apply_focused_ink_editor_key(&action, &modifiers, &mut self.input) {
+            return;
+        }
+        if interpreter::apply_focused_ink_surface_key(&action, &modifiers, &mut self.input) {
+            return;
+        }
         if let KeyAction::Space(pressed) = &action {
-            if self.shell.context_menu.is_some() && *pressed {
+            if *pressed && (self.shell.context_menu.is_some() || self.shell.retained_select_owns_keyboard()) {
                 if let Err(err) = self.shell.handle_keyboard_async(KeyAction::Space(true), &modifiers, &mut self.input).await {
                     log_debug(&format!("keyboard failed: {err}"));
                 }
@@ -14795,12 +15727,28 @@ impl AppInteractionState {
         }
     }
 
-    async fn handle_pointer_button(&mut self, x: f32, y: f32, down: bool, button: i16, modifiers: PointerModifiers) {
+    /// 🛑️ Clears pointer ownership without manufacturing a successful release.
+    fn handle_pointer_cancel(&mut self, pointer_id: ui_render::PointerId) {
+        self.pointer_down = false;
+        self.pointer_capture.release();
+        self.shell.handle_pointer_cancel_for(pointer_id, &mut self.input);
+        for state in self.shell.world3d_states.values_mut() {
+            infinite_world::world::world3d_cancel_relocate_drag(state);
+        }
+    }
+
+    async fn handle_pointer_button(&mut self, pointer_id: ui_render::PointerId, x: f32, y: f32, down: bool, button: i16, modifiers: PointerModifiers) {
         self.last_pointer_x = x;
         self.last_pointer_y = y;
         self.pointer_down = down;
         self.pointer_button = button;
         self.modifiers = modifiers.clone();
+        if !down {
+            interpreter::release_scene_pointer(pointer_id);
+        }
+        if down && button == 0 {
+            interpreter::blur_focused_ink_editor_at(x, y, &mut self.input);
+        }
         // ⌨️🖱️ The AGGREGATE input state learns the modifier set too, not just this runtime's own
         // field. Everything the shell resolves off the flat hit registry reads `InputState::modifiers`
         // — the virtual file system's shift/ctrl row selection (`vfs_selection_for_click`), the text
@@ -14832,7 +15780,7 @@ impl AppInteractionState {
             self.shell.activate_window_under_pointer(x, y);
         }
         if owner == PointerHitOwner::Chrome {
-            if let Err(err) = self.shell.handle_pointer_button(x, y, down, button, &mut self.input, &self.theme).await {
+            if let Err(err) = self.shell.handle_pointer_button_for(pointer_id, x, y, down, button, &mut self.input, &self.theme).await {
                 log_debug(&format!("pointer failed: {err}"));
             }
             return;
@@ -14863,7 +15811,7 @@ impl AppInteractionState {
             if map_consumed || board_consumed {
                 return;
             }
-            if let Err(err) = self.shell.handle_pointer_button(x, y, down, button, &mut self.input, &self.theme).await {
+            if let Err(err) = self.shell.handle_pointer_button_for(pointer_id, x, y, down, button, &mut self.input, &self.theme).await {
                 log_debug(&format!("pointer failed: {err}"));
             }
             let mut world_consumed = false;
@@ -14913,7 +15861,7 @@ impl AppInteractionState {
         // The menu opens AND the surface is pressed, in that order, exactly as the DOM delivers them.
         let over_world = self.shell.world3d_states.values().any(|state| state.bounds.contains(x, y));
         if over_world && button == 2 && !modifiers.shift && !modifiers.alt && !modifiers.meta {
-            if let Err(err) = self.shell.handle_pointer_button(x, y, down, button, &mut self.input, &self.theme).await {
+            if let Err(err) = self.shell.handle_pointer_button_for(pointer_id, x, y, down, button, &mut self.input, &self.theme).await {
                 log_debug(&format!("pointer failed: {err}"));
             }
         }
@@ -14932,6 +15880,10 @@ impl AppInteractionState {
         for (surface_id, surface) in &self.shell.node_graph_states {
             if !surface.bounds.contains(x, y) {
                 continue;
+            }
+            if down && !interpreter::claim_scene_pointer_owner(&surface.window_id, surface_id, ui_wgpu::wgpu::SurfaceKind::NodeGraph, pointer_id) {
+                self.input.record_action_fault(ui_wgpu::wgpu::BoundedActionFault::ItemCredits);
+                return;
             }
             // 🩺️ One line per real press on a retained engine surface — the witness that a graph
             // whose window did not repaint this frame is still pointer-dispatchable.
@@ -14953,6 +15905,10 @@ impl AppInteractionState {
             }
             map_pointer_on_surface = true;
             if down {
+                if !interpreter::claim_scene_pointer_owner(&surface.window_id, surface_id, ui_wgpu::wgpu::SurfaceKind::TiledMap, pointer_id) {
+                    self.input.record_action_fault(ui_wgpu::wgpu::BoundedActionFault::ItemCredits);
+                    return;
+                }
                 if let Err(fault) = scenes::tiled_map_pointer_down_into(surface_id, &surface.controller_id, surface.bounds, x, y, button, modifiers.shift, modifiers.ctrl_or_meta(), &surface.selection_method, &mut self.input) {
                     self.input.record_action_fault(fault);
                     return;
@@ -14969,18 +15925,22 @@ impl AppInteractionState {
             }
             board_pointer_on_surface = true;
             if down {
+                if !interpreter::claim_scene_pointer_owner(&surface.window_id, surface_id, ui_wgpu::wgpu::SurfaceKind::Board2d, pointer_id) {
+                    self.input.record_action_fault(ui_wgpu::wgpu::BoundedActionFault::ItemCredits);
+                    return;
+                }
                 scenes::puzzle_board_pointer_down(surface_id, surface.bounds, x, y, button, modifiers.shift, modifiers.ctrl_or_meta());
             }
         }
         if board_pointer_on_surface && (button == 0 || button == 1) {
             return;
         }
-        if let Err(err) = self.shell.handle_pointer_button(x, y, down, button, &mut self.input, &self.theme).await {
+        if let Err(err) = self.shell.handle_pointer_button_for(pointer_id, x, y, down, button, &mut self.input, &self.theme).await {
             log_debug(&format!("pointer failed: {err}"));
         }
     }
 
-    async fn handle_pointer_move(&mut self, x: f32, y: f32, down: bool, button: i16, modifiers: PointerModifiers) {
+    async fn handle_pointer_move(&mut self, pointer_id: ui_render::PointerId, x: f32, y: f32, down: bool, button: i16, modifiers: PointerModifiers) {
         let drag_dx = x - self.last_pointer_x;
         let drag_dy = y - self.last_pointer_y;
         self.last_pointer_x = x;
@@ -14990,7 +15950,7 @@ impl AppInteractionState {
         self.modifiers = modifiers.clone();
         // ⌨️🖱️ Same refresh as `handle_pointer_button`'s — see the comment there.
         self.input.modifiers = modifiers.clone();
-        self.shell.handle_pointer_move(x, y, down, &mut self.input, &self.theme);
+        self.shell.handle_pointer_move_for(pointer_id, x, y, down, &mut self.input, &self.theme);
         log_debug(&format!("[DEBUG] os_host pointer hit x={x} y={y} targets={} staged={} gen={} hit={:?}", self.input.hits().len(), self.input.staged_hits().len(), self.input.hit_generation(), self.input.hit_at(x, y).map(|target| (target.kind, target.control_id.clone()))));
         // 🖱️ A live shell-chrome drag CAPTURES the pointer, exactly as React's resize handle does with
         // `setPointerCapture`: the shell above has already applied this move to the split it is
@@ -15091,6 +16051,12 @@ impl AppInteractionState {
 // before/after per site.
 //#endregion 🔖️OsHostDecomposition — SemioApp deletion
 
+
+/// 🎥️ Advances camera residency after snapshot sealing. Frame construction precedes this phase, so
+/// the pending witness deliberately schedules one more build when this step applies a new orbit.
+fn step_world3d_camera_fit_after_snapshot(state: &mut infinite_world::world::World3dState) {
+    let _ = step_world3d_camera_fit(state);
+}
 
 /// 🩺️ Rate-limited `[DEBUG] ` trace of one World3d surface's MESH INGEST, taken where the frame
 /// transaction actually drives it rather than where the chrome paints it. Behind the runtime

@@ -2,6 +2,7 @@
 
 use crate::editor::flow::commands::evaluate::evaluate_result;
 use crate::editor::flow::modes::edit::windows::main::config::FlowMainWindowConfig;
+use crate::editor::flow::modes::edit::windows::main::FLOW_PLAY_WINDOW_MAIN;
 use crate::editor::flow::commands::reorganize::reorganize_operations;
 use semio_framework_plugin::NoConfig;
 use semio_framework_plugin::NoConfigMutation;
@@ -42,7 +43,7 @@ pub fn extension_action_result(payload: &RunExtensionAction, snapshot: &FlowSnap
     }
     match *effect {
         "reorganize" => Emit::mutations(reorganize_operations(snapshot, config, session)),
-        "evaluate" => evaluate_result(snapshot, config, session),
+        "evaluate" => evaluate_result(snapshot, config, session, FLOW_PLAY_WINDOW_MAIN, FLOW_PLAY_WINDOW_MAIN),
         _ => Emit::default(),
     }
 }

@@ -21,6 +21,7 @@ import {
   reduceHubSessionV1,
   removeHubConnectionV1,
   runHubSessionAuthorityV1,
+  parseHubSessionMintResultV1,
   runHubSignInV1,
   runHubSignOutV1,
   selectHubConnectionV1,
@@ -53,6 +54,24 @@ import {
   type SpaceMemberPresenceV1,
   type SpaceRowV1,
 } from "../../../../📇️directory/🏘️spaces/🟦️.ts";
+import {
+  agentCredentialCommandV1,
+  agentCredentialFileV1,
+  agentDelegationErrorFromResponseV1,
+  agentDelegationListPathV1,
+  agentDelegationRevokePathV1,
+  agentDelegationRowsV1,
+  createAgentDelegationBodyV1,
+  parseAgentDelegationListV1,
+  parseAgentDelegationReceiptV1,
+  AGENT_DELEGATION_PATH_V1,
+  type AgentAudienceV1,
+  type AgentDelegationErrorCodeV1,
+  type AgentDelegationPhaseV1,
+  type AgentDelegationReceiptV1,
+  type AgentDelegationRowV1,
+  type AgentDelegationSummaryV1,
+} from "../../../../📇️directory/🤖️delegations/🟦️.ts";
 // #endregion 🔌️Adapters
 
 //#region 🌐️Labels
@@ -85,8 +104,58 @@ export const hubUiLabel = registerUiTranslationBundles({
             localOnly: { label: { normal: "Working on this device only", beginner: "Working on this device only" } },
             errorRegion: { label: { normal: "Sign-in problem", beginner: "Problem" } },
           },
+          firstRun: {
+            replay: { label: { normal: "How this works", beginner: "Show me how this works" } },
+          },
+          agent: {
+            title: { label: { normal: "AI agents", beginner: "AI helpers" } },
+            description: { label: { normal: "Give an AI agent its own access to this space. It acts under its own name, and you can withdraw it at any time.", beginner: "Let an AI helper work in this space. It has its own name and you can stop it at any time." } },
+            signedOut: { label: { normal: "Sign in to the hub to give an agent access.", beginner: "Sign in first." } },
+            noSpace: { label: { normal: "Open a space to manage the agents that work in it.", beginner: "Open a space first." } },
+            notAuthor: { label: { normal: "Only an author of this space can give an agent access to it.", beginner: "Only people who may edit can do this." } },
+            createTitle: { label: { normal: "Give an agent access", beginner: "Add an AI helper" } },
+            name: { label: { normal: "Agent name", beginner: "Name" } },
+            audience: { label: { normal: "The agent may", beginner: "It may" } },
+            audienceRead: { label: { normal: "Read only", beginner: "Only look" } },
+            audienceEdit: { label: { normal: "Read and edit", beginner: "Look and change" } },
+            expiry: { label: { normal: "Access expires after", beginner: "Stops after" } },
+            expiryDay: { label: { normal: "1 day", beginner: "1 day" } },
+            expiryWeek: { label: { normal: "1 week", beginner: "1 week" } },
+            expiryMonth: { label: { normal: "30 days", beginner: "30 days" } },
+            create: { label: { normal: "Create delegation", beginner: "Add helper" } },
+            ready: { label: { normal: "The credential file is ready. It is shown once — download it now; it cannot be shown again.", beginner: "Download the file now. You cannot get it again." } },
+            download: { label: { normal: "Download credential file", beginner: "Download the file" } },
+            downloaded: { label: { normal: "Credential file saved.", beginner: "Saved." } },
+            downloadFailed: { label: { normal: "Could not save the file. Copy the text below into a file yourself.", beginner: "Could not save. Copy the text below." } },
+            dismiss: { label: { normal: "Discard credential", beginner: "Discard" } },
+            permission: { label: { normal: "Keep the file readable by you alone — run chmod 600 on it. The agent refuses a file anyone else can read.", beginner: "Only you may read the file. Run chmod 600 on it." } },
+            command: { label: { normal: "Start the agent with", beginner: "Start it with" } },
+            principal: { label: { normal: "Acts as {{principal}}", beginner: "Called {{principal}}" } },
+            list: { label: { normal: "Agents with access", beginner: "Your AI helpers" } },
+            empty: { label: { normal: "No agent has access to this space.", beginner: "No helpers yet." } },
+            loading: { label: { normal: "Loading agent delegations…", beginner: "Loading…" } },
+            submitting: { label: { normal: "Waiting for the hub…", beginner: "Working…" } },
+            failed: { label: { normal: "The hub did not accept that. Nothing was changed.", beginner: "That did not work. Nothing changed." } },
+            refresh: { label: { normal: "Refresh agent delegations", beginner: "Refresh" } },
+            created: { label: { normal: "Created {{when}}", beginner: "Added {{when}}" } },
+            expires: { label: { normal: "Expires {{when}}", beginner: "Stops {{when}}" } },
+            lastUsed: { label: { normal: "Last used {{when}}", beginner: "Last used {{when}}" } },
+            lastUsedNever: { label: { normal: "Never used", beginner: "Never used" } },
+            stateLive: { label: { normal: "Active", beginner: "Working" } },
+            stateExpired: { label: { normal: "Expired", beginner: "Stopped" } },
+            stateRevoked: { label: { normal: "Withdrawn", beginner: "Stopped by you" } },
+            revoke: { label: { normal: "Withdraw {{name}}", beginner: "Stop {{name}}" } },
+            revokeConfirmTitle: { label: { normal: "Withdraw access from {{name}}?", beginner: "Stop {{name}}?" } },
+            revokeConfirmBody: { label: { normal: "Its open sessions end at once and its credential file stops working. This cannot be undone.", beginner: "It stops right away. You cannot undo this." } },
+            revokeConfirm: { label: { normal: "Withdraw access", beginner: "Stop it" } },
+            revokeCancel: { label: { normal: "Keep access", beginner: "Keep it" } },
+            errorForbidden: { label: { normal: "You may not manage agents in this space.", beginner: "You are not allowed to do this." } },
+            errorRateLimited: { label: { normal: "Too many attempts. Try again in a moment.", beginner: "Too fast. Wait a moment." } },
+            errorUnreachable: { label: { normal: "The hub could not be reached. Try again in a moment.", beginner: "No connection. Try again." } },
+            errorRefused: { label: { normal: "The hub refused that.", beginner: "The hub said no." } },
+          },
           spaces: {
-            title: { label: { normal: "Spaces", beginner: "Your spaces" } },
+            title: { label: { normal: "Spaces",beginner: "Your spaces" } },
             list: { label: { normal: "Your spaces", beginner: "Your spaces" } },
             search: { label: { normal: "Find a space", beginner: "Find a space" } },
             open: { label: { normal: "Open {{name}}", beginner: "Open {{name}}" } },
@@ -175,6 +244,56 @@ export const hubUiLabel = registerUiTranslationBundles({
             localOnly: { label: { normal: "Nur auf diesem Gerät", beginner: "Nur auf diesem Gerät" } },
             errorRegion: { label: { normal: "Problem bei der Anmeldung", beginner: "Problem" } },
           },
+          firstRun: {
+            replay: { label: { normal: "So funktioniert das", beginner: "Zeig mir, wie das geht" } },
+          },
+          agent: {
+            title: { label: { normal: "KI-Agenten", beginner: "KI-Helfer" } },
+            description: { label: { normal: "Gib einem KI-Agenten einen eigenen Zugang zu diesem Space. Er handelt unter eigenem Namen, und du kannst den Zugang jederzeit zurückziehen.", beginner: "Lass einen KI-Helfer in diesem Space arbeiten. Er hat einen eigenen Namen, und du kannst ihn jederzeit stoppen." } },
+            signedOut: { label: { normal: "Melde dich beim Hub an, um einem Agenten Zugang zu geben.", beginner: "Melde dich zuerst an." } },
+            noSpace: { label: { normal: "Öffne einen Space, um seine Agenten zu verwalten.", beginner: "Öffne zuerst einen Space." } },
+            notAuthor: { label: { normal: "Nur ein Autor dieses Spaces kann einem Agenten Zugang geben.", beginner: "Das dürfen nur Personen, die bearbeiten können." } },
+            createTitle: { label: { normal: "Einem Agenten Zugang geben", beginner: "KI-Helfer hinzufügen" } },
+            name: { label: { normal: "Name des Agenten", beginner: "Name" } },
+            audience: { label: { normal: "Der Agent darf", beginner: "Er darf" } },
+            audienceRead: { label: { normal: "Nur lesen", beginner: "Nur schauen" } },
+            audienceEdit: { label: { normal: "Lesen und bearbeiten", beginner: "Schauen und ändern" } },
+            expiry: { label: { normal: "Zugang läuft ab nach", beginner: "Endet nach" } },
+            expiryDay: { label: { normal: "1 Tag", beginner: "1 Tag" } },
+            expiryWeek: { label: { normal: "1 Woche", beginner: "1 Woche" } },
+            expiryMonth: { label: { normal: "30 Tage", beginner: "30 Tage" } },
+            create: { label: { normal: "Zugang erstellen", beginner: "Helfer hinzufügen" } },
+            ready: { label: { normal: "Die Zugangsdatei ist bereit. Sie wird nur einmal angezeigt — lade sie jetzt herunter; ein zweites Mal ist nicht möglich.", beginner: "Lade die Datei jetzt herunter. Ein zweites Mal geht nicht." } },
+            download: { label: { normal: "Zugangsdatei herunterladen", beginner: "Datei herunterladen" } },
+            downloaded: { label: { normal: "Zugangsdatei gespeichert.", beginner: "Gespeichert." } },
+            downloadFailed: { label: { normal: "Die Datei konnte nicht gespeichert werden. Kopiere den Text unten selbst in eine Datei.", beginner: "Speichern nicht möglich. Kopiere den Text unten." } },
+            dismiss: { label: { normal: "Zugangsdatei verwerfen", beginner: "Verwerfen" } },
+            permission: { label: { normal: "Nur du darfst die Datei lesen können — führe chmod 600 darauf aus. Der Agent verweigert eine Datei, die andere lesen können.", beginner: "Nur du darfst die Datei lesen. Führe chmod 600 darauf aus." } },
+            command: { label: { normal: "Starte den Agenten mit", beginner: "Starte ihn mit" } },
+            principal: { label: { normal: "Handelt als {{principal}}", beginner: "Heißt {{principal}}" } },
+            list: { label: { normal: "Agenten mit Zugang", beginner: "Deine KI-Helfer" } },
+            empty: { label: { normal: "Kein Agent hat Zugang zu diesem Space.", beginner: "Noch keine Helfer." } },
+            loading: { label: { normal: "Agenten-Zugänge werden geladen…", beginner: "Wird geladen…" } },
+            submitting: { label: { normal: "Warten auf den Hub…", beginner: "Wird ausgeführt…" } },
+            failed: { label: { normal: "Der Hub hat das nicht angenommen. Es wurde nichts geändert.", beginner: "Das hat nicht geklappt. Nichts wurde geändert." } },
+            refresh: { label: { normal: "Agenten-Zugänge aktualisieren", beginner: "Aktualisieren" } },
+            created: { label: { normal: "Erstellt {{when}}", beginner: "Hinzugefügt {{when}}" } },
+            expires: { label: { normal: "Läuft ab {{when}}", beginner: "Endet {{when}}" } },
+            lastUsed: { label: { normal: "Zuletzt genutzt {{when}}", beginner: "Zuletzt genutzt {{when}}" } },
+            lastUsedNever: { label: { normal: "Nie genutzt", beginner: "Nie genutzt" } },
+            stateLive: { label: { normal: "Aktiv", beginner: "Arbeitet" } },
+            stateExpired: { label: { normal: "Abgelaufen", beginner: "Beendet" } },
+            stateRevoked: { label: { normal: "Zurückgezogen", beginner: "Von dir gestoppt" } },
+            revoke: { label: { normal: "{{name}} zurückziehen", beginner: "{{name}} stoppen" } },
+            revokeConfirmTitle: { label: { normal: "Zugang von {{name}} zurückziehen?", beginner: "{{name}} stoppen?" } },
+            revokeConfirmBody: { label: { normal: "Die offenen Sitzungen enden sofort und die Zugangsdatei funktioniert nicht mehr. Das lässt sich nicht rückgängig machen.", beginner: "Er stoppt sofort. Du kannst das nicht rückgängig machen." } },
+            revokeConfirm: { label: { normal: "Zugang zurückziehen", beginner: "Stoppen" } },
+            revokeCancel: { label: { normal: "Zugang behalten", beginner: "Behalten" } },
+            errorForbidden: { label: { normal: "Du darfst die Agenten dieses Spaces nicht verwalten.", beginner: "Das darfst du nicht." } },
+            errorRateLimited: { label: { normal: "Zu viele Versuche. Versuche es gleich erneut.", beginner: "Zu schnell. Warte einen Moment." } },
+            errorUnreachable: { label: { normal: "Der Hub war nicht erreichbar. Versuche es gleich erneut.", beginner: "Keine Verbindung. Versuche es erneut." } },
+            errorRefused: { label: { normal: "Der Hub hat das abgelehnt.", beginner: "Der Hub hat abgelehnt." } },
+          },
           spaces: {
             title: { label: { normal: "Spaces", beginner: "Deine Spaces" } },
             list: { label: { normal: "Deine Spaces", beginner: "Deine Spaces" } },
@@ -258,6 +377,10 @@ export interface HubConnectionPortV1 {
   readonly bootstrapOrigin: string;
   readonly deviceInstanceId: string;
   readonly clientClass: HubSignInClientClassV1;
+  /** 🎫️ The session a previous page load of this browsing context left behind, if any. Its presence
+   * is what turns a reload into a re-bootstrap rather than a sign-in form; the hub still has the
+   * last word, because the hook confirms it with one `GET /auth/sessions/me` before believing it. */
+  readonly restoredCapability?: Readonly<{ userId: string }> | null;
   listSpaces(origin: string, signal: AbortSignal): Promise<readonly DirectorySpaceListEntryV1[]>;
   /** 👥️ `GET /directory/spaces/{id}` — the hub's own administration page, whose `members` window is
    * the only authoritative roster. A non-member's hub answers `404`, which reaches the caller as an
@@ -266,6 +389,39 @@ export interface HubConnectionPortV1 {
   submitCommand(origin: string, command: DirectoryCommand, signal: AbortSignal): Promise<DirectoryCommandReceiptV1>;
   redeemInvite(origin: string, token: string, signal: AbortSignal): Promise<Readonly<{ status: number }>>;
   writeClipboard?(text: string): Promise<void>;
+  /** 🤖️ `GET /auth/agent-delegations?space=<id>` — this human's agent delegations in one space,
+   * revoked ones included so the pane can show what was withdrawn. Never a token, never a selector. */
+  listAgentDelegations(origin: string, spaceId: string, signal: AbortSignal): Promise<readonly AgentDelegationSummaryV1[]>;
+  /** 🤖️ `POST /auth/agent-delegations` — the one call that ever yields a delegation capability, and
+   * it yields it exactly once. The receipt is handed straight to the pane and never stored. */
+  createAgentDelegation(origin: string, body: string, signal: AbortSignal): Promise<AgentDelegationReceiptV1>;
+  /** 🤖️ `DELETE /auth/agent-delegations/{id}` — withdrawal, which cascades to every live agent
+   * session minted from it. */
+  revokeAgentDelegation(origin: string, delegationId: string, signal: AbortSignal): Promise<void>;
+  /** 📄️ Hands the human a file to save. Separate from the clipboard port because a credential must
+   * end up in a file the agent can read, not in a paste buffer. */
+  saveFile?(file: Readonly<{ fileName: string; contents: string; mediaType: string }>): Promise<void>;
+}
+
+/** 🤖️ One refusal carrying the hub's own code, so the pane names a cause instead of a status. */
+export class AgentDelegationRefusalV1 extends Error {
+  readonly code: AgentDelegationErrorCodeV1;
+
+  constructor(code: AgentDelegationErrorCodeV1) {
+    super(`hub.agent-delegation.${code}`);
+    this.name = "AgentDelegationRefusalV1";
+    this.code = code;
+  }
+}
+
+/** 🎁️ The one-time delegation capability, held here and nowhere else — the invitation lane's twin.
+ * `receipt.token` never enters the connection book, a URL or a log line: it is handed to
+ * `🤖️AgentDelegations` only while the human is looking at it, and `dismissDelegation` drops it. */
+export interface HubAgentCredentialV1 {
+  readonly receipt: AgentDelegationReceiptV1;
+  readonly file: Readonly<{ fileName: string; contents: string; mediaType: string }>;
+  readonly command: string;
+  readonly save: "idle" | "saved" | "failed";
 }
 
 /** 👥️ One roster row as the hub's space-administration page serves it
@@ -306,6 +462,12 @@ export interface HubConnectionValueV1 {
   readonly search: string;
   readonly invite: HubInviteCapabilityV1 | null;
   readonly redemption: HubRedemptionStateV1;
+  /** 🤖️ The agent delegations of the space currently being watched, newest live first. */
+  readonly delegations: readonly AgentDelegationRowV1[];
+  readonly delegationPhase: AgentDelegationPhaseV1;
+  readonly delegationError: AgentDelegationErrorCodeV1 | null;
+  /** 🎁️ The delegation capability minted a moment ago, readable exactly once. */
+  readonly agentCredential: HubAgentCredentialV1 | null;
   selectConnection(id: string): void;
   addRemoteHub(typed: string, label: string): HubSignInErrorCodeV1 | "invalid-origin" | null;
   forgetHub(id: string): void;
@@ -322,6 +484,22 @@ export interface HubConnectionValueV1 {
   copyInvite(): void;
   dismissInvite(): void;
   redeemInvite(typed: string): void;
+  refreshDelegations(): void;
+  createDelegation(agentLabel: string, audience: AgentAudienceV1, ttlSecs: number): void;
+  downloadAgentCredential(): void;
+  dismissAgentCredential(): void;
+  revokeDelegation(delegationId: string): void;
+}
+
+export interface HubConnectionOperationOwnerV1 {
+  readonly generation: number;
+  readonly connectionId: string;
+  readonly origin: string;
+}
+
+/** 🪪️ Accepts a completion only while both its connection identity and selection generation remain current. */
+export function hubConnectionOperationOwnerCurrentV1(owner: HubConnectionOperationOwnerV1, generation: number, connectionId: string): boolean {
+  return owner.generation === generation && owner.connectionId === connectionId;
 }
 //#endregion 🔖️Port
 
@@ -332,9 +510,9 @@ function useLiveRef<T>(value: T): { current: T } {
   return ref;
 }
 
-/** 🔗️ Mounts one hub relationship. Every async lane carries its own `AbortController` so a hub
- * switch, a cancel press or an unmount cancels in flight work instead of landing stale state; the
- * session capability lives inside the port, never in this hook's state, so React never serializes
+/** 🔗️ Mounts one hub relationship. Every async lane carries its own `AbortController` and
+ * connection generation so a switch, cancel press or unmount rejects even abort-insensitive completions.
+ * The session capability lives inside the port, never in this hook's state, so React never serializes
  * it into a snapshot. */
 export function useHubConnection(port: HubConnectionPortV1, onlineUserIds: readonly string[] = []): HubConnectionValueV1 {
   const [book, setBook] = useState<HubConnectionBookV1>(() => readHubConnectionBookV1(port.storage, port.bootstrapOrigin));
@@ -348,49 +526,91 @@ export function useHubConnection(port: HubConnectionPortV1, onlineUserIds: reado
   const [authority, setAuthority] = useState<HubSessionAuthorityV1 | null>(null);
   const [memberRows, setMemberRows] = useState<readonly HubSpaceMemberRowV1[]>([]);
   const [watchedSpaceId, setWatchedSpaceId] = useState<string | null>(null);
+  const [delegationSummaries, setDelegationSummaries] = useState<readonly AgentDelegationSummaryV1[]>([]);
+  const [delegationPhase, setDelegationPhase] = useState<AgentDelegationPhaseV1>("idle");
+  const [delegationError, setDelegationError] = useState<AgentDelegationErrorCodeV1 | null>(null);
+  const [agentCredential, setAgentCredential] = useState<HubAgentCredentialV1 | null>(null);
+  const delegationAbort = useRef<AbortController | null>(null);
+  const rebootstrapped = useRef(false);
   const signInAbort = useRef<AbortController | null>(null);
   const authorityAbort = useRef<AbortController | null>(null);
   const membersAbort = useRef<AbortController | null>(null);
   const spacesAbort = useRef<AbortController | null>(null);
   const commandAbort = useRef<AbortController | null>(null);
+  const signOutAbort = useRef<AbortController | null>(null);
+  const redemptionAbort = useRef<AbortController | null>(null);
+  const operationGeneration = useRef(1);
+  const operationConnectionId = useRef(connection.id);
   const portRef = useLiveRef(port);
   const connectionRef = useLiveRef(connection);
   const watchedSpaceIdRef = useLiveRef(watchedSpaceId);
+
+  if (operationConnectionId.current !== connection.id) {
+    operationGeneration.current++;
+    operationConnectionId.current = connection.id;
+  }
+
+  const captureOperationOwner = useCallback((): HubConnectionOperationOwnerV1 => ({ generation: operationGeneration.current, connectionId: connectionRef.current.id, origin: connectionRef.current.origin }), [connectionRef]);
+  const operationOwnerCurrent = useCallback((owner: HubConnectionOperationOwnerV1): boolean => hubConnectionOperationOwnerCurrentV1(owner, operationGeneration.current, operationConnectionId.current), []);
+
+  const retireOperationsForConnection = useCallback((connectionId: string) => {
+    if (operationConnectionId.current === connectionId) return;
+    operationGeneration.current++;
+    operationConnectionId.current = connectionId;
+    signInAbort.current?.abort();
+    signOutAbort.current?.abort();
+    commandAbort.current?.abort();
+    authorityAbort.current?.abort();
+    membersAbort.current?.abort();
+    spacesAbort.current?.abort();
+    redemptionAbort.current?.abort();
+    delegationAbort.current?.abort();
+    signInAbort.current = null;
+    signOutAbort.current = null;
+    commandAbort.current = null;
+    authorityAbort.current = null;
+    membersAbort.current = null;
+    spacesAbort.current = null;
+    redemptionAbort.current = null;
+    delegationAbort.current = null;
+  }, []);
 
   const persist = useCallback((next: HubConnectionBookV1) => {
     writeHubConnectionBookV1(portRef.current.storage, next);
     setBook(next);
   }, [portRef]);
 
-  const loadSpaces = useCallback(() => {
+  const loadSpaces = useCallback((owner = captureOperationOwner()) => {
+    if (!operationOwnerCurrent(owner)) return;
     spacesAbort.current?.abort();
     const abort = new AbortController();
     spacesAbort.current = abort;
     setSpacesPhase((current) => (current === "ready" || current === "stale" ? current : "loading"));
     void portRef.current
-      .listSpaces(connectionRef.current.origin, abort.signal)
+      .listSpaces(owner.origin, abort.signal)
       .then((entries) => {
-        if (abort.signal.aborted) return;
+        if (abort.signal.aborted || !operationOwnerCurrent(owner)) return;
         setRows(spaceRowsV1(entries));
         setSpacesPhase("ready");
         dispatchSession({ kind: "connectivity", offline: false });
       })
       .catch(() => {
-        if (abort.signal.aborted) return;
+        if (abort.signal.aborted || !operationOwnerCurrent(owner)) return;
         setSpacesPhase((current) => (current === "loading" ? "failed" : "stale"));
         dispatchSession({ kind: "connectivity", offline: true });
       });
-  }, [connectionRef, portRef]);
+  }, [captureOperationOwner, operationOwnerCurrent, portRef]);
 
   /** 🪪️ Reads `GET /auth/sessions/me`. This is the only source of `expiresAtMs` — AU1 §1.1 keeps the
    * expiry out of the mint response precisely so the two can never disagree — and a `401` here is
    * the hub's own statement that the capability is gone, which is what drives re-authentication. */
-  const readAuthority = useCallback(() => {
+  const readAuthority = useCallback((owner = captureOperationOwner()) => {
+    if (!operationOwnerCurrent(owner)) return;
     authorityAbort.current?.abort();
     const abort = new AbortController();
     authorityAbort.current = abort;
-    void runHubSessionAuthorityV1(portRef.current.signIn, connectionRef.current.origin, abort.signal).then((outcome) => {
-      if (abort.signal.aborted) return;
+    void runHubSessionAuthorityV1(portRef.current.signIn, owner.origin, abort.signal).then((outcome) => {
+      if (abort.signal.aborted || !operationOwnerCurrent(owner)) return;
       if (outcome.kind === "authority") {
         setAuthority(outcome.authority);
         dispatchSession({ kind: "minted", userId: outcome.authority.userId, expiresAtMs: outcome.authority.expiresAtMs });
@@ -404,9 +624,10 @@ export function useHubConnection(port: HubConnectionPortV1, onlineUserIds: reado
       }
       if (outcome.code === "unreachable") dispatchSession({ kind: "connectivity", offline: true });
     });
-  }, [connectionRef, portRef]);
+  }, [captureOperationOwner, operationOwnerCurrent, portRef]);
 
-  const loadMembers = useCallback((spaceId: string | null) => {
+  const loadMembers = useCallback((spaceId: string | null, owner = captureOperationOwner()) => {
+    if (!operationOwnerCurrent(owner)) return;
     membersAbort.current?.abort();
     if (spaceId === null) {
       setMemberRows([]);
@@ -415,48 +636,91 @@ export function useHubConnection(port: HubConnectionPortV1, onlineUserIds: reado
     const abort = new AbortController();
     membersAbort.current = abort;
     void portRef.current
-      .readSpaceMembers(connectionRef.current.origin, spaceId, abort.signal)
+      .readSpaceMembers(owner.origin, spaceId, abort.signal)
       .then((rows) => {
-        if (abort.signal.aborted) return;
+        if (abort.signal.aborted || !operationOwnerCurrent(owner)) return;
         setMemberRows(rows);
       })
       .catch(() => {
-        if (abort.signal.aborted) return;
+        if (abort.signal.aborted || !operationOwnerCurrent(owner)) return;
         setMemberRows([]);
       });
-  }, [connectionRef, portRef]);
+  }, [captureOperationOwner, operationOwnerCurrent, portRef]);
+
+  /** 🤖️ Reads `GET /auth/agent-delegations?space=<id>`. `null` clears the lane without a round trip:
+   * a delegation belongs to exactly one space, so there is nothing to show until one is open. */
+  const loadDelegations = useCallback((spaceId: string | null, owner = captureOperationOwner()) => {
+    if (!operationOwnerCurrent(owner)) return;
+    delegationAbort.current?.abort();
+    if (spaceId === null) {
+      setDelegationSummaries([]);
+      setDelegationPhase("idle");
+      setDelegationError(null);
+      return;
+    }
+    const abort = new AbortController();
+    delegationAbort.current = abort;
+    setDelegationPhase((current) => (current === "ready" ? current : "loading"));
+    void portRef.current
+      .listAgentDelegations(owner.origin, spaceId, abort.signal)
+      .then((summaries) => {
+        if (abort.signal.aborted || !operationOwnerCurrent(owner)) return;
+        setDelegationSummaries(summaries);
+        setDelegationPhase("ready");
+        setDelegationError(null);
+      })
+      .catch((error: unknown) => {
+        if (abort.signal.aborted || !operationOwnerCurrent(owner)) return;
+        setDelegationPhase("failed");
+        setDelegationError(error instanceof AgentDelegationRefusalV1 ? error.code : "unreachable");
+      });
+  }, [captureOperationOwner, operationOwnerCurrent, portRef]);
 
   const watchSpaceMembers = useCallback((spaceId: string | null) => {
     setWatchedSpaceId(spaceId);
     loadMembers(spaceId);
-  }, [loadMembers]);
+    setAgentCredential(null);
+    loadDelegations(spaceId);
+  }, [loadDelegations, loadMembers]);
 
   const runCommand = useCallback(
     (command: DirectoryCommand, onReceipt: (receipt: DirectoryCommandReceiptV1) => void) => {
+      const owner = captureOperationOwner();
       commandAbort.current?.abort();
       const abort = new AbortController();
       commandAbort.current = abort;
       setSpacesPhase("submitting");
       void portRef.current
-        .submitCommand(connectionRef.current.origin, command, abort.signal)
+        .submitCommand(owner.origin, command, abort.signal)
         .then((receipt) => {
-          if (abort.signal.aborted) return;
+          if (abort.signal.aborted || !operationOwnerCurrent(owner)) return;
           onReceipt(receipt);
-          loadSpaces();
-          loadMembers(watchedSpaceIdRef.current);
+          loadSpaces(owner);
+          loadMembers(watchedSpaceIdRef.current, owner);
         })
         .catch(() => {
-          if (abort.signal.aborted) return;
+          if (abort.signal.aborted || !operationOwnerCurrent(owner)) return;
           setSpacesPhase("failed");
         });
     },
-    [connectionRef, loadMembers, loadSpaces, portRef, watchedSpaceIdRef],
+    [captureOperationOwner, loadMembers, loadSpaces, operationOwnerCurrent, portRef, watchedSpaceIdRef],
   );
 
   useEffect(() => {
     loadSpaces();
     return () => spacesAbort.current?.abort();
   }, [connection.id, loadSpaces]);
+
+  /** ♻️ Re-bootstrap after a reload: the port restored a capability this browsing context minted
+   * earlier, so the session is presumed live only until the hub's own `me` answer confirms or
+   * refuses it. Mount-only — a later sign-out must not resurrect the session it just ended. */
+  useEffect(() => {
+    const restored = portRef.current.restoredCapability;
+    if (!restored || rebootstrapped.current) return;
+    rebootstrapped.current = true;
+    dispatchSession({ kind: "minted", userId: restored.userId, expiresAtMs: null });
+    readAuthority();
+  }, [portRef, readAuthority, rebootstrapped]);
 
   useEffect(() => {
     const online = (): void => dispatchSession({ kind: "connectivity", offline: false });
@@ -471,10 +735,15 @@ export function useHubConnection(port: HubConnectionPortV1, onlineUserIds: reado
   }, []);
 
   useEffect(() => () => {
+    operationGeneration.current++;
     signInAbort.current?.abort();
+    signOutAbort.current?.abort();
     commandAbort.current?.abort();
     authorityAbort.current?.abort();
     membersAbort.current?.abort();
+    spacesAbort.current?.abort();
+    redemptionAbort.current?.abort();
+    delegationAbort.current?.abort();
   }, []);
 
   /** ♻️ Re-authentication without a round trip per render: once the locally known deadline has
@@ -492,19 +761,22 @@ export function useHubConnection(port: HubConnectionPortV1, onlineUserIds: reado
   }, [readAuthority, session.expiresAtMs, session.phase]);
 
   const selectConnection = useCallback((id: string) => {
-    signInAbort.current?.abort();
-    authorityAbort.current?.abort();
-    membersAbort.current?.abort();
+    const next = selectHubConnectionV1(book, id);
+    if (next.selectedId === operationConnectionId.current) return;
+    retireOperationsForConnection(next.selectedId);
     setAuthority(null);
     setMemberRows([]);
     setInvite(null);
     setRedemption({ phase: "idle", error: null });
     setRows([]);
     setSpacesPhase("loading");
-    const next = selectHubConnectionV1(book, id);
+    setAgentCredential(null);
+    setDelegationSummaries([]);
+    setDelegationPhase("idle");
+    setDelegationError(null);
     dispatchSession({ kind: "select-connection", connectionId: next.selectedId });
     persist(next);
-  }, [book, persist]);
+  }, [book, persist, retireOperationsForConnection]);
 
   const addRemoteHub = useCallback((typed: string, label: string): HubSignInErrorCodeV1 | "invalid-origin" | null => {
     let origin: string;
@@ -515,27 +787,55 @@ export function useHubConnection(port: HubConnectionPortV1, onlineUserIds: reado
     }
     const trimmed = label.trim();
     const next = upsertHubConnectionV1(book, { id: hubConnectionIdForOriginV1(origin), label: trimmed.length > 0 ? trimmed.slice(0, 128) : origin, origin, kind: "remote", lastUserId: null });
+    const changed = next.selectedId !== operationConnectionId.current;
+    retireOperationsForConnection(next.selectedId);
+    if (changed) {
+      setAuthority(null);
+      setMemberRows([]);
+      setInvite(null);
+      setRedemption({ phase: "idle", error: null });
+      setRows([]);
+      setSpacesPhase("loading");
+      setAgentCredential(null);
+      setDelegationSummaries([]);
+      setDelegationPhase("idle");
+      setDelegationError(null);
+    }
     dispatchSession({ kind: "select-connection", connectionId: next.selectedId });
     persist(next);
     return null;
-  }, [book, persist]);
+  }, [book, persist, retireOperationsForConnection]);
 
   const forgetHub = useCallback((id: string) => {
     const next = removeHubConnectionV1(book, id);
+    const changed = next.selectedId !== operationConnectionId.current;
+    retireOperationsForConnection(next.selectedId);
+    if (changed) {
+      setAuthority(null);
+      setMemberRows([]);
+      setInvite(null);
+      setRedemption({ phase: "idle", error: null });
+      setRows([]);
+      setSpacesPhase("loading");
+      setAgentCredential(null);
+      setDelegationSummaries([]);
+      setDelegationPhase("idle");
+      setDelegationError(null);
+    }
     dispatchSession({ kind: "select-connection", connectionId: next.selectedId });
     persist(next);
-  }, [book, persist]);
+  }, [book, persist, retireOperationsForConnection]);
 
   const signIn = useCallback((input: Readonly<{ email: string; password: string }>) => {
+    const owner = captureOperationOwner();
     signInAbort.current?.abort();
     const abort = new AbortController();
     signInAbort.current = abort;
     dispatchSession({ kind: "submit" });
     const active = portRef.current;
-    const target = connectionRef.current;
     const credential: HubSignInCredentialV1 = { email: input.email, password: input.password, deviceInstanceId: active.deviceInstanceId, clientClass: active.clientClass };
-    void runHubSignInV1(active.signIn, target.origin, credential, abort.signal).then((outcome) => {
-      if (abort.signal.aborted && outcome.kind !== "failed") return;
+    void runHubSignInV1(active.signIn, owner.origin, credential, abort.signal).then((outcome) => {
+      if (!operationOwnerCurrent(owner)) return;
       if (outcome.kind === "failed") {
         dispatchSession({ kind: "failed", code: outcome.code, retryAfterSeconds: outcome.retryAfterSeconds });
         if (outcome.code === "unreachable") dispatchSession({ kind: "connectivity", offline: true });
@@ -543,12 +843,13 @@ export function useHubConnection(port: HubConnectionPortV1, onlineUserIds: reado
       }
       dispatchSession({ kind: "minted", userId: outcome.result.userId, expiresAtMs: null });
       dispatchSession({ kind: "connectivity", offline: false });
-      persist(upsertHubConnectionV1(book, { ...target, lastUserId: outcome.result.userId }));
-      readAuthority();
-      loadSpaces();
-      loadMembers(watchedSpaceIdRef.current);
+      const target = book.connections.find((entry) => entry.id === owner.connectionId);
+      if (target) persist(upsertHubConnectionV1(book, { ...target, lastUserId: outcome.result.userId }));
+      readAuthority(owner);
+      loadSpaces(owner);
+      loadMembers(watchedSpaceIdRef.current, owner);
     });
-  }, [book, connectionRef, loadMembers, loadSpaces, persist, portRef, readAuthority, watchedSpaceIdRef]);
+  }, [book, captureOperationOwner, loadMembers, loadSpaces, operationOwnerCurrent, persist, portRef, readAuthority, watchedSpaceIdRef]);
 
   const cancelSignIn = useCallback(() => {
     signInAbort.current?.abort();
@@ -557,20 +858,28 @@ export function useHubConnection(port: HubConnectionPortV1, onlineUserIds: reado
   }, []);
 
   const signOut = useCallback(() => {
+    const owner = captureOperationOwner();
+    signOutAbort.current?.abort();
     authorityAbort.current?.abort();
     membersAbort.current?.abort();
     setAuthority(null);
     setMemberRows([]);
     dispatchSession({ kind: "sign-out" });
     const abort = new AbortController();
-    void runHubSignOutV1(portRef.current.signIn, connectionRef.current.origin, abort.signal).then(() => {
+    signOutAbort.current = abort;
+    void runHubSignOutV1(portRef.current.signIn, owner.origin, abort.signal).then(() => {
+      if (abort.signal.aborted || !operationOwnerCurrent(owner)) return;
       dispatchSession({ kind: "signed-out" });
       setRows([]);
       setInvite(null);
       setRedemption({ phase: "idle", error: null });
       setSpacesPhase("loading");
+      setAgentCredential(null);
+      setDelegationSummaries([]);
+      setDelegationPhase("idle");
+      setDelegationError(null);
     });
-  }, [connectionRef, portRef]);
+  }, [captureOperationOwner, operationOwnerCurrent, portRef]);
 
   const createSpace = useCallback((name: string, kind: DirectorySpaceKind, visibility: DirectorySpaceVisibility) => {
     let command: DirectoryCommand;
@@ -610,6 +919,7 @@ export function useHubConnection(port: HubConnectionPortV1, onlineUserIds: reado
   }, [connectionRef, runCommand]);
 
   const copyInvite = useCallback(() => {
+    const owner = captureOperationOwner();
     const current = invite;
     const write = portRef.current.writeClipboard;
     if (current === null || write === undefined) {
@@ -617,13 +927,14 @@ export function useHubConnection(port: HubConnectionPortV1, onlineUserIds: reado
       return;
     }
     void write(current.link)
-      .then(() => setInvite((value) => (value === null ? value : { ...value, copy: "copied" })))
-      .catch(() => setInvite((value) => (value === null ? value : { ...value, copy: "failed" })));
-  }, [invite, portRef]);
+      .then(() => { if (operationOwnerCurrent(owner)) setInvite((value) => (value === null ? value : { ...value, copy: "copied" })); })
+      .catch(() => { if (operationOwnerCurrent(owner)) setInvite((value) => (value === null ? value : { ...value, copy: "failed" })); });
+  }, [captureOperationOwner, invite, operationOwnerCurrent, portRef]);
 
   const dismissInvite = useCallback(() => setInvite(null), []);
 
   const redeemInvite = useCallback((typed: string) => {
+    const owner = captureOperationOwner();
     let token: string;
     try {
       token = parseInviteTokenV1(typed);
@@ -631,23 +942,112 @@ export function useHubConnection(port: HubConnectionPortV1, onlineUserIds: reado
       setRedemption({ phase: "failed", error: "invalid-invite" });
       return;
     }
+    redemptionAbort.current?.abort();
     setRedemption({ phase: "redeeming", error: null });
     const abort = new AbortController();
+    redemptionAbort.current = abort;
     void portRef.current
-      .redeemInvite(connectionRef.current.origin, token, abort.signal)
+      .redeemInvite(owner.origin, token, abort.signal)
       .then((response) => {
+        if (abort.signal.aborted || !operationOwnerCurrent(owner)) return;
         if (response.status >= 200 && response.status < 300) {
           setRedemption({ phase: "redeemed", error: null });
-          loadSpaces();
+          loadSpaces(owner);
           return;
         }
         setRedemption({ phase: "failed", error: inviteRedemptionErrorFromStatusV1(response.status) });
       })
-      .catch(() => setRedemption({ phase: "failed", error: abort.signal.aborted ? "cancelled" : "unreachable" }));
-  }, [connectionRef, loadSpaces, portRef]);
+      .catch(() => { if (operationOwnerCurrent(owner)) setRedemption({ phase: "failed", error: abort.signal.aborted ? "cancelled" : "unreachable" }); });
+  }, [captureOperationOwner, loadSpaces, operationOwnerCurrent, portRef]);
+
+  const refreshSpaces = useCallback(() => loadSpaces(), [loadSpaces]);
+
+  const refreshDelegations = useCallback(() => loadDelegations(watchedSpaceIdRef.current), [loadDelegations, watchedSpaceIdRef]);
+
+  /** 🤖️ Mints one delegation. The receipt is turned into a credential file HERE, once, and the raw
+   * token is never written anywhere else: the pane only ever sees the rendered file. */
+  const createDelegation = useCallback((agentLabel: string, audience: AgentAudienceV1, ttlSecs: number) => {
+    const owner = captureOperationOwner();
+    const spaceId = watchedSpaceIdRef.current;
+    if (spaceId === null) {
+      setDelegationError("malformed-request");
+      setDelegationPhase("failed");
+      return;
+    }
+    let body: string;
+    try {
+      body = createAgentDelegationBodyV1(spaceId, agentLabel, audience, ttlSecs);
+    } catch {
+      setDelegationError("malformed-request");
+      setDelegationPhase("failed");
+      return;
+    }
+    delegationAbort.current?.abort();
+    const abort = new AbortController();
+    delegationAbort.current = abort;
+    setDelegationPhase("submitting");
+    setDelegationError(null);
+    void portRef.current
+      .createAgentDelegation(owner.origin, body, abort.signal)
+      .then((receipt) => {
+        if (abort.signal.aborted || !operationOwnerCurrent(owner)) return;
+        setAgentCredential({ receipt, file: agentCredentialFileV1(receipt, owner.origin), command: agentCredentialCommandV1(receipt, owner.origin), save: "idle" });
+        loadDelegations(spaceId, owner);
+      })
+      .catch((error: unknown) => {
+        if (abort.signal.aborted || !operationOwnerCurrent(owner)) return;
+        setDelegationPhase("failed");
+        setDelegationError(error instanceof AgentDelegationRefusalV1 ? error.code : "unreachable");
+      });
+  }, [captureOperationOwner, loadDelegations, operationOwnerCurrent, portRef, watchedSpaceIdRef]);
+
+  const downloadAgentCredential = useCallback(() => {
+    const owner = captureOperationOwner();
+    const current = agentCredential;
+    const save = portRef.current.saveFile;
+    if (current === null || save === undefined) {
+      setAgentCredential((value) => (value === null ? value : { ...value, save: "failed" }));
+      return;
+    }
+    void save(current.file)
+      .then(() => { if (operationOwnerCurrent(owner)) setAgentCredential((value) => (value === null ? value : { ...value, save: "saved" })); })
+      .catch(() => { if (operationOwnerCurrent(owner)) setAgentCredential((value) => (value === null ? value : { ...value, save: "failed" })); });
+  }, [agentCredential, captureOperationOwner, operationOwnerCurrent, portRef]);
+
+  const dismissAgentCredential = useCallback(() => setAgentCredential(null), []);
+
+  const revokeDelegation = useCallback((delegationId: string) => {
+    const owner = captureOperationOwner();
+    const spaceId = watchedSpaceIdRef.current;
+    try {
+      agentDelegationRevokePathV1(delegationId);
+    } catch {
+      setDelegationError("malformed-request");
+      setDelegationPhase("failed");
+      return;
+    }
+    delegationAbort.current?.abort();
+    const abort = new AbortController();
+    delegationAbort.current = abort;
+    setDelegationPhase("submitting");
+    setDelegationError(null);
+    void portRef.current
+      .revokeAgentDelegation(owner.origin, delegationId, abort.signal)
+      .then(() => {
+        if (abort.signal.aborted || !operationOwnerCurrent(owner)) return;
+        setAgentCredential((value) => (value === null || value.receipt.delegationId !== delegationId ? value : null));
+        loadDelegations(spaceId, owner);
+      })
+      .catch((error: unknown) => {
+        if (abort.signal.aborted || !operationOwnerCurrent(owner)) return;
+        setDelegationPhase("failed");
+        setDelegationError(error instanceof AgentDelegationRefusalV1 ? error.code : "unreachable");
+      });
+  }, [captureOperationOwner, loadDelegations, operationOwnerCurrent, portRef, watchedSpaceIdRef]);
 
   const visibleRows = useMemo(() => filterSpaceRowsV1(rows, search), [rows, search]);
   const members = useMemo(() => spaceMemberPresenceV1(memberRows, onlineUserIds), [memberRows, onlineUserIds]);
+  const delegations = useMemo(() => agentDelegationRowsV1(delegationSummaries, Date.now()), [delegationSummaries]);
 
   return {
     book,
@@ -660,13 +1060,17 @@ export function useHubConnection(port: HubConnectionPortV1, onlineUserIds: reado
     search,
     invite,
     redemption,
+    delegations,
+    delegationPhase,
+    delegationError,
+    agentCredential,
     selectConnection,
     addRemoteHub,
     forgetHub,
     signIn,
     cancelSignIn,
     signOut,
-    refreshSpaces: loadSpaces,
+    refreshSpaces,
     watchSpaceMembers,
     setSearch,
     createSpace,
@@ -675,6 +1079,11 @@ export function useHubConnection(port: HubConnectionPortV1, onlineUserIds: reado
     copyInvite,
     dismissInvite,
     redeemInvite,
+    refreshDelegations,
+    createDelegation,
+    downloadAgentCredential,
+    dismissAgentCredential,
+    revokeDelegation,
   };
 }
 //#endregion 🔖️Hook
@@ -732,8 +1141,22 @@ export function createHubConnectionFetchPortV1(options: {
   readonly parseSpaces: (body: string) => readonly DirectorySpaceListEntryV1[];
   readonly sealCommand: (command: DirectoryCommand) => Readonly<{ body: string; parseReceipt: (body: string) => Promise<DirectoryCommandReceiptV1> }>;
   readonly writeClipboard?: (text: string) => Promise<void>;
+  /** 📄️ Hands the human a file to save — the one-time agent credential. Injected rather than reached
+   * for, so a headless test drives the same lane a browser download does. */
+  readonly saveFile?: (file: Readonly<{ fileName: string; contents: string; mediaType: string }>) => Promise<void>;
+  /** 🎫️ The capability a previous page load minted and this context remembered, restored so a
+   * reload continues the same hub session instead of asking for the password again. */
+  readonly restoredCapability?: Readonly<{ token: string; userId: string }> | null;
+  /** 📣️ Announces every change of the capability this port holds — a mint, a sign-out, or the hub
+   * refusing it. The shell is what remembers it and what hands it to the credential-owning worker;
+   * this port stays the only thing that ever puts it on a wire. */
+  readonly onCapability?: (capability: Readonly<{ token: string; userId: string }> | null) => void;
 }): HubConnectionPortV1 {
-  let capability: string | null = null;
+  let capability: string | null = options.restoredCapability?.token ?? null;
+  const announce = (next: Readonly<{ token: string; userId: string }> | null): void => {
+    capability = next?.token ?? null;
+    options.onCapability?.(next);
+  };
   const authorized = (json: boolean): Record<string, string> => ({
     ...(json ? { "content-type": "application/json" } : {}),
     ...(capability === null ? {} : { authorization: `Bearer ${capability}` }),
@@ -748,23 +1171,29 @@ export function createHubConnectionFetchPortV1(options: {
     storage: options.storage,
     deviceInstanceId: options.deviceInstanceId,
     clientClass: options.clientClass,
+    restoredCapability: options.restoredCapability ? { userId: options.restoredCapability.userId } : null,
     ...(options.writeClipboard === undefined ? {} : { writeClipboard: options.writeClipboard }),
     signIn: {
       mint: async (origin, body, signal) => {
         const result = await answer(await options.request(`${origin}/auth/sessions`, { method: "POST", headers: { "content-type": "application/json" }, body }, signal));
         if (result.status === 200) {
           try {
-            capability = (JSON.parse(result.body) as { token?: unknown }).token as string;
+            const minted = parseHubSessionMintResultV1(result.body);
+            announce({ token: minted.token, userId: minted.userId });
           } catch {
-            capability = null;
+            announce(null);
           }
         }
         return result;
       },
-      read: async (origin, signal) => answer(await options.request(`${origin}/auth/sessions/me`, { method: "GET", headers: authorized(false) }, signal)),
+      read: async (origin, signal) => {
+        const result = await answer(await options.request(`${origin}/auth/sessions/me`, { method: "GET", headers: authorized(false) }, signal));
+        if (result.status === 401) announce(null);
+        return result;
+      },
       end: async (origin, signal) => {
         const result = await answer(await options.request(`${origin}/auth/sessions/me`, { method: "DELETE", headers: authorized(false) }, signal));
-        capability = null;
+        announce(null);
         return result;
       },
     },
@@ -788,6 +1217,23 @@ export function createHubConnectionFetchPortV1(options: {
       const response = await options.request(`${origin}/directory/invites/${encodeURIComponent(token)}/redeem`, { method: "POST", headers: authorized(false) }, signal);
       return { status: response.status };
     },
+    listAgentDelegations: async (origin, spaceId, signal) => {
+      const response = await options.request(`${origin}${agentDelegationListPathV1(spaceId)}`, { method: "GET", headers: authorized(false) }, signal);
+      const text = await response.text();
+      if (response.status !== 200) throw new AgentDelegationRefusalV1(agentDelegationErrorFromResponseV1(response.status, text));
+      return parseAgentDelegationListV1(text);
+    },
+    createAgentDelegation: async (origin, body, signal) => {
+      const response = await options.request(`${origin}${AGENT_DELEGATION_PATH_V1}`, { method: "POST", headers: authorized(true), body }, signal);
+      const text = await response.text();
+      if (response.status !== 201) throw new AgentDelegationRefusalV1(agentDelegationErrorFromResponseV1(response.status, text));
+      return parseAgentDelegationReceiptV1(text);
+    },
+    revokeAgentDelegation: async (origin, delegationId, signal) => {
+      const response = await options.request(`${origin}${agentDelegationRevokePathV1(delegationId)}`, { method: "DELETE", headers: authorized(false) }, signal);
+      if (response.status !== 204) throw new AgentDelegationRefusalV1(agentDelegationErrorFromResponseV1(response.status, await response.text()));
+    },
+    ...(options.saveFile === undefined ? {} : { saveFile: options.saveFile }),
   };
 }
 

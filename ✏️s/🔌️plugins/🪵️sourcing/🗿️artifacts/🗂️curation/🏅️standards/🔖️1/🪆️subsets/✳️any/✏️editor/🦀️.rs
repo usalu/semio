@@ -1265,13 +1265,18 @@ pub fn create_sourcing_curation_app() -> AppDefinition {
             // 🔧️ Curation counts/stock edits are persisted in `CurationSnapshot`, so each arm emits a
             // whole-document `SetArtifact` operation and is declared as a Mutation, never a View.
             .action_with(ActionDefinition::new("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"), ActionKind::Mutation, "panel-left"))
+            .action_destructive("setActiveExample")
             .mutation("stockFromCatalogue", LocalizedLabel::native("Stock From Catalogue", "Bestand aus Katalog"))
             .action_with(hidden_operation("setDocument", LocalizedLabel::native("Set Document", "Dokument festlegen")))
+            .action_destructive("setDocument")
             .action_with(hidden_operation("curationAdd", LocalizedLabel::native("Curation Add", "Kuratierung hinzufügen")))
             .action_with(hidden_operation("curationSetCount", LocalizedLabel::native("Curation Set Count", "Kuratierte Anzahl festlegen")))
             .action_with(hidden_operation("curationRemove", LocalizedLabel::native("Curation Remove", "Kuratierung entfernen")))
+            .action_destructive("curationRemove")
             .action_with(hidden_operation("dropOnPool", LocalizedLabel::native("Drop On Pool", "Auf Pool ablegen")))
+            .action_audience("dropOnPool", semio_framework_plugin::CapabilityAudience::Input)
             .action_with(hidden_operation("dropOnCurated", LocalizedLabel::native("Drop On Curated", "Auf Kuratiert ablegen")))
+            .action_audience("dropOnCurated", semio_framework_plugin::CapabilityAudience::Input)
             // 👁️ Filters/sort/selection — session-only `SourcingCurationConfig` view state, never the document.
             .action_with(hidden_view_action("setFilterQuery", LocalizedLabel::native("Set Filter Query", "Filterabfrage festlegen")))
             .action_with(hidden_view_action("setFilterModule", LocalizedLabel::native("Set Filter Module", "Filtermodul festlegen")))
@@ -1331,3 +1336,10 @@ pub fn create_sourcing_curation_app() -> AppDefinition {
 pub(crate) mod unit_tests;
 //#endregion 🧪️UnitTests
 
+//#region 🪢️TaxonomyMounts
+#[path = "📚️examples/🎬️demo-session/🦀️.rs"]
+pub mod demo_session;
+#[cfg(test)]
+#[path = "📚️examples/🎬️demo-session/🧪️tests/🧩️example/🦀️.rs"]
+mod example;
+//#endregion 🪢️TaxonomyMounts

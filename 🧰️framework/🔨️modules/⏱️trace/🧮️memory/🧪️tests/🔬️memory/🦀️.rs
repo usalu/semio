@@ -1,6 +1,5 @@
 //! 📏️ The guest linear-memory budget, pinned against the language-neutral schema and against the
-//! two link arguments that actually put it into the shipped component — `.cargo/config.toml`'s
-//! `--max-memory` and the dev plugin build's `-zstack-size`. Neither may drift from
+//! two target-scoped link arguments in `.cargo/config.toml`: `--max-memory` and `-zstack-size`. Neither may drift from
 //! `🧮️memory/🧬️schema/🔣️.json`, because the number in that schema is the one every law reasons with
 //! and the ones in the link arguments are the ones the browser enforces.
 
@@ -68,19 +67,18 @@ fn the_contiguous_request_ceiling_is_one_guest_growth_unit() {
 
 /// ⚖️ LAW: the budget is what the linker is actually told. `--max-memory` is uniform across every
 /// `wasm32-wasip2` plugin in `.cargo/config.toml` (per-plugin rustflags would churn cargo
-/// fingerprints across the shared dep graph), and `-zstack-size` rides the dev plugin build's
-/// `cargo rustc --` tail; a change to either without the schema is the drift this catches.
+/// fingerprints across the shared dep graph). The target's `-zstack-size` reserves the schema's stack.
 #[test]
 fn the_link_arguments_carry_the_declared_budget() {
     let cargo_config = include_str!("../../../../../../.cargo/config.toml");
+    let guest_target = cargo_config.lines().skip_while(|line| line.trim() != "[target.wasm32-wasip2]").skip(1).take_while(|line| !line.trim_start().starts_with('[')).collect::<Vec<_>>().join("\n");
     assert!(
-        cargo_config.contains(&format!("link-arg=--max-memory={GUEST_LINEAR_MEMORY_MAXIMUM_BYTES}")),
+        guest_target.contains(&format!("link-arg=--max-memory={GUEST_LINEAR_MEMORY_MAXIMUM_BYTES}")),
         "`.cargo/config.toml` must link wasm32-wasip2 plugin guests with --max-memory={GUEST_LINEAR_MEMORY_MAXIMUM_BYTES}"
     );
-    let dev_script = include_str!("../../../../../🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📜️script.ts");
     assert!(
-        dev_script.contains(&format!("const PLUGIN_WASM_STACK_BYTES = {} * 1024 * 1024;", GUEST_LINEAR_MEMORY_STACK_BYTES / (1024 * 1024))),
-        "the dev plugin build must carve the declared shadow stack out of the guest budget"
+        guest_target.contains(&format!("link-arg=-zstack-size={GUEST_LINEAR_MEMORY_STACK_BYTES}")),
+        "the plugin guest target must reserve the declared shadow stack"
     );
 }
 

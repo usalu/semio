@@ -258,9 +258,15 @@ export function parseInferenceApprovalReceiptV1(value: unknown): InferenceApprov
   return { schema: "semio.hub.inference-approval-receipt/v1", jobId: row.jobId as string, mutationId: row.mutationId as string, commandHash: row.commandHash as string, proposalHash: row.proposalHash as string, applied: row.applied, undo: parseGisMapApprovalUndoHandleV1(row.undo) };
 }
 
+/** 🗺️ The one server-derived `CreateRegion` proposal the outbox corpus prepares and the committed
+ * WAL witness reconciles. Both corpora describe ONE approval of one job, so this literal is also
+ * what `🧾️inference-wal-proof-v1`'s command carries as its diff payload. */
+export const INFERENCE_APPROVAL_OUTBOX_PROPOSAL_V1 =
+  '{"CreateRegion":{"index":0,"item":{"id":"inference-4da0cbcd465dd9474f46e2a9e1efd24d","data":{"id":"inference-4da0cbcd465dd9474f46e2a9e1efd24d","kind":"inference-bounds","ring":[[7.0,46.0],[9.0,46.0],[9.0,48.0],[7.0,48.0],[7.0,46.0]]}}}}';
+
 /** 📤️ The ledger-only outbox row a prepared approval reconciles exactly once. */
 export type InferenceApprovalOutboxV1 = {
-  readonly proposal: "ledger-only-proposal";
+  readonly proposal: typeof INFERENCE_APPROVAL_OUTBOX_PROPOSAL_V1;
   readonly commandHex: string;
   readonly jobId: string;
   readonly mutationId: string;
@@ -272,9 +278,9 @@ export type InferenceApprovalOutboxV1 = {
 export function parseInferenceApprovalOutboxV1(value: unknown): InferenceApprovalOutboxV1 {
   const name = "hub.inference/InferenceApprovalOutboxV1";
   const row = rows(value, ["proposal", "commandHex", "jobId", "mutationId", "proposalHash", "commandHash", "preparedCount", "reconciledCount"], name);
-  if (row.proposal !== "ledger-only-proposal" || !hexBytes(row.commandHex, 16384) || (row.commandHex as string).length < 2 || !hex(row.jobId, 32) || !hex(row.mutationId, 32)
+  if (row.proposal !== INFERENCE_APPROVAL_OUTBOX_PROPOSAL_V1 || !hexBytes(row.commandHex, 16384) || (row.commandHex as string).length < 2 || !hex(row.jobId, 32) || !hex(row.mutationId, 32)
     || !hex(row.proposalHash, 64) || !hex(row.commandHash, 64) || row.preparedCount !== 1 || row.reconciledCount !== 1) return fail(name);
-  return { proposal: "ledger-only-proposal", commandHex: row.commandHex as string, jobId: row.jobId as string, mutationId: row.mutationId as string, proposalHash: row.proposalHash as string, commandHash: row.commandHash as string, preparedCount: 1, reconciledCount: 1 };
+  return { proposal: INFERENCE_APPROVAL_OUTBOX_PROPOSAL_V1, commandHex: row.commandHex as string, jobId: row.jobId as string, mutationId: row.mutationId as string, proposalHash: row.proposalHash as string, commandHash: row.commandHash as string, preparedCount: 1, reconciledCount: 1 };
 }
 
 /** ⏸️ One integration-fixtures checkpoint control frame on the fixed inherited descriptor. */

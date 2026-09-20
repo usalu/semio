@@ -9,6 +9,14 @@ mod app_builder_tests {
         surface_app_id(&ArtifactDialect { artifact_kind: format!("s.test.app-builder.{slug}"), standard: "1".into(), subset: "*".into() }, AppRole::Editor)
     }
 
+    /// 🧾️ Every action a built definition declares — the app-level roster (`AppDefinition::actions`,
+    /// where `try_build_definition` puts every framework-injected verb) chained with the per-window
+    /// rosters. A window kind only carries the actions its own declaration or `action_refs` named,
+    /// so a lookup that reads `window_kinds` alone cannot see an injected app-level verb at all.
+    fn declared_actions(definition: &AppDefinition) -> impl Iterator<Item = &ActionDefinition> {
+        definition.actions.iter().chain(definition.window_kinds.iter().flat_map(|window| window.actions.iter()))
+    }
+
     /// 🪦️ REMOVED (ticket 26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME, registrar):
     /// `build_definition_rejects_{,dialog_}select_arg_with_no_options` asserted that a Select
     /// argument declaring zero options is rejected. After the peer `ActionArgDef` redesign
@@ -145,13 +153,14 @@ mod app_builder_tests {
             .await
             .try_build_definition()
             .expect("an explicit app-wide disposition classifies its existing inventory");
-        assert!(migrated.window_kinds.iter().flat_map(|window| &window.actions).all(|action| action.semantics.execution.interactive_job == Migrated));
+        let migrated_action = declared_actions(&migrated).find(|action| action.id == "migratedAction").expect("the declared action survives into the released catalog");
+        assert_eq!(migrated_action.semantics.execution.interactive_job, Migrated);
 
         for (index, classification) in [BatchOnlyPendingRewrite, ForbiddenFromUi, Deleted].into_iter().enumerate() {
             let mut action = ActionDefinition::bounded_catalog("blockedAction", LocalizedLabel::data("Blocked"), ActionKind::Mutation);
             action.semantics.execution.interactive_job = classification;
             let definition = minimal_app(&format!("classified-action-{index}")).await.action_with(action).await.try_build_definition().expect("an explicit non-UI disposition is valid inventory data");
-            let retained = definition.window_kinds.iter().flat_map(|window| &window.actions).find(|entry| entry.id == "blockedAction").expect("classified action retained");
+            let retained = declared_actions(&definition).find(|entry| entry.id == "blockedAction").expect("classified action retained");
             assert_eq!(retained.semantics.execution.interactive_job, classification);
         }
     }
@@ -159,7 +168,7 @@ mod app_builder_tests {
     #[semio_framework_async_macros::async_test]
     async fn build_definition_auto_injects_history_actions_and_keybindings() {
         let definition = minimal_app("history-app").await.build_definition();
-        let history_ids: HashSet<&str> = definition.window_kinds.iter().flat_map(|window| window.actions.iter()).map(|c| c.id.as_str()).collect();
+        let history_ids: HashSet<&str> = declared_actions(&definition).map(|c| c.id.as_str()).collect();
         assert!(history_ids.contains("undo"));
         assert!(history_ids.contains("redo"));
         assert!(history_ids.contains("commitCheckpoint"));
@@ -180,13 +189,13 @@ mod app_builder_tests {
     #[semio_framework_async_macros::async_test]
     async fn build_definition_auto_injects_clipboard_actions_and_keybindings() {
         let definition = minimal_app("clipboard-app").await.build_definition();
-        let clipboard_ids: HashSet<&str> = definition.window_kinds.iter().flat_map(|window| window.actions.iter()).map(|c| c.id.as_str()).collect();
+        let clipboard_ids: HashSet<&str> = declared_actions(&definition).map(|c| c.id.as_str()).collect();
         assert!(clipboard_ids.contains("copy"));
         assert!(clipboard_ids.contains("cut"));
         assert!(clipboard_ids.contains("paste"));
-        let copy_action = definition.window_kinds.iter().flat_map(|window| window.actions.iter()).find(|a| a.id == "copy").expect("copy declared");
+        let copy_action = declared_actions(&definition).find(|a| a.id == "copy").expect("copy declared");
         assert_eq!(copy_action.kind, ActionKind::Clipboard);
-        let paste_action = definition.window_kinds.iter().flat_map(|window| window.actions.iter()).find(|a| a.id == "paste").expect("paste declared");
+        let paste_action = declared_actions(&definition).find(|a| a.id == "paste").expect("paste declared");
         assert!(paste_action.args.iter().any(|arg| arg.id == "anchor"));
         let copy_binding = definition.keybindings.iter().find(|binding| binding.keys == "mod+c").expect("copy keybinding auto-injected");
         assert_eq!(copy_binding.action.action, "copy");
@@ -203,13 +212,13 @@ mod app_builder_tests {
             history_panel_tab_ids.push(tab.id());
         }
         assert!(history_panel_tab_ids.iter().any(|id| *id == ui_wgpu::wgpu::FRAMEWORK_PANEL_TAB_HISTORY_ID));
-        let action_ids: HashSet<&str> = definition.window_kinds.iter().flat_map(|window| window.actions.iter()).map(|a| a.id.as_str()).collect();
+        let action_ids: HashSet<&str> = declared_actions(&definition).map(|a| a.id.as_str()).collect();
         assert!(action_ids.contains(REVERT_TO_COMMAND_ACTION_ID));
         assert!(action_ids.contains(SET_HISTORY_COMMAND_FILTER_ACTION_ID));
-        let revert = definition.window_kinds.iter().flat_map(|window| window.actions.iter()).find(|a| a.id == REVERT_TO_COMMAND_ACTION_ID).expect("revertToCommand declared");
+        let revert = declared_actions(&definition).find(|a| a.id == REVERT_TO_COMMAND_ACTION_ID).expect("revertToCommand declared");
         assert_eq!(revert.kind, ActionKind::History);
         assert!(!revert.in_palette);
-        let filter = definition.window_kinds.iter().flat_map(|window| window.actions.iter()).find(|a| a.id == SET_HISTORY_COMMAND_FILTER_ACTION_ID).expect("setHistoryCommandFilter declared");
+        let filter = declared_actions(&definition).find(|a| a.id == SET_HISTORY_COMMAND_FILTER_ACTION_ID).expect("setHistoryCommandFilter declared");
         assert_eq!(filter.kind, ActionKind::View);
         assert!(!filter.in_palette);
     }
@@ -237,8 +246,10 @@ mod app_builder_tests {
             .await
             .shell_action("exportPng", LocalizedLabel::data("Export PNG"))
             .await
+            .interactive_jobs(semio_framework::InteractiveJobClassification::Migrated)
+            .await
             .build_definition();
-        let by_id = |id: &str| definition.window_kinds.iter().flat_map(|window| window.actions.iter()).find(|c| c.id == id).expect("declared");
+        let by_id = |id: &str| declared_actions(&definition).find(|c| c.id == id).expect("declared");
         assert_eq!(by_id("addLayer").kind, ActionKind::Mutation);
         assert_eq!(by_id("setCamera").kind, ActionKind::View);
         assert_eq!(by_id("exportPng").kind, ActionKind::Shell);
@@ -270,7 +281,7 @@ mod app_builder_tests {
             .utility_simple("eraser", LocalizedLabel::data("Eraser"), IconName::Eraser)
             .await
             .build_definition();
-        let set_active_utility = definition.window_kinds.iter().flat_map(|window| window.actions.iter()).find(|action| action.id == SET_ACTIVE_UTILITY_ACTION_ID).expect("setActiveUtility injected");
+        let set_active_utility = declared_actions(&definition).find(|action| action.id == SET_ACTIVE_UTILITY_ACTION_ID).expect("setActiveUtility injected");
         assert_eq!(set_active_utility.kind, ActionKind::View);
         assert!(!set_active_utility.in_palette);
         let binding = definition.keybindings.iter().find(|binding| binding.keys == "b").expect("utility keybinding auto-injected");
@@ -282,7 +293,7 @@ mod app_builder_tests {
     async fn no_utilities_means_no_set_active_utility_action() {
         use semio_framework::SET_ACTIVE_UTILITY_ACTION_ID;
         let definition = minimal_app("no-utility-app").await.build_definition();
-        assert!(!definition.window_kinds.iter().flat_map(|window| window.actions.iter()).any(|action| action.id == SET_ACTIVE_UTILITY_ACTION_ID));
+        assert!(!declared_actions(&definition).any(|action| action.id == SET_ACTIVE_UTILITY_ACTION_ID));
     }
 
     #[semio_framework_async_macros::async_test]
@@ -320,7 +331,7 @@ mod app_builder_tests {
             .mode_tools("edit", vec![ToolRef::new("fill").await])
             .await
             .build_definition();
-        let set_active_tool = definition.window_kinds.iter().flat_map(|window| window.actions.iter()).find(|action| action.id == SET_ACTIVE_TOOL_ACTION_ID).expect("setActiveTool injected");
+        let set_active_tool = declared_actions(&definition).find(|action| action.id == SET_ACTIVE_TOOL_ACTION_ID).expect("setActiveTool injected");
         assert_eq!(set_active_tool.kind, ActionKind::View);
         assert!(!set_active_tool.in_palette);
         let binding = definition.keybindings.iter().find(|binding| binding.keys == "f").expect("tool keybinding auto-injected");
@@ -332,7 +343,7 @@ mod app_builder_tests {
     async fn no_tools_means_no_set_active_tool_action() {
         use semio_framework::SET_ACTIVE_TOOL_ACTION_ID;
         let definition = minimal_app("no-tool-app").await.build_definition();
-        assert!(!definition.window_kinds.iter().flat_map(|window| window.actions.iter()).any(|action| action.id == SET_ACTIVE_TOOL_ACTION_ID));
+        assert!(!declared_actions(&definition).any(|action| action.id == SET_ACTIVE_TOOL_ACTION_ID));
     }
 
     #[semio_framework_async_macros::async_test]
@@ -353,7 +364,7 @@ mod app_builder_tests {
             windows: Vec::new(),
         };
         let plain = minimal_app("tool-without-run-app").await.tool(ToolDefinition::new("fill", LocalizedLabel::data("Fill"), IconName::PaintBucket).await).await.mode_tools("edit", vec![ToolRef::new("fill").await]).await.build_definition();
-        assert!(!plain.window_kinds.iter().flat_map(|window| window.actions.iter()).any(|action| TOOL_RUN_ACTION_IDS.contains(&action.id.as_str())));
+        assert!(!declared_actions(&plain).any(|action| TOOL_RUN_ACTION_IDS.contains(&action.id.as_str())));
         let interactive = minimal_app("tool-run-app").await.tool(ToolDefinition { run: Some(run), ..ToolDefinition::new("fill", LocalizedLabel::data("Fill"), IconName::PaintBucket).await }).await.mode_tools("edit", vec![ToolRef::new("fill").await]).await.build_definition();
         let window_actions: Vec<&str> = interactive.window_kinds.first().actions.iter().map(|action| action.id.as_str()).collect();
         for id in TOOL_RUN_ACTION_IDS {
@@ -374,8 +385,8 @@ mod app_builder_tests {
 
     #[semio_framework_async_macros::async_test]
     async fn action_args_attaches_declared_arguments() {
-        let definition = minimal_app("args-app").await.mutation("resize", LocalizedLabel::data("Resize")).await.action_args("resize", vec![ActionArgDef::slider("scale", LocalizedLabel::data("Scale"), 0.0, 4.0).required()]).await.build_definition();
-        let resize = definition.window_kinds.iter().flat_map(|window| window.actions.iter()).find(|action| action.id == "resize").expect("declared");
+        let definition = minimal_app("args-app").await.mutation("resize", LocalizedLabel::data("Resize")).await.action_args("resize", vec![ActionArgDef::slider("scale", LocalizedLabel::data("Scale"), 0.0, 4.0).required()]).await.interactive_jobs(semio_framework::InteractiveJobClassification::Migrated).await.build_definition();
+        let resize = declared_actions(&definition).find(|action| action.id == "resize").expect("declared");
         assert_eq!(resize.args.len(), 1);
         assert_eq!(resize.args[0].id, "scale");
         assert!(resize.args[0].required);
@@ -416,7 +427,7 @@ mod app_builder_tests {
             .build_definition();
         assert_eq!(definition.interactions.len(), 1);
         assert_eq!(definition.window_kinds.first().interactions, vec![InteractionRef::new("world")]);
-        assert_eq!(definition.window_kinds.iter().flat_map(|window| window.actions.iter()).find(|action| action.id == INTERACTION_HOVER_ACTION_ID).map(|action| action.kind), Some(ActionKind::Interaction));
+        assert_eq!(declared_actions(&definition).find(|action| action.id == INTERACTION_HOVER_ACTION_ID).map(|action| action.kind), Some(ActionKind::Interaction));
         assert_eq!(definition.keybindings.iter().find(|binding| binding.keys == "escape").map(|binding| binding.action.action.as_str()), Some("clearSelection"));
     }
 
@@ -429,7 +440,7 @@ mod app_builder_tests {
             .introduction(IntroductionDefinition { title: LocalizedLabel::data("Welcome"), steps: vec![IntroductionStepDefinition::new("welcome", LocalizedLabel::data("Welcome"), LocalizedLabel::data("Hi there"))] })
             .await
             .build_definition();
-        let start_introduction = definition.window_kinds.iter().flat_map(|window| window.actions.iter()).find(|action| action.id == START_INTRODUCTION_ACTION_ID).expect("startIntroduction injected");
+        let start_introduction = declared_actions(&definition).find(|action| action.id == START_INTRODUCTION_ACTION_ID).expect("startIntroduction injected");
         assert_eq!(start_introduction.kind, ActionKind::View);
         assert!(!start_introduction.in_palette, "the shell-owned Introduce App command owns palette discovery");
     }
@@ -438,7 +449,7 @@ mod app_builder_tests {
     async fn no_introduction_means_no_start_introduction_action() {
         use semio_framework::START_INTRODUCTION_ACTION_ID;
         let definition = minimal_app("no-intro-app").await.build_definition();
-        assert!(!definition.window_kinds.iter().flat_map(|window| window.actions.iter()).any(|action| action.id == START_INTRODUCTION_ACTION_ID));
+        assert!(!declared_actions(&definition).any(|action| action.id == START_INTRODUCTION_ACTION_ID));
     }
 
     #[semio_framework_async_macros::async_test]
@@ -582,6 +593,8 @@ mod app_builder_tests {
                 ],
             })
             .await
+            .interactive_jobs(semio_framework::InteractiveJobClassification::Migrated)
+            .await
             .build_definition();
         let introduction = definition.introduction.expect("introduction present");
         assert_eq!(introduction.steps.len(), 5);
@@ -605,7 +618,7 @@ mod app_builder_tests {
     async fn declaring_tutorial_injects_start_tutorial_action() {
         use semio_framework::{ActionKind, START_TUTORIAL_ACTION_ID};
         let definition = minimal_app("tutorial-app").await.tutorial(minimal_tutorial("welcome-tour").await).await.build_definition();
-        let start_tutorial = definition.window_kinds.iter().flat_map(|window| window.actions.iter()).find(|action| action.id == START_TUTORIAL_ACTION_ID).expect("startTutorial injected");
+        let start_tutorial = declared_actions(&definition).find(|action| action.id == START_TUTORIAL_ACTION_ID).expect("startTutorial injected");
         assert_eq!(start_tutorial.kind, ActionKind::View);
         assert!(!start_tutorial.in_palette, "the shell-owned Play Tutorial command owns palette discovery");
     }
@@ -614,8 +627,8 @@ mod app_builder_tests {
     async fn no_tutorial_means_no_start_tutorial_action_but_record_is_always_injected() {
         use semio_framework::{RECORD_TUTORIAL_ACTION_ID, START_TUTORIAL_ACTION_ID};
         let definition = minimal_app("no-tutorial-app").await.build_definition();
-        assert!(!definition.window_kinds.iter().flat_map(|window| window.actions.iter()).any(|action| action.id == START_TUTORIAL_ACTION_ID));
-        assert!(definition.window_kinds.iter().flat_map(|window| window.actions.iter()).any(|action| action.id == RECORD_TUTORIAL_ACTION_ID), "recordTutorial is injected unconditionally — recording needs no app declaration");
+        assert!(!declared_actions(&definition).any(|action| action.id == START_TUTORIAL_ACTION_ID));
+        assert!(declared_actions(&definition).any(|action| action.id == RECORD_TUTORIAL_ACTION_ID), "recordTutorial is injected unconditionally — recording needs no app declaration");
     }
 
     #[semio_framework_async_macros::async_test]
@@ -680,7 +693,7 @@ mod app_builder_tests {
         tutorial.tracks.ui = vec![TutorialUiKeyframe { at: 20, sample: TutorialUiSample::Delta { changes: vec![TutorialUiChange::ActiveUtility { window_id: "main".into(), utility_id: Some("brush".into()) }] } }];
         tutorial.tracks.gestures = vec![TutorialGestureCue { at: 30, duration_ms: 200, gesture: IntroductionGesture::LeftClick { at: IntroductionPoint::Element { id: window_element_id("main"), offset: None } }, cursor: None }];
         let definition =
-            minimal_app("good-tutorial-app").await.mutation("addLayer", LocalizedLabel::data("Add Layer")).await.utility_simple("brush", LocalizedLabel::data("Brush"), IconName::Paintbrush).await.tutorial(tutorial).await.build_definition();
+            minimal_app("good-tutorial-app").await.mutation("addLayer", LocalizedLabel::data("Add Layer")).await.utility_simple("brush", LocalizedLabel::data("Brush"), IconName::Paintbrush).await.tutorial(tutorial).await.interactive_jobs(semio_framework::InteractiveJobClassification::Migrated).await.build_definition();
         assert_eq!(definition.tutorials.len(), 1);
         assert_eq!(definition.tutorials[0].id, "good-tour");
     }
@@ -688,7 +701,7 @@ mod app_builder_tests {
     #[semio_framework_async_macros::async_test]
     async fn declaring_dialog_appends_to_definition() {
         use semio_framework::{ActionRef, DialogDefinition};
-        let definition = minimal_app("dialog-app").await.mutation("addLayer", LocalizedLabel::data("Add Layer")).await.dialog(DialogDefinition::new("addLayer", LocalizedLabel::data("Add Layer"), ActionRef::new("addLayer"))).await.build_definition();
+        let definition = minimal_app("dialog-app").await.mutation("addLayer", LocalizedLabel::data("Add Layer")).await.dialog(DialogDefinition::new("addLayer", LocalizedLabel::data("Add Layer"), ActionRef::new("addLayer"))).await.interactive_jobs(semio_framework::InteractiveJobClassification::Migrated).await.build_definition();
         assert_eq!(definition.dialogs.len(), 1);
         assert_eq!(definition.dialogs[0].id, "addLayer");
         assert_eq!(definition.dialogs[0].submit_label, LocalizedLabel::data("OK"));
@@ -756,6 +769,8 @@ mod app_builder_tests {
             .await
             .mode_command("edit", CommandDefinition::new("mode.focus", LocalizedLabel::data("Focus"), "view", "focus", ActionKind::View))
             .await
+            .interactive_jobs(semio_framework::InteractiveJobClassification::Migrated)
+            .await
             .build_definition();
         assert_eq!(definition.commands.iter().map(|command| command.id.as_str()).collect::<Vec<_>>(), vec!["app.export"]);
         assert_eq!(definition.modes[0].commands.iter().map(|command| command.id.as_str()).collect::<Vec<_>>(), vec!["mode.focus"]);
@@ -795,6 +810,8 @@ mod app_builder_tests {
             .await
             .mode_command("edit", CommandDefinition::bounded_catalog("focus", LocalizedLabel::data("Mode Focus"), "mode", ActionKind::View))
             .await
+            .interactive_jobs(semio_framework::InteractiveJobClassification::Migrated)
+            .await
             .build_definition();
         assert_eq!(definition.commands[0].category, "app");
         assert_eq!(definition.modes[0].commands[0].category, "mode");
@@ -828,6 +845,27 @@ mod app_builder_tests {
         let migrated = registry.migrated_tool_ids();
         assert!(migrated.contains("addWidget") && migrated.contains("setShowMode"), "migrated tool ids must join the top-level declarations: {migrated:?}");
         println!("[STATS] app action registry indexed {} actions, {} migrated", registry.actions.len(), migrated.len());
+    }
+
+    /// 🪟️ `stack` is the tabbed LEAF container, never an axis direction. `create_default_layout`
+    /// used to answer `"stack"` with `Axis { kind: "stack", children: [Stack[window]] }`, and every
+    /// consumer that walks a stack node's children as window leaves — the React seed resolver
+    /// `convertFrameworkLayoutNodeToModeLayout` among them — then read the inner stack AS a window
+    /// and minted a pane with no id, which is how `🎞️animate` booted with zero panes
+    /// (ticket 26/09/18, slice F1).
+    #[semio_framework_async_macros::async_test]
+    async fn a_stack_default_layout_is_one_stack_root_of_window_leaves() {
+        use ui_wgpu::wgpu::{WindowLayoutRoot, create_stack_layout};
+        let layout = create_default_layout(&["tile-editor".into()], "stack", None, Some(&["Tile editor".into()]));
+        let WindowLayoutRoot::Stack(root) = &layout.root else {
+            panic!("a stack request must mint a stack ROOT, not an axis wearing the stack discriminator");
+        };
+        assert_eq!(root.children.len(), 1);
+        assert_eq!(root.children[0].window_kind_id, "tile-editor");
+        assert_eq!(root.children[0].title.as_deref(), Some("Tile editor"));
+        assert_eq!(&layout, &create_stack_layout(&["tile-editor".into()], Some(&["Tile editor".into()])));
+        let row = create_default_layout(&["a".into(), "b".into()], "row", Some(&[60.0, 40.0]), None);
+        assert!(matches!(row.root, WindowLayoutRoot::Axis(_)), "a row direction is still an axis root");
     }
 
     #[semio_framework_async_macros::async_test]

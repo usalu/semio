@@ -67,7 +67,7 @@ async fn change_structural_system_committed_json_is_canonical() {
     }
     let reencoded = serde_json::to_value(mutation()).expect("change-structural-system mutation encodes");
     let original: serde_json::Value = serde_json::from_str(MUTATION).expect("change-structural-system mutation reparses");
-    assert_eq!(reencoded, original, "change-structural-system/switches-structural-system-to-wall-dcm: committed mutation JSON is not the canonical externally-tagged ChangeStructuralSystem form carrying newStructuralSystem");
+    assert_eq!(reencoded, original, "change-structural-system/switches-structural-system-to-wall-dcm: committed mutation JSON is not the canonical internally-tagged ChangeStructuralSystem form carrying mutation and newStructuralSystem");
 }
 
 /// 🎯️ The declared outcome holds: `change-structural-system` at wall_dcm is applied, not rejected, and carries no

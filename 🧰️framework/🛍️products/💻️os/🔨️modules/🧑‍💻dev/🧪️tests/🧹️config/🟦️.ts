@@ -6,16 +6,21 @@
  * @vitest-environment node
  */
 import { spawnSync } from "node:child_process";
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, renameSync, rmSync, statSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, renameSync, rmSync, statSync, watch, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { dirname, join, relative, resolve } from "node:path";
+import { dirname, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { build, type Plugin } from "esbuild";
 import picomatch from "picomatch";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { stripExecutableShebang } from "../../🧹️executable-source/🟦️.ts";
 import { createServer } from "vite";
 import { UNWATCHED_REPOSITORY_SEGMENTS, createSourceFreshnessRegistry, repositorySourceWatchRoots, requestedTransformFile, semioPlaygroundReactRefreshCoherenceVitePlugin, semioSourceFreshnessVitePlugins, semioSourceWatchVitePlugin, unwatchedRepositoryPathMatcher } from "../../🔌️vite-plugins/🟦️.ts";
+
+vi.mock("node:fs", async (original) => {
+  const fs = await original<typeof import("node:fs")>();
+  return { ...fs, existsSync: vi.fn(fs.existsSync), watch: vi.fn(fs.watch) };
+});
 
 describe("semioPlaygroundReactRefreshCoherenceVitePlugin", () => {
   const plugin = semioPlaygroundReactRefreshCoherenceVitePlugin();
@@ -135,6 +140,7 @@ const watchPolicy = JSON.parse(readFileSync(join(packageDir, "../../🧫️fixtu
   readonly watchedPaths: readonly string[];
   readonly requiredRoots: readonly string[];
   readonly forbiddenRoots: readonly string[];
+  readonly vanishedRename: { readonly path: string; readonly previousExists: boolean; readonly expectedEvents: readonly string[] };
 };
 
 /** @emoji 🔮️ Independent oracle: `picomatch` is the glob engine chokidar itself filters with, so the
@@ -143,6 +149,34 @@ const watchPolicy = JSON.parse(readFileSync(join(packageDir, "../../🧫️fixtu
 const picomatchUnwatched = (relativePath: string): boolean => watchPolicy.unwatchedGlobs.some((glob) => picomatch(glob, { dot: true })(relativePath));
 
 describe("dev server watch policy", () => {
+  it("survives a temporary file disappearing between existence and metadata reads", async () => {
+    const fs = await vi.importActual<typeof import("node:fs")>("node:fs");
+    const target = join(repoRoot, watchPolicy.vanishedRename.path);
+    const callbacks = new Map<string, (event: string, name: string) => void>();
+    const events: string[] = [];
+    const closed: (() => void)[] = [];
+    const siblings: string[] = [];
+    const freshness: Pick<ReturnType<typeof createSourceFreshnessRegistry>, "movedInDirectory"> = { movedInDirectory: (directory: string) => (siblings.push(directory), [join(directory, "source.ts")]) };
+    expect(fs.existsSync(target)).toBe(false);
+    vi.mocked(existsSync).mockImplementation((path) => path === target ? watchPolicy.vanishedRename.previousExists : fs.existsSync(path));
+    vi.mocked(watch).mockImplementation(((root: string, _options: unknown, callback: (event: string, name: string) => void) => {
+      callbacks.set(root, callback);
+      return { close() {} };
+    }) as typeof watch);
+    try {
+      semioSourceWatchVitePlugin({ repoRoot, freshness }).configureServer({ watcher: { emit: (event, path) => (events.push(`${event}:${relative(repoRoot, path).replaceAll("\\", "/")}`), true) }, httpServer: { once: (_event, callback) => { closed.push(callback); } } });
+      const root = [...callbacks.keys()].find((path) => target.startsWith(`${path}${sep}`));
+      expect(root).toBeDefined();
+      expect(() => callbacks.get(root!)!("rename", relative(root!, target))).not.toThrow();
+      expect(events).toEqual(watchPolicy.vanishedRename.expectedEvents);
+      expect(siblings).toEqual([dirname(target)]);
+    } finally {
+      for (const close of closed) close();
+      vi.mocked(existsSync).mockImplementation(fs.existsSync);
+      vi.mocked(watch).mockImplementation(fs.watch);
+    }
+  });
+
   it.each(watchPolicy.unwatchedPaths)("keeps %s outside every dev-server watch", (relativePath) => {
     expect(unwatchedRepositoryPathMatcher().test(relativePath)).toBe(true);
     expect(unwatchedRepositoryPathMatcher().test(relativePath.replaceAll("/", "\\"))).toBe(true);

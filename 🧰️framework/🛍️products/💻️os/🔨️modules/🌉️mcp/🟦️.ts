@@ -7,6 +7,7 @@
  */
 
 import { type ChildProcessByStdio, spawn } from "node:child_process";
+import { createHash } from "node:crypto";
 import { accessSync, constants as fsConstants, readFileSync, statSync } from "node:fs";
 import { posix, win32 } from "node:path";
 import { createInterface } from "node:readline";
@@ -16,8 +17,13 @@ import { cargoTargetDirectory } from "../../../🦑️repo/🔨️modules/📚�
 //#region 🔖️BinaryPath
 /** 📦️ Nx owns the executable separately from mutable compiler state. */
 export const MCP_ARTIFACT_REL = "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust/dist/build";
+/** 📦️ Where the optimized distribution binary is staged. Separate from {@link MCP_ARTIFACT_REL} so a
+ * release build never clobbers the dev-loop artifact `.mcp.json` and every black-box gate exec. */
+export const MCP_RELEASE_ARTIFACT_REL = "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust/dist/build-release";
 export const MCP_CARGO_PACKAGE = "semio-framework-os-mcp";
 export const MCP_BINARY_NAME = "semio-os-mcp";
+/** 🏗️ The cargo profiles this crate's build targets produce. */
+export type McpBuildProfile = "debug" | "release";
 
 function pathApi(platform: NodeJS.Platform): typeof posix {
   return platform === "win32" ? win32 : posix;
@@ -28,10 +34,15 @@ export function resolveMcpTargetDirectory(repoRoot: string, env: NodeJS.ProcessE
   return cargoTargetDirectory(repoRoot, env);
 }
 
-/** 📦️ The exact debug artifact Cargo's MCP build command must produce, ignoring test overrides. */
-export function resolveBuiltMcpBinaryPath(repoRoot: string, env: NodeJS.ProcessEnv = process.env, platform: NodeJS.Platform = process.platform): string {
+/** 📦️ The exact artifact Cargo's MCP build command must produce for `profile`, ignoring test overrides. */
+export function resolveBuiltMcpBinaryPath(repoRoot: string, env: NodeJS.ProcessEnv = process.env, platform: NodeJS.Platform = process.platform, profile: McpBuildProfile = "debug"): string {
   const filename = platform === "win32" ? `${MCP_BINARY_NAME}.exe` : MCP_BINARY_NAME;
-  return pathApi(platform).join(resolveMcpTargetDirectory(repoRoot, env, platform), "debug", filename);
+  return pathApi(platform).join(resolveMcpTargetDirectory(repoRoot, env, platform), profile, filename);
+}
+
+/** 📁️ The staged release executable — the one a tarball ships and an end user installs. */
+export function resolveStagedReleaseMcpBinaryPath(repoRoot: string, platform: NodeJS.Platform = process.platform): string {
+  return pathApi(platform).resolve(repoRoot, MCP_RELEASE_ARTIFACT_REL, platform === "win32" ? `${MCP_BINARY_NAME}.exe` : MCP_BINARY_NAME);
 }
 
 /** 📁️ Resolves the staged executable or an explicit independent binary override. */
@@ -191,6 +202,114 @@ export function mcpServerEntries(repoRoot: string): Record<string, McpServerEntr
   return servers;
 }
 
+/** 🎯️ The ONE plugin, artifact kind and verb the os journey dispatches against. A gate that picked
+ * its target from a fuzzy `capabilities_search` measured whichever plugin BM25 happened to rank
+ * first that day: the same journey read `animate` on 2026-09-20 18:00 and `energy` four hours later
+ * purely because 20 more descriptors became decodable in between (`📓️a3b-descriptor-sweep.md` §6),
+ * and `energy` has no compiled component at all — three red rows that say nothing about the
+ * dispatch lane. `🗒️note` is the plugin whose guest the two-phase prepare/apply law is proven
+ * against (`📓️wr4-typed-command-dispatch-and-gates.md` §5.1, the same `addBlock` verb), and its
+ * component is the smallest of the rebuilt set (64 MB against `🌍️gis`'s 202 MB, which is what wedged
+ * an earlier run behind a 240 s request wall). `capabilities_search` keeps its own step — see
+ * `capabilitySearchRankingVerdict`, which asserts ranking PROPERTIES over the compiled catalog and
+ * needs no guest at all. */
+export const CLIENT_E2E_PINNED_PLUGIN_ID = "note";
+export const CLIENT_E2E_PINNED_ARTIFACT_KIND = "s.note.note";
+export const CLIENT_E2E_PINNED_CAPABILITY_ID = "note.s.note.note@1/*#editor.addBlock";
+
+/** 💡️ The inference the journey runs, pinned for the same reason and against the same kind of
+ * drift: `inference_list` returns the UNION of every installed plugin's declared roster, and taking
+ * `declared[0]` handed the gate `🌍️gis` — whose 202 MB component is the one that wedges a journey
+ * and whose guest answers `inference instantiate: wasmtime: failed to convert function to given
+ * type` (measured 22:38). `🀄️wfc` declares five real inference services of its own, and its
+ * component is staged and current. */
+export const CLIENT_E2E_PINNED_INFERENCE_PLUGIN_ID = "wfc";
+export const CLIENT_E2E_PINNED_INFERENCE_ARTIFACT_KIND = "s.wfc.bitmap";
+export const CLIENT_E2E_PINNED_INFERENCE_SCHEMA = "s.wfc.bitmap.solve";
+
+/** 📁️ Where every plugin component is staged, and in which order a profile wins — the TypeScript
+ * twin of `PLUGIN_WASM_TARGET_DIR`/`PLUGIN_WASM_PROFILE_DIRS` in `🌉️mcp/🏠️workspace/🦀️.rs`, so the
+ * preflight looks in exactly the places the gateway will look. */
+const PLUGIN_WASM_TARGET_REL = ".🧬semio/🦑️repo/⚡️cache/cargo/target/wasm32-wasip2";
+const PLUGIN_WASM_PROFILE_DIRS = ["wasm-dev", "wasm-release"] as const;
+const PLUGIN_REGISTRY_REL = "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🔌️plugins.json";
+
+/** 🧾️ What the preflight found for one pinned plugin: whether its component is staged AND is the
+ * exact build its committed descriptor describes. */
+export type StagedComponentVerdict = { readonly ok: boolean; readonly detail: string };
+
+/** 🧱️ Refuses, by name and up front, unless `pluginId`'s compiled component is staged where the
+ * gateway resolves it AND is byte-identical to the build its committed descriptor was cut from
+ * (`🔣️.json` → `hashes.wasmSha256`).
+ *
+ * 🐛️ Both failures are otherwise invisible until the journey is minutes deep: a MISSING component
+ * surfaces as a `NOT_FOUND` on the third dispatch row, and a STALE one is worse — the catalog types
+ * the verb from a descriptor that no longer describes the guest that will run it, so a refusal
+ * reads as a dispatch bug. Neither is a statement about the lane this gate exists to measure, so
+ * the gate stops here instead of spending a 240 s request wall to say so. */
+export function verifyStagedPluginComponent(repoRoot: string, pluginId: string): StagedComponentVerdict {
+  const registryPath = posix.join(repoRoot, PLUGIN_REGISTRY_REL);
+  let rows: Array<{ pluginId?: string; cratePath?: string; wasmOut?: string }>;
+  try {
+    rows = JSON.parse(readFileSync(registryPath, "utf8"));
+  } catch (error) {
+    return { ok: false, detail: `the generated plugin registry ${PLUGIN_REGISTRY_REL} is unreadable (${String(error)}) — run \`bun nx run @semio-tech/plugin-registry:generate\`` };
+  }
+  const row = rows.find((entry) => entry.pluginId === pluginId);
+  if (!row?.cratePath || !row.wasmOut) return { ok: false, detail: `\`${pluginId}\` is not a row of the generated plugin registry — this gate's pinned target names a plugin that is not installed` };
+  const ownerRoot = posix.dirname(posix.dirname(posix.join(repoRoot, row.cratePath)));
+  const descriptorPath = posix.join(ownerRoot, "🔣️.json");
+  let declaredWasmSha256: string | undefined;
+  try {
+    declaredWasmSha256 = (JSON.parse(readFileSync(descriptorPath, "utf8")) as { hashes?: { wasmSha256?: string } }).hashes?.wasmSha256;
+  } catch (error) {
+    return { ok: false, detail: `\`${pluginId}\` has no readable committed descriptor at ${descriptorPath} (${String(error)}) — describe it: \`cd ${row.cratePath} && bun ./📜️script.ts describe\`` };
+  }
+  if (!declaredWasmSha256) return { ok: false, detail: `\`${pluginId}\`'s committed descriptor declares no \`hashes.wasmSha256\`, so a staged component cannot be checked against it` };
+  const tried: string[] = [];
+  for (const profile of PLUGIN_WASM_PROFILE_DIRS) {
+    const candidate = posix.join(repoRoot, PLUGIN_WASM_TARGET_REL, profile, row.wasmOut);
+    tried.push(candidate);
+    let bytes: Buffer;
+    try {
+      bytes = readFileSync(candidate);
+    } catch {
+      continue;
+    }
+    const staged = createHash("sha256").update(bytes).digest("hex");
+    if (staged === declaredWasmSha256) return { ok: true, detail: `${pluginId}: ${profile}/${row.wasmOut} ${bytes.length} B, sha256 ${staged.slice(0, 12)}… matches its committed descriptor` };
+    return {
+      ok: false,
+      detail: `${pluginId}: the staged ${profile}/${row.wasmOut} (${bytes.length} B, sha256 ${staged.slice(0, 12)}…) is NOT the build its committed descriptor describes (${declaredWasmSha256.slice(0, 12)}…) — the catalog would type this verb from a descriptor that no longer describes the guest that runs it; re-describe it: \`cd ${row.cratePath} && bun ./📜️script.ts describe\``,
+    };
+  }
+  return { ok: false, detail: `${pluginId}: no compiled component is staged (tried ${tried.join(", ")}) — build it: \`bun nx run @semio-tech/framework-os-dev:build -- ${pluginId}\`` };
+}
+
+/** 🔎️ The ranking properties a compiled capability catalog owes an agent, asserted over one
+ * `capabilities_search` reply and NOTHING else — no guest, no component, no artifact. This is the
+ * step that used to be implicit in "whatever hit 0 is": a search is a ranking, so what a permanent
+ * gate can hold it to is that the ranking is ordered, filtered, unambiguous and reaches the verb a
+ * client would be looking for. */
+export function capabilitySearchRankingVerdict(hits: ReadonlyArray<Record<string, any>>, mustReach: string, filteredArtifactKind: string): StagedComponentVerdict {
+  if (hits.length === 0) return { ok: false, detail: `the compiled catalog returned no mutation of \`${filteredArtifactKind}\` at all` };
+  const scores = hits.map((hit) => Number(hit.score));
+  const unordered = scores.findIndex((score, index) => index > 0 && score > (scores[index - 1] as number));
+  const ids = hits.map((hit) => String(hit.capabilityId));
+  const duplicate = ids.find((id, index) => ids.indexOf(id) !== index);
+  const foreignAudience = hits.find((hit) => String(hit.audience) !== "agent");
+  const foreignKind = hits.find((hit) => String(hit.artifactKind) !== filteredArtifactKind);
+  const rank = ids.indexOf(mustReach);
+  const faults = [
+    unordered >= 0 ? `score rises at hit ${unordered} (${scores[unordered - 1]} → ${scores[unordered]}) — the ranking is not ordered` : "",
+    duplicate ? `\`${duplicate}\` appears twice — two catalog rows carry one capability id` : "",
+    foreignAudience ? `\`${foreignAudience.capabilityId}\` is audience=${foreignAudience.audience}, but every published hit must be an agent projection` : "",
+    foreignKind ? `\`${foreignKind.capabilityId}\` acts on \`${foreignKind.artifactKind}\`, but the search filtered for \`${filteredArtifactKind}\` — the filter is not honored` : "",
+    rank < 0 ? `\`${mustReach}\` is not among the ${hits.length} hit(s) — the pinned verb is unreachable by search` : "",
+  ].filter((fault) => fault.length > 0);
+  return faults.length === 0 ? { ok: true, detail: `${hits.length} mutation hit(s) of \`${filteredArtifactKind}\`, scores ${scores[0]}…${scores[scores.length - 1]} monotonically non-increasing, ids unique, all audience=agent, \`${mustReach}\` at rank ${rank}` } : { ok: false, detail: faults.join("; ") };
+}
+
 /** 🔌️ An id-correlated newline-delimited JSON-RPC client over a spawned server's stdio. Unlike
  * `spawnRawMcp`'s next-line reader it never assumes the next stdout line answers the last request:
  * responses are matched by id and everything else (server notifications, `notifications/progress`)
@@ -289,7 +408,9 @@ function announce(steps: McpClientStep[], step: McpClientStep): void {
 }
 
 /** 🧪️ Builds the smallest input a capability's own published JSON Schema admits — every required
- * property filled with a value of its declared type. The catalog types action inputs per capability,
+ * property filled with a value of its declared type, recursively for a required object (a
+ * `#[dsl(block)]` payload like `setFrame.frame` publishes its own `required` list, and an empty `{}`
+ * would be refused by the guest that decodes it). The catalog types action inputs per capability,
  * so an e2e that hardcoded one plugin's argument names would only ever exercise that plugin. */
 function minimalInputForSchema(schema: any): Record<string, unknown> {
   const properties = (schema?.properties ?? {}) as Record<string, any>;
@@ -302,7 +423,7 @@ function minimalInputForSchema(schema: any): Record<string, unknown> {
     else if (type === "number" || type === "integer") input[name] = 0;
     else if (type === "boolean") input[name] = false;
     else if (type === "array") input[name] = [];
-    else if (type === "object") input[name] = {};
+    else if (type === "object") input[name] = minimalInputForSchema(property);
     else input[name] = "";
   }
   return input;
@@ -317,6 +438,31 @@ function stampText(stamp: RevisionStampWire | undefined): string {
 
 function revisionOf(reply: McpToolReply): RevisionStampWire | undefined {
   return reply.structuredContent?.expectedRevision as RevisionStampWire | undefined;
+}
+
+/** 📄️ Walks one cursor-paginated list method exactly as a spec-strict client does: page one, then
+ * every `nextCursor` until there is none. Bounded by a page cap so a server that ever returned a
+ * non-advancing cursor fails this gate instead of hanging it. */
+async function paginationWalk(session: McpClientSession, method: string, key: string, identify: (entry: any) => string): Promise<{ ok: boolean; detail: string; pages: number; visited: string[]; firstCursor?: string }> {
+  const visited: string[] = [];
+  const seenCursors = new Set<string>();
+  let cursor: string | undefined;
+  let firstCursor: string | undefined;
+  let pages = 0;
+  while (pages < 64) {
+    const page = await session.request(method, cursor === undefined ? {} : { cursor });
+    if (page.error) return { ok: false, detail: `${method} page ${pages + 1}: ${JSON.stringify(page.error)}`, pages, visited, firstCursor };
+    const entries = (page.result?.[key] ?? []) as unknown[];
+    visited.push(...entries.map(identify));
+    pages += 1;
+    const next = page.result?.nextCursor as string | undefined;
+    if (next === undefined || next === null) return { ok: true, detail: `${pages} page(s)`, pages, visited, firstCursor };
+    if (seenCursors.has(next)) return { ok: false, detail: `${method} repeated cursor ${next} — the walk would never terminate`, pages, visited, firstCursor };
+    seenCursors.add(next);
+    if (firstCursor === undefined) firstCursor = next;
+    cursor = next;
+  }
+  return { ok: false, detail: `${method} did not finish within 64 pages`, pages, visited, firstCursor };
 }
 
 /** 🔭️ The artifact's CURRENT head, re-read live: `action.prepare` opens with a real `ReadHistory`
@@ -370,7 +516,13 @@ export async function runRepoMcpClientJourney(repoRoot: string): Promise<readonl
 export async function runOsMcpClientJourney(repoRoot: string, folder: string): Promise<readonly McpClientStep[]> {
   const entry = mcpServerEntries(repoRoot).semio;
   if (!entry) return [mcpStepFailure("os: .mcp.json entry", "`.mcp.json` declares no `semio` server")];
-  const session = new McpClientSession(entry, ["--folder", folder], repoRoot);
+  // 🔒️ `--no-bridge` PINS this gate to the headless lane. Without it the gateway publishes a
+  //    rendezvous offer, a developer's live `dev s` shell dials it, `SessionChannelBinding::resolve`
+  //    answers `ChannelKind::Shell`, and this `--folder` gate silently measures — and DRIVES — that
+  //    human's open document instead of the workspace it names (measured 2026-09-20, WR3 §5.0:
+  //    "the shell reports 1 open instance(s)" in a run against a throwaway tmpdir). The shell route
+  //    has its own permanent gate, `live-agent-loop-check`; this one owns the headless route.
+  const session = new McpClientSession(entry, ["--folder", folder, "--no-bridge"], repoRoot);
   const steps: McpClientStep[] = [];
   try {
     const initialized = await session.request("initialize", { protocolVersion: MCP_CLIENT_PROTOCOL_VERSION, capabilities: { roots: { listChanged: true }, sampling: {}, elicitation: {} }, clientInfo: { name: "semio-mcp-client-e2e", title: "semio MCP client e2e", version: "1" } });
@@ -378,11 +530,48 @@ export async function runOsMcpClientJourney(repoRoot: string, folder: string): P
     session.notify("notifications/initialized", {});
     announce(steps, { step: "os: initialize", ok: true, detail: `server=${initialized.result?.serverInfo?.name}@${initialized.result?.serverInfo?.version} protocol=${initialized.result?.protocolVersion}`, wire: initialized.result });
 
+    // 🧭️ Step 0 of the gate proper: WHICH lane is this run measuring? `context_resolve` takes the
+    //    session's channel decision and is sticky, so the value read here is the value every later
+    //    tool call uses. A `--folder --no-bridge` run that reports anything but `headless` is not a
+    //    headless measurement and every number below it would be about somebody else's shell.
+    const context = await session.call("context_resolve", {});
+    const resolvedChannel = String(context.structuredContent?.channel ?? "");
+    announce(steps, {
+      step: "os: context_resolve pins the headless channel",
+      ok: context.isError !== true && resolvedChannel === "headless",
+      detail:
+        context.isError === true
+          ? JSON.stringify(context.structuredContent).slice(0, 240)
+          : resolvedChannel === "headless"
+            ? `channel=headless principal=${context.structuredContent?.principal} session=${context.structuredContent?.sessionId}`
+            : `channel=${resolvedChannel || "<none>"} — this gate spawns with --no-bridge and must never resolve a live shell; a shell route means the offer was published anyway`,
+      wire: context.structuredContent,
+    });
+    if (resolvedChannel !== "headless") return steps;
+
+    // 🧱️ The second thing this gate establishes, before it spends a single request on a guest: is
+    //    the ONE component every dispatch row below is pinned to staged, and is it the build its
+    //    committed descriptor describes? Both answers are a file read; neither is worth a 240 s
+    //    request wall to discover.
+    const staged = [CLIENT_E2E_PINNED_PLUGIN_ID, CLIENT_E2E_PINNED_INFERENCE_PLUGIN_ID].map((pluginId) => verifyStagedPluginComponent(repoRoot, pluginId));
+    announce(steps, { step: "os: every pinned component is staged and current", ok: staged.every((verdict) => verdict.ok), detail: staged.map((verdict) => verdict.detail).join(" | "), wire: staged });
+    if (!staged.every((verdict) => verdict.ok)) return steps;
+
     const tools = await session.request("tools/list", {});
     const toolNames = ((tools.result?.tools ?? []) as Array<{ name: string }>).map((tool) => tool.name).sort();
     const requiredTools = ["action_invoke", "action_prepare", "artifact_create", "artifact_open", "artifact_snapshot", "capabilities_search", "history_undo", "inference_run", "job_cancel"];
     const missingTools = requiredTools.filter((name) => !toolNames.includes(name));
     announce(steps, { step: "os: tools/list", ok: missingTools.length === 0 && toolNames.length >= 9, detail: missingTools.length === 0 ? `${toolNames.length} tools, all ${requiredTools.length} required present` : `missing: ${missingTools.join(", ")}`, wire: toolNames });
+
+    // 📄️ Cursor pagination, walked as a spec-strict client walks it: page one, then every
+    // `nextCursor` until there is none, and the concatenation must equal the whole stable list.
+    const walk = await paginationWalk(session, "tools/list", "tools", (tool: any) => String(tool.name));
+    announce(steps, { step: "os: tools/list pagination walk", ok: walk.ok && walk.visited.join(" ") === toolNames.join(" "), detail: walk.ok ? `${walk.pages} page(s), ${walk.visited.length} tool(s), order identical to the unpaged list` : walk.detail, wire: { pages: walk.pages, firstCursor: walk.firstCursor } });
+    const foreignCursor = await session.request("tools/list", { cursor: "someone-elses-cursor" });
+    announce(steps, { step: "os: tools/list rejects a foreign cursor", ok: foreignCursor.error?.code === -32602, detail: foreignCursor.error ? `code=${foreignCursor.error.code} ${foreignCursor.error.message}` : "a cursor this server never minted was ACCEPTED", wire: foreignCursor.error ?? foreignCursor.result });
+    const resourcesWalk = await paginationWalk(session, "resources/list", "resources", (resource: any) => String(resource.uri));
+    const duplicateUris = resourcesWalk.visited.filter((uri, index) => resourcesWalk.visited.indexOf(uri) !== index);
+    announce(steps, { step: "os: resources/list pagination + unique URIs", ok: resourcesWalk.ok && duplicateUris.length === 0, detail: resourcesWalk.ok ? `${resourcesWalk.pages} page(s), ${resourcesWalk.visited.length} resource(s), ${duplicateUris.length} duplicate URI(s)` : resourcesWalk.detail, wire: duplicateUris });
 
     const search = await session.call("capabilities_search", { query: "edit the document" });
     const results = (search.structuredContent?.results ?? []) as Array<Record<string, any>>;
@@ -399,31 +588,62 @@ export async function runOsMcpClientJourney(repoRoot: string, folder: string): P
     const opened = await session.call("artifact_open", { artifactId });
     announce(steps, { step: "os: artifact_open", ok: opened.isError !== true, detail: opened.isError === true ? JSON.stringify(opened.structuredContent) : `kind=${opened.structuredContent?.kind} sizeBytes=${opened.structuredContent?.sizeBytes}`, wire: opened.structuredContent });
 
-    const mutations = await session.call("capabilities_search", { query: "set", kind: ["mutation"] });
+    // 🔎️ `capabilities_search` keeps a step of ITS OWN, and it is a ranking step: the reply is read
+    //    for the properties a ranking owes an agent (ordered, filtered, unambiguous, reaching the
+    //    verb a client would look for) over the COMPILED CATALOG alone — no guest, no component, no
+    //    artifact. What it deliberately no longer does is hand the dispatch rows below their target.
+    const mutations = await session.call("capabilities_search", { query: "add a block to the note", kind: ["mutation"], artifactKind: CLIENT_E2E_PINNED_ARTIFACT_KIND });
     const mutationHits = (mutations.structuredContent?.results ?? []) as Array<Record<string, any>>;
-    const target = mutationHits[0];
-    if (!target) {
-      announce(steps, mcpStepFailure("os: pick a mutation capability", `capabilities_search(kind=[mutation]) returned ${mutationHits.length} hit(s) — no plugin mutation is reachable`, mutations.structuredContent));
-      return steps;
-    }
-    const described = await session.call("capabilities_describe", { capabilityId: target.capabilityId });
+    const ranking = capabilitySearchRankingVerdict(mutationHits, CLIENT_E2E_PINNED_CAPABILITY_ID, CLIENT_E2E_PINNED_ARTIFACT_KIND);
+    announce(steps, { step: "os: capabilities_search ranking properties", ok: mutations.isError !== true && ranking.ok, detail: mutations.isError === true ? JSON.stringify(mutations.structuredContent).slice(0, 240) : ranking.detail, wire: mutationHits.slice(0, 5) });
+
+    const described = await session.call("capabilities_describe", { capabilityId: CLIENT_E2E_PINNED_CAPABILITY_ID });
     const inputSchema = described.structuredContent?.inputSchema ?? described.structuredContent?.capability?.inputSchema;
     const input = minimalInputForSchema(inputSchema);
-    announce(steps, { step: "os: capabilities_describe", ok: described.isError !== true, detail: `${target.capabilityId} input=${JSON.stringify(input).slice(0, 120)}`, wire: described.structuredContent });
+    const describedKind = String(described.structuredContent?.artifactKind ?? described.structuredContent?.capability?.artifactKind ?? "");
+    announce(steps, {
+      step: "os: capabilities_describe (the pinned verb)",
+      ok: described.isError !== true && describedKind === CLIENT_E2E_PINNED_ARTIFACT_KIND,
+      detail:
+        described.isError === true
+          ? `${CLIENT_E2E_PINNED_CAPABILITY_ID}: ${JSON.stringify(described.structuredContent).slice(0, 240)}`
+          : describedKind === CLIENT_E2E_PINNED_ARTIFACT_KIND
+            ? `${CLIENT_E2E_PINNED_CAPABILITY_ID} artifactKind=${describedKind} input=${JSON.stringify(input).slice(0, 120)}`
+            : `${CLIENT_E2E_PINNED_CAPABILITY_ID} is typed against \`${describedKind || "<none>"}\`, not the pinned \`${CLIENT_E2E_PINNED_ARTIFACT_KIND}\``,
+      wire: described.structuredContent,
+    });
 
-    const typedKind = String(described.structuredContent?.artifactKind ?? described.structuredContent?.capability?.artifactKind ?? target.artifactKind ?? "");
+    const typedKind = CLIENT_E2E_PINNED_ARTIFACT_KIND;
     const typedArtifactId = `${artifactId}-typed`;
     const typedCreated = await session.call("artifact_create", { artifactId: typedArtifactId, kind: typedKind });
     announce(steps, { step: "os: artifact_create (a real plugin artifact kind)", ok: typedCreated.isError !== true && typedCreated.structuredContent?.kind === typedKind, detail: typedCreated.isError === true ? `kind=${typedKind}: ${JSON.stringify(typedCreated.structuredContent).slice(0, 260)}` : `artifactId=${typedArtifactId} kind=${typedCreated.structuredContent?.kind} pluginId=${typedCreated.structuredContent?.pluginId} sizeBytes=${typedCreated.structuredContent?.sizeBytes}`, wire: typedCreated.structuredContent });
 
-    const exportTarget = typedCreated.isError === true ? artifactId : typedArtifactId;
+    if (typedCreated.isError === true || typedCreated.structuredContent?.kind !== typedKind) return steps;
+
+    const exportTarget = typedArtifactId;
     const exported = await session.call("artifact_export", { artifactId: exportTarget });
     announce(steps, { step: "os: artifact_export", ok: exported.isError !== true && typeof exported.structuredContent?.contentBase64 === "string" && (exported.structuredContent?.contentBase64 as string).length > 0, detail: exported.isError === true ? `${exportTarget}: ${JSON.stringify(exported.structuredContent).slice(0, 300)}` : `artifactId=${exportTarget} port=${exported.structuredContent?.format} base64Bytes=${String(exported.structuredContent?.contentBase64 ?? "").length} declaredFormats=${JSON.stringify(exported.structuredContent?.declaredExportFormats ?? [])}`, wire: { ...exported.structuredContent, contentBase64: `${String(exported.structuredContent?.contentBase64 ?? "").slice(0, 32)}…` } });
 
-    const prepared = await session.call("action_prepare", { capabilityId: target.capabilityId, input });
+    // 🎯️ Every dispatch row from here down is the PINNED verb on the PINNED artifact kind, whose
+    //    component the step above proved staged and current. Walking on to another hit when one
+    //    refuses was tried and REVERTED (WR4 §5.4): each hit belongs to a different plugin, stdio
+    //    dispatches one request at a time, and abandoning a call client-side does not free the
+    //    server — so one cold 202 MB component (`gis`) wedges every later step behind it. One
+    //    plugin per journey is also one cold component compile per journey.
+    const prepared = await session.call("action_prepare", { capabilityId: CLIENT_E2E_PINNED_CAPABILITY_ID, input });
     const baselineRevision = revisionOf(prepared);
-    announce(steps, { step: "os: action_prepare", ok: prepared.isError !== true, detail: prepared.isError === true ? JSON.stringify(prepared.structuredContent).slice(0, 300) : `handle=${prepared.structuredContent?.preparedHandle} baseline=${stampText(baselineRevision)}`, wire: prepared.structuredContent });
+    announce(steps, { step: "os: action_prepare", ok: prepared.isError !== true, detail: prepared.isError === true ? `${CLIENT_E2E_PINNED_CAPABILITY_ID} input=${JSON.stringify(input)}: ${JSON.stringify(prepared.structuredContent).slice(0, 260)}` : `handle=${prepared.structuredContent?.preparedHandle} baseline=${stampText(baselineRevision)}`, wire: prepared.structuredContent });
     if (prepared.isError === true) return steps;
+
+    // 🔔️ `resources/subscribe` on the very artifact the prepared action will mutate — the one URI
+    // whose `notifications/resources/updated` the commit below must push.
+    const watchedArtifact = baselineRevision?.artifactId ?? artifactId;
+    const watchedUri = `semio://artifact/${watchedArtifact}`;
+    const subscribed = await session.request("resources/subscribe", { uri: watchedUri });
+    announce(steps, { step: "os: resources/subscribe", ok: !subscribed.error, detail: subscribed.error ? `${watchedUri}: ${JSON.stringify(subscribed.error)}` : `subscribed to ${watchedUri}`, wire: subscribed.result });
+    const unknownSubscribe = await session.request("resources/subscribe", { uri: "semio://there-is-no-such-resource" });
+    announce(steps, { step: "os: resources/subscribe refuses an unknown URI", ok: Boolean(unknownSubscribe.error), detail: unknownSubscribe.error ? `code=${unknownSubscribe.error.code} ${unknownSubscribe.error.message.slice(0, 120)}` : "an unserveable URI was accepted into a silent forever-wait", wire: unknownSubscribe.error ?? unknownSubscribe.result });
+    const notificationsBefore = session.serverNotifications().length;
 
     const invoked = await session.call("action_invoke", { preparedActionHandle: prepared.structuredContent?.preparedHandle });
     const undoToken = invoked.structuredContent?.undoToken as string | undefined;
@@ -431,11 +651,27 @@ export async function runOsMcpClientJourney(repoRoot: string, folder: string): P
     const revisionAfter = invoked.structuredContent?.revisionAfter as RevisionStampWire | undefined;
     announce(steps, { step: "os: action_invoke (a real mutation)", ok: invoked.isError !== true && invoked.structuredContent?.status === "SUCCEEDED" && revisionAfter?.headEditId !== undefined && revisionAfter?.headEditId !== revisionBefore?.headEditId, detail: invoked.isError === true ? JSON.stringify(invoked.structuredContent).slice(0, 300) : `status=${invoked.structuredContent?.status} ${stampText(revisionBefore)} → ${stampText(revisionAfter)} undoToken=${undoToken ?? "<none>"}`, wire: invoked.structuredContent });
 
-    const mutatedArtifact = revisionAfter?.artifactId ?? ((invoked.structuredContent?.affectedResources ?? []) as string[]).find((resource) => typeof resource === "string") ?? artifactId;
-    const afterSnapshot = await session.call("artifact_snapshot", { artifactId: mutatedArtifact });
-    announce(steps, { step: "os: artifact_snapshot (mutation visible)", ok: afterSnapshot.isError !== true && Number(afterSnapshot.structuredContent?.packBytes ?? 0) > 0, detail: afterSnapshot.isError === true ? JSON.stringify(afterSnapshot.structuredContent).slice(0, 300) : `artifactId=${mutatedArtifact} packBytes=${afterSnapshot.structuredContent?.packBytes} sprBytes=${afterSnapshot.structuredContent?.sprBytes}`, wire: { ...afterSnapshot.structuredContent, packBase64: `${String(afterSnapshot.structuredContent?.packBase64 ?? "").slice(0, 32)}…` } });
+    // 🔔️ The push the subscription promised: a `notifications/resources/updated` naming the exact
+    // URI subscribed to, arriving without a single poll.
+    const updates = session.serverNotifications().slice(notificationsBefore).filter((envelope) => envelope.method === "notifications/resources/updated");
+    const updatedUris = updates.map((envelope) => String((envelope.params as any)?.uri ?? ""));
+    announce(steps, { step: "os: notifications/resources/updated after the commit", ok: updatedUris.includes(watchedUri), detail: updatedUris.includes(watchedUri) ? `${updates.length} update(s), including ${watchedUri}` : `${updates.length} update(s), none naming ${watchedUri}: ${updatedUris.join(", ") || "<none>"}`, wire: updatedUris });
+    const unsubscribed = await session.request("resources/unsubscribe", { uri: watchedUri });
+    announce(steps, { step: "os: resources/unsubscribe", ok: !unsubscribed.error, detail: unsubscribed.error ? JSON.stringify(unsubscribed.error) : `unsubscribed from ${watchedUri}`, wire: unsubscribed.result });
 
-    const headAfterInvoke = await headRevision(session, target.capabilityId, input);
+    // 📦️ The snapshot is taken of the artifact this journey CREATED, by the id it created it with.
+    //    It deliberately no longer follows `revisionAfter.artifactId`: in the headless lane that
+    //    field is the PLUGIN ID (`🌉️mcp/🏠️workspace/🦀️.rs:1793` stamps `entry.plugin_id`), because
+    //    `action_prepare`/`action_invoke` drive the plugin's own live session document while
+    //    `artifact_create` persists a separate folder artifact seeded from it. Snapshotting `note`
+    //    answered `no such artifact: note` and said nothing about either document. The statement
+    //    that the MUTATION landed is the `os: live head advanced` row below/above — a fresh
+    //    `ReadHistory` against the document the mutation actually went to, which is the only
+    //    revision oracle this lane has. §"honest gaps" of `📓️ce1-…` carries the identity defect.
+    const afterSnapshot = await session.call("artifact_snapshot", { artifactId: typedArtifactId });
+    announce(steps, { step: "os: artifact_snapshot (the created artifact)", ok: afterSnapshot.isError !== true && Number(afterSnapshot.structuredContent?.packBytes ?? 0) > 0, detail: afterSnapshot.isError === true ? `${typedArtifactId}: ${JSON.stringify(afterSnapshot.structuredContent).slice(0, 300)}` : `artifactId=${typedArtifactId} packBytes=${afterSnapshot.structuredContent?.packBytes} sprBytes=${afterSnapshot.structuredContent?.sprBytes}`, wire: { ...afterSnapshot.structuredContent, packBase64: `${String(afterSnapshot.structuredContent?.packBase64 ?? "").slice(0, 32)}…` } });
+
+    const headAfterInvoke = await headRevision(session, CLIENT_E2E_PINNED_CAPABILITY_ID, input);
     announce(steps, { step: "os: live head advanced", ok: headAfterInvoke !== undefined && headAfterInvoke.headEditId === revisionAfter?.headEditId && headAfterInvoke.headEditId !== baselineRevision?.headEditId, detail: `re-read head ${stampText(headAfterInvoke)} (baseline ${stampText(baselineRevision)}, invoke reported ${stampText(revisionAfter)})`, wire: headAfterInvoke });
 
     if (!undoToken) {
@@ -443,27 +679,57 @@ export async function runOsMcpClientJourney(repoRoot: string, folder: string): P
       return steps;
     }
     const undone = await session.call("history_undo", { undoToken });
-    const headAfterUndo = await headRevision(session, target.capabilityId, input);
-    announce(steps, { step: "os: history_undo (mutation reverted)", ok: undone.isError !== true && Number(undone.structuredContent?.members ?? 0) > 0 && headAfterUndo?.headEditId === baselineRevision?.headEditId, detail: undone.isError === true ? JSON.stringify(undone.structuredContent).slice(0, 300) : `members=${undone.structuredContent?.members} head ${stampText(headAfterUndo)} (baseline ${stampText(baselineRevision)})`, wire: undone.structuredContent });
+    const headAfterUndo = await headRevision(session, CLIENT_E2E_PINNED_CAPABILITY_ID, input);
+    // ⚠️ `members` is the COUNT OF MEMBERS ATTEMPTED (`ActionAdapter::fan_out` returns
+    //    `undo.members.len()` whether or not a member failed) — a per-member failure travels in
+    //    `warnings`, and only an all-members failure is a tool error. A gate that read `members > 0`
+    //    alone therefore passed on a fan-out where every member warned, so `warnings` is asserted.
+    const undoWarnings = (undone.structuredContent?.warnings ?? []) as string[];
+    announce(steps, { step: "os: history_undo (mutation reverted)", ok: undone.isError !== true && Number(undone.structuredContent?.members ?? 0) > 0 && undoWarnings.length === 0 && headAfterUndo?.headEditId === baselineRevision?.headEditId, detail: undone.isError === true ? JSON.stringify(undone.structuredContent).slice(0, 300) : `members=${undone.structuredContent?.members} warnings=${undoWarnings.length === 0 ? "none" : undoWarnings.join(" / ").slice(0, 200)} head ${stampText(headAfterUndo)} (baseline ${stampText(baselineRevision)})`, wire: undone.structuredContent });
 
     const redone = await session.call("history_redo", { undoToken });
-    const headAfterRedo = await headRevision(session, target.capabilityId, input);
-    announce(steps, { step: "os: history_redo (mutation restored)", ok: redone.isError !== true && Number(redone.structuredContent?.members ?? 0) > 0 && headAfterRedo?.headEditId !== undefined && headAfterRedo.headEditId !== baselineRevision?.headEditId, detail: redone.isError === true ? JSON.stringify(redone.structuredContent).slice(0, 300) : `members=${redone.structuredContent?.members} head ${stampText(headAfterRedo)} (undone head was ${stampText(headAfterUndo)})`, wire: redone.structuredContent });
+    const headAfterRedo = await headRevision(session, CLIENT_E2E_PINNED_CAPABILITY_ID, input);
+    const redoWarnings = (redone.structuredContent?.warnings ?? []) as string[];
+    announce(steps, { step: "os: history_redo (mutation restored)", ok: redone.isError !== true && Number(redone.structuredContent?.members ?? 0) > 0 && redoWarnings.length === 0 && headAfterRedo?.headEditId !== undefined && headAfterRedo.headEditId !== baselineRevision?.headEditId, detail: redone.isError === true ? JSON.stringify(redone.structuredContent).slice(0, 300) : `members=${redone.structuredContent?.members} warnings=${redoWarnings.length === 0 ? "none" : redoWarnings.join(" / ").slice(0, 200)} head ${stampText(headAfterRedo)} (undone head was ${stampText(headAfterUndo)})`, wire: redone.structuredContent });
 
-    const sagaMember = await session.call("action_prepare", { capabilityId: target.capabilityId, input });
+    const sagaMember = await session.call("action_prepare", { capabilityId: CLIENT_E2E_PINNED_CAPABILITY_ID, input });
     const began = await session.call("transaction_begin", { preparedHandles: [sagaMember.structuredContent?.preparedHandle] });
     const transactionHandle = began.structuredContent?.transactionHandle as string | undefined;
     announce(steps, { step: "os: transaction_begin", ok: began.isError !== true && typeof transactionHandle === "string", detail: began.isError === true ? JSON.stringify(began.structuredContent).slice(0, 300) : `transactionHandle=${transactionHandle} members=1`, wire: began.structuredContent });
     const rolledBack = await session.call("transaction_rollback", { transactionHandle });
-    const headAfterRollback = await headRevision(session, target.capabilityId, input);
+    const headAfterRollback = await headRevision(session, CLIENT_E2E_PINNED_CAPABILITY_ID, input);
     announce(steps, { step: "os: transaction_rollback (no change)", ok: rolledBack.isError !== true && headAfterRollback?.headEditId === headAfterRedo?.headEditId, detail: rolledBack.isError === true ? JSON.stringify(rolledBack.structuredContent).slice(0, 300) : `rolledBack=${rolledBack.structuredContent?.rolledBack} head ${stampText(headAfterRollback)} unchanged from ${stampText(headAfterRedo)}`, wire: rolledBack.structuredContent });
 
     const listed = await session.call("inference_list", {});
     const declared = (listed.structuredContent?.declared ?? []) as Array<Record<string, any>>;
-    announce(steps, { step: "os: inference_list", ok: listed.isError !== true && declared.length > 0, detail: listed.isError === true ? JSON.stringify(listed.structuredContent).slice(0, 200) : `${declared.length} declared inference(s)${declared[0] ? `, first=${declared[0].artifactKind}/${declared[0].inferenceSchema} by ${declared[0].contributor || declared[0].owner}` : " — no installed plugin declares one"}`, wire: declared.slice(0, 5) });
-    const service = declared[0];
+    // 💡️ The roster must CONTAIN the pinned service — the list is a union over every installed
+    //    plugin's declared roster, so which entry is first is another thing the gate must not read.
+    const service = declared.find((row) => row.artifactKind === CLIENT_E2E_PINNED_INFERENCE_ARTIFACT_KIND && row.inferenceSchema === CLIENT_E2E_PINNED_INFERENCE_SCHEMA);
+    announce(steps, { step: "os: inference_list declares the pinned service", ok: listed.isError !== true && service !== undefined, detail: listed.isError === true ? JSON.stringify(listed.structuredContent).slice(0, 200) : service ? `${declared.length} declared inference(s), including ${CLIENT_E2E_PINNED_INFERENCE_ARTIFACT_KIND}/${CLIENT_E2E_PINNED_INFERENCE_SCHEMA} by ${service.contributor || service.owner}` : `${declared.length} declared inference(s), none of them ${CLIENT_E2E_PINNED_INFERENCE_ARTIFACT_KIND}/${CLIENT_E2E_PINNED_INFERENCE_SCHEMA}: ${declared.map((row) => `${row.artifactKind}/${row.inferenceSchema}`).join(", ")}`, wire: declared.slice(0, 8) });
     if (!service) return steps;
-    const inference = await session.call("inference_run", { artifactKind: service.artifactKind, inferenceSchema: service.inferenceSchema, pluginId: service.contributor || service.owner, cancellationId: `${artifactId}-cancel` });
+    // 📈️ The spec's own progress mechanism, on the one tool that mints a job: the call carries
+    // `_meta.progressToken`, and every `JobRegistry` row of that job must arrive as a
+    // `notifications/progress` carrying that exact token — no `job_get` poll in this step.
+    const progressToken = `m5b-${Date.now().toString(36)}`;
+    const progressBefore = session.serverNotifications().length;
+    // ⏳️ A request that never answers must become a NAMED RED, not an exception: an uncaught
+    //    rejection here aborts the journey before it prints a tally or a single `FAIL` line, which
+    //    is strictly worse than a red row (WR4 §5.4 recorded the same trap for a cold `gis`).
+    //    Measured 2026-09-20: `s.wfc.bitmap.solve` did not answer within **900 000 ms** — that is
+    //    not a cold-compile budget, it is a solve that does not return, so the budget stays at the
+    //    journey's own 240 s and the row says so.
+    const inferenceEnvelope = await session
+      .request("tools/call", { name: "inference_run", arguments: { artifactKind: service.artifactKind, inferenceSchema: service.inferenceSchema, pluginId: CLIENT_E2E_PINNED_INFERENCE_PLUGIN_ID, cancellationId: `${artifactId}-cancel` }, _meta: { progressToken } })
+      .catch((error: Error) => ({ jsonrpc: "2.0" as const, id: null, error: { code: -32000, message: error.message } }));
+    const inference = (inferenceEnvelope.error ? { isError: true, structuredContent: { code: `JSONRPC_${inferenceEnvelope.error.code}`, message: inferenceEnvelope.error.message } } : (inferenceEnvelope.result ?? {})) as McpToolReply;
+    const progressRows = session.serverNotifications().slice(progressBefore).filter((envelope) => envelope.method === "notifications/progress" && (envelope.params as any)?.progressToken === progressToken);
+    announce(steps, { step: "os: notifications/progress for _meta.progressToken", ok: progressRows.length > 0, detail: progressRows.length > 0 ? `${progressRows.length} progress row(s), last progress=${(progressRows[progressRows.length - 1]?.params as any)?.progress}` : `no progress notification carried token ${progressToken} — the job reported none, or the push is not wired`, wire: progressRows.map((envelope) => envelope.params) });
+    // 🛑️ MCP's own request-scoped cancellation. stdio dispatches one request at a time, so this
+    // arrives after the call it names returned: what it proves here is that the server accepts the
+    // notification, answers nothing (JSON-RPC's rule for notifications) and stays responsive.
+    session.notify("notifications/cancelled", { requestId: inferenceEnvelope.id ?? 0, reason: "client-e2e cancellation probe" });
+    const stillAlive = await session.request("ping", {});
+    announce(steps, { step: "os: notifications/cancelled is accepted and unanswered", ok: !stillAlive.error, detail: stillAlive.error ? `the server stopped answering after notifications/cancelled: ${JSON.stringify(stillAlive.error)}` : "cancelled accepted with no response; ping still answers", wire: stillAlive.result });
     const jobId = inference.structuredContent?.jobId as string | undefined;
     announce(steps, { step: "os: inference_run", ok: inference.isError !== true, detail: inference.isError === true ? JSON.stringify(inference.structuredContent).slice(0, 300) : `jobId=${jobId} status=${inference.structuredContent?.status} complete=${inference.structuredContent?.complete} bytes=${inference.structuredContent?.payloadBytes ?? 0}`, wire: inference.structuredContent });
 

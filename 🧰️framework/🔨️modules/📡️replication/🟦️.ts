@@ -102,7 +102,20 @@ export type ArtifactPresencePeer = {
   readonly ui?: ArtifactPresenceUi;
   /** ⏯️ Summary of this peer's tool run (bit 10, ARTIFACT scope), never provisional geometry. */
   readonly toolRun?: ArtifactPresenceToolRun;
+  /** 🤖️ What kind of principal this peer is (bit 11). Like `userId`/`role`/`color` the Hub replaces
+   * whatever a client sends with the kind it AUTHENTICATED, so a human session can never claim to be
+   * an agent and an agent session can never hide as a human. `undefined` is the pre-agent wire shape
+   * and a reader must treat it as `"human"`. */
+  readonly principalKind?: ArtifactPresencePrincipalKind;
 };
+
+/** 🤖️ Twin of Rust `PresencePrincipalKind`, in binary tag order. An `agent` peer is an AI agent
+ * acting under a credential a human delegated to it (`hub.auth`'s `AgentDelegationRecord`); it is a
+ * principal in its own right, never the delegating human, so a roster shows it as its own row. */
+export const PRESENCE_PRINCIPAL_KINDS = Object.freeze(["human", "agent"] as const);
+
+/** 🔤️ One `PresencePrincipalKind` wire name. */
+export type ArtifactPresencePrincipalKind = (typeof PRESENCE_PRINCIPAL_KINDS)[number];
 
 /** ⏳️ Twin of Rust `PresenceToolRunState`: the `ToolRunState` wire spelling (tool run contract §2.2) in binary tag order.
  * Duplicated because the tool run module layers above replication. */
@@ -417,6 +430,7 @@ export function encodePresencePeer(peer: ArtifactPresencePeer): number[] {
   if (peer.views.length > 0) flags |= 1 << 8;
   if (presencePresent(peer.ui)) flags |= 1 << 9;
   if (presencePresent(peer.toolRun)) flags |= 1 << 10;
+  if (presencePresent(peer.principalKind)) flags |= 1 << 11;
   writeVarintU64(out, flags);
   writeVarintU64(out, peer.connectedAtMs ?? 0);
   if (presencePresent(peer.label)) writeStr(out, peer.label);
@@ -430,6 +444,11 @@ export function encodePresencePeer(peer: ArtifactPresencePeer): number[] {
   if (peer.views.length > 0) writeVecPresenceWindowView(out, peer.views);
   if (presencePresent(peer.ui)) writePresenceUi(out, peer.ui);
   if (presencePresent(peer.toolRun)) writePresenceToolRun(out, peer.toolRun);
+  if (presencePresent(peer.principalKind)) {
+    const tag = PRESENCE_PRINCIPAL_KINDS.indexOf(peer.principalKind);
+    if (tag < 0) throw new Error(`presence peer principal kind: unknown ${peer.principalKind}`);
+    out.push(tag);
+  }
   return out;
 }
 
@@ -605,6 +624,13 @@ class PresencePeerReader {
   ui(): ArtifactPresenceUi {
     return { hoveredPath: this.optionalText("presence ui hovered path"), focusedPath: this.optionalText("presence ui focused path"), pressedPath: this.optionalText("presence ui pressed path") };
   }
+
+  principalKind(): ArtifactPresencePrincipalKind {
+    const tag = this.byte("presence peer principal kind");
+    const kind = PRESENCE_PRINCIPAL_KINDS[tag];
+    if (kind === undefined) this.fail("presence peer principal kind", `unknown principal kind tag ${tag}`);
+    return kind;
+  }
 }
 
 /** 🎯️ Exact, allocation-bounded inverse of {@link encodePresencePeer}. */
@@ -614,7 +640,7 @@ export function decodePresencePeer(bytes: Uint8Array, pos: [number]): ArtifactPr
   const reader = new PresencePeerReader(bytes, pos[0]);
   const actor = reader.text("presence peer actor");
   const flags = reader.varint("presence peer flags");
-  if (flags > 0x7ff) reader.fail("presence peer flags", `unknown flag bits set: ${flags.toString(16)}`);
+  if (flags > 0xfff) reader.fail("presence peer flags", `unknown flag bits set: ${flags.toString(16)}`);
   const connectedAtMs = reader.varint("presence peer connected at");
   if (connectedAtMs > PRESENCE_PEER_WIRE_LIMITS_V1.maximumConnectedAtMs) reader.fail("presence peer connected at", "limit exceeded");
   const label = flags & (1 << 0) ? reader.text("presence peer label") : undefined;
@@ -628,9 +654,10 @@ export function decodePresencePeer(bytes: Uint8Array, pos: [number]): ArtifactPr
   const views = flags & (1 << 8) ? reader.views() : [];
   const ui = flags & (1 << 9) ? reader.ui() : undefined;
   const toolRun = flags & (1 << 10) ? reader.toolRun() : undefined;
+  const principalKind = flags & (1 << 11) ? reader.principalKind() : undefined;
   if (reader.position !== bytes.length) reader.fail("presence peer", "trailing bytes");
   pos[0] = reader.position;
-  return { actor, connectedAtMs, label, presencePack, userId, role, dragGhostJson, interaction, color, surface, views, ui, toolRun };
+  return { actor, connectedAtMs, label, presencePack, userId, role, dragGhostJson, interaction, color, surface, views, ui, toolRun, principalKind };
 }
 
 /** ⏯️ Twin of Rust `encode_presence_tool_run`: the standalone tool run summary body a guest's

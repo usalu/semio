@@ -1,7 +1,7 @@
 import React from "react";
-import type { AppDefinition } from "@semio-tech/framework";
+import { SemioFaultError, resolveWindowActions, type AppDefinition } from "@semio-tech/framework";
 import type { BackboneWorkerRequest, BackboneWorkerResponse } from "@semio-tech/framework-os";
-import type { PluginWasmHandle } from "../../🔌️PluginRuntime/🟦️.tsx";
+import type { PluginOperationCompletion, PluginWasmHandle } from "../../🔌️PluginRuntime/🟦️.tsx";
 import type { ViewModel } from "../../🐚️Shell/🟦️.tsx";
 
 export const DIRECTORY_PROJECTION_RECEIPT_SCHEMA = "semio.space.home.directory-projection-receipt.v1";
@@ -23,6 +23,13 @@ export type DirectoryBootstrapPendingV1 = Readonly<{
   receiptSha256: string;
   throughSeqInclusive: number;
 }>;
+
+/** ⏱️ Ceiling on how long ONE page's typed operation may take to publish its terminal receipt. It
+ * bounds a completion frame that never arrives (a faulted shard, a retired instance) — past it the
+ * page is re-offered, never waited on for ever. There is no poll behind it: the runtime's own
+ * continuation drain advances the operation and `subscribeOperationCompletions` delivers the terminal
+ * publication, so this timer only ever fires when that delivery was lost. */
+export const DIRECTORY_BOOTSTRAP_SETTLE_DEADLINE_MS = 30_000;
 
 export type DirectoryHomeOwnerV1 = {
   plugin: PluginWasmHandle;
@@ -78,7 +85,7 @@ export function parseDirectoryProjectionReceiptV1(value: unknown): DirectoryProj
 }
 
 function actionAvailable(app: AppDefinition, actionId: string): boolean {
-  return app.windowKinds.some((window) => (window.actions ?? []).some((action) => action.id === actionId));
+  return app.windowKinds.some((window) => resolveWindowActions(app, window).some((action) => action.id === actionId));
 }
 
 function identityField(value: string): boolean {
@@ -200,12 +207,105 @@ function directoryPageInvocation(owner: DirectoryHomeOwnerV1, canonicalJson: str
   return directoryActionInvocation(owner, "applyDirectoryEventPage", { pageJson: canonicalJson });
 }
 
-/** ✅️ Applies one retained page and emits ACK only after the exact typed terminal receipt returns. */
+/** 🎟️ The typed-operation id an admitting reply started, or `null` when it started none.
+ * `applyDirectoryEventPage` is a `Migrated`, job-routed verb: its admitting `InvocationResult` carries
+ * the `{ operationId, generation }` handle (`🔌️plugin/🦀️.rs`'s `start_typed_command_operation`, both
+ * decimal STRINGS) and NOT the verb's result, while `AppFrame::OperationCompleted.operation` carries
+ * the same id as a number. This is where the two spellings meet, and it is the ONLY thing this lane
+ * reads out of the admission. */
+export function startedDirectoryOperationIdV1(output: unknown): number | null {
+  if (typeof output !== "object" || output === null || Array.isArray(output)) return null;
+  const raw = (output as { readonly operationId?: unknown }).operationId;
+  const operation = typeof raw === "string" ? (/^[0-9]+$/u.test(raw) ? Number(raw) : Number.NaN) : typeof raw === "number" ? raw : Number.NaN;
+  return Number.isSafeInteger(operation) && operation >= 0 ? operation : null;
+}
+
+/** ♻️ Whether a refusal is one this page may be re-offered after. The wire already answers it: every
+ * `Fault` carries a `retryable` flag its raiser set (`⚠️diagnostic/🦀️.rs`'s `with_retryable`, `false`
+ * by default), so a permanent refusal — an unparsable page, a receipt the guest itself rejected, a
+ * retired instance — stops the lane with its own code instead of being re-fetched about once a second,
+ * which is the retry storm S4 measured on the live shell (31 `event-page?after=0` in 60 s). */
+function directoryRefusalIsTransientV1(error: unknown): boolean {
+  return error instanceof SemioFaultError && error.fault.retryable;
+}
+
+function directoryRefusalCodeV1(error: unknown): string {
+  if (error instanceof SemioFaultError) return error.fault.code;
+  return "directory-bootstrap.apply-refused";
+}
+
+/** 🚨️ Raised when the operation's terminal publication never reached this shell. Transient by
+ * construction — the operation was admitted, so the page is re-offered rather than refused. */
+class DirectorySettleDeadlineError extends Error {}
+
+/** 🚨️ Raised when the owner is retired while its operation is still settling, so the wait never
+ * outlives the owner it belongs to. The caller's own `aborted` test turns it into `cancelled`. */
+class DirectoryOwnerRetiredError extends Error {}
+
+/** 🏁️ Waits for ONE typed operation's terminal publication on the owner's instance.
+ *
+ * The subscription opens BEFORE the verb is dispatched, because a completion can land in the same
+ * message pump turn that resolves the admitting reply: a completion for an operation nobody is waiting
+ * on yet is remembered, and the wait resolves from that memory. There is no polling anywhere in here —
+ * the runtime's own continuation drain (`drainTypedOperations`) advances the operation and
+ * `subscribeOperationCompletions` is its only delivery path. */
+function watchDirectoryOperationV1(owner: DirectoryHomeOwnerV1, deadlineMs: number): Readonly<{
+  terminalOutputOf(operation: number): Promise<unknown>;
+  dispose(): void;
+}> {
+  const arrived = new Map<number, unknown>();
+  let waiting: Readonly<{ operation: number; resolve(output: unknown): void }> | null = null;
+  const receive = (completion: PluginOperationCompletion): void => {
+    if (waiting && waiting.operation === completion.operation) {
+      const settled = waiting;
+      waiting = null;
+      settled.resolve(completion.terminalOutput);
+      return;
+    }
+    arrived.set(completion.operation, completion.terminalOutput);
+  };
+  const unsubscribe = owner.plugin.subscribeOperationCompletions(owner.instanceId, receive);
+  return {
+    terminalOutputOf: (operation) => {
+      if (arrived.has(operation)) return Promise.resolve(arrived.get(operation));
+      if (owner.abort.signal.aborted) return Promise.reject(new DirectoryOwnerRetiredError("directory-bootstrap: owner retired before its operation settled"));
+      return new Promise<unknown>((resolve, reject) => {
+        const finish = (): void => {
+          clearTimeout(deadline);
+          owner.abort.signal.removeEventListener("abort", retired);
+          waiting = null;
+        };
+        const retired = (): void => {
+          finish();
+          reject(new DirectoryOwnerRetiredError("directory-bootstrap: owner retired before its operation settled"));
+        };
+        const deadline = setTimeout(() => {
+          finish();
+          reject(new DirectorySettleDeadlineError(`directory-bootstrap: typed operation ${operation} published no terminal receipt within ${deadlineMs} ms`));
+        }, deadlineMs);
+        owner.abort.signal.addEventListener("abort", retired, { once: true });
+        waiting = { operation, resolve: (output) => { finish(); resolve(output); } };
+      });
+    },
+    dispose: unsubscribe,
+  };
+}
+
+/** ✅️ Applies one retained page and emits ACK only after the exact typed terminal receipt returns.
+ *
+ * 🧾️ The receipt comes from the operation's SETTLED terminal publication, never from the admitting
+ * reply. `applyDirectoryEventPage` is job-routed (`InteractiveJobClassification::Migrated`): the guest
+ * answers the dispatch with a `{ operationId, generation }` handle on the admission turn and emits the
+ * `semio.space.home.directory-projection-receipt.v1` event turns later, so reading `response.output`
+ * as the receipt parsed `null` for every real page and closed the owner with
+ * `directory-bootstrap.receipt-mismatch` — measured live on hub 7611, and the reason Home's space
+ * table stayed empty on a hub that has ever indexed a document. */
 export async function applyDirectoryEventPageBootstrapV1(
   owner: DirectoryHomeOwnerV1,
   page: DirectoryEventPageBootstrapV1,
   post: (request: BackboneWorkerRequest) => void,
   beforeAcknowledge?: (owner: DirectoryHomeOwnerV1) => Promise<void>,
+  settleDeadlineMs: number = DIRECTORY_BOOTSTRAP_SETTLE_DEADLINE_MS,
 ): Promise<DirectoryBootstrapApplyResult> {
   if (owner.abort.signal.aborted || page.bootstrapEpoch !== owner.bootstrapEpoch) return { state: { kind: "fault", code: "directory-bootstrap.stale-owner" } };
   if (owner.pending) return { state: { kind: "pending", throughSeqInclusive: owner.pending.throughSeqInclusive, cancellable: true } };
@@ -216,10 +316,18 @@ export async function applyDirectoryEventPageBootstrapV1(
     receiptSha256: page.receiptSha256,
     throughSeqInclusive: page.throughSeqInclusive,
   };
+  let settle: ReturnType<typeof watchDirectoryOperationV1> | null = null;
   try {
-    const response = await owner.plugin.handleAction(owner.instanceId, directoryPageInvocation(owner, page.canonicalJson), { ...owner.viewState, sessionIdentity: { userId: owner.identity.userId, displayName: owner.identity.displayName } });
+    settle = watchDirectoryOperationV1(owner, settleDeadlineMs);
+    const admission = await owner.plugin.handleAction(owner.instanceId, directoryPageInvocation(owner, page.canonicalJson), { ...owner.viewState, sessionIdentity: { userId: owner.identity.userId, displayName: owner.identity.displayName } });
     if (owner.abort.signal.aborted || owner.pending?.receiptSha256 !== page.receiptSha256) return { state: { kind: "fault", code: "directory-bootstrap.cancelled" } };
-    const receipt = parseDirectoryProjectionReceiptV1(response.output);
+    const operation = startedDirectoryOperationIdV1(admission.output);
+    if (operation === null) {
+      await closeDirectoryHomeOwnerV1(owner, post);
+      return { state: { kind: "fault", code: "directory-bootstrap.operation-unstarted" } };
+    }
+    const receipt = parseDirectoryProjectionReceiptV1(await settle.terminalOutputOf(operation));
+    if (owner.abort.signal.aborted || owner.pending?.receiptSha256 !== page.receiptSha256) return { state: { kind: "fault", code: "directory-bootstrap.cancelled" } };
     if (!receipt || !receiptMatchesPage(receipt, page)) {
       await closeDirectoryHomeOwnerV1(owner, post);
       return { state: { kind: "fault", code: "directory-bootstrap.receipt-mismatch" } };
@@ -236,11 +344,17 @@ export async function applyDirectoryEventPageBootstrapV1(
       receiptSha256: receipt.receiptSha256,
     });
     return { state: { kind: "idle" }, receipt };
-  } catch {
+  } catch (error) {
     if (owner.abort.signal.aborted || owner.pending?.receiptSha256 !== page.receiptSha256) return { state: { kind: "fault", code: "directory-bootstrap.cancelled" } };
-    post({ kind: "directory-bootstrap-reject", bootstrapEpoch: owner.bootstrapEpoch, receiptSha256: page.receiptSha256 });
     owner.pending = null;
+    if (!(error instanceof DirectorySettleDeadlineError) && !directoryRefusalIsTransientV1(error)) {
+      await closeDirectoryHomeOwnerV1(owner, post);
+      return { state: { kind: "fault", code: directoryRefusalCodeV1(error) } };
+    }
+    post({ kind: "directory-bootstrap-reject", bootstrapEpoch: owner.bootstrapEpoch, receiptSha256: page.receiptSha256 });
     return { state: { kind: "retrying", throughSeqInclusive: page.throughSeqInclusive } };
+  } finally {
+    settle?.dispose();
   }
 }
 
@@ -260,7 +374,12 @@ export function DirectoryBootstrapStatusNotice(props: Readonly<{ state: Director
   const language = directoryLanguage(props.locale);
   if (!language) return <div role="alert" aria-live="assertive" data-directory-bootstrap="locale-missing">{props.locale}</div>;
   const labels = DIRECTORY_STATUS_LABELS[language];
-  if (props.state.kind === "fault") return <div role="alert" aria-live="assertive" data-directory-bootstrap="fault">{labels.fault}</div>;
+  if (props.state.kind === "fault")
+    return (
+      <div role="alert" aria-live="assertive" data-directory-bootstrap="fault" data-directory-bootstrap-code={props.state.code}>
+        {labels.fault}
+      </div>
+    );
   const text = labels[props.state.kind].replace("{frontier}", String(props.state.throughSeqInclusive));
   return (
     <div role="status" aria-live="polite" aria-current="true" data-directory-bootstrap={props.state.kind}>

@@ -257,13 +257,19 @@ async fn real_fixture_d1_locates_every_named_section() {
     for name in expected_names {
         assert!(sections.iter().any(|s| s.name == name), "missing real section {name}");
     }
-    // Every located page must carry a real, in-bounds file address and nonzero decoded
-    // size -- proof this is genuine location, not a stub returning empty placeholders.
+    // Every located page must carry a real, IN-BOUNDS file address resolved through the page
+    // directory -- proof this is genuine location, not a stub returning empty placeholders.
+    // Decoded CONTENT is deliberately not asserted here: `locate_r2004_sections` is the locator
+    // and hands every page back with `decoded: Vec::new()` by construction (its own loop), so a
+    // `!page.decoded.is_empty()` assertion measured D2's function, not D1's, and could never hold
+    // for any file. D2 (`real_fixture_d2_decompresses_every_section`, next) is where nonzero
+    // decoded bytes are the bar.
     for section in &sections {
         assert!(!section.pages.is_empty(), "section {} has no pages", section.name);
         for page in &section.pages {
             assert!(page.file_address > 0, "section {} page {} has null address", section.name, page.page_number);
-            assert!(!page.decoded.is_empty(), "section {} page {} decoded to zero bytes", section.name, page.page_number);
+            assert!((page.file_address as usize) < ARCHITECTURAL_FIXTURE.len(), "section {} page {} address {:#x} is past the end of the file", section.name, page.page_number, page.file_address);
+            assert!(page.decoded.is_empty(), "the locator carries no content: section {} page {} arrived pre-decoded", section.name, page.page_number);
         }
     }
 }
@@ -627,6 +633,21 @@ mod conformance_laws {
         let decoded = <DwgSnapshot as store::ArtifactPack>::decode_pack(FIXTURE_PACK).expect("decode shipped .pack.semio fixture");
         assert_eq!(decoded, demo, "shipped .pack.semio fixture does not decode back to demo_dwg_snapshot()");
         assert_eq!(store::ArtifactPack::encode_pack(&demo), FIXTURE_PACK, "encode_pack(demo_dwg_snapshot()) drifted from the shipped .pack.semio fixture");
+    }
+
+    /// 🖊️ The ONLY way the two shipped fixtures are ever refreshed: real `print_dsl`/`encode_pack`
+    /// output of the demo, never a hand edit (`fixture_honesty_law` above is what that honesty
+    /// means). Run it deliberately after a codec change — `cargo test -p semio-s-artifact-stdio-dwg
+    /// --lib -- --ignored zzz_write` — then re-run the law. `🎒️.pack.semio` had been left at a
+    /// 51-byte pre-codec stub that `decode_pack` rejected outright (`Truncated(22)`), while
+    /// `🗣️.dsl.semio` beside it was already genuine.
+    #[semio_framework_async_macros::async_test]
+    #[ignore]
+    async fn zzz_write_demo_fixtures() {
+        let demo = crate::standards::v_ac1024::engine::demo_dwg_snapshot();
+        let assets = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🏅️standards/4️⃣ac1018/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets");
+        std::fs::write(assets.join("🗣️.dsl.semio"), store::ArtifactDsl::print_dsl(&demo)).expect("write 🗣️.dsl.semio");
+        std::fs::write(assets.join("🎒️.pack.semio"), store::ArtifactPack::encode_pack(&demo)).expect("write 🎒️.pack.semio");
     }
 }
 //#endregion 🔖️ConformanceLaws

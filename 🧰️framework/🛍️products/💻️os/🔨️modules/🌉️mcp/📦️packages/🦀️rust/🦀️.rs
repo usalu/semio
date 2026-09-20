@@ -39,6 +39,9 @@ pub mod bridge;
 #[path = "../../🛰️rendezvous/🦀️.rs"]
 pub mod rendezvous;
 
+#[path = "../../🤖️agent-credential/🦀️.rs"]
+pub mod agent_credential;
+
 #[path = "../../🗂️catalog/🦀️.rs"]
 pub mod catalog;
 
@@ -47,6 +50,13 @@ pub mod search;
 
 #[path = "../../🧠️context/🦀️.rs"]
 pub mod context;
+
+// 📣️ Server→client notifications (`resources/updated`, `resources/list_changed`, `progress`) and the
+// per-connection subscription/progress bookkeeping that decides who gets each one. NOT glob
+// re-exported at the crate root: its `publish`/`paginate`/`Page` are deliberately generic names that
+// would collide with the flat facet namespace, and every call site reads better as `notify::…`.
+#[path = "../../📣️notify/🦀️.rs"]
+pub mod notify;
 
 #[path = "../../🧪️conformance/🦀️.rs"]
 pub mod conformance;
@@ -76,6 +86,12 @@ pub mod inference;
 
 #[path = "../../🖥️ui/🦀️.rs"]
 pub mod ui;
+
+// 🐚️ The live-shell artifact route — the `ArtifactChannel` whose other end is the human's running
+// shell. Mounted after `🖥️ui` (it uses that facet's `BridgeSlot`/`active_shell_connection`) and
+// after `🏠️workspace` (whose `ArtifactChannels` closes the implementor set it joins).
+#[path = "../../🐚️channel/🦀️.rs"]
+pub mod shell_channel;
 
 #[path = "../../💬️prompts/🦀️.rs"]
 pub mod prompts;

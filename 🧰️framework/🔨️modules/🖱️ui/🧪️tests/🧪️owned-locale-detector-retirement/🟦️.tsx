@@ -388,7 +388,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       const { readFileSync } = await import("node:fs");
       const { fileURLToPath } = await import("node:url");
       const { dirname, resolve } = await import("node:path");
-      const css = readFileSync(resolve(dirname(fileURLToPath(testSource.url)), "../../../../🎨️styling/🖌️ui/🎨️.css"), "utf8");
+      const css = readFileSync(resolve(dirname(fileURLToPath(testSource.url)), "../../🎨️styling/🖌️ui/🎨️.css"), "utf8");
       expect(css).toMatch(/@property --celebrate-border-angle[\s\S]*?inherits:\s*false/);
       expect(css).toMatch(/\[data-celebrated="true"\][\s\S]*?--celebrate-conic:/);
       expect(css).toMatch(/\[data-celebrated="true"\]::after[\s\S]*?background:\s*var\(--celebrate-conic\)/);
@@ -419,7 +419,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       const { readFileSync } = await import("node:fs");
       const { fileURLToPath } = await import("node:url");
       const { dirname, resolve } = await import("node:path");
-      const css = readFileSync(resolve(dirname(fileURLToPath(testSource.url)), "../../../../🎨️styling/🖌️ui/🎨️.css"), "utf8");
+      const css = readFileSync(resolve(dirname(fileURLToPath(testSource.url)), "../../🎨️styling/🖌️ui/🎨️.css"), "utf8");
       // 🩺️ An animated registered custom property declared `inherits: true` and started on `:root`
       // re-resolves EVERY element's computed style on EVERY frame — measured at 112.3 s of style
       // recalculation out of 129.0 s of main-thread task time on the generation3d example, which paced
@@ -1261,9 +1261,9 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       const { readFileSync } = await import("node:fs");
       const { fileURLToPath } = await import("node:url");
       const { dirname, resolve } = await import("node:path");
-      const css = readFileSync(resolve(dirname(fileURLToPath(testSource.url)), "../../../../🎨️styling/🖌️ui/🎨️.css"), "utf8");
+      const css = readFileSync(resolve(dirname(fileURLToPath(testSource.url)), "../../🎨️styling/🖌️ui/🎨️.css"), "utf8");
       expect(css).toContain('[data-slot="introduction-info-box"]');
-      expect(css).toContain('[data-slot="dialog-box"]');
+      expect(css).toContain('[data-slot="dialog-content"]');
       expect(css).toContain("data-window-silhouette-border");
       expect(css).toContain("[data-window-silhouette]");
       expect(css).toContain(':not([data-active="true"]):hover');
@@ -1272,7 +1272,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       expect(css).toContain("@keyframes introduced-border-pulse");
       expect(css).not.toContain("@keyframes window-silhouette-border-introduced-pulse");
       expect(css).not.toMatch(/\[data-slot="introduction-info-box"\]:focus-within/);
-      expect(css).not.toMatch(/\[data-slot="dialog-box"\]:focus-within/);
+      expect(css).not.toMatch(/\[data-slot="dialog-content"\]:focus-within/);
       expect(GLASS_OVERLAY_BOX_CLASS).not.toMatch(/(?:^|\s)border(?:\s|$)/);
       expect(GLASS_OVERLAY_BOX_CLASS).not.toContain("border-emphasized");
       expect(GLASS_OVERLAY_BOX_CLASS).not.toContain("border-normal");
@@ -1407,7 +1407,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       const { readFileSync } = await import("node:fs");
       const { fileURLToPath } = await import("node:url");
       const { dirname, resolve } = await import("node:path");
-      const css = readFileSync(resolve(dirname(fileURLToPath(testSource.url)), "../../../../🎨️styling/🖌️ui/🎨️.css"), "utf8");
+      const css = readFileSync(resolve(dirname(fileURLToPath(testSource.url)), "../../🎨️styling/🖌️ui/🎨️.css"), "utf8");
       expect(css).toMatch(/\[data-slot="introduction-info-box"\]\s*\[data-slot="introduction-body-paragraph"\]:hover\s*\{\s*color:\s*var\(--border-emphasized-color\);/);
       expect(css).not.toMatch(/\[data-slot="introduction-info-box"\]\s*\[data-slot="window-chrome-body"\]:hover/);
       expect(css).toMatch(
@@ -2759,7 +2759,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       const { readFileSync } = await import("node:fs");
       const { fileURLToPath } = await import("node:url");
       const { dirname, resolve } = await import("node:path");
-      return readFileSync(resolve(dirname(fileURLToPath(testSource.url)), "../../../../🎨️styling/🖌️ui/🎨️.css"), "utf8");
+      return readFileSync(resolve(dirname(fileURLToPath(testSource.url)), "../../🎨️styling/🖌️ui/🎨️.css"), "utf8");
     }
 
     it("gives every vendored icon id and non-catalog kind a hover keyframes block and animation assignment", async () => {
@@ -3187,7 +3187,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       const { readFileSync } = await import("node:fs");
       const { fileURLToPath } = await import("node:url");
       const { dirname, resolve } = await import("node:path");
-      const css = readFileSync(resolve(dirname(fileURLToPath(testSource.url)), "../../../../🎨️styling/🖌️ui/🎨️.css"), "utf8");
+      const css = readFileSync(resolve(dirname(fileURLToPath(testSource.url)), "../../🎨️styling/🖌️ui/🎨️.css"), "utf8");
       expect(css).toContain("[data-window-silhouette-gap]");
       expect(css).toMatch(/\[data-window-silhouette-gap\][\s\S]*backdrop-filter:\s*none/);
       render(
@@ -6819,7 +6819,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       expect(actions).toBeTruthy();
       const body = container.querySelector('[data-slot="window-engagement-body"]');
       expect(body?.contains(actions)).toBe(true);
-      fireEvent.click(toggle);
+      fireEvent.click(container.querySelector('[id="framework.window.mergedWindow.engagement.toggle"]')!);
       expect(container.querySelector('[data-testid="adhoc-actions"]')).toBeNull();
     });
 
@@ -7400,6 +7400,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     });
 
     it("Window utility bar body caps its height below the top-left Actions chrome and scrolls the overflow, instead of overlapping it (regression guard for a tall active-utility options tree, e.g. puzzle 3D's Füllen tree)", () => {
+      const originalDescriptor = Object.getOwnPropertyDescriptor(HTMLElement.prototype, "getBoundingClientRect");
       const originalRect = HTMLElement.prototype.getBoundingClientRect;
       HTMLElement.prototype.getBoundingClientRect = function (this: HTMLElement) {
         if (this.getAttribute("data-slot") === "window-body") return { top: 0, bottom: 400, height: 400, left: 0, right: 800, width: 800, x: 0, y: 0, toJSON: () => ({}) } as DOMRect;
@@ -7418,7 +7419,8 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         expect(body.className).toContain("overflow-y-auto");
         expect(Number.parseFloat(body.style.maxHeight)).toBe(400 - 120 - uiSpacingPx(1));
       } finally {
-        HTMLElement.prototype.getBoundingClientRect = originalRect;
+        if (originalDescriptor) Object.defineProperty(HTMLElement.prototype, "getBoundingClientRect", originalDescriptor);
+        else Reflect.deleteProperty(HTMLElement.prototype, "getBoundingClientRect");
       }
     });
 
@@ -10290,7 +10292,7 @@ export async function registerTests2(vitest: Pick<typeof import("vitest"), "desc
   
       it("renders fullscreen toggle on the trailing navbar edge by default", () => {
         const markup = renderToStaticMarkup(<Navbar items={[{ key: "title", content: <span>App</span> }]} />);
-        expect(markup).toContain('data-slot="navbar-fullscreen-toggle"');
+        expect(markup).toContain('data-slot="navbar-trailing-chrome"');
         expect(markup).toContain('id="ui.fullscreen.toggle"');
       });
   
@@ -10528,7 +10530,7 @@ export async function registerTests2(vitest: Pick<typeof import("vitest"), "desc
         const { readFileSync } = await import("node:fs");
         const { fileURLToPath } = await import("node:url");
         const { dirname, resolve } = await import("node:path");
-        const css = readFileSync(resolve(dirname(fileURLToPath(testSource.url)), "../../../../🎨️styling/🖌️ui/🎨️.css"), "utf8");
+        const css = readFileSync(resolve(dirname(fileURLToPath(testSource.url)), "../../🎨️styling/🖌️ui/🎨️.css"), "utf8");
         expect(css).toContain('[data-slot="navbar"]::after');
         expect(css).toContain('[data-slot="footer"]::before');
         expect(css).toMatch(/\[data-slot="navbar"\]:hover::after/);
@@ -10628,7 +10630,7 @@ export async function registerTests2(vitest: Pick<typeof import("vitest"), "desc
         expect(markup).not.toContain("ui-glass-chrome");
       });
   
-      it("panel chip-cap and controls paint glass above one transparent clipped payload", async () => {
+      it("panel chip-cap paints glass above a transparent payload without unused controls", async () => {
         const { render } = await import("@testing-library/react");
         const tabs = [singleTreeLeaf({ id: "tab-a", icon: PanelRightIcon, name: "Tab A", tree: { sections: [] } }), singleTreeLeaf({ id: "tab-b", icon: PanelRightIcon, name: "Tab B", tree: { sections: [] } })];
         const { container } = render(<Panel anchor="top-left" visible onVisibleChange={() => {}} tabs={tabs} activeTabPath={["tab-a"]} />);
@@ -10638,7 +10640,7 @@ export async function registerTests2(vitest: Pick<typeof import("vitest"), "desc
         expect(chip.className).toContain("ui-glass");
         expect(body.hasAttribute("data-window-silhouette-content")).toBe(true);
         expect(body.className).not.toContain("ui-glass");
-        expect(controls.className).toContain("ui-glass");
+        expect(controls).toBeNull();
         expect(chip.className).not.toContain("ui-glass-chrome");
         expect(chip.hasAttribute("data-window-silhouette-chip")).toBe(true);
         expect(container.querySelector('[data-slot="window-chrome-silhouette-border"]')).toBeTruthy();
@@ -11449,13 +11451,13 @@ export async function registerTests2(vitest: Pick<typeof import("vitest"), "desc
         durationMs: 10_000,
         chapters: [{ id: "start", at: 0, title: "Start" }],
         base: { exampleId: "concrete-forest", ui: { activeUtilityByWindowId: {}, activePanelTabByGroup: {}, interactionSelection: {}, expandedTreeIds: [], commandPanelOpen: false }, cameras: [] },
-        tracks: { narration: [], video: [], events: [], ui: [], artifact: [], camera: [], gestures: [] },
+        tracks: { narration: [], video: [], events: [], ui: [], document: [], camera: [], gestures: [] },
       });
   
       //#region 🏠️LocalInteractionCompositionTests
       it("TutorialLocalInteraction preserves exact three-map authored changes against Immer", async () => {
         const source = await import("../../../🛂️manifest/🎬️tutorial/🏠️local-interaction/🟦️.ts");
-        const { readFileSync } = await import("node:fs"); const { fileURLToPath } = await import("node:url"); const { dirname, resolve } = await import("node:path"); const fixture: unknown = JSON.parse(readFileSync(resolve(dirname(fileURLToPath(testSource.url)), "../../../../../🛂️manifest/🧫️fixtures/🖱️tutorial-local-interaction.json"), "utf8")); const { default: schema } = await import("../../../🛂️manifest/🧬️schema/🔣️.json"); const { default: localSchema } = await import("../../../📡️replication/📡️wire/🏠️local-interaction/🧬️schema/🔣️.json");
+        const { readFileSync } = await import("node:fs"); const { fileURLToPath } = await import("node:url"); const { dirname, resolve } = await import("node:path"); const fixture: unknown = JSON.parse(readFileSync(resolve(dirname(fileURLToPath(testSource.url)), "../../../🛂️manifest/🧫️fixtures/🖱️tutorial-local-interaction.json"), "utf8")); const { default: schema } = await import("../../../🛂️manifest/🧬️schema/🔣️.json"); const { default: localSchema } = await import("../../../📡️replication/📡️wire/🏠️local-interaction/🧬️schema/🔣️.json");
         const { default: Ajv } = await import("ajv"); const { produce, enableMapSet } = await import("immer"); const assert: typeof import("node:assert") = (await import("node:assert")).default;
         type State = import("../../../📡️replication/📡️wire/🏠️local-interaction/🟦️.ts").LocalInteractionState; type Change = import("../../../🛂️manifest/🎬️tutorial/🏠️local-interaction/🟦️.ts").TutorialLocalInteractionChange;
         const validate = new Ajv({ strict: true, allErrors: true }).addSchema(localSchema).addSchema(schema).compile<{ cases: Array<{ name: string; before: State; after: State; changes: Change[] }> }>({ $ref: `${schema.$id}#/$defs/TutorialLocalInteractionFixture` }); expect(validate(fixture)).toBe(true); if (!validate(fixture)) throw new Error("Invalid tutorial local interaction fixture"); enableMapSet();
@@ -11563,7 +11565,7 @@ export async function registerTests2(vitest: Pick<typeof import("vitest"), "desc
           ...base,
           tracks: {
             ...base.tracks,
-            artifact: [
+            document: [
               { at: 100, kind: { kind: "edit", forwards: [{ op: "add", id: "a" }], backwards: [{ op: "remove", id: "a" }] } },
               { at: 200, kind: { kind: "edit", forwards: [{ op: "add", id: "b" }], backwards: [{ op: "remove", id: "b" }] } },
             ],
@@ -11571,15 +11573,15 @@ export async function registerTests2(vitest: Pick<typeof import("vitest"), "desc
         };
         const forward = tutorialSlice(def, 0, 250);
         expect(forward.forward).toBe(true);
-        expect(forward.artifact).toHaveLength(2);
-        expect((forward.artifact[0].kind as { forwards: readonly { id: string }[] }).forwards[0].id).toBe("a");
+        expect(forward.document).toHaveLength(2);
+        expect((forward.document[0].kind as { forwards: readonly { id: string }[] }).forwards[0].id).toBe("a");
   
         const backward = tutorialSlice(def, 250, 0);
         expect(backward.forward).toBe(false);
-        expect(backward.artifact).toHaveLength(2);
-        expect((backward.artifact[0].kind as { backwards: readonly { id: string }[] }).backwards[0].id).toBe("b");
+        expect(backward.document).toHaveLength(2);
+        expect((backward.document[0].kind as { backwards: readonly { id: string }[] }).backwards[0].id).toBe("b");
   
-        expect(tutorialSlice(def, 250, 250).artifact).toHaveLength(0);
+        expect(tutorialSlice(def, 250, 250).document).toHaveLength(0);
       });
   
       it("validateTutorial rejects unsorted/out-of-range tracks and passes a minimal valid tutorial", () => {

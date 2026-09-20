@@ -1,5 +1,4 @@
 {
-  "ChangeSiloRadiusM": {
-    "newSiloRadiusM": 6.25
-  }
+  "mutation": "changeSiloRadiusM",
+  "newSiloRadiusM": 6.25
 }

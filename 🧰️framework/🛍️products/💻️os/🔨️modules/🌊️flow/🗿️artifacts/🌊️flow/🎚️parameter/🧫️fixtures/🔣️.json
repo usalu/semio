@@ -62,7 +62,7 @@
       }
     }
   ],
-  "action": "setGraphParameter",
+  "action": "nodeGraphEdit",
   "expected": {
     "documentJsonReads": 0,
     "wholeFixtureActions": 0,

@@ -1,5 +1,4 @@
 {
-  "ChangeWallHeightM": {
-    "newWallHeightM": 5.5
-  }
+  "mutation": "changeWallHeightM",
+  "newWallHeightM": 5.5
 }

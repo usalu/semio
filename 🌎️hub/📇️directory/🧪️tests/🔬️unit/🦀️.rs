@@ -178,6 +178,14 @@ async fn publish_reserved(service: &DirectoryService, actor: DirectoryActor, che
     service.publish_reserved_artifact_checkpoint(actor, checkpoint, reservation, 100).await
 }
 
+/// 🪢 The owning app's `Dialect` coordinate these fixtures index under. It is deliberately NOT the
+/// descriptor's `artifact_kind`: the descriptor carries the manifest `ArtifactKindSpec::id`, which
+/// this fixture family spells with neutral punctuation (`s.gis:gismap`) to prove the descriptor is
+/// carried as opaque text, while a dialect is a canonical `s.<plugin>.<artifact>` coordinate. Every
+/// plugin but `gis` really has the two in different spaces, so deriving one from the other here made
+/// the hub's own genesis helper test a shape only `gis` can produce.
+const FIXTURE_PARENT_DIALECT_KIND: &str = "s.gis.gismap";
+
 async fn publish_fixture_genesis<S: ArtifactChunkCasStorage>(service: &DirectoryService, user_id: &str, mut descriptor: DocumentDescriptor, storage: Arc<S>, context: &OperationContext<'_>) -> (DocumentDescriptor, ArtifactCheckpoint) {
     use crate::artifact_authority::creation::{ARTIFACT_CREATION_DEADLINE_MS, ArtifactCreationActorV1, ArtifactCreationFactBodyV1, ArtifactCreationPreparedV1, artifact_creation_command_digest_v1};
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🗿️artifact-authority/🌱️creation/🧫️fixtures/📚️operation-v1/🔣️.json")).expect("creation fixture");
@@ -207,7 +215,7 @@ async fn publish_fixture_genesis<S: ArtifactChunkCasStorage>(service: &Directory
     intent.owner = descriptor.owner.clone();
     intent.artifact_schema = descriptor.artifact_schema.clone();
     intent.pack_schema_hash = descriptor.pack_schema_hash.clone();
-    intent.parent_dialect.artifact_kind = descriptor.artifact_kind.clone();
+    intent.parent_dialect.artifact_kind = FIXTURE_PARENT_DIALECT_KIND.into();
     intent.accepted_at_ms = now_ms() as u64;
     intent.deadline_ms = intent.accepted_at_ms + ARTIFACT_CREATION_DEADLINE_MS;
     intent.command_sha256 = artifact_creation_command_digest_v1(&intent.scope.space_id, &intent.request).expect("creation command digest");
@@ -782,59 +790,6 @@ async fn artifact_chunk_cas_expiry_supersedes_tokens_and_sweep_cancellation_comm
 }
 
 #[tokio::test]
-async fn artifact_chunk_cas_opaque_continuation_converges_after_page_overflow_cancel_and_resume() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🗿️artifact-authority/🧫️fixtures/🧱️artifact-chunk-cas/🔣️.json")).expect("artifact CAS fixture");
-    let law = &fixture["sweepContinuation"];
-    let object_counts = law["planObjectCounts"].as_array().expect("plan object counts");
-    let total_objects = law["totalObjects"].as_u64().expect("total objects");
-    let maximum = usize::try_from(law["requestMaximumObjects"].as_u64().expect("request maximum")).expect("bounded request maximum");
-    assert_eq!(law["tokenPayloadBytes"].as_u64(), Some(ARTIFACT_CAS_SWEEP_CONTINUATION_PAYLOAD_BYTES as u64));
-    assert_eq!(law["tokenAuthenticationBytes"].as_u64(), Some((ARTIFACT_CAS_SWEEP_CONTINUATION_BYTES - ARTIFACT_CAS_SWEEP_CONTINUATION_PAYLOAD_BYTES) as u64));
-    assert_eq!(law["cursorExposesObjectIdentity"].as_bool(), Some(false));
-    assert_eq!(law["invalidAfterGenerationChange"].as_bool(), Some(true));
-    assert_eq!(law["invalidAfterRestart"].as_bool(), Some(true));
-    let dir = fresh_dir().await;
-    let service = DirectoryService::new(dir.clone(), 64);
-    let system = DirectoryActor { kind: DirectoryActorKind::System, id: "system:artifact-authority".into() };
-    for (index, count) in object_counts.iter().enumerate() {
-        let count = usize::try_from(count.as_u64().expect("plan object count")).expect("bounded plan object count");
-        service.reserve_artifact_cas(system.clone(), sweep_convergence_plan(index, count), 200, 100).await.expect("reserve convergence plan");
-    }
-    assert_eq!(dir.artifact_cas_ledger_generation().await.expect("sweep generation"), law["ledgerGeneration"].as_u64().expect("fixture generation"));
-    let storage = MemoryArtifactChunkCasStorage::default();
-    let probe = ArtifactCasProbe::new(201, None);
-    let context = OperationContext::new(10_000, AuthorityLimits::maximum(), &probe);
-    assert!(matches!(
-        service.sweep_artifact_cas(&storage, ArtifactCasSweepRequest { execute: true, max_objects: maximum + 1, continuation: None }, &context).await,
-        Err(crate::artifact_authority::AuthorityError::ResourceLimit("artifact CAS sweep object"))
-    ));
-    let first = service.sweep_artifact_cas(&storage, ArtifactCasSweepRequest { execute: true, max_objects: maximum, continuation: None }, &context).await.expect("first bounded sweep");
-    let continuation = first.continuation.expect("first sweep continuation");
-    assert_eq!(first.examined_objects, law["expectedExaminedPerRequest"][0].as_u64().expect("first examined"));
-    assert_eq!(format!("{continuation:?}"), "ArtifactCasSweepContinuation(<opaque>)");
-    let first_position = service.artifact_cas_sweep_position(continuation, true).expect("decode owned continuation");
-    assert_eq!(first_position.observed_generation, law["expectedFirstCursor"]["observedGeneration"].as_u64().expect("cursor generation"));
-    assert_eq!(first_position.after_generation, law["expectedFirstCursor"]["afterGeneration"].as_u64().expect("cursor page"));
-    assert_eq!(first_position.object_offset as u64, law["expectedFirstCursor"]["objectOffset"].as_u64().expect("cursor offset"));
-    assert!(matches!(service.sweep_artifact_cas(&storage, ArtifactCasSweepRequest { execute: false, max_objects: maximum, continuation: Some(continuation) }, &context).await, Err(crate::artifact_authority::AuthorityError::Store(_))));
-
-    let restarted = DirectoryService::new(dir.clone(), 64);
-    assert!(matches!(restarted.sweep_artifact_cas(&storage, ArtifactCasSweepRequest { execute: true, max_objects: maximum, continuation: Some(continuation) }, &context).await, Err(crate::artifact_authority::AuthorityError::Store(_))));
-    let cancel_probe = ArtifactCasProbe::new(201, Some(1));
-    let cancel_context = OperationContext::new(10_000, AuthorityLimits::maximum(), &cancel_probe);
-    assert!(matches!(service.sweep_artifact_cas(&storage, ArtifactCasSweepRequest { execute: true, max_objects: maximum, continuation: Some(continuation) }, &cancel_context).await, Err(crate::artifact_authority::AuthorityError::Cancelled)));
-    assert_eq!(cancel_probe.progress.lock().expect("cancel progress").iter().filter(|progress| progress.stage == AuthorityProgressStage::CasSweep).count(), 1);
-    let second = service.sweep_artifact_cas(&storage, ArtifactCasSweepRequest { execute: true, max_objects: maximum, continuation: Some(continuation) }, &context).await.expect("resume bounded sweep");
-    assert_eq!(second.examined_objects, law["expectedExaminedPerRequest"][1].as_u64().expect("second examined"));
-    assert!(second.continuation.is_none());
-    assert_eq!(first.examined_objects + second.examined_objects, total_objects);
-
-    let changed = service.sweep_artifact_cas(&storage, ArtifactCasSweepRequest { execute: true, max_objects: 1, continuation: None }, &context).await.expect("generation-bound continuation").continuation.expect("generation-bound token");
-    service.reserve_artifact_cas(system, sweep_convergence_plan(object_counts.len(), 2), 500, 300).await.expect("advance sweep generation");
-    assert!(matches!(service.sweep_artifact_cas(&storage, ArtifactCasSweepRequest { execute: true, max_objects: maximum, continuation: Some(changed) }, &context).await, Err(crate::artifact_authority::AuthorityError::Store(_))));
-}
-
-#[tokio::test]
 async fn artifact_chunk_cas_failed_epoch_advance_releases_directory_lease() {
     let dir = fresh_dir().await;
     let service = DirectoryService::new(dir, 64);
@@ -946,7 +901,7 @@ async fn artifact_chunk_cas_filesystem_process_sweep_and_publication_race_preser
         return;
     }
 
-    let root = std::path::PathBuf::from(std::env::var_os("SEMIO_TEST_ARTIFACT_DIR").expect("ticket generated artifact root")).join(format!("semio-artifact-cas-directory-process-race-{}", directory::os_identity::time_ordered_id()));
+    let root = crate::test_artifact_root::test_artifact_root().join(format!("semio-artifact-cas-directory-process-race-{}", directory::os_identity::time_ordered_id()));
     std::fs::create_dir_all(&root).expect("create process race root");
     let path_text = root.join("directory.sqlite3").to_str().expect("UTF-8 process race path").to_string();
     let cas_root = root.join("artifact-cas").join("v1");
@@ -1226,7 +1181,7 @@ async fn artifact_chunk_cas_sqlite_and_filesystem_restart_rebuild_restore_exact_
     descriptor.document_id = "artifact-00000000000000000000000000000005".into();
     let pair = ArtifactPair { pack: b"restart-pack".to_vec(), spr: b"restart-spr".to_vec() };
     let verified;
-    let mut root = std::path::PathBuf::from(std::env::var_os("SEMIO_TEST_ARTIFACT_DIR").expect("ticket generated artifact root"));
+    let mut root = crate::test_artifact_root::test_artifact_root();
     root.push(format!("semio-artifact-checkpoint-{}", directory::os_identity::time_ordered_id()));
     std::fs::create_dir_all(&root).expect("create test directory");
     let path = root.join("directory.sqlite3");
@@ -1526,7 +1481,7 @@ impl ProjectionRebuildControl for DirectoryRebuildWriterProbe {
 async fn invite_archive_projection_serializes_independent_service_decisions() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🎟️invite-redemption-transaction-v1/🔣️.json")).unwrap();
     for row in fixture["backendOrders"].as_array().unwrap() {
-        let root = std::path::PathBuf::from(std::env::var("SEMIO_TEST_ARTIFACT_DIR").expect("ticket artifacts")).join(format!("archive-writers-{}", time_ordered_id()));
+        let root = crate::test_artifact_root::test_artifact_root().join(format!("archive-writers-{}", time_ordered_id()));
         std::fs::create_dir_all(&root).unwrap();
         let path = root.join("directory.sqlite3");
         let primary = SqliteDirectory::connect(path.to_str().unwrap()).await.unwrap();
@@ -1719,4 +1674,61 @@ async fn invite_redemption_commit_and_publication_precede_the_next_directory_com
     assert!(matches!(retried, InviteRedemptionCommit::AlreadyCommitted { .. }));
     assert_eq!(retried.event(), redeemed.event());
     assert!(tokio::time::timeout(std::time::Duration::from_millis(25), receiver.recv()).await.is_err(), "idempotent retry never republishes the original event");
+}
+
+mod exhaustive {
+    use super::*;
+
+    #[tokio::test]
+    async fn artifact_chunk_cas_opaque_continuation_converges_after_page_overflow_cancel_and_resume() {
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🗿️artifact-authority/🧫️fixtures/🧱️artifact-chunk-cas/🔣️.json")).expect("artifact CAS fixture");
+        let law = &fixture["sweepContinuation"];
+        let object_counts = law["planObjectCounts"].as_array().expect("plan object counts");
+        let total_objects = law["totalObjects"].as_u64().expect("total objects");
+        let maximum = usize::try_from(law["requestMaximumObjects"].as_u64().expect("request maximum")).expect("bounded request maximum");
+        assert_eq!(law["tokenPayloadBytes"].as_u64(), Some(ARTIFACT_CAS_SWEEP_CONTINUATION_PAYLOAD_BYTES as u64));
+        assert_eq!(law["tokenAuthenticationBytes"].as_u64(), Some((ARTIFACT_CAS_SWEEP_CONTINUATION_BYTES - ARTIFACT_CAS_SWEEP_CONTINUATION_PAYLOAD_BYTES) as u64));
+        assert_eq!(law["cursorExposesObjectIdentity"].as_bool(), Some(false));
+        assert_eq!(law["invalidAfterGenerationChange"].as_bool(), Some(true));
+        assert_eq!(law["invalidAfterRestart"].as_bool(), Some(true));
+        let dir = fresh_dir().await;
+        let service = DirectoryService::new(dir.clone(), 64);
+        let system = DirectoryActor { kind: DirectoryActorKind::System, id: "system:artifact-authority".into() };
+        for (index, count) in object_counts.iter().enumerate() {
+            let count = usize::try_from(count.as_u64().expect("plan object count")).expect("bounded plan object count");
+            service.reserve_artifact_cas(system.clone(), sweep_convergence_plan(index, count), 200, 100).await.expect("reserve convergence plan");
+        }
+        assert_eq!(dir.artifact_cas_ledger_generation().await.expect("sweep generation"), law["ledgerGeneration"].as_u64().expect("fixture generation"));
+        let storage = MemoryArtifactChunkCasStorage::default();
+        let probe = ArtifactCasProbe::new(201, None);
+        let context = OperationContext::new(10_000, AuthorityLimits::maximum(), &probe);
+        assert!(matches!(
+            service.sweep_artifact_cas(&storage, ArtifactCasSweepRequest { execute: true, max_objects: maximum + 1, continuation: None }, &context).await,
+            Err(crate::artifact_authority::AuthorityError::ResourceLimit("artifact CAS sweep object"))
+        ));
+        let first = service.sweep_artifact_cas(&storage, ArtifactCasSweepRequest { execute: true, max_objects: maximum, continuation: None }, &context).await.expect("first bounded sweep");
+        let continuation = first.continuation.expect("first sweep continuation");
+        assert_eq!(first.examined_objects, law["expectedExaminedPerRequest"][0].as_u64().expect("first examined"));
+        assert_eq!(format!("{continuation:?}"), "ArtifactCasSweepContinuation(<opaque>)");
+        let first_position = service.artifact_cas_sweep_position(continuation, true).expect("decode owned continuation");
+        assert_eq!(first_position.observed_generation, law["expectedFirstCursor"]["observedGeneration"].as_u64().expect("cursor generation"));
+        assert_eq!(first_position.after_generation, law["expectedFirstCursor"]["afterGeneration"].as_u64().expect("cursor page"));
+        assert_eq!(first_position.object_offset as u64, law["expectedFirstCursor"]["objectOffset"].as_u64().expect("cursor offset"));
+        assert!(matches!(service.sweep_artifact_cas(&storage, ArtifactCasSweepRequest { execute: false, max_objects: maximum, continuation: Some(continuation) }, &context).await, Err(crate::artifact_authority::AuthorityError::Store(_))));
+
+        let restarted = DirectoryService::new(dir.clone(), 64);
+        assert!(matches!(restarted.sweep_artifact_cas(&storage, ArtifactCasSweepRequest { execute: true, max_objects: maximum, continuation: Some(continuation) }, &context).await, Err(crate::artifact_authority::AuthorityError::Store(_))));
+        let cancel_probe = ArtifactCasProbe::new(201, Some(1));
+        let cancel_context = OperationContext::new(10_000, AuthorityLimits::maximum(), &cancel_probe);
+        assert!(matches!(service.sweep_artifact_cas(&storage, ArtifactCasSweepRequest { execute: true, max_objects: maximum, continuation: Some(continuation) }, &cancel_context).await, Err(crate::artifact_authority::AuthorityError::Cancelled)));
+        assert_eq!(cancel_probe.progress.lock().expect("cancel progress").iter().filter(|progress| progress.stage == AuthorityProgressStage::CasSweep).count(), 1);
+        let second = service.sweep_artifact_cas(&storage, ArtifactCasSweepRequest { execute: true, max_objects: maximum, continuation: Some(continuation) }, &context).await.expect("resume bounded sweep");
+        assert_eq!(second.examined_objects, law["expectedExaminedPerRequest"][1].as_u64().expect("second examined"));
+        assert!(second.continuation.is_none());
+        assert_eq!(first.examined_objects + second.examined_objects, total_objects);
+
+        let changed = service.sweep_artifact_cas(&storage, ArtifactCasSweepRequest { execute: true, max_objects: 1, continuation: None }, &context).await.expect("generation-bound continuation").continuation.expect("generation-bound token");
+        service.reserve_artifact_cas(system, sweep_convergence_plan(object_counts.len(), 2), 500, 300).await.expect("advance sweep generation");
+        assert!(matches!(service.sweep_artifact_cas(&storage, ArtifactCasSweepRequest { execute: true, max_objects: maximum, continuation: Some(changed) }, &context).await, Err(crate::artifact_authority::AuthorityError::Store(_))));
+    }
 }

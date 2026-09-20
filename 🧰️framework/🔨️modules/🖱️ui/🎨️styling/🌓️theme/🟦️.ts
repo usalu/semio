@@ -857,14 +857,14 @@ export function semioTheme(): UiTheme {
 
 const _builtinThemesCache = ephemeralBox<UiTheme[] | undefined>("framework.modules.ui.styling.packages.typescript.index.ts._builtinThemesCache", undefined);
 
-/** @emoji 🎨️ Premade themes bundled with the app: semio plus any `framework/ui/styling/theme/*.theme.json` presets. `import.meta.glob` is a Vite build-time macro — it only exists once actually *called* in the bundled output, so this must call it directly inside a try/catch rather than probe for it first (`import.meta.glob` as a bare property is always `undefined` at runtime, in Vite and everywhere else; a `typeof` guard would never be true). Outside Vite (bun scripts, tests) the call throws and this falls back to semio only. */
+/** 🎨️ Bundles the same JSON presets that the styling projection validates; standalone scripts use semio. */
 export function builtinUiThemes(): readonly UiTheme[] {
   if (_builtinThemesCache.current) {
     return _builtinThemesCache.current;
   }
   const themes: UiTheme[] = [semioTheme()];
   try {
-    const modules = import.meta.glob("../theme/*.theme.json", { eager: true, import: "default" }) as Record<string, unknown>;
+    const modules = import.meta.glob("./*.json", { eager: true, import: "default" }) as Record<string, unknown>;
     for (const raw of Object.values(modules)) {
       themes.push(parseUiTheme(raw));
     }

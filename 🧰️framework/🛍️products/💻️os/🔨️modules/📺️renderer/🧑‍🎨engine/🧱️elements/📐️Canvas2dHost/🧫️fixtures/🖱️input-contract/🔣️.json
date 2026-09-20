@@ -1,0 +1,42 @@
+{
+  "surface": {
+    "id": "canvas-input-surface",
+    "controllerId": "canvas-input-controller",
+    "width": 100,
+    "height": 100
+  },
+  "pointer": {
+    "down": {
+      "x": 20,
+      "y": 20,
+      "button": 0,
+      "modifiers": {
+        "shift": true,
+        "ctrl": true,
+        "meta": true,
+        "alt": true
+      }
+    },
+    "cancel": {
+      "x": 20,
+      "y": 20
+    }
+  },
+  "catalogue": {
+    "mime": "application/x-semio-catalogue-item",
+    "rawPayload": "{\"pluginId\":\"s.system\",\"appId\":\"draw\",\"kindId\":\"rectangle\"}",
+    "types": [
+      "application/x-semio-catalogue-item",
+      "text/plain"
+    ],
+    "point": {
+      "x": 24,
+      "y": 36
+    }
+  },
+  "doubleClick": {
+    "x": 24,
+    "y": 36,
+    "intervalMs": 100
+  }
+}

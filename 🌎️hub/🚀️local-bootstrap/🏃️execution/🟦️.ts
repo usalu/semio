@@ -223,18 +223,21 @@ export function localHubReadinessAdmitted(body: Record<string, any>, status: num
 /** ⏱️ Polls the bounded readiness endpoint until the exact local run is admitted. */
 export async function waitForReadiness(run: LocalHubRun, bootstrapSecuritySmoke = false): Promise<Record<string, any>> {
   const deadline = Date.now() + LOCAL_READINESS_DEADLINE_MS;
+  let closedGates = "no /readyz answer was ever received";
   while (Date.now() < deadline) {
     if (run.child.exitCode !== null) throw new Error("hub exited before readiness");
     try {
       const response = await fetch(`http://127.0.0.1:${run.port}/readyz`, { signal: AbortSignal.timeout(1000) });
       const body = (await response.json()) as Record<string, any>;
       if (localHubReadinessAdmitted(body, response.status, run.runId, bootstrapSecuritySmoke, run.publicSessionIssuance)) return body;
+      const blocked = Array.isArray(body.blockedBy) ? (body.blockedBy as { gate: string; reason: string }[]) : [];
+      closedGates = blocked.length ? blocked.map((closed) => `${closed.gate}=${closed.reason}`).join(" ") : `status=${body.status} with no closed gate declared`;
     } catch (error) {
       if (error instanceof Error && error.message === "hub readiness binding mismatch") throw error;
     }
     await new Promise<void>((resolveDelay) => setTimeout(resolveDelay, 50));
   }
-  throw new Error("hub readiness deadline exceeded");
+  throw new Error(`hub readiness deadline exceeded — closed gates: ${closedGates}`);
 }
 
 /** ⏳ Waits for one already-owned child without taking over its termination policy. */

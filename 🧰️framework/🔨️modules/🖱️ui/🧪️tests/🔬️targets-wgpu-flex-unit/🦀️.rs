@@ -1,5 +1,5 @@
 use super::*;
-use ui_contract::{AbsoluteLayout, Align, Axis, EdgeSpace, GridLayout, GridTrack, Justify, LayoutSpec, LeafLayout, OverlayLayout, ScrollAxes, ScrollLayout, Sizing, SpaceToken, StackLayout};
+use ui_contract::{AbsoluteLayout, Align, Axis, EdgeSpace, GridLayout, GridTrack, Justify, LayoutSpec, LeafLayout, ScrollAxes, ScrollLayout, Sizing, SpaceToken, StackLayout};
 
 //#region 🧪️Fixtures
 
@@ -79,6 +79,24 @@ fn fixed_children(root: LayoutSpec, count: usize, width: f32, height: f32) -> Fi
 
 fn close(left: f32, right: f32) -> bool {
     (left - right).abs() < 0.01
+}
+
+fn overlay_flow_fixture() -> serde_json::Value {
+    serde_json::from_str(include_str!("../../🧫️fixtures/📐️overlay-flow/🔣️.json")).expect("overlay flow fixture")
+}
+
+fn fixture_layout(fixture: &serde_json::Value, node: &str) -> LayoutSpec {
+    serde_json::from_value(fixture[node]["layout"].clone()).unwrap_or_else(|error| panic!("{node} layout: {error}"))
+}
+
+fn fixture_rect(fixture: &serde_json::Value, node: &str) -> FlexRect {
+    let rect = &fixture[node]["expectedRect"];
+    let number = |field: &str| rect[field].as_f64().unwrap_or_else(|| panic!("{node}.{field}")) as f32;
+    FlexRect { x: number("x"), y: number("y"), width: number("width"), height: number("height") }
+}
+
+fn assert_rect(actual: FlexRect, expected: FlexRect) {
+    assert!(close(actual.x, expected.x) && close(actual.y, expected.y) && close(actual.width, expected.width) && close(actual.height, expected.height), "expected {expected:?}, got {actual:?}");
 }
 
 //#endregion 🧪️Fixtures
@@ -213,19 +231,97 @@ fn a_two_column_grid_renders_two_columns_not_two_rows() {
 }
 
 #[test]
-fn an_overlay_child_is_out_of_flow_and_never_offsets_its_siblings() {
-    let root = stack(Axis::Vertical, Align::Stretch, Justify::Start, false);
-    let overlay = LayoutSpec::Overlay(OverlayLayout { anchor: ui_contract::Anchor::Center, inset: EdgeSpace::All(SpaceToken::Md), dismissible: true });
-    let leaf = fixed_leaf();
+fn an_overlay_is_an_in_flow_positioning_context_and_absolute_stays_out_of_flow() {
+    let source = overlay_flow_fixture();
     let mut fixture = Fixture::new();
-    let parent = fixture.push(LayoutNodeKind::Stack { horizontal: false, gap: 0.0, padding: 0.0 }, None, Some(&root));
-    let popup = fixture.push(LayoutNodeKind::Leaf, Some(parent), Some(&overlay));
-    let sibling = fixture.push(LayoutNodeKind::Leaf, Some(parent), Some(&leaf));
-    fixture.solve(200.0, 100.0);
-    assert!(close(fixture.rect(sibling).y, 0.0), "an overlay must not push the sibling that follows it down the stack");
-    let rect = fixture.rect(popup);
-    assert!(close(rect.x, 12.8) && close(rect.y, 12.8), "the overlay floats at its own inset, got {rect:?}");
-    assert!(close(rect.width, 174.4) && close(rect.height, 74.4), "inset on all four sides stretches it inside the box, got {rect:?}");
+    let root_layout = fixture_layout(&source, "root");
+    let overlay_layout = fixture_layout(&source, "overlay");
+    let content_layout = fixture_layout(&source, "content");
+    let absolute_layout = fixture_layout(&source, "absolute");
+    let following_layout = fixture_layout(&source, "following");
+    let parent = fixture.push(LayoutNodeKind::Stack { horizontal: false, gap: 0.0, padding: 0.0 }, None, Some(&root_layout));
+    let overlay = fixture.push(LayoutNodeKind::Stack { horizontal: false, gap: 0.0, padding: 0.0 }, Some(parent), Some(&overlay_layout));
+    let content = fixture.push(LayoutNodeKind::Leaf, Some(overlay), Some(&content_layout));
+    let absolute = fixture.push(LayoutNodeKind::Leaf, Some(parent), Some(&absolute_layout));
+    let following = fixture.push(LayoutNodeKind::Leaf, Some(parent), Some(&following_layout));
+    fixture.solve(source["viewport"]["width"].as_f64().expect("viewport width") as f32, source["viewport"]["height"].as_f64().expect("viewport height") as f32);
+    assert_rect(fixture.rect(parent), fixture_rect(&source, "root"));
+    assert_rect(fixture.rect(overlay), fixture_rect(&source, "overlay"));
+    assert_rect(fixture.rect(content), fixture_rect(&source, "content"));
+    assert_rect(fixture.rect(absolute), fixture_rect(&source, "absolute"));
+    assert_rect(fixture.rect(following), fixture_rect(&source, "following"));
+}
+
+#[test]
+fn taffy_confirms_the_shared_overlay_flow_geometry() {
+    let source = overlay_flow_fixture();
+    let LayoutSpec::Stack(root) = fixture_layout(&source, "root") else { panic!("root stack") };
+    let LayoutSpec::Overlay(overlay) = fixture_layout(&source, "overlay") else { panic!("overlay") };
+    let LayoutSpec::Leaf(content) = fixture_layout(&source, "content") else { panic!("content leaf") };
+    let LayoutSpec::Absolute(absolute) = fixture_layout(&source, "absolute") else { panic!("absolute") };
+    let LayoutSpec::Leaf(following) = fixture_layout(&source, "following") else { panic!("following leaf") };
+    let dimension = |sizing: Sizing| match sizing {
+        Sizing::Hug => taffy::style::Dimension::auto(),
+        Sizing::Fill => taffy::style::Dimension::percent(1.0),
+        Sizing::Fixed(token) => taffy::style::Dimension::length(token.px()),
+    };
+    let edge = overlay.inset.px();
+    let mut oracle: taffy::TaffyTree<()> = taffy::TaffyTree::new();
+    oracle.disable_rounding();
+    let content_node = oracle.new_leaf_with_context(taffy::Style { size: taffy::geometry::Size { width: dimension(content.width), height: dimension(content.height) }, ..Default::default() }, ()).expect("taffy content");
+    let overlay_node = oracle
+        .new_with_children(
+            taffy::Style {
+                display: taffy::style::Display::Flex,
+                position: taffy::style::Position::Relative,
+                flex_direction: taffy::style::FlexDirection::Column,
+                padding: taffy::geometry::Rect {
+                    top: taffy::style::LengthPercentage::length(edge.top),
+                    right: taffy::style::LengthPercentage::length(edge.right),
+                    bottom: taffy::style::LengthPercentage::length(edge.bottom),
+                    left: taffy::style::LengthPercentage::length(edge.left),
+                },
+                ..Default::default()
+            },
+            &[content_node],
+        )
+        .expect("taffy overlay");
+    let absolute_node = oracle
+        .new_leaf_with_context(taffy::Style { position: taffy::style::Position::Absolute, size: taffy::geometry::Size { width: dimension(absolute.sizing_width), height: dimension(absolute.sizing_height) }, ..Default::default() }, ())
+        .expect("taffy absolute");
+    let following_node = oracle.new_leaf_with_context(taffy::Style { size: taffy::geometry::Size { width: dimension(following.width), height: dimension(following.height) }, ..Default::default() }, ()).expect("taffy following");
+    let width = source["viewport"]["width"].as_f64().expect("viewport width") as f32;
+    let height = source["viewport"]["height"].as_f64().expect("viewport height") as f32;
+    let root_node = oracle
+        .new_with_children(
+            taffy::Style {
+                display: taffy::style::Display::Flex,
+                flex_direction: match root.axis {
+                    Axis::Horizontal => taffy::style::FlexDirection::Row,
+                    Axis::Vertical => taffy::style::FlexDirection::Column,
+                },
+                align_items: Some(taffy::style::AlignItems::Stretch),
+                size: taffy::geometry::Size { width: taffy::style::Dimension::length(width), height: taffy::style::Dimension::length(height) },
+                ..Default::default()
+            },
+            &[overlay_node, absolute_node, following_node],
+        )
+        .expect("taffy root");
+    oracle
+        .compute_layout_with_measure(root_node, taffy::geometry::Size { width: taffy::AvailableSpace::Definite(width), height: taffy::AvailableSpace::Definite(height) }, |known, _, _, _, _| taffy::geometry::Size {
+            width: known.width.unwrap_or(0.0),
+            height: known.height.unwrap_or(0.0),
+        })
+        .expect("taffy solve");
+    let solved = |node| {
+        let layout = oracle.layout(node).expect("taffy layout");
+        FlexRect { x: layout.location.x, y: layout.location.y, width: layout.size.width, height: layout.size.height }
+    };
+    assert_rect(solved(root_node), fixture_rect(&source, "root"));
+    assert_rect(solved(overlay_node), fixture_rect(&source, "overlay"));
+    assert_rect(solved(content_node), fixture_rect(&source, "content"));
+    assert_rect(solved(absolute_node), fixture_rect(&source, "absolute"));
+    assert_rect(solved(following_node), fixture_rect(&source, "following"));
 }
 
 #[test]
@@ -295,6 +391,30 @@ fn a_section_stacks_children_below_its_header_at_their_own_height() {
     assert!(close(first_rect.y, SECTION_HEADER_HEIGHT), "got {}", first_rect.y);
     assert!(close(first_rect.height, 12.0), "a section's children keep their intrinsic height, never grow");
     assert!(close(second_rect.y, first_rect.y + first_rect.height + theme.gap_standard), "second sits one gap below, got {}", second_rect.y);
+}
+
+#[test]
+fn fixed_tree_bands_keep_their_intrinsic_pitch_inside_a_short_scroll_viewport() {
+    let metrics = TreeRowMetrics::from_theme(&crate::wgpu::theme::Theme::default());
+    let row = metrics.row_height;
+    let action_count = 55;
+    let intrinsic = row * (action_count + 1) as f32;
+    let scroll = LayoutSpec::Scroll(ScrollLayout { axes: ScrollAxes::Vertical, padding: EdgeSpace::default(), sizing: Sizing::Fill });
+    let mut fixture = Fixture::new();
+    let viewport = fixture.push(LayoutNodeKind::Stack { horizontal: false, gap: 0.0, padding: 0.0 }, None, Some(&scroll));
+    let tree = fixture.push(LayoutNodeKind::Tree { height: intrinsic, reversed: false }, Some(viewport), None);
+    let section = fixture.push(LayoutNodeKind::TreeSection { header: row, height: intrinsic, expanded: true, reversed: false }, Some(tree), None);
+    let mut rows = Vec::new();
+    for _ in 0..action_count {
+        rows.push(fixture.push(LayoutNodeKind::TreeRow { row, height: row, expanded: false, reversed: false }, Some(section), None));
+    }
+    fixture.solve(300.0, 480.0);
+
+    assert!(close(fixture.rect(viewport).height, 480.0));
+    assert!(close(fixture.rect(tree).height, intrinsic), "the intrinsic Tree band was squeezed to {:?}", fixture.rect(tree));
+    assert!(close(fixture.rect(section).height, intrinsic), "the intrinsic section band was squeezed to {:?}", fixture.rect(section));
+    assert!(close(fixture.rect(rows[0]).height, row) && close(fixture.rect(rows[1]).height, row));
+    assert!(close(fixture.rect(rows[1]).y - fixture.rect(rows[0]).y, row), "successive Actions rows keep React's 24px pitch");
 }
 
 //#endregion 🧱️LegacyDialect

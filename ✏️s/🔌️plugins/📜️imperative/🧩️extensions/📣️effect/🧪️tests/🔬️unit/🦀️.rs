@@ -14,7 +14,7 @@ async fn bundle_contributes_core_module_for_imperative_play() {
 
 #[semio_framework_async_macros::async_test]
 async fn catalogue_json_includes_input_channels() {
-    let registry = module_registry();
+    let registry = neural_engine::ColdOwner::new(module_registry());
     let raw = catalogue_json(&registry);
     let parsed = pack::json::parse(&raw).expect("catalogue json");
     let items = parsed.get("sections").and_then(JsonValue::as_array).and_then(|sections| sections.first()).and_then(|section| section.get("items")).and_then(JsonValue::as_array).expect("catalogue items");
@@ -25,9 +25,9 @@ async fn catalogue_json_includes_input_channels() {
 
 #[semio_framework_async_macros::async_test]
 async fn state_increment_updates_counter() {
-    let registry = module_registry();
+    let registry = neural_engine::ColdOwner::new(module_registry());
     let input = Dictionary::new().insert("key", Value::Atom(Atom::String("counter".into()))).insert("by", Value::Atom(Atom::Decimal(2.0))).insert("counter", Value::Atom(Atom::Decimal(5.0)));
-    let output = registry.dispatch("state.increment", &input).expect("dispatch");
+    let output = registry.dispatch_cold("state.increment", input).expect("dispatch");
     let value = output.get("counter").and_then(|v| v.as_atom()).and_then(|a| a.as_f64());
     assert_eq!(value, Some(7.0));
 }

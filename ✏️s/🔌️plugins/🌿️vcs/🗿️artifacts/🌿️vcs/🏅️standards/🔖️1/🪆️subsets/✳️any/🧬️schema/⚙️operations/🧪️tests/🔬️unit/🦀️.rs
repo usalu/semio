@@ -6,7 +6,7 @@ use semio_framework_os_kernel::os_spr::protocol_laws::{assert_mutation_diff_abso
 
 #[semio_framework_async_macros::async_test]
 async fn vcs_demo_mutation_round_trips_store() {
-    let mut store = store::ArtifactStore::<VcsSnapshot, VcsDemoMutation>::new(store::create_document_envelope("vcs.vcs", "vcs", empty_vcs_snapshot(), None)).await.expect("valid artifact store fixture");
+    let mut store = new_vcs_store(store::create_document_envelope("vcs.vcs", "vcs", empty_vcs_snapshot(), None)).await.expect("valid artifact store fixture");
     store.dispatch(store::ArtifactCommand::Apply { mutations: vec![change_counter(3)], description: None }).await.expect("apply");
     assert_eq!(store.snapshot().expect("snapshot").counter, 3);
 }

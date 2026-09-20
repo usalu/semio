@@ -71,7 +71,10 @@ fn control_node(case: &Value) -> UiNode {
             step: None,
             accept: None,
             on_change,
-            on_submit: None, on_abort: None, on_repeat_last: None, presence,
+            on_submit: None,
+            on_abort: None,
+            on_repeat_last: None,
+            presence,
             menu: None,
         }),
         "toggle" => {
@@ -280,7 +283,10 @@ fn number_input(id: &str, value: &str, min: Option<f64>, max: Option<f64>, step:
         step,
         accept: None,
         on_change: ActionDescriptor { controller_id: "ctrl".into(), action: "setValue".into(), args: None },
-        on_submit: None, on_abort: None, on_repeat_last: None, presence: UiPresence::default(),
+        on_submit: None,
+        on_abort: None,
+        on_repeat_last: None,
+        presence: UiPresence::default(),
         menu: None,
     })
 }
@@ -408,8 +414,9 @@ fn a_stepper_takes_the_relative_path_only_when_it_declares_a_delta_binding() {
         let control = place(&mut tree, Some(root), 1, node, (0.0, 0.0, 90.0, 24.0));
         stamp(&mut tree, control, 0, bindings);
         let mut router = EventRouter::new("main");
-        router.dispatch(&mut tree, root, &UiEvent::PointerDown { x: 80.0, y: 12.0, button: PointerButton::Primary, modifiers: Default::default() });
-        let commands = router.dispatch(&mut tree, root, &UiEvent::PointerUp { x: 80.0, y: 12.0, button: PointerButton::Primary, modifiers: Default::default() });
+        let commands = router.dispatch(&mut tree, root, &UiEvent::PointerDown { x: 80.0, y: 12.0, button: PointerButton::Primary, modifiers: Default::default() });
+        let released = router.dispatch(&mut tree, root, &UiEvent::PointerUp { x: 80.0, y: 12.0, button: PointerButton::Primary, modifiers: Default::default() });
+        assert!(!released.iter().any(|command| matches!(command, UiCommand::App { .. })));
         commands
             .iter()
             .find_map(|command| match command {

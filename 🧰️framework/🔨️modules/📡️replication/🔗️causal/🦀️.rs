@@ -334,7 +334,13 @@ impl<T: PartialEq> PartialEq for MutationDagFixedSlots<T> {
 
 impl<T> Drop for MutationDagFixedSlots<T> {
     fn drop(&mut self) {
-        assert!(self.is_empty(), "fixed causal slots reached Drop before every exact nested owner was detached");
+        // 🧯️ A thread that is ALREADY unwinding is not holding this contract wrong — it is being
+        // torn down. Panicking a second time here turns the first, diagnosable panic into
+        // `panic in a destructor during cleanup` + `SIGABRT`, which takes the whole test binary
+        // down and hides every other test's result. The occupied slots are `MaybeUninit`, so
+        // returning early leaks them rather than dropping them — safe, and the process is dying
+        // anyway. Same guard as `ValueRetirement`, `ordered::Retirement` and `Dictionary`.
+        assert!(self.is_empty() || std::thread::panicking(), "fixed causal slots reached Drop before every exact nested owner was detached");
     }
 }
 
@@ -360,7 +366,10 @@ impl Clone for MutationDag {
 
 impl Drop for MutationDag {
     fn drop(&mut self) {
-        assert!(self.terminal_is_empty(), "mutation dag reached Drop before every exact envelope and identity owner was cursor-retired");
+        // 🧯️ Panicking-aware for the same reason as `MutationDagFixedSlots::drop` above: a second
+        // panic while the thread already unwinds aborts the whole test binary and erases the first
+        // panic's diagnosis.
+        assert!(self.terminal_is_empty() || std::thread::panicking(), "mutation dag reached Drop before every exact envelope and identity owner was cursor-retired");
     }
 }
 

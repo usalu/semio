@@ -171,9 +171,13 @@ fn architect_window_ownership_report_handler_preserves_exact_invocation_identity
 fn architect_window_ownership_runtime_isolates_renders_reloads_and_closes() {
     std::thread::Builder::new()
         .name("architect-window-ownership-law".into())
-        .stack_size(2 * 1024 * 1024)
+        // 🧵️ 8 MiB, the repo-wide budget every other window-ownership law thread uses. The original
+        // 2 MiB was a diagnostic aid, not a contract (nothing here asserts a stack bound), and the
+        // mounted wrapper's dispatch/settle/close ladder has since outgrown it — the whole test
+        // binary aborted with `fatal runtime error: stack overflow`.
+        .stack_size(8 * 1024 * 1024)
         .spawn(|| {
-            eprintln!("[DEBUG] Architect window ownership runtime entered the 2 MiB thread");
+            eprintln!("[DEBUG] Architect window ownership runtime entered its 8 MiB thread");
             block_on_architect_windows(Box::pin(async {
                 use crate::editor::architect::commands::adjacency::set_adjacency_filter;
                 use crate::editor::architect::commands::graph::node_graph_viewport;

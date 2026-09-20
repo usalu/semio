@@ -123,8 +123,11 @@ impl SchemaCatalog {
 /// 🔗 Shared GraphQL `@state`/`@derived` SDL preamble — declared once, never repeated per artifact.
 /// `@state` names one of the four state lanes; `@derived` is the ORTHOGONAL derivation marker, never
 /// a fifth lane — a derived field is computed from a snapshot, so it is not state at all.
+/// `Long` is the 64-bit integer lane: GraphQL's built-in `Int` is 32-bit by specification, so a Rust
+/// `i64`/`u64` carrier has no built-in spelling and is declared here once, exactly as `@state` is.
 pub const GRAPHQL_STATE_PREAMBLE: &str = "\
 enum StateClass { ARTIFACT CONFIG PRESENCE TRANSIENT }\n\
+scalar Long\n\
 directive @state(class: StateClass!) on FIELD_DEFINITION\n\
 directive @derived on FIELD_DEFINITION\
 ";

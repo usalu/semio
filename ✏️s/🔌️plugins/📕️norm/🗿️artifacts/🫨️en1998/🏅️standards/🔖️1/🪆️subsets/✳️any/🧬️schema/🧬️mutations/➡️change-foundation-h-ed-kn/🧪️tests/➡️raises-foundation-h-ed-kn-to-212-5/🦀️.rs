@@ -67,7 +67,7 @@ async fn change_foundation_h_ed_kn_committed_json_is_canonical() {
     }
     let reencoded = serde_json::to_value(mutation()).expect("change-foundation-h-ed-kn mutation encodes");
     let original: serde_json::Value = serde_json::from_str(MUTATION).expect("change-foundation-h-ed-kn mutation reparses");
-    assert_eq!(reencoded, original, "change-foundation-h-ed-kn/raises-foundation-h-ed-kn-to-212-5: committed mutation JSON is not the canonical externally-tagged ChangeFoundationHEdKn form carrying newFoundationHEdKn");
+    assert_eq!(reencoded, original, "change-foundation-h-ed-kn/raises-foundation-h-ed-kn-to-212-5: committed mutation JSON is not the canonical internally-tagged ChangeFoundationHEdKn form carrying mutation and newFoundationHEdKn");
 }
 
 /// 🎯️ The declared outcome holds: `change-foundation-h-ed-kn` at 212.5 is applied, not rejected, and carries no

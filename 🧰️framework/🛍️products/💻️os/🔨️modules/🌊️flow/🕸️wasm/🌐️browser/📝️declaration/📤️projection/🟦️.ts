@@ -44,7 +44,7 @@ ${["document", "interaction", "editing", "surface", "drawing"].map((group, index
   return `  readonly ${group}: { ${groupNames.map((name) => { const fields = contract.arguments[name]; return `${name}(${fields.length ? `args${fields.every((field) => field.type === "optional-utf8") ? "?" : ""}: ${record(fields)}` : ""}): FlowTask<unknown>`; }).join("; ")} };`;
 }).join("\n")}
 }
-export interface FlowBrowserOptions { readonly source: unknown; readonly imports?: WebAssembly.Imports; readonly instantiate?: typeof WebAssembly.instantiate; readonly schedule?: (callback: () => void) => void; readonly now?: () => number; readonly maximumInFlight?: number; }
+export interface FlowBrowserOptions { readonly source: unknown; readonly bindings?: unknown; readonly imports?: WebAssembly.Imports; readonly instantiate?: typeof WebAssembly.instantiate; readonly schedule?: (callback: () => void) => void; readonly now?: () => number; readonly maximumInFlight?: number; }
 export interface FlowBrowserRuntime { openSession(): FlowSession; close(): Promise<void>; terminalIsEmpty(): boolean; }
 export declare function createFlowBrowserRuntime(options: FlowBrowserOptions): Promise<FlowBrowserRuntime>;
 export declare class FlowSession {

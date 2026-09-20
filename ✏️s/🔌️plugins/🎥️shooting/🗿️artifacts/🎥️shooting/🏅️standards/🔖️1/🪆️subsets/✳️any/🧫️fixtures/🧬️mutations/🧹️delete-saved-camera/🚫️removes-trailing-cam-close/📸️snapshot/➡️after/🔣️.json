@@ -80,7 +80,8 @@
       "metalness": 0.0,
       "roughness": 1.0,
       "emissive": "#000000",
-      "emissiveIntensity": 0.0
+      "emissiveIntensity": 0.0,
+      "stroke": ""
     }
   },
   "shots": [

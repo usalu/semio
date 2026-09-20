@@ -83,3 +83,8 @@ mod tests;
 /// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
 pub use super::bounds::PlyBounds;
 //#endregion 🔁️Re-exports
+
+//#region 🪢️TaxonomyMounts
+#[path = "💾️binary/🦀️.rs"]
+pub mod binary;
+//#endregion 🪢️TaxonomyMounts

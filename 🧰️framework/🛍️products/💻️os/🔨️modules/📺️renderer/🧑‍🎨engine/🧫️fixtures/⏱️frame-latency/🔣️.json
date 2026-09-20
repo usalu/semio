@@ -1,0 +1,33 @@
+{
+  "schemaVersion": 2,
+  "productionCapacity": 256,
+  "oracleCapacity": 4,
+  "requiredStages": [
+    "wireApply", "dispatchApply", "transactionDrainProjectionDeltas", "transactionRouteIntents", "transactionFlushEffects", "transactionPresentSurface", "shellRefresh", "retainedExchange", "transactionReconcileTree", "transactionBuildRenderPackets", "transactionPublishSnapshot", "presenterBeginGpu", "presenterOwnership", "presenterEngine", "presenterUploads", "presenterStage", "queueSubmit", "presenterCloseGpu", "presenterAcknowledge", "presenterProgressAcknowledge", "presenterFullscreen", "presenterDirectives", "presenterAborted", "presenterRetirement", "snapshotPublish", "workerTick", "workerReplyEncode"
+  ],
+  "observations": [
+    { "authority": { "domain": "rendererFrame", "generation": 41 }, "stage": "transactionRouteIntents", "startedUs": 100, "durationUs": 5, "workItems": 1, "repeat": 300, "spacingUs": 6 },
+    { "authority": { "domain": "browserInputBatch", "generation": 41 }, "stage": "wireApply", "startedUs": 2000, "durationUs": 15, "workItems": 3, "repeat": 1, "spacingUs": 0 },
+    { "authority": { "domain": "rendererFrame", "generation": 41 }, "stage": "queueSubmit", "startedUs": 2020, "durationUs": 40, "workItems": 1, "repeat": 1, "spacingUs": 0 },
+    { "authority": { "domain": "rendererFrame", "generation": 42 }, "stage": "presenterRetirement", "startedUs": 2070, "durationUs": 2, "workItems": 1, "repeat": 300, "spacingUs": 3 },
+    { "authority": { "domain": "browserInputBatch", "generation": 8 }, "stage": "workerTick", "startedUs": 3000, "durationUs": 20, "workItems": 1, "repeat": 1, "spacingUs": 0 },
+    { "authority": { "domain": "rendererFrame", "generation": 42 }, "stage": "presenterRetirement", "startedUs": 3100, "durationUs": 7, "workItems": 1, "repeat": 1, "spacingUs": 0 }
+  ],
+  "expected": {
+    "totalObservations": 604,
+    "summaryEvictions": 1,
+    "recentPhases": [
+      { "authority": { "domain": "browserInputBatch", "generation": 41 }, "stage": "wireApply", "firstSequence": 301, "lastSequence": 301, "observationCount": 1, "firstStartedUs": 2000, "lastFinishedUs": 2015, "totalDurationUs": 15, "maxDurationUs": 15, "totalWorkItems": 3 },
+      { "authority": { "domain": "rendererFrame", "generation": 41 }, "stage": "queueSubmit", "firstSequence": 302, "lastSequence": 302, "observationCount": 1, "firstStartedUs": 2020, "lastFinishedUs": 2060, "totalDurationUs": 40, "maxDurationUs": 40, "totalWorkItems": 1 },
+      { "authority": { "domain": "rendererFrame", "generation": 42 }, "stage": "presenterRetirement", "firstSequence": 303, "lastSequence": 604, "observationCount": 301, "firstStartedUs": 2070, "lastFinishedUs": 3107, "totalDurationUs": 607, "maxDurationUs": 7, "totalWorkItems": 301 },
+      { "authority": { "domain": "browserInputBatch", "generation": 8 }, "stage": "workerTick", "firstSequence": 603, "lastSequence": 603, "observationCount": 1, "firstStartedUs": 3000, "lastFinishedUs": 3020, "totalDurationUs": 20, "maxDurationUs": 20, "totalWorkItems": 1 }
+    ],
+    "stageTotals": [
+      { "authorityDomain": "rendererFrame", "stage": "transactionRouteIntents", "observationCount": 300, "totalDurationUs": 1500, "maxDurationUs": 5, "totalWorkItems": 300 },
+      { "authorityDomain": "rendererFrame", "stage": "queueSubmit", "observationCount": 1, "totalDurationUs": 40, "maxDurationUs": 40, "totalWorkItems": 1 },
+      { "authorityDomain": "rendererFrame", "stage": "presenterRetirement", "observationCount": 301, "totalDurationUs": 607, "maxDurationUs": 7, "totalWorkItems": 301 },
+      { "authorityDomain": "browserInputBatch", "stage": "wireApply", "observationCount": 1, "totalDurationUs": 15, "maxDurationUs": 15, "totalWorkItems": 3 },
+      { "authorityDomain": "browserInputBatch", "stage": "workerTick", "observationCount": 1, "totalDurationUs": 20, "maxDurationUs": 20, "totalWorkItems": 1 }
+    ]
+  }
+}

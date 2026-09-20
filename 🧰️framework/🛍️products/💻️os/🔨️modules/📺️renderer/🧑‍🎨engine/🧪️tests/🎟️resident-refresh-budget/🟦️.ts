@@ -43,6 +43,9 @@ type Fixture = {
   readonly documentNodes: number;
   readonly nodeRecordBytes: number;
   readonly openBytes: number;
+  readonly fullDocumentBytes: number;
+  readonly fullDocumentAdmittedRoots: number;
+  readonly fullDocumentRefusedRoot: number;
   readonly refreshes: number;
   readonly retirementGrantItems: number;
   readonly retirementGrantBytes: number;
@@ -176,7 +179,7 @@ describe("retained resident refresh budget", () => {
     assert.equal(doubledBytes, 2 * singleBytes);
   });
 
-  it("admits only three ceiling-sized surfaces", () => {
+  it("admits only six ceiling-sized surfaces", () => {
     const ledger = new ResidentLedger(fixture.measured.fixedBackingBytes);
     const ceiling: Limits = { items: fixture.surfaceItems, bytes: fixture.surfaceBytes };
     const admitted: number[] = [];
@@ -192,6 +195,30 @@ describe("retained resident refresh budget", () => {
     assert.equal(refusal, "capacity");
   });
 
+  it("admits sixty-two populated full documents and refuses the sixty-third on bytes", () => {
+    const ledger = new ResidentLedger(fixture.measured.fixedBackingBytes);
+    const full = surfaceLimits(fixture.documentNodes);
+    const admitted: number[] = [];
+    let refusalAt = 0;
+    for (let root = 1; root <= fixture.fullDocumentRefusedRoot; root += 1) {
+      const slot = ledger.reserve(full);
+      if (typeof slot === "number") admitted.push(slot);
+      else {
+        assert.equal(slot, "capacity");
+        refusalAt = root;
+        break;
+      }
+    }
+    assert.equal(full.bytes, fixture.fullDocumentBytes);
+    assert.equal(admitted.length, fixture.fullDocumentAdmittedRoots);
+    assert.equal(refusalAt, fixture.fullDocumentRefusedRoot);
+    assert.equal(ledger.roots, fixture.fullDocumentAdmittedRoots);
+    assert(ledger.roots < RESIDENT_SLOTS, "the byte ceiling refuses while two slot positions remain");
+    for (const slot of admitted) ledger.release(slot);
+    assert.equal(ledger.roots, 0);
+    assert.equal(ledger.committedBytes, fixture.measured.fixedBackingBytes);
+  });
+
   it("carries the measured six-surface census the wgpu shell reported", () => {
     const { measured } = fixture;
     console.log(`[DEBUG] ${JSON.stringify(measured)}`);
@@ -200,6 +227,6 @@ describe("retained resident refresh budget", () => {
     assert.equal(measured.surfaces, fixture.surfaces.length);
     assert(measured.residentBytes > measured.fixedBackingBytes, "the live census includes the fixed backing charge");
     assert(measured.residentBytes < fixture.aggregateBytes / 2, "a settled six-surface refresh sits nowhere near the aggregate ceiling");
-    assert.equal(fixture.laws.length, 4);
+    assert.equal(fixture.laws.length, 5);
   });
 });

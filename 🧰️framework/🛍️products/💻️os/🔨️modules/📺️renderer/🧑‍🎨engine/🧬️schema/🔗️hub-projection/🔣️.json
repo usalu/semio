@@ -1,0 +1,143 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "cases", "workspace", "operationOwnership", "transport"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "cases": {
+      "type": "array",
+      "minItems": 5,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "projection", "expected"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "projection": { "$ref": "#/definitions/projection" },
+          "expected": { "$ref": "#/definitions/summary" }
+        }
+      }
+    },
+    "workspace": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["openerId", "route", "controls", "sections"],
+      "properties": {
+        "openerId": { "const": "framework.hub.signIn" },
+        "route": { "const": "/hub" },
+        "controls": {
+          "type": "array",
+          "minItems": 9,
+          "items": { "type": "string", "minLength": 1 },
+          "uniqueItems": true
+        },
+        "sections": {
+          "type": "array",
+          "minItems": 3,
+          "items": { "enum": ["signIn", "spaces", "invitations"] },
+          "uniqueItems": true
+        }
+      }
+    },
+    "operationOwnership": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["selectedGeneration", "completions"],
+      "properties": {
+        "selectedGeneration": { "type": "integer", "minimum": 1 },
+        "completions": {
+          "type": "array",
+          "minItems": 5,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["operation", "ownerGeneration", "accepted"],
+            "properties": {
+              "operation": { "enum": ["signInFailure", "signOut", "command", "authority", "members", "redemption"] },
+              "ownerGeneration": { "type": "integer", "minimum": 1 },
+              "accepted": { "type": "boolean" }
+            }
+          }
+        }
+      }
+    },
+    "transport": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["capacity", "documentKey", "publications", "expected"],
+      "properties": {
+        "capacity": { "const": 64 },
+        "documentKey": { "type": "string", "minLength": 1, "maxLength": 512 },
+        "publications": {
+          "type": "array",
+          "minItems": 3,
+          "items": { "enum": ["connecting", "live", "close"] }
+        },
+        "expected": { "enum": ["connecting", "live", "close"] }
+      }
+    }
+  },
+  "definitions": {
+    "authority": {
+      "oneOf": [
+        { "type": "object", "additionalProperties": false, "required": ["kind"], "properties": { "kind": { "const": "noVerifiedSession" } } },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "authorizationGeneration"],
+          "properties": {
+            "kind": { "const": "verifiedSession" },
+            "authorizationGeneration": { "type": "integer", "minimum": 1, "maximum": 9007199254740991 }
+          }
+        }
+      ]
+    },
+    "remote": {
+      "oneOf": [
+        { "type": "object", "additionalProperties": false, "required": ["kind"], "properties": { "kind": { "const": "detached" } } },
+        { "type": "object", "additionalProperties": false, "required": ["kind"], "properties": { "kind": { "const": "connecting" } } },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "peerCount"],
+          "properties": { "kind": { "const": "live" }, "peerCount": { "type": "integer", "minimum": 0, "maximum": 65535 } }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "retryInMs"],
+          "properties": { "kind": { "const": "backoff" }, "retryInMs": { "type": "integer", "minimum": 0, "maximum": 9007199254740991 } }
+        }
+      ]
+    },
+    "document": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["documentKey", "remote"],
+      "properties": {
+        "documentKey": { "type": "string", "minLength": 1, "maxLength": 512 },
+        "remote": { "$ref": "#/definitions/remote" }
+      }
+    },
+    "projection": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["authority", "documents"],
+      "properties": {
+        "authority": { "$ref": "#/definitions/authority" },
+        "documents": { "type": "array", "maxItems": 64, "items": { "$ref": "#/definitions/document" } }
+      }
+    },
+    "summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["state", "peerCount", "documentCount"],
+      "properties": {
+        "state": { "enum": ["signedOut", "live", "connecting", "reconnecting", "offline"] },
+        "peerCount": { "type": "integer", "minimum": 0 },
+        "documentCount": { "type": "integer", "minimum": 0, "maximum": 64 }
+      }
+    }
+  }
+}

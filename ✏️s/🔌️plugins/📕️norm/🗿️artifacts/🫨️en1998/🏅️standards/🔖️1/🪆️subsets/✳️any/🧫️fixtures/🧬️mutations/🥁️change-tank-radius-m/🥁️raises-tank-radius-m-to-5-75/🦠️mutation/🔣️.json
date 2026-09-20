@@ -1,5 +1,4 @@
 {
-  "ChangeTankRadiusM": {
-    "newTankRadiusM": 5.75
-  }
+  "mutation": "changeTankRadiusM",
+  "newTankRadiusM": 5.75
 }

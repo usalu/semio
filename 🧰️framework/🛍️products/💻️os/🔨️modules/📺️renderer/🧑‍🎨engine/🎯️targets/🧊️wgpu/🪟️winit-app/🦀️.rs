@@ -23,7 +23,7 @@
 use crate::os_host::OsHost;
 use crate::AppInteractionState;
 use ui_host::{RedrawOutcome, WindowDelegate, WindowMetrics};
-use ui_render::{CursorRequest, DispatchEvent, EventModifiers, ImeEvent, InvalidationReason, PointerButton};
+use ui_render::{CursorRequest, DispatchEvent, EventModifiers, ImeEvent, InvalidationReason, PointerButton, PointerInfo, TextEditTarget};
 
 /// ⏱️ P1e: this process has exactly one renderer frame callback (`OsHost::redraw`, below) — one
 /// `OperationId` allocated once, lazily, on first frame, rather than a fresh one per call (an
@@ -68,22 +68,34 @@ enum FrameGenerationHold {
 /// be stress-tested without constructing a platform window or GPU surface.
 fn enqueue_host_event(events: &mut ui_host::EventQueue, scheduler: &mut ui_render::FrameScheduler, ui_token: ui_host::UiThreadToken, frame_generation: &mut u64, hold: FrameGenerationHold, event: DispatchEvent) -> ui_host::EnqueueOutcome {
     let _watchdog = semio_framework_trace::Watchdog::start("os_renderer_event", render_frame_operation_id(), semio_framework_trace::Generation(*frame_generation), semio_framework_trace::InteractiveStage::UiEvent);
-    if hold == FrameGenerationHold::Free && !advance_frame_generation(frame_generation) {
+    let mut next_generation = *frame_generation;
+    if hold == FrameGenerationHold::Free && !advance_frame_generation(&mut next_generation) {
         return ui_host::EnqueueOutcome::Overflow;
     }
+    let outcome = events.enqueue(ui_token, event);
+    if outcome != ui_host::EnqueueOutcome::Accepted {
+        return outcome;
+    }
+    *frame_generation = next_generation;
     scheduler.invalidate(InvalidationReason::INPUT_STATE);
-    events.enqueue(ui_token, event)
+    outcome
 }
 
 /// 📐️ The mounted resize-callback core, isolated for the same window-free latency proof as
 /// [`enqueue_host_event`]. GPU surface reconfiguration remains the immediate platform-only step.
-fn enqueue_host_metrics(events: &mut ui_host::EventQueue, scheduler: &mut ui_render::FrameScheduler, ui_token: ui_host::UiThreadToken, frame_generation: &mut u64, hold: FrameGenerationHold, physical_width: u32, physical_height: u32, scale_factor: f32) {
+fn enqueue_host_metrics(events: &mut ui_host::EventQueue, scheduler: &mut ui_render::FrameScheduler, ui_token: ui_host::UiThreadToken, frame_generation: &mut u64, hold: FrameGenerationHold, physical_width: u32, physical_height: u32, scale_factor: f32) -> ui_host::EnqueueOutcome {
     let _watchdog = semio_framework_trace::Watchdog::start("os_renderer_metrics", render_frame_operation_id(), semio_framework_trace::Generation(*frame_generation), semio_framework_trace::InteractiveStage::UiEvent);
-    if hold == FrameGenerationHold::Free && !advance_frame_generation(frame_generation) {
-        return;
+    let mut next_generation = *frame_generation;
+    if hold == FrameGenerationHold::Free && !advance_frame_generation(&mut next_generation) {
+        return ui_host::EnqueueOutcome::Overflow;
     }
+    let outcome = events.enqueue_metrics(ui_token, physical_width, physical_height, scale_factor);
+    if outcome != ui_host::EnqueueOutcome::Accepted {
+        return outcome;
+    }
+    *frame_generation = next_generation;
     scheduler.invalidate(InvalidationReason::VIEWPORT);
-    events.enqueue_metrics(ui_token, physical_width, physical_height, scale_factor);
+    outcome
 }
 
 //#region 🔖️WindowDelegate for OsHost
@@ -107,7 +119,6 @@ impl WindowDelegate for OsHost {
     // 🚫️async: U1 — the enqueue itself never awaits; the batched dispatch this feeds is the boundary-
     // async exception U1 itself carves out.
     fn handle_event(&mut self, event: DispatchEvent) {
-        crate::log_debug(&format!("[DEBUG] os_host handle_event {event:?} gen={}", self.frame_generation));
         let hold = self.frame_generation_hold();
         if enqueue_host_event(&mut self.events, &mut self.scheduler, self.ui_token, &mut self.frame_generation, hold, event) == ui_host::EnqueueOutcome::Overflow {
             crate::log_debug("os_host: discrete input queue overflow — a redraw has not drained in a while");
@@ -120,7 +131,9 @@ impl WindowDelegate for OsHost {
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn handle_metrics(&mut self, metrics: WindowMetrics) {
         let hold = self.frame_generation_hold();
-        enqueue_host_metrics(&mut self.events, &mut self.scheduler, self.ui_token, &mut self.frame_generation, hold, metrics.physical.width, metrics.physical.height, metrics.scale_factor);
+        if enqueue_host_metrics(&mut self.events, &mut self.scheduler, self.ui_token, &mut self.frame_generation, hold, metrics.physical.width, metrics.physical.height, metrics.scale_factor) != ui_host::EnqueueOutcome::Accepted {
+            return;
+        }
         let (width, height) = metrics.logical_size();
         let _ = self.surface_resize.enqueue(metrics.physical.width, metrics.physical.height, metrics.scale_factor);
         let dpr = metrics.scale_factor;
@@ -219,7 +232,7 @@ impl OsHost {
             let generation = self.events.current_generation();
             let drained = self.events.drain_page(ui_host::WorkerContext::new(generation));
             let drained_shape = format!("move={} scroll={} metrics={} discrete={}", drained.pointer_move.is_some(), drained.scroll.is_some(), drained.metrics.is_some(), drained.discrete.iter().filter(|slot| slot.is_some()).count());
-            let admitted = self.runtime.enqueue_apply(None, true, crate::RuntimeApply::DispatchEvents(Some(crate::RuntimeDispatchCursor::new(drained))));
+            let admitted = self.runtime.enqueue_apply(None, true, crate::RuntimeApply::DispatchEvents(Some(crate::RuntimeDispatchCursor::new_for_generation(drained, self.frame_generation))));
             crate::log_debug(&format!("[DEBUG] os_host drain events generation={generation:?} {drained_shape} enqueue-apply={admitted}"));
         }
         // 🧵️ `poll_runtime_and_resubmit` never waits: it accepts a fresh completed frame or leaves the
@@ -227,6 +240,7 @@ impl OsHost {
         let build_inputs = self.runtime.frame_inputs(crate::app_now_ms());
         let build_operation = render_frame_operation_id();
         let build_generation = semio_framework_trace::Generation(self.frame_generation);
+        crate::frame_latency::observe_frame_generation(build_generation.0);
         self.runtime.observe_presentation_input_generation(build_generation.0);
         // 📮️ One bounded mailbox share per host tick, taken BEFORE the presentation gate — a completion
         // that arrives while no frame build can run (the interaction state is checked out, or a
@@ -267,6 +281,11 @@ impl OsHost {
                     self.present_fault = Some("render snapshot revision exhausted".to_string());
                     return;
                 };
+                let _latency = crate::frame_latency::FrameLatencyTimer::start(
+                    crate::frame_latency::FrameLatencyAuthority::renderer_frame(generation.0),
+                    crate::frame_latency::FrameLatencyStage::SnapshotPublish,
+                    1,
+                );
                 self.snapshot_sink.publish(crate::render_snapshot::RenderSnapshot::new(revision, semio_cursor_to_request(cursor), None));
             }
             Ok(crate::AppPresentStep::Pending) => self.scheduler.invalidate(InvalidationReason::RESOURCE_READY),
@@ -337,34 +356,26 @@ fn semio_cursor_to_request(cursor: ui_wgpu::wgpu::SemioCursor) -> CursorRequest 
 pub(crate) async fn dispatch_normalized_event(app: &mut AppInteractionState, event: DispatchEvent) {
     crate::log_debug(&format!("[DEBUG] os_host dispatch_normalized_event {event:?}"));
     match event {
-        DispatchEvent::PointerMove { x, y, .. } => {
-            let (down, button, modifiers) = (app.pointer_down, app.pointer_button, app.modifiers.clone());
-            app.handle_pointer_move(x, y, down, button, modifiers).await;
+        DispatchEvent::PointerMove { pointer, x, y, modifiers } => {
+            let (down, button, modifiers) = (app.pointer_down, app.pointer_button, event_modifiers_to_pointer(modifiers));
+            app.handle_pointer_move(pointer.id, x, y, down, button, modifiers).await;
         }
-        DispatchEvent::PointerDown { x, y, button, .. } => {
-            let modifiers = app.modifiers.clone();
-            app.handle_pointer_button(x, y, true, pointer_button_to_i16(button), modifiers).await;
+        DispatchEvent::PointerDown { pointer, x, y, button, modifiers } => {
+            let modifiers = event_modifiers_to_pointer(modifiers);
+            app.handle_pointer_button(pointer.id, x, y, true, pointer_button_to_i16(button), modifiers).await;
         }
-        DispatchEvent::PointerUp { x, y, button, .. } => {
-            let modifiers = app.modifiers.clone();
-            app.handle_pointer_button(x, y, false, pointer_button_to_i16(button), modifiers).await;
+        DispatchEvent::PointerUp { pointer, x, y, button, modifiers } => {
+            let modifiers = event_modifiers_to_pointer(modifiers);
+            app.handle_pointer_button(pointer.id, x, y, false, pointer_button_to_i16(button), modifiers).await;
         }
+        DispatchEvent::PointerCancel { pointer } => app.handle_pointer_cancel(pointer.id),
         // 🖱️ The wheel's OWN point, not the pointer's last known one — see `AppWheel`.
-        DispatchEvent::Scroll { x, y, delta_y, .. } => {
+        DispatchEvent::Scroll { x, y, delta_y, modifiers, .. } => {
+            let modifiers = event_modifiers_to_pointer(modifiers);
+            app.modifiers = modifiers.clone();
+            app.input.modifiers = modifiers;
             app.wheel.accumulate(x, y, delta_y);
         }
-        // ⌨️ `DispatchEvent`'s POINTER variants carry no modifier state — only the key variants do
-        // (`PointerDown/Up/Move { pointer, x, y, button }`). This is therefore the one place the
-        // shell can learn that shift/ctrl/alt/meta are held, and `app.modifiers` is what the three
-        // pointer arms above read. Before this assignment `app.modifiers` was a closed loop —
-        // written only by `handle_pointer_*` from the value those same arms had just handed it — so
-        // it never left `PointerModifiers::default()`. Measured on 6118: every world3d intent carried
-        // `mods=----`, so shift-click published `merge:"replace"` instead of `additive`, and
-        // alt/shift + right-drag never reached `plan_world3d_drag`'s orbit/pan arms at all
-        // (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️wgpu-world3d-interaction-2026-09-13.md`).
-        // A modifier KeyDown/KeyUp reports the FULL post-event state (`Shift` down → `shift: true`,
-        // `Shift` up → `shift: false`), so mirroring both edges is exactly winit's
-        // `WindowEvent::ModifiersChanged` for the normalized dispatch path.
         DispatchEvent::KeyDown { key, modifiers } => {
             app.modifiers = event_modifiers_to_pointer(modifiers);
             if (modifiers.ctrl || modifiers.meta) && key.eq_ignore_ascii_case("z") && app.undo_text_operation() {
@@ -383,9 +394,28 @@ pub(crate) async fn dispatch_normalized_event(app: &mut AppInteractionState, eve
                 app.handle_key(action, event_modifiers_to_pointer(modifiers)).await;
             }
         }
-        DispatchEvent::TextInput { text } | DispatchEvent::Paste { text } => {
+        DispatchEvent::Paste { text } => {
+            if crate::interpreter::apply_focused_ink_paste(&text, false, &mut app.input) {
+                return;
+            }
             if let Err(error) = app.enqueue_text_operation(text) {
                 app.text_fault = Some(error);
+            }
+        }
+        DispatchEvent::TextInput { text } => {
+            if let Err(error) = app.enqueue_text_operation(text) {
+                app.text_fault = Some(error);
+            }
+        }
+        DispatchEvent::TextEditStart { stream, target, declared_bytes } if matches!(target, TextEditTarget::Paste | TextEditTarget::PasteImageDataUrl) => {
+            match crate::interpreter::start_focused_ink_clipboard_stream(stream, target == TextEditTarget::PasteImageDataUrl, declared_bytes) {
+                Ok(true) => {}
+                Ok(false) => {
+                    if let Err(error) = app.start_text_operation(stream, declared_bytes) {
+                        app.text_fault = Some(error);
+                    }
+                }
+                Err(error) => app.text_fault = Some(error.to_string()),
             }
         }
         DispatchEvent::TextEditStart { stream, declared_bytes, .. } => {
@@ -394,16 +424,24 @@ pub(crate) async fn dispatch_normalized_event(app: &mut AppInteractionState, eve
             }
         }
         DispatchEvent::TextEditChunk { stream, text } => {
-            if let Err(error) = app.push_text_operation(stream, text) {
-                app.text_fault = Some(error);
+            match crate::interpreter::push_focused_ink_clipboard_stream(stream, &text) {
+                Ok(true) => {}
+                Ok(false) => if let Err(error) = app.push_text_operation(stream, text) { app.text_fault = Some(error) },
+                Err(error) => app.text_fault = Some(error.to_string()),
             }
         }
         DispatchEvent::TextEditCommit { stream } => {
+            if crate::interpreter::commit_focused_ink_clipboard_stream(stream, &mut app.input) {
+                return;
+            }
             if let Err(error) = app.commit_text_operation(stream) {
                 app.text_fault = Some(error);
             }
         }
         DispatchEvent::TextEditAbort { stream } => {
+            if crate::interpreter::abort_focused_ink_clipboard_stream(stream) {
+                return;
+            }
             if let Err(error) = app.abort_text_operation(stream) {
                 app.text_fault = Some(error);
             }
@@ -414,6 +452,11 @@ pub(crate) async fn dispatch_normalized_event(app: &mut AppInteractionState, eve
             }
         }
         DispatchEvent::Ime(_) => {}
+        DispatchEvent::Accessibility { target, event } => {
+            if let Err(error) = app.shell.handle_accessibility_event(&target, &event, &mut app.input).await {
+                app.frame_fault = Some(error);
+            }
+        }
     }
 }
 
@@ -712,30 +755,31 @@ mod native {
             WindowEvent::CursorMoved { device_id, position } => {
                 app.last_pointer_pos = (position.x as f32 / scale, position.y as f32 / scale);
                 let pointer = pointer_info_for_mouse(app, *device_id);
-                Some(DispatchEvent::PointerMove { pointer, x: app.last_pointer_pos.0, y: app.last_pointer_pos.1 })
+                Some(DispatchEvent::PointerMove { pointer, x: app.last_pointer_pos.0, y: app.last_pointer_pos.1, modifiers: app.modifiers })
             }
             WindowEvent::MouseInput { device_id, state, button } => {
                 let pointer = pointer_info_for_mouse(app, *device_id);
                 let button = pointer_button_from_winit(*button)?;
                 let (x, y) = app.last_pointer_pos;
                 Some(match state {
-                    ElementState::Pressed => DispatchEvent::PointerDown { pointer, x, y, button },
-                    ElementState::Released => DispatchEvent::PointerUp { pointer, x, y, button },
+                    ElementState::Pressed => DispatchEvent::PointerDown { pointer, x, y, button, modifiers: app.modifiers },
+                    ElementState::Released => DispatchEvent::PointerUp { pointer, x, y, button, modifiers: app.modifiers },
                 })
             }
             WindowEvent::MouseWheel { delta, .. } => {
                 let (delta_x, delta_y) = normalize_wheel_delta(*delta);
                 let (x, y) = app.last_pointer_pos;
-                Some(DispatchEvent::Scroll { x, y, delta_x, delta_y })
+                Some(DispatchEvent::Scroll { x, y, delta_x, delta_y, modifiers: app.modifiers })
             }
             WindowEvent::Touch(touch) => {
                 let pointer = pointer_info_for_touch(app, touch);
                 let x = touch.location.x as f32 / scale;
                 let y = touch.location.y as f32 / scale;
                 Some(match touch.phase {
-                    TouchPhase::Started => DispatchEvent::PointerDown { pointer, x, y, button: PointerButton::Primary },
-                    TouchPhase::Moved => DispatchEvent::PointerMove { pointer, x, y },
-                    TouchPhase::Ended | TouchPhase::Cancelled => DispatchEvent::PointerUp { pointer, x, y, button: PointerButton::Primary },
+                    TouchPhase::Started => DispatchEvent::PointerDown { pointer, x, y, button: PointerButton::Primary, modifiers: app.modifiers },
+                    TouchPhase::Moved => DispatchEvent::PointerMove { pointer, x, y, modifiers: app.modifiers },
+                    TouchPhase::Ended => DispatchEvent::PointerUp { pointer, x, y, button: PointerButton::Primary, modifiers: app.modifiers },
+                    TouchPhase::Cancelled => DispatchEvent::PointerCancel { pointer },
                 })
             }
             WindowEvent::KeyboardInput { event, .. } => {

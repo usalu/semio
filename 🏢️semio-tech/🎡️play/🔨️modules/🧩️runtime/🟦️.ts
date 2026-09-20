@@ -9,11 +9,23 @@ export const PLAY_HOST = catalog.host;
 export const PLAY_HOST_VARIANT = catalog.hostVariant;
 export const PLAY_GROUPS = catalog.groups;
 
-/** @emoji 🎡️ One authored pane of the play grid, tagged with the group it is listed under. */
-export type PlayRuntimePane = (typeof catalog.groups)[number]["panes"][number] & { readonly group: string };
+/** @emoji 🎡️ One authored pane of the play grid, tagged with the group it is listed under. Mirrors
+ * `🧬️schema/🔣️.json`'s `PlayPane` — `example` is the curated `PlayExampleId` the pane boots on and is
+ * absent exactly for the panes whose app publishes no example for its dialect. Stated rather than
+ * inferred from the JSON module, because a catalog of heterogeneous rows infers as a union that hides
+ * the optional key. */
+export type PlayRuntimePane = {
+  readonly variant: string;
+  readonly label: string;
+  readonly tagline: string;
+  readonly description: string;
+  readonly icon: string;
+  readonly example?: string;
+  readonly group: string;
+};
 
 /** @emoji 📋️ Every authored pane in grid order (row-major, groups in authored order). */
-export const PLAY_RUNTIME_PANES: readonly PlayRuntimePane[] = catalog.groups.flatMap(group => group.panes.map(pane => ({ ...pane, group: group.id })));
+export const PLAY_RUNTIME_PANES: readonly PlayRuntimePane[] = catalog.groups.flatMap(group => group.panes.map(pane => ({ ...(pane as Omit<PlayRuntimePane, "group">), group: group.id })));
 
 /** @emoji 🧭️ The playground variants play must show: every registry row except the host shell and the rows
  * that only re-skin another row under a partner brand. */
@@ -28,10 +40,16 @@ export const PLAY_RUNTIME_TARGETS: readonly PlaygroundBuildTarget[] = PLAY_RUNTI
   return target;
 });
 
+/** @emoji 🧩️ One pane's closure ROOT. A pane boots exactly ONE app, so a registry row naming an `app`
+ * never pulls the whole catalog in even when its crate is the OS host (`🪐️space`'s Home and Space). */
+export function playPaneClosureRoot(row: PlaygroundBuildTarget): { readonly id: string; readonly appScoped: boolean } {
+  return { id: row.pluginId, appScoped: row.app !== undefined };
+}
+
 /** @emoji 🧩️ The union of the component closures the panes load — each pane boots its own plugin's closure. */
 export function playRuntimeComponentIds(): string[] {
   const components = [...PLUGIN_BUILD_TARGETS, ...EXTENSION_TARGETS];
-  return [...new Set(PLAY_RUNTIME_TARGETS.flatMap(row => runtimeComponentClosure(components, [row.pluginId]) as string[]))].sort();
+  return [...new Set(PLAY_RUNTIME_TARGETS.flatMap(row => runtimeComponentClosure(components, [playPaneClosureRoot(row)]) as string[]))].sort();
 }
 
 export type PlayRuntimeModuleLayout = {
@@ -53,5 +71,9 @@ if (import.meta.vitest) {
   const { join } = await import("node:path");
   const { isIconName } = await import("../../../../🧰️framework/🔨️modules/🖼️assets/🔣️icons/🤖️generated/🖼️icons/🟦️.ts");
   const { registerTests1 } = await import("../../🧪️tests/🧪️playpanecoverage/🟦️.ts");
-  await registerTests1(import.meta.vitest, { PLAYGROUND_BUILD_TARGETS, PLAY_RUNTIME_PANES, PLAY_RUNTIME_TARGETS, PLAY_HOST_VARIANT, playExpectedVariants, playRuntimeComponentIds, isIconName }, join(import.meta.dirname, "../../../.."));
+  const repoRoot = join(import.meta.dirname, "../../../..");
+  await registerTests1(import.meta.vitest, { PLAYGROUND_BUILD_TARGETS, PLAY_RUNTIME_PANES, PLAY_RUNTIME_TARGETS, PLAY_HOST_VARIANT, playExpectedVariants, playRuntimeComponentIds, isIconName }, repoRoot);
+  const { PLAY_PANES } = await import("../../🪧️brand.ts");
+  const { registerTests1: registerPaneDefaultTests } = await import("../../🧪️tests/🧪️playpanedefaults/🟦️.ts");
+  await registerPaneDefaultTests(import.meta.vitest, { PLAY_RUNTIME_PANES, PLAY_RUNTIME_TARGETS, PLAY_PANES }, repoRoot);
 }

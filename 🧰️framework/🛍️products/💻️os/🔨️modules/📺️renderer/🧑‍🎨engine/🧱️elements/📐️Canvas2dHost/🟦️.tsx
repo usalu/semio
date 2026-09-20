@@ -8,7 +8,7 @@
 // #region 🔌️Adapters
 import { useCallback, useContext, useEffect, useMemo, useRef, useState, type DragEvent, type MouseEvent } from "react";
 import { type GraphWasmSession, GraphWasmCanvas, type CanvasInputModifiers } from "@semio-tech/infinite-canvas-react-renderer";
-import { ContextMenuController, CATALOGUE_DRAG_MIME, registerIntroductionSurfaceResolver, sampleBezierSegments, windowElementId, useLabel, type ContextMenuItem, type IntroductionResolvedGeometry } from "@semio-tech/ui-react";
+import { ContextMenuController, CATALOGUE_DRAG_MIME, getActiveCataloguePointerDragPayload, registerIntroductionSurfaceResolver, sampleBezierSegments, windowElementId, useLabel, type ContextMenuItem, type IntroductionResolvedGeometry } from "@semio-tech/ui-react";
 import { type ComponentSceneHostProps } from "@semio-tech/framework";
 import { currentStylingAppearanceName, STYLING_BOARD_PALETTES, STYLING_METRICS, STYLING_STROKES } from "@semio-tech/ui-styling";
 import { WindowInstanceIdContext } from "../🌐️World3dHost/🟦️.tsx";
@@ -212,6 +212,14 @@ function applySceneTransform(ctx: CanvasRenderingContext2D, transform: readonly 
   ctx.transform(a ?? 1, b ?? 0, c ?? 0, d ?? 1, e ?? 0, f ?? 0);
 }
 
+/** 🖼️ `complete` alone is NOT "this image can be drawn": it turns true for a FAILED load too, and
+ * `drawImage` on a broken element throws an uncaught `InvalidStateError` that surfaces as a page
+ * error (measured on 🎞️animate, whose demo deck names a source the dev server does not serve — five
+ * of its six remaining console faults). A decoded raster always reports a non-zero `naturalWidth`. */
+function isDecodedImage(image: HTMLImageElement | undefined): image is HTMLImageElement {
+  return Boolean(image?.complete) && (image?.naturalWidth ?? 0) > 0;
+}
+
 function drawSceneNode(ctx: CanvasRenderingContext2D, layer: CanvasLayerRecord, zoom: number, imageCache: ReadonlyMap<string, HTMLImageElement>): void {
   if (layer.visible === false) return;
   const opacity = layer.opacity ?? 1;
@@ -252,7 +260,7 @@ function drawSceneNode(ctx: CanvasRenderingContext2D, layer: CanvasLayerRecord, 
     const width = layer.image.width ?? layer.width ?? 64;
     const height = layer.image.height ?? layer.height ?? 64;
     const image = imageCache.get(layer.image.src);
-    if (image?.complete) {
+    if (isDecodedImage(image)) {
       ctx.globalAlpha = opacity;
       ctx.drawImage(image, 0, 0, width, height);
       ctx.globalAlpha = 1;
@@ -582,7 +590,7 @@ export class JsonLayersCanvasSession implements GraphWasmSession {
       if (layer.kind === "image" && layer.dataUrl) {
         const bounds = layerBounds(layer);
         const image = this.imageCache.get(layer.dataUrl);
-        if (bounds && image && image.complete) {
+        if (bounds && isDecodedImage(image)) {
           ctx.drawImage(image, bounds.x, bounds.y, bounds.width, bounds.height);
         }
         continue;
@@ -736,6 +744,10 @@ export const CAMERA_SYNC_DEBOUNCE_MS = 120;
 const DRAG_OVER_THROTTLE_MS = 50;
 const DRAG_OVER_THROTTLE_DISTANCE = 4;
 
+function clientPointOverRect(clientX: number, clientY: number, rect: DOMRect): boolean {
+  return clientX >= rect.left && clientX <= rect.right && clientY >= rect.top && clientY <= rect.bottom;
+}
+
 export function Canvas2dHost({ node, onAction, requestContextMenu }: ComponentSceneHostProps) {
   const scene = node.canvas2d;
   const windowInstanceId = useContext(WindowInstanceIdContext);
@@ -761,12 +773,10 @@ export function Canvas2dHost({ node, onAction, requestContextMenu }: ComponentSc
   // 🏁️ RETURNS `onAction`'s promise: the gesture lane's single-flight gate is that promise (a `void`
   // dispatcher would clear it on the next microtask and coalesce nothing — World3dHost wave B33).
   const dispatch = useCallback(
-    (action: string, args?: Record<string, unknown>): void | Promise<unknown> =>
-      onAction({
-        controllerId: node.controllerId,
-        action,
-        args: { surfaceId: node.surfaceId, ...args },
-      }),
+    (action: string, args?: Record<string, unknown>): void | Promise<unknown> => {
+      const ownedArgs = { surfaceId: node.surfaceId, ...args };
+      return onAction({ controllerId: node.controllerId, action, args: ownedArgs });
+    },
     [node.controllerId, node.surfaceId, onAction],
   );
   const mapContextMenu = useMapContextMenuSpecs(dispatch);
@@ -869,21 +879,29 @@ export function Canvas2dHost({ node, onAction, requestContextMenu }: ComponentSc
     });
   }, [windowInstanceId, readLayers]);
 
+  const publishCatalogueDragOverAt = useCallback(
+    (clientX: number, clientY: number, types: readonly string[]): boolean => {
+      const rect = containerRef.current?.getBoundingClientRect();
+      if (!rect || !clientPointOverRect(clientX, clientY, rect)) return false;
+      const x = clientX - rect.left;
+      const y = clientY - rect.top;
+      const last = dragOverStateRef.current;
+      const now = Date.now();
+      if (last && now - last.time < DRAG_OVER_THROTTLE_MS && Math.abs(x - last.x) < DRAG_OVER_THROTTLE_DISTANCE && Math.abs(y - last.y) < DRAG_OVER_THROTTLE_DISTANCE) return true;
+      dragOverStateRef.current = { x, y, time: now };
+      dispatch("canvasDragOver", { x, y, width: rect.width, height: rect.height, types: [...types] });
+      return true;
+    },
+    [dispatch],
+  );
+
   const handleDragOver = useCallback(
     (event: DragEvent<HTMLDivElement>) => {
       if (!event.dataTransfer.types.includes(CATALOGUE_DRAG_MIME)) return;
       event.preventDefault();
-      const rect = containerRef.current?.getBoundingClientRect();
-      if (!rect) return;
-      const x = event.clientX - rect.left;
-      const y = event.clientY - rect.top;
-      const last = dragOverStateRef.current;
-      const now = Date.now();
-      if (last && now - last.time < DRAG_OVER_THROTTLE_MS && Math.abs(x - last.x) < DRAG_OVER_THROTTLE_DISTANCE && Math.abs(y - last.y) < DRAG_OVER_THROTTLE_DISTANCE) return;
-      dragOverStateRef.current = { x, y, time: now };
-      dispatch("canvasDragOver", { x, y, width: rect.width, height: rect.height, types: [...event.dataTransfer.types] });
+      publishCatalogueDragOverAt(event.clientX, event.clientY, event.dataTransfer.types);
     },
-    [dispatch],
+    [publishCatalogueDragOverAt],
   );
 
   const handleDragLeave = useCallback(() => {
@@ -891,18 +909,73 @@ export function Canvas2dHost({ node, onAction, requestContextMenu }: ComponentSc
     dispatch("canvasDragLeave");
   }, [dispatch]);
 
-  const handleDrop = useCallback(
-    (event: DragEvent<HTMLDivElement>) => {
-      const raw = event.dataTransfer.getData(CATALOGUE_DRAG_MIME);
-      if (!raw) return;
-      event.preventDefault();
+  const publishCatalogueDropAt = useCallback(
+    (clientX: number, clientY: number, raw: string, ensurePointerPreview = false) => {
+      const hadPreview = dragOverStateRef.current !== null;
       dragOverStateRef.current = null;
       const rect = containerRef.current?.getBoundingClientRect();
       if (!rect) return;
-      dispatch("canvasDrop", { x: event.clientX - rect.left, y: event.clientY - rect.top, width: rect.width, height: rect.height, dragData: raw });
+      const previewArgs = { x: clientX - rect.left, y: clientY - rect.top, width: rect.width, height: rect.height, types: [CATALOGUE_DRAG_MIME] };
+      const args = { x: clientX - rect.left, y: clientY - rect.top, width: rect.width, height: rect.height, dragData: raw };
+      void (async () => {
+        try {
+          if (ensurePointerPreview && !hadPreview) await dispatch("canvasDragOver", previewArgs);
+        } finally {
+          try {
+            await dispatch("canvasDragLeave");
+          } finally {
+            if (raw) await dispatch("canvasDrop", args);
+          }
+        }
+      })().catch(() => undefined);
     },
     [dispatch],
   );
+
+  const handleDrop = useCallback(
+    (event: DragEvent<HTMLDivElement>) => {
+      if (!event.dataTransfer.types.includes(CATALOGUE_DRAG_MIME)) return;
+      const raw = event.dataTransfer.getData(CATALOGUE_DRAG_MIME);
+      event.preventDefault();
+      publishCatalogueDropAt(event.clientX, event.clientY, raw);
+    },
+    [publishCatalogueDropAt],
+  );
+
+  useEffect(() => {
+    const retirePointerPreview = () => {
+      if (!dragOverStateRef.current) return;
+      dragOverStateRef.current = null;
+      dispatch("canvasDragLeave");
+    };
+    const onPointerMove = (event: PointerEvent) => {
+      const raw = getActiveCataloguePointerDragPayload();
+      if (!raw) {
+        retirePointerPreview();
+        return;
+      }
+      if (!publishCatalogueDragOverAt(event.clientX, event.clientY, [CATALOGUE_DRAG_MIME])) retirePointerPreview();
+    };
+    const onPointerUp = (event: PointerEvent) => {
+      const raw = getActiveCataloguePointerDragPayload();
+      if (!raw) return;
+      const rect = containerRef.current?.getBoundingClientRect();
+      if (rect && clientPointOverRect(event.clientX, event.clientY, rect)) {
+        publishCatalogueDropAt(event.clientX, event.clientY, raw, true);
+      } else {
+        retirePointerPreview();
+      }
+    };
+    const onPointerCancel = () => retirePointerPreview();
+    window.addEventListener("pointermove", onPointerMove);
+    window.addEventListener("pointerup", onPointerUp, true);
+    window.addEventListener("pointercancel", onPointerCancel, true);
+    return () => {
+      window.removeEventListener("pointermove", onPointerMove);
+      window.removeEventListener("pointerup", onPointerUp, true);
+      window.removeEventListener("pointercancel", onPointerCancel, true);
+    };
+  }, [dispatch, publishCatalogueDragOverAt, publishCatalogueDropAt]);
 
   //#region ContextMenu
   /** @emoji 🖱️ No layer pick/selection is tracked at this level (`Canvas2dScene` carries only camera + `layersJson`) — `hits`/`selection` stay empty per surface convention until layer picking lands here. */

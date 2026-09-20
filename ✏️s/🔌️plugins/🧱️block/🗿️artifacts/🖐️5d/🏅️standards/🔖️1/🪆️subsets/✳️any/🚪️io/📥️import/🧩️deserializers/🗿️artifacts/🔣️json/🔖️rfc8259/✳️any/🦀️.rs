@@ -15,7 +15,12 @@ pub const JSON_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.json", stand
 /// An absent/empty `schema` is filled with `BLOCK_5D_SCHEMA` so a hand-authored json is still accepted.
 pub fn from_json_text(text: &str) -> Result<Block5dSnapshot, IoError> {
     let value = parse_json_text(text).map_err(|error| IoError { message: format!("json→block5d: parse failed: {error}"), diagnostics: Vec::new() })?;
-    let raw: dsl::DslValue = JsonSnapshot::from_value(value).to_serde_value().into();
+    // 🎯️ Through stdio's own first-party `to_pack_value()` bridge, never `to_serde_value()`:
+    // `serde_json`'s default (no `float_roundtrip`) number parser rebuilds an f64 as
+    // `significand as f64 * 10^exponent`, off by one ULP for any 17-significant-digit literal
+    // (`0.42839899821678995` came back as `0.4283989982167899`), which broke this leaf's own
+    // `IoFidelity::Exact` claim for every example carrying full-precision geometry.
+    let raw: dsl::DslValue = dsl::json::to_dsl_value(&JsonSnapshot::from_value(value).to_pack_value());
     let mut snapshot: Block5dSnapshot = dsl::FromValue::from_value(raw).map_err(|error| IoError { message: format!("json→block5d: {error}"), diagnostics: Vec::new() })?;
     if snapshot.schema.is_empty() {
         snapshot.schema = BLOCK_5D_SCHEMA.to_string();

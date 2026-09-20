@@ -67,7 +67,7 @@ async fn change_foundation_area_m2_committed_json_is_canonical() {
     }
     let reencoded = serde_json::to_value(mutation()).expect("change-foundation-area-m2 mutation encodes");
     let original: serde_json::Value = serde_json::from_str(MUTATION).expect("change-foundation-area-m2 mutation reparses");
-    assert_eq!(reencoded, original, "change-foundation-area-m2/raises-foundation-area-m2-to-144-0: committed mutation JSON is not the canonical externally-tagged ChangeFoundationAreaM2 form carrying newFoundationAreaM2");
+    assert_eq!(reencoded, original, "change-foundation-area-m2/raises-foundation-area-m2-to-144-0: committed mutation JSON is not the canonical internally-tagged ChangeFoundationAreaM2 form carrying mutation and newFoundationAreaM2");
 }
 
 /// 🎯️ The declared outcome holds: `change-foundation-area-m2` at 144.0 is applied, not rejected, and carries no

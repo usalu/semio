@@ -359,10 +359,20 @@ fn apply_flow_params(host: &mut FlowHost, host_snapshot: &FlowHostSnapshot, para
 }
 
 fn evaluated_preview_payload(host_snapshot: &FlowHostSnapshot, params: &Value) -> (String, String) {
-    let mut host = FlowHost::from_host_snapshot(host_snapshot.clone());
-    host.set_neuron_kind_info_map(flow_neuron_kind_info_map());
-    apply_flow_params(&mut host, host_snapshot, params);
-    let eval_json = host.evaluate().unwrap_or_default();
+    // 🧊️ A `FlowHost` and the `FlowHostSnapshot` it owns refuse a bare drop — the snapshot's
+    // `layout` is an `OrderedMap` and its neurons own `Dictionary` params — so the host is CLOSED
+    // here, never dropped. A missed close panics the native tests with
+    // `final Dictionary ownership must be explicitly retired or owned by a cold boundary` and
+    // ABORTS the wasm guest, which is why the eval result is read out and the host retired before
+    // any of the branches below can return (twin of the flow editor's `with_host_from_snapshot`).
+    let eval_json = {
+        let mut host = FlowHost::from_host_snapshot(host_snapshot.clone());
+        host.set_neuron_kind_info_map(flow_neuron_kind_info_map());
+        apply_flow_params(&mut host, host_snapshot, params);
+        let eval_json = host.evaluate().unwrap_or_default();
+        host.retire_cold();
+        eval_json
+    };
     let eval: Value = parse_json(&eval_json).unwrap_or(pack::json!({}));
     let mut meshes: Vec<Value> = Vec::new();
     let mut instances: Vec<Value> = Vec::new();
@@ -419,6 +429,8 @@ fn render_preview_body(payload: &ModuleRenderPayload) -> UiAssemblyResult<BuiltN
     let host_snapshot: FlowHostSnapshot = pack::json::from_json_str(fixture_json).unwrap_or_else(|_| FlowHostSnapshot::default());
     let params = params_as_json(&payload.params);
     let (meshes_json, instances_json) = evaluated_preview_payload(&host_snapshot, &params);
+    // 🧊️ The decoded fixture is this function's own owner of the widgets' dictionaries.
+    host_snapshot.retire_cold();
     scene_surface(PREVIEW_SURFACE, SurfaceKind::World3d, &world3d_scene(world3d_default_camera(), meshes_json, instances_json, world3d_selection_json("single", &[], None), &WorldSunConfig::default()))
 }
 //#endregion 🔖️Preview
@@ -426,10 +438,15 @@ fn render_preview_body(payload: &ModuleRenderPayload) -> UiAssemblyResult<BuiltN
 //#region 🔖️MediaExport
 /// 🧵️ Collects every distinct brep geometry handle exposed by the fixture's preview-flagged widgets, evaluated against the current param overrides — same eval pass as `evaluated_preview_payload`, minus the tessellation step.
 fn evaluated_preview_geometry_handles(host_snapshot: &FlowHostSnapshot, params: &Value) -> Vec<String> {
-    let mut host = FlowHost::from_host_snapshot(host_snapshot.clone());
-    host.set_neuron_kind_info_map(flow_neuron_kind_info_map());
-    apply_flow_params(&mut host, host_snapshot, params);
-    let eval_json = host.evaluate().unwrap_or_default();
+    // 🧊️ Closed, never dropped — see `evaluated_preview_payload`.
+    let eval_json = {
+        let mut host = FlowHost::from_host_snapshot(host_snapshot.clone());
+        host.set_neuron_kind_info_map(flow_neuron_kind_info_map());
+        apply_flow_params(&mut host, host_snapshot, params);
+        let eval_json = host.evaluate().unwrap_or_default();
+        host.retire_cold();
+        eval_json
+    };
     let eval: Value = parse_json(&eval_json).unwrap_or(pack::json!({}));
     let mut handles: Vec<String> = Vec::new();
     for widget in &host_snapshot.widgets {
@@ -455,6 +472,8 @@ fn handle_export_solid(payload: &mut ModuleRenderPayload, format: &str) {
     };
     let host_snapshot: FlowHostSnapshot = pack::json::from_json_str(fixture_json).unwrap_or_else(|_| FlowHostSnapshot::default());
     let handles = evaluated_preview_geometry_handles(&host_snapshot, &params_as_json(&payload.params));
+    // 🧊️ Closed, never dropped — see `evaluated_preview_payload`.
+    host_snapshot.retire_cold();
     let result_json =
         if handles.is_empty() { pack::json!({ "error": "no procedural solid geometry to export" }) } else { parse_json(&export_solid_json(&handles, format, SOLID_EXPORT_DEFLECTION)).unwrap_or(pack::json!({ "error": "export failed" })) };
     let mut object = params_as_json(&payload.params);
@@ -526,6 +545,10 @@ fn render_params_body(payload: &ModuleRenderPayload, labels: &ModuleLabels) -> U
     };
     let host_snapshot: FlowHostSnapshot = pack::json::from_json_str(fixture_json).map_err(|error| PluginAssemblyError::new("procedural.fixture", error.to_string()))?;
     let spec = flow_host_snapshot_to_form_spec(&host_snapshot);
+    // 🧊️ `spec` is an OWNED form projection, so the decoded fixture is done here — closed, never
+    // dropped (see `evaluated_preview_payload`). Retired BEFORE the `?`-returning body below so no
+    // early exit can leak it.
+    host_snapshot.retire_cold();
     let values: Map = params_as_json(&payload.params).as_object().cloned().unwrap_or_default();
     let Some(step) = spec.steps.first() else {
         return text_node(labels.no_flow_inputs.as_str());

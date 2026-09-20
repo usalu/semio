@@ -1,0 +1,558 @@
+{
+  "$schema": "../../🧬️schema/🖼️reference-visual/🔣️.json",
+  "schema": "framework.world3d.reference-visual/v1",
+  "reference": {
+    "threeRevision": "182",
+    "fiberVersion": "9.7.0",
+    "material": "MeshBasicMaterial",
+    "side": "DoubleSide",
+    "depthWrite": false,
+    "toneMapped": false,
+    "lockedOpacityScale": 0.35,
+    "selectedContentOpacityScale": 0.5,
+    "renderOrder": {
+      "background": -11,
+      "content": -10,
+      "outline": -9
+    }
+  },
+  "scene": {
+    "viewport": [
+      64,
+      64
+    ],
+    "cameraExtent": 2,
+    "planeSize": [
+      2,
+      2
+    ],
+    "textureRgba8": [
+      64,
+      128,
+      192,
+      204
+    ],
+    "clearHex": "#06171c",
+    "antialias": false,
+    "premultipliedAlpha": false
+  },
+  "geometry": {
+    "origin": [
+      7.0,
+      0.0,
+      0.01
+    ],
+    "widthWorld": 50.0,
+    "sourceNaturalSize": [
+      2275,
+      2560
+    ],
+    "expectedPlaneSize": [
+      50.0,
+      56.26373626373626
+    ],
+    "expectedCorners": [
+      [
+        -18.0,
+        -28.13186813186813,
+        0.01
+      ],
+      [
+        32.0,
+        -28.13186813186813,
+        0.01
+      ],
+      [
+        32.0,
+        28.13186813186813,
+        0.01
+      ],
+      [
+        -18.0,
+        28.13186813186813,
+        0.01
+      ]
+    ],
+    "originMeaning": "plane-center"
+  },
+  "identityCases": [
+    {
+      "id": "reference-authored-a",
+      "url": "https://semio-parity.invalid/shared-reference.png",
+      "expectedInteractionId": "reference-authored-a"
+    },
+    {
+      "id": "reference-authored-b",
+      "url": "https://semio-parity.invalid/shared-reference.png",
+      "expectedInteractionId": "reference-authored-b"
+    }
+  ],
+  "sourceProfiles": [
+    {
+      "id": "world-image",
+      "route": "TextureLoader",
+      "mediaKinds": [
+        "image"
+      ],
+      "textureColorSpace": "NoColorSpace",
+      "reachableFromWorld3dHost": true
+    },
+    {
+      "id": "explicit-canvas-raster",
+      "route": "CanvasTexture",
+      "mediaKinds": [
+        "svg",
+        "pdf"
+      ],
+      "textureColorSpace": "SRGBColorSpace",
+      "reachableFromWorld3dHost": false
+    }
+  ],
+  "themes": [
+    {
+      "id": "semio-light",
+      "activeBase": {
+        "cssVar": "--active-base",
+        "hex": "#ff344f"
+      },
+      "hoverBase": {
+        "cssVar": "--hover-base",
+        "hex": "#c4c4b9"
+      },
+      "accentSecondary": {
+        "cssVar": "--accent-secondary",
+        "hex": "#34d1bf"
+      }
+    },
+    {
+      "id": "semio-dark",
+      "activeBase": {
+        "cssVar": "--active-base",
+        "hex": "#ff344f"
+      },
+      "hoverBase": {
+        "cssVar": "--hover-base",
+        "hex": "#334041"
+      },
+      "accentSecondary": {
+        "cssVar": "--accent-secondary",
+        "hex": "#34d1bf"
+      }
+    }
+  ],
+  "stateCases": [
+    {
+      "id": "image-neutral-authored-opacity",
+      "themeId": "semio-light",
+      "sourceProfileId": "world-image",
+      "baseOpacity": 0.72,
+      "locked": false,
+      "hidden": false,
+      "revealed": false,
+      "hovered": false,
+      "selected": false,
+      "expected": {
+        "visible": true,
+        "selectable": true,
+        "interactionId": "reference-authored-a",
+        "contentOpacity": 0.72,
+        "backgroundSemantic": null,
+        "outlineSemantic": null,
+        "outlineOpacity": 0
+      },
+      "samples": [
+        {
+          "id": "image-neutral-authored-opacity-content",
+          "point": [
+            32,
+            32
+          ]
+        }
+      ]
+    },
+    {
+      "id": "canvas-srgb-authored-opacity",
+      "themeId": "semio-light",
+      "sourceProfileId": "explicit-canvas-raster",
+      "baseOpacity": 0.72,
+      "locked": false,
+      "hidden": false,
+      "revealed": false,
+      "hovered": false,
+      "selected": false,
+      "expected": {
+        "visible": true,
+        "selectable": true,
+        "interactionId": "reference-authored-a",
+        "contentOpacity": 0.72,
+        "backgroundSemantic": null,
+        "outlineSemantic": null,
+        "outlineOpacity": 0
+      },
+      "samples": [
+        {
+          "id": "canvas-srgb-authored-opacity-content",
+          "point": [
+            32,
+            32
+          ]
+        }
+      ]
+    },
+    {
+      "id": "image-locked",
+      "themeId": "semio-light",
+      "sourceProfileId": "world-image",
+      "baseOpacity": 0.72,
+      "locked": true,
+      "hidden": false,
+      "revealed": false,
+      "hovered": false,
+      "selected": false,
+      "expected": {
+        "visible": true,
+        "selectable": false,
+        "interactionId": null,
+        "contentOpacity": 0.252,
+        "backgroundSemantic": null,
+        "outlineSemantic": null,
+        "outlineOpacity": 0
+      },
+      "samples": [
+        {
+          "id": "image-locked-content",
+          "point": [
+            32,
+            32
+          ]
+        }
+      ]
+    },
+    {
+      "id": "image-hover-light",
+      "themeId": "semio-light",
+      "sourceProfileId": "world-image",
+      "baseOpacity": 0.72,
+      "locked": false,
+      "hidden": false,
+      "revealed": false,
+      "hovered": true,
+      "selected": false,
+      "expected": {
+        "visible": true,
+        "selectable": true,
+        "interactionId": "reference-authored-a",
+        "contentOpacity": 0.72,
+        "backgroundSemantic": "hoverBase",
+        "outlineSemantic": "accentSecondary",
+        "outlineOpacity": 0.9
+      },
+      "samples": [
+        {
+          "id": "image-hover-light-content",
+          "point": [
+            32,
+            32
+          ]
+        },
+        {
+          "id": "image-hover-light-outline",
+          "point": [
+            48,
+            32
+          ]
+        }
+      ]
+    },
+    {
+      "id": "image-hover-dark",
+      "themeId": "semio-dark",
+      "sourceProfileId": "world-image",
+      "baseOpacity": 0.72,
+      "locked": false,
+      "hidden": false,
+      "revealed": false,
+      "hovered": true,
+      "selected": false,
+      "expected": {
+        "visible": true,
+        "selectable": true,
+        "interactionId": "reference-authored-a",
+        "contentOpacity": 0.72,
+        "backgroundSemantic": "hoverBase",
+        "outlineSemantic": "accentSecondary",
+        "outlineOpacity": 0.9
+      },
+      "samples": [
+        {
+          "id": "image-hover-dark-content",
+          "point": [
+            32,
+            32
+          ]
+        },
+        {
+          "id": "image-hover-dark-outline",
+          "point": [
+            48,
+            32
+          ]
+        }
+      ]
+    },
+    {
+      "id": "image-selected",
+      "themeId": "semio-light",
+      "sourceProfileId": "world-image",
+      "baseOpacity": 0.72,
+      "locked": false,
+      "hidden": false,
+      "revealed": false,
+      "hovered": false,
+      "selected": true,
+      "expected": {
+        "visible": true,
+        "selectable": true,
+        "interactionId": "reference-authored-a",
+        "contentOpacity": 0.36,
+        "backgroundSemantic": "activeBase",
+        "outlineSemantic": "activeBase",
+        "outlineOpacity": 1
+      },
+      "samples": [
+        {
+          "id": "image-selected-content",
+          "point": [
+            32,
+            32
+          ]
+        },
+        {
+          "id": "image-selected-outline",
+          "point": [
+            48,
+            32
+          ]
+        }
+      ]
+    },
+    {
+      "id": "image-locked-selected-suppressed",
+      "themeId": "semio-light",
+      "sourceProfileId": "world-image",
+      "baseOpacity": 0.72,
+      "locked": true,
+      "hidden": false,
+      "revealed": false,
+      "hovered": false,
+      "selected": true,
+      "expected": {
+        "visible": true,
+        "selectable": false,
+        "interactionId": null,
+        "contentOpacity": 0.252,
+        "backgroundSemantic": null,
+        "outlineSemantic": null,
+        "outlineOpacity": 0
+      },
+      "samples": [
+        {
+          "id": "image-locked-selected-suppressed-content",
+          "point": [
+            32,
+            32
+          ]
+        }
+      ]
+    },
+    {
+      "id": "image-hidden",
+      "themeId": "semio-light",
+      "sourceProfileId": "world-image",
+      "baseOpacity": 0.72,
+      "locked": false,
+      "hidden": true,
+      "revealed": false,
+      "hovered": false,
+      "selected": false,
+      "expected": {
+        "visible": false,
+        "selectable": false,
+        "interactionId": null,
+        "contentOpacity": 0.72,
+        "backgroundSemantic": null,
+        "outlineSemantic": null,
+        "outlineOpacity": 0
+      },
+      "samples": [
+        {
+          "id": "image-hidden-clear",
+          "point": [
+            32,
+            32
+          ]
+        }
+      ]
+    },
+    {
+      "id": "image-hidden-revealed",
+      "themeId": "semio-light",
+      "sourceProfileId": "world-image",
+      "baseOpacity": 0.72,
+      "locked": false,
+      "hidden": true,
+      "revealed": true,
+      "hovered": false,
+      "selected": false,
+      "expected": {
+        "visible": true,
+        "selectable": false,
+        "interactionId": null,
+        "contentOpacity": 0.72,
+        "backgroundSemantic": "hoverBase",
+        "outlineSemantic": "accentSecondary",
+        "outlineOpacity": 0.9
+      },
+      "samples": [
+        {
+          "id": "image-hidden-revealed-content",
+          "point": [
+            32,
+            32
+          ]
+        },
+        {
+          "id": "image-hidden-revealed-outline",
+          "point": [
+            48,
+            32
+          ]
+        }
+      ]
+    }
+  ],
+  "pixelOracle": {
+    "status": "recorded",
+    "producer": "installed Three 182 WebGLRenderer in Chromium",
+    "maximumRgbError": 0,
+    "rows": [
+      {
+        "id": "image-neutral-authored-opacity-content",
+        "rgba8": [
+          82,
+          118,
+          141,
+          255
+        ]
+      },
+      {
+        "id": "canvas-srgb-authored-opacity-content",
+        "rgba8": [
+          39,
+          83,
+          122,
+          255
+        ]
+      },
+      {
+        "id": "image-locked-content",
+        "rgba8": [
+          32,
+          56,
+          68,
+          255
+        ]
+      },
+      {
+        "id": "image-hover-light-content",
+        "rgba8": [
+          162,
+          191,
+          208,
+          255
+        ]
+      },
+      {
+        "id": "image-hover-light-outline",
+        "rgba8": [
+          106,
+          191,
+          182,
+          255
+        ]
+      },
+      {
+        "id": "image-hover-dark-content",
+        "rgba8": [
+          101,
+          135,
+          157,
+          255
+        ]
+      },
+      {
+        "id": "image-hover-dark-outline",
+        "rgba8": [
+          106,
+          191,
+          182,
+          255
+        ]
+      },
+      {
+        "id": "image-selected-content",
+        "rgba8": [
+          221,
+          91,
+          121,
+          255
+        ]
+      },
+      {
+        "id": "image-selected-outline",
+        "rgba8": [
+          248,
+          65,
+          84,
+          255
+        ]
+      },
+      {
+        "id": "image-locked-selected-suppressed-content",
+        "rgba8": [
+          32,
+          56,
+          68,
+          255
+        ]
+      },
+      {
+        "id": "image-hidden-clear",
+        "rgba8": [
+          6,
+          23,
+          28,
+          255
+        ]
+      },
+      {
+        "id": "image-hidden-revealed-content",
+        "rgba8": [
+          162,
+          191,
+          208,
+          255
+        ]
+      },
+      {
+        "id": "image-hidden-revealed-outline",
+        "rgba8": [
+          106,
+          191,
+          182,
+          255
+        ]
+      }
+    ]
+  }
+}

@@ -12,8 +12,8 @@
       "capacityConstant": "SCENE_SURFACE_CAPACITY",
       "capacity": 256,
       "elementType": "Option<AdmittedSurfaceEntry<World3dState>>",
-      "elementSizeBytes": 22920,
-      "ownerSizeBytes": 48944
+      "elementSizeBytes": 23464,
+      "ownerSizeBytes": 50040
     },
     {
       "guard": "renderer::engine_canvas",
@@ -22,7 +22,7 @@
       "capacityConstant": "ENGINE_SURFACE_CAPACITY",
       "capacity": 256,
       "elementType": "EngineSurfaceSlot",
-      "elementSizeBytes": 75032,
+      "elementSizeBytes": 75704,
       "ownerSizeBytes": 16
     },
     {
@@ -82,7 +82,7 @@
       "capacityConstant": "UI_LAYOUT_SURFACE_SLOTS",
       "capacity": 64,
       "elementType": "Option<UiSurfaceSlot>",
-      "elementSizeBytes": 160768,
+      "elementSizeBytes": 161912,
       "ownerSizeBytes": 520
     },
     {
@@ -103,7 +103,7 @@
       "capacity": 1024,
       "elementType": "Option<WorldInteractionObjectSlot>",
       "elementSizeBytes": 400,
-      "ownerSizeBytes": 40
+      "ownerSizeBytes": 168
     }
   ]
 }

@@ -1,4 +1,3 @@
-
 use super::*;
 
 const LIBRARY_SOURCE: &str = include_str!("../../🎯️targets/🧊️wgpu/🧊️renderer/🦀️.rs");
@@ -25,7 +24,12 @@ fn a_refused_frame_preparation_names_its_fault_before_the_build_cancels() {
     let refused = &frame_job[refused_at..][..frame_job[refused_at..].find("ActiveFrameStep::Pending").expect("the refused arm ends on its own step")];
     assert!(refused.contains("preparation.fault()"), "the refused arm reads the preparation's own fault");
 
-    for arm in ["self.fault = Some(\"prepared render job admission was refused\")", "self.fault = Some(\"prepared render job session admission was refused\")", "self.fault = Some(\"prepared render job lost its session\")", "self.fault = Some(\"prepared render job was cancelled\")"] {
+    for arm in [
+        "self.fault = Some(\"prepared render job admission was refused\")",
+        "self.fault = Some(\"prepared render job session admission was refused\")",
+        "self.fault = Some(\"prepared render job lost its session\")",
+        "self.fault = Some(\"prepared render job was cancelled\")",
+    ] {
         assert!(LIBRARY_SOURCE.contains(arm), "every preparation refusal names itself: {arm}");
     }
     assert!(LIBRARY_SOURCE.contains("session.checked_out_job_mut().and_then(|job| job.fault())"), "and a refusal from inside the prepared job carries that job's own fault string");
@@ -110,7 +114,7 @@ fn retained_raster_contract(draw: &str, gpu: &str, glue: &str, engine: &str) -> 
     let present_step = gpu.find("pub fn prepared_present_step").unwrap_or(0);
     let presenter_close = glue.find("self.gpu.close_raster_table_step()").unwrap_or(usize::MAX);
     let world_terminal = glue.find("self.gpu.raster_table_terminal_is_empty()").unwrap_or(0);
-    let engine_reservation = "gpu.reserve_engine_texture(key, build.width, build.height, candidate_generation, expected)";
+    let engine_reservation = "gpu.reserve_engine_texture(key, build.width, build.height, identity, candidate_generation, expected)";
     let engine_reservation_index = engine.find(engine_reservation).unwrap_or(usize::MAX);
     let first_engine_allocation = ["create_target_texture", ".create_view", "Renderer::new"].iter().filter_map(|marker| engine.find(marker)).min().unwrap_or(0);
     let upload_stage = &draw[draw.find("pub(crate) fn ensure_raster_step").unwrap_or(draw.len())..draw.find("pub fn get(&self, key: &str) -> Option<&RasterTexture>").unwrap_or(draw.len())];
@@ -120,10 +124,13 @@ fn retained_raster_contract(draw: &str, gpu: &str, glue: &str, engine: &str) -> 
     let upload_close = &upload_close[..upload_close.find("pub fn close_step(&mut self)").unwrap_or(upload_close.len())];
     draw.contains("pub const RASTER_TEXTURE_TABLE_CAPACITY: usize = 256")
         && draw.contains("pub const RASTER_TEXTURE_KEY_BYTES: usize = 256")
-        && draw.contains("pub const RASTER_TEXTURE_ITEM_BYTE_CAPACITY: usize = 16 * 1024 * 1024")
+        && draw.contains("pub const RASTER_TEXTURE_ITEM_BYTE_CAPACITY: usize = 64 * 1024 * 1024")
         && draw.contains("pub const RASTER_TEXTURE_TABLE_BYTE_CAPACITY: usize = 256 * 1024 * 1024")
         && draw.contains("const RASTER_TEXTURE_PROBE_CAPACITY: usize = 8")
-        && draw.contains("const PAGE_BYTES: usize = 16 * 1024")
+        && draw.contains("Self::Scene(lease) => lease.transfer_bytes()")
+        && upload_stage.contains("let transfer_bytes = pixels.transfer_bytes();")
+        && upload_stage.contains("row_bytes > transfer_bytes")
+        && upload_stage.contains("transfer_bytes / row_bytes")
         && draw.contains("struct FixedRasterTextureRegistry<T>")
         && draw.contains("pub struct RasterTextureAdmission")
         && draw.contains("candidate: RasterTextureWitnessSlot")
@@ -153,6 +160,7 @@ fn retained_raster_contract(draw: &str, gpu: &str, glue: &str, engine: &str) -> 
         && !upload_close.contains(concat!("self.reservation =", " None"))
         && draw.contains("self.key == admission.key")
         && draw.contains("self.witness == admission.witness")
+        && draw.contains("self.content_identity == admission.content_identity")
         && draw.contains("self.width == admission.width")
         && draw.contains("self.height == admission.height")
         && draw.contains("self.bytes == admission.bytes")
@@ -169,7 +177,7 @@ fn retained_raster_contract(draw: &str, gpu: &str, glue: &str, engine: &str) -> 
         && guarded_allocations(upload_stage, "self.claim_view_allocation(admission, expected)", ".create_view", 1)
         && guarded_allocations(upload_stage, "self.claim_bind_group_allocation(admission, expected)", "device.create_bind_group", 1)
         && guarded_allocations(gpu_stage, "self.claim_bind_group_allocation(&admission, expected)", "device.create_bind_group", 1)
-        && upload_stage.contains("if let Err((fault, admission, value)) = self.stage_claimed_texture(admission, value, allocation_claim)")
+        && upload_stage.contains("if let Err((fault, admission, value, cpu_release)) = self.stage_claimed_texture(admission, value, allocation_claim, cpu_release)")
         && upload_stage.contains("self.upload_close = Some(RasterTextureUploadCloseCursor::new(RasterTextureUploadCursor")
         && upload_stage.contains("texture: Some(value.texture)")
         && upload_stage.contains("view: Some(value.view)")
@@ -193,24 +201,26 @@ fn retained_raster_contract(draw: &str, gpu: &str, glue: &str, engine: &str) -> 
         && gpu.contains("view: wgpu::TextureView")
         && gpu.contains(".stage_gpu_bind_group")
         && gpu.contains("Result<(), RasterTextureStageFault>")
+        && gpu.contains("pixels.content_identity()")
         && begin < present_step
         && engine.matches(engine_reservation).count() == 1
         && engine_reservation_index < first_engine_allocation
         && guarded_allocations(engine, "gpu.validate_engine_target_texture_allocation(admission, expected)", "create_target_texture", 1)
         && guarded_allocations(engine, "gpu.validate_engine_target_view_allocation(admission, expected)", ".create_view", 1)
         && guarded_allocations(engine, "gpu.validate_engine_renderer_allocation(admission, expected)", "Renderer::new", 1)
-        && guarded_allocations(engine, "gpu.validate_engine_replacement_texture_allocation(admission, expected)", "create_target_texture", 1)
-        && guarded_allocations(engine, "gpu.validate_engine_replacement_view_allocation(admission, expected)", ".create_view", 1)
+        && engine.contains("gpu.raster_content_is_reusable(key, identity, candidate_generation, expected)")
+        && engine.matches("create_target_texture(gpu.device(), build.width, build.height)").count() == 1
         && engine.contains("Err(RasterTextureStageFault::Returned { fault, admission, texture, view }) => {")
         && engine.contains("build.admission = Some(admission);")
         && engine.contains("build.texture = Some(texture);")
         && engine.contains("build.view = Some(view);")
         && engine.contains("Err(RasterTextureStageFault::Retained(fault)) => {")
         && engine.contains("gpu.cancel_engine_texture_admission(admission)?;")
-        && engine.contains("let (Some(renderer), Some(texture), Some(view)) = (candidate.renderer.take(), candidate.replacement_texture.take(), candidate.replacement_view.take())")
-        && engine.contains("let published = EngineGpuSurface { vello: renderer, texture, view };")
-        && engine.contains("if let Some(displaced) = self.live.replace(published) {")
-        && engine.contains("self.retirement = Some(EngineGpuRetirement::new(displaced));")
+        && engine.contains("EngineGpuBuildPhase::RetireRenderer")
+        && engine.contains("if build.renderer.take().is_some()")
+        && !engine.contains("EngineGpuSurface")
+        && !engine.contains("replacement_texture")
+        && !engine.contains("replacement_view")
         && !engine.contains("surface.view.clone()")
         && !engine.contains("surface.texture.clone()")
         && glue.contains("struct RuntimeRasterOperationAuthority")
@@ -236,7 +246,7 @@ fn raster_upload_cache_is_fixed_generation_witnessed_and_mutation_complete() {
             (DRAW_SOURCE.replace("pub const RASTER_TEXTURE_TABLE_CAPACITY: usize = 256", "pub const RASTER_TEXTURE_TABLE_CAPACITY: usize = 257"), GPU_SOURCE.to_string(), LIBRARY_SOURCE.to_string(), ENGINE_CANVAS_SOURCE.to_string()),
             (DRAW_SOURCE.replace("pub const RASTER_TEXTURE_KEY_BYTES: usize = 256", "pub const RASTER_TEXTURE_KEY_BYTES: usize = 255"), GPU_SOURCE.to_string(), LIBRARY_SOURCE.to_string(), ENGINE_CANVAS_SOURCE.to_string()),
             (
-                DRAW_SOURCE.replace("pub const RASTER_TEXTURE_ITEM_BYTE_CAPACITY: usize = 16 * 1024 * 1024", "pub const RASTER_TEXTURE_ITEM_BYTE_CAPACITY: usize = usize::MAX"),
+                DRAW_SOURCE.replace("pub const RASTER_TEXTURE_ITEM_BYTE_CAPACITY: usize = 64 * 1024 * 1024", "pub const RASTER_TEXTURE_ITEM_BYTE_CAPACITY: usize = usize::MAX"),
                 GPU_SOURCE.to_string(),
                 LIBRARY_SOURCE.to_string(),
                 ENGINE_CANVAS_SOURCE.to_string(),
@@ -246,7 +256,6 @@ fn raster_upload_cache_is_fixed_generation_witnessed_and_mutation_complete() {
             (DRAW_SOURCE.replace("view: Option<wgpu::TextureView>", "view_erased: bool"), GPU_SOURCE.to_string(), LIBRARY_SOURCE.to_string(), ENGINE_CANVAS_SOURCE.to_string()),
             (DRAW_SOURCE.to_string(), GPU_SOURCE.replace("view: wgpu::TextureView", "view: &wgpu::TextureView"), LIBRARY_SOURCE.to_string(), ENGINE_CANVAS_SOURCE.to_string()),
             (DRAW_SOURCE.to_string(), GPU_SOURCE.to_string(), LIBRARY_SOURCE.to_string(), ENGINE_CANVAS_SOURCE.replace("gpu.reserve_engine_texture", "gpu.realize_without_reservation")),
-            (DRAW_SOURCE.to_string(), GPU_SOURCE.to_string(), LIBRARY_SOURCE.to_string(), ENGINE_CANVAS_SOURCE.replace("self.retirement = Some(EngineGpuRetirement::new(displaced));", "drop(displaced);")),
             (DRAW_SOURCE.to_string(), GPU_SOURCE.to_string(), LIBRARY_SOURCE.replace("raster_operation_authority: RuntimeRasterOperationAuthority", "raster_operation_authority_erased: bool"), ENGINE_CANVAS_SOURCE.to_string()),
             (
                 DRAW_SOURCE.to_string(),
@@ -329,21 +338,9 @@ fn raster_upload_cache_is_fixed_generation_witnessed_and_mutation_complete() {
                 ENGINE_CANVAS_SOURCE.replace("gpu.validate_engine_renderer_allocation(admission, expected)", "Ok(())"),
             ),
             (
-                DRAW_SOURCE.to_string(),
-                GPU_SOURCE.to_string(),
-                LIBRARY_SOURCE.to_string(),
-                ENGINE_CANVAS_SOURCE.replace("gpu.validate_engine_replacement_texture_allocation(admission, expected)", "Ok(())"),
-            ),
-            (
-                DRAW_SOURCE.to_string(),
-                GPU_SOURCE.to_string(),
-                LIBRARY_SOURCE.to_string(),
-                ENGINE_CANVAS_SOURCE.replace("gpu.validate_engine_replacement_view_allocation(admission, expected)", "Ok(())"),
-            ),
-            (
                 DRAW_SOURCE.replace(
-                    "if let Err((fault, admission, value)) = self.stage_claimed_texture(admission, value, allocation_claim)",
-                    "if self.stage_claimed_texture(admission, value, allocation_claim).map_err(|(fault, _, _)| fault).is_err()",
+                    "if let Err((fault, admission, value, cpu_release)) = self.stage_claimed_texture(admission, value, allocation_claim, cpu_release)",
+                    "if self.stage_claimed_texture(admission, value, allocation_claim, cpu_release).map_err(|(fault, _, _, _)| fault).is_err()",
                 ),
                 GPU_SOURCE.to_string(),
                 LIBRARY_SOURCE.to_string(),
@@ -375,12 +372,16 @@ fn raster_upload_cache_is_fixed_generation_witnessed_and_mutation_complete() {
             ),
             (DRAW_SOURCE.to_string(), GPU_SOURCE.to_string(), LIBRARY_SOURCE.to_string(), ENGINE_CANVAS_SOURCE.replace("build.texture = Some(texture);", "drop(texture);")),
             (DRAW_SOURCE.to_string(), GPU_SOURCE.to_string(), LIBRARY_SOURCE.to_string(), ENGINE_CANVAS_SOURCE.replace("build.view = Some(view);", "drop(view);")),
+            (DRAW_SOURCE.replace("Self::Scene(lease) => lease.transfer_bytes()", "Self::Scene(_) => usize::MAX"), GPU_SOURCE.to_string(), LIBRARY_SOURCE.to_string(), ENGINE_CANVAS_SOURCE.to_string()),
+            (DRAW_SOURCE.replace("let transfer_bytes = pixels.transfer_bytes();", "let transfer_bytes = usize::MAX;"), GPU_SOURCE.to_string(), LIBRARY_SOURCE.to_string(), ENGINE_CANVAS_SOURCE.to_string()),
+            (DRAW_SOURCE.replace("row_bytes > transfer_bytes", "false"), GPU_SOURCE.to_string(), LIBRARY_SOURCE.to_string(), ENGINE_CANVAS_SOURCE.to_string()),
+            (DRAW_SOURCE.replace("transfer_bytes / row_bytes", "usize::MAX"), GPU_SOURCE.to_string(), LIBRARY_SOURCE.to_string(), ENGINE_CANVAS_SOURCE.to_string()),
         ];
-    assert_eq!(mutations.len(), 38);
+    assert_eq!(mutations.len(), 39);
     for (draw, gpu, glue, engine) in mutations {
         assert!(!retained_raster_contract(&draw, &gpu, &glue, &engine));
     }
-    let reservation = "let admission = build.surface.id.with_raster_key(|key| gpu.reserve_engine_texture(key, build.width, build.height, candidate_generation, expected))?;";
+    let reservation = "build.admission = Some(gpu.reserve_engine_texture(key, build.width, build.height, identity, candidate_generation, expected)?);";
     let first_allocation = "build.texture = Some(create_target_texture(gpu.device(), build.width, build.height));";
     let reservation_after_first_allocation = ENGINE_CANVAS_SOURCE.replacen(reservation, "", 1).replacen(first_allocation, &format!("{first_allocation}\n            {reservation}"), 1);
     assert!(!retained_raster_contract(DRAW_SOURCE, GPU_SOURCE, LIBRARY_SOURCE, &reservation_after_first_allocation));
@@ -553,10 +554,7 @@ fn retained_image_decoder_admits_a_reference_plan_and_rejects_a_pixel_bomb_witho
     authority.finish(owner).unwrap();
 
     let (mut authority, mut probe, step) = drive(&jpeg(4097, 4097));
-    assert!(
-        matches!(step, RendererAssetProbeStep::Reject("JPEG dimensions exceeded fixed pixel credits")),
-        "a refused image is ONE missing asset — a Fault here quarantines the whole surface"
-    );
+    assert!(matches!(step, RendererAssetProbeStep::Reject("JPEG dimensions exceeded fixed pixel credits")), "a refused image is ONE missing asset — a Fault here quarantines the whole surface");
     let (detail, kind, url) = probe.take_rejection().expect("a rejection carries the lane its miss belongs to");
     assert_eq!(detail, "JPEG dimensions exceeded fixed pixel credits");
     assert_eq!(kind, WorldAssetRequestKind::ReferenceImage);
@@ -565,6 +563,105 @@ fn retained_image_decoder_admits_a_reference_plan_and_rejects_a_pixel_bomb_witho
     let RendererAssetFetchOwner::Shared(owner) = probe.take_terminal_owner().unwrap() else { panic!("shared probe") };
     authority.finish(owner).unwrap();
     assert!(authority.terminal_is_empty());
+
+    for source in [br#"<svg xmlns="http://www.w3.org/2000/svg" width="1" height="1"></svg>"#.as_slice(), b"GIF89a\x01\0\x01\0".as_slice()] {
+        let (mut authority, mut probe, step) = drive(source);
+        assert!(matches!(step, RendererAssetProbeStep::Ready), "React-accepted reference media reaches the target decoder rather than being narrowed at the shared probe");
+        probe.begin_close();
+        while !probe.close_step() {}
+        let RendererAssetFetchOwner::Shared(owner) = probe.take_terminal_owner().unwrap() else { panic!("shared probe") };
+        authority.finish(owner).unwrap();
+    }
+}
+
+#[test]
+fn reference_decode_staging_refuses_a_fifth_live_token_without_evicting_the_first() {
+    let mut io = WorldAssetIoAuthority::default();
+    let tokens = (0..5)
+        .map(|index| io.reserve(1, index + 1, WorldAssetRequestKind::ReferenceImage, &format!("reference-{index}.png"), 4).expect("bounded reference token"))
+        .collect::<Vec<_>>();
+    let mut staged = StagedReferenceImageAuthority::new();
+    let pool = SceneRasterPool::new();
+    for (index, token) in tokens.iter().copied().take(4).enumerate() {
+        let descriptor = SceneRasterDescriptor { width: 1, height: 1, source_digest: [index as u64 + 1, index as u64 + 101], source_revision: 1, profile: SceneRasterProfile::ReferenceImageMapNoColorSpace, mesh: None };
+        assert_eq!(staged.begin(&pool, token, format!("reference-{index}.png"), descriptor, index as u64 + 1).expect("begin"), StagedReferenceImageAuthority::WRITER);
+        assert!(staged.push(&pool, token, 0, &[index as u8, 0, 0, 255]).expect("exact row"));
+        assert!(staged.seal(&pool, token).expect("seal"));
+    }
+    let fifth = SceneRasterDescriptor { width: 1, height: 1, source_digest: [5, 105], source_revision: 1, profile: SceneRasterProfile::ReferenceImageMapNoColorSpace, mesh: None };
+    assert_eq!(staged.begin(&pool, tokens[4], "reference-4.png".into(), fifth, 5).expect("bounded staging refusal"), StagedReferenceImageAuthority::BUSY, "the fifth live token waits instead of evicting");
+    let first = staged.take(tokens[0], "reference-0.png").expect("first token remains staged");
+    first.with_rows(0, 4, |bytes, rows| assert_eq!((bytes, rows), (&[0, 0, 0, 255][..], 1))).expect("immutable first row");
+    assert!(first.release());
+    for token in tokens.iter().copied().skip(1).take(3) {
+        staged.discard(&pool, token);
+    }
+    io.begin_close();
+    while !io.close_step() {}
+    assert!(io.terminal_is_empty(), "the token fixture returns every request owner after proving staged residency");
+}
+
+#[test]
+fn reference_decode_staging_grants_one_writer_and_reuses_only_after_seal() {
+    let mut io = WorldAssetIoAuthority::default();
+    let token = io.reserve(1, 1, WorldAssetRequestKind::ReferenceImage, "shared.png", 4).expect("source token");
+    let descriptor = SceneRasterDescriptor { width: 1, height: 1, source_digest: [7, 11], source_revision: 1, profile: SceneRasterProfile::ReferenceImageMapNoColorSpace, mesh: None };
+    let pool = SceneRasterPool::new();
+    let mut staged = StagedReferenceImageAuthority::new();
+
+    assert_eq!(staged.begin(&pool, token, "shared.png".into(), descriptor, 1).expect("first begin"), StagedReferenceImageAuthority::WRITER);
+    assert_eq!(staged.begin(&pool, token, "shared.png".into(), descriptor, 1).expect("reentrant begin"), StagedReferenceImageAuthority::BUSY);
+    assert!(staged.push(&pool, token, 0, &[7, 11, 13, 255]).expect("only writer pixels"));
+    assert!(staged.seal(&pool, token).expect("exact seal"));
+    assert_eq!(staged.begin(&pool, token, "shared.png".into(), descriptor, 1).expect("sealed begin"), StagedReferenceImageAuthority::REUSED);
+
+    let lease = staged.take(token, "shared.png").expect("sealed lease remains available");
+    lease.with_rows(0, 4, |bytes, rows| assert_eq!((bytes, rows), (&[7, 11, 13, 255][..], 1))).expect("immutable source");
+    assert!(lease.release());
+    io.begin_close();
+    while !io.close_step() {}
+    assert!(io.terminal_is_empty());
+}
+
+#[test]
+fn reference_decode_staging_reports_exact_pool_reuse_before_browser_decode() {
+    let mut io = WorldAssetIoAuthority::default();
+    let first_token = io.reserve(1, 1, WorldAssetRequestKind::ReferenceImage, "shared.png", 4).expect("first source token");
+    let second_token = io.reserve(2, 1, WorldAssetRequestKind::ReferenceImage, "shared.png", 4).expect("second source token");
+    let descriptor = SceneRasterDescriptor { width: 1, height: 1, source_digest: [7, 11], source_revision: 1, profile: SceneRasterProfile::ReferenceImageMapNoColorSpace, mesh: None };
+    let pool = SceneRasterPool::new();
+    let mut staged = StagedReferenceImageAuthority::new();
+    assert_eq!(staged.begin(&pool, first_token, "shared.png".into(), descriptor, 1).expect("first begin"), StagedReferenceImageAuthority::WRITER);
+    assert!(staged.push(&pool, first_token, 0, &[7, 11, 13, 255]).expect("first pixels"));
+    assert!(staged.seal(&pool, first_token).expect("first seal"));
+    let first = staged.take(first_token, "shared.png").expect("first ready lease");
+    assert!(first.release());
+
+    assert_eq!(staged.begin(&pool, second_token, "shared.png".into(), descriptor, 2).expect("second begin"), StagedReferenceImageAuthority::REUSED);
+    assert!(staged.seal(&pool, second_token).expect("reused seal is terminal without another pixel stream"));
+    let second = staged.take(second_token, "shared.png").expect("reused ready lease");
+    second.with_rows(0, 4, |bytes, rows| assert_eq!((bytes, rows), (&[7, 11, 13, 255][..], 1))).expect("reused immutable source");
+    assert!(second.release());
+
+    io.begin_close();
+    while !io.close_step() {}
+    assert!(io.terminal_is_empty());
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+#[test]
+fn native_reference_decode_cancellation_retires_an_unsubmitted_exact_owner() {
+    let mut io = WorldAssetIoAuthority::default();
+    let token = io.reserve(1, 1, WorldAssetRequestKind::ReferenceImage, "reference.png", 4).expect("reference token");
+    let job = NativeReferenceDecodeJob::new(token, "reference.png".into(), vec![1, 2, 3, 4]);
+    job.cancel();
+    assert_eq!(job.phase.load(Ordering::Acquire), 2);
+    assert!(job.input.lock().expect("decode input").is_none());
+    assert!(matches!(job.take_output(), Some(NativeReferenceDecodeOutput::Failed)));
+    assert!(LIBRARY_SOURCE.contains("renderer_worker_pool().try_submit(semio_framework_async::Lane::Maintenance, job)"), "native reference decode submits only to the bounded maintenance lane");
+    io.begin_close();
+    while !io.close_step() {}
+    assert!(io.terminal_is_empty(), "the token fixture returns its request owner after proving job cancellation");
 }
 
 #[test]
@@ -647,8 +744,8 @@ fn manifest_has_no_retired_direct_edges() {
 
 #[test]
 fn runtime_dispatch_cursor_preserves_coalesced_then_discrete_order() {
-    let pointer = ui_host::PointerMoveSample { pointer: ui_render::PointerInfo { id: ui_render::PointerId(1), kind: ui_render::PointerKind::Mouse, pressure: None, tilt: None }, x: 1.0, y: 2.0, generation: ui_host::InputGeneration(1) };
-    let scroll = ui_host::ScrollSample { x: 3.0, y: 4.0, delta_x: 5.0, delta_y: 6.0, generation: ui_host::InputGeneration(2) };
+    let pointer = ui_host::PointerMoveSample { pointer: ui_render::PointerInfo { id: ui_render::PointerId(1), kind: ui_render::PointerKind::Mouse, pressure: None, tilt: None }, x: 1.0, y: 2.0, modifiers: ui_render::EventModifiers { shift: true, ..Default::default() }, generation: ui_host::InputGeneration(1) };
+    let scroll = ui_host::ScrollSample { x: 3.0, y: 4.0, delta_x: 5.0, delta_y: 6.0, modifiers: ui_render::EventModifiers { ctrl: true, ..Default::default() }, generation: ui_host::InputGeneration(2) };
     let discrete = ui_host::DiscreteEvent { event: ui_render::DispatchEvent::KeyDown { key: "A".to_string(), modifiers: ui_render::EventModifiers::default() }, generation: ui_host::InputGeneration(3) };
     let mut events = ui_host::DrainedEvents { pointer_move: Some(pointer), scroll: Some(scroll), ..Default::default() };
     events.discrete[0] = Some(discrete);
@@ -703,6 +800,82 @@ fn frame_deferred_cancel_retires_one_action_per_step() {
     assert!(!cursor.close_step());
     assert!(cursor.close_step());
     assert!(cursor.terminal_is_empty());
+}
+
+#[test]
+fn catalogue_terminal_pair_never_partially_enters_the_frame_action_owner() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../../../../../../../../🔨️modules/🖱️ui/🧪️fixtures/🛒️canvas-catalogue-terminal/🔣️.json"
+    )))
+    .unwrap();
+    let frame = &fixture["frameOwner"];
+    assert_eq!(WORLD3D_DEADLINE_CAPACITY, frame["capacity"].as_u64().unwrap() as usize);
+    let mut actions = FrameActionOwners::default();
+    for index in 0..frame["occupiedBeforePair"].as_u64().unwrap() as usize {
+        actions.try_push(ActionDescriptor { controller_id: "fixture".into(), action: format!("occupied-{index}"), args: None }).unwrap();
+    }
+    let mut input = InputState::<ActionDescriptor>::default();
+    let mut batch = input.reserve_actions(2, 512).unwrap();
+    batch
+        .action("layout-play", "canvasDragLeave", 256, |builder| {
+            builder.begin_object(None)?;
+            builder.string(Some("surfaceId"), "canvas.catalogue.terminal")?;
+            builder.end_container()
+        })
+        .unwrap();
+    batch
+        .action("layout-play", "canvasDrop", 256, |builder| {
+            builder.begin_object(None)?;
+            builder.string(Some("surfaceId"), "canvas.catalogue.terminal")?;
+            builder.string(Some("dragData"), "{\"kind\":\"rect\"}")?;
+            builder.end_container()
+        })
+        .unwrap();
+    batch.publish().unwrap();
+    assert_eq!(transfer_frame_input_action(&mut input, &mut actions), Ok(FrameInputActionStep::Deferred), "expected capacity pressure defers the whole source batch without faulting the frame");
+    assert_eq!(input.take_action_batch_len_step(), Ok(Some(2)), "refusal retains the complete source batch at its original owner");
+    assert_eq!(actions.pop_front().unwrap().action, "occupied-0", "the previously published FIFO remains independently drainable");
+    assert_eq!(transfer_frame_input_action(&mut input, &mut actions), Ok(FrameInputActionStep::Pending), "one opportunity materializes only the first member into the staged owner");
+    assert_eq!(input.take_action_batch_len_step(), Ok(Some(1)), "the unpublished drop remains source-owned between opportunities");
+    assert_eq!(transfer_frame_input_action(&mut input, &mut actions), Ok(FrameInputActionStep::Transferred));
+    assert_eq!(input.take_action_batch_len_step(), Ok(None));
+    let mut published = Vec::new();
+    while let Some(action) = actions.pop_front() {
+        published.push(action.action);
+    }
+    assert_eq!(published.first().map(String::as_str), Some("occupied-1"));
+    assert_eq!(published[published.len() - 2..].iter().map(String::as_str).collect::<Vec<_>>(), ["canvasDragLeave", "canvasDrop"]);
+    assert_eq!(frame["expectedPairAdmission"], "refusedWhole");
+}
+
+#[test]
+fn a_fault_after_staging_leave_retires_the_source_drop_before_a_later_single_dispatches() {
+    let mut input = InputState::<ActionDescriptor>::default();
+    let mut terminal = input.reserve_actions(2, 64).unwrap();
+    terminal.action("fixture", "canvasDragLeave", 32, |_| Ok(())).unwrap();
+    terminal.action("fixture", "canvasDrop", 32, |_| Ok(())).unwrap();
+    terminal.publish().unwrap();
+    input.reserve_action("fixture", "later", 16).unwrap().publish().unwrap();
+    let mut actions = FrameActionOwners::default();
+    assert_eq!(transfer_frame_input_action(&mut input, &mut actions), Ok(FrameInputActionStep::Pending));
+    input.record_action_fault(ui_wgpu::wgpu::BoundedActionFault::ByteCredits);
+    let mut faulted = false;
+    for _ in 0..ui_wgpu::wgpu::action::ACTION_BATCH_ITEM_CAPACITY * 2 + 2 {
+        match transfer_frame_input_action(&mut input, &mut actions) {
+            Err("bounded frame input action batch source faulted") => {
+                faulted = true;
+                break;
+            }
+            Ok(FrameInputActionStep::Pending) => {}
+            other => panic!("fault retirement published or deferred a terminal member: {other:?}"),
+        }
+    }
+    assert!(faulted, "the batch fault becomes observable after bounded staged/source retirement");
+    assert!(actions.is_empty(), "no terminal prefix entered the dispatch ledger");
+    assert_eq!(transfer_frame_input_action(&mut input, &mut actions), Ok(FrameInputActionStep::Transferred));
+    assert_eq!(actions.pop_front().unwrap().action, "later", "the independent successor remains the next dispatchable owner");
+    assert_eq!(input.take_action_batch_len_step(), Ok(None));
 }
 
 #[test]
@@ -999,7 +1172,7 @@ fn presenter_retirement_contract(glue: &str, prepared: &str, gpu: &str, draw: &s
         && glue.contains("begin_prepared_offscreen(token, &self.gate, packet, expected.scene_revision, expected.input_generation)")
         && glue.contains("self.raster_operation_authority.begin(expected.scene_revision, expected.input_generation)")
         && glue.contains(concat!("raster_witness.scene_revision != packet.scene_revision() || raster_witness.", "preview_generation != packet.preview_generation()"))
-        && glue.matches("mark_scene_changed();").count() == 2
+        && glue.matches("mark_scene_changed();").count() == 4
         && !glue.contains(concat!("let revision = packet.", "scene_revision();"))
         && !glue.contains(concat!("let generation = packet.", "preview_generation();"))
         && !glue.contains(concat!("scene_revision: packet.", "scene_revision()"))
@@ -1118,8 +1291,8 @@ const PRESENTER_RETIREMENT_MUTATIONS: &[(PresenterContractSource, &str, &str, bo
 #[test]
 fn a_fetched_glb_becomes_the_resident_world_mesh_its_url_names() {
     use infinite_world::world::{
-        begin_world3d_dynamic_retirement, finish_world3d_asset, publish_world3d_asset_mesh_lease, reserve_world3d_asset_request, reserve_world3d_asset_response, return_world3d_asset, seal_world3d_asset_response,
-        step_world3d_dynamic_retirement, take_next_completed_world3d_asset_step, take_next_world3d_asset, world3d_dynamic_retirement_terminal_is_empty, World3dState,
+        begin_world3d_dynamic_retirement, finish_world3d_asset, publish_world3d_asset_mesh_lease, reserve_world3d_asset_request, reserve_world3d_asset_response, return_world3d_asset, seal_world3d_asset_response, step_world3d_dynamic_retirement,
+        take_next_completed_world3d_asset_step, take_next_world3d_asset, world3d_dynamic_retirement_terminal_is_empty, World3dState,
     };
 
     let mut json = br#"{"scene":0,"scenes":[{"nodes":[0]}],"nodes":[{"mesh":0}],"accessors":[{"bufferView":0,"componentType":5126,"count":3,"type":"VEC3"},{"bufferView":1,"componentType":5121,"count":3,"type":"SCALAR"}],"bufferViews":[{"buffer":0,"byteOffset":0,"byteLength":36},{"buffer":0,"byteOffset":36,"byteLength":3}],"meshes":[{"primitives":[{"attributes":{"POSITION":0},"indices":1,"mode":4}]}]}"#.to_vec();
@@ -1221,8 +1394,8 @@ fn a_fetched_glb_becomes_the_resident_world_mesh_its_url_names() {
 #[test]
 fn a_real_catalogued_glb_streams_through_the_surfaces_own_asset_lane_into_its_mesh_table() {
     use infinite_world::world::{
-        begin_world3d_dynamic_retirement, finish_world3d_asset, publish_world3d_asset_mesh_lease, reserve_world3d_asset_request, reserve_world3d_asset_response, return_world3d_asset, seal_world3d_asset_response,
-        step_world3d_dynamic_retirement, take_next_completed_world3d_asset_step, take_next_world3d_asset, world3d_dynamic_retirement_terminal_is_empty, World3dState,
+        begin_world3d_dynamic_retirement, finish_world3d_asset, publish_world3d_asset_mesh_lease, reserve_world3d_asset_request, reserve_world3d_asset_response, return_world3d_asset, seal_world3d_asset_response, step_world3d_dynamic_retirement,
+        take_next_completed_world3d_asset_step, take_next_world3d_asset, world3d_dynamic_retirement_terminal_is_empty, World3dState,
     };
     let glb: &[u8] = include_bytes!("../../../../../../../🔨️modules/🖼️assets/🌱️metabolism/🎨️representation/💊️capsules/🪝️j/🧊️capsule_J.glb");
     let url = "/mesh/🧊️capsule_J.glb";
@@ -1332,7 +1505,10 @@ fn glass_foreground_scalars_are_encoded_after_the_glass_pass_and_never_into_the_
     let ladder = GPU_SOURCE.split("pub fn prepared_present_step").nth(1).expect("the prepared present ladder");
     let commands = ladder.split("PreparedGpuPresentPhase::Commands =>").nth(1).expect("the scene command phase");
     let commands = &commands[..commands.find("PreparedGpuPresentPhase::BlurScene =>").unwrap_or(commands.len())];
-    assert!(commands.contains("if !owner.is_some_and(|draw| prepared_draw_scalar_is_glass_foreground(draw, draw_cursor) && !prepared_foreground_scalar_is_enclosed(draw, overlay_after, draw_cursor))"), "the scene phase skips glass-foreground scalars no later region encloses");
+    assert!(
+        commands.contains("if !owner.is_some_and(|draw| prepared_draw_scalar_is_glass_foreground(draw, draw_cursor) && !prepared_foreground_scalar_is_enclosed(draw, overlay_after, draw_cursor))"),
+        "the scene phase skips glass-foreground scalars no later region encloses"
+    );
     assert!(commands.contains("PreparedDrawTarget::Scene"), "and everything else goes to the scene");
     let foreground = ladder.split("PreparedGpuPresentPhase::ForegroundCommands =>").nth(1).expect("the glass-foreground phase");
     let foreground = &foreground[..foreground.find("PreparedGpuPresentPhase::Present =>").unwrap_or(foreground.len())];
@@ -1374,5 +1550,5 @@ fn the_present_watchdog_signature_carries_within_item_upload_progress() {
     assert!(DRAW_SOURCE.contains("pub fn upload_progress(&self) -> (u32, u32)"), "the mesh table exposes its own cursor's walk");
     assert!(GPU_SOURCE.contains("pub fn prepared_upload_progress(&self) -> (u32, u32, usize)"), "the GPU context joins it with the atlas page cursor");
     assert!(LIBRARY_SOURCE.contains("let upload_progress = self.gpu.prepared_upload_progress();"), "and the presenter reads it every step");
-    assert!(LIBRARY_SOURCE.contains("cursor.gpu_cursor.as_ref().map(ui_wgpu::wgpu::PreparedGpuPresentCursor::progress), upload_progress)"), "as the fifth term of the progress signature");
+    assert!(LIBRARY_SOURCE.contains("cursor.gpu_cursor.as_ref().map(ui_wgpu::wgpu::PreparedGpuPresentCursor::progress), upload_progress, cursor.raster_keep_steps)"), "as the fifth term of the progress signature");
 }

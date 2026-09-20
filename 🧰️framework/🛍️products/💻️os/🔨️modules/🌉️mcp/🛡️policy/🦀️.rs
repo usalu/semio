@@ -309,20 +309,35 @@ pub struct ApprovalRequest<'a> {
     pub approval_handle: &'a str,
     pub capability_id: &'a str,
     pub capability_title: &'a str,
+    /// 📖️ The verb's own published description, in the session's locale — the sentence an agent
+    /// found it by, so the human reads the same claim the agent acted on.
+    pub capability_description: &'a str,
+    /// 🗿️ The artifact kind the verb belongs to, when it declares one: "what is about to change".
+    pub artifact_kind: Option<&'a str>,
     pub principal_id: &'a str,
     pub diff_summary: &'a serde_json::Value,
 }
 
 impl ApprovalRequest<'_> {
-    /// 📨️ The bridge's single `ApprovalRequested.summary` string, JSON-encoded in exactly the
-    /// `{capabilityId, diffSummary, risk, requestedBy}` shape `🤖️AgentApprovals`'
-    /// `parseApprovalSummary` already reads (`📓️terra-P10-report.md` anticipated this producer).
-    fn shell_summary(&self) -> String {
+    /// 📨️ The bridge's single `ApprovalRequested.summary` string, JSON-encoded in the shape both
+    /// approval surfaces parse — `💬️AgentChatPanel`/`🤖️AgentApprovals`' `parseApprovalSummary` and
+    /// its wgpu twin `parse_approval_summary`. The frame's wire shape is unchanged (tag 3 carries
+    /// one string); this payload IS the schema, and `🧫️fixtures/🛡️approval-summary` is the one file
+    /// both parsers are asserted against.
+    ///
+    /// ⏱️ `timeoutMs` is a DURATION, never a deadline: the shell starts its countdown when the
+    /// frame arrives, so a browser clock that disagrees with the gateway's cannot make an approval
+    /// look already-expired (or never-expiring) to the human deciding it.
+    fn shell_summary(&self, timeout_ms: u64) -> String {
         serde_json::json!({
             "capabilityId": self.capability_id,
+            "capabilityTitle": self.capability_title,
+            "description": self.capability_description,
+            "artifactKind": self.artifact_kind,
             "diffSummary": format!("{} — {}", self.capability_title, self.diff_summary),
             "risk": "high",
             "requestedBy": self.principal_id,
+            "timeoutMs": timeout_ms,
         })
         .to_string()
     }
@@ -398,7 +413,7 @@ impl ApprovalCoordinator {
     fn resolve_by_shell(&self, request: &ApprovalRequest<'_>) -> Result<ApprovalResolution, &'static str> {
         let Some(bridge) = self.bridge.as_ref().and_then(|slot| slot.get()) else { return Err("this gateway is serving no /bridge — no OS shell can be asked") };
         let Some(connection) = crate::ui::active_shell_connection(bridge) else { return Err("a /bridge is running but no OS shell is attached to it") };
-        let frame = crate::bridge::GatewayToShell::ApprovalRequested { approval_id: request.approval_handle.to_string(), summary: request.shell_summary() };
+        let frame = crate::bridge::GatewayToShell::ApprovalRequested { approval_id: request.approval_handle.to_string(), summary: request.shell_summary(self.shell_timeout_ms) };
         if !bridge.send_to(connection, frame) {
             return Err("the attached shell's connection closed while the approval was being published");
         }

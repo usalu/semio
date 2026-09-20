@@ -561,7 +561,7 @@ export const BLOB_ENDPOINT_PATH = "/semio-blob";
  * worker owns a live private lease that verified those exact bytes. */
 export type { DirectoryCommandErrorCodeV1, DirectoryCommandOutcomeV1, DirectoryCommandReceiptV1, DirectoryCommandRequestV1, DirectoryCommandResultV1, DocumentExecutionTargetLeaseFieldsV1, DocumentExecutionTargetProgressV1, DocumentExecutionTargetStatusCodeV1 } from "./🔨️modules/📇️directory/🧬️schema/🟦️.ts";
 export { directoryCommandRequestJson } from "./🔨️modules/📇️directory/🧬️schema/🟦️.ts";
-export { DIRECTORY_COMMAND_RECEIPT_MAX_BYTES, DIRECTORY_COMMAND_REQUEST_MAX_BYTES, canonicalDirectoryCommandV1, directoryCommandErrorIsTransient, directoryCommandSha256, parseDirectoryCommandReceiptV1, parseDirectoryCommandRequestV1, parseDirectoryCommandV1, sealDirectoryCommandReceiptV1, sealDirectoryCommandRequestV1 } from "./🔨️modules/📇️directory/🧬️schema/🟦️.ts";
+export { DIRECTORY_COMMAND_OUTCOMES_V1, DIRECTORY_COMMAND_RECEIPT_MAX_BYTES, DIRECTORY_COMMAND_REQUEST_MAX_BYTES, canonicalDirectoryCommandV1, directoryCommandErrorIsTransient, directoryCommandSha256, parseDirectoryCommandOutcomeV1, parseDirectoryCommandReceiptV1, parseDirectoryCommandRequestV1, parseDirectoryCommandV1, sealDirectoryCommandReceiptV1, sealDirectoryCommandRequestV1 } from "./🔨️modules/📇️directory/🧬️schema/🟦️.ts";
 export { DOCUMENT_EXECUTION_TARGET_COMPONENT_MAX_BYTES, DOCUMENT_EXECUTION_TARGET_DESCRIPTOR_MAX_BYTES, DOCUMENT_EXECUTION_TARGET_STATUS_TEXT_V1, documentExecutionTargetStatusRoleV1, leaseFieldsFromPlanV1, parseDocumentExecutionTargetLeaseFieldsV1, sameLeaseFieldsV1 } from "./🔨️modules/📇️directory/🧬️schema/🟦️.ts";
 /** 💡️ The host-owned ephemeral GIS Map inference port: its closed wire DTOs, its nine-phase state
  * machine, and its explicit EN/DE vocabulary. Nothing here is ever persisted into a document. */
@@ -1624,6 +1624,12 @@ export function packUInt(value: bigint): PackInteger {
 /** @emoji 🔎️ True only for a carrier this module minted — never for a look-alike literal. */
 export function isPackInteger(value: unknown): value is PackInteger {
   return typeof value === "object" && value !== null && packIntegerMint.has(value);
+}
+
+/** @emoji 🗺️ True only for the MAP arm of {@link PackValue} — not an array, not a minted integer
+ * carrier. The one narrowing a reader of a decoded pack needs before it may index by key. */
+export function isPackMap(value: PackValue): value is { readonly [key: string]: PackValue } {
+  return typeof value === "object" && value !== null && !Array.isArray(value) && !isPackInteger(value);
 }
 
 /** @emoji 🧬️ Structural-clone replacement. The mint is a `WeakSet`, so a raw `structuredClone`
@@ -3884,6 +3890,14 @@ export class AppChannelClient {
     return this.sendCommand({ LoadDocument: { seq: this.nextSeq(), pack: Array.from(pack), spr: Array.from(spr) } });
   }
 
+  /** 📤️ Produces one OUT port's current bytes (`AppCommand::MediaOut` → `AppFrame::Media`) — the
+   * agent-facing export lane, which returns the guest's own bytes to the caller instead of handing
+   * the human a download. Deliberately the SAME command the headless gateway drives, so an export
+   * over the live-shell route and one over the headless route ask the guest the identical question. */
+  async mediaOut(port: string): Promise<AppFrameValue[]> {
+    return this.sendCommand({ MediaOut: { seq: this.nextSeq(), port, request: [] } });
+  }
+
   /** 🗃️ Restores one root envelope and its complete recursive owned-member closure atomically. */
   async loadDocumentArchive(
     archive: DocumentArchivePack,
@@ -4000,6 +4014,7 @@ export class AppChannelClient {
   async readHistory(): Promise<AppFrameValue[]> {
     return this.sendCommand({ ReadHistory: { seq: this.nextSeq() } });
   }
+
 
   /** 📂️ Opens an artifact in its resolved (or explicitly named) viewer/editor surface —
    * `os.open-artifact` (contract-freeze §3 of
@@ -4243,7 +4258,7 @@ if (import.meta.vitest) {
 // the shell never opens a directory socket on the UI thread. `fetch`/`WebSocket` only — no external
 // HTTP library (CLAUDE.md "no external libraries for runtime purposes").
 import type { DirectorySpaceAdministrationPageV1, DirectorySpaceListEntryV1, DocumentScope } from "./🔨️modules/📇️directory/🟦️.ts";
-import { DIRECTORY_SPACE_ADMINISTRATION_CURSOR_MAX_BYTES, DIRECTORY_SPACE_ADMINISTRATION_PAGE_MAX_BYTES } from "./🔨️modules/📇️directory/🟦️.ts";
+import { DIRECTORY_SPACE_ADMINISTRATION_PAGE_MAX_BYTES } from "./🔨️modules/📇️directory/🟦️.ts";
 
 /** 🏛️ One administration page plus the exact response bytes its receipt covers. */
 export interface CanonicalDirectorySpaceAdministrationPageV1 {
@@ -4959,3 +4974,25 @@ export {
 } from "./🔨️modules/📇️directory/🏘️spaces/🟦️.ts";
 export type { InviteRedemptionErrorCodeV1, SpaceAccessV1, SpaceBrowserPhaseV1, SpaceMemberPresenceV1, SpaceRowV1 } from "./🔨️modules/📇️directory/🏘️spaces/🟦️.ts";
 //#endregion 🔖️HubSignIn
+
+//#region 🔖️HubFirstRun
+/** 🎓️ ticket 26/09/18/OS-HUB-COLLABORATION-AI-END-TO-END slice D2 (G12 ranked item #12) — the hub
+ * first-run walkthrough contract: one `IntroductionDefinition` covering sign in → create or join a
+ * space → invite, in both owned locales, plus the local-only seen flag. Pure, transport-free, and
+ * state-independent apart from the entry step. Appended only. */
+export {
+  HUB_FIRST_RUN_ANCHORS_V1,
+  HUB_FIRST_RUN_SEEN_VALUE_V1,
+  HUB_FIRST_RUN_STAGES_V1,
+  HUB_FIRST_RUN_STORAGE_KEY_V1,
+  HUB_FIRST_RUN_TEXT_V1,
+  hubFirstRunIntroductionV1,
+  hubFirstRunSeenV1,
+  hubFirstRunShouldStartV1,
+  hubFirstRunStageV1,
+  hubFirstRunStepIndexV1,
+  hubFirstRunTextV1,
+  markHubFirstRunSeenV1,
+} from "./🔨️modules/📇️directory/🎓️first-run/🟦️.ts";
+export type { HubFirstRunLocaleV1, HubFirstRunStageV1, HubFirstRunStateV1 } from "./🔨️modules/📇️directory/🎓️first-run/🟦️.ts";
+//#endregion 🔖️HubFirstRun

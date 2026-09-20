@@ -2,26 +2,30 @@ import { INTERACTIVITY_AUDIT_SHELL_FILE, INTERACTIVITY_AUDIT_ENGINE_CANVAS_FILE,
 
 /** 🧪️ Executes interactivity mounted frame transaction policy assertions. */
 export function interactivityMountedFrameTransactionSelfTests(repoRoot: string): void {
-  const files = [
-    "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/🦀️.rs",
-    "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧵️frame-job/🦀️.rs",
-    "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🪟️winit-app/🦀️.rs",
-    "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📸️render-snapshot/🦀️.rs",
-    "🧰️framework/🔨️modules/🖱️ui/🧠️runtime/📦️packages/🦀️rust/🦀️.rs",
-    INTERACTIVITY_AUDIT_SHELL_FILE,
-    INTERACTIVITY_AUDIT_ENGINE_CANVAS_FILE,
-    INTERACTIVITY_AUDIT_WORLD3D_FILE,
-    INTERACTIVITY_AUDIT_PREPARED_RASTER_FILE,
-    INTERACTIVITY_AUDIT_PREPARED_RASTER_GPU_FILE,
-    INTERACTIVITY_AUDIT_PREPARED_RASTER_DRAW_FILE,
-    "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🗣️Interpreter/🎯️targets/🧊️wgpu/🦀️.rs",
-    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/⚙️engine/🦀️.rs",
-    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖌️paint/🦀️.rs",
-    "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/📨️scene_slots/🦀️.rs",
-    "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🎞️Scenes/🎯️targets/🧊️wgpu/🦀️.rs",
-    INTERACTIVITY_AUDIT_OS_SERVICES_FILE,
+  const read = (file: string): string => policyReadRustPolicySource(repoRoot, file);
+  // 🧭️ `Parameters<…>` is what keeps this list and the audit's seventeen positional parameters in step:
+  // `Array.prototype.map` answers `string[]`, whose length TypeScript does not know, so spreading its
+  // result into a fixed-arity call is a `TS2556` — and a source added here without a parameter to
+  // receive it would pass unnoticed.
+  const clean: Parameters<typeof interactivityMountedFrameTransactionFailures> = [
+    read("🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/🦀️.rs"),
+    read("🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧵️frame-job/🦀️.rs"),
+    read("🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🪟️winit-app/🦀️.rs"),
+    read("🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📸️render-snapshot/🦀️.rs"),
+    read("🧰️framework/🔨️modules/🖱️ui/🧠️runtime/📦️packages/🦀️rust/🦀️.rs"),
+    read(INTERACTIVITY_AUDIT_SHELL_FILE),
+    read(INTERACTIVITY_AUDIT_ENGINE_CANVAS_FILE),
+    read(INTERACTIVITY_AUDIT_WORLD3D_FILE),
+    read(INTERACTIVITY_AUDIT_PREPARED_RASTER_FILE),
+    read(INTERACTIVITY_AUDIT_PREPARED_RASTER_GPU_FILE),
+    read(INTERACTIVITY_AUDIT_PREPARED_RASTER_DRAW_FILE),
+    read("🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🗣️Interpreter/🎯️targets/🧊️wgpu/🦀️.rs"),
+    read("🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/⚙️engine/🦀️.rs"),
+    read("🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖌️paint/🦀️.rs"),
+    read("🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/📨️scene_slots/🦀️.rs"),
+    read("🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🎞️Scenes/🎯️targets/🧊️wgpu/🦀️.rs"),
+    read(INTERACTIVITY_AUDIT_OS_SERVICES_FILE),
   ];
-  const clean = files.map((file) => policyReadRustPolicySource(repoRoot, file));
   const mutations: [string, number, string, string][] = [
     ["zero-mounted-constructor", 1, "crate::FrameTransaction::new", "crate::UnmountedFrameTransaction::new"],
     ["second-runtime", 1, "renderer_worker_pool()", "semio_framework_async::WorkerPool::new()"],
@@ -42,8 +46,8 @@ export function interactivityMountedFrameTransactionSelfTests(repoRoot: string):
     ["missing-max-identity", 0, "assert_eq!(rejected.controller_id.as_ptr(), identity)", "assert_eq!(identity, identity)"],
     ["missing-input-storm-law", 2, "mounted_pointer_storm_callback_p99_stays_below_two_milliseconds", "pointer_storm_smoke"],
     ["missing-last-valid-law", 3, "revision_exhaustion_is_permanent_and_preserves_last_valid_snapshot", "revision_exhaustion_smoke"],
-    ["dormant-production-authority", 4, "#[cfg(test)]\n#[path = \"🦀️transaction.rs\"]", "#[path = \"🦀️transaction.rs\"]"],
-    ["opaque-before-callee", 0, "app.frame_before_input_step(handle, directives, self.dpr, cursor)", "app.frame_before_input(handle, directives, self.dpr, cursor)"],
+    ["dormant-production-authority", 4, "#[cfg(test)]\n#[path = \"../../🔄️transaction/🦀️.rs\"]", "#[path = \"../../🔄️transaction/🦀️.rs\"]"],
+    ["opaque-before-callee", 0, "app.frame_before_input_step(handle, directives, cursor)", "app.frame_before_input(handle, directives, cursor)"],
     ["bulk-draw-clear", 0, "if previous.retire_step() {\n                    cursor.previous_draw = None;", "if { self.draw.clear(); true } {\n                    cursor.previous_draw = None;"],
     ["select-whole-materialization", 13, "UiNode::Select(select) => {\n            if select.items.len()", "UiNode::Select(select) => {\n            let _whole_select = select.items.iter().collect::<Vec<_>>();\n            if select.items.len()"],
     ["immediate-deferred-drive", 0, "self.pending_frame_deferred = Some", "self.drive_pending_frame_deferred(handle); self.pending_frame_deferred = Some"],
@@ -96,7 +100,7 @@ export function interactivityMountedFrameTransactionSelfTests(repoRoot: string):
     ["missing-shell-large-law", 5, "dialog_and_tour_text_advance_one_scalar_and_one_glyph_per_grant", "dialog_and_tour_text_smoke"],
     ["missing-maintenance-drop-handback", 0, "if self.armed && self.registry.abandon(self.generation)", "if false && self.registry.abandon(self.generation)"],
     ["missing-maintenance-terminal-law", 0, "frame_maintenance_cancel_and_stale_each_close_one_populated_owner_per_grant", "frame_maintenance_terminal_smoke"],
-    ["whole-component-scene-renderer", 11, "render_component_scene_step(scene, slot.rect, &mut ctx, cursor)", "render_component_scene(scene, slot.rect, &mut ctx)"],
+    ["whole-component-scene-renderer", 11, "render_component_scene_step(scene, slot.rect, &mut ctx, cursor, &mut hosts, self.driver_drag, self.document_generation)", "render_component_scene(scene, slot.rect, &mut ctx)"],
     ["whole-image-renderer", 11, "render_ui_image_step(image, slot.rect, &mut ctx, cursor)", "render_ui_image(image, slot.rect, &mut ctx)"],
     ["missing-scene-node-owner", 14, "node: Option<NodeId>", "node: NodeId"],
     ["bulk-scene-byte-run", 15, "cursor.advance_byte()", "cursor.advance_byte_run()"],
@@ -108,11 +112,12 @@ export function interactivityMountedFrameTransactionSelfTests(repoRoot: string):
     ["unmounted-atlas-abandonment-drain", 0, "PreparedAtlasPages::close_abandoned_step()", "true"],
     ["missing-atlas-interrupted-close-law", 8, "interrupted_atlas_close_rejoins_the_same_abandonment_authority", "interrupted_atlas_close_smoke"],
   ];
+  const mutationFailures: string[] = [];
   for (const [name, index, needle, replacement] of mutations) {
-    const mutated = [...clean];
+    const mutated: typeof clean = [...clean];
     mutated[index] = mutated[index]!.replace(needle, replacement);
-    if (mutated[index] === clean[index]) throw new Error(`[verify interactivity] P5a mutation ${name} did not alter source.`);
-    if (interactivityMountedFrameTransactionFailures(...mutated).length === 0) throw new Error(`[verify interactivity] P5a mutation ${name} was falsely accepted.`);
+    if (mutated[index] === clean[index]) mutationFailures.push(`mutation ${name} did not alter source`);
+    else if (interactivityMountedFrameTransactionFailures(...mutated).length === 0) mutationFailures.push(`mutation ${name} was falsely accepted`);
   }
   const legacyChromeMutations: [string, string, string][] = [
     ["production-chrome-measure-oracle", "#[cfg(test)]\nfn measure_chrome_group_item", "fn measure_chrome_group_item"],
@@ -120,11 +125,12 @@ export function interactivityMountedFrameTransactionSelfTests(repoRoot: string):
     ["mounted-legacy-chrome-group-restoration", "RetainedChromeGroupStep::Fault => self.error = Some(\"Shell fullscreen item exceeded the retained glyph boundary\".to_string())", "RetainedChromeGroupStep::Fault => { render_chrome_group(draw, atlas, icons, input, theme, rect, &[item], true); self.error = Some(\"Shell fullscreen item exceeded the retained glyph boundary\".to_string()) }"],
   ];
   for (const [name, needle, replacement] of legacyChromeMutations) {
-    const mutated = [...clean];
+    const mutated: typeof clean = [...clean];
     mutated[5] = mutated[5]!.replace(needle, replacement);
-    if (mutated[5] === clean[5]) throw new Error(`[verify interactivity] P5a mutation ${name} did not alter Shell source.`);
-    if (interactivityMountedFrameTransactionFailures(...mutated).length === 0) throw new Error(`[verify interactivity] P5a mutation ${name} was falsely accepted.`);
+    if (mutated[5] === clean[5]) mutationFailures.push(`mutation ${name} did not alter Shell source`);
+    else if (interactivityMountedFrameTransactionFailures(...mutated).length === 0) mutationFailures.push(`mutation ${name} was falsely accepted`);
   }
   const failures = interactivityMountedFrameTransactionFailures(...clean);
-  if (failures.length !== 0) throw new Error(`[verify interactivity] P5a mounted frame baseline was falsely rejected: ${failures.join("; ")}`);
+  if (failures.length !== 0) mutationFailures.push(`mounted frame baseline was falsely rejected: ${failures.join("; ")}`);
+  if (mutationFailures.length !== 0) throw new Error(`[verify interactivity] P5a ${mutationFailures.join("; ")}`);
 }

@@ -19,10 +19,13 @@ export function readGeneratedCatalogProjection(generatedDir = join(import.meta.d
   return { entries: read<PluginRegistryEntry>(GENERATED_PLUGINS_PROJECTION), playgrounds: read<PlaygroundEntry>(GENERATED_PLAYGROUNDS_PROJECTION) };
 }
 
-/** 🏠️ Host detection of projected rows: a variant, alias or bare plugin id whose crate declares `[package.metadata.semio].host`. */
+/** 🏠️ Host detection of projected rows: a variant, alias or bare plugin id whose crate declares
+ * `[package.metadata.semio].host` and whose playground row names no `app`. A row that names one boots
+ * that single artifact app standalone, even on the host crate (`🪐️space`'s Home and Space). */
 export function projectedHostPluginFilter(projection: GeneratedCatalogProjection, pluginFilter?: string): boolean {
   if (!pluginFilter) return true;
   const variantRow = projection.playgrounds.find((row) => row.variant === pluginFilter || row.aliases.includes(pluginFilter));
+  if (variantRow?.app !== undefined) return false;
   const pluginId = variantRow?.pluginId ?? pluginFilter;
   return projection.entries.some((entry) => entry.pluginId === pluginId && entry.host !== undefined);
 }

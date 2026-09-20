@@ -217,7 +217,7 @@ fn gather_world_passes(surface_passes: &[SurfacePass], width: f32, height: f32) 
         let line_range = (line_start, lines.len() as u32 - line_start);
         mask_quads.push(QuadInstance::solid(full_screen, white));
         mask_quads.push(QuadInstance::solid(pass.viewport, white));
-        prepared.push(PreparedWorldPass { globals: World3dGlobals { view_proj: pass.view_proj, light_dir: [pass.light_dir[0], pass.light_dir[1], pass.light_dir[2], 0.0] }, viewport: pass.viewport, opaque, translucent, line_range });
+        prepared.push(PreparedWorldPass { globals: World3dGlobals::from_pass(pass), viewport: pass.viewport, opaque, translucent, line_range });
     }
     (prepared, instances, lines, mask_quads)
 }
@@ -244,6 +244,7 @@ fn replay_world_passes(
         pass.set_viewport(scene.viewport[0], scene.viewport[1], scene.viewport[2].max(1.0), scene.viewport[3].max(1.0), 0.0, 1.0);
         pass.set_bind_group(0, world_ring.bind_group(), &[world_ring.offset_for_slot(slot as u32)]);
         pass.set_pipeline(&pipelines.world_opaque_pipeline);
+        pass.set_bind_group(1, &pipelines.world_shadow_bind_group, &[]);
         for (mesh, offset, count) in &scene.opaque {
             draw_mesh_range(pass, resources, *mesh, instance_buffer, *offset, *count)?;
         }
@@ -431,6 +432,17 @@ pub(crate) fn render(
     });
 
     let mut encoder = device.create_command_encoder(&wgpu::CommandEncoderDescriptor { label: Some("webgpu_backend_frame") });
+
+    if prepared_world.iter().any(|pass| pass.globals.shadow[0] > 0.5) {
+        let _pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
+            label: Some("world3d_shadow_fallback_clear"),
+            color_attachments: &[],
+            depth_stencil_attachment: Some(wgpu::RenderPassDepthStencilAttachment { view: &pipelines.world_shadow_view, depth_ops: Some(wgpu::Operations { load: wgpu::LoadOp::Clear(1.0), store: wgpu::StoreOp::Store }), stencil_ops: None }),
+            timestamp_writes: None,
+            occlusion_query_set: None,
+            multiview_mask: None,
+        });
+    }
 
     {
         let mut pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {

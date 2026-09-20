@@ -36,7 +36,7 @@ opt-doctype = "[" "0" "]" | "[" "1" "," doctype-lit "]"
 doctype-lit = "[" hex "," opt-external-id "," "[" dtd-declaration-list? "]" "]"
 opt-external-id = "[" "0" "]" | "[" "1" "," external-id "]"
 external-id = "S" "[" hex "]" | "P" "[" hex "," hex "]"
-dtd-declaration-list = dtd-declaration ("," dtd-declaration)*
+dtd-declaration-list = dtd-declaration {"," dtd-declaration}*
 dtd-declaration = "E" "[" bool-lit "," hex "," hex "]"
 
 # `enc_node_diff`/`dec_node_diff` -- `XmlNodeDiff` itself needs a tag (`E`=Element, `T`=Text,

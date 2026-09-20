@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Stepper Pointer Commit",
+  "type": "object",
+  "required": ["cases"],
+  "additionalProperties": false,
+  "properties": {
+    "cases": {
+      "type": "array", "minItems": 1,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["id", "segment", "terminal", "pressActions", "terminalActions", "deltaSteps"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "segment": { "enum": ["minus", "value", "plus"] },
+          "terminal": { "enum": ["release-inside", "release-outside", "cancel"] },
+          "pressActions": { "type": "integer", "minimum": 0 },
+          "terminalActions": { "type": "integer", "minimum": 0 },
+          "deltaSteps": { "type": "number" }
+        }
+      }
+    }
+  }
+}

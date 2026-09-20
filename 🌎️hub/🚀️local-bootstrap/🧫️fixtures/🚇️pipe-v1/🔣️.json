@@ -127,9 +127,10 @@
     "authentication": { "kind": "local-bootstrap-pipe-v1", "bootstrapReady": true, "publicSessionIssuance": false },
     "directory": { "ready": true },
     "storage": { "ready": true },
-    "artifactAuthority": { "ready": false },
+    "artifactAuthority": { "ready": false, "reason": "trusted-catalog-never-published-in-this-data-root" },
     "adminAssets": { "ready": true },
-    "features": { "openPlan": false, "rebootstrap": true, "mcpWorkspace": false, "inference": false }
+    "features": { "openPlan": false, "rebootstrap": true, "mcpWorkspace": false, "inference": false },
+    "blockedBy": [{ "gate": "artifactAuthority", "reason": "trusted-catalog-never-published-in-this-data-root" }]
   },
   "notReady": {
     "schema": "semio.hub.readiness/v1",
@@ -138,11 +139,16 @@
     "mode": "development",
     "bindScope": "loopback",
     "authentication": { "kind": "local-bootstrap-pipe-v1", "bootstrapReady": false, "publicSessionIssuance": false },
-    "directory": { "ready": false },
-    "storage": { "ready": false },
-    "artifactAuthority": { "ready": false },
-    "adminAssets": { "ready": false },
-    "features": { "openPlan": false, "rebootstrap": true, "mcpWorkspace": false, "inference": false }
+    "directory": { "ready": false, "reason": "directory-backend-unavailable" },
+    "storage": { "ready": false, "reason": "document-storage-backend-unavailable" },
+    "artifactAuthority": { "ready": false, "reason": "trusted-catalog-never-published-in-this-data-root" },
+    "adminAssets": { "ready": false, "reason": "admin-spa-dist-missing-run-os-hub-admin-build" },
+    "features": { "openPlan": false, "rebootstrap": true, "mcpWorkspace": false, "inference": false },
+    "blockedBy": [
+      { "gate": "authentication.bootstrapReady", "reason": "local-bootstrap-pipe-handshake-incomplete" },
+      { "gate": "artifactAuthority", "reason": "trusted-catalog-never-published-in-this-data-root" },
+      { "gate": "adminAssets", "reason": "admin-spa-dist-missing-run-os-hub-admin-build" }
+    ]
   },
   "hostile": {
     "wrongProof": "f79b613ee78f07614846ab03615dc9df317071949a8de681494eabc96267ac05",

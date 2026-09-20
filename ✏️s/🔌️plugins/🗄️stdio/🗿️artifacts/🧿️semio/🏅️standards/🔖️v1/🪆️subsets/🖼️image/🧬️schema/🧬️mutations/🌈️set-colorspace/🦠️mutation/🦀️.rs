@@ -5,6 +5,6 @@ use crate::standards::v1::subsets::image::schema::mutations::set_colorspace;
 
 /// ▶️ Applies a set-colorspace mutation.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn apply(snapshot: &mut SemioImageSnapshot, colorspace: SemioColorspace) -> SemioImageDiff {
+pub fn apply(snapshot: &mut SemioImageSnapshot, colorspace: SemioColorspace) -> protocol::MutationOutcome<SemioImageDiff> {
     apply_semio_image_mutation(snapshot, &SemioImageMutation::SetColorspace(set_colorspace::SetColorspace { colorspace }))
 }

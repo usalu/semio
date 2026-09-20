@@ -67,7 +67,7 @@ async fn change_retrofit_gamma_el_committed_json_is_canonical() {
     }
     let reencoded = serde_json::to_value(mutation()).expect("change-retrofit-gamma-el mutation encodes");
     let original: serde_json::Value = serde_json::from_str(MUTATION).expect("change-retrofit-gamma-el mutation reparses");
-    assert_eq!(reencoded, original, "change-retrofit-gamma-el/raises-retrofit-gamma-el-to-1-25: committed mutation JSON is not the canonical externally-tagged ChangeRetrofitGammaEl form carrying newRetrofitGammaEl");
+    assert_eq!(reencoded, original, "change-retrofit-gamma-el/raises-retrofit-gamma-el-to-1-25: committed mutation JSON is not the canonical internally-tagged ChangeRetrofitGammaEl form carrying mutation and newRetrofitGammaEl");
 }
 
 /// 🎯️ The declared outcome holds: `change-retrofit-gamma-el` at 1.25 is applied, not rejected, and carries no

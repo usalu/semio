@@ -1,5 +1,4 @@
 {
-  "ChangeMultipleResistingSystems": {
-    "newMultipleResistingSystems": false
-  }
+  "mutation": "changeMultipleResistingSystems",
+  "newMultipleResistingSystems": false
 }

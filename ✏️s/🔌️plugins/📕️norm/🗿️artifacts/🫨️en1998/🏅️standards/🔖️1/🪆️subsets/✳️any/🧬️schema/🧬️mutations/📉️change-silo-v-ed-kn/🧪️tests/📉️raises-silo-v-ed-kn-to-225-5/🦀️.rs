@@ -67,7 +67,7 @@ async fn change_silo_v_ed_kn_committed_json_is_canonical() {
     }
     let reencoded = serde_json::to_value(mutation()).expect("change-silo-v-ed-kn mutation encodes");
     let original: serde_json::Value = serde_json::from_str(MUTATION).expect("change-silo-v-ed-kn mutation reparses");
-    assert_eq!(reencoded, original, "change-silo-v-ed-kn/raises-silo-v-ed-kn-to-225-5: committed mutation JSON is not the canonical externally-tagged ChangeSiloVEdKn form carrying newSiloVEdKn");
+    assert_eq!(reencoded, original, "change-silo-v-ed-kn/raises-silo-v-ed-kn-to-225-5: committed mutation JSON is not the canonical internally-tagged ChangeSiloVEdKn form carrying mutation and newSiloVEdKn");
 }
 
 /// 🎯️ The declared outcome holds: `change-silo-v-ed-kn` at 225.5 is applied, not rejected, and carries no

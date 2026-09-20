@@ -306,7 +306,7 @@ function treeSectionsCatalogueDragMime(sections: readonly TreeDataSection[]): st
     return undefined;
   };
   for (const section of sections) {
-    const mime = visit(section.items);
+    const mime = visit(section.items ?? []);
     if (mime) return mime;
   }
   return undefined;
@@ -911,7 +911,7 @@ function layoutSpecStyle(layout: LayoutSpec): CSSProperties {
     }
     case "overlay": {
       const l = layout as OverlayLayout & { kind: "overlay" };
-      return { position: "absolute", inset: edgeSpaceToPadding(l.inset) };
+      return { position: "relative", padding: edgeSpaceToPadding(l.inset) };
     }
     case "scroll": {
       const l = layout as ScrollLayout & { kind: "scroll" };
@@ -1114,7 +1114,7 @@ function ContainerView({ store, record, context }: { readonly store: UiDocumentS
   const component = record.component as Extract<Component, { type: "container" }>;
   const { props: aria, describedBy } = accessibilityAriaProps(record.accessibility, `node-${record.id}`);
   const presence = usePresenceOverlayEntry(record.key);
-  const style: CSSProperties = { ...layoutSpecStyle(record.layout), position: record.layout.kind === "overlay" ? "relative" : undefined };
+  const style = layoutSpecStyle(record.layout);
   const dataAttrs = styleSpecDataAttributes(record.style);
   const childIds = record.children ?? [];
   const childReactKeys = uiChildReactKeys(store.getState(), childIds);
@@ -2248,6 +2248,8 @@ if (import.meta.vitest) {
   await registerTreeWindowTests(import.meta.vitest, { TreeWindowContext, UiDocumentStore, UiNodeView, treeItemToTreeData, treePickIntentInputV1, treePickTargetsV1, treeWindowBodyRequestsV1, treeWindowContainersUnder, treeWindowRowHeightPx, treeWindowScrollViewport, treeWindowViewportMetrics }, { url: import.meta.url });
   const { registerTests1: registerProgressTests } = await import("./🧪️tests/📶️progress/🟦️.tsx");
   await registerProgressTests(import.meta.vitest, { UiDocumentStore, UiNodeView }, { url: import.meta.url });
+  const { registerTests1: registerOverlayFlowTests } = await import("./🧪️tests/📐️overlay-flow/🟦️.tsx");
+  await registerOverlayFlowTests(import.meta.vitest, { UiDocumentStore, UiNodeView, layoutSpecStyle }, { url: import.meta.url });
   const { registerTests1: registerSurfaceSceneLaneTests } = await import("./🧪️tests/🚚️surface-scene-lanes/🟦️.tsx");
   await registerSurfaceSceneLaneTests(
     import.meta.vitest,

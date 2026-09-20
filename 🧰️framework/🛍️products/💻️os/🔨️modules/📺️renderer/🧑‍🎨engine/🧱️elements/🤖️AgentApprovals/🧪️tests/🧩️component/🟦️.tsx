@@ -9,9 +9,12 @@
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
+import { readFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { cleanup, fireEvent, render, screen } from "@semio-tech/ui-react/test";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { AgentApprovals, parseApprovalSummary } from "../../🟦️.tsx";
+import { AgentApprovals, approvalSecondsRemaining, parseApprovalSummary } from "../../🟦️.tsx";
 import { type PendingAgentApproval } from "../../../🔗️AgentBridge/🟦️.tsx";
 // #endregion 🔌️Adapters
 
@@ -21,15 +24,40 @@ afterEach(cleanup);
 describe("parseApprovalSummary", () => {
   it("parses a structured JSON summary", () => {
     const parsed = parseApprovalSummary(JSON.stringify({ capabilityId: "cad.viewport.translateSelection", diffSummary: "Move 3 elements by (1, 0, 0)", risk: "medium", requestedBy: "agent:demo" }));
-    expect(parsed).toEqual({ capabilityId: "cad.viewport.translateSelection", diffSummary: "Move 3 elements by (1, 0, 0)", risk: "medium", requestedBy: "agent:demo" });
+    expect(parsed).toEqual({ capabilityId: "cad.viewport.translateSelection", capabilityTitle: null, description: null, artifactKind: null, diffSummary: "Move 3 elements by (1, 0, 0)", risk: "medium", requestedBy: "agent:demo", timeoutMs: null });
   });
 
   it("falls back to plain text when the summary is not JSON", () => {
-    expect(parseApprovalSummary("translate the selection")).toEqual({ capabilityId: null, diffSummary: "translate the selection", risk: null, requestedBy: null });
+    expect(parseApprovalSummary("translate the selection")).toEqual({ capabilityId: null, capabilityTitle: null, description: null, artifactKind: null, diffSummary: "translate the selection", risk: null, requestedBy: null, timeoutMs: null });
   });
 
   it("falls back to plain text when the summary is JSON but not the expected shape", () => {
-    expect(parseApprovalSummary(JSON.stringify([1, 2, 3]))).toEqual({ capabilityId: null, diffSummary: "[1,2,3]", risk: null, requestedBy: null });
+    expect(parseApprovalSummary(JSON.stringify([1, 2, 3]))).toEqual({ capabilityId: null, capabilityTitle: null, description: null, artifactKind: null, diffSummary: "[1,2,3]", risk: null, requestedBy: null, timeoutMs: null });
+  });
+
+  // 🧾️ The same file the wgpu twin `parse_approval_summary` is asserted against, so the two hosts
+  // can never disagree about what the gateway sent.
+  const summaryFixture = JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../../🧫️fixtures/🛡️summary/🔣️.json"), "utf8")) as Record<string, { readonly summary: string; readonly parsed: Record<string, unknown> }> & {
+    readonly unusableTimeout: { readonly summary: string };
+  };
+
+  for (const row of ["rich", "plainText", "legacyWithoutTheNewFields"]) {
+    it(`parses the shared fixture row \`${row}\` exactly as the wgpu bank does`, () => {
+      expect(parseApprovalSummary(summaryFixture[row]!.summary)).toEqual(summaryFixture[row]!.parsed);
+    });
+  }
+
+  it("refuses to count down a non-positive timeout", () => {
+    expect(parseApprovalSummary(summaryFixture.unusableTimeout.summary).timeoutMs).toBeNull();
+  });
+});
+
+describe("approvalSecondsRemaining", () => {
+  it("counts from the frame's arrival, floors at zero, and answers nothing without a budget", () => {
+    expect(approvalSecondsRemaining(120_000, 1_000, 1_000)).toBe(120);
+    expect(approvalSecondsRemaining(120_000, 1_000, 61_000)).toBe(60);
+    expect(approvalSecondsRemaining(120_000, 1_000, 999_000)).toBe(0);
+    expect(approvalSecondsRemaining(null, 1_000, 1_000)).toBeNull();
   });
 });
 //#endregion 🔖️ParseSummary

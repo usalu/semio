@@ -31,6 +31,13 @@ export type UiAccessibilityProjectionNodeV1 = {
   readonly focusable: boolean;
   readonly actionable: boolean;
   readonly focused: boolean;
+  readonly checked: boolean | null;
+  readonly selected: boolean | null;
+  readonly expanded: boolean | null;
+  readonly editable: boolean;
+  readonly controls: string | null;
+  readonly activeDescendant: string | null;
+  readonly level: number | null;
   readonly valueMin: number | null;
   readonly valueMax: number | null;
   readonly valueNow: number | null;
@@ -138,6 +145,14 @@ export function uiAccessibilityIsFocusableV1(component: Component, activatable: 
 /** 📶️ `aria-valuemin`/`max`/`now`/`valuetext` for a determinate progress bar, only `aria-busy` while it
  * is indeterminate (a total that is absent, never merely zero), and nothing for every other component. */
 export function uiAccessibilityValueV1(component: Component): UiAccessibilityValueV1 {
+  if (component.type === "input") {
+    const numeric = /^[-+]?(?:\d+\.?\d*|\.\d+)(?:[eE][-+]?\d+)?$/u.test(component.value) ? Number(component.value) : Number.NaN;
+    return { valueMin: component.min ?? null, valueMax: component.max ?? null, valueNow: Number.isFinite(numeric) ? numeric : null, valueText: component.value, busy: false };
+  }
+  if (component.type === "select" || component.type === "iconSelect") return { valueMin: null, valueMax: null, valueNow: null, valueText: component.value, busy: false };
+  if (component.type === "slider") return { valueMin: component.min, valueMax: component.max, valueNow: component.value, valueText: component.unit == null ? null : `${component.value} ${component.unit}`, busy: false };
+  if (component.type === "numberStepper") return { valueMin: null, valueMax: null, valueNow: component.value, valueText: String(component.value), busy: false };
+  if (component.type === "ring") return { valueMin: 0, valueMax: 1, valueNow: component.t, valueText: String(component.t), busy: false };
   if (component.type !== "progress") return { valueMin: null, valueMax: null, valueNow: null, valueText: null, busy: false };
   if (component.total == null) return { valueMin: null, valueMax: null, valueNow: null, valueText: null, busy: true };
   return { valueMin: 0, valueMax: component.total, valueNow: component.completed, valueText: component.valueText, busy: false };
@@ -172,6 +187,13 @@ export function uiAccessibilityProjectionNodeV1(record: UiNodeRecord, depth: num
     focusable: uiAccessibilityIsFocusableV1(record.component, activatable),
     actionable: activatable || bindings.length > 0,
     focused: false,
+    checked: record.component.type === "toggle" ? record.component.on : null,
+    selected: null,
+    expanded: record.component.type === "select" ? false : record.component.type === "treeSection" || record.component.type === "treeItem" ? record.component.defaultOpen ?? true : null,
+    editable: false,
+    controls: null,
+    activeDescendant: null,
+    level: record.component.type === "treeItem" ? depth + 1 : null,
     ...uiAccessibilityValueV1(record.component),
   };
 }

@@ -10,13 +10,13 @@ use std::sync::{
 pub const UI_RESIDENT_SLOTS: usize = 64;
 pub const UI_RESIDENT_SURFACE_BYTES: usize = 8 * 1024 * 1024;
 
-/// 📐️ What ONE surface costs when its body FILLS the document contract: every record the contract
-/// admits, at the size the contract gives a record. This is a PRICE — what a real holder occupies —
-/// where [`UI_RESIDENT_SURFACE_BYTES`] is a MAXIMUM a pathological single surface may reach.
+/// 📐️ The full document's record-byte baseline, excluding assembly records and open metadata.
+/// [`crate::ui_document_resident_limits`] prices a reservation including those additional owners.
 pub const UI_RESIDENT_DOCUMENT_BYTES: usize = super::UI_DOCUMENT_NODES * size_of::<super::UiNodeRecord>();
 
-/// 🎟️ The process-wide budget, funding every slot the SLOT ledger admits at one full document each, so
-/// the two ledgers refuse together instead of the byte ledger refusing first with slots still empty.
+/// 🎟️ The process-wide byte budget, derived from sixty-four full-document record baselines.
+/// Static backing and each reservation's additional owners consume this budget too, so its byte
+/// ceiling and the slot ceiling remain independent.
 ///
 /// 🐛️ ticket 26/09/09/PROCEDURAL-3D-END-TO-END lane `react-example-switch-regression`: this was
 /// `4 * UI_RESIDENT_SURFACE_BYTES` — four times the per-surface CEILING, the imagined concurrency of a

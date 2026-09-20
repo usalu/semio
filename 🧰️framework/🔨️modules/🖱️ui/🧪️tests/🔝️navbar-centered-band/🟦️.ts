@@ -20,6 +20,11 @@ describe("🛟️ navbar centered band", () => {
     expect(fixture.contract.fullyOccupiedBarKeepsWholeWidth).toBe(true);
     expect(fixture.contract.emptyFlowChildIsFreeRoom).toBe(true);
     expect(fixture.contract.itemWiderThanBandStartsAtBandLeft).toBe(true);
+    expect(fixture.contract.topMiddleBelongsToCenteredCluster).toBe(true);
+    expect(fixture.contract.footerTrailingOrder).toEqual(["presence", "hubConnection", "bottomRight"]);
+    expect(fixture.contract.mobileNavbarOmitsDesktopCenterControls).toBe(true);
+    expect(fixture.contract.mobileFooterKeepsHubConnection).toBe(true);
+    expect(fixture.contract.dockCapDepthUsesControlAndPadding).toBe(true);
   });
 
   for (const scenario of fixture.occupancy) {
@@ -66,5 +71,16 @@ describe("🛟️ navbar centered band", () => {
     expect(band).toEqual({ left: 173, right: 947 });
     const left = navbarCenteredLeftV1(width, band, 753);
     expect(left + 753).toBeLessThanOrEqual(947);
+  });
+
+  it("derives dock cap depth from its padded control while navbar height stays independently customizable", () => {
+    for (const scenario of fixture.dockCapMetrics) {
+      const controlHeight = scenario.spacing * scenario.controlHeightUiSpacing;
+      const padding = scenario.spacing * scenario.paddingUiSpacing;
+      expect(controlHeight).toBeCloseTo(scenario.controlHeight);
+      expect(controlHeight + padding * 2).toBeCloseTo(scenario.capDepth);
+      expect(scenario.spacing * scenario.navbarHeightUiSpacing).toBeCloseTo(scenario.navbarHeight);
+    }
+    expect(fixture.dockCapMetrics[1]!.capDepth).not.toBe(fixture.dockCapMetrics[1]!.navbarHeight);
   });
 });

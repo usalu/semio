@@ -1,5 +1,4 @@
 {
-  "ChangeFoundationPRdKpa": {
-    "newFoundationPRdKpa": 625.0
-  }
+  "mutation": "changeFoundationPRdKpa",
+  "newFoundationPRdKpa": 625.0
 }

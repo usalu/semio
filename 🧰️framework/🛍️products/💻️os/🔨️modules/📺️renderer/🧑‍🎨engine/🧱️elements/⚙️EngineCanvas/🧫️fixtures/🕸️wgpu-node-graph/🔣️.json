@@ -6,6 +6,136 @@
     "why_committed": "The framework renderer must not depend on a plugin crate; the payload is committed as data, and every field is re-validated by FlowHost::parse_host_snapshot_json in the lane that reads it.",
     "expect": { "widgets": 7, "synapses": 6, "camera": { "x": 94.75581571737445, "y": -97.50833134679668, "zoom": 1.7844325616011099 } }
   },
+  "operators": [
+    {
+      "id": "brep.curve.polygon",
+      "extension": "brep.curve",
+      "name": "polygon",
+      "abbreviation": "P",
+      "icon": "box",
+      "summary": "",
+      "inputs": [
+        {
+          "code": "radius",
+          "abbreviation": "radius",
+          "name": "radius",
+          "fullName": "radius",
+          "label": "radius",
+          "cardinality": "!"
+        },
+        {
+          "code": "sides",
+          "abbreviation": "sides",
+          "name": "sides",
+          "fullName": "sides",
+          "label": "sides",
+          "cardinality": "!"
+        }
+      ],
+      "outputs": [
+        {
+          "code": "wire",
+          "abbreviation": "wire",
+          "name": "wire",
+          "fullName": "wire",
+          "label": "wire",
+          "cardinality": "!"
+        }
+      ],
+      "group": [
+        "brep.curve"
+      ]
+    },
+    {
+      "id": "math.vector",
+      "extension": "math",
+      "name": "vector",
+      "abbreviation": "V",
+      "icon": "box",
+      "summary": "",
+      "inputs": [
+        {
+          "code": "x",
+          "abbreviation": "x",
+          "name": "x",
+          "fullName": "x",
+          "label": "x",
+          "cardinality": "!"
+        },
+        {
+          "code": "y",
+          "abbreviation": "y",
+          "name": "y",
+          "fullName": "y",
+          "label": "y",
+          "cardinality": "!"
+        },
+        {
+          "code": "z",
+          "abbreviation": "z",
+          "name": "z",
+          "fullName": "z",
+          "label": "z",
+          "cardinality": "!"
+        }
+      ],
+      "outputs": [
+        {
+          "code": "vectorOut",
+          "abbreviation": "vectorOut",
+          "name": "vectorOut",
+          "fullName": "vectorOut",
+          "label": "vectorOut",
+          "cardinality": "!"
+        }
+      ],
+      "group": [
+        "math"
+      ]
+    },
+    {
+      "id": "brep.solid.extrude",
+      "extension": "brep.solid",
+      "name": "extrude",
+      "abbreviation": "E",
+      "icon": "box",
+      "summary": "",
+      "inputs": [
+        {
+          "code": "wire",
+          "abbreviation": "wire",
+          "name": "wire",
+          "fullName": "wire",
+          "label": "wire",
+          "cardinality": "!"
+        },
+        {
+          "code": "vector",
+          "abbreviation": "vector",
+          "name": "vector",
+          "fullName": "vector",
+          "label": "vector",
+          "cardinality": "!"
+        }
+      ],
+      "outputs": [
+        {
+          "code": "solid",
+          "abbreviation": "solid",
+          "name": "solid",
+          "fullName": "solid",
+          "label": "solid",
+          "cardinality": "!"
+        }
+      ],
+      "group": [
+        "brep.solid"
+      ]
+    }
+  ],
+  "captionExpectation": { "nodes": 6, "ports": 13, "outputHandles": ["profile@wire", "extrusion-axis@vectorOut", "extrude@solid"] },
+  "tutorialViewport": { "width": 966, "height": 836 },
+  "tutorialVisibility": [ { "entity": "radius", "visible": true }, { "entity": "height", "visible": false } ],
   "hostSnapshot": {
     "schema": "flow.hostSnapshot",
     "camera": { "x": 94.75581571737445, "y": -97.50833134679668, "zoom": 1.7844325616011099 },

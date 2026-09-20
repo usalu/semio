@@ -1178,18 +1178,18 @@
               },
               {
                 "args": [],
-                "iconId": "eye",
-                "id": "setEditorSelection",
+                "iconId": "text-cursor",
+                "id": "textSelect",
                 "inPalette": false,
                 "kind": "view",
                 "label": {
                   "native": {
-                    "de": "Editor-Auswahl festlegen",
-                    "en": "Set Editor Selection"
+                    "de": "Editor-Text auswählen",
+                    "en": "Select Editor Text"
                   },
                   "reuse": {
-                    "de": "Editor-Auswahl festlegen",
-                    "en": "Set Editor Selection"
+                    "de": "Editor-Text auswählen",
+                    "en": "Select Editor Text"
                   }
                 },
                 "semantics": {

@@ -60,6 +60,11 @@
       "fatViewChars": 8388609,
       "encoding": "pack",
       "crossings": 1,
+      "sequenceCases": [
+        { "ownerBefore": 126, "sequence": 127 },
+        { "ownerBefore": 127, "sequence": 128 },
+        { "ownerBefore": 9007199254740990, "sequence": 9007199254740991 }
+      ],
       "slimView": {
         "locale": "en",
         "terminology": "native"

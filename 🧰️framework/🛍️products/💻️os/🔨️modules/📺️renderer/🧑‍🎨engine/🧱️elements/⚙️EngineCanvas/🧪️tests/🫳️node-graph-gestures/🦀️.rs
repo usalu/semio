@@ -148,11 +148,7 @@ fn a_dense_sweep_across_the_whole_surface_survives_an_action_queue_that_is_never
         }
     }
     assert_eq!(published, columns * rows, "every swept point was admitted");
-    assert!(
-        crate::collect_fixture_actions(&mut input).len() < ui_wgpu::wgpu::action::ACTION_QUEUE_ITEM_CAPACITY,
-        "a {columns}x{rows} sweep of an undrained queue stays inside {} items",
-        ui_wgpu::wgpu::action::ACTION_QUEUE_ITEM_CAPACITY
-    );
+    assert!(crate::collect_fixture_actions(&mut input).len() < ui_wgpu::wgpu::action::ACTION_QUEUE_ITEM_CAPACITY, "a {columns}x{rows} sweep of an undrained queue stays inside {} items", ui_wgpu::wgpu::action::ACTION_QUEUE_ITEM_CAPACITY);
     drop_engine_surface(surface_id);
 }
 

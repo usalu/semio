@@ -1,0 +1,284 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio.tech/schema/ui/ink-clipboard-v1.json",
+  "title": "Ink Clipboard",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "payloadSchema", "limits", "viewport", "document", "copy", "paste", "ownership"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "payloadSchema": { "const": "ink.clipboard" },
+    "limits": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["clipboardTextBytes", "actionItemBytes", "actionStringBytes", "selectedItems", "mountedOperations"],
+      "properties": {
+        "clipboardTextBytes": { "const": 16383 },
+        "actionItemBytes": { "const": 16384 },
+        "actionStringBytes": { "const": 4096 },
+        "selectedItems": { "const": 254 },
+        "mountedOperations": { "const": 32 }
+      }
+    },
+    "viewport": { "$ref": "#/$defs/size" },
+    "document": { "$ref": "#/$defs/document" },
+    "copy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["selectedIds", "expectedBlockIds", "assetsEmbedded", "emptySelectionWrites"],
+      "properties": {
+        "selectedIds": { "$ref": "#/$defs/ids" },
+        "expectedBlockIds": { "$ref": "#/$defs/ids" },
+        "assetsEmbedded": { "const": false },
+        "emptySelectionWrites": { "const": false }
+      }
+    },
+    "paste": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["target", "blocks", "plainText", "svg", "raster", "invalidPayloads", "priority"],
+      "properties": {
+        "target": { "$ref": "#/$defs/point" },
+        "blocks": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["payload", "expectedTopLevelPoints", "reidentifyRecursively", "preserveNames"],
+          "properties": {
+            "payload": { "$ref": "#/$defs/payload" },
+            "expectedTopLevelPoints": {
+              "type": "array",
+              "minItems": 1,
+              "items": { "$ref": "#/$defs/point" }
+            },
+            "reidentifyRecursively": { "const": true },
+            "preserveNames": { "const": true }
+          }
+        },
+        "plainText": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["clipboard", "trimmed", "paragraphs", "point", "size"],
+          "properties": {
+            "clipboard": { "type": "string", "minLength": 1 },
+            "trimmed": { "type": "string", "minLength": 1 },
+            "paragraphs": { "type": "array", "minItems": 1, "items": { "type": "string" } },
+            "point": { "$ref": "#/$defs/point" },
+            "size": { "$ref": "#/$defs/size" }
+          }
+        },
+        "svg": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["clipboard", "trimmed", "mime", "point", "size"],
+          "properties": {
+            "clipboard": { "type": "string", "minLength": 1 },
+            "trimmed": { "type": "string", "pattern": "^<svg" },
+            "mime": { "const": "image/svg+xml" },
+            "point": { "$ref": "#/$defs/point" },
+            "size": { "$ref": "#/$defs/size" }
+          }
+        },
+        "raster": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["mime", "base64", "dataUrl", "point", "size"],
+          "properties": {
+            "mime": { "const": "image/png" },
+            "base64": { "type": "string", "minLength": 1 },
+            "dataUrl": { "type": "string", "pattern": "^data:image/png;base64," },
+            "point": { "$ref": "#/$defs/point" },
+            "size": { "$ref": "#/$defs/size" }
+          }
+        },
+        "invalidPayloads": {
+          "type": "array",
+          "minItems": 3,
+          "items": { "type": "string" },
+          "uniqueItems": true
+        },
+        "priority": {
+          "type": "array",
+          "prefixItems": [{ "const": "image" }, { "const": "ink.clipboard" }, { "const": "svg" }, { "const": "plainText" }],
+          "items": false,
+          "minItems": 4,
+          "maxItems": 4
+        }
+      }
+    },
+    "ownership": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["address", "editorBypass", "completion", "close", "replacement", "admission"],
+      "properties": {
+        "address": {
+          "type": "array",
+          "prefixItems": [{ "const": "windowId" }, { "const": "windowGeneration" }, { "const": "nodeId" }, { "const": "surfaceId" }],
+          "items": false,
+          "minItems": 4,
+          "maxItems": 4
+        },
+        "editorBypass": { "const": true },
+        "completion": { "const": "exactLiveAddress" },
+        "close": { "const": "cancelAndRetire" },
+        "replacement": { "const": "rejectOldCompletion" },
+        "admission": { "const": "boundedIndependentOperations" }
+      }
+    }
+  },
+  "$defs": {
+    "ids": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 },
+      "uniqueItems": true
+    },
+    "point": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["x", "y"],
+      "properties": { "x": { "type": "number" }, "y": { "type": "number" } }
+    },
+    "size": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["width", "height"],
+      "properties": { "width": { "type": "number", "exclusiveMinimum": 0 }, "height": { "type": "number", "exclusiveMinimum": 0 } }
+    },
+    "camera": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["x", "y", "zoom"],
+      "properties": { "x": { "type": "number" }, "y": { "type": "number" }, "zoom": { "type": "number", "exclusiveMinimum": 0 } }
+    },
+    "itemBase": {
+      "type": "object",
+      "required": ["id", "name", "kind", "x", "y", "width", "height", "rotation", "visible", "locked"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "name": { "type": "string", "minLength": 1 },
+        "kind": { "enum": ["text", "image", "table", "group"] },
+        "x": { "type": "number" },
+        "y": { "type": "number" },
+        "width": { "type": "number", "minimum": 0 },
+        "height": { "type": "number", "minimum": 0 },
+        "rotation": { "type": "number" },
+        "visible": { "type": "boolean" },
+        "locked": { "type": "boolean" }
+      }
+    },
+    "text": {
+      "type": "object",
+      "allOf": [
+        { "$ref": "#/$defs/itemBase" },
+        {
+          "type": "object",
+          "required": ["paragraphs", "fontSize", "fontWeight", "align"],
+          "properties": {
+            "kind": { "const": "text" },
+            "paragraphs": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["runs"],
+                "properties": {
+                  "runs": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": ["text"],
+                      "properties": { "text": { "type": "string" } }
+                    }
+                  }
+                }
+              }
+            },
+            "fontSize": { "type": "number", "exclusiveMinimum": 0 },
+            "fontWeight": { "enum": ["normal", "bold"] },
+            "align": { "enum": ["left", "center", "right"] }
+          }
+        }
+      ],
+      "unevaluatedProperties": false
+    },
+    "image": {
+      "type": "object",
+      "allOf": [
+        { "$ref": "#/$defs/itemBase" },
+        { "type": "object", "required": ["imageKey"], "properties": { "kind": { "const": "image" }, "imageKey": { "type": "string", "minLength": 1 } } }
+      ],
+      "unevaluatedProperties": false
+    },
+    "table": {
+      "type": "object",
+      "allOf": [
+        { "$ref": "#/$defs/itemBase" },
+        {
+          "type": "object",
+          "required": ["columns", "rows"],
+          "properties": {
+            "kind": { "const": "table" },
+            "columns": { "type": "array", "items": { "type": "string" } },
+            "rows": {
+              "type": "array",
+              "items": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": ["content"],
+                  "properties": { "content": { "type": "string" } }
+                }
+              }
+            }
+          }
+        }
+      ],
+      "unevaluatedProperties": false
+    },
+    "group": {
+      "type": "object",
+      "allOf": [
+        { "$ref": "#/$defs/itemBase" },
+        { "type": "object", "required": ["children"], "properties": { "kind": { "const": "group" }, "children": { "type": "array", "items": { "$ref": "#/$defs/item" } } } }
+      ],
+      "unevaluatedProperties": false
+    },
+    "item": { "oneOf": [{ "$ref": "#/$defs/text" }, { "$ref": "#/$defs/image" }, { "$ref": "#/$defs/table" }, { "$ref": "#/$defs/group" }] },
+    "asset": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mime", "data"],
+      "properties": {
+        "mime": { "type": "string", "pattern": "^image/" },
+        "data": { "type": "string", "minLength": 1 },
+        "width": { "type": "number", "exclusiveMinimum": 0 },
+        "height": { "type": "number", "exclusiveMinimum": 0 }
+      }
+    },
+    "document": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema", "id", "camera", "blocks", "assets", "gridVisible", "snapEnabled", "snapGridSpacing"],
+      "properties": {
+        "schema": { "const": "ink.document" },
+        "id": { "type": "string", "minLength": 1 },
+        "camera": { "$ref": "#/$defs/camera" },
+        "blocks": { "type": "array", "items": { "$ref": "#/$defs/item" } },
+        "assets": { "type": "object", "additionalProperties": { "$ref": "#/$defs/asset" } },
+        "gridVisible": { "type": "boolean" },
+        "snapEnabled": { "type": "boolean" },
+        "snapGridSpacing": { "type": "number", "exclusiveMinimum": 0 }
+      }
+    },
+    "payload": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema", "blocks"],
+      "properties": {
+        "schema": { "const": "ink.clipboard" },
+        "blocks": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/item" } }
+      }
+    }
+  }
+}

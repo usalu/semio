@@ -18,12 +18,21 @@ import {
   runCmd,
   runProbe,
 } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
-import { MCP_BINARY_NAME, MCP_CARGO_PACKAGE, resolveBuiltMcpBinaryPath, requireMcpBinary } from "../../🟦️.ts";
+import { type McpBuildProfile, MCP_BINARY_NAME, MCP_CARGO_PACKAGE, resolveBuiltMcpBinaryPath, resolveStagedReleaseMcpBinaryPath, requireMcpBinary } from "../../🟦️.ts";
+import { OsMcpLiveAgentLoopScript } from "../../🧪️tests/🤖️live-agent-loop/🏃️execution/🟦️.ts";
 
-import { buildCargoArtifacts } from "../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🏗️native-build/🟦️.ts";
+import { buildCargoArtifacts, packageNativeRelease, signExecutableForDistribution, workspaceCargoVersion } from "../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🏗️native-build/🟦️.ts";
 
-const binaryContract = JSON.parse(readFileSync(new URL("../../🎚️config/🧱️binary-gate.json", import.meta.url), "utf8")) as { cargoPackage: string; cargoBinary: string; profile: "debug" };
-if (binaryContract.cargoPackage !== MCP_CARGO_PACKAGE || binaryContract.cargoBinary !== MCP_BINARY_NAME || binaryContract.profile !== "debug") throw new Error("semio-os-mcp binary fixture disagrees with the shared path contract");
+const binaryContract = JSON.parse(readFileSync(new URL("../../🎚️config/🧱️binary-gate.json", import.meta.url), "utf8")) as {
+  cargoPackage: string;
+  cargoBinary: string;
+  profiles: Record<string, McpBuildProfile>;
+  artifactRoot: string;
+  releaseArtifactRoot: string;
+};
+if (binaryContract.cargoPackage !== MCP_CARGO_PACKAGE || binaryContract.cargoBinary !== MCP_BINARY_NAME) throw new Error("semio-os-mcp binary fixture disagrees with the shared path contract");
+if (binaryContract.profiles.build !== "debug" || binaryContract.profiles["build-release"] !== "release") throw new Error("semio-os-mcp binary fixture must name one cargo profile per build target");
+if (!binaryContract.artifactRoot.endsWith("/dist/build") || !binaryContract.releaseArtifactRoot.endsWith("/dist/build-release")) throw new Error("semio-os-mcp binary fixture must stage each profile under its own deliverable root");
 
 /** 🧬️ One compiled export of the GIS plugin's own module contract (`✏️s/🔌️plugins/🌍️gis/🧬️schema/🔣️.json`).
  * The GIS scope owns these shapes; this crate is a reader, never a second declaration site. */
@@ -89,6 +98,35 @@ class BuildScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length) throw new Error("MCP build has a fixed binary output contract");
     await buildCargoArtifacts(join(this.root, "Cargo.toml"), ["--package", MCP_CARGO_PACKAGE, "--bin", MCP_BINARY_NAME], this.repoRoot);
+  }
+}
+
+/** 📦️ Stages the **release**-profile `semio-os-mcp` binary, the one a distribution ships.
+ *
+ * Mirrors `os-hub`'s own `BuildScript` (`🌎️hub/📦️packages/🦀️rust/📜️script.ts`, `["--release",
+ * "--bin", …]`): the only differences are this crate's explicit `--package` selector and a separate
+ * `dist/build-release` deliverable root, so the dev-loop `dist/build` artifact every black-box gate
+ * and `.mcp.json` exec stays exactly where it was. `stageArtifacts` publishes through a fresh
+ * directory and one rename rather than writing over the previous binary, and the staged executable
+ * is re-signed afterwards so a macOS copy cannot inherit a signature that no longer matches it. */
+class BuildReleaseScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    if (segments.length) throw new Error("MCP release build has a fixed binary output contract");
+    await buildCargoArtifacts(join(this.root, "Cargo.toml"), ["--release", "--package", MCP_CARGO_PACKAGE, "--bin", MCP_BINARY_NAME], this.repoRoot, { output: "dist/build-release" });
+    const staged = resolveStagedReleaseMcpBinaryPath(this.repoRoot);
+    if (!statSync(staged).isFile()) throw new Error(`the release build staged no ${staged}`);
+    signExecutableForDistribution(staged);
+    console.log(`mcp-build-release: profile=release staged=${staged}`);
+  }
+}
+
+/** 🚚️ Packages the staged release binary as a versioned, checksummed tarball under `dist/publish`.
+ * Local artifact only — nothing is uploaded or pushed anywhere. Reached through the root
+ * `bun ./📜️script.ts publish os-mcp`. */
+class PublishScript extends BundleScript {
+  run(segments: string[]): void {
+    if (segments.length) throw new Error("MCP publish has a fixed deliverable contract");
+    packageNativeRelease({ binary: resolveStagedReleaseMcpBinaryPath(this.repoRoot), name: MCP_BINARY_NAME, version: workspaceCargoVersion(this.repoRoot), output: join(this.root, "dist", "publish") });
   }
 }
 
@@ -435,6 +473,19 @@ class DevScript extends BundleScript {
  *  two language mirrors from the ONE Rust registry, by running the built binary's own
  *  `semio-os-mcp schemas` emitter. `--check` writes nothing and fails on any drift, so a stale
  *  mirror is a red gate rather than a silently divergent contract. */
+/** 🚨️ The capability-audience/destructive gate (ticket 26/09/18 slice M5a §7.4): runs the built
+ * gateway's own `audit` mode over every committed plugin descriptor in this repo and fails on any
+ * finding — a gesture-named route published to agents with no declared audience, or a
+ * delete/clear/replace mutation whose `effects.destructive` is false so `WhenDestructive` never
+ * fires. `derive_audience` guessing right is not evidence; a human declaring it is. */
+class CapabilityAuditCheckScript extends BundleScript {
+  run(): void {
+    const audited = runProbe(requireMcpBinary(this.repoRoot), ["audit", "--folder", this.repoRoot], { cwd: this.repoRoot, budgetMs: 120_000 });
+    process.stdout.write(audited.stdout);
+    if (audited.status !== 0) throw new Error(`capability-audit-check found unreviewed agent capabilities:\n${audited.stdout.slice(-8_000)}${audited.stderr.slice(-2_000)}`);
+  }
+}
+
 class SchemaMirrorScript extends BundleScript {
   run(segments: string[]): void {
     const check = segments.includes("--check");
@@ -500,8 +551,14 @@ function renderType(node: SchemaNode | boolean, indent: string): string {
     case "integer":
     case "number":
       return "number";
-    case "array":
-      return `readonly ${renderType((node.items as SchemaNode | boolean | undefined) ?? true, indent)}[]`;
+    case "array": {
+      const element = renderType((node.items as SchemaNode | boolean | undefined) ?? true, indent);
+      // 📐️ `readonly T[]` parses only while `T` is a single type reference. An element that is itself
+      // an array emitted `readonly readonly X[][]`, which TypeScript refuses outright (`TS1354`), and
+      // a union element emitted `readonly A | B[]`, which parses as `(readonly A) | (B[])` — the wrong
+      // type, silently. Anything that is not a bare identifier gets its own parentheses.
+      return `readonly ${/^[A-Za-z_$][A-Za-z0-9_$]*$/.test(element) ? element : `(${element})`}[]`;
+    }
     case "object": {
       const properties = node.properties as Record<string, SchemaNode> | undefined;
       if (!properties || Object.keys(properties).length === 0) return "{ readonly [key: string]: JsonValue }";
@@ -641,6 +698,8 @@ function parseExport(exportId: string, value: unknown): unknown {
 
 const router = new ScriptRouter(import.meta.dir)
   .register("build", BuildScript)
+  .register("build-release", BuildReleaseScript)
+  .register("publish", PublishScript)
   .register("check", CheckScript)
   .register("test", TestScript)
   .register("canonical-pair-check", CanonicalPairCheckScript)
@@ -652,6 +711,8 @@ const router = new ScriptRouter(import.meta.dir)
   .register("canonical-checkpoint-resource-oracle", CanonicalCheckpointResourceOracleScript)
   .register("canonical-checkpoint-resource-check", CanonicalCheckpointResourceCheckScript)
   .register("canonical-checkpoint-resource-native-check", CanonicalCheckpointResourceNativeCheckScript)
+  .register("live-agent-loop-check", OsMcpLiveAgentLoopScript)
+  .register("capability-audit-check", CapabilityAuditCheckScript)
   .register("schema-mirror", SchemaMirrorScript)
   .register("dev", DevScript);
 

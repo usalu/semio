@@ -1,0 +1,57 @@
+{
+  "id": "custom.fixture",
+  "label": "Fixture Theme",
+  "colors": {
+    "primary": "#336699"
+  },
+  "spacing": {
+    "single": "0.25rem"
+  },
+  "fontStacks": {
+    "sans": "system-ui"
+  },
+  "canvasFonts": {
+    "mapLabelSansFallback": "Arial, sans-serif"
+  },
+  "strokes": {
+    "chromeBorderHairline": 1
+  },
+  "radii": {
+    "chrome": 4
+  },
+  "opacities": {
+    "chromeFocusRingAlpha": 0.6
+  },
+  "metrics": {
+    "chrome": {
+      "navbarHeightUiSpacing": 8,
+      "uiSpacingCompactPx": 4
+    }
+  },
+  "appearances": {
+    "light": {
+      "board": {},
+      "map": {},
+      "canvas": {},
+      "chrome": {
+        "accent": {
+          "token": "primary"
+        }
+      },
+      "outcome": {},
+      "diagram": {}
+    },
+    "dark": {
+      "board": {},
+      "map": {},
+      "canvas": {},
+      "chrome": {
+        "accent": {
+          "token": "primary"
+        }
+      },
+      "outcome": {},
+      "diagram": {}
+    }
+  }
+}

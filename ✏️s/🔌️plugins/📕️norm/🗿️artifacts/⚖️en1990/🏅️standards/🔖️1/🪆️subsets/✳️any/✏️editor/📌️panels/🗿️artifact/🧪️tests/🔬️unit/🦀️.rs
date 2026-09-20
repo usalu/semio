@@ -11,4 +11,5 @@ async fn definition_binds_the_framework_document_tab_to_this_body_key() {
 async fn renders_the_family_headline() {
     let mut app = context::app_with_registry().await;
     assert!(context::render(&mut app, BODY_ARTIFACT).await.contains("checks"));
+    context::close(&mut app);
 }

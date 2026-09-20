@@ -1,6 +1,6 @@
 pub(crate) mod context {
     use super::super::*;
-    use semio_framework_plugin::artifact_app_laws::{meta, new_app, new_app_with_registry};
+    use semio_framework_plugin::artifact_app_laws::{meta, new_app_with_registry};
     use semio_framework_plugin::{EditorApp, InvocationResult, PluginApp, VcsArtifactApp, ViewModel};
     
     pub type LayoutApp = VcsArtifactApp<EditorApp<LayoutPlayApp>>;
@@ -10,9 +10,14 @@ pub(crate) mod context {
     /// `ArtifactApp` implementor `VcsArtifactApp` wraps, exactly the way
     /// `PluginBuilder::editor::<LayoutPlayApp>` builds it.
     
-    /// 🧪️ A bare app instance — no `AppActionRegistry`, so undeclared internal commands dispatch freely.
+    /// 🧪️ The app instance every test builds — registry-backed, because there is no other kind.
+    /// `EditorApp<LayoutPlayApp>` publishes a `bounded_first_step_tool_proofs!` roster, and
+    /// `with_registry_on_bus` joins that roster against the registry's `Migrated` tool ids
+    /// (`AppActionRegistry::validate_tool_job_rows`): an empty registry declares none of them, so the
+    /// registry-LESS `artifact_app_laws::new_app` fails construction outright with
+    /// `interactive-job.catalog-authority … generated_migrated=false, migrated={}`.
     pub async fn layout_app() -> LayoutApp {
-        new_app::<EditorApp<LayoutPlayApp>>().await
+        layout_app_with_registry().await
     }
     
     /// 🧪️ Adapts `create_layout_app`'s `AppDefinition` (contract §2.4) into the `App { definition,
@@ -403,7 +408,18 @@ fn command_from_action_round_trips_every_command_id() {
             dsl::DslValue::Object(entries) if entries.len() == 1 => entries[0].1.clone(),
             other => other.clone(),
         };
-        let camel = camel_case_keys(&payload);
+        let mut camel = camel_case_keys(&payload);
+        if matches!(id, "canvasDragOver" | "canvasDrop") {
+            let DslValue::Object(entries) = &mut camel else { panic!("catalogue payload object") };
+            let index = entries.iter().position(|(key, _)| key == "kind").expect("typed catalogue kind");
+            let (_, kind) = entries.remove(index);
+            if id == "canvasDrop" {
+                entries.push(("dragData".into(), DslValue::String(dsl::json::to_json_string(&DslValue::Object(vec![("kind".into(), kind)])))));
+            } else {
+                let DslValue::String(kind) = kind else { panic!("typed catalogue kind text") };
+                entries.push(("types".into(), DslValue::Array(vec![DslValue::String("application/x-semio-catalogue-item".into()), DslValue::String(format!("application/x-semio-catalogue-kind.{kind}"))])));
+            }
+        }
         let bridged = LayoutPlayApp::command_from_action(id, Some(&camel)).unwrap_or_else(|error| panic!("action {id} failed to bridge: {}", error.message));
         assert_eq!(bridged.command_id(), id, "command_id mismatch for action {id}");
         assert_eq!(bridged, command, "payload drifted through the bridge for action {id}");
@@ -607,3 +623,76 @@ async fn layout_io_declares_fields_in_and_layout_out_ports() {
     assert!(all_ports.iter().any(|port| port.id == "artifact:out"));
 }
 //#endregion 🔖️MediaPorts
+
+#[test]
+fn canvas_catalogue_actions_consume_the_neutral_renderer_envelope() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../🧫️fixtures/🛍️canvas-catalogue/🔣️.json" )).expect("neutral catalogue actions");
+    for case in fixture["cases"].as_array().unwrap() {
+        let args: dsl::DslValue = case["args"].clone().into();
+        let result = LayoutPlayApp::command_from_action(case["action"].as_str().unwrap(), Some(&args));
+        let Some(kind) = case["kind"].as_str() else {
+            assert!(result.is_err(), "{} must refuse malformed or ambiguous catalogue input", case["id"]);
+            continue;
+        };
+        let command = result.unwrap_or_else(|fault| panic!("{}: {}", case["id"], fault.message));
+        let (actual, x, y, width, height) = match command {
+            LayoutCommand::CanvasDragOver(payload) => (payload.kind, payload.x, payload.y, payload.width, payload.height),
+            LayoutCommand::CanvasDrop(payload) => (payload.kind, payload.x, payload.y, payload.width, payload.height),
+            _ => panic!("catalogue action routed to another command"),
+        };
+        assert_eq!(actual, kind, "{}", case["id"]);
+        assert_eq!([x,y,width,height], [24.0,36.0,100.0,100.0]);
+    }
+}
+
+#[semio_framework_async_macros::async_test]
+async fn canvas_catalogue_retained_actions_preview_and_create_in_the_addressed_window() {
+    use blueprint::config::LayoutBlueprintWindowConfigOwner;
+    use blueprint::transient::LayoutBlueprintWindowTransientOwner;
+    use semio_framework_plugin::{ActionMeta, ViewModel, ViewWindowInstance, WindowConfigOwner};
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../🧫️fixtures/🛍️canvas-catalogue/🔣️.json")).unwrap();
+    let view = ViewModel {
+        window_instances: ["catalogue-left", "catalogue-right"].map(|id| ViewWindowInstance { id: id.into(), window_kind_id: LayoutBlueprintWindowConfigOwner::WINDOW_KIND_ID.into() }).into(),
+        ..Default::default()
+    };
+    let left = view.for_window_instance("catalogue-left").unwrap();
+    let right = view.for_window_instance("catalogue-right").unwrap();
+    for kind in ["page", "rect", "text", "image"] {
+        let mut app = Box::new(layout_app_with_registry().await);
+        let meta = ActionMeta { instance_id: 91, view_state: Some(left.clone()), ..artifact_app_laws::meta("catalogue") };
+        app.bind_instance_id(meta.instance_id).await;
+        let outcome: Result<(), String> = async {
+            let before = app.snapshot().map_err(|error| format!("{error:?}"))?;
+            for action in ["canvasDragOver", "canvasDrop"] {
+                let case = fixture["cases"].as_array().unwrap().iter().find(|case| case["action"] == action && case["kind"] == kind).unwrap();
+                let args: DslValue = case["args"].clone().into();
+                let command = LayoutPlayApp::command_from_action(action, Some(&args)).map_err(|error| error.message)?;
+                app.dispatch_typed(command, &meta).await.map_err(|error| format!("{error:?}"))?;
+                artifact_app_laws::settle_registered_typed_operation(&mut *app, meta.instance_id).await.map_err(|error| format!("{error:?}"))?;
+                let transient = app.window_transient_snapshot(&left).map_err(|error| format!("{error:?}"))?.ok_or("addressed transient missing")?;
+                let preview = &transient.get::<LayoutBlueprintWindowTransientOwner>().ok_or("blueprint transient missing")?.drop_preview;
+                if action == "canvasDragOver" {
+                    if preview.kind != kind || (preview.x, preview.y) != (-26.0, -14.0) { return Err(format!("preview mismatch: {preview:?}")); }
+                    if app.snapshot().map_err(|error| format!("{error:?}"))? != before { return Err("preview changed document".into()); }
+                } else if !preview.kind.is_empty() {
+                    return Err("drop did not clear preview".into());
+                }
+                if let Some(other) = app.window_transient_snapshot(&right).map_err(|error| format!("{error:?}"))? {
+                    if other.get::<LayoutBlueprintWindowTransientOwner>().is_some_and(|state| !state.drop_preview.kind.is_empty()) { return Err("preview crossed window identity".into()); }
+                }
+            }
+            let after = app.snapshot().map_err(|error| format!("{error:?}"))?;
+            if kind == "page" {
+                if after.pages.len() != before.pages.len() + 1 { return Err("page drop did not create exactly one page".into()); }
+            } else {
+                if after.pages[0].frames.len() != before.pages[0].frames.len() + 1 { return Err("frame drop did not create exactly one frame".into()); }
+                let frame = after.pages[0].frames.last().ok_or("created frame missing")?;
+                if frame.kind_str() != kind || (frame.bounds().x, frame.bounds().y) != (-26.0, -14.0) { return Err(format!("created frame mismatch: {frame:?}")); }
+            }
+            Ok(())
+        }.await;
+        artifact_app_laws::close_registered_fixture_app(&mut *app);
+        outcome.unwrap_or_else(|error| panic!("{kind}: {error}"));
+        eprintln!("[DEBUG] Layout catalogue {kind}: addressed preview, one creation, terminal preview retirement");
+    }
+}

@@ -13,11 +13,9 @@ start document
 # `.🧬semio/…/STUBS-AND-PLACEHOLDERS-COMPLETION/📓️grammar-envelope-transcription.md` for how that
 # mismatch was discovered.
 #
-# Honest limitation: `RasterSnapshot::require_empty_output_shell()` (same file, line 45-56,
-# `RASTER_POPULATED_OUTPUT_ERROR`) forbids PRINTING a populated `layers`/`assets` through this
-# legacy whole-output codec — a real EMITTED document only ever has `layers=[]`/`assets=[]` — but
-# the codec's PARSER (`dec_layer_list`/`dec_asset_map`) accepts real populated content, so the
-# grammar below (matching the parser) allows non-empty lists.
+# Printer and parser are exact inverses over the whole document: `enc_layer_list`/`enc_asset_map`
+# emit the same populated `layers`/`assets` lists `dec_layer_list`/`dec_asset_map` read, which is
+# what the committed `🖼️assets/🎬️demo/🗣️.dsl.semio` carrier already spells.
 artifact-mark = "semio raster.raster.dsl v1"
 document = artifact-mark schema-line id-line title-line layers-line assets-line
 

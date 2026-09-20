@@ -16,22 +16,34 @@ pub(crate) mod context {
         let child_id = snapshot.content.child_id.clone();
         let dialect = snapshot.content.target.dialect.clone();
         assert_eq!(child_id, materialized.content.child_id, "Sequence concrete app and canonical child identities diverged");
+        // 🌱️ `with_registry` seeds the app's declared genesis children itself (`seed_genesis_children`
+        // → `genesis_sequence_child_pack`), so the `content` slot is usually already occupied and a
+        // second `register_child` is refused with `interactive-job.child-member-duplicate`. The
+        // fixture only has to FILL the slot when the host left it empty.
+        if app.child_store("content", &child_id).await.is_some() {
+            return;
+        }
         let member = create_semio_member(&child_id, &dialect, &content.encode_pack()).await.expect("Sequence child member");
         app.register_child("content", child_id, dialect, member).await.expect("register Sequence content child");
     }
 
-    /// 🧪️ A bare app instance — no `AppActionRegistry`, so undeclared internal commands dispatch freely.
+    /// 🧪️ An app instance carrying the real `AppActionRegistry` (identical to
+    /// `new_app_with_registry_wired`). The registry-LESS `VcsArtifactApp::new` is unusable for this
+    /// app: `with_registry_on_bus` joins `EditorApp<SequencePlayApp>`'s
+    /// `bounded_first_step_tool_proofs!` roster against the registry's `Migrated` tool ids
+    /// (`AppActionRegistry::validate_tool_job_rows`), and an empty registry declares none of them —
+    /// construction panics with `interactive-job.catalog-authority` … `generated_migrated=false`,
+    /// `migrated={}`. A registry-less wrapper could not dispatch anything anyway
+    /// (`admit_command_wire_with_proof` refuses every verb that has no manifest declaration).
     pub async fn new_app() -> SequenceApp {
-        let mut app = VcsArtifactApp::<EditorApp<SequencePlayApp>, SemioMembers>::new(EditorApp::default()).await;
-        register_content_child(&mut app).await;
-        app
+        new_app_with_registry_wired().await
     }
 
     /// 🧩️ `create_sequence_app` now returns `AppDefinition` (contract §2.4), not the runtime-shaped
     /// `App { definition, examples }` `new_app_with_registry` still expects (SDK gap, unchanged by
     /// this ticket — `context::assert_declared_actions_bridge_to_commands` carries the identical gap
     /// per `📓️w0-f-report.md` Gap 3) — wraps it with an empty `examples` list rather than porting one.
-    fn sequence_manifest_for_tests() -> App {
+    pub(crate) fn sequence_manifest_for_tests() -> App {
         App { definition: create_sequence_app(), examples: Vec::new() }
     }
 
@@ -72,7 +84,8 @@ use semio_framework_plugin::{artifact_app_laws::assert_undo_redo_round_trip, Loc
 
 #[semio_framework_async_macros::async_test]
 async fn default_snapshot_has_steps() {
-    assert_eq!(default_snapshot().to_host_snapshot().steps.len(), 2);
+    let fixture = neural_engine::ColdOwner::new(default_snapshot());
+    assert_eq!(fixture.to_host_snapshot().steps.len(), 2);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -84,10 +97,15 @@ async fn undo_redo_round_trip_through_the_wrapper() {
 /// 🧪️ The definitional regression proof: two independent instances start from the same fixture,
 /// apply DISJOINT edits (A moves step-1, B moves step-2), and exchanging operations over a
 /// `MemoryBackbone` converges both sides onto an identical projection.
+///
+/// 🧹️ The REGISTERED pair: sequence publishes bounded tool proofs, so a registry-less `paired_apps`
+/// instance faults in the `interactive-job.catalog-authority` proof join (`generated_migrated=false`,
+/// `migrated={}`) while it is constructed, before any edit lands.
 #[semio_framework_async_macros::async_test]
 async fn two_instances_converge_disjoint_edits_via_backbone() {
-    semio_framework_plugin::artifact_app_laws::assert_two_instances_converge::<semio_framework_plugin::EditorApp<SequencePlayApp>, _>(
+    semio_framework_plugin::artifact_app_laws::assert_two_registered_instances_converge::<semio_framework_plugin::EditorApp<SequencePlayApp>, _, _, _>(
         "mem://sequence-convergence",
+        || async { crate::editor::sequence::unit_tests::context::sequence_manifest_for_tests() },
         SequenceCommand::MoveStep(move_step::MoveStep { node_id: "step-1".into(), x: 111.0, y: 0.0 }),
         SequenceCommand::MoveStep(move_step::MoveStep { node_id: "step-2".into(), x: 222.0, y: 0.0 }),
         |app| app.snapshot().expect("projection"),
@@ -206,7 +224,11 @@ async fn command_ids_are_unique_and_match_the_declared_manifest_actions() {
     sorted.sort_unstable();
     sorted.dedup();
     assert_eq!(sorted.len(), ids.len(), "duplicate command ids in {ids:?}");
-    assert_eq!(ids.len(), 17, "every SequenceCommand row must be covered by every_command()");
+    // 🧾️ Measured against the enum's own generated roster rather than a hand-copied count, so a row
+    // added to (or removed from) `app_commands!` can never leave `every_command()` silently stale.
+    let mut declared: Vec<&str> = SequenceCommand::TOOL_JOB_IDS.to_vec();
+    declared.sort_unstable();
+    assert_eq!(sorted, declared, "every SequenceCommand row must be covered by every_command()");
 }
 
 /// ⚖️ LAW: text and binary are two projections of the same command, for every single row.
@@ -269,14 +291,14 @@ use neural_engine::Atom;
 
 #[semio_framework_async_macros::async_test]
 async fn disconnect_steps_removes_edge() {
-    let mut host = SequenceHost::default();
+    let mut host = neural_engine::ColdOwner::new(SequenceHost::default());
     assert!(host.disconnect_steps("step-1", "step-2"));
     assert!(host.snapshot.edges.is_empty());
 }
 
 #[semio_framework_async_macros::async_test]
 async fn sync_from_dag_copies_node_positions() {
-    let mut host = SequenceHost::default();
+    let mut host = neural_engine::ColdOwner::new(SequenceHost::default());
     if let Some(node) = host.dag.host_snapshot.nodes.iter_mut().find(|node| node.id == "step-1") {
         node.x = 120.0;
         node.y = 80.0;
@@ -289,7 +311,7 @@ async fn sync_from_dag_copies_node_positions() {
 
 #[semio_framework_async_macros::async_test]
 async fn sync_edges_from_dag_preserves_existing_edge_ids() {
-    let mut host = SequenceHost::default();
+    let mut host = neural_engine::ColdOwner::new(SequenceHost::default());
     let first_id = host.snapshot.edges[0].id.clone();
     host.sync_edges_from_dag();
     assert_eq!(host.snapshot.edges[0].id, first_id);
@@ -299,7 +321,7 @@ async fn sync_edges_from_dag_preserves_existing_edge_ids() {
 
 #[semio_framework_async_macros::async_test]
 async fn connect_steps_rejects_fan_out() {
-    let mut host = SequenceHost::default();
+    let mut host = neural_engine::ColdOwner::new(SequenceHost::default());
     host.snapshot.edges.clear();
     host.snapshot.steps.push(SequenceStep { id: "step-3".into(), kind: "wait.delay".into(), params: StepParams::new().insert("ms", NeuralValue::Atom(Atom::Decimal(10.0))), x: 560.0, y: 0.0, slot: None, collapsed: false });
     assert!(host.connect_steps("step-1", "step-2").is_ok());
@@ -308,7 +330,7 @@ async fn connect_steps_rejects_fan_out() {
 
 #[semio_framework_async_macros::async_test]
 async fn build_path_includes_control_bodies() {
-    let mut host = SequenceHost::default();
+    let mut host = neural_engine::ColdOwner::new(SequenceHost::default());
     host.snapshot.steps.push(SequenceStep { id: "step-3".into(), kind: "control.if".into(), params: StepParams::new().insert("key", NeuralValue::Atom(Atom::String("flag".into()))), x: 560.0, y: 0.0, slot: None, collapsed: false });
     host.snapshot.steps.push(SequenceStep {
         id: "step-4".into(),
@@ -329,7 +351,7 @@ async fn build_path_includes_control_bodies() {
 
 #[semio_framework_async_macros::async_test]
 async fn rebuild_dag_preserves_selection() {
-    let mut host = SequenceHost::default();
+    let mut host = neural_engine::ColdOwner::new(SequenceHost::default());
     host.dag.set_selection(&["step-1".into()]);
     host.snapshot.steps.push(SequenceStep { id: "step-3".into(), kind: "wait.delay".into(), params: StepParams::new().insert("ms", NeuralValue::Atom(Atom::Decimal(10.0))), x: 560.0, y: 0.0, slot: None, collapsed: false });
     host.rebuild_dag();
@@ -338,7 +360,7 @@ async fn rebuild_dag_preserves_selection() {
 
 #[semio_framework_async_macros::async_test]
 async fn execution_ports_use_triangle_shape() {
-    let host = SequenceHost::default();
+    let host = neural_engine::ColdOwner::new(SequenceHost::default());
     let node = host.step_to_dag_node(&host.snapshot.steps[1]);
     assert_eq!(node.inputs()[0].shape, PortShape::Triangle);
     assert_eq!(node.outputs()[0].shape, PortShape::Triangle);
@@ -346,7 +368,7 @@ async fn execution_ports_use_triangle_shape() {
 
 #[semio_framework_async_macros::async_test]
 async fn function_steps_use_data_ports_without_visible_execution_pins() {
-    let host = SequenceHost::default();
+    let host = neural_engine::ColdOwner::new(SequenceHost::default());
     let step = SequenceStep { id: "step-fn".into(), kind: "math.add".into(), params: StepParams::new(), x: 0.0, y: 0.0, slot: None, collapsed: false };
     let node = host.step_to_dag_node(&step);
     assert!(node.inputs().iter().any(|port| port.id == "a" && port.visible));
@@ -357,7 +379,7 @@ async fn function_steps_use_data_ports_without_visible_execution_pins() {
 
 #[semio_framework_async_macros::async_test]
 async fn text_steps_use_data_ports_without_visible_execution_pins() {
-    let host = SequenceHost::default();
+    let host = neural_engine::ColdOwner::new(SequenceHost::default());
     let step = SequenceStep { id: "step-txt".into(), kind: "text.concat".into(), params: StepParams::new(), x: 0.0, y: 0.0, slot: None, collapsed: false };
     let node = host.step_to_dag_node(&step);
     assert!(node.inputs().iter().any(|port| port.id == "left" && port.visible));
@@ -369,7 +391,7 @@ async fn text_steps_use_data_ports_without_visible_execution_pins() {
 
 #[semio_framework_async_macros::async_test]
 async fn replace_snapshot_preserves_next_serial_and_selection() {
-    let mut host = SequenceHost::default();
+    let mut host = neural_engine::ColdOwner::new(SequenceHost::default());
     let first = host.add_step("math.add", 40.0, 40.0);
     host.dag.set_selection(std::slice::from_ref(&first));
     let json = host.to_json().expect("fixture json");
@@ -384,7 +406,7 @@ async fn replace_snapshot_preserves_next_serial_and_selection() {
 
 #[semio_framework_async_macros::async_test]
 async fn repeated_drops_after_replace_snapshot_use_distinct_ids() {
-    let mut host = SequenceHost::default();
+    let mut host = neural_engine::ColdOwner::new(SequenceHost::default());
     let first = host.add_step_dropped("math.add", 10.0, 10.0, None);
     let json = host.to_json().expect("fixture json");
     let round_trip: SequenceHostSnapshot = dsl::os_pack::from_json_str(&json).expect("parse");
@@ -396,7 +418,7 @@ async fn repeated_drops_after_replace_snapshot_use_distinct_ids() {
 
 #[semio_framework_async_macros::async_test]
 async fn add_step_dropped_targets_expanded_control_slot() {
-    let mut host = SequenceHost::default();
+    let mut host = neural_engine::ColdOwner::new(SequenceHost::default());
     host.snapshot.steps.push(SequenceStep { id: "step-3".into(), kind: "control.if".into(), params: StepParams::new(), x: 560.0, y: 0.0, slot: None, collapsed: false });
     let id = host.add_step_dropped("log.print", 600.0, 180.0, Some("step-3"));
     let step = host.snapshot.steps.iter().find(|entry| entry.id == id).expect("added step");
@@ -405,14 +427,14 @@ async fn add_step_dropped_targets_expanded_control_slot() {
 
 #[semio_framework_async_macros::async_test]
 async fn execution_edges_use_sharp_sz_routing() {
-    let host = SequenceHost::default();
+    let host = neural_engine::ColdOwner::new(SequenceHost::default());
     let fixture = host.build_dag_host_snapshot();
     assert!(fixture.edges.iter().all(|edge| edge.route_style == EdgeRouteStyle::SharpSz));
 }
 
 #[semio_framework_async_macros::async_test]
 async fn set_step_collapsed_toggles_control_step() {
-    let mut host = SequenceHost::default();
+    let mut host = neural_engine::ColdOwner::new(SequenceHost::default());
     host.snapshot.steps.push(SequenceStep { id: "step-3".into(), kind: "control.if".into(), params: StepParams::new(), x: 560.0, y: 0.0, slot: None, collapsed: false });
     assert!(host.set_step_collapsed("step-3", true));
     assert!(host.snapshot.steps.iter().find(|step| step.id == "step-3").unwrap().collapsed);
@@ -420,20 +442,20 @@ async fn set_step_collapsed_toggles_control_step() {
 
 #[semio_framework_async_macros::async_test]
 async fn set_step_collapsed_rejects_unknown_id() {
-    let mut host = SequenceHost::default();
+    let mut host = neural_engine::ColdOwner::new(SequenceHost::default());
     assert!(!host.set_step_collapsed("nope", true));
 }
 
 #[semio_framework_async_macros::async_test]
 async fn set_step_collapsed_rejects_non_control_step() {
-    let mut host = SequenceHost::default();
+    let mut host = neural_engine::ColdOwner::new(SequenceHost::default());
     assert!(!host.set_step_collapsed("step-1", true));
     assert!(!host.snapshot.steps.iter().find(|step| step.id == "step-1").unwrap().collapsed);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn remove_step_also_removes_slot_children() {
-    let mut host = SequenceHost::default();
+    let mut host = neural_engine::ColdOwner::new(SequenceHost::default());
     host.snapshot.steps.push(SequenceStep { id: "step-3".into(), kind: "control.if".into(), params: StepParams::new(), x: 560.0, y: 0.0, slot: None, collapsed: false });
     host.snapshot.steps.push(SequenceStep { id: "step-4".into(), kind: "log.print".into(), params: StepParams::new(), x: 560.0, y: 160.0, slot: Some(SlotRef { owner: "step-3".into(), name: "then".into() }), collapsed: false });
     assert!(host.remove_step("step-3"));
@@ -442,13 +464,13 @@ async fn remove_step_also_removes_slot_children() {
 
 #[semio_framework_async_macros::async_test]
 async fn remove_step_returns_false_for_unknown_id() {
-    let mut host = SequenceHost::default();
+    let mut host = neural_engine::ColdOwner::new(SequenceHost::default());
     assert!(!host.remove_step("nope"));
 }
 
 #[semio_framework_async_macros::async_test]
 async fn set_step_params_json_updates_step_params() {
-    let mut host = SequenceHost::default();
+    let mut host = neural_engine::ColdOwner::new(SequenceHost::default());
     host.set_step_params_json("step-1", r#"{"key":"renamed"}"#).expect("set params");
     let step = host.snapshot.steps.iter().find(|step| step.id == "step-1").unwrap();
     assert_eq!(step.params.get("key").and_then(|v| v.as_atom()).and_then(|a| a.as_str()), Some("renamed"));
@@ -456,46 +478,46 @@ async fn set_step_params_json_updates_step_params() {
 
 #[semio_framework_async_macros::async_test]
 async fn set_step_params_json_rejects_unknown_step() {
-    let mut host = SequenceHost::default();
+    let mut host = neural_engine::ColdOwner::new(SequenceHost::default());
     let err = host.set_step_params_json("nope", "{}").unwrap_err();
     assert!(matches!(err, SequenceCoreError::UnknownStep(id) if id == "nope"));
 }
 
 #[semio_framework_async_macros::async_test]
 async fn set_step_params_json_rejects_invalid_json() {
-    let mut host = SequenceHost::default();
+    let mut host = neural_engine::ColdOwner::new(SequenceHost::default());
     let err = host.set_step_params_json("step-1", "not json").unwrap_err();
     assert!(matches!(err, SequenceCoreError::Json(_)));
 }
 
 #[semio_framework_async_macros::async_test]
 async fn connect_steps_rejects_self_connect() {
-    let mut host = SequenceHost::default();
+    let mut host = neural_engine::ColdOwner::new(SequenceHost::default());
     assert!(matches!(host.connect_steps("step-1", "step-1").unwrap_err(), SequenceCoreError::SelfConnect));
 }
 
 #[semio_framework_async_macros::async_test]
 async fn connect_steps_rejects_unknown_from_step() {
-    let mut host = SequenceHost::default();
+    let mut host = neural_engine::ColdOwner::new(SequenceHost::default());
     assert!(matches!(host.connect_steps("nope", "step-2").unwrap_err(), SequenceCoreError::StepNotFound(id) if id == "nope"));
 }
 
 #[semio_framework_async_macros::async_test]
 async fn connect_steps_rejects_unknown_to_step() {
-    let mut host = SequenceHost::default();
+    let mut host = neural_engine::ColdOwner::new(SequenceHost::default());
     assert!(matches!(host.connect_steps("step-1", "nope").unwrap_err(), SequenceCoreError::StepNotFound(id) if id == "nope"));
 }
 
 #[semio_framework_async_macros::async_test]
 async fn connect_steps_rejects_mismatched_slot_scope() {
-    let mut host = SequenceHost::default();
+    let mut host = neural_engine::ColdOwner::new(SequenceHost::default());
     host.snapshot.steps.push(SequenceStep { id: "step-4".into(), kind: "log.print".into(), params: StepParams::new(), x: 560.0, y: 160.0, slot: Some(SlotRef { owner: "step-3".into(), name: "then".into() }), collapsed: false });
     assert!(matches!(host.connect_steps("step-2", "step-4").unwrap_err(), SequenceCoreError::MismatchedSlotScope));
 }
 
 #[semio_framework_async_macros::async_test]
 async fn connect_steps_rejects_cycle() {
-    let mut host = SequenceHost::default();
+    let mut host = neural_engine::ColdOwner::new(SequenceHost::default());
     host.snapshot.steps.push(SequenceStep { id: "step-3".into(), kind: "wait.delay".into(), params: StepParams::new().insert("ms", NeuralValue::Atom(Atom::Decimal(10.0))), x: 560.0, y: 0.0, slot: None, collapsed: false });
     host.connect_steps("step-2", "step-3").expect("connect step-2 to step-3");
     assert!(matches!(host.connect_steps("step-3", "step-1").unwrap_err(), SequenceCoreError::CycleDetected));
@@ -503,7 +525,7 @@ async fn connect_steps_rejects_cycle() {
 
 #[semio_framework_async_macros::async_test]
 async fn connect_steps_rewires_existing_incoming_edge() {
-    let mut host = SequenceHost::default();
+    let mut host = neural_engine::ColdOwner::new(SequenceHost::default());
     host.snapshot.steps.push(SequenceStep { id: "step-3".into(), kind: "wait.delay".into(), params: StepParams::new().insert("ms", NeuralValue::Atom(Atom::Decimal(10.0))), x: 560.0, y: 0.0, slot: None, collapsed: false });
     host.connect_steps("step-3", "step-2").expect("rewire onto step-2");
     assert_eq!(host.snapshot.edges.len(), 1);
@@ -513,15 +535,15 @@ async fn connect_steps_rewires_existing_incoming_edge() {
 
 #[semio_framework_async_macros::async_test]
 async fn disconnect_steps_returns_false_when_no_matching_edge() {
-    let mut host = SequenceHost::default();
+    let mut host = neural_engine::ColdOwner::new(SequenceHost::default());
     assert!(!host.disconnect_steps("step-2", "step-1"));
     assert_eq!(host.snapshot.edges.len(), 1);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn load_json_parses_valid_fixture() {
-    let json = SequenceHost::default().to_json().expect("fixture json");
-    let host = SequenceHost::load_json(&json).expect("load json");
+    let json = neural_engine::ColdOwner::new(SequenceHost::default()).to_json().expect("fixture json");
+    let host = neural_engine::ColdOwner::new(SequenceHost::load_json(&json).expect("load json"));
     assert_eq!(host.snapshot.steps.len(), 2);
 }
 
@@ -533,13 +555,13 @@ async fn load_json_rejects_unsupported_schema() {
 
 #[semio_framework_async_macros::async_test]
 async fn catalogue_json_reports_imperative_catalogue_schema() {
-    let host = SequenceHost::default();
+    let host = neural_engine::ColdOwner::new(SequenceHost::default());
     assert!(host.catalogue_json().contains("\"imperative.catalogue\""));
 }
 
 #[semio_framework_async_macros::async_test]
 async fn layout_expanded_slots_positions_slot_members_relative_to_owner() {
-    let mut host = SequenceHost::default();
+    let mut host = neural_engine::ColdOwner::new(SequenceHost::default());
     host.snapshot.steps.push(SequenceStep { id: "step-3".into(), kind: "control.if".into(), params: StepParams::new(), x: 560.0, y: 0.0, slot: None, collapsed: false });
     host.snapshot.steps.push(SequenceStep { id: "step-4".into(), kind: "log.print".into(), params: StepParams::new(), x: 0.0, y: 0.0, slot: Some(SlotRef { owner: "step-3".into(), name: "then".into() }), collapsed: false });
     host.layout_expanded_slots();
@@ -550,7 +572,7 @@ async fn layout_expanded_slots_positions_slot_members_relative_to_owner() {
 
 #[semio_framework_async_macros::async_test]
 async fn reorganize_syncs_step_positions_from_dag_layout() {
-    let mut host = SequenceHost::default();
+    let mut host = neural_engine::ColdOwner::new(SequenceHost::default());
     host.reorganize(&DagLayoutOptions::default()).expect("reorganize");
     for step in &host.snapshot.steps {
         let node = host.dag.host_snapshot.nodes.iter().find(|node| node.id == step.id).expect("node for step");
@@ -561,21 +583,21 @@ async fn reorganize_syncs_step_positions_from_dag_layout() {
 
 #[semio_framework_async_macros::async_test]
 async fn pick_step_id_at_screen_finds_step_under_cursor() {
-    let host = SequenceHost::default();
+    let host = neural_engine::ColdOwner::new(SequenceHost::default());
     let id = host.pick_step_id_at_screen(400.0, 300.0, 800, 600, 1.0);
     assert_eq!(id, Some("step-1".to_string()));
 }
 
 #[semio_framework_async_macros::async_test]
 async fn pick_step_id_at_screen_returns_none_when_missing_all_nodes() {
-    let host = SequenceHost::default();
+    let host = neural_engine::ColdOwner::new(SequenceHost::default());
     let id = host.pick_step_id_at_screen(-9000.0, -9000.0, 800, 600, 1.0);
     assert_eq!(id, None);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn add_step_dropped_falls_back_when_owner_collapsed() {
-    let mut host = SequenceHost::default();
+    let mut host = neural_engine::ColdOwner::new(SequenceHost::default());
     host.snapshot.steps.push(SequenceStep { id: "step-3".into(), kind: "control.if".into(), params: StepParams::new(), x: 560.0, y: 0.0, slot: None, collapsed: true });
     let id = host.add_step_dropped("log.print", 600.0, 180.0, Some("step-3"));
     let step = host.snapshot.steps.iter().find(|entry| entry.id == id).expect("added step");
@@ -584,7 +606,7 @@ async fn add_step_dropped_falls_back_when_owner_collapsed() {
 
 #[semio_framework_async_macros::async_test]
 async fn add_step_dropped_falls_back_for_non_control_owner() {
-    let mut host = SequenceHost::default();
+    let mut host = neural_engine::ColdOwner::new(SequenceHost::default());
     let id = host.add_step_dropped("log.print", 300.0, 0.0, Some("step-2"));
     let step = host.snapshot.steps.iter().find(|entry| entry.id == id).expect("added step");
     assert!(step.slot.is_none());
@@ -592,7 +614,7 @@ async fn add_step_dropped_falls_back_for_non_control_owner() {
 
 #[semio_framework_async_macros::async_test]
 async fn add_step_dropped_falls_back_for_unknown_owner_id() {
-    let mut host = SequenceHost::default();
+    let mut host = neural_engine::ColdOwner::new(SequenceHost::default());
     let id = host.add_step_dropped("log.print", 300.0, 0.0, Some("nope"));
     let step = host.snapshot.steps.iter().find(|entry| entry.id == id).expect("added step");
     assert!(step.slot.is_none());
@@ -600,7 +622,7 @@ async fn add_step_dropped_falls_back_for_unknown_owner_id() {
 
 #[semio_framework_async_macros::async_test]
 async fn build_path_returns_unordered_slot_body_when_multiple_heads() {
-    let mut host = SequenceHost::default();
+    let mut host = neural_engine::ColdOwner::new(SequenceHost::default());
     host.snapshot.steps.push(SequenceStep { id: "step-3".into(), kind: "control.if".into(), params: StepParams::new(), x: 560.0, y: 0.0, slot: None, collapsed: false });
     host.snapshot.steps.push(SequenceStep { id: "step-4".into(), kind: "log.print".into(), params: StepParams::new(), x: 0.0, y: 160.0, slot: Some(SlotRef { owner: "step-3".into(), name: "then".into() }), collapsed: false });
     host.snapshot.steps.push(SequenceStep { id: "step-5".into(), kind: "log.print".into(), params: StepParams::new(), x: 280.0, y: 160.0, slot: Some(SlotRef { owner: "step-3".into(), name: "then".into() }), collapsed: false });
@@ -614,7 +636,7 @@ async fn build_path_returns_unordered_slot_body_when_multiple_heads() {
 
 #[semio_framework_async_macros::async_test]
 async fn step_to_dag_node_shows_collapsed_indicator_for_collapsed_control_step() {
-    let mut host = SequenceHost::default();
+    let mut host = neural_engine::ColdOwner::new(SequenceHost::default());
     host.snapshot.steps.push(SequenceStep { id: "step-3".into(), kind: "control.if".into(), params: StepParams::new(), x: 560.0, y: 0.0, slot: None, collapsed: false });
     let expanded = host.step_to_dag_node(&host.snapshot.steps.iter().find(|step| step.id == "step-3").unwrap().clone());
     assert_eq!(expanded.abbreviation, "▾️0");
@@ -625,7 +647,7 @@ async fn step_to_dag_node_shows_collapsed_indicator_for_collapsed_control_step()
 
 #[semio_framework_async_macros::async_test]
 async fn set_ghost_step_and_clear_ghost_step_toggle_dag_ghost_node() {
-    let mut host = SequenceHost::default();
+    let mut host = neural_engine::ColdOwner::new(SequenceHost::default());
     assert!(host.dag.ghost_node().is_none());
     host.set_ghost_step("math.add", 10.0, 20.0);
     assert!(host.dag.ghost_node().is_some());
@@ -635,7 +657,7 @@ async fn set_ghost_step_and_clear_ghost_step_toggle_dag_ghost_node() {
 
 #[semio_framework_async_macros::async_test]
 async fn run_executes_default_snapshot_and_records_scope() {
-    let host = SequenceHost::default();
+    let host = neural_engine::ColdOwner::new(SequenceHost::default());
     let result = host.run();
     assert_eq!(result.scope.get("counter").and_then(|v| v.as_atom()).and_then(|a| a.as_f64()), Some(0.0));
     assert!(!result.effects.is_empty());
@@ -643,7 +665,7 @@ async fn run_executes_default_snapshot_and_records_scope() {
 
 #[semio_framework_async_macros::async_test]
 async fn compile_text_renders_default_snapshot_steps() {
-    let host = SequenceHost::default();
+    let host = neural_engine::ColdOwner::new(SequenceHost::default());
     let text = host.compile_text();
     assert!(text.contains("state.set"));
     assert!(text.contains("log.print"));
@@ -651,7 +673,7 @@ async fn compile_text_renders_default_snapshot_steps() {
 
 #[semio_framework_async_macros::async_test]
 async fn compiled_wire_literal_includes_step_ids() {
-    let host = SequenceHost::default();
+    let host = neural_engine::ColdOwner::new(SequenceHost::default());
     let literal = host.compiled_wire_literal();
     assert!(literal.contains("step-1"));
     assert!(literal.contains("step-2"));
@@ -671,7 +693,7 @@ async fn sequence_io_declares_the_steps_in_port() {
 
 #[semio_framework_async_macros::async_test]
 async fn next_available_step_id_is_free_and_deterministic() {
-    let fixture = default_snapshot();
+    let fixture = neural_engine::ColdOwner::new(default_snapshot());
     let id = next_available_step_id(&fixture);
     assert!(!fixture.to_host_snapshot().steps.iter().any(|step| step.id == id));
     assert_eq!(id, next_available_step_id(&fixture), "pure function of the fixture, not a mutating counter");

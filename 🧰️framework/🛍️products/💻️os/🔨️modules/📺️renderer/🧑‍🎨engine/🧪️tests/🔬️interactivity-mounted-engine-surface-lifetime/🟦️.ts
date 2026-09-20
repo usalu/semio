@@ -2,19 +2,23 @@ import { INTERACTIVITY_AUDIT_ENGINE_CANVAS_FILE, INTERACTIVITY_AUDIT_RENDERER_HO
 
 /** 🧪️ Executes interactivity mounted engine surface lifetime policy assertions. */
 export function interactivityMountedEngineSurfaceLifetimeSelfTests(repoRoot: string): void {
-  const files = [
-    INTERACTIVITY_AUDIT_ENGINE_CANVAS_FILE,
-    INTERACTIVITY_AUDIT_RENDERER_HOST_FILE,
-    INTERACTIVITY_AUDIT_WINIT_HOST_FILE,
-    "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🌐️browser-worker/🦀️.rs",
-    INTERACTIVITY_AUDIT_RENDERER_GLUE_FILE,
-    "🧰️framework/🔨️modules/🗺️surface/🕸️node-graph/🦀️.rs",
-    "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🦀️.rs",
-    "🧰️framework/🔨️modules/🗺️surface/🗺️tiled-map/🦀️.rs",
-    "🧰️framework/🔨️modules/✍️editor/🦀️.rs",
-    "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/🕸️dag/🦀️.rs",
-  ] as const;
-  const clean = files.map((file) => policyReadRustPolicySource(repoRoot, file));
+  const read = (file: string): string => policyReadRustPolicySource(repoRoot, file);
+  // 🧭️ `Parameters<…>` is what keeps this list and the audit's ten positional parameters in step:
+  // `Array.prototype.map` answers `string[]`, whose length TypeScript does not know, so spreading its
+  // result into a fixed-arity call is a `TS2556` — and a source added here without a parameter to
+  // receive it would pass unnoticed.
+  const clean: Parameters<typeof interactivityMountedEngineSurfaceLifetimeFailures> = [
+    read(INTERACTIVITY_AUDIT_ENGINE_CANVAS_FILE),
+    read(INTERACTIVITY_AUDIT_RENDERER_HOST_FILE),
+    read(INTERACTIVITY_AUDIT_WINIT_HOST_FILE),
+    read("🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🌐️browser-worker/🦀️.rs"),
+    read(INTERACTIVITY_AUDIT_RENDERER_GLUE_FILE),
+    read("🧰️framework/🔨️modules/🗺️surface/🕸️node-graph/🦀️.rs"),
+    read("🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🦀️.rs"),
+    read("🧰️framework/🔨️modules/🗺️surface/🗺️tiled-map/🦀️.rs"),
+    read("🧰️framework/🔨️modules/✍️editor/🦀️.rs"),
+    read("🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/🕸️dag/🦀️.rs"),
+  ];
   const mutations: readonly [string, number, string, string][] = [
     ["wrapping-cpu-generation", 0, "slot.generation.checked_add(1)", "Some(slot.generation.wrapping_add(1))"],
     ["blocking-cpu-close-registry", 0, "self.state().try_lock().ok()", "self.state().lock().ok()"],
@@ -41,7 +45,7 @@ export function interactivityMountedEngineSurfaceLifetimeSelfTests(repoRoot: str
     ["missing-abandonment-law", 1, "interrupted_host_retirement_is_rediscovered_and_fixed_registry_refuses_max_plus_one", "host_retirement_smoke"],
   ];
   for (const [name, index, needle, replacement] of mutations) {
-    const mutated = [...clean];
+    const mutated: typeof clean = [...clean];
     mutated[index] = mutated[index]!.replace(needle, replacement);
     if (mutated[index] === clean[index]) throw new Error(`[verify interactivity p3mn] mutation ${name} did not bind live source`);
     if (interactivityMountedEngineSurfaceLifetimeFailures(...mutated).length === 0) throw new Error(`[verify interactivity p3mn] mutation ${name} was falsely accepted`);

@@ -67,7 +67,7 @@ async fn change_silo_radius_m_committed_json_is_canonical() {
     }
     let reencoded = serde_json::to_value(mutation()).expect("change-silo-radius-m mutation encodes");
     let original: serde_json::Value = serde_json::from_str(MUTATION).expect("change-silo-radius-m mutation reparses");
-    assert_eq!(reencoded, original, "change-silo-radius-m/raises-silo-radius-m-to-6-25: committed mutation JSON is not the canonical externally-tagged ChangeSiloRadiusM form carrying newSiloRadiusM");
+    assert_eq!(reencoded, original, "change-silo-radius-m/raises-silo-radius-m-to-6-25: committed mutation JSON is not the canonical internally-tagged ChangeSiloRadiusM form carrying mutation and newSiloRadiusM");
 }
 
 /// 🎯️ The declared outcome holds: `change-silo-radius-m` at 6.25 is applied, not rejected, and carries no

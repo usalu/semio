@@ -832,6 +832,10 @@ impl EditorHost {
         }
     }
 
+    pub fn pointer_cancel_screen(&mut self) {
+        self.drag_selecting = false;
+    }
+
     pub fn insert_text(&mut self, chunk: &str) {
         let mut start = self.caret.min(self.anchor);
         let mut end = self.caret.max(self.anchor);
@@ -1716,6 +1720,11 @@ impl EditorSession {
     #[wasm_bindgen(js_name = pointerUpScreen)]
     pub fn pointer_up_screen(&mut self, sx: f64, sy: f64, button: i32) {
         self.state.borrow_mut().host.pointer_up_screen(sx, sy, button);
+    }
+
+    #[wasm_bindgen(js_name = pointerCancelScreen)]
+    pub fn pointer_cancel_screen(&mut self) {
+        self.state.borrow_mut().host.pointer_cancel_screen();
     }
 
     #[wasm_bindgen(js_name = insertText)]

@@ -6,8 +6,10 @@ import { TurnClock, TurnLedger, UI_TURN_BUDGET_MS, type TurnLedgerSnapshot, type
 import { FRAME_WORKER_BOOT_LIVENESS_POLICY, bootPhaseCeilingMs, describeBrowserBootSilence, evaluateBrowserBootLiveness, type BrowserBootPhase } from "../🫀️boot-liveness/🟦️.ts";
 import type { WgpuBootDescriptor, WgpuHostAppearance, WgpuHostPlatform, WgpuHostStorageSnapshot } from "../🧭️boot-descriptor/🟦️.ts";
 import { stampShardWorkerDiagnostics } from "../../../../../../../../🔨️modules/🎭️actor/🩺️diagnostics/🟦️.ts";
+import { decodeReferenceImageOnPage, type ReferenceImageDimensions } from "../🖼️reference-image-decode/🟦️.ts";
 
 export const FRAME_WORKER_LOSSLESS_ITEM_CAPACITY = 64;
+export const FRAME_WORKER_HUB_DOCUMENT_CAPACITY = 64;
 export const FRAME_WORKER_BYTE_CAPACITY = 256 * 1024;
 /** @emoji ⏳️ Outer bound on a Worker that is silent AND has declared no long phase — the only state that
  * is really a wedged event loop. It is NOT a total-boot deadline and no longer a bare stall bound either:
@@ -18,12 +20,14 @@ export const FRAME_WORKER_BOOT_STALL_TIMEOUT_MS = FRAME_WORKER_BOOT_LIVENESS_POL
 export const FRAME_WORKER_POINTER_CAPACITY = 16;
 export const FRAME_WORKER_MESSAGE_BYTE_CAPACITY = 4 * 1024;
 export const FRAME_WORKER_TEXT_CHUNK_CODE_UNITS = 1024;
+export const FRAME_WORKER_ACCESSIBILITY_ID_BYTES = 512;
 /** @emoji ⏱️ Re-exported so a reader of the transport sees the ceiling its turns are priced against;
  * the law itself — executing-time pricing and the sustained-run attribution — lives in
  * `../⏱️turn-budget/🟦️.ts`. */
 export const FRAME_UI_TURN_BUDGET_MS = UI_TURN_BUDGET_MS;
 export const FRAME_WORKER_INTROSPECTION_CAPACITY = 4;
 export const FRAME_WORKER_INTROSPECTION_TIMEOUT_MS = 10_000;
+export const FRAME_WORKER_IMAGE_DECODE_BYTE_CAPACITY = 16 * 1024 * 1024;
 
 export type BrowserFrameWorkerFaultCode =
   | "worker-unavailable"
@@ -71,7 +75,14 @@ export type BrowserFrameFallbackState = {
   readonly bootSilentForMs: number;
 };
 
-export type BrowserFramePointer = {
+export type BrowserFrameModifiers = {
+  readonly shift: boolean;
+  readonly ctrl: boolean;
+  readonly alt: boolean;
+  readonly meta: boolean;
+};
+
+export type BrowserFramePointer = BrowserFrameModifiers & {
   readonly pointerId: number;
   readonly pointerKind: "mouse" | "touch" | "pen" | "eraser";
   readonly x: number;
@@ -83,25 +94,54 @@ export type BrowserFramePointer = {
 
 export type BrowserFrameReplaceableEvent =
   | ({ readonly kind: "pointer-move" } & BrowserFramePointer)
-  | { readonly kind: "wheel"; readonly x: number; readonly y: number; readonly deltaX: number; readonly deltaY: number }
+  | ({ readonly kind: "wheel"; readonly x: number; readonly y: number; readonly deltaX: number; readonly deltaY: number } & BrowserFrameModifiers)
   | { readonly kind: "resize"; readonly width: number; readonly height: number; readonly dpr: number };
 
+export type BrowserHubDocumentRemote =
+  | { readonly kind: "detached" }
+  | { readonly kind: "connecting" }
+  | { readonly kind: "live"; readonly peerCount: number }
+  | { readonly kind: "backoff"; readonly retryInMs: number };
+
+export type BrowserFrameAccessibilityAddress = {
+  readonly windowId: string;
+  readonly windowGeneration: number;
+  readonly nodeId: number;
+  readonly nodeKey: string;
+};
+
 export type BrowserFrameLosslessEvent =
+  | ({ readonly kind: "pointer-cancel" } & BrowserFramePointer)
   | ({ readonly kind: "pointer-down" | "pointer-up"; readonly button: "primary" | "secondary" | "middle" } & BrowserFramePointer)
   | { readonly kind: "key-down" | "key-up"; readonly key: string; readonly shift: boolean; readonly ctrl: boolean; readonly alt: boolean; readonly meta: boolean }
-  | { readonly kind: "text" | "paste"; readonly text: string }
+  | { readonly kind: "text" | "paste" | "paste-image-data-url"; readonly text: string }
   | { readonly kind: "ime-start" | "ime-cancel" }
   | { readonly kind: "ime-update"; readonly text: string; readonly cursor: number }
-  | { readonly kind: "ime-commit"; readonly text: string };
+  | { readonly kind: "ime-commit"; readonly text: string }
+  | ({ readonly kind: "accessibility-focus" | "accessibility-blur" | "accessibility-activate" } & BrowserFrameAccessibilityAddress)
+  | ({ readonly kind: "accessibility-value"; readonly value: string } & BrowserFrameAccessibilityAddress)
+  // ⏱️ These two are minted straight into a wire batch by `takeLosslessWireBatch` rather than enqueued
+  // as input, so unlike every other member they carry the batch stamp on the type instead of
+  // acquiring it at flush.
+  | { readonly kind: "hub-document-status"; readonly documentKey: string; readonly remote: BrowserHubDocumentRemote; readonly timestampMs: number }
+  | { readonly kind: "hub-document-close"; readonly documentKey: string; readonly timestampMs: number };
 
 /** @emoji 🖱️ One DOM input as the UI isolate observes it on `#semio-wgpu-canvas`, reduced to the fields
  * the wire carries. Deliberately NOT `PointerEvent`/`WheelEvent`/`KeyboardEvent`: this shape is what the
  * language-neutral oracle `🧫️fixtures/🎮️wgpu-browser-input-wire/🔣️.json` names, so the projection below
  * can be exercised without a DOM and the Rust law can read the same rows. */
+type BrowserFramePointerDomFields = BrowserFrameModifiers & { readonly pointerId: number; readonly pointerType: string; readonly offsetX: number; readonly offsetY: number; readonly pressure?: number; readonly tiltX?: number; readonly tiltY?: number; readonly button?: number };
+
+type BrowserFrameKeyDomFields = { readonly key: string; readonly shift: boolean; readonly ctrl: boolean; readonly alt: boolean; readonly meta: boolean };
+
 export type BrowserFrameDomEvent =
-  | { readonly type: "pointermove" | "pointerdown" | "pointerup"; readonly pointerId: number; readonly pointerType: string; readonly offsetX: number; readonly offsetY: number; readonly pressure?: number; readonly tiltX?: number; readonly tiltY?: number; readonly button?: number }
-  | { readonly type: "wheel"; readonly offsetX: number; readonly offsetY: number; readonly deltaX: number; readonly deltaY: number }
-  | { readonly type: "keydown" | "keyup"; readonly key: string; readonly shift: boolean; readonly ctrl: boolean; readonly alt: boolean; readonly meta: boolean }
+  | ({ readonly type: "pointercancel" } & BrowserFramePointerDomFields)
+  | ({ readonly type: "pointermove" } & BrowserFramePointerDomFields)
+  | ({ readonly type: "pointerdown" } & BrowserFramePointerDomFields)
+  | ({ readonly type: "pointerup" } & BrowserFramePointerDomFields)
+  | ({ readonly type: "wheel"; readonly offsetX: number; readonly offsetY: number; readonly deltaX: number; readonly deltaY: number } & BrowserFrameModifiers)
+  | ({ readonly type: "keydown" } & BrowserFrameKeyDomFields)
+  | ({ readonly type: "keyup" } & BrowserFrameKeyDomFields)
   | { readonly type: "resize"; readonly clientWidth: number; readonly clientHeight: number };
 
 /** @emoji 📏️ The ONE place a CSS pixel becomes a physical pixel — and it is used for the SURFACE
@@ -121,7 +161,7 @@ function pointerButtonName(button: number | undefined): "primary" | "secondary" 
 
 /** @emoji 🖱️ `offsetX`/`offsetY` are CSS pixels relative to the canvas and stay that way: the
  * renderer hit-tests in logical pixels. */
-function pointerFields(event: Extract<BrowserFrameDomEvent, { type: "pointermove" | "pointerdown" | "pointerup" }>): BrowserFramePointer {
+function pointerFields(event: Extract<BrowserFrameDomEvent, { type: "pointermove" | "pointerdown" | "pointerup" | "pointercancel" }>): BrowserFramePointer {
   return {
     pointerId: event.pointerId,
     pointerKind: event.pointerType === "touch" || event.pointerType === "pen" || event.pointerType === "eraser" ? event.pointerType : "mouse",
@@ -130,7 +170,37 @@ function pointerFields(event: Extract<BrowserFrameDomEvent, { type: "pointermove
     ...(event.pressure ? { pressure: event.pressure } : {}),
     ...(event.tiltX ? { tiltX: event.tiltX } : {}),
     ...(event.tiltY ? { tiltY: event.tiltY } : {}),
+    shift: event.shift,
+    ctrl: event.ctrl,
+    alt: event.alt,
+    meta: event.meta,
   };
+}
+
+/** @emoji ⌨️ Reads the event-time modifier snapshot carried by every DOM pointer and wheel event. */
+export function browserFrameModifiersFromDom(event: Pick<MouseEvent, "shiftKey" | "ctrlKey" | "altKey" | "metaKey">): BrowserFrameModifiers {
+  return { shift: event.shiftKey, ctrl: event.ctrlKey, alt: event.altKey, meta: event.metaKey };
+}
+
+/** @emoji 🖱️ Reduces one real DOM pointer event into the owned input vocabulary. */
+export function browserFramePointerDomEvent(event: PointerEvent, type: "pointermove" | "pointerdown" | "pointerup" | "pointercancel"): BrowserFrameDomEvent {
+  return {
+    type,
+    pointerId: event.pointerId,
+    pointerType: event.pointerType,
+    offsetX: event.offsetX,
+    offsetY: event.offsetY,
+    pressure: event.pressure,
+    tiltX: event.tiltX,
+    tiltY: event.tiltY,
+    button: event.button,
+    ...browserFrameModifiersFromDom(event),
+  };
+}
+
+/** @emoji 🎡️ Reduces one real DOM wheel event into the owned input vocabulary. */
+export function browserFrameWheelDomEvent(event: WheelEvent): BrowserFrameDomEvent {
+  return { type: "wheel", offsetX: event.offsetX, offsetY: event.offsetY, deltaX: event.deltaX, deltaY: event.deltaY, ...browserFrameModifiersFromDom(event) };
 }
 
 /** @emoji 🎮️ Projects one observed DOM input onto the single wire event the frame Worker decodes.
@@ -144,9 +214,10 @@ function pointerFields(event: Extract<BrowserFrameDomEvent, { type: "pointermove
  * `devicePixelRatio` reaches exactly one event kind: `resize`, whose width/height ARE the physical
  * surface extent. Pointer and wheel positions stay CSS pixels. */
 export function browserFrameEventFromDom(event: BrowserFrameDomEvent, devicePixelRatio: number): BrowserFrameReplaceableEvent | BrowserFrameLosslessEvent {
+  if (event.type === "pointercancel") return { kind: "pointer-cancel", ...pointerFields(event) };
   if (event.type === "pointermove") return { kind: "pointer-move", ...pointerFields(event) };
   if (event.type === "pointerdown" || event.type === "pointerup") return { kind: event.type === "pointerdown" ? "pointer-down" : "pointer-up", ...pointerFields(event), button: pointerButtonName(event.button) };
-  if (event.type === "wheel") return { kind: "wheel", x: event.offsetX, y: event.offsetY, deltaX: event.deltaX, deltaY: event.deltaY };
+  if (event.type === "wheel") return { kind: "wheel", x: event.offsetX, y: event.offsetY, deltaX: event.deltaX, deltaY: event.deltaY, shift: event.shift, ctrl: event.ctrl, alt: event.alt, meta: event.meta };
   if (event.type === "resize") return { kind: "resize", width: Math.max(1, Math.round(physical(event.clientWidth, devicePixelRatio))), height: Math.max(1, Math.round(physical(event.clientHeight, devicePixelRatio))), dpr: devicePixelRatio };
   return { kind: event.type === "keydown" ? "key-down" : "key-up", key: event.key, shift: event.shift, ctrl: event.ctrl, alt: event.alt, meta: event.meta };
 }
@@ -210,8 +281,8 @@ export type BrowserFrameWorkerBatch = {
 };
 
 export type BrowserFrameWireLosslessEvent =
-  | Exclude<BrowserFrameLosslessEvent, { readonly kind: "text" | "paste" | "ime-update" | "ime-commit" }>
-  | { readonly kind: "text-chunk"; readonly streamId: number; readonly target: "text" | "paste" | "ime-update" | "ime-commit"; readonly text: string; readonly totalBytes: number; readonly final: boolean; readonly cursor?: number };
+  | (Exclude<BrowserFrameLosslessEvent, { readonly kind: "text" | "paste" | "paste-image-data-url" | "ime-update" | "ime-commit" }> & { readonly timestampMs: number })
+  | { readonly kind: "text-chunk"; readonly streamId: number; readonly target: "text" | "paste" | "paste-image-data-url" | "ime-update" | "ime-commit"; readonly text: string; readonly totalBytes: number; readonly final: boolean; readonly timestampMs: number; readonly cursor?: number };
 
 /** @emoji 🔬️ The renderer's `#[wasm_bindgen]` introspection exports (`🗣️Interpreter/🎯️targets/🧊️wgpu/🦀️.rs`
  * region `🔬️IntrospectionExports`) read `UI_ENGINE`, a thread-local that lives inside `semio-frame-worker`.
@@ -236,7 +307,9 @@ export type BrowserFrameShardPort = { readonly kind: "shard-port"; readonly shar
  * alone, exactly like `introspection`, so no host-side request table beyond the pending map exists. */
 export type BrowserFrameHostIoResult = { readonly kind: "host-io-result"; readonly lifecycle: number; readonly requestId: number; readonly json: string | null; readonly detail?: string };
 
-export type BrowserFrameUiMessage = BrowserFrameWorkerBoot | BrowserFrameWorkerBatch | BrowserFrameWorkerIntrospect | InteractiveJobUiMessage | BrowserFrameShardPort | BrowserFrameHostIoResult | BrowserFrameHostAppearance | BrowserFrameHostStorage | { readonly kind: "close"; readonly lifecycle: number };
+export type BrowserFrameImageDecodeResult = { readonly kind: "image-decode-result"; readonly lifecycle: number; readonly requestId: number; readonly bitmap: ImageBitmap | null; readonly detail?: string };
+
+export type BrowserFrameUiMessage = BrowserFrameWorkerBoot | BrowserFrameWorkerBatch | BrowserFrameWorkerIntrospect | InteractiveJobUiMessage | BrowserFrameShardPort | BrowserFrameHostIoResult | BrowserFrameImageDecodeResult | BrowserFrameHostAppearance | BrowserFrameHostStorage | { readonly kind: "close"; readonly lifecycle: number };
 
 /** @emoji 🧵️ The frame Worker's own step ledger, as the UI isolate sees it. The Worker prices its steps
  * against `WORKER_STEP_BUDGET_MS` with the same executing-span law the UI isolate uses for its turns
@@ -287,6 +360,8 @@ export type BrowserFrameWorkerMessage =
    * browser halves used to answer `None` and return silently — an export produced its bytes and handed
    * them to nobody, an import opened nothing (ticket 26/09/09/PROCEDURAL-3D-END-TO-END). */
   | { readonly kind: "host-io"; readonly lifecycle: number; readonly requestId: number; readonly request: string; readonly bytes: Uint8Array | null }
+  | { readonly kind: "image-decode"; readonly lifecycle: number; readonly requestId: number; readonly source: Uint8Array<ArrayBuffer>; readonly dimensions: ReferenceImageDimensions }
+  | { readonly kind: "image-decode-cancel"; readonly lifecycle: number; readonly requestId: number }
   | InteractiveJobWorkerMessage;
 
 export interface BrowserFrameWorkerPort {
@@ -326,7 +401,7 @@ export type BrowserFrameTransportOptions = {
 };
 
 type QueuedLossless = {
-  readonly event: BrowserFrameLosslessEvent;
+  readonly event: Exclude<BrowserFrameLosslessEvent, { readonly kind: "hub-document-status" | "hub-document-close" }>;
   readonly bytes: number;
   readonly streamId: number;
   readonly timestampMs: number;
@@ -365,6 +440,7 @@ export class BrowserFrameTransport {
   private resize: BrowserFrameReplaceableEvent | undefined;
   private lossless: QueuedLossless[] = [];
   private losslessBytes = 0;
+  private readonly hubDocuments = new Map<string, BrowserHubDocumentRemote | null>();
   private nextStreamId = 1;
   private generation = 0;
   private sequence = 0;
@@ -388,6 +464,7 @@ export class BrowserFrameTransport {
   private deferredScheduled = false;
   private readonly introspections = new Map<number, { readonly resolve: (json: string | null) => void; readonly timer: number }>();
   private nextIntrospectionId = 1;
+  private readonly imageDecodes = new Map<number, AbortController>();
 
   constructor(options: BrowserFrameTransportOptions) {
     this.worker = options.worker;
@@ -452,6 +529,8 @@ export class BrowserFrameTransport {
   /** @emoji 🔒 Admits a lossless input only while both item and byte credits remain. */
   enqueueLossless(event: BrowserFrameLosslessEvent): boolean {
     if (!this.accepting()) return false;
+    if (event.kind === "hub-document-status") return this.publishHubDocumentStatus(event.documentKey, event.remote);
+    if (event.kind === "hub-document-close") return this.publishHubDocumentStatus(event.documentKey, null);
     if ((event.kind === "key-down" || event.kind === "key-up") && event.key.length > FRAME_WORKER_TEXT_CHUNK_CODE_UNITS) {
       this.fail("lossless-overflow", `key payload exceeded ${FRAME_WORKER_TEXT_CHUNK_CODE_UNITS} code units`);
       return false;
@@ -460,6 +539,17 @@ export class BrowserFrameTransport {
       this.fail("lossless-overflow", `IME payload exceeded ${FRAME_WORKER_TEXT_CHUNK_CODE_UNITS} code units`);
       return false;
     }
+    if (event.kind === "accessibility-focus" || event.kind === "accessibility-blur" || event.kind === "accessibility-activate" || event.kind === "accessibility-value") {
+      const invalidText = (value: string) => value.length === 0 || new TextEncoder().encode(value).byteLength > FRAME_WORKER_ACCESSIBILITY_ID_BYTES || /[\u0000-\u001f\u007f]/u.test(value);
+      if (invalidText(event.windowId) || invalidText(event.nodeKey) || !Number.isSafeInteger(event.windowGeneration) || event.windowGeneration < 1 || !Number.isSafeInteger(event.nodeId) || event.nodeId < 1) {
+        this.fail("lossless-overflow", "accessibility address is outside fixed identity credits");
+        return false;
+      }
+      if (event.kind === "accessibility-value" && event.value.length > FRAME_WORKER_TEXT_CHUNK_CODE_UNITS) {
+        this.fail("lossless-overflow", `accessibility value exceeded ${FRAME_WORKER_TEXT_CHUNK_CODE_UNITS} code units`);
+        return false;
+      }
+    }
     const bytes = admittedBytes(event);
     if (this.lossless.length >= FRAME_WORKER_LOSSLESS_ITEM_CAPACITY || this.losslessBytes + bytes > FRAME_WORKER_BYTE_CAPACITY) {
       this.fail("lossless-overflow", `lossless lane exceeded ${FRAME_WORKER_LOSSLESS_ITEM_CAPACITY} items or ${FRAME_WORKER_BYTE_CAPACITY} bytes`);
@@ -467,6 +557,15 @@ export class BrowserFrameTransport {
     }
     this.lossless.push({ event, bytes, streamId: this.nextStreamId++, timestampMs: this.now(), cursor: 0 });
     this.losslessBytes += bytes;
+    this.generation++;
+    this.requestFrame();
+    return true;
+  }
+
+  publishHubDocumentStatus(documentKey: string, remote: BrowserHubDocumentRemote | null): boolean {
+    if (!this.accepting() || documentKey.length === 0 || documentKey.length > 512 || /[\u0000-\u001f\u007f]/u.test(documentKey)) return false;
+    if (!this.hubDocuments.has(documentKey) && this.hubDocuments.size >= FRAME_WORKER_HUB_DOCUMENT_CAPACITY) return false;
+    this.hubDocuments.set(documentKey, remote);
     this.generation++;
     this.requestFrame();
     return true;
@@ -499,7 +598,7 @@ export class BrowserFrameTransport {
     this.pointerCount = 0;
     this.wheel = undefined;
     this.resize = undefined;
-    this.frameRequested = this.lossless.length > 0;
+    this.frameRequested = this.lossless.length > 0 || this.hubDocuments.size > 0;
     const sequence = ++this.sequence;
     this.inFlight = true;
     try {
@@ -728,6 +827,37 @@ export class BrowserFrameTransport {
     );
   }
 
+  private answerImageDecode(message: Extract<BrowserFrameWorkerMessage, { readonly kind: "image-decode" }>): void {
+    const reply = (bitmap: ImageBitmap | null, detail?: string): void => {
+      if (!this.accepting()) {
+        bitmap?.close();
+        return;
+      }
+      try {
+        this.worker.postMessage({ kind: "image-decode-result", lifecycle: this.lifecycle, requestId: message.requestId, bitmap, ...(detail === undefined ? {} : { detail }) }, bitmap ? [bitmap] : []);
+      } catch {
+        bitmap?.close();
+      }
+    };
+    if (!this.accepting()) return;
+    const expected = Number.isSafeInteger(message.dimensions.width) && Number.isSafeInteger(message.dimensions.height)
+      ? message.dimensions.width * message.dimensions.height * 4
+      : Number.POSITIVE_INFINITY;
+    if (this.imageDecodes.size >= 1 || message.source.byteLength < 1 || message.source.byteLength > FRAME_WORKER_IMAGE_DECODE_BYTE_CAPACITY || expected < 4 || expected > 64 * 1024 * 1024) {
+      reply(null, "reference-image-decode-credits");
+      return;
+    }
+    const controller = new AbortController();
+    this.imageDecodes.set(message.requestId, controller);
+    const source = new Blob([message.source], { type: message.dimensions.mediaType });
+    void decodeReferenceImageOnPage(source, message.dimensions, controller.signal).then(
+      (bitmap) => reply(bitmap),
+      (error: unknown) => reply(null, error instanceof Error ? `${error.name}: ${error.message}` : String(error)),
+    ).finally(() => {
+      if (this.imageDecodes.get(message.requestId) === controller) this.imageDecodes.delete(message.requestId);
+    });
+  }
+
   private receive(message: BrowserFrameWorkerMessage): void {
     if (message.kind === "shard-spawn") {
       this.spawnShardWorker(message.shardIndex, message.url);
@@ -744,6 +874,14 @@ export class BrowserFrameTransport {
     }
     if (message.kind === "host-io") {
       this.answerHostIo(message);
+      return;
+    }
+    if (message.kind === "image-decode") {
+      this.answerImageDecode(message);
+      return;
+    }
+    if (message.kind === "image-decode-cancel") {
+      this.imageDecodes.get(message.requestId)?.abort();
       return;
     }
     if (message.kind === "introspection") {
@@ -866,6 +1004,8 @@ export class BrowserFrameTransport {
   }
 
   private clearQueues(): void {
+    for (const controller of this.imageDecodes.values()) controller.abort();
+    this.imageDecodes.clear();
     for (const pending of this.introspections.values()) {
       this.clearTimer(pending.timer);
       pending.resolve(null);
@@ -883,6 +1023,7 @@ export class BrowserFrameTransport {
     };
     if (retiredLossless.length > 0) this.setTimer(drain, 0);
     this.losslessBytes = 0;
+    this.hubDocuments.clear();
     this.frameRequested = false;
     this.inFlight = false;
   }
@@ -903,10 +1044,17 @@ export class BrowserFrameTransport {
   private takeLosslessWireBatch(): BrowserFrameWireLosslessEvent[] {
     const batch: BrowserFrameWireLosslessEvent[] = [];
     let budget = FRAME_WORKER_MESSAGE_BYTE_CAPACITY - 2048;
+    for (const [documentKey, remote] of this.hubDocuments) {
+      const bytes = 2 * documentKey.length + 192;
+      if (batch.length >= 16 || budget <= bytes) break;
+      batch.push(remote === null ? { kind: "hub-document-close", documentKey, timestampMs: this.now() } : { kind: "hub-document-status", documentKey, remote, timestampMs: this.now() });
+      this.hubDocuments.delete(documentKey);
+      budget -= bytes;
+    }
     while (batch.length < 16 && this.lossless.length > 0 && budget > 256) {
       const queued = this.lossless[0]!;
       const event = queued.event;
-      if (event.kind !== "text" && event.kind !== "paste" && event.kind !== "ime-update" && event.kind !== "ime-commit") {
+      if (event.kind !== "text" && event.kind !== "paste" && event.kind !== "paste-image-data-url" && event.kind !== "ime-update" && event.kind !== "ime-commit") {
         batch.push({ ...event, timestampMs: queued.timestampMs } as BrowserFrameWireLosslessEvent);
         budget -= Math.min(queued.bytes, 512);
         this.lossless.shift();
@@ -931,8 +1079,11 @@ export class BrowserFrameTransport {
 }
 
 function admittedBytes(event: BrowserFrameLosslessEvent): number {
-  if (event.kind === "text" || event.kind === "paste" || event.kind === "ime-update" || event.kind === "ime-commit") return 3 * event.text.length + 128;
+  if (event.kind === "text" || event.kind === "paste" || event.kind === "paste-image-data-url" || event.kind === "ime-update" || event.kind === "ime-commit") return 3 * event.text.length + 128;
   if (event.kind === "key-down" || event.kind === "key-up") return 2 * event.key.length + 128;
+  if (event.kind === "hub-document-status" || event.kind === "hub-document-close") return 2 * event.documentKey.length + 192;
+  if (event.kind === "accessibility-value") return 2 * (event.windowId.length + event.nodeKey.length + event.value.length) + 192;
+  if (event.kind === "accessibility-focus" || event.kind === "accessibility-blur" || event.kind === "accessibility-activate") return 2 * (event.windowId.length + event.nodeKey.length) + 192;
   return 128;
 }
 

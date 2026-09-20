@@ -36,11 +36,7 @@ fn fixture_state() -> World3dState {
     state.bound_domain_granularity_id = Some(scene["domainGranularityId"].as_str().expect("domainGranularityId").into());
     let numbers = |value: &serde_json::Value| value.as_array().expect("number list").iter().map(|entry| entry.as_f64().expect("number") as f32).collect::<Vec<f32>>();
     let mesh = scene["meshes"].as_array().expect("mesh list")[0].clone();
-    let data = mesh_oracle_from_buffers(
-        numbers(&mesh["data"]["positions"]),
-        numbers(&mesh["data"]["normals"]),
-        mesh["data"]["indices"].as_array().expect("index list").iter().map(|entry| entry.as_u64().expect("index") as u32).collect(),
-    );
+    let data = mesh_oracle_from_buffers(numbers(&mesh["data"]["positions"]), numbers(&mesh["data"]["normals"]), mesh["data"]["indices"].as_array().expect("index list").iter().map(|entry| entry.as_u64().expect("index") as u32).collect());
     let mesh_key = mesh["id"].as_str().expect("mesh id").to_string();
     store_mesh(&mut state, mesh_key.clone(), publish_oracle_mesh(data));
     let mesh_version = *state.mesh_versions.get(&mesh_key).expect("mesh version");
@@ -54,9 +50,9 @@ fn fixture_state() -> World3dState {
         model.cols[3][1] = position[1];
         model.cols[3][2] = position[2];
         state.instance_interaction_ids.insert(id.clone(), target);
-        instances.push(Instance3d { id, model, color: [1.0; 4], selected: false, hovered: false });
+        instances.push(Instance3d { id, model, color: [1.0; 4], selected: false, hovered: false, material: Default::default() });
     }
-    state.draws.push(SceneDraw3d { mesh_key, mesh_version, instances });
+    state.draws.push(SceneDraw3d { mesh_key, mesh_version, instances, shadow_role: Default::default() });
     state
 }
 
@@ -69,7 +65,24 @@ fn instance_ray(state: &World3dState, instance_id: &str) -> (Vec3, Vec3) {
 }
 
 fn ray_cursor(state: &World3dState, purpose: WorldRayPickPurpose, origin: Vec3, direction: Vec3, merge: u8) -> WorldRayPickCursor {
-    WorldRayPickCursor { revision: state.interaction_revision, generation: 1, purpose, origin, direction, draw: 0, instance: 0, triangle: 0, mesh: None, mesh_probe: 0, merge, best: None, pick_target: 0, best_target: None, complete: false, faulted: false }
+    WorldRayPickCursor {
+        revision: state.interaction_revision,
+        generation: 1,
+        purpose,
+        origin,
+        direction,
+        draw: 0,
+        instance: 0,
+        triangle: 0,
+        mesh: None,
+        mesh_probe: 0,
+        merge,
+        best: None,
+        pick_target: 0,
+        best_target: None,
+        complete: false,
+        faulted: false,
+    }
 }
 
 /// 🏁️ Drives one bounded pick to completion and returns the descriptor it published, if any.
@@ -106,11 +119,7 @@ fn an_instance_pick_selects_the_topology_target_at_object_granularity() {
         let expect = case["expect"].clone();
         let mut state = fixture_state();
         let (origin, direction) = instance_ray(&state, case["instanceId"].as_str().expect("instanceId"));
-        let merge = world_merge_code(
-            case["modifiers"]["shiftKey"].as_bool().unwrap_or(false),
-            case["modifiers"]["ctrlKey"].as_bool().unwrap_or(false),
-            case["modifiers"]["metaKey"].as_bool().unwrap_or(false),
-        );
+        let merge = world_merge_code(case["modifiers"]["shiftKey"].as_bool().unwrap_or(false), case["modifiers"]["ctrlKey"].as_bool().unwrap_or(false), case["modifiers"]["metaKey"].as_bool().unwrap_or(false));
         let cursor = ray_cursor(&state, WorldRayPickPurpose::Instance, origin, direction, merge);
         let action = publish_pick(&mut state, cursor).unwrap_or_else(|| panic!("{id} publishes an action"));
         assert_eq!(action.action, expect["action"].as_str().expect("action id"), "{id}");
@@ -216,7 +225,10 @@ fn a_camera_gesture_addresses_the_window_that_owns_the_surface() {
     assert_eq!(arg(&action, "windowId"), fixture()["scene"]["surfaceId"].as_str().expect("surfaceId"));
     assert!(action.args.as_ref().and_then(|args| args.get("surfaceId")).is_none(), "the pre-fix `surfaceId` address is gone, not merely joined by `windowId`");
     let camera = action.args.as_ref().and_then(|args| args.get("camera")).expect("the pose nests under `camera`");
-    assert!(camera.get("position").is_some() && camera.get("target").is_some() && camera.get("zoom").is_some() && camera.get("up").is_some(), "the pose carries React's `{{position, target, zoom, up}}` — never `fov`, which the guest camera value has no member for");
+    assert!(
+        camera.get("position").is_some() && camera.get("target").is_some() && camera.get("zoom").is_some() && camera.get("up").is_some(),
+        "the pose carries React's `{{position, target, zoom, up}}` — never `fov`, which the guest camera value has no member for"
+    );
     assert!(camera.get("fov").is_none(), "`fov` is gone from the wire, not merely joined by `zoom`");
     println!("[DEBUG] pointer-gestures orbit-completes-into-one-setcamera: windowId={} camera={:?}", arg(&action, "windowId"), camera);
 }
@@ -233,18 +245,8 @@ fn a_camera_gesture_addresses_the_window_that_owns_the_surface() {
 fn an_empty_marquee_page_reserves_the_bytes_of_its_own_empty_array() {
     let state = fixture_state();
     let job = WorldMarqueePublishJob::new(2, WorldMarqueeGesture::new(state.interaction_revision, 1, [0.0, 0.0]), WorldMarqueeResultPages::default(), false, false);
-    let base = ui_wgpu::wgpu::checked_action_string_bytes(&[
-        state.controller_id.as_str(),
-        "interactionSelect",
-        "domainId",
-        resolved_domain_id(&state),
-        "targets",
-        "merge",
-        job.merge,
-        "method",
-        selection_method_wire_str(SelectionMethod::Rectangle),
-    ])
-    .expect("base action bytes");
+    let base = ui_wgpu::wgpu::checked_action_string_bytes(&[state.controller_id.as_str(), "interactionSelect", "domainId", resolved_domain_id(&state), "targets", "merge", job.merge, "method", selection_method_wire_str(SelectionMethod::Rectangle)])
+        .expect("base action bytes");
     let credit = job.page_credit(&state, 0).expect("empty page credit");
     assert_eq!(credit - base, INTERACTION_TARGETS_EMPTY.len(), "an empty page reserves exactly the `[]` it writes");
     println!("[DEBUG] pointer-gestures empty-marquee-credit: base={base} credit={credit} array={}", INTERACTION_TARGETS_EMPTY.len());
@@ -255,16 +257,20 @@ fn an_empty_marquee_page_reserves_the_bytes_of_its_own_empty_array() {
 fn the_merge_vocabulary_is_not_translated() {
     for id in ["instance-pick-replaces", "instance-pick-additive", "instance-pick-subtractive", "instance-pick-subtractive-on-command", "instance-pick-invertive"] {
         let case = gesture(id);
-        let code = world_merge_code(
-            case["modifiers"]["shiftKey"].as_bool().unwrap_or(false),
-            case["modifiers"]["ctrlKey"].as_bool().unwrap_or(false),
-            case["modifiers"]["metaKey"].as_bool().unwrap_or(false),
-        );
+        let code = world_merge_code(case["modifiers"]["shiftKey"].as_bool().unwrap_or(false), case["modifiers"]["ctrlKey"].as_bool().unwrap_or(false), case["modifiers"]["metaKey"].as_bool().unwrap_or(false));
         assert_eq!(world_merge_wire_label(code), case["expect"]["merge"].as_str().expect("merge"), "{id}");
     }
     // 🔍️ The pre-fix rule — `shift → additive, ctrl → INVERTIVE, else replace` — has no
     // `subtractive` at all, so it disagrees on the two ctrl/cmd cases.
-    let pre_fix = |shift: bool, ctrl: bool| if shift { MergeMode::Additive } else if ctrl { MergeMode::Invertive } else { MergeMode::Replace };
+    let pre_fix = |shift: bool, ctrl: bool| {
+        if shift {
+            MergeMode::Additive
+        } else if ctrl {
+            MergeMode::Invertive
+        } else {
+            MergeMode::Replace
+        }
+    };
     assert_ne!(pre_fix(false, true).wire_label(), gesture("instance-pick-subtractive")["expect"]["merge"].as_str().expect("merge"));
     assert_ne!(pre_fix(true, true).wire_label(), gesture("instance-pick-invertive")["expect"]["merge"].as_str().expect("merge"));
 }
@@ -291,10 +297,10 @@ fn a_relocate_press_grabs_the_object_react_grabs() {
 #[test]
 fn a_relocate_commit_is_the_origin_plus_the_ground_travel_and_a_still_drag_commits_nothing() {
     let session = World3dRelocateSession { object_id: "o1".into(), origin: [10.0, 20.0, 5.0], from: [0.0, 0.0, 5.0] };
-    let moved = world3d_relocate_dispatch_args(&session, [3.0, -4.0, 5.0], 0.0).expect("a travelled drag commits");
+    let moved = world3d_relocate_dispatch_args(&session, [3.0, -4.0, 5.0], false, 1.0).expect("a travelled drag commits");
     assert_eq!(moved, [13.0, 16.0, 5.0], "origin + (to - from), with the grabbed object's own z preserved");
-    assert_eq!(world3d_relocate_dispatch_args(&session, [0.0, 0.0, 5.0], 0.0), None, "a drag that never travelled commits nothing");
-    let snapped = world3d_relocate_dispatch_args(&session, [3.4, -4.4, 5.0], 1.0).expect("a travelled drag commits");
+    assert_eq!(world3d_relocate_dispatch_args(&session, [0.0, 0.0, 5.0], false, 1.0), None, "a drag that never travelled commits nothing");
+    let snapped = world3d_relocate_dispatch_args(&session, [3.4, -4.4, 5.0], true, 1.0).expect("a travelled drag commits");
     assert_eq!(snapped, [13.0, 16.0, 5.0], "the committed point is snapped exactly like a catalogue drop");
 }
 

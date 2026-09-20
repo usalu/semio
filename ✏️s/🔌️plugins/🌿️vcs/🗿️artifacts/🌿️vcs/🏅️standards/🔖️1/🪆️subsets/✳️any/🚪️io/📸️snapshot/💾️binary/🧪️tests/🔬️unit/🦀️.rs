@@ -17,11 +17,14 @@ async fn vcs_demo_projection_dsl_pack_equivalence() {
 /// `command_envelope_round_trip_holds_for_an_applied_operation`).
 #[semio_framework_async_macros::async_test]
 async fn command_envelope_round_trip_holds_for_an_applied_operation() {
+    use crate::standards::v1::subsets::any::schema::operations::new_vcs_store;
     use protocol::{ArtifactId, Edit, SchemaId};
-    use store::{create_document_envelope, ArtifactCommand, ArtifactStore};
+    use store::{create_document_envelope, ArtifactCommand};
 
-    let mut store: ArtifactStore<VcsSnapshot, VcsDemoMutation> =
-        ArtifactStore::new(create_document_envelope(VCS_DOCUMENT_SCHEMA, "vcs-demo", crate::standards::v1::subsets::any::schema::empty_vcs_snapshot(), None)).await.expect("valid artifact store fixture");
+    // 🔐️ `new_vcs_store` installs the exact owner catalog a bare `ArtifactStore::new` leaves empty —
+    // without it `Apply` is refused (`edit history insertion requires its exact mutation retirement
+    // factory`) and the store cannot close at Drop either.
+    let mut store = new_vcs_store(create_document_envelope(VCS_DOCUMENT_SCHEMA, "vcs-demo", crate::standards::v1::subsets::any::schema::empty_vcs_snapshot(), None)).await.expect("valid artifact store fixture");
     store.dispatch(ArtifactCommand::Apply { mutations: vec![crate::mutations::rename_vcs("Renamed".into())], description: None }).await.expect("apply");
     let edit: &Edit<VcsDemoMutation> = store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");
     store::os_store::test_support::assert_command_envelope_round_trip::<VcsSnapshot, VcsDemoMutation>(edit, &ArtifactId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone())).await;

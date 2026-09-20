@@ -6,7 +6,8 @@ use semio_framework_plugin::kernel::{ActivationEvent, CapabilityId, CapabilityRe
 use semio_framework_plugin::plugin_app_close_prelude::*;
 use semio_framework_plugin::{ExecutionMode, Plugin, PluginApp, PluginAssemblyError};
 
-// 🗃️ Closed runtime app fleet for every stdio editor and viewer surface.
+// 🗃️ Closed runtime app fleet for every stdio editor and viewer surface — the library fleet.
+#[cfg(feature = "full-app-catalog")]
 dyn_enum_close! {
     pub enum StdioApps: PluginApp {
         PngEditor(VcsArtifactApp<EditorApp<semio_s_artifact_stdio_png::editor::png::PngEditor>>),
@@ -188,6 +189,33 @@ dyn_enum_close! {
     }
 }
 
+// 🗃️ Closed runtime app fleet the SHIPPED component assembles: the nine text/data document
+// subsets of `document-app-catalog`. Its sibling `full-app-catalog` fleet above closes the same
+// enum over all 88 subsets and cannot be linked into a component — see `register_apps`.
+#[cfg(not(feature = "full-app-catalog"))]
+dyn_enum_close! {
+    pub enum StdioApps: PluginApp {
+        CsvEditor(VcsArtifactApp<EditorApp<semio_s_artifact_stdio_csv::editor::csv::CsvEditor>>),
+        CsvViewer(VcsArtifactApp<ViewerApp<semio_s_artifact_stdio_csv::viewer::csv::CsvViewer>>),
+        TsvEditor(VcsArtifactApp<EditorApp<semio_s_artifact_stdio_tsv::editor::tsv::TsvEditor>>),
+        TsvViewer(VcsArtifactApp<ViewerApp<semio_s_artifact_stdio_tsv::viewer::tsv::TsvViewer>>),
+        TxtEditor(VcsArtifactApp<EditorApp<semio_s_artifact_stdio_txt::editor::txt::TxtEditor>>),
+        TxtViewer(VcsArtifactApp<ViewerApp<semio_s_artifact_stdio_txt::viewer::txt::TxtViewer>>),
+        JsonAnyEditor(VcsArtifactApp<EditorApp<semio_s_artifact_stdio_json::editor::json_any::JsonAnyEditor>>),
+        JsonAnyViewer(VcsArtifactApp<ViewerApp<semio_s_artifact_stdio_json::viewer::json_any::JsonAnyViewer>>),
+        JsonIJsonEditor(VcsArtifactApp<EditorApp<semio_s_artifact_stdio_json::editor::json_i_json::JsonIJsonEditor>>),
+        JsonIJsonViewer(VcsArtifactApp<ViewerApp<semio_s_artifact_stdio_json::viewer::json_i_json::JsonIJsonViewer>>),
+        XmlAnyEditor(VcsArtifactApp<EditorApp<semio_s_artifact_stdio_xml::editor::xml_any::XmlAnyEditor>>),
+        XmlAnyViewer(VcsArtifactApp<ViewerApp<semio_s_artifact_stdio_xml::viewer::xml_any::XmlAnyViewer>>),
+        XmlValidEditor(VcsArtifactApp<EditorApp<semio_s_artifact_stdio_xml::editor::xml_valid::XmlValidEditor>>),
+        XmlValidViewer(VcsArtifactApp<ViewerApp<semio_s_artifact_stdio_xml::viewer::xml_valid::XmlValidViewer>>),
+        MdEditor(VcsArtifactApp<EditorApp<semio_s_artifact_stdio_md::editor::md::MdEditor>>),
+        MdViewer(VcsArtifactApp<ViewerApp<semio_s_artifact_stdio_md::viewer::md::MdViewer>>),
+        HtmlEditor(VcsArtifactApp<EditorApp<semio_s_artifact_stdio_html::editor::html::HtmlEditor>>),
+        HtmlViewer(VcsArtifactApp<ViewerApp<semio_s_artifact_stdio_html::viewer::html::HtmlViewer>>),
+    }
+}
+
 /// 🧾️ Builds all stdio definitions before the typed library assembly boundary. `.activation(…)`/
 /// `.execution(…)`/`.requests(…)` (ticket 26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME M0,
 /// `📓️design-abi.md` §3/§6, following the `✏️s/🔌️plugins/🗒️note` E2 proof migration's shape): stdio
@@ -210,6 +238,70 @@ pub fn plugin() -> Result<Plugin<StdioApps>, PluginAssemblyError> {
     for artifact_kind in crate::registry::native_codec_artifact_kinds() {
         builder = builder.artifact_kind(artifact_kind);
     }
+    builder = register_apps(builder);
+
+    //#region 🔖️Descriptor
+    // 🚀 Ticket 26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME M0 (`📓️design-abi.md` §3/§6): one
+    // `on-artifact-kind:` activation event per artifact kind this crate genuinely owns — every
+    // package-local `semio_s_artifact_stdio_<fmt>::artifact_kind()` function (36 formats: image/
+    // audio/video/text/data/document/geometry), each read via its own function rather than a
+    // hardcoded string so this list can never silently drift from the real declarations above.
+    builder = builder.activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_stdio_binary::artifact_kind().id });
+    builder = builder.activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_stdio_txt::artifact_kind().id });
+    builder = builder.activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_stdio_json::artifact_kind().id });
+    builder = builder.activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_stdio_xml::artifact_kind().id });
+    builder = builder.activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_stdio_csv::artifact_kind().id });
+    builder = builder.activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_stdio_md::artifact_kind().id });
+    builder = builder.activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_stdio_deflate::artifact_kind().id });
+    builder = builder.activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_stdio_zip::artifact_kind().id });
+    builder = builder.activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_stdio_step::artifact_kind().id });
+    builder = builder.activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_stdio_ifc::artifact_kind().id });
+    builder = builder.activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_stdio_las::artifact_kind().id });
+    builder = builder.activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_stdio_gltf::artifact_kind().id });
+    builder = builder.activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_stdio_obj::artifact_kind().id });
+    builder = builder.activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_stdio_ply::artifact_kind().id });
+    builder = builder.activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_stdio_dxf::artifact_kind().id });
+    builder = builder.activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_stdio_stl::artifact_kind().id });
+    builder = builder.activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_stdio_svg::artifact_kind().id });
+    builder = builder.activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_stdio_bmp::artifact_kind().id });
+    builder = builder.activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_stdio_dwg::artifact_kind().id });
+    builder = builder.activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_stdio_png::artifact_kind().id });
+    builder = builder.activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_stdio_pdf::artifact_kind().id });
+    builder = builder.activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_stdio_jpg::artifact_kind().id });
+    builder = builder.activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_stdio_gif::artifact_kind().id });
+    builder = builder.activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_stdio_tiff::artifact_kind().id });
+    builder = builder.activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_stdio_docx::artifact_kind().id });
+    builder = builder.activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_stdio_pptx::artifact_kind().id });
+    builder = builder.activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_stdio_xlsx::artifact_kind().id });
+    builder = builder.activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_stdio_bcf::artifact_kind().id });
+    builder = builder.activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_stdio_semio::artifact_kind().id });
+    builder = builder.activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_stdio_mp4::artifact_kind().id });
+    builder = builder.activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_stdio_avi::artifact_kind().id });
+    builder = builder.activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_stdio_mp3::artifact_kind().id });
+    builder = builder.activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_stdio_wav::artifact_kind().id });
+    builder = builder.activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_stdio_epw::artifact_kind().id });
+    builder = builder.activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_stdio_tsv::artifact_kind().id });
+    builder = builder.activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_stdio_html::artifact_kind().id });
+    builder = builder.execution(ExecutionMode::Isolated);
+    builder = builder.requests(CapabilityRequest {
+        id: CapabilityId("artifacts.write".into()),
+        scope: "plugin".into(),
+        reason: "persist editor mutations back to whichever of stdio's 36 owned file-format artifacts (image/audio/video/text/data/document/geometry) is currently open".into(),
+        optional: false,
+    });
+    //#endregion 🔖️Descriptor
+
+    builder.contributes_topic(catalog).try_library()
+}
+
+/// 🗃️ Registers the FULL 88-subset editor/viewer fleet (`full-app-catalog`). Every app monomorphises
+/// the whole app machinery, and inside stdio's own component every registered app is live code, so
+/// this fleet costs ≈600 000 wasm functions and `wasm-component-ld` refuses it over wasmparser's
+/// 1 000 000-function ceiling. It is therefore the LIBRARY fleet (`cargo check -p semio-s-plugin-stdio
+/// --features full-app-catalog`); the component assembles `document-app-catalog` below.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+#[cfg(feature = "full-app-catalog")]
+fn register_apps(mut builder: PluginBuilder<Ready, StdioApps>) -> PluginBuilder<Ready, StdioApps> {
     //#region 👁️✏️SurfacesP1StdioMedia
     // 🧵 W2 packet P1-stdio-media (ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET):
     // png/jpg/bmp/tiff/gif/svg/mp4/mp3/wav/avi/html/md, 17 subsets × {editor, viewer}.
@@ -245,7 +337,7 @@ pub fn plugin() -> Result<Plugin<StdioApps>, PluginAssemblyError> {
     builder = builder.viewer::<semio_s_artifact_stdio_avi::viewer::avi::AviViewer>(semio_s_artifact_stdio_avi::viewer::avi::create_avi_viewer());
     builder = builder.editor::<semio_s_artifact_stdio_html::editor::html::HtmlEditor>(semio_s_artifact_stdio_html::editor::html::create_html_editor());
     builder = builder.viewer::<semio_s_artifact_stdio_html::viewer::html::HtmlViewer>(semio_s_artifact_stdio_html::viewer::html::create_html_viewer());
-    builder = builder.editor::<semio_s_artifact_stdio_md::editor::md::MdEditor>(semio_s_artifact_stdio_md::editor::md::create_md_editor());
+    builder = builder.editor_with_examples::<semio_s_artifact_stdio_md::editor::md::MdEditor>(semio_s_artifact_stdio_md::editor::md::create_md_editor(), vec![semio_s_artifact_stdio_md::examples::demo::source()]);
     builder = builder.viewer::<semio_s_artifact_stdio_md::viewer::md::MdViewer>(semio_s_artifact_stdio_md::viewer::md::create_md_viewer());
     //#endregion 👁️✏️SurfacesP1StdioMedia
 
@@ -456,57 +548,32 @@ pub fn plugin() -> Result<Plugin<StdioApps>, PluginAssemblyError> {
     builder = builder.editor::<semio_s_artifact_stdio_binary::editor::binary::BinaryEditor>(semio_s_artifact_stdio_binary::editor::binary::create_binary_editor());
     builder = builder.viewer::<semio_s_artifact_stdio_binary::viewer::binary::BinaryViewer>(semio_s_artifact_stdio_binary::viewer::binary::create_binary_viewer());
     //#endregion 👁️✏️SurfacesP2StdioDataMisc
+    builder
+}
 
-    //#region 🔖️Descriptor
-    // 🚀 Ticket 26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME M0 (`📓️design-abi.md` §3/§6): one
-    // `on-artifact-kind:` activation event per artifact kind this crate genuinely owns — every
-    // package-local `semio_s_artifact_stdio_<fmt>::artifact_kind()` function (36 formats: image/
-    // audio/video/text/data/document/geometry), each read via its own function rather than a
-    // hardcoded string so this list can never silently drift from the real declarations above.
-    builder = builder.activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_stdio_binary::artifact_kind().id });
-    builder = builder.activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_stdio_txt::artifact_kind().id });
-    builder = builder.activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_stdio_json::artifact_kind().id });
-    builder = builder.activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_stdio_xml::artifact_kind().id });
-    builder = builder.activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_stdio_csv::artifact_kind().id });
-    builder = builder.activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_stdio_md::artifact_kind().id });
-    builder = builder.activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_stdio_deflate::artifact_kind().id });
-    builder = builder.activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_stdio_zip::artifact_kind().id });
-    builder = builder.activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_stdio_step::artifact_kind().id });
-    builder = builder.activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_stdio_ifc::artifact_kind().id });
-    builder = builder.activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_stdio_las::artifact_kind().id });
-    builder = builder.activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_stdio_gltf::artifact_kind().id });
-    builder = builder.activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_stdio_obj::artifact_kind().id });
-    builder = builder.activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_stdio_ply::artifact_kind().id });
-    builder = builder.activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_stdio_dxf::artifact_kind().id });
-    builder = builder.activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_stdio_stl::artifact_kind().id });
-    builder = builder.activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_stdio_svg::artifact_kind().id });
-    builder = builder.activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_stdio_bmp::artifact_kind().id });
-    builder = builder.activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_stdio_dwg::artifact_kind().id });
-    builder = builder.activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_stdio_png::artifact_kind().id });
-    builder = builder.activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_stdio_pdf::artifact_kind().id });
-    builder = builder.activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_stdio_jpg::artifact_kind().id });
-    builder = builder.activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_stdio_gif::artifact_kind().id });
-    builder = builder.activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_stdio_tiff::artifact_kind().id });
-    builder = builder.activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_stdio_docx::artifact_kind().id });
-    builder = builder.activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_stdio_pptx::artifact_kind().id });
-    builder = builder.activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_stdio_xlsx::artifact_kind().id });
-    builder = builder.activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_stdio_bcf::artifact_kind().id });
-    builder = builder.activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_stdio_semio::artifact_kind().id });
-    builder = builder.activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_stdio_mp4::artifact_kind().id });
-    builder = builder.activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_stdio_avi::artifact_kind().id });
-    builder = builder.activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_stdio_mp3::artifact_kind().id });
-    builder = builder.activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_stdio_wav::artifact_kind().id });
-    builder = builder.activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_stdio_epw::artifact_kind().id });
-    builder = builder.activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_stdio_tsv::artifact_kind().id });
-    builder = builder.activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_stdio_html::artifact_kind().id });
-    builder = builder.execution(ExecutionMode::Isolated);
-    builder = builder.requests(CapabilityRequest {
-        id: CapabilityId("artifacts.write".into()),
-        scope: "plugin".into(),
-        reason: "persist editor mutations back to whichever of stdio's 36 owned file-format artifacts (image/audio/video/text/data/document/geometry) is currently open".into(),
-        optional: false,
-    });
-    //#endregion 🔖️Descriptor
-
-    builder.contributes_topic(catalog).try_library()
+/// 📄️ Registers the shipped component fleet: csv/tsv/txt/json(any, i-json)/xml(any, valid)/md/html —
+/// the nine text and data document subsets, 18 apps, which link far under the component function
+/// ceiling while the plugin keeps declaring, and codec-owning, all 36 stdio artifact kinds.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+#[cfg(not(feature = "full-app-catalog"))]
+fn register_apps(mut builder: PluginBuilder<Ready, StdioApps>) -> PluginBuilder<Ready, StdioApps> {
+    builder = builder.editor::<semio_s_artifact_stdio_csv::editor::csv::CsvEditor>(semio_s_artifact_stdio_csv::editor::csv::create_csv_editor());
+    builder = builder.viewer::<semio_s_artifact_stdio_csv::viewer::csv::CsvViewer>(semio_s_artifact_stdio_csv::viewer::csv::create_csv_viewer());
+    builder = builder.editor::<semio_s_artifact_stdio_tsv::editor::tsv::TsvEditor>(semio_s_artifact_stdio_tsv::editor::tsv::create_tsv_editor());
+    builder = builder.viewer::<semio_s_artifact_stdio_tsv::viewer::tsv::TsvViewer>(semio_s_artifact_stdio_tsv::viewer::tsv::create_tsv_viewer());
+    builder = builder.editor::<semio_s_artifact_stdio_txt::editor::txt::TxtEditor>(semio_s_artifact_stdio_txt::editor::txt::create_txt_editor());
+    builder = builder.viewer::<semio_s_artifact_stdio_txt::viewer::txt::TxtViewer>(semio_s_artifact_stdio_txt::viewer::txt::create_txt_viewer());
+    builder = builder.editor::<semio_s_artifact_stdio_json::editor::json_any::JsonAnyEditor>(semio_s_artifact_stdio_json::editor::json_any::create_json_editor());
+    builder = builder.viewer::<semio_s_artifact_stdio_json::viewer::json_any::JsonAnyViewer>(semio_s_artifact_stdio_json::viewer::json_any::create_json_viewer());
+    builder = builder.editor::<semio_s_artifact_stdio_json::editor::json_i_json::JsonIJsonEditor>(semio_s_artifact_stdio_json::editor::json_i_json::create_json_i_json_editor());
+    builder = builder.viewer::<semio_s_artifact_stdio_json::viewer::json_i_json::JsonIJsonViewer>(semio_s_artifact_stdio_json::viewer::json_i_json::create_json_i_json_viewer());
+    builder = builder.editor::<semio_s_artifact_stdio_xml::editor::xml_any::XmlAnyEditor>(semio_s_artifact_stdio_xml::editor::xml_any::create_xml_editor());
+    builder = builder.viewer::<semio_s_artifact_stdio_xml::viewer::xml_any::XmlAnyViewer>(semio_s_artifact_stdio_xml::viewer::xml_any::create_xml_viewer());
+    builder = builder.editor::<semio_s_artifact_stdio_xml::editor::xml_valid::XmlValidEditor>(semio_s_artifact_stdio_xml::editor::xml_valid::create_xml_valid_editor());
+    builder = builder.viewer::<semio_s_artifact_stdio_xml::viewer::xml_valid::XmlValidViewer>(semio_s_artifact_stdio_xml::viewer::xml_valid::create_xml_valid_viewer());
+    builder = builder.editor_with_examples::<semio_s_artifact_stdio_md::editor::md::MdEditor>(semio_s_artifact_stdio_md::editor::md::create_md_editor(), vec![semio_s_artifact_stdio_md::examples::demo::source()]);
+    builder = builder.viewer::<semio_s_artifact_stdio_md::viewer::md::MdViewer>(semio_s_artifact_stdio_md::viewer::md::create_md_viewer());
+    builder = builder.editor::<semio_s_artifact_stdio_html::editor::html::HtmlEditor>(semio_s_artifact_stdio_html::editor::html::create_html_editor());
+    builder = builder.viewer::<semio_s_artifact_stdio_html::viewer::html::HtmlViewer>(semio_s_artifact_stdio_html::viewer::html::create_html_viewer());
+    builder
 }

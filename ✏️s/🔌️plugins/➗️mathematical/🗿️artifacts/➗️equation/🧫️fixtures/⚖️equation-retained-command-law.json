@@ -15,7 +15,8 @@
     "setDirected",
     "nodeGraphEdit",
     "nodeGraphViewport",
-    "setPoints"
+    "setPoints",
+    "setActiveExample"
   ],
   "hostileCases": [
     {

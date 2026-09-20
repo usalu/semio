@@ -32,9 +32,12 @@ export type ArtifactInferenceDescriptor = {
 //#region 🔖️GraphQlStatePreamble
 /** 🔗 Shared GraphQL `@state`/`@derived` SDL preamble — TS twin of Rust `GRAPHQL_STATE_PREAMBLE`.
  * `@state` names one of the four state lanes; `@derived` is the ORTHOGONAL derivation marker, never
- * a fifth lane — a derived field is computed from a snapshot, so it is not state at all. */
+ * a fifth lane — a derived field is computed from a snapshot, so it is not state at all.
+ * `Long` is the 64-bit integer lane: GraphQL's built-in `Int` is 32-bit by specification, so a Rust
+ * `i64`/`u64` carrier has no built-in spelling and is declared here once, exactly as `@state` is. */
 export const GRAPHQL_STATE_PREAMBLE =
   "enum StateClass { ARTIFACT CONFIG PRESENCE TRANSIENT }\n" +
+  "scalar Long\n" +
   "directive @state(class: StateClass!) on FIELD_DEFINITION\n" +
   "directive @derived on FIELD_DEFINITION";
 

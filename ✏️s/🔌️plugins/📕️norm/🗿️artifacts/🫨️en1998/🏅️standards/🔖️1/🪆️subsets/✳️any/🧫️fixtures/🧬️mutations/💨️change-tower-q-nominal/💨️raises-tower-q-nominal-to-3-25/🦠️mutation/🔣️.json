@@ -1,5 +1,4 @@
 {
-  "ChangeTowerQNominal": {
-    "newTowerQNominal": 3.25
-  }
+  "mutation": "changeTowerQNominal",
+  "newTowerQNominal": 3.25
 }

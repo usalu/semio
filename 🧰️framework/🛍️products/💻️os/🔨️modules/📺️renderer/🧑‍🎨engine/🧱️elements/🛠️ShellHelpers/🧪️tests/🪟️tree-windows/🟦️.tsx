@@ -280,7 +280,7 @@ describe("🪟️ panel body tree window context", () => {
     const sink = { opens: [] as [string, string, boolean][] };
     const shared = (parent: string) =>
       builtNode(parent, { type: "treeSection", label: parent, defaultOpen: true, window: { total: 2, offset: 0 } }, [
-        builtNode("shared", { type: "treeItem", label: "Shared", description: null, icon: null, defaultOpen: true, draggable: null, dragData: null, dimmed: null, window: null, granularity: null, rowActions: [], window: { total: 1, offset: 0 } }, [
+        builtNode("shared", { type: "treeItem", label: "Shared", description: null, icon: null, defaultOpen: true, draggable: null, dragData: null, dimmed: null, granularity: null, rowActions: [], window: { total: 1, offset: 0 } }, [
           builtNode(`${parent}.shared.0`, { type: "treeItem", label: `${parent} child`, description: null, icon: null, defaultOpen: null, draggable: null, dragData: null, dimmed: null, window: null, granularity: null, rowActions: [] }),
         ]),
       ]);

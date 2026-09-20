@@ -1375,6 +1375,38 @@ pub struct PresencePeer {
     pub ui: Option<PresenceUi>,
     /// @emoji ⏯️ Summary of this peer's non-terminal or just-settled tool run (ARTIFACT scope), never provisional geometry.
     pub tool_run: Option<PresenceToolRun>,
+    /// @emoji 🤖️ What kind of principal this peer is. `None` means the peer never declared one and a
+    /// reader must treat it as [`PresencePrincipalKind::Human`] — the pre-agent wire shape. Like
+    /// `user_id`/`role`/`color` this is an *admitted* field: the hub overwrites whatever a client
+    /// sends with the kind it authenticated, so a human session can never claim to be an agent and
+    /// an agent session can never hide behind a human.
+    pub principal_kind: Option<PresencePrincipalKind>,
+}
+
+/// @emoji 🤖️ Which kind of principal holds a presence slot. An `Agent` peer is an AI agent acting
+/// under a credential a human delegated to it (`hub.auth`'s `AgentDelegationRecord`); it is a
+/// principal in its own right, never the delegating human, so a roster shows it as its own row.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum PresencePrincipalKind {
+    Human,
+    Agent,
+}
+
+impl PresencePrincipalKind {
+    pub const ALL: [PresencePrincipalKind; 2] = [Self::Human, Self::Agent];
+
+    /// @emoji 🔤️ The camelCase wire spelling, shared by the binary tag's ordinal and the JSON value.
+    pub fn wire_name(self) -> &'static str {
+        match self {
+            Self::Human => "human",
+            Self::Agent => "agent",
+        }
+    }
+
+    /// @emoji 🔡️ Inverse of [`Self::wire_name`].
+    pub fn from_wire_name(name: &str) -> Option<Self> {
+        Self::ALL.into_iter().find(|kind| kind.wire_name() == name)
+    }
 }
 
 /// @emoji ⏳️ Lifecycle state of a peer's tool run, spelled like `ToolRunState` in the tool run contract §2.2.
@@ -1520,6 +1552,9 @@ impl crate::value::ToValue for PresencePeer {
         if let Some(tool_run) = &self.tool_run {
             entries.push(("toolRun".to_string(), crate::value::ToValue::to_value(tool_run)));
         }
+        if let Some(principal_kind) = self.principal_kind {
+            entries.push(("principalKind".to_string(), crate::value::DslValue::String(principal_kind.wire_name().to_string())));
+        }
         crate::value::DslValue::object(entries)
     }
 }
@@ -1541,6 +1576,7 @@ impl crate::value::FromValue for PresencePeer {
         let mut views = Vec::new();
         let mut ui = None;
         let mut tool_run = None;
+        let mut principal_kind = None;
         for (key, entry) in fields {
             match key.as_str() {
                 "actor" => actor = Some(<String as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("actor"))?),
@@ -1561,6 +1597,15 @@ impl crate::value::FromValue for PresencePeer {
                 "views" => views = <Vec<PresenceWindowView> as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("views"))?,
                 "ui" => ui = <Option<PresenceUi> as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("ui"))?,
                 "toolRun" => tool_run = <Option<PresenceToolRun> as crate::value::FromValue>::from_value(entry).map_err(|e| e.under("toolRun"))?,
+                "principalKind" => {
+                    principal_kind = match entry {
+                        crate::value::DslValue::Null => None,
+                        crate::value::DslValue::String(name) => {
+                            Some(PresencePrincipalKind::from_wire_name(&name).ok_or_else(|| crate::value::ValueError::new(format!("unknown PresencePeer.principalKind `{name}`")).under("principalKind"))?)
+                        }
+                        other => return Err(crate::value::ValueError::new(format!("PresencePeer.principalKind must be a string, found {other:?}")).under("principalKind")),
+                    }
+                }
                 _ => {}
             }
         }
@@ -1578,6 +1623,7 @@ impl crate::value::FromValue for PresencePeer {
             views,
             ui,
             tool_run,
+            principal_kind,
         })
     }
 }
@@ -1594,6 +1640,9 @@ impl crate::value::FromValue for PresencePeer {
 /// present. `flags` widened from a single `u8` to a varint (ticket 26/08/17/SHARED-PRESENCE-SESSION-
 /// COLORS-AND-UNIVERSAL-ARTIFACT-CREATION C7.1) now that bit 9 exceeds a byte's range. Bit 10 carries
 /// `tool_run` as `tool_id str | state u8 | stage varint | completed varint | total bool+varint?`.
+/// Bit 11 carries `principal_kind` as one declaration-order tag byte (`0` human, `1` agent); a peer
+/// that leaves it unset is the pre-agent wire shape and reads back as `None`, so every encoder and
+/// decoder written before the agent principal existed still round-trips byte-for-byte.
 pub async fn encode_presence_peer(peer: &PresencePeer) -> Vec<u8> {
     let mut out = Vec::new();
     crate::write_str(&mut out, &peer.actor);
@@ -1631,6 +1680,9 @@ pub async fn encode_presence_peer(peer: &PresencePeer) -> Vec<u8> {
     if peer.tool_run.is_some() {
         flags |= 1 << 10;
     }
+    if peer.principal_kind.is_some() {
+        flags |= 1 << 11;
+    }
     crate::wire::write_varint_u64(&mut out, flags);
     crate::wire::write_varint_u64(&mut out, peer.connected_at_ms as u64);
     if let Some(label) = &peer.label {
@@ -1665,6 +1717,9 @@ pub async fn encode_presence_peer(peer: &PresencePeer) -> Vec<u8> {
     }
     if let Some(tool_run) = &peer.tool_run {
         encode_presence_tool_run(tool_run, &mut out);
+    }
+    if let Some(principal_kind) = peer.principal_kind {
+        out.push(principal_kind as u8);
     }
     out
 }
@@ -1767,6 +1822,11 @@ impl<'a> PresencePeerReader<'a> {
         let value = *self.bytes.get(self.position).ok_or_else(|| self.malformed(what, "truncated byte"))?;
         self.position += 1;
         Ok(value)
+    }
+
+    fn principal_kind(&mut self) -> Result<PresencePrincipalKind, crate::ProtocolError> {
+        let tag = self.byte("presence peer principal kind")?;
+        PresencePrincipalKind::ALL.get(usize::from(tag)).copied().ok_or_else(|| self.malformed("presence peer principal kind", format!("unknown principal kind tag {tag}")))
     }
 
     fn boolean(&mut self, what: &'static str) -> Result<bool, crate::ProtocolError> {
@@ -1881,7 +1941,7 @@ pub async fn decode_presence_peer(bytes: &[u8]) -> Result<PresencePeer, crate::P
     let mut reader = PresencePeerReader { bytes, position: 0, limits };
     let actor = reader.text("presence peer actor")?;
     let flags = reader.varint("presence peer flags")?;
-    if flags >> 11 != 0 { return Err(reader.malformed("presence peer flags", format!("unknown flag bits set: {flags:#x}"))); }
+    if flags >> 12 != 0 { return Err(reader.malformed("presence peer flags", format!("unknown flag bits set: {flags:#x}"))); }
     let connected_at = reader.varint("presence peer connected at")?;
     if connected_at > limits.maximum_connected_at_ms { return Err(crate::ProtocolError::LimitExceeded("presence peer connected at")); }
     let connected_at_ms = connected_at as i64;
@@ -1896,8 +1956,9 @@ pub async fn decode_presence_peer(bytes: &[u8]) -> Result<PresencePeer, crate::P
     let views = if flags & (1 << 8) != 0 { reader.views()? } else { Vec::new() };
     let ui = if flags & (1 << 9) != 0 { Some(reader.ui()?) } else { None };
     let tool_run = if flags & (1 << 10) != 0 { Some(reader.tool_run()?) } else { None };
+    let principal_kind = if flags & (1 << 11) != 0 { Some(reader.principal_kind()?) } else { None };
     if reader.position != bytes.len() { return Err(reader.malformed("presence peer", "trailing bytes")); }
-    Ok(PresencePeer { actor, connected_at_ms, label, presence_pack, user_id, role, drag_ghost_json, interaction, color, surface, views, ui, tool_run })
+    Ok(PresencePeer { actor, connected_at_ms, label, presence_pack, user_id, role, drag_ghost_json, interaction, color, surface, views, ui, tool_run, principal_kind })
 }
 
 #[cfg(test)]

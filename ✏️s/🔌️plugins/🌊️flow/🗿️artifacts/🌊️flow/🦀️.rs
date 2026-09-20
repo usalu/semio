@@ -155,6 +155,25 @@ pub fn flow_content_snapshot_from_working(widgets: &[Widget], synapses: &[Synaps
     SemioFlowSnapshot { schema: STDIO_SEMIOFLOW_DOCUMENT_SCHEMA.into(), nodes, edges }
 }
 
+/// 🌱️ The initial pack for the `content` child this document declares but no archive member carries —
+/// derived from the working scene the parent already caches on its own content handle, which is the
+/// same bytes `register_content_child` composes in the unit fixture.
+///
+/// 🩸️ Without it `ArtifactEditor::genesis_child_pack`'s default `None` leaves the child uncomposed in
+/// a live shell, so `context.children.dialect("content", …)` never resolves, `FlowChildGroupWork`'s
+/// `admitted_child` returns `None` at its second `?`, and every `Child`-lane verb is refused before
+/// any capacity is measured — measured on :6216 as *"addWidget refused: dispatch-failed (user
+/// window=flow-main) — retained command work refused the command before any capacity was measured"*
+/// (ticket 26/09/18, slices PB1 §3 / PB3 §3.4), while the same command passes natively, where the
+/// fixture registers the child by hand.
+pub fn flow_genesis_content_pack(document: &FlowSnapshot, slot: &str, child_id: &str) -> Option<Vec<u8>> {
+    if slot != "content" || child_id != document.content.child_id {
+        return None;
+    }
+    let scene = document.content.local_owner::<FlowWorkingScene>()?;
+    Some(<SemioFlowSnapshot as store::ArtifactPack>::encode_pack(&flow_content_snapshot_from_working(&scene.widgets, &scene.synapses, &scene.layout)))
+}
+
 /// 🌉 Maps one exact working widget and layout entry into its typed Semio child node.
 pub fn flow_content_node_from_working(widget: &Widget, layout: Option<&WidgetLayout>) -> SemioFlowNode {
     let id = schema::widget_id(widget).to_string();
@@ -188,6 +207,15 @@ pub fn flow_content_child_handle(widgets: &[Widget], synapses: &[SynapseSpec], l
 
 /// 🌊️ Mints a content-addressed child while enforcing the caller's exact serialization cap without staging JSON.
 pub fn flow_content_child_handle_bounded(widgets: &[Widget], synapses: &[SynapseSpec], layout: &flow::OrderedMap<WidgetLayout>, maximum_bytes: usize) -> Result<FlowContentChild, String> {
+    let digest = flow_content_digest(widgets, synapses, layout, maximum_bytes)?;
+    Ok(flow_content_child_from_digest(digest, Arc::new(FlowWorkingScene { widgets: widgets.to_vec(), synapses: synapses.to_vec(), layout: layout.clone() })))
+}
+
+/// 🔐️ The canonical content digest alone, over borrowed scene parts — split out of
+/// [`flow_content_child_handle_bounded`] so a caller that already OWNS the scene can move it into the
+/// child's local owner instead of cloning it (an `OrderedMap` clone that is later dropped rather than
+/// retired aborts the guest: "ordered-map root must be explicitly retired before drop").
+fn flow_content_digest(widgets: &[Widget], synapses: &[SynapseSpec], layout: &flow::OrderedMap<WidgetLayout>, maximum_bytes: usize) -> Result<[u8; 32], String> {
     let mut writer = FlowContentHashWriter { hasher: semio_framework_hash::Sha256::new(), written: 0, maximum_bytes };
     writer.hasher.update(FLOW_CONTENT_ID_DOMAIN);
     let value = dsl::DslValue::object([
@@ -197,7 +225,7 @@ pub fn flow_content_child_handle_bounded(widgets: &[Widget], synapses: &[Synapse
     ]);
     let json: serde_json::Value = value.into();
     serde_json::to_writer(&mut writer, &json).map_err(|error| error.to_string())?;
-    Ok(flow_content_child_from_digest(writer.hasher.finalize(), Arc::new(FlowWorkingScene { widgets: widgets.to_vec(), synapses: synapses.to_vec(), layout: layout.clone() })))
+    Ok(writer.hasher.finalize())
 }
 
 /// 🪪️ Portable content identity framing; scene bytes follow this NUL-terminated UTF-8 domain.
@@ -224,6 +252,28 @@ pub struct FlowWorkingScene {
     pub layout: flow::OrderedMap<WidgetLayout>,
 }
 
+/// ♻️ A scene value RETIRES its own layout root. `flow::OrderedMap`'s `Drop` is fail-closed
+/// ("ordered-map root must be explicitly retired before drop"), and this type is handed out by value
+/// to every reader — a diff that refuses early, an inverse that only reads a prior position, a test
+/// that counts widgets. Retiring here is what makes "just drop it" correct for all of them; a caller
+/// that TRANSFERS the parts on (into a new content child, into a `FlowHostSnapshot`) takes them
+/// through [`FlowWorkingScene::into_parts`] instead, which leaves an empty root behind.
+impl Drop for FlowWorkingScene {
+    fn drop(&mut self) {
+        let mut retirement = semio_framework_artifact_flow_flow::retained::FlowRetirement::default();
+        retirement.push(semio_framework_artifact_flow_flow::retained::FlowOwner::Layouts(std::mem::take(&mut self.layout)));
+        retirement.retire_cold();
+    }
+}
+
+impl FlowWorkingScene {
+    /// 🚚️ Moves the three owned parts out for a caller that transfers them onward, leaving this
+    /// scene's own root empty so its retiring [`Drop`] has nothing left to close.
+    pub fn into_parts(mut self) -> (Vec<Widget>, Vec<SynapseSpec>, flow::OrderedMap<WidgetLayout>) {
+        (std::mem::take(&mut self.widgets), std::mem::take(&mut self.synapses), std::mem::take(&mut self.layout))
+    }
+}
+
 /// 📝 Replaces one exact child handle's local scene owner without publishing process state.
 pub fn cache_flow_content(handle: &mut FlowContentChild, widgets: Vec<Widget>, synapses: Vec<SynapseSpec>, layout: flow::OrderedMap<WidgetLayout>) {
     handle.set_local_owner(Arc::new(FlowWorkingScene { widgets, synapses, layout }));
@@ -241,9 +291,19 @@ pub fn flow_working_scene(snapshot: &FlowSnapshot) -> FlowWorkingScene {
     flow_working_scene_for_handle(&snapshot.content)
 }
 
-/// 🏗️ Mints a new content-addressed handle with its exact artifact-instance scene owner.
+/// 🏗️ Mints a new content-addressed handle and MOVES the caller's scene into its exact
+/// artifact-instance owner.
+///
+/// 🩸️ It used to mint the handle from borrowed parts and then let `widgets`/`synapses`/`layout` fall
+/// out of scope — and `layout` is a `flow::OrderedMap`, whose fail-closed `Drop` panics with
+/// "ordered-map root must be explicitly retired before drop". Every caller that owns a live scene
+/// (`FlowSnapshot::from_host_snapshot`, and through it `rename-flow-widget`, `patchFlowWidgets`,
+/// every `FlowMutation` that rebuilds the content child) therefore aborted the guest on a populated
+/// document. The scene is now moved into the child's local owner, which `♻️retirement::retire_scene`
+/// closes — no clone is minted and nothing is dropped.
 pub fn flow_content_child_handle_and_cache(widgets: Vec<Widget>, synapses: Vec<SynapseSpec>, layout: flow::OrderedMap<WidgetLayout>) -> FlowContentChild {
-    flow_content_child_handle(&widgets, &synapses, &layout)
+    let digest = flow_content_digest(&widgets, &synapses, &layout, usize::MAX).expect("Flow content serialization");
+    flow_content_child_from_digest(digest, Arc::new(FlowWorkingScene { widgets, synapses, layout }))
 }
 //#endregion 🔖️WorkingScene
 

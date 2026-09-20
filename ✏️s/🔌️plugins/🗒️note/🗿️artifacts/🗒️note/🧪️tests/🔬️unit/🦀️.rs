@@ -90,3 +90,39 @@ async fn note_document_round_trips_assets_and_grid_settings() {
     assert_eq!(parsed.grid_subdivisions, Some(6.0));
     assert_eq!(parsed.grid_opacity, Some(0.5));
 }
+
+//#region 🚧️TemporaryFixtureRegeneration
+/// 🚧️ [DEBUG] One-shot fixture regeneration (ticket 26/09/19): rewrites every committed
+/// `🔺️diff/🔣️.json` through `NoteDiff`'s own decode→encode so its `f64` slots carry the canonical
+/// `5.0` form instead of the stale `5`. Inert unless `SEMIO_REGENERATE_NOTE_DIFF_FIXTURES` is set.
+#[semio_framework_async_macros::async_test]
+async fn regenerate_committed_diff_fixtures() {
+    if std::env::var("SEMIO_REGENERATE_NOTE_DIFF_FIXTURES").is_err() {
+        return;
+    }
+    fn walk(dir: &std::path::Path, out: &mut Vec<std::path::PathBuf>) {
+        let Ok(entries) = std::fs::read_dir(dir) else { return };
+        for entry in entries.flatten() {
+            let path = entry.path();
+            if path.is_dir() {
+                walk(&path, out);
+            } else if path.file_name().is_some_and(|name| name == "🔣️.json") && path.parent().is_some_and(|parent| parent.file_name().is_some_and(|name| name == "🔺️diff")) {
+                out.push(path);
+            }
+        }
+    }
+    let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("..").join("..");
+    let mut files = Vec::new();
+    walk(&root, &mut files);
+    files.sort();
+    for path in files {
+        let text = std::fs::read_to_string(&path).expect("committed diff reads");
+        let decoded: crate::NoteDiff = dsl::os_pack::from_json_str(&text).expect("committed diff decodes");
+        let canonical = dsl::os_pack::to_json_string(&decoded);
+        if serde_json::from_str::<serde_json::Value>(&canonical).expect("canonical parses") != serde_json::from_str::<serde_json::Value>(&text).expect("committed parses") {
+            eprintln!("[DEBUG] regenerating {}", path.display());
+            std::fs::write(&path, canonical).expect("committed diff rewrites");
+        }
+    }
+}
+//#endregion 🚧️TemporaryFixtureRegeneration

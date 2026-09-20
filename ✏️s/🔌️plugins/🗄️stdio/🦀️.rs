@@ -19,3 +19,10 @@ pub mod registry;
 #[cfg(feature = "full-artifact-catalog")]
 #[path = "🛂️manifest/🦀️.rs"]
 pub mod manifest;
+
+//#region 🪢️TaxonomyMounts
+#[path = "🎟️capabilities/🦀️.rs"]
+pub mod capabilities;
+#[path = "🔧️setup/🦀️.rs"]
+pub mod setup;
+//#endregion 🪢️TaxonomyMounts

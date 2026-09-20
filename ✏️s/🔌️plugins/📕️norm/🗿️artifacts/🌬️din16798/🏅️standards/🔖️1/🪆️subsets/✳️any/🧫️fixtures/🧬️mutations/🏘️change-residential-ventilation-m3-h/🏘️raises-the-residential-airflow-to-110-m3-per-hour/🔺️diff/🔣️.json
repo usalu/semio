@@ -17,7 +17,7 @@
   "bedrooms": null,
   "dwellingVentilationM3H": null,
   "occupants": null,
-  "residentialVentilationM3H": 110,
+  "residentialVentilationM3H": 110.0,
   "sfpWM3S": null,
   "sfpRequiredClass": null,
   "heatRecoveryEta": null,

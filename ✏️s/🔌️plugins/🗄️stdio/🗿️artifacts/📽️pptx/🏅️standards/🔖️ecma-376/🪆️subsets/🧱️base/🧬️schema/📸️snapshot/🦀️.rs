@@ -63,7 +63,7 @@ pub struct PptxTransform {
 // `kind` (the placeholder TYPE, per the brief's field naming), which would collide with an
 // internal tag literally named `kind`.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
-#[value(tag = "shapeKind", rename_all = "camelCase")]
+#[value(tag = "shapeKind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum PptxShape {
     /// 📝️ `p:sp` with no `p:nvSpPr/p:nvPr/p:ph` (a plain autoshape/text box).
     TextBox {
@@ -206,6 +206,29 @@ impl PptxSnapshot {
         self.opc.content_types.defaults.sort_by(|left, right| left.0.cmp(&right.0));
         self.opc.content_types.overrides.sort_by(|left, right| content_type_override_key(&left.0).cmp(&content_type_override_key(&right.0)));
         self.xml_parts.sort_by(|left, right| left.path.cmp(&right.path));
+    }
+
+    /// 🧾️ One part's content as the encoder writes it, wherever that part lives: a logical XML
+    /// part is materialized through the OPC text writer, a retained binary part is read as utf-8.
+    /// Every reader that used to call `opc.part_bytes` for an XML part must call THIS — since the
+    /// logical split, `opc.parts` carries only the parts `pptx_part_is_xml` rejects.
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn part_text(&self, path: &str) -> Option<String> {
+        let key = path.trim_start_matches('/');
+        if let Some(part) = self.xml_parts.iter().find(|part| part.path == key) {
+            return Some(semio_s_artifact_stdio_zip::opc::xml_document_to_opc_text(&part.document));
+        }
+        self.opc.part_bytes(key).and_then(|bytes| String::from_utf8(bytes.to_vec()).ok())
+    }
+
+    /// 🧾️ Every part that has a textual form, in path order — the surface a whole-package
+    /// conformance sweep (namespace/VML/AlternateContent checks) has to walk.
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    pub fn part_texts(&self) -> Vec<(String, String)> {
+        let mut out: Vec<(String, String)> = self.xml_parts.iter().map(|part| (part.path.clone(), semio_s_artifact_stdio_zip::opc::xml_document_to_opc_text(&part.document))).collect();
+        out.extend(self.opc.parts.iter().filter_map(|part| String::from_utf8(part.bytes.clone()).ok().map(|text| (part.path.clone(), text))));
+        out.sort_by(|left, right| left.0.cmp(&right.0));
+        out
     }
 }
 //#endregion 🔖️Snapshot

@@ -1304,9 +1304,27 @@ export function Board2dHost({ node, onAction, requestContextMenu }: ComponentSce
     };
 
     const onPointerCancel = (event: PointerEvent): void => {
+      const session = sessionRef.current;
       gesturePointersRef.current = gesturePointerUp(gesturePointersRef.current, event.pointerId);
       pinchFrameRef.current = pinchFrame(gesturePointersRef.current);
       if (canvas.hasPointerCapture?.(event.pointerId)) canvas.releasePointerCapture(event.pointerId);
+      if (!session) return;
+      session.pointerCancelScreen();
+      endPuzzle2dPeerGesture(peerScope, node.controllerId, node.surfaceId, peerRef.current);
+      pendingCameraDispatchRef.current = null;
+      try {
+        session.drainEventsJson();
+      } catch {
+        /* session not ready */
+      }
+      pendingEventRowsRef.current = [];
+      boardStatusRef.current.pendingEvents = 0;
+      setLocalSelectionJson(null);
+      applyPendingFixtureIfReady(session);
+      applyPendingSelectionIfReady(session);
+      publishBoardVitals();
+      scheduleRender();
+      notifyPuzzle2dPeersGestureEnded(peerScope, node.controllerId, node.surfaceId, false);
     };
 
     const onPointerEnter = (): void => {
@@ -1357,7 +1375,7 @@ export function Board2dHost({ node, onAction, requestContextMenu }: ComponentSce
       window.removeEventListener("pointercancel", onPointerCancel);
       container.removeEventListener("wheel", onWheel);
     };
-  }, [peerScope, beginCameraInteraction, dispatch, dispatchBufferedEvents, drainAndMaybeFlush, drainIntoBuffer, node.controllerId, node.surfaceId, readContainerSize, scheduleRender, scene?.activeUtility, scene?.interactive, settleGestureEnd]);
+  }, [peerScope, applyPendingFixtureIfReady, applyPendingSelectionIfReady, beginCameraInteraction, dispatch, dispatchBufferedEvents, drainAndMaybeFlush, node.controllerId, node.surfaceId, publishBoardVitals, readContainerSize, scheduleRender, scene?.activeUtility, scene?.interactive, settleGestureEnd]);
   //#endregion Pointer
 
   //#region Keyboard

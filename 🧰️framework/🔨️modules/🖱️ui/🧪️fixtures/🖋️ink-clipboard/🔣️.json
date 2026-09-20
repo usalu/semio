@@ -1,0 +1,183 @@
+{
+  "schemaVersion": 1,
+  "payloadSchema": "ink.clipboard",
+  "limits": {
+    "clipboardTextBytes": 16383,
+    "actionItemBytes": 16384,
+    "actionStringBytes": 4096,
+    "selectedItems": 254,
+    "mountedOperations": 32
+  },
+  "viewport": { "width": 320, "height": 240 },
+  "document": {
+    "schema": "ink.document",
+    "id": "ink-clipboard-document",
+    "camera": { "x": 16, "y": -8, "zoom": 2 },
+    "gridVisible": false,
+    "snapEnabled": true,
+    "snapGridSpacing": 8,
+    "assets": {
+      "existing-image": {
+        "mime": "image/png",
+        "data": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAFgwJ/lXHgVwAAAABJRU5ErkJggg==",
+        "width": 1,
+        "height": 1
+      }
+    },
+    "blocks": [
+      {
+        "id": "text-a",
+        "name": "Text A",
+        "kind": "text",
+        "x": 8,
+        "y": 16,
+        "width": 80,
+        "height": 40,
+        "rotation": 0,
+        "visible": true,
+        "locked": false,
+        "paragraphs": [{ "runs": [{ "text": "Alpha" }] }],
+        "fontSize": 18,
+        "fontWeight": "normal",
+        "align": "left"
+      },
+      {
+        "id": "group-a",
+        "name": "Group A",
+        "kind": "group",
+        "x": -16,
+        "y": 24,
+        "width": 96,
+        "height": 64,
+        "rotation": 0,
+        "visible": true,
+        "locked": false,
+        "children": [
+          {
+            "id": "table-child",
+            "name": "Nested Table",
+            "kind": "table",
+            "x": 4,
+            "y": 6,
+            "width": 60,
+            "height": 32,
+            "rotation": 0,
+            "visible": true,
+            "locked": false,
+            "columns": ["A"],
+            "rows": [[{ "content": "nested" }]]
+          }
+        ]
+      },
+      {
+        "id": "image-a",
+        "name": "Image A",
+        "kind": "image",
+        "x": 96,
+        "y": 32,
+        "width": 40,
+        "height": 40,
+        "rotation": 0,
+        "visible": true,
+        "locked": false,
+        "imageKey": "existing-image"
+      }
+    ]
+  },
+  "copy": {
+    "selectedIds": ["group-a", "image-a", "text-a", "missing"],
+    "expectedBlockIds": ["group-a", "image-a", "text-a"],
+    "assetsEmbedded": false,
+    "emptySelectionWrites": false
+  },
+  "paste": {
+    "target": { "x": 72, "y": 64 },
+    "blocks": {
+      "payload": {
+        "schema": "ink.clipboard",
+        "blocks": [
+          {
+            "id": "group-source",
+            "name": "Group Source",
+            "kind": "group",
+            "x": -16,
+            "y": 24,
+            "width": 96,
+            "height": 64,
+            "rotation": 0,
+            "visible": true,
+            "locked": false,
+            "children": [
+              {
+                "id": "nested-source",
+                "name": "Nested Source",
+                "kind": "text",
+                "x": 4,
+                "y": 6,
+                "width": 60,
+                "height": 32,
+                "rotation": 0,
+                "visible": true,
+                "locked": false,
+                "paragraphs": [{ "runs": [{ "text": "Nested" }] }],
+                "fontSize": 14,
+                "fontWeight": "normal",
+                "align": "left"
+              }
+            ]
+          },
+          {
+            "id": "text-source",
+            "name": "Text Source",
+            "kind": "text",
+            "x": 8,
+            "y": 16,
+            "width": 80,
+            "height": 40,
+            "rotation": 0,
+            "visible": true,
+            "locked": false,
+            "paragraphs": [{ "runs": [{ "text": "Source" }] }],
+            "fontSize": 18,
+            "fontWeight": "normal",
+            "align": "left"
+          }
+        ]
+      },
+      "expectedTopLevelPoints": [{ "x": 56, "y": 88 }, { "x": 80, "y": 80 }],
+      "reidentifyRecursively": true,
+      "preserveNames": true
+    },
+    "plainText": {
+      "clipboard": "  Hello\nWelt  ",
+      "trimmed": "Hello\nWelt",
+      "paragraphs": ["Hello", "Welt"],
+      "point": { "x": 72, "y": 64 },
+      "size": { "width": 280, "height": 120 }
+    },
+    "svg": {
+      "clipboard": " \n<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"2\" height=\"1\"><path d=\"M0 0h2v1H0z\"/></svg>\n ",
+      "trimmed": "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"2\" height=\"1\"><path d=\"M0 0h2v1H0z\"/></svg>",
+      "mime": "image/svg+xml",
+      "point": { "x": -48, "y": -16 },
+      "size": { "width": 240, "height": 160 }
+    },
+    "raster": {
+      "mime": "image/png",
+      "base64": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAFgwJ/lXHgVwAAAABJRU5ErkJggg==",
+      "dataUrl": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAFgwJ/lXHgVwAAAABJRU5ErkJggg==",
+      "point": { "x": -48, "y": -16 },
+      "size": { "width": 240, "height": 160 }
+    },
+    "invalidPayloads": ["{", "{\"schema\":\"wrong\",\"blocks\":[]}", "{\"schema\":\"ink.clipboard\",\"blocks\":{}}"],
+    "priority": ["image", "ink.clipboard", "svg", "plainText"]
+  },
+  "ownership": {
+    "address": ["windowId", "windowGeneration", "nodeId", "surfaceId"],
+    "editorBypass": true,
+    "completion": "exactLiveAddress",
+    "close": "cancelAndRetire",
+    "replacement": "rejectOldCompletion",
+    "admission": "boundedIndependentOperations"
+  }
+}

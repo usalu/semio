@@ -3,7 +3,7 @@ import { closeSync, lstatSync, mkdtempSync, openSync, readFileSync, readSync, re
 import { join, resolve } from "node:path";
 import { BundleScript, buildBudgetMs, devToolingEnv, runCmdStatus } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { verifyDescriptorPairBytesV1 } from "../../📇️registry/✅️catalog-verification/🟦️.ts";
-import { DESCRIPTOR_JSON_FILENAME, DESCRIPTOR_PACK_FILENAME, FRESH_COMPONENT_MAX_BYTES, FRESH_IO_CHUNK_BYTES, cargoTargetRoot, ensureBuiltBin } from "../🏗️component-build/🟦️.ts";
+import { CRATE_NAME, DESCRIPTOR_JSON_FILENAME, DESCRIPTOR_PACK_FILENAME, FRESH_COMPONENT_MAX_BYTES, FRESH_IO_CHUNK_BYTES, cargoTargetRoot, ensureBuiltBin } from "../🏗️component-build/🟦️.ts";
 import { freshPathIsWithin } from "../🧾️source-epoch/🟦️.ts";
 export type DescriptorEmissionRequestV1 = Readonly<{
   rawComponentPath: string;

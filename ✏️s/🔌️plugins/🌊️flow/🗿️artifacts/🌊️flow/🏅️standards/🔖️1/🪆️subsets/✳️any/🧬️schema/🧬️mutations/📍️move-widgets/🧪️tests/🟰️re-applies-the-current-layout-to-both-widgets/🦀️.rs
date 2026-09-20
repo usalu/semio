@@ -71,11 +71,12 @@ async fn inverse_restores_before() {
     let FlowMutation::MoveWidgets(undo) = &inverse[0] else {
         panic!("move-widgets' inverse must be a move-widgets, got {:?}", inverse[0]);
     };
-    let scene_layout = flow_working_scene(&base).layout;
+    let scene = flow_working_scene(&base);
     assert_eq!(undo.entries.len(), 2, "the undo must cover both moved widgets, got {:?}", undo.entries);
     for entry in &undo.entries {
-        assert_eq!(entry.layout.as_ref(), scene_layout.get(&entry.id), "each undo entry carries the layout read off BASE for that id, never the payload's");
+        assert_eq!(entry.layout.as_ref(), scene.layout.get(&entry.id), "each undo entry carries the layout read off BASE for that id, never the payload's");
     }
+    drop(scene);
     let mut snapshot = base.clone();
     apply_flow_mutation(&mut snapshot, &mutation).expect("forward applies");
     for step in &inverse {

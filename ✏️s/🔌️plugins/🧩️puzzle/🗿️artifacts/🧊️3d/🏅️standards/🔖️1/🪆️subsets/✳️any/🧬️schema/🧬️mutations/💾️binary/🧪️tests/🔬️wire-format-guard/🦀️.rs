@@ -1,7 +1,7 @@
 
 //! 🔒️ Byte-level `OpBinary` round-trip guard for the semantic-mutations-overhaul document
-//! vocabulary (ticket `26/08/12/SEMANTIC-MUTATIONS-OVERHAUL`) plus the (unrelated, unchanged)
-//! frozen headless-engine-command wire below. The pre-overhaul whole-record-upsert /
+//! vocabulary (ticket `26/08/12/SEMANTIC-MUTATIONS-OVERHAUL`) plus the (unrelated) frozen
+//! headless-engine-command wire below. The pre-overhaul whole-record-upsert /
 //! whole-document-replace wire bytes this guard used to freeze for `Puzzle3dMutation` no
 //! longer exist — that vocabulary is banned outright, not preserved — so the document-mutation
 //! half now asserts the NEW operations' `OpText`/`OpBinary` round-trip instead of pinning byte
@@ -38,9 +38,17 @@ fn engine_commands() -> Vec<Puzzle3dEngineCommand> {
 }
 
 /// 🔒️ Same frozen capture for the headless engine-command codec.
-const PRE_MIGRATION_ENGINE_COMMAND_WIRE: &[&str] = &[
-    "update-kind-weights object-weights={ Host=0.5 } vortex-weights={ } | 26 | 01040104486f737402001001060005000000000000e03f011000",
-    "brush-preview vortex-full-id=\"host:v0\" candidate-index=2 | 18 | 01050107686f73743a763002000600010402",
+///
+/// 🔁️ Re-frozen 2026-09-20. `dsl::variants_binary::encode_op` writes the variant's DECLARATION
+/// ORDINAL as the second wire byte, so deleting a variant renumbers every later one. Commit
+/// `39fbe1b9bf` (2026-09-14) deleted `ApplyFillCount` and `ComposeFillDisplay` — the two variants
+/// that used to sit at ordinals 2 and 3 — which shifted `UpdateKindWeights` 4 → 2 and
+/// `BrushPreview` 5 → 3. Nothing else about either row moved (same body bytes, same lengths), and
+/// neither deleted command exists anywhere in the crate any more, so the old capture pinned a wire
+/// that can no longer be produced. The law is unchanged: these bytes must not drift again.
+const FROZEN_ENGINE_COMMAND_WIRE: &[&str] = &[
+    "update-kind-weights object-weights={ Host=0.5 } vortex-weights={ } | 26 | 01020104486f737402001001060005000000000000e03f011000",
+    "brush-preview vortex-full-id=\"host:v0\" candidate-index=2 | 18 | 01030107686f73743a763002000600010402",
 ];
 
 /// ⚖️ Every document-mutation operation prints, parses, encodes, and decodes back to an equal
@@ -77,10 +85,10 @@ fn operations_round_trip_text_and_binary() {
 
 /// ⚖️ Same law for the engine-command codec.
 #[test]
-fn engine_command_rows_keep_their_pre_migration_wire_bytes() {
+fn engine_command_rows_keep_their_frozen_wire_bytes() {
     let commands = engine_commands();
-    assert_eq!(commands.len(), PRE_MIGRATION_ENGINE_COMMAND_WIRE.len(), "every engine-command variant covered here must be in the frozen wire table");
-    for (command, expected) in commands.iter().zip(PRE_MIGRATION_ENGINE_COMMAND_WIRE) {
+    assert_eq!(commands.len(), FROZEN_ENGINE_COMMAND_WIRE.len(), "every engine-command variant covered here must be in the frozen wire table");
+    for (command, expected) in commands.iter().zip(FROZEN_ENGINE_COMMAND_WIRE) {
         let bytes = encode_engine_command(command).expect("encode");
         let hex: String = bytes.iter().map(|byte| format!("{byte:02x}")).collect();
         assert_eq!(&format!("{} | {} | {hex}", command.print_op(), bytes.len()), expected);

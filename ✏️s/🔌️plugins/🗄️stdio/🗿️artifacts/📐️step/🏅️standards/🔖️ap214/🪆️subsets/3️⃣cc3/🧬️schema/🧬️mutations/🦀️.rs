@@ -143,7 +143,7 @@ pub(crate) fn class_diff(base: &StepSnapshot, edit: &ClassEdit) -> protocol::Mut
 /// explicit whole-snapshot restore where it does not.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn class_inverse(base: &StepSnapshot, edit: &ClassEdit) -> Vec<StepCc3Mutation> {
-    match ladder::invert_class_edit(&base.to_part21_document(), MAX_RUNG, edit) {
+    match ladder::invert_class_edit_restoring(&base.to_part21_document(), CLASS, MAX_RUNG, edit) {
         Some(ClassEdit::FileSchema { schemas }) => vec![StepCc3Mutation::SetFileSchema(set_file_schema::SetFileSchema { schemas })],
         Some(ClassEdit::ProductIdentity { identity }) => vec![StepCc3Mutation::SetProductIdentity(set_product_identity::SetProductIdentity { identity })],
         Some(ClassEdit::Representation { id, row }) => vec![StepCc3Mutation::SetShapeRepresentation(set_shape_representation::SetShapeRepresentation { id, representation: row })],

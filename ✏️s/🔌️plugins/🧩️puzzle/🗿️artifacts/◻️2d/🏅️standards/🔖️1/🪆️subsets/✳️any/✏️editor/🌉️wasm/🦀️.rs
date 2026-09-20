@@ -252,6 +252,11 @@ impl BoardSession {
         self.state.borrow_mut().host.pointer_up_screen(sx, sy, shift, ctrl_or_meta, alt);
     }
 
+    #[wasm_bindgen(js_name = pointerCancelScreen)]
+    pub fn pointer_cancel_screen_wasm(&mut self) -> bool {
+        self.state.borrow_mut().host.pointer_cancel_screen()
+    }
+
     #[wasm_bindgen(js_name = pointerLeaveScreen)]
     pub fn pointer_leave_screen_wasm(&mut self, alt: bool) {
         self.state.borrow_mut().host.pointer_leave_screen(alt);

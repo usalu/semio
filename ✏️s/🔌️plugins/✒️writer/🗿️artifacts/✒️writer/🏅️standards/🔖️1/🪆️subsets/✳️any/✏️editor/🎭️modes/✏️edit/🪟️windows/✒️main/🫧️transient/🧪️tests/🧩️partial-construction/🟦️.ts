@@ -3,6 +3,7 @@ import { readFileSync } from "node:fs";
 import Ajv from "ajv";
 import { applyPatch, type Operation } from "fast-json-patch";
 import { applyWriterMainWindowTransientMutation, type WriterMainWindowTransientMutation } from "../../🧬️schema/🧬️mutations/🟦️.ts";
+import type { WriterMainWindowTransient } from "../../🧬️schema/🟦️.ts";
 
 /** 🧵️ Checks the native construction vectors against schema and independent JSON Patch. */
 export function testWriterPartialConstructionOracle(): void {
@@ -12,17 +13,17 @@ export function testWriterPartialConstructionOracle(): void {
   const ajv = new Ajv({ strict: true, allErrors: true });
   ajv.addKeyword("x-semio-state");
   ajv.addKeyword("x-semio-owner");
-  const validateState = ajv.compile(schema);
-  const validateMutation = ajv.compile(mutationSchema);
+  const validateState = ajv.compile<WriterMainWindowTransient>(schema);
+  const validateMutation = ajv.compile<WriterMainWindowTransientMutation>(mutationSchema);
   const input = fixture.payload.text.repeat(fixture.payload.repeat);
   assert.equal(new TextEncoder().encode(input).length, fixture.payload.utf8Bytes);
   const before = { ...fixture.base, engagementInput: input };
   assert(validateState(before), JSON.stringify(validateState.errors));
   for (const row of fixture.cases) {
     assert(validateMutation(row.mutation), JSON.stringify(validateMutation.errors));
-    const actual = applyWriterMainWindowTransientMutation(before, row.mutation as WriterMainWindowTransientMutation);
+    const actual = applyWriterMainWindowTransientMutation(before, row.mutation);
     const operations = Object.entries(row.patch).map(([key, value]) => ({ op: "replace", path: `/${key}`, value })) as Operation[];
-    const expected = applyPatch(before, operations, true, false).newDocument;
+    const expected: WriterMainWindowTransient = applyPatch(before, operations, true, false).newDocument;
     assert(validateState(actual), JSON.stringify(validateState.errors));
     assert.deepEqual(actual, expected);
     assert.equal(before.engagementInput, input);

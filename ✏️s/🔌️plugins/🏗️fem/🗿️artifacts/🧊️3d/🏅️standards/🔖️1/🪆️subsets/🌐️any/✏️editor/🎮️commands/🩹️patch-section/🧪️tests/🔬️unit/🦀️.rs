@@ -1,5 +1,5 @@
 use super::*;
-use crate::editor::fem3d::unit_tests::context::{dispatch, fem3d_app};
+use crate::editor::fem3d::unit_tests::context::{dispatch, fem3d_demo_app};
 use crate::editor::fem3d::Fem3dCommand;
 
 fn emit(snapshot: &Fem3dSnapshot, payload: PatchSection) -> Result<Emit<Fem3dMutation, NoConfigMutation>, Fault> {
@@ -11,7 +11,7 @@ fn emit(snapshot: &Fem3dSnapshot, payload: PatchSection) -> Result<Emit<Fem3dMut
 
 #[semio_framework_async_macros::async_test]
 async fn patch_section_edits_one_property_on_the_live_demo_3d() {
-    let mut app = fem3d_app();
+    let mut app = fem3d_demo_app().await;
     dispatch(&mut app, Fem3dCommand::PatchSection(PatchSection { id: "hea200".into(), field: "j".into(), value: "0.0000012".into() })).await;
     let snapshot = app.snapshot().expect("snapshot");
     let section = snapshot.sections.iter().find(|section| section.id == "hea200").expect("hea200");

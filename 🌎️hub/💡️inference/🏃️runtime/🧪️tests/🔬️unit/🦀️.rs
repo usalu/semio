@@ -126,6 +126,32 @@ fn tracked_approval_ingress(identity: &Identity, released: Option<Arc<std::sync:
     })
 }
 
+static LAST_PUBLISHER_REGION_EVIDENCE: std::sync::Mutex<Option<String>> = std::sync::Mutex::new(None);
+
+fn record_publisher_region_evidence(evidence: String) {
+    *LAST_PUBLISHER_REGION_EVIDENCE.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(evidence);
+}
+
+fn last_publisher_region_evidence() -> Option<String> {
+    LAST_PUBLISHER_REGION_EVIDENCE.lock().unwrap_or_else(std::sync::PoisonError::into_inner).clone()
+}
+
+/// 🧩️ The state an `ArtifactPair` materializes to. The `pack` half of every pair in this product is
+/// the document's GENESIS snapshot, never its current fold: `print_document_pack` encodes
+/// `vcs.initial_snapshot`, the native codec's `apply_ops_binary` reprints exactly that pack while
+/// appending to the `spr`, and every load path (`parse_decoded_document_spr`, `open_member_store`)
+/// folds the `spr` log back onto it. So a committed mutation is visible in a published checkpoint
+/// only when BOTH halves are folded — reading `pair.pack` alone asks the genesis whether an approval
+/// happened, which it can never answer.
+async fn published_pair_snapshot(pack: &[u8], spr: &[u8]) -> Result<semio_s_artifact_gis_gismap::GisMapSnapshot, GisMapApprovalCommitErrorV1> {
+    let parsed = directory::os_store::parse_document_pack::<semio_s_artifact_gis_gismap::GisMapSnapshot, semio_s_artifact_gis_gismap::mutations::GisMapMutation>(pack, spr)
+        .await
+        .map_err(|_| GisMapApprovalCommitErrorV1::Storage)?;
+    let snapshot = parsed.snapshot.clone();
+    directory::os_store::test_support::retire_parsed_document(parsed);
+    Ok(snapshot)
+}
+
 struct OrderedApprovalCheckpointPublisherV1 {
     ledger: Arc<InferenceJobLedgerV1>,
     identity: Identity,
@@ -144,7 +170,7 @@ impl GisMapApprovalCheckpointPublisherV1 for OrderedApprovalCheckpointPublisherV
         decision_now_ms: u64,
     ) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<directory::os_directory::PublishedArtifactCheckpoint, GisMapApprovalCommitErrorV1>> + Send + 'a>> {
         Box::pin(async move {
-            let snapshot = <semio_s_artifact_gis_gismap::GisMapSnapshot as directory::ArtifactPack>::decode_pack(&request.pair.pack).map_err(|_| GisMapApprovalCommitErrorV1::Storage)?;
+            let snapshot = published_pair_snapshot(&request.pair.pack, &request.pair.spr).await?;
             let expected_region = format!("inference-{}", self.job_id);
             let attempt = self.attempts.fetch_add(1, Ordering::AcqRel);
             let has_expected_region = snapshot
@@ -152,12 +178,17 @@ impl GisMapApprovalCheckpointPublisherV1 for OrderedApprovalCheckpointPublisherV
                 .iter()
                 .any(|region| region.id == expected_region && region.data.get("id").and_then(|value| value.as_str()) == Some(expected_region.as_str()) && region.data.get("kind").and_then(|value| value.as_str()) == Some("inference-bounds"));
             if has_expected_region != (attempt < 2) {
-                return Err(GisMapApprovalCommitErrorV1::Conflict);
+                record_publisher_region_evidence(format!(
+                    "attempt {attempt} wanted {expected_region} present={}, folded pair carried {:?}",
+                    attempt < 2,
+                    snapshot.regions.iter().map(|region| (region.id.clone(), region.data.get("id").and_then(|value| value.as_str()).map(str::to_owned), region.data.get("kind").and_then(|value| value.as_str()).map(str::to_owned))).collect::<Vec<_>>()
+                ));
+                return Err(gis_map_commit_conflict(GisMapCommitConflictArmV1::PublisherRegionDiffers));
             }
             let view = self.ledger.read(&self.job_id, &reader(&self.identity), decision_now_ms).map_err(|_| GisMapApprovalCommitErrorV1::Storage)?;
             let expected_proposal_state = if attempt < 2 { super::super::schema::InferenceProposalStateV1::Offered } else { super::super::schema::InferenceProposalStateV1::Approved };
             if view.proposal_state != expected_proposal_state || document_write.gate.try_lock().is_ok() {
-                return Err(GisMapApprovalCommitErrorV1::Conflict);
+                return Err(gis_map_commit_conflict(GisMapCommitConflictArmV1::PublisherProposalStateOrGate));
             }
             self.order.lock().unwrap_or_else(std::sync::PoisonError::into_inner).push("public-checkpoint-attempt");
             if attempt == 0 {
@@ -190,13 +221,14 @@ impl GisMapApprovalCheckpointPublisherV1 for OrderedApprovalCheckpointPublisherV
     fn checkpoint_applied(&self, checkpoint: &directory::os_directory::PublishedArtifactCheckpoint) -> Result<(), GisMapApprovalCommitErrorV1> {
         let view = self.ledger.read(&self.job_id, &reader(&self.identity), checkpoint.published_at_ms).map_err(|_| GisMapApprovalCommitErrorV1::Storage)?;
         if view.proposal_state != super::super::schema::InferenceProposalStateV1::Approved {
-            return Err(GisMapApprovalCommitErrorV1::Conflict);
+            return Err(gis_map_commit_conflict(GisMapCommitConflictArmV1::PublisherCheckpointApplyState));
         }
         self.order.lock().unwrap_or_else(std::sync::PoisonError::into_inner).push("peer-rebootstrap");
         Ok(())
     }
 }
 
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum AbandonedApprovalPhaseV1 {
     Preflight,
     Assembly,
@@ -234,7 +266,7 @@ where
         };
         assert!(pending, "approval must remain retained before its cancellation phase");
         let reached = {
-            let documents = committer.documents.lock().await;
+            let documents = committer.documents.try_lock().expect("a retained approval never parks holding the committer document map");
             match (documents.get(key), &phase) {
                 (Some(RetainedGisMapDocumentStateV1::Ready { pending: Some(_), document_write: Some(_), .. }), AbandonedApprovalPhaseV1::Preflight)
                 | (Some(RetainedGisMapDocumentStateV1::Assembly { .. }), AbandonedApprovalPhaseV1::Assembly)
@@ -248,6 +280,52 @@ where
         }
     }
     panic!("approval did not reach its exact retained cancellation phase");
+}
+
+/// ⏰️ An OS-thread hang guard for one law in this module. Every bound in here is a
+/// `tokio::time::timeout`, which cannot fire when the current-thread runtime itself is wedged — the
+/// law then burns nextest's whole 300 s kill budget and names nothing. This thread watches the wall
+/// clock instead: on expiry it prints the last phase the law entered plus the last abandoned
+/// `Assembly` turn and aborts, so a wedge costs seconds and arrives with a name. It is declared
+/// FIRST in the law so it drops LAST, after the committer and its pool.
+struct RuntimeLawHangWatchdogV1 {
+    phase: Arc<std::sync::Mutex<String>>,
+    finished: Arc<std::sync::atomic::AtomicBool>,
+}
+
+impl RuntimeLawHangWatchdogV1 {
+    fn arm(law: &'static str, budget: std::time::Duration) -> Self {
+        let phase = Arc::new(std::sync::Mutex::new(String::from("armed, before the first step")));
+        let finished = Arc::new(std::sync::atomic::AtomicBool::new(false));
+        let watched_phase = phase.clone();
+        let watched_finished = finished.clone();
+        std::thread::spawn(move || {
+            let deadline = std::time::Instant::now() + budget;
+            while std::time::Instant::now() < deadline {
+                if watched_finished.load(Ordering::Acquire) {
+                    return;
+                }
+                std::thread::sleep(std::time::Duration::from_millis(25));
+            }
+            if watched_finished.load(Ordering::Acquire) {
+                return;
+            }
+            let entered = watched_phase.lock().unwrap_or_else(std::sync::PoisonError::into_inner).clone();
+            eprintln!("law hang watchdog: {law} exceeded {budget:?}; last phase entered: {entered}; last abandoned turn {:?}", last_abandoned_assembly_turn());
+            std::process::abort();
+        });
+        Self { phase, finished }
+    }
+
+    fn at(&self, phase: impl Into<String>) {
+        *self.phase.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = phase.into();
+    }
+}
+
+impl Drop for RuntimeLawHangWatchdogV1 {
+    fn drop(&mut self) {
+        self.finished.store(true, Ordering::Release);
+    }
 }
 
 async fn wait_for_abandoned_approval_handoff(committer: &RetainedGisMapApprovalCommitterV1, key: &str, gate: &Arc<tokio::sync::Mutex<()>>, ingress_released: &std::sync::atomic::AtomicBool) {
@@ -265,7 +343,30 @@ async fn wait_for_abandoned_approval_handoff(committer: &RetainedGisMapApprovalC
         }
     })
     .await
-    .expect("abandoned approval returns every Store, ingress and document writer");
+    .unwrap_or_else(|_| {
+        let state = committer.documents.try_lock().map_or_else(
+            |_| String::from("document map held across an await"),
+            |documents| match documents.get(key) {
+                None => String::from("absent"),
+                Some(RetainedGisMapDocumentStateV1::Recovery { .. }) => String::from("Recovery"),
+                Some(RetainedGisMapDocumentStateV1::Recovered { .. }) => String::from("Recovered"),
+                Some(RetainedGisMapDocumentStateV1::Ready { pending, document_write, .. }) => format!("Ready pending={} document_write={}", pending.is_some(), document_write.is_some()),
+                Some(RetainedGisMapDocumentStateV1::Assembly { owner, .. }) => format!("Assembly phase={:?} [{}]", owner.phase(), owner.closing_witness()),
+                Some(RetainedGisMapDocumentStateV1::Journal { receipt, .. }) => format!("Journal receipt={}", receipt.is_some()),
+                Some(RetainedGisMapDocumentStateV1::Verification { .. }) => String::from("Verification"),
+                Some(RetainedGisMapDocumentStateV1::Publishing { .. }) => String::from("Publishing"),
+                Some(RetainedGisMapDocumentStateV1::Published { .. }) => String::from("Published"),
+                Some(RetainedGisMapDocumentStateV1::Closing(_)) => String::from("Closing"),
+            },
+        );
+        panic!(
+            "abandoned approval returns every Store, ingress and document writer: state {state}, last abandoned turn {:?}, maintenance_owns={}, gate_free={}, ingress_released={}",
+            last_abandoned_assembly_turn(),
+            committer.maintenance_owns_document(key),
+            gate.try_lock().is_ok(),
+            ingress_released.load(Ordering::Acquire),
+        );
+    });
 }
 
 async fn wait_for_abandoned_prepared_handoff(
@@ -455,6 +556,7 @@ async fn gis_map_approval_committed_event_reaches_actor_frontier_and_public_chec
         order: order.clone(),
         pause: Some((publisher_entered.clone(), publisher_release.clone())),
     });
+    let backend_witness = backend.clone();
     let committer = Arc::new(RetainedGisMapApprovalCommitterV1::new(database.clone(), backend, ledger.clone(), publisher));
     let committer_port: Arc<dyn GisMapApprovalCommitterV1> = committer.clone();
     let gate = Arc::new(tokio::sync::Mutex::new(()));
@@ -491,7 +593,13 @@ async fn gis_map_approval_committed_event_reaches_actor_frontier_and_public_chec
     let first_ingress_released = Arc::new(std::sync::atomic::AtomicBool::new(false));
     let first_ingress = tracked_approval_ingress(&identity, Some(first_ingress_released.clone()));
     let first = commit_prepared_approval(&committer_port, &identity, &accepted.job_id, &proposal_hash, &command, &base, 60_000, 1_004, gate.clone(), first_ingress).await;
-    assert!(matches!(first, Err(InferenceRouteErrorV1::Storage)), "public checkpoint refusal remains a retained nonterminal publication, got {:?}", first.as_ref().err());
+    assert!(
+        matches!(first, Err(InferenceRouteErrorV1::Storage)),
+        "public checkpoint refusal remains a retained nonterminal publication, got {:?} refused as {:?}; {:?}",
+        first.as_ref().err(),
+        last_gis_map_commit_conflict_arm(),
+        last_publisher_region_evidence(),
+    );
     assert!(first_ingress_released.load(Ordering::Acquire), "a failed request releases its live Hub ingress authority after the durable decision is retained");
     assert!(gate.try_lock().is_err(), "the exact document write authority remains held after publication refusal");
     assert_eq!(ledger.read(&accepted.job_id, &owner, 1_005).expect("retained proposal").proposal_state, super::super::schema::InferenceProposalStateV1::Offered);
@@ -525,7 +633,8 @@ async fn gis_map_approval_committed_event_reaches_actor_frontier_and_public_chec
     assert_eq!(drawing_owner, directory::os_store::OwnerRef { parent: expected_parent.clone(), slot: "drawing".into(), child_id: "gismap-drawing".into() });
     assert_eq!(value_reference.to_uri(), "gismap-value!s.stdio.semio@v1/value");
     assert_eq!(value_owner, directory::os_store::OwnerRef { parent: expected_parent, slot: "value".into(), child_id: "gismap-value".into() });
-    assert_ne!(actor.frontier.chain_hash, parent_revision, "the actor WAL chain and Store content revision are intentionally distinct hash domains");
+    assert_ne!(actor.frontier.chain_hash, initial.frontier.chain_hash, "a committed fixed-three decision advances the actor frontier away from its genesis chain hash");
+    assert_eq!(actor.frontier.chain_hash, parent_revision, "a committed fixed-three decision anchors the actor frontier chain hash to the parent Store's post content revision");
 
     let retry_ingress_released = Arc::new(std::sync::atomic::AtomicBool::new(false));
     let retry_ingress = tracked_approval_ingress(&identity, Some(retry_ingress_released.clone()));
@@ -561,7 +670,10 @@ async fn gis_map_approval_committed_event_reaches_actor_frontier_and_public_chec
     assert_eq!(order.lock().unwrap_or_else(std::sync::PoisonError::into_inner).as_slice(), ["public-checkpoint-attempt", "public-checkpoint-attempt"]);
     drop(close);
     publisher_release.notify_one();
-    let terminal = tokio::time::timeout(std::time::Duration::from_secs(5), &mut retry).await.expect("fresh retry observes retained publication").expect("fresh request joins the one publication");
+    let terminal = tokio::time::timeout(std::time::Duration::from_secs(5), &mut retry)
+        .await
+        .expect("fresh retry observes retained publication")
+        .unwrap_or_else(|error| panic!("fresh request joins the one publication: {error:?} refused as {:?}, identity mismatch {:?}, prepare conflict {:?}", last_gis_map_commit_conflict_arm(), last_gis_map_identity_mismatch(), last_gis_map_prepare_conflict()));
     assert!(terminal.applied, "a successful committed-witness reconciliation reports the durable approval as applied");
     assert_eq!(terminal.document_generation, 0, "the committed witness retains the live initial actor generation");
     assert_eq!(terminal.frontier.head_edit_ordinal, base.frontier.head_edit_ordinal + undo_contract["firstCommandOrdinalDelta"].as_u64().expect("first command delta"), "the first real command is the first history edit",);
@@ -658,16 +770,16 @@ async fn gis_map_approval_committed_event_reaches_actor_frontier_and_public_chec
     assert!(!undo_contract["restoresGenesisFrontier"].as_bool().expect("frontier contract"));
     assert!(undo_receipt.frontier.head_edit_ordinal > 0 && undo_receipt.frontier.last_commit_seq > 0, "undo restores content through a real second command, never by resetting lineage to genesis");
     assert!(undo_ingress_released.load(Ordering::Acquire), "durable undo releases its retained Hub ingress only after publication ACK");
-    let reverted = {
+    let reverted_pair = {
         use directory::os_store::SpaceMember as _;
         let documents = committer.documents.lock().await;
         let owners = match documents.get(&document_key(&scope)) {
             Some(RetainedGisMapDocumentStateV1::Published { owners, .. }) => owners,
             _ => panic!("the undo publication retains its exact three Store owners"),
         };
-        let pack = semio_framework::io::resolve_ready(owners.parent.as_ref().expect("retained reverted parent Store").snapshot_pack()).expect("reverted Map snapshot").pack;
-        <semio_s_artifact_gis_gismap::GisMapSnapshot as directory::ArtifactPack>::decode_pack(&pack).expect("reverted Map pack")
+        semio_framework::io::resolve_ready(owners.parent.as_ref().expect("retained reverted parent Store").snapshot_pack()).expect("reverted Map snapshot")
     };
+    let reverted = published_pair_snapshot(&reverted_pair.pack, &reverted_pair.spr).await.expect("reverted Map pair folds to its exact head state");
     assert!(undo_contract["restoresExactInitialSnapshot"].as_bool().expect("snapshot contract"));
     assert_eq!(reverted, genesis_snapshot, "the second durable publication restores the exact package-owned initial Map snapshot");
     assert_eq!(
@@ -707,468 +819,9 @@ async fn gis_map_approval_committed_event_reaches_actor_frontier_and_public_chec
     let mut database = Arc::try_unwrap(database).ok().expect("sole database owner");
     database.shutdown(&db::DatabaseShutdownControl::for_timeout(std::time::Duration::from_secs(5))).await.expect("database shutdown");
     drop(database);
-    pool.shutdown().expect("worker pool shutdown");
-}
-
-#[tokio::test]
-async fn gis_map_abandoned_pre_witness_request_returns_exact_stores_and_document_writer() {
-    let (identity, base) = canonical_identity_and_base();
-    let ledger = ledger();
-    let accepted = ledger.accept(&identity, &base.pack, 1_000).expect("accepted job");
-    let claim = ledger.start(&accepted.job_id, &identity, 1_001).expect("claim").expect("owned epoch");
-    let (proposal, command) = canonical_approval(&identity, &accepted.job_id, &base, 1_004);
-    let result = InferencePrivateBytesV1::new(b"bounded-result".to_vec(), RESULT_MAX_BYTES).expect("bounded result");
-    assert!(ledger.succeed(&accepted.job_id, &identity, claim.run_epoch, &result, &proposal, 1_002).expect("offer"));
-    let proposal_hash = sha256(proposal.as_slice());
-    ledger.prepare_approval(&accepted.job_id, &identity, &proposal_hash, &command, 1_003).expect("prepared outbox");
-    let pool = Arc::new(db::semio_framework_async::WorkerPool::new(db::semio_framework_async::WorkerPoolConfig::new(db::semio_framework_async::ProcessKind::HeadlessBatch, 2)));
-    let memory = db::storage::MemoryStorage::new(pool.clone()).await.expect("memory storage");
-    let backend = Arc::new(db::storage::DbBackend::Memory(memory));
-    let database = Arc::new(db::Database::open(pool.clone(), db::DbConfig::for_profile(db::Profile::Test), backend.clone()).await.expect("database"));
-    let scope = DocumentScope::new(identity.space_id.clone(), identity.document_id.clone());
-    let document = protocol::ArtifactId(document_key(&scope));
-    let handle = database.ensure_document(&document).await.expect("document actor");
-    let order = Arc::new(std::sync::Mutex::new(Vec::new()));
-    let publisher: Arc<dyn GisMapApprovalCheckpointPublisherV1> =
-        Arc::new(OrderedApprovalCheckpointPublisherV1 { ledger: ledger.clone(), identity: identity.clone(), job_id: accepted.job_id.clone(), attempts: std::sync::atomic::AtomicUsize::new(0), order: order.clone(), pause: None });
-    let committer = Arc::new(RetainedGisMapApprovalCommitterV1::new(database.clone(), backend, ledger.clone(), publisher));
-    let key = document_key(&scope);
-    let gate = Arc::new(tokio::sync::Mutex::new(()));
-    let composed_children = base.composed_children().expect("exact composed children");
-    let actor = approval_actor(&identity);
-    let mutation_id = approval_mutation_id(&accepted.job_id, &proposal_hash);
-    let command_hash = sha256(command.as_slice());
-    let invalid_children = vec!["gismap-drawing".to_owned(), "substituted-value".to_owned()];
-    let foreign_scope_ingress_released = Arc::new(std::sync::atomic::AtomicBool::new(false));
-    let foreign_scope_ingress: Arc<dyn GisMapApprovalIngressAuthorityV1> = Arc::new(TestApprovalIngressAuthorityV1 {
-        scope: DocumentScope::new("eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee", identity.document_id.clone()),
-        user_id: identity.user_id.clone(),
-        session_id: identity.session_id.clone(),
-        authorization_generation: identity.authorization_generation,
-        released: Some(foreign_scope_ingress_released.clone()),
-    });
-    assert!(matches!(
-        committer
-            .commit(GisMapApprovalCommitRequestV1 {
-                composed_children: &composed_children,
-                scope: &scope,
-                actor: &actor,
-                mutation_id: &mutation_id,
-                command_hash: &command_hash,
-                job_id: &accepted.job_id,
-                proposal_hash: &proposal_hash,
-                command: command.as_slice(),
-                base: &base,
-                base_frontier: &base.frontier,
-                deadline_ms: 60_000,
-                now_ms: 1_004,
-                document_write: gate.clone(),
-                ingress: foreign_scope_ingress,
-            })
-            .await,
-        Err(GisMapApprovalCommitErrorV1::Conflict)
-    ));
-    assert!(foreign_scope_ingress_released.load(Ordering::Acquire));
-    let mut substituted_bases = Vec::new();
-    let mut descriptor = canonical_map_base(&identity);
-    descriptor.descriptor_digest = "9".repeat(64);
-    substituted_bases.push(("descriptor", descriptor));
-    let mut pack = canonical_map_base(&identity);
-    pack.pack = InferencePrivateBytesV1::new(b"substituted-pack".to_vec(), INPUT_MAX_BYTES).expect("bounded substituted pack");
-    substituted_bases.push(("pack", pack));
-    let mut head_ordinal = canonical_map_base(&identity);
-    head_ordinal.frontier.head_edit_ordinal += 1;
-    substituted_bases.push(("head-ordinal", head_ordinal));
-    let mut head_edit = canonical_map_base(&identity);
-    head_edit.frontier.head_edit_id = "substituted-edit".to_owned();
-    substituted_bases.push(("head-edit", head_edit));
-    let mut commit = canonical_map_base(&identity);
-    commit.frontier.last_commit_seq += 1;
-    substituted_bases.push(("commit", commit));
-    let mut chain = canonical_map_base(&identity);
-    chain.frontier.chain_hash = directory::os_directory::ArtifactHash([1; 32]);
-    substituted_bases.push(("chain", chain));
-    for (name, candidate) in &substituted_bases {
-        let ingress_released = Arc::new(std::sync::atomic::AtomicBool::new(false));
-        assert!(
-            matches!(
-                committer
-                    .commit(GisMapApprovalCommitRequestV1 {
-                        composed_children: &composed_children,
-                        scope: &scope,
-                        actor: &actor,
-                        mutation_id: &mutation_id,
-                        command_hash: &command_hash,
-                        job_id: &accepted.job_id,
-                        proposal_hash: &proposal_hash,
-                        command: command.as_slice(),
-                        base: candidate,
-                        base_frontier: &candidate.frontier,
-                        deadline_ms: 60_000,
-                        now_ms: 1_004,
-                        document_write: gate.clone(),
-                        ingress: tracked_approval_ingress(&identity, Some(ingress_released.clone())),
-                    })
-                    .await,
-                Err(GisMapApprovalCommitErrorV1::Conflict)
-            ),
-            "{name} substitution reached cleanup admission",
-        );
-        assert!(ingress_released.load(Ordering::Acquire), "{name} substitution retained ingress");
-    }
-    let mut substituted_frontier = base.frontier.clone();
-    substituted_frontier.head_edit_ordinal += 1;
-    let frontier_ingress_released = Arc::new(std::sync::atomic::AtomicBool::new(false));
-    assert!(matches!(
-        committer
-            .commit(GisMapApprovalCommitRequestV1 {
-                composed_children: &composed_children,
-                scope: &scope,
-                actor: &actor,
-                mutation_id: &mutation_id,
-                command_hash: &command_hash,
-                job_id: &accepted.job_id,
-                proposal_hash: &proposal_hash,
-                command: command.as_slice(),
-                base: &base,
-                base_frontier: &substituted_frontier,
-                deadline_ms: 60_000,
-                now_ms: 1_004,
-                document_write: gate.clone(),
-                ingress: tracked_approval_ingress(&identity, Some(frontier_ingress_released.clone())),
-            })
-            .await,
-        Err(GisMapApprovalCommitErrorV1::Conflict)
-    ));
-    assert!(frontier_ingress_released.load(Ordering::Acquire));
-    let substituted_actor = format!("user:{}#session:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee", identity.user_id);
-    let actor_ingress_released = Arc::new(std::sync::atomic::AtomicBool::new(false));
-    assert!(matches!(
-        committer
-            .commit(GisMapApprovalCommitRequestV1 {
-                composed_children: &composed_children,
-                scope: &scope,
-                actor: &substituted_actor,
-                mutation_id: &mutation_id,
-                command_hash: &command_hash,
-                job_id: &accepted.job_id,
-                proposal_hash: &proposal_hash,
-                command: command.as_slice(),
-                base: &base,
-                base_frontier: &base.frontier,
-                deadline_ms: 60_000,
-                now_ms: 1_004,
-                document_write: gate.clone(),
-                ingress: tracked_approval_ingress(&identity, Some(actor_ingress_released.clone())),
-            })
-            .await,
-        Err(GisMapApprovalCommitErrorV1::Conflict)
-    ));
-    assert!(actor_ingress_released.load(Ordering::Acquire));
-    assert!(committer.cleanup_jobs.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_empty());
-    assert!(ledger.approval_recovery_by_mutation(&mutation_id).expect("pure admission refusal lookup").is_some(), "pure admission refusals preserve the prepared outbox");
-    let substituted_command_hash = sha256(b"substituted-command");
-    let substituted_proposal_hash = sha256(b"substituted-proposal");
-    let substituted_ingress_released = Arc::new(std::sync::atomic::AtomicBool::new(false));
-    assert!(
-        matches!(
-            committer
-                .commit(GisMapApprovalCommitRequestV1 {
-                    composed_children: &composed_children,
-                    scope: &scope,
-                    actor: &actor,
-                    mutation_id: &mutation_id,
-                    command_hash: &substituted_command_hash,
-                    job_id: &accepted.job_id,
-                    proposal_hash: &substituted_proposal_hash,
-                    command: command.as_slice(),
-                    base: &base,
-                    base_frontier: &base.frontier,
-                    deadline_ms: 60_000,
-                    now_ms: 1_004,
-                    document_write: gate.clone(),
-                    ingress: tracked_approval_ingress(&identity, Some(substituted_ingress_released.clone())),
-                })
-                .await,
-            Err(GisMapApprovalCommitErrorV1::Conflict)
-        ),
-        "the public committer refuses a same-job substituted command/proposal tuple before cleanup admission",
-    );
-    assert!(substituted_ingress_released.load(Ordering::Acquire));
-    assert!(committer.cleanup_jobs.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_empty());
-    let prepared_after_substitution = ledger.approval_recovery_by_mutation(&mutation_id).expect("substitution outbox lookup").expect("exact prepared outbox remains");
-    assert_eq!(
-        (prepared_after_substitution.0.command_hash.as_str(), prepared_after_substitution.0.proposal_hash.as_str(), prepared_after_substitution.1.authorization_generation,),
-        (command_hash.as_str(), proposal_hash.as_str(), identity.authorization_generation),
-    );
-    let cleanup_reservations = (0..super::super::schema::JOB_CAPACITY).map(|index| format!("{index:064x}")).collect::<Vec<_>>();
-    for job_id in &cleanup_reservations {
-        committer.reserve_cleanup_job(job_id).expect("bounded cleanup reservation");
-    }
-    let capacity_ingress_released = Arc::new(std::sync::atomic::AtomicBool::new(false));
-    let capacity_refused = committer
-        .commit(GisMapApprovalCommitRequestV1 {
-            composed_children: &composed_children,
-            scope: &scope,
-            actor: &actor,
-            mutation_id: &mutation_id,
-            command_hash: &command_hash,
-            job_id: &accepted.job_id,
-            proposal_hash: &proposal_hash,
-            command: command.as_slice(),
-            base: &base,
-            base_frontier: &base.frontier,
-            deadline_ms: 60_000,
-            now_ms: 1_004,
-            document_write: gate.clone(),
-            ingress: tracked_approval_ingress(&identity, Some(capacity_ingress_released.clone())),
-        })
-        .await;
-    assert!(matches!(capacity_refused, Err(GisMapApprovalCommitErrorV1::Capacity)));
-    assert!(capacity_ingress_released.load(Ordering::Acquire));
-    assert_eq!(
-        ledger.pending_approvals(None, &InferenceOperationControlV1::new(1_000, 5).expect("bounded approval query")).expect("capacity outbox query").rows.len(),
-        1,
-        "cleanup-capacity refusal preserves the caller's exact durable prepared owner",
-    );
-    for job_id in &cleanup_reservations {
-        committer.release_cleanup_job(job_id);
-    }
-    assert!(committer.cleanup_jobs.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_empty());
-    let prepared_runtime_shutdown_released = Arc::new(std::sync::atomic::AtomicBool::new(false));
-    committer.reserve_cleanup_job(&accepted.job_id).expect("prepared cleanup reservation");
-    let prepared_runtime_shutdown_owner = GisMapPreparedApprovalV1 {
-        scope: scope.clone(),
-        job_id: accepted.job_id.clone(),
-        mutation_id: mutation_id.clone(),
-        command_hash: command_hash.clone(),
-        proposal_hash: proposal_hash.clone(),
-        ingress: tracked_approval_ingress(&identity, Some(prepared_runtime_shutdown_released.clone())),
-    };
-    let prepared_runtime_shutdown_key = format!("prepared:{}", accepted.job_id);
-    assert!(committer.maintenance.lock().unwrap_or_else(std::sync::PoisonError::into_inner).insert(prepared_runtime_shutdown_key.clone()));
-    let prepared_runtime_shutdown_task = GisMapPreparedApprovalTaskV1 { committer: committer.as_ref().clone(), maintenance_key: prepared_runtime_shutdown_key, owner: Some(prepared_runtime_shutdown_owner) };
-    std::thread::spawn(move || {
-        let runtime = tokio::runtime::Builder::new_current_thread().build().expect("temporary prepared-cleanup runtime");
-        runtime.spawn(async move {
-            let _retained = prepared_runtime_shutdown_task;
-            std::future::pending::<()>().await;
-        });
-        runtime.block_on(tokio::task::yield_now());
-    })
-    .join()
-    .expect("temporary prepared-cleanup runtime shutdown");
-    assert!(committer.parked_prepared.lock().unwrap_or_else(std::sync::PoisonError::into_inner).contains_key(&accepted.job_id));
-    assert!(!prepared_runtime_shutdown_released.load(Ordering::Acquire), "runtime shutdown reinserts the exact prepared ingress cursor instead of dropping it");
-    resume_parked_cleanup(&committer).await;
-    assert!(prepared_runtime_shutdown_released.load(Ordering::Acquire));
-    assert!(committer.cleanup_jobs.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_empty());
-    assert!(ledger.pending_approvals(None, &InferenceOperationControlV1::new(1_000, 5).expect("bounded approval query")).expect("prepared runtime-shutdown query").rows.is_empty());
-    ledger.prepare_approval(&accepted.job_id, &identity, &proposal_hash, &command, 1_005).expect("same owner revives after prepared cleanup runtime shutdown");
-    let runtime_shutdown_ingress_released = Arc::new(std::sync::atomic::AtomicBool::new(false));
-    committer.reserve_cleanup_job(&accepted.job_id).expect("request cleanup reservation");
-    let runtime_shutdown_ingress = tracked_approval_ingress(&identity, Some(runtime_shutdown_ingress_released.clone()));
-    let runtime_shutdown_request = Arc::new(GisMapApprovalRequestTokenV1);
-    let (runtime_shutdown_identity, _) = RetainedGisMapApprovalCommitterV1::preflight(&GisMapApprovalCommitRequestV1 {
-        composed_children: &composed_children,
-        scope: &scope,
-        actor: &actor,
-        mutation_id: &mutation_id,
-        command_hash: &command_hash,
-        job_id: &accepted.job_id,
-        proposal_hash: &proposal_hash,
-        command: command.as_slice(),
-        base: &base,
-        base_frontier: &base.frontier,
-        deadline_ms: 60_000,
-        now_ms: 1_004,
-        document_write: gate.clone(),
-        ingress: runtime_shutdown_ingress,
-    })
-    .expect("runtime-shutdown cursor preflight");
-    let runtime_shutdown_owner = GisMapAbandonedRequestV1 { key: key.clone(), identity: runtime_shutdown_identity, request: runtime_shutdown_request };
-    let runtime_shutdown_maintenance_key = RetainedGisMapApprovalCommitterV1::abandoned_request_maintenance_key(&runtime_shutdown_owner);
-    assert!(committer.maintenance.lock().unwrap_or_else(std::sync::PoisonError::into_inner).insert(runtime_shutdown_maintenance_key.clone()));
-    let runtime_shutdown_task = GisMapAbandonedRequestTaskV1 { committer: committer.as_ref().clone(), maintenance_key: runtime_shutdown_maintenance_key, owner: Some(runtime_shutdown_owner) };
-    std::thread::spawn(move || {
-        let runtime = tokio::runtime::Builder::new_current_thread().build().expect("temporary cleanup runtime");
-        runtime.spawn(async move {
-            let _retained = runtime_shutdown_task;
-            std::future::pending::<()>().await;
-        });
-        runtime.block_on(tokio::task::yield_now());
-    })
-    .join()
-    .expect("temporary cleanup runtime shutdown");
-    assert!(committer.parked_requests.lock().unwrap_or_else(std::sync::PoisonError::into_inner).contains_key(&accepted.job_id));
-    assert!(!runtime_shutdown_ingress_released.load(Ordering::Acquire), "runtime shutdown reinserts the exact ingress cursor instead of dropping it");
-    resume_parked_cleanup(&committer).await;
-    assert!(runtime_shutdown_ingress_released.load(Ordering::Acquire));
-    assert!(committer.cleanup_jobs.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_empty());
-    assert!(ledger.pending_approvals(None, &InferenceOperationControlV1::new(1_000, 5).expect("bounded approval query")).expect("runtime-shutdown outbox query").rows.is_empty());
-    ledger.prepare_approval(&accepted.job_id, &identity, &proposal_hash, &command, 1_005).expect("same owner revives after temporary cleanup runtime shutdown");
-    let thread_committer = committer.clone();
-    let thread_identity = identity.clone();
-    let thread_scope = scope.clone();
-    let thread_frontier = base.frontier.clone();
-    let thread_descriptor = base.descriptor_digest.clone();
-    let thread_pack = base.pack.as_slice().to_vec();
-    let thread_command = command.as_slice().to_vec();
-    let thread_children = composed_children.clone();
-    let thread_actor = actor.clone();
-    let thread_mutation_id = mutation_id.clone();
-    let thread_command_hash = command_hash.clone();
-    let thread_job_id = accepted.job_id.clone();
-    let thread_proposal_hash = proposal_hash.clone();
-    let thread_gate = gate.clone();
-    let thread_ingress_released = Arc::new(std::sync::atomic::AtomicBool::new(false));
-    let thread_released = thread_ingress_released.clone();
-    std::thread::spawn(move || {
-        let thread_base = InferenceMapBaseV1 { frontier: thread_frontier, descriptor_digest: thread_descriptor, pack: InferencePrivateBytesV1::new(thread_pack, INPUT_MAX_BYTES).expect("bounded thread base") };
-        let thread_command = InferencePrivateBytesV1::new(thread_command, super::super::command::COMMAND_MAX_BYTES).expect("bounded thread command");
-        let future = thread_committer.commit(GisMapApprovalCommitRequestV1 {
-            composed_children: &thread_children,
-            scope: &thread_scope,
-            actor: &thread_actor,
-            mutation_id: &thread_mutation_id,
-            command_hash: &thread_command_hash,
-            job_id: &thread_job_id,
-            proposal_hash: &thread_proposal_hash,
-            command: thread_command.as_slice(),
-            base: &thread_base,
-            base_frontier: &thread_base.frontier,
-            deadline_ms: 60_000,
-            now_ms: 1_004,
-            document_write: thread_gate,
-            ingress: tracked_approval_ingress(&thread_identity, Some(thread_released)),
-        });
-        drop(future);
-    })
-    .join()
-    .expect("no-runtime unpolled owner thread");
-    assert!(thread_ingress_released.load(Ordering::Acquire), "no-runtime future Drop synchronously returns its ingress after exact outbox abandonment");
-    assert!(ledger.pending_approvals(None, &InferenceOperationControlV1::new(1_000, 5).expect("bounded approval query")).expect("no-runtime outbox query").rows.is_empty());
-    ledger.prepare_approval(&accepted.job_id, &identity, &proposal_hash, &command, 1_005).expect("same owner revives after no-runtime Drop");
-    let unpolled_ingress_released = Arc::new(std::sync::atomic::AtomicBool::new(false));
-    let unpolled = committer.commit(GisMapApprovalCommitRequestV1 {
-        composed_children: &composed_children,
-        scope: &scope,
-        actor: &actor,
-        mutation_id: &mutation_id,
-        command_hash: &command_hash,
-        job_id: &accepted.job_id,
-        proposal_hash: &proposal_hash,
-        command: command.as_slice(),
-        base: &base,
-        base_frontier: &base.frontier,
-        deadline_ms: 60_000,
-        now_ms: 1_004,
-        document_write: gate.clone(),
-        ingress: tracked_approval_ingress(&identity, Some(unpolled_ingress_released.clone())),
-    });
-    drop(unpolled);
-    wait_for_abandoned_prepared_handoff(&committer, &ledger, &identity, &accepted.job_id, &key, &gate, unpolled_ingress_released.as_ref()).await;
-    ledger.prepare_approval(&accepted.job_id, &identity, &proposal_hash, &command, 1_005).expect("same owner revives after an unpolled future");
-    let rejected_ingress_released = Arc::new(std::sync::atomic::AtomicBool::new(false));
-    assert!(matches!(
-        committer
-            .commit(GisMapApprovalCommitRequestV1 {
-                composed_children: &invalid_children,
-                scope: &scope,
-                actor: &actor,
-                mutation_id: &mutation_id,
-                command_hash: &command_hash,
-                job_id: &accepted.job_id,
-                proposal_hash: &proposal_hash,
-                command: command.as_slice(),
-                base: &base,
-                base_frontier: &base.frontier,
-                deadline_ms: 60_000,
-                now_ms: 1_006,
-                document_write: gate.clone(),
-                ingress: tracked_approval_ingress(&identity, Some(rejected_ingress_released.clone())),
-            })
-            .await,
-        Err(GisMapApprovalCommitErrorV1::Rejected)
-    ),);
-    assert!(rejected_ingress_released.load(Ordering::Acquire));
-    assert!(committer.cleanup_jobs.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_empty());
-    assert!(ledger.approval_recovery_by_mutation(&mutation_id).expect("rejected preflight lookup").is_some(), "a pure preflight rejection leaves the prepared outbox unchanged");
-    for (phase_index, phase) in [AbandonedApprovalPhaseV1::Preflight, AbandonedApprovalPhaseV1::Assembly, AbandonedApprovalPhaseV1::Journal].into_iter().enumerate() {
-        let ingress_released = Arc::new(std::sync::atomic::AtomicBool::new(false));
-        let ingress = tracked_approval_ingress(&identity, Some(ingress_released.clone()));
-        let mut future = committer.commit(GisMapApprovalCommitRequestV1 {
-            composed_children: &composed_children,
-            scope: &scope,
-            actor: &actor,
-            mutation_id: &mutation_id,
-            command_hash: &command_hash,
-            job_id: &accepted.job_id,
-            proposal_hash: &proposal_hash,
-            command: command.as_slice(),
-            base: &base,
-            base_frontier: &base.frontier,
-            deadline_ms: 60_000,
-            now_ms: 1_004,
-            document_write: gate.clone(),
-            ingress,
-        });
-        tokio::time::timeout(std::time::Duration::from_secs(5), poll_approval_to_phase(&mut future, &committer, &key, phase)).await.expect("approval reaches its retained cancellation phase");
-        drop(future);
-        assert!(committer.cleanup_jobs.lock().unwrap_or_else(std::sync::PoisonError::into_inner).contains_key(&accepted.job_id));
-        wait_for_abandoned_approval_handoff(&committer, &key, &gate, ingress_released.as_ref()).await;
-        let actor = handle.checkpoint_publication_snapshot().await.expect("unchanged actor frontier");
-        assert_eq!((actor.frontier.head_seq, actor.frontier.commit_seq, actor.head_edit_id), (0, 0, None));
-        let pending = ledger.pending_approvals(None, &InferenceOperationControlV1::new(1_000, 5).expect("bounded approval query")).expect("abandoned outbox query");
-        assert!(pending.rows.is_empty(), "the autonomous cancellation owner clears its exact prepared outbox row before releasing Hub ingress");
-        let revived = ledger.prepare_approval(&accepted.job_id, &identity, &proposal_hash, &command, 1_005 + u64::try_from(phase_index).expect("bounded phase")).expect("same owner revives its exact abandoned outbox row");
-        assert_eq!((revived.mutation_id.as_str(), revived.command_hash.as_str(), revived.proposal_hash.as_str()), (mutation_id.as_str(), command_hash.as_str(), proposal_hash.as_str()));
-    }
-    let prepared_events = ledger.events(&accepted.job_id, &reader(&identity), 0, 1_008).expect("owner event page").events.into_iter().filter(|event| event.kind == "approval-prepared").count();
-    assert_eq!(prepared_events, 1, "three exact cancellation/revival cycles preserve one immutable preparation event");
-    assert!(order.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_empty(), "pre-witness cancellation emits neither a public checkpoint nor a peer rebootstrap signal");
-    assert_eq!(ledger.read(&accepted.job_id, &reader(&identity), 1_005).expect("offered proposal").proposal_state, super::super::schema::InferenceProposalStateV1::Offered);
-    let ingress_released = Arc::new(std::sync::atomic::AtomicBool::new(false));
-    let ingress = tracked_approval_ingress(&identity, Some(ingress_released.clone()));
-    let mut future = committer.commit(GisMapApprovalCommitRequestV1 {
-        composed_children: &composed_children,
-        scope: &scope,
-        actor: &actor,
-        mutation_id: &mutation_id,
-        command_hash: &command_hash,
-        job_id: &accepted.job_id,
-        proposal_hash: &proposal_hash,
-        command: command.as_slice(),
-        base: &base,
-        base_frontier: &base.frontier,
-        deadline_ms: 60_000,
-        now_ms: 1_006,
-        document_write: gate.clone(),
-        ingress,
-    });
-    tokio::time::timeout(std::time::Duration::from_secs(5), poll_approval_to_phase(&mut future, &committer, &key, AbandonedApprovalPhaseV1::Committed)).await.expect("approval reaches its committed receipt cutover");
-    drop(future);
-    tokio::time::timeout(std::time::Duration::from_secs(10), async {
-        loop {
-            let approved = ledger.read(&accepted.job_id, &reader(&identity), 1_007).is_ok_and(|view| view.proposal_state == super::super::schema::InferenceProposalStateV1::Approved);
-            let maintenance_idle = !committer.maintenance_owns_document(&key);
-            if approved && maintenance_idle && gate.try_lock().is_ok() && ingress_released.load(Ordering::Acquire) {
-                return;
-            }
-            tokio::task::yield_now().await;
-        }
-    })
-    .await
-    .expect("receipt cutover autonomously reaches public checkpoint and ledger apply");
-    assert_eq!(order.lock().unwrap_or_else(std::sync::PoisonError::into_inner).as_slice(), ["public-checkpoint-attempt", "public-checkpoint-attempt", "public-checkpoint-ack", "peer-rebootstrap"],);
-    let actor = handle.checkpoint_publication_snapshot().await.expect("committed actor frontier");
-    assert_eq!((actor.frontier.head_seq, actor.frontier.commit_seq, actor.head_edit_id.as_ref().map(|id| id.0.as_str())), (1, 1, Some(mutation_id.as_str())));
-    committer.close().await.expect("committer close");
-    drop(committer);
-    drop(handle);
-    let mut database = Arc::try_unwrap(database).ok().expect("sole database owner");
-    database.shutdown(&db::DatabaseShutdownControl::for_timeout(std::time::Duration::from_secs(5))).await.expect("database shutdown");
-    drop(database);
+    let db::storage::DbBackend::Memory(memory) = backend_witness.as_ref() else { panic!("the law mounts the exact memory DB I/O backend") };
+    memory.close().await.expect("terminal memory DB I/O backend close");
+    drop(backend_witness);
     pool.shutdown().expect("worker pool shutdown");
 }
 
@@ -1196,6 +849,7 @@ async fn gis_map_terminal_close_waits_for_unpolled_cleanup_and_fences_new_admiss
         order: Arc::new(std::sync::Mutex::new(Vec::new())),
         pause: None,
     });
+    let backend_witness = backend.clone();
     let committer = Arc::new(RetainedGisMapApprovalCommitterV1::new(database.clone(), backend, ledger.clone(), publisher));
     let gate = Arc::new(tokio::sync::Mutex::new(()));
     let children = base.composed_children().expect("exact composed children");
@@ -1263,6 +917,10 @@ async fn gis_map_terminal_close_waits_for_unpolled_cleanup_and_fences_new_admiss
     let mut database = Arc::try_unwrap(database).ok().expect("sole database owner");
     database.shutdown(&db::DatabaseShutdownControl::for_timeout(std::time::Duration::from_secs(5))).await.expect("database shutdown");
     drop(database);
+    assert_eq!(Arc::strong_count(&backend_witness), 1, "every retained owner of the I/O backend is released before the pool closes — a surviving clone is the pool use `shutdown` reports as busy");
+    let db::storage::DbBackend::Memory(memory) = backend_witness.as_ref() else { panic!("the law mounts the exact memory DB I/O backend") };
+    memory.close().await.expect("terminal memory DB I/O backend close");
+    drop(backend_witness);
     pool.shutdown().expect("worker pool shutdown");
 }
 
@@ -1374,4 +1032,478 @@ fn gis_map_proposal_fixture_pins_the_exact_frozen_comparison_limits_and_error_vo
     }
     assert_eq!(document_key(&scope), format!("v1:{}:{}:{}{}", identity.space_id.len(), identity.document_id.len(), identity.space_id, identity.document_id));
     assert_eq!(approval_actor(&identity), format!("user:{}#session:{}", identity.user_id, identity.session_id));
+}
+
+mod quick {
+    use super::*;
+
+    #[tokio::test]
+    async fn gis_map_abandoned_pre_witness_request_returns_exact_stores_and_document_writer() {
+        let watchdog = RuntimeLawHangWatchdogV1::arm("gis_map_abandoned_pre_witness_request_returns_exact_stores_and_document_writer", std::time::Duration::from_secs(30));
+        let (identity, base) = canonical_identity_and_base();
+        let ledger = ledger();
+        let accepted = ledger.accept(&identity, &base.pack, 1_000).expect("accepted job");
+        let claim = ledger.start(&accepted.job_id, &identity, 1_001).expect("claim").expect("owned epoch");
+        let (proposal, command) = canonical_approval(&identity, &accepted.job_id, &base, 1_004);
+        let result = InferencePrivateBytesV1::new(b"bounded-result".to_vec(), RESULT_MAX_BYTES).expect("bounded result");
+        assert!(ledger.succeed(&accepted.job_id, &identity, claim.run_epoch, &result, &proposal, 1_002).expect("offer"));
+        let proposal_hash = sha256(proposal.as_slice());
+        ledger.prepare_approval(&accepted.job_id, &identity, &proposal_hash, &command, 1_003).expect("prepared outbox");
+        let pool = Arc::new(db::semio_framework_async::WorkerPool::new(db::semio_framework_async::WorkerPoolConfig::new(db::semio_framework_async::ProcessKind::HeadlessBatch, 2)));
+        let memory = db::storage::MemoryStorage::new(pool.clone()).await.expect("memory storage");
+        let backend = Arc::new(db::storage::DbBackend::Memory(memory));
+        let database = Arc::new(db::Database::open(pool.clone(), db::DbConfig::for_profile(db::Profile::Test), backend.clone()).await.expect("database"));
+        let scope = DocumentScope::new(identity.space_id.clone(), identity.document_id.clone());
+        let document = protocol::ArtifactId(document_key(&scope));
+        let handle = database.ensure_document(&document).await.expect("document actor");
+        let order = Arc::new(std::sync::Mutex::new(Vec::new()));
+        let publisher: Arc<dyn GisMapApprovalCheckpointPublisherV1> =
+            Arc::new(OrderedApprovalCheckpointPublisherV1 { ledger: ledger.clone(), identity: identity.clone(), job_id: accepted.job_id.clone(), attempts: std::sync::atomic::AtomicUsize::new(0), order: order.clone(), pause: None });
+        let backend_witness = backend.clone();
+        let committer = Arc::new(RetainedGisMapApprovalCommitterV1::new(database.clone(), backend, ledger.clone(), publisher));
+        let key = document_key(&scope);
+        let gate = Arc::new(tokio::sync::Mutex::new(()));
+        let composed_children = base.composed_children().expect("exact composed children");
+        let actor = approval_actor(&identity);
+        let mutation_id = approval_mutation_id(&accepted.job_id, &proposal_hash);
+        let command_hash = sha256(command.as_slice());
+        let invalid_children = vec!["gismap-drawing".to_owned(), "substituted-value".to_owned()];
+        let foreign_scope_ingress_released = Arc::new(std::sync::atomic::AtomicBool::new(false));
+        let foreign_scope_ingress: Arc<dyn GisMapApprovalIngressAuthorityV1> = Arc::new(TestApprovalIngressAuthorityV1 {
+            scope: DocumentScope::new("eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee", identity.document_id.clone()),
+            user_id: identity.user_id.clone(),
+            session_id: identity.session_id.clone(),
+            authorization_generation: identity.authorization_generation,
+            released: Some(foreign_scope_ingress_released.clone()),
+        });
+        assert!(matches!(
+            committer
+                .commit(GisMapApprovalCommitRequestV1 {
+                    composed_children: &composed_children,
+                    scope: &scope,
+                    actor: &actor,
+                    mutation_id: &mutation_id,
+                    command_hash: &command_hash,
+                    job_id: &accepted.job_id,
+                    proposal_hash: &proposal_hash,
+                    command: command.as_slice(),
+                    base: &base,
+                    base_frontier: &base.frontier,
+                    deadline_ms: 60_000,
+                    now_ms: 1_004,
+                    document_write: gate.clone(),
+                    ingress: foreign_scope_ingress,
+                })
+                .await,
+            Err(GisMapApprovalCommitErrorV1::Conflict)
+        ));
+        assert!(foreign_scope_ingress_released.load(Ordering::Acquire));
+        let mut substituted_bases = Vec::new();
+        let mut descriptor = canonical_map_base(&identity);
+        descriptor.descriptor_digest = "9".repeat(64);
+        substituted_bases.push(("descriptor", descriptor));
+        let mut pack = canonical_map_base(&identity);
+        pack.pack = InferencePrivateBytesV1::new(b"substituted-pack".to_vec(), INPUT_MAX_BYTES).expect("bounded substituted pack");
+        substituted_bases.push(("pack", pack));
+        let mut head_ordinal = canonical_map_base(&identity);
+        head_ordinal.frontier.head_edit_ordinal += 1;
+        substituted_bases.push(("head-ordinal", head_ordinal));
+        let mut head_edit = canonical_map_base(&identity);
+        head_edit.frontier.head_edit_id = "substituted-edit".to_owned();
+        substituted_bases.push(("head-edit", head_edit));
+        let mut commit = canonical_map_base(&identity);
+        commit.frontier.last_commit_seq += 1;
+        substituted_bases.push(("commit", commit));
+        let mut chain = canonical_map_base(&identity);
+        chain.frontier.chain_hash = directory::os_directory::ArtifactHash([1; 32]);
+        substituted_bases.push(("chain", chain));
+        for (name, candidate) in &substituted_bases {
+            let ingress_released = Arc::new(std::sync::atomic::AtomicBool::new(false));
+            assert!(
+                matches!(
+                    committer
+                        .commit(GisMapApprovalCommitRequestV1 {
+                            composed_children: &composed_children,
+                            scope: &scope,
+                            actor: &actor,
+                            mutation_id: &mutation_id,
+                            command_hash: &command_hash,
+                            job_id: &accepted.job_id,
+                            proposal_hash: &proposal_hash,
+                            command: command.as_slice(),
+                            base: candidate,
+                            base_frontier: &candidate.frontier,
+                            deadline_ms: 60_000,
+                            now_ms: 1_004,
+                            document_write: gate.clone(),
+                            ingress: tracked_approval_ingress(&identity, Some(ingress_released.clone())),
+                        })
+                        .await,
+                    Err(GisMapApprovalCommitErrorV1::Conflict)
+                ),
+                "{name} substitution reached cleanup admission",
+            );
+            assert!(ingress_released.load(Ordering::Acquire), "{name} substitution retained ingress");
+        }
+        let mut substituted_frontier = base.frontier.clone();
+        substituted_frontier.head_edit_ordinal += 1;
+        let frontier_ingress_released = Arc::new(std::sync::atomic::AtomicBool::new(false));
+        assert!(matches!(
+            committer
+                .commit(GisMapApprovalCommitRequestV1 {
+                    composed_children: &composed_children,
+                    scope: &scope,
+                    actor: &actor,
+                    mutation_id: &mutation_id,
+                    command_hash: &command_hash,
+                    job_id: &accepted.job_id,
+                    proposal_hash: &proposal_hash,
+                    command: command.as_slice(),
+                    base: &base,
+                    base_frontier: &substituted_frontier,
+                    deadline_ms: 60_000,
+                    now_ms: 1_004,
+                    document_write: gate.clone(),
+                    ingress: tracked_approval_ingress(&identity, Some(frontier_ingress_released.clone())),
+                })
+                .await,
+            Err(GisMapApprovalCommitErrorV1::Conflict)
+        ));
+        assert!(frontier_ingress_released.load(Ordering::Acquire));
+        let substituted_actor = format!("user:{}#session:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee", identity.user_id);
+        let actor_ingress_released = Arc::new(std::sync::atomic::AtomicBool::new(false));
+        assert!(matches!(
+            committer
+                .commit(GisMapApprovalCommitRequestV1 {
+                    composed_children: &composed_children,
+                    scope: &scope,
+                    actor: &substituted_actor,
+                    mutation_id: &mutation_id,
+                    command_hash: &command_hash,
+                    job_id: &accepted.job_id,
+                    proposal_hash: &proposal_hash,
+                    command: command.as_slice(),
+                    base: &base,
+                    base_frontier: &base.frontier,
+                    deadline_ms: 60_000,
+                    now_ms: 1_004,
+                    document_write: gate.clone(),
+                    ingress: tracked_approval_ingress(&identity, Some(actor_ingress_released.clone())),
+                })
+                .await,
+            Err(GisMapApprovalCommitErrorV1::Conflict)
+        ));
+        assert!(actor_ingress_released.load(Ordering::Acquire));
+        assert!(committer.cleanup_jobs.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_empty());
+        assert!(ledger.approval_recovery_by_mutation(&mutation_id).expect("pure admission refusal lookup").is_some(), "pure admission refusals preserve the prepared outbox");
+        let substituted_command_hash = sha256(b"substituted-command");
+        let substituted_proposal_hash = sha256(b"substituted-proposal");
+        let substituted_ingress_released = Arc::new(std::sync::atomic::AtomicBool::new(false));
+        assert!(
+            matches!(
+                committer
+                    .commit(GisMapApprovalCommitRequestV1 {
+                        composed_children: &composed_children,
+                        scope: &scope,
+                        actor: &actor,
+                        mutation_id: &mutation_id,
+                        command_hash: &substituted_command_hash,
+                        job_id: &accepted.job_id,
+                        proposal_hash: &substituted_proposal_hash,
+                        command: command.as_slice(),
+                        base: &base,
+                        base_frontier: &base.frontier,
+                        deadline_ms: 60_000,
+                        now_ms: 1_004,
+                        document_write: gate.clone(),
+                        ingress: tracked_approval_ingress(&identity, Some(substituted_ingress_released.clone())),
+                    })
+                    .await,
+                Err(GisMapApprovalCommitErrorV1::Conflict)
+            ),
+            "the public committer refuses a same-job substituted command/proposal tuple before cleanup admission",
+        );
+        assert!(substituted_ingress_released.load(Ordering::Acquire));
+        assert!(committer.cleanup_jobs.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_empty());
+        let prepared_after_substitution = ledger.approval_recovery_by_mutation(&mutation_id).expect("substitution outbox lookup").expect("exact prepared outbox remains");
+        assert_eq!(
+            (prepared_after_substitution.0.command_hash.as_str(), prepared_after_substitution.0.proposal_hash.as_str(), prepared_after_substitution.1.authorization_generation,),
+            (command_hash.as_str(), proposal_hash.as_str(), identity.authorization_generation),
+        );
+        let cleanup_reservations = (0..crate::inference::schema::JOB_CAPACITY).map(|index| format!("{index:064x}")).collect::<Vec<_>>();
+        for job_id in &cleanup_reservations {
+            committer.reserve_cleanup_job(job_id).expect("bounded cleanup reservation");
+        }
+        let capacity_ingress_released = Arc::new(std::sync::atomic::AtomicBool::new(false));
+        let capacity_refused = committer
+            .commit(GisMapApprovalCommitRequestV1 {
+                composed_children: &composed_children,
+                scope: &scope,
+                actor: &actor,
+                mutation_id: &mutation_id,
+                command_hash: &command_hash,
+                job_id: &accepted.job_id,
+                proposal_hash: &proposal_hash,
+                command: command.as_slice(),
+                base: &base,
+                base_frontier: &base.frontier,
+                deadline_ms: 60_000,
+                now_ms: 1_004,
+                document_write: gate.clone(),
+                ingress: tracked_approval_ingress(&identity, Some(capacity_ingress_released.clone())),
+            })
+            .await;
+        assert!(matches!(capacity_refused, Err(GisMapApprovalCommitErrorV1::Capacity)));
+        assert!(capacity_ingress_released.load(Ordering::Acquire));
+        assert_eq!(
+            ledger.pending_approvals(None, &InferenceOperationControlV1::new(1_000, 5).expect("bounded approval query")).expect("capacity outbox query").rows.len(),
+            1,
+            "cleanup-capacity refusal preserves the caller's exact durable prepared owner",
+        );
+        for job_id in &cleanup_reservations {
+            committer.release_cleanup_job(job_id);
+        }
+        assert!(committer.cleanup_jobs.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_empty());
+        let prepared_runtime_shutdown_released = Arc::new(std::sync::atomic::AtomicBool::new(false));
+        committer.reserve_cleanup_job(&accepted.job_id).expect("prepared cleanup reservation");
+        let prepared_runtime_shutdown_owner = GisMapPreparedApprovalV1 {
+            scope: scope.clone(),
+            job_id: accepted.job_id.clone(),
+            mutation_id: mutation_id.clone(),
+            command_hash: command_hash.clone(),
+            proposal_hash: proposal_hash.clone(),
+            ingress: tracked_approval_ingress(&identity, Some(prepared_runtime_shutdown_released.clone())),
+        };
+        let prepared_runtime_shutdown_key = format!("prepared:{}", accepted.job_id);
+        assert!(committer.maintenance.lock().unwrap_or_else(std::sync::PoisonError::into_inner).insert(prepared_runtime_shutdown_key.clone()));
+        let prepared_runtime_shutdown_task = GisMapPreparedApprovalTaskV1 { committer: committer.as_ref().clone(), maintenance_key: prepared_runtime_shutdown_key, owner: Some(prepared_runtime_shutdown_owner) };
+        std::thread::spawn(move || {
+            let runtime = tokio::runtime::Builder::new_current_thread().build().expect("temporary prepared-cleanup runtime");
+            runtime.spawn(async move {
+                let _retained = prepared_runtime_shutdown_task;
+                std::future::pending::<()>().await;
+            });
+            runtime.block_on(tokio::task::yield_now());
+        })
+        .join()
+        .expect("temporary prepared-cleanup runtime shutdown");
+        assert!(committer.parked_prepared.lock().unwrap_or_else(std::sync::PoisonError::into_inner).contains_key(&accepted.job_id));
+        assert!(!prepared_runtime_shutdown_released.load(Ordering::Acquire), "runtime shutdown reinserts the exact prepared ingress cursor instead of dropping it");
+        resume_parked_cleanup(&committer).await;
+        assert!(prepared_runtime_shutdown_released.load(Ordering::Acquire));
+        assert!(committer.cleanup_jobs.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_empty());
+        assert!(ledger.pending_approvals(None, &InferenceOperationControlV1::new(1_000, 5).expect("bounded approval query")).expect("prepared runtime-shutdown query").rows.is_empty());
+        ledger.prepare_approval(&accepted.job_id, &identity, &proposal_hash, &command, 1_005).expect("same owner revives after prepared cleanup runtime shutdown");
+        let runtime_shutdown_ingress_released = Arc::new(std::sync::atomic::AtomicBool::new(false));
+        committer.reserve_cleanup_job(&accepted.job_id).expect("request cleanup reservation");
+        let runtime_shutdown_ingress = tracked_approval_ingress(&identity, Some(runtime_shutdown_ingress_released.clone()));
+        let runtime_shutdown_request = Arc::new(GisMapApprovalRequestTokenV1);
+        let (runtime_shutdown_identity, _) = RetainedGisMapApprovalCommitterV1::preflight(&GisMapApprovalCommitRequestV1 {
+            composed_children: &composed_children,
+            scope: &scope,
+            actor: &actor,
+            mutation_id: &mutation_id,
+            command_hash: &command_hash,
+            job_id: &accepted.job_id,
+            proposal_hash: &proposal_hash,
+            command: command.as_slice(),
+            base: &base,
+            base_frontier: &base.frontier,
+            deadline_ms: 60_000,
+            now_ms: 1_004,
+            document_write: gate.clone(),
+            ingress: runtime_shutdown_ingress,
+        })
+        .expect("runtime-shutdown cursor preflight");
+        let runtime_shutdown_owner = GisMapAbandonedRequestV1 { key: key.clone(), identity: runtime_shutdown_identity, request: runtime_shutdown_request };
+        let runtime_shutdown_maintenance_key = RetainedGisMapApprovalCommitterV1::abandoned_request_maintenance_key(&runtime_shutdown_owner);
+        assert!(committer.maintenance.lock().unwrap_or_else(std::sync::PoisonError::into_inner).insert(runtime_shutdown_maintenance_key.clone()));
+        let runtime_shutdown_task = GisMapAbandonedRequestTaskV1 { committer: committer.as_ref().clone(), maintenance_key: runtime_shutdown_maintenance_key, owner: Some(runtime_shutdown_owner) };
+        std::thread::spawn(move || {
+            let runtime = tokio::runtime::Builder::new_current_thread().build().expect("temporary cleanup runtime");
+            runtime.spawn(async move {
+                let _retained = runtime_shutdown_task;
+                std::future::pending::<()>().await;
+            });
+            runtime.block_on(tokio::task::yield_now());
+        })
+        .join()
+        .expect("temporary cleanup runtime shutdown");
+        assert!(committer.parked_requests.lock().unwrap_or_else(std::sync::PoisonError::into_inner).contains_key(&accepted.job_id));
+        assert!(!runtime_shutdown_ingress_released.load(Ordering::Acquire), "runtime shutdown reinserts the exact ingress cursor instead of dropping it");
+        resume_parked_cleanup(&committer).await;
+        assert!(runtime_shutdown_ingress_released.load(Ordering::Acquire));
+        assert!(committer.cleanup_jobs.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_empty());
+        assert!(ledger.pending_approvals(None, &InferenceOperationControlV1::new(1_000, 5).expect("bounded approval query")).expect("runtime-shutdown outbox query").rows.is_empty());
+        ledger.prepare_approval(&accepted.job_id, &identity, &proposal_hash, &command, 1_005).expect("same owner revives after temporary cleanup runtime shutdown");
+        let thread_committer = committer.clone();
+        let thread_identity = identity.clone();
+        let thread_scope = scope.clone();
+        let thread_frontier = base.frontier.clone();
+        let thread_descriptor = base.descriptor_digest.clone();
+        let thread_pack = base.pack.as_slice().to_vec();
+        let thread_command = command.as_slice().to_vec();
+        let thread_children = composed_children.clone();
+        let thread_actor = actor.clone();
+        let thread_mutation_id = mutation_id.clone();
+        let thread_command_hash = command_hash.clone();
+        let thread_job_id = accepted.job_id.clone();
+        let thread_proposal_hash = proposal_hash.clone();
+        let thread_gate = gate.clone();
+        let thread_ingress_released = Arc::new(std::sync::atomic::AtomicBool::new(false));
+        let thread_released = thread_ingress_released.clone();
+        std::thread::spawn(move || {
+            let thread_base = InferenceMapBaseV1 { frontier: thread_frontier, descriptor_digest: thread_descriptor, pack: InferencePrivateBytesV1::new(thread_pack, INPUT_MAX_BYTES).expect("bounded thread base") };
+            let thread_command = InferencePrivateBytesV1::new(thread_command, crate::inference::command::COMMAND_MAX_BYTES).expect("bounded thread command");
+            let future = thread_committer.commit(GisMapApprovalCommitRequestV1 {
+                composed_children: &thread_children,
+                scope: &thread_scope,
+                actor: &thread_actor,
+                mutation_id: &thread_mutation_id,
+                command_hash: &thread_command_hash,
+                job_id: &thread_job_id,
+                proposal_hash: &thread_proposal_hash,
+                command: thread_command.as_slice(),
+                base: &thread_base,
+                base_frontier: &thread_base.frontier,
+                deadline_ms: 60_000,
+                now_ms: 1_004,
+                document_write: thread_gate,
+                ingress: tracked_approval_ingress(&thread_identity, Some(thread_released)),
+            });
+            drop(future);
+        })
+        .join()
+        .expect("no-runtime unpolled owner thread");
+        assert!(thread_ingress_released.load(Ordering::Acquire), "no-runtime future Drop synchronously returns its ingress after exact outbox abandonment");
+        assert!(ledger.pending_approvals(None, &InferenceOperationControlV1::new(1_000, 5).expect("bounded approval query")).expect("no-runtime outbox query").rows.is_empty());
+        ledger.prepare_approval(&accepted.job_id, &identity, &proposal_hash, &command, 1_005).expect("same owner revives after no-runtime Drop");
+        let unpolled_ingress_released = Arc::new(std::sync::atomic::AtomicBool::new(false));
+        let unpolled = committer.commit(GisMapApprovalCommitRequestV1 {
+            composed_children: &composed_children,
+            scope: &scope,
+            actor: &actor,
+            mutation_id: &mutation_id,
+            command_hash: &command_hash,
+            job_id: &accepted.job_id,
+            proposal_hash: &proposal_hash,
+            command: command.as_slice(),
+            base: &base,
+            base_frontier: &base.frontier,
+            deadline_ms: 60_000,
+            now_ms: 1_004,
+            document_write: gate.clone(),
+            ingress: tracked_approval_ingress(&identity, Some(unpolled_ingress_released.clone())),
+        });
+        drop(unpolled);
+        watchdog.at("awaiting the unpolled abandoned prepared handoff");
+        wait_for_abandoned_prepared_handoff(&committer, &ledger, &identity, &accepted.job_id, &key, &gate, unpolled_ingress_released.as_ref()).await;
+        ledger.prepare_approval(&accepted.job_id, &identity, &proposal_hash, &command, 1_005).expect("same owner revives after an unpolled future");
+        let rejected_ingress_released = Arc::new(std::sync::atomic::AtomicBool::new(false));
+        assert!(matches!(
+            committer
+                .commit(GisMapApprovalCommitRequestV1 {
+                    composed_children: &invalid_children,
+                    scope: &scope,
+                    actor: &actor,
+                    mutation_id: &mutation_id,
+                    command_hash: &command_hash,
+                    job_id: &accepted.job_id,
+                    proposal_hash: &proposal_hash,
+                    command: command.as_slice(),
+                    base: &base,
+                    base_frontier: &base.frontier,
+                    deadline_ms: 60_000,
+                    now_ms: 1_006,
+                    document_write: gate.clone(),
+                    ingress: tracked_approval_ingress(&identity, Some(rejected_ingress_released.clone())),
+                })
+                .await,
+            Err(GisMapApprovalCommitErrorV1::Rejected)
+        ),);
+        assert!(rejected_ingress_released.load(Ordering::Acquire));
+        assert!(committer.cleanup_jobs.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_empty());
+        assert!(ledger.approval_recovery_by_mutation(&mutation_id).expect("rejected preflight lookup").is_some(), "a pure preflight rejection leaves the prepared outbox unchanged");
+        for (phase_index, phase) in [AbandonedApprovalPhaseV1::Preflight, AbandonedApprovalPhaseV1::Assembly, AbandonedApprovalPhaseV1::Journal].into_iter().enumerate() {
+            let ingress_released = Arc::new(std::sync::atomic::AtomicBool::new(false));
+            let ingress = tracked_approval_ingress(&identity, Some(ingress_released.clone()));
+            let mut future = committer.commit(GisMapApprovalCommitRequestV1 {
+                composed_children: &composed_children,
+                scope: &scope,
+                actor: &actor,
+                mutation_id: &mutation_id,
+                command_hash: &command_hash,
+                job_id: &accepted.job_id,
+                proposal_hash: &proposal_hash,
+                command: command.as_slice(),
+                base: &base,
+                base_frontier: &base.frontier,
+                deadline_ms: 60_000,
+                now_ms: 1_004,
+                document_write: gate.clone(),
+                ingress,
+            });
+            watchdog.at(format!("polling the approval to its retained cancellation phase {phase:?}"));
+            tokio::time::timeout(std::time::Duration::from_secs(5), poll_approval_to_phase(&mut future, &committer, &key, phase)).await.unwrap_or_else(|_| panic!("approval reaches its retained cancellation phase {phase:?}"));
+            drop(future);
+            assert!(committer.cleanup_jobs.lock().unwrap_or_else(std::sync::PoisonError::into_inner).contains_key(&accepted.job_id));
+            watchdog.at(format!("awaiting the abandoned handoff after cancellation phase {phase:?}"));
+            wait_for_abandoned_approval_handoff(&committer, &key, &gate, ingress_released.as_ref()).await;
+            let actor = handle.checkpoint_publication_snapshot().await.expect("unchanged actor frontier");
+            assert_eq!((actor.frontier.head_seq, actor.frontier.commit_seq, actor.head_edit_id), (0, 0, None));
+            let pending = ledger.pending_approvals(None, &InferenceOperationControlV1::new(1_000, 5).expect("bounded approval query")).expect("abandoned outbox query");
+            assert!(pending.rows.is_empty(), "the autonomous cancellation owner clears its exact prepared outbox row before releasing Hub ingress");
+            let revived = ledger.prepare_approval(&accepted.job_id, &identity, &proposal_hash, &command, 1_005 + u64::try_from(phase_index).expect("bounded phase")).expect("same owner revives its exact abandoned outbox row");
+            assert_eq!((revived.mutation_id.as_str(), revived.command_hash.as_str(), revived.proposal_hash.as_str()), (mutation_id.as_str(), command_hash.as_str(), proposal_hash.as_str()));
+        }
+        let prepared_events = ledger.events(&accepted.job_id, &reader(&identity), 0, 1_008).expect("owner event page").events.into_iter().filter(|event| event.kind == "approval-prepared").count();
+        assert_eq!(prepared_events, 1, "three exact cancellation/revival cycles preserve one immutable preparation event");
+        assert!(order.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_empty(), "pre-witness cancellation emits neither a public checkpoint nor a peer rebootstrap signal");
+        assert_eq!(ledger.read(&accepted.job_id, &reader(&identity), 1_005).expect("offered proposal").proposal_state, crate::inference::schema::InferenceProposalStateV1::Offered);
+        let ingress_released = Arc::new(std::sync::atomic::AtomicBool::new(false));
+        let ingress = tracked_approval_ingress(&identity, Some(ingress_released.clone()));
+        let mut future = committer.commit(GisMapApprovalCommitRequestV1 {
+            composed_children: &composed_children,
+            scope: &scope,
+            actor: &actor,
+            mutation_id: &mutation_id,
+            command_hash: &command_hash,
+            job_id: &accepted.job_id,
+            proposal_hash: &proposal_hash,
+            command: command.as_slice(),
+            base: &base,
+            base_frontier: &base.frontier,
+            deadline_ms: 60_000,
+            now_ms: 1_006,
+            document_write: gate.clone(),
+            ingress,
+        });
+        tokio::time::timeout(std::time::Duration::from_secs(5), poll_approval_to_phase(&mut future, &committer, &key, AbandonedApprovalPhaseV1::Committed)).await.expect("approval reaches its committed receipt cutover");
+        drop(future);
+        tokio::time::timeout(std::time::Duration::from_secs(10), async {
+            loop {
+                let approved = ledger.read(&accepted.job_id, &reader(&identity), 1_007).is_ok_and(|view| view.proposal_state == crate::inference::schema::InferenceProposalStateV1::Approved);
+                let maintenance_idle = !committer.maintenance_owns_document(&key);
+                if approved && maintenance_idle && gate.try_lock().is_ok() && ingress_released.load(Ordering::Acquire) {
+                    return;
+                }
+                tokio::task::yield_now().await;
+            }
+        })
+        .await
+        .expect("receipt cutover autonomously reaches public checkpoint and ledger apply");
+        assert_eq!(order.lock().unwrap_or_else(std::sync::PoisonError::into_inner).as_slice(), ["public-checkpoint-attempt", "public-checkpoint-attempt", "public-checkpoint-ack", "peer-rebootstrap"],);
+        let actor = handle.checkpoint_publication_snapshot().await.expect("committed actor frontier");
+        assert_eq!((actor.frontier.head_seq, actor.frontier.commit_seq, actor.head_edit_id.as_ref().map(|id| id.0.as_str())), (1, 1, Some(mutation_id.as_str())));
+        committer.close().await.expect("committer close");
+        drop(committer);
+        drop(handle);
+        let mut database = Arc::try_unwrap(database).ok().expect("sole database owner");
+        database.shutdown(&db::DatabaseShutdownControl::for_timeout(std::time::Duration::from_secs(5))).await.expect("database shutdown");
+        drop(database);
+        let db::storage::DbBackend::Memory(memory) = backend_witness.as_ref() else { panic!("the law mounts the exact memory DB I/O backend") };
+        memory.close().await.expect("terminal memory DB I/O backend close");
+        drop(backend_witness);
+        pool.shutdown().expect("worker pool shutdown");
+    }
 }

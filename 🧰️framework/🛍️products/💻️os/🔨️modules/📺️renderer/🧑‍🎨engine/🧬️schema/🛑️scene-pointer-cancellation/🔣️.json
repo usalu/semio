@@ -1,0 +1,101 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/renderer/scene-pointer-cancellation-v1.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "owner", "cases"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "owner": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["identity", "match", "zeroGeneration", "staleGeneration", "replacement", "afterCancel"],
+      "properties": {
+        "identity": {
+          "const": ["surfaceId", "generation", "pointerId"]
+        },
+        "match": { "const": "all-fields" },
+        "zeroGeneration": { "const": "invalid" },
+        "staleGeneration": { "const": "ignore" },
+        "replacement": { "const": "cancel-old-before-reuse" },
+        "afterCancel": { "const": "next-down-accepted" }
+      }
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 6,
+      "maxItems": 6,
+      "items": { "$ref": "#/definitions/case" }
+    }
+  },
+  "definitions": {
+    "case": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "family",
+        "gesture",
+        "reactStatus",
+        "terminal",
+        "invokeNormalPointerUp",
+        "retire",
+        "preservePublished",
+        "discardTransient",
+        "publishOnCancel",
+        "nextDown",
+        "source"
+      ],
+      "properties": {
+        "family": {
+          "enum": ["nodeGraph", "board2d", "ink", "tiledMap", "paint2d", "textEditor"]
+        },
+        "gesture": { "type": "string", "minLength": 1 },
+        "reactStatus": { "enum": ["missing", "contact-only", "reference"] },
+        "terminal": { "enum": ["discard", "commit-navigation"] },
+        "invokeNormalPointerUp": { "type": "boolean" },
+        "retire": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["capture", "queuedIntent", "inProgressIntent"],
+          "properties": {
+            "capture": { "const": true },
+            "queuedIntent": { "const": true },
+            "inProgressIntent": { "const": true }
+          }
+        },
+        "preservePublished": {
+          "type": "array",
+          "minItems": 2,
+          "uniqueItems": true,
+          "items": { "enum": ["selection", "camera"] }
+        },
+        "discardTransient": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "wire-preview",
+              "node-drag-preview",
+              "link-preview",
+              "brush-preview",
+              "stroke-preview",
+              "marquee",
+              "navigator-pan",
+              "selection-drag-preview",
+              "queued-mutation-terminal",
+              "action-claim"
+            ]
+          }
+        },
+        "publishOnCancel": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "enum": ["camera"] }
+        },
+        "nextDown": { "const": "accepted" },
+        "source": { "type": "string", "minLength": 1 }
+      }
+    }
+  }
+}

@@ -1,11 +1,12 @@
-//! 🔎️ Deterministic capability search — packet `P2-catalog`. BM25 (`k1=1.2`, `b=0.75`) over five
-//! weighted fields (id ×3, title ×3, use_when ×2, description ×1, category/owner ×0.5), a
+//! 🔎️ Deterministic capability search — packet `P2-catalog`. BM25 (`k1=1.2`, `b=0.75`) over seven
+//! weighted fields (id ×3, title ×3, use_when ×2, description ×2, parameter names ×1.5, artifact
+//! kind ×1, category/owner/plugin display name ×0.5), a
 //! camelCase/kebab-case-aware tokenizer, en+de stopword filtering, and structural filters. **No LLM,
 //! no randomness, no `HashMap` iteration anywhere in this file** — every collection that could leak
 //! nondeterminism into the ranking is a `Vec`/`BTreeMap`/`BTreeSet`, and every tie is broken by
 //! capability id (`Ord` on `String`) so two searches over the same catalog always agree byte-for-byte.
 
-use crate::catalog::{CapabilityDefinition, CapabilityOwner, Catalog};
+use crate::catalog::{CapabilityAudience, CapabilityDefinition, CapabilityOwner, Catalog};
 use std::collections::{BTreeMap, BTreeSet};
 
 //#region 🔖️Tokenizer
@@ -52,6 +53,10 @@ pub struct SearchFilters {
     pub owner: Option<String>,
     pub artifact_kind: Option<String>,
     pub requires_scope: Option<String>,
+    /// 🎯️ Restricts the result set to these audiences. Empty = no audience restriction, which is
+    /// what the gateway wants: `compile()` already published the agent projection only, so a second
+    /// filter here would be redundant — this exists for a caller that compiled the full surface.
+    pub audience: Vec<CapabilityAudience>,
 }
 
 fn owner_matches(owner: &CapabilityOwner, filter: &str) -> bool {
@@ -67,6 +72,9 @@ fn owner_matches(owner: &CapabilityOwner, filter: &str) -> bool {
 
 fn passes_filters(capability: &CapabilityDefinition, filters: &SearchFilters) -> bool {
     if !filters.kind.is_empty() && !filters.kind.contains(&capability.kind) {
+        return false;
+    }
+    if !filters.audience.is_empty() && !filters.audience.contains(&capability.audience) {
         return false;
     }
     if let Some(owner) = &filters.owner {
@@ -114,8 +122,16 @@ fn owner_text(owner: &CapabilityOwner) -> String {
         CapabilityOwner::Shell => "shell".to_string(),
         CapabilityOwner::Gateway => "gateway".to_string(),
         CapabilityOwner::Extension { extension_id } => extension_id.clone(),
-        CapabilityOwner::Plugin { plugin_id, app_id, .. } => format!("{plugin_id} {}", app_id.clone().unwrap_or_default()),
+        CapabilityOwner::Plugin { plugin_id, label, app_id, .. } => format!("{plugin_id} {} {}", label.clone().unwrap_or_default(), app_id.clone().unwrap_or_default()),
     }
+}
+
+/// 📝️ One document's parameter vocabulary — every declared argument's id AND its localized label,
+/// which is what a natural-language query actually names ("opacity", "layer id", "format"). Without
+/// this field an agent searching for the argument it holds ("set the opacity of the selection") had
+/// nothing but the verb title to match against.
+fn argument_text(capability: &CapabilityDefinition) -> String {
+    capability.presentation.args.iter().map(|arg| format!("{} {}", arg.id, arg.label)).collect::<Vec<_>>().join(" ")
 }
 
 fn build_fields(capability: &CapabilityDefinition) -> Vec<WeightedField> {
@@ -123,7 +139,9 @@ fn build_fields(capability: &CapabilityDefinition) -> Vec<WeightedField> {
         WeightedField { tokens: tokenize(capability.id.as_str()), weight: 3.0 },
         WeightedField { tokens: tokenize(&capability.title), weight: 3.0 },
         WeightedField { tokens: tokenize(&capability.use_when.join(" ")), weight: 2.0 },
-        WeightedField { tokens: tokenize(&capability.description), weight: 1.0 },
+        WeightedField { tokens: tokenize(&capability.description), weight: 2.0 },
+        WeightedField { tokens: tokenize(&argument_text(capability)), weight: 1.5 },
+        WeightedField { tokens: tokenize(capability.artifact_kind.as_deref().unwrap_or_default()), weight: 1.0 },
         WeightedField { tokens: tokenize(&format!("{} {}", capability.presentation.category.clone().unwrap_or_default(), owner_text(&capability.owner))), weight: 0.5 },
     ]
 }

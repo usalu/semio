@@ -3,8 +3,9 @@
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
-import { Mode, createEvenWindowLayout, reactHostPort, uiDataLabel } from "@semio-tech/ui-react";
+import { Mode, createEvenWindowLayout, reactHostPort, uiDataLabel, type WindowLayoutAxisNode, type WindowLayoutStackNode } from "@semio-tech/ui-react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import dockAxisGeometry from "../../🧫️fixtures/📐️dock-axis-geometry/🔣️.json";
 import { contentThroughGlassPlay, maximizeStackPlay, quadLayoutPlay } from "../../🧱️elements/🎨️Canvas/🧪️tests/🎭️storybook-interaction/🟦️.ts";
 // #endregion 🔌️Adapters
 
@@ -16,6 +17,13 @@ const Pane = ({ label }: { label: string }) => (
     <span className="text-lg font-semibold">{label}</span>
   </div>
 );
+
+type GeometryNode = { kind: "stack"; id: string } | { kind: "row" | "column"; children: Array<{ weight: number; node: GeometryNode }> };
+
+function geometryModeNode(node: GeometryNode, size?: number): WindowLayoutAxisNode | WindowLayoutStackNode {
+  if (node.kind === "stack") return { kind: "stack", size, activeId: node.id, children: [{ kind: "window", id: node.id }] };
+  return { kind: node.kind, size, children: node.children.map((child) => geometryModeNode(child.node, child.weight)) };
+}
 
 // #region 🧪️SilhouetteVisualFixture
 const SilhouetteVisualFixture = () => (
@@ -156,6 +164,25 @@ export const EvenSplit: Story = {
       />
     </div>
   ),
+};
+
+export const GeometryOracle: Story = {
+  render: () => {
+    const { viewport, layout } = dockAxisGeometry;
+    return (
+      <div data-testid="dock-axis-geometry-oracle" style={{ width: viewport.width, height: viewport.height }}>
+        <Mode
+          windows={[
+            { id: "left", title: uiDataLabel("Left / Links"), iconId: "app-window", children: <Pane label="Left / Links" /> },
+            { id: "right-top", title: uiDataLabel("Top / Oben"), iconId: "app-window", children: <Pane label="Top / Oben" /> },
+            { id: "right-bottom", title: uiDataLabel("Bottom / Unten"), iconId: "app-window", children: <Pane label="Bottom / Unten" /> },
+          ]}
+          layout={geometryModeNode(layout as GeometryNode)}
+          activeWindowId="left"
+        />
+      </div>
+    );
+  },
 };
 
 export const ContentThroughGlass: Story = {

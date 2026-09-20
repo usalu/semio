@@ -1,12 +1,8 @@
-
 use super::*;
+use crate::wgpu::component::ui::{UiButtonNode, UiComponentSceneNode, UiInputNode, UiPresence, UiSelectItem, UiSelectNode, UiSeparatorNode, UiSliderNode, UiStackNode, UiTextNode, UiToggleNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode};
+use crate::wgpu::tree::{Node, NodeKey, WidgetSpec};
 use crate::wgpu::IconName;
 use crate::wgpu::Label;
-use crate::wgpu::component::ui::{
-    UiButtonNode, UiComponentSceneNode, UiInputNode, UiPresence, UiSelectItem, UiSelectNode, UiSeparatorNode, UiSliderNode, UiStackNode, UiTextNode, UiToggleNode, UiTreeItemNode, UiTreeNode,
-    UiTreeSectionNode,
-};
-use crate::wgpu::tree::{Node, NodeKey, WidgetSpec};
 
 fn action() -> ActionDescriptor {
     ActionDescriptor { controller_id: "ctrl".into(), action: "go".into(), args: None }
@@ -45,7 +41,23 @@ fn insert_tree_row(tree: &mut UiTree, tree_id: NodeId, item_id: &str, rect: (f32
 }
 
 fn input_ui(id: &str, value: &str) -> UiNode {
-    UiNode::Input(UiInputNode { id: id.into(), input_kind: "text".into(), value: value.into(), placeholder: None, commit: None, min: None, max: None, step: None, accept: None, on_change: action(), on_submit: None, on_abort: None, on_repeat_last: None, presence: UiPresence::default(), menu: None })
+    UiNode::Input(UiInputNode {
+        id: id.into(),
+        input_kind: "text".into(),
+        value: value.into(),
+        placeholder: None,
+        commit: None,
+        min: None,
+        max: None,
+        step: None,
+        accept: None,
+        on_change: action(),
+        on_submit: None,
+        on_abort: None,
+        on_repeat_last: None,
+        presence: UiPresence::default(),
+        menu: None,
+    })
 }
 
 fn stack_ui() -> UiNode {
@@ -100,6 +112,41 @@ fn hit_test_respects_clips_children_pruning() {
 
     assert_eq!(hit_test(&tree, root, 400.0, 400.0), None, "point outside the clipper must not match the overflowing child");
     assert_eq!(hit_test(&tree, root, 10.0, 10.0), Some(overflowing_child), "inside the clip bounds the child still matches");
+}
+
+#[test]
+fn hit_test_and_absolute_rect_follow_nested_scroll_offsets() {
+    let mut tree = UiTree::new();
+    let root = leaf(&mut tree, None, 0, stack_ui(), (10.0, 20.0, 200.0, 60.0));
+    set_flag(&mut tree, root, NodeFlags::SCROLLABLE);
+    set_flag(&mut tree, root, NodeFlags::CLIPS_CHILDREN);
+    tree.node_mut(root).unwrap().state.scroll_offset = (0.0, 48.0);
+    let group = leaf(&mut tree, Some(root), 1, stack_ui(), (3.0, 4.0, 190.0, 144.0));
+    let hidden = leaf(&mut tree, Some(group), 1, button_ui("hidden"), (0.0, 0.0, 100.0, 24.0));
+    let visible = leaf(&mut tree, Some(group), 2, button_ui("visible"), (0.0, 48.0, 100.0, 24.0));
+    assert_eq!(tree.absolute_rect(visible), Some(Rect::new(13.0, 24.0, 100.0, 24.0)));
+    assert_eq!(hit_test(&tree, root, 20.0, 30.0), Some(visible));
+    assert_ne!(hit_test(&tree, root, 20.0, -20.0), Some(hidden));
+}
+
+#[test]
+fn scrolled_select_popup_commits_a_row_outside_its_scroll_viewport() {
+    let mut tree = UiTree::new();
+    let root = leaf(&mut tree, None, 0, stack_ui(), (0.0, 0.0, 200.0, 200.0));
+    let viewport = leaf(&mut tree, Some(root), 1, stack_ui(), (10.0, 20.0, 150.0, 30.0));
+    set_flag(&mut tree, viewport, NodeFlags::SCROLLABLE);
+    set_flag(&mut tree, viewport, NodeFlags::CLIPS_CHILDREN);
+    tree.node_mut(viewport).unwrap().state.scroll_offset = (0.0, 48.0);
+    let select = leaf(&mut tree, Some(viewport), 1, select_ui("sel", "a"), (0.0, 48.0, 100.0, 30.0));
+    let _row = leaf(&mut tree, Some(select), 1, button_ui("b"), (0.0, 32.0, 100.0, 24.0));
+    let mut router = EventRouter::new("main");
+    router.dispatch(&mut tree, root, &UiEvent::PointerDown { x: 20.0, y: 30.0, button: PointerButton::Primary, modifiers: Default::default() });
+    router.dispatch(&mut tree, root, &UiEvent::PointerUp { x: 20.0, y: 30.0, button: PointerButton::Primary, modifiers: Default::default() });
+    assert!(tree.node(select).unwrap().state.open, "the painted scrolled trigger opens");
+    router.dispatch(&mut tree, root, &UiEvent::PointerDown { x: 20.0, y: 60.0, button: PointerButton::Primary, modifiers: Default::default() });
+    let commands = router.dispatch(&mut tree, root, &UiEvent::PointerUp { x: 20.0, y: 60.0, button: PointerButton::Primary, modifiers: Default::default() });
+    assert!(commands.iter().any(|command| matches!(command, UiCommand::App { intent, .. } if intent.descriptor().action == "go")), "the escaped row remains actionable");
+    assert!(!tree.node(select).unwrap().state.open);
 }
 
 #[test]
@@ -417,7 +464,7 @@ fn scroll_routes_to_the_nearest_scrollable_ancestor_and_clamps_at_zero() {
     let mut tree = UiTree::new();
     let root = leaf(&mut tree, None, 0, stack_ui(), (0.0, 0.0, 200.0, 200.0));
     set_flag(&mut tree, root, NodeFlags::SCROLLABLE);
-    leaf(&mut tree, Some(root), 1, text_ui("content"), (10.0, 10.0, 20.0, 20.0));
+    leaf(&mut tree, Some(root), 1, text_ui("content"), (10.0, 10.0, 180.0, 390.0));
     let mut router = EventRouter::new("main");
 
     router.dispatch(&mut tree, root, &UiEvent::Scroll { x: 15.0, y: 15.0, delta_x: 0.0, delta_y: 30.0, modifiers: Default::default() });
@@ -425,6 +472,9 @@ fn scroll_routes_to_the_nearest_scrollable_ancestor_and_clamps_at_zero() {
 
     router.dispatch(&mut tree, root, &UiEvent::Scroll { x: 15.0, y: 15.0, delta_x: 0.0, delta_y: -100.0, modifiers: Default::default() });
     assert_eq!(tree.node(root).unwrap().state.scroll_offset, (0.0, 0.0), "scroll offset must clamp at zero, not go negative");
+
+    router.dispatch(&mut tree, root, &UiEvent::Scroll { x: 15.0, y: 15.0, delta_x: 0.0, delta_y: 1_000.0, modifiers: Default::default() });
+    assert_eq!(tree.node(root).unwrap().state.scroll_offset, (0.0, 200.0), "scroll offset must clamp at the retained content extent");
 }
 
 #[test]
@@ -688,6 +738,7 @@ fn pressing_a_draggable_tree_row_then_moving_past_threshold_promotes_it_to_a_dra
     // — these tests build the retained tree by hand (no `paint_tree` call), so it's set directly.
     tree.node_mut(row_id).unwrap().flags.set(NodeFlags::DRAG_SOURCE, true);
     let mut router = EventRouter::new("main");
+    router.set_tree_drag_policy(&mut tree, UiDriverDrag::Surface, TreeRowMetrics::from_theme(&crate::wgpu::theme::Theme::default()));
 
     router.dispatch(&mut tree, root, &UiEvent::PointerDown { x: 10.0, y: 10.0, button: PointerButton::Primary, modifiers: Default::default() });
     assert_eq!(router.capture(), Some((row_id, CaptureKind::Press)), "the row must be a real hit-test target once DRAG_SOURCE-flagged");
@@ -696,6 +747,59 @@ fn pressing_a_draggable_tree_row_then_moving_past_threshold_promotes_it_to_a_dra
     let drag = router.drag_session().expect("moving past the promote threshold should start a DragSession for a draggable row");
     assert_eq!(drag.source, row_id);
     assert_eq!(drag.payload, payload);
+}
+
+#[test]
+fn handle_driver_arms_only_the_canonical_trailing_tree_handle() {
+    let mut item = UiTreeItemNode::base("row1", Label::data("Row One"));
+    item.draggable = Some(true);
+    item.drag_data = Some(DragPayload::from([("application/x-semio-catalogue-item".to_string(), "{}".to_string())]));
+    let section = UiTreeSectionNode { window: None, id: "s1".into(), label: None, default_open: Some(true), presence: UiPresence::default(), items: vec![item] };
+    let mut tree = UiTree::new();
+    let root = leaf(&mut tree, None, 0, stack_ui(), (0.0, 0.0, 200.0, 200.0));
+    let tree_id = leaf(&mut tree, Some(root), 1, tree_ui(vec![section]), (0.0, 0.0, 200.0, 200.0));
+    let row_id = insert_tree_row(&mut tree, tree_id, "row1", (0.0, 0.0, 200.0, 24.0));
+    tree.node_mut(row_id).unwrap().flags.set(NodeFlags::DRAG_SOURCE, true);
+    let mut router = EventRouter::new("main");
+    let metrics = TreeRowMetrics::from_theme(&crate::wgpu::theme::Theme::default());
+    router.set_tree_drag_policy(&mut tree, UiDriverDrag::Handle, metrics);
+
+    router.dispatch(&mut tree, root, &UiEvent::PointerDown { x: 10.0, y: 10.0, button: PointerButton::Primary, modifiers: Default::default() });
+    router.dispatch(&mut tree, root, &UiEvent::PointerMove { x: 30.0, y: 10.0, modifiers: Default::default() });
+    assert!(router.drag_session().is_none(), "the label band stays selection-only under the handle driver");
+    router.dispatch(&mut tree, root, &UiEvent::PointerUp { x: 30.0, y: 10.0, button: PointerButton::Primary, modifiers: Default::default() });
+
+    let handle = tree_drag_handle_rect(200.0, &metrics);
+    let x = handle.x + handle.w * 0.5;
+    let y = handle.y + handle.h * 0.5;
+    router.dispatch(&mut tree, root, &UiEvent::PointerDown { x, y, button: PointerButton::Primary, modifiers: Default::default() });
+    router.dispatch(&mut tree, root, &UiEvent::PointerMove { x: x - 20.0, y, modifiers: Default::default() });
+    assert_eq!(router.drag_session().map(|drag| drag.source), Some(row_id));
+    let commands = router.dispatch(&mut tree, root, &UiEvent::PointerUp { x: x - 20.0, y, button: PointerButton::Primary, modifiers: Default::default() });
+    assert!(commands.iter().any(|command| matches!(command, UiCommand::DropCancelled { source, .. } if *source == row_id)));
+}
+
+#[test]
+fn changing_tree_drag_driver_cancels_an_in_flight_surface_drag() {
+    let mut item = UiTreeItemNode::base("row1", Label::data("Row One"));
+    item.draggable = Some(true);
+    let section = UiTreeSectionNode { window: None, id: "s1".into(), label: None, default_open: Some(true), presence: UiPresence::default(), items: vec![item] };
+    let mut tree = UiTree::new();
+    let root = leaf(&mut tree, None, 0, stack_ui(), (0.0, 0.0, 200.0, 200.0));
+    let tree_id = leaf(&mut tree, Some(root), 1, tree_ui(vec![section]), (0.0, 0.0, 200.0, 200.0));
+    let row_id = insert_tree_row(&mut tree, tree_id, "row1", (0.0, 0.0, 200.0, 24.0));
+    tree.node_mut(row_id).unwrap().flags.set(NodeFlags::DRAG_SOURCE, true);
+    let mut router = EventRouter::new("main");
+    let metrics = TreeRowMetrics::from_theme(&crate::wgpu::theme::Theme::default());
+    router.set_tree_drag_policy(&mut tree, UiDriverDrag::Surface, metrics);
+    router.dispatch(&mut tree, root, &UiEvent::PointerDown { x: 10.0, y: 10.0, button: PointerButton::Primary, modifiers: Default::default() });
+    router.dispatch(&mut tree, root, &UiEvent::PointerMove { x: 30.0, y: 10.0, modifiers: Default::default() });
+    assert!(router.drag_session().is_some());
+
+    let commands = router.set_tree_drag_policy(&mut tree, UiDriverDrag::Handle, metrics);
+    assert!(router.drag_session().is_none());
+    assert_eq!(router.capture(), None);
+    assert!(commands.iter().any(|command| matches!(command, UiCommand::DropCancelled { source, .. } if *source == row_id)));
 }
 //#endregion 🔖️W2InteractivityTests
 
@@ -1153,6 +1257,21 @@ async fn a_routers_flow_defaults_to_ltr_down_and_only_changes_once() {
     assert_eq!(router.flow_inline(), FlowInline::Rtl);
 }
 
+#[test]
+fn an_up_flow_tree_section_routes_its_bottom_header_through_the_event_router() {
+    let section = UiTreeSectionNode { window: None, id: "drivers".into(), label: Some(Label::data("Drivers")), default_open: Some(true), presence: UiPresence::default(), items: Vec::new() };
+    let mut tree = UiTree::new();
+    let root = leaf(&mut tree, None, 0, tree_ui(vec![section]), (0.0, 0.0, 200.0, 100.0));
+    let disclosure = insert_tree_row(&mut tree, root, "drivers", (0.0, 0.0, 200.0, 100.0));
+    let mut router = EventRouter::new("w");
+    router.set_flow(UiFlow { inline: FlowInline::Ltr, block: ui_contract::FlowBlock::Up });
+
+    router.dispatch(&mut tree, root, &UiEvent::PointerDown { x: 100.0, y: 88.0, button: PointerButton::Primary, modifiers: EventModifiers::default() });
+    assert_eq!(router.capture.target.map(|(id, _)| id), Some(disclosure), "the painted bottom header owns the press");
+    router.dispatch(&mut tree, root, &UiEvent::PointerUp { x: 100.0, y: 88.0, button: PointerButton::Primary, modifiers: EventModifiers::default() });
+    assert_eq!(tree.disclosure_open(disclosure), Some(false), "release over the same bottom band closes the disclosure");
+}
+
 #[semio_framework_async_macros::async_test]
 async fn an_rtl_window_swaps_the_horizontal_arrow_pair_and_leaves_every_other_key_alone() {
     let mut router = EventRouter::new("w");
@@ -1257,10 +1376,7 @@ fn a_search_line_fires_change_while_typing_and_submit_on_enter() {
 
     let entered = router.dispatch(&mut tree, root, &UiEvent::KeyDown { key: "Enter".into(), modifiers: EventModifiers::default() });
     assert_eq!(fired_verbs(&entered), vec![("Submit".to_string(), "engagementSubmit".to_string())], "⏎️ Enter confirms through `onSubmit`, and never re-fires the change");
-    let submitted = entered
-        .iter()
-        .find_map(|cmd| if let UiCommand::App { intent, .. } = cmd { intent.payload() } else { None })
-        .expect("⏎️ the submit carries the line");
+    let submitted = entered.iter().find_map(|cmd| if let UiCommand::App { intent, .. } = cmd { intent.payload() } else { None }).expect("⏎️ the submit carries the line");
     assert_eq!(submitted, DslValue::Object(vec![("value".into(), DslValue::String("box".into()))]), "⏎️ React submits `draft.trim()`");
 }
 

@@ -14,17 +14,19 @@
 // #region 🔌️Adapters
 import { useCallback, useEffect, useRef, useState } from "react";
 import { registerUiTranslationBundles } from "@semio-tech/ui-react";
-import { reduce, type ReduceResult, type ShellCommand, type ShellState } from "../../../../🖥️shell/🟦️.ts";
+import { defaultShellState, reduce, type ReduceResult, type ShellCommand, type ShellState } from "../../../../🖥️shell/🟦️.ts";
 import {
   NO_BRIDGE_FLAGS,
   decodeGatewayToShell,
   encodeShellToGateway,
   type ApprovalDecision,
   type BridgeFlags,
+  type BridgeInstanceRef,
   type GatewayToShell,
   type ShellKind,
   type ShellToGateway,
 } from "../../../../🌉️mcp/🧵️bridge/🟦️.ts";
+import { decodeShellAppCommand, encodeShellAppFrame, shellAppFault, type ShellAppCommandV1, type ShellAppFrameV1 } from "../../../../🌉️mcp/🐚️channel/🟦️.ts";
 // #endregion 🔌️Adapters
 
 //#region 🌐️Labels
@@ -55,6 +57,10 @@ export const agentUiLabel = registerUiTranslationBundles({
             succeeded: { label: { normal: "Done", beginner: "Done" } },
             approvalPending: { label: { normal: "Waiting for your decision", beginner: "Waiting for your decision" } },
             approvalActionsLabel: { label: { normal: "Decide this approval", beginner: "Decide this approval" } },
+            approvalCountdown: { label: { normal: "{{seconds}}s left to decide", beginner: "{{seconds}}s left to decide" } },
+            approvalExpired: { label: { normal: "Out of time — the agent was refused", beginner: "Out of time — the agent was refused" } },
+            approvalVerb: { label: { normal: "Action", beginner: "Action" } },
+            approvalTarget: { label: { normal: "Applies to", beginner: "Applies to" } },
             draftLabel: { label: { normal: "Message to the agent", beginner: "Message to the agent" } },
             placeholder: { label: { normal: "Tell the agent what to do…", beginner: "Tell the agent what to do…" } },
             send: { label: { normal: "Send", beginner: "Send" } },
@@ -110,6 +116,10 @@ export const agentUiLabel = registerUiTranslationBundles({
             succeeded: { label: { normal: "Fertig", beginner: "Fertig" } },
             approvalPending: { label: { normal: "Wartet auf deine Entscheidung", beginner: "Wartet auf deine Entscheidung" } },
             approvalActionsLabel: { label: { normal: "Diese Freigabe entscheiden", beginner: "Diese Freigabe entscheiden" } },
+            approvalCountdown: { label: { normal: "Noch {{seconds}} s für die Entscheidung", beginner: "Noch {{seconds}} s für die Entscheidung" } },
+            approvalExpired: { label: { normal: "Zeit abgelaufen — der Agent wurde abgelehnt", beginner: "Zeit abgelaufen — der Agent wurde abgelehnt" } },
+            approvalVerb: { label: { normal: "Aktion", beginner: "Aktion" } },
+            approvalTarget: { label: { normal: "Betrifft", beginner: "Betrifft" } },
             draftLabel: { label: { normal: "Nachricht an den Agent", beginner: "Nachricht an den Agent" } },
             placeholder: { label: { normal: "Sag dem Agent, was zu tun ist…", beginner: "Sag dem Agent, was zu tun ist…" } },
             send: { label: { normal: "Senden", beginner: "Senden" } },
@@ -260,73 +270,13 @@ export function bridgeProtocols(config: AgentBridgeConfig): readonly ["semio.mcp
 //#endregion 🔖️DiscoverConfig
 
 //#region 🔖️DefaultState
-/** 🌱️ A fresh, empty `ShellState` — the mirror `AgentBridge` reduces `ShellCommand`s against
- * before a real `ShellHost`-derived snapshot is ever supplied via `initialState`. Field-for-field
- * identical to `🖥️shell/🟦️.ts`'s own in-source `defaultState()` test fixture (that
- * function is not exported — it lives inside an `import.meta.vitest`-gated block — so this is a
- * deliberate, checked-against-the-fixtures duplicate, not drift). */
-export function createDefaultShellState(): ShellState {
-  return {
-    revision: 0,
-    loadedPlugins: [],
-    pluginStatusById: {},
-    pluginSupervisorById: {},
-    activeSession: null,
-    sessionError: null,
-    appLabelsOverlay: {},
-    actionPaneFoldedByWindow: {},
-    actionPaneExpandedByWindow: {},
-    stagedActionArgs: {},
-    activeUtilityByWindow: {},
-    activeToolId: null,
-    commandPanelExpanded: null,
-    stagedCommandArgs: {},
-    panelsVisible: { left: false, right: false, top: false, bottom: false },
-    panelsSize: { left: 280, right: 280, top: 280, bottom: 280 },
-    panelsPath: { left: [], right: [], top: [], bottom: [] },
-    dockOverride: null,
-    panelPathMemory: {},
-    treeOpenStates: {},
-    activeWindowId: null,
-    shellLayout: null,
-    activeExampleId: "",
-    mobilePanelPath: [],
-    mobilePanelVisible: false,
-    extraWindows: [],
-    windowTitlesById: {},
-    windowIconsById: {},
-    searchOpen: false,
-    findOpen: false,
-    introductionStepIndex: null,
-    introductionAutoStartedKeys: [],
-    introductionCompletedInteractions: [],
-    dialogStack: [],
-    transientNotice: null,
-    openWithFocusRole: null,
-    activeTutorialId: null,
-    uiAppearance: "system",
-    uiLayout: "desktop",
-    uiDriverId: "",
-    uiCustomDrivers: {},
-    uiDriverDraft: null,
-    uiLocale: "en",
-    uiTerminology: "",
-    uiThemeId: "",
-    uiCustomThemes: {},
-    uiThemeDraft: null,
-    uiKeybindingOverrides: {},
-    syncBackboneUri: null,
-    syncCardKind: null,
-    syncDraftPath: "",
-    syncStatusByDocument: {},
-    inferencePortByDocument: {},
-    mergePolicy: "manual",
-    conflicts: [],
-    selectedConflictId: null,
-    storageScope: "memory",
-    openingPreferences: {},
-  };
-}
+/** 🌱️ A fresh, empty `ShellState` — the mirror `AgentBridge` reduces `ShellCommand`s against before
+ * a real `ShellHost`-derived snapshot is ever supplied via `initialState`. It is the SSOT twin's own
+ * {@link defaultShellState}, re-exported under the name this module's callers already use: the
+ * hand-written copy that used to live here drifted nine `ui*` rows wide (they belong to `🐚️Shell`'s
+ * renderer preference state, not to the shell SSOT), which is exactly the failure a second spelling
+ * of a default always produces. */
+export { defaultShellState as createDefaultShellState };
 //#endregion 🔖️DefaultState
 
 //#region 🔖️FramePayloads
@@ -380,6 +330,50 @@ export function applyInboundShellCommand(state: ShellState, seq: bigint, command
   return { command, result, resultFrame };
 }
 //#endregion 🔖️FramePayloads
+
+//#region 🔖️ArtifactRoute
+/** 🗿️ One inbound `appCommand` frame, decoded, with the correlation id its answer must carry.
+ * `instanceId` is the shell's OWN plugin-instance id (the one this shell published in its
+ * `instances` frame) — the gateway resolved it from the shell's census, never invented it. */
+export type AgentAppCommandRequest = {
+  readonly seq: bigint;
+  readonly instanceId: string;
+  readonly command: ShellAppCommandV1;
+};
+
+/** 🧑‍🔧️ What a host (`🏛️ShellHost`) supplies to make this shell the agent's document owner: it
+ * executes `request` against the LIVE plugin instance — through the same action-dispatch lane the
+ * UI uses, so the human sees the edit and can undo it — and answers the frames. Returning an
+ * `error` frame is a first-class outcome; throwing is turned into one, never into silence. */
+export type AgentAppCommandHandler = (request: AgentAppCommandRequest) => Promise<readonly ShellAppFrameV1[]> | readonly ShellAppFrameV1[];
+
+/** 🚫️ The answer a shell with no artifact route mounted gives. It is a REFUSAL, not a timeout: the
+ * agent learns immediately that this shell renders the agent chrome but does not own documents for
+ * it, and its session can be re-resolved onto the headless channel instead of burning a wall
+ * budget. */
+/** 📇️ The stable empty census — a fresh `[]` per render would re-publish an `instances` frame on
+ * every render, which is exactly the redial-storm class of defect one level down. */
+const EMPTY_INSTANCES: readonly BridgeInstanceRef[] = [];
+
+export const NO_ARTIFACT_ROUTE_MESSAGE = "this shell has no live artifact route mounted — it renders the agent surface but does not execute artifact commands; resolve a headless context (`--folder`/`--hub`) for mutations";
+
+/** 📦️ Builds the `appFrames` answer for one request, never throwing: a handler that rejects or
+ * throws becomes a single `channel.not-wired` error frame naming the failure. The correlation id
+ * and the instance id are echoed verbatim — the gateway refuses a reply addressed elsewhere. */
+export async function answerAgentAppCommand(request: AgentAppCommandRequest, handler: AgentAppCommandHandler | undefined): Promise<ShellToGateway> {
+  let frames: readonly ShellAppFrameV1[];
+  if (handler === undefined) {
+    frames = [shellAppFault("plugin.unavailable", NO_ARTIFACT_ROUTE_MESSAGE)];
+  } else {
+    try {
+      frames = await handler(request);
+    } catch (error) {
+      frames = [shellAppFault("channel.not-wired", error instanceof Error ? error.message : "the shell's artifact route failed without a message")];
+    }
+  }
+  return { variant: "appFrames", inReplyTo: request.seq, instanceId: request.instanceId, frames: frames.map((frame) => encodeShellAppFrame(frame)) };
+}
+//#endregion 🔖️ArtifactRoute
 
 //#region 🔖️Hook
 export type AgentBridgeStatus = "disabled" | "connecting" | "open" | "reconnecting" | "closed";
@@ -439,6 +433,14 @@ export type UseAgentBridgeOptions = {
   readonly flags?: BridgeFlags;
   readonly initialState?: ShellState;
   readonly onCommandApplied?: (command: ShellCommand | null, result: ReduceResult | null) => void;
+  /** 🗿️ Makes this shell the agent's document owner. Omit it and every inbound `appCommand` is
+   * answered with {@link NO_ARTIFACT_ROUTE_MESSAGE} — the shell still renders the agent surface,
+   * it just does not claim to execute mutations. */
+  readonly onAppCommand?: AgentAppCommandHandler;
+  /** 📇️ The live plugin instances this shell owns, published as `instances` frames whenever the
+   * array's identity changes. The gateway resolves an `AppCommand`'s target from this census, so a
+   * shell that publishes nothing is a shell no artifact verb can address. */
+  readonly instances?: readonly BridgeInstanceRef[];
 };
 
 export type UseAgentBridgeResult = {
@@ -485,10 +487,21 @@ export function useAgentBridge(options: UseAgentBridgeOptions = {}): UseAgentBri
   const generatedShellSessionIdRef = useRef(`shell-${Math.random().toString(36).slice(2)}`);
   const shellSessionId = options.shellSessionId ?? generatedShellSessionIdRef.current;
   const principalActor = options.principalActor ?? "agent:unknown";
-  const flags = options.flags ?? NO_BRIDGE_FLAGS;
+  // 🚩️ `relayAppCommands` is a CLAIM, and the claim is what the gateway routes on: a shell that
+  // declared it and then answers `plugin.unavailable` to every command is worse than one that never
+  // claimed it (the gateway would have picked its own headless workspace instead). So the flag is
+  // derived from the handler actually being mounted, not from a hand-set option — an explicit
+  // `flags` option still wins for the tests and embedders that pin the whole mask.
+  const declaredFlags = options.flags ?? NO_BRIDGE_FLAGS;
+  const relayAppCommands = options.flags ? declaredFlags.relayAppCommands : options.onAppCommand !== undefined;
+  const flagsIdentityRef = useRef<BridgeFlags>({ ...declaredFlags, relayAppCommands });
+  if (flagsIdentityRef.current.relayAppCommands !== relayAppCommands || flagsIdentityRef.current.sharedBackbone !== declaredFlags.sharedBackbone || flagsIdentityRef.current.elicit !== declaredFlags.elicit) {
+    flagsIdentityRef.current = { ...declaredFlags, relayAppCommands };
+  }
+  const flags = flagsIdentityRef.current;
 
   const [status, setStatus] = useState<AgentBridgeStatus>(config ? "connecting" : "disabled");
-  const [shellState, setShellState] = useState<ShellState>(() => options.initialState ?? createDefaultShellState());
+  const [shellState, setShellState] = useState<ShellState>(() => options.initialState ?? defaultShellState());
   const [presence, setPresence] = useState<AgentBridgePresence>(IDLE_PRESENCE);
   const [pendingApprovals, setPendingApprovals] = useState<readonly PendingAgentApproval[]>([]);
   const [conversation, setConversation] = useState<readonly AgentConversationEntry[]>([]);
@@ -503,6 +516,13 @@ export function useAgentBridge(options: UseAgentBridgeOptions = {}): UseAgentBri
   const pingTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const onCommandAppliedRef = useRef(options.onCommandApplied);
   onCommandAppliedRef.current = options.onCommandApplied;
+  // 🗿️ A ref, for the same reason `onCommandApplied` is one: the socket effect must not re-dial
+  // because a host re-created its handler closure on a render (`📓️m7` §2's no-redial-storm law).
+  const onAppCommandRef = useRef(options.onAppCommand);
+  onAppCommandRef.current = options.onAppCommand;
+  const instances = options.instances ?? EMPTY_INSTANCES;
+  const instancesRef = useRef(instances);
+  instancesRef.current = instances;
 
   const send = useCallback((frame: ShellToGateway) => {
     const socket = socketRef.current;
@@ -600,6 +620,9 @@ export function useAgentBridge(options: UseAgentBridgeOptions = {}): UseAgentBri
           setStatus("open");
           setLastError(null);
           send(buildShellStateFrame(shellStateRef.current));
+          // 📇️ The instance census travels with the first snapshot: an `appCommand` that arrives
+          // before the gateway knows what this shell has open cannot be addressed at all.
+          send({ variant: "instances", entries: [...instancesRef.current] });
           break;
         }
         case "shellCommand": {
@@ -640,8 +663,20 @@ export function useAgentBridge(options: UseAgentBridgeOptions = {}): UseAgentBri
           setLastError(frame.reason || null);
           break;
         }
-        case "appCommand":
+        case "appCommand": {
+          // 🗿️ The live artifact route. Decoding happens here so a malformed payload answers a
+          // named `channel.not-wired` error on the SAME correlation id instead of being dropped —
+          // a dropped `appCommand` costs the agent its whole wall budget and tells it nothing.
+          let request: AgentAppCommandRequest;
+          try {
+            request = { seq: frame.seq, instanceId: frame.instanceId, command: decodeShellAppCommand(frame.command) };
+          } catch (error) {
+            send({ variant: "appFrames", inReplyTo: frame.seq, instanceId: frame.instanceId, frames: [encodeShellAppFrame(shellAppFault("channel.not-wired", error instanceof Error ? error.message : "malformed AppCommand payload"))] });
+            break;
+          }
+          void answerAgentAppCommand(request, onAppCommandRef.current).then(send);
           break;
+        }
       }
     };
 
@@ -708,6 +743,13 @@ export function useAgentBridge(options: UseAgentBridgeOptions = {}): UseAgentBri
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [config?.url, config?.admissionProof, shellKind, shellSessionId, principalActor, send]);
+
+  // 📇️ Re-publishes the census whenever the host's array identity changes — opening or closing an
+  // artifact in the shell must change what an agent can address, without a reconnect.
+  useEffect(() => {
+    if (status !== "open") return;
+    send({ variant: "instances", entries: [...instances] });
+  }, [instances, status, send]);
 
   return { status, shellState, presence, pendingApprovals, conversation, lastError, dispatch, resolveApproval, sendAgentMessage, cancelToolCall };
 }

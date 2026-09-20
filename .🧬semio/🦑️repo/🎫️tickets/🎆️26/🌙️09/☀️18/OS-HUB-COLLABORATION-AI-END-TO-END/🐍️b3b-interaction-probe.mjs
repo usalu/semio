@@ -12,7 +12,8 @@
  *   1. the default example renders (a document witness is non-empty at boot),
  *   2. one Actions-panel row dispatches and appends an APPLIED mutation entry to the ledger,
  *   3. `framework.history.undo` retires that entry,
- *   4. no console error or refusal line in the whole run.
+ *   4. `framework.history.redo` brings it back,
+ *   5. no console error or refusal line in the whole run.
  */
 import { chromium } from "/Users/ueli/Documents/semio/node_modules/playwright/index.mjs";
 import { mkdirSync, writeFileSync } from "node:fs";
@@ -197,6 +198,23 @@ export async function runInteractionProbe(config) {
     for (const [key, value] of Object.entries(config.args ?? {})) {
       const scopes = [`[id="action.${config.action}.arg.${key}"]`, `[id$=".arg.${key}"]`, `[id$="${key}"]`];
       let done = `${key}:absent`;
+      // 🗨️ A verb reached through a DIALOG (`openAddObjectDialog` → `addObjectKind`, puzzle3d
+      // `✏️editor/🦀️.rs:8619`) mounts its argument control as the dialog's own trigger button whose id
+      // IS the arg key (`button#objectKind`), not a control nested in an Actions-pane row. Value
+      // `"*"` takes whatever the first option is, which is what an agent with no catalogue knows.
+      const trigger = page.locator(`button[id="${key}"], [id="${key}"][role="combobox"]`).first();
+      if (await trigger.count()) {
+        const option = value === "*"
+          ? page.locator('[role="option"]').first()
+          : page.locator('[role="option"]').filter({ hasText: new RegExp(`^\\s*${String(value).replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\s*$`, "i") }).first();
+        done = await trigger.click({ force: true })
+          .then(() => page.waitForTimeout(500))
+          .then(() => option.click({ timeout: 5000, force: true }))
+          .then(() => `${key}=${value}`)
+          .catch((e) => `${key}:${String(e).split("\n")[0].slice(0, 80)}`);
+        filled.push(done);
+        continue;
+      }
       for (const scope of scopes) {
         const select = page.locator(`${scope} select, select${scope}`).first();
         if (await select.count()) { done = await select.selectOption(String(value)).then(() => `${key}=${value}`).catch((e) => `${key}:${String(e).split("\n")[0].slice(0, 80)}`); break; }
@@ -223,7 +241,9 @@ export async function runInteractionProbe(config) {
     // it (`🆔️ElementId/🟦️.tsx:27`). The ROW keeps the raw id (`action.change-seed`) while its execute
     // control becomes `…​.action.changeSeed.execute`, so a dash-spelled verb needs both spellings —
     // b2b's single raw selector scored wfc's `change-seed` as having no trigger at all.
-    let submitted = await click(`[id$=".action.${config.action}.execute"], [id$=".action.${segment(config.action)}.execute"]`);
+    // 🗨️ `#ui.dialog.submit` is the dialog's own trigger (`DialogDefinition::submit_label`); a pane row
+    // with a staged form keeps the `…​.execute` control. Both are tried, dialog first when one is open.
+    let submitted = await click(`[id="ui.dialog.submit"], [id$=".action.${config.action}.execute"], [id$=".action.${segment(config.action)}.execute"]`);
     const stagedIds = submitted === "ok" ? [] : await page.evaluate((ids) => [...document.querySelectorAll(ids.map((id) => `[id*="${id}"]`).join(", "))].map((el) => `${el.tagName.toLowerCase()}#${el.id}`).slice(0, 24), [config.action, segment(config.action)]);
     // 🩸️ Waiting for ANY witness change ended the settle on the shell's own chrome: clicking an Actions
     // row focuses its window, the host journals `shell.windowActivate` as an "Activate Window" ledger
@@ -259,6 +279,29 @@ export async function runInteractionProbe(config) {
     note("undo", { clicked, undone, before, afterInvoke, after }, from);
   }
 
+  // ↷️ Redo is the bar's fourth clause: the retired edit must come back, and the chrome rows the
+  // shell noted on the way must still not be undo targets (ticket 26/09/18 §3.2 laws A+B — a note
+  // the shell declared no inverse for is logged with no `↶` and is never what undo/redo moves).
+  let redone = false;
+  if (config.action && undone) {
+    const from = lines.length;
+    const afterUndo = witness(shell);
+    let clicked = await click('[id="action.redo"]');
+    if (clicked !== "ok") clicked = await click('[id="framework.history.redo"] button, [id="framework.history.redo"]');
+    const settled = await until((next) => witness(next).edits > afterUndo.edits, SETTLE_MS);
+    shell = settled.shell;
+    const after = witness(shell);
+    redone = after.edits > afterUndo.edits;
+    note("redo", { clicked, redone, afterUndo, after }, from);
+  }
+
+  // 🪞️ Law A's runtime witness: every ledger row the SHELL noted for its own chrome must be logged
+  // without the revert affordance (`↶`), because no React call site declares an inverse for one.
+  const CHROME = /^(Activate Window|Resize Window|Move Window|Toggle Panel|Switch Panel Tab|Set Theme|Reset Dock|Dock )/;
+  const chromeRows = witness(shell).ledger.map((entry) => entry.slice(entry.indexOf(":") + 1)).filter((label) => CHROME.test(label));
+  const chromeRevertible = chromeRows.filter((label) => label.includes("↶")).length;
+  note("chrome-rows", { chromeRows: chromeRows.length, chromeRevertible, sample: chromeRows.slice(0, 8) }, lines.length);
+
   await page.screenshot({ path: join(OUT, `b3b-${config.plugin}.png`) });
   const faults = faultsSince(0);
   report.summary = {
@@ -268,8 +311,11 @@ export async function runInteractionProbe(config) {
     actionCount: shell.actions.length,
     mutated,
     undone,
+    redone,
+    chromeRows: chromeRows.length,
+    chromeRevertible,
     faultLines: faults.length,
-    interactionBar: (report.steps.find((s) => s.step === "example-rendered")?.detail.rendered ?? false) && mutated && undone && faults.length === 0 && !shell.error,
+    interactionBar: (report.steps.find((s) => s.step === "example-rendered")?.detail.rendered ?? false) && mutated && undone && redone && faults.length === 0 && !shell.error,
   };
   writeFileSync(join(outDir, "report.json"), JSON.stringify(report, null, 2));
   writeFileSync(join(OUT, `b3b-${config.plugin}-console.txt`), [

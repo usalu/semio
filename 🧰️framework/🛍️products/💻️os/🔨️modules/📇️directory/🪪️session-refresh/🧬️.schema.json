@@ -6,8 +6,10 @@
     "schema",
     "intervalMs",
     "proofTtlMs",
+    "retryDelaysMs",
     "success",
     "refusals",
+    "transientFailures",
     "cancellation",
     "maximumConcurrentRequests",
     "actionAdmission",
@@ -24,6 +26,16 @@
     "proofTtlMs": {
       "const": 15000
     },
+    "retryDelaysMs": {
+      "const": [
+        500,
+        1000,
+        2000,
+        4000,
+        5000,
+        5000
+      ]
+    },
     "success": {
       "const": [
         "initial",
@@ -34,10 +46,16 @@
     "refusals": {
       "const": [
         "http-401",
+        "http-403",
+        "expired"
+      ]
+    },
+    "transientFailures": {
+      "const": [
         "http-428",
+        "http-503",
         "non-200",
         "invalid-body",
-        "expired",
         "transport"
       ]
     },
@@ -53,11 +71,26 @@
     },
     "actionAdmission": {
       "const": [
-        { "id": "missing", "accepted": false },
-        { "id": "same", "accepted": true },
-        { "id": "different-binding", "accepted": false },
-        { "id": "different-generation", "accepted": false },
-        { "id": "expired", "accepted": false }
+        {
+          "id": "missing",
+          "accepted": false
+        },
+        {
+          "id": "same",
+          "accepted": true
+        },
+        {
+          "id": "different-binding",
+          "accepted": false
+        },
+        {
+          "id": "different-generation",
+          "accepted": false
+        },
+        {
+          "id": "expired",
+          "accepted": false
+        }
       ]
     },
     "unavailableRetries": {
@@ -65,10 +98,23 @@
     },
     "presentation": {
       "const": {
-        "locales": ["en", "de"],
+        "locales": [
+          "en",
+          "de"
+        ],
         "states": [
-          { "kind": "pending", "role": "status", "live": "polite", "cancellable": true },
-          { "kind": "unavailable", "role": "alert", "live": "assertive", "cancellable": false }
+          {
+            "kind": "pending",
+            "role": "status",
+            "live": "polite",
+            "cancellable": true
+          },
+          {
+            "kind": "unavailable",
+            "role": "alert",
+            "live": "assertive",
+            "cancellable": false
+          }
         ],
         "text": {
           "en": {

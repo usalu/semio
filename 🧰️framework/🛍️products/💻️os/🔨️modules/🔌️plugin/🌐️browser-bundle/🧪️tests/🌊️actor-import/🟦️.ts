@@ -106,7 +106,9 @@ export async function testCanonicalActorAsyncImport(repoRoot: string, evidenceRo
     await assert.rejects(closeActorBundle(source, cores, { importInterfaces: [...importInterfaces, fixture.identity.unsupportedImport] }), /unsupported import interface/);
     actorModulePath = join(evidence, "actor-import.closed.js");
     const { bytes, ...receipt } = await buildClosedBrowserActorArtifactV1(component, {});
-    const digest = async (value: Uint8Array) => Buffer.from(await crypto.subtle.digest("SHA-256", value)).toString("hex");
+    // 🧭️ `slice()` answers a `Uint8Array<ArrayBuffer>`: a view over a `SharedArrayBuffer` is not a
+    // `BufferSource`, and `Uint8Array` alone no longer says which of the two backs it.
+    const digest = async (value: Uint8Array) => Buffer.from(await crypto.subtle.digest("SHA-256", value.slice())).toString("hex");
     assert.equal(receipt.codegenPolicy, fixture.identity.artifactPolicy);
     assert.equal(receipt.componentSha256, await digest(component));
     assert.equal(receipt.sha256, await digest(bytes));
@@ -261,7 +263,7 @@ export async function testCanonicalActorAsyncImport(repoRoot: string, evidenceRo
           },
           cancelEffect(requestId) { cancellations.push(requestId); return cancellation; },
           log() {}, traceSpan() {}, nowMs: () => 1n,
-          wasi: { nowNs: () => process.hrtime.bigint(), write(channel, bytes) { writes.push({ channel, bytes: [...bytes] }); } },
+          wasi: { nowNs: () => process.hrtime.bigint(), wallNs: () => BigInt(Date.now()) * 1000000n, write(channel, bytes) { writes.push({ channel, bytes: [...bytes] }); } },
         };
         return { port, frames, writes, cancellations, bind(value) { runtime = value; } };
       };

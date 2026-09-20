@@ -1,0 +1,87 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "productionCapacity", "oracleCapacity", "requiredStages", "observations", "expected"],
+  "properties": {
+    "schemaVersion": { "const": 2 },
+    "productionCapacity": { "const": 256 },
+    "oracleCapacity": { "type": "integer", "minimum": 1 },
+    "requiredStages": { "type": "array", "minItems": 27, "uniqueItems": true, "items": { "$ref": "#/definitions/stage" } },
+    "observations": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["authority", "stage", "startedUs", "durationUs", "workItems", "repeat", "spacingUs"],
+        "properties": {
+          "authority": { "$ref": "#/definitions/authority" },
+          "stage": { "$ref": "#/definitions/stage" },
+          "startedUs": { "type": "integer", "minimum": 0 },
+          "durationUs": { "type": "integer", "minimum": 0 },
+          "workItems": { "type": "integer", "minimum": 1 },
+          "repeat": { "type": "integer", "minimum": 1 },
+          "spacingUs": { "type": "integer", "minimum": 0 }
+        }
+      }
+    },
+    "expected": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["totalObservations", "summaryEvictions", "recentPhases", "stageTotals"],
+      "properties": {
+        "totalObservations": { "type": "integer", "minimum": 0 },
+        "summaryEvictions": { "type": "integer", "minimum": 0 },
+        "recentPhases": { "type": "array", "items": { "$ref": "#/definitions/phaseSummary" } },
+        "stageTotals": { "type": "array", "items": { "$ref": "#/definitions/stageTotal" } }
+      }
+    }
+  },
+  "definitions": {
+    "authority": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["domain", "generation"],
+      "properties": {
+        "domain": { "enum": ["rendererFrame", "browserInputBatch"] },
+        "generation": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "phaseSummary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["authority", "stage", "firstSequence", "lastSequence", "observationCount", "firstStartedUs", "lastFinishedUs", "totalDurationUs", "maxDurationUs", "totalWorkItems"],
+      "properties": {
+        "authority": { "$ref": "#/definitions/authority" },
+        "stage": { "$ref": "#/definitions/stage" },
+        "firstSequence": { "type": "integer", "minimum": 1 },
+        "lastSequence": { "type": "integer", "minimum": 1 },
+        "observationCount": { "type": "integer", "minimum": 1 },
+        "firstStartedUs": { "type": "integer", "minimum": 0 },
+        "lastFinishedUs": { "type": "integer", "minimum": 0 },
+        "totalDurationUs": { "type": "integer", "minimum": 0 },
+        "maxDurationUs": { "type": "integer", "minimum": 0 },
+        "totalWorkItems": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "stageTotal": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["authorityDomain", "stage", "observationCount", "totalDurationUs", "maxDurationUs", "totalWorkItems"],
+      "properties": {
+        "authorityDomain": { "enum": ["rendererFrame", "browserInputBatch"] },
+        "stage": { "$ref": "#/definitions/stage" },
+        "observationCount": { "type": "integer", "minimum": 1 },
+        "totalDurationUs": { "type": "integer", "minimum": 0 },
+        "maxDurationUs": { "type": "integer", "minimum": 0 },
+        "totalWorkItems": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "stage": {
+      "enum": [
+        "wireApply", "dispatchApply", "transactionDrainProjectionDeltas", "transactionRouteIntents", "transactionFlushEffects", "transactionPresentSurface", "shellRefresh", "retainedExchange", "transactionReconcileTree", "transactionBuildRenderPackets", "transactionPublishSnapshot", "presenterBeginGpu", "presenterOwnership", "presenterEngine", "presenterUploads", "presenterStage", "queueSubmit", "presenterCloseGpu", "presenterAcknowledge", "presenterProgressAcknowledge", "presenterFullscreen", "presenterDirectives", "presenterAborted", "presenterRetirement", "snapshotPublish", "workerTick", "workerReplyEncode"
+      ]
+    }
+  }
+}

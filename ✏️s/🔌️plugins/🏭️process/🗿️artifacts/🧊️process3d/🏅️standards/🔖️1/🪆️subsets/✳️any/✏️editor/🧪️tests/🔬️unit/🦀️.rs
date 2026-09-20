@@ -443,7 +443,7 @@ async fn every_declared_command_is_ui_reachable_on_a_real_lane() {
     let declared = definition
         .window_kinds
         .iter()
-        .flat_map(|window| window.actions.iter().map(|action| (action.id.as_str(), action.semantics.execution.interactive_job)))
+        .flat_map(|window| semio_framework::window_kind_actions(&definition, window).into_iter().map(|action| (action.id.as_str(), action.semantics.execution.interactive_job)))
         .chain(definition.commands.iter().map(|command| (command.id.as_str(), command.semantics.execution.interactive_job)))
         .collect::<HashMap<_, _>>();
     let lanes = <Process3dBoundedCommandJobFactory as ArtifactOwnedToolJobFactory>::PUBLICATION_CONTRACTS

@@ -125,6 +125,447 @@
       },
       "additionalProperties": false
     },
+    "SceneListTransferFixture": {
+      "title": "Driver-Aware Scene List Transfer Fixture",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["$schema", "schemaVersion", "contract", "rules", "drivers", "table", "blockList", "journeys"],
+      "properties": {
+        "$schema": {
+          "const": "https://json.schemas.assets.semio-tech.com/framework/ui/render/schema.json#/$defs/SceneListTransferFixture"
+        },
+        "schemaVersion": { "const": 1 },
+        "contract": { "const": "driver-aware-scene-list-transfer" },
+        "rules": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "drivers": {
+          "type": "array",
+          "minItems": 2,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "drag", "sourceGeometry", "visibleHandles"],
+            "properties": {
+              "id": { "type": "string", "minLength": 1 },
+              "drag": { "enum": ["handle", "surface"] },
+              "sourceGeometry": { "enum": ["handle", "row"] },
+              "visibleHandles": {
+                "type": "array",
+                "uniqueItems": true,
+                "items": { "enum": ["step-sort", "block-sort", "palette-transfer", "table-transfer"] }
+              }
+            }
+          }
+        },
+        "table": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["source", "destination", "expectedAction"],
+          "properties": {
+            "source": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["windowId", "surfaceId", "rowId", "mime", "payload"],
+              "properties": {
+                "windowId": { "type": "string", "minLength": 1 },
+                "surfaceId": { "type": "string", "minLength": 1 },
+                "rowId": { "type": "string", "minLength": 1 },
+                "mime": { "type": "string", "pattern": "^application/x-semio-" },
+                "payload": { "type": "object" }
+              }
+            },
+            "destination": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["windowId", "surfaceId", "dropAction"],
+              "properties": {
+                "windowId": { "type": "string", "minLength": 1 },
+                "surfaceId": { "type": "string", "minLength": 1 },
+                "dropAction": { "$ref": "#/$defs/SceneListTransferAction" }
+              }
+            },
+            "expectedAction": { "$ref": "#/$defs/SceneListTransferAction" }
+          }
+        },
+        "blockList": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["surfaceId", "steps", "palette"],
+          "properties": {
+            "surfaceId": { "type": "string", "minLength": 1 },
+            "steps": {
+              "type": "array",
+              "minItems": 2,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["id", "title", "blocks"],
+                "properties": {
+                  "id": { "type": "string", "minLength": 1 },
+                  "title": { "type": "string", "minLength": 1 },
+                  "blocks": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": ["id", "label", "kind"],
+                      "properties": {
+                        "id": { "type": "string", "minLength": 1 },
+                        "label": { "type": "string", "minLength": 1 },
+                        "kind": { "type": "string", "minLength": 1 }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "palette": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["blockKind", "label", "iconId"],
+                "properties": {
+                  "blockKind": { "type": "string", "minLength": 1 },
+                  "label": { "type": "string", "minLength": 1 },
+                  "iconId": { "type": "string", "minLength": 1 }
+                }
+              }
+            }
+          }
+        },
+        "journeys": {
+          "type": "array",
+          "minItems": 9,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "kind", "driver", "source", "target", "cancellation", "generation", "expectedAction"],
+            "properties": {
+              "id": { "type": "string", "minLength": 1 },
+              "kind": { "enum": ["table-transfer", "step-sort", "block-sort", "palette-transfer", "initiation", "cancellation", "stale-release"] },
+              "driver": { "enum": ["handle", "surface"] },
+              "source": { "$ref": "#/$defs/SceneListTransferPoint" },
+              "target": {
+                "anyOf": [
+                  { "$ref": "#/$defs/SceneListTransferPoint" },
+                  { "type": "null" }
+                ]
+              },
+              "cancellation": {
+                "type": ["string", "null"],
+                "enum": [null, "escape", "outside", "source-close"]
+              },
+              "generation": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["armed", "released"],
+                "properties": {
+                  "armed": { "type": "integer", "minimum": 1 },
+                  "released": { "type": "integer", "minimum": 1 }
+                }
+              },
+              "expectedAction": {
+                "anyOf": [
+                  { "$ref": "#/$defs/SceneListTransferAction" },
+                  { "type": "null" }
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "SceneListTransferAction": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["controllerId", "action", "args"],
+      "properties": {
+        "controllerId": { "type": "string", "minLength": 1 },
+        "action": { "type": "string", "minLength": 1 },
+        "args": { "type": "object" }
+      }
+    },
+    "SceneListTransferPoint": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["surfaceId", "type", "id"],
+      "properties": {
+        "surfaceId": { "type": "string", "minLength": 1 },
+        "type": { "enum": ["table-row", "step", "block", "palette", "label", "outside"] },
+        "id": { "type": "string" },
+        "stepId": { "type": "string" },
+        "index": { "type": "integer", "minimum": 0 },
+        "mime": { "type": "string" },
+        "payload": {}
+      }
+    },
+    "World3dLightingFixture": {
+      "title": "World3d and IconRender Lighting Fixture",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["$schema", "schemaVersion", "worldEnvironment", "iconRenderRequest", "sample"],
+      "properties": {
+        "$schema": {
+          "const": "https://json.schemas.assets.semio-tech.com/framework/ui/render/schema.json#/$defs/World3dLightingFixture"
+        },
+        "schemaVersion": { "const": 1 },
+        "worldEnvironment": { "$ref": "#/$defs/World3dEnvironment" },
+        "iconRenderRequest": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["assetUrl", "format", "camera", "lights", "width", "height", "shadowEnabled", "material"],
+          "properties": {
+            "assetUrl": { "type": "string" },
+            "format": { "const": "png" },
+            "camera": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["position", "target", "zoom"],
+              "properties": {
+                "position": { "$ref": "#/$defs/World3dVec3" },
+                "target": { "$ref": "#/$defs/World3dVec3" },
+                "zoom": { "type": "number" }
+              }
+            },
+            "lights": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["ambientIntensity", "ambientColor", "sunAzimuth", "sunElevation", "sunIntensity", "sunColor"],
+              "properties": {
+                "ambientIntensity": { "type": "number" },
+                "ambientColor": { "type": "string" },
+                "sunAzimuth": { "type": "number" },
+                "sunElevation": { "type": "number" },
+                "sunIntensity": { "type": "number" },
+                "sunColor": { "type": "string" }
+              }
+            },
+            "width": { "type": "number", "exclusiveMinimum": 0 },
+            "height": { "type": "number", "exclusiveMinimum": 0 },
+            "shadowEnabled": { "type": "boolean" },
+            "material": { "$ref": "#/$defs/World3dMaterial" }
+          }
+        },
+        "sample": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["normal", "baseColor"],
+          "properties": {
+            "normal": { "$ref": "#/$defs/World3dVec3" },
+            "baseColor": { "type": "string" }
+          }
+        }
+      }
+    },
+    "World3dShadowFixture": {
+      "title": "World3d and IconRender Shadow Fixture",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["$schema", "schemaVersion", "worldEnvironment", "iconRender", "oracle"],
+      "properties": {
+        "$schema": {
+          "const": "https://json.schemas.assets.semio-tech.com/framework/ui/render/schema.json#/$defs/World3dShadowFixture"
+        },
+        "schemaVersion": { "const": 1 },
+        "worldEnvironment": { "$ref": "#/$defs/World3dEnvironment" },
+        "iconRender": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["shadowEnabled", "materialPresent", "mapSize"],
+          "properties": {
+            "shadowEnabled": { "const": true },
+            "materialPresent": { "const": true },
+            "mapSize": { "const": 1024 }
+          }
+        },
+        "oracle": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["shadowMatrix", "sampleWorldPosition"],
+          "properties": {
+            "shadowMatrix": { "$ref": "#/$defs/World3dMat4" },
+            "sampleWorldPosition": { "$ref": "#/$defs/World3dVec3" }
+          }
+        }
+      }
+    },
+    "World3dShadowParityFixture": {
+      "title": "World3d and IconRender Exact Shadow Parity Fixture",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["$schema", "schemaVersion", "provenance", "profiles", "roles", "frusta", "pcf"],
+      "properties": {
+        "$schema": { "const": "https://json.schemas.assets.semio-tech.com/framework/ui/render/schema.json#/$defs/World3dShadowParityFixture" },
+        "schemaVersion": { "const": 1 },
+        "provenance": { "type": "string", "minLength": 1 },
+        "profiles": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["world", "iconPng", "iconSvg"],
+          "properties": {
+            "world": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["format", "mapSize", "filter", "bias", "normalBias", "radius", "intensity", "opacityInput", "softnessInput", "consumesOpacity", "consumesSoftness", "usesShadowMap"],
+              "properties": {
+                "format": { "const": "canvas" },
+                "mapSize": { "const": 512 },
+                "filter": { "const": "pcf" },
+                "bias": { "const": 0 },
+                "normalBias": { "const": 0 },
+                "radius": { "const": 1 },
+                "intensity": { "const": 1 },
+                "opacityInput": { "type": "number" },
+                "softnessInput": { "type": "number" },
+                "consumesOpacity": { "const": false },
+                "consumesSoftness": { "const": false },
+                "usesShadowMap": { "const": true }
+              }
+            },
+            "iconPng": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["format", "mapSize", "usesShadowMap"],
+              "properties": { "format": { "const": "png" }, "mapSize": { "const": 1024 }, "usesShadowMap": { "const": true } }
+            },
+            "iconSvg": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["format", "usesShadowMap"],
+              "properties": { "format": { "const": "svg" }, "usesShadowMap": { "const": false } }
+            }
+          }
+        },
+        "roles": {
+          "type": "array",
+          "minItems": 6,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["kind", "transparent", "materialPresent", "casts", "receives"],
+            "properties": {
+              "kind": { "enum": ["glb", "terrain", "paint", "icon"] },
+              "transparent": { "type": "boolean" },
+              "materialPresent": { "type": "boolean" },
+              "casts": { "type": "boolean" },
+              "receives": { "type": "boolean" }
+            }
+          }
+        },
+        "frusta": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["mainCamera", "sun", "offscreenCasterBounds", "visibleReceiverBounds", "offscreenCasterMainVisible", "offscreenCasterLightVisible", "visibleReceiverMainVisible", "visibleReceiverLightVisible"],
+          "properties": {
+            "mainCamera": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["position", "target", "up", "fov", "aspect", "near", "far"],
+              "properties": {
+                "position": { "$ref": "#/$defs/World3dVec3" }, "target": { "$ref": "#/$defs/World3dVec3" }, "up": { "$ref": "#/$defs/World3dVec3" },
+                "fov": { "type": "number" }, "aspect": { "type": "number" }, "near": { "type": "number" }, "far": { "type": "number" }
+              }
+            },
+            "sun": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["azimuth", "elevation", "distance"],
+              "properties": { "azimuth": { "type": "number" }, "elevation": { "type": "number" }, "distance": { "type": "number" } }
+            },
+            "offscreenCasterBounds": { "$ref": "#/$defs/World3dBounds" },
+            "visibleReceiverBounds": { "$ref": "#/$defs/World3dBounds" },
+            "offscreenCasterMainVisible": { "const": false },
+            "offscreenCasterLightVisible": { "const": true },
+            "visibleReceiverMainVisible": { "const": true },
+            "visibleReceiverLightVisible": { "const": true }
+          }
+        },
+        "pcf": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["sampleCount", "fragmentPosition", "interleavedGradientNoise", "rotation", "unitOffsets"],
+          "properties": {
+            "sampleCount": { "const": 5 },
+            "fragmentPosition": { "$ref": "#/$defs/World3dVec2" },
+            "interleavedGradientNoise": { "type": "number" },
+            "rotation": { "type": "number" },
+            "unitOffsets": { "type": "array", "minItems": 5, "maxItems": 5, "items": { "$ref": "#/$defs/World3dVec2" } }
+          }
+        }
+      }
+    },
+    "World3dEnvironment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["ambient", "sun", "material"],
+      "properties": {
+        "ambient": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["intensity", "color"],
+          "properties": { "intensity": { "type": "number" }, "color": { "type": "string" } }
+        },
+        "sun": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["enabled", "azimuth", "elevation", "intensity", "color"],
+          "properties": {
+            "enabled": { "type": "boolean" },
+            "azimuth": { "type": "number" },
+            "elevation": { "type": "number" },
+            "intensity": { "type": "number" },
+            "color": { "type": "string" }
+          }
+        },
+        "shadow": { "$ref": "#/$defs/World3dShadow" },
+        "material": { "$ref": "#/$defs/World3dMaterial" }
+      }
+    },
+    "World3dShadow": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["enabled", "opacity", "softness"],
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "opacity": { "type": "number", "minimum": 0, "maximum": 1 },
+        "softness": { "type": "number", "minimum": 0, "maximum": 4 }
+      }
+    },
+    "World3dMaterial": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["color", "metalness", "roughness", "emissive", "emissiveIntensity"],
+      "properties": {
+        "color": { "type": "string" },
+        "metalness": { "type": "number" },
+        "roughness": { "type": "number" },
+        "emissive": { "type": "string" },
+        "emissiveIntensity": { "type": "number" }
+      }
+    },
+    "World3dVec3": {
+      "type": "array",
+      "items": [{ "type": "number" }, { "type": "number" }, { "type": "number" }],
+      "minItems": 3,
+      "maxItems": 3
+    },
+    "World3dVec2": {
+      "type": "array",
+      "items": [{ "type": "number" }, { "type": "number" }],
+      "minItems": 2,
+      "maxItems": 2
+    },
+    "World3dBounds": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["min", "max"],
+      "properties": { "min": { "$ref": "#/$defs/World3dVec3" }, "max": { "$ref": "#/$defs/World3dVec3" } }
+    },
     "MetalObjectiveCAbiFixture": {
       "title": "Owned Objective-C Runtime ABI Fixture",
       "type": "object",
@@ -237,6 +678,12 @@
           }
         }
       }
+    },
+    "World3dMat4": {
+      "type": "array",
+      "minItems": 16,
+      "maxItems": 16,
+      "items": { "type": "number" }
     }
   }
 }

@@ -489,10 +489,15 @@ async fn camera_drag_never_creates_a_document_undo_step() {
 /// 🧪️ The definitional regression proof: two independent instances start from the same fixture,
 /// apply DISJOINT edits, and exchanging operations over a `MemoryBackbone` converges both sides to
 /// contain BOTH edits.
+///
+/// 🧹️ The REGISTERED pair: shooting publishes bounded tool proofs, so a registry-less `paired_apps`
+/// instance faults in the `interactive-job.catalog-authority` proof join (`generated_migrated=false`,
+/// `migrated={}`) while it is constructed, before any edit lands.
 #[semio_framework_async_macros::async_test]
 async fn two_instances_converge_disjoint_edits_via_backbone() {
-    artifact_app_laws::assert_two_instances_converge::<EditorApp<ShootingPlayApp>, (String, [f64; 3])>(
+    artifact_app_laws::assert_two_registered_instances_converge::<EditorApp<ShootingPlayApp>, (String, [f64; 3]), _, _>(
         "mem://shooting-convergence",
+        || async { context::shooting_app_manifest_for_tests() },
         ShootingCommand::SetActiveShotLabel(set_active_shot_label::SetActiveShotLabel { value: "Renamed By A".into() }),
         ShootingCommand::TranslateSelection(translate_selection::TranslateSelection { asset_ids: vec!["base".into()], dx: 5.0, dy: 6.0, dz: 7.0 }),
         |app| {

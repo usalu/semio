@@ -205,11 +205,19 @@ fn runtime_diagnostics_from_environment() -> bool {
 #[path = "🧮️memory/🦀️.rs"]
 mod guest_memory;
 pub use guest_memory::{
-    guest_host_answer_pages, guest_linear_memory_bytes, guest_linear_memory_install_peak_ceiling_bytes, guest_linear_memory_percent, peak_heap_bytes, reset_heap_peak,
-    retained_heap_bytes, HeapWitness, GUEST_CONTIGUOUS_REQUEST_CEILING_BYTES, GUEST_HOST_ANSWER_CEILING_BYTES, GUEST_LINEAR_MEMORY_INSTALL_PEAK_PERCENT, GUEST_LINEAR_MEMORY_MAXIMUM_BYTES,
+    guest_host_answer_pages, guest_linear_memory_bytes, guest_linear_memory_install_peak_ceiling_bytes, guest_linear_memory_percent, peak_heap_bytes, peak_heap_bytes_on_this_thread, reset_heap_peak, reset_heap_peak_on_this_thread,
+    retained_heap_bytes, retained_heap_bytes_on_this_thread, HeapWitness, GUEST_CONTIGUOUS_REQUEST_CEILING_BYTES, GUEST_HOST_ANSWER_CEILING_BYTES, GUEST_LINEAR_MEMORY_INSTALL_PEAK_PERCENT, GUEST_LINEAR_MEMORY_MAXIMUM_BYTES,
     GUEST_LINEAR_MEMORY_STACK_BYTES,
 };
 //#endregion 🧮️GuestMemory
+
+//#region 📝️SpanRecord
+/// 📝️ Structured request-scoped span records with an injectable sink — the server half of this
+/// module's observability budget, kept in its own file because it is the only part that ever
+/// formats or writes anything. See `📝️record/🦀️.rs`.
+#[path = "📝️record/🦀️.rs"]
+pub mod record;
+//#endregion 📝️SpanRecord
 
 //#region 🔄️BoundedRing
 /// 🔄️ Generic fixed-capacity overwrite-oldest ring, the same shape as

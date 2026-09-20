@@ -5,7 +5,7 @@ import type { ActivationComponentSpec } from "../../../../../🧰️framework/�
 import { runtimeComponentClosure } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧩️runtime/🟨️.mjs";
 import { EXTENSION_TARGETS, PLUGIN_BUILD_TARGETS } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🧩️plugins/🟦️.ts";
 import { moduleDirectoryName } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📦️deployment/🟦️.ts";
-import { PLAY_RUNTIME_TARGETS, playRuntimeComponentIds } from "../🟦️.ts";
+import { PLAY_RUNTIME_TARGETS, playPaneClosureRoot, playRuntimeComponentIds } from "../🟦️.ts";
 
 //#region 🛣️PlayActivationLanes
 /** @emoji 📦️ Repository-relative root of the `@semio-tech/framework-os-dev` package every lane's
@@ -18,11 +18,12 @@ export const PLAY_UNION_RECEIPT_DIRECTORY = "🏢️semio-tech/🎡️play/dist/
 
 /** @emoji 🛣️ The fewest pane variants whose activation closures together cover every pane component —
  * greedy by newly covered components, ties broken by grid order, so the result is deterministic. Pane
- * variants are the only candidates: the `s` host lane would also require the stdio component, whose wasm
- * cannot be linked (1,000,000-function ceiling), and no pane needs it. */
+ * variants are the only candidates: the `s` host lane is the launcher play itself replaces, and every
+ * component play needs — the stdio one included, since its own `stdio` pane activates it — is reachable
+ * from some pane. */
 export function playActivationLanes(): readonly string[] {
   const components = [...PLUGIN_BUILD_TARGETS, ...EXTENSION_TARGETS];
-  const closures = PLAY_RUNTIME_TARGETS.map(target => ({ variant: target.variant, ids: runtimeComponentClosure(components, [target.pluginId]) as readonly string[] }));
+  const closures = PLAY_RUNTIME_TARGETS.map(target => ({ variant: target.variant, ids: runtimeComponentClosure(components, [playPaneClosureRoot(target)]) as readonly string[] }));
   const union = new Set(playRuntimeComponentIds()), covered = new Set<string>(), lanes: string[] = [];
   while ([...union].some(id => !covered.has(id))) {
     let best: { readonly variant: string; readonly ids: readonly string[] } | undefined, bestGain = 0;
@@ -114,6 +115,14 @@ export function readPlayActivation(workspace: string): { readonly receiptDirecto
 }
 //#endregion 🔖️PlayUnionReceipt
 
+/** @emoji 🗂️ Where one installed extension's module directory is served from. A dev server reads it from the
+ * lane that staged it ({@link playExtensionDirectories}); a production build has no activation lane at all
+ * and every component sits under the release `🔌️plugin-modules` root — the same fallback the demonstrator's
+ * `installedExtensionsDir` makes, expressed once so the build mode is a tested rule, not a `??` in a config. */
+export function playExtensionDirectory(name: string, pluginModulesDirectory: string, laneDirectories?: ReadonlyMap<string, string>): string {
+  return laneDirectories?.get(name) ?? join(pluginModulesDirectory, name);
+}
+
 /** @emoji 🔎️ Describes every union component for the activation-receipt freshness watcher. */
 export function playActivationComponents(workspace: string, extensionDirectories: ReadonlyMap<string, string>): readonly ActivationComponentSpec[] {
   const byId = new Map([...PLUGIN_BUILD_TARGETS, ...EXTENSION_TARGETS].map(row => [row.pluginId, row]));
@@ -125,5 +134,5 @@ export function playActivationComponents(workspace: string, extensionDirectories
 
 if (import.meta.vitest) {
   const { registerTests1 } = await import("../../../🧪️tests/🧪️playactivation/🟦️.ts");
-  await registerTests1(import.meta.vitest, { playActivationLanes, playRuntimeComponentIds, mergePlayActivationReceipts }, join(import.meta.dirname, "../../../../.."));
+  await registerTests1(import.meta.vitest, { playActivationLanes, playPaneClosureRoot, playRuntimeComponentIds, mergePlayActivationReceipts, playExtensionDirectory }, join(import.meta.dirname, "../../../../.."));
 }

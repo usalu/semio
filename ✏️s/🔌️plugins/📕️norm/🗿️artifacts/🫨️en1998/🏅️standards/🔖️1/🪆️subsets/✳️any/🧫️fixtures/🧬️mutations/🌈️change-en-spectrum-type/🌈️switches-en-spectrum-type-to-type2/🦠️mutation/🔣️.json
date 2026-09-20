@@ -1,5 +1,4 @@
 {
-  "ChangeEnSpectrumType": {
-    "newEnSpectrumType": "type2"
-  }
+  "mutation": "changeEnSpectrumType",
+  "newEnSpectrumType": "type2"
 }

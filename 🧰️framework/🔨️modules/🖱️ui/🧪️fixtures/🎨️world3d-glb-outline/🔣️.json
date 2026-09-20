@@ -1,0 +1,49 @@
+{
+  "schema": "framework.world3d.glb-outline/v1",
+  "thresholdAngleDegrees": 1,
+  "outlineScale": 1.001,
+  "positionWeldPrecisionDecimals": 4,
+  "semanticEdgeIds": [],
+  "derivation": {
+    "workUnit": "oneTrianglePerStep",
+    "publication": "meshAndOutlineTogether",
+    "cancellation": "retirePartialWithoutPublication"
+  },
+  "cases": [
+    {
+      "id": "coplanar-indexed-square",
+      "positions": [[-1, -1, 0], [1, -1, 0], [1, 1, 0], [-1, 1, 0]],
+      "indices": [0, 1, 2, 0, 2, 3],
+      "expectedSegments": [
+        [[-1, -1, 0], [-1, 1, 0]],
+        [[-1, -1, 0], [1, -1, 0]],
+        [[-1, 1, 0], [1, 1, 0]],
+        [[1, -1, 0], [1, 1, 0]]
+      ]
+    },
+    {
+      "id": "folded-indexed-crease",
+      "positions": [[0, 0, 0], [1, 0, 0], [0, 1, 0], [0, 0, 1]],
+      "indices": [0, 1, 2, 1, 0, 3],
+      "expectedSegments": [
+        [[0, 0, 0], [0, 0, 1]],
+        [[0, 0, 0], [0, 1, 0]],
+        [[0, 0, 0], [1, 0, 0]],
+        [[0, 0, 1], [1, 0, 0]],
+        [[0, 1, 0], [1, 0, 0]]
+      ]
+    },
+    {
+      "id": "coplanar-duplicate-position-square",
+      "positions": [[-1, -1, 0], [1, -1, 0], [1, 1, 0], [-1, -1, 0], [1, 1, 0], [-1, 1, 0]],
+      "indices": [0, 1, 2, 3, 4, 5],
+      "expectedSegments": [
+        [[-1, -1, 0], [-1, 1, 0]],
+        [[-1, -1, 0], [1, -1, 0]],
+        [[-1, 1, 0], [1, 1, 0]],
+        [[1, -1, 0], [1, 1, 0]]
+      ]
+    }
+  ]
+}
+

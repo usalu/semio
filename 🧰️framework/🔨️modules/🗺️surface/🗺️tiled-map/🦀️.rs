@@ -2870,14 +2870,16 @@ impl MapHost {
                 }
                 let mut cx = 0.0;
                 let mut cy = 0.0;
+                let mut polyline = Vec::with_capacity(route.points.len());
                 for [lon, lat] in &route.points {
                     let w = projection::lonlat_to_world(*lon, *lat);
                     let s = map_viewport::world_to_screen(&self.camera, &self.viewport, w);
                     cx += s.x;
                     cy += s.y;
+                    polyline.push([s.x, s.y]);
                 }
                 let n = route.points.len() as f64;
-                serde_json::to_string(&serde_json::json!({ "x": cx / n, "y": cy / n })).unwrap_or_else(|_| "null".into())
+                serde_json::to_string(&serde_json::json!({ "x": cx / n, "y": cy / n, "polyline": polyline })).unwrap_or_else(|_| "null".into())
             }
             _ => "null".into(),
         }
@@ -2908,6 +2910,12 @@ impl MapHost {
         let w = projection::lonlat_to_world(pos.lon, pos.lat);
         let s = map_viewport::world_to_screen(&self.camera, &self.viewport, w);
         serde_json::to_string(&serde_json::json!({ "x": s.x, "y": s.y })).unwrap_or_else(|_| "null".into())
+    }
+
+    /// 👻️ World coordinates to surface-local pixels through the map's live camera.
+    pub fn world_to_screen_point(&self, wx: f64, wy: f64) -> (f64, f64) {
+        let point = map_viewport::world_to_screen(&self.camera, &self.viewport, Point::new(wx, wy));
+        (point.x, point.y)
     }
 
     pub fn focus_feature(&mut self, kind: &str, id: &str) -> bool {

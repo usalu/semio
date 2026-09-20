@@ -134,11 +134,30 @@ export interface DirectoryEventDocumentIndexed {
   entry: DocumentIndexEntryV1;
 }
 
-/** 🛡️ Validates the bounded presentation shape without authorizing document execution. */
+/** 🌟 The dialect grammar's any-subset coordinate, mirrored from `io_schema::SubsetId::ANY` and from
+ * this law's Rust twin (`📇️document-index-v1/🦀️.rs`). */
+export const DOCUMENT_INDEX_ANY_SUBSET_V1 = "*";
+
+/** 🛡️ Validates the bounded presentation shape without authorizing document execution.
+ *
+ * 🌟 `subset` additionally admits the ONE canonical any-subset coordinate (`*`): it is the dialect
+ * grammar's own wildcard, the value every dialect that declares no narrowed subset carries —
+ * including the `parentDialect` the Directory's own document-open admission returns — so rejecting it
+ * drops the presentation row of practically every indexed document, and with it the whole event page
+ * that row rides on. It stays a bounded, non-executable literal: exactly `*`, never a pattern
+ * embedded in a longer identity. The Rust twin has always said so; this side had not.
+ *
+ * 🪢 `dialect.artifactKind` is the owning app's `Dialect` coordinate (`s.note.note`, `s.gis.gismap`),
+ * NOT the manifest `ArtifactKindSpec.id` its descriptor carries (`2d.note`, `stdio.json`) — two id
+ * spaces that coincide for `gis` alone — so it is bounded by its own canonical grammar and never
+ * compared to the descriptor. The plugin segment is compared to nothing: `demonstrator` ships apps
+ * whose `Dialect` belongs to another plugin. */
 export function validDocumentIndexEntryV1(entry: DocumentIndexEntryV1): boolean {
   const identity = (value: unknown): boolean => typeof value === "string" && value.length <= 256 && /^[A-Za-z0-9][A-Za-z0-9._:/-]*$/u.test(value);
+  const subsetIdentity = (value: unknown): boolean => value === DOCUMENT_INDEX_ANY_SUBSET_V1 || identity(value);
+  const canonicalDialectArtifactKind = (value: unknown): boolean => typeof value === "string" && value.length <= 256 && /^s(\.[a-z0-9]+(-[a-z0-9]+)*){1,2}$/u.test(value);
   return typeof entry.name === "string" && entry.name.length > 0 && [...entry.name].length <= 128 && !entry.name.startsWith(" ") && !entry.name.endsWith(" ") && !/[\u0000-\u001f\u007f-\u009f\uD800-\uDFFF]/u.test(entry.name)
-    && identity(entry.dialect.artifactKind) && identity(entry.dialect.standard) && identity(entry.dialect.subset);
+    && canonicalDialectArtifactKind(entry.dialect.artifactKind) && identity(entry.dialect.standard) && subsetIdentity(entry.dialect.subset);
 }
 
 export interface DirectoryEventArtifactCheckpointPublished {
@@ -407,6 +426,7 @@ export type CheckpointPublicationCurrentV1 = { state: "genesis"; checkpointId: s
 
 export interface CheckpointPublicationBlobV1 {
   sha256: string;
+  blake3: string;
   byteLength: number;
 }
 
@@ -455,8 +475,12 @@ function checkpointPublicationFrontier(value: unknown): CheckpointPublicationFro
 }
 
 function checkpointPublicationBlob(value: unknown, name: string): CheckpointPublicationBlobV1 {
-  const blob = directoryEventPageObject(value, ["sha256", "byteLength"]);
-  return { sha256: checkpointPublicationHex(blob.sha256, `${name}-hash`), byteLength: directoryEventPageInteger(blob.byteLength, true) };
+  const blob = directoryEventPageObject(value, ["sha256", "blake3", "byteLength"]);
+  return {
+    sha256: checkpointPublicationHex(blob.sha256, `${name}-hash`),
+    blake3: checkpointPublicationHex(blob.blake3, `${name}-address`),
+    byteLength: directoryEventPageInteger(blob.byteLength, true),
+  };
 }
 
 /** 📥️ Parses one exact canonical checkpoint command without accepting route-owned scope fields. */
@@ -523,6 +547,16 @@ export interface DirectoryCommandRequestV1 {
 
 /** 🧾️ Closed disposition of one durable command request. */
 export type DirectoryCommandOutcomeV1 = "accepted" | "previously-accepted" | "secret-undeliverable";
+
+/** 🧾️ Every member of {@link DirectoryCommandOutcomeV1}, in wire order — the one place the vocabulary is enumerated. */
+export const DIRECTORY_COMMAND_OUTCOMES_V1: readonly DirectoryCommandOutcomeV1[] = ["accepted", "previously-accepted", "secret-undeliverable"];
+
+/** 🧾️ Narrows an untyped disposition to an owned one, refusing anything the vocabulary does not name. */
+export function parseDirectoryCommandOutcomeV1(value: string): DirectoryCommandOutcomeV1 {
+  const outcome = DIRECTORY_COMMAND_OUTCOMES_V1.find((member) => member === value);
+  if (outcome === undefined) throw new Error("directory command outcome: unowned");
+  return outcome;
+}
 
 /** 🎁️ Closed command-result grammar; the invite capability never leaves the live operation. */
 export type DirectoryCommandResultV1 = { kind: "none" } | { kind: "invite"; inviteToken: string };
@@ -1296,7 +1330,13 @@ function documentOpenObject(value: unknown, required: readonly string[], optiona
   if (value === null || typeof value !== "object" || Array.isArray(value)) throw new Error("document-open.invalid-object");
   const object = value as Record<string, unknown>;
   const accepted = new Set([...required, ...optional]);
-  if (Object.keys(object).some((key) => !accepted.has(key)) || required.some((key) => !(key in object))) throw new Error("document-open.invalid-fields");
+  // 🩺️ The refusal names the keys it refused on. This check is the closed-object gate for the plan
+  // and for every object nested inside it, and a bare code left a caller unable to tell an added
+  // field from a missing one, in which object — including the common case where the body is not a
+  // plan at all but a two-field `document-open-plan-error/v1`, whose `code` is the real answer.
+  const unexpected = Object.keys(object).filter((key) => !accepted.has(key));
+  const missing = required.filter((key) => !(key in object));
+  if (unexpected.length !== 0 || missing.length !== 0) throw new Error(`document-open.invalid-fields unexpected=[${unexpected.join(",")}] missing=[${missing.join(",")}] accepted=[${[...accepted].join(",")}]`);
   return object;
 }
 
@@ -1385,7 +1425,7 @@ export function parseDocumentOpenPlanV1(value: unknown, nowMs: number): Document
     standard: documentOpenText(parentDialect.standard),
     subset: documentOpenText(parentDialect.subset),
   };
-  if (parsedParentDialect.artifactKind !== artifact.kind || Object.values(parsedParentDialect).some((value) => value.trim() !== value)) throw new Error("document-open.invalid-parent-dialect");
+  if (Object.values(parsedParentDialect).some((value) => value.trim() !== value)) throw new Error("document-open.invalid-parent-dialect");
   const checkpoint = documentOpenObject(object.checkpoint, ["checkpointId", "descriptorDigestV1", "baselineFrontier", "aggregateSha256"]);
   if (checkpoint.descriptorDigestV1 !== descriptorDigestV1) throw new Error("document-open.stale-checkpoint");
   return {
@@ -1508,7 +1548,7 @@ export function parseDocumentExecutionTargetLeaseFieldsV1(value: unknown): Docum
     standard: documentOpenText(parentDialect.standard),
     subset: documentOpenText(parentDialect.subset),
   };
-  if (parsedParentDialect.artifactKind !== artifact.kind || Object.values(parsedParentDialect).some((entry) => entry.trim() !== entry)) throw new Error("document-execution-target-lease.invalid-parent-dialect");
+  if (Object.values(parsedParentDialect).some((entry) => entry.trim() !== entry)) throw new Error("document-execution-target-lease.invalid-parent-dialect");
   const parsedPackage: DocumentOpenPackageV1 = {
     pluginId: documentOpenText(packageValue.pluginId),
     packageId: documentOpenText(packageValue.packageId),

@@ -2,16 +2,20 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/tiff/6.0/baseline/mutations.json",
   "title": "TiffBaselineMutation",
-  "description": "Discriminated union over this module's mutation leaves (externally tagged); every payload is the leaf's own schema, referenced, never restated.",
+  "description": "Discriminated union over this module's mutation leaves (adjacently tagged); every payload is the leaf's own schema, referenced, never restated.",
   "oneOf": [
     {
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "InsertTileTags"
+        "mutation",
+        "payload"
       ],
       "properties": {
-        "InsertTileTags": {
+        "mutation": {
+          "const": "insert-tile-tags"
+        },
+        "payload": {
           "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/tiff/6.0/baseline/mutation/insert-tile-tags/schema.json"
         }
       }
@@ -20,10 +24,14 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "RemoveStripOffsets"
+        "mutation",
+        "payload"
       ],
       "properties": {
-        "RemoveStripOffsets": {
+        "mutation": {
+          "const": "remove-strip-offsets"
+        },
+        "payload": {
           "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/tiff/6.0/baseline/mutation/remove-strip-offsets/schema.json"
         }
       }
@@ -32,10 +40,14 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "RemoveTileTags"
+        "mutation",
+        "payload"
       ],
       "properties": {
-        "RemoveTileTags": {
+        "mutation": {
+          "const": "remove-tile-tags"
+        },
+        "payload": {
           "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/tiff/6.0/baseline/mutation/remove-tile-tags/schema.json"
         }
       }
@@ -44,10 +56,14 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "SetBitsPerSample"
+        "mutation",
+        "payload"
       ],
       "properties": {
-        "SetBitsPerSample": {
+        "mutation": {
+          "const": "set-bits-per-sample"
+        },
+        "payload": {
           "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/tiff/6.0/baseline/mutation/set-bits-per-sample/schema.json"
         }
       }
@@ -56,10 +72,14 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "SetCompression"
+        "mutation",
+        "payload"
       ],
       "properties": {
-        "SetCompression": {
+        "mutation": {
+          "const": "set-compression"
+        },
+        "payload": {
           "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/tiff/6.0/baseline/mutation/set-compression/schema.json"
         }
       }
@@ -68,10 +88,14 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "SetPhotometricInterpretation"
+        "mutation",
+        "payload"
       ],
       "properties": {
-        "SetPhotometricInterpretation": {
+        "mutation": {
+          "const": "set-photometric-interpretation"
+        },
+        "payload": {
           "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/tiff/6.0/baseline/mutation/set-photometric-interpretation/schema.json"
         }
       }
@@ -80,10 +104,14 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "SetSnapshot"
+        "mutation",
+        "payload"
       ],
       "properties": {
-        "SetSnapshot": {
+        "mutation": {
+          "const": "set-snapshot"
+        },
+        "payload": {
           "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/tiff/6.0/baseline/mutation/set-snapshot/schema.json"
         }
       }
@@ -92,10 +120,14 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "SetStripOffsets"
+        "mutation",
+        "payload"
       ],
       "properties": {
-        "SetStripOffsets": {
+        "mutation": {
+          "const": "set-strip-offsets"
+        },
+        "payload": {
           "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/tiff/6.0/baseline/mutation/set-strip-offsets/schema.json"
         }
       }

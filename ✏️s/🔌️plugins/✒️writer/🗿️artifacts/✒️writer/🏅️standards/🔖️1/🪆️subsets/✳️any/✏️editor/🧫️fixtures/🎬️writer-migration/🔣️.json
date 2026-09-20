@@ -122,7 +122,7 @@
       ]
     },
     {
-      "action": "setEditorSelection",
+      "action": "textSelect",
       "variants": [
         "editor-selection"
       ]

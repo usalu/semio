@@ -1,10 +1,10 @@
 pub(crate) mod context {
     use super::super::*;
     use semio_framework_plugin::app::App;
-    use semio_framework_plugin::artifact_app_laws::{meta, new_app_with_registry};
+    use semio_framework_plugin::artifact_app_laws::{meta, new_app_with_registry_and_members as new_app_with_registry};
     use semio_framework_plugin::{EditorApp, InvocationResult, PluginApp, VcsArtifactApp, ViewModel};
     
-    pub type ImperativeApp = VcsArtifactApp<EditorApp<ImperativePlayApp>>;
+    pub type ImperativeApp = VcsArtifactApp<EditorApp<ImperativePlayApp>, semio_s_artifact_stdio_semio::SemioMembers>;
     
     /// ✏️ `ImperativePlayApp` implements the AUTHORING trait `ArtifactEditor`, not the runtime
     /// `ArtifactApp` — `EditorApp<ImperativePlayApp>` (SDK adapter, contract §2.1) is the real
@@ -28,7 +28,7 @@ pub(crate) mod context {
     /// 🧪️ An app wired to the real manifest registry — enforces View/Shell kind discipline and materializes
     /// declared action-arg defaults (e.g. `addStep`'s `kind`).
     pub async fn imperative_app_with_registry() -> ImperativeApp {
-        let mut app = new_app_with_registry::<EditorApp<ImperativePlayApp>>(imperative_app_manifest_for_tests).await;
+        let mut app = new_app_with_registry::<EditorApp<ImperativePlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(imperative_app_manifest_for_tests).await;
         semio_framework::io::resolve_ready(app.bind_instance_id(meta("local").instance_id));
         app
     }
@@ -81,6 +81,31 @@ fn retained_route_fixture_matches_the_exact_factory_and_fail_closed_census() {
     }
 }
 
+/// 🧬️ The example picker's whole-document load. Every part of the recipe is asserted on the built
+/// manifest and the real demo asset, because each one fails at a DIFFERENT boundary at runtime and
+/// none of them is a compile error: an undeclared verb is dropped `undeclared-action` before the app
+/// sees it; a non-`HostOnly` contract claims a store lane this verb never writes; a child slot the
+/// app cannot mint genesis bytes for fails the archive's closure leg and the whole replacement is
+/// refused. `ProcedureSnapshot` owns TWO composed `s.stdio.semio` children, so both must answer.
+#[test]
+fn set_active_example_is_host_only_and_both_composed_children_mint_genesis_packs() {
+    assert!(IMPERATIVE_RETAINED_TOOL_IDS.contains(&"setActiveExample"), "the example verb must be a retained tool or the dispatch gate refuses it");
+    let contract = IMPERATIVE_RETAINED_PUBLICATION_CONTRACTS.iter().find(|contract| contract.tool_id == "setActiveExample").expect("setActiveExample has a publication contract");
+    assert_eq!(contract.lanes, &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly], "a whole-document load publishes through neither the artifact nor the config store");
+    let definition = create_imperative_app();
+    let action = definition.actions.iter().find(|action| action.id == "setActiveExample").expect("setActiveExample is declared on the app roster");
+    assert_eq!(action.semantics.execution.interactive_job, InteractiveJobClassification::Migrated);
+    let demo = <crate::ProcedureSnapshot as store::ArtifactDsl>::parse_dsl(crate::examples::demo::PRIMARY_TEXT).expect("the demo asset parses as a procedure snapshot");
+    for (slot, child) in [("flow", &demo.flow), ("text", &demo.text)] {
+        assert_eq!(child.target.artifact_id, child.child_id, "slot {slot}'s target must name its own child_id or ChildRestoreProjection refuses the whole load with InvalidReference");
+    }
+    for (slot, child_id) in [("flow", demo.flow.child_id.as_str()), ("text", demo.text.child_id.as_str())] {
+        let pack = <ImperativePlayApp as ArtifactEditor>::genesis_child_pack(&demo, slot, child_id).unwrap_or_else(|| panic!("slot {slot} mints no genesis pack, so the archive closure leg refuses the load"));
+        assert!(!pack.is_empty(), "slot {slot} minted an empty pack");
+    }
+    assert!(<ImperativePlayApp as ArtifactEditor>::genesis_child_pack(&demo, "flow", "not-this-documents-child").is_none(), "a foreign child id must not be answered");
+}
+
 #[semio_framework_async_macros::async_test]
 async fn app_definition_builds_without_panicking() {
     let app = create_imperative_app();
@@ -107,7 +132,7 @@ async fn command_ids_are_unique_and_match_the_declared_manifest_actions() {
     sorted.sort_unstable();
     sorted.dedup();
     assert_eq!(sorted.len(), ids.len(), "duplicate command ids in {ids:?}");
-    assert_eq!(ids.len(), 10, "every ImperativeCommand row must be covered by every_command()");
+    assert_eq!(ids.len(), 11, "every ImperativeCommand row must be covered by every_command()");
 }
 
 /// ⚖️ LAW: text and binary are two projections of the same command, for every single row.
@@ -127,6 +152,7 @@ async fn every_printed_op_line_starts_with_the_rows_wire_keyword() {
         let id = command.command_id();
         let expected = match id {
             "setContributions" => "contributions".to_string(),
+            "setActiveExample" => "active-example".to_string(),
             _ => id.chars().flat_map(|c| if c.is_ascii_uppercase() { vec!['-', c.to_ascii_lowercase()] } else { vec![c] }).collect(),
         };
         let printed = protocol::OpText::print_op(&command);
@@ -165,6 +191,7 @@ pub(super) fn every_command() -> Vec<ImperativeCommand> {
         ImperativeCommand::SetStepParamsAt(set_step_params_at::SetStepParamsAt { id: "step-1".into(), owner: Some("step-if".into()), slot: Some("then".into()), params }),
         ImperativeCommand::Run(run::Run {}),
         ImperativeCommand::SetContributions(set_contributions::SetContributions { json: "[]".into() }),
+        ImperativeCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: crate::examples::demo::ID.into() }),
     ]
 }
 //#endregion 🔖️CommandSurface

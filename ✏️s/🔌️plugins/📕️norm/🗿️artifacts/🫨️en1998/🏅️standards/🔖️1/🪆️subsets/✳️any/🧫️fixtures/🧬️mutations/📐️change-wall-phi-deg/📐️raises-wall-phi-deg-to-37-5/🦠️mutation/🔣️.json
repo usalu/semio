@@ -1,5 +1,4 @@
 {
-  "ChangeWallPhiDeg": {
-    "newWallPhiDeg": 37.5
-  }
+  "mutation": "changeWallPhiDeg",
+  "newWallPhiDeg": 37.5
 }

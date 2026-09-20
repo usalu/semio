@@ -48,8 +48,15 @@ source descriptor editor app (except the space host apps) is reachable through s
   🧪️tests/                 🎚️config (vitest), unit tests, 🎭️acceptance (boots every pane)
 ```
 
-## 🧮️ Grid for 58 panes
+## 🧮️ Grid
 
-`columns = ceil(sqrt(n))`, `rows = ceil(n / columns)` → 8×8. Overview cards are compact (icon, label,
-tagline). Boot is on demand (hover/focus/hash) plus a slow idle queue; a live-pane budget suspends the
-least recently used pristine pane so the page never holds dozens of wasm shells at once.
+Never a constant: `playGridDimensions(n)` takes the shape with the FEWEST empty cells among those no more
+than two columns wider than tall (ties to the squarest), so the grid follows the pane count as apps are
+added — 8 panes give the demonstrator's own gapless 4×2, the 60 panes of 2026-09-20 give 9×7. A short
+trailing row is centred (`playGridRowSpan`) and the free pan is clamped to the occupied columns of the
+rows in view (`playOccupiedColumnRange`), so an empty cell is never a viewport of its own. Overview cards
+are compact (icon, label, tagline, description, open chip). Boot is on demand (hover/focus/hash) plus a
+slow `schedulePlayIdle` warm-boot queue; a live-pane budget suspends the least recently used pristine
+pane so the page never holds dozens of wasm shells at once. Landing chrome reads its strings through
+`useLabel` from en+de bundles (`playLandingUiLabel`, `playCardUiLabel`) — no default language, even
+though every pane shell is locked to English.

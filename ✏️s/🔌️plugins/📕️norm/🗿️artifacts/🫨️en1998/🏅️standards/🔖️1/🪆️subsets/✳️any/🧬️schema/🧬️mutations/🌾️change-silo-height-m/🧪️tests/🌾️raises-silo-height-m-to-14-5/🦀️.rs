@@ -67,7 +67,7 @@ async fn change_silo_height_m_committed_json_is_canonical() {
     }
     let reencoded = serde_json::to_value(mutation()).expect("change-silo-height-m mutation encodes");
     let original: serde_json::Value = serde_json::from_str(MUTATION).expect("change-silo-height-m mutation reparses");
-    assert_eq!(reencoded, original, "change-silo-height-m/raises-silo-height-m-to-14-5: committed mutation JSON is not the canonical externally-tagged ChangeSiloHeightM form carrying newSiloHeightM");
+    assert_eq!(reencoded, original, "change-silo-height-m/raises-silo-height-m-to-14-5: committed mutation JSON is not the canonical internally-tagged ChangeSiloHeightM form carrying mutation and newSiloHeightM");
 }
 
 /// 🎯️ The declared outcome holds: `change-silo-height-m` at 14.5 is applied, not rejected, and carries no

@@ -67,7 +67,7 @@ async fn change_tower_q_nominal_committed_json_is_canonical() {
     }
     let reencoded = serde_json::to_value(mutation()).expect("change-tower-q-nominal mutation encodes");
     let original: serde_json::Value = serde_json::from_str(MUTATION).expect("change-tower-q-nominal mutation reparses");
-    assert_eq!(reencoded, original, "change-tower-q-nominal/raises-tower-q-nominal-to-3-25: committed mutation JSON is not the canonical externally-tagged ChangeTowerQNominal form carrying newTowerQNominal");
+    assert_eq!(reencoded, original, "change-tower-q-nominal/raises-tower-q-nominal-to-3-25: committed mutation JSON is not the canonical internally-tagged ChangeTowerQNominal form carrying mutation and newTowerQNominal");
 }
 
 /// 🎯️ The declared outcome holds: `change-tower-q-nominal` at 3.25 is applied, not rejected, and carries no

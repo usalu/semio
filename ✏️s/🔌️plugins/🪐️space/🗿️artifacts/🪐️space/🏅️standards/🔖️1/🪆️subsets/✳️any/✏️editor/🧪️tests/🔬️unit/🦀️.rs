@@ -2,12 +2,25 @@ pub(crate) mod context {
     
     use super::super::*;
     use semio_framework_plugin::EditorApp;
-    use semio_framework_plugin::artifact_app_laws::{meta, new_app as framework_new_app};
-    
+    use semio_framework_plugin::artifact_app_laws::{meta, new_app_with_registry};
+
     pub type SpaceIndexApp = semio_framework_plugin::VcsArtifactApp<EditorApp<SpaceIndexEditor>>;
-    
+
+    /// 🧩️ Adapts `create_space_index_editor`'s `AppDefinition` (contract §2.4) into the
+    /// `App { definition, examples }` shape `new_app_with_registry` expects.
+    fn space_index_manifest_for_tests() -> semio_framework_plugin::App {
+        semio_framework_plugin::App { definition: create_space_index_editor(), examples: Vec::new() }
+    }
+
+    /// 🧪️ An app instance carrying the real `AppActionRegistry`. The registry-LESS
+    /// `artifact_app_laws::new_app` is unusable here: `with_registry_on_bus` joins
+    /// `EditorApp<SpaceIndexEditor>`'s `bounded_first_step_tool_proofs!` roster against the registry's
+    /// `Migrated` tool ids (`AppActionRegistry::validate_tool_job_rows`), and an empty registry
+    /// declares none of them — construction panics with `interactive-job.catalog-authority` …
+    /// `generated_migrated=false`, `migrated={}`. A registry-less wrapper could not dispatch anything
+    /// anyway (`admit_command_wire_with_proof` refuses every verb with no manifest declaration).
     pub async fn new_app() -> SpaceIndexApp {
-        framework_new_app::<EditorApp<SpaceIndexEditor>>().await
+        new_app_with_registry::<EditorApp<SpaceIndexEditor>>(space_index_manifest_for_tests).await
     }
     
     pub async fn new_app_with_artifact() -> (SpaceIndexApp, String) {

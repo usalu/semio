@@ -1,0 +1,186 @@
+{
+  "$schema": "https://json.schemas.assets.semio-tech.com/framework/ui/render/schema.json#/$defs/SceneListTransferFixture",
+  "schemaVersion": 1,
+  "contract": "driver-aware-scene-list-transfer",
+  "rules": [
+    "one generation-owned transfer crosses retained scene surfaces and windows",
+    "release revalidates source generation, destination permission, MIME and source type",
+    "handle drivers initiate only from semantic handles while surface drivers initiate from rows",
+    "BlockList step sorting is global and block sorting remains scoped to its source step",
+    "escape, outside release and source closure cancel without an action",
+    "a promoted drag suppresses its source click"
+  ],
+  "drivers": [
+    {
+      "id": "default",
+      "drag": "handle",
+      "sourceGeometry": "handle",
+      "visibleHandles": ["step-sort", "block-sort", "palette-transfer", "table-transfer"]
+    },
+    {
+      "id": "compact",
+      "drag": "surface",
+      "sourceGeometry": "row",
+      "visibleHandles": []
+    }
+  ],
+  "table": {
+    "source": {
+      "windowId": "window-a",
+      "surfaceId": "table-a",
+      "rowId": "asset-7",
+      "mime": "application/x-semio-asset",
+      "payload": {
+        "artifactId": "asset-7",
+        "revision": 3
+      }
+    },
+    "destination": {
+      "windowId": "window-b",
+      "surfaceId": "table-b",
+      "dropAction": {
+        "controllerId": "controller.table-b",
+        "action": "attachAsset",
+        "args": {
+          "surfaceId": "table-b",
+          "lane": "target"
+        }
+      }
+    },
+    "expectedAction": {
+      "controllerId": "controller.table-b",
+      "action": "attachAsset",
+      "args": {
+        "surfaceId": "table-b",
+        "lane": "target",
+        "artifactId": "asset-7",
+        "revision": 3
+      }
+    }
+  },
+  "blockList": {
+    "surfaceId": "pipeline",
+    "steps": [
+      {
+        "id": "prepare",
+        "title": "Prepare",
+        "blocks": [
+          { "id": "load", "label": "Load", "kind": "source" },
+          { "id": "clean", "label": "Clean", "kind": "transform" }
+        ]
+      },
+      {
+        "id": "publish",
+        "title": "Publish",
+        "blocks": [
+          { "id": "write", "label": "Write", "kind": "sink" }
+        ]
+      }
+    ],
+    "palette": [
+      { "blockKind": "filter", "label": "Filter", "iconId": "filter" }
+    ]
+  },
+  "journeys": [
+    {
+      "id": "table-a-to-table-b",
+      "kind": "table-transfer",
+      "driver": "handle",
+      "source": { "surfaceId": "table-a", "type": "table-row", "id": "asset-7", "mime": "application/x-semio-asset", "payload": { "artifactId": "asset-7", "revision": 3 } },
+      "target": { "surfaceId": "table-b", "type": "table-row", "id": "destination" },
+      "cancellation": null,
+      "generation": { "armed": 7, "released": 7 },
+      "expectedAction": { "controllerId": "controller.table-b", "action": "attachAsset", "args": { "surfaceId": "table-b", "lane": "target", "artifactId": "asset-7", "revision": 3 } }
+    },
+    {
+      "id": "escape-cancels",
+      "kind": "cancellation",
+      "driver": "handle",
+      "source": { "surfaceId": "pipeline", "type": "step", "id": "prepare" },
+      "target": null,
+      "cancellation": "escape",
+      "generation": { "armed": 8, "released": 8 },
+      "expectedAction": null
+    },
+    {
+      "id": "outside-release-cancels",
+      "kind": "cancellation",
+      "driver": "surface",
+      "source": { "surfaceId": "table-a", "type": "table-row", "id": "asset-7" },
+      "target": { "surfaceId": "outside", "type": "outside", "id": "" },
+      "cancellation": "outside",
+      "generation": { "armed": 9, "released": 9 },
+      "expectedAction": null
+    },
+    {
+      "id": "source-close-cancels",
+      "kind": "cancellation",
+      "driver": "handle",
+      "source": { "surfaceId": "table-a", "type": "table-row", "id": "asset-7" },
+      "target": null,
+      "cancellation": "source-close",
+      "generation": { "armed": 10, "released": 10 },
+      "expectedAction": null
+    },
+    {
+      "id": "step-prepare-after-publish",
+      "kind": "step-sort",
+      "driver": "handle",
+      "source": { "surfaceId": "pipeline", "type": "step", "id": "prepare", "index": 0 },
+      "target": { "surfaceId": "pipeline", "type": "step", "id": "publish", "index": 1 },
+      "cancellation": null,
+      "generation": { "armed": 11, "released": 11 },
+      "expectedAction": { "controllerId": "controller.block-list", "action": "moveStep", "args": { "stepId": "prepare", "index": 1 } }
+    },
+    {
+      "id": "block-load-after-clean",
+      "kind": "block-sort",
+      "driver": "handle",
+      "source": { "surfaceId": "pipeline", "type": "block", "id": "load", "stepId": "prepare", "index": 0 },
+      "target": { "surfaceId": "pipeline", "type": "block", "id": "clean", "stepId": "prepare", "index": 1 },
+      "cancellation": null,
+      "generation": { "armed": 12, "released": 12 },
+      "expectedAction": { "controllerId": "controller.block-list", "action": "moveBlock", "args": { "blockId": "load", "fromStepId": "prepare", "toStepId": "prepare", "index": 1 } }
+    },
+    {
+      "id": "palette-filter-into-publish",
+      "kind": "palette-transfer",
+      "driver": "handle",
+      "source": { "surfaceId": "pipeline", "type": "palette", "id": "filter", "mime": "application/x-semio-block-list-block-kind", "payload": "filter" },
+      "target": { "surfaceId": "pipeline", "type": "step", "id": "publish", "index": 1 },
+      "cancellation": null,
+      "generation": { "armed": 13, "released": 13 },
+      "expectedAction": { "controllerId": "controller.block-list", "action": "addBlock", "args": { "stepId": "publish", "kind": "filter" } }
+    },
+    {
+      "id": "handle-label-does-not-drag",
+      "kind": "initiation",
+      "driver": "handle",
+      "source": { "surfaceId": "pipeline", "type": "label", "id": "prepare" },
+      "target": null,
+      "cancellation": null,
+      "generation": { "armed": 14, "released": 14 },
+      "expectedAction": null
+    },
+    {
+      "id": "surface-step-initiates",
+      "kind": "initiation",
+      "driver": "surface",
+      "source": { "surfaceId": "pipeline", "type": "step", "id": "prepare" },
+      "target": null,
+      "cancellation": null,
+      "generation": { "armed": 15, "released": 15 },
+      "expectedAction": null
+    },
+    {
+      "id": "stale-generation-release-is-rejected",
+      "kind": "stale-release",
+      "driver": "handle",
+      "source": { "surfaceId": "table-a", "type": "table-row", "id": "asset-7" },
+      "target": { "surfaceId": "table-b", "type": "table-row", "id": "destination" },
+      "cancellation": null,
+      "generation": { "armed": 16, "released": 17 },
+      "expectedAction": null
+    }
+  ]
+}

@@ -13,7 +13,7 @@
   "masonryClass": null,
   "designSituation": null,
   "mu": null,
-  "wallThicknessMm": 300,
+  "wallThicknessMm": 300.0,
   "fireResistanceMin": null,
   "unit": null,
   "exposure": null,

@@ -116,7 +116,7 @@ pub enum Ifc2x3CobieMutation {
 
 /// 📇️ Kebab-case spelling of every `Ifc2x3CobieMutation` variant, in declaration order — the
 /// `ifc-2x3-cobie` catalog in `../../🔣️oracle.json` is required to match verbatim.
-pub const KINDS: &[&str] = &["no-mutation", "set-snapshot", "set-view-definition", "set-facility-name", "set-floor-elevation", "set-space", "set-type-assignment"];
+pub const KINDS: &[&str] = &["set-snapshot", "set-view-definition", "set-facility-name", "set-floor-elevation", "set-space", "set-type-assignment"];
 
 impl Ifc2x3CobieMutation {
     /// 🏷️ This mutation's own kebab-case kind — the single spelling `KINDS`, the `ifc-2x3-cobie`

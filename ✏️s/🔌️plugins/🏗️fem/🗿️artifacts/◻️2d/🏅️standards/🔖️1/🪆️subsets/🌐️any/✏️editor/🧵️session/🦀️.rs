@@ -1017,7 +1017,6 @@ impl MountedState {
         }
         self.fault = Some(detail.clone());
         self.visual.state = FemVisualState::FaultedCancelled;
-        eprintln!("[DEBUG] fem2d session fault at {:?}: {}", self.stage, String::from_utf8_lossy(&detail));
         self.stage = MountedStage::Fault;
         JobStep::Failed(detail)
     }

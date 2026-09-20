@@ -1,0 +1,115 @@
+{
+  "schemaVersion": 1,
+  "scene": {
+    "surfaceId": "note.play.composite",
+    "controllerId": "note-composite",
+    "domainId": "blocks",
+    "domainGranularityId": "block",
+    "hoverChannel": "pointer",
+    "selectionJson": "[\"text-a\"]",
+    "hoveredId": "image-b"
+  },
+  "viewport": { "width": 320, "height": 240 },
+  "document": {
+    "schema": "ink.document",
+    "id": "note-domain-fixture",
+    "camera": { "x": 0, "y": 0, "zoom": 1 },
+    "activeUtility": "selectDirect",
+    "gridVisible": false,
+    "blocks": [
+      {
+        "id": "text-a",
+        "interactionId": "note-play-block:text-a",
+        "name": "Text A",
+        "kind": "text",
+        "x": 20,
+        "y": 20,
+        "width": 100,
+        "height": 60,
+        "visible": true,
+        "locked": false,
+        "paragraphs": [{ "runs": [{ "text": "a" }] }],
+        "fontSize": 18,
+        "fontWeight": "normal",
+        "align": "left"
+      },
+      {
+        "id": "image-b",
+        "interactionId": "note-play-block:image-b",
+        "name": "Image B",
+        "kind": "image",
+        "x": 160,
+        "y": 20,
+        "width": 100,
+        "height": 60,
+        "visible": true,
+        "locked": false,
+        "imageKey": "missing-fixture-image"
+      }
+    ]
+  },
+  "identity": {
+    "requiresInteractionId": true,
+    "missingInteractionId": "refuse-target",
+    "rawIdFallback": false,
+    "incomingPaintIds": "raw"
+  },
+  "forbiddenActions": ["setHover", "setSelection"],
+  "cases": [
+    {
+      "id": "pointer-hover",
+      "gesture": { "kind": "move", "x": 40, "y": 40 },
+      "action": "interactionHover",
+      "args": {
+        "domainId": "blocks",
+        "channel": "pointer",
+        "targets": "[{\"granularity\":\"block\",\"id\":\"note-play-block:text-a\"}]"
+      }
+    },
+    {
+      "id": "pointer-leave",
+      "gesture": { "kind": "move", "x": 300, "y": 200 },
+      "action": "interactionHover",
+      "args": { "domainId": "blocks", "channel": "pointer", "targets": "[]" }
+    },
+    {
+      "id": "replace-pick",
+      "gesture": { "kind": "down", "blockId": "text-a", "shiftKey": false },
+      "action": "interactionSelect",
+      "args": {
+        "domainId": "blocks",
+        "targets": "[{\"granularity\":\"block\",\"id\":\"note-play-block:text-a\"}]",
+        "merge": "replace",
+        "method": "pick"
+      }
+    },
+    {
+      "id": "additive-pick",
+      "gesture": { "kind": "down", "blockId": "image-b", "shiftKey": true },
+      "action": "interactionSelect",
+      "args": {
+        "domainId": "blocks",
+        "targets": "[{\"granularity\":\"block\",\"id\":\"note-play-block:image-b\"}]",
+        "merge": "additive",
+        "method": "pick"
+      }
+    },
+    {
+      "id": "background-clear",
+      "gesture": { "kind": "down", "x": 300, "y": 200, "shiftKey": false },
+      "action": "interactionSelect",
+      "args": { "domainId": "blocks", "targets": "[]", "merge": "replace", "method": "pick" }
+    },
+    {
+      "id": "rectangle-marquee",
+      "gesture": { "kind": "marquee", "from": { "x": 10, "y": 10 }, "to": { "x": 270, "y": 90 } },
+      "action": "interactionSelect",
+      "args": {
+        "domainId": "blocks",
+        "targets": "[{\"granularity\":\"block\",\"id\":\"note-play-block:text-a\"},{\"granularity\":\"block\",\"id\":\"note-play-block:image-b\"}]",
+        "merge": "replace",
+        "method": "rectangle"
+      }
+    }
+  ]
+}

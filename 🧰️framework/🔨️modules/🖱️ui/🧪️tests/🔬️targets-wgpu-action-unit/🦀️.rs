@@ -1,4 +1,3 @@
-
 use super::*;
 
 fn publish(queue: &mut BoundedActionQueue, index: usize) {
@@ -63,6 +62,24 @@ fn full_queue_fails_before_builder_and_retry_preserves_fifo() {
         last = Some(action.into_descriptor().expect("descriptor"));
     }
     assert_eq!(last.and_then(|action| action.args).as_ref().and_then(|args| args.get("index")).and_then(DslValue::as_f64), Some(ACTION_QUEUE_ITEM_CAPACITY as f64));
+    assert_eq!(queue.bytes(), 0);
+}
+
+#[test]
+fn token_addressed_removal_preserves_peer_order_and_exact_byte_ownership() {
+    let mut queue = BoundedActionQueue::default();
+    publish(&mut queue, 0);
+    publish(&mut queue, 1);
+    publish(&mut queue, 2);
+    let before = queue.bytes();
+    let removed = queue.remove_at(1).expect("the middle token owns one action");
+    assert_eq!(queue.bytes(), before - removed.owned_bytes());
+    assert_eq!(removed.into_descriptor().unwrap().args.as_ref().and_then(|args| args.get("index")).and_then(DslValue::as_f64), Some(1.0));
+    let first = queue.pop_front().unwrap().into_descriptor().unwrap();
+    let last = queue.pop_front().unwrap().into_descriptor().unwrap();
+    assert_eq!(first.args.as_ref().and_then(|args| args.get("index")).and_then(DslValue::as_f64), Some(0.0));
+    assert_eq!(last.args.as_ref().and_then(|args| args.get("index")).and_then(DslValue::as_f64), Some(2.0));
+    assert!(queue.is_empty());
     assert_eq!(queue.bytes(), 0);
 }
 
@@ -150,7 +167,9 @@ fn detached_claim_batch_reserves_and_publishes_all_pages_atomically_in_fifo_orde
     assert!(!queue.is_empty());
     queue.publish_prepared_claimed_batch(batch).expect("atomic page publication");
     assert_eq!(queue.claimed_items(), 0);
+    assert_eq!(queue.front_batch_len(), Ok(Some(3)));
     assert_eq!(queue.pop_front().unwrap().into_descriptor().unwrap().action, "first");
+    assert_eq!(queue.front_batch_len(), Ok(Some(2)));
     assert_eq!(queue.pop_front().unwrap().into_descriptor().unwrap().action, "second");
     assert_eq!(queue.pop_front().unwrap().into_descriptor().unwrap().action, "third");
 }
@@ -179,8 +198,42 @@ fn batch_reservation_is_atomic_and_preserves_order() {
     batch.action("controller", "first", 128, |_| Ok(())).expect("first");
     batch.action("controller", "second", 128, |_| Ok(())).expect("second");
     batch.publish().expect("publish");
+    assert_eq!(queue.front_batch_len(), Ok(Some(2)));
     assert_eq!(queue.pop_front().expect("first").into_descriptor().expect("first descriptor").action, "first");
+    assert_eq!(queue.front_batch_len(), Ok(Some(1)));
     assert_eq!(queue.pop_front().expect("second").into_descriptor().expect("second descriptor").action, "second");
+}
+
+#[test]
+fn batch_countdown_survives_middle_and_terminal_removal_without_joining_neighbours() {
+    let mut queue = BoundedActionQueue::default();
+    let mut batch = queue.reserve_batch(3, 96).unwrap();
+    for action in ["first", "second", "third"] {
+        batch.action("controller", action, 32, |_| Ok(())).unwrap();
+    }
+    batch.publish().unwrap();
+    publish(&mut queue, 9);
+    assert_eq!(queue.remove_at(1).unwrap().into_descriptor().unwrap().action, "second");
+    assert_eq!(queue.front_batch_len(), Ok(Some(2)));
+    assert_eq!(queue.pop_back().unwrap().into_descriptor().unwrap().action, "dispatch");
+    assert_eq!(queue.front_batch_len(), Ok(Some(2)));
+    assert_eq!(queue.pop_back().unwrap().into_descriptor().unwrap().action, "third");
+    assert_eq!(queue.front_batch_len(), Ok(Some(1)));
+    assert_eq!(queue.pop_front().unwrap().into_descriptor().unwrap().action, "first");
+}
+
+#[test]
+fn batch_marker_uses_existing_bounded_action_padding() {
+    struct BeforeBatchMarker {
+        controller_id: TextSpan,
+        action: TextSpan,
+        nodes: Box<[Option<FlatNode>; ACTION_NODE_CAPACITY]>,
+        bytes: Box<[u8; ACTION_ITEM_BYTE_CAPACITY]>,
+        node_len: usize,
+        byte_len: usize,
+        root: Option<u16>,
+    }
+    assert_eq!(std::mem::size_of::<BoundedAction>(), std::mem::size_of::<BeforeBatchMarker>());
 }
 
 #[test]

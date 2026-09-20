@@ -15,6 +15,10 @@ async fn render_lists_one_row_per_cell() {
     let node = render(&document).expect("render");
     let Component::Surface(props) = node.component else { panic!("expected a retained table surface") };
     let scene: semio_framework_ui_scene::TableScene = semio_framework_ui_scene::decode(&props).expect("decode table scene");
-    let rows: Vec<Vec<String>> = serde_json::from_str(&scene.rows_json).expect("rows json");
-    assert_eq!(rows, vec![vec!["Sheet1".to_string(), "1".to_string(), "0".to_string(), "1".to_string()]]);
+    // 📊️ `TableWindowKit` contract: `columnsJson` is `{id, label}` records, `rowsJson` is
+    // `{id, <column id>: cell}` records keyed by column position.
+    let columns: Vec<serde_json::Value> = serde_json::from_str(&scene.columns_json).expect("columns json");
+    assert_eq!(columns, vec![serde_json::json!({ "id": "0", "label": "sheet" }), serde_json::json!({ "id": "1", "label": "row" }), serde_json::json!({ "id": "2", "label": "col" }), serde_json::json!({ "id": "3", "label": "value" })]);
+    let rows: Vec<serde_json::Value> = serde_json::from_str(&scene.rows_json).expect("rows json");
+    assert_eq!(rows, vec![serde_json::json!({ "id": "0", "0": "Sheet1", "1": "1", "2": "0", "3": "1" })]);
 }

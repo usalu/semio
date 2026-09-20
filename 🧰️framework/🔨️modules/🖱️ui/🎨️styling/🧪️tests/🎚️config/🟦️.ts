@@ -18,10 +18,10 @@ export default {
   test: {
     root: testRoot,
     name: "@semio-tech/ui-styling",
-    environment: "node",
-    include: ["📽️projection/🟦️.ts"],
-    coverage: { include: ["📽️projection/🟦️.ts"] },
-    includeSource: ["📽️projection/🟦️.ts"],
+    environment: "jsdom",
+    include: [],
+    coverage: { include: ["📽️projection/🟦️.ts", "🌓️theme/🟦️.ts", "🏗️builder/🌐️vite/🟦️.ts"] },
+    includeSource: ["📽️projection/🟦️.ts", "🌓️theme/🟦️.ts", "🏗️builder/🌐️vite/🟦️.ts"],
     passWithNoTests: false,
   },
 };

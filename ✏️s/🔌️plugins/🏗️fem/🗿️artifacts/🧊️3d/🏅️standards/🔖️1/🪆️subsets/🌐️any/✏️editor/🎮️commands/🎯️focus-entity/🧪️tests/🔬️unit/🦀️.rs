@@ -4,7 +4,7 @@ use crate::editor::fem3d::unit_tests::context::view;
 use semio_framework_plugin::HistoryView;
 
 fn demo() -> Fem3dSnapshot {
-    crate::standards::v1::subsets::any::schema::snapshot::text::fem3d_boot_snapshot()
+    crate::standards::v1::subsets::any::schema::snapshot::text::fem3d_demo_snapshot()
 }
 
 /// 🎯️ LAW: focusing re-aims the orbit at the entity and carries the eye offset along, on the

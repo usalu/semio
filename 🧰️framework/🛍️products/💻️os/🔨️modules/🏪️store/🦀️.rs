@@ -10893,15 +10893,15 @@ where
     P: Clone,
     Mutation: self::Mutation<P>,
 {
-    let mut snapshot = envelope.vcs.initial_snapshot.clone();
+    let mut snapshot = ReplayProjection::<P, Mutation>::new(envelope.vcs.initial_snapshot.clone());
     for edit_id in applied_edit_ids {
         let edit = envelope.vcs.edits.iter().find(|entry| entry.id == *edit_id).ok_or_else(|| VcsError::UnknownEdit(edit_id.clone()))?;
         for operation in &edit.forwards {
-            let next = apply_mutation(&snapshot, operation)?.0;
-            retire_replayed_projection::<P, Mutation>(std::mem::replace(&mut snapshot, next));
+            let next = apply_mutation(&*snapshot, operation)?.0;
+            snapshot.advance(next);
         }
     }
-    Ok(snapshot)
+    Ok(snapshot.into_inner())
 }
 
 /// 🕰️ Single timestamp source for `Edit.started_at`/`Checkpoint.timestamp` — re-exported so
@@ -12017,7 +12017,7 @@ where
         Ok(out)
     }
 
-    let mut snapshot = initial_snapshot.clone();
+    let mut snapshot = ReplayProjection::<P, Mutation>::new(initial_snapshot.clone());
     let mut edits: Vec<Edit<Mutation>> = Vec::with_capacity(log.edits.len());
     let mut edit_messages = Vec::new();
     for (index, history_edit) in log.edits.into_iter().enumerate() {
@@ -12042,8 +12042,8 @@ where
             edit_messages.push(crate::os_spr::EditMessages { edit_id: edit_id.clone(), messages: durable_messages });
         }
         for operation in &forwards {
-            let next = apply_mutation(&snapshot, operation).map_err(|error| TextError::new(error.to_string(), TextSpan::at(1, 1)))?.0;
-            retire_replayed_projection::<P, Mutation>(std::mem::replace(&mut snapshot, next));
+            let next = apply_mutation(&*snapshot, operation).map_err(|error| TextError::new(error.to_string(), TextSpan::at(1, 1)))?.0;
+            snapshot.advance(next);
         }
         edits.push(Edit {
             id: history_edit.id,
@@ -12063,8 +12063,9 @@ where
     // binding to a bare drop at the end of the function, which aborts the process for any artifact
     // whose projection owns a fail-closed root: every `.pack`/`.spr` load of a generation3d document
     // with a layout entry died in `OrderedMap<WidgetLayout>::drop`
-    // (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-    retire_replayed_projection::<P, Mutation>(snapshot);
+    // (ticket 26/09/09/PROCEDURAL-3D-END-TO-END). `ReplayProjection` now retires it on every early
+    // `?` above as well, which the explicit call below never covered.
+    drop(snapshot);
 
     let mut conflicts = Vec::with_capacity(log.conflicts.len());
     for conflict in std::mem::take(&mut log.conflicts) {
@@ -14086,6 +14087,7 @@ pub struct ArtifactStoreOneItemLiveAuthority {
     next_clock: HybridLogicalTimestamp,
     actor: String,
     group_id: Option<String>,
+    stamped_edit_id: Option<String>,
 }
 
 impl ArtifactStoreOneItemLiveAuthority {
@@ -14120,7 +14122,15 @@ impl ArtifactStoreOneItemLiveAuthority {
     /// @emoji 🪪️ The globally unique identity of the edit this authority publishes — content-addressed
     /// over the actor, the sequence and the HLC tick the Store minted, so two replicas' edits never
     /// share an identity the way a replica-local counter would. The Store stamps it on the staged edit.
+    ///
+    /// @emoji 🔏 A server-stamped publication instead publishes under the identity its durable
+    /// decision was hashed over: the approval's own mutation id, itself content-addressed over the
+    /// job and the proposal, so the uniqueness argument above still holds and the committed edit
+    /// carries the identity every downstream verifier (WAL, ledger, actor frontier) binds against.
     pub fn edit_id(&self) -> String {
+        if let Some(stamped) = self.stamped_edit_id.as_ref() {
+            return stamped.clone();
+        }
         let mut material = Vec::with_capacity(self.actor.len() + 48);
         material.extend_from_slice(&(self.actor.len() as u64).to_le_bytes());
         material.extend_from_slice(self.actor.as_bytes());
@@ -14139,6 +14149,13 @@ impl ArtifactStoreOneItemLiveAuthority {
 
     pub fn group_id(&self) -> Option<&str> {
         self.group_id.as_deref()
+    }
+
+    /// @emoji 🔏 The server-stamped identity this publication was minted under, or `None` for every
+    /// local gesture. The fold reads it to keep the stamped mutation id on the first folded item
+    /// instead of rewriting it to the store's `<edit-id>#<position>` form.
+    pub fn stamped_edit_id(&self) -> Option<&str> {
+        self.stamped_edit_id.as_deref()
     }
 
     /// 🧹️ Transfers the authority Arc and its final actor/group strings into byte-bounded retirement.
@@ -14275,6 +14292,22 @@ pub trait ArtifactStoreOneItemPreparation<P, Mutation>: Send {
 pub trait ArtifactStoreOneItemPreparationFactory<P, Mutation>: Send + Sync {
     fn preflight(&self, mutation: &Mutation, description: Option<&str>, lane: HistoryLane) -> Result<ArtifactStoreOneItemFootprint, String>;
     fn begin(&self, request: ArtifactStoreOneItemPreparationRequest<P, Mutation>) -> Result<Box<dyn ArtifactStoreOneItemPreparation<P, Mutation>>, ArtifactStoreOneItemPreparationRequest<P, Mutation>>;
+
+    /// 🕰️ Declares a server-derived publication clock the factory will stamp on its prepared edit,
+    /// so the Store mints the authority at that exact tick instead of its own wall-clock one. A
+    /// factory that returns `None` keeps the Store's clock, which is what every local gesture wants.
+    fn stamped_clock(&self) -> Option<HybridLogicalTimestamp> {
+        None
+    }
+
+    /// 🔏 Declares the server-derived mutation identity the factory will stamp on its prepared edit.
+    /// A stamped publication is hashed into a durable decision under this exact identity before the
+    /// Store ever sees it, so the Store must publish under it rather than mint its own — otherwise
+    /// the committed edit carries an identity no verifier can bind to the approval it executed.
+    /// `None` keeps the Store's content-addressed mint, which is what every local gesture wants.
+    fn stamped_mutation_id(&self) -> Option<MutationId> {
+        None
+    }
 }
 
 //#region 🧺️BatchSource
@@ -14286,6 +14319,14 @@ trait ArtifactStoreBatchItemAuthority<P, Mutation>: Send + Sync {
 
     fn preflight(&self, input: &Self::Input, description: Option<&str>, lane: HistoryLane) -> Result<ArtifactStoreOneItemFootprint, String>;
     fn begin(&self, request: ArtifactStoreOneItemPreparationRequest<P, Self::Input>) -> Result<Box<dyn ArtifactStoreOneItemPreparation<P, Mutation>>, ArtifactStoreOneItemPreparationRequest<P, Self::Input>>;
+
+    fn stamped_clock(&self) -> Option<HybridLogicalTimestamp> {
+        None
+    }
+
+    fn stamped_mutation_id(&self) -> Option<MutationId> {
+        None
+    }
 }
 
 impl<P: Send + Sync, Mutation: Send> ArtifactStoreBatchItemAuthority<P, Mutation> for Arc<dyn ArtifactStoreOneItemPreparationFactory<P, Mutation>> {
@@ -14297,6 +14338,14 @@ impl<P: Send + Sync, Mutation: Send> ArtifactStoreBatchItemAuthority<P, Mutation
 
     fn begin(&self, request: ArtifactStoreOneItemPreparationRequest<P, Mutation>) -> Result<Box<dyn ArtifactStoreOneItemPreparation<P, Mutation>>, ArtifactStoreOneItemPreparationRequest<P, Mutation>> {
         self.as_ref().begin(request)
+    }
+
+    fn stamped_clock(&self) -> Option<HybridLogicalTimestamp> {
+        self.as_ref().stamped_clock()
+    }
+
+    fn stamped_mutation_id(&self) -> Option<MutationId> {
+        self.as_ref().stamped_mutation_id()
     }
 }
 
@@ -14824,6 +14873,33 @@ impl<P, Mutation> ArtifactStoreBatchPublication<P, Mutation> {
     pub fn terminal_is_empty(&self) -> bool {
         self.phase == ArtifactStoreOneItemPublicationPhase::Complete && self.preparation.is_none() && self.source.is_none() && self.stage.is_none() && self.authority.is_none() && self.receipt.is_none() && self.fault.is_none() && self.coalesce_key.is_none()
     }
+
+    /// 🔬️ The first owner `close_step` would try to retire, in its exact drain order, plus whether
+    /// `begin_close` has run. `close_step` answers only `Pending`/`Blocked`/`Complete`, so a
+    /// publication that will not reach terminal emptiness under repeated one-item grants cannot say
+    /// WHICH of its seven owners refuses. This names it.
+    pub fn closing_owner_witness(&self) -> &'static str {
+        if !self.close_started {
+            return "close-not-started";
+        }
+        if self.preparation.is_some() {
+            "preparation"
+        } else if self.source.is_some() {
+            "source"
+        } else if self.stage.is_some() {
+            "stage"
+        } else if self.coalesce_key.is_some() {
+            "coalesce-key"
+        } else if self.receipt.is_some() {
+            "receipt"
+        } else if self.authority.is_some() {
+            "authority"
+        } else if self.fault.is_some() {
+            "fault"
+        } else {
+            "none"
+        }
+    }
 }
 
 impl<P, Mutation> Drop for ArtifactStoreBatchPublication<P, Mutation> {
@@ -15232,6 +15308,13 @@ where
     /// 🪪️ Reads the event-maintained generation at an already-owned operation boundary.
     pub fn generation_now(&self) -> u64 {
         self.generation()
+    }
+
+    /// ⏰️ Reads this Store's hybrid logical clock without suspension, so a server that mints a
+    /// stamped publication clock can make it strictly after the document's own last edit instead of
+    /// guessing from its wall clock.
+    pub fn clock_now(&self) -> HybridLogicalTimestamp {
+        self.clock
     }
 
     pub fn content_revision(&self) -> [u8; 32] {
@@ -16530,6 +16613,31 @@ where
         };
         let mut next_clock = self.clock;
         next_clock.tick(now_ms());
+        // ⏰️ A stamped clock is compared against the document's OWN history, not against the
+        // wall clock this Store happened to be constructed at. `clock` is seeded
+        // `HybridLogicalTimestamp::new(0, now_ms())` at construction, so a Store that has published
+        // no edit of its own carries a machine fact, not a document fact, and rejecting a stamp
+        // against it refused every first publication whose stamp was minted anywhere but this
+        // process's `now_ms()`. Once this Store has published an edit, `clock` IS the last edit's
+        // stamp (the commit path assigns `self.clock = next_clock`), and strictly-after is then
+        // exactly the hybrid-logical invariant the ordering depends on.
+        match source.authority.as_ref().and_then(ArtifactStoreBatchItemAuthority::stamped_clock) {
+            Some(stamped) if self.edit_sequence == 0 || (stamped.physical_ms, stamped.logical) > (self.clock.physical_ms, self.clock.logical) => next_clock = stamped,
+            Some(_) => return Err(reject("stamped publication clock is not strictly after this Store's own last published edit".into(), source)),
+            None => {}
+        }
+        // 🔏 The stamped identity travels with the stamped clock: a durable committer hashes its
+        // canonical command over BOTH before the Store is reached, so an authority that minted its
+        // own content-addressed `edit_id()` published an edit that no verifier could bind back to
+        // the approval it executed. It is admitted under the same fixed identity capacity every
+        // other Store identity answers to.
+        let stamped_edit_id = match source.authority.as_ref().and_then(ArtifactStoreBatchItemAuthority::stamped_mutation_id) {
+            Some(identity) if identity.0.is_empty() || identity.0.len() > ARTIFACT_STORE_ONE_ITEM_ID_BYTES => {
+                return Err(reject("stamped publication identity exceeds its fixed identity capacity".into(), source));
+            }
+            Some(identity) => Some(identity.0),
+            None => None,
+        };
         let admitted_items = source.inputs.len();
         let authority = Arc::new(ArtifactStoreOneItemLiveAuthority {
             operation,
@@ -16540,6 +16648,7 @@ where
             next_clock,
             actor,
             group_id,
+            stamped_edit_id,
         });
         if admitted_items > footprint.work_items {
             return Err(reject("batched publication item census disagrees with its declared fixed work envelope".into(), source));
@@ -16832,6 +16941,7 @@ where
             || candidate.edit.mutation_meta.len() != 1
             || candidate.edit.id != candidate.applied_edit_id
             || candidate.edit.id != candidate.tail_edit_id
+            || authority.stamped_edit_id().is_some_and(|identity| identity != candidate.edit.id)
             || candidate.edit.actor.as_deref() != Some(authority.actor.as_str())
             || candidate.local_actor.as_deref() != Some(authority.actor.as_str())
             || candidate.next_clock != authority.next_clock
@@ -16881,8 +16991,16 @@ where
         }
         stage.edit.inverse.extend(inverse);
         let position = stage.edit.forwards.len();
+        // 🔏 A stamped publication's first folded item keeps the identity its durable decision was
+        // hashed over. The `#position` form is the store's way of naming the several mutations one
+        // local gesture folds into one edit; rewriting the stamped item to it produced a committed
+        // decision whose `mutation_id` no longer matched the approval target the WAL verifies.
+        let folded_identity = match authority.stamped_edit_id() {
+            Some(identity) if position == 0 => MutationId(identity.to_string()),
+            _ => MutationId(format!("{}#{position}", stage.edit.id)),
+        };
         for meta in edit.mutation_meta.iter_mut() {
-            meta.mutation_id = Some(crate::os_spr::MutationId(format!("{}#{position}", stage.edit.id)));
+            meta.mutation_id = Some(folded_identity.clone());
         }
         stage.edit.forwards.extend(std::mem::take(&mut edit.forwards));
         stage.edit.mutation_meta.extend(std::mem::take(&mut edit.mutation_meta));
@@ -17099,13 +17217,13 @@ where
             let added = next[next.len() - 1].clone();
             let edit = self.envelope.vcs.edits.iter().find(|edit| edit.id == added).ok_or_else(|| VcsError::UnknownEdit(added.clone()))?;
             let pre = Arc::clone(&*self.current);
-            let mut folded = pre.as_ref().clone();
+            let mut folded = ReplayProjection::<P, Mutation>::new(pre.as_ref().clone());
             for operation in &edit.forwards {
-                let next = apply_mutation(&folded, operation)?.0;
-                retire_replayed_projection::<P, Mutation>(std::mem::replace(&mut folded, next));
+                let next = apply_mutation(&*folded, operation)?.0;
+                folded.advance(next);
             }
             self.replace_tail_undo_cache_retained(Some((added, pre)))?;
-            return Ok(Arc::new(folded));
+            return Ok(Arc::new(folded.into_inner()));
         }
         self.replace_tail_undo_cache_retained(None)?;
         Ok(Arc::new(Self::fold_history(&self.envelope, next).await?))
@@ -18500,6 +18618,66 @@ where
     <Mutation::Diff as MutationDiff<P>>::retire_projection(projection);
 }
 
+/// 🧊️ The live intermediate of a history fold, which retires itself on EVERY exit path. A fold walks
+/// `base → mid₁ → … → head`; its loop body already retires the projection each step displaces, but an
+/// early return — an unknown edit id, a `MutationDiff::apply` refusal, a saturated owner queue —
+/// carried the still-live one straight into a bare drop, and an artifact whose projection owns a
+/// fail-closed root (an `OrderedMap`, a neural `Dictionary`) aborts the guest there. That is why
+/// 🖨️raster's `redo` kept trapping after its `retire_projection`/`retire_cold` overrides landed:
+/// `undo` answers from the tail cache and folds nothing, while `redo` re-applies the reinstated
+/// edit's forwards in [`ArtifactStore::project_applied`] and meets the `?` (measured 2026-09-20).
+/// Holding the intermediate here makes the retirement STRUCTURAL — a fold that grows a new early
+/// return cannot silently miss it, and no technology has to override anything extra to be safe.
+struct ReplayProjection<P, Mutation>
+where
+    Mutation: self::Mutation<P>,
+{
+    projection: Option<P>,
+    technology: std::marker::PhantomData<fn() -> Mutation>,
+}
+
+impl<P, Mutation> ReplayProjection<P, Mutation>
+where
+    Mutation: self::Mutation<P>,
+{
+    /// 🌱️ Takes ownership of a fold's base projection.
+    fn new(projection: P) -> Self {
+        Self { projection: Some(projection), technology: std::marker::PhantomData }
+    }
+
+    /// ▶️ Installs the next projection and retires the one it displaces.
+    fn advance(&mut self, next: P) {
+        let displaced = self.projection.replace(next).expect("a live replay projection is present until it is handed out");
+        retire_replayed_projection::<P, Mutation>(displaced);
+    }
+
+    /// 🎁️ Hands the finished projection to the caller, who owns its retirement from here on.
+    fn into_inner(mut self) -> P {
+        self.projection.take().expect("a live replay projection is handed out exactly once")
+    }
+}
+
+impl<P, Mutation> std::ops::Deref for ReplayProjection<P, Mutation>
+where
+    Mutation: self::Mutation<P>,
+{
+    type Target = P;
+    fn deref(&self) -> &P {
+        self.projection.as_ref().expect("a live replay projection is present until it is handed out")
+    }
+}
+
+impl<P, Mutation> Drop for ReplayProjection<P, Mutation>
+where
+    Mutation: self::Mutation<P>,
+{
+    fn drop(&mut self) {
+        if let Some(projection) = self.projection.take() {
+            retire_replayed_projection::<P, Mutation>(projection);
+        }
+    }
+}
+
 /// @emoji 🧊️ Cold-retires scratch operations (a rebased or discarded inverse): an operation may own a
 /// fail-closed root, so a displaced copy never reaches `Drop` owning it.
 fn retire_scratch_operations<P, Mutation>(operations: Vec<Mutation>)
@@ -18571,7 +18749,7 @@ where
     P: Clone,
     Mutation: self::Mutation<P>,
 {
-    let mut snapshot = envelope.vcs.initial_snapshot.clone();
+    let mut snapshot = ReplayProjection::<P, Mutation>::new(envelope.vcs.initial_snapshot.clone());
     let mut seen = HashSet::new();
     for edit_id in applied_edit_ids {
         if !seen.insert(edit_id) {
@@ -18580,11 +18758,11 @@ where
         let edit = envelope.vcs.edits.iter().find(|entry| entry.id == *edit_id).ok_or_else(|| VcsError::UnknownEdit(edit_id.clone()))?;
         for operation in &edit.forwards {
             // 🧮️ Mechanical wrap only — see `replay_mutations`'s matching note.
-            let next = apply_mutation(&snapshot, operation)?.0;
-            retire_replayed_projection::<P, Mutation>(std::mem::replace(&mut snapshot, next));
+            let next = apply_mutation(&*snapshot, operation)?.0;
+            snapshot.advance(next);
         }
     }
-    Ok(snapshot)
+    Ok(snapshot.into_inner())
 }
 //#endregion 🔖️ArtifactStore
 
@@ -21753,6 +21931,41 @@ pub mod test_support {
         assert!(!printed.contains('\n'), "print_op must be one line, got: {printed:?}");
         let parsed = Op::parse_op(&printed).unwrap_or_else(|error| panic!("op parse failed: {error}"));
         assert_eq!(&parsed, operation, "op-text round trip diverged; printed: {printed:?}");
+    }
+
+    /// @emoji 🧊️ Cold twin of [`assert_op_line_round_trip`] for an operation that REJECTS a bare drop —
+    /// one carrying an `OrderedMap` root or a retirement ladder (`🧰️framework/🔨️modules/🌱️value/🗂️ordered/🦀️.rs:81`),
+    /// e.g. a mutation payload holding a `neural_engine::Dictionary`. Every operation this helper
+    /// decodes is handed to `retire` instead of being dropped, so the law can be asserted without
+    /// tripping a destructor guard. The op-level mirror of [`assert_dsl_round_trip_cold`].
+    pub fn assert_op_line_round_trip_cold<Op>(operation: &Op, retire: impl FnOnce(Op))
+    where
+        Op: OpText + PartialEq + std::fmt::Debug,
+    {
+        let printed = operation.print_op();
+        assert!(!printed.contains('\n'), "print_op must be one line, got: {printed:?}");
+        let parsed = Op::parse_op(&printed).unwrap_or_else(|error| panic!("op parse failed: {error}"));
+        let matches = parsed == *operation;
+        let report = matches.then(String::new).unwrap_or_else(|| format!("{parsed:?}"));
+        retire(parsed);
+        assert!(matches, "op-text round trip diverged; printed: {printed:?}\nparsed:\n{report}");
+    }
+
+    /// @emoji 🧊️ Cold twin of [`assert_op_text_binary_equivalence`]; `retire` takes exact ownership of
+    /// every operation this helper decodes (one from the text lane, one from the binary lane).
+    pub fn assert_op_text_binary_equivalence_cold<Op>(operation: &Op, mut retire: impl FnMut(Op))
+    where
+        Op: OpText + OpBinary + PartialEq + std::fmt::Debug,
+    {
+        assert_op_line_round_trip_cold(operation, &mut retire);
+        let encoded = operation.encode_op().unwrap_or_else(|error| panic!("op encode failed: {error}"));
+        let encoded_again = operation.encode_op().unwrap_or_else(|error| panic!("op re-encode failed: {error}"));
+        assert_eq!(encoded, encoded_again, "op binary encoding is not deterministic");
+        let decoded = Op::decode_op(&encoded).unwrap_or_else(|error| panic!("op decode failed: {error}"));
+        let matches = decoded == *operation;
+        let report = matches.then(String::new).unwrap_or_else(|| format!("{decoded:?}"));
+        retire(decoded);
+        assert!(matches, "op-binary round trip diverged from source operation\ndecoded:\n{report}");
     }
 
     /// @emoji ⚖️ Asserts op text and op binary are two encodings of the SAME operation:

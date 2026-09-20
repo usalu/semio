@@ -1,0 +1,53 @@
+{
+  "version": 1,
+  "mime": "application/x-semio-catalogue-item",
+  "surface": {
+    "id": "canvas.catalogue.terminal",
+    "controllerId": "layout-play",
+    "width": 320,
+    "height": 200
+  },
+  "frameOwner": {
+    "capacity": 256,
+    "occupiedBeforePair": 255,
+    "expectedPairAdmission": "refusedWhole"
+  },
+  "cases": [
+    {
+      "id": "valid-after-refused-leave",
+      "terminal": "valid",
+      "types": ["application/x-semio-catalogue-item", "application/x-semio-catalogue-kind.rect"],
+      "rawPayload": "{\"kind\":\"rect\"}",
+      "point": { "x": 73, "y": 41 },
+      "leaveOutcome": "reject",
+      "expectedActions": ["canvasDragLeave", "canvasDrop"]
+    },
+    {
+      "id": "malformed-retains-raw-refusal",
+      "terminal": "malformed",
+      "types": ["application/x-semio-catalogue-item", "application/x-semio-catalogue-kind.rect"],
+      "rawPayload": "{\"kind\":",
+      "point": { "x": 91, "y": 57 },
+      "leaveOutcome": "resolve",
+      "expectedActions": ["canvasDragLeave", "canvasDrop"]
+    },
+    {
+      "id": "empty-is-leave-only",
+      "terminal": "empty",
+      "types": ["application/x-semio-catalogue-item", "application/x-semio-catalogue-kind.rect"],
+      "rawPayload": "",
+      "point": { "x": 109, "y": 63 },
+      "leaveOutcome": "resolve",
+      "expectedActions": ["canvasDragLeave"]
+    },
+    {
+      "id": "foreign-drop-is-inert",
+      "terminal": "nonCatalogue",
+      "types": ["text/plain"],
+      "rawPayload": "foreign",
+      "point": { "x": 127, "y": 79 },
+      "leaveOutcome": "resolve",
+      "expectedActions": []
+    }
+  ]
+}

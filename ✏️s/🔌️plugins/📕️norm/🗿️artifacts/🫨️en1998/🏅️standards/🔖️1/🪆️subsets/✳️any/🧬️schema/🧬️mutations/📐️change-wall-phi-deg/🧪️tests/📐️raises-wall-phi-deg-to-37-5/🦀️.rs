@@ -67,7 +67,7 @@ async fn change_wall_phi_deg_committed_json_is_canonical() {
     }
     let reencoded = serde_json::to_value(mutation()).expect("change-wall-phi-deg mutation encodes");
     let original: serde_json::Value = serde_json::from_str(MUTATION).expect("change-wall-phi-deg mutation reparses");
-    assert_eq!(reencoded, original, "change-wall-phi-deg/raises-wall-phi-deg-to-37-5: committed mutation JSON is not the canonical externally-tagged ChangeWallPhiDeg form carrying newWallPhiDeg");
+    assert_eq!(reencoded, original, "change-wall-phi-deg/raises-wall-phi-deg-to-37-5: committed mutation JSON is not the canonical internally-tagged ChangeWallPhiDeg form carrying mutation and newWallPhiDeg");
 }
 
 /// 🎯️ The declared outcome holds: `change-wall-phi-deg` at 37.5 is applied, not rejected, and carries no

@@ -125,6 +125,73 @@ export function observeActivationReceipts(directory: string, listener: (receipt:
   return { snapshot: () => current, close };
 }
 
+//#region 🩺️HealthySet
+/** 🩺️ What one session component's staged module directory actually holds, as read off disk by the
+ * caller — kept a plain record so the rule below is pure and a fixture can drive every outcome. */
+export type PreparedComponentFacts = Readonly<{
+  pluginId: string;
+  /** 🧱️ `false` when the component's own `component-<profile>`/`materialize-<profile>` never produced
+   * a staging directory at all — the shape a crate that failed to compile leaves behind. */
+  directoryPresent: boolean;
+  /** 🔣️ `pluginId` the staged `🔣️.json` names, `undefined` when that descriptor is absent or unreadable. */
+  descriptorPluginId?: string;
+  bridgePresent: boolean;
+  artifactMarkerPresent: boolean;
+}>;
+
+/** 🩺️ One component's prepared-staging verdict. `unstaged` and `incomplete` are different facts: the
+ * first means nothing was produced, the second means something was produced and does not hold together. */
+export type PreparedComponentVerdict = Readonly<{
+  pluginId: string;
+  kind: "prepared" | "unstaged" | "incomplete";
+  detail?: string;
+}>;
+
+/** 🩺️ Decides one staged component's prepared-ness from already-collected facts — pure, so the
+ * preparation pass and the activation receipt share ONE rule. Precedence is most-fundamental-first:
+ * nothing staged beats a descriptor naming a different plugin, which beats a missing bridge or
+ * Nx artifact marker. */
+export function preparedComponentVerdict(facts: PreparedComponentFacts): PreparedComponentVerdict {
+  if (!facts.directoryPresent) return { pluginId: facts.pluginId, kind: "unstaged", detail: "no staged module directory" };
+  if (facts.descriptorPluginId === undefined) return { pluginId: facts.pluginId, kind: "incomplete", detail: "no readable 🔣️.json descriptor" };
+  if (facts.descriptorPluginId !== facts.pluginId) return { pluginId: facts.pluginId, kind: "incomplete", detail: `descriptor names ${facts.descriptorPluginId}` };
+  if (!facts.bridgePresent) return { pluginId: facts.pluginId, kind: "incomplete", detail: "no module bridge" };
+  if (!facts.artifactMarkerPresent) return { pluginId: facts.pluginId, kind: "incomplete", detail: "no .nx-artifact.json marker" };
+  return { pluginId: facts.pluginId, kind: "prepared" };
+}
+
+/** 🩺️ The HEALTHY SET rule for a multi-plugin host: one component that failed to build is a missing
+ * component, not a broken product. `s` fans its Nx closure out to the entire registered catalog, so an
+ * all-or-nothing preparation makes the whole hub un-bootable whenever any single one of ~60 crates is
+ * red — which is exactly how every cold `dev s` attempt before ticket 26/09/18 ended (`🧱️block`).
+ *
+ * The exclusion is explicit and principled rather than a swallowed error: every excluded component is
+ * NAMED with its verdict, it is dropped from the activation receipt (so the serve-start freshness pass
+ * reports it `unactivated` and the shell's own per-plugin install isolation refuses it at open time
+ * instead of pretending it is there), and the two components that genuinely cannot be missing still
+ * refuse the boot — the variant's OWN host plugin, and the degenerate case where nothing prepared at
+ * all. Anything else is reported and excluded. */
+export function healthyPreparedComponents(verdicts: readonly PreparedComponentVerdict[], hostPluginId: string): {
+  readonly prepared: readonly string[];
+  readonly excluded: readonly PreparedComponentVerdict[];
+  readonly refusal?: string;
+} {
+  const prepared = verdicts.filter((row) => row.kind === "prepared").map((row) => row.pluginId);
+  const excluded = verdicts.filter((row) => row.kind !== "prepared");
+  const host = excluded.find((row) => row.pluginId === hostPluginId);
+  if (host) return { prepared, excluded, refusal: `Host component ${hostPluginId} is ${host.kind}${host.detail ? ` — ${host.detail}` : ""}` };
+  if (prepared.length === 0) return { prepared, excluded, refusal: `No component of ${verdicts.length} prepared` };
+  return { prepared, excluded };
+}
+
+/** 📣️ Renders one `[excluded]` line per component the healthy set drops, each ending in the exact
+ * command that would bring it back — a component silently missing from a 60-plugin hub is unreadable.
+ * Same line shape as {@link stagedModuleReportLines} so one boot capture reads as one report. */
+export function preparedComponentReportLines(excluded: readonly PreparedComponentVerdict[], command: string): readonly string[] {
+  return excluded.map((row) => `[excluded] ${row.pluginId}: ${row.kind}${row.detail ? ` — ${row.detail}` : ""} — run: ${command}`);
+}
+//#endregion 🩺️HealthySet
+
 //#region 🔖️StagedModuleFreshness
 /** 🗑️ Directory names inside a component's owner tree that hold BUILD OUTPUT, never the sources whose
  * mtime decides whether the staged module is behind. Walking them would make every crate permanently

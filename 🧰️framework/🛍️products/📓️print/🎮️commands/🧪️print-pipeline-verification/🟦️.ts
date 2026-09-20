@@ -1,7 +1,10 @@
+import { BundleScript, TEST_LEVELS, resolveTestLevel } from "../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { verifyVisualizationCoverage } from "../../🔨️modules/📊️visualization-gallery/🟦️.ts";
+import { verifyPrintMacroStagingNative, verifyPrintPipelineLong, verifyPrintPipelineQuick, verifyPrintVisualizationBuild } from "./🧪️tests/🖨️pipeline/🟦️.ts";
 
 //#region 🧪️PrintPipelineVerification
-/** 🧪️ Verifies pure print transformations, the platform cases of the print owner, and the rendered gallery. */
+/** 🧪️ Verifies pure print transformations and, from `long` upward, every template PDF; `viz` adds the
+ * authored gallery coverage contract and, at `full`, every visualization PDF. */
 export class PrintPipelineVerificationCommand extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments[0] === "macro") {
@@ -11,18 +14,15 @@ export class PrintPipelineVerificationCommand extends BundleScript {
     }
     if (segments[0] === "viz") {
       const mode = segments[1] ?? "coverage";
-      if (mode === "fixtures") {
-        await regeneratePrintGalleryFixtures(segments.slice(2));
-        return;
-      }
       if (!["quick", "coverage", "full"].includes(mode)) throw new Error(`unknown viz test mode: ${mode}`);
       await verifyPrintPipelineQuick();
       verifyVisualizationCoverage();
-      runPrintPlatformCases(mode === "full" ? "long" : "quick");
       if (mode === "full") await verifyPrintVisualizationBuild();
       return;
     }
     const { level } = resolveTestLevel(segments);
+    await verifyPrintPipelineQuick();
+    if (TEST_LEVELS.indexOf(level) >= TEST_LEVELS.indexOf("long")) await verifyPrintPipelineLong();
   }
 }
 //#endregion 🧪️PrintPipelineVerification

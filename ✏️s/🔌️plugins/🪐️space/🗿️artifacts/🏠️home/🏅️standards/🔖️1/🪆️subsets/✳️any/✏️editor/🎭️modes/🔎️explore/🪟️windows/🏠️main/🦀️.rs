@@ -30,6 +30,12 @@ use semio_framework_ui_contract::{Buildable, HasBase, HasChildren};
 //#region 🔖️Constants
 pub const S_HOME_WINDOW: &str = "s-home-main";
 pub const S_HOME_BODY: &str = TableWindowKit::KIND_ID;
+/// 🕳️ The empty-catalog message's own reconciliation key. It exists because this node is a CHILD of
+/// the window body's stack: see `render_rows_wrapped`'s doc for why an unkeyed built child is a
+/// collision, not a convenience.
+const S_HOME_EMPTY: &str = "s-home-empty";
+/// 🩹️ The two dead-line spacers' keys — see `window_content_dead_line_spacer`.
+const S_HOME_DEAD_LINE: [&str; 2] = ["s-home-dead-line-a", "s-home-dead-line-b"];
 //#endregion 🔖️Constants
 
 //#region 🔖️Manifest
@@ -94,7 +100,10 @@ fn row_actions(labels: &SHomeLabels, row: &crate::HomeSpaceRow) -> semio_framewo
 /// other test has created a studio, which is why `render` itself cannot be probed for "empty" reliably).
 fn render_rows(rows: &[crate::HomeSpaceRow], table: &HomeTableLabels, actions: &SHomeLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     if rows.is_empty() {
-        return semio_framework_plugin::built_text_node(semio_framework_plugin::Label::data(table.empty_message.as_str().to_string()))
+        return semio_framework_ui_contract::text(fixed_label(table.empty_message, "ui.table.empty-label")?)
+            .try_id(S_HOME_EMPTY)
+            .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.table.empty-id", "empty table id admission failed"))?
+            .try_build()
             .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.table.empty", "empty table text admission failed"));
     }
     let mut view = TableRowsView::new(fixed_text(table.column_actions.as_str(), "ui.table.actions-label")?);
@@ -139,8 +148,12 @@ fn render_rows(rows: &[crate::HomeSpaceRow], table: &HomeTableLabels, actions: &
 /// hosts already get it. Two empty separators (measured: ~6.4px of clearance each from the stack's own
 /// `gap-double`) reliably clear the dead-line with margin; confirmed live via Playwright-style
 /// `elementFromPoint` hit-testing at the button's own center before/after.
-fn window_content_dead_line_spacer() -> semio_framework_plugin::BuiltNode {
-    semio_framework_ui_contract::BuiltNode::empty_separator()
+/// 🔑️ Keyed explicitly for the reason `render_rows_wrapped` documents: nothing in this stack may rely
+/// on a positional key, because its siblings are already-built nodes that carry keys of their own.
+fn window_content_dead_line_spacer(key: &str) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+    let mut spacer = semio_framework_ui_contract::BuiltNode::empty_separator();
+    spacer.key = semio_framework_plugin::UiText::try_from_str(key).ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.window.spacer-id", "window spacer id admission failed"))?;
+    Ok(spacer)
 }
 
 fn create_space_button(actions: &SHomeLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
@@ -158,10 +171,19 @@ fn create_space_button(actions: &SHomeLabels) -> semio_framework_plugin::UiAssem
     builder.try_build().map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.window.create", "create button admission failed"))
 }
 
+/// 🔑️ **Every child of this stack carries an explicit key, and that is load-bearing.**
+/// `Buildable::try_build()` stamps the ROOT-position key `#0` on any node whose author set no id
+/// (`🏗️builder/🦀️.rs:849-853`), while `HasChildren::try_child` only fills a key that is still EMPTY.
+/// So a `try_build()`-ed node used as a child arrives pre-keyed `#0` and collides with whichever
+/// sibling the parent numbered `#0` — the UI document then refuses the whole tree with
+/// `DuplicateSiblingKey`, the surface never publishes, and the window shows a fault box.
+/// That is exactly what `s-home-main` did for every signed-out visitor: the empty-catalog message was
+/// `try_build()`-ed `#0` and the first spacer was positioned `#0` (ticket 26/09/18, S3 — measured live
+/// and pinned by `the_signed_out_window_body_survives_the_component_tree_producer`).
 fn render_rows_wrapped(rows: &[crate::HomeSpaceRow], table: &HomeTableLabels, actions: &SHomeLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let table_node = render_rows(rows, table, actions)?;
     let mut children: semio_framework_plugin::UiFixedList<semio_framework_plugin::BuiltNode> = semio_framework_plugin::UiFixedList::default();
-    for child in [window_content_dead_line_spacer(), window_content_dead_line_spacer(), create_space_button(actions)?, table_node] {
+    for child in [window_content_dead_line_spacer(S_HOME_DEAD_LINE[0])?, window_content_dead_line_spacer(S_HOME_DEAD_LINE[1])?, create_space_button(actions)?, table_node] {
         children.try_push(child).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.window.children", "fixed window child admission failed"))?;
     }
     semio_framework_ui_contract::column()
@@ -175,10 +197,24 @@ pub fn render(cfg: &HomeConfig, view_state: &semio_framework_plugin::ViewModel) 
     let table = semio_framework_plugin::resolve_labels::<HomeTableLabels>(view_state);
     let actions = semio_framework_plugin::resolve_labels::<SHomeLabels>(view_state);
     let directory = cfg.directory().map_err(|_| semio_framework_plugin::PluginAssemblyError::new("s.home.directory-projection-malformed", "Home directory projection is invalid"))?;
+    // 🪪️ SIGNED OUT IS A STATE, NOT A FAULT. Refusing here (`s.home.session-identity-required`) meant
+    // the landing window of the whole product never published for anyone who was not already signed in
+    // — which is the ordinary first paint of every hub-configured shell. The host then had an app that
+    // declined to render, and the human's later sign-in had nothing to re-render (ticket 26/09/18, S2
+    // §3.3: measured live, this was the operative blocker of a usable `s`).
+    //
+    // A signed-out human simply owns no spaces, so the honest answer is this same window with an empty
+    // row set — the table kit already states its own empty case in en+de — next to the shell's own
+    // "Sign in" affordance, which is chrome and is mounted on every device regardless of this surface.
+    // Nothing here is faked: no row is invented, and the moment an identity arrives the host
+    // re-establishes and the real rows replace this.
+    //
     // 🌉️ `crate::home_space_rows` is a plugin-root async fn (outside this lease); `render` must
     // stay sync (called synchronously by `HomeApp::render`) — bridged via `resolve_ready`.
-    let identity = crate::home_session_identity(view_state).ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("s.home.session-identity-required", "current host session identity is required"))?;
-    let rows = semio_framework_plugin::resolve_ready(crate::home_space_rows(&directory, &identity.user_id));
+    let rows = match crate::home_session_identity(view_state) {
+        Some(identity) => semio_framework_plugin::resolve_ready(crate::home_space_rows(&directory, &identity.user_id)),
+        None => Vec::new(),
+    };
     render_rows_wrapped(&rows, table, actions)
 }
 //#endregion 🔖️Render

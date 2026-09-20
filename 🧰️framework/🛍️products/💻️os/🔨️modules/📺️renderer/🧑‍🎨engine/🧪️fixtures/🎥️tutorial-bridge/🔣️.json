@@ -1,0 +1,60 @@
+{
+  "schemaVersion": 1,
+  "snapshot": {
+    "focusedWindowId": "world-main",
+    "activeUtilityByWindowId": { "world-main": "transform", "graph-main": "select" },
+    "activeToolId": "fill",
+    "activePanelTabByGroup": {
+      "top-left": "panel.top-left", "top-middle": "panel.top-middle", "top-right": "panel.top-right", "right-middle": "panel.right-middle",
+      "bottom-right": "panel.bottom-right", "bottom-middle": "panel.bottom-middle", "bottom-left": "panel.bottom-left", "left-middle": "panel.left-middle"
+    },
+    "interactionSelection": {
+      "world": { "granularity": "object", "ids": ["solid-a", "solid-b"], "anchorId": "solid-a" },
+      "graph": { "granularity": "node", "ids": ["node-a"] }
+    },
+    "openDialogId": "confirm.reset",
+    "expandedTreeIds": ["catalogue.solids", "settings.appearance"],
+    "commandPanelOpen": false
+  },
+  "mutated": {
+    "focusedWindowId": "graph-main",
+    "activeUtilityByWindowId": { "graph-main": "wire" },
+    "activeToolId": "brush",
+    "activePanelTabByGroup": {
+      "top-left": "mutated.top-left", "top-middle": "mutated.top-middle", "top-right": "mutated.top-right", "right-middle": "mutated.right-middle",
+      "bottom-right": "mutated.bottom-right", "bottom-middle": "mutated.bottom-middle", "bottom-left": "mutated.bottom-left", "left-middle": "mutated.left-middle"
+    },
+    "interactionSelection": { "map": { "granularity": "position", "ids": ["position-a"] } },
+    "openDialogId": "confirm.other",
+    "expandedTreeIds": ["mutated.one"],
+    "commandPanelOpen": true
+  },
+  "deltas": [
+    { "kind": "selection", "domainId": "world", "granularity": "object", "ids": [] },
+    { "kind": "treeExpansion", "id": "catalogue.solids", "expanded": false },
+    { "kind": "dialog", "id": "confirm.other" },
+    { "kind": "panelTab", "group": "bottom-middle", "tabId": null },
+    { "kind": "commandPanel", "open": true },
+    { "kind": "commandPanel", "open": false }
+  ],
+  "afterDeltas": {
+    "focusedWindowId": "world-main",
+    "activeUtilityByWindowId": { "world-main": "transform", "graph-main": "select" },
+    "activeToolId": "fill",
+    "activePanelTabByGroup": {
+      "top-left": "panel.top-left", "top-middle": "panel.top-middle", "top-right": "panel.top-right", "right-middle": "panel.right-middle",
+      "bottom-right": "panel.bottom-right", "bottom-left": "panel.bottom-left", "left-middle": "panel.left-middle"
+    },
+    "interactionSelection": { "graph": { "granularity": "node", "ids": ["node-a"] } },
+    "openDialogId": "confirm.other",
+    "expandedTreeIds": ["settings.appearance"],
+    "commandPanelOpen": false
+  },
+  "gestureMatrix": [
+    { "kind": "scene", "id": "world-main", "position": [0.0, 0.0, 0.0] },
+    { "kind": "canvas", "id": "graph-main", "x": 0.0, "y": 0.0 },
+    { "kind": "entity", "id": "graph-main", "domain": "node", "entity": "height", "offset": [0.25, 0.75] },
+    { "kind": "curve", "id": "graph-main", "domain": "edge", "entity": "e1", "t": 0.25 },
+    { "kind": "domain", "id": "graph-main", "domain": "slider", "entity": "height", "value": 7.5 }
+  ]
+}

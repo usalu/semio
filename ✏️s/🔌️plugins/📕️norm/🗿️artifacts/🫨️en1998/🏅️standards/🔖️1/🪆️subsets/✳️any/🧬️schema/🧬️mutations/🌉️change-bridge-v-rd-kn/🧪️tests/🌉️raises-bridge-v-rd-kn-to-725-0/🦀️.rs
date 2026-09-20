@@ -67,7 +67,7 @@ async fn change_bridge_v_rd_kn_committed_json_is_canonical() {
     }
     let reencoded = serde_json::to_value(mutation()).expect("change-bridge-v-rd-kn mutation encodes");
     let original: serde_json::Value = serde_json::from_str(MUTATION).expect("change-bridge-v-rd-kn mutation reparses");
-    assert_eq!(reencoded, original, "change-bridge-v-rd-kn/raises-bridge-v-rd-kn-to-725-0: committed mutation JSON is not the canonical externally-tagged ChangeBridgeVRdKn form carrying newBridgeVRdKn");
+    assert_eq!(reencoded, original, "change-bridge-v-rd-kn/raises-bridge-v-rd-kn-to-725-0: committed mutation JSON is not the canonical internally-tagged ChangeBridgeVRdKn form carrying mutation and newBridgeVRdKn");
 }
 
 /// 🎯️ The declared outcome holds: `change-bridge-v-rd-kn` at 725.0 is applied, not rejected, and carries no

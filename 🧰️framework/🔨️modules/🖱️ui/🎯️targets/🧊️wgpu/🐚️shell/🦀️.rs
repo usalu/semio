@@ -163,6 +163,7 @@ impl Shell {
         let mut out = Vec::new();
         let Some(root) = self.tree.root else { return out };
         match event {
+            UiEvent::PointerCancel => self.pressed = None,
             UiEvent::PointerDown { x, y, .. } => {
                 self.pressed = hit_test(&self.tree, root, *x, *y);
             }

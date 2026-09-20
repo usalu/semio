@@ -67,7 +67,7 @@ async fn change_tower_mass_t_committed_json_is_canonical() {
     }
     let reencoded = serde_json::to_value(mutation()).expect("change-tower-mass-t mutation encodes");
     let original: serde_json::Value = serde_json::from_str(MUTATION).expect("change-tower-mass-t mutation reparses");
-    assert_eq!(reencoded, original, "change-tower-mass-t/raises-tower-mass-t-to-112-5: committed mutation JSON is not the canonical externally-tagged ChangeTowerMassT form carrying newTowerMassT");
+    assert_eq!(reencoded, original, "change-tower-mass-t/raises-tower-mass-t-to-112-5: committed mutation JSON is not the canonical internally-tagged ChangeTowerMassT form carrying mutation and newTowerMassT");
 }
 
 /// 🎯️ The declared outcome holds: `change-tower-mass-t` at 112.5 is applied, not rejected, and carries no

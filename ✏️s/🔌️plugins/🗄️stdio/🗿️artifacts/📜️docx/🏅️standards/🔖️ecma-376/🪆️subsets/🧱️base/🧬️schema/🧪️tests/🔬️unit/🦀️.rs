@@ -282,22 +282,18 @@ mod conformance_laws {
         assert_eq!(native.as_slice(), include_bytes!("../../../📚️examples/🎬️demo/🖼️assets/📜️example.docx"), "encode_docx(demo) drifted from 📜️example.docx");
     }
 
+    /// 🖊️ The ONLY way the three shipped assets are ever refreshed: real `encode_docx`/`print_dsl`/
+    /// `encode_pack` output of the demo, never a hand edit (`fixture_honesty_law` above is what that
+    /// honesty means). Run it deliberately after a codec change — `cargo test -p
+    /// semio-s-artifact-stdio-docx --lib -- --ignored zzz_write` — then re-run the law.
     #[semio_framework_async_macros::async_test]
     #[ignore]
     async fn zzz_write_native_docx_fixture() {
         let demo = demo_docx_snapshot().await;
-        let native = encode_docx(&demo).expect("encode");
-        let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/📚️examples/🎬️demo/🖼️assets/📜️example.docx");
-        std::fs::write(path, native).expect("write 📜️example.docx");
+        let assets = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/📚️examples/🎬️demo/🖼️assets");
+        std::fs::write(assets.join("📜️example.docx"), encode_docx(&demo).expect("encode")).expect("write 📜️example.docx");
+        std::fs::write(assets.join("🗣️.dsl.semio"), store::ArtifactDsl::print_dsl(&demo)).expect("write 🗣️.dsl.semio");
+        std::fs::write(assets.join("🎒️.pack.semio"), store::ArtifactPack::encode_pack(&demo)).expect("write 🎒️.pack.semio");
     }
-    // TEMP_REGEN_FIXTURE
-    #[semio_framework_async_macros::async_test]
-    async fn temp_regen_fixture() {
-        let demo = demo_docx_snapshot().await;
-        let dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/📚️examples/🎬️demo/🖼️assets");
-        std::fs::write(dir.join("🗣️.dsl.semio"), store::ArtifactDsl::print_dsl(&demo)).unwrap();
-        std::fs::write(dir.join("🎒️.pack.semio"), store::ArtifactPack::encode_pack(&demo)).unwrap();
-    }
-    // TEMP_REGEN_FIXTURE_END
 }
 //#endregion 🔖️ConformanceLaws

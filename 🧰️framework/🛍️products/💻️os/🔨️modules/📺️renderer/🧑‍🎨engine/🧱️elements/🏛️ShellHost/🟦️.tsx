@@ -13,7 +13,8 @@ import { admitDocumentOpeningV1, BackgroundDocumentSessionsV1, browserDocumentMo
 import { createArtifactCreationCatalogMountV1, runArtifactCreationReadyOpeningV1, type ArtifactCreationCatalogMountV1 } from "./🌱️artifact-creation/🚪️ready-opening/🟦️.ts";
 import { directorySessionAuthorityIsCurrentV1, startDirectorySessionRefreshV1, type DirectorySessionRefreshV1 } from "../../../../📇️directory/🪪️session-refresh/🟦️.ts";
 import { directoryAdministrationCommandAllowedV1 } from "../../../../📇️directory/🧬️schema/🟦️.ts";
-import { BrowserBrokerPortClientV1 } from "../../../../📇️directory/🪪️session-refresh/🌐️broker-port/🟦️.ts";
+import { HubSessionPortClientV1 } from "../../../../📇️directory/🪪️session-refresh/🪪️session-port/🟦️.ts";
+import { readHubSessionCapabilityV1, writeHubSessionCapabilityV1, type HubConnectionStorageV1, type HubSessionCapabilityV1 } from "../../../../📇️directory/🔐️sign-in/🟦️.ts";
 import { SessionAuthorityNotice } from "../../../../📇️directory/🪪️session-refresh/🪪️notice/🟦️.tsx";
 import { OwnedTutorialRunV1, TutorialDriveV1, runPausedTutorialSeekV1 } from "./🗨️dialog-origin/🎥️tutorial/🟦️.ts";
 import React, {
@@ -153,7 +154,6 @@ import {
 import {
   type BackboneWorkerRequest,
   type BackboneWorkerResponse,
-  type BrowserBrokerPortResponseV1,
   type BrowserActorUiMountedV1,
   artifactFrontierIsEditedForV1,
   artifactFrontierIsGenesisForV1,
@@ -161,6 +161,7 @@ import {
   buildFolderBackboneUri,
   buildFrameworkSyncUtilities,
   buildRemoteBackboneUri,
+  parseRemoteBackboneUri,
   decodeBackboneMessage,
   decodeBackboneWorkerResponse,
   decodeDocumentArchiveBytes,
@@ -205,6 +206,7 @@ import { DOCUMENT_BACKBONE_RETENTION_LIMITS, type LocalInteractionState, type Mu
 import { scopedPresencePeersV1 } from "./👥️presence-scope/🟦️.ts";
 import { MODE_STEP_CONTROL_IDS, SURFACE_ROLE_CONTROL_IDS, SURFACE_ROLE_ORDER, createSealedInstanceLedgerV1, createSessionAppSwitchGateV1, createSessionWorkLedgerV1, quiesceSessionWorkV1, resolveBootPrimaryAppV1, roleSwitchTargetV1, sealedInstanceDropTextV1, sealedInstanceDropV1, stepModeIdV1, surfaceRoleAppsV1, surfaceSwitchBusyTextV1 } from "./🔀️surface-switch/🟦️.ts";
 import { KEYBINDING_UNOWNED_CODE, dockSeedActiveWindowIdV1, keybindingUnownedTextV1, modeLayoutStacksV1, reservedShellChordsV1, resolveKeybindingTargetWindowV1, type WindowScopeInstanceV1, type WindowScopeKindV1, type WindowScopeLayoutNodeV1 } from "./⌨️window-scope/🟦️.ts";
+import { focusedProgramKeyV1, focusedProgramV1, programHistoryKeyV1, programHistoryProjectionV1, programHistoryProjectionsAfterPatchV1, programHistoryProjectionsRetainedV1, spawnedBridgeCensusV1, spawnedProgramViewStateV1, guestActiveUtilityByWindowIdV1, guestWindowIdV1, renameLayoutWindowIdsV1, spawnedIdOfWindowInstanceV1, spawnedLayoutRenameV1, spawnedProgramWindowInstancesV1, spawnedWindowInstanceIdV1, spawnedWindowKindOfInstanceV1, type FocusedProgramV1, type ProgramHistoryProjectionsV1 } from "./🪟️spawned-program/🟦️.ts";
 import { causalOrderKeyV1, createInputLedgerV1, createRefusalNoticeThrottleV1, createVersionedRegisterV1, expectedGenerationFromArgsV1, inputAppliedV1, inputRefusalNoticeTextV1, inputRefusalNotifiesV1, inputRefusalTextV1, inputRefusedV1, resolveUtilityActivationV1, type InputOutcomeV1, type InputRefusalReasonV1, type ShellInputActionV1, type VersionedRegisterCellV1 } from "./🎯️input-ledger/🟦️.ts";
 
 
@@ -214,13 +216,18 @@ function scopeRuntimeKey(message: { readonly documentId: string; readonly scope?
   return documentRuntimeKeyV1({ kind: "hub", ...scope });
 }
 
-let localBrowserBrokerProof = (() => {
-  if (typeof window === "undefined") return undefined;
-  const match = /^#semio-broker=([0-9a-f]{64})$/u.exec(window.location.hash);
-  if (!match) return undefined;
-  window.history.replaceState(window.history.state, "", `${window.location.pathname}${window.location.search}`);
-  return match[1];
-})();
+/** 🗄️ Where one browsing context remembers the hub session it minted. `sessionStorage`, not
+ * `localStorage`: the connection BOOK (which hubs exist, which one is selected) is durable identity
+ * and belongs to the profile, but a session capability belongs to the browsing context that signed
+ * in — it must survive a reload, and it must not outlive the tab or leak into a second one. A
+ * blocked or throwing store yields `null`, which is simply "no session", never a boot failure. */
+function hubSessionStorageV1(): HubConnectionStorageV1 | null {
+  try {
+    return typeof globalThis.sessionStorage === "undefined" ? null : globalThis.sessionStorage;
+  } catch {
+    return null;
+  }
+}
 
 /** 🪪️ ticket 26/08/16/HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-STUDIOS §C3 — the config-lane
  * identity facet's documentId/schema + fold. `@semio-tech/framework-os` never had a live consumer of
@@ -661,7 +668,10 @@ import {
 
 
 import { HubConnectionIndicator, SyncAttachCard, type HubSessionPresenceV1 } from "../🔄️ShellSync/🟦️.tsx";
-import { useAgentBridge } from "../🔗️AgentBridge/🟦️.tsx";
+import { useAgentBridge, type AgentAppCommandHandler } from "../🔗️AgentBridge/🟦️.tsx";
+import { shellAppFault, type ShellAppFrameV1 } from "../../../../🌉️mcp/🐚️channel/🟦️.ts";
+import type { BridgeInstanceRef } from "../../../../🌉️mcp/🧵️bridge/🟦️.ts";
+import type { ReduceResult, ShellCommand } from "../../../../🖥️shell/🟦️.ts";
 import { AgentChatPanel } from "../💬️AgentChatPanel/🟦️.tsx";
 import { AgentApprovals } from "../🤖️AgentApprovals/🟦️.tsx";
 import { TaskManagerWindow } from "../🧵️TaskManager/🟦️.tsx";
@@ -710,6 +720,15 @@ function requiredHostPanelLeafId(app: AppDefinition | undefined): string {
   if (!leaf) throw new Error("configured host app has no panel leaf");
   return panelTabKindId(leaf.kind);
 }
+
+/** 🔗️ The shell's hub connection surface. It is an OVERLAY route: `applyShellUri` opens the workspace
+ * over whatever is already open and returns without touching the session, precisely so the app stays
+ * usable while no hub is reachable. `parseShellRoute` (owned by `ShellHelpers`) has no `/hub` concept
+ * and classifies it `notFound`, so every consumer of that classification must exempt this one path or
+ * it undoes the overlay contract — which is what tore the host app's canvas down the moment anyone
+ * opened the hub workspace to sign in (ticket 26/09/18, S3: `s-home-main` present signed out, gone
+ * after the sign-in, canvas reading `Route not found: /hub`). */
+const SHELL_HUB_ROUTE = "/hub";
 //#endregion 🔖️BuiltNodeReconciler
 
 //#region FrameworkOsShell
@@ -868,6 +887,19 @@ const OPERATION_SETTLE_RING_SLOTS = 64;
  * faulted worker, a torn-down instance). Past it the caller resumes: a background tick loop must be
  * able to recover from a lost frame, never wedge on one. */
 const OPERATION_SETTLE_WATCHDOG_MS = 30_000;
+
+/** 🧾️ One program's history as the shell projects it: the cursor undo/redo act on, the entries the
+ * History panel lists, and the checkpoint the check-in lane watches. */
+type ShellHistoryProjectionV1 = {
+  readonly cursor: number;
+  readonly entries: Readonly<Record<number, HistoryEntry>>;
+  readonly canUndo: boolean;
+  readonly canRedo: boolean;
+  readonly currentCheckpointId: string | undefined;
+};
+/** 🧾️ What a program whose history has not been read yet projects — and what the History panel shows
+ * for it, which is nothing rather than another program's ledger. */
+const EMPTY_SHELL_HISTORY_PROJECTION_V1: ShellHistoryProjectionV1 = { cursor: 0, entries: {}, canUndo: false, canRedo: false, currentCheckpointId: undefined };
 
 /** 🏁️ The typed-operation id an admitting `InvocationResult` started, or `undefined` when the action
  * started none. `dispatch_typed_command_inner` (`🔌️plugin/🦀️.rs`) answers a started operation with
@@ -1182,7 +1214,7 @@ export class TutorialRecorder {
       durationMs,
       chapters: this.chapters,
       base: { documentDsl: this.baseDocumentJson ?? undefined, exampleId, ui: this.baseUiSnapshot, cameras: [] },
-      tracks: { narration: [], video: [], events: this.events, ui: this.uiKeyframes, artifact: [], camera: this.cameraKeyframes, gestures: [] },
+      tracks: { narration: [], video: [], events: this.events, ui: this.uiKeyframes, document: [], camera: this.cameraKeyframes, gestures: [] },
       recordedAt: new Date().toISOString(),
     };
   }
@@ -2028,8 +2060,17 @@ function FrameworkOsShellInner({
   const defaults = defaultsProp ?? EMPTY_SHELL_DEFAULTS;
   const ephemeral = isEphemeralShellBrand(brand);
   const [shellState, dispatch] = useReducer(shellReducer, undefined, () => initialShellState({ pluginFilter, plugins, locks, defaults, storage: scope.storage }));
-  const [historyProjection, setHistoryProjection] = useState<{ readonly cursor: number; readonly entries: Readonly<Record<number, HistoryEntry>>; readonly canUndo: boolean; readonly canRedo: boolean; readonly currentCheckpointId: string | undefined }>({ cursor: 0, entries: {}, canUndo: false, canRedo: false, currentCheckpointId: undefined });
+  /** 🧾️ One history projection PER PROGRAM ({@link programHistoryKeyV1}), never one for the window.
+   * A spawned program is a member of this session with a document and a cursor of its own, and the
+   * cursor rule below is what decides whether a patch is a step forward — taken against the wrong
+   * program it silently drops every patch the other one sends (`🪟️spawned-program`'s
+   * {@link programHistoryProjectionsAfterPatchV1} carries the measurement). */
+  const [historyProjectionByProgram, setHistoryProjectionByProgram] = useState<ProgramHistoryProjectionsV1<ShellHistoryProjectionV1>>({});
   const historyOrderRef = useRef(0);
+  /** 🧾️ The order at which each program's projection last moved — what a full snapshot's own
+   * staleness guard compares against. Shell-wide it was the wrong question the moment two programs
+   * are open: a spawned program's patch would cancel the session's in-flight snapshot and vice versa. */
+  const historyOrderByProgramRef = useRef(new Map<string, number>());
   const exampleOptionsRef = useRef<readonly { readonly id: string }[]>([]);
   const lastDispatchedExampleIdRef = useRef("");
   const localHistoryOrderRef = useRef(0);
@@ -2039,21 +2080,33 @@ function FrameworkOsShellInner({
   // temporal dead zone there — the shell then throws `Cannot access 'uiLocale' before initialization` on first paint.
   const { uiAppearance, uiLayout, uiDriverId, uiCustomDrivers, uiDriverDraft, uiLocale, uiTerminology, uiThemeId, uiCustomThemes, uiThemeDraft, uiKeybindingOverrides } = shellState.uiPrefs;
   const boardSessionFactory = useMemo(() => resolveAppSurfaceSessionFactory(surfaceSessionFactories ?? [], session ? { pluginId: session.pluginId, appId: session.app.id, instanceId: session.instanceId } : null), [surfaceSessionFactories, session?.pluginId, session?.app.id, session?.instanceId]);
-  const applyHistoryPatch = useCallback((patch: HistoryPatch | undefined, replace = false) => {
+  /** 🧾️ Applies one `HistoryPatch` to the projection of the program that produced it. `owner` is that
+   * program — the dispatch's target session, the completion's spawned instance, the snapshot's
+   * instance — and defaults to the live session for the shell's own lanes. */
+  const applyHistoryPatch = useCallback((patch: HistoryPatch | undefined, replace = false, owner?: { readonly pluginId: string; readonly instanceId: number }) => {
     if (!patch) return;
+    const key = programHistoryKeyV1(owner ?? sessionRef.current);
+    if (key === "") return;
     let applied = false;
-    setHistoryProjection((current) => {
-      if (!historyPatchShouldApplyV1(current.cursor, patch, replace)) {
-        return current;
-      }
-      applied = true;
-      localHistoryOrderRef.current = ++historyOrderRef.current;
-      const entries = replace ? {} as Record<number, HistoryEntry> : { ...current.entries };
-      for (const entry of patch.upserts ?? []) entries[entry.seq] = entry;
-      // 📌️ §C5 — `currentCheckpointId` used to be dropped here even though `HistoryPatch` always
-      // carried it; `🔖️CheckIn` below watches it change to know a checkpoint it asked for actually
-      // landed (see `touchSpaceIndexArtifact`'s call site).
-      return { cursor: patch.cursor, entries, canUndo: patch.canUndo ?? false, canRedo: patch.canRedo ?? false, currentCheckpointId: replace ? patch.currentCheckpointId : (patch.currentCheckpointId ?? current.currentCheckpointId) };
+    setHistoryProjectionByProgram((projections) => {
+      const next = programHistoryProjectionsAfterPatchV1(
+        projections,
+        key,
+        EMPTY_SHELL_HISTORY_PROJECTION_V1,
+        (currentCursor) => historyPatchShouldApplyV1(currentCursor, patch, replace),
+        (current) => {
+          historyOrderByProgramRef.current.set(key, ++historyOrderRef.current);
+          localHistoryOrderRef.current = historyOrderRef.current;
+          const entries = replace ? {} as Record<number, HistoryEntry> : { ...current.entries };
+          for (const entry of patch.upserts ?? []) entries[entry.seq] = entry;
+          // 📌️ §C5 — `currentCheckpointId` used to be dropped here even though `HistoryPatch` always
+          // carried it; `🔖️CheckIn` below watches it change to know a checkpoint it asked for actually
+          // landed (see `touchSpaceIndexArtifact`'s call site).
+          return { cursor: patch.cursor, entries, canUndo: patch.canUndo ?? false, canRedo: patch.canRedo ?? false, currentCheckpointId: replace ? patch.currentCheckpointId : (patch.currentCheckpointId ?? current.currentCheckpointId) };
+        },
+      );
+      if (next.applied) applied = true;
+      return next.projections;
     });
     if (applied) {
       const navbarExample = navbarExampleIdFromHistoryUpserts(patch.upserts, lastDispatchedExampleIdRef.current, resolveBootExampleId("", exampleOptionsRef.current, defaults.exampleId));
@@ -2122,15 +2175,19 @@ function FrameworkOsShellInner({
       setLeftoverInspectionEpoch(leftoverInspectionEpochRef.current);
     }
   }, []);
-  const refreshHistorySnapshot = useCallback((instanceId: number) => {
-    const plugin = loadedPluginsRef.current.find((entry) => entry.handle.pluginId === sessionRef.current?.pluginId)?.handle;
+  /** 🧾️ Re-reads ONE program's full history and replaces that program's projection with it. The
+   * handle is resolved from the OWNER's plugin, never from the session's: a spawned editor's
+   * instance id addressed through the host plugin's handle is a different instance (or none). */
+  const refreshHistorySnapshot = useCallback((owner: { readonly pluginId: string; readonly instanceId: number }) => {
+    const plugin = loadedPluginsRef.current.find((entry) => entry.handle.pluginId === owner.pluginId)?.handle;
     if (!plugin?.readHistory) return;
-    const orderAtRequest = historyOrderRef.current;
-    void plugin.readHistory(instanceId).then((snapshot) => {
-      if (historyOrderRef.current > orderAtRequest) {
+    const key = programHistoryKeyV1(owner);
+    const orderAtRequest = historyOrderByProgramRef.current.get(key) ?? 0;
+    void plugin.readHistory(owner.instanceId).then((snapshot) => {
+      if ((historyOrderByProgramRef.current.get(key) ?? 0) > orderAtRequest) {
         return;
       }
-      applyHistoryPatch(snapshot, true);
+      applyHistoryPatch(snapshot, true, owner);
     }).catch((error) => undefined);
   }, [applyHistoryPatch]);
   const hostPlugin = useMemo(() => (hostConfig ? loadedPlugins.find((entry) => entry.handle.pluginId === hostConfig.pluginId) : undefined), [loadedPlugins, hostConfig]);
@@ -2182,13 +2239,14 @@ function FrameworkOsShellInner({
     const plugin = loadedPluginsRef.current.find((entry) => entry.handle.pluginId === session.pluginId)?.handle;
     if (!plugin) return;
     let cancelled = false;
-    const orderAtRequest = historyOrderRef.current;
+    const owner = { pluginId: session.pluginId, instanceId: session.instanceId };
+    const orderAtRequest = historyOrderByProgramRef.current.get(programHistoryKeyV1(owner)) ?? 0;
     void plugin.readHistory(session.instanceId).then((snapshot) => {
       if (cancelled) return;
-      if (historyOrderRef.current > orderAtRequest) {
+      if ((historyOrderByProgramRef.current.get(programHistoryKeyV1(owner)) ?? 0) > orderAtRequest) {
         return;
       }
-      applyHistoryPatch(snapshot, true);
+      applyHistoryPatch(snapshot, true, owner);
     }).catch((error) => undefined);
     return () => {
       cancelled = true;
@@ -2200,7 +2258,7 @@ function FrameworkOsShellInner({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [applyHistoryPatch, session?.pluginId, session?.instanceId]);
   const { windowUiByWindowId, windowEngagementsByWindowId, windowMeasuresByWindowId, toolMeasuresByToolId, panelUiByKey, appLabelsOverlay, appCatalogue } = shellState.windowUi;
-  const { spawnedWindowUi, spawnedWindowFault, spawnedWindowEngagements, spawnedWindowMeasures } = shellState.spawnedWindow;
+  const { spawnedWindowUiByWindowId, spawnedWindowFault, spawnedWindowEngagements, spawnedWindowMeasures } = shellState.spawnedWindow;
   const { foldedByWindowId: actionPaneFoldedByWindowId, expandedByWindowId: actionPaneExpandedByWindowId, stagedArgsByKey: actionPaneStagedArgsByKey, activeUtilityByWindowId, activeToolId } = shellState.actionPane;
   const { expandedCommandId, stagedArgsByCommandId: commandStagedArgsByCommandId } = shellState.commandPanel;
   const { panels, dockOverride, panelPathMemory, treeOpenStates, activeWindowId, shellLayout, activeExampleId, mobilePanelPath, mobilePanelVisible, extraWindowInstances, windowTitlesById, windowIconsById } = shellState.layout;
@@ -2407,7 +2465,7 @@ function FrameworkOsShellInner({
   const applyShellUriDepthRef = useRef(0);
   //#region 🔖️BuiltNodeStores
   /** 🧬️ Per-window/panel `📃️UiDocumentStore`s, keyed the same way `windowUiByWindowId`/`panelUiByKey`/
-   * `spawnedWindowUi` already are — one stable store instance per key, reloaded via
+   * `spawnedWindowUiByWindowId` already are — one stable store instance per key, reloaded via
    * `loadSnapshot`/`builtNodeToSnapshot` whenever that key's authored `BuiltNode` reference actually
    * changes (the reducer's own `mergeRecordPreservingIdentity` already keeps an unchanged window's
    * `BuiltNode` reference-stable across a `refreshUi` cycle, so this rarely reloads). Plain ref-backed
@@ -2436,9 +2494,61 @@ function FrameworkOsShellInner({
   const shellSessionIdRef = useRef<string>(Math.random().toString(36).slice(2));
   /** 🖋️ Stable per-tab actor id for hub `Hello`/presence frames and operation-origin filtering. */
   const shellActorIdRef = useRef<string>(`client-${shellSessionIdRef.current}`);
+  /** 🎛️ Applies one inbound agent `ShellCommand` to THIS host's real chrome. `useAgentBridge` runs
+   * before `dispatch`/`dock` exist, so the seam is a ref the effect below fills — without it the
+   * bridge reduces `ui_reveal`/`ui_focus` against its private mirror, answers the gateway `ok: true`
+   * and nothing on screen moves, which is exactly what slice M7's live transcript measured. */
+  const applyAgentShellCommandRef = useRef<(command: ShellCommand) => void>(() => {});
+  /** 🗿️ Executes one agent artifact command against THIS host's live plugin instance. Same ref
+   * rationale as {@link applyAgentShellCommandRef} — `useAgentBridge` runs thousands of lines before
+   * `onAction`/`historyProjection` exist. Until the effect below fills it, the honest answer is a
+   * typed refusal, never silence (a silent route costs the agent its whole wall budget). */
+  const agentArtifactRouteRef = useRef<AgentAppCommandHandler>(() => [shellAppFault("plugin.unavailable", "this shell's artifact route is not mounted yet — no plugin session has been established")]);
+  /** 🧾️ Prepared-but-uncommitted agent plans, by transaction id. The shell has no "compute the ops
+   * without applying them" seam, so `action_prepare`'s ops are a DEFERRED plan parked here and
+   * `transaction_commit` is the leg that dispatches — which is what makes a rollback a real no-op. */
+  const agentDeferredPlansRef = useRef<Map<string, string>>(new Map());
+  /** 📇️🪟️ The agent census, filled by the effect beside the spawned roster far below (the roster,
+   * the focused program and the plugin manifests are all declared after this line, and
+   * `useAgentBridge` takes a value rather than a ref). */
+  const [agentBridgeCensus, setAgentBridgeCensus] = useState<readonly BridgeInstanceRef[]>([]);
+  /** 📇️ What an agent may address in this shell. The gateway's `ShellArtifactChannel` resolves an
+   * `AppCommand`'s target from exactly this census, so a shell with nothing open is a shell whose
+   * artifact verbs answer `plugin.unavailable` by name.
+   *
+   * 🪟️ It is the live session PLUS every spawned program. Before this it was the session alone, which
+   * made a spawned foreign editor invisible to an MCP client even while the human was working in it:
+   * measured verbatim on the real `s` host with `note` spawned from the palette and its window on the
+   * canvas (ticket 26/09/18, S6, `🗑️generated/s6-agent-gate-s.txt`) —
+   *
+   * ```
+   * PLUGIN_UNAVAILABLE: capability `note.s.note.note@1/*#editor.addBlock` is owned by plugin `note`,
+   * which has no open instance in the attached shell — open one there first
+   * (the shell reports 1 open instance(s))
+   * ```
+   *
+   * — that ONE instance being `s`'s own Home. It is the same session-only shape S5 found at five other
+   * decision sites, on the last lane that still had it: outcome 4's agent could drive only the landing
+   * app of a shell whose whole point is hosting every other plugin's artifacts.
+   *
+   * 🎯️ ORDER carries the focus: entry 0 is the program that owns the canvas right now. A
+   * capability-less agent command has no other rule for choosing among several open instances, and
+   * the shell's own answer to "which document does the user mean" is this one — which is also the
+   * identity published on `data-semio-artifact-id`, so what a browser can be asked about and what
+   * the agent route hands out stay the same string once more than one program is open. */
+  const agentBridgeInstances = agentBridgeCensus;
   // 🤖️ Agent bridge: stays `disabled` (never throws, never blocks render) until a gateway URL+token
   // is discovered, so a shell with no agent attached behaves exactly as before.
-  const agentBridge = useAgentBridge({ shellSessionId: shellSessionIdRef.current });
+  const agentBridge = useAgentBridge({
+    shellSessionId: shellSessionIdRef.current,
+    instances: agentBridgeInstances,
+    onCommandApplied: useCallback((command: ShellCommand | null, result: ReduceResult | null) => {
+      if (command && result?.ok) applyAgentShellCommandRef.current(command);
+    }, []),
+    // 🗿️ Mounting this is what makes the gateway select the `shell` channel for a session: the
+    // `Hello` frame's `relayAppCommands` is derived from the handler being present.
+    onAppCommand: useCallback<AgentAppCommandHandler>((request) => agentArtifactRouteRef.current(request), []),
+  });
   /** 🪪️ §C3 identity bootstrap — `null` until `DirectoryClient.me()`/`mintSession` resolves (or forever,
    * with no hub env). Mirrored into {@link shellActorIdRef}/`setPluginRuntimeActor` by the effect below,
    * never read directly for the actor id (that's always `shellActorIdRef.current`). */
@@ -2455,12 +2565,29 @@ function FrameworkOsShellInner({
    * directory-lane's persistent `/directory/socket/v1` subscription, which the shell never opens itself (§C6:
    * `🏪️store/👷️worker/🟦️.ts`'s `🔖️Directory` region is the only socket owner). Re-created only if the
    * hub base url or token actually changes. */
-  const localBrowserBrokerRef = useRef<BrowserBrokerPortClientV1 | null>(null);
+  const hubSessionPortRef = useRef<HubSessionPortClientV1 | null>(null);
   const hubEnv = useMemo(() => {
     const hubBaseUrl = readViteSEnv("VITE_S_HUB_URL");
     const dataDir = readViteSEnv("VITE_S_DATA_DIR");
     return hubBaseUrl ? { hubBaseUrl, dataDir } : null;
   }, []);
+  /** 🎫️ The one hub session this shell acts with. Seeded from the browsing context's own store, so a
+   * reload continues the session the human signed into; replaced by every mint and cleared by a
+   * sign-out or by the hub refusing the capability. It is the ONLY identity input below: there is no
+   * second, launcher-issued credential path any more. */
+  const [hubSessionCapability, setHubSessionCapability] = useState<HubSessionCapabilityV1 | null>(() =>
+    hubEnv === null ? null : readHubSessionCapabilityV1(hubSessionStorageV1(), hubBootstrapOriginV1()),
+  );
+  const rememberHubSessionCapability = useCallback((minted: Readonly<{ token: string; userId: string }> | null) => {
+    const origin = hubBootstrapOriginV1();
+    const next = minted === null ? null : { origin, token: minted.token, userId: minted.userId };
+    writeHubSessionCapabilityV1(hubSessionStorageV1(), next);
+    setHubSessionCapability(next);
+  }, []);
+  /** 🎫️ The mount-time capability the hub port is seeded with — a ref, because the port holds the
+   * live token in its own closure and must never be rebuilt underneath an in-flight request. */
+  const restoredHubSessionCapabilityRef = useRef(hubSessionCapability);
+  const restoredHubSessionCapability = restoredHubSessionCapabilityRef.current;
   /** 📇️ Retained directory owner bound to the same visible Home landing instance. */
   const directoryHomeOwnerRef = useRef<DirectoryHomeOwnerV1 | null>(null);
   const directoryHomeRetirementRef = useRef<{ readonly owner: DirectoryHomeOwnerV1; readonly promise: Promise<void> } | null>(null);
@@ -2626,9 +2753,12 @@ function FrameworkOsShellInner({
         // build already injects as non-secret collaborative endpoint metadata
         // (`🧑‍💻dev/🏗️builder/🌐️vite/🟦️.ts`). Falling back to the page origin only matters where hub and
         // UI really are co-served; a sign-in against the UI origin would otherwise post credentials
-        // at the SPA's own index route. The shell's local-relay lane is unaffected — it carries the
-        // relay's own bootstrap capability over `/_semio/hub/*` and never this human's session.
+        // at the SPA's own index route. The capability this mints is the shell's ONLY identity: it is
+        // remembered for this browsing context and handed to the credential-owning backbone worker,
+        // whose own hub lane (`/_semio/hub/*`, same-origin) carries exactly this human's session.
         bootstrapOrigin: hubBootstrapOriginV1(),
+        restoredCapability: restoredHubSessionCapability,
+        onCapability: rememberHubSessionCapability,
         deviceInstanceId: hubDeviceInstanceIdV1(typeof globalThis.localStorage === "undefined" ? null : globalThis.localStorage),
         clientClass: "browser",
         parseSpaces: (body) => (JSON.parse(body) as unknown[]).map(parseDirectorySpaceListEntryV1),
@@ -2637,8 +2767,16 @@ function FrameworkOsShellInner({
           return { body: directoryCommandRequestJson(request), parseReceipt: (text) => parseDirectoryCommandReceiptV1(text, request) };
         },
         writeClipboard: typeof navigator === "undefined" || navigator.clipboard === undefined ? undefined : (text) => navigator.clipboard.writeText(text),
+        // 📄️ ticket 26/09/18 slice M6b — the one-time agent credential leaves as a downloaded file,
+        // never through the clipboard: it must end up somewhere `semio-os-mcp --credential-file` can
+        // read at mode 0600, and a paste buffer is neither a file nor private.
+        saveFile: typeof document === "undefined"
+          ? undefined
+          : async (file) => {
+              downloadMediaExport(file.fileName, file.mediaType, file.contents);
+            },
       }),
-    [],
+    [rememberHubSessionCapability, restoredHubSessionCapability],
   );
   const spaceAdministrationRef = useRef<ShellSpaceAdministrationStateV1 | null>(null);
   spaceAdministrationRef.current = spaceAdministration;
@@ -2829,6 +2967,22 @@ function FrameworkOsShellInner({
    * plugin's own fault code, without making every refresh effect depend on the supervisor roster. */
   const pluginSupervisorByIdRef = useRef<Readonly<Record<string, PluginSupervisorState>>>({});
   pluginSupervisorByIdRef.current = pluginSupervisorById;
+
+  /** 🧯️ Where every FIRE-AND-FORGET refresh sends its rejection. A `void refreshUi(…)` without a
+   * `catch` is an unhandled promise rejection, and an unhandled rejection out of a React subtree stops
+   * that subtree applying updates — so one guest that declines to render takes the whole shell with it,
+   * silently, with nothing on screen to say so.
+   *
+   * Measured 2026-09-20 (ticket 26/09/18, S2 §3.3): `🪐️space`'s Home answers
+   * `s.home.session-identity-required` and `settlePluginTurn` throws "stopped without publishing
+   * requested UI surfaces"; the rejection escaped, the tree froze, and the human's subsequent
+   * successful hub sign-in could no longer re-establish anything — every recovery path in this file was
+   * intact and simply never re-entered. A guest refusal is a WINDOW FAULT: it is shown, and the shell
+   * keeps running so the next identity/session change can recover from it. */
+  const reportRefreshFault = useCallback((pluginId: string, error: unknown): void => {
+    const fault = windowFaultFromError(error, pluginSupervisorByIdRef.current[pluginId]);
+    dispatch({ type: "SET_ERROR", value: fault.message, fault });
+  }, []);
   /** 🔌️ The exact (possibly cache-busted `?v=`) module URL each currently-loaded plugin was acquired
    * at — `LoadedProgramState`/`PluginWasmHandle` carry no URL of their own. 🧬️ H1-react: its old
    * reader, `evictPluginModule` (the deleted refcounted module-URL lease pool, packet H2's "must not
@@ -2862,10 +3016,6 @@ function FrameworkOsShellInner({
   const ensureBackboneWorker = useCallback((): Worker => {
     if (backboneWorkerRef.current) return backboneWorkerRef.current;
     const worker = new Worker(new URL("../../../../🏪️store/👷️worker/🟦️.ts", import.meta.url), { type: "module" });
-    const brokerChannel = new MessageChannel();
-    worker.postMessage({ kind: "semio-browser-broker-port", port: brokerChannel.port2 }, [brokerChannel.port2]);
-    localBrowserBrokerRef.current = new BrowserBrokerPortClientV1(brokerChannel.port1, localBrowserBrokerProof);
-    localBrowserBrokerProof = undefined;
     worker.onmessage = (messageEvent: MessageEvent<BackboneWorkerResponse | { readonly wire: Uint8Array }>) => {
       const message = "wire" in messageEvent.data ? decodeBackboneWorkerResponse(messageEvent.data.wire) : messageEvent.data;
       if (message.kind === "browser-actor-action-result") {
@@ -3211,6 +3361,11 @@ function FrameworkOsShellInner({
       if (!entry || entry.clientInstanceId !== message.clientInstanceId) return;
       const { event } = message;
       if (event.kind === "status") {
+        // 🧭️ `typeof` in a TYPE position reads the DECLARED type of `event`, not the narrowed one, so
+        // `typeof event.remote` asked the whole `ArtifactEvent` union for a field only its `status`
+        // member has. A local binding carries the narrowing into the type.
+        const status = event;
+        (window as unknown as { semioWgpuHubProjection?: { publishDocumentStatus: (documentKey: string, remote: typeof status.remote | null) => boolean } }).semioWgpuHubProjection?.publishDocumentStatus(runtimeKey, status.remote);
         dispatch({ type: "SET_SYNC_STATUS_FOR_DOCUMENT", documentId: runtimeKey, status: { persisted: event.persisted, pendingMutations: event.pendingMutations, remote: event.remote } });
       } else if (event.kind === "presence") {
         const peers = entry.scope === undefined ? [] : scopedPresencePeersV1(message, entry.scope);
@@ -3398,8 +3553,8 @@ function FrameworkOsShellInner({
     abort.abort("directory.session-authority.cancelled");
     sessionRefreshRef.current?.close();
     sessionRefreshRef.current = null;
-    localBrowserBrokerRef.current?.close();
-    localBrowserBrokerRef.current = null;
+    hubSessionPortRef.current?.close();
+    hubSessionPortRef.current = null;
     retireAuthenticatedInferencePresentation();
     verifiedSessionAuthorityRef.current = null;
     setVerifiedSessionAuthority(null);
@@ -3416,7 +3571,10 @@ function FrameworkOsShellInner({
   useEffect(() => {
     // 📇️ §C3 "No hub env ⇒ skip all of it and keep today's local-only behaviour exactly" — the
     // existing `🛠️dev🖥️s⚛️react` launcher (no `S_HUB_URL`) never reaches any code below this guard.
-    if (!hubEnv) return;
+    // 🎫️ A hub env with no session is the ordinary local-first state, not a fault: the shell runs,
+    // and the hub badge offers sign-in. Only a signed-in human has hub authority to bootstrap.
+    const capability = hubSessionCapability;
+    if (!hubEnv || capability === null) return;
     let cancelled = false;
     const identityWaitAbort = new AbortController();
     identityBootstrapAbortRef.current = identityWaitAbort;
@@ -3457,15 +3615,18 @@ function FrameworkOsShellInner({
         cachedIdentity = null;
       }
       if (cancelled || identityClientInstanceIdRef.current !== clientInstanceId) return;
-      const broker = localBrowserBrokerRef.current;
-      if (!broker) {
-        setIdentityOffline(true);
-        return;
-      }
+      // 🎫️ Hands the credential-owning worker the human's own capability over a private port, then
+      // reads the hub's authority back through it. A fresh channel per bootstrap is deliberate: the
+      // worker retires every owner bound to a previous capability when a new one is installed, so
+      // switching humans can never leave one principal's document open under another's session.
+      const sessionChannel = new MessageChannel();
+      worker.postMessage({ kind: "semio-hub-session-port", port: sessionChannel.port2 }, [sessionChannel.port2]);
+      const sessionPort = new HubSessionPortClientV1(sessionChannel.port1, capability.token);
+      hubSessionPortRef.current = sessionPort;
       const ownerIsCurrent = (): boolean => !cancelled && identityClientInstanceIdRef.current === clientInstanceId;
       sessionRefreshRef.current = startDirectorySessionRefreshV1({
         signal: identityWaitAbort.signal,
-        read: (signal) => broker.me(signal),
+        read: (signal) => sessionPort.me(signal),
         onAuthority: (authority) => {
           if (!ownerIsCurrent()) return;
           const previous = verifiedSessionAuthorityRef.current;
@@ -3495,6 +3656,13 @@ function FrameworkOsShellInner({
           shellActorIdRef.current = shellActorId(shellSessionIdRef.current, null);
           setPluginRuntimeActor(shellActorIdRef.current);
         },
+        // 🔌️ A link that stopped answering is not a session that ended: the shell says it is offline
+        // and keeps the authority it already verified, so a short connection loss leaves the document,
+        // its history and its owners exactly where they were and the loop catches up on its own.
+        onDegraded: (offline) => {
+          if (!ownerIsCurrent()) return;
+          setIdentityOffline(offline);
+        },
       });
     })().catch((error) => console.error("[os-shell] identity bootstrap failed unexpectedly", error));
     return () => {
@@ -3503,8 +3671,8 @@ function FrameworkOsShellInner({
       if (identityBootstrapAbortRef.current === identityWaitAbort) identityBootstrapAbortRef.current = null;
       sessionRefreshRef.current?.close();
       sessionRefreshRef.current = null;
-      localBrowserBrokerRef.current?.close();
-      localBrowserBrokerRef.current = null;
+      hubSessionPortRef.current?.close();
+      hubSessionPortRef.current = null;
       verifiedSessionAuthorityRef.current = null;
       setVerifiedSessionAuthority(null);
       const clientInstanceId = identityClientInstanceIdRef.current;
@@ -3513,7 +3681,7 @@ function FrameworkOsShellInner({
         if (identityClientInstanceIdRef.current === clientInstanceId) identityClientInstanceIdRef.current = null;
       }
     };
-  }, [hubEnv]);
+  }, [hubEnv, hubSessionCapability]);
 
   useEffect(() => {
     if (!identity || !verifiedSessionAuthority || verifiedSessionAuthority.userId !== identity.userId || !hubEnv || !hostPlugin || !landingApp || !session || session.pluginId !== hostPlugin.handle.pluginId || session.app.id !== landingApp.id) return;
@@ -3629,8 +3797,17 @@ function FrameworkOsShellInner({
     async (handle: PluginWasmHandle) => {
       const manifest = handle.manifest;
       if (hostConfig) {
-        const sApp = resolveRequiredHostApps(manifest.apps, hostConfig).landing;
-        const panelState = buildSpacePanelState([], requiredHostPanelLeafId(hostApp));
+        // 🏛️ BOTH apps come from the manifest in hand, never from the `hostApp` render closure: this
+        // callback runs from `installPlugin` immediately after `UPSERT_LOADED_PLUGIN` is dispatched, so
+        // `loadedPlugins` — and therefore `hostPlugin`/`hostApp`, which derive from it — is still the
+        // pre-commit array and `hostApp` is `undefined`. Reading it here threw "configured host app has
+        // no panel leaf" and killed the whole boot, which is why a host-mode shell (`dev s`) never
+        // reached a ready beacon while every single-plugin playground, whose `hostConfig` is null and
+        // which therefore takes the branch below, booted fine. `handle` IS the host plugin here — the
+        // `.landing` resolution on the next line already depends on that — so one resolution answers both.
+        const hostApps = resolveRequiredHostApps(manifest.apps, hostConfig);
+        const sApp = hostApps.landing;
+        const panelState = buildSpacePanelState([], requiredHostPanelLeafId(hostApps.host));
         const instanceId = await handle.createApp(sApp.id);
         const viewState: ViewModel = { activeModeId: sApp.defaultModeId ?? sApp.modes[0]?.id, panelJson: panelJsonFromState(panelState) };
         // 🪟️ Seed default-layout panes (Top/Perspective) before any effect can fire actions — otherwise
@@ -3669,7 +3846,7 @@ function FrameworkOsShellInner({
       dispatch({ type: "SET_ACTIVE_WINDOW_ID", value: seededActiveWindowId(seeded.modeLayout) });
       dispatch({ type: "SET_ERROR", value: null });
     },
-    [hostConfig, hostApp, appId, appRole, pluginFilter],
+    [hostConfig, appId, appRole, pluginFilter],
   );
 
   /** 🚑️ ONE watchdog kill must not be a fatal boot. Losing the shard that was running the primary
@@ -4223,6 +4400,87 @@ function FrameworkOsShellInner({
   spawnedAppsRef.current = panel?.spawnedApps ?? [];
   const activeSpawnedEntry = panel?.spawnedApps.find((entry) => entry.id === panel.activeSpawnedId);
   const activeAppTitle = appBreadcrumb(activeSpawnedEntry ? resolveArtifactByAppId(loadedPlugins, activeSpawnedEntry.appId, activeSpawnedEntry.breadcrumb, uiTerminology) : session ? resolveAppBreadcrumb(session.app, uiTerminology) : []);
+  /** 🪟️ Every live spawned instance id, for the host↔guest window-id translation. A ref too, because
+   * `onAction` and the keydown lane read it at dispatch time from stable callbacks. */
+  const spawnedIds = useMemo(() => (panel?.spawnedApps ?? []).map((entry) => entry.id), [panel?.spawnedApps]);
+  const spawnedIdsRef = useRef<readonly string[]>([]);
+  spawnedIdsRef.current = spawnedIds;
+  /** 🏁️ Identity of the live spawned ROSTER — what a per-instance subscription must re-run on. */
+  const spawnedRosterKey = (panel?.spawnedApps ?? []).map((entry) => `${entry.id}:${entry.pluginId}:${entry.instanceId}`).join("|");
+  /** 🪟️ The focused spawned instance's own `AppDefinition` — the manifest the canvas, the Display
+   * menu, the Actions rail and the chord loop must read once a foreign program owns the canvas. */
+  const activeSpawnedApp = useMemo(
+    () => (activeSpawnedEntry ? loadedPlugins.find((entry) => entry.handle.pluginId === activeSpawnedEntry.pluginId)?.manifest.apps.find((candidate) => candidate.id === activeSpawnedEntry.appId) : undefined),
+    [activeSpawnedEntry, loadedPlugins],
+  );
+  /** 🪟️ Which program owns the canvas right now (`🪟️spawned-program`). A spawned program is a member
+   * of this session, not a picture inside the host app's panel: from here on every window-scoped
+   * decision — the layout seed, the Display menu, the active window, per-window utilities, the
+   * Actions rail and the chord loop — is taken against THIS app, not `session.app`. */
+  const focusedProgram = useMemo(
+    (): FocusedProgramV1 | null =>
+      focusedProgramV1(
+        session ? { pluginId: session.pluginId, instanceId: session.instanceId, appId: session.app.id } : null,
+        hostMode && activeSpawnedEntry && activeSpawnedApp ? activeSpawnedEntry : null,
+      ),
+    [session, hostMode, activeSpawnedEntry, activeSpawnedApp],
+  );
+  const focusedApp = hostMode && activeSpawnedApp ? activeSpawnedApp : (session?.app ?? null);
+  const focusedSpawnedId = focusedProgram?.spawnedId ?? null;
+  /** 🧾️ The history the History panel, the undo/redo controls, the uncommitted-edit count and
+   * `data-history-json` all read: the FOCUSED program's own, because that is the document the user
+   * is editing. While a spawned editor owns the canvas the session's ledger is still kept — it is
+   * just not what is shown — so coming back to it shows its own rows, not the editor's. */
+  const historyProjection = programHistoryProjectionV1(historyProjectionByProgram, programHistoryKeyV1(focusedProgram), EMPTY_SHELL_HISTORY_PROJECTION_V1);
+  /** 🧾️ A spawned program's full history, read once when it takes the canvas. Its completions patch
+   * the projection incrementally from then on; without this first snapshot its ledger would start
+   * empty even for a document that already carries entries (a re-opened artifact). */
+  useEffect(() => {
+    if (!hostMode || focusedProgram === null || focusedProgram.spawnedId === null) return;
+    refreshHistorySnapshot({ pluginId: focusedProgram.pluginId, instanceId: focusedProgram.instanceId });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hostMode, focusedProgram?.pluginId, focusedProgram?.instanceId, focusedProgram?.spawnedId, refreshHistorySnapshot]);
+  /** 📇️🪟️ Publishes the agent census — the live session PLUS every spawned program, the FOCUSED one
+   * first ({@link spawnedBridgeCensusV1}). Keyed on the spawned ROSTER, never on `panel` identity (a
+   * panel object churns on every action), on the loaded-plugin count (a spawned program's window
+   * kinds come from its manifest and a roster entry can be written before its plugin finished
+   * loading), and on the focused program, because focus is what entry 0 means. */
+  useEffect(() => {
+    const spawned = (spawnedAppsRef.current ?? []).flatMap((entry) => {
+      const app = loadedPluginsRef.current.find((candidate) => candidate.handle.pluginId === entry.pluginId)?.manifest.apps.find((candidate) => candidate.id === entry.appId);
+      return app ? [{ id: entry.id, pluginId: entry.pluginId, appId: app.id, instanceId: entry.instanceId, windowIds: spawnedProgramWindowInstancesV1(entry.id, app.windowKinds.map((kind) => ({ id: kind.id, bodyKey: kind.bodyKey }))).map((instance) => instance.id) }] : [];
+    });
+    const census = spawnedBridgeCensusV1(
+      session ? { pluginId: session.pluginId, appId: session.app.id, instanceId: session.instanceId, windowIds: sessionWindowInstances(session.app, extraWindowInstancesRef.current).map((instance) => instance.id) } : null,
+      spawned,
+      focusedProgram,
+    );
+    const next: BridgeInstanceRef[] = [...census].sort((left, right) => Number(right.focused) - Number(left.focused)).map(({ focused: _focused, ...ref }) => ({ ...ref, windowIds: [...ref.windowIds] }));
+    setAgentBridgeCensus((current) => (JSON.stringify(current) === JSON.stringify(next) ? current : next));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [spawnedRosterKey, loadedPlugins.length, session?.pluginId, session?.app.id, session?.instanceId, focusedProgramKeyV1(focusedProgram)]);
+  /** 🧾️ Drops the projections of programs that are no longer open. Keyed on the spawned roster and
+   * the session's instance, which is exactly when a program appears or disappears. */
+  useEffect(() => {
+    const live = [programHistoryKeyV1(session), ...spawnedAppsRef.current.map((entry) => programHistoryKeyV1(entry))];
+    setHistoryProjectionByProgram((projections) => programHistoryProjectionsRetainedV1(projections, live));
+    for (const key of [...historyOrderByProgramRef.current.keys()]) if (!live.includes(key)) historyOrderByProgramRef.current.delete(key);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [spawnedRosterKey, session?.pluginId, session?.instanceId]);
+  /** 🪟️ The focused program's live window instances, in the ONE shape every consumer reads: a spawned
+   * program contributes one per declared window kind under its own `${spawnedId}::` namespace; the
+   * session's own app contributes its base kinds plus the user's split/extra instances. */
+  const focusedWindowInstances = useMemo(
+    () =>
+      focusedApp === null
+        ? []
+        : focusedSpawnedId !== null
+          ? spawnedProgramWindowInstancesV1(focusedSpawnedId, focusedApp.windowKinds)
+          : sessionWindowInstances(focusedApp, extraWindowInstances),
+    [focusedApp, focusedSpawnedId, extraWindowInstances],
+  );
+  const focusedWindowInstancesRef = useRef<readonly { readonly id: string; readonly bodyKey: string; readonly windowKindId: string }[]>([]);
+  focusedWindowInstancesRef.current = focusedWindowInstances;
 
   useEffect(() => {
     sessionRef.current = session;
@@ -4606,8 +4864,8 @@ function FrameworkOsShellInner({
       // component unmount; see `extensionFetchAbortRef`'s own doc a few hundred lines up.
       extensionFetchAbortRef.current.abort();
       segmentedDownloadAbortRef.current.abort(new Error("segmented-download-shell-unmounted"));
-      localBrowserBrokerRef.current?.close();
-      localBrowserBrokerRef.current = null;
+      hubSessionPortRef.current?.close();
+      hubSessionPortRef.current = null;
       const retirements: Promise<unknown>[] = [];
       retirements.push(backgroundSpaceIndexSessionsRef.current.close());
       const destroyDetachedApp = async (plugin: PluginWasmHandle, instanceId: number) => {
@@ -4801,7 +5059,7 @@ function FrameworkOsShellInner({
         return fromDocument;
       },
       buildPack: (session, kinds, environment) => {
-        const loadedForScope = environment.loadedPlugins.filter((entry) => !environment.disabledExtensionIds.has(entry.handle.pluginId)).map((entry) => ({ pluginId: entry.handle.pluginId, manifest: { ...entry.manifest, workflows: [] } }));
+        const loadedForScope = environment.loadedPlugins.filter((entry) => !environment.disabledExtensionIds.has(entry.handle.pluginId)).map((entry) => ({ pluginId: entry.handle.pluginId, manifest: { topicContributions: entry.manifest.topicContributions } }));
         const scopedContributionsJson = scopeContributionsJson(loadedForScope, session.pluginId, kinds, environment.consumedTopics);
         return scopedContributionsJson;
       },
@@ -5275,7 +5533,7 @@ function FrameworkOsShellInner({
           // 🦴 A `BuiltNode` needs its full field set (layout/style/accessibility/…) — reuse
           // `pendingWindowUiNode()`'s already-valid defaults rather than hand-authoring them, and
           // override just the component (a plain text node) and activity (no longer "loading").
-          value: { ...pendingWindowUiNode(), activity: "idle", component: { type: "text", value: `Plugin unavailable: ${spawned.pluginId}/${spawned.appId}`, emphasize: null, dataAttributes: null } } satisfies BuiltNode,
+          value: { [spawnedWindowInstanceIdV1(spawned.id, "main")]: { ...pendingWindowUiNode(), activity: "idle", component: { type: "text", value: `Plugin unavailable: ${spawned.pluginId}/${spawned.appId}`, emphasize: null, dataAttributes: null } } satisfies BuiltNode },
         });
         dispatch({ type: "SET_SPAWNED_WINDOW_ENGAGEMENTS", value: {} });
         dispatch({ type: "SET_SPAWNED_WINDOW_MEASURES", value: {} });
@@ -5287,27 +5545,44 @@ function FrameworkOsShellInner({
         spawnedUiRefreshCacheRef.current = new Map();
       }
       const cache = spawnedUiRefreshCacheRef.current;
-      const bodyKey = resolveCanvasBodyKey(app);
+      // 🪟️ EVERY window the spawned app declares, not just its canvas body: a spawned program is a
+      // member of this session and owns all of its own windows. The guest is addressed by its OWN
+      // window instance ids (its window kind ids — it has exactly one instance), while the shell keys
+      // them under `${spawnedId}::` so two spawned instances of one app cannot collide
+      // (`🪟️spawned-program`).
+      const windowKinds = app.windowKinds.map((kind) => ({ id: kind.id, bodyKey: kind.bodyKey }));
+      const guestActiveWindowId = guestWindowIdV1(activeWindowIdRef.current, spawnedIdsRef.current) ?? resolveCanvasBodyKey(app);
       // 🧩️ A spawned instance reads contributions from the registry the paged `setContributions` run
       // installed, exactly like a primary session — the view context carries none.
       const fullViewState: ViewModel = injectActiveUtility(
-        { ...viewState, locale: uiLocale, terminology: uiTerminology, windowId: bodyKey, windowInstances: [{ id: bodyKey, windowKindId: bodyKey }] },
-        spawned.id,
+        {
+          ...spawnedProgramViewStateV1(viewState, app),
+          locale: uiLocale,
+          terminology: uiTerminology,
+          windowId: guestActiveWindowId,
+          windowInstances: windowKinds.map((kind) => ({ id: kind.id, windowKindId: kind.id })),
+          activeUtilityByWindowId: guestActiveUtilityByWindowIdV1(activeUtilityByWindowIdRef.current, spawned.id, spawnedIdsRef.current),
+        },
+        spawnedWindowInstanceIdV1(spawned.id, guestActiveWindowId),
       );
-      // 🐢️ A spawned instance's view is a single body + utilities + engagements + measures (no panels, no
+      // 🐢️ A spawned instance's view is its bodies + utilities + engagements + measures (no panels, no
       // labels) — that's already the minimal grouping, so there is no narrower-than-full "partial" scope
       // worth expressing here; only `none` (handled above) short-circuits the request.
-      const singleWindowKind = [{ id: bodyKey, bodyKey }];
-      const request = buildUiRefreshRequest({ kind: "full" }, singleWindowKind, [], fullViewState, cache);
+      const request = buildUiRefreshRequest({ kind: "full" }, windowKinds, [], fullViewState, cache);
       if (request) {
         const response = await plugin.refreshUi(spawned.instanceId, request);
         if (generation !== spawnedRefreshGenerationRef.current) return;
         applyUiRefreshResponseToCache(cache, response);
       }
-      const ui = (cache.get(`window:${bodyKey}`)?.value as BuiltNode | undefined) ?? pendingWindowUiNode();
-      const dynamicEngagements = (cache.get("engagements")?.value as Readonly<Record<string, WindowEngagement>> | undefined) ?? {};
-      const dynamicMeasures = (cache.get("measures")?.value as Readonly<Record<string, readonly WindowMeasure[]>> | undefined) ?? {};
-      dispatch({ type: "SET_SPAWNED_WINDOW_UI", value: (current: BuiltNode | null) => preserveJsonIdentity(current ?? undefined, ui) });
+      const uiByWindowId = Object.fromEntries(windowKinds.map((kind) => [spawnedWindowInstanceIdV1(spawned.id, kind.id), (cache.get(`window:${kind.bodyKey}`)?.value as BuiltNode | undefined) ?? pendingWindowUiNode()] as const));
+      const spawnedKeyed = <T,>(byGuestWindowId: Readonly<Record<string, T>>): Readonly<Record<string, T>> =>
+        Object.fromEntries(Object.entries(byGuestWindowId).map(([windowId, value]) => [spawnedWindowInstanceIdV1(spawned.id, windowId), value] as const));
+      const dynamicEngagements = spawnedKeyed((cache.get("engagements")?.value as Readonly<Record<string, WindowEngagement>> | undefined) ?? {});
+      const dynamicMeasures = spawnedKeyed((cache.get("measures")?.value as Readonly<Record<string, readonly WindowMeasure[]>> | undefined) ?? {});
+      dispatch({
+        type: "SET_SPAWNED_WINDOW_UI",
+        value: (current: Readonly<Record<string, BuiltNode>>) => Object.fromEntries(Object.entries(uiByWindowId).map(([windowId, node]) => [windowId, preserveJsonIdentity(current[windowId], node)] as const)),
+      });
       dispatch({ type: "SET_SPAWNED_WINDOW_ENGAGEMENTS", value: dynamicEngagements });
       dispatch({ type: "SET_SPAWNED_WINDOW_MEASURES", value: dynamicMeasures });
     },
@@ -5328,7 +5603,22 @@ function FrameworkOsShellInner({
   // effect that many times for the SAME already-open session, each dispatching a fresh top-level
   // `refreshUi` against the wasm guest's single-flight `InstanceGuard` — live-confirmed as the dominant
   // contributor to the `plugin.internal: plugin instance busy` storm blocking collab-e2e STEP 2.
-  const sessionIdentityKey = session ? `${session.pluginId}:${session.app.id}:${session.instanceId}` : null;
+  // 🪪️ The signed-in human is part of this key, not just the app/instance triple. `resolvedTargetViewState`
+  // stamps `sessionIdentity` from `identityRef.current` at plugin-call time, and apps that need it refuse
+  // to assemble without it — `🪐️space`'s Home answers `s.home.session-identity-required` and stops
+  // without publishing `s-home-main`. A shell that boots local-first (the ordinary state: hub configured,
+  // nobody signed in yet) therefore assembled Home identity-less, and before ticket 26/09/18's C1c slice
+  // nothing re-assembled it when the human then signed in — the spaces table stayed a fault box for the
+  // rest of the page's life. Observed live at 2026-09-20 against a hub-backed `home` shell.
+  // 🪪️ The key is split because the two halves need DIFFERENT recoveries, measured 2026-09-20 on the
+  // first signed-in `s` host (ticket 26/09/18, C1c E2E run 5 / S2 §3): a changed app/instance triple is a
+  // live session that only needs re-rendering, but a changed HUMAN invalidates surfaces the guest already
+  // refused to assemble — and an actor that refused has STOPPED (`status=idle`), so asking it to render
+  // again reaches nothing. Clearing the fault made the fault box disappear while `s-home-main` was still
+  // never published. Re-establishing is the recovery that exists for exactly this shape (see the
+  // human-change effect below `retireSessionInstance`).
+  const sessionTripleKey = session ? `${session.pluginId}:${session.app.id}:${session.instanceId}` : null;
+  const sessionHumanKey = `${identity?.userId ?? ""}:${identity?.displayName ?? ""}`;
   useEffect(() => {
     const current = sessionRef.current;
     if (!current) return;
@@ -5336,31 +5626,80 @@ function FrameworkOsShellInner({
       const fault = windowFaultFromError(renderError, pluginSupervisorByIdRef.current[current.pluginId]);
       dispatch({ type: "SET_ERROR", value: fault.message, fault });
     });
-  }, [refreshUi, sessionIdentityKey]);
+  }, [refreshUi, sessionTripleKey]);
 
   useEffect(() => {
     if (!hostMode || !session) {
-      dispatch({ type: "SET_SPAWNED_WINDOW_UI", value: null });
+      dispatch({ type: "SET_SPAWNED_WINDOW_UI", value: {} });
       dispatch({ type: "SET_SPAWNED_WINDOW_ENGAGEMENTS", value: {} });
       dispatch({ type: "SET_SPAWNED_WINDOW_MEASURES", value: {} });
       return;
     }
     const activeSpawned = panel?.spawnedApps.find((entry) => entry.id === panel.activeSpawnedId);
     if (!activeSpawned) {
-      dispatch({ type: "SET_SPAWNED_WINDOW_UI", value: null });
+      dispatch({ type: "SET_SPAWNED_WINDOW_UI", value: {} });
       dispatch({ type: "SET_SPAWNED_WINDOW_ENGAGEMENTS", value: {} });
       dispatch({ type: "SET_SPAWNED_WINDOW_MEASURES", value: {} });
       return;
     }
     void refreshSpawnedUi(activeSpawned, session.viewState).catch((renderError) => {
       const fault = windowFaultFromError(renderError, pluginSupervisorByIdRef.current[activeSpawned.pluginId]);
-      dispatch({ type: "SET_SPAWNED_WINDOW_UI", value: null, fault });
+      dispatch({ type: "SET_SPAWNED_WINDOW_UI", value: {}, fault });
     });
     // 🩹️ ticket 26/08/17/FINISH-HUB-SPACES-COLLABORATION-END-TO-END lane 5-E — `loadedPlugins` dropped
     // (same reasoning as the session-refresh effect above): `refreshSpawnedUi` now reads
     // `loadedPluginsRef.current` at call time, and a spawned instance can only exist for an
     // already-loaded plugin, so this never needed to refire on unrelated background catalogue loads.
   }, [panel, refreshSpawnedUi, session, hostMode]);
+
+  /** 🪟️ The session layout the shell was showing when a spawned program took the canvas — restored
+   * verbatim when focus comes back, so opening a foreign editor and closing it again does not cost
+   * the user the arrangement they built. */
+  const sessionLayoutBeforeSpawnRef = useRef<{ readonly layout: WindowLayoutNode | null; readonly activeWindowId: string | null } | null>(null);
+  const focusedProgramKey = focusedProgramKeyV1(focusedProgram);
+  const seededFocusedProgramKeyRef = useRef<string>("");
+  /**
+   * 🪟️ Seeds the canvas for whichever program owns it. THIS is what makes a spawned program a member
+   * of the session rather than a breadcrumb: `Mode` prunes every layout leaf whose id is absent from
+   * the window list it is handed (`resolveModeLayout` → `reconcileWindows`), so a spawned program
+   * whose windows were never put into `shellLayout` reconciled the host app's leaves away and painted
+   * the empty-shell notice — measured verbatim on the real `s` host as "Drag windows from Display in
+   * the navbar, or restore a saved layout" with `[data-window-id] = []`
+   * (ticket 26/09/18, S4 §5.2). The spawned app's OWN declared default layout is used, renamed into
+   * that instance's window-id namespace, so a two-window foreign editor opens as its author declared.
+   *
+   * 🚦️ Keyed on the focused PROGRAM, never on `session` identity: an ordinary refresh must not
+   * re-seed, or every action would throw the live arrangement away.
+   */
+  useEffect(() => {
+    if (!session) return;
+    if (seededFocusedProgramKeyRef.current === focusedProgramKey) return;
+    const previous = seededFocusedProgramKeyRef.current;
+    seededFocusedProgramKeyRef.current = focusedProgramKey;
+    if (focusedSpawnedId !== null && focusedApp !== null) {
+      // 🪟️ Leaving the session's own canvas — remember it before the spawned seed replaces it.
+      if (sessionLayoutBeforeSpawnRef.current === null) sessionLayoutBeforeSpawnRef.current = { layout: shellLayout ?? null, activeWindowId: activeWindowIdRef.current };
+      const seed = resolveFrameworkLayoutSeed(focusedApp.defaultLayout, withLocalizedWindowKindLabels(focusedApp.windowKinds), appLabelsOverlay, uiTerminology, uiLocale);
+      const modeLayout = renameLayoutWindowIdsV1(seed.modeLayout as WindowLayoutNode & { kind: "window" | "stack" | "row" | "column" }, spawnedLayoutRenameV1(focusedSpawnedId, focusedApp.windowKinds)) as WindowLayoutNode;
+      dispatch({ type: "SET_SHELL_LAYOUT", value: modeLayout });
+      dispatch({ type: "SET_ACTIVE_WINDOW_ID", value: seededActiveWindowId(modeLayout) });
+      return;
+    }
+    const restored = sessionLayoutBeforeSpawnRef.current;
+    sessionLayoutBeforeSpawnRef.current = null;
+    if (restored?.layout) {
+      dispatch({ type: "SET_SHELL_LAYOUT", value: restored.layout });
+      dispatch({ type: "SET_ACTIVE_WINDOW_ID", value: restored.activeWindowId ?? seededActiveWindowId(restored.layout) });
+      return;
+    }
+    if (previous === "") return;
+    const seed = resolveFrameworkLayoutSeed(session.app.defaultLayout, withLocalizedWindowKindLabels(session.app.windowKinds), appLabelsOverlay, uiTerminology, uiLocale);
+    dispatch({ type: "SET_SHELL_LAYOUT", value: seed.modeLayout });
+    dispatch({ type: "SET_ACTIVE_WINDOW_ID", value: seededActiveWindowId(seed.modeLayout) });
+    // 🐢️ `shellLayout` is read, not depended on: this effect fires on a focused-PROGRAM change only,
+    // and listing the live layout would re-enter it on every drag the user makes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [focusedProgramKey, focusedSpawnedId, focusedApp, session, appLabelsOverlay, uiTerminology, uiLocale]);
 
   const updateSpacePanel = useCallback((panelState: SpacePanelState) => {
     dispatch({
@@ -5389,6 +5728,37 @@ function FrameworkOsShellInner({
     await documentAttachmentLanesRef.current.get(plugin)?.get(retired.instanceId)?.drain();
     await plugin.destroyApp(retired.instanceId);
   }, []);
+
+  /** 🪪️ A session whose HUMAN changed is recoverable exactly the way a worker loss is — by establishing
+   * it again, not by refreshing it.
+   *
+   * An app that needs the signed-in human refuses to assemble without one and STOPS: `🪐️space`'s Home
+   * answers `s.home.session-identity-required` and never publishes `s-home-main`, leaving the actor
+   * `status=idle`. A shell that boots local-first — the ordinary state, hub configured and nobody signed
+   * in yet — therefore assembles Home identity-less, and `refreshUi` afterwards talks to that stopped
+   * actor, so the fault box vanishes and the surface still never appears. Measured 2026-09-20 against a
+   * hub-backed `s` host (ticket 26/09/18: C1c E2E run 5 check 2, `s-home-main` absent after 120 s with
+   * `identityFault: false`). Every surface assembled under the old identity is invalid anyway, so the
+   * honest recovery is a fresh instance — the same `establishPrimaryWithShardRetry` the killed-boot and
+   * worker-loss paths already use — with the superseded instance retired once the new one is mounted.
+   *
+   * The first run only records the key: mounting is not an identity CHANGE, and re-establishing there
+   * would fight the boot that is already establishing the session. */
+  const sessionHumanKeyRef = useRef<string | null>(null);
+  useEffect(() => {
+    const previous = sessionHumanKeyRef.current;
+    sessionHumanKeyRef.current = sessionHumanKey;
+    const current = sessionRef.current;
+    if (!current || previous === null || previous === sessionHumanKey) return;
+    const handle = loadedPluginsRef.current.find((entry) => entry.handle.pluginId === current.pluginId)?.handle;
+    if (!handle) return;
+    void establishPrimaryWithShardRetry(handle)
+      .then(() => retireSessionInstance(current).catch(() => undefined))
+      .catch((error: unknown) => {
+        const fault = windowFaultFromError(error, pluginSupervisorByIdRef.current[current.pluginId]);
+        dispatch({ type: "SET_ERROR", value: fault.message, fault });
+      });
+  }, [sessionHumanKey, establishPrimaryWithShardRetry, retireSessionInstance]);
 
   // 🏠️🧳️👁️✏️ Generalised from the host-only `switchToManagedApp`: switches the mounted session to ANY
   // loaded plugin's app by `(pluginId, appId)`, so the navbar role group can swap a playground between
@@ -5468,7 +5838,7 @@ function FrameworkOsShellInner({
   const syncSpawnedPluginDocument = useCallback(async (plugin: PluginWasmHandle, app: AppDefinition, pluginInstanceId: number, artifactJson: string, viewState: ViewModel) => {
     try {
       const document = JSON.parse(artifactJson) as Record<string, unknown>;
-      const targetSession: ActiveSession = { pluginId: plugin.pluginId, instanceId: pluginInstanceId, app, viewState };
+      const targetSession: ActiveSession = { pluginId: plugin.pluginId, instanceId: pluginInstanceId, app, viewState: spawnedProgramViewStateV1(viewState, app) };
       await plugin.handleAction(pluginInstanceId, encodeWindowActionInvocation(targetSession, { controllerId: app.controllerId, action: "setDocument", args: { document } }), viewState);
     } catch (syncError) {
     }
@@ -5906,7 +6276,7 @@ function FrameworkOsShellInner({
             const primary = current.pluginId === baseSession.pluginId && current.instanceId === baseSession.instanceId;
             const spawned = parsePanelState(current.viewState)?.spawnedApps.some((entry) => entry.pluginId === baseSession.pluginId && entry.instanceId === baseSession.instanceId);
             if (!primary && !spawned) throw new Error("extension.requester-retired");
-            applyHistoryPatch(response.historyPatch);
+            applyHistoryPatch(response.historyPatch, false, { pluginId: baseSession.pluginId, instanceId: baseSession.instanceId });
             applyLeftoverInteractionView(response.output);
             await applyHostEffects(response.requestedEffects ?? [], primary ? current : { ...baseSession, viewState: current.viewState }, resolveUiDirtyScope(response.uiScope), effectOwner);
           }).catch((error) => {
@@ -5956,7 +6326,7 @@ function FrameworkOsShellInner({
               "[os-shell] openPluginInstance: no program matches",
               { pluginId, appId },
               "available:",
-              catalog.map((entry) => `${entry.pluginId}/${entry.appId}`),
+              spacePrograms.map((entry) => `${entry.pluginId}/${entry.appId}`),
             );
           }
           continue;
@@ -6029,7 +6399,7 @@ function FrameworkOsShellInner({
         // the caller's contract is "the guest work is finished", and the host-effect pass that follows is
         // this same subscription's own work, not the guest's.
         settleOperation(completion.operation);
-        applyHistoryPatch(completion.historyPatch);
+        applyHistoryPatch(completion.historyPatch, false, { pluginId: target.pluginId, instanceId: target.instanceId });
         const refresh = typedOperationCompletionRefreshV1(completion);
         const owner = captureEffectOwner(target, captureDialogOrigin(target));
         if (refresh === null) return;
@@ -6039,6 +6409,47 @@ function FrameworkOsShellInner({
       return;
     }
   }, [applyHistoryPatch, applyLeftoverInteractionView, applyHostEffects, captureDialogOrigin, captureEffectOwner, dropForRetiredInstance, isCurrentEffectOwner, session, settleOperation]);
+
+  /**
+   * 🏁️🪟️ The SAME terminal-publication subscription, for every spawned program. The effect above
+   * subscribes `session.pluginId`/`session.instanceId` and nothing else, so a spawned foreign editor's
+   * typed operations completed into the void: no history delta, no final `UiDirtyScope`, none of the
+   * continuation turns' effects — and `settleOperation` was never called, so every `onAction` on a
+   * spawned program waited out the full {@link OPERATION_SETTLE_WATCHDOG_MS} watchdog.
+   *
+   * 🧯️ Measured live inside `s`: `addLayer` on a spawned `draw` DID add the layer, and the window kept
+   * reading `1 layer · 0 selected` until the next unrelated interaction re-fetched it
+   * (`🗑️generated/s5-action-{8,11}.txt`, ticket 26/09/18 S5 §4.3). `applyHostEffects` on a spawned base
+   * session already routes to `refreshSpawnedUi`, so the completion pass needs no spawned-specific
+   * branch of its own — only an owner.
+   */
+  useEffect(() => {
+    if (!hostMode || !session) return;
+    const disposers: (() => void)[] = [];
+    for (const spawned of spawnedAppsRef.current) {
+      const entry = loadedPluginsRef.current.find((candidate) => candidate.handle.pluginId === spawned.pluginId);
+      const app = entry?.manifest.apps.find((candidate) => candidate.id === spawned.appId);
+      if (!entry || !app) continue;
+      const target: ActiveSession = { pluginId: spawned.pluginId, instanceId: spawned.instanceId, app, viewState: spawnedProgramViewStateV1(session.viewState, app) };
+      try {
+        const dispose = entry.handle.subscribeOperationCompletions(spawned.instanceId, (completion) => {
+          settleOperation(completion.operation);
+          applyHistoryPatch(completion.historyPatch, false, { pluginId: spawned.pluginId, instanceId: spawned.instanceId });
+          const refresh = typedOperationCompletionRefreshV1(completion);
+          if (refresh === null) return;
+          void applyHostEffects(completion.requestedEffects, target, refresh, captureEffectOwner(target, captureDialogOrigin(target))).catch((error) => console.error("spawned typed-operation completion effects failed", error));
+        });
+        if (typeof dispose === "function") disposers.push(dispose);
+      } catch (error) {
+        console.warn(`[os-shell] spawned operation-completion subscription refused for ${spawned.pluginId}#${spawned.instanceId}`, error);
+      }
+    }
+    return () => {
+      for (const dispose of disposers) dispose();
+    };
+    // 🐢️ Keyed on the spawned ROSTER, not on `panel` identity: a panel object churns on every action.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hostMode, session, spawnedRosterKey, applyHistoryPatch, applyHostEffects, captureDialogOrigin, captureEffectOwner, settleOperation]);
 
   /** 🎞️ Renders a running operation's process while it runs: every mid-operation refresh a tool run asks for (its trace,
    * provisional pieces, progress) goes through the ui-refresh lane, whose coalescer merges what arrives while a pass is in
@@ -6069,6 +6480,47 @@ function FrameworkOsShellInner({
     }
   }, [applyHostEffects, captureDialogOrigin, captureEffectOwner, dropForRetiredInstance, session]);
 
+  /**
+   * 🎞️🪟️ The SAME mid-operation progress lane, for every spawned program. The effect above
+   * subscribes `session.instanceId` alone, so a spawned editor's running operation — a tool run's
+   * trace, a mounted analysis's provisional pieces, a fill plan's progress — reached no window at
+   * all: the human watched a frozen canvas until the terminal completion landed. Measured as
+   * still-session-only by S6 (§2, `🏛️ShellHost` `subscribeOperationProgress`/
+   * `subscribeSpawnedJobProgress`), which is the last of the six session-only decision sites S5
+   * started on.
+   */
+  useEffect(() => {
+    if (!hostMode || !session) return;
+    const disposers: (() => void)[] = [];
+    for (const spawned of spawnedAppsRef.current) {
+      const entry = loadedPluginsRef.current.find((candidate) => candidate.handle.pluginId === spawned.pluginId);
+      const app = entry?.manifest.apps.find((candidate) => candidate.id === spawned.appId);
+      if (!entry || !app) continue;
+      const target: ActiveSession = { pluginId: spawned.pluginId, instanceId: spawned.instanceId, app, viewState: spawnedProgramViewStateV1(session.viewState, app) };
+      try {
+        const unsubscribeOperations = entry.handle.subscribeOperationProgress(spawned.instanceId, (uiScope) => {
+          const scope = resolveUiDirtyScope(uiScope);
+          if (scope.kind === "none") return;
+          void applyHostEffects([], target, scope, captureEffectOwner(target, captureDialogOrigin(target))).catch((error) => console.error("spawned typed-operation progress refresh failed", error));
+        });
+        const unsubscribeJobs = entry.handle.subscribeSpawnedJobProgress?.(spawned.instanceId, () => {
+          void applyHostEffects([], target, { kind: "full" }, captureEffectOwner(target, captureDialogOrigin(target))).catch((error) => console.error("spawned job progress refresh failed", error));
+        });
+        disposers.push(() => {
+          unsubscribeOperations();
+          unsubscribeJobs?.();
+        });
+      } catch (error) {
+        console.warn(`[os-shell] spawned operation-progress subscription refused for ${spawned.pluginId}#${spawned.instanceId}`, error);
+      }
+    }
+    return () => {
+      for (const dispose of disposers) dispose();
+    };
+    // 🐢️ Keyed on the spawned ROSTER, not on `panel` identity: a panel object churns on every action.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hostMode, session, spawnedRosterKey, applyHostEffects, captureDialogOrigin, captureEffectOwner]);
+
   const applyShellUri = useCallback(
     async (uri: string, preservedViewState?: ViewModel) => {
       // 🩹️ See `applyShellUriDepthRef`'s own doc comment: turns an unbounded reentrant call chain into
@@ -6091,7 +6543,7 @@ function FrameworkOsShellInner({
         // 🔗️ AU2 — `/hub` is the shell's hub connection surface: sign in, browse/switch/create a
         // space, invite, redeem. It is an overlay over whatever is already open, so it never tears
         // down the running session and the app stays usable while no hub is reachable.
-        if (path === "/hub") {
+        if (path === SHELL_HUB_ROUTE) {
           setHubWorkspaceOpen(true);
           return;
         }
@@ -6185,7 +6637,7 @@ function FrameworkOsShellInner({
       const spawned = panel.spawnedApps.find((entry) => entry.id === panel.activeSpawnedId);
       if (spawned) {
         const app = loadedPlugins.find((entry) => entry.handle.pluginId === spawned.pluginId)?.manifest.apps.find((candidate) => candidate.id === spawned.appId);
-        if (app) return { pluginId: spawned.pluginId, instanceId: spawned.instanceId, app, viewState: session.viewState };
+        if (app) return { pluginId: spawned.pluginId, instanceId: spawned.instanceId, app, viewState: spawnedProgramViewStateV1(session.viewState, app) };
       }
     }
     return session;
@@ -6328,6 +6780,7 @@ function FrameworkOsShellInner({
     const entry = openDocumentSessionsRef.current.get(runtimeKey);
     if (!entry) return;
     if (clientInstanceId !== undefined && entry.clientInstanceId !== clientInstanceId) return;
+    (window as unknown as { semioWgpuHubProjection?: { publishDocumentStatus: (documentKey: string, remote: null) => boolean } }).semioWgpuHubProjection?.publishDocumentStatus(runtimeKey, null);
     entry.creationMount?.close(new Error("document closed"));
     entry.rejectReady(new Error("document closed"));
     entry.replacements.invalidate();
@@ -6401,21 +6854,37 @@ function FrameworkOsShellInner({
     async (uri: string) => {
       const targetSession = resolveSyncTargetSession();
       if (!targetSession) return;
-      const documentId = syncDocumentId(targetSession, panel, hostMode);
-      const bindings: PersistenceBinding[] = uri.startsWith("remote://")
-        ? (() => {
-            const rest = uri.slice("remote://".length);
-            const slash = rest.indexOf("/");
-            const baseUrl = slash > 0 ? `http://${rest.slice(0, slash)}` : `http://${rest}`;
-            const spaceId = slash > 0 ? rest.slice(slash + 1) || "default" : "default";
-            return [{ kind: "hub", baseUrl, spaceId }];
-          })()
+      // 🌐️ A `remote://` uri names all THREE parts — host, space and document
+      // (`buildRemoteBackboneUri`) — and `parseRemoteBackboneUri` is the one decoder that reads them
+      // back. This adapter used to hand-roll its own split, which took everything after the host as
+      // the space id (so `remote://host/space-1/doc-a` bound space `"space-1/doc-a"`) and then threw
+      // the uri's document id away in favour of the local `pluginId-instanceId`. Two browsers
+      // attaching to the SAME hub document therefore opened two different documents in two
+      // mis-named spaces and never shared a replication session — which is why joining one shared
+      // document looked like it needed host mode. Ticket 26/09/18 slice C1c.
+      const remote = parseRemoteBackboneUri(uri);
+      const documentId = remote?.documentId ?? syncDocumentId(targetSession, panel, hostMode);
+      // 🪪️ A hub binding MUST name the surface it wants: the store worker refuses a hub binding that
+      // carries neither `requestedSurfaceId` nor a previously installed target
+      // (`👷️worker/🟦️.ts:6085`, `socket-actor-failed … installed-target-unavailable`), so this
+      // adapter's binding could never open a hub document at all. The surface is the session app's
+      // own canonical one — the same expression `openDocument` uses when it resolves bindings itself.
+      const requestedSurfaceId = targetSession.app.dialect ? canonicalSurfaceId(targetSession.app.dialect, targetSession.app.role) : undefined;
+      const bindings: PersistenceBinding[] = remote
+        ? [{ kind: "hub", baseUrl: `http://${remote.hostPort}`, spaceId: remote.spaceId, ...(requestedSurfaceId === undefined ? {} : { requestedSurfaceId }) }]
         : uri.startsWith("folder://")
           ? [{ kind: "folder", path: uri.slice("folder://".length) }]
           : uri.startsWith("file://")
             ? [{ kind: "folder", path: uri.slice("file://".length).replace(/\/[^/]*$/, "") }]
             : [];
-      await openDocument({ documentId, schema: targetSession.app.breadcrumb.join(".") }, bindings);
+      // 📐️ The artifact's OWN schema (`AppDefinition.io.artifactSchema`), not the chrome breadcrumb:
+      // a hub plan states the document's schema and `documentOpenPlanAuthority`
+      // (`👷️worker/🟦️.ts:2637`) refuses the open when it differs, so attaching the gis map answered
+      // `document open: authority mismatch` → "The document target changed" with
+      // `planSchema="gis.map"` against the breadcrumb's `"semio.gis.2d"`. The breadcrumb stays the
+      // fallback for an app that declares no artifact io (a viewer of nothing).
+      const appArtifactSchema = (targetSession.app as unknown as { readonly io?: { readonly artifactSchema?: string } }).io?.artifactSchema;
+      await openDocument({ documentId, schema: appArtifactSchema && appArtifactSchema.length > 0 ? appArtifactSchema : targetSession.app.breadcrumb.join(".") }, bindings);
     },
     [openDocument, panel, resolveSyncTargetSession, hostMode],
   );
@@ -6602,29 +7071,38 @@ function FrameworkOsShellInner({
           // utility clears any active mode-level tool.
           if (next && activeToolIdRef.current) writeToolRegister(null, null);
           if (next) completeIntroductionInteraction((interaction) => interaction.on.kind === "utility" && interaction.on.id === next);
-          const pluginEntry = loadedPlugins.find((entry) => entry.handle.pluginId === session.pluginId);
+          // 🧰️🪟️ "Active utility is per-window" means per-window of whichever PROGRAM owns that window.
+          // A spawned foreign editor's utility bar forwarded to the landing app's instance, so arming a
+          // drawing tool inside a spawned `draw` reached `s.space.home` and did nothing.
+          const utilitySpawnedId = spawnedIdOfWindowInstanceV1(windowId, spawnedIdsRef.current);
+          const utilitySpawned = utilitySpawnedId === null ? undefined : panel?.spawnedApps.find((entry) => entry.id === utilitySpawnedId);
+          const utilityApp = utilitySpawned ? loadedPlugins.find((entry) => entry.handle.pluginId === utilitySpawned.pluginId)?.manifest.apps.find((candidate) => candidate.id === utilitySpawned.appId) : undefined;
+          const utilitySession: ActiveSession = utilitySpawned && utilityApp ? { pluginId: utilitySpawned.pluginId, instanceId: utilitySpawned.instanceId, app: utilityApp, viewState: spawnedProgramViewStateV1(session.viewState, utilityApp) } : session;
+          const utilityExtraInstances = utilitySession === session ? extraWindowInstancesRef.current : [];
+          const utilityGuestWindowId = guestWindowIdV1(windowId, spawnedIdsRef.current) ?? windowId;
+          const pluginEntry = loadedPlugins.find((entry) => entry.handle.pluginId === utilitySession.pluginId);
           const program = pluginEntry?.handle;
           if (program) {
             const viewState = windowViewContext(
               {
-                ...session.viewState,
+                ...utilitySession.viewState,
                 locale: uiLocaleRef.current,
                 terminology: uiTerminologyRef.current,
                 activeToolId: next ? undefined : activeToolIdRef.current ?? undefined,
-                activeUtilityByWindowId: buildActiveUtilityByWindowId(activeUtilityByWindowIdRef.current),
-                windowInstances: sessionWindowInstances(session.app, extraWindowInstancesRef.current).map((instance) => ({ id: instance.id, windowKindId: instance.windowKindId })),
+                activeUtilityByWindowId: guestActiveUtilityByWindowIdV1(activeUtilityByWindowIdRef.current, utilitySpawnedId, spawnedIdsRef.current),
+                windowInstances: sessionWindowInstances(utilitySession.app, utilityExtraInstances).map((instance) => ({ id: instance.id, windowKindId: instance.windowKindId })),
               },
-              windowId,
+              utilityGuestWindowId,
             );
             if (!viewState) return refuse("view-state-unresolved", `window=${windowId}`);
             const forwarded: ActionDescriptor = { controllerId: action.controllerId, action: action.action, args: { utilityId: next } };
             await program
-              .handleAction(session.instanceId, encodeWindowActionInvocation({ ...session, viewState }, forwarded, extraWindowInstancesRef.current, windowId), viewState, { order: causalOrderKeyV1(entry.provenance) })
+              .handleAction(utilitySession.instanceId, encodeWindowActionInvocation({ ...utilitySession, viewState }, forwarded, utilityExtraInstances, utilityGuestWindowId), viewState, { order: causalOrderKeyV1(entry.provenance) })
               .then((response) => {
-                applyHistoryPatch(response.historyPatch);
+                applyHistoryPatch(response.historyPatch, false, { pluginId: utilitySession.pluginId, instanceId: utilitySession.instanceId });
                 applyLeftoverInteractionView(response.output, windowId);
                 if (!isCurrentEffectOwner(primaryActionOwner)) return;
-                return applyHostEffects(response.requestedEffects ?? [], { ...session, viewState }, resolveUiDirtyScope(response.uiScope), primaryActionOwner);
+                return applyHostEffects(response.requestedEffects ?? [], { ...utilitySession, viewState }, resolveUiDirtyScope(response.uiScope), primaryActionOwner);
               })
               .catch((utilityError) => undefined);
           }
@@ -6772,6 +7250,9 @@ function FrameworkOsShellInner({
           return applied();
         }
 
+        /** 🪟️ Which spawned instance this dispatch belongs to — `null` for the session's own app. It
+         * decides BOTH the target instance and the host↔guest window-id translation below. */
+        let targetSpawnedId: string | null = null;
         let targetSession =
           hostMode && action.controllerId !== session.app.controllerId
             ? (() => {
@@ -6782,9 +7263,34 @@ function FrameworkOsShellInner({
                 if (!spawned) return session;
                 const app = loadedPlugins.find((p) => p.handle.pluginId === spawned.pluginId)?.manifest.apps.find((a) => a.id === spawned.appId);
                 if (!app) return session;
-                return { pluginId: spawned.pluginId, instanceId: spawned.instanceId, app, viewState: session.viewState };
+                targetSpawnedId = spawned.id;
+                return { pluginId: spawned.pluginId, instanceId: spawned.instanceId, app, viewState: spawnedProgramViewStateV1(session.viewState, app) };
               })()
             : session;
+        const actionWindowId = typeof action.args === "object" && action.args != null && typeof (action.args as { windowId?: unknown }).windowId === "string" ? (action.args as { windowId: string }).windowId : undefined;
+        /** 🪟️ The window id in the SHELL's namespace — what the canvas, the utility map and the
+         * leftover-overlay lane are keyed by. */
+        const hostWindowId = actionWindowId ?? activeWindowIdRef.current ?? undefined;
+        /**
+         * 🪟️ A WINDOW-scoped dispatch belongs to the program that owns that window, whatever
+         * controller raised it. Shell chrome (the navbar's history verbs, a keybinding, a panel row)
+         * raises actions with the SESSION's controller id while the active window belongs to a
+         * spawned program — measured on the live `s` host as
+         * `noteShellCommand refused: view-state-unresolved (user window=space-2::s-workflow)`, because
+         * the host app has no window by that name. This is the "panel actions dispatch in the ACTIVE
+         * window" rule, stated once for every route below instead of per call site.
+         */
+        if (hostMode && hostWindowId !== undefined) {
+          const windowOwnerId = spawnedIdOfWindowInstanceV1(hostWindowId, spawnedIdsRef.current);
+          if (windowOwnerId !== null && windowOwnerId !== targetSpawnedId) {
+            const owner = panel?.spawnedApps.find((entry) => entry.id === windowOwnerId);
+            const ownerApp = owner ? loadedPlugins.find((entry) => entry.handle.pluginId === owner.pluginId)?.manifest.apps.find((candidate) => candidate.id === owner.appId) : undefined;
+            if (owner && ownerApp) {
+              targetSpawnedId = owner.id;
+              targetSession = { pluginId: owner.pluginId, instanceId: owner.instanceId, app: ownerApp, viewState: spawnedProgramViewStateV1(session.viewState, ownerApp) };
+            }
+          }
+        }
         if (action.action === "undo") {
           const mounted = Object.entries(inferenceHistoryByRuntimeKeyRef.current).filter(([runtimeKey, history]) => {
             const document = openDocumentSessionsRef.current.get(runtimeKey);
@@ -6834,8 +7340,13 @@ function FrameworkOsShellInner({
         // 🪟️ `windowId` is read back off the tagged `action.args` (see `windowMeasuresChrome`/`tagSetActiveUtilityWindow`),
         // falling back to the active window — stamped into the dispatched view state so the plugin can key any
         // per-window option mutation off `view_state.windowId` instead of ever guessing at the active window.
-        const actionWindowId = typeof action.args === "object" && action.args != null && typeof (action.args as { windowId?: unknown }).windowId === "string" ? (action.args as { windowId: string }).windowId : undefined;
-        const dispatchWindowId = actionWindowId ?? activeWindowIdRef.current ?? undefined;
+        /** 🪟️ The window id the GUEST knows. A spawned instance owns exactly one set of windows, so
+         * its instance ids are its window KIND ids; the `${spawnedId}::` namespace is the shell's.
+         * Without this strip the guest is addressed at a window it never declared and
+         * `undeclaredActionDiagnostic` drops the action — the shape that made every foreign-kind verb
+         * unreachable inside `s` (`🪟️spawned-program`). */
+        const dispatchWindowId = guestWindowIdV1(hostWindowId, spawnedIdsRef.current);
+        const dispatchExtraInstances = targetSpawnedId === null ? extraWindowInstancesRef.current : [];
         // 🧹️ `clearSelection` retires the host's own leftover overlay on the SAME turn it is dispatched.
         // The guest's half of the clear is exact — measured on 6018, the clearing turn's
         // `turn-result.presence` carries the cleared mark for the row that lost the selection — but the
@@ -6844,14 +7355,14 @@ function FrameworkOsShellInner({
         // later gesture publishes. So the row the guest had just retired kept `aria-selected="true"` until
         // the next pick, which is exactly the one-keystroke-wide window
         // `📓️window-gaps-followup-2026-09-14.md` G1 measured.
-        if (action.action === CLEAR_SELECTION_ACTION_ID) applyLeftoverInteractionView({ interactionView: { selectedIds: [], selectionCleared: true } }, dispatchWindowId);
+        if (action.action === CLEAR_SELECTION_ACTION_ID) applyLeftoverInteractionView({ interactionView: { selectedIds: [], selectionCleared: true } }, hostWindowId);
         const baseDispatchViewState: ViewModel = {
           ...targetSession.viewState,
           locale: uiLocale,
           terminology: uiTerminology,
-          windowInstances: sessionWindowInstances(targetSession.app, extraWindowInstancesRef.current).map((instance) => ({ id: instance.id, windowKindId: instance.windowKindId })),
-          activeUtilityByWindowId: buildActiveUtilityByWindowId(activeUtilityByWindowIdRef.current),
-          focusedWindowId: activeWindowIdRef.current ?? undefined,
+          windowInstances: sessionWindowInstances(targetSession.app, dispatchExtraInstances).map((instance) => ({ id: instance.id, windowKindId: instance.windowKindId })),
+          activeUtilityByWindowId: guestActiveUtilityByWindowIdV1(activeUtilityByWindowIdRef.current, targetSpawnedId, spawnedIdsRef.current),
+          focusedWindowId: guestWindowIdV1(activeWindowIdRef.current, spawnedIdsRef.current),
           // 🪟️ See the identical spread in `runUiRefreshPass` — an action's own render must materialise
           // the same tree windows the last refresh did, or a pick dispatched on a streamed row lands on
           // a body the guest rebuilt at a different offset.
@@ -6864,7 +7375,7 @@ function FrameworkOsShellInner({
         // 🚨️ Undeclared-action drop — ALWAYS visible, never `[DEBUG]`/diagnostics-gated: this is the one
         // place a fully wired binding dies without a fault reaching anyone, so it names the app, the action
         // and the dispatching window kind (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-        const undeclared = undeclaredActionDiagnostic(targetSession.app.id, action.action, targetSession.app.windowKinds, (baseDispatchViewState.windowInstances ?? []).find((instance) => instance.id === dispatchWindowId)?.windowKindId ?? null);
+        const undeclared = undeclaredActionDiagnostic(targetSession.app.id, action.action, targetSession.app.windowKinds, (baseDispatchViewState.windowInstances ?? []).find((instance) => instance.id === dispatchWindowId)?.windowKindId ?? null, targetSession.app.actions ?? []);
         if (undeclared) {
           console.error(undeclared.message, undeclared);
           return refuse("undeclared-action", undeclared.message);
@@ -6876,7 +7387,7 @@ function FrameworkOsShellInner({
         // `isViewerReadOnlyFault` are deliberately NOT in this callback's dep list below — both are stable
         // across renders (refs + `dispatch` only), and are declared later in this component, so adding
         // them would read a not-yet-initialized `const` on the render that first creates this callback.
-        if (targetSession.app.role === "viewer" && targetSession.app.windowKinds.some((kind) => (kind.actions ?? []).some((entry) => entry.id === action.action && entry.kind === "mutation"))) {
+        if (targetSession.app.role === "viewer" && targetSession.app.windowKinds.some((kind) => resolveWindowActions(targetSession.app, kind).some((entry) => entry.id === action.action && entry.kind === "mutation"))) {
           showTransientNotice(viewerReadOnlyNoticeText(uiLocale), "info", SURFACE_FAULT_CODES.ViewerReadOnly);
           return refuse("viewer-read-only", undefined, true);
         }
@@ -6916,7 +7427,7 @@ function FrameworkOsShellInner({
           try {
             await dispatchDirectBrowserActorCommand(
               directBrowserActor,
-              windowActionInvocation({ ...targetSession, viewState: dispatchViewState }, action, extraWindowInstancesRef.current, dispatchWindowId),
+              windowActionInvocation({ ...targetSession, viewState: dispatchViewState }, action, dispatchExtraInstances, dispatchWindowId),
               dispatchViewState,
             );
           } catch (actionError) {
@@ -6934,14 +7445,14 @@ function FrameworkOsShellInner({
         // the entire chain, not just `handleAction`'s own promise.
         const releaseActionWork = sessionWorkRef.current.begin(targetSession.pluginId, targetSession.instanceId, "typed-operation");
         try {
-          const response = await plugin.handleAction(targetSession.instanceId, encodeWindowActionInvocation({ ...targetSession, viewState: dispatchViewState }, action, extraWindowInstancesRef.current, dispatchWindowId), dispatchViewState, { order: causalOrderKeyV1(entry.provenance) });
-          applyHistoryPatch(response.historyPatch);
-          applyLeftoverInteractionView(response.output, dispatchWindowId);
+          const response = await plugin.handleAction(targetSession.instanceId, encodeWindowActionInvocation({ ...targetSession, viewState: dispatchViewState }, action, dispatchExtraInstances, dispatchWindowId), dispatchViewState, { order: causalOrderKeyV1(entry.provenance) });
+          applyHistoryPatch(response.historyPatch, false, { pluginId: targetSession.pluginId, instanceId: targetSession.instanceId });
+          applyLeftoverInteractionView(response.output, hostWindowId);
           const navbarExample = navbarExampleIdFromHistoryUpserts(response.historyPatch?.upserts, lastDispatchedExampleIdRef.current, resolveBootExampleId("", exampleOptionsRef.current, defaults.exampleId));
           if (navbarExample !== undefined) dispatch({ type: "SET_ACTIVE_EXAMPLE_ID", value: navbarExample });
           const needsHistoryRefresh = historyRefreshNeededV1(action.action, response.historyPatch);
           if (!isCurrentEffectOwner(actionOwner)) {
-            if (needsHistoryRefresh) refreshHistorySnapshot(targetSession.instanceId);
+            if (needsHistoryRefresh) refreshHistorySnapshot({ pluginId: targetSession.pluginId, instanceId: targetSession.instanceId });
             return applied();
           }
           await applyHostEffects(response.requestedEffects ?? [], { ...targetSession, viewState: dispatchViewState }, resolveUiDirtyScope(response.uiScope), actionOwner);
@@ -6952,7 +7463,7 @@ function FrameworkOsShellInner({
           // background tick loop depends on (`ComponentSceneHostProps.onAction`). The ledger's own
           // `settled(inputSeq)` is the input-level twin (design §H).
           await awaitOperationSettle(response.output);
-          if (needsHistoryRefresh) refreshHistorySnapshot(targetSession.instanceId);
+          if (needsHistoryRefresh) refreshHistorySnapshot({ pluginId: targetSession.pluginId, instanceId: targetSession.instanceId });
           return applied();
         } catch (actionError) {
           let outcome: InputOutcomeV1;
@@ -7719,7 +8230,7 @@ function FrameworkOsShellInner({
       // 🪟️ Hand the just-computed instance list straight to the fetch rather than reading `extraWindowInstances`
       // state (which wouldn't reflect this dispatch until the next render) — every newly-seeded pane's own
       // body/measures/engagement gets fetched immediately instead of showing "missing window" until later.
-      void refreshUi(session, { kind: "full" }, seeded.extraInstances);
+      void refreshUi(session, { kind: "full" }, seeded.extraInstances).catch((error: unknown) => reportRefreshFault(session.pluginId, error));
     },
     [session, appLabelsOverlay, refreshUi, uiTerminology, uiLocale],
   );
@@ -7742,7 +8253,7 @@ function FrameworkOsShellInner({
             dispatch({ type: "SET_EXTRA_WINDOW_INSTANCES", value: seeded.extraInstances });
             dispatch({ type: "SET_SHELL_LAYOUT", value: seeded.modeLayout });
             dispatch({ type: "SET_ACTIVE_WINDOW_ID", value: seededActiveWindowId(seeded.modeLayout) });
-            void refreshUi(nextSession, { kind: "full" }, seeded.extraInstances);
+            void refreshUi(nextSession, { kind: "full" }, seeded.extraInstances).catch((error: unknown) => reportRefreshFault(nextSession.pluginId, error));
           }
           return nextSession;
         },
@@ -7813,6 +8324,14 @@ function FrameworkOsShellInner({
   const handleTemplateDrop = useCallback(
     (payload: WindowTemplateDropPayload, target: ModeCanvasDropTarget) => {
       if (!session) return;
+      // 🪟️ Display ▸ Windows now offers the FOCUSED program's kinds, and a spawned program's extra
+      // panes are not modelled yet (`refreshSpawnedUi` fetches its declared kinds, not splits of
+      // them). Dropping one would mint a window instance no guest was asked to render, so the drop is
+      // refused loudly instead. Named in `📓️s5-spawned-app-windows-in-s.md` as the next owner's step.
+      if (focusedSpawnedId !== null) {
+        console.warn(`[os-shell] window template drop refused: ${focusedSpawnedId} is a spawned program and has no split lane yet (kind ${payload.windowKindId})`);
+        return;
+      }
       const kind = session.app.windowKinds.find((entry) => entry.id === payload.windowKindId);
       if (!kind) return;
       extraWindowCounterRef.current += 1;
@@ -7829,7 +8348,7 @@ function FrameworkOsShellInner({
       }
       // 🪟️ The new split pane is its own window instance — fetch its body/measures/engagement right away
       // (see `applyNamedLayout`'s comment) rather than waiting for an unrelated action to trigger a refresh.
-      void refreshUi(session, { kind: "full" }, nextExtraInstances);
+      void refreshUi(session, { kind: "full" }, nextExtraInstances).catch((error: unknown) => reportRefreshFault(session.pluginId, error));
       dispatch({
         type: "SET_SHELL_LAYOUT",
         value: (current) => {
@@ -7842,14 +8361,18 @@ function FrameworkOsShellInner({
       dispatch({ type: "SET_ACTIVE_WINDOW_ID", value: instanceId });
       noteShellCommand("shell.windowSplit", shellLabel("ui.shellCommand.windowSplit"), { windowKindId: payload.windowKindId, instanceId });
     },
-    [appLabelsOverlay, refreshUi, session, noteShellCommand, uiTerminology, uiLocale],
+    [appLabelsOverlay, refreshUi, session, focusedSpawnedId, noteShellCommand, uiTerminology, uiLocale],
   );
 
   const displayHostRef = useRef<DisplayHostApi | null>(null);
+  // 🪟️ Display ▸ Windows offers the windows of the program that OWNS the canvas. It read
+  // `session.app` unconditionally, so a spawned foreign editor's Display menu listed the landing
+  // app's window instead of its own — the symptom S4 measured as
+  // "framework.display.windows.s-home-main (Studios)" after spawning `draw`.
   const displayHost = useNamedLayoutHost({
-    appId: session?.app.id ?? "framework-os",
-    windowKinds: session?.app.windowKinds.map((kind) => ({ ...kind, label: resolveAppLabel(appLabelsOverlay, "windowKind", kind.id, resolveManifestLabel(kind.label as LocalizedLabel | string, uiTerminology, uiLocale)) })) ?? [],
-    builtinLayouts: session?.app.namedLayouts ?? [],
+    appId: focusedApp?.id ?? "framework-os",
+    windowKinds: focusedApp?.windowKinds.map((kind) => ({ ...kind, label: resolveAppLabel(appLabelsOverlay, "windowKind", kind.id, resolveManifestLabel(kind.label as LocalizedLabel | string, uiTerminology, uiLocale)) })) ?? [],
+    builtinLayouts: focusedApp?.namedLayouts ?? [],
     currentLayout: captureCurrentFrameworkLayout(shellLayout, extraWindowInstances, session?.app.defaultLayout),
     onApplyLayout: applyNamedLayout,
     namedLayoutStore,
@@ -8744,6 +9267,10 @@ function FrameworkOsShellInner({
     (event: globalThis.KeyboardEvent) => {
       if (event.defaultPrevented) return;
       if (!session) return;
+      // ⌨️ Chords belong to the program that OWNS the canvas. Reading `session.app` unconditionally
+      // meant a spawned foreign editor's own verbs — and the framework-universal undo/redo chords —
+      // were resolved against, and dispatched to, the LANDING app (`🪟️spawned-program`).
+      const keyApp = focusedApp ?? session.app;
       const parseKeys = (keys: string) =>
         keys
           .split(",")
@@ -8756,19 +9283,22 @@ function FrameworkOsShellInner({
         if (target.isContentEditable) return true;
         return target.closest("[contenteditable='true'], [role='textbox']") != null;
       };
-      const focusedWindowId = activeWindowIdRef.current ?? session.viewState.windowId ?? session.viewState.activeWindowKindId ?? null;
-      const instances = sessionWindowInstances(session.app, extraWindowInstancesRef.current);
+      const instances = focusedWindowInstancesRef.current;
+      const focusedWindowId = activeWindowIdRef.current ?? (focusedSpawnedId !== null ? (instances[0]?.id ?? null) : (session.viewState.windowId ?? session.viewState.activeWindowKindId ?? null));
       // 🪟️ Only the windows the ACTIVE MODE mounts, in layout order. A verb owned by a window this mode
       // does not show has no reachable owner and must say so rather than dispatch into a dead address.
       const mounted: readonly WindowScopeInstanceV1[] = modeLayoutStacksV1(effectiveModeLayoutRef.current as WindowScopeLayoutNodeV1 | null)
         .flatMap((stack) => [...stack.windowIds])
         .map((id) => ({ id, windowKindId: instances.find((instance) => instance.id === id)?.windowKindId ?? id }));
-      const scopeKinds: readonly WindowScopeKindV1[] = session.app.windowKinds.map((kind) => ({ id: kind.id, actionIds: (kind.actions ?? []).map((action) => action.id) }));
+      const scopeKinds: readonly WindowScopeKindV1[] = keyApp.windowKinds.map((kind) => ({ id: kind.id, actionIds: resolveWindowActions(keyApp, kind).map((action) => action.id) }));
       // 🛡️ The shell's own chrome chords are never an app's to shadow. `build_definition` mints a
       // keybinding for each reserved `toolRun*` action a declared tool run injects, and `toolRunStep`'s
       // is `mod+alt+arrowright` — the navbar's own mode-step chord.
       const reservedChords = reservedShellChordsV1(SHELL_KEYBINDINGS, uiKeybindingOverrides);
-      const actionDefinition = (windowKindId: string, actionId: string) => (session.app.windowKinds.find((kind) => kind.id === windowKindId)?.actions ?? []).find((action) => action.id === actionId);
+      const actionDefinition = (windowKindId: string, actionId: string) => {
+        const kind = keyApp.windowKinds.find((entry) => entry.id === windowKindId);
+        return kind ? resolveWindowActions(keyApp, kind).find((action) => action.id === actionId) : undefined;
+      };
       if (isEditableTarget(event.target)) return;
       // 🧰️🛠️ Escape deactivates the active window's active utility (P5), or — when no utility is active —
       // the active mode-level tool, when nothing is being typed.
@@ -8776,16 +9306,16 @@ function FrameworkOsShellInner({
         const windowId = activeWindowIdRef.current;
         if (windowId && activeUtilityByWindowIdRef.current[windowId]) {
           event.preventDefault();
-          void onAction({ controllerId: session.app.controllerId, action: SET_ACTIVE_UTILITY_ACTION_ID, args: { windowId, utilityId: "", expectedGeneration: utilityGenerationFor(windowId) } });
+          void onAction({ controllerId: keyApp.controllerId, action: SET_ACTIVE_UTILITY_ACTION_ID, args: { windowId, utilityId: "", expectedGeneration: utilityGenerationFor(windowId) } });
           return;
         }
         if (activeToolIdRef.current) {
           event.preventDefault();
-          void onAction({ controllerId: session.app.controllerId, action: SET_ACTIVE_TOOL_ACTION_ID, args: { toolId: "", expectedGeneration: toolGeneration() } });
+          void onAction({ controllerId: keyApp.controllerId, action: SET_ACTIVE_TOOL_ACTION_ID, args: { toolId: "", expectedGeneration: toolGeneration() } });
           return;
         }
       }
-      for (const binding of session.app.keybindings) {
+      for (const binding of keyApp.keybindings) {
         for (const chord of parseKeys(binding.keys)) {
           if (!keyboardEventMatchesChord(event, chord)) continue;
           if (reservedChords.has(chord)) continue;
@@ -8799,7 +9329,7 @@ function FrameworkOsShellInner({
             // 🚦️ No window of this mode owns the verb: a deliberate, HINTED no-op. A chord that silently
             // does nothing is indistinguishable from a broken keyboard, which is exactly how
             // `mod+shift+g` read in edit mode.
-            const anyDefinition = session.app.windowKinds.flatMap((kind) => kind.actions ?? []).find((action) => action.id === binding.action.action);
+            const anyDefinition = keyApp.windowKinds.flatMap((kind) => resolveWindowActions(keyApp, kind)).find((action) => action.id === binding.action.action);
             const label = anyDefinition ? resolveAppLabel(appLabelsOverlay, "action", anyDefinition.id, resolveManifestLabel(anyDefinition.label as LocalizedLabel | string, uiTerminology, uiLocale)) : binding.action.action;
             showTransientNotice(keybindingUnownedTextV1(uiLocale, formatKeybindingShortcut(chord), label), "info", KEYBINDING_UNOWNED_CODE);
             return;
@@ -8815,14 +9345,14 @@ function FrameworkOsShellInner({
             const retainedPaste = pasteActionWithRetainedFragment<ClipboardActionDescriptor>({ action: definition.id }, clipboardFragmentRef.current);
             const retainedArgs = retainedPaste.args;
             if (pasteArgsFragment(retainedPaste) !== undefined) {
-              onAction({ controllerId: session.app.controllerId, action: retainedPaste.action, args: { ...(typeof retainedArgs === "object" && retainedArgs !== null ? retainedArgs : {}), windowId: targetWindowId } });
+              onAction({ controllerId: keyApp.controllerId, action: retainedPaste.action, args: { ...(typeof retainedArgs === "object" && retainedArgs !== null ? retainedArgs : {}), windowId: targetWindowId } });
               return;
             }
             const expanded = actionPaneExpandedByWindowIdRef.current[targetWindowId] ?? null;
             const staged = actionPaneStagedArgsByKeyRef.current[actionStageKey(targetWindowId, definition.id)] ?? {};
             const intent = resolveKeybindingIntent(definition, expanded, staged);
             if (intent.kind === "execute") {
-              onAction({ controllerId: session.app.controllerId, action: intent.actionId, args: { ...(typeof intent.args === "object" && intent.args !== null ? intent.args : {}), windowId: targetWindowId } });
+              onAction({ controllerId: keyApp.controllerId, action: intent.actionId, args: { ...(typeof intent.args === "object" && intent.args !== null ? intent.args : {}), windowId: targetWindowId } });
             } else if (intent.kind === "open") {
               dispatch({ type: "SET_ACTION_PANE_FOLDED", windowId: targetWindowId, value: false });
               dispatch({ type: "SET_ACTION_PANE_EXPANDED", windowId: targetWindowId, value: intent.actionId });
@@ -8838,16 +9368,16 @@ function FrameworkOsShellInner({
       // remote/local routing in the `action === "undo"` branch applies identically.
       if ((event.ctrlKey || event.metaKey) && !event.altKey && event.key.toLowerCase() === "z") {
         event.preventDefault();
-        onAction({ controllerId: session.app.controllerId, action: event.shiftKey ? "redo" : "undo" });
+        onAction({ controllerId: keyApp.controllerId, action: event.shiftKey ? "redo" : "undo" });
         return;
       }
       if ((event.ctrlKey || event.metaKey) && !event.altKey && !event.shiftKey && event.key.toLowerCase() === "y") {
         event.preventDefault();
-        onAction({ controllerId: session.app.controllerId, action: "redo" });
+        onAction({ controllerId: keyApp.controllerId, action: "redo" });
         return;
       }
     },
-    [onAction, session, appLabelsOverlay, showTransientNotice, uiKeybindingOverrides, uiLocale, uiTerminology, utilityGenerationFor, toolGeneration],
+    [onAction, session, focusedApp, focusedSpawnedId, appLabelsOverlay, showTransientNotice, uiKeybindingOverrides, uiLocale, uiTerminology, utilityGenerationFor, toolGeneration],
   );
   useShellKeydown(scope.rootRef, handleAppKeydown, [handleAppKeydown]);
 
@@ -8982,11 +9512,12 @@ function FrameworkOsShellInner({
    * that badge is that it is NOT the active document's, so this reads the full map rather than
    * `currentSyncStatus`. */
   const hubConnectionStatuses = useMemo(() => Object.values(syncStatusByDocumentId), [syncStatusByDocumentId]);
-  /** 🔐️ Mirrors the hub workspace's own session phase (AU2's `useHubConnection`). It starts
-   * `"signedOut"` rather than `"none"` because the badge now has something to open — the workspace
-   * overlay — and the workspace reports every phase change back here, so closing the overlay does
-   * not make a live session look absent. Never `"none"`: this shell always mounts the surface. */
-  const [hubSessionPresence, setHubSessionPresence] = useState<HubSessionPresenceV1>("signedOut");
+  /** 🔐️ Derived from the SHELL's own verified session authority, not from the workspace overlay's
+   * mirror of it. That is the only honest source: the authority is what every hub-authenticated
+   * operation is admitted against, it survives the overlay being closed, and it is already live when
+   * a reloaded page re-bootstraps a remembered session — which the old mirror read as `signedOut`
+   * until a human opened the workspace once. Never `"none"`: this shell always mounts the surface. */
+  const hubSessionPresence: HubSessionPresenceV1 = verifiedSessionAuthority === null ? "signedOut" : "signedIn";
   /** 🔗️ Opens the hub workspace through its own address, so the badge, the palette verb and a pasted
    * `/hub` link all take one path — but the overlay's own state is opened directly, because the URI
    * lane is host-mode-only: `applyShellUri` is guarded by `hostMode`, so in a plugin playground a
@@ -8994,7 +9525,7 @@ function FrameworkOsShellInner({
    * everywhere except the hub host. Signing in to a hub is shell chrome, not a host-mode privilege. */
   const openHubWorkspace = useCallback(() => {
     setHubWorkspaceOpen(true);
-    if (hostMode) navigateHistory("/hub");
+    if (hostMode) navigateHistory(SHELL_HUB_ROUTE);
   }, [hostMode, navigateHistory]);
   /** 👥️ The hub identities this shell's presence lane currently sees. A peer with no hub identity
    * (a folder-only or anonymous participant) contributes nothing, so the roster can never show a
@@ -9333,7 +9864,7 @@ function FrameworkOsShellInner({
   // `manifest::examples_for_app` is its twin, both pinned by `📚️example-picker.json`.
   const exampleOptions = useMemo(() => {
     const app = session?.app;
-    if (!app || !appSwitchesExamples(app.id, app.windowKinds)) return [];
+    if (!app || !appSwitchesExamples(app.id, app.windowKinds, app.actions ?? [])) return [];
     return examplesForApp(activePluginManifest?.examples ?? [], app).map((example) => ({
       id: example.id,
       label: resolveAppLabel(appLabelsOverlay, "example", example.id, resolveManifestLabel(example.label, uiTerminology, uiLocale)),
@@ -9462,11 +9993,14 @@ function FrameworkOsShellInner({
         for (const definition of resolveWindowActions(session.app, kind)) actionDefinitions.push({ ownerId: actionStageKey(instance.id, definition.id), args: choiceArgs(definition.args) });
       }
     }
+    // 🪟️ Every window a spawned program owns stages its own args, under the shell's window-id
+    // namespace — the Actions rail is per window instance, and a spawned app is no longer one window.
     for (const spawned of panel?.spawnedApps ?? []) {
       const app = loadedPlugins.find((entry) => entry.handle.pluginId === spawned.pluginId)?.manifest.apps.find((candidate) => candidate.id === spawned.appId);
-      const kind = app?.windowKinds[0];
-      if (app === undefined || kind === undefined) continue;
-      for (const definition of resolveWindowActions(app, kind)) actionDefinitions.push({ ownerId: actionStageKey(spawned.id, definition.id), args: choiceArgs(definition.args) });
+      if (app === undefined) continue;
+      for (const kind of app.windowKinds) {
+        for (const definition of resolveWindowActions(app, kind)) actionDefinitions.push({ ownerId: actionStageKey(spawnedWindowInstanceIdV1(spawned.id, kind.id), definition.id), args: choiceArgs(definition.args) });
+      }
     }
     for (const retirement of artifactKindChoiceDraftRetirementsV1(actionPaneStagedArgsByKey, actionDefinitions)) {
       const split = retirement.ownerId.lastIndexOf(":");
@@ -9519,7 +10053,7 @@ function FrameworkOsShellInner({
       // verb through `navigateHistory` keeps the palette entry, the connection badge and a pasted
       // link on exactly one code path.
       if (isOsCommandAddress(address) && commandId === OPEN_HUB_COMMAND_ID) {
-        navigateHistory("/hub");
+        navigateHistory(SHELL_HUB_ROUTE);
       }
       if (isOsCommandAddress(address) && commandId === OPEN_TASK_MANAGER_COMMAND_ID) {
         dispatch({ type: "SET_PANEL_PATH", anchor: "bottom-right", value: [FRAMEWORK_TASK_MANAGER_PANEL_ID] });
@@ -9998,8 +10532,9 @@ function FrameworkOsShellInner({
     const opened = historyOpen && !historyTabOpenRef.current;
     historyTabOpenRef.current = historyOpen;
     if (!opened) return;
-    refreshHistorySnapshot(session.instanceId);
-  }, [panelActivePaths, refreshHistorySnapshot, session]);
+    // 🧾️ The FOCUSED program's history, because that is whose ledger the panel renders.
+    refreshHistorySnapshot(focusedProgram ?? { pluginId: session.pluginId, instanceId: session.instanceId });
+  }, [focusedProgram, panelActivePaths, refreshHistorySnapshot, session]);
 
   /**
    * 🧭️ Generalizes the old `leftPanelActivePath`/`rightPanelActivePath` studio/plugin "snap to the active panel
@@ -10039,6 +10574,142 @@ function FrameworkOsShellInner({
     dispatch({ type: "SET_PANEL_VISIBLE", anchor: located.anchor, value: true });
   }, [panelUiByKey, dock]);
 
+  /** 🤖️ Fills {@link applyAgentShellCommandRef}: the MCP gateway's `ui_reveal`/`ui_focus` reach this
+   * host as SSOT `ShellCommand`s, and this is where they stop being a mirror update and become the
+   * real chrome moving. `setPanelPath` carries the shell SSOT's four-anchor vocabulary while this
+   * dock has six, so the TAB is the address — `findPanelTabInDock` answers where it actually lives,
+   * exactly as the tool-run reveal above does, and the requested anchor is advisory. */
+  useEffect(() => {
+    applyAgentShellCommandRef.current = (command: ShellCommand): void => {
+      if (command.type === "focusWindow") {
+        dispatch({ type: "SET_ACTIVE_WINDOW_ID", value: command.windowId });
+        return;
+      }
+      if (command.type !== "setPanelPath") return;
+      const tabId = command.path[command.path.length - 1];
+      if (!tabId) return;
+      const located = findPanelTabInDock(dock, tabId);
+      if (!located) return;
+      const resolved = findPanelTabPath(dock.anchors[located.anchor], tabId);
+      if (resolved) dispatch({ type: "SET_PANEL_PATH", anchor: located.anchor, value: resolved });
+      dispatch({ type: "SET_PANEL_VISIBLE", anchor: located.anchor, value: true });
+    };
+  }, [dock]);
+
+  /** 🗿️ Fills {@link agentArtifactRouteRef}: this is the LIVE artifact route — an MCP client's
+   * `action_prepare`/`action_invoke`/`history_undo`/`transaction_*` executing against the plugin
+   * instance the human is looking at, instead of against the gateway's own headless interpreter on
+   * a different `--folder` workspace (`📓️r2…` §12 finding 1).
+   *
+   * Three laws make it the human's edit and not a side channel:
+   * 1. **One dispatch lane.** A mutation leaves through `onActionRef.current`, the shell's ONE input
+   *    funnel — the same call the palette, the keybindings and the app's own buttons make. It mints
+   *    an input-ledger entry, obeys the active-window rules and settles with a typed outcome, so an
+   *    agent can never bypass a gate the UI respects.
+   * 2. **The agent is its own actor.** `provenance.origin = "agent"` rides along, so the edit is
+   *    attributable in the human's history rather than looking like something they did.
+   * 3. **The commit is where the mutation happens.** The gateway's protocol is
+   *    `ReadHistory → PureCommand → TransactionPrepare → TransactionCommit`; the shell has no
+   *    "compute the ops but do not apply them" seam, so `pureCommand` returns a DEFERRED plan and
+   *    `transactionCommit` is the one leg that dispatches. A rollback therefore really does leave
+   *    the document untouched, which is the property the two-phase shape exists to give. */
+  useEffect(() => {
+    const deferred = agentDeferredPlansRef.current;
+    agentArtifactRouteRef.current = async (request): Promise<readonly ShellAppFrameV1[]> => {
+      const live = sessionRef.current;
+      if (!live) return [shellAppFault("plugin.unavailable", "no plugin session is established in this shell — open an artifact here before driving it from an agent")];
+      if (request.instanceId !== String(live.instanceId)) {
+        return [shellAppFault("plugin.unavailable", `this shell's live instance is \`${live.instanceId}\`, not \`${request.instanceId}\` — the agent addressed an instance this shell has closed`)];
+      }
+      const readHistory = async (): Promise<ShellAppFrameV1> => {
+        const plugin = loadedPluginsRef.current.find((entry) => entry.handle.pluginId === live.pluginId)?.handle;
+        if (!plugin?.readHistory) return shellAppFault("plugin.unavailable", `plugin \`${live.pluginId}\` exposes no history port in this shell`);
+        const patch = await plugin.readHistory(live.instanceId);
+        const head = [...(patch?.upserts ?? [])].sort((left, right) => right.seq - left.seq)[0];
+        return { kind: "historySnapshot", artifactId: `${live.pluginId}:${live.app.id}:${live.instanceId}`, headEditId: head?.actionId ?? "", cursor: String(patch?.cursor ?? 0) };
+      };
+      const dispatchVerb = async (action: string, args: Record<string, unknown>): Promise<ShellAppFrameV1 | null> => {
+        const outcome = await onActionRef.current({ controllerId: live.app.controllerId, action, args, provenance: { origin: "agent", windowId: activeWindowIdRef.current ?? null, causedBy: null } });
+        if (outcome.kind === "refused") return shellAppFault(outcome.reason === "viewer-read-only" ? "viewer.read-only" : outcome.reason === "mutation-rejected" ? "mutation.rejected" : "channel.not-wired", `the shell refused \`${action}\`: ${outcome.reason}${outcome.detail ? ` (${outcome.detail})` : ""}`);
+        return null;
+      };
+      switch (request.command.kind) {
+        case "readHistory":
+          return [await readHistory()];
+        case "pureCommand": {
+          const verb = request.command.capabilityId.split(".").pop() ?? "";
+          if (!(live.app.actions ?? []).some((declared) => declared.id === verb)) {
+            return [shellAppFault("capability.not-found", `app \`${live.app.id}\` declares no action \`${verb}\` (from capability \`${request.command.capabilityId}\`)`)];
+          }
+          const plan = new TextEncoder().encode(JSON.stringify({ deferredAction: verb, args: request.command.input ?? {} }));
+          return [{ kind: "emit", ops: { document: [plan], config: [], draft: [] }, warnings: [] }];
+        }
+        case "transactionPrepare": {
+          const lane = request.command.ops.document[0];
+          if (!lane) return [shellAppFault("mutation.rejected", "the shell route prepares only its own deferred plan; this transaction carries no document-lane ops")];
+          deferred.set(request.command.txnId, new TextDecoder().decode(lane));
+          return [{ kind: "transactionPrepared", txnId: request.command.txnId }];
+        }
+        case "transactionRollback":
+          deferred.delete(request.command.txnId);
+          return [{ kind: "transactionRolledBack", txnId: request.command.txnId }];
+        case "transactionCommit": {
+          const plan = deferred.get(request.command.txnId);
+          deferred.delete(request.command.txnId);
+          if (plan === undefined) return [shellAppFault("transaction.generation-mismatch", `this shell holds no prepared plan for transaction \`${request.command.txnId}\``)];
+          let parsed: { readonly deferredAction?: string; readonly args?: Record<string, unknown> };
+          try {
+            parsed = JSON.parse(plan) as { readonly deferredAction?: string; readonly args?: Record<string, unknown> };
+          } catch {
+            return [shellAppFault("mutation.rejected", "the prepared plan is not this shell route's own")];
+          }
+          if (!parsed.deferredAction) return [shellAppFault("mutation.rejected", "the prepared plan names no action")];
+          const refusal = await dispatchVerb(parsed.deferredAction, parsed.args ?? {});
+          if (refusal) return [refusal];
+          const after = await readHistory();
+          return [{ kind: "transactionCommitted", txnId: request.command.txnId, editId: after.kind === "historySnapshot" ? after.headEditId : "" }];
+        }
+        case "transactionUndo":
+        case "transactionRedo": {
+          const verb = request.command.kind === "transactionUndo" ? "undo" : "redo";
+          const refusal = await dispatchVerb(verb, {});
+          if (refusal) return [refusal];
+          return request.command.kind === "transactionUndo" ? [{ kind: "transactionUndone", groupId: request.command.groupId }] : [{ kind: "transactionRedone", groupId: request.command.groupId }];
+        }
+        case "cancel":
+          return [shellAppFault("budget.exceeded", `the gateway abandoned command ${request.command.cancelSeq}`)];
+        // 🚧️ Honest gaps, named rather than faked: a genesis read and a media export both need the
+        // live store's own pack bytes, which this host does not expose to the bridge yet. An agent
+        // that needs either resolves a headless context (`--folder`/`--hub`) for it.
+        // 🗿️ The genesis/snapshot read, answered from the LIVE store: `readAppDocumentPack` is the
+        // handle's own document port (the one `🏪️store`'s persistence already round-trips through),
+        // so an agent's `artifact_create`/`artifact_open` reads the very bytes the human is editing.
+        // It is optional on the handle and may answer `null` for a plugin with no document — both
+        // refuse BY NAME rather than going silent, the contract every other arm here keeps.
+        case "readArtifact": {
+          const plugin = loadedPluginsRef.current.find((entry) => entry.handle.pluginId === live.pluginId)?.handle;
+          if (!plugin?.readAppDocumentPack) return [shellAppFault("plugin.unavailable", `plugin \`${live.pluginId}\` exposes no document port in this shell — an agent needing a genesis read must resolve a headless context (\`--folder\`/\`--hub\`)`)];
+          const document = await plugin.readAppDocumentPack(live.instanceId);
+          if (!document) return [shellAppFault("plugin.unavailable", `plugin \`${live.pluginId}\` instance ${live.instanceId} holds no document to read`)];
+          return [{ kind: "artifact", pack: document.pack, spr: document.spr }];
+        }
+        // 📤️ The media OUT port, answered from the LIVE guest: `exportAppMedia` drives
+        // `AppCommand::MediaOut` on the handle's own channel — the SAME command the headless
+        // gateway sends — so the agent gets the guest's own bytes back over the bridge rather than
+        // the human getting an unasked-for download off the segmented queue. Both refusal paths
+        // (no port on the handle, no `Media` frame in the reply) name themselves, the contract
+        // every other arm here keeps.
+        case "exportMedia": {
+          const plugin = loadedPluginsRef.current.find((entry) => entry.handle.pluginId === live.pluginId)?.handle;
+          if (!plugin?.exportAppMedia) return [shellAppFault("plugin.unavailable", `plugin \`${live.pluginId}\` exposes no media OUT port in this shell — an agent needing an export must resolve a headless context (\`--folder\`/\`--hub\`)`)];
+          const exported = await plugin.exportAppMedia(live.instanceId, request.command.port);
+          if (!exported) return [shellAppFault("plugin.unavailable", `plugin \`${live.pluginId}\` produced no media on port \`${request.command.port}\``)];
+          return [{ kind: "exported", port: exported.port, descriptor: exported.descriptor, data: exported.data }];
+        }
+      }
+    };
+  }, []);
+
   useEffect(() => {
     const leftoverIds = leftoverInspectionIdsRef.current.length > 0 ? leftoverInspectionIdsRef.current : leftoverWorldSelectionOverlayV1()?.ids ?? [];
     if (leftoverInspectionEpoch === 0 || leftoverIds.length === 0) return;
@@ -10064,7 +10735,7 @@ function FrameworkOsShellInner({
       let cancelled = false;
       const timer = window.setTimeout(() => {
         if (cancelled) return;
-        void refreshUi(currentSession, scope, undefined, true);
+        void refreshUi(currentSession, scope, undefined, true).catch((error: unknown) => reportRefreshFault(currentSession.pluginId, error));
       }, 250);
       return () => {
         cancelled = true;
@@ -10088,7 +10759,7 @@ function FrameworkOsShellInner({
       .map((tab) => tab.bodyKey)
       .filter((bodyKey): bodyKey is string => Boolean(bodyKey));
     if (panelBodies.length === 0) return;
-    void refreshUi(currentSession, { kind: "partial", panelBodies });
+    void refreshUi(currentSession, { kind: "partial", panelBodies }).catch((error: unknown) => reportRefreshFault(currentSession.pluginId, error));
   }, [activeWindowId, refreshUi]);
 
   const lastDetailsOverrideTabIdRef = useRef<string | undefined>(undefined);
@@ -10375,12 +11046,41 @@ function FrameworkOsShellInner({
       });
     }
     if (hostMode && panel) {
+      // 🎛️ One entry per PROGRAM, with an id that is unique and a name a human can type.
+      //
+      // 🧯️ Both halves were measured broken on the live `s` host (ticket 26/09/18 S7 §5). The id was
+      // `spawn.<pluginId>` for EVERY app of that plugin, so `spawn.space` was five different items
+      // and `spawn.stdio` two — a DOM id that names several programs, which is what every probe and
+      // the live agent gate address. And the searchable text was the breadcrumb ALONE, which an
+      // aggregate plugin resolves to another plugin's artifact: `spawn.demonstrator` read
+      // `Spawn semio · cad` and `spawn.playbook-module-procedural` read `Spawn semio · forms`, so
+      // typing either plugin's own name found nothing at all and S6 §3.4 recorded them (plus
+      // `mathematical`) as having no palette entry. They had one; it could not be reached by name.
+      const spawnEntryCounts = new Map<string, number>();
       for (const program of spacePrograms) {
+        const seen = spawnEntryCounts.get(program.pluginId) ?? 0;
+        spawnEntryCounts.set(program.pluginId, seen + 1);
         items.push({
-          id: `spawn.${program.pluginId}`,
+          // 🪪️ The FIRST program of a plugin keeps the bare `spawn.<pluginId>` id every probe, the
+          // live agent gate's `spawnProgramThroughPalette` and S3's palette route already address;
+          // its siblings take their own app-qualified id instead of colliding with it.
+          id: seen === 0 ? `spawn.${program.pluginId}` : `spawn.${program.pluginId}.${program.appId}`,
           label: `${shellLabel("ui.palette.spawnPrefix")} ${appBreadcrumb(resolveArtifactByAppId(loadedPlugins, program.appId, program.breadcrumb, uiTerminology))}`,
+          // 🔎️ `ShellSearch` ranks `label + description + category`, so the plugin's own id belongs
+          // here: it is the name a human (and every probe) types for a program whose breadcrumb
+          // never mentions it.
+          description: `${program.pluginId} · ${program.appId}`,
           category: shellLabel("ui.search.category.catalogue"),
-          onSelect: () => onAction({ controllerId: hostControllerId ?? "", action: "spawnApp", args: { pluginId: program.pluginId } }),
+          // 🚀️ Spawning a program from the palette is SHELL chrome, so it calls the shell's own
+          // `spawnProgram` instead of raising a guest action. Raising it as
+          // `{ controllerId: hostControllerId, action: "spawnApp" }` was a dead round trip: the
+          // interceptor below only claims `spawnApp` when the controller is NOT the host's
+          // (`:6913`), so the palette's own item fell through to whichever app owns the active
+          // window — and from the landing window the shell answered `dropped action "spawnApp" …
+          // no window kind declares it (window kinds: s-home-main)`, which is every
+          // `spawn.<plugin>` entry this product offers before a studio is open (measured by S3 and
+          // again by S4, ticket 26/09/18). The guest's own `spawnApp` path is untouched.
+          onSelect: () => void spawnProgram(program),
         });
       }
       items.push(
@@ -10428,38 +11128,45 @@ function FrameworkOsShellInner({
       const cursor = utilityId ? (app.utilities ?? []).find((utility) => utility.id === utilityId)?.cursor : undefined;
       return cursor ? { cursor } : undefined;
     };
-    if (hostMode && (spawnedWindowUi || spawnedWindowFault) && panel?.activeSpawnedId) {
-      const spawned = panel.spawnedApps.find((entry) => entry.id === panel.activeSpawnedId);
-      if (spawned) {
-        const spawnedApp = loadedPlugins.find((entry) => entry.handle.pluginId === spawned.pluginId)?.manifest.apps.find((candidate) => candidate.id === spawned.appId);
-        const windowKind = spawnedApp?.windowKinds[0];
-        const chrome = windowKind ? spawnedWindowChromeForKind(windowKind, spawned.id, spawnedWindowEngagements, spawnedWindowMeasures, activeUtilityByWindowId[spawned.id] ?? undefined, onActionStable) : undefined;
-        const spawnedUtilities = spawnedApp && windowKind ? resolveUtilityNodes(spawnedApp, windowKind, activeUtilityByWindowId[spawned.id], spawned.id, appLabelsOverlay, uiTerminology, uiLocale, utilityGenerationFor(spawned.id)) : [];
-        return [
-          {
-            id: spawned.id,
-            iconId: windowIconsById[spawned.id] ?? windowKind?.iconId ?? "app-window",
-            title: wireLabel(appBreadcrumb(spawnedApp ? resolveAppBreadcrumb(spawnedApp, uiTerminology) : spawned.breadcrumb)),
-            fill: true,
-            measures: chrome?.measures,
-            measuresFolded: measuresFoldedFor(spawned.id, windowKind?.id ?? spawned.id),
-            engagement: chrome?.engagement,
-            search: chrome?.search,
-            utilityBar: spawnedApp && windowKind ? utilityBarNode(spawnedUtilities, spawned.id, onActionStable, introductionUtilityId, chrome?.utilityOptions) : undefined,
-            utilityBarFolded: utilityBarFoldedFor(spawned.id, windowKind?.id ?? spawned.id),
-            actionPane: spawnedApp && windowKind ? windowActionPaneNode(spawnedApp, windowKind, spawned.id, actionPaneSlice, onActionStable, dispatch, appLabelsOverlay, uiTerminology, uiLocale, loadedPlugins.map((entry) => entry.manifest), selectedSpaceArtifactKinds) : undefined,
-            actionsFolded: actionsFoldedFor(spawned.id, windowKind?.id ?? spawned.id),
-            onActionsFoldedChange: onActionsFoldedFor(spawned.id),
-            children: (
-              <ChromeAwareWindowScrollSurface className="relative flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden" style={spawnedApp ? cursorFor(spawnedApp, spawned.id) : undefined}>
-                <ShellFaultBoundary boundaryId={`window-${spawned.id}`} fallbackLabel={shellLabel("ui.common.renderError")}>
-                  {spawnedWindowUi ? <InterpretedUiNode store={builtNodeStoreFor("spawned", spawnedWindowUi)} onAction={onActionStable} onIntent={onIntentStable} /> : <WindowFaultStatus fault={spawnedWindowFault!} />}
+    // 🪟️ A spawned program owns the canvas with EVERY window kind it declares — the same projection
+    // the session's own app gets below, under that instance's own window-id namespace. A foreign
+    // editor used to reach here with one hard-coded `windowKinds[0]` body and an id the layout never
+    // held, so nothing was drawn at all (ticket 26/09/18, S4 §5.2 → S5).
+    if (hostMode && activeSpawnedEntry && activeSpawnedApp && focusedSpawnedId !== null) {
+      const spawned = activeSpawnedEntry;
+      const spawnedApp = activeSpawnedApp;
+      return spawnedApp.windowKinds.map((windowKind) => {
+        const windowId = spawnedWindowInstanceIdV1(spawned.id, windowKind.id);
+        const chrome = spawnedWindowChromeForKind(windowKind, windowId, spawnedWindowEngagements, spawnedWindowMeasures, activeUtilityByWindowId[windowId] ?? undefined, onActionStable);
+        const spawnedUtilities = resolveUtilityNodes(spawnedApp, windowKind, activeUtilityByWindowId[windowId], windowId, appLabelsOverlay, uiTerminology, uiLocale, utilityGenerationFor(windowId));
+        const body = spawnedWindowUiByWindowId[windowId];
+        return {
+          id: windowId,
+          iconId: windowIconsById[windowId] ?? windowKind.iconId ?? "app-window",
+          title: wireLabel(spawnedApp.windowKinds.length > 1 ? appWindowLabel(spawnedApp, uiTerminology, resolveAppLabel(appLabelsOverlay, "windowKind", windowKind.id, resolveManifestLabel(windowKind.label as LocalizedLabel | string, uiTerminology, uiLocale)), uiLocale) : appBreadcrumb(resolveAppBreadcrumb(spawnedApp, uiTerminology))),
+          fill: true,
+          measures: chrome.measures,
+          measuresFolded: measuresFoldedFor(windowId, windowKind.id),
+          engagement: chrome.engagement,
+          search: chrome.search,
+          utilityBar: utilityBarNode(spawnedUtilities, windowId, onActionStable, introductionUtilityId, chrome.utilityOptions),
+          utilityBarFolded: utilityBarFoldedFor(windowId, windowKind.id),
+          actionPane: windowActionPaneNode(spawnedApp, windowKind, windowId, actionPaneSlice, onActionStable, dispatch, appLabelsOverlay, uiTerminology, uiLocale, loadedPlugins.map((entry) => entry.manifest), selectedSpaceArtifactKinds),
+          actionsFolded: actionsFoldedFor(windowId, windowKind.id),
+          onActionsFoldedChange: onActionsFoldedFor(windowId),
+          status: body?.activity,
+          skeleton: <WindowBodySkeleton />,
+          children: (
+            <ChromeAwareWindowScrollSurface id={childElementId("framework.window", windowId)} className="relative flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden" style={cursorFor(spawnedApp, windowId)}>
+              <WindowInstanceIdContext.Provider value={windowId}>
+                <ShellFaultBoundary boundaryId={`window-${windowId}`} fallbackLabel={shellLabel("ui.common.renderError")}>
+                  {body ? <InterpretedUiNode store={builtNodeStoreFor(`spawned:${windowId}`, body)} onAction={onActionStable} onIntent={onIntentStable} /> : spawnedWindowFault ? <WindowFaultStatus fault={spawnedWindowFault} /> : <WindowBodySkeleton />}
                 </ShellFaultBoundary>
-              </ChromeAwareWindowScrollSurface>
-            ),
-          },
-        ];
-      }
+              </WindowInstanceIdContext.Provider>
+            </ChromeAwareWindowScrollSurface>
+          ),
+        };
+      });
     }
     const baseWindows = session.app.windowKinds.map((kind) => {
       const browserActorStore = currentBrowserActorUi?.sessionInstanceId === session.instanceId && currentBrowserActorUi.windowKindId === kind.id ? currentBrowserActorUi.store : undefined;
@@ -10566,8 +11273,11 @@ function FrameworkOsShellInner({
     session,
     spawnedWindowEngagements,
     spawnedWindowMeasures,
-    spawnedWindowUi,
+    spawnedWindowUiByWindowId,
     spawnedWindowFault,
+    activeSpawnedEntry,
+    activeSpawnedApp,
+    focusedSpawnedId,
     instanceFault,
     hostMode,
     uiLocale,
@@ -10647,7 +11357,7 @@ function FrameworkOsShellInner({
   );
 
   const canvas = useMemo(() => {
-    if (hostMode && shellRoute.kind === "notFound") {
+    if (hostMode && shellRoute.kind === "notFound" && shellRoute.path !== SHELL_HUB_ROUTE) {
       return <ShellRouteNotFoundPage path={shellRoute.path} onHome={() => navigateHistory("/")} />;
     }
     const supervisorPluginId = primaryPluginId;
@@ -10747,16 +11457,28 @@ function FrameworkOsShellInner({
               onTemplateDrop={mobile ? undefined : handleTemplateDrop}
               onWindowClose={(windowId) => {
                 noteShellCommand("shell.windowClose", shellLabel("ui.shellCommand.windowClose"), { windowId });
-                if (hostMode && panel?.spawnedApps.some((entry) => entry.id === windowId)) {
-                  const closedSpawned = panel.spawnedApps.find((entry) => entry.id === windowId);
-                  const nextSpawned = panel.spawnedApps.filter((entry) => entry.id !== windowId);
-                  updateSpacePanel(buildSpacePanelState(nextSpawned, panel.activePanelTab, nextSpawned[0]?.id));
-                  // 🪶️ Closing a spawned app's window used to leave its plugin instance running forever
-                  // (see REDUCE-DEMONSTRATOR-IDLE-MEMORY-FOOTPRINT's documented teardown gap) — the panel
-                  // entry was dropped from the UI, but nothing ever told the guest to free it.
-                  if (closedSpawned) {
-                    const closedPlugin = loadedPlugins.find((entry) => entry.handle.pluginId === closedSpawned.pluginId)?.handle;
-                    void closedPlugin?.destroyApp(closedSpawned.instanceId).catch(() => {});
+                // 🪟️ A spawned program now owns one window per declared kind, so closing ONE of them
+                // closes that window; the instance is retired when its LAST window goes. Before this,
+                // a spawned app was a single window whose id was the instance id itself.
+                const closedSpawnedId = hostMode && panel ? spawnedIdOfWindowInstanceV1(windowId, panel.spawnedApps.map((entry) => entry.id)) : null;
+                if (closedSpawnedId !== null && panel) {
+                  const closedSpawned = panel.spawnedApps.find((entry) => entry.id === closedSpawnedId);
+                  const closedApp = closedSpawned ? loadedPlugins.find((entry) => entry.handle.pluginId === closedSpawned.pluginId)?.manifest.apps.find((candidate) => candidate.id === closedSpawned.appId) : undefined;
+                  const mountedWindowIds = modeLayoutStacksV1(effectiveModeLayoutRef.current as WindowScopeLayoutNodeV1 | null).flatMap((stack) => [...stack.windowIds]);
+                  const remaining = (closedApp?.windowKinds ?? []).map((kind) => spawnedWindowInstanceIdV1(closedSpawnedId, kind.id)).filter((id) => id !== windowId && mountedWindowIds.includes(id));
+                  if (remaining.length === 0) {
+                    const nextSpawned = panel.spawnedApps.filter((entry) => entry.id !== closedSpawnedId);
+                    updateSpacePanel(buildSpacePanelState(nextSpawned, panel.activePanelTab, nextSpawned[0]?.id));
+                    // 🪶️ Closing a spawned app's window used to leave its plugin instance running forever
+                    // (see REDUCE-DEMONSTRATOR-IDLE-MEMORY-FOOTPRINT's documented teardown gap) — the panel
+                    // entry was dropped from the UI, but nothing ever told the guest to free it.
+                    if (closedSpawned) {
+                      const closedPlugin = loadedPlugins.find((entry) => entry.handle.pluginId === closedSpawned.pluginId)?.handle;
+                      void closedPlugin?.destroyApp(closedSpawned.instanceId).catch(() => {});
+                    }
+                    // 🧰️ Its per-window host registers go with it — a stale `activeUtilityByWindowId`
+                    // row keeps arming a utility for a window nobody can see.
+                    for (const kind of closedApp?.windowKinds ?? []) writeUtilityRegister(spawnedWindowInstanceIdV1(closedSpawnedId, kind.id), null, null);
                   }
                 }
                 clearPendingWorldProjection(windowId);
@@ -10775,6 +11497,9 @@ function FrameworkOsShellInner({
               }}
               onWindowOpenInNewWindow={(windowId) => {
                 if (!session) return;
+                // 🪟️ Same bound as `handleTemplateDrop`: a spawned program owns its declared windows,
+                // not splits of them.
+                if (spawnedIdOfWindowInstanceV1(windowId, spawnedIds) !== null) return;
                 const extra = extraWindowInstancesRef.current.find((entry) => entry.id === windowId);
                 const windowKindId = extra?.windowKindId ?? session.app.windowKinds.find((kind) => kind.id === windowId)?.id;
                 if (!windowKindId) return;
@@ -10791,7 +11516,7 @@ function FrameworkOsShellInner({
                 const nextExtraInstances = [...extraWindowInstancesRef.current, { id: instanceId, windowKindId, title }];
                 extraWindowInstancesRef.current = nextExtraInstances;
                 dispatch({ type: "SET_EXTRA_WINDOW_INSTANCES", value: nextExtraInstances });
-                void refreshUi(session, { kind: "full" }, nextExtraInstances);
+                void refreshUi(session, { kind: "full" }, nextExtraInstances).catch((error: unknown) => reportRefreshFault(session.pluginId, error));
                 dispatch({
                   type: "SET_SHELL_LAYOUT",
                   value: (current) => {
@@ -11094,8 +11819,20 @@ function FrameworkOsShellInner({
     <ShellFaultBoundary boundaryId="shell-root" fallbackLabel={shellLabel("ui.common.renderError")}>
     <UIFindProvider>
       <LevelProvider level="base">
-        <div className="flex h-screen min-h-0 w-screen flex-col bg-transparent" data-level="base" data-semio-os-ready={session && !error ? "" : undefined} data-history-json={JSON.stringify(shellHistoryCursorDomV1(historyProjection))}>
-          {hubEnv && verifiedSessionAuthority === null ? <SessionAuthorityNotice state={identityOffline ? "unavailable" : "pending"} locale={uiLocale} onCancel={cancelSessionAuthorityBootstrap} /> : null}
+        <div
+          className="flex h-screen min-h-0 w-screen flex-col bg-transparent"
+          data-level="base"
+          data-semio-os-ready={session && !error ? "" : undefined}
+          /* 🪪️ The identity an AGENT names this document by, published into the DOM so "the browser
+             shows the artifact the agent edited" is an assertion rather than a skip. It is the one
+             the shell's own artifact route hands back on every `historySnapshot`
+             (`${pluginId}:${appId}:${instanceId}`, the `artifactRef` the bridge census declares), so
+             a gateway reading `expectedRevision.artifactId` off `action_prepare` can resolve its
+             session straight onto this element. */
+          data-semio-artifact-id={agentBridgeInstances[0]?.artifactRef}
+          data-history-json={JSON.stringify(shellHistoryCursorDomV1(historyProjection))}
+        >
+          {hubEnv && hubSessionCapability !== null && verifiedSessionAuthority === null ? <SessionAuthorityNotice state={identityOffline ? "unavailable" : "pending"} locale={uiLocale} onCancel={cancelSessionAuthorityBootstrap} /> : null}
           {Object.values(bootstrapUiByDocument).length > 0 ? (
             <div className="pointer-events-auto absolute top-workbench left-1/2 z-50 flex -translate-x-1/2 flex-col gap-single rounded-sm border bg-base px-double py-single text-sm shadow-sm">
               {Object.entries(bootstrapUiByDocument).map(([runtimeKey, status]) => (
@@ -11136,13 +11873,12 @@ function FrameworkOsShellInner({
            * route) so the shell is never left behind an overlay that still owns focus; in a plugin
            * playground there is no shell router to address, and the overlay is plain shell state. */}
           {hubWorkspaceOpen ? (
-            <div className="pointer-events-auto absolute top-workbench left-1/2 z-50 max-h-[80vh] w-full max-w-[44rem] -translate-x-1/2 overflow-auto rounded-sm border bg-base shadow-sm">
+            <div data-elevation-root="" className="pointer-events-auto absolute top-workbench left-1/2 z-50 max-h-[80vh] w-full max-w-[44rem] -translate-x-1/2 overflow-auto rounded-sm border bg-base shadow-sm">
               <HubWorkspace
                 port={hubConnectionPort}
                 locale={uiLocale === "de" ? "de" : "en"}
                 activeSpaceId={openSpaceIdRef.current}
                 onlineUserIds={hubOnlineUserIds}
-                onSessionChange={setHubSessionPresence}
                 onOpenSpace={(spaceId) => navigateHistory(`/spaces/${spaceId}`)}
                 onClose={() => {
                   setHubWorkspaceOpen(false);

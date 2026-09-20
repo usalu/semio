@@ -940,6 +940,7 @@ pub fn create_bitmap_editor() -> semio_framework_plugin::AppDefinition {
         .window_kind_def(output::definition())
         .default_layout(edit::layout())
         .action_with(ActionDefinition::new("setActiveExample", LocalizedLabel::native("Load Example", "Beispiel laden"), ActionKind::Mutation, "panel-left"))
+        .action_destructive("setActiveExample")
         .action_args(
             "setActiveExample",
             vec![ActionArgDef::select(

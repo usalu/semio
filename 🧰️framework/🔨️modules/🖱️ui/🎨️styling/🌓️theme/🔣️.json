@@ -656,6 +656,9 @@
         "base": {
           "token": "light"
         },
+        "panel": {
+          "token": "light-5-7"
+        },
         "foreground": {
           "token": "dark"
         },
@@ -1029,6 +1032,9 @@
       "chrome": {
         "base": {
           "token": "dark"
+        },
+        "panel": {
+          "token": "dark-7-9"
         },
         "foreground": {
           "token": "light"

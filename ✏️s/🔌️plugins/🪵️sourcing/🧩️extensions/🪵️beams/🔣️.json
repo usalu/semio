@@ -1,0 +1,59 @@
+{
+  "descriptorVersion": 1,
+  "packageId": "semio:sourcing-module-beams",
+  "role": "extension",
+  "manifest": {
+    "pluginId": "sourcing-module-beams",
+    "label": "Sourcing Module Beams",
+    "version": "0.1.0",
+    "apps": [],
+    "examples": [],
+    "capabilities": [],
+    "topicContributions": [
+      {
+        "topic": "sourcing.module",
+        "payload": {
+          "appId": "sourcing-curation",
+          "iconId": "beam",
+          "kindsJson": "[{\"id\":\"beam-glulam-gl24h\",\"name\":\"Glulam GL24h 200×400\",\"moduleId\":\"beams\",\"typologyPath\":[\"beams\",\"solid-timber\",\"glulam\"],\"availability\":24,\"geometry\":{\"kind\":\"box\",\"width\":0.2,\"height\":0.4,\"depth\":6.0}},{\"id\":\"beam-kvh-c24\",\"name\":\"KVH C24 100×200\",\"moduleId\":\"beams\",\"typologyPath\":[\"beams\",\"solid-timber\",\"kvh\"],\"availability\":60,\"geometry\":{\"kind\":\"box\",\"width\":0.1,\"height\":0.2,\"depth\":4.0}},{\"id\":\"beam-steel-ipe200\",\"name\":\"Steel IPE 200\",\"moduleId\":\"beams\",\"typologyPath\":[\"beams\",\"steel\",\"ipe\"],\"availability\":12,\"geometry\":{\"kind\":\"box\",\"width\":0.1,\"height\":0.2,\"depth\":5.0}},{\"id\":\"beam-steel-hea160\",\"name\":\"Steel HEA 160\",\"moduleId\":\"beams\",\"typologyPath\":[\"beams\",\"steel\",\"hea\"],\"availability\":8,\"geometry\":{\"kind\":\"box\",\"width\":0.16,\"height\":0.152,\"depth\":5.0}}]",
+          "label": "Beams",
+          "moduleId": "beams",
+          "typologyJson": "{\"id\":\"beams\",\"label\":\"Beams\",\"children\":[{\"id\":\"solid-timber\",\"label\":\"Solid Timber\",\"children\":[{\"id\":\"glulam\",\"label\":\"Glulam\"},{\"id\":\"kvh\",\"label\":\"KVH\"}]},{\"id\":\"steel\",\"label\":\"Steel\",\"children\":[{\"id\":\"ipe\",\"label\":\"IPE\"},{\"id\":\"hea\",\"label\":\"HEA\"}]}]}"
+        }
+      }
+    ],
+    "commands": [],
+    "artifactKinds": [],
+    "dependencies": [
+      {
+        "pluginId": "sourcing",
+        "version": "*"
+      }
+    ]
+  },
+  "execution": "declarative",
+  "executionProtocol": {
+    "appChannelVersion": 17
+  },
+  "quotas": {},
+  "contributions": {
+    "topicContributions": [
+      {
+        "topic": "sourcing.module",
+        "payload": {
+          "appId": "sourcing-curation",
+          "iconId": "beam",
+          "kindsJson": "[{\"id\":\"beam-glulam-gl24h\",\"name\":\"Glulam GL24h 200×400\",\"moduleId\":\"beams\",\"typologyPath\":[\"beams\",\"solid-timber\",\"glulam\"],\"availability\":24,\"geometry\":{\"kind\":\"box\",\"width\":0.2,\"height\":0.4,\"depth\":6.0}},{\"id\":\"beam-kvh-c24\",\"name\":\"KVH C24 100×200\",\"moduleId\":\"beams\",\"typologyPath\":[\"beams\",\"solid-timber\",\"kvh\"],\"availability\":60,\"geometry\":{\"kind\":\"box\",\"width\":0.1,\"height\":0.2,\"depth\":4.0}},{\"id\":\"beam-steel-ipe200\",\"name\":\"Steel IPE 200\",\"moduleId\":\"beams\",\"typologyPath\":[\"beams\",\"steel\",\"ipe\"],\"availability\":12,\"geometry\":{\"kind\":\"box\",\"width\":0.1,\"height\":0.2,\"depth\":5.0}},{\"id\":\"beam-steel-hea160\",\"name\":\"Steel HEA 160\",\"moduleId\":\"beams\",\"typologyPath\":[\"beams\",\"steel\",\"hea\"],\"availability\":8,\"geometry\":{\"kind\":\"box\",\"width\":0.16,\"height\":0.152,\"depth\":5.0}}]",
+          "label": "Beams",
+          "moduleId": "beams",
+          "typologyJson": "{\"id\":\"beams\",\"label\":\"Beams\",\"children\":[{\"id\":\"solid-timber\",\"label\":\"Solid Timber\",\"children\":[{\"id\":\"glulam\",\"label\":\"Glulam\"},{\"id\":\"kvh\",\"label\":\"KVH\"}]},{\"id\":\"steel\",\"label\":\"Steel\",\"children\":[{\"id\":\"ipe\",\"label\":\"IPE\"},{\"id\":\"hea\",\"label\":\"HEA\"}]}]}"
+        }
+      }
+    ]
+  },
+  "hashes": {
+    "wasmSha256": "b483b7f7082cbdb69232b01cfa1b53917f571d888273f34516adc99f6f2255cf",
+    "coreWasmSha256": "9fd4814e4e7da6b45dec8be1091bd563f61844d606823f5d900f1702fd0928c1",
+    "descriptorSha256": "e00ccf78f808bf66e2668d06655ab8e970479909954bca0c4436670238073711"
+  }
+}

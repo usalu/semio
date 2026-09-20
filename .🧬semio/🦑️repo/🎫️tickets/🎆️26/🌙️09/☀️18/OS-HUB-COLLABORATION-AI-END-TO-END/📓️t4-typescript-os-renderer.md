@@ -917,4 +917,345 @@ only workable iteration tool):
 
 Drift of +2 against §25's capture is peer churn in `🏛️ShellHost` / `🔗️AgentBridge` (C1c and M7).
 
-## 27. (filling)
+## 27. Correction to §26's non-owned column
+
+§23's table carried "T2 — `🦑️repo` product 9 / legacy 3" forward unchanged. That is stale. The ten
+non-owned diagnostics in `t4c-os-full4.txt` are actually:
+
+| file | count | who |
+|---|---:|---|
+| `🧰️framework/🔨️modules/🖱️ui/🧪️tests/🧪️owned-locale-detector-retirement/🟦️.tsx` | 7 | **T4 — §24a's own leftover** |
+| `♻️mit-bestand/🧺️demonstrator/🧪️tests/🧪️scheduledemonstratoridle/🟦️.ts` | 2 | legacy |
+| `🦑️repo/…/⚡️caching/🚀️bootstrap/🛠️tools/🕸️wasm/📜️script.ts` | 1 | T2 |
+
+So §24a's tutorial-track rename was **not** finished: the ui suite still wrote `tracks.artifact` and
+read `tutorialSlice(…).artifact` in seven places. §24a's grep only covered the *type* names
+(`TutorialArtifact*`), never the renamed FIELD. Fixed here; `grep -rn "tracks\.artifact\|ui: \[\], artifact: \[\]"`
+over `*.ts *.tsx *.rs *.json` now returns 0.
+
+## 28. Root causes found and fixed this session
+
+Each is a single cause with many diagnostics downstream, verified with the scoped loop
+(`🐍️t4c-scope.py` → `🔣️t4c-one.json` / `🔣️t4c-probe.json`, captures `t4c-wave*.txt`, `t4c-staging*.txt`).
+
+**a. `Object.assign({}, …)` past three sources types the whole bag `any`.**
+`lib.es2015.core.d.ts` declares `assign` for 1, 2 and 3 sources and then falls back to
+`assign(target: object, ...sources: any[]): any`. `🧑‍💻dev/🧪️tests/🧪️ticket-owned-browser-host-staging`
+built its 69-namespace dependency bag that way, so `typeof testDependencies` was `any` and EVERY case in
+that 2 000-line file was unchecked. Replacing it with an object-literal spread (`{ ...Fs, ...Crypto, … }`)
+took the file from **15 reported → 46 real**, which is the honest number; the 31 that appeared were
+already-broken calls. Two of them were live defects rather than type noise:
+- **`resolve` was `url.resolve`, not `path.resolve`.** Both `node:path` and `node:url` export `resolve`,
+  and `...Url` spread last, so the bag's `resolve` was the deprecated two-argument
+  `url.resolve(from, to)` while all three call sites pass one path. Order flipped to `…, ...Url, ...Path`.
+- **`buildPluginCatalog` resolved to the wrong function.** `📇️registry/🟦️.ts` exports a zero-argument
+  catalog *projection* builder and `📇️registry/🔄️refresh/🟦️.ts` exports the six-argument catalog *build*;
+  the later spread won, so the two `buildPluginCatalog(targets, cargoFn, materializeFn, …)` cases were
+  calling the projection. Pinned explicitly in the bag with the reason in its docstring. **The name
+  collision itself is still open** — see §30.
+
+**b. `atTestLevel`'s generic constraint could never be satisfied by Vitest's `TestAPI`.**
+`atTestLevel<Case extends { runIf(condition: boolean): Case }>` requires `runIf` to return the SAME type,
+but `@vitest/runner` declares `runIf: (condition: any) => ChainableTestAPI<ExtraContext>` — a supertype,
+not `TestAPI`. So every `const itLong = atTestLevel(it, "long")` was an error and every `itLong(…)` after it
+was `TS2349: This expression is not callable`. One signature change in
+`🦑️repo/🔨️modules/📚️library/🟦️.ts` — `atTestLevel<Gated>(factory: { runIf(condition: boolean): Gated }, level)`
+— closed **~27** diagnostics across `🧪️ticket-owned-browser-host-staging` (25) and
+`📇️registry/🧪️tests/🎮️playground-session` (2).
+
+**c. Six third-party test oracles had no ambient declaration.**
+`whatwg-url` (×3), `lodash-es` + `lodash-es/findIndex.js` (×2) and `@webassemblyjs/ieee754` (×1) were all
+`TS7016`. The repo already owns exactly one home for this — `🧰️framework/📦️packages/🟦️typescript/🌿️ambient/🟦️.d.ts`,
+whose docstring says "the exact members those call sites use" — so four `declare module` blocks went there
+beside the existing `@webassemblyjs/leb128` and `semver` entries. No `any`, no `@types/*` install.
+
+**d. A union constituent with a multi-literal discriminant never narrows.**
+`BrowserFrameDomEvent`'s pointer member was `{ type: "pointermove" | "pointerdown" | "pointerup"; … }`.
+TypeScript filters *constituents* on a discriminant test; a constituent whose discriminant is a union of
+three literals is never removed by `=== "pointermove"` and never narrowed within, so after the pointer,
+wheel and resize branches returned, `event.key` still resolved against the pointer member (5 × TS2339 on
+one line). Split into three constituents sharing `BrowserFramePointerDomFields` (and the key member into
+two sharing `BrowserFrameKeyDomFields`), which makes it a real discriminated union.
+
+**e. `ThemePaletteGroup` grew two members that the settings UI never got.**
+`🖱️ui/🎨️styling/🌓️theme/🟦️.ts` declares six groups (`outcome` and `diagram` were added for the wgpu target),
+but `📌️ChromePanels`' label map still had four and `satisfies Record<ThemePaletteGroup, UiTranslationKey>`
+failed (TS1360 + TS7053). Fixed at the product end, not by narrowing the map: `ui.settings.theme.group.outcome`
+and `.diagram` added to `📚️I18n`'s `UiTranslationSchema` and to **both** locale packs in
+`🖱️ui/🎯️targets/⚛️react/🟦️.tsx`, the label map completed, and `appearanceGroups` widened to all six — so the
+two new palettes are now editable in settings instead of being unreachable.
+
+**f. `TreeDataItem.onClick` could not be pressed outside a rendered tree.**
+Its contract is `(event: React.MouseEvent, context: TreeDataActivationContext) => void`; tests either called
+it with zero arguments (4 × TS2554) or with `{} as never, {} as never` (2 casts in `🔬️engine-contract`).
+Added `treeDataActivation()` to `🖱️ui/🧱️elements/🌳️Tree/🟦️.tsx` (re-exported from the react target): it wraps a
+real DOM `MouseEvent` in React's synthetic surface, so `preventDefault()`/`stopPropagation()`/`button`/`metaKey`
+behave as under a rendered row. Both call sites now spread it; the two `as never` casts are gone.
+
+**g. The shell-local `PluginManifest` had no `topicContributions`.**
+`🐚️Shell/🟦️.tsx` keeps its own richer `PluginManifest` (documented as deliberate). It omitted
+`topicContributions`, which is the ONLY field `scopeContributionsJson` reads — so the host→guest
+contributions push in `🏛️ShellHost` typechecked against a weak type with no properties in common, and
+carried a `{ ...entry.manifest, workflows: [] }` shim to paper over it. Field added (typed as core's
+`TopicContribution`), shim replaced by `{ topicContributions: entry.manifest.topicContributions }`.
+The same wrongness made `🩺️window-fault`'s four fixtures cast to `PluginManifest`; those casts are deleted —
+the parameter is `Pick<PluginManifest, "topicContributions">` and the literals satisfy it directly.
+
+**h. `AreaState` lost `legacy`/`mixed`.** `🦑️repo/…/🔍️discovery` now declares `AreaState = "clean" | "exempt"`,
+but `🔌️plugin/📇️registry/🔎️discovery`'s `mergeAreaStates` still ranked three states and
+`📽️projection` still compared against two dead literals (4 + 2 diagnostics). Both rewritten against the live
+vocabulary, docstrings and the explanatory comments included.
+
+**i. One 90-line duplicated default.** `🖥️shell/🧪️tests/🧪️semio-tech-framework-os-shell-reduce` hand-rolled a
+`defaultState()` for the flat pre-slice shape and aliased `ShellState` from the *renderer*'s `🐚️Shell`
+component rather than from the shell SSOT it actually drives. `🖥️shell/🟦️.ts` already exports
+`defaultShellState()`, whose docstring calls itself "the ONLY place a default is spelled on this side".
+The duplicate is deleted and the test takes `defaultShellState` through its dependency bag.
+
+Smaller root fixes in the same pass: `DIRECTORY_SPACE_ADMINISTRATION_CURSOR_MAX_BYTES` imported twice in
+`💻️os/🟦️.ts` (once from the schema module, once from the barrel that re-exports it) → TS2300 ×2;
+`CRATE_NAME` used but not imported in `🔌️plugin/🖨️describe/🛂️descriptor-emission`; `PluginHotSwapMarker`
+not exported from `🧑‍💻dev/🔌️vite-plugins`; `acceptBrowserSessionAuthority` destructured from the backbone
+worker's dependency bag although it lives on `testSeams` (and every use already reads it there);
+`parseDirectorySessionAuthorityLocaleV1` added to `📇️directory/🪪️session-refresh` so a fixture locale narrows
+through the module's own refusal instead of indexing a two-key record with `string`;
+`storage: TEST_HOST_STORAGE` added to the six `BrowserFrameWorkerBoot` literals in
+`🧪️tests/📨️browser-frame-transport`; `semioPlaygroundReactRefreshCoherenceVitePlugin`'s `config`/
+`transformIndexHtml` hooks given the structural parameter types the rest of that file already uses.
+
+## 29. §28 was never measured whole-program — it is, now (§30)
+
+The previous T4c worker was cut at 00:54 with §29 left as a placeholder. Its last scoped captures
+(`t4c-typecheck2.txt`) were partial. First act of this session: one full-program run.
+
+---
+
+# Session 5 — slice T4c (resumed 2026-09-20)
+
+## 30. Re-measurement at resume
+
+`bun x tsc --noEmit --incremental false --pretty false -p 🧰️framework/🛍️products/💻️os/tsconfig.json`
+→ `🗑️generated/t4c-os-full6.txt`, **8 m 16 s** wall (10 % CPU — the fleet is at load ≈ 90).
+
+| owner | §23 t4c start | §26 (09-19 23:26) | **now (09-20 resume)** |
+|---|---:|---:|---:|
+| T4 — `💻️os` | 298 | 221 | **122** |
+| T4 — `✏️s` | 23 | 23 | **8** |
+| T4 — root `📜️script.ts` | 0 | 0 | 0 |
+| **T4 owned total** | **321** | **244** | **130** |
+| legacy `♻️mit-bestand` | 3 | 1 | 2 |
+| T2 — `🦑️repo` product | 9 | 9 | 1 |
+| **program total** | **333** | **254** | **133** |
+
+So §28's root fixes landed and hold: 244 → 130 owned. Codes: TS2345 25, TS2322 24, TS2769 14,
+TS2339 10, TS2353 10, TS18047 6, TS2556 5, TS2740 5. Heaviest files:
+`🧪️space-artifact-creation-owner` 28, `🔬️engine-contract` 14, `🌉️mcp/🧪️tests/🤖️live-agent-loop` 7,
+`🧑‍💻dev/🧪️tests/🧹️config` 7, `🌐️World3dHost` 5, `🔱️trinity/🔌️jack/🪜️resumable-query` 4,
+`🧊️wgpu/🐚️plugin-bridge` 4, `🏛️ShellHost` 4.
+
+## 31. Root causes found and fixed this session
+
+Each closed with the scoped loop (`🐍️t4c-scope.py` → `🔣️t4c-one.json`, captures `t4c-s5-wave{1,2}.txt`).
+A scoped run under the current fleet load costs ~2 min, the whole program ~8 min, so every wave batches
+a dozen files.
+
+**a. `FreshnessServer.config.server.hmr` was required; Vite's `ResolvedServerOptions.hmr` is optional.**
+`🧑‍💻dev/🔌️vite-plugins`' own structural server type demanded `hmr`, so `ViteDevServer` was NOT assignable
+to it, so `configureServer` was not a valid `ServerHook`, so the whole plugin array was not a
+`PluginOption[]`, so `createServer(inlineConfig)` fell through `InlineConfig | ResolvedConfig` to
+**`ResolvedConfig`** — and reported `configFile: false` as "boolean is not assignable to string",
+`server: {…}` as "missing 12 properties of `ResolvedServerOptions`" and the plugin array as incompatible.
+Six diagnostics in `🧑‍💻dev/🧪️tests/🧹️config`, one character of cause (`hmr?: unknown`). The probe that
+proved it is `🐍️t4c-vite-probe.ts` (ticket folder): the same literal asserted against `InlineConfig`
+alone, which names the real chain in one error instead of a union mismatch.
+Same file's 7th: `semioSourceWatchVitePlugin` declared `freshness?: SourceFreshnessRegistry` although it
+reads exactly one member — narrowed to `Pick<…, "movedInDirectory">`, which deletes the test's
+`as ReturnType<typeof createSourceFreshnessRegistry>` cast. **7 → 0.**
+
+**b. `lib` was missing `DOM.AsyncIterable`.** `for await (const chunk of response.body)` is how three
+files read a stream; TypeScript ships `ReadableStream[Symbol.asyncIterator]` only in that lib. Added to
+`💻️os/tsconfig.json` beside `DOM.Iterable`. Closed `🧊️wgpu/📦️publication`, `🌊️flow/🕸️wasm/🌐️browser/📦️publication`
+and the T2-owned `🦑️repo/…/🕸️wasm/📜️script.ts` — **3 → 0** without touching a line of source.
+
+**c. `mode: "test"` inside a vitest `test:` block is not in `InlineConfig`.** Three os-program configs
+(`🌉️mcp`, `🖥️shell`, `💻️os/🧪️tests`) carried it; the ~20 sibling configs in the same program do not.
+Vitest does read `options.test?.mode` at runtime, but only as an override of the run mode the CLI
+already set — so hardcoding `"test"` is a no-op for `vitest run` and would actively break `vitest bench`.
+Removed. **3 → 0.**
+
+**d. `Array.prototype.map` erases a tuple's length, so its result cannot be spread into a fixed-arity call.**
+`🔬️interactivity-mounted-frame-transaction` (17 positional source parameters) and
+`🔬️interactivity-mounted-engine-surface-lifetime` (10) both built `const clean = files.map(read)` and
+called `failures(...clean)` → 5 × `TS2556`. Both now declare
+`const clean: Parameters<typeof <thatAudit>> = [read(…), …]` and `const mutated: typeof clean = [...clean]`
+— derived from the audit's own signature, so a source added without a parameter to receive it is now an
+error instead of passing unnoticed. **5 → 0.**
+
+**e. The TS schema-mirror emitter never parenthesised an array element.**
+`🌉️mcp/📦️packages/🦀️rust/📜️script.ts`'s `renderType` emitted `` `readonly ${element}[]` `` unconditionally,
+so `Vec<Vec<JsonValue>>` became `readonly readonly JsonValue[][]` — which TypeScript refuses outright
+(`TS1354`) — and a union element would have silently become `(readonly A) | (B[])`. Fixed in the
+**emitter** (bare identifiers unchanged, everything else parenthesised) and the mirror regenerated with
+`bun ./📜️script.ts schema-mirror`, never hand-edited. The committed `🔣️.json` was already stale behind
+the built binary (29 added lines, 0 removed — `🧬️schema/🦀️.rs` 23:44 vs binary 23:56), so the same run
+brought it forward; `schema-mirror --check` is green again where it was red before this session.
+
+**f. `Bun.spawn` is declared twice, so `ReturnType<typeof Bun.spawn>` is a coin toss.**
+bun-types declares it generic over the stdio literals; the repo's own
+`🦑️repo/…/🏃️process/🌿️environment/🟦️.d.ts` declares `Bun.spawn(…): BunSubprocess` in a merged
+`declare namespace Bun`. `🌉️mcp/🧪️tests/🤖️live-agent-loop` annotated its child
+`ReturnType<typeof Bun.spawn>`, which picked the overload that types `stdin` as `number | FileSink`
+and `stdout` as `number | ReadableStream` — 7 diagnostics on `.write`/`.flush`/`for await`. Dropping the
+annotation and letting TypeScript infer the field from the constructor assignment binds the signature the
+call actually resolved to. **7 → 0.**
+
+**g. A story that uses `render` still has to satisfy the component's required props.**
+`📊️Table`, `🧩️BlockListHost` and `🖼️IconRenderHost` each had one `render`-only story mounting a different
+host, and Storybook's `StoryObj<typeof meta>` still demanded `args`. Declared the defaults once on
+`meta.args`, which is what lets every story state only what it changes. **3 → 0.**
+
+**h. Two identifiers had been renamed away and one type had moved.**
+`DEFAULT_SHARD_BUDGET` → `MAINTENANCE_LANE_DEFAULT_BUDGET` (12 uses in `🧺️turn-patch-batch`);
+`ViewModel` is exported by `🐚️Shell`, not by `@semio-tech/framework` (`📇️directory-home-bootstrap`);
+`fast-json-patch`'s `Operation` is a named export, not a namespace member of its default export
+(`♻️rewriting/…/🗂️map-ownership`). **4 → 0.**
+
+**i. `Board2dWasmSession.setSelectionScreenPreview` disagreed with the only binding that implements it.**
+The hand-written contract in `🪪️WasmSessionLoader` said `(flatXy: readonly number[])`; wasm-bindgen emits
+`(flat_xy: Float64Array)` for the Rust `&[f64]`, and `semio_puzzle.d.ts` is the only declaration of it in
+the repo. No TypeScript caller exists, so the contract was simply wrong. **1 → 0.**
+
+**j. Two test harness literals were missing members their contracts require.**
+`storage: TEST_HOST_STORAGE` on the `BrowserFrameWorkerBoot` literals of `⏱️wgpu-ui-turn-budget` and
+`🎮️wgpu-browser-input-wire` (the same gap §28 closed in `📨️browser-frame-transport`); `invoke`,
+`dispatchInvokeExtension`, `pushScopedContributions` and `captureExtensionCompletion` on
+`🧩️package-integration`'s `fakeHandle` — they were reaching the result only through
+`Partial<WgpuPluginHandle>`, which made every one of them optional. **3 → 0.**
+
+**k. `wgpuBuildScopedContributionsPack` asked for a whole `PluginManifest` to read one field.**
+Its only consumer, `scopeContributionsJson`, already takes `Pick<PluginManifest, "topicContributions">`
+(§28g). Narrowed to match, which is what made `🔬️wgpu-extension-dispatch`'s three contribution fixtures
+legal without inventing `apps`/`workflows`/`examples`. **3 → 0.**
+
+**l. Smaller root fixes in the same waves.** `requestId: 0` → `""` in `🧪️backbone-envelope-io`
+(`LocalInteractionQueryCommand.requestId` is a string) and its `enqueue` stub widened to
+`readonly Uint8Array[]`; the six-shape `🪜️resumable-query` fixture read through a
+`Partial<Record<…, string>>` binding so an absent statement is a branch rather than an `undefined` handed
+to SQLite; `🪪️document-contract`'s two `as Record<string, (input: unknown) => unknown>` module casts
+replaced by the direct `snapshot.parseSemioObjectSnapshot` / `diff.parseSemioObjectDiff` imports (both
+exist, correctly typed); the same file's `Object.values(value)` given the corpus record's real shape;
+`💡️inference-bridge`'s hub-schema annotation extended with the `properties` it actually reads.
+
+## 32. Session 5b (resumed 06:15 after the ~03:00 session-limit cut) — 73 → 10
+
+Re-measured once at resume (`🗑️generated/t4c-s5-full7.txt`, 73 total / **71 owned**), then bucket by bucket.
+Final whole-program run `🗑️generated/t4c-s5-full10.txt`: **10 total, 8 owned by T4, 2 legacy**.
+
+| owner | §23 t4c start | §30 (09-20 01:20) | §32 resume | **final** |
+|---|---:|---:|---:|---:|
+| T4 — `💻️os` | 298 | 122 | 71 | **8** |
+| T4 — `✏️s` | 23 | 8 | 0 | **0** |
+| T4 — root `📜️script.ts` | 0 | 1 | 0 | **0** |
+| **T4 owned total** | **321** | **131** | **71** | **8** |
+| legacy `♻️mit-bestand` | 3 | 2 | 2 | 2 |
+| T2 — `🦑️repo` product | 9 | 1 | 0 | 0 |
+| **program total** | **333** | **133** | **73** | **10** |
+
+### 32a. Root causes closed in this half
+
+**a. `FakeHubWebSocket` was a resemblance, not a `WebSocket` (28 → 1 in `🧪️space-artifact-creation-owner`).**
+Seven diagnostics were the test's hub-socket double being forced into `handleHubFrame`/`state.socket`,
+each site paying for it separately. `class FakeHubWebSocket implements WebSocket` — with the instance
+`CONNECTING`/`OPEN`/`CLOSING`/`CLOSED`, `extensions`, `bufferedAmount`, `binaryType: BinaryType` and three
+refusing listener methods — makes the compiler name a member the worker could reach and the double has
+not implemented, which is the point of the double. The same file's other eleven: the retained
+`InferenceOperationV1` built from the committed `🌐️browser-document-open-v1` corpus through
+`parseDocumentExecutionTargetLeaseFieldsV1` instead of a partial literal; a `mirrorRetirement` holder
+instead of a `let` TypeScript narrows to its initializer (a `?.()` on `never`); `transferableBuffer`,
+which narrows `Uint8Array.buffer` with `instanceof ArrayBuffer` because a `SharedArrayBuffer` view is
+not `Transferable`; the readonly `Welcome.bootstrap` variant rebuilt rather than written over; a
+session fence on the undo owner; `{ kind: "none" }` excluded from the browser-actor digest rewrite; and
+three `expect(x).not.toBeNull()` "narrowings" replaced by refusals that actually narrow.
+
+**b. `UiDriverProvider` declared `children` REQUIRED (21 → 0 in `🔬️engine-contract`).**
+`createElement(Comp, props, child)` type-checks `props` alone, so every `createElement(UiDriverProvider,
+{ driver }, …)` in the suite was a `TS2769`. One `?` on the provider's own prop — which is what React's
+`PropsWithChildren` says anyway — closed six. The rest of that file was contract drift a peer left behind:
+`TableHost` imported twice, `snapshotJson` → `documentJson` on `InkCanvasScene` (4 sites), `activeUtility`
+gone from `InkDocument`, `method: "click"` gone from `SelectionMarqueeMethod`, `gumballActive` gone from
+the gumball selection args, `id` gone from the instance-pick record, `ArgSchema` now requiring `options`,
+`GumballPose` needing tuples rather than `number[]`, `new Promise` without its type argument, and a
+`never[]`-typed JSON fixture column read through an annotated binding.
+
+**c. Two of my own regressions, found by the next full run and fixed.** `typeof event.remote` inside a
+cast annotation reads the DECLARED type, not the narrowed one — and naming the local `remote` then made
+it self-referential (`TS2502`); a second binding fixes both. Tightening `LeftoverInteractionViewV1.activeMode`
+to `SelectionMode` (which is what the shell's `InteractionState` declares) needed a matching
+`leftoverSelectionModeRecord` parser, because the guest encodes that field as free text and an unknown
+mode must be dropped rather than smuggled in.
+
+**d. Smaller root fixes.** `Bun.build`/`playwright` reached through an indirect specifier erase their
+module types, so `🎨️world3d-scene-shading/📜️script.ts`'s callbacks were implicit `any` and its corpus
+`unknown` — typed at the import and with a named fixture type. `isValidConnection` was missing from
+`🕸️Diagram`'s `DiagramProps`, so `🕸️NodeGraph`'s connection-validity guard was being dropped at the
+boundary instead of asked: added to the contract, destructured, and forwarded to React Flow.
+`semanticOwnedFileProjectionContracts` is a union whose `exact-owner-path-catalog` member names
+`sourceBasenames` rather than one `sourceFilename`, so the empty-lane marker is now read through a
+discriminating helper. `FaultScope` has no `req` (it is a 5-field Rust/WIT/TS contract), so both
+extension-answer faults carry the request id in their message instead. `PluginRuntime`'s hot-message
+guard compared `decodeBackboneMessage(bytes).kind === "snapshot"` although that variant is now `"genesis"`
+— **a dead guard, not type noise**: the hot lane had stopped refusing a genesis pack. `FlowBrowserOptions`
+was missing `bindings`, which `🏃️runtime/🟨️.js` destructures and `🪪️WasmSessionLoader` passes — added to
+the **projection template** and regenerated with `bun ./📜️script.ts declarations`, never hand-edited.
+
+### 32b. os vitest — K2's ten regressions: 10 → 3, and the three that are not mine
+
+K2 §16.1 measured `@semio-tech/framework-os:test` at 349/359 with ten failures. Re-measured here after
+each fix (`🗑️generated/t4c-s5-vitest{1..4}.txt`): **356 passed / 3 failed (359)**.
+
+| test | what it was | disposition |
+|---|---|---|
+| `tags every AppCommand variant…` | mine, within this session: `requestId` is a **decimal-u64 string**, so `""` throws `local-interaction.invalid-u64`. `"0"`. | fixed |
+| 5 × execution-target / lease / body-reader / viewer | `HUB_SESSION_CAPABILITY_PATTERN_V1` is `session.v1.<32 hex>.<64 hex>`; the harness still installed a bare 64-hex proof, so `installHubSessionCapability` refused and every test behind it failed. The capability is now minted inside `acceptCurrentTestBrowserSessionAuthority`. | fixed |
+| `allowlists only one canonical safe-decimal event-page route…` | `browserDirectoryRequest`'s allowlist matches the un-prefixed `/directory/…` path the live `DirectoryClient` builds (`requestBaseUrl: ""`); the test still passed `/_semio/hub/directory/…` and was denied. | fixed |
+| `browser document first open rejects hostile assets…` | `foreign-plan-scope` now accepts what the fixture expects refused — a plan-scope admission change in the worker, not TypeScript. | **route to W3c / C1c** |
+| `browser document actor reservation activates only after an exact current socket Session` | `session activation test deadline`: the activation never settles under the current socket-Session path. | **route to W3c / C1c** |
+| `browser document actor transfers one verified cold pair…` | `hub session rebootstrap required` thrown by `hubSessionFetch`. | **route to W3c / C1c** |
+
+### 32c. The typecheck target in the standard chain
+
+`@semio-tech/framework-os:typecheck` (`bun ./📜️script.ts typecheck` → `tsc --noEmit -p ../../tsconfig.json`)
+was already registered in `💻️os/📦️packages/🟦️typescript/📋️project.json`. It had **no launcher**; added
+`🛠️dev💻️os🪁️typecheck` to `.vscode/launch.json` **and** `.vscode/🧩️launch.seed.jsonc` at group `3_dev`
+order `390.2`, immediately after `🛠️dev🧰️framework🪁️typecheck` (390.1), following that family's naming.
+No `dependsOn` was added: neither `@semio-tech/framework` nor any sibling chains `typecheck` into `test`,
+and an 8-minute whole-program `tsc` in front of every test run would be a different decision from this slice's.
+
+### 32d. What is still open — the 8 I own
+
+| file | count | what it needs |
+|---|---:|---|
+| `🗣️Interpreter/📖️stories` | 2 | The story is written against the RETIRED `interpretUiNode(node, { onAction })`; the live signature is `(store: UiDocumentStore, context: UiInterpreterContext)`. Its three hand-written `UiNode` JSON trees have to become `UiSnapshot`s loaded into a store (the pattern `🔬️engine-contract`'s `renderContractTree` uses). A real ~150-line story migration, not a type patch. |
+| `🧪️space-artifact-creation-owner:3530` | 1 | `state.verifiedColdPair = { assertCurrent(){}, drop(){} }`. `VerifiedColdDocumentPair`'s constructor is mint-token-private and needs a `DocumentExecutionTargetLease` + `WireArtifactBootstrap`; `verifiedColdDocumentPairMintToken` IS already in the test dependency bag, so the honest fix is to mint a real one in that nested describe — it needs a lease harness that block does not have yet. |
+| `🌊️flow/🕸️wasm/🌐️browser/📦️publication:53` | 1 | `write` on a `Bun.build` config. The repo's own `🌿️environment/🟦️.d.ts` declares it, bun-types declares it — the merged `Bun` namespace picks the wrong one, the same double-declaration trap as `Bun.spawn` in §31f. |
+| `🏛️ShellHost:4923` | 1 | `consumes` is absent from the `plugins` PROP's entry type while `expandPluginRegistry`'s rows have it; the shell's registry element type has to be reconciled with the registry's own. |
+| `🎥️tutorial-bridge:81` | 1 | The imported fixture's two snapshots disagree on which `activeUtilityByWindowId` keys exist, so TypeScript requires the union of both. Needs an annotated fixture type. |
+| `🎥️world3d-camera-framing:41` | 1 | `FixtureCamera.projection` is `unknown`; the framing call wants `explicitProjection: boolean`. The fixture's own camera shape has to say which. |
+| `🧑‍💻dev/🏗️builder/🌐️vite:24` | 1 | `defineConfig(async () => ({…}))` — the returned object is not a `UserConfig` (`worker.format: string`, a plugin array that is not `PluginOption[]`). The file should use the repo's own `defineOwnedBuildConfig`/`OwnedBuildConfig` contract, which is what every other owned build config uses. |
+
+Not mine and left alone: `♻️mit-bestand/🧺️demonstrator/🧪️tests/🧪️scheduledemonstratoridle` ×2 (legacy).
+
+### 32e. Files changed (session 5, both halves)
+
+`🧰️framework/🛍️products/💻️os/tsconfig.json` (`DOM.AsyncIterable`) · `.vscode/launch.json` + `🧩️launch.seed.jsonc`
+· `💻️os/📦️packages/🟦️typescript/📜️script.ts` · `🌉️mcp/📦️packages/🦀️rust/📜️script.ts` + regenerated
+`🌉️mcp/🧬️schema/{🔣️.json,🟦️.ts}` · `🌊️flow/🕸️wasm/🌐️browser/📝️declaration/📤️projection/🟦️.ts` + regenerated
+`🤖️generated/🟦️.d.ts` · `🧑‍💻dev/🔌️vite-plugins/🟦️.ts` · `🧑‍💻dev/📊️benchmarks/🔌️plugins/🌐️browser/🟦️.ts` ·
+`🔌️plugin/{📇️registry/🗿️taxonomy-validation,🪟️window-kits/📝️text,🌐️browser-bundle/🌐️host}/🟦️.ts` ·
+`🎯️targets/🧊️wgpu/{🐚️plugin-bridge,🚚️browser-frame-transport}/🟦️.ts` ·
+`🧱️elements/{🌐️World3dHost,🏛️ShellHost,🔌️PluginRuntime,🛠️ShellHelpers,🪪️WasmSessionLoader,🗣️Interpreter}/🟦️.tsx` ·
+`🏛️ShellHost/🗨️dialog-origin/🛂️admission/📄️document/🟦️.ts` · `🧰️framework/🔨️modules/🖱️ui/🧱️elements/{🚗️UiDriver,🕸️Diagram}/🟦️.tsx` ·
+three `📖️stories` metas · 18 os test modules · three `🎚️config`s · four `✏️s` plugin modules.
+
+Scratch tooling added this session: `🐍️t4c-vite-probe.ts` (ticket folder).
+

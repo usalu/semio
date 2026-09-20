@@ -361,31 +361,13 @@ impl OrbitController {
     pub fn from_camera(camera: &Camera3d) -> Self {
         let offset = camera.position.sub_m(camera.target);
         let distance = offset.length_m().max(0.5);
-        Self {
-            target: camera.target,
-            distance,
-            yaw: offset.y.atan2(offset.x),
-            pitch: (offset.z / distance).clamp(-1.0, 1.0).asin(),
-            fov_y: camera.fov_y,
-            projection: camera.projection,
-            zoom: camera.zoom,
-            up: camera.up,
-        }
+        Self { target: camera.target, distance, yaw: offset.y.atan2(offset.x), pitch: (offset.z / distance).clamp(-1.0, 1.0).asin(), fov_y: camera.fov_y, projection: camera.projection, zoom: camera.zoom, up: camera.up }
     }
 
     pub fn to_camera(&self) -> Camera3d {
         let cp = self.pitch.cos();
         let position = vec3_new_m(self.target.x + self.distance * cp * self.yaw.cos(), self.target.y + self.distance * cp * self.yaw.sin(), self.target.z + self.distance * self.pitch.sin());
-        Camera3d {
-            position,
-            target: self.target,
-            up: self.up,
-            fov_y: self.fov_y,
-            near: WORLD_ORBIT_CAMERA_NEAR,
-            far: adaptive_orbit_camera_far(self.distance),
-            projection: self.projection,
-            zoom: self.zoom,
-        }
+        Camera3d { position, target: self.target, up: self.up, fov_y: self.fov_y, near: WORLD_ORBIT_CAMERA_NEAR, far: adaptive_orbit_camera_far(self.distance), projection: self.projection, zoom: self.zoom }
     }
 
     pub fn orbit(&mut self, dx: f32, dy: f32) {
@@ -526,18 +508,14 @@ pub fn frame_projection_orbit_to_bounds(orbit: &OrbitController, orientation: Wo
 /// 🎯️ Frames an orbit on an axis-aligned box while keeping its current look direction — the ONE
 /// framing rule the wgpu world surface and its React twin (`world3dFrameOrbitToBounds`) both obey.
 ///
-/// ⚖️ A parallel camera cannot dolly, so the family decides WHICH number the fit moves: perspective
-/// takes the stand-off distance, orthographic keeps its distance and takes React's
-/// `worldProjectionOrthoZoom` instead (`frameWorldProjectionPose`, `🎨️r3f/🟦️.tsx`).
+/// ⚖️ React's `WorldAutoFit` uses the sphere-fit formula for perspective and parallel
+/// cameras. A parallel pane's independent projection-content frame owns `zoom`; auto-fit preserves
+/// that value while moving the eye and target onto rendered geometry. Three's orthographic camera
+/// exposes no aspect ratio, so that family's fit uses one.
 pub fn frame_orbit_to_bounds(orbit: &OrbitController, minimum: [f32; 3], maximum: [f32; 3], width: f32, height: f32, margin: f32) -> OrbitController {
     let center = vec3_new_m((minimum[0] + maximum[0]) * 0.5, (minimum[1] + maximum[1]) * 0.5, (minimum[2] + maximum[2]) * 0.5);
     let radius = (((maximum[0] - minimum[0]).powi(2) + (maximum[1] - minimum[1]).powi(2) + (maximum[2] - minimum[2]).powi(2)).sqrt()) * 0.5;
-    let aspect = (width.max(1.0) / height.max(1.0)).max(0.05);
-    if orbit.projection.is_parallel() {
-        let framed = OrbitController { target: center, ..orbit.clone() };
-        let (half_width, half_height) = screen_half_extent(&framed.to_camera(), minimum, maximum);
-        return OrbitController { zoom: world_projection_ortho_zoom(half_width, half_height, width, height, margin.max(1.0)), ..framed };
-    }
+    let aspect = if orbit.projection.is_parallel() { 1.0 } else { (width.max(1.0) / height.max(1.0)).max(0.05) };
     OrbitController { target: center, distance: frame_distance_for_radius(radius, orbit.fov_y, aspect, margin), ..orbit.clone() }
 }
 
@@ -553,12 +531,7 @@ pub fn screen_half_extent(camera: &Camera3d, minimum: [f32; 3], maximum: [f32; 3
     let mut half_width = 0.0_f32;
     let mut half_height = 0.0_f32;
     for corner in 0..8 {
-        let point = vec3_new_m(
-            if corner & 1 == 0 { minimum[0] } else { maximum[0] },
-            if corner & 2 == 0 { minimum[1] } else { maximum[1] },
-            if corner & 4 == 0 { minimum[2] } else { maximum[2] },
-        )
-        .sub_m(centre);
+        let point = vec3_new_m(if corner & 1 == 0 { minimum[0] } else { maximum[0] }, if corner & 2 == 0 { minimum[1] } else { maximum[1] }, if corner & 4 == 0 { minimum[2] } else { maximum[2] }).sub_m(centre);
         half_width = half_width.max(point.dot_m(right).abs());
         half_height = half_height.max(point.dot_m(up).abs());
     }
@@ -807,7 +780,6 @@ impl Mesh3dOwner {
         self.written = [0; 9];
         true
     }
-
 }
 
 enum Mesh3dSlotState {
@@ -1231,6 +1203,45 @@ impl Mesh3dItemCursor {
     }
 }
 
+#[repr(u8)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub enum SceneColorSource3d {
+    SemanticNeutral,
+    #[default]
+    Authored,
+    Environment,
+}
+
+impl SceneColorSource3d {
+    pub const fn snapshot_flag(self) -> u16 {
+        self as u16
+    }
+
+    pub const fn from_snapshot_flag(flag: u16) -> Self {
+        match flag {
+            0 => Self::SemanticNeutral,
+            2 => Self::Environment,
+            _ => Self::Authored,
+        }
+    }
+}
+
+#[repr(C)]
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct SceneInstanceMaterial3d {
+    pub color_source: SceneColorSource3d,
+    pub preserve_vertex_color: bool,
+    pub emissive_intensity: f32,
+    pub metalness: f32,
+    pub roughness: f32,
+}
+
+impl Default for SceneInstanceMaterial3d {
+    fn default() -> Self {
+        Self { color_source: SceneColorSource3d::default(), preserve_vertex_color: false, emissive_intensity: 0.0, metalness: 0.0, roughness: 1.0 }
+    }
+}
+
 #[derive(Clone, Debug)]
 pub struct Instance3d {
     pub id: String,
@@ -1238,6 +1249,7 @@ pub struct Instance3d {
     pub color: [f32; 4],
     pub selected: bool,
     pub hovered: bool,
+    pub material: SceneInstanceMaterial3d,
 }
 
 impl Instance3d {
@@ -1248,21 +1260,127 @@ impl Instance3d {
 //#endregion Mesh
 
 //#region ScenePass
-#[derive(Clone, Debug)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub struct SceneShadowRole3d {
+    pub casts: bool,
+    pub receives: bool,
+}
+
+#[derive(Clone, Debug, Default)]
 pub struct SceneDraw3d {
     pub mesh_key: String,
     pub mesh_version: u64,
     pub instances: Vec<Instance3d>,
+    pub shadow_role: SceneShadowRole3d,
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub enum SceneMaterialKind3d {
+    Standard,
+    Painted { texture_key: String },
+    Celebration { stops: [[f32; 4]; 3], angle: f32 },
+}
+
+#[derive(Clone, Debug)]
+pub struct SceneMaterialDraw3d {
+    pub mesh_key: String,
+    pub mesh_version: u64,
+    pub instances: Vec<Instance3d>,
+    pub material: SceneMaterialKind3d,
+    pub translucent: bool,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct SceneLighting3d {
+    pub ambient_color: [f32; 3],
+    pub ambient_intensity: f32,
+    pub sun_color: [f32; 3],
+    pub sun_intensity: f32,
+    pub sun_enabled: bool,
+}
+
+impl Default for SceneLighting3d {
+    fn default() -> Self {
+        Self { ambient_color: [1.0; 3], ambient_intensity: 1.15, sun_color: [1.0; 3], sun_intensity: 0.85, sun_enabled: false }
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct SceneMaterial3d {
+    pub metalness: f32,
+    pub roughness: f32,
+    pub emissive: [f32; 3],
+    pub emissive_intensity: f32,
+}
+
+impl Default for SceneMaterial3d {
+    fn default() -> Self {
+        Self { metalness: 0.0, roughness: 1.0, emissive: [0.0; 3], emissive_intensity: 0.0 }
+    }
+}
+
+pub const WORLD_SHADOW_LIGHT_DISTANCE: f32 = 120.0;
+pub const WORLD_SHADOW_HALF_EXTENT: f32 = 5.0;
+pub const WORLD_SHADOW_NEAR: f32 = 0.5;
+pub const WORLD_SHADOW_FAR: f32 = 500.0;
+pub const WORLD_SHADOW_MAP_SIZE: u32 = 512;
+pub const ICON_SHADOW_MAP_SIZE: u32 = 1024;
+
+fn directional_shadow_view_projection_m(light_dir: [f32; 3]) -> Mat4 {
+    let mut direction = vec3_from_array_m(light_dir);
+    if direction.length_m() <= 1e-6 {
+        direction = vec3_new_m(0.4, 0.6, 0.8);
+    }
+    direction = direction.normalize_m();
+    let up = if direction.cross_m(vec3_new_m(0.0, 1.0, 0.0)).length_m() > 1e-4 { vec3_new_m(0.0, 1.0, 0.0) } else { vec3_new_m(0.0, 0.0, 1.0) };
+    mat4_orthographic_m(WORLD_SHADOW_HALF_EXTENT, WORLD_SHADOW_HALF_EXTENT, WORLD_SHADOW_NEAR, WORLD_SHADOW_FAR).mul_m(mat4_look_at_m(direction.scale_m(WORLD_SHADOW_LIGHT_DISTANCE), Vec3::ZERO, up))
+}
+
+/// 🌑️ React's configured directional light shadow camera: three.js' default symmetric
+/// orthographic frustum, placed at the sun and aimed at the origin with its default +Y up axis.
+pub fn directional_shadow_view_projection(light_dir: [f32; 3]) -> [f32; 16] {
+    directional_shadow_view_projection_m(light_dir).to_cols_array_m()
+}
+
+/// 🌑️ The directional light's own culling planes, independent of the color camera.
+pub fn directional_shadow_frustum_planes(light_dir: [f32; 3]) -> [FrustumPlane; 6] {
+    frustum_planes(directional_shadow_view_projection_m(light_dir))
+}
+
+/// 🧪️ Three's `DirectionalLightShadow.matrix` oracle: XY clip coordinates biased into
+/// texture space while Z stays in the renderer's shared WebGPU `[0, 1]` depth convention.
+pub fn directional_shadow_texture_matrix(light_dir: [f32; 3]) -> [f32; 16] {
+    let clip = directional_shadow_view_projection_m(light_dir);
+    Mat4 { cols: [[0.5, 0.0, 0.0, 0.0], [0.0, 0.5, 0.0, 0.0], [0.0, 0.0, 1.0, 0.0], [0.5, 0.5, 0.0, 1.0]] }.mul_m(clip).to_cols_array_m()
+}
+
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct SceneShadow3d {
+    pub enabled: bool,
+    pub map_size: u32,
+    pub view_proj: [f32; 16],
+}
+
+impl Default for SceneShadow3d {
+    fn default() -> Self {
+        Self { enabled: false, map_size: WORLD_SHADOW_MAP_SIZE, view_proj: Mat4::identity().to_cols_array_m() }
+    }
 }
 
 #[derive(Clone, Debug, Default)]
 pub struct ScenePass3d {
     pub viewport: [f32; 4],
     pub view_proj: [f32; 16],
+    pub camera_position: [f32; 3],
     pub light_dir: [f32; 3],
+    pub lighting: SceneLighting3d,
+    pub neutral_material: SceneMaterial3d,
+    pub shadow: SceneShadow3d,
+    pub shadow_draws: Vec<SceneDraw3d>,
     pub draws: Vec<SceneDraw3d>,
     pub line_draws: Vec<LineDraw3d>,
     pub translucent_draws: Vec<SceneDraw3d>,
+    pub material_draws: Vec<SceneMaterialDraw3d>,
     pub textured_draws: Vec<TexturedDraw3d>,
     pub layer_index: usize,
     pub ui_watermark: usize,
@@ -1286,7 +1404,8 @@ pub struct LineDraw3d {
 pub struct TexturedInstance3d {
     pub texture_key: String,
     pub model: Mat4,
-    pub tint: [f32; 4],
+    pub background: [f32; 4],
+    pub appearance: [f32; 4],
 }
 
 #[derive(Clone, Debug, Default)]
@@ -1454,7 +1573,11 @@ fn ray_triangle_barycentric(origin: Vec3, dir: Vec3, a: Vec3, b: Vec3, c: Vec3) 
         return None;
     }
     let t = f * edge2.dot_m(q);
-    if t > 1e-4 { Some((t, u, v)) } else { None }
+    if t > 1e-4 {
+        Some((t, u, v))
+    } else {
+        None
+    }
 }
 
 pub fn interpolate_mesh_uv(mesh: Mesh3dLease, triangle_index: usize, bary_u: f32, bary_v: f32) -> Option<(f32, f32)> {
@@ -1555,7 +1678,11 @@ fn segment_intersects_polygon(a: [f32; 2], b: [f32; 2], polygon: &[[f32; 2]]) ->
 }
 
 fn marquee_contains_point(point: [f32; 2], polygon: &[[f32; 2]], rectangle: bool, rect_bounds: Option<[f32; 4]>) -> bool {
-    if rectangle { rect_bounds.is_some_and(|bounds| rect_contains(bounds, point)) } else { point_in_polygon(point, polygon) }
+    if rectangle {
+        rect_bounds.is_some_and(|bounds| rect_contains(bounds, point))
+    } else {
+        point_in_polygon(point, polygon)
+    }
 }
 
 fn marquee_segment_selected(a: [f32; 2], b: [f32; 2], polygon: &[[f32; 2]], rectangle: bool, rect_bounds: Option<[f32; 4]>, crossing: bool) -> bool {
@@ -1563,7 +1690,11 @@ fn marquee_segment_selected(a: [f32; 2], b: [f32; 2], polygon: &[[f32; 2]], rect
         if marquee_contains_point(a, polygon, rectangle, rect_bounds) || marquee_contains_point(b, polygon, rectangle, rect_bounds) {
             return true;
         }
-        if rectangle { rect_bounds.is_some_and(|bounds| segment_intersects_rect(a, b, bounds)) } else { segment_intersects_polygon(a, b, polygon) }
+        if rectangle {
+            rect_bounds.is_some_and(|bounds| segment_intersects_rect(a, b, bounds))
+        } else {
+            segment_intersects_polygon(a, b, polygon)
+        }
     } else {
         marquee_contains_point(a, polygon, rectangle, rect_bounds) && marquee_contains_point(b, polygon, rectangle, rect_bounds)
     }
@@ -1729,7 +1860,11 @@ pub fn ray_triangle(origin: Vec3, dir: Vec3, a: Vec3, b: Vec3, c: Vec3) -> Optio
         return None;
     }
     let t = f * edge2.dot_m(q);
-    if t > 1e-4 { Some(t) } else { None }
+    if t > 1e-4 {
+        Some(t)
+    } else {
+        None
+    }
 }
 
 pub fn project_point(view_proj: Mat4, point: Vec3, width: f32, height: f32) -> Option<[f32; 2]> {
@@ -1923,7 +2058,11 @@ pub fn gumball_axis_drag_plane_normal(axis: Vec3, eye: Vec3) -> Vec3 {
     if align.length_m() > 1e-6 {
         return align.cross_m(axis).normalize_m();
     }
-    if axis.z.abs() < 0.9 { vec3_new_m(0.0, 0.0, 1.0).cross_m(axis).normalize_m() } else { vec3_new_m(0.0, 1.0, 0.0).cross_m(axis).normalize_m() }
+    if axis.z.abs() < 0.9 {
+        vec3_new_m(0.0, 0.0, 1.0).cross_m(axis).normalize_m()
+    } else {
+        vec3_new_m(0.0, 1.0, 0.0).cross_m(axis).normalize_m()
+    }
 }
 
 pub fn gumball_project_ray_onto_axis(origin: Vec3, dir: Vec3, pivot: Vec3, axis: Vec3, eye: Vec3) -> Option<f32> {

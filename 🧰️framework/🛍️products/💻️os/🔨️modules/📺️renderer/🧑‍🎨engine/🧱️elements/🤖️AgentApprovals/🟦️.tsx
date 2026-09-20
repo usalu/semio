@@ -19,33 +19,59 @@ export type ApprovalRisk = "low" | "medium" | "high";
 
 export type ParsedApprovalSummary = {
   readonly capabilityId: string | null;
+  /** 🏷️ The verb's own published label — WHAT is about to happen, in words the human reads. */
+  readonly capabilityTitle: string | null;
+  /** 📖️ The verb's published description, the sentence the agent found it by. */
+  readonly description: string | null;
+  /** 🗿️ The artifact kind the verb belongs to — WHAT it is about to happen to. */
+  readonly artifactKind: string | null;
   readonly diffSummary: string;
   readonly risk: ApprovalRisk | null;
   readonly requestedBy: string | null;
+  /** ⏱️ How long the gateway will wait, as a DURATION from this frame's arrival — never a wall
+   * clock, so a browser whose clock disagrees with the gateway's still counts down truthfully.
+   * `null` for a producer that sends none, and for a non-positive value, which cannot be counted. */
+  readonly timeoutMs: number | null;
 };
 
 /** 🔍️ The bridge's `ApprovalRequested.summary` wire field is a single string
- * (`🌉️mcp/🧵️bridge/🦀️.rs` tag 3 — `📓️terra-P10-report.md` documents this as a real gap
- * between the required "capability + diff + risk" richness and today's shipped frame shape, not
- * something this element's own `path_scope` may fix by editing that Rust facet). A future
- * approval-producing packet can JSON-encode `{capabilityId, diffSummary, risk, requestedBy}` into
- * that same string field with zero wire-format change; this parses that shape when present and
- * falls back to treating the whole string as the diff summary otherwise, so the dialog never goes
- * blank for a plain-text producer. */
+ * (`🌉️mcp/🧵️bridge/🦀️.rs` tag 3), and that string's JSON payload IS the schema: the producer is
+ * `🌉️mcp/🛡️policy`'s `ApprovalRequest::shell_summary`, and the shape it writes
+ * (`{capabilityId, capabilityTitle, description, artifactKind, diffSummary, risk, requestedBy,
+ * timeoutMs}`) is pinned for BOTH banks by `🧫️fixtures/🛡️summary` — this parser and its wgpu twin
+ * `parse_approval_summary` are asserted against the same rows, so the two hosts can never drift.
+ *
+ * A producer that sends only the older `{capabilityId, diffSummary, risk, requestedBy}` subset, and
+ * one that sends plain text, both parse: the new fields answer `null` and the surfaces omit their
+ * rows rather than going blank. */
 export function parseApprovalSummary(summary: string): ParsedApprovalSummary {
+  const plain: ParsedApprovalSummary = { capabilityId: null, capabilityTitle: null, description: null, artifactKind: null, diffSummary: summary, risk: null, requestedBy: null, timeoutMs: null };
   try {
     const value = JSON.parse(summary) as Record<string, unknown>;
     if (value && typeof value === "object" && !Array.isArray(value)) {
-      const capabilityId = typeof value.capabilityId === "string" ? value.capabilityId : null;
+      const text = (field: unknown): string | null => (typeof field === "string" && field.length > 0 ? field : null);
+      const capabilityId = text(value.capabilityId);
       const risk = value.risk === "low" || value.risk === "medium" || value.risk === "high" ? (value.risk as ApprovalRisk) : null;
-      const requestedBy = typeof value.requestedBy === "string" ? value.requestedBy : null;
+      const requestedBy = text(value.requestedBy);
       const diffSummary = typeof value.diffSummary === "string" ? value.diffSummary : summary;
-      if (capabilityId !== null || risk !== null || requestedBy !== null) return { capabilityId, diffSummary, risk, requestedBy };
+      const timeoutMs = typeof value.timeoutMs === "number" && Number.isFinite(value.timeoutMs) && value.timeoutMs > 0 ? value.timeoutMs : null;
+      if (capabilityId !== null || risk !== null || requestedBy !== null) {
+        return { capabilityId, capabilityTitle: text(value.capabilityTitle), description: text(value.description), artifactKind: text(value.artifactKind), diffSummary, risk, requestedBy, timeoutMs };
+      }
     }
   } catch {
     // not JSON — plain-text summary, handled by the fallback below
   }
-  return { capabilityId: null, diffSummary: summary, risk: null, requestedBy: null };
+  return plain;
+}
+
+/** ⏱️ What the countdown shows: whole seconds left of `timeoutMs` counted from when the frame
+ * arrived. `null` when the producer named no timeout (nothing to count), and `0` once the budget is
+ * spent — the gateway refuses on its own clock, so the surface says "out of time" rather than
+ * deciding anything itself. */
+export function approvalSecondsRemaining(timeoutMs: number | null, requestedAtMs: number, nowMs: number): number | null {
+  if (timeoutMs === null) return null;
+  return Math.max(0, Math.ceil((requestedAtMs + timeoutMs - nowMs) / 1000));
 }
 //#endregion 🔖️ParseSummary
 
@@ -77,21 +103,44 @@ function ApprovalRow({ approval, onDecision }: { readonly approval: PendingAgent
   const denyLabel = useLabel(agentUiLabel("os.agent.approvals.decisionDeny"));
   const onceLabel = useLabel(agentUiLabel("os.agent.approvals.decisionOnce"));
   const sessionLabel = useLabel(agentUiLabel("os.agent.approvals.decisionSession"));
+  const targetLabel = useLabel(agentUiLabel("os.agent.chat.approvalTarget"));
+  const expiredLabel = useLabel(agentUiLabel("os.agent.chat.approvalExpired"));
   const parsed = parseApprovalSummary(approval.summary);
+  const [nowMs, setNowMs] = useState(() => Date.now());
+  useEffect(() => {
+    if (parsed.timeoutMs === null) return;
+    const ticker = window.setInterval(() => setNowMs(Date.now()), 1000);
+    return () => window.clearInterval(ticker);
+  }, [parsed.timeoutMs]);
+  const secondsLeft = approvalSecondsRemaining(parsed.timeoutMs, approval.requestedAtMs, nowMs);
+  const countdownLabel = useLabel(agentUiLabel("os.agent.chat.approvalCountdown"), { seconds: String(secondsLeft ?? 0) });
 
   return (
     <li className="space-y-2 border-b py-3 last:border-b-0" data-semio-agent-approval-id={approval.approvalId}>
       <div className="space-y-1 text-sm">
+        {parsed.capabilityTitle ? <p className="font-medium">{parsed.capabilityTitle}</p> : null}
         {parsed.capabilityId ? (
           <p>
             <span className="text-muted-foreground">{capabilityLabel}: </span>
             <span className="font-medium">{parsed.capabilityId}</span>
           </p>
         ) : null}
+        {parsed.description ? <p className="text-muted-foreground">{parsed.description}</p> : null}
+        {parsed.artifactKind ? (
+          <p className="text-muted-foreground" data-semio-agent-approval-target={parsed.artifactKind}>
+            <span>{targetLabel}: </span>
+            {parsed.artifactKind}
+          </p>
+        ) : null}
         <p>
           <span className="text-muted-foreground">{diffLabel}: </span>
           {parsed.diffSummary}
         </p>
+        {secondsLeft !== null ? (
+          <p role="status" aria-live="polite" data-semio-agent-approval-countdown={String(secondsLeft)} className="text-muted-foreground">
+            {secondsLeft > 0 ? countdownLabel : expiredLabel}
+          </p>
+        ) : null}
         {parsed.requestedBy ? (
           <p className="text-muted-foreground">
             <span>{requestedByLabel}: </span>
@@ -105,14 +154,17 @@ function ApprovalRow({ approval, onDecision }: { readonly approval: PendingAgent
           </p>
         ) : null}
       </div>
-      <div className="flex gap-2">
-        <button type="button" className="rounded-sm border px-double py-1 text-sm text-red-400" aria-label={`${denyLabel}: ${parsed.capabilityId ?? parsed.diffSummary}`} onClick={() => onDecision(approval.approvalId, "deny")}>
+      {/* ⌨️ Wraps at phone width, and every control carries the same `framework.approvals.<decision>.<id>`
+          address its React and wgpu twins use, so a keyboard, a screen reader and a gate all reach the
+          same three decisions by name rather than by position. */}
+      <div className="flex flex-wrap gap-2">
+        <button type="button" id={`framework.approvals.deny.${approval.approvalId}`} className="rounded-sm border px-double py-1 text-sm text-red-400" aria-label={`${denyLabel}: ${parsed.capabilityId ?? parsed.diffSummary}`} onClick={() => onDecision(approval.approvalId, "deny")}>
           {denyLabel}
         </button>
-        <button type="button" className="rounded-sm border px-double py-1 text-sm" aria-label={`${onceLabel}: ${parsed.capabilityId ?? parsed.diffSummary}`} onClick={() => onDecision(approval.approvalId, "once")}>
+        <button type="button" id={`framework.approvals.once.${approval.approvalId}`} className="rounded-sm border px-double py-1 text-sm" aria-label={`${onceLabel}: ${parsed.capabilityId ?? parsed.diffSummary}`} onClick={() => onDecision(approval.approvalId, "once")}>
           {onceLabel}
         </button>
-        <button type="button" className="rounded-sm border px-double py-1 text-sm font-medium" aria-label={`${sessionLabel}: ${parsed.capabilityId ?? parsed.diffSummary}`} onClick={() => onDecision(approval.approvalId, "session")}>
+        <button type="button" id={`framework.approvals.session.${approval.approvalId}`} className="rounded-sm border px-double py-1 text-sm font-medium" aria-label={`${sessionLabel}: ${parsed.capabilityId ?? parsed.diffSummary}`} onClick={() => onDecision(approval.approvalId, "session")}>
           {sessionLabel}
         </button>
       </div>

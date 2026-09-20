@@ -2,7 +2,7 @@
 
 import { artifactFiles } from "../../../🔌️plugin/🌐️browser-bundle/📦️distribution/📋️inventory/🟦️.ts";
 
-import { ACTIVATION_RECEIPT_FILE, PLAYGROUND_SESSION_OUTPUT_ROOT_ENV, developmentRuntimeRoot, newestComponentSourceMtime, nextActivationReceipt, playgroundSessionOutputPath, pluginModulesRoot, publishActivationReceipt, readActivationReceipt, stagedModuleMtime, stagedModuleReportLines, stagedModuleVerdict, type StagedModuleFacts, type StagedModuleVerdict } from "../🟦️.ts";
+import { ACTIVATION_RECEIPT_FILE, PLAYGROUND_SESSION_OUTPUT_ROOT_ENV, developmentRuntimeRoot, healthyPreparedComponents, newestComponentSourceMtime, nextActivationReceipt, playgroundSessionOutputPath, pluginModulesRoot, preparedComponentReportLines, preparedComponentVerdict, publishActivationReceipt, readActivationReceipt, stagedModuleMtime, stagedModuleReportLines, stagedModuleVerdict, type StagedModuleFacts, type StagedModuleVerdict } from "../🟦️.ts";
 
 import { FONT_ASSET, validateFontAsset } from "../../../♾️infinite/🖼️canvas/🔤️fonts/🟦️.ts";
 
@@ -71,6 +71,10 @@ const repoRoot = getWorkspaceRoot();
 
 import { activationFilesDigest, publishActivatedExtension } from "../📥️installation/🟦️.ts";
 
+import { stagedComponentFacts } from "../🔍️freshness/🟦️.ts";
+
+import { playgroundCatalog } from "../../../🔌️plugin/🏗️build/📋️plan/🟦️.ts";
+
 
 
 
@@ -91,9 +95,16 @@ class ActivationScript extends BundleScript {
       for (const directory of [PREVIEW2_VENDOR_RELATIVE, MODULE_SHARD_DIRECTORY]) for (const [name, path] of artifactFiles(join(moduleRoot, directory))) support.set(join(directory, name), path);
       support.set(FONT_ASSET, join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust/dist/fonts", FONT_ASSET));
       const supportDigest = await activationFilesDigest(support, controller.signal), completed = [];
-      for (const plugin of session.plugins) {
-        const digest = await activationFilesDigest(artifactFiles(join(moduleRoot, moduleDirectoryName(plugin.pluginId))), controller.signal);
-        completed.push({ pluginId: plugin.pluginId, artifactSha256: createHash("sha256").update(supportDigest + digest).digest("hex") });
+      // 🩺️ HEALTHY SET: the receipt names what is ACTIVATED, so a component that never staged must be
+      // absent from it rather than carry a digest of nothing — that absence is what makes the serve's
+      // own freshness pass report it `unactivated` instead of the host pretending it is there.
+      const verdicts = session.plugins.map((plugin: { readonly pluginId: string }) => preparedComponentVerdict(stagedComponentFacts(moduleRoot, plugin.pluginId)));
+      const healthy = healthyPreparedComponents(verdicts, playgroundCatalog.find((row) => row.variant === variant)?.pluginId ?? variant);
+      for (const line of preparedComponentReportLines(healthy.excluded, `bun nx run @semio-tech/framework-os-dev:activate-${variant}-${renderer}-${profile}`)) console.warn(line);
+      if (healthy.refusal) throw new Error(healthy.refusal);
+      for (const pluginId of healthy.prepared) {
+        const digest = await activationFilesDigest(artifactFiles(join(moduleRoot, moduleDirectoryName(pluginId))), controller.signal);
+        completed.push({ pluginId, artifactSha256: createHash("sha256").update(supportDigest + digest).digest("hex") });
       }
       const previous = existsSync(join(receiptRoot, ACTIVATION_RECEIPT_FILE)) ? readActivationReceipt(receiptRoot) : undefined;
       const receipt = nextActivationReceipt(variant, profile, completed, previous);

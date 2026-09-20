@@ -20,7 +20,11 @@ pub struct SetDoctypePayload {
 #[value(tag = "phase", content = "value", rename_all = "camelCase")]
 pub enum SetDoctypeMutation {
     Apply(SetDoctypePayload),
-    Restore(XmlDiff),
+    /// 📦️ Boxed on purpose: `XmlDiff` is the largest thing this leaf can hold, and an inline
+    /// variant of that size pushes the whole leaf past the neutral inline-ownership budget
+    /// (`🧫️fixtures/📦️inline-layout/🔣️.json`, 128 B) every ephemeral transfer of it is measured
+    /// against — same boxing the sibling `🧊️gltf` leaves use for their own `Restore` arm.
+    Restore(Box<XmlDiff>),
 }
 
 impl protocol::MutationKind<XmlSnapshot, super::XmlMutation> for SetDoctypeMutation {
@@ -29,7 +33,7 @@ impl protocol::MutationKind<XmlSnapshot, super::XmlMutation> for SetDoctypeMutat
     fn diff(&self, _base: &XmlSnapshot) -> protocol::MutationOutcome<XmlDiff> {
         match self {
             Self::Apply(payload) => protocol::MutationOutcome::new(XmlDiff { prolog: None, declaration: None, doctype: Some(payload.doctype.clone()), root: None }),
-            Self::Restore(diff) => protocol::MutationOutcome::new(diff.clone()),
+            Self::Restore(diff) => protocol::MutationOutcome::new(diff.as_ref().clone()),
         }
     }
 
@@ -39,7 +43,7 @@ impl protocol::MutationKind<XmlSnapshot, super::XmlMutation> for SetDoctypeMutat
             return Vec::new();
         }
         let inverse = <XmlDiff as protocol::DiffAlgebra<XmlSnapshot>>::inverse(outcome.diff(), base);
-        vec![super::XmlMutation::SetDoctype(Self::Restore(inverse))]
+        vec![super::XmlMutation::SetDoctype(Self::Restore(Box::new(inverse)))]
     }
 
     fn label(&self) -> String {

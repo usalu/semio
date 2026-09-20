@@ -100,6 +100,8 @@ async fn envelope_helpers_round_trip() {
             outcome => panic!("valid Presentation envelope caller produced {outcome:?}"),
         }
     }
+    // 🔚 A published retained caller still owns its pages until the bounded close loop reclaims it — without this the registry is not terminal-empty and its Drop panics on top of the failed assert (a double panic aborts the whole test binary).
+    close_presentation_registry(&mut registry, &pool);
     assert!(registry.terminal_is_empty());
     drop(registry);
     let deck = target.value.take().expect("typed projection published exactly once");
@@ -134,6 +136,8 @@ async fn retained_presentation_envelope_materializes_populated_history_in_order(
             outcome => panic!("populated Presentation history produced {outcome:?}"),
         }
     }
+    // 🔚 A published retained caller still owns its pages until the bounded close loop reclaims it — without this the registry is not terminal-empty and its Drop panics on top of the failed assert (a double panic aborts the whole test binary).
+    close_presentation_registry(&mut registry, &pool);
     assert!(registry.terminal_is_empty());
     drop(registry);
     let deck = target.value.take().expect("populated history published exactly once");

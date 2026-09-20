@@ -9,8 +9,8 @@ use semio_framework_plugin::{ExecutionMode, Plugin, PluginApp};
 semio_framework_dispatch_macros::dyn_enum_close! {
     /// 🗃️ Closed runtime app fleet for the imperative plugin's editor and viewer.
     pub enum ImperativeApps: PluginApp {
-        Editor(VcsArtifactApp<EditorApp<crate::editor::procedure::ImperativePlayApp>>),
-        Viewer(VcsArtifactApp<ViewerApp<crate::viewer::procedure::ImperativeViewer>>),
+        Editor(VcsArtifactApp<EditorApp<crate::editor::procedure::ImperativePlayApp>, semio_s_artifact_stdio_semio::SemioMembers>),
+        Viewer(VcsArtifactApp<ViewerApp<crate::viewer::procedure::ImperativeViewer>, semio_s_artifact_stdio_semio::SemioMembers>),
     }
 }
 //#endregion 🗃️Apps

@@ -9,7 +9,7 @@
   "solarGainsKwh": null,
   "systemLossesKwh": null,
   "renewableKwh": null,
-  "annualLimitKwh": 6000,
+  "annualLimitKwh": 6000.0,
   "energyCarrier": null,
   "referenceQPKwh": null
 }

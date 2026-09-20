@@ -10,6 +10,7 @@ use super::*;
 /// 🧾️ The shared, cross-implementation frame corpus — the same file the Rust SSOT and the TS twin
 /// assert against, read at compile time so a moved fixture is a build error, not a skipped test.
 const FRAME_FIXTURES: &str = include_str!("../../../../../../🌉️mcp/🧵️bridge/🧫️fixtures/📨️frames.json");
+const CANCELLATION_FIXTURE: &str = include_str!("../../🧫️fixtures/🛑️cancellation/🔣️.json");
 
 /// 📨️ Shell→Gateway variants this shell deliberately does not model — the four snapshot-carrying
 /// frames that only a `ShellState`-mirroring shell produces (see [`ShellToGateway`]'s own doc).
@@ -73,7 +74,7 @@ fn every_modelled_shell_to_gateway_fixture_round_trips_through_this_codec() {
         assert_eq!(encode_hex(&frame.encode()), hex, "{variant} re-encoded to different bytes");
         seen.push(variant);
     }
-    assert_eq!(distinct_variants(&seen), 6, "Hello + ShellCommandResult + Approval + Ping + Bye + AgentMessage — the ten SSOT variants minus the unmodelled four, saw {seen:?}");
+    assert_eq!(distinct_variants(&seen), 7, "Hello + ShellCommandResult + Approval + Ping + Bye + AgentMessage + AgentCancel — the eleven SSOT variants minus the unmodelled four, saw {seen:?}");
 }
 
 #[test]
@@ -220,6 +221,55 @@ fn a_tool_result_settles_its_own_call_in_place_and_an_orphan_result_records_noth
     }
     state.apply_frame(GatewayToShell::AgentToolResult { invocation_id: "inv_missing".into(), tool_name: "translate".into(), ok: true, summary: "done".into() }, 2.0);
     assert_eq!(state.conversation.len(), 1);
+}
+
+/// 🛑️ LAW: the WGPU consumer follows the same neutral cancellation sequence as the real React
+/// hook, carrying the gateway's invocation id byte-for-byte and waiting for a real result to settle.
+#[test]
+fn cancellation_matches_the_shared_react_lifecycle_fixture() {
+    let fixture: serde_json::Value = serde_json::from_str(CANCELLATION_FIXTURE).expect("cancellation fixture parses");
+    let invocation_id = fixture["invocation"]["id"].as_str().expect("invocation id");
+    let tool_name = fixture["invocation"]["toolName"].as_str().expect("tool name");
+    let arguments = fixture["invocation"]["arguments"].as_str().expect("arguments");
+    let mut state = AgentBridgeState::default();
+    state.apply_frame(GatewayToShell::Welcome { bridge_version: BRIDGE_VERSION, connection: "gateway-1".into(), principal: "agent:test".into() }, 0.0);
+    state.apply_frame(GatewayToShell::AgentToolCall { invocation_id: invocation_id.into(), tool_name: tool_name.into(), arguments: arguments.into() }, 1.0);
+
+    assert_eq!(state.cancel_tool_call(invocation_id), fixture["openCancellation"]["accepted"].as_bool().expect("open accepted"));
+    assert_eq!(state.take_outbox(), vec![ShellToGateway::AgentCancel { invocation_id: invocation_id.into() }]);
+    assert!(matches!(&state.conversation[0], AgentConversationEntry::ToolCall { id, state: AgentToolCallState::Cancelling, .. } if id == invocation_id));
+
+    state.note_socket_closed();
+    assert_eq!(state.cancel_tool_call(invocation_id), fixture["closedCancellation"]["accepted"].as_bool().expect("closed accepted"));
+    assert_eq!(state.outbox_len(), fixture["closedCancellation"]["outboundCount"].as_u64().expect("closed outbound count") as usize);
+    assert!(matches!(&state.conversation[0], AgentConversationEntry::ToolCall { state: AgentToolCallState::Cancelling, .. }));
+
+    let ok = fixture["terminalResult"]["ok"].as_bool().expect("terminal ok");
+    let summary = fixture["terminalResult"]["summary"].as_str().expect("terminal summary");
+    state.apply_frame(GatewayToShell::AgentToolResult { invocation_id: invocation_id.into(), tool_name: tool_name.into(), ok, summary: summary.into() }, 2.0);
+    assert!(matches!(&state.conversation[0], AgentConversationEntry::ToolCall { state: AgentToolCallState::Failed, summary: Some(actual), .. } if actual == summary));
+}
+
+/// ✂️ A result arriving after the bounded transcript retired its call cannot resurrect a call-less
+/// row or a cancellation affordance.
+#[test]
+fn a_retired_cancelled_invocation_stays_retired_when_its_result_arrives() {
+    let fixture: serde_json::Value = serde_json::from_str(CANCELLATION_FIXTURE).expect("cancellation fixture parses");
+    let invocation_id = fixture["invocation"]["id"].as_str().expect("invocation id");
+    let maximum = fixture["retirement"]["maximumEntries"].as_u64().expect("maximum entries") as usize;
+    assert_eq!(maximum, AGENT_CONVERSATION_MAX_ENTRIES);
+    let mut state = AgentBridgeState::default();
+    state.apply_frame(GatewayToShell::Welcome { bridge_version: BRIDGE_VERSION, connection: "gateway-1".into(), principal: "agent:test".into() }, 0.0);
+    state.apply_frame(GatewayToShell::AgentToolCall { invocation_id: invocation_id.into(), tool_name: "inference_run".into(), arguments: "{}".into() }, 1.0);
+    assert!(state.cancel_tool_call(invocation_id));
+    for index in 0..maximum {
+        assert!(state.send_agent_message("shell-1", &format!("turn-{index}")));
+    }
+    assert_eq!(state.conversation.len(), maximum);
+    assert!(state.conversation.iter().all(|entry| entry.id() != invocation_id), "the oldest cancelled call is retired");
+    state.apply_frame(GatewayToShell::AgentToolResult { invocation_id: invocation_id.into(), tool_name: "inference_run".into(), ok: false, summary: "cancelled by user".into() }, 2.0);
+    assert_eq!(state.conversation.len(), maximum);
+    assert_eq!(state.conversation.iter().any(|entry| entry.id() == invocation_id), fixture["retirement"]["lateResultCreatesEntry"].as_bool().expect("late result policy"));
 }
 
 /// ⏸️ LAW: an approval is ONE conversation row across its whole life — requested, then resolved in
@@ -411,3 +461,66 @@ fn a_new_config_restarts_the_ladder_from_zero_and_clearing_it_disables_the_bridg
     assert_eq!(dialer.turn(&mut state, AgentBridgeSocketState::Absent, 0.0), AgentBridgeDialTurn::Idle);
 }
 //#endregion 🔖️DialLadder
+
+//#region 🔖️InboundShellCommands
+/// 🎛️ `ui_focus` and `ui_reveal` are the gateway's whole live chrome surface, and both arrive as
+/// `ShellCommand` frames. They used to be answered with one blanket "no ShellState reducer twin"
+/// refusal; they are chrome actions this shell has always been able to perform, so they are queued
+/// for the host and only a verb with no chrome here is refused — by name.
+#[test]
+fn ui_focus_and_ui_reveal_are_queued_for_the_host_while_a_chromeless_verb_is_refused_by_name() {
+    let mut state = AgentBridgeState::default();
+    let frame = |seq: u64, json: &str| GatewayToShell::ShellCommand { seq, command: json.as_bytes().to_vec() };
+    state.apply_frame(frame(1, r#"{"type":"focusWindow","windowId":"note-composite"}"#), 0.0);
+    state.apply_frame(frame(2, r#"{"type":"setPanelVisible","anchor":"right","visible":true}"#), 0.0);
+    state.apply_frame(frame(3, r#"{"type":"setPanelPath","anchor":"right","path":["framework.chat"]}"#), 0.0);
+    state.apply_frame(frame(4, r#"{"type":"setStorageScope","scope":"memory"}"#), 0.0);
+
+    let refusals: Vec<_> = state
+        .take_outbox()
+        .into_iter()
+        .filter_map(|frame| match frame {
+            ShellToGateway::ShellCommandResult { in_reply_to, ok, fault } => Some((in_reply_to, ok, fault)),
+            _ => None,
+        })
+        .collect();
+    assert_eq!(refusals.len(), 1, "only the chromeless verb answers before the host runs");
+    assert_eq!(refusals[0].0, 4);
+    assert!(!refusals[0].1);
+    assert_eq!(refusals[0].2.as_deref(), Some("this shell has no chrome for the `setStorageScope` shell command"));
+
+    let inbound = state.take_inbound_shell_commands();
+    assert_eq!(
+        inbound,
+        vec![
+            InboundShellCommand::FocusWindow { seq: 1, window_id: Some("note-composite".to_string()) },
+            InboundShellCommand::Acknowledge { seq: 2 },
+            InboundShellCommand::RevealPanelTab { seq: 3, tab_id: "framework.chat".to_string() },
+        ]
+    );
+    assert!(state.take_inbound_shell_commands().is_empty(), "taking drains the queue");
+}
+
+/// ✅️ The acknowledgement is the HOST's to send, after the chrome actually moved — the whole point
+/// of splitting take/settle rather than answering `ok` at decode time.
+#[test]
+fn the_host_acknowledges_an_inbound_command_only_after_it_applied_it() {
+    let mut state = AgentBridgeState::default();
+    state.apply_frame(GatewayToShell::ShellCommand { seq: 7, command: br#"{"type":"focusWindow","windowId":null}"#.to_vec() }, 0.0);
+    assert!(state.take_outbox().is_empty(), "nothing is answered before the host applies it");
+    let inbound = state.take_inbound_shell_commands();
+    assert_eq!(inbound.len(), 1);
+    assert_eq!(inbound[0].seq(), 7);
+    assert_eq!(inbound[0], InboundShellCommand::FocusWindow { seq: 7, window_id: None });
+    state.settle_shell_command(7, false, Some("no such window".to_string()));
+    assert_eq!(state.take_outbox(), vec![ShellToGateway::ShellCommandResult { in_reply_to: 7, ok: false, fault: Some("no such window".to_string()) }]);
+}
+
+/// 🚨️ A malformed payload is a named refusal, never a panic and never a silent drop.
+#[test]
+fn a_malformed_shell_command_payload_is_refused_with_its_reason() {
+    assert!(decode_inbound_shell_command(1, b"not json").expect_err("malformed").starts_with("malformed ShellCommand JSON"));
+    assert_eq!(decode_inbound_shell_command(2, br#"{"anchor":"right"}"#).expect_err("typeless"), "ShellCommand carried no `type`");
+    assert_eq!(decode_inbound_shell_command(3, br#"{"type":"setPanelPath","anchor":"right","path":[]}"#).expect_err("pathless"), "setPanelPath carried no panel tab id to reveal");
+}
+//#endregion 🔖️InboundShellCommands

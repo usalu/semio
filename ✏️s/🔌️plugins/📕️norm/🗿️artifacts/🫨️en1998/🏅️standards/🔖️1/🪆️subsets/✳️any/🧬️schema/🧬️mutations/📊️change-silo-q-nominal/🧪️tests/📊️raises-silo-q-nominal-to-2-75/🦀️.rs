@@ -67,7 +67,7 @@ async fn change_silo_q_nominal_committed_json_is_canonical() {
     }
     let reencoded = serde_json::to_value(mutation()).expect("change-silo-q-nominal mutation encodes");
     let original: serde_json::Value = serde_json::from_str(MUTATION).expect("change-silo-q-nominal mutation reparses");
-    assert_eq!(reencoded, original, "change-silo-q-nominal/raises-silo-q-nominal-to-2-75: committed mutation JSON is not the canonical externally-tagged ChangeSiloQNominal form carrying newSiloQNominal");
+    assert_eq!(reencoded, original, "change-silo-q-nominal/raises-silo-q-nominal-to-2-75: committed mutation JSON is not the canonical internally-tagged ChangeSiloQNominal form carrying mutation and newSiloQNominal");
 }
 
 /// 🎯️ The declared outcome holds: `change-silo-q-nominal` at 2.75 is applied, not rejected, and carries no

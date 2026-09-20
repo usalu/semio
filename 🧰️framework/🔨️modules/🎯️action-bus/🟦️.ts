@@ -84,16 +84,29 @@ export function partitionWindowMeasures(measures: readonly WindowMeasure[], acti
 }
 
 /**
- * 📇️ Returns the definitions owned by one window kind in declaration order.
+ * 🕹️ Every action dispatchable in one window kind, in declaration order: the window kind's OWN
+ * roster first, then every `AppDefinition.actions` row that no window kind of this app claims for
+ * itself. An id declared by ANY window kind is that window's authored declaration and is never
+ * re-offered from the app roster. Hand-written twin of Rust `window_kind_actions`
+ * (`🛂️manifest/🦀️.rs`); the roster lives on the app because copying it into every window kind made
+ * the package descriptor grow as `apps × window kinds × actions`.
  */
 export function resolveWindowActions(
-  _app: { readonly windowKinds: readonly { readonly actions?: readonly ActionDefinition[] }[] },
+  app: { readonly windowKinds: readonly { readonly actions?: readonly ActionDefinition[] }[]; readonly actions?: readonly ActionDefinition[] },
   windowKind: { readonly actions?: readonly ActionDefinition[] },
 ): ActionDefinition[] {
+  const claimed = new Set<string>();
+  for (const kind of app.windowKinds ?? []) for (const action of kind.actions ?? []) if (action) claimed.add(action.id);
   const resolved: ActionDefinition[] = [];
   const seen = new Set<string>();
   for (const action of windowKind.actions ?? []) {
     if (action && !seen.has(action.id)) {
+      seen.add(action.id);
+      resolved.push(action);
+    }
+  }
+  for (const action of app.actions ?? []) {
+    if (action && !claimed.has(action.id) && !seen.has(action.id)) {
       seen.add(action.id);
       resolved.push(action);
     }

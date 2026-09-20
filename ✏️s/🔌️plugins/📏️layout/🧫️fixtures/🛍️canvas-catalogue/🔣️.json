@@ -1,0 +1,222 @@
+{
+  "mime": "application/x-semio-catalogue-item",
+  "kindMimePrefix": "application/x-semio-catalogue-kind.",
+  "cases": [
+    {
+      "id": "page-over",
+      "action": "canvasDragOver",
+      "args": {
+        "surfaceId": "layout.play.blueprint",
+        "x": 24,
+        "y": 36,
+        "width": 100,
+        "height": 100,
+        "types": [
+          "application/x-semio-catalogue-item",
+          "application/x-semio-catalogue-kind.page"
+        ]
+      },
+      "kind": "page"
+    },
+    {
+      "id": "page-drop",
+      "action": "canvasDrop",
+      "args": {
+        "surfaceId": "layout.play.blueprint",
+        "x": 24,
+        "y": 36,
+        "width": 100,
+        "height": 100,
+        "dragData": "{\"kind\":\"page\"}"
+      },
+      "kind": "page"
+    },
+    {
+      "id": "rect-over",
+      "action": "canvasDragOver",
+      "args": {
+        "surfaceId": "layout.play.blueprint",
+        "x": 24,
+        "y": 36,
+        "width": 100,
+        "height": 100,
+        "types": [
+          "application/x-semio-catalogue-item",
+          "application/x-semio-catalogue-kind.rect"
+        ]
+      },
+      "kind": "rect"
+    },
+    {
+      "id": "rect-drop",
+      "action": "canvasDrop",
+      "args": {
+        "surfaceId": "layout.play.blueprint",
+        "x": 24,
+        "y": 36,
+        "width": 100,
+        "height": 100,
+        "dragData": "{\"kind\":\"rect\"}"
+      },
+      "kind": "rect"
+    },
+    {
+      "id": "text-over",
+      "action": "canvasDragOver",
+      "args": {
+        "surfaceId": "layout.play.blueprint",
+        "x": 24,
+        "y": 36,
+        "width": 100,
+        "height": 100,
+        "types": [
+          "application/x-semio-catalogue-item",
+          "application/x-semio-catalogue-kind.text"
+        ]
+      },
+      "kind": "text"
+    },
+    {
+      "id": "text-drop",
+      "action": "canvasDrop",
+      "args": {
+        "surfaceId": "layout.play.blueprint",
+        "x": 24,
+        "y": 36,
+        "width": 100,
+        "height": 100,
+        "dragData": "{\"kind\":\"text\"}"
+      },
+      "kind": "text"
+    },
+    {
+      "id": "image-over",
+      "action": "canvasDragOver",
+      "args": {
+        "surfaceId": "layout.play.blueprint",
+        "x": 24,
+        "y": 36,
+        "width": 100,
+        "height": 100,
+        "types": [
+          "application/x-semio-catalogue-item",
+          "application/x-semio-catalogue-kind.image"
+        ]
+      },
+      "kind": "image"
+    },
+    {
+      "id": "image-drop",
+      "action": "canvasDrop",
+      "args": {
+        "surfaceId": "layout.play.blueprint",
+        "x": 24,
+        "y": 36,
+        "width": 100,
+        "height": 100,
+        "dragData": "{\"kind\":\"image\"}"
+      },
+      "kind": "image"
+    },
+    {
+      "id": "missing-base",
+      "action": "canvasDragOver",
+      "args": {
+        "surfaceId": "layout.play.blueprint",
+        "x": 24,
+        "y": 36,
+        "width": 100,
+        "height": 100,
+        "types": [
+          "application/x-semio-catalogue-kind.rect"
+        ]
+      },
+      "kind": null
+    },
+    {
+      "id": "ambiguous-preview",
+      "action": "canvasDragOver",
+      "args": {
+        "surfaceId": "layout.play.blueprint",
+        "x": 24,
+        "y": 36,
+        "width": 100,
+        "height": 100,
+        "types": [
+          "application/x-semio-catalogue-item",
+          "application/x-semio-catalogue-kind.rect",
+          "application/x-semio-catalogue-kind.text"
+        ]
+      },
+      "kind": null
+    },
+    {
+      "id": "unknown-preview",
+      "action": "canvasDragOver",
+      "args": {
+        "surfaceId": "layout.play.blueprint",
+        "x": 24,
+        "y": 36,
+        "width": 100,
+        "height": 100,
+        "types": [
+          "application/x-semio-catalogue-item",
+          "application/x-semio-catalogue-kind.circle"
+        ]
+      },
+      "kind": null
+    },
+    {
+      "id": "invalid-json",
+      "action": "canvasDrop",
+      "args": {
+        "surfaceId": "layout.play.blueprint",
+        "x": 24,
+        "y": 36,
+        "width": 100,
+        "height": 100,
+        "dragData": "{"
+      },
+      "kind": null
+    },
+    {
+      "id": "unknown-kind",
+      "action": "canvasDrop",
+      "args": {
+        "surfaceId": "layout.play.blueprint",
+        "x": 24,
+        "y": 36,
+        "width": 100,
+        "height": 100,
+        "dragData": "{\"kind\":\"circle\"}"
+      },
+      "kind": null
+    },
+    {
+      "id": "extra-field",
+      "action": "canvasDrop",
+      "args": {
+        "surfaceId": "layout.play.blueprint",
+        "x": 24,
+        "y": 36,
+        "width": 100,
+        "height": 100,
+        "dragData": "{\"kind\":\"rect\",\"width\":900}"
+      },
+      "kind": null
+    },
+    {
+      "id": "fabricated-kind",
+      "action": "canvasDrop",
+      "args": {
+        "surfaceId": "layout.play.blueprint",
+        "x": 24,
+        "y": 36,
+        "width": 100,
+        "height": 100,
+        "kind": "rect"
+      },
+      "kind": null
+    }
+  ]
+}

@@ -2482,6 +2482,46 @@ pub fn create_cad_app() -> semio_framework_plugin::AppDefinition {
             .action_args("setActiveExample", vec![ActionArgDef::select("exampleId", LocalizedLabel::native("Example", "Beispiel"), vec![
                 ActionArgOption::new(CAD_EXAMPLE_FOREST_LEFT, LocalizedLabel::native("Hexagonal Cut Concrete Forest Left", "Sechseckig geschnittener Betonwald links")),
             ]).required()])
+            // 💬️ Agent-facing descriptions (ticket 26/09/18 slice M5a) — EN first, DE second.
+            .action_describe("addObject", LocalizedLabel::native("Adds a new geometric object to the CAD model.", "Fügt dem CAD-Modell ein neues geometrisches Objekt hinzu."))
+            .action_use_when("addObject", vec!["add a box".into(), "create an object".into(), "place a solid in the model".into()])
+            .action_describe("patchObject", LocalizedLabel::native("Sets one named property of one CAD object — its name, material, dimensions or placement.", "Setzt eine benannte Eigenschaft eines CAD-Objekts — Name, Material, Abmessungen oder Platzierung."))
+            .action_describe("patchSelection", LocalizedLabel::native("Sets one named property on every currently selected CAD object.", "Setzt eine benannte Eigenschaft auf allen aktuell ausgewählten CAD-Objekten."))
+            .action_describe("deleteObject", LocalizedLabel::native("Removes one object from the CAD model by id.", "Entfernt ein Objekt anhand seiner Id aus dem CAD-Modell."))
+            .action_describe("duplicateObject", LocalizedLabel::native("Copies one CAD object and inserts the copy alongside the original.", "Kopiert ein CAD-Objekt und fügt die Kopie neben dem Original ein."))
+            .action_describe("addNode", LocalizedLabel::native("Adds a node to the model tree — the grouping level CAD objects hang from.", "Fügt dem Modellbaum einen Knoten hinzu — die Gruppierungsebene, an der CAD-Objekte hängen."))
+            .action_describe("renameNode", LocalizedLabel::native("Renames one node of the model tree.", "Benennt einen Knoten des Modellbaums um."))
+            .action_describe("translateSelection", LocalizedLabel::native("Moves the selected objects by a delta along x, y and z.", "Verschiebt die ausgewählten Objekte um einen Versatz entlang x, y und z."))
+            .action_use_when("translateSelection", vec!["move the selection".into(), "shift these objects 2 metres east".into()])
+            .action_describe("rotateSelection", LocalizedLabel::native("Rotates the selected objects by an angle around a given axis.", "Dreht die ausgewählten Objekte um einen Winkel um eine angegebene Achse."))
+            .action_use_when("rotateSelection", vec!["rotate the selection 90 degrees".into()])
+            .action_describe("scaleSelection", LocalizedLabel::native("Scales the selected objects by a factor per axis.", "Skaliert die ausgewählten Objekte um einen Faktor je Achse."))
+            .action_describe("applyTransformation", LocalizedLabel::native("Bakes the staged transformation into the selected objects' geometry.", "Schreibt die vorbereitete Transformation fest in die Geometrie der ausgewählten Objekte."))
+            .action_describe("importCadFile", LocalizedLabel::native("Reads a CAD file (STEP, OBJ, STL) into the model.", "Liest eine CAD-Datei (STEP, OBJ, STL) in das Modell ein."))
+            .action_use_when("importCadFile", vec!["import a step file".into(), "load this geometry".into()])
+            .action_describe("setActiveExample", LocalizedLabel::native("Replaces the whole model with one of the plugin's declared playground examples.", "Ersetzt das gesamte Modell durch eines der deklarierten Beispiele des Plugins."))
+            .action_describe("saveCurrent", LocalizedLabel::native("Exports the current model to a downloadable CAD file in the chosen format.", "Exportiert das aktuelle Modell als herunterladbare CAD-Datei im gewählten Format."))
+            .action_use_when("saveCurrent", vec!["export the model as step".into(), "download this as an obj".into()])
+            .action_describe("saveSelected", LocalizedLabel::native("Exports only the selected objects to a downloadable CAD file.", "Exportiert nur die ausgewählten Objekte als herunterladbare CAD-Datei."))
+            .action_describe("saveInPlay", LocalizedLabel::native("Writes the current model back into the playground document it was opened from.", "Schreibt das aktuelle Modell in das Playground-Dokument zurück, aus dem es geöffnet wurde."))
+            .action_describe("loadRawRequest", LocalizedLabel::native("Asks the host to open a raw geometry file and load it into the model.", "Fordert den Host auf, eine Rohgeometriedatei zu öffnen und in das Modell zu laden."))
+            .action_describe("setProjection", LocalizedLabel::native("Switches the viewport between perspective and the orthographic projections.", "Schaltet das Ansichtsfenster zwischen Perspektive und den orthografischen Projektionen um."))
+            .action_describe("toggleSun", LocalizedLabel::native("Turns the scene's sun light on or off.", "Schaltet das Sonnenlicht der Szene ein oder aus."))
+            .action_describe("setSunAzimuth", LocalizedLabel::native("Sets the sun's compass direction, in degrees.", "Legt die Himmelsrichtung der Sonne in Grad fest."))
+            .action_describe("setSunElevation", LocalizedLabel::native("Sets the sun's height above the horizon, in degrees.", "Legt die Höhe der Sonne über dem Horizont in Grad fest."))
+            .action_describe("setSunIntensity", LocalizedLabel::native("Sets how bright the scene's sun light is.", "Legt fest, wie hell das Sonnenlicht der Szene ist."))
+            // ⚠️ Discards content no later verb reconstructs — the gateway asks a human first.
+            .action_destructive("deleteObject")
+            .action_destructive("setActiveExample")
+            // 🖱️ Raw input plumbing — the 3D viewport and the engagement bar feed these, agents never do.
+            .action_audience("engagementSubmit", semio_framework_plugin::CapabilityAudience::Input)
+            .action_audience("engagementInput", semio_framework_plugin::CapabilityAudience::Input)
+            .action_audience("engagementPossibleSelect", semio_framework_plugin::CapabilityAudience::Input)
+            .action_audience("engagementRepeatLast", semio_framework_plugin::CapabilityAudience::Input)
+            .action_audience("engagementAbort", semio_framework_plugin::CapabilityAudience::Input)
+            .action_audience("worldPointerDown", semio_framework_plugin::CapabilityAudience::Input)
+            .action_audience("worldPointerMove", semio_framework_plugin::CapabilityAudience::Input)
+            .action_audience("referenceHover", semio_framework_plugin::CapabilityAudience::Input)
             .utility(cad_dislocate_utility())
             .window_kind_utilities(shape::WINDOW_KIND_ID, cad_dislocate_utility_refs())
             .window_kind_utilities(building::WINDOW_KIND_ID, cad_dislocate_utility_refs())
@@ -2594,3 +2634,11 @@ pub fn default_working_scene() -> CadWorkingScene {
 pub(crate) mod unit_tests;
 
 //#endregion 🧪️Tests
+
+//#region 🪢️TaxonomyMounts
+#[path = "📚️examples/🎬️demo-session/🦀️.rs"]
+pub mod demo_session;
+#[cfg(test)]
+#[path = "📚️examples/🎬️demo-session/🧪️tests/🧩️example/🦀️.rs"]
+mod example;
+//#endregion 🪢️TaxonomyMounts

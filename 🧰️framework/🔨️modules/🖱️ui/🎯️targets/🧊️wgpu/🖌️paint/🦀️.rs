@@ -18,17 +18,17 @@
 use crate::wgpu::arena::NodeId;
 #[cfg(test)]
 use crate::wgpu::chrome::chrome_item_bg;
-use crate::wgpu::chrome::{item_bg, item_text, push_chrome_border, push_control_border, push_icon, ICON_TINY, SIZE_TINY};
-use crate::wgpu::component::ui::{
-    UiControlNode, UiNode, UiPresence, UiProgressNode, UiStackNode, UiState, UiStatus, UiTreeItemNode, UiTreeNode, UI_INSPECTOR_MIXED_PLACEHOLDER,
-};
+use crate::wgpu::chrome::{item_bg, item_text, push_chrome_border, push_control_border, push_icon, UiDriverDrag, ICON_TINY, SIZE_TINY};
 #[cfg(test)]
-use crate::wgpu::component::ui::{UiButtonNode, UiComponentSceneNode, UiExternalSlotNode, UiFieldNode, UiGroupNode, UiIconSelectNode, UiImageNode, UiInputNode, UiKeyValueNode, UiNumberStepperNode, UiRingNode, UiSectionNode, UiSelectItem, UiSelectNode, UiSliderNode, UiTextNode, UiToggleNode};
+use crate::wgpu::component::ui::{
+    UiButtonNode, UiComponentSceneNode, UiExternalSlotNode, UiFieldNode, UiGroupNode, UiIconSelectNode, UiImageNode, UiInputNode, UiKeyValueNode, UiNumberStepperNode, UiRingNode, UiSectionNode, UiSelectItem, UiSelectNode, UiSliderNode, UiTextNode,
+    UiToggleNode,
+};
+use crate::wgpu::component::ui::{UiControlNode, UiNode, UiPresence, UiProgressNode, UiStackNode, UiState, UiStatus, UiTreeItemNode, UiTreeNode, UI_INSPECTOR_MIXED_PLACEHOLDER};
 use crate::wgpu::draw::{DrawList, IconAtlas};
 use crate::wgpu::geometry::Rect;
-use crate::wgpu::layout::{tree_row_control_rect, TreeRowMetrics};
-#[cfg(test)]
 use crate::wgpu::layout::tree_section_header_height;
+use crate::wgpu::layout::{tree_drag_handle_rect, tree_drag_handle_reservation, tree_drag_role, TreeDragRole, TreeRowMetrics};
 use crate::wgpu::text::FontAtlas;
 use crate::wgpu::theme::{Level, Rgba, Theme};
 #[cfg(test)]
@@ -54,6 +54,7 @@ const TREE_ICON_SIZE: f32 = crate::wgpu::chrome::ICON_TREE_ROW;
 pub const RETAINED_NODE_TEXT_MAX_BYTES: usize = 4 * 1024 * 1024;
 const RETAINED_NODE_COLLECTION_ITEMS: usize = 256;
 const RETAINED_NODE_FIXED_OUTPUT_ITEMS: usize = 8;
+pub(crate) const RETAINED_NUMBER_STEPPER_CHROME_OUTPUT_ITEMS: usize = 10;
 const RETAINED_NODE_FIXED_OUTPUT_BYTES: usize = 64 * 1024;
 const RETAINED_TREE_DEPTH: usize = 64;
 
@@ -136,7 +137,17 @@ pub fn paint_retained_glyph_step(value: &str, bounds: Rect, size: f32, color: Rg
 /// sized for one (see `TextWeight::strikes`'s own doc comment, and the law
 /// `a_semibold_glyph_strike_prices_and_paints_two_instances`).
 #[allow(clippy::too_many_arguments, reason = "one arg per retained text input; a struct here is a T2 restructure of every glyph call site")]
-pub fn paint_retained_glyph_step_weighted(value: &str, bounds: Rect, size: f32, color: Rgba, flow: RetainedTextFlow, weight: crate::wgpu::text::TextWeight, atlas: &mut FontAtlas, draw: &mut DrawList, cursor: &mut RetainedGlyphCursor) -> RetainedGlyphStep {
+pub fn paint_retained_glyph_step_weighted(
+    value: &str,
+    bounds: Rect,
+    size: f32,
+    color: Rgba,
+    flow: RetainedTextFlow,
+    weight: crate::wgpu::text::TextWeight,
+    atlas: &mut FontAtlas,
+    draw: &mut DrawList,
+    cursor: &mut RetainedGlyphCursor,
+) -> RetainedGlyphStep {
     paint_retained_glyph_step_inner(value, bounds, size, color, flow, weight, atlas, draw, cursor)
 }
 
@@ -246,11 +257,28 @@ pub(crate) struct RetainedNodePaintCursor {
     visited: usize,
     ascending: bool,
     selected: Option<usize>,
+    popup_route: bool,
 }
 
 impl Default for RetainedNodePaintCursor {
     fn default() -> Self {
-        Self { node: None, glyph: RetainedGlyphCursor::default(), origin_x: 0.0, origin_y: 0.0, chrome: false, phase: 0, item: 0, section: 0, depth: 0, path: [0; RETAINED_TREE_DEPTH], row_y: 0.0, visited: 0, ascending: false, selected: None }
+        Self {
+            node: None,
+            glyph: RetainedGlyphCursor::default(),
+            origin_x: 0.0,
+            origin_y: 0.0,
+            chrome: false,
+            phase: 0,
+            item: 0,
+            section: 0,
+            depth: 0,
+            path: [0; RETAINED_TREE_DEPTH],
+            row_y: 0.0,
+            visited: 0,
+            ascending: false,
+            selected: None,
+            popup_route: false,
+        }
     }
 }
 
@@ -262,6 +290,17 @@ pub(crate) enum RetainedNodePaintStep {
 }
 
 impl RetainedNodePaintCursor {
+    pub(crate) fn is_active(&self) -> bool {
+        self.node.is_some()
+    }
+
+    pub(crate) fn census(&self) -> String {
+        format!(
+            "node={:?} phase={} section={} item={} depth={} glyph-byte={} glyph-line={} visited={} chrome={} popup={}",
+            self.node, self.phase, self.section, self.item, self.depth, self.glyph.byte, self.glyph.line, self.visited, self.chrome, self.popup_route
+        )
+    }
+
     #[cfg(test)]
     pub(crate) fn terminal_is_empty(&self) -> bool {
         self.node.is_none()
@@ -289,6 +328,10 @@ impl RetainedNodePaintCursor {
         RetainedNodePaintStep::Complete
     }
 
+    pub(crate) fn cancel_draw_route(&mut self, draw: &mut DrawList) {
+        let _ = retained_select_close_route(draw, self);
+    }
+
     fn reset_progress(&mut self) {
         self.glyph.reset();
         self.chrome = false;
@@ -301,6 +344,7 @@ impl RetainedNodePaintCursor {
         self.visited = 0;
         self.ascending = false;
         self.selected = None;
+        self.popup_route = false;
     }
 
     fn advance(&mut self, phase: u16) {
@@ -312,9 +356,27 @@ impl RetainedNodePaintCursor {
 }
 
 fn retained_fixed_output(draw: &mut DrawList, paint: impl FnOnce(&mut DrawList)) -> Result<(), crate::wgpu::draw::RetainedOutputError> {
-    draw.begin_retained_output(RETAINED_NODE_FIXED_OUTPUT_ITEMS, RETAINED_NODE_FIXED_OUTPUT_BYTES)?;
+    retained_fixed_output_budgeted(draw, RETAINED_NODE_FIXED_OUTPUT_ITEMS, paint)
+}
+
+fn retained_fixed_output_budgeted(draw: &mut DrawList, items: usize, paint: impl FnOnce(&mut DrawList)) -> Result<(), crate::wgpu::draw::RetainedOutputError> {
+    draw.begin_retained_output(items, RETAINED_NODE_FIXED_OUTPUT_BYTES)?;
     paint(draw);
     draw.finish_retained_output().map(|_| ())
+}
+
+fn retained_select_close_route(draw: &mut DrawList, cursor: &mut RetainedNodePaintCursor) -> Result<(), crate::wgpu::draw::RetainedOutputError> {
+    if !cursor.popup_route {
+        return Ok(());
+    }
+    let result = retained_fixed_output(draw, |draw| {
+        draw.pop_scissor();
+        draw.end_glass_content();
+    });
+    if result.is_ok() {
+        cursor.popup_route = false;
+    }
+    result
 }
 
 /// ➖️➕️ Where one stepper segment's glyph run starts: padded in, and dropped to the baseline the
@@ -349,43 +411,68 @@ fn retained_text_node_step_weighted(value: &str, bounds: Rect, size: f32, color:
     }
 }
 
-fn retained_tree_item_at<'a>(tree: &'a UiTreeNode, cursor: &RetainedNodePaintCursor) -> Option<&'a UiTreeItemNode> {
+fn retained_tree_index(len: usize, index: usize, reversed: bool) -> Option<usize> {
+    if index >= len {
+        return None;
+    }
+    Some(if reversed { len - index - 1 } else { index })
+}
+
+fn retained_tree_section_at<'a>(tree: &'a UiTreeNode, index: usize, reversed: bool) -> Option<&'a crate::wgpu::component::ui::UiTreeSectionNode> {
+    tree.sections.get(retained_tree_index(tree.sections.len(), index, reversed)?)
+}
+
+fn retained_tree_item_at<'a>(tree: &'a UiTreeNode, cursor: &RetainedNodePaintCursor, reversed: bool) -> Option<&'a UiTreeItemNode> {
     if cursor.depth == 0 {
         return None;
     }
-    let section = tree.sections.get(cursor.section)?;
-    let mut item = section.items.get(cursor.path[0])?;
+    let section = retained_tree_section_at(tree, cursor.section, reversed)?;
+    let mut item = section.items.get(retained_tree_index(section.items.len(), cursor.path[0], reversed)?)?;
     for level in 1..cursor.depth {
-        item = item.items.as_ref()?.get(cursor.path[level])?;
+        let items = item.items.as_ref()?;
+        item = items.get(retained_tree_index(items.len(), cursor.path[level], reversed)?)?;
     }
     Some(item)
 }
 
-fn retained_tree_sibling_count(tree: &UiTreeNode, cursor: &RetainedNodePaintCursor) -> Option<usize> {
+fn retained_tree_item_node_at(retained: &UiTree, tree_id: NodeId, tree: &UiTreeNode, cursor: &RetainedNodePaintCursor, reversed: bool) -> Option<NodeId> {
+    if cursor.depth == 0 {
+        return None;
+    }
+    let section = retained_tree_section_at(tree, cursor.section, reversed)?;
+    let mut parent = retained.explicit_child(tree_id, &section.id)?;
+    let mut items = section.items.as_slice();
+    for level in 0..cursor.depth {
+        let item = items.get(retained_tree_index(items.len(), cursor.path[level], reversed)?)?;
+        parent = retained.explicit_child(parent, &item.id)?;
+        items = item.items.as_deref().unwrap_or(&[]);
+    }
+    Some(parent)
+}
+
+fn retained_tree_item_row(retained: &UiTree, tree_id: NodeId, tree: &UiTreeNode, bounds: Rect, cursor: &RetainedNodePaintCursor, metrics: &TreeRowMetrics, reversed: bool) -> Option<(Rect, bool)> {
+    let item = retained_tree_item_at(tree, cursor, reversed)?;
+    let row_id = retained_tree_item_node_at(retained, tree_id, tree, cursor, reversed)?;
+    let open = retained.disclosure_open(row_id).unwrap_or(item.default_open.unwrap_or(false)) && item.items.as_deref().is_some_and(|items| !items.is_empty());
+    let height = crate::wgpu::mounted_layout::live_tree_item_height(retained, row_id, item, metrics, cursor.depth - 1);
+    let y = if reversed && open { cursor.row_y + height - metrics.row_height } else { cursor.row_y };
+    Some((Rect::new(bounds.x, y, bounds.w, metrics.row_height), open))
+}
+
+fn retained_tree_sibling_count(tree: &UiTreeNode, cursor: &RetainedNodePaintCursor, reversed: bool) -> Option<usize> {
     if cursor.depth == 0 {
         return None;
     }
     if cursor.depth == 1 {
-        return Some(tree.sections.get(cursor.section)?.items.len());
+        return Some(retained_tree_section_at(tree, cursor.section, reversed)?.items.len());
     }
-    let mut parent = tree.sections.get(cursor.section)?.items.get(cursor.path[0])?;
+    let section = retained_tree_section_at(tree, cursor.section, reversed)?;
+    let mut parent = section.items.get(retained_tree_index(section.items.len(), cursor.path[0], reversed)?)?;
     for level in 1..cursor.depth - 1 {
-        parent = parent.items.as_ref()?.get(cursor.path[level])?;
+        let items = parent.items.as_ref()?;
+        parent = items.get(retained_tree_index(items.len(), cursor.path[level], reversed)?)?;
     }
     parent.items.as_ref().map(Vec::len)
-}
-
-fn retained_control_text(control: &UiControlNode) -> Option<&str> {
-    match control {
-        UiControlNode::Input(node) => Some(if node.value.is_empty() { node.placeholder.as_ref().map_or("", Label::as_str) } else { node.value.as_str() }),
-        UiControlNode::Select(node) => node.placeholder.as_ref().map(Label::as_str),
-        UiControlNode::Toggle(node) => node.text.as_ref().map(Label::as_str),
-        UiControlNode::Button(node) => Some(node.label.as_str()),
-        UiControlNode::KeyValue(node) => node.entries.first().map(|entry| entry.value.as_str()),
-        UiControlNode::Slider(node) => node.unit.as_deref(),
-        UiControlNode::NumberStepper(_) | UiControlNode::Ring(_) => None,
-        UiControlNode::IconSelect(node) => Some(node.value.as_str()),
-    }
 }
 
 fn retained_control_is_bounded(control: &UiControlNode) -> bool {
@@ -396,7 +483,17 @@ fn retained_control_is_bounded(control: &UiControlNode) -> bool {
     }
 }
 
-fn retained_tree_node_step(tree: &UiTreeNode, bounds: Rect, theme: &Theme, atlas: &mut FontAtlas, icons: Option<&IconAtlas>, draw: &mut DrawList, cursor: &mut RetainedNodePaintCursor) -> RetainedNodePaintStep {
+fn retained_tree_content_height(retained: &UiTree, tree_id: NodeId, tree: &UiTreeNode, metrics: &TreeRowMetrics) -> f32 {
+    crate::wgpu::mounted_layout::retained_tree_height(retained, tree_id, tree, metrics)
+}
+
+/// 🔽️ Translates a Select's window-local popup to the exact trigger bounds this paint frame uses.
+fn retained_select_popup_at_bounds(tree: &UiTree, id: NodeId, bounds: Rect, popup: crate::wgpu::select::SelectPopupGeometry) -> Option<crate::wgpu::select::SelectPopupGeometry> {
+    let local = tree.absolute_rect(id)?;
+    Some(popup.translated(bounds.x - local.x, bounds.y - local.y))
+}
+
+fn retained_tree_node_step(retained: &UiTree, tree_id: NodeId, tree: &UiTreeNode, bounds: Rect, theme: &Theme, driver_drag: UiDriverDrag, reversed: bool, atlas: &mut FontAtlas, icons: Option<&IconAtlas>, draw: &mut DrawList, cursor: &mut RetainedNodePaintCursor) -> RetainedNodePaintStep {
     if tree.sections.len() > RETAINED_NODE_COLLECTION_ITEMS {
         return RetainedNodePaintStep::Fault;
     }
@@ -404,7 +501,8 @@ fn retained_tree_node_step(tree: &UiTreeNode, bounds: Rect, theme: &Theme, atlas
     match cursor.phase {
         0 => {
             let result = retained_fixed_output(draw, |draw| draw.push_scissor(bounds));
-            cursor.row_y = bounds.y;
+            let content_height = retained_tree_content_height(retained, tree_id, tree, &metrics);
+            cursor.row_y = if reversed { bounds.y + (bounds.h - content_height).max(0.0) } else { bounds.y };
             cursor.advance(1);
             if result.is_err() {
                 RetainedNodePaintStep::Fault
@@ -413,7 +511,7 @@ fn retained_tree_node_step(tree: &UiTreeNode, bounds: Rect, theme: &Theme, atlas
             }
         }
         1 => {
-            let Some(section) = tree.sections.get(cursor.section) else {
+            let Some(section) = retained_tree_section_at(tree, cursor.section, reversed) else {
                 cursor.advance(10);
                 return RetainedNodePaintStep::Pending;
             };
@@ -425,13 +523,17 @@ fn retained_tree_node_step(tree: &UiTreeNode, bounds: Rect, theme: &Theme, atlas
                 cursor.advance(1);
                 return RetainedNodePaintStep::Pending;
             }
+            let open = retained.tree_section_open(tree_id, &section.id, section.default_open.unwrap_or(true));
+            let header_height = tree_section_header_height(section, &metrics);
+            let section_height = retained.explicit_child(tree_id, &section.id).map_or(header_height, |section_id| crate::wgpu::mounted_layout::live_tree_section_height(retained, section_id, section, &metrics));
+            let header_y = if reversed { cursor.row_y + section_height - header_height } else { cursor.row_y };
             if !cursor.chrome {
                 cursor.chrome = true;
                 let Some(label) = section.label.as_ref() else { return RetainedNodePaintStep::Pending };
-                let color = if section.default_open.unwrap_or(true) { theme.text_element } else { theme.text_muted };
+                let color = if open { theme.text_element } else { theme.text_muted };
                 let result = retained_fixed_output(draw, |draw| {
                     if let Some(icons) = icons {
-                        push_icon(draw, icons, "folder", bounds.x + TREE_TOGGLE_WIDTH + theme.gap_standard, cursor.row_y + (metrics.header_height - TREE_ICON_SIZE) * 0.5, TREE_ICON_SIZE, color);
+                        push_icon(draw, icons, "folder", bounds.x + TREE_TOGGLE_WIDTH + theme.gap_standard, header_y + (header_height - TREE_ICON_SIZE) * 0.5, TREE_ICON_SIZE, color);
                     }
                 });
                 let _ = label;
@@ -441,11 +543,13 @@ fn retained_tree_node_step(tree: &UiTreeNode, bounds: Rect, theme: &Theme, atlas
                 cursor.advance(2);
                 return RetainedNodePaintStep::Pending;
             };
-            let color = if section.default_open.unwrap_or(true) { theme.text_element } else { theme.text_muted };
-            let label_bounds = Rect::new(bounds.x + TREE_TOGGLE_WIDTH + theme.gap_standard + TREE_ICON_SIZE + theme.gap_standard, cursor.row_y, bounds.w, metrics.header_height);
+            let color = if open { theme.text_element } else { theme.text_muted };
+            let label_bounds = Rect::new(bounds.x + TREE_TOGGLE_WIDTH + theme.gap_standard + TREE_ICON_SIZE + theme.gap_standard, header_y, bounds.w, header_height);
             match retained_text_node_step(label.as_str(), label_bounds, theme.font_size_small, color, atlas, draw, cursor) {
                 RetainedNodePaintStep::Complete => {
-                    cursor.row_y += metrics.header_height;
+                    if !reversed {
+                        cursor.row_y += header_height;
+                    }
                     cursor.advance(2);
                     RetainedNodePaintStep::Pending
                 }
@@ -453,8 +557,12 @@ fn retained_tree_node_step(tree: &UiTreeNode, bounds: Rect, theme: &Theme, atlas
             }
         }
         2 => {
-            let Some(section) = tree.sections.get(cursor.section) else { return RetainedNodePaintStep::Fault };
-            if section.items.is_empty() {
+            let Some(section) = retained_tree_section_at(tree, cursor.section, reversed) else { return RetainedNodePaintStep::Fault };
+            let open = retained.tree_section_open(tree_id, &section.id, section.default_open.unwrap_or(true));
+            if !open || section.items.is_empty() {
+                if reversed {
+                    cursor.row_y += tree_section_header_height(section, &metrics);
+                }
                 cursor.section += 1;
                 cursor.advance(1);
             } else {
@@ -465,7 +573,7 @@ fn retained_tree_node_step(tree: &UiTreeNode, bounds: Rect, theme: &Theme, atlas
             RetainedNodePaintStep::Pending
         }
         3 => {
-            let Some(item) = retained_tree_item_at(tree, cursor) else { return RetainedNodePaintStep::Fault };
+            let Some(item) = retained_tree_item_at(tree, cursor, reversed) else { return RetainedNodePaintStep::Fault };
             if item.items.as_ref().is_some_and(|items| items.len() > RETAINED_NODE_COLLECTION_ITEMS)
                 || item.actions.as_ref().is_some_and(|actions| actions.len() > RETAINED_NODE_COLLECTION_ITEMS)
                 || item.control.as_ref().is_some_and(|control| !retained_control_is_bounded(control))
@@ -481,7 +589,7 @@ fn retained_tree_node_step(tree: &UiTreeNode, bounds: Rect, theme: &Theme, atlas
                 cursor.advance(8);
                 return RetainedNodePaintStep::Pending;
             }
-            let row = Rect::new(bounds.x, cursor.row_y, bounds.w, metrics.row_height);
+            let Some((row, open)) = retained_tree_item_row(retained, tree_id, tree, bounds, cursor, &metrics, reversed) else { return RetainedNodePaintStep::Fault };
             let selected = item.presence.selected;
             let previewed = item.presence.state == UiState::Previewed;
             let result = retained_fixed_output(draw, |draw| {
@@ -507,7 +615,12 @@ fn retained_tree_node_step(tree: &UiTreeNode, bounds: Rect, theme: &Theme, atlas
                 let indent = bounds.x + (cursor.depth - 1) as f32 * TREE_INDENT_PER_LEVEL + TREE_TOGGLE_WIDTH;
                 if item.items.as_ref().is_some_and(|items| !items.is_empty()) {
                     if let Some(icons) = icons {
-                        let chevron = if item.default_open.unwrap_or(false) { "chevron-down" } else { "chevron-right" };
+                        let chevron = match (reversed, open) {
+                            (true, true) => "chevron-up",
+                            (true, false) => "chevron-left",
+                            (false, true) => "chevron-down",
+                            (false, false) => "chevron-right",
+                        };
                         push_icon(draw, icons, chevron, indent - TREE_TOGGLE_WIDTH, row.y + (metrics.row_height - SIZE_TINY) * 0.5, SIZE_TINY, theme.text_element);
                     }
                 }
@@ -524,18 +637,21 @@ fn retained_tree_node_step(tree: &UiTreeNode, bounds: Rect, theme: &Theme, atlas
             }
         }
         4 => {
-            let Some(item) = retained_tree_item_at(tree, cursor) else { return RetainedNodePaintStep::Fault };
+            let Some(item) = retained_tree_item_at(tree, cursor, reversed) else { return RetainedNodePaintStep::Fault };
             if !item.presence.visible() {
                 cursor.advance(8);
                 return RetainedNodePaintStep::Pending;
             }
+            let Some((row, _)) = retained_tree_item_row(retained, tree_id, tree, bounds, cursor, &metrics, reversed) else { return RetainedNodePaintStep::Fault };
             let indent = bounds.x + (cursor.depth - 1) as f32 * TREE_INDENT_PER_LEVEL + TREE_TOGGLE_WIDTH;
             let label_x = indent + if item.icon_id.is_some() { TREE_ICON_SIZE + theme.gap_standard } else { 0.0 };
             let selected = item.presence.selected;
             let previewed = item.presence.state == UiState::Previewed;
             let color = if selected || previewed { theme.active_foreground } else { theme.text_element };
             let color = if item.dimmed.unwrap_or(false) || item.presence.state == UiState::Disabled { color.with_alpha(color.a * 0.5) } else { color };
-            match retained_text_node_step(item.label.as_str(), Rect::new(label_x, cursor.row_y, bounds.w, metrics.row_height), theme.font_size_body, color, atlas, draw, cursor) {
+            let trailing = if driver_drag == UiDriverDrag::Handle && tree_drag_role(item).is_some() { tree_drag_handle_reservation(&metrics) } else { 0.0 };
+            let label_width = (bounds.x + bounds.w - trailing - label_x).max(1.0);
+            match retained_text_node_step(item.label.as_str(), Rect::new(label_x, row.y, label_width, metrics.row_height), theme.font_size_body, color, atlas, draw, cursor) {
                 RetainedNodePaintStep::Complete => {
                     cursor.advance(5);
                     RetainedNodePaintStep::Pending
@@ -544,14 +660,18 @@ fn retained_tree_node_step(tree: &UiTreeNode, bounds: Rect, theme: &Theme, atlas
             }
         }
         5 => {
-            let Some(item) = retained_tree_item_at(tree, cursor) else { return RetainedNodePaintStep::Fault };
+            let Some(item) = retained_tree_item_at(tree, cursor, reversed) else { return RetainedNodePaintStep::Fault };
             let Some(description) = item.description.as_deref() else {
                 cursor.advance(6);
                 return RetainedNodePaintStep::Pending;
             };
+            let Some((row, _)) = retained_tree_item_row(retained, tree_id, tree, bounds, cursor, &metrics, reversed) else { return RetainedNodePaintStep::Fault };
             let indent = bounds.x + (cursor.depth - 1) as f32 * TREE_INDENT_PER_LEVEL + TREE_TOGGLE_WIDTH;
             let offset = item.label.as_str().len().min(RETAINED_NODE_COLLECTION_ITEMS) as f32 * theme.font_size_body * 0.5;
-            match retained_text_node_step(description, Rect::new(indent + TREE_ICON_SIZE + theme.gap_standard + offset, cursor.row_y, bounds.w, metrics.row_height), theme.font_size_small, theme.text_muted, atlas, draw, cursor) {
+            let description_x = indent + TREE_ICON_SIZE + theme.gap_standard + offset;
+            let trailing = if driver_drag == UiDriverDrag::Handle && tree_drag_role(item).is_some() { tree_drag_handle_reservation(&metrics) } else { 0.0 };
+            let description_width = (bounds.x + bounds.w - trailing - description_x).max(1.0);
+            match retained_text_node_step(description, Rect::new(description_x, row.y, description_width, metrics.row_height), theme.font_size_small, theme.text_muted, atlas, draw, cursor) {
                 RetainedNodePaintStep::Complete => {
                     cursor.advance(6);
                     RetainedNodePaintStep::Pending
@@ -560,7 +680,20 @@ fn retained_tree_node_step(tree: &UiTreeNode, bounds: Rect, theme: &Theme, atlas
             }
         }
         6 => {
-            let Some(item) = retained_tree_item_at(tree, cursor) else { return RetainedNodePaintStep::Fault };
+            let Some(item) = retained_tree_item_at(tree, cursor, reversed) else { return RetainedNodePaintStep::Fault };
+            if !cursor.chrome {
+                cursor.chrome = true;
+                if driver_drag == UiDriverDrag::Handle {
+                    if let (Some(icons), Some(role)) = (icons, tree_drag_role(item)) {
+                        let Some((row, _)) = retained_tree_item_row(retained, tree_id, tree, bounds, cursor, &metrics, reversed) else { return RetainedNodePaintStep::Fault };
+                        let handle = tree_drag_handle_rect(bounds.w, &metrics);
+                        let icon = if role == TreeDragRole::Transfer { "move" } else { "grip-vertical" };
+                        let color = if item.presence.selected || item.presence.state == UiState::Previewed { theme.active_foreground } else { theme.text_muted };
+                        let result = retained_fixed_output(draw, |draw| push_icon(draw, icons, icon, bounds.x + handle.x, row.y + handle.y, handle.w, color));
+                        return if result.is_err() { RetainedNodePaintStep::Fault } else { RetainedNodePaintStep::Pending };
+                    }
+                }
+            }
             let actions = item.actions.as_deref().unwrap_or(&[]);
             if cursor.item >= actions.len() {
                 cursor.advance(7);
@@ -571,10 +704,12 @@ fn retained_tree_node_step(tree: &UiTreeNode, bounds: Rect, theme: &Theme, atlas
             if action.placement() == UiTreeActionPlacement::Menu {
                 return RetainedNodePaintStep::Pending;
             }
-            let x = bounds.x + bounds.w - theme.gap_standard - cursor.item as f32 * (TREE_ICON_SIZE + theme.padding_standard);
+            let trailing = if driver_drag == UiDriverDrag::Handle && tree_drag_role(item).is_some() { tree_drag_handle_reservation(&metrics) } else { 0.0 };
+            let x = bounds.x + bounds.w - theme.gap_standard - trailing - cursor.item as f32 * (TREE_ICON_SIZE + theme.padding_standard);
+            let Some((row, _)) = retained_tree_item_row(retained, tree_id, tree, bounds, cursor, &metrics, reversed) else { return RetainedNodePaintStep::Fault };
             let result = retained_fixed_output(draw, |draw| {
                 if let Some(icons) = icons {
-                    push_icon(draw, icons, action.icon_id.as_str(), x, cursor.row_y + (metrics.row_height - TREE_ICON_SIZE) * 0.5, TREE_ICON_SIZE, theme.text_element);
+                    push_icon(draw, icons, action.icon_id.as_str(), x, row.y + (metrics.row_height - TREE_ICON_SIZE) * 0.5, TREE_ICON_SIZE, theme.text_element);
                 }
             });
             if result.is_err() {
@@ -584,50 +719,17 @@ fn retained_tree_node_step(tree: &UiTreeNode, bounds: Rect, theme: &Theme, atlas
             }
         }
         7 => {
-            let Some(item) = retained_tree_item_at(tree, cursor) else { return RetainedNodePaintStep::Fault };
-            let Some(control) = item.control.as_ref() else {
-                cursor.advance(8);
-                return RetainedNodePaintStep::Pending;
-            };
-            let relative_control = tree_row_control_rect(bounds.w, &metrics);
-            let control_rect = Rect::new(bounds.x + relative_control.x, cursor.row_y + relative_control.y, relative_control.w, relative_control.h);
-            if !cursor.chrome {
-                let result = retained_fixed_output(draw, |draw| push_control_border(draw, control_rect, theme, theme.border_normal, theme.input_bg));
-                cursor.chrome = true;
-                return if result.is_err() { RetainedNodePaintStep::Fault } else { RetainedNodePaintStep::Pending };
-            }
-            if let UiControlNode::Select(select) = control {
-                if cursor.selected.is_none() && cursor.item < select.items.len() {
-                    if select.items[cursor.item].value == select.value {
-                        cursor.selected = Some(cursor.item);
-                    }
-                    cursor.item += 1;
-                    return RetainedNodePaintStep::Pending;
-                }
-            }
-            let value = match control {
-                UiControlNode::Select(select) => cursor.selected.and_then(|index| select.items.get(index)).map(|item| item.label.as_str()).or_else(|| select.placeholder.as_ref().map(Label::as_str)),
-                control => retained_control_text(control),
-            };
-            let Some(value) = value else {
-                cursor.advance(8);
-                return RetainedNodePaintStep::Pending;
-            };
-            match retained_text_node_step(value, control_rect, theme.font_size_small, theme.text, atlas, draw, cursor) {
-                RetainedNodePaintStep::Complete => {
-                    cursor.advance(8);
-                    RetainedNodePaintStep::Pending
-                }
-                step => step,
-            }
+            cursor.advance(8);
+            RetainedNodePaintStep::Pending
         }
         8 => {
-            let Some(item) = retained_tree_item_at(tree, cursor) else { return RetainedNodePaintStep::Fault };
-            if item.presence.visible() {
+            let Some(item) = retained_tree_item_at(tree, cursor, reversed) else { return RetainedNodePaintStep::Fault };
+            let Some((_, open)) = retained_tree_item_row(retained, tree_id, tree, bounds, cursor, &metrics, reversed) else { return RetainedNodePaintStep::Fault };
+            if item.presence.visible() && (!reversed || !open) {
                 cursor.row_y += metrics.row_height;
             }
             cursor.selected = None;
-            if item.default_open.unwrap_or(false) && item.items.as_ref().is_some_and(|items| !items.is_empty()) {
+            if open {
                 if cursor.depth >= RETAINED_TREE_DEPTH {
                     return RetainedNodePaintStep::Fault;
                 }
@@ -644,7 +746,7 @@ fn retained_tree_node_step(tree: &UiTreeNode, bounds: Rect, theme: &Theme, atlas
             if !cursor.ascending || cursor.depth == 0 {
                 return RetainedNodePaintStep::Fault;
             }
-            let Some(siblings) = retained_tree_sibling_count(tree, cursor) else { return RetainedNodePaintStep::Fault };
+            let Some(siblings) = retained_tree_sibling_count(tree, cursor, reversed) else { return RetainedNodePaintStep::Fault };
             let level = cursor.depth - 1;
             if cursor.path[level] + 1 < siblings {
                 cursor.path[level] += 1;
@@ -652,7 +754,15 @@ fn retained_tree_node_step(tree: &UiTreeNode, bounds: Rect, theme: &Theme, atlas
             } else {
                 cursor.path[level] = 0;
                 cursor.depth -= 1;
+                if reversed && cursor.depth > 0 {
+                    cursor.row_y += metrics.row_height;
+                }
                 if cursor.depth == 0 {
+                    if reversed {
+                        if let Some(section) = retained_tree_section_at(tree, cursor.section, reversed) {
+                            cursor.row_y += tree_section_header_height(section, &metrics);
+                        }
+                    }
                     cursor.section += 1;
                     cursor.advance(1);
                 }
@@ -683,6 +793,24 @@ pub(crate) fn paint_node_step(
     atlas: &mut FontAtlas,
     icons: Option<&IconAtlas>,
     has_scene_host: bool,
+    draw: &mut DrawList,
+    cursor: &mut RetainedNodePaintCursor,
+) -> RetainedNodePaintStep {
+    paint_node_step_with_driver(tree, id, origin_x, origin_y, theme, atlas, icons, has_scene_host, UiDriverDrag::Handle, false, draw, cursor)
+}
+
+#[allow(clippy::too_many_arguments, reason = "one retained paint context plus the canonical driver drag axis")]
+pub(crate) fn paint_node_step_with_driver(
+    tree: &UiTree,
+    id: NodeId,
+    origin_x: f32,
+    origin_y: f32,
+    theme: &Theme,
+    atlas: &mut FontAtlas,
+    icons: Option<&IconAtlas>,
+    has_scene_host: bool,
+    driver_drag: UiDriverDrag,
+    block_reversed: bool,
     draw: &mut DrawList,
     cursor: &mut RetainedNodePaintCursor,
 ) -> RetainedNodePaintStep {
@@ -717,511 +845,37 @@ pub(crate) fn paint_node_step(
             step => step,
         };
     }
-    let step = match &node.spec.0 {
-        UiNode::Text(text) => {
-            if cursor.phase == 0 {
-                let emphasize = text.emphasize.unwrap_or(false);
-                // 🅰️ React's `TextView` is `text-foreground` in BOTH states and swaps `text-sm` for
-                // `font-semibold` (`🗣️Interpreter/🟦️.tsx:1168`), so plain body text is never muted
-                // here either, and an emphasized run is BOTH a step up the size ramp (it loses
-                // `text-sm`) and a real weight change. The weight half was a built-but-unwired
-                // primitive until ticket 26/09/17 packet W15a: `draw_text_weighted`/`TextWeight`
-                // existed with zero callers, so every emphasized `Text` painted as a size bump alone.
-                // No bold face ships on disk, so `Semibold` is the synthetic double strike
-                // `text::faux_bold_offset` describes — advances, and so wraps, unchanged.
-                let size = if emphasize { theme.font_size_emphasized } else { theme.font_size_body };
-                let color = theme.text;
-                let weight = crate::wgpu::text::TextWeight::of(emphasize);
-                match retained_text_node_step_weighted(text.value.as_str(), bounds, size, color, weight, atlas, draw, cursor) {
-                    RetainedNodePaintStep::Complete => {
-                        cursor.advance(1);
-                        RetainedNodePaintStep::Pending
-                    }
-                    step => step,
-                }
-            } else {
-                retained_presence_step(draw, bounds, theme, presence)
-            }
-        }
-        UiNode::Stack(stack) => {
-            if cursor.phase == 0 {
-                let result = retained_fixed_output(draw, |draw| paint_stack_frame(stack, bounds, flags, theme, draw));
-                cursor.advance(1);
-                if result.is_err() {
-                    RetainedNodePaintStep::Fault
-                } else {
-                    RetainedNodePaintStep::Pending
-                }
-            } else {
-                retained_presence_step(draw, bounds, theme, presence)
-            }
-        }
-        UiNode::Separator(_) => {
-            if cursor.phase == 0 {
-                let result = retained_fixed_output(draw, |draw| paint_separator(bounds, theme, draw));
-                cursor.advance(1);
-                if result.is_err() {
-                    RetainedNodePaintStep::Fault
-                } else {
-                    RetainedNodePaintStep::Pending
-                }
-            } else {
-                retained_presence_step(draw, bounds, theme, presence)
-            }
-        }
-        UiNode::Button(button) => match cursor.phase {
-            0 => {
-                let hovered = flags.contains(NodeFlags::HOVERED);
-                let result = retained_fixed_output(draw, |draw| {
-                    push_control_border(draw, bounds, theme, if focus_ring_visible(flags) { theme.accent } else { theme.border_normal }, item_bg(theme, false, hovered));
-                    if let Some(icons) = icons {
-                        push_icon(draw, icons, button.icon_id.as_str(), bounds.x + theme.padding_standard, bounds.y + (bounds.h - ICON_TINY) * 0.5, ICON_TINY, theme.text_element);
-                    }
-                });
-                cursor.advance(1);
-                if result.is_err() {
-                    RetainedNodePaintStep::Fault
-                } else {
-                    RetainedNodePaintStep::Pending
-                }
-            }
-            1 => match retained_text_node_step(button.label.as_str(), bounds, theme.font_size_body, theme.text, atlas, draw, cursor) {
-                RetainedNodePaintStep::Complete => {
-                    cursor.advance(2);
-                    RetainedNodePaintStep::Pending
-                }
-                step => step,
-            },
-            _ => retained_presence_step(draw, bounds, theme, presence),
-        },
-        UiNode::Input(input_node) => {
-            let display = node.state.edit.as_ref().map(|edit| edit.text.as_str()).filter(|text| !text.is_empty()).unwrap_or_else(|| {
-                if input_node.value.is_empty() {
-                    input_node.placeholder.as_ref().map_or("", Label::as_str)
-                } else {
-                    input_node.value.as_str()
-                }
-            });
-            match cursor.phase {
-                0 => {
-                    let result = retained_fixed_output(draw, |draw| {
-                        push_control_border(draw, bounds, theme, if focus_ring_visible(flags) { theme.accent } else { theme.border_normal }, theme.input_bg);
-                    });
-                    cursor.advance(1);
-                    if result.is_err() {
-                        RetainedNodePaintStep::Fault
-                    } else {
-                        RetainedNodePaintStep::Pending
-                    }
-                }
-                1 => match retained_text_node_step(display, bounds, theme.font_size_body, if input_node.value.is_empty() { theme.text_muted } else { theme.text }, atlas, draw, cursor) {
-                    RetainedNodePaintStep::Complete => {
-                        cursor.advance(2);
-                        RetainedNodePaintStep::Pending
-                    }
-                    step => step,
-                },
-                _ => retained_presence_step(draw, bounds, theme, presence),
-            }
-        }
-        UiNode::Select(select) => {
-            if select.items.len() > RETAINED_NODE_COLLECTION_ITEMS {
-                return RetainedNodePaintStep::Fault;
-            }
-            match cursor.phase {
-                0 => {
-                    let hovered = flags.contains(NodeFlags::HOVERED);
-                    let result = retained_fixed_output(draw, |draw| {
-                        push_control_border(draw, bounds, theme, if focus_ring_visible(flags) { theme.accent } else { theme.border_normal }, if hovered { theme.button_hover } else { theme.input_bg });
-                        if let Some(icons) = icons {
-                            push_icon(draw, icons, "chevron-down", bounds.x + bounds.w - theme.padding_standard - ICON_TINY, bounds.y + (bounds.h - ICON_TINY) * 0.5, ICON_TINY, theme.text_element);
-                        }
-                    });
-                    cursor.advance(1);
-                    if result.is_err() {
-                        RetainedNodePaintStep::Fault
-                    } else {
-                        RetainedNodePaintStep::Pending
-                    }
-                }
-                1 if cursor.item < select.items.len() => {
-                    if select.items[cursor.item].value == select.value {
-                        cursor.selected = Some(cursor.item);
-                    }
-                    cursor.item += 1;
-                    RetainedNodePaintStep::Pending
-                }
-                1 => {
-                    cursor.advance(2);
-                    RetainedNodePaintStep::Pending
-                }
-                2 => {
-                    let label = cursor.selected.and_then(|index| select.items.get(index)).map(|item| item.label.as_str()).or_else(|| select.placeholder.as_ref().map(Label::as_str)).unwrap_or("Select…");
-                    match retained_text_node_step(label, bounds, theme.font_size_body, theme.text, atlas, draw, cursor) {
-                        RetainedNodePaintStep::Complete => {
-                            cursor.advance(if node.state.open { 3 } else { 6 });
-                            RetainedNodePaintStep::Pending
-                        }
-                        step => step,
-                    }
-                }
-                3 => {
-                    let menu_top = select_menu_top_for(tree, id, bounds.h, select.items.len(), theme);
-                    let menu = Rect::new(bounds.x, bounds.y + menu_top, bounds.w, crate::wgpu::select::select_menu_height(select.items.len(), theme));
-                    let result = retained_fixed_output(draw, |draw| {
-                        draw.push_glass([menu.x, menu.y, menu.w, menu.h], theme.border_radius, theme.glass(Level::Menu));
-                    });
-                    cursor.advance(4);
-                    if result.is_err() {
-                        RetainedNodePaintStep::Fault
-                    } else {
-                        RetainedNodePaintStep::Pending
-                    }
-                }
-                4 if cursor.item < select.items.len() => {
-                    let relative = select_popup_row_rect(bounds.w, cursor.item, select_menu_top_for(tree, id, bounds.h, select.items.len(), theme), theme);
-                    let row = Rect::new(bounds.x + relative.x, bounds.y + relative.y, relative.w, relative.h);
-                    let item = &select.items[cursor.item];
-                    // ⌨️ The keyboard-highlighted row reads like a hovered one, as React's
-                    // `data-highlighted` styling does — see `tree::WidgetState::highlighted`.
-                    let highlighted = node.state.highlighted == Some(cursor.item);
-                    let result = retained_fixed_output(draw, |draw| {
-                        if highlighted || item.value == select.value {
-                            draw.push_rounded([row.x, row.y, row.w, row.h], theme.row_hover, theme.border_radius);
-                        }
-                    });
-                    cursor.phase = 5;
-                    cursor.glyph.reset();
-                    if result.is_err() {
-                        RetainedNodePaintStep::Fault
-                    } else {
-                        RetainedNodePaintStep::Pending
-                    }
-                }
-                4 => {
-                    cursor.advance(6);
-                    RetainedNodePaintStep::Pending
-                }
-                5 => {
-                    let Some(item) = select.items.get(cursor.item) else { return RetainedNodePaintStep::Fault };
-                    let relative = select_popup_row_rect(bounds.w, cursor.item, select_menu_top_for(tree, id, bounds.h, select.items.len(), theme), theme);
-                    let row = Rect::new(bounds.x + relative.x + 8.0, bounds.y + relative.y, relative.w - 8.0, relative.h);
-                    match retained_text_node_step(item.label.as_str(), row, theme.font_size_body, theme.text, atlas, draw, cursor) {
-                        RetainedNodePaintStep::Complete => {
-                            cursor.item += 1;
-                            cursor.phase = 4;
-                            cursor.glyph.reset();
-                            RetainedNodePaintStep::Pending
-                        }
-                        step => step,
-                    }
-                }
-                _ => retained_presence_step(draw, bounds, theme, presence),
-            }
-        }
-        UiNode::Toggle(toggle) => match cursor.phase {
-            0 => {
-                let pressed = toggle.presence.selected;
-                let hovered = flags.contains(NodeFlags::HOVERED);
-                let result = retained_fixed_output(draw, |draw| {
-                    push_control_border(draw, bounds, theme, if focus_ring_visible(flags) { theme.accent } else { theme.border_normal }, item_bg(theme, pressed, hovered));
-                    if let Some(icons) = icons {
-                        push_icon(draw, icons, toggle.icon_id.as_str(), bounds.x + theme.padding_standard, bounds.y + (bounds.h - ICON_TINY) * 0.5, ICON_TINY, item_text(theme, pressed, hovered));
-                    }
-                });
-                cursor.advance(1);
-                if result.is_err() {
-                    RetainedNodePaintStep::Fault
-                } else {
-                    RetainedNodePaintStep::Pending
-                }
-            }
-            1 => {
-                let label = toggle.text.as_ref().map_or("", Label::as_str);
-                match retained_text_node_step(label, bounds, theme.font_size_body, theme.text, atlas, draw, cursor) {
-                    RetainedNodePaintStep::Complete => {
-                        cursor.advance(2);
-                        RetainedNodePaintStep::Pending
-                    }
-                    step => step,
-                }
-            }
-            _ => retained_presence_step(draw, bounds, theme, presence),
-        },
-        UiNode::KeyValue(key_value) => {
-            if key_value.entries.len() > RETAINED_NODE_COLLECTION_ITEMS {
-                return RetainedNodePaintStep::Fault;
-            }
-            let Some(entry) = key_value.entries.get(cursor.item) else {
-                cursor.advance(2);
-                return match retained_presence_step(draw, bounds, theme, presence) {
-                    RetainedNodePaintStep::Complete => cursor.finish(),
-                    step => step,
-                };
-            };
-            let row = Rect::new(bounds.x, bounds.y + cursor.item as f32 * theme.control_height, bounds.w, theme.control_height);
-            if cursor.phase == 0 {
-                match retained_text_node_step(entry.label.as_str(), row, theme.font_size_small, theme.text_muted, atlas, draw, cursor) {
-                    RetainedNodePaintStep::Complete => {
-                        cursor.phase = 1;
-                        cursor.glyph.reset();
-                        RetainedNodePaintStep::Pending
-                    }
-                    step => step,
-                }
-            } else {
-                let value_bounds = Rect::new(row.x + row.w * 0.4, row.y, row.w * 0.6, row.h);
-                match retained_text_node_step(entry.value.as_str(), value_bounds, theme.font_size_small, theme.text, atlas, draw, cursor) {
-                    RetainedNodePaintStep::Complete => {
-                        cursor.item += 1;
-                        cursor.phase = 0;
-                        cursor.glyph.reset();
-                        RetainedNodePaintStep::Pending
-                    }
-                    step => step,
-                }
-            }
-        }
-        UiNode::Slider(slider) => match cursor.phase {
-            0 => {
-                let track_y = bounds.y + bounds.h * 0.5;
-                let range = (slider.max - slider.min).max(f64::EPSILON);
-                let knob_x = bounds.x + bounds.w * ((slider.value - slider.min) / range).clamp(0.0, 1.0) as f32;
-                let result = retained_fixed_output(draw, |draw| {
-                    draw.push_rounded([bounds.x, track_y - 2.0, bounds.w, 4.0], theme.separator, 2.0);
-                    draw.push_rounded([knob_x - 6.0, track_y - 6.0, 12.0, 12.0], theme.accent, 6.0);
-                });
-                cursor.advance(1);
-                if result.is_err() {
-                    RetainedNodePaintStep::Fault
-                } else {
-                    RetainedNodePaintStep::Pending
-                }
-            }
-            1 => {
-                let label = slider.unit.as_deref().unwrap_or("");
-                match retained_text_node_step(label, bounds, theme.font_size_small, theme.text_muted, atlas, draw, cursor) {
-                    RetainedNodePaintStep::Complete => {
-                        cursor.advance(2);
-                        RetainedNodePaintStep::Pending
-                    }
-                    step => step,
-                }
-            }
-            _ => retained_presence_step(draw, bounds, theme, presence),
-        },
-        // ➖️🔢️➕️ Three segments, painted at exactly the rects `events`' press routing hit-tests
-        // (`layout::number_stepper_segments`). Before this the streaming paint drew only the outer
-        // border and the value, so a user had no `−`/`+` to aim at even once the press routing existed
-        // (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️audit-wgpu-parity-2026-09-13.md` gap #6).
-        UiNode::NumberStepper(stepper) => {
-            let [decrement, value_segment, increment] = crate::wgpu::layout::number_stepper_segments(bounds);
-            match cursor.phase {
-                0 => {
-                    let result = retained_fixed_output(draw, |draw| {
-                        push_control_border(draw, bounds, theme, if focus_ring_visible(flags) { theme.accent } else { theme.border_normal }, if flags.contains(NodeFlags::HOVERED) { theme.button_hover } else { theme.input_bg });
-                        push_control_border(draw, value_segment, theme, theme.border_normal, theme.input_bg);
-                    });
-                    cursor.advance(1);
-                    if result.is_err() {
-                        RetainedNodePaintStep::Fault
-                    } else {
-                        RetainedNodePaintStep::Pending
-                    }
-                }
-                1 => match retained_text_node_step("−", stepper_glyph_rect(decrement, theme), theme.font_size_body, theme.text, atlas, draw, cursor) {
-                    RetainedNodePaintStep::Complete => {
-                        cursor.advance(2);
-                        RetainedNodePaintStep::Pending
-                    }
-                    step => step,
-                },
-                2 => {
-                    let label = if stepper.uniform { format!("{:.3}", stepper.value) } else { UI_INSPECTOR_MIXED_PLACEHOLDER.to_string() };
-                    let color = if stepper.uniform { theme.text } else { theme.text_muted };
-                    match retained_text_node_step(&label, stepper_glyph_rect(value_segment, theme), theme.font_size_body, color, atlas, draw, cursor) {
-                        RetainedNodePaintStep::Complete => {
-                            cursor.advance(3);
-                            RetainedNodePaintStep::Pending
-                        }
-                        step => step,
-                    }
-                }
-                3 => match retained_text_node_step("+", stepper_glyph_rect(increment, theme), theme.font_size_body, theme.text, atlas, draw, cursor) {
-                    RetainedNodePaintStep::Complete => {
-                        cursor.advance(4);
-                        RetainedNodePaintStep::Pending
-                    }
-                    step => step,
-                },
-                _ => retained_presence_step(draw, bounds, theme, presence),
-            }
-        }
-        UiNode::Ring(ring) => {
-            let segments = 48usize;
-            if cursor.item < segments {
-                let cx = bounds.x + bounds.w * 0.5;
-                let cy = bounds.y + bounds.h * 0.5;
-                let radius = bounds.w.min(bounds.h) * 0.4;
-                let a0 = std::f32::consts::TAU * cursor.item as f32 / segments as f32;
-                let a1 = std::f32::consts::TAU * (cursor.item + 1) as f32 / segments as f32;
-                let result = retained_fixed_output(draw, |draw| draw.push_line(cx + a0.cos() * radius, cy + a0.sin() * radius, cx + a1.cos() * radius, cy + a1.sin() * radius, theme.separator, 2.0));
-                cursor.item += 1;
-                if result.is_err() {
-                    RetainedNodePaintStep::Fault
-                } else {
-                    RetainedNodePaintStep::Pending
-                }
-            } else if cursor.phase == 0 {
-                let result = retained_fixed_output(draw, |draw| {
-                    let cx = bounds.x + bounds.w * 0.5;
-                    let cy = bounds.y + bounds.h * 0.5;
-                    let radius = bounds.w.min(bounds.h) * 0.4;
-                    let angle = std::f32::consts::TAU * ring.t as f32;
-                    draw.push_rounded([cx + angle.cos() * radius - 6.0, cy + angle.sin() * radius - 6.0, 12.0, 12.0], theme.accent, 6.0);
-                });
-                cursor.phase = 1;
-                if result.is_err() {
-                    RetainedNodePaintStep::Fault
-                } else {
-                    RetainedNodePaintStep::Pending
-                }
-            } else {
-                retained_presence_step(draw, bounds, theme, presence)
-            }
-        }
-        UiNode::Progress(progress) => {
-            if cursor.phase == 0 {
-                let result = retained_fixed_output(draw, |draw| paint_progress(progress, bounds, theme, draw));
-                cursor.advance(1);
-                if result.is_err() {
-                    RetainedNodePaintStep::Fault
-                } else {
-                    RetainedNodePaintStep::Pending
-                }
-            } else {
-                retained_presence_step(draw, bounds, theme, presence)
-            }
-        }
-        UiNode::IconSelect(select) => match cursor.phase {
-            0 => {
-                let result = retained_fixed_output(draw, |draw| push_control_border(draw, bounds, theme, theme.border_normal, theme.input_bg));
-                cursor.advance(1);
-                if result.is_err() {
-                    RetainedNodePaintStep::Fault
-                } else {
-                    RetainedNodePaintStep::Pending
-                }
-            }
-            // ✍️ A focused `IconSelect` shows its LIVE buffer, not the declarative value —
-            // `events`' `editable_value` seeds one for this kind exactly as it does for `Input`,
-            // mirroring React's `IconSelector` editing its icon string in a textarea.
-            1 => match retained_text_node_step(node.state.edit.as_ref().map_or(select.value.as_str(), |edit| edit.text.as_str()), bounds, theme.font_size_body, theme.text, atlas, draw, cursor) {
-                RetainedNodePaintStep::Complete => {
-                    cursor.advance(2);
-                    RetainedNodePaintStep::Pending
-                }
-                step => step,
-            },
-            _ => retained_presence_step(draw, bounds, theme, presence),
-        },
-        UiNode::Field(field) => {
-            let value = match cursor.phase {
-                0 => Some((field.label.as_str(), theme.text_muted)),
-                1 => field.description.as_deref().map(|value| (value, theme.text_muted)),
-                2 => field.error.as_deref().map(|value| (value, theme.error)),
-                _ => None,
-            };
-            if let Some((value, color)) = value {
-                match retained_text_node_step(value, bounds, theme.font_size_small, color, atlas, draw, cursor) {
-                    RetainedNodePaintStep::Complete => {
-                        cursor.advance(cursor.phase + 1);
-                        RetainedNodePaintStep::Pending
-                    }
-                    step => step,
-                }
-            } else if cursor.phase < 3 {
-                cursor.advance(cursor.phase + 1);
-                RetainedNodePaintStep::Pending
-            } else {
-                retained_presence_step(draw, bounds, theme, presence)
-            }
-        }
-        UiNode::Section(section) => {
-            if cursor.phase == 0 {
-                let result = retained_fixed_output(draw, |draw| {
-                    if let Some(icons) = icons {
-                        push_icon(draw, icons, if section.default_open.unwrap_or(true) { "chevron-down" } else { "chevron-right" }, bounds.x, bounds.y, ICON_TINY, theme.text_element);
-                    }
-                });
-                cursor.advance(1);
-                if result.is_err() {
-                    RetainedNodePaintStep::Fault
-                } else {
-                    RetainedNodePaintStep::Pending
-                }
-            } else if cursor.phase == 1 {
-                let label = section.label.as_ref().map_or("", Label::as_str);
-                match retained_text_node_step(label, bounds, theme.font_size_body, theme.text, atlas, draw, cursor) {
-                    RetainedNodePaintStep::Complete => {
-                        cursor.advance(2);
-                        RetainedNodePaintStep::Pending
-                    }
-                    step => step,
-                }
-            } else {
-                retained_presence_step(draw, bounds, theme, presence)
-            }
-        }
-        UiNode::Group(group) => {
-            if cursor.phase == 0 {
-                let result = retained_fixed_output(draw, |draw| {
-                    if let Some(icons) = icons {
-                        push_icon(draw, icons, if group.default_open.unwrap_or(true) { "chevron-down" } else { "chevron-right" }, bounds.x, bounds.y, ICON_TINY, theme.text_element);
-                    }
-                });
-                cursor.advance(1);
-                if result.is_err() {
-                    RetainedNodePaintStep::Fault
-                } else {
-                    RetainedNodePaintStep::Pending
-                }
-            } else if cursor.phase == 1 {
-                match retained_text_node_step(group.label.as_str(), bounds, theme.font_size_body, theme.text, atlas, draw, cursor) {
-                    RetainedNodePaintStep::Complete => {
-                        cursor.advance(2);
-                        RetainedNodePaintStep::Pending
-                    }
-                    step => step,
-                }
-            } else {
-                retained_presence_step(draw, bounds, theme, presence)
-            }
-        }
-        UiNode::Tree(tree_node) => retained_tree_node_step(tree_node, bounds, theme, atlas, icons, draw, cursor),
-        // 🖼️ No `SceneHost` this tick: decode what this process can (a `data:` PNG) and draw the real
-        // bitmap as a `KIND_RASTER` quad at React's `object-contain` rect — see 🖼️UiImageSources. A
-        // source only the host can fetch still falls back to the placeholder + `alt` chrome below,
-        // which is what React shows for a broken/pending `<img>` too.
-        UiNode::Image(image) => {
-            // 🖼️ Admission is the production caller of `admit_ui_image` — without this line the
-            // ledger stayed empty forever, `ui_image_natural_size` always answered `None`, and EVERY
-            // `UiNode::Image` painted the `alt` placeholder however decodable its `src` was. Safe per
-            // frame: an already-decoded source is a ledger lookup, never a second decode, and a
-            // source only a host can fetch answers `Deferred`/`Unsupported` and falls through to the
-            // same placeholder chrome React shows for a pending/broken `<img>`.
-            let decoded = if has_scene_host {
-                None
-            } else {
-                matches!(admit_ui_image(image.src.as_str()), UiImageAdmission::Ready).then(|| ui_image_natural_size(image.src.as_str())).flatten()
-            };
-            if has_scene_host {
-                retained_presence_step(draw, bounds, theme, presence)
-            } else if let Some((natural_w, natural_h)) = decoded {
+    let step =
+        match &node.spec.0 {
+            UiNode::Text(text) => {
                 if cursor.phase == 0 {
-                    let content = ui_image_content_rect(bounds, natural_w, natural_h);
-                    let result = retained_fixed_output(draw, |draw| draw.push_raster_quad(image.src.as_str(), [content.x, content.y, content.w, content.h], [0.0, 0.0, 1.0, 1.0], 1.0));
-                    cursor.advance(2);
+                    let emphasize = text.emphasize.unwrap_or(false);
+                    // 🅰️ React's `TextView` is `text-foreground` in BOTH states and swaps `text-sm` for
+                    // `font-semibold` (`🗣️Interpreter/🟦️.tsx:1168`), so plain body text is never muted
+                    // here either, and an emphasized run is BOTH a step up the size ramp (it loses
+                    // `text-sm`) and a real weight change. The weight half was a built-but-unwired
+                    // primitive until ticket 26/09/17 packet W15a: `draw_text_weighted`/`TextWeight`
+                    // existed with zero callers, so every emphasized `Text` painted as a size bump alone.
+                    // No bold face ships on disk, so `Semibold` is the synthetic double strike
+                    // `text::faux_bold_offset` describes — advances, and so wraps, unchanged.
+                    let size = if emphasize { theme.font_size_emphasized } else { theme.font_size_body };
+                    let color = theme.text;
+                    let weight = crate::wgpu::text::TextWeight::of(emphasize);
+                    match retained_text_node_step_weighted(text.value.as_str(), bounds, size, color, weight, atlas, draw, cursor) {
+                        RetainedNodePaintStep::Complete => {
+                            cursor.advance(1);
+                            RetainedNodePaintStep::Pending
+                        }
+                        step => step,
+                    }
+                } else {
+                    retained_presence_step(draw, bounds, theme, presence)
+                }
+            }
+            UiNode::Stack(stack) => {
+                if cursor.phase == 0 {
+                    let result = retained_fixed_output(draw, |draw| paint_stack_frame(stack, bounds, flags, theme, draw));
+                    cursor.advance(1);
                     if result.is_err() {
                         RetainedNodePaintStep::Fault
                     } else {
@@ -1230,72 +884,595 @@ pub(crate) fn paint_node_step(
                 } else {
                     retained_presence_step(draw, bounds, theme, presence)
                 }
-            } else if cursor.phase == 0 {
-                let result = retained_fixed_output(draw, |draw| draw.push_rounded([bounds.x, bounds.y, bounds.w, bounds.h], theme.panel, theme.border_radius));
-                cursor.advance(1);
-                if result.is_err() {
-                    RetainedNodePaintStep::Fault
+            }
+            UiNode::Separator(_) => {
+                if cursor.phase == 0 {
+                    let result = retained_fixed_output(draw, |draw| paint_separator(bounds, theme, draw));
+                    cursor.advance(1);
+                    if result.is_err() {
+                        RetainedNodePaintStep::Fault
+                    } else {
+                        RetainedNodePaintStep::Pending
+                    }
                 } else {
-                    RetainedNodePaintStep::Pending
+                    retained_presence_step(draw, bounds, theme, presence)
                 }
-            } else if cursor.phase == 1 {
-                let label = image.alt.as_ref().map_or(image.id.as_str(), Label::as_str);
-                match retained_text_node_step(label, bounds, theme.font_size_small, theme.text_muted, atlas, draw, cursor) {
+            }
+            UiNode::Button(button) => match cursor.phase {
+                0 => {
+                    let hovered = flags.contains(NodeFlags::HOVERED);
+                    let result = retained_fixed_output(draw, |draw| {
+                        push_control_border(draw, bounds, theme, if focus_ring_visible(flags) { theme.accent } else { theme.border_normal }, item_bg(theme, false, hovered));
+                        if let Some(icons) = icons {
+                            push_icon(draw, icons, button.icon_id.as_str(), bounds.x + theme.padding_standard, bounds.y + (bounds.h - ICON_TINY) * 0.5, ICON_TINY, theme.text_element);
+                        }
+                    });
+                    cursor.advance(1);
+                    if result.is_err() {
+                        RetainedNodePaintStep::Fault
+                    } else {
+                        RetainedNodePaintStep::Pending
+                    }
+                }
+                1 => match retained_text_node_step(button.label.as_str(), bounds, theme.font_size_body, theme.text, atlas, draw, cursor) {
                     RetainedNodePaintStep::Complete => {
                         cursor.advance(2);
                         RetainedNodePaintStep::Pending
                     }
                     step => step,
+                },
+                _ => retained_presence_step(draw, bounds, theme, presence),
+            },
+            UiNode::Input(input_node) => {
+                let display = node.state.edit.as_ref().map(|edit| edit.text.as_str()).filter(|text| !text.is_empty()).unwrap_or_else(|| {
+                    if input_node.value.is_empty() {
+                        input_node.placeholder.as_ref().map_or("", Label::as_str)
+                    } else {
+                        input_node.value.as_str()
+                    }
+                });
+                match cursor.phase {
+                    0 => {
+                        let result = retained_fixed_output(draw, |draw| {
+                            push_control_border(draw, bounds, theme, if focus_ring_visible(flags) { theme.accent } else { theme.border_normal }, theme.input_bg);
+                        });
+                        cursor.advance(1);
+                        if result.is_err() {
+                            RetainedNodePaintStep::Fault
+                        } else {
+                            RetainedNodePaintStep::Pending
+                        }
+                    }
+                    1 => match retained_text_node_step(display, bounds, theme.font_size_body, if input_node.value.is_empty() { theme.text_muted } else { theme.text }, atlas, draw, cursor) {
+                        RetainedNodePaintStep::Complete => {
+                            cursor.advance(2);
+                            RetainedNodePaintStep::Pending
+                        }
+                        step => step,
+                    },
+                    _ => retained_presence_step(draw, bounds, theme, presence),
                 }
-            } else {
-                retained_presence_step(draw, bounds, theme, presence)
             }
-        }
-        UiNode::ComponentScene(scene) => {
-            if has_scene_host {
-                retained_presence_step(draw, bounds, theme, presence)
-            } else if cursor.phase == 0 {
-                let result = retained_fixed_output(draw, |draw| draw.push_rounded([bounds.x, bounds.y, bounds.w, bounds.h], theme.panel, theme.border_radius));
-                cursor.advance(1);
-                if result.is_err() {
-                    RetainedNodePaintStep::Fault
-                } else {
-                    RetainedNodePaintStep::Pending
+            UiNode::Select(select) => {
+                if select.items.len() > RETAINED_NODE_COLLECTION_ITEMS {
+                    return RetainedNodePaintStep::Fault;
                 }
-            } else if cursor.phase == 1 {
-                match retained_text_node_step(scene.surface_id.as_str(), bounds, theme.font_size_small, theme.text_muted, atlas, draw, cursor) {
+                match cursor.phase {
+                    0 => {
+                        let hovered = flags.contains(NodeFlags::HOVERED);
+                        let result = retained_fixed_output(draw, |draw| {
+                            push_control_border(draw, bounds, theme, if focus_ring_visible(flags) { theme.accent } else { theme.border_normal }, if hovered { theme.button_hover } else { theme.input_bg });
+                            if let Some(icons) = icons {
+                                push_icon(draw, icons, "chevron-down", bounds.x + bounds.w - theme.padding_standard - ICON_TINY, bounds.y + (bounds.h - ICON_TINY) * 0.5, ICON_TINY, theme.text_element);
+                            }
+                        });
+                        cursor.advance(1);
+                        if result.is_err() {
+                            RetainedNodePaintStep::Fault
+                        } else {
+                            RetainedNodePaintStep::Pending
+                        }
+                    }
+                    1 if cursor.item < select.items.len() => {
+                        if select.items[cursor.item].value == select.value {
+                            cursor.selected = Some(cursor.item);
+                        }
+                        cursor.item += 1;
+                        RetainedNodePaintStep::Pending
+                    }
+                    1 => {
+                        cursor.advance(2);
+                        RetainedNodePaintStep::Pending
+                    }
+                    2 => {
+                        let label = cursor.selected.and_then(|index| select.items.get(index)).map(|item| item.label.as_str()).or_else(|| select.placeholder.as_ref().map(Label::as_str)).unwrap_or("Select…");
+                        match retained_text_node_step(label, bounds, theme.font_size_body, theme.text, atlas, draw, cursor) {
+                            RetainedNodePaintStep::Complete => {
+                                cursor.advance(if node.state.open { 3 } else { 8 });
+                                RetainedNodePaintStep::Pending
+                            }
+                            step => step,
+                        }
+                    }
+                    3 => {
+                        let Some(popup) = node.state.select_popup.and_then(|popup| retained_select_popup_at_bounds(tree, id, bounds, popup)) else { return RetainedNodePaintStep::Fault };
+                        let mut opened = false;
+                        let result = retained_fixed_output(draw, |draw| {
+                            let glass = draw.push_glass([popup.menu.x, popup.menu.y, popup.menu.w, popup.menu.h], theme.border_radius, theme.glass(Level::Menu));
+                            draw.begin_glass_content(glass);
+                            draw.push_scissor(popup.menu);
+                            opened = true;
+                        });
+                        cursor.phase = 4;
+                        cursor.item = popup.first_row;
+                        cursor.glyph.reset();
+                        cursor.popup_route = opened;
+                        if result.is_err() {
+                            let _ = retained_select_close_route(draw, cursor);
+                            RetainedNodePaintStep::Fault
+                        } else {
+                            RetainedNodePaintStep::Pending
+                        }
+                    }
+                    4 if node.state.select_popup.is_some_and(|popup| cursor.item < popup.last_row) => {
+                        let Some(popup) = node.state.select_popup.and_then(|popup| retained_select_popup_at_bounds(tree, id, bounds, popup)) else {
+                            let _ = retained_select_close_route(draw, cursor);
+                            return RetainedNodePaintStep::Fault;
+                        };
+                        let row = crate::wgpu::select::select_popup_row_rect(bounds, cursor.item, popup, theme);
+                        let item = &select.items[cursor.item];
+                        // ⌨️ The keyboard-highlighted row reads like a hovered one, as React's
+                        // `data-highlighted` styling does — see `tree::WidgetState::highlighted`.
+                        let highlighted = node.state.highlighted == Some(cursor.item);
+                        let result = retained_fixed_output(draw, |draw| {
+                            if highlighted || item.value == select.value {
+                                draw.push_rounded([row.x, row.y, row.w, row.h], theme.row_hover, theme.border_radius);
+                            }
+                        });
+                        cursor.phase = 5;
+                        cursor.glyph.reset();
+                        if result.is_err() {
+                            let _ = retained_select_close_route(draw, cursor);
+                            RetainedNodePaintStep::Fault
+                        } else {
+                            RetainedNodePaintStep::Pending
+                        }
+                    }
+                    4 => {
+                        cursor.advance(6);
+                        RetainedNodePaintStep::Pending
+                    }
+                    5 => {
+                        let Some(item) = select.items.get(cursor.item) else {
+                            let _ = retained_select_close_route(draw, cursor);
+                            return RetainedNodePaintStep::Fault;
+                        };
+                        let Some(popup) = node.state.select_popup.and_then(|popup| retained_select_popup_at_bounds(tree, id, bounds, popup)) else {
+                            let _ = retained_select_close_route(draw, cursor);
+                            return RetainedNodePaintStep::Fault;
+                        };
+                        let painted = crate::wgpu::select::select_popup_row_rect(bounds, cursor.item, popup, theme);
+                        let row = Rect::new(painted.x + theme.padding_standard, painted.y, (painted.w - theme.padding_standard).max(0.0), painted.h);
+                        match retained_text_node_step(item.label.as_str(), row, theme.font_size_body, theme.text, atlas, draw, cursor) {
+                            RetainedNodePaintStep::Complete => {
+                                cursor.item += 1;
+                                cursor.phase = 4;
+                                cursor.glyph.reset();
+                                RetainedNodePaintStep::Pending
+                            }
+                            RetainedNodePaintStep::Fault => {
+                                let _ = retained_select_close_route(draw, cursor);
+                                RetainedNodePaintStep::Fault
+                            }
+                            step => step,
+                        }
+                    }
+                    6 => {
+                        let Some(popup) = node.state.select_popup.and_then(|popup| retained_select_popup_at_bounds(tree, id, bounds, popup)) else {
+                            let _ = retained_select_close_route(draw, cursor);
+                            return RetainedNodePaintStep::Fault;
+                        };
+                        let result = retained_fixed_output(draw, |draw| {
+                            if let (Some(up), Some(down), Some(icons)) = (popup.up, popup.down, icons) {
+                                let chevron = SIZE_TINY;
+                                let center_x = popup.menu.x + (popup.menu.w - chevron) * 0.5;
+                                push_icon(draw, icons, "chevron-up", center_x, up.y + theme.padding_standard, chevron, theme.text_muted);
+                                push_icon(draw, icons, "chevron-down", center_x, down.y + theme.padding_standard, chevron, theme.text_muted);
+                            }
+                        });
+                        cursor.advance(7);
+                        if result.is_err() {
+                            let _ = retained_select_close_route(draw, cursor);
+                            RetainedNodePaintStep::Fault
+                        } else {
+                            RetainedNodePaintStep::Pending
+                        }
+                    }
+                    7 => {
+                        let result = retained_select_close_route(draw, cursor);
+                        cursor.advance(8);
+                        if result.is_err() {
+                            RetainedNodePaintStep::Fault
+                        } else {
+                            RetainedNodePaintStep::Pending
+                        }
+                    }
+                    _ => retained_presence_step(draw, bounds, theme, presence),
+                }
+            }
+            UiNode::Toggle(toggle) => match cursor.phase {
+                0 => {
+                    let pressed = toggle.presence.selected;
+                    let hovered = flags.contains(NodeFlags::HOVERED);
+                    let result = retained_fixed_output(draw, |draw| {
+                        push_control_border(draw, bounds, theme, if focus_ring_visible(flags) { theme.accent } else { theme.border_normal }, item_bg(theme, pressed, hovered));
+                        if let Some(icons) = icons {
+                            push_icon(draw, icons, toggle.icon_id.as_str(), bounds.x + theme.padding_standard, bounds.y + (bounds.h - ICON_TINY) * 0.5, ICON_TINY, item_text(theme, pressed, hovered));
+                        }
+                    });
+                    cursor.advance(1);
+                    if result.is_err() {
+                        RetainedNodePaintStep::Fault
+                    } else {
+                        RetainedNodePaintStep::Pending
+                    }
+                }
+                1 => {
+                    let label = toggle.text.as_ref().map_or("", Label::as_str);
+                    match retained_text_node_step(label, bounds, theme.font_size_body, theme.text, atlas, draw, cursor) {
+                        RetainedNodePaintStep::Complete => {
+                            cursor.advance(2);
+                            RetainedNodePaintStep::Pending
+                        }
+                        step => step,
+                    }
+                }
+                _ => retained_presence_step(draw, bounds, theme, presence),
+            },
+            UiNode::KeyValue(key_value) => {
+                if key_value.entries.len() > RETAINED_NODE_COLLECTION_ITEMS {
+                    return RetainedNodePaintStep::Fault;
+                }
+                let Some(entry) = key_value.entries.get(cursor.item) else {
+                    cursor.advance(2);
+                    return match retained_presence_step(draw, bounds, theme, presence) {
+                        RetainedNodePaintStep::Complete => cursor.finish(),
+                        step => step,
+                    };
+                };
+                let row = Rect::new(bounds.x, bounds.y + cursor.item as f32 * theme.control_height, bounds.w, theme.control_height);
+                if cursor.phase == 0 {
+                    match retained_text_node_step(entry.label.as_str(), row, theme.font_size_small, theme.text_muted, atlas, draw, cursor) {
+                        RetainedNodePaintStep::Complete => {
+                            cursor.phase = 1;
+                            cursor.glyph.reset();
+                            RetainedNodePaintStep::Pending
+                        }
+                        step => step,
+                    }
+                } else {
+                    let value_bounds = Rect::new(row.x + row.w * 0.4, row.y, row.w * 0.6, row.h);
+                    match retained_text_node_step(entry.value.as_str(), value_bounds, theme.font_size_small, theme.text, atlas, draw, cursor) {
+                        RetainedNodePaintStep::Complete => {
+                            cursor.item += 1;
+                            cursor.phase = 0;
+                            cursor.glyph.reset();
+                            RetainedNodePaintStep::Pending
+                        }
+                        step => step,
+                    }
+                }
+            }
+            UiNode::Slider(slider) => match cursor.phase {
+                0 => {
+                    let track_y = bounds.y + bounds.h * 0.5;
+                    let range = (slider.max - slider.min).max(f64::EPSILON);
+                    let knob_x = bounds.x + bounds.w * ((slider.value - slider.min) / range).clamp(0.0, 1.0) as f32;
+                    let result = retained_fixed_output(draw, |draw| {
+                        draw.push_rounded([bounds.x, track_y - 2.0, bounds.w, 4.0], theme.separator, 2.0);
+                        draw.push_rounded([knob_x - 6.0, track_y - 6.0, 12.0, 12.0], theme.accent, 6.0);
+                    });
+                    cursor.advance(1);
+                    if result.is_err() {
+                        RetainedNodePaintStep::Fault
+                    } else {
+                        RetainedNodePaintStep::Pending
+                    }
+                }
+                1 => {
+                    let label = slider.unit.as_deref().unwrap_or("");
+                    match retained_text_node_step(label, bounds, theme.font_size_small, theme.text_muted, atlas, draw, cursor) {
+                        RetainedNodePaintStep::Complete => {
+                            cursor.advance(2);
+                            RetainedNodePaintStep::Pending
+                        }
+                        step => step,
+                    }
+                }
+                _ => retained_presence_step(draw, bounds, theme, presence),
+            },
+            // ➖️🔢️➕️ Three segments, painted at exactly the rects `events`' press routing hit-tests
+            // (`layout::number_stepper_segments`). Before this the streaming paint drew only the outer
+            // border and the value, so a user had no `−`/`+` to aim at even once the press routing existed
+            // (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️audit-wgpu-parity-2026-09-13.md` gap #6).
+            UiNode::NumberStepper(stepper) => {
+                let [decrement, value_segment, increment] = crate::wgpu::layout::number_stepper_segments(bounds);
+                match cursor.phase {
+                    0 => {
+                        let result = retained_fixed_output_budgeted(draw, RETAINED_NUMBER_STEPPER_CHROME_OUTPUT_ITEMS, |draw| {
+                            push_control_border(draw, bounds, theme, if focus_ring_visible(flags) { theme.accent } else { theme.border_normal }, if flags.contains(NodeFlags::HOVERED) { theme.button_hover } else { theme.input_bg });
+                            push_control_border(draw, value_segment, theme, theme.border_normal, theme.input_bg);
+                        });
+                        cursor.advance(1);
+                        if result.is_err() {
+                            RetainedNodePaintStep::Fault
+                        } else {
+                            RetainedNodePaintStep::Pending
+                        }
+                    }
+                    1 => match retained_text_node_step("−", stepper_glyph_rect(decrement, theme), theme.font_size_body, theme.text, atlas, draw, cursor) {
+                        RetainedNodePaintStep::Complete => {
+                            cursor.advance(2);
+                            RetainedNodePaintStep::Pending
+                        }
+                        step => step,
+                    },
+                    2 => {
+                        let label = if stepper.uniform { format!("{:.3}", stepper.value) } else { UI_INSPECTOR_MIXED_PLACEHOLDER.to_string() };
+                        let color = if stepper.uniform { theme.text } else { theme.text_muted };
+                        match retained_text_node_step(&label, stepper_glyph_rect(value_segment, theme), theme.font_size_body, color, atlas, draw, cursor) {
+                            RetainedNodePaintStep::Complete => {
+                                cursor.advance(3);
+                                RetainedNodePaintStep::Pending
+                            }
+                            step => step,
+                        }
+                    }
+                    3 => match retained_text_node_step("+", stepper_glyph_rect(increment, theme), theme.font_size_body, theme.text, atlas, draw, cursor) {
+                        RetainedNodePaintStep::Complete => {
+                            cursor.advance(4);
+                            RetainedNodePaintStep::Pending
+                        }
+                        step => step,
+                    },
+                    _ => retained_presence_step(draw, bounds, theme, presence),
+                }
+            }
+            UiNode::Ring(ring) => {
+                let segments = 48usize;
+                if cursor.item < segments {
+                    let cx = bounds.x + bounds.w * 0.5;
+                    let cy = bounds.y + bounds.h * 0.5;
+                    let radius = bounds.w.min(bounds.h) * 0.4;
+                    let a0 = std::f32::consts::TAU * cursor.item as f32 / segments as f32;
+                    let a1 = std::f32::consts::TAU * (cursor.item + 1) as f32 / segments as f32;
+                    let result = retained_fixed_output(draw, |draw| draw.push_line(cx + a0.cos() * radius, cy + a0.sin() * radius, cx + a1.cos() * radius, cy + a1.sin() * radius, theme.separator, 2.0));
+                    cursor.item += 1;
+                    if result.is_err() {
+                        RetainedNodePaintStep::Fault
+                    } else {
+                        RetainedNodePaintStep::Pending
+                    }
+                } else if cursor.phase == 0 {
+                    let result = retained_fixed_output(draw, |draw| {
+                        let cx = bounds.x + bounds.w * 0.5;
+                        let cy = bounds.y + bounds.h * 0.5;
+                        let radius = bounds.w.min(bounds.h) * 0.4;
+                        let angle = std::f32::consts::TAU * ring.t as f32;
+                        draw.push_rounded([cx + angle.cos() * radius - 6.0, cy + angle.sin() * radius - 6.0, 12.0, 12.0], theme.accent, 6.0);
+                    });
+                    cursor.phase = 1;
+                    if result.is_err() {
+                        RetainedNodePaintStep::Fault
+                    } else {
+                        RetainedNodePaintStep::Pending
+                    }
+                } else {
+                    retained_presence_step(draw, bounds, theme, presence)
+                }
+            }
+            UiNode::Progress(progress) => {
+                if cursor.phase == 0 {
+                    let result = retained_fixed_output(draw, |draw| paint_progress(progress, bounds, theme, draw));
+                    cursor.advance(1);
+                    if result.is_err() {
+                        RetainedNodePaintStep::Fault
+                    } else {
+                        RetainedNodePaintStep::Pending
+                    }
+                } else {
+                    retained_presence_step(draw, bounds, theme, presence)
+                }
+            }
+            UiNode::IconSelect(select) => match cursor.phase {
+                0 => {
+                    let result = retained_fixed_output(draw, |draw| push_control_border(draw, bounds, theme, theme.border_normal, theme.input_bg));
+                    cursor.advance(1);
+                    if result.is_err() {
+                        RetainedNodePaintStep::Fault
+                    } else {
+                        RetainedNodePaintStep::Pending
+                    }
+                }
+                // ✍️ A focused `IconSelect` shows its LIVE buffer, not the declarative value —
+                // `events`' `editable_value` seeds one for this kind exactly as it does for `Input`,
+                // mirroring React's `IconSelector` editing its icon string in a textarea.
+                1 => match retained_text_node_step(node.state.edit.as_ref().map_or(select.value.as_str(), |edit| edit.text.as_str()), bounds, theme.font_size_body, theme.text, atlas, draw, cursor) {
                     RetainedNodePaintStep::Complete => {
                         cursor.advance(2);
                         RetainedNodePaintStep::Pending
                     }
                     step => step,
-                }
-            } else {
-                retained_presence_step(draw, bounds, theme, presence)
-            }
-        }
-        UiNode::ExternalSlot(slot) => {
-            if cursor.phase == 0 {
-                let result = retained_fixed_output(draw, |draw| draw.push_rounded([bounds.x, bounds.y, bounds.w, bounds.h], theme.panel, theme.border_radius));
-                cursor.advance(1);
-                if result.is_err() {
-                    RetainedNodePaintStep::Fault
-                } else {
+                },
+                _ => retained_presence_step(draw, bounds, theme, presence),
+            },
+            UiNode::Field(field) => {
+                let value = match cursor.phase {
+                    0 => Some((field.label.as_str(), theme.text_muted)),
+                    1 => field.description.as_deref().map(|value| (value, theme.text_muted)),
+                    2 => field.error.as_deref().map(|value| (value, theme.error)),
+                    _ => None,
+                };
+                if let Some((value, color)) = value {
+                    match retained_text_node_step(value, bounds, theme.font_size_small, color, atlas, draw, cursor) {
+                        RetainedNodePaintStep::Complete => {
+                            cursor.advance(cursor.phase + 1);
+                            RetainedNodePaintStep::Pending
+                        }
+                        step => step,
+                    }
+                } else if cursor.phase < 3 {
+                    cursor.advance(cursor.phase + 1);
                     RetainedNodePaintStep::Pending
+                } else {
+                    retained_presence_step(draw, bounds, theme, presence)
                 }
-            } else if cursor.phase == 1 {
-                match retained_text_node_step(slot.body_key.as_str(), bounds, theme.font_size_small, theme.text_muted, atlas, draw, cursor) {
-                    RetainedNodePaintStep::Complete => {
-                        cursor.advance(2);
+            }
+            UiNode::Section(section) => {
+                if cursor.phase == 0 {
+                    let result = retained_fixed_output(draw, |draw| {
+                        if let Some(icons) = icons {
+                            push_icon(draw, icons, if tree.disclosure_open(id).unwrap_or(section.default_open.unwrap_or(true)) { "chevron-down" } else { "chevron-right" }, bounds.x, bounds.y, ICON_TINY, theme.text_element);
+                        }
+                    });
+                    cursor.advance(1);
+                    if result.is_err() {
+                        RetainedNodePaintStep::Fault
+                    } else {
                         RetainedNodePaintStep::Pending
                     }
-                    step => step,
+                } else if cursor.phase == 1 {
+                    let label = section.label.as_ref().map_or("", Label::as_str);
+                    match retained_text_node_step(label, bounds, theme.font_size_body, theme.text, atlas, draw, cursor) {
+                        RetainedNodePaintStep::Complete => {
+                            cursor.advance(2);
+                            RetainedNodePaintStep::Pending
+                        }
+                        step => step,
+                    }
+                } else {
+                    retained_presence_step(draw, bounds, theme, presence)
                 }
-            } else {
-                retained_presence_step(draw, bounds, theme, presence)
             }
-        }
-    };
+            UiNode::Group(group) => {
+                if cursor.phase == 0 {
+                    let result = retained_fixed_output(draw, |draw| {
+                        if let Some(icons) = icons {
+                            push_icon(draw, icons, if group.default_open.unwrap_or(true) { "chevron-down" } else { "chevron-right" }, bounds.x, bounds.y, ICON_TINY, theme.text_element);
+                        }
+                    });
+                    cursor.advance(1);
+                    if result.is_err() {
+                        RetainedNodePaintStep::Fault
+                    } else {
+                        RetainedNodePaintStep::Pending
+                    }
+                } else if cursor.phase == 1 {
+                    match retained_text_node_step(group.label.as_str(), bounds, theme.font_size_body, theme.text, atlas, draw, cursor) {
+                        RetainedNodePaintStep::Complete => {
+                            cursor.advance(2);
+                            RetainedNodePaintStep::Pending
+                        }
+                        step => step,
+                    }
+                } else {
+                    retained_presence_step(draw, bounds, theme, presence)
+                }
+            }
+            UiNode::Tree(tree_node) => retained_tree_node_step(tree, id, tree_node, bounds, theme, driver_drag, block_reversed, atlas, icons, draw, cursor),
+            // 🖼️ No `SceneHost` this tick: decode what this process can (a `data:` PNG) and draw the real
+            // bitmap as a `KIND_RASTER` quad at React's `object-contain` rect — see 🖼️UiImageSources. A
+            // source only the host can fetch still falls back to the placeholder + `alt` chrome below,
+            // which is what React shows for a broken/pending `<img>` too.
+            UiNode::Image(image) => {
+                // 🖼️ Admission is the production caller of `admit_ui_image` — without this line the
+                // ledger stayed empty forever, `ui_image_natural_size` always answered `None`, and EVERY
+                // `UiNode::Image` painted the `alt` placeholder however decodable its `src` was. Safe per
+                // frame: an already-decoded source is a ledger lookup, never a second decode, and a
+                // source only a host can fetch answers `Deferred`/`Unsupported` and falls through to the
+                // same placeholder chrome React shows for a pending/broken `<img>`.
+                let decoded = if has_scene_host { None } else { matches!(admit_ui_image(image.src.as_str()), UiImageAdmission::Ready).then(|| ui_image_natural_size(image.src.as_str())).flatten() };
+                if has_scene_host {
+                    retained_presence_step(draw, bounds, theme, presence)
+                } else if let Some((natural_w, natural_h)) = decoded {
+                    if cursor.phase == 0 {
+                        let content = ui_image_content_rect(bounds, natural_w, natural_h);
+                        let result = retained_fixed_output(draw, |draw| draw.push_raster_quad(image.src.as_str(), [content.x, content.y, content.w, content.h], [0.0, 0.0, 1.0, 1.0], 1.0));
+                        cursor.advance(2);
+                        if result.is_err() {
+                            RetainedNodePaintStep::Fault
+                        } else {
+                            RetainedNodePaintStep::Pending
+                        }
+                    } else {
+                        retained_presence_step(draw, bounds, theme, presence)
+                    }
+                } else if cursor.phase == 0 {
+                    let result = retained_fixed_output(draw, |draw| draw.push_rounded([bounds.x, bounds.y, bounds.w, bounds.h], theme.panel, theme.border_radius));
+                    cursor.advance(1);
+                    if result.is_err() {
+                        RetainedNodePaintStep::Fault
+                    } else {
+                        RetainedNodePaintStep::Pending
+                    }
+                } else if cursor.phase == 1 {
+                    let label = image.alt.as_ref().map_or(image.id.as_str(), Label::as_str);
+                    match retained_text_node_step(label, bounds, theme.font_size_small, theme.text_muted, atlas, draw, cursor) {
+                        RetainedNodePaintStep::Complete => {
+                            cursor.advance(2);
+                            RetainedNodePaintStep::Pending
+                        }
+                        step => step,
+                    }
+                } else {
+                    retained_presence_step(draw, bounds, theme, presence)
+                }
+            }
+            UiNode::ComponentScene(scene) => {
+                if has_scene_host {
+                    retained_presence_step(draw, bounds, theme, presence)
+                } else if cursor.phase == 0 {
+                    let result = retained_fixed_output(draw, |draw| draw.push_rounded([bounds.x, bounds.y, bounds.w, bounds.h], theme.panel, theme.border_radius));
+                    cursor.advance(1);
+                    if result.is_err() {
+                        RetainedNodePaintStep::Fault
+                    } else {
+                        RetainedNodePaintStep::Pending
+                    }
+                } else if cursor.phase == 1 {
+                    match retained_text_node_step(scene.surface_id.as_str(), bounds, theme.font_size_small, theme.text_muted, atlas, draw, cursor) {
+                        RetainedNodePaintStep::Complete => {
+                            cursor.advance(2);
+                            RetainedNodePaintStep::Pending
+                        }
+                        step => step,
+                    }
+                } else {
+                    retained_presence_step(draw, bounds, theme, presence)
+                }
+            }
+            UiNode::ExternalSlot(slot) => {
+                if cursor.phase == 0 {
+                    let result = retained_fixed_output(draw, |draw| draw.push_rounded([bounds.x, bounds.y, bounds.w, bounds.h], theme.panel, theme.border_radius));
+                    cursor.advance(1);
+                    if result.is_err() {
+                        RetainedNodePaintStep::Fault
+                    } else {
+                        RetainedNodePaintStep::Pending
+                    }
+                } else if cursor.phase == 1 {
+                    match retained_text_node_step(slot.body_key.as_str(), bounds, theme.font_size_small, theme.text_muted, atlas, draw, cursor) {
+                        RetainedNodePaintStep::Complete => {
+                            cursor.advance(2);
+                            RetainedNodePaintStep::Pending
+                        }
+                        step => step,
+                    }
+                } else {
+                    retained_presence_step(draw, bounds, theme, presence)
+                }
+            }
+        };
     match step {
         RetainedNodePaintStep::Complete => cursor.finish(),
         step => step,
@@ -1429,6 +1606,8 @@ pub(crate) struct RetainedInteractiveSyncCursor {
     /// 🔽️ The open popup's collision-resolved top offset, captured once per `Select` bind so every
     /// row this sync pass writes lands on the same side of the trigger paint chose.
     select_menu_top: f32,
+    select_first_row: usize,
+    select_last_row: usize,
     tree_section: usize,
     tree_depth: usize,
     tree_frames: [Option<RetainedSyncTreeFrame>; RETAINED_SYNC_DEPTH],
@@ -1453,6 +1632,8 @@ impl Default for RetainedInteractiveSyncCursor {
             select_width: 0.0,
             select_height: 0.0,
             select_menu_top: 0.0,
+            select_first_row: 0,
+            select_last_row: 0,
             tree_section: 0,
             tree_depth: 0,
             tree_frames: [None; RETAINED_SYNC_DEPTH],
@@ -1482,6 +1663,8 @@ impl RetainedInteractiveSyncCursor {
         self.select_width = 0.0;
         self.select_height = 0.0;
         self.select_menu_top = 0.0;
+        self.select_first_row = 0;
+        self.select_last_row = 0;
         self.tree_section = 0;
         self.tree_depth = 0;
         self.tree_item_count = 0;
@@ -1581,7 +1764,7 @@ fn retained_sync_tree_item_step(cursor: &mut RetainedInteractiveSyncCursor) -> R
     cursor.tree_records[record_index] = Some(RetainedSyncTreeRecord { key, parent: Some(frame.record), retained: None, draggable: item.draggable.unwrap_or(false), section: false });
     cursor.tree_record_len += 1;
     cursor.tree_item_count = item_count;
-    let children = item.items.as_deref().filter(|items| item.default_open.unwrap_or(false) && !items.is_empty());
+    let children = item.items.as_deref().filter(|items| !items.is_empty());
     if let Some(children) = children {
         let Some(depth) = cursor.tree_depth.checked_add(1).filter(|depth| *depth < RETAINED_SYNC_DEPTH) else { return retained_sync_fault(cursor, line!()) };
         cursor.tree_depth = depth;
@@ -1611,14 +1794,34 @@ pub(crate) fn sync_interactive_state_node_step(tree: &mut UiTree, id: NodeId, th
                     let Some(layout) = tree.accepted_layout(id) else { return retained_sync_fault(cursor, line!()) };
                     cursor.select_width = layout.width;
                     cursor.select_height = layout.height;
-                    cursor.select_menu_top = select_menu_top_for(tree, id, layout.height, select.items.len(), theme);
+                    let Some(trigger) = tree.absolute_rect(id) else { return retained_sync_fault(cursor, line!()) };
+                    let viewport_h = tree.root.and_then(|root| tree.accepted_layout(root)).map_or(0.0, |layout| layout.height);
+                    let (offset, direction) = tree.node(id).map_or((0.0, 0.0), |node| (node.state.scroll_offset.1, node.state.scroll_offset.0));
+                    let popup = crate::wgpu::select::select_popup_geometry(trigger, select.items.len(), theme, viewport_h, offset, direction);
+                    cursor.select_menu_top = popup.menu.y - trigger.y;
+                    cursor.select_first_row = popup.first_row;
+                    cursor.select_last_row = popup.last_row;
+                    let Some(node) = tree.node_mut(id) else { return retained_sync_fault(cursor, line!()) };
+                    node.state.scroll_offset = (0.0, popup.scroll);
+                    node.state.select_popup = Some(popup);
                     cursor.phase = RetainedInteractiveSyncPhase::SelectItem;
                     RetainedInteractiveSyncStep::Pending
                 }
                 // 🔽️ A closed popup that still owns rows unmounts them before anything else runs.
                 UiNode::Select(_) if tree.composite_rows_of(id) > 0 => {
+                    if let Some(node) = tree.node_mut(id) {
+                        node.state.scroll_offset = (0.0, 0.0);
+                        node.state.select_popup = None;
+                    }
                     cursor.phase = RetainedInteractiveSyncPhase::SelectRetire;
                     RetainedInteractiveSyncStep::Pending
+                }
+                UiNode::Select(_) => {
+                    if let Some(node) = tree.node_mut(id) {
+                        node.state.scroll_offset = (0.0, 0.0);
+                        node.state.select_popup = None;
+                    }
+                    cursor.finish()
                 }
                 UiNode::Stack(_) => {
                     cursor.phase = RetainedInteractiveSyncPhase::StackWrite;
@@ -1701,8 +1904,23 @@ pub(crate) fn sync_interactive_state_node_step(tree: &mut UiTree, id: NodeId, th
         }
         RetainedInteractiveSyncPhase::SelectWrite => {
             let Some(child) = cursor.matched.take() else { return retained_sync_fault(cursor, line!()) };
-            let rect = select_popup_row_rect(cursor.select_width, cursor.item, cursor.select_menu_top, theme);
+            let spec = tree.node(id).and_then(|node| match &node.spec.0 {
+                UiNode::Select(select) => select.items.get(cursor.item).map(|item| crate::wgpu::reconcile::select_item_row(select, item)),
+                _ => None,
+            });
+            let Some(spec) = spec else { return retained_sync_fault(cursor, line!()) };
+            let rect = if cursor.item >= cursor.select_first_row && cursor.item < cursor.select_last_row {
+                let Some(trigger) = tree.absolute_rect(id) else { return retained_sync_fault(cursor, line!()) };
+                let Some(popup) = tree.node(id).and_then(|node| node.state.select_popup) else { return retained_sync_fault(cursor, line!()) };
+                let absolute = crate::wgpu::select::select_popup_row_hit_rect(trigger, cursor.item, popup, theme);
+                Rect::new(absolute.x - trigger.x, absolute.y - trigger.y, absolute.w, absolute.h)
+            } else {
+                Rect::new(0.0, 0.0, 0.0, 0.0)
+            };
             let Some(node) = tree.node_mut(child) else { return retained_sync_fault(cursor, line!()) };
+            if node.spec.0 != spec {
+                node.spec = WidgetSpec(spec);
+            }
             node.layout.x = rect.x;
             node.layout.y = rect.y;
             node.layout.width = rect.w;
@@ -2640,8 +2858,9 @@ fn paint_tree_item(item: &UiTreeItemNode, x: f32, width: f32, y: f32, depth: u32
     // 🎛️ An inline per-row control (e.g. a small toggle/select embedded in a tree row), static data
     // already present on `UiTreeItemNode` that the old paint pass never rendered at all.
     if let Some(control) = &item.control {
-        let control_w = 120.0;
-        let control_rect = Rect::new(row.x + row.w - control_w - theme.gap_standard, row.y + (row.h - theme.control_height) * 0.5, control_w, theme.control_height);
+        let control_height = crate::wgpu::layout::tree_inline_control_height(control, theme);
+        let local = crate::wgpu::layout::tree_row_control_rect_with_height(row.w, control_height, &metrics);
+        let control_rect = Rect::new(row.x + local.x, row.y + local.y, local.w, local.h);
         paint_control(control, control_rect, theme, atlas, icons, draw);
     }
     let mut next_y = y + metrics.row_height;

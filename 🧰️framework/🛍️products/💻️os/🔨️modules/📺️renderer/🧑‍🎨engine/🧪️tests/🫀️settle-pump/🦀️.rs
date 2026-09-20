@@ -153,6 +153,17 @@ fn the_boot_arms_the_settle_lane_instead_of_converging_and_the_frame_loop_drives
     assert!(RENDERER_SOURCE.contains("interaction.shell.settle_pump_step().await"), "the frame's deferred owner is the ONE caller of the settle step");
 }
 
+/// 🎥️ Scene paint precedes typed snapshot sealing in a frame transaction, so the snapshot
+/// boundary must advance camera residency itself. The fit cursor then participates in the ordinary
+/// World3d pending predicate and funds later corners without a global frame-loop poll.
+#[test]
+fn a_sealed_world_snapshot_hands_camera_fit_to_the_retained_wake_lane() {
+    let snapshot = RENDERER_SOURCE.split("AppFrameTransactionPhase::World3dSnapshot =>").nth(1).expect("the frame transaction declares its World snapshot phase");
+    let snapshot = &snapshot[..snapshot.find("AppFrameTransactionPhase::World3dAuthority =>").expect("the snapshot phase terminates")];
+    assert!(snapshot.contains("World3dSnapshotApplyStep::Idle | World3dSnapshotApplyStep::Complete => {\n                        step_world3d_camera_fit_after_snapshot(state);"), "an idle or newly sealed snapshot advances one bounded camera-fit step before leaving its surface");
+    assert!(RENDERER_SOURCE.contains("fn step_world3d_camera_fit_after_snapshot(state: &mut infinite_world::world::World3dState)"), "the transaction has one explicit post-snapshot camera handoff");
+}
+
 #[test]
 fn the_refresh_honours_the_dirty_scope_now_that_the_pump_funds_the_guest() {
     let refresh = SHELL_SOURCE.split("pub async fn refresh_ui").nth(1).expect("the shell declares refresh_ui");
@@ -210,6 +221,17 @@ fn a_gesture_runs_its_user_activation_bound_work_before_it_returns() {
         let runs = row["runs"].as_str().expect("runs");
         assert!(body.contains(runs), "{id}: {signature} must run {runs} — a picker handed to the settle pump has lost the gesture that was allowed to open it");
     }
+    let wrapper = SHELL_SOURCE
+        .split("pub async fn handle_pointer_button(")
+        .nth(1)
+        .expect("the default-pointer entry point is declared")
+        .split("\n    }\n")
+        .next()
+        .expect("the default-pointer entry point has a body");
+    assert!(
+        wrapper.contains("self.handle_pointer_button_for(") && wrapper.contains(".await"),
+        "the default-pointer entry point must await the identity-aware gesture in the same user-activation turn"
+    );
     assert!(
         SHELL_SOURCE.contains("async fn drain_gesture_bound_work(&mut self) {"),
         "the shell owns one narrow drain for user-activation-bound work"

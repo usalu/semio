@@ -22,4 +22,5 @@ async fn an_out_of_range_selected_index_falls_back_to_the_first_check() {
 async fn renders_a_single_check() {
     let mut app = context::app_with_registry().await;
     assert!(!context::render(&mut app, BODY_INSPECTION).await.contains("Unknown body"));
+    context::close(&mut app);
 }

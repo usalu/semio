@@ -1,4 +1,3 @@
-
 use super::*;
 
 //#region 🔖️OwnedWgslValidation
@@ -181,6 +180,8 @@ fn world3d_wgsl_is_byte_identical_in_the_wgpu_target_and_the_shader_contract() {
     assert_eq!(target, WORLD3D_SHADER, "WORLD3D_SHADER drifted between 🎯️targets/🧊️wgpu/🎨️shaders and ✨️shader-contract");
     let target_lines = raw_string_const(WGPU_TARGET_SHADERS_SOURCE, "WORLD3D_LINES_SHADER").expect("wgpu target declares WORLD3D_LINES_SHADER as a raw string const");
     assert_eq!(target_lines, WORLD3D_LINES_SHADER, "WORLD3D_LINES_SHADER drifted between 🎯️targets/🧊️wgpu/🎨️shaders and ✨️shader-contract");
+    let target_textured = raw_string_const(WGPU_TARGET_SHADERS_SOURCE, "WORLD3D_TEXTURED_SHADER").expect("wgpu target declares WORLD3D_TEXTURED_SHADER as a raw string const");
+    assert_eq!(target_textured, WORLD3D_TEXTURED_SHADER, "WORLD3D_TEXTURED_SHADER drifted between 🎯️targets/🧊️wgpu/🎨️shaders and ✨️shader-contract");
 }
 
 /// ⚖️ Law: every per-vertex channel the world-3d WGSL declares has a matching vertex attribute in
@@ -188,13 +189,8 @@ fn world3d_wgsl_is_byte_identical_in_the_wgpu_target_and_the_shader_contract() {
 /// that feeds it (the exact shape of the W1f divergence: `@location(2) color` present, stride 24).
 #[test]
 fn world3d_vertex_locations_are_all_fed_by_the_declared_vertex_buffers() {
-    let declared: Vec<u32> = WORLD3D_SHADER
-        .lines()
-        .skip_while(|line| !line.starts_with("struct VertexInput"))
-        .skip(1)
-        .take_while(|line| !line.starts_with('}'))
-        .filter_map(|line| line.trim().strip_prefix("@location(")?.split(')').next()?.parse().ok())
-        .collect();
+    let declared: Vec<u32> =
+        WORLD3D_SHADER.lines().skip_while(|line| !line.starts_with("struct VertexInput")).skip(1).take_while(|line| !line.starts_with('}')).filter_map(|line| line.trim().strip_prefix("@location(")?.split(')').next()?.parse().ok()).collect();
     assert_eq!(declared, vec![0, 1, 2], "world-3d VertexInput channels changed — update the vertex buffers and both mirrors");
     for pipeline in [&WORLD3D_OPAQUE_PIPELINE, &WORLD3D_TRANSLUCENT_PIPELINE] {
         for location in &declared {
@@ -206,23 +202,124 @@ fn world3d_vertex_locations_are_all_fed_by_the_declared_vertex_buffers() {
         }
     }
 }
-/// ⚖️ Law: the world-3d lighting rig is ONE set of numbers in four backends. The WGSL lives twice
-/// (above) and is transcribed by hand into HLSL and MSL, so a rig change that lands in the WGSL only
-/// would silently leave d3d12 and metal lighting the scene differently — the same class of drift the
-/// twin law above exists for. The numbers are React's own R3F scene
-/// (`<ambientLight intensity={1.15}>`, `<hemisphereLight groundColor="#9aa0ab" intensity={1.35}>`
-/// and its three `<directionalLight>`s, `🌐️World3dHost/🟦️.tsx`) plus `MESH_STYLE_PAINT`'s
-/// selected/hovered `emissiveIntensity`.
+/// ⚖️ Law: every native mesh mirror carries current Three's bounded standard-material math,
+/// inverse-transpose normal path, and World-only ACES exit.
 #[test]
-fn world3d_lighting_constants_are_identical_in_every_backend_mirror() {
-    const RIG: &[&str] = &["0.31830989", "1.15", "1.35", "0.32313", "0.35153", "0.40724", "2.4", "1.2", "0.75", "0.35", "0.08", "12.0, 18.0, 10.0", "-14.0, -10.0, 6.0", "0.0, 0.0, -16.0"];
+fn world3d_environment_and_material_contract_is_identical_in_every_backend_mirror() {
+    const CONTRACT: &[&str] = &[
+        "camera_position",
+        "light_dir",
+        "ambient",
+        "sun",
+        "material",
+        "material_emissive",
+        "flags.z",
+        "flags.w",
+        "0.31830989",
+        "1.35",
+        "0.32314321",
+        "0.3515326",
+        "0.40724021",
+        "2.4",
+        "1.2",
+        "0.75",
+        "12.0, 18.0, 10.0",
+        "-14.0, -10.0, 6.0",
+        "0.0, 0.0, -16.0",
+        "roughness * roughness",
+        "fresnel",
+        "world3d_brdf_ggx_multiscatter",
+        "WORLD3D_DFG_LUT",
+        "0.047619",
+        "WORLD3D_RECIPROCAL_PI + direct",
+        "cofactor",
+        "determinant",
+        "world3d_output_transform",
+        "world3d_attachment_output",
+        "0.41666",
+        "1.055",
+        "0.0031308",
+        "shadow.w",
+        "0.59719",
+        "0.238081",
+    ];
     let hlsl = raw_string_const(D3D12_HLSL_SOURCE, "WORLD3D_MESH_SHADER_HLSL").expect("the d3d12 target declares WORLD3D_MESH_SHADER_HLSL as a raw string const");
     let msl = raw_string_const(METAL_MSL_SOURCE, "WORLD3D_MESH_SHADER_MSL").expect("the metal target declares WORLD3D_MESH_SHADER_MSL as a raw string const");
     for (label, source) in [("wgsl", WORLD3D_SHADER), ("hlsl", hlsl.as_str()), ("msl", msl.as_str())] {
-        for value in RIG {
-            assert!(source.contains(value), "the {label} world-3d shader is missing the lighting-rig value `{value}`");
+        for value in CONTRACT {
+            assert!(source.contains(value), "the {label} world-3d shader is missing environment/material contract `{value}`");
         }
-        assert!(!source.contains("0.28"), "the {label} world-3d shader still carries the old single-directional ambient floor");
+        assert!(!source.contains("WORLD3D_AMBIENT_INTENSITY"), "the {label} shader still hardcodes ambient instead of reading the pass");
+        assert!(
+            !source.contains("globals.material.x") && !source.contains("globals.material.y") && !source.contains("material.x") && !source.contains("material.y"),
+            "the {label} shader still applies one pass-global standard material to every instance"
+        );
+    }
+    for (label, source, policy) in [("wgsl", WORLD3D_SHADER, "u32(instance.flags.x) & 1u"), ("hlsl", hlsl.as_str(), "uint(input.flags.x) & 1u"), ("msl", msl.as_str(), "uint(in.flags.x) & 1u")] {
+        assert!(source.contains(policy), "the {label} shader does not decode preserve-vertex-colour from policy bit zero");
+    }
+}
+
+/// 🎨️ World outputs follow their authored material policy; reference Basic and shared UI bypass ACES.
+#[test]
+fn world3d_output_families_apply_their_authored_tone_mapping_policy() {
+    for source in [WORLD3D_SHADER, WORLD3D_LINES_SHADER] {
+        assert!(source.contains("world3d_output_transform"));
+        assert!(source.contains("world3d_attachment_output"));
+        assert!(source.contains("world3d_linear_to_srgb"));
+        assert!(source.contains("globals.shadow.w"));
+        assert!(source.contains("0.59719") && source.contains("0.238081") && source.contains("/ 0.6"));
+    }
+    assert!(WORLD3D_TEXTURED_SHADER.contains("world3d_basic_attachment_output"));
+    assert!(WORLD3D_TEXTURED_SHADER.contains("world3d_linear_to_srgb"));
+    assert!(WORLD3D_TEXTURED_SHADER.contains("globals.shadow.w"));
+    assert!(!WORLD3D_TEXTURED_SHADER.contains("world3d_output_transform"));
+    assert!(!WORLD3D_TEXTURED_SHADER.contains("0.59719") && !WORLD3D_TEXTURED_SHADER.contains("0.238081"));
+    for source in [UI_SHADER, VECTOR_SHADER, SCENE_BLIT_SHADER, GLASS_SHADER] {
+        assert!(!source.contains("world3d_output_transform"), "shared UI/composite shader was accidentally tone mapped");
+        assert!(!source.contains("world3d_attachment_output"), "shared UI/composite shader was accidentally encoded as World content");
+    }
+    for (source, name) in [(D3D12_HLSL_SOURCE, "WORLD3D_LINES_SHADER_HLSL"), (METAL_MSL_SOURCE, "WORLD3D_LINES_SHADER_MSL")] {
+        let mirror = raw_string_const(source, name).expect("native line mirror");
+        assert!(mirror.contains("world3d_output_transform"));
+        assert!(mirror.contains("world3d_attachment_output"));
+        assert!(mirror.contains("shadow.w"));
+    }
+}
+
+/// 🌑️ Law: the canonical WGPU mesh shader owns current Three's five-sample rotated Vogel PCF.
+#[test]
+fn world3d_wgpu_shadow_consumer_matches_current_three_pcf() {
+    for value in [
+        "shadow_view_proj",
+        "texture_depth_2d",
+        "sampler_comparison",
+        "globals.shadow.x < 0.5",
+        "world3d_interleaved_gradient_noise",
+        "world3d_vogel_disk_sample",
+        "2.399963229728653",
+        "index < 5u",
+        "6.28318530718",
+        "textureSampleCompareLevel",
+        "return visibility * 0.2",
+        "u32(in.flags.x) & 2u",
+        "* shadow_visibility",
+    ] {
+        assert!(WORLD3D_SHADER.contains(value), "the canonical WGPU shadow consumer is missing `{value}`");
+    }
+    for forbidden in ["ndc.z - 0.0005", "globals.shadow.y", "globals.shadow.z", "index < 9u"] {
+        assert!(!WORLD3D_SHADER.contains(forbidden), "the canonical WGPU shadow consumer still contains React-dead or biased behavior `{forbidden}`");
+    }
+}
+
+#[test]
+fn every_world3d_wgsl_variant_parses_and_validates_with_naga() {
+    for (label, name, canonical) in [("mesh", "WORLD3D_SHADER", WORLD3D_SHADER), ("lines", "WORLD3D_LINES_SHADER", WORLD3D_LINES_SHADER), ("textured", "WORLD3D_TEXTURED_SHADER", WORLD3D_TEXTURED_SHADER)] {
+        let target = raw_string_const(WGPU_TARGET_SHADERS_SOURCE, name).unwrap_or_else(|| panic!("wgpu target is missing {name}"));
+        for (owner, source) in [("contract", canonical), ("target", target.as_str())] {
+            let module = naga::front::wgsl::parse_str(source).unwrap_or_else(|error| panic!("{owner} {label} WGSL parse failed: {error}"));
+            naga::valid::Validator::new(naga::valid::ValidationFlags::all(), naga::valid::Capabilities::all()).validate(&module).unwrap_or_else(|error| panic!("{owner} {label} WGSL validation failed: {error}"));
+        }
     }
 }
 //#endregion ⚖️WgpuTargetShaderAgreement

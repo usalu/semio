@@ -1,4 +1,3 @@
-
 use super::*;
 use ui_wgpu::wgpu::{DrawList, FontAtlas, IconAtlas, InputState, TableScene};
 
@@ -41,7 +40,7 @@ fn render(node: &UiComponentSceneNode) -> InputState<ActionDescriptor> {
     let mut selects = HashMap::new();
     {
         let mut ctx = crate::interpreter::framework_widget_context(&mut draw, None, &mut atlas, Some(&icons), &mut input, &theme, &mut scroll, &mut collapsed, &mut selects, None, 0.0);
-        render_table(node, Rect::new(0.0, 0.0, 400.0, 300.0), &mut ctx);
+        render_table(node, Rect::new(0.0, 0.0, 400.0, 300.0), &mut ctx, UiDriverDrag::Handle);
     }
     input
 }
@@ -130,7 +129,7 @@ fn press(node: &UiComponentSceneNode, x: f32, y: f32) -> Option<SceneListHit> {
 
 /// 🧪️ `press` with the modifier set the pointer event carried.
 fn press_with(node: &UiComponentSceneNode, x: f32, y: f32, modifiers: SceneModifiers) -> Option<SceneListHit> {
-    table_hit(node, Rect::new(0.0, 0.0, 400.0, 300.0), x, y, &Theme::default(), modifiers)
+    table_hit(node, Rect::new(0.0, 0.0, 400.0, 300.0), x, y, &Theme::default(), modifiers, UiDriverDrag::Handle)
 }
 
 fn row_center_y(index: usize) -> f32 {
@@ -236,16 +235,7 @@ fn row_press_merge_mode_follows_the_pointer_modifiers() {
     table.domain_granularity_id = Some("part".into());
     let node = table_scene("table-press-merge", table);
     let merge_for = |modifiers: SceneModifiers| {
-        press_with(&node, 40.0, row_center_y(0), modifiers)
-            .expect("row hit")
-            .action
-            .expect("interactionSelect")
-            .args
-            .as_ref()
-            .and_then(|args| args.get("merge"))
-            .and_then(semio_framework::DslValue::as_str)
-            .map(str::to_string)
-            .expect("merge")
+        press_with(&node, 40.0, row_center_y(0), modifiers).expect("row hit").action.expect("interactionSelect").args.as_ref().and_then(|args| args.get("merge")).and_then(semio_framework::DslValue::as_str).map(str::to_string).expect("merge")
     };
     assert_eq!(merge_for(SceneModifiers::default()), "replace");
     assert_eq!(merge_for(SceneModifiers { shift: true, ..SceneModifiers::default() }), "range");
@@ -256,44 +246,74 @@ fn row_press_merge_mode_follows_the_pointer_modifiers() {
 }
 
 //#region TableRowTransferTests
-/// 🫳️ React `📊️Table/🟦️.tsx` `rowDragProps`: a row is `draggable` only when the scene names a
-/// `rowDragMime` AND the row itself carries a `_drag` record, and the transfer payload is that
-/// record serialized.
-#[test]
-fn a_row_is_a_drag_source_only_with_both_a_row_drag_mime_and_a_drag_record() {
-    let rows = json!([{ "id": "r1", "name": "Alpha", "_drag": { "partId": "p1" } }, { "id": "r2", "name": "Beta" }]).to_string();
-    let bounds = Rect::new(0.0, 0.0, 400.0, 300.0);
-    let theme = Theme::default();
-    let without_mime = table_scene("table-drag-none", TableScene::base(columns_json(&[("name", "Name", false)]), rows.clone()));
-    assert!(scene_transfer_drag_source(&without_mime, bounds, 40.0, row_center_y(0), &theme).is_none(), "a table with no rowDragMime declares no drag source");
-
-    let mut table = TableScene::base(columns_json(&[("name", "Name", false)]), rows);
-    table.row_drag_mime = Some("application/x-semio-part".into());
-    let node = table_scene("table-drag-src", table);
-    let (mime, payload) = scene_transfer_drag_source(&node, bounds, 40.0, row_center_y(0), &theme).expect("row 0 carries _drag");
-    assert_eq!(mime, "application/x-semio-part");
-    assert_eq!(serde_json::from_str::<Value>(&payload).expect("payload json"), json!({ "partId": "p1" }));
-    assert!(scene_transfer_drag_source(&node, bounds, 40.0, row_center_y(1), &theme).is_none(), "a row without a _drag record is not draggable");
+fn drain_actions(input: &mut InputState<ActionDescriptor>) -> Vec<ActionDescriptor> {
+    let mut actions = Vec::new();
+    while let Some(action) = input.take_action_step().expect("action authority live") {
+        actions.push(action.into_descriptor().expect("bounded action materializes"));
+    }
+    actions
 }
 
-/// 🫴️ React `📊️Table/🟦️.tsx` `onDrop`: the first `application/x-semio-*` entry on the transfer is
-/// JSON-parsed and SPREAD over `dropActionJson`'s own args (`dispatchCellAction`), so the drop action
-/// keeps everything it declared and gains the dragged record's keys.
+fn transfer_table(surface_id: &str, controller_id: &str, row_drag_mime: Option<&str>, drop_action: Option<Value>) -> UiComponentSceneNode {
+    let rows = json!([{ "id": "asset-7", "name": "Asset", "_drag": { "artifactId": "asset-7", "revision": 3 } }]).to_string();
+    let mut table = TableScene::base(columns_json(&[("name", "Name", false)]), rows);
+    table.row_drag_mime = row_drag_mime.map(str::to_string);
+    table.drop_action_json = drop_action.map(|value| value.to_string());
+    let mut node = table_scene(surface_id, table);
+    node.controller_id = controller_id.to_string();
+    node
+}
+
 #[test]
-fn a_drop_spreads_the_transfer_payload_over_the_declared_drop_action_args() {
-    let mut table = TableScene::base(columns_json(&[("name", "Name", false)]), json!([{ "id": "r1", "name": "Alpha" }]).to_string());
-    table.drop_action_json = Some(json!({ "controllerId": "controller", "action": "acceptDrop", "args": { "surfaceId": "table-drop", "slot": "inbox" } }).to_string());
-    let node = table_scene("table-drop", table);
+fn shared_fixture_drivers_gate_table_transfer_to_handle_or_surface_geometry() {
+    let fixture: Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../../../../../🔨️modules/🖱️ui/🧫️fixtures/🔀️scene-list-transfer/🔣️.json"))).expect("shared transfer fixture");
+    let source = &fixture["table"]["source"];
+    let node = transfer_table(source["surfaceId"].as_str().unwrap(), "controller.table-a", source["mime"].as_str(), None);
     let bounds = Rect::new(0.0, 0.0, 400.0, 300.0);
     let theme = Theme::default();
-    let action = scene_transfer_drop_action(&node, bounds, 40.0, row_center_y(0), &theme, "application/x-semio-part", &json!({ "partId": "p1" }).to_string()).expect("drop action");
-    assert_eq!(action.action, "acceptDrop");
-    let args = action.args.as_ref().expect("args");
-    assert_eq!(args.get("slot").and_then(semio_framework::DslValue::as_str), Some("inbox"), "the declared args survive the spread");
-    assert_eq!(args.get("partId").and_then(semio_framework::DslValue::as_str), Some("p1"), "the dragged record's keys are merged in");
-    assert!(
-        scene_transfer_drop_action(&node, bounds, 40.0, row_center_y(0), &theme, "text/plain", &json!({ "partId": "p1" }).to_string()).is_none(),
-        "React filters the transfer types to `application/x-semio-*`; anything else is not a drop"
+    let metrics = table_metrics(bounds, 1, &theme);
+    let row = Rect::new(metrics.body.x, metrics.body.y, metrics.body.w, metrics.row_h);
+    let handle = table_transfer_handle_rect(row, &theme);
+    let handle_point = (handle.x + handle.w * 0.5, handle.y + handle.h * 0.5);
+    let label_point = (handle.x + handle.w + theme.gap_standard * 2.0, handle_point.1);
+
+    let handle_start = table_transfer_start(&node, bounds, handle_point.0, handle_point.1, &theme, UiDriverDrag::Handle).expect("Handle driver arms the semantic transfer handle");
+    assert!(matches!(handle_start.source, SceneListTransferSource::TableRow { ref row_id, .. } if row_id == "asset-7"));
+    assert!(table_transfer_start(&node, bounds, label_point.0, label_point.1, &theme, UiDriverDrag::Handle).is_none(), "Handle labels do not arm");
+    assert!(table_transfer_start(&node, bounds, label_point.0, label_point.1, &theme, UiDriverDrag::Surface).is_some(), "Surface rows arm");
+}
+
+#[test]
+fn shared_fixture_table_transfer_crosses_windows_and_revalidates_mime_payload_and_generation() {
+    cancel_scene_list_transfer();
+    let fixture: Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../../../../../🔨️modules/🖱️ui/🧫️fixtures/🔀️scene-list-transfer/🔣️.json"))).expect("shared transfer fixture");
+    let source_fixture = &fixture["table"]["source"];
+    let destination_fixture = &fixture["table"]["destination"];
+    let source = transfer_table(source_fixture["surfaceId"].as_str().unwrap(), "controller.table-a", source_fixture["mime"].as_str(), None);
+    let destination = transfer_table(
+        destination_fixture["surfaceId"].as_str().unwrap(),
+        destination_fixture["dropAction"]["controllerId"].as_str().unwrap(),
+        None,
+        Some(destination_fixture["dropAction"].clone()),
     );
+    let bounds = Rect::new(0.0, 0.0, 400.0, 300.0);
+    let theme = Theme::default();
+    remember_scene_theme(&theme);
+    let metrics = table_metrics(bounds, 1, &theme);
+    let handle = table_transfer_handle_rect(Rect::new(metrics.body.x, metrics.body.y, metrics.body.w, metrics.row_h), &theme);
+    let (x, y) = (handle.x + handle.w * 0.5, handle.y + handle.h * 0.5);
+    let mut input = InputState::<ActionDescriptor>::default();
+
+    passive_scene_pointer_button(&source, bounds, x, y, true, 0, SceneModifiers::default(), "window-a", 7, UiDriverDrag::Handle, &mut input).expect("source down");
+    passive_scene_pointer_move(&source, bounds, x + theme.control_height, y, "window-a", 7, UiDriverDrag::Handle);
+    passive_scene_pointer_button(&destination, bounds, 20.0, row_center_y(0), false, 0, SceneModifiers::default(), "window-b", 3, UiDriverDrag::Handle, &mut input).expect("destination up");
+    let actions = drain_actions(&mut input);
+    assert_eq!(actions.len(), 1);
+    assert_eq!(serde_json::to_value(&actions[0]).expect("action json"), fixture["table"]["expectedAction"]);
+
+    passive_scene_pointer_button(&source, bounds, x, y, true, 0, SceneModifiers::default(), "window-a", 8, UiDriverDrag::Handle, &mut input).expect("source down");
+    passive_scene_pointer_move(&source, bounds, x + theme.control_height, y, "window-a", 9, UiDriverDrag::Handle);
+    passive_scene_pointer_button(&destination, bounds, 20.0, row_center_y(0), false, 0, SceneModifiers::default(), "window-b", 3, UiDriverDrag::Handle, &mut input).expect("stale destination up");
+    assert!(drain_actions(&mut input).is_empty(), "a changed source document generation retires the transfer before release");
 }
 //#endregion TableRowTransferTests

@@ -126,6 +126,50 @@ fn a_commit_outlives_every_frame_candidate_that_was_discarded_before_it_dispatch
 }
 
 #[test]
+fn a_live_deferred_owner_drains_before_a_new_complete_source_batch_installs() {
+    let mut earlier = FrameActionOwners::default();
+    earlier.try_push(ActionDescriptor { controller_id: "fixture".into(), action: "earlier".into(), args: None }).unwrap();
+    let mut live = FrameDeferredCursor::new(earlier, false, false, false, false, 1, semio_framework_job::root_cancel_token());
+    let mut later = FrameActionOwners::default();
+    let mut input = InputState::<ActionDescriptor>::default();
+    let mut batch = input.reserve_actions(2, 64).unwrap();
+    batch.action("fixture", "canvasDragLeave", 32, |_| Ok(())).unwrap();
+    batch.action("fixture", "canvasDrop", 32, |_| Ok(())).unwrap();
+    batch.publish().unwrap();
+    assert_eq!(transfer_frame_input_action(&mut input, &mut later), Ok(FrameInputActionStep::Pending));
+    input.reserve_action("fixture", "later", 16).unwrap().publish().unwrap();
+    assert_eq!(transfer_frame_input_action(&mut input, &mut later), Ok(FrameInputActionStep::Transferred));
+    assert_eq!(transfer_frame_input_action(&mut input, &mut later), Ok(FrameInputActionStep::Transferred));
+    assert!(matches!(live.take_next(), Some(FrameDeferredWork::Action(action)) if action.action == "earlier"));
+    assert!(live.take_next().is_none());
+    assert!(live.terminal_is_empty());
+    let mut next = FrameDeferredCursor::new(later, false, false, false, false, 2, semio_framework_job::root_cancel_token());
+    assert!(matches!(next.take_next(), Some(FrameDeferredWork::Action(action)) if action.action == "canvasDragLeave"));
+    assert!(matches!(next.take_next(), Some(FrameDeferredWork::Action(action)) if action.action == "canvasDrop"));
+    assert!(matches!(next.take_next(), Some(FrameDeferredWork::Action(action)) if action.action == "later"));
+    assert!(next.take_next().is_none());
+    assert!(next.terminal_is_empty());
+    assert!(!RENDERER_SOURCE.contains("frame completion found an unclosed deferred owner"));
+}
+
+#[test]
+fn closing_a_partially_staged_batch_retires_one_descriptor_then_its_reservation() {
+    let mut actions = FrameActionOwners::default();
+    let mut input = InputState::<ActionDescriptor>::default();
+    let mut batch = input.reserve_actions(2, 64).unwrap();
+    batch.action("fixture", "first", 32, |_| Ok(())).unwrap();
+    batch.action("fixture", "second", 32, |_| Ok(())).unwrap();
+    batch.publish().unwrap();
+    assert_eq!(transfer_frame_input_action(&mut input, &mut actions), Ok(FrameInputActionStep::Pending));
+    let mut cursor = FrameDeferredCursor::new(actions, false, false, false, false, 1, semio_framework_job::root_cancel_token());
+    cursor.closing = true;
+    assert!(!cursor.close_step(), "one grant retires the staged descriptor");
+    assert!(!cursor.close_step(), "one later grant retires the empty batch reservation");
+    assert!(cursor.close_step());
+    assert!(cursor.terminal_is_empty());
+}
+
+#[test]
 fn the_ledger_is_the_runtimes_and_no_frame_candidate_owns_one() {
     assert!(RENDERER_SOURCE.contains("    frame_actions: FrameActionOwners,"), "the runtime declares the ledger");
     assert!(RENDERER_SOURCE.contains("app.frame_actions.try_push(action)"), "the frame's authorities push onto the RUNTIME's ledger");

@@ -395,7 +395,7 @@ fn descriptor_bytes(plugin_id: &str, package_id: &str, version: &str, component_
 fn prepared_fixture() -> FixtureDirectory {
     let sequence = FIXTURE_SEQUENCE.fetch_add(1, Ordering::SeqCst);
     let schema = format!("fixture.document.catalog.{}.{}@1", std::process::id(), sequence);
-    let root = PathBuf::from(std::env::var_os("SEMIO_TEST_ARTIFACT_DIR").expect("ticket-owned catalog fixture root")).join(format!("semio-hub-trusted-catalog-{}-{sequence}", std::process::id()));
+    let root = crate::test_artifact_root::test_artifact_root().join(format!("semio-hub-trusted-catalog-{}-{sequence}", std::process::id()));
     std::fs::create_dir_all(root.join("components")).expect("component directory");
     std::fs::create_dir_all(root.join("descriptors")).expect("descriptor directory");
     std::fs::create_dir_all(root.join("browser")).expect("actor directory");
@@ -506,7 +506,7 @@ async fn prepared_gis_binding_fixture(viewer: bool, foreign_service: bool) -> Fi
         target["grant"]["write"] = false.into();
     }
     let sequence = FIXTURE_SEQUENCE.fetch_add(1, Ordering::SeqCst);
-    let root = PathBuf::from(std::env::var_os("SEMIO_TEST_ARTIFACT_DIR").expect("ticket-owned exact-law artifact directory")).join(format!("gis-binding-catalog-{}-{sequence}", std::process::id()));
+    let root = crate::test_artifact_root::test_artifact_root().join(format!("gis-binding-catalog-{}-{sequence}", std::process::id()));
     std::fs::create_dir(&root).expect("exclusive GIS binding fixture directory");
     std::fs::write(root.join("component.wasm"), component).expect("write synthetic GIS component");
     std::fs::write(root.join("descriptor.semio"), &bytes).expect("write actual GIS descriptor");
@@ -544,130 +544,6 @@ impl NativeCodecProviderSourceV1 for RecordingLinkedProvider {
         let bindings = NativeCodecProviderSourceV1::preview(&NativeCodecProviderSetV1::linked(), package, descriptor, context)?;
         self.previews.lock().expect("successful private previews").push(package.plugin_id.to_owned());
         Ok(bindings)
-    }
-}
-
-#[cfg(feature = "native-artifact-execution")]
-#[tokio::test]
-async fn linked_stdio_gis_descriptor_failures_never_publish_a_partial_codec_closure() {
-    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔗️compiled-dependencies/🔣️.json")).unwrap();
-    let mut fixture = prepared_gis_binding_fixture(false, false).await;
-    for receipt in semio_s_plugin_gis::native_codecs::native_codec_factory_receipts().unwrap() {
-        let native = receipt.into_codec().unwrap();
-        let declared = document_codec(&native.schema).await.unwrap().expect("actual assembled GIS declaration owns its codec");
-        assert_eq!(native.schema, declared.schema);
-        assert_eq!(native.extension, declared.extension);
-        assert_eq!(native.pack_schema_hash, declared.pack_schema_hash);
-        assert!(std::ptr::fn_addr_eq(native.compile_dsl, declared.compile_dsl));
-        assert!(std::ptr::fn_addr_eq(native.print_mirror, declared.print_mirror));
-        assert!(std::ptr::fn_addr_eq(native.edit_text_from_envelope, declared.edit_text_from_envelope));
-        assert!(std::ptr::fn_addr_eq(native.apply_ops_binary, declared.apply_ops_binary));
-    }
-    let baseline = fixture.bundle.clone();
-    let originals: Vec<_> = baseline["packages"]
-        .as_array()
-        .unwrap()
-        .iter()
-        .map(|record| {
-            let path = fixture.root.join(record["descriptor"]["path"].as_str().unwrap());
-            (path.clone(), std::fs::read(path).expect("original full descriptor"))
-        })
-        .collect();
-    let schemas: Vec<_> = baseline["packages"].as_array().unwrap().iter().flat_map(|record| record["nativeCodecs"].as_array().unwrap().iter().map(|codec| codec["artifactSchema"].as_str().unwrap().to_owned())).collect();
-    assert_eq!(schemas.len(), 28);
-    let mut before = Vec::with_capacity(schemas.len());
-    for schema in &schemas {
-        before.push(document_codec(schema).await.unwrap().map(|codec| (codec.schema, codec.extension, codec.pack_schema_hash)));
-    }
-    eprintln!("[DEBUG] linked-catalog initial-public-codecs={}", before.iter().filter(|codec| codec.is_some()).count());
-    for row in corpus["atomicCases"].as_array().unwrap() {
-        fixture.bundle = baseline.clone();
-        for (path, bytes) in &originals {
-            std::fs::write(path, bytes).expect("restore exact descriptor bytes");
-        }
-        let change = row["change"].as_str().unwrap();
-        let package = if change == "stdio-catalog" { "stdio" } else { "gis" };
-        let index = fixture.bundle["packages"].as_array().unwrap().iter().position(|record| record["pluginId"] == package).unwrap();
-        if !matches!(change, "exact" | "gis-provider") {
-            let mut descriptor = decode_package_descriptor(&originals[index].1).expect("original authoritative descriptor");
-            match change {
-                "stdio-catalog" | "gis-catalog" => descriptor.manifest.topic_contributions.retain(|entry| entry.topic != "stdio.artifact-catalog.v1"),
-                "gis-dependency" => descriptor.manifest.dependencies.clear(),
-                "gis-trailing-byte" | "gis-duplicate-field" => {}
-                _ => panic!("unknown atomic fixture change {change}"),
-            }
-            descriptor.hashes.descriptor_sha256.clear();
-            descriptor.hashes.descriptor_sha256 = hex_lower(&Sha256::digest(&os_store::pack_rt::encode_wire_value(&to_dsl_value(&descriptor).unwrap())));
-            let mut value = to_dsl_value(&descriptor).unwrap();
-            if change == "gis-duplicate-field" {
-                let DslValue::Object(fields) = &mut value else { panic!("full descriptor object") };
-                let duplicate = fields.iter().find(|(key, _)| key == "manifest").unwrap().clone();
-                fields.push(duplicate);
-            }
-            let mut bytes = os_store::pack_rt::encode_wire_value(&value);
-            if change == "gis-trailing-byte" {
-                bytes.push(0);
-            }
-            let raw_invalid = matches!(change, "gis-trailing-byte" | "gis-duplicate-field");
-            assert_eq!(decode_package_descriptor(&bytes).is_err(), raw_invalid, "full descriptor raw gate: {change}");
-            let record = &mut fixture.bundle["packages"][index];
-            record["descriptor"]["byteLength"] = bytes.len().into();
-            record["descriptor"]["sha256"] = hex_lower(&Sha256::digest(&bytes)).into();
-            if record["browserActor"]["kind"] == "closed-browser-actor" {
-                record["browserActor"]["sourceDescriptorByteSha256"] = record["descriptor"]["sha256"].clone();
-            }
-            std::fs::write(&originals[index].0, bytes).expect("write resealed complete candidate descriptor");
-        }
-        fixture.refresh_profile_generation();
-        fixture.persist_bundle();
-        let providers = RecordingLinkedProvider { previews: Mutex::new(Vec::new()), fail_gis: change == "gis-provider" };
-        let control = TestControl::new();
-        let result = TrustedCatalogLoader::load_fixture(&fixture.bundle_path, "frozen-gis-test", &providers, &control.context()).await;
-        assert_eq!(result.is_ok(), row["accepted"].as_bool().unwrap(), "loader result: {change}: {:?}", result.as_ref().err());
-        let previews: Vec<String> = serde_json::from_value(row["previews"].clone()).unwrap();
-        assert_eq!(*providers.previews.lock().unwrap(), previews, "successful private preview frontier: {change}");
-        if let Ok(catalog) = result {
-            assert_eq!(catalog.codec_count(), 28);
-            assert_eq!(catalog.packages().iter().map(VerifiedTrustedPackage::plugin_id).collect::<Vec<_>>(), vec!["stdio", "gis"]);
-            assert_eq!(catalog.open_target_count(), 1);
-            assert_eq!(catalog.selected_document_open().unwrap().package.plugin_id, "gis");
-            for schema in &schemas {
-                assert!(document_codec(schema).await.unwrap().is_some(), "complete public codec: {schema}");
-            }
-        } else {
-            for (schema, prior) in schemas.iter().zip(&before) {
-                assert_eq!(&document_codec(schema).await.unwrap().map(|codec| (codec.schema, codec.extension, codec.pack_schema_hash)), prior, "partial public codec after {change}: {schema}");
-            }
-        }
-        eprintln!("[DEBUG] linked-catalog atomic-case={change} successful-private-previews={}", previews.len());
-    }
-}
-
-#[cfg(feature = "native-artifact-execution")]
-#[tokio::test]
-async fn gis_map_binding_constructs_from_loaded_catalog_and_retains_verified_bytes() {
-    for (viewer, foreign_service) in [(false, false), (true, false), (false, true)] {
-        let fixture = prepared_gis_binding_fixture(viewer, foreign_service).await;
-        let control = TestControl::new();
-        let catalog = Arc::new(TrustedCatalogLoader::load_fixture(&fixture.bundle_path, "frozen-gis-test", &NativeCodecProviderSetV1::linked(), &control.context()).await.expect("catalog loaded with real GIS receipts"));
-        let result = crate::inference::verified_gis_map_binding(catalog.clone());
-        if foreign_service {
-            assert!(matches!(result, Err(crate::inference::InferenceErrorV1::Denied)));
-        } else if viewer {
-            assert!(result.expect("viewer profile is admissible").is_none());
-        } else {
-            let binding = result.expect("verified editor binding").expect("GIS Map editor is bound");
-            assert!(Arc::ptr_eq(binding.catalog(), &catalog));
-            assert_eq!(binding.selection(), catalog.selected_document_open().expect("sole selection"));
-            assert_eq!(binding.service().executable_identity(), semio_s_artifact_gis_gismap::gis_map_inference_service().executable_identity());
-            let retained = catalog.packages().iter().find(|package| package.plugin_id() == "gis").expect("verified GIS package").component_bytes().to_vec();
-            let digest = binding.digest().to_owned();
-            std::fs::write(fixture.component_path(0), b"tampered").expect("mutate fixture backing component");
-            assert!(TrustedCatalogLoader::load_fixture(&fixture.bundle_path, "frozen-gis-test", &NativeCodecProviderSetV1::linked(), &control.context()).await.is_err());
-            drop(catalog);
-            assert_eq!(binding.catalog().packages().iter().find(|package| package.plugin_id() == "gis").expect("retained GIS package").component_bytes(), retained);
-            assert_eq!(binding.digest(), digest);
-        }
     }
 }
 
@@ -1390,4 +1266,132 @@ fn local_stdio_gis_profile_is_exact_two_packages_twenty_eight_codecs_and_one_map
     let mut reordered = local_stdio_gis_profile_bundle();
     reordered.profiles[0].selected_closure.reverse();
     assert!(validate_bundle(&reordered, "local-stdio-gis-open-v1").expect_err("noncanonical closure").to_string().contains("canonical"));
+}
+
+mod long {
+    use super::*;
+
+    #[cfg(feature = "native-artifact-execution")]
+    #[tokio::test]
+    async fn gis_map_binding_constructs_from_loaded_catalog_and_retains_verified_bytes() {
+        for (viewer, foreign_service) in [(false, false), (true, false), (false, true)] {
+            let fixture = prepared_gis_binding_fixture(viewer, foreign_service).await;
+            let control = TestControl::new();
+            let catalog = Arc::new(TrustedCatalogLoader::load_fixture(&fixture.bundle_path, "frozen-gis-test", &NativeCodecProviderSetV1::linked(), &control.context()).await.expect("catalog loaded with real GIS receipts"));
+            let result = crate::inference::verified_gis_map_binding(catalog.clone());
+            if foreign_service {
+                assert!(matches!(result, Err(crate::inference::InferenceErrorV1::Denied)));
+            } else if viewer {
+                assert!(result.expect("viewer profile is admissible").is_none());
+            } else {
+                let binding = result.expect("verified editor binding").expect("GIS Map editor is bound");
+                assert!(Arc::ptr_eq(binding.catalog(), &catalog));
+                assert_eq!(binding.selection(), catalog.selected_document_open().expect("sole selection"));
+                assert_eq!(binding.service().executable_identity(), semio_s_artifact_gis_gismap::gis_map_inference_service().executable_identity());
+                let retained = catalog.packages().iter().find(|package| package.plugin_id() == "gis").expect("verified GIS package").component_bytes().to_vec();
+                let digest = binding.digest().to_owned();
+                std::fs::write(fixture.component_path(0), b"tampered").expect("mutate fixture backing component");
+                assert!(TrustedCatalogLoader::load_fixture(&fixture.bundle_path, "frozen-gis-test", &NativeCodecProviderSetV1::linked(), &control.context()).await.is_err());
+                drop(catalog);
+                assert_eq!(binding.catalog().packages().iter().find(|package| package.plugin_id() == "gis").expect("retained GIS package").component_bytes(), retained);
+                assert_eq!(binding.digest(), digest);
+            }
+        }
+    }
+
+    #[cfg(feature = "native-artifact-execution")]
+    #[tokio::test]
+    async fn linked_stdio_gis_descriptor_failures_never_publish_a_partial_codec_closure() {
+        let corpus: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔗️compiled-dependencies/🔣️.json")).unwrap();
+        let mut fixture = prepared_gis_binding_fixture(false, false).await;
+        for receipt in semio_s_plugin_gis::native_codecs::native_codec_factory_receipts().unwrap() {
+            let native = receipt.into_codec().unwrap();
+            let declared = document_codec(&native.schema).await.unwrap().expect("actual assembled GIS declaration owns its codec");
+            assert_eq!(native.schema, declared.schema);
+            assert_eq!(native.extension, declared.extension);
+            assert_eq!(native.pack_schema_hash, declared.pack_schema_hash);
+            assert!(std::ptr::fn_addr_eq(native.compile_dsl, declared.compile_dsl));
+            assert!(std::ptr::fn_addr_eq(native.print_mirror, declared.print_mirror));
+            assert!(std::ptr::fn_addr_eq(native.edit_text_from_envelope, declared.edit_text_from_envelope));
+            assert!(std::ptr::fn_addr_eq(native.apply_ops_binary, declared.apply_ops_binary));
+        }
+        let baseline = fixture.bundle.clone();
+        let originals: Vec<_> = baseline["packages"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|record| {
+                let path = fixture.root.join(record["descriptor"]["path"].as_str().unwrap());
+                (path.clone(), std::fs::read(path).expect("original full descriptor"))
+            })
+            .collect();
+        let schemas: Vec<_> = baseline["packages"].as_array().unwrap().iter().flat_map(|record| record["nativeCodecs"].as_array().unwrap().iter().map(|codec| codec["artifactSchema"].as_str().unwrap().to_owned())).collect();
+        assert_eq!(schemas.len(), 28);
+        let mut before = Vec::with_capacity(schemas.len());
+        for schema in &schemas {
+            before.push(document_codec(schema).await.unwrap().map(|codec| (codec.schema, codec.extension, codec.pack_schema_hash)));
+        }
+        eprintln!("[DEBUG] linked-catalog initial-public-codecs={}", before.iter().filter(|codec| codec.is_some()).count());
+        for row in corpus["atomicCases"].as_array().unwrap() {
+            fixture.bundle = baseline.clone();
+            for (path, bytes) in &originals {
+                std::fs::write(path, bytes).expect("restore exact descriptor bytes");
+            }
+            let change = row["change"].as_str().unwrap();
+            let package = if change == "stdio-catalog" { "stdio" } else { "gis" };
+            let index = fixture.bundle["packages"].as_array().unwrap().iter().position(|record| record["pluginId"] == package).unwrap();
+            if !matches!(change, "exact" | "gis-provider") {
+                let mut descriptor = decode_package_descriptor(&originals[index].1).expect("original authoritative descriptor");
+                match change {
+                    "stdio-catalog" | "gis-catalog" => descriptor.manifest.topic_contributions.retain(|entry| entry.topic != "stdio.artifact-catalog.v1"),
+                    "gis-dependency" => descriptor.manifest.dependencies.clear(),
+                    "gis-trailing-byte" | "gis-duplicate-field" => {}
+                    _ => panic!("unknown atomic fixture change {change}"),
+                }
+                descriptor.hashes.descriptor_sha256.clear();
+                descriptor.hashes.descriptor_sha256 = hex_lower(&Sha256::digest(&os_store::pack_rt::encode_wire_value(&to_dsl_value(&descriptor).unwrap())));
+                let mut value = to_dsl_value(&descriptor).unwrap();
+                if change == "gis-duplicate-field" {
+                    let DslValue::Object(fields) = &mut value else { panic!("full descriptor object") };
+                    let duplicate = fields.iter().find(|(key, _)| key == "manifest").unwrap().clone();
+                    fields.push(duplicate);
+                }
+                let mut bytes = os_store::pack_rt::encode_wire_value(&value);
+                if change == "gis-trailing-byte" {
+                    bytes.push(0);
+                }
+                let raw_invalid = matches!(change, "gis-trailing-byte" | "gis-duplicate-field");
+                assert_eq!(decode_package_descriptor(&bytes).is_err(), raw_invalid, "full descriptor raw gate: {change}");
+                let record = &mut fixture.bundle["packages"][index];
+                record["descriptor"]["byteLength"] = bytes.len().into();
+                record["descriptor"]["sha256"] = hex_lower(&Sha256::digest(&bytes)).into();
+                if record["browserActor"]["kind"] == "closed-browser-actor" {
+                    record["browserActor"]["sourceDescriptorByteSha256"] = record["descriptor"]["sha256"].clone();
+                }
+                std::fs::write(&originals[index].0, bytes).expect("write resealed complete candidate descriptor");
+            }
+            fixture.refresh_profile_generation();
+            fixture.persist_bundle();
+            let providers = RecordingLinkedProvider { previews: Mutex::new(Vec::new()), fail_gis: change == "gis-provider" };
+            let control = TestControl::new();
+            let result = TrustedCatalogLoader::load_fixture(&fixture.bundle_path, "frozen-gis-test", &providers, &control.context()).await;
+            assert_eq!(result.is_ok(), row["accepted"].as_bool().unwrap(), "loader result: {change}: {:?}", result.as_ref().err());
+            let previews: Vec<String> = serde_json::from_value(row["previews"].clone()).unwrap();
+            assert_eq!(*providers.previews.lock().unwrap(), previews, "successful private preview frontier: {change}");
+            if let Ok(catalog) = result {
+                assert_eq!(catalog.codec_count(), 28);
+                assert_eq!(catalog.packages().iter().map(VerifiedTrustedPackage::plugin_id).collect::<Vec<_>>(), vec!["stdio", "gis"]);
+                assert_eq!(catalog.open_target_count(), 1);
+                assert_eq!(catalog.selected_document_open().unwrap().package.plugin_id, "gis");
+                for schema in &schemas {
+                    assert!(document_codec(schema).await.unwrap().is_some(), "complete public codec: {schema}");
+                }
+            } else {
+                for (schema, prior) in schemas.iter().zip(&before) {
+                    assert_eq!(&document_codec(schema).await.unwrap().map(|codec| (codec.schema, codec.extension, codec.pack_schema_hash)), prior, "partial public codec after {change}: {schema}");
+                }
+            }
+            eprintln!("[DEBUG] linked-catalog atomic-case={change} successful-private-previews={}", previews.len());
+        }
+    }
 }

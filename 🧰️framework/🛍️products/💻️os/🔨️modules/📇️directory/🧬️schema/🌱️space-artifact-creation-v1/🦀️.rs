@@ -15,6 +15,19 @@ fn identity(value: &str) -> bool {
     !value.is_empty() && value.len() <= 256 && value.as_bytes()[0].is_ascii_alphanumeric() && value.bytes().all(|byte| byte.is_ascii_alphanumeric() || b"._:/-".contains(&byte))
 }
 
+/// 🌟 The dialect grammar's any-subset coordinate, mirrored from `io_schema::SubsetId::ANY` exactly
+/// as `📇️document-index-v1/🦀️.rs` mirrors it (this module cannot depend on that crate).
+const ANY_SUBSET: &str = "*";
+
+/// 🃏️ A dialect subset is an identity **or** the one any-subset coordinate that a dialect writes
+/// for a standard's whole subset space (`"s.gis.gismap@1/*"`). Every shipped trusted-catalog open
+/// target declares it, so an identity-only predicate here refuses the real catalog and makes
+/// artifact creation impossible. It stays a bounded, non-executable literal: exactly `*`, never a
+/// pattern embedded in a longer identity.
+fn subset(value: &str) -> bool {
+    value == ANY_SUBSET || identity(value)
+}
+
 fn request_id(value: &str) -> bool {
     value.len() == 32 && value.bytes().any(|byte| byte != b'0') && value.bytes().all(|byte| byte.is_ascii_digit() || matches!(byte, b'a'..=b'f'))
 }
@@ -49,8 +62,21 @@ pub struct SpaceArtifactCreationKindV1 {
 
 impl SpaceArtifactCreationKindV1 {
     /// 🛡️ Presentation coordinates remain exact and cannot carry executable authority.
+    ///
+    /// 🪢 `kind_id` and `dialect.artifact_kind` are two DIFFERENT id spaces the product keeps
+    /// deliberately distinct, so neither may be validated against the other: `kind_id` is a manifest
+    /// `ArtifactKindSpec::id` from the taxonomy space (`2d.note`, `text.document`, `stdio.json`),
+    /// while `dialect.artifact_kind` is the owning app's `Dialect` coordinate from the plugin space
+    /// (`s.note.note`, `s.writer.writer`, `s.stdio.json`). Every plugin in the repo but one spells
+    /// them differently; `gis` alone writes `ArtifactKindSpec { id: GISMAP_DIALECT.artifact_kind }`,
+    /// so a string equality here admits `gis` and refuses every other plugin's catalog row, which
+    /// made a non-`gis` trusted catalog impossible to present for creation. The binding between the
+    /// two spaces is declared by the trusted catalog, where `artifact_creation_catalog` derives BOTH
+    /// fields from one `VerifiedDocumentOpenSelectionV1` whose `artifact.kind` is already pinned to a
+    /// manifest kind and whose `parent_dialect` is already pinned to that app's dialect by
+    /// `validate_descriptor_open_target`; no authority is lost by bounding each field on its own.
     pub fn validate(&self) -> bool {
-        identity(&self.kind_id) && identity(&self.schema) && self.dialect.artifact_kind == self.kind_id && identity(&self.dialect.standard) && identity(&self.dialect.subset) && label(&self.label.en) && label(&self.label.de)
+        identity(&self.kind_id) && identity(&self.schema) && identity(&self.dialect.artifact_kind) && identity(&self.dialect.standard) && subset(&self.dialect.subset) && label(&self.label.en) && label(&self.label.de)
     }
 }
 
@@ -166,14 +192,20 @@ pub struct SpaceArtifactCreationReadyV1 {
 }
 
 impl SpaceArtifactCreationReadyV1 {
-    /// 🧷️ Checks the minted coordinate and exact kind/dialect relationship.
+    /// 🧷️ Checks the minted coordinate and each kind/dialect coordinate it carries.
+    ///
+    /// 🪢 `kind_id` (manifest taxonomy space) and `parent_dialect.artifact_kind` (plugin dialect
+    /// space) are the two distinct spaces `SpaceArtifactCreationKindV1::validate` documents; the
+    /// receipt copies both out of the accepted intent, which took them from one trusted-catalog
+    /// selection, so the relationship is established there and cannot be re-derived from the two
+    /// strings alone.
     pub fn validate(&self) -> bool {
         self.artifact_id.strip_prefix("artifact-").is_some_and(request_id)
             && identity(&self.kind_id)
             && identity(&self.artifact_schema)
-            && self.parent_dialect.artifact_kind == self.kind_id
+            && identity(&self.parent_dialect.artifact_kind)
             && identity(&self.parent_dialect.standard)
-            && identity(&self.parent_dialect.subset)
+            && subset(&self.parent_dialect.subset)
     }
 }
 

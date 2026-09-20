@@ -67,7 +67,7 @@ async fn change_wall_h_rd_kn_committed_json_is_canonical() {
     }
     let reencoded = serde_json::to_value(mutation()).expect("change-wall-h-rd-kn mutation encodes");
     let original: serde_json::Value = serde_json::from_str(MUTATION).expect("change-wall-h-rd-kn mutation reparses");
-    assert_eq!(reencoded, original, "change-wall-h-rd-kn/raises-wall-h-rd-kn-to-187-5: committed mutation JSON is not the canonical externally-tagged ChangeWallHRdKn form carrying newWallHRdKn");
+    assert_eq!(reencoded, original, "change-wall-h-rd-kn/raises-wall-h-rd-kn-to-187-5: committed mutation JSON is not the canonical internally-tagged ChangeWallHRdKn form carrying mutation and newWallHRdKn");
 }
 
 /// 🎯️ The declared outcome holds: `change-wall-h-rd-kn` at 187.5 is applied, not rejected, and carries no

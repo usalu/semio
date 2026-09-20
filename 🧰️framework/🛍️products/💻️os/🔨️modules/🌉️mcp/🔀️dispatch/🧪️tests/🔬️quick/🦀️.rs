@@ -2,7 +2,7 @@
 use super::*;
 
 use crate::audit::InMemoryAuditSink;
-use crate::catalog::{CapabilityDefinition, CapabilityKind, CapabilityOwner, CapabilityPresentation, CapabilityRef, CapabilitySource, Catalog, ToolExposure, compile};
+use crate::catalog::{CapabilityAudience, CapabilityDefinition, CapabilityKind, CapabilityOwner, CapabilityPresentation, CapabilityRef, CapabilitySource, Catalog, ToolExposure, compile};
 use crate::source_builders;
 use semio_framework::manifest::kernel;
 use semio_framework::manifest::{ApprovalMode, CapabilityEffects, CapabilityExecution, CapabilityPolicy, ResourceSelector};
@@ -14,6 +14,7 @@ fn synthetic_capability(id: &str, scopes: &[&str], approval: ApprovalMode, destr
         version: 1,
         owner: CapabilityOwner::Gateway,
         kind: CapabilityKind::Mutation,
+        audience: CapabilityAudience::Agent,
         title: id.to_string(),
         description: String::new(),
         artifact_kind: None,

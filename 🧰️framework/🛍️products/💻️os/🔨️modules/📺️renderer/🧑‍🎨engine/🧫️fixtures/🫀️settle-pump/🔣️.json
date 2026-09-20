@@ -278,7 +278,7 @@
       "id": "a-chrome-pointer-button-declares-and-returns",
       "why": "The measured defect: this body ended in `flush_deferred_actions`, whose `settle_ui_chain` runs whole-shell refresh passes to a fixed point. On 6118 one gesture's chain held the `dispatch-event` checkout for 8 515 ms across 6 refresh passes, and the `F` pressed 1.1 s later reached the node-graph fit 7 632 ms after the key went down (`📓️wgpu-generate-add-port-fit-2026-09-14.md`).",
       "source": "shell",
-      "owns": "pub async fn handle_pointer_button",
+      "owns": "pub async fn handle_pointer_button_for",
       "forbids": "flush_deferred_actions",
       "declares": "self.owe_settle();"
     },
@@ -312,7 +312,7 @@
       "id": "a-pointer-gesture-runs-its-file-picker-before-it-returns",
       "why": "Measured: with the picker handed to the pump, `io`'s \"the import opens a real file picker\" read `{\"inputs\":[],\"choosers\":0}` — no input element was ever created — and \"the picked file REPLACES the graph\" fell with it, 6/6 → 4/6.",
       "source": "shell",
-      "owns": "pub async fn handle_pointer_button",
+      "owns": "pub async fn handle_pointer_button_for",
       "runs": "self.drain_gesture_bound_work().await;"
     },
     {

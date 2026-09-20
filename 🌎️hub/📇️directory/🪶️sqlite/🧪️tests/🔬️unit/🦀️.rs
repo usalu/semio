@@ -282,7 +282,7 @@ async fn share_issuance_atomically_requires_the_persisted_scope_and_preserves_ar
         .expect("postcondition counts");
     assert_eq!(after, before);
 
-    let root = std::env::var_os("SEMIO_TEST_ARTIFACT_DIR").map_or_else(std::env::temp_dir, std::path::PathBuf::from);
+    let root = crate::test_artifact_root::test_artifact_root();
     std::fs::create_dir_all(&root).expect("share race artifact root");
     let path = root.join(format!("share-issuance-race-{}.sqlite", time_ordered_id()));
     let issuer = SqliteDirectory::connect(path.to_str().expect("share race path")).await.expect("race issuer");

@@ -54,10 +54,10 @@ export type DocumentOpeningParkV1<Owner> = Readonly<{
 }>;
 
 /** 🚦️ Foreground admission may name predecessors; only a committed successor may retire them. */
-export function documentOpeningPredecessorsV1<Plugin>(
+export function documentOpeningPredecessorsV1<Plugin, Owner extends DocumentOpeningOwnerV1<Plugin>>(
   opening: Readonly<{ runtimeKey: string; plugin: Plugin; instanceId: number }>,
-  owners: ReadonlyMap<string, DocumentOpeningOwnerV1<Plugin>>,
-): ReadonlyArray<readonly [string, DocumentOpeningOwnerV1<Plugin>]> {
+  owners: ReadonlyMap<string, Owner>,
+): ReadonlyArray<readonly [string, Owner]> {
   return [...owners].filter(([key, owner]) => key === opening.runtimeKey || (owner.plugin === opening.plugin && owner.session.instanceId === opening.instanceId));
 }
 

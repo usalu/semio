@@ -1,5 +1,4 @@
 {
-  "ChangeTankHeightM": {
-    "newTankHeightM": 11.5
-  }
+  "mutation": "changeTankHeightM",
+  "newTankHeightM": 11.5
 }

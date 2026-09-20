@@ -19,7 +19,6 @@ export default defineConfig({
   test: {
     root: testRoot,
     name: "@semio-tech/framework-os",
-    mode: "test",
     environment: "node",
     // 🩹️ `include` MUST stay empty: these are in-source (`import.meta.vitest`) suites collected via
     // `includeSource`. Listing the same files in BOTH keys made vitest collect each twice and report

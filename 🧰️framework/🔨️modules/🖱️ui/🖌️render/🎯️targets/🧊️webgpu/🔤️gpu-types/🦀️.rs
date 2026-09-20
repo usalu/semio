@@ -101,7 +101,9 @@ pub(crate) fn binding_type(kind: BindingKind) -> wgpu::BindingType {
     match kind {
         BindingKind::UniformBuffer { dynamic_offset, min_size } => wgpu::BindingType::Buffer { ty: wgpu::BufferBindingType::Uniform, has_dynamic_offset: dynamic_offset, min_binding_size: min_size.and_then(std::num::NonZeroU64::new) },
         BindingKind::Texture2D => wgpu::BindingType::Texture { sample_type: wgpu::TextureSampleType::Float { filterable: true }, view_dimension: wgpu::TextureViewDimension::D2, multisampled: false },
+        BindingKind::DepthTexture2D => wgpu::BindingType::Texture { sample_type: wgpu::TextureSampleType::Depth, view_dimension: wgpu::TextureViewDimension::D2, multisampled: false },
         BindingKind::Sampler => wgpu::BindingType::Sampler(wgpu::SamplerBindingType::Filtering),
+        BindingKind::ComparisonSampler => wgpu::BindingType::Sampler(wgpu::SamplerBindingType::Comparison),
     }
 }
 

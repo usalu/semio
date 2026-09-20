@@ -426,31 +426,716 @@ Ticket-folder artefacts: `📜️h1-dev-boot.sh` (the real-route boot + restart 
 
 ---
 
-# H1b — session 4 (2026-09-19 ~23:30 →)
+# H1b — session 4 (2026-09-19 23:30 → 2026-09-20)
 
-Continuation slice. Everything below is measured on the tree as of this session; §1–§8 above are
-H1's session-2/3 record and are not re-litigated. Captures: `🗑️generated/h1b-*.txt`.
+Continuation slice. §1–§8 above are H1's session-2/3 record and are not re-litigated; everything below
+is measured on the tree as of this session. Captures: `🗑️generated/h1b-*.txt`. Commands run from
+`/Users/ueli/Documents/semio`.
 
 ## 9. Re-measurement of the hub test surface
 
-(filling)
+### 9.1 The run
 
-## 10. `os-hub:test` level budget
+```
+SEMIO_TEST_ARTIFACT_DIR=🌎️hub/📦️packages/🦀️rust/🗑️generated/test-artifacts RUST_MIN_STACK=134217728 \
+  cargo nextest run -p semio-hub --no-fail-fast --profile long --status-level all
+Summary [318.819s] 280 tests run: 247 passed, 32 failed, 1 timed out, 0 skipped
+```
 
-(filling)
+Capture `h1b-nextest-default.txt`. Default features (`sqlite,native-artifact-execution`), 10-way
+parallelism, `SEMIO_TEST_ARTIFACT_DIR` exported exactly as the `os-hub:test` route exports it.
 
-## 11. G2 stub list — what is still stub on this tree
+This is **not** comparable term-for-term with AU1's "hub lib 141/33" or H1 §5.4's "170 passed / 9
+failed": those were `cargo test --lib --bins` on the 11:00 tree, 179 executed laws. The tree has taken
+a full fleet day of hub landings since (AU1/AU3 auth + rate limiter, W3b/W3d durable stores and
+sagas, K1's `/healthz`), and nextest executes 280 laws — 101 more than the run H1 classified.
 
-(filling)
+### 9.2 Per-lane result
+
+| lane | passed | failed | timed out |
+|---|---|---|---|
+| `semio-hub` lib (`--lib`) | 155 | 8 | 0 |
+| `semio-hub::bin/os-hub` (`--bins`) | 92 | 24 | 1 |
+| **total** | **247** | **32** | **1** |
+
+### 9.3 Classification of every red
+
+Eight root causes, not thirty-three. Grouped by the exact failing expression.
+
+| # | root cause (file:line of the failing expression) | laws | owner | state |
+|---|---|---|---|---|
+| R1 | `🧾️wal/🧪️tests/🔬️unit/🦀️.rs:27` — the fixture stamped the parent edit `mutation_id` as `inference-store-edit-1-mutation`, while production stamps `approval_mutation_id(job_id, proposal_hash)` (`🏃️runtime/🦀️.rs:1353`, `:3513`). Gate 1 of `durable_decision_event_match` (`🧾️wal/🦀️.rs:255-261`) therefore never matched a record the same test had just written, and `verify` returned `Ok(None)` → `"absent"` | 4 wal + 1 sqlite | **hub, stale test** | **fixed here** |
+| R2 | `🧪️tests/🔬️bin-unit/🦀️.rs:475` — `tempdir()` returned a path it never created, so `std::fs::canonicalize(tempdir(…))` at `:257` failed `NotFound` | 1 | **hub, stale test** | **fixed here** |
+| R3 | `📇️directory/🦀️.rs:2013` — `decide_verified_checkpoint` now refuses `"ordinary artifact publication requires a committed genesis parent"`; the fixture helper `publish_checkpoint_for_test` (`🔬️bin-unit/🦀️.rs:714-748`) still publishes an ordinary checkpoint with `parent_checkpoint_id: None` into a document that has no genesis | 2 (+1 timeout, §9.4) | **hub, stale test** | open, §13.1 |
+| R4 | `🌱️creation/🧬️schema/🦀️.rs:290` — `ArtifactCreationIntentV1::validate` rejects the fixture intent built by `publish_genesis_checkpoint_for_test` (`🔬️bin-unit/🦀️.rs:806`) with `Conflict("artifact creation accepted identity is invalid")` | 4 | **hub, stale test** | open, §13.2 |
+| R5 | `Catalog("trusted document-open target is invalid, unbound, or duplicated")` from `TrustedCatalogLoader` on the linked stdio profile (`🔬️bin-unit/🦀️.rs:421`, `:896`) | 3 | **DS1** (stdio descriptor / trusted-catalog publication) | not touched |
+| R6 | `inference::runtime` three-store assembly reaches `DurableOwnedThreeStoreMapAssemblyAdvanceV1::Terminal`, so the commit turn answers `Rejected` → route `Denied` where the law wants `Storage` (`🏃️runtime/🦀️.rs:1421-1426`; the terminal's `DurableOwnedThreeStoreMapAssemblyFailureV1` is **discarded**, which is why H1 §7.1 could not name the stage) | 3 | **hub** | open, §13.3 — the discarded failure is the first thing to surface |
+| R7 | bounded-deadline laws that elapse (`HTTP deadline: Elapsed`, `admin gate deadline: Elapsed`, `removal-wins sender deadline: Elapsed`, `no revocation close before 5s deadline`) plus two status mismatches (`400≠202`, `500≠200`) | 8 | **hub / load** | open, §13.4 — not separated from 10-way parallelism in this session |
+| R8 | `directory_event_page_v1_*`: `"all PostgreSQL full-event append seams admit before persistence"` (`:6136`) and `assertion failed: control.cancelled…` (`:6073`); `document_open_and_execution_target_refuse_descriptor_or_index_without_genesis` `Conflict("directory event violates the bounded event-page contract")` (`:2757`); `document_open_plan_admin_revocation…` `"cancelled" ≠ "succeeded"` (`:3174`); `document_open_plan_exchange…` `"committed document checkpoint"` (`:2321`) | 5 | **hub** | open, §13.5 |
+
+### 9.4 The one timeout
+
+`tests::artifact_cas_maintenance_checkpoint_reaches_tail_after_sixteen_requests` hit the `long`
+profile's 300 s `slow-timeout` (`terminate-after = 1`). Its second statement is
+`publish_checkpoint_for_test` (R3), i.e. the law panics within a second; the process then fails to
+exit because the `hub_worker_pool()` threads outlive the panicking test thread. So the 300 s is a
+*second* defect stacked on R3: a panicking hub law does not terminate its own process. Recorded in
+§13.1 with R3 because the panic must be removed first.
+
+## 10. `os-hub:test` level budget — closed
+
+H1 §5.5 / §7.2: `runCargoTestBudgeted` (`🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟦️.ts:1763`)
+runs the active level's budget over the whole nextest **run** phase, `fundamental` is `15_000 ms`
+(`:1086-1091`), and every hub law was unscoped, i.e. `fundamental`.
+
+### 10.1 The measured cost distribution
+
+From `h1b-nextest-default.txt` (per-law wall clock, `--status-level all`):
+
+| bucket | laws | summed law time |
+|---|---|---|
+| < 0.5 s | 225 | 30.5 s |
+| 0.5–2 s | 26 | 27.8 s |
+| 2–10 s | 20 | 84.0 s |
+| 10–60 s | 7 | 197.8 s |
+| ≥ 60 s | 2 | 474.1 s |
+| **all** | **280** | **814.2 s** |
+
+814 s of law time against a 15 s run budget: no thread count closes that gap. Nine laws individually
+exceed the `quick` budget and two exceed the `long` per-test `slow-timeout`.
+
+### 10.2 The split
+
+29 laws moved into `mod quick` / `mod long` / `mod exhaustive` submodules — the repo's own convention
+(`📚️library/🟦️.ts:1758-1761`: "tests live in `mod quick`/`mod long`/`mod exhaustive` submodules inside
+`mod tests`; unscoped tests are `fundamental`"), which `runCargoTestBudgeted` reads through its
+cumulative `--skip <level>::` filters. No timeout was inflated and no law was deleted or weakened.
+
+Boundaries are the measured cost, not taste: `quick` = 2–10 s, `long` = 10–120 s, `exhaustive` ≥ 120 s.
+
+| file | quick | long | exhaustive |
+|---|---|---|---|
+| `🌎️hub/🧪️tests/🔬️bin-unit/🦀️.rs` | 7 | 3 | — |
+| `🌎️hub/🗿️artifact-authority/📇️native-openable-provider/🧪️tests/🔬️unit/🦀️.rs` | 4 | — | — |
+| `🌎️hub/🗿️artifact-authority/🧱️chunk-cas/🧪️tests/🔬️unit/🦀️.rs` | 3 | 1 | — |
+| `🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🧪️tests/🔬️unit/🦀️.rs` | — | 2 | — |
+| `🌎️hub/🔐️auth/🧪️tests/🔬️unit/🦀️.rs` | 1 | 1 | — |
+| `🌎️hub/📇️directory/🪶️sqlite/🌱️creation-v1/🧪️tests/🔬️standalone/🦀️.rs` | 1 | 1 | — |
+| `🌎️hub/📇️directory/🧪️tests/🔬️unit/🦀️.rs` | — | — | 1 |
+| `🌎️hub/💡️inference/🏃️runtime/🧪️tests/🔬️unit/🦀️.rs` | 1 | — | — |
+| `🌎️hub/💡️inference/🧾️wal/🧪️tests/{🔬️unit,⛓️chain}/🦀️.rs` | 2 | — | — |
+| `🌎️hub/📇️directory/🔐️authorization/🔌️socket-grant/🧪️tests/🔮️oracles/🦀️.rs` | 1 | — | — |
+| **total** | **20** | **8** | **1** |
+
+Projected wall clock per lane at the thread counts `runCargoTestBudgeted` itself picks (7 assertion
+threads at `fundamental`, default parallelism above it) on this 10-core machine:
+
+| nx target | level | laws it runs | summed law time | projected wall | budget |
+|---|---|---|---|---|---|
+| `os-hub:test` | fundamental | 251 | 58.3 s | ≈ 8.3 s | 15 s |
+| `os-hub:test-quick` | + quick | 271 | 142.3 s | ≈ 14.2 s | 30 s |
+| `os-hub:test-long` | + long | 279 | 340.1 s | ≈ 34.0 s | 300 s |
+| `os-hub:test-exhaustive` | + exhaustive | 280 | 814.2 s | ≈ 300 s (one serial 300 s law dominates) | 900 s |
+
+The mechanical move was done by `🐍️h1b-level-tests.py` (kept in this ticket folder): it lifts each
+named law with its attributes verbatim, asserts a column-zero terminator, refuses any law carrying a
+multi-line raw string, and re-parents it. Six `super::super::` paths inside moved laws were rewritten
+to absolute `crate::inference::` / `crate::artifact_authority::` paths so nesting cannot shift them
+again. `git diff --stat` on `🌎️hub` is 1945 insertions / 1883 deletions — the delta is exactly the 29
+module wrappers, i.e. no law body changed.
+
+**Honest limit:** the projections above are arithmetic over measured per-law times, not a stopwatch on
+`bun ./📜️script.ts test`. The end-to-end timing run is blocked behind §13.6's peer break — see §13.7.
+
+## 11. G2 stub list — status on this tree
+
+Re-checked by grep/read on the current tree, per G2 §12's ranked list, restricted to this slice's
+subsystems (db persistence, presence, directory, artifact authority).
+
+| G2 item | G2's verdict | status now | evidence |
+|---|---|---|---|
+| P0 #1 no login/session-mint route | STUB | **closed by AU1/AU3** | `🏗️bootstrap/🦀️.rs:8375-8376` registers `semio_hub::auth::SESSION_MINT_ROUTE` and `CREDENTIAL_ROUTE` with their own body limits |
+| P0 #2 rate limiting absent | ABSENT | **closed by AU1** | `rate_limit_middleware` layered router-wide (`🏗️bootstrap/🦀️.rs:8422`), 130 `rate.?limit`/`token.?bucket` hits under `🌎️hub/**/*.rs` |
+| P1 #3 observability absent | ABSENT | **partly closed here** | `/healthz` exists (K1, `:8126`), `/readyz` gains closed-gate reasons (§12). Still **0** `tracing::` call sites — §13.8 |
+| P1 #6 postgres/neo4j never compiled | unverified | **green, inherited** | `au3-hub-postgres-check.txt` / `au3-hub-neo4j-check.txt` both `Finished dev profile`; K1 re-ran them (`k1-hub-check-postgres.txt`, `k1-hub-check-neo4j.txt`). Not re-run by H1b — §13.6 blocks any default/extra-feature cargo on this tree right now |
+| P1 #5 `checkpoint-publications` has no caller | possibly dead | **refuted** | exercised over real HTTP by `📜️script.ts:918` (`checkpoint-publication-process-check`) and by two bin laws (`🔬️bin-unit/🦀️.rs:6184`, `:6252`) |
+| §3 presence wire extension `ServerFrame::Session{actor,color}` / `views` unverified | PLACEHOLDER | **closed** | 10 live-socket laws assert the frame (`🔬️bin-unit/🦀️.rs:3224, 3644, 5094, 5181, …`), all passing in §9.1 |
+| P2 #8 no `/healthz` vs `/readyz` split | missing | **closed by K1** | `HubLivenessV1` at `🏗️bootstrap/🦀️.rs:2110-2133`, deliberately subsystem-independent |
+| §4 browser-broker-proof issuer | STUB | **still stub** | `grep BrokerProof\|broker_proof 🌎️hub --include=*.rs` → 0. `os-hub:browser-broker-check` exists as a target but the hub-side issuer does not. Owned by the identity slices (AU3/C1c), not duplicated here |
+
+So of G2's four subsystems, **db persistence, directory and artifact authority are real**, presence is
+real and now proven at runtime, and the only remaining stub inside this slice's scope is hub-side
+observability (§12/§13.8) plus the broker-proof issuer, which belongs to the identity slices.
 
 ## 12. Observability minimal bar
 
-(filling)
+C1b lost hours to a hub that bound its port and then waited forever with `artifactAuthority:false` and
+no stated reason. The three pieces:
+
+1. **`/healthz`** — already present (K1): `HubLivenessV1 { schema, status, runId, uptimeMs }`, reading
+   nothing but the run identity and the process clock, so an orchestrator never restarts a hub that is
+   merely still warming up (`🏗️bootstrap/🦀️.rs:2110-2133`).
+2. **`/readyz` now names the closed gate and why.** `HubComponentReadinessV1` gains
+   `reason: Option<&'static str>` (`🏗️bootstrap/🦀️.rs:2075-2088`), set only when the gate is closed, and
+   `HubReadinessV1` gains `blocked_by: Vec<HubClosedReadinessGateV1>` (`:2052-2066`), the ordered list of
+   *required* gates holding `status` at `not-ready`. Both are `skip_serializing_if`, so **a ready hub's
+   `/readyz` body is byte-identical to before** — the fixtures and the TS admission predicate keep
+   passing unchanged. Reason codes are stable kebab-case:
+   `local-bootstrap-pipe-handshake-incomplete`, `identity-assertion-verifier-not-configured`,
+   `artifact-cas-coordinator-barrier-closed`, `admin-spa-dist-missing-run-os-hub-admin-build`,
+   `artifact-cas-maintenance-supervisor-failed-closed`, and for the gate that cost C1b the time:
+   `trusted-catalog-never-published-in-this-data-root` vs
+   `trusted-catalog-pointer-present-but-not-loadable` vs
+   `native-artifact-execution-feature-not-compiled`, discriminated at the startup call site from the
+   data root and the compiled feature set (`🏗️bootstrap/🦀️.rs:8722-8730`).
+3. **Startup says it out loud.** `eprintln!("[INFO] os-hub ready at …")` fired even when the hub was
+   *not* ready. It is now `startup_readiness_line(&state.readiness, &addr)`
+   (`🏗️bootstrap/🦀️.rs:2168-2180`, called at `:8805`): `[INFO] os-hub ready at http://…` only when every
+   required gate is open, otherwise
+   `[WARN] os-hub listening at http://… but /readyz reports not-ready — closed gates: artifactAuthority=trusted-catalog-never-published-in-this-data-root …`.
+4. **The waiter repeats it.** `waitForReadiness` used to die with the bare string
+   `"hub readiness deadline exceeded"`; it now carries the last observed `blockedBy`
+   (`🌎️hub/🚀️local-bootstrap/🏃️execution/🟦️.ts:222-239`), so every launcher, probe and collaboration
+   harness built on it inherits the reason without new plumbing.
+
+Contract twins updated together: the JSON schema's `readyComponent` gains the optional `reason`, a new
+`closedReadinessGate` `$def` and the optional top-level `blockedBy`, with an explicit
+`"not": {"required": ["blockedBy"]}` on the `status == "ready"` branch
+(`🌎️hub/🚀️local-bootstrap/🧬️schema/🔣️.json:12-33, 219-233`); the pipe fixture's two not-ready snapshots
+now carry the reasons a real hub emits (`🧫️fixtures/🚇️pipe-v1/🔣️.json`).
+
+New law: `a_not_ready_hub_names_every_closed_gate_and_its_reason_in_readyz_and_at_startup`
+(`🌎️hub/🧪️tests/🔬️bin-unit/🦀️.rs:96-129`) — a ready hub publishes no `blockedBy` and no `reason`
+anywhere in its body and prints `[INFO]`; a hub with four closed gates lists them in order with their
+codes, keeps open gates reason-free, and prints a `[WARN]` line naming each; a production hub without
+an identity verifier names `identity-assertion-verifier-not-configured`.
 
 ## 13. Open gaps after H1b
 
-(filling)
+1. **R3 — `publish_checkpoint_for_test` predates the genesis-parent rule.** The fixture helper
+   (`🔬️bin-unit/🦀️.rs:714-748`) publishes an ordinary checkpoint into a document that has no committed
+   genesis, which `📇️directory/🦀️.rs:2013` now refuses. The helper has no session token, so it cannot
+   reach `publish_document_genesis` without a signature change; that is a fixture redesign, not an
+   import fix. Stacked on it: a panicking hub law does not terminate its process (§9.4), turning one
+   panic into a 300 s timeout — the `hub_worker_pool()` threads must not outlive a failed law.
+2. **R4 — `ArtifactCreationIntentV1::validate` rejects the genesis fixture intent.** The failing
+   predicate is one of the eleven disjuncts at `🌱️creation/🧬️schema/🦀️.rs:268-286`; this session did not
+   isolate which. The fixture's actor comes from a live `authenticate_session`
+   (`🔬️bin-unit/🦀️.rs:838-839`), so `authorization_generation == 0` and the
+   `SpaceArtifactCreationStatusV1`/`ready()` sub-validations are the first two to instrument.
+3. **R6 — the three-store assembly terminal reason is thrown away.** `🏃️runtime/🦀️.rs:1421-1426` takes
+   `take_terminal_owners()` and drops `terminal.failure`
+   (`DurableOwnedThreeStoreMapAssemblyFailureV1::{Cancelled, Admission, Preparation, Binding}`), so the
+   route can only answer `Denied` with no stage. Surfacing that failure — as a `[WARN]` line at minimum,
+   ideally as a discriminated commit error — is the prerequisite for finishing H1 §7.1, and is worth
+   doing on its own observability merit.
+4. **R7 — eight bounded-deadline laws are not separated from load.** A serial
+   (`--test-threads 1`) re-run was started twice and both times sat in `Blocking waiting for file lock on
+   artifact directory` behind the fleet; it was stopped rather than left queued. Until it runs, "load"
+   is a hypothesis, not a classification.
+5. **R8 — five directory/open-plan laws with distinct assertions.** Untouched; each needs its own read.
+6. **`semio-s-artifact-stdio-semio` is broken by a peer refactor right now**, which blocks every
+   default-feature `cargo check/test -p semio-hub`: 11 × `E0308` in
+   `🏅️standards/🔖️v1/🪆️subsets/🖼️image/🧬️schema/🧬️mutations/*/🦠️mutation/🦀️.rs:9`, where the thin `apply`
+   wrappers still return `SemioImageDiff` while `apply_semio_image_mutation` now returns
+   `MutationOutcome<SemioImageDiff>` (capture `h1b-check-1.txt`). Same shape as H1 §1's pdf break, and
+   per preamble rule 3 it was not touched.
+7. **The §10 lane split is compile-verified only in the sqlite lane.**
+   `cargo check -p semio-hub --no-default-features --features sqlite --all-targets` is **green, 0 errors,
+   64 warnings emitted** in 6 m 38 s (`h1b-check-sqlite.txt`) — which covers `🔬️bin-unit` and the
+   directory/auth/chunk-cas moves. The moves inside
+   `#[cfg(feature = "native-artifact-execution")]` modules (wal, inference runtime, native-openable
+   provider, trusted catalog) and the R1 fixture fix are **not yet compiled** because of gap 6.
+8. **`tracing` is still absent** (0 `tracing::` call sites under `🌎️hub`). §12 raises the floor from
+   "silent" to "says which gate is closed"; structured request/WS tracing and a metrics endpoint remain
+   G2 P1 #3.
+9. H1 §7's items 3 (`os-hub:build` release never executed), 4 (`--all-features` in seven non-`test`
+   script checks) and 6 (the `os-hub:dev` row hangs with the Nx daemon) are unchanged by this slice.
 
 ## 14. Files changed by H1b
 
-(filling)
+| file | change |
+|---|---|
+| `🌎️hub/🏗️bootstrap/🦀️.rs` | `HubComponentReadinessV1::reason`, `HubClosedReadinessGateV1`, `HubReadinessV1::blocked_by`, `HubArtifactCasSweeperReadinessV1::reason`, `hub_readiness(…, artifact_authority_reason)`, `startup_readiness_line`, `/readyz` sweeper gate reason, the startup line now branches on readiness |
+| `🌎️hub/🧪️tests/🔬️bin-unit/🦀️.rs` | `tempdir` creates its directory (R2); 19 `hub_readiness` call sites carry the new reason; new law `a_not_ready_hub_names_every_closed_gate_and_its_reason_in_readyz_and_at_startup`; 7 laws → `mod quick`, 3 → `mod long` |
+| `🌎️hub/💡️inference/🧾️wal/🧪️tests/🔬️unit/🦀️.rs` | R1: `durable_edit` takes the mutation id; the fixture's three member edits are stamped `approval_mutation_id(...)`, `…:drawing`, `…:value` exactly as `🏃️runtime/🦀️.rs:1353-1355` does; 1 law → `mod quick` |
+| `🌎️hub/💡️inference/🧾️wal/🧪️tests/⛓️chain/🦀️.rs` | 1 law → `mod quick` |
+| `🌎️hub/💡️inference/🏃️runtime/🧪️tests/🔬️unit/🦀️.rs` | 1 law → `mod quick`; four `super::super::` → `crate::inference::` |
+| `🌎️hub/🗿️artifact-authority/📇️native-openable-provider/🧪️tests/🔬️unit/🦀️.rs` | 4 laws → `mod quick`; two `super::super::` → `crate::artifact_authority::` |
+| `🌎️hub/🗿️artifact-authority/🧱️chunk-cas/🧪️tests/🔬️unit/🦀️.rs` | 3 laws → `mod quick`, 1 → `mod long` |
+| `🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🧪️tests/🔬️unit/🦀️.rs` | 2 laws → `mod long` |
+| `🌎️hub/🔐️auth/🧪️tests/🔬️unit/🦀️.rs` | 1 law → `mod quick`, 1 → `mod long` |
+| `🌎️hub/📇️directory/🪶️sqlite/🌱️creation-v1/🧪️tests/🔬️standalone/🦀️.rs` | 1 law → `mod quick`, 1 → `mod long` |
+| `🌎️hub/📇️directory/🧪️tests/🔬️unit/🦀️.rs` | 1 law → `mod exhaustive` |
+| `🌎️hub/📇️directory/🔐️authorization/🔌️socket-grant/🧪️tests/🔮️oracles/🦀️.rs` | 1 law → `mod quick` |
+| `🌎️hub/🚀️local-bootstrap/🧬️schema/🔣️.json` | optional `reason` on `readyComponent`, new `closedReadinessGate`, optional top-level `blockedBy`, `not/required` on the ready branch |
+| `🌎️hub/🚀️local-bootstrap/🧫️fixtures/🚇️pipe-v1/🔣️.json` | the two not-ready snapshots carry the reasons and `blockedBy` a real hub now emits |
+| `🌎️hub/🚀️local-bootstrap/🏃️execution/🟦️.ts` | `waitForReadiness` reports the last observed closed gates instead of a bare deadline string |
+
+Ticket-folder artefacts added: `🐍️h1b-level-tests.py` (the level-tiering codemod). Captures:
+`🗑️generated/h1b-nextest-default.txt`, `h1b-check-1.txt`, `h1b-check-sqlite.txt`.
+
+---
+
+# H1b — session 5 (2026-09-20 ~01:25 →)
+
+Continuation of the H1b slice after the 01:15 desktop restart cut fleet 4. §9–§14 above are session 4's
+record. Everything below is measured on the tree as of this session. Captures: `🗑️generated/h1b-s5-*.txt`.
+Commands run from `/Users/ueli/Documents/semio`.
+
+## 15. Inherited state, re-measured
+
+| session-4 claim | state at 01:25 | evidence |
+|---|---|---|
+| predecessor's `cargo nextest run -p semio-hub … --profile long` (pid 18276 / cargo 18413) still alive | **dead** — neither pid exists; its capture `h1b-nextest-serial.txt` holds only `Blocking waiting for file lock` + `error: Broken pipe (os error 32)` | `ps -p 18276 -p 18413` → empty |
+| §13.6 `semio-s-artifact-stdio-semio` broken by a peer (11 × E0308) | **fixed by the peer**; the last capture `h1b-nextest-after.txt` (01:21) instead died on a *different* peer break, `E0599 no associated function … from_cols_array … for struct Mat4` in `semio-framework-ui-scene` | `h1b-nextest-after.txt:94` |
+| that `Mat4::from_cols_array` break | **also gone** — `grep -rn from_cols_array --include="*.rs" .` → 0 hits repo-wide | grep, 01:28 |
+
+So both peer breaks that blocked session 4's default-feature lane are clear, and the hub test lane is
+buildable again. The session-5 build was started at 01:29 and spent its first ~30 min in
+`Blocking waiting for file lock on artifact directory` behind ~24 peer cargo processes (preamble
+rule 14: legitimate — the holders have live `rustc` children at 2–35 % CPU).
+
+## 16. Root cause behind R3/R4 and three of session 4's "R7 load" laws: the any-subset coordinate
+
+Session 4's §9.3 classified R4 as "hub, stale test" and put three socket laws under R7 "hub / load".
+Both classifications are wrong, and the three reds have **one** root cause, which is a **product
+defect, not a fixture defect**.
+
+### 16.1 The measurement
+
+The failing disjunct in `ArtifactCreationIntentV1::validate`
+(`🌎️hub/🗿️artifact-authority/🌱️creation/🧬️schema/🦀️.rs:278`, `!self.ready().validate()`) is
+`identity(&self.parent_dialect.subset)` in `SpaceArtifactCreationReadyV1::validate`
+(`🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🌱️space-artifact-creation-v1/🦀️.rs:175`).
+`identity` requires `value.as_bytes()[0].is_ascii_alphanumeric()`, so it refuses the one-character
+subset `*`.
+
+`*` is not a test artefact. It is the dialect grammar's own any-subset coordinate
+(`🧰️framework/🔨️modules/🚪️io/🧬️schema/🦀️.rs:41  pub const ANY: SubsetId = SubsetId("*")`, and
+`ArtifactDialect::to_coordinate`'s own doc writes `"s.stdio.gif@87a/*"`), and it is what **every
+shipped catalog** declares:
+
+- `🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🧫️fixtures/🧬️stdio-gis-bootstrap/🔣️.json:57` —
+  the startup bootstrap catalog — `"parentDialect": { …, "subset": "*" }`;
+- `🔏️trusted-catalog/🦀️.rs:1100` *asserts* the selected GIS map target's parent dialect is
+  `ArtifactDialect { artifact_kind: "s.gis.gismap", standard: "1", subset: "*" }`;
+- every plugin descriptor in `✏️s/🔌️plugins/**/🔣️.json` (trinity, remodel, … ) writes `"subset": "*"`;
+- the surface/app ids are literally `s.gis.gismap@1/*#editor`.
+
+### 16.2 Why this is a P0 for outcomes 1 and 2
+
+The production creation path is `materialize_selected_genesis`
+(`🌎️hub/🗿️artifact-authority/🌱️creation/🦀️.rs:62-68`): it builds a `SpaceArtifactCreationReadyV1`
+straight from `selection.parent_dialect` and returns `AuthorityError::InvalidScope` when
+`target.validate()` is false. With an identity-only subset predicate that is **always** false for
+every catalog target that ships, so *creating an artifact in a space cannot succeed on the real
+catalog* — not in the shell, not over `POST /spaces/{id}/artifact-creations`. The same predicate also
+gates `SpaceArtifactCreationKindV1::validate`, i.e. `SpaceArtifactCreationCatalogV1::canonical_json`,
+so `GET /spaces/{id}/artifact-creations` cannot serve the catalog either.
+
+The repo already knew this: the sibling twin `📇️document-index-v1/🦀️.rs:16-24` carries a four-line
+docstring explaining exactly this ("rejecting it here would drop the presentation row of practically
+every indexed document") and a `subset_identity` predicate with a private `ANY_SUBSET` const. The
+creation twin was never given the same treatment.
+
+### 16.3 The fix (all four twins, same shape as the document-index twin)
+
+| file | change |
+|---|---|
+| `🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🌱️space-artifact-creation-v1/🦀️.rs` | new `const ANY_SUBSET: &str = "*"` + `fn subset(value) = value == ANY_SUBSET \|\| identity(value)`, used by `SpaceArtifactCreationKindV1::validate` (`:53`) and `SpaceArtifactCreationReadyV1::validate` (`:175`) |
+| `…/🌱️space-artifact-creation-v1/🟦️.ts` | new `subsetIdentity`, used by `ready()` and `creationKind()` |
+| `🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🔣️.json` | `subset` pattern widened to `^(?:\*\|[A-Za-z0-9][A-Za-z0-9._:/-]*)$` in `SpaceArtifactCreationCreationDialect`, `SpaceArtifactCreationReady.parentDialect` **and** `DocumentIndexEntryV1.dialect` — the last one had drifted from its own Rust twin, which has admitted `*` since it was written |
+| `…/🌱️space-artifact-creation-v1/🔣️.json` | five new conformance vectors (97 insertions, 0 deletions, no reformatting): `ready-any-subset` / `any-subset` accepted, and `ready-embedded-wildcard-subset` (`gis.*`), `ready-wildcard-prefixed-subset` (`*any`), `embedded-wildcard-subset` (`any.*`) refused — so the wildcard stays exactly one literal `*` and never a pattern inside a longer identity |
+
+The three twins are checked against each other by `proveSpaceArtifactCreationContractV1`
+(`🌎️hub/📦️packages/🦀️rust/📜️script.ts:14469`), which runs the AJV schema, the first-party TypeScript
+parser and a Pack round-trip over every vector.
+
+**Execution status: written, not yet executed** — the verifying run is behind the build lock (§15).
+
+## 17. Outcome 2 proven on a booted hub — 33 of 34 checks
+
+New gate `🐍️h1b-hub-runtime-probe.ts` (kept in this ticket folder). It boots the `os-hub` binary
+through the **real local-bootstrap route** (`startLocalHub` + the fd-3 identity handshake — a raw
+`spawn` is refused with `UnsafeAuthConfiguration("production requires an IdentityAssertionVerifier
+adapter")`), against a brand-new `OS_HUB_DATA` under `/private/tmp`, then **kills the process and
+boots the same data root again**, so durable state is separated from in-memory state by construction.
+
+Run: `bun 🐍️h1b-hub-runtime-probe.ts --port 8847` → **33 PASS, 1 FAIL**, capture
+`🗑️generated/h1b-s5-runtime-probe-3.txt`. Earlier runs: `-1` (raw spawn refused — how the identity
+requirement was found), `-2` (pre-hello socket, 4 fails).
+
+**Binary vintage, stated because it bounds every claim below:**
+`.🧬semio/🦑️repo/⚡️cache/cargo/target/debug/os-hub`, built **2026-09-19 11:12**. It therefore does
+**not** contain session 4's §12 `blockedBy`/`reason` work, and the build of a current binary is behind
+the lock (§15). Everything below is a property of the hub as it shipped at 11:12; §18.1 is the
+re-run this slice still owes.
+
+| # | claim | measured |
+|---|---|---|
+| 1 | `/healthz` is real and subsystem-independent | `200 {schema:"semio.hub.liveness/v1", status:"live", runId, uptimeMs}`; the restart's `runId` differs from the first boot's, so an orchestrator can tell a restart from a warm process |
+| 2 | `/readyz` | `503 {status:"not-ready"}` on a fresh data root, **by design**: `artifactAuthority` is a *required* gate and opens only when `<data>/trusted-catalog/current.json` loads (`🏗️bootstrap/🦀️.rs:456-471`, `:9537-9547`). Every other required gate — `directory`, `storage`, `artifactCasBarrier`, `artifactPublication`, `adminAssets` — is `ready:true`. HTTP code and `status` agree. See §18.2 |
+| 3 | sqlite persistence across a real restart | the credential mints again (`200`), the space is still in `/directory/spaces`, `/directory/spaces/{id}` is `200`, and the **membership roster survives exactly**: `[[ada,"author"],[bo,"spectator"]]`. Presence is `[]` after the restart — ephemeral by contract, as `🏗️bootstrap/🦀️.rs:1644-1649` declares |
+| 4 | auth: mint | `POST /auth/sessions` → `200`, token matches `^session\.v1\.[0-9a-f]{32}\.[0-9a-f]{64}$`; `GET /auth/sessions/me` → `200` with the right `userId` and an `expiresAt` that honours `OS_HUB_SESSION_TTL_SECONDS` |
+| 5 | auth: revocation | `DELETE /auth/sessions/me` → `204`, and the same capability is `401` on the next call |
+| 6 | auth: **expiry** | booted with `OS_HUB_SESSION_TTL_SECONDS=60` (the hub's own `MIN_SESSION_TTL_SECS`); the probe waits the session out (63 s) and `GET /auth/sessions/me` turns `401` with no client action. Server-clocked, not client-enforced |
+| 7 | presence / live socket join and leave | a real `/directory/socket/v1` **upgrade** with a grant issued by `POST /directory/socket-grants` (grant carried in `Sec-WebSocket-Protocol` beside `semio.socket.v1`), then the credential-free `SocketHelloV1` encoded by the repo's **own first-party wire codec** (`📡️replication/🟦️.ts encodeClientFrame`, command lane). The joined peer then received **3 live `{"kind":"event"}` frames** for commands issued by the *other* principal over HTTP; after `close()` the socket reaches `CLOSED`, a further accepted command produces **no** further frame, and the peer's frame count stays at 3 |
+| 8 | rate limiter | the auth bucket (`burst 10`, `cost 6000 ms`, `🔐️auth/🚦️rate-limit/🦀️.rs:56`) refuses with `429`, body `{error:"rate-limited"}` and an integer `retry-after ≥ 1`; a **correct** password is then refused `429` too, i.e. the bucket is charged per remote address, not per outcome |
+
+### 17.1 The one failure is a real defect, caught live
+
+```
+FAIL 2 a not-ready hub warns at startup instead of claiming readiness: false (expected true)
+```
+
+The 11:12 hub printed `[INFO] os-hub ready at http://…` while its own `/readyz` answered
+`503 not-ready`. That is exactly the defect session 4's §12 `startup_readiness_line`
+(`🏗️bootstrap/🦀️.rs:2168-2180`) replaces with a `[WARN] os-hub listening at … but /readyz reports
+not-ready — closed gates: …` line. So §12 is now **motivated by an observed runtime failure**, not
+only by C1b's anecdote, and this probe is the gate that will prove the fix (§18.1).
+
+### 17.2 What the probe does *not* prove
+
+Document-scoped `ServerFrame::Presence { peers }` roster growth/shrink (the `peers` fan-out on the
+**document** socket) is not exercised: reaching it needs a document with a committed genesis, which is
+blocked by the same catalog prerequisite as §17's row 2. The hub's own laws cover it in-process over
+real TCP (`presence_lease_*`, 6 laws in `🔬️bin-unit`). What this probe adds is that the *socket
+admission, grant consumption, hello handshake, live fan-out and departure* all work against a real
+booted process over a real network socket.
+
+## 18. Open gaps after session 5
+
+1. **Every cargo measurement this session owes is behind the shared build lock.** `cargo nextest run
+   -p semio-hub --no-run` was started at 01:29 and after **55 minutes** had still printed nothing but
+   `Blocking waiting for file lock on artifact directory`, behind ~24 peer cargo
+   processes with live `rustc` children (preamble rule 14: legitimate, not a wedge). **Characterised
+   rather than assumed:** the exclusive holder is orphaned cargo pid 72865 (`ppid 1`, 47 min) which
+   has two live `rustc` children compiling `semio_s_*` at 12–31 % CPU, i.e. real work; three further
+   orphans (75229, 84482, 16193) and this slice's own nextest (76739 → cargo 77074) are all parked in
+   `cargo::util::flock::acquire → flock` (`sample 75229`), i.e. waiters, not a `prebuild_lock_exclusive`
+   deadlock. Nothing was killed. Still owed:
+   the fresh hub pass/fail numbers, compile verification of §16's fix, the postgres/neo4j feature
+   lanes, the end-to-end `os-hub:test` stopwatch for §10's level split, and a re-run of §17's probe
+   against a binary that contains §12. The run was left queued rather than killed (pids 76739 /
+   77074, capture `🗑️generated/h1b-s5-build.txt`): a successor should read that capture first and
+   only restart the command if the pids are gone.
+2. **`/readyz` can never reach `200` in a fresh data root.** `artifactAuthority` is required and needs
+   a published trusted catalog; publishing one costs two wasm release component builds plus a
+   default-features `--bin os-hub` (`📜️c1b-warm-catalog.sh`), and no data root in the tree has one
+   (`find .🧬semio/🌐hub -name current.json -path '*trusted-catalog*'` → 0). This is the gate C1b lost
+   hours to and the one DS1's stdio descriptor work feeds. Whoever owns zero-touch boot has to decide
+   whether the catalog publication is part of `os-hub:dev` or a separate warm step.
+3. **`open-plan-check --source` is red on this tree, independently of this slice.**
+   `bun ./📜️script.ts open-plan-check --source` →
+   `document-open catalog-gated issuer and exchange activation boundary drifted`
+   (`📜️script.ts:4117`), a source-marker assertion over hub production source. The same failure
+   re-appears as `required checkpoint presence differs: present` inside
+   `space-artifact-creation-check source` (`:14569`), *after* that gate's own creation section has
+   already printed `cases=51 … AJV=1 TypeScript=1 Pack=1` — i.e. §16's four twins agree and the
+   refusal is in the document-open section. Attribution evidence: the checkpoint-present plan is
+   accepted by `parseDocumentOpenPlanV1`, by `parseDocumentExecutionTargetLeaseFieldsV1` and by both
+   AJV exports (`🐍️h1b-open-plan-diagnose.ts`, `🐍️h1b-open-plan-ajv.ts`, both kept in this folder),
+   and none of the three defs this slice widened is referenced by `DocumentOpenPlanV1`. Captures:
+   `h1b-s5-creation-contract.txt`, `h1b-s5-open-plan-check.txt`.
+4. Session 4's §13 items 1 (R3 fixture genesis), 3 (R6 discarded assembly terminal), 4 (R7 vs load),
+   5 (R8) and 8 (`tracing` absent) are unchanged. **R4 is closed by §16**, and the three socket laws
+   session 4 filed under R7 whose real message is `issue document open plan: 404 Not Found NotFound`
+   (`admin_removal_revokes_visible_plan_presence_and_target_after_sqlite_reopen`,
+   `presence_lease_reconnect_rejects_old_live_refresh_and_close`,
+   `presence_normalization_socket_overwrites_identity_and_rejects_without_refresh`) are **not load** —
+   they are the same missing-genesis family as R3/R4, which §16 is the first half of.
+
+## 19. Files changed by session 5
+
+| file | change |
+|---|---|
+| `🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🌱️space-artifact-creation-v1/🦀️.rs` | `ANY_SUBSET` + `fn subset`; used by `SpaceArtifactCreationKindV1::validate` and `SpaceArtifactCreationReadyV1::validate` |
+| `…/🌱️space-artifact-creation-v1/🟦️.ts` | `subsetIdentity`; used by `ready()` and `creationKind()` |
+| `…/🌱️space-artifact-creation-v1/🔣️.json` | 5 conformance vectors for the any-subset coordinate (97 insertions, 0 deletions) |
+| `🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🔣️.json` | 3 `subset` patterns widened to `^(?:\*\|[A-Za-z0-9][A-Za-z0-9._:/-]*)$` |
+
+Ticket-folder artefacts added: `🐍️h1b-hub-runtime-probe.ts` (the outcome-2 runtime gate),
+`🐍️h1b-open-plan-diagnose.ts`, `🐍️h1b-open-plan-ajv.ts` (the §18.3 attribution probes). Captures:
+`🗑️generated/h1b-s5-runtime-probe-{1,2,3}.txt`, `h1b-s5-creation-contract.txt`,
+`h1b-s5-open-plan-check.txt`, `h1b-s5-build.txt`.
+
+---
+
+# H1b — session 5b (2026-09-20 06:15 →)
+
+The fleet was cut at ~03:00 by the account session limit; the coordinator killed the deadlocked cargo
+set at 06:12 (34 cargos, 0 % CPU, 4 h, all in `prebuild_lock_exclusive → flock`), which is the same
+queue §18.1 recorded this slice's `--no-run` sitting in. Section 18.1's "still owed" list is what this
+section closes. Captures: `🗑️generated/h1b-s5b-*.txt`.
+
+## 20. §16's any-subset fix is compile-proven
+
+```
+cargo check -p semio-hub --lib
+    Finished `dev` profile [unoptimized] target(s) in 11m 10s
+```
+
+**0 errors, 147 warnings emitted** (20 of them from `semio-hub` itself — proof the expansion really
+ran rather than aborting early). Capture `h1b-s5b-check-lib.txt`. So the four twins of §16
+(`ANY_SUBSET` + `fn subset` in Rust, `subsetIdentity` in TypeScript, three widened AJV patterns, five
+new conformance vectors) are now **both executed** (§16.3's gate, `cases=51`) **and compiled**.
+
+## 21. The live-caught startup defect (§17.1) — closed by construction
+
+§17.1 caught the 11:12 binary printing `[INFO] os-hub ready at http://…` while its own `/readyz`
+answered `503 not-ready`. Session 4's `startup_readiness_line` already replaced that line, and it is
+still in the tree at `🌎️hub/🏗️bootstrap/🦀️.rs:2355` (a peer, OB1r, has since added
+`readiness_trace_detail` beside it at `:2366` — not touched). So the *source* was already right and
+the failure was purely the binary's vintage.
+
+What was still fragile: the `[INFO]` branch tested only `readiness.blocked_by.is_empty()`. That list
+and `status` are derived from the same four booleans today (`:2313`, `:2326`), so they agree — but by
+coincidence of one expression, not by construction, and the defect this probe caught is exactly "the
+printed line disagreed with the served body". The branch now reads the **served `status`** as well,
+and a `not-ready` status with no named gate warns with `status=not-ready` instead of falling through
+to `[INFO]`:
+
+```rust
+if readiness.status == "ready" && readiness.blocked_by.is_empty() {
+    return format!("[INFO] os-hub ready at http://{addr}");
+}
+```
+
+Behaviour is identical for every state reachable today, so session 4's law
+`a_not_ready_hub_names_every_closed_gate_and_its_reason_in_readyz_and_at_startup` is unchanged; the
+new guard only removes the unreachable branch in which the two facts could diverge again.
+
+## 22. cargo starvation at 07:35 — the suite and the probe rerun are still owed
+
+Rule 23(a) was applied twice and both cargo items after §20 are unfinished. Sequence, measured:
+
+| time | command | outcome |
+|---|---|---|
+| 06:17 → 06:28 | `cargo check -p semio-hub --lib` | **completed**, 11m10s, 0 errors / 147 warnings (§20) |
+| 06:30 → 07:12 | `cargo nextest run -p semio-hub --no-fail-fast --profile long` | 42 min, capture never grew past its first line. Rule 23(a) check: 12–48 `rustc` alive throughout, so **not** the no-rustc deadlock; `sample 17076` showed 5 frames in `cargo::util::flock::acquire → open_rw_exclusive_create`, i.e. parked on the prebuild exclusive lock. Killed **my own** stack by pid (17057/17059/17076) and rerun once, per 23(a) |
+| 07:13 → 07:35+ | `cargo build -p semio-hub --bin os-hub` (the rerun, chosen over the suite because it is the cheaper of the two and is the only thing between §17's probe and a 34/34) | same: capture stuck on `Blocking waiting for file lock`, with 66 `rustc` / 51 `cargo` alive at 07:35 — peer codegen saturating the exclusive prebuild lock. **cargo starvation at 07:35**; left queued rather than killed a second time |
+
+So `.🧬semio/🦑️repo/⚡️cache/cargo/target/debug/os-hub` is **still the 2026-09-19 11:12 binary**, and §17's
+probe still reports 33/34 against it. Nothing in §17's table changes; only the one FAIL is now known
+to be a binary-vintage artefact rather than a source defect (§21).
+
+**Still owed, in the order a successor should take them:**
+
+1. `cargo build -p semio-hub --bin os-hub` → then `bun 🐍️h1b-hub-runtime-probe.ts --port 8847`.
+   Expected **34/34**: §21's line is in the tree, so `2 a not-ready hub warns at startup instead of
+   claiming readiness` must flip to PASS, and the `blockedBy` line in the capture must stop saying
+   `undefined` and name `artifactAuthority=trusted-catalog-never-published-in-this-data-root`.
+   If it does not, that is a real regression, not vintage.
+2. `cargo nextest run -p semio-hub --no-fail-fast --profile long` for fresh pass/fail against session
+   4's 247/32/1, working §18.4's classification down (R4 is closed by §16; the three `issue document
+   open plan: 404` laws should move with it, or prove the R3 half is still open).
+3. The postgres/neo4j feature lanes and the `os-hub:test` end-to-end stopwatch (§18.1), both untouched.
+
+Captures: `h1b-s5b-check-lib.txt` (the one that completed), `h1b-s5b-nextest.txt` and
+`h1b-s5b-build-bin.txt` (both one line of `Blocking waiting for file lock`).
+
+## 23. Files changed by session 5b
+
+| file | change |
+|---|---|
+| `🌎️hub/🏗️bootstrap/🦀️.rs` | `startup_readiness_line` now branches on the served `status` as well as the derived gate list, so the startup line cannot disagree with the `/readyz` body; a `not-ready` status with no named gate warns with `status=not-ready` instead of falling through to `[INFO]` (§21) |
+
+No other hub file was touched: the siblings' work since session 5 (M6 `auth::agent`, OB1r's
+`readiness_trace_detail` at `🏗️bootstrap/🦀️.rs:2366` and the saga drain, P4's SIGTERM/CORS/version
+stamp) was read where it sat next to this slice's lines and left alone.
+
+## 24. Rule 25's private uplift dir cures the starvation — but two peers' in-flight refactors now block the hub
+
+**Rule 25 works, measured.** The same `cargo build -p semio-hub --bin os-hub` that had spent 22 min
+parked in `flock → open_rw_exclusive_create` (§22) reached real compilation within minutes when rerun
+as `CARGO_TARGET_DIR="$PWD/.🧬semio/🦑️repo/⚡️cache/cargo/target-h1b" cargo build …`. The queued starved
+cargo was killed first by pid (60868/60870). Writer starvation is no longer this slice's blocker.
+
+**What blocks it instead: two different peer refactors, both landed mid-flight while these commands
+ran.** Neither is this slice's code and, per preamble rule 3, neither was touched.
+
+| lane | command | outcome | owner |
+|---|---|---|---|
+| bin | `CARGO_TARGET_DIR=…/target-h1b cargo build -p semio-hub --bin os-hub` | **6 errors**, `E0423`/`E0061`/`E0599`: `StartupCatalogControl` gained a `tracer: Tracer` field (`🏗️bootstrap/🦀️.rs:236-238`) but three construction sites still use the unit-struct form — `🏗️bootstrap/🦀️.rs:588`, `:9815`, and `🗿️artifact-authority/🔏️trusted-catalog/📤️command/🦀️.rs:42`. `🏗️bootstrap/🦀️.rs` mtime **07:59**, i.e. being edited as the build ran | **OB1r** (observability / tracer) |
+| lib tests | `CARGO_TARGET_DIR=…/target-h1b cargo nextest run -p semio-hub --lib …` | **`E0609` × 4**: `no field metalness / roughness on type SceneInstanceMaterial3d`, at `🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🦀️.rs:3818` and `:3872`. mtime **08:09**. `semio-framework-ui`'s wgpu target is in the hub's *test* profile but not its lib, which is why `cargo check -p semio-hub --lib` was green at 06:28 (§20) and the test build is not | a **wgpu/scene** peer, not in this ticket's hub set |
+
+Capture `h1b-s5b-build-bin2.txt` (bin) and `h1b-s5b-nextest-lib.txt` (lib tests). Captured at 08:13,
+with both files modified inside the preceding 15 minutes.
+
+**Consequences for the coordinator's list, stated plainly:**
+
+- **Fresh suite numbers: still not obtained.** Session 4's **247 passed / 32 failed / 1 timed out**
+  remains the standing figure. M6's, P4's and OB1r's new laws have therefore never been counted here.
+- **The probe is still 33/34** against the 2026-09-19 11:12 binary, because no new binary exists.
+  §21's fix is in the tree and compiles in the lib lane; it cannot be *run* until the bin builds.
+- **postgres/neo4j lanes and the `os-hub:test` stopwatch: not started** — both sit behind the same
+  two breaks.
+
+The probe now takes `--binary PATH` so it can boot a hub out of a private uplift dir:
+`bun 🐍️h1b-hub-runtime-probe.ts --binary .🧬semio/🦑️repo/⚡️cache/cargo/target-h1b/debug/os-hub --port 8847`.
+That is the exact command to run the moment the bin compiles, and §22's expectation stands: 34/34,
+with `blockedBy` naming `artifactAuthority=trusted-catalog-never-published-in-this-data-root`
+instead of printing `undefined`.
+
+## 25. Feature lanes green; the bin still starves at 08:33 (`cargo deadlock at 09:05`)
+
+**Coordinator item (4) — the postgres and neo4j feature lanes — is done and green.** Both re-measured
+on this tree, with §16's any-subset fix in, and neither needs an uplift (rule 25: `cargo check` never
+uplifts, so these never starved):
+
+| lane | command | result | capture |
+|---|---|---|---|
+| postgres | `cargo check -p semio-hub --lib --no-default-features --features postgres` | **0 errors, 111 warnings**, 16m38s | `h1b-s5b-check-postgres.txt` |
+| neo4j | `cargo check -p semio-hub --lib --no-default-features --features neo4j` | **0 errors, 110 warnings**, 2m59s | `h1b-s5b-check-neo4j.txt` |
+
+So K1's one-off result holds on the current tree, and the warning counts prove the expansions ran.
+
+**The bin retry.** OB1r's `StartupCatalogControl` break cleared on its own
+(`grep -c 'let control = StartupCatalogControl;' 🌎️hub/🏗️bootstrap/🦀️.rs` → 0 at 08:33), so
+`CARGO_TARGET_DIR=…/target-h1b cargo build -p semio-hub --bin os-hub` was rerun. It compiled past
+every earlier error — **0 errors after 30 min** — and then stalled: 0 % CPU, **no rustc children of
+its own**, only 6 rustc machine-wide, and `sample 16081` shows **3 frames in `flock`**. Rule 25's
+private uplift dir removes the *uplift* contention (that is why this run reached real compilation in
+minutes rather than sitting at one line), but the **shared build-dir prebuild lock is still
+serialized across the fleet**, and this run lost it. Rule 23(a)'s kill-and-rerun-once was already
+spent in §22, so per its recurrence clause: **cargo deadlock at 09:05**, left queued (pids
+16078/16081, capture `h1b-s5b-build-bin3.txt`) rather than killed a third time.
+
+### 25.1 Final state of the coordinator's list
+
+| item | state |
+|---|---|
+| (1) compile-prove the `*` any-subset fix | ✅ §20 — `cargo check -p semio-hub --lib`, 0 errors / 147 warnings |
+| (2) fresh suite numbers + per-slice red table | ❌ **not obtained.** The `--lib` test lane is blocked by a wgpu/scene peer (`E0609 no field metalness/roughness on SceneInstanceMaterial3d`, `🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🦀️.rs:3818,:3872`, §24) and the `--bins` lane behind the bin build above. Session 4's **247 passed / 32 failed / 1 timed out** stands; M6's, P4's and OB1r's new laws remain uncounted here, so the per-slice attribution table cannot be written honestly yet |
+| (3) startup-readiness defect | ✅ source (§21, hardened to read the served `status`); ❌ the 34/34 probe rerun, which needs the bin |
+| (4) postgres / neo4j lanes | ✅ both green, this section |
+| (5) `os-hub:test` stopwatch | ❌ not started — same blocker as (2) |
+
+The single command that unblocks (2), (3) and (5) is the bin/test build winning the shared prebuild
+lock. The probe is ready for it:
+`bun 🐍️h1b-hub-runtime-probe.ts --binary .🧬semio/🦑️repo/⚡️cache/cargo/target-h1b/debug/os-hub --port 8847`.
+
+---
+
+# H1b — session 5c (2026-09-20 11:18 →)
+
+Rule 26: the coordinator owns `semio-hub` test/bin builds. This slice killed its own queued
+`cargo build -p semio-hub --bin os-hub` at 11:19 and is cargo-free here except `cargo check`.
+Source of truth for numbers: `🗑️generated/coordinator-hub-nextest-0917.txt`,
+**318 tests run: 260 passed, 58 failed, 0 skipped** (41.5 s).
+
+## 26. The 58 reds, attributed per slice
+
+**Measurement limit, stated first because it bounds the table.** The capture contains **14 `stderr`
+blocks for 58 failures** — it was taken at a status level that suppresses passing/failing output for
+most laws. So 44 of the 58 have a *name* but no captured message. Everything below marked
+“message captured” is attributed from its panic; everything marked “by name/ownership” is attributed
+from the module it lives in and is a hypothesis until the rerun prints it.
+
+| # | cluster | laws | attribution | evidence |
+|---|---|---|---|---|
+| A | `artifact_authority::trusted_catalog::{tests, tests::long, opened_root::publication_tests}` | **19** | **GIS plugin peer — NEW regression since session 4** | Session 4's run had these green (its only catalog reds were 3 of R5). The loader (`🔏️trusted-catalog/🦀️.rs`, mtime 09-18 22:31) and its bootstrap fixture (09-18 21:29) have **not** changed; what has is the **GIS plugin the laws load through `NativeCodecProviderSetV1::linked()`** — `✏️s/🔌️plugins/🌍️gis/` has uncommitted edits to `Cargo.toml`, `📇️native-codecs/` and four editor test modules. The one captured message in this family, `verified stdio authority: Catalog("trusted document-open target is invalid, unbound, or duplicated")`, is raised at `🔏️trusted-catalog/🦀️.rs:1028`, whose disjuncts bind each `open_target` to a `native_codec` with an equal `pack_schema_hash` — exactly what a codec/descriptor change breaks. **Not H1b, not M6/P4/OB1r.** |
+| B | `publish_genesis_checkpoint_for_test` callers — `document_open_plan_*`, `execution_target_*`, `checkpoint_publication_route_*`, `directory::sqlite::creation_tests::genesis_physical_pair…` | ~8 | **H1b (R4), stale test — fixed here, §27** | message captured: `exact prepared publication genesis: Conflict("artifact creation prepared pair differs from its accepted intent")`. §16's fix moved this family past `"…accepted identity is invalid"` to the next disjunct |
+| C | `artifact_cas_maintenance_checkpoint_reaches_tail_after_sixteen_requests` + `publish_checkpoint_for_test` callers | 2–3 | **H1b (R3), stale test — still open** | message captured: `publish verified checkpoint: Conflict("ordinary artifact publication requires a committed genesis parent")` at `🔬️bin-unit/🦀️.rs:758` |
+| D | `inference::wal::*`, `inference::runtime::*`, `inference::sqlite::*` | 8 | **H1b (R1/R6), hub** | session 4 §9.3; R1's fixture fix is in the tree, R6's discarded assembly terminal is still open (§13.3) |
+| E | socket/deadline laws — `presence_lease_reconnect…`, `presence_normalization_socket…`, `scoped_directory_socket_*`, `socket_admin_user_gate…`, `canonical_pair_route_*`, `retained_short_admin_request…`, `socket_grant_revoke_before_command_admission…` | ~12 | **H1b (R7) + cluster B spillover** | 6 captured as `socket test: Any { .. }`, and the two with real messages are `issue document open plan: 404 Not Found NotFound` (i.e. cluster B's missing genesis, **not** load) and `removal-wins sender deadline: Elapsed(())` / `admin gate deadline: Elapsed(())` / `HTTP deadline: Elapsed(())` (load-shaped) |
+| F | `directory::tests::*` (chunk-cas restart/sweep, invite archive), `directory_event_page_v1_*`, `space_public_boundary…`, `presence_normalization_matches_neutral_authority…` | ~7 | **H1b (R8) + unknown** | session 4 §9.3 R8; `400≠202` and `500≠200` captured, the rest have no message |
+| G | `socket_grant_oracle::quick::hub_socket_grant_fixture_serde_parity` | 1 | **unknown — needs its message** | the one captured `left: [[12, 115, 101, …]]` byte-vector mismatch is this law; it is a serde-parity fixture, so most likely a wire/fixture drift by whoever last touched the socket-grant fixture |
+
+**No red in this capture is attributable to M6 (`auth::agent` delegation), P4
+(posture/cors/shutdown/format) or OB1r (observability/saga/session store)** — none of the 58 names
+lives in those modules, and none of the 14 captured messages mentions them. That is a *negative*
+result from an incomplete capture, not a clearance: with 44 messages missing it should be re-checked
+on the rerun.
+
+**Ask for the rerun:** please run it with `--status-level all --failure-output immediate` (or at
+least `--failure-output final`). Cluster A alone is 19 laws with one message between them, and it is
+the largest and newest regression in the suite.
+
+## 27. Root fix landed: R4's second half (cluster B)
+
+§16 fixed the first disjunct (`*` refused as a dialect subset). The next one was
+`c.pack.storage_key != format!("sha256/{}", c.pack.sha256.hex())` in
+`ArtifactCreationPreparedV1::validate` (`🌱️creation/🧬️schema/🦀️.rs`).
+
+**The validator is right and the fixture was wrong**, established from production rather than taste:
+
+- the **prepared candidate** gets its storage keys from `blob_reference`
+  (`🗿️artifact-authority/🦀️.rs:516`) — `format!("sha256/{}", hex)` — and
+  `materialize_selected_genesis` builds the candidate through it (`🌱️creation/🦀️.rs:98`);
+- the **chunk CAS manifest locator** (`semio.artifact-cas.manifest/v1/<hex>`) is written **later**,
+  after staging, in place and *without* recomputing `checkpoint_id`
+  (`🗿️artifact-authority/🦀️.rs:503-505`);
+- `publish_document_genesis` takes the prepared candidate and the published checkpoint as **two
+  separate arguments** (`📇️directory/🦀️.rs:2366-2372`), which is the same split.
+
+`publish_genesis_checkpoint_for_test` stamped the manifest locator into the checkpoint *before*
+`prepared.validate(&intent)`, so every caller failed. Fixed in `🌎️hub/🧪️tests/🔬️bin-unit/🦀️.rs`:
+the checkpoint is built with `sha256/<hex>` keys (so `checkpoint_id` is computed over them, as in
+production), the staged results are now bound and asserted to equal the reserved manifest locators,
+and a separate `published` checkpoint carries those locators into `publish_document_genesis`. The
+helper returns the published form. A docstring on the helper records why the two forms are distinct.
+
+**Not run** — rule 26. `needs hub rerun`.
+
+## 28. Outcome 2 on a booted hub: 44 PASS / 0 FAIL
+
+`bun 🐍️h1b-hub-runtime-probe.ts --binary /private/tmp/h1b-os-hub-11h42 --port 8849`
+→ **44 passed, 0 failed**, `h1b-hub-runtime: all checks passed`.
+Capture `🗑️generated/h1b-s5c-runtime-probe.txt`.
+
+The binary is the coordinator's `target-coordinator-hub/debug/os-hub` (11:42), copied out and
+re-signed (`rm` + `cp` + `codesign -f -s -`) so the coordinator's build could keep writing.
+Size was confirmed stable across 6 s before copying.
+
+The probe reports 44 checks rather than the 34 of §17 because §17's single readiness assertion has
+since become a five-way branch that also asserts the closed-gate vocabulary. **Zero failures** is the
+number that matters: §17.1's live-caught defect is closed and every §17 claim re-passes on a current
+binary.
+
+The two things this run proves that §17's could not:
+
+1. **The startup line no longer lies.** `2 a not-ready hub warns at startup instead of claiming
+   readiness` — the one FAIL of §17 — now **passes**. §21's `startup_readiness_line` is verified at
+   runtime, not just by reading.
+2. **`/readyz` names its closed gate.** The body now carries
+   `"artifactAuthority":{"ready":false,"reason":"trusted-catalog-never-published-in-this-data-root"}`
+   and `"blockedBy":[{"gate":"artifactAuthority","reason":"trusted-catalog-never-published-in-this-data-root"}]`
+   — session 4's §12 vocabulary, observed for the first time. A new assertion pins that exact pair,
+   so the reason code cannot silently drift.
+
+Everything else re-passed unchanged: `/healthz` with a fresh `runId` per run, sqlite persistence of
+credential + space + the exact membership roster across a real kill-and-restart, presence ephemeral
+after restart, a real `/directory/socket/v1` upgrade + grant + `SocketHelloV1` with live fan-out and
+silence after departure, session mint/introspection/revocation/60 s expiry, and the rate limiter's
+`429` + `retry-after` charged per remote address.
+
+## 29. `cargo check -p semio-hub --all-targets` — green, and a correction to rule 25
+
+```
+CARGO_TARGET_DIR=…/target-h1b cargo check -p semio-hub --all-targets
+    Finished `dev` profile [unoptimized] target(s) in 5m 05s
+```
+**0 errors, 305 warnings.** Capture `h1b-s5c-check-all-targets2.txt`. This covers §27's fixture fix
+and §21's startup line across every target, including `🔬️bin-unit`.
+
+**Correction to preamble rule 25, measured.** Rule 25 says "`cargo check` never uplifts so it is
+unaffected". That holds for `--lib` (§20 ran it on the shared dir in 11 min) but **not** for
+`--all-targets`: the first attempt sat **35 minutes** at 0 % CPU with no `rustc` children and
+`sample 89883` showing **5 frames in `flock`** (capture `h1b-s5c-check-all-targets.txt`, one line).
+Killed by pid and rerun with the private uplift dir, it finished in **5m 05s**. Suggested amendment:
+*every* cargo invocation that materialises test targets — including `cargo check --all-targets` —
+takes the uplift path and needs `CARGO_TARGET_DIR`.
+
+## 30. State of the coordinator's list at the end of session 5c
+
+| item | state |
+|---|---|
+| per-slice red table for the 58 | ✅ §26 — with the stated limit that the capture holds 14 messages for 58 reds, so 44 are attributed by module, not by panic |
+| root-fix hub defects / stale hub tests | ✅ R4's second half (§27, cluster B ≈ 8 laws, stale test); ❌ R3 (cluster C) still needs the fixture redesign session 4 §13.1 scoped — it cannot reach `publish_document_genesis` without a session token, and it was not attempted blind under rule 26 |
+| `cargo check -p semio-hub --all-targets` | ✅ §29 — 0 errors, 305 warnings |
+| probe to 34/34 | ✅ §28 — **44/44**, `blockedBy` names the trusted-catalog gate |
+
+**needs hub rerun** — for §27's cluster B, and with `--status-level all --failure-output immediate`
+so cluster A's 19 trusted_catalog laws finally print a message.

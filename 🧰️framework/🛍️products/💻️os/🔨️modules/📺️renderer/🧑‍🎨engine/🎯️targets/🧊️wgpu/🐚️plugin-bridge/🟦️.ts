@@ -47,11 +47,10 @@
  *   `submitTurn`, one {@link createTurnOutcomeBroadcast} per `loadPluginModule` call, matching
  *   `PluginRuntime`'s own `handle`/`turnOutcomes` construction in its `loadPluginModule` line for line.
  *
- * Honest gap: `render` has no wire counterpart any more (channel v12 retired the per-verb
- * `render`/`renderWithDocument` command) — it is rebuilt here on top of a raw `"surface-visible"` turn
- * event + the retained-patch reconciliation `🖼️wire-turn/🟦️.ts` provides, exactly mirroring
- * `PluginRuntime`'s own `refreshUi`. `windowEngagements`/`windowMeasures` are left unimplemented;
- * Rust's `🌉️ProgramBridge` already treats their absence as an empty-map result.
+ * `render` has no wire counterpart any more (channel v12 retired the per-verb
+ * `render`/`renderWithDocument` command), so it is rebuilt here on top of a raw `"surface-visible"`
+ * turn event plus the retained-patch reconciliation `🖼️wire-turn/🟦️.ts` provides, exactly mirroring
+ * `PluginRuntime`'s own `refreshUi`. Reserved engagements and measures use that same retained route.
  */
 // #endregion 🧲️Header
 
@@ -81,7 +80,7 @@ import {
   type SpawnedJobCompletion,
   type TurnOutcome,
 } from "@semio-tech/framework";
-import { AppChannelClient, AppChannelRequestSequence, type AppFrameValue, type WindowConfigPackEntry, decodeAppFrame, decodeFaultFromWire, decodeInvocationResultPacks, decodePackValue, decodePackWire, encodeAppCommand, encodePackValue, faultDisplayMessage, packValueFromBase64, packWireNatural } from "@semio-tech/framework-os";
+import { AppChannelClient, AppChannelRequestSequence, type AppFrameValue, type WindowConfigPackEntry, decodeAppFrame, decodeFaultFromWire, decodeInvocationResultPacks, decodePackValue, decodePackWire, encodePackValue, faultDisplayMessage, packValueFromBase64, packWireNatural, viewContextWireValue } from "@semio-tech/framework-os";
 import { createShardCommandIngressPages, settleFailedInstanceOpen, ShardClient, SHARD_COMMAND_MAXIMUM_PAGES, type ShardCommandIngressPage, type ShardEventEnvelope } from "../../../../../../../../🔨️modules/🎭️actor/📮️shard-client/🟦️.ts";
 import { createPooledActorRuntime, DEFAULT_SHARD_BUDGET, type PooledActorRuntime } from "../../../../../../../../🔨️modules/🎭️actor/🧵️shard-runtime/🟦️.ts"
 import { SHARD_WORKER_URL } from "../../../../../../../../🔨️modules/🎭️actor/🧵️shard-runtime/🟦️.ts";
@@ -363,7 +362,12 @@ const WGPU_UI_GRANT = Object.freeze({ maxItems: 1, maxBytes: 4_096 });
  * through it at `shell-boot` as `wgpu-ui.intake-budget-exhausted`. */
 export const WGPU_UI_INTAKE_STEP_CEILING = retainedUiIntakeStepCeiling(DEFAULT_UI_DOCUMENT_LIMITS);
 type WgpuActorExecutor = <T>(work: () => Promise<T>) => Promise<T>;
-type WgpuOwnedUiProjection = Readonly<{ node: BuiltNode; document: Readonly<{ surface: string; revision: number; root: number; nodes: readonly object[]; layoutEpoch: number }>; effects: readonly Effect[] }>;
+/** @emoji 📄️ What the owned-UI route itself can answer: the surface as the guest published it.
+ * `effects` is NOT part of it — a turn's leftover host effects belong to the caller that drained
+ * them, which is why `renderSurfaceSerialized` is the only place the two are joined. */
+type WgpuOwnedUiDocument = Readonly<{ node: BuiltNode; document: Readonly<{ surface: string; revision: number; root: number; nodes: readonly object[]; layoutEpoch: number }> }>;
+
+type WgpuOwnedUiProjection = WgpuOwnedUiDocument & Readonly<{ effects: readonly Effect[] }>;
 
 /** @emoji ⏳️ How long this bridge may hold the isolate between yields — the SAME ceiling
  * `../../../⏱️turn-budget/🟦️.ts` prices a frame-Worker step against, so an intake never blocks a frame
@@ -562,7 +566,7 @@ export class WgpuOwnedUiInstanceRoute {
     return [next, ...await this.accept(next, execute)];
   }
 
-  async project(surfaceId: string): Promise<WgpuOwnedUiProjection | null> {
+  async project(surfaceId: string): Promise<WgpuOwnedUiDocument | null> {
     if (this.#closing) throw new Error("wgpu-ui.owner-closing");
     const surface = this.#surfaces.get(surfaceId);
     if (!surface) return null;
@@ -571,7 +575,7 @@ export class WgpuOwnedUiInstanceRoute {
     try { return await read; } finally { this.#reads.delete(read); }
   }
 
-  async #project(surfaceId: string, surface: OwnedUiInstanceSurface): Promise<WgpuOwnedUiProjection | null> {
+  async #project(surfaceId: string, surface: OwnedUiInstanceSurface): Promise<WgpuOwnedUiDocument | null> {
     const view = surface.view;
     if (view.root === null) return null;
     if (!view.hash) throw new Error("wgpu-ui.surface-hash-required");
@@ -734,7 +738,7 @@ function wgpuConsumedTopics(receiverPluginId: string): readonly string[] {
 export function wgpuBuildScopedContributionsPack(
   receiverPluginId: string,
   reachabilityValues: readonly unknown[],
-  loadedManifests?: ReadonlyArray<{ readonly pluginId: string; readonly manifest: PluginManifest }>,
+  loadedManifests?: ReadonlyArray<{ readonly pluginId: string; readonly manifest: Pick<PluginManifest, "topicContributions"> }>,
   consumedTopics: readonly string[] = wgpuConsumedTopics(receiverPluginId),
 ): { readonly json: string; readonly bytes: Uint8Array; readonly pluginIds: readonly string[]; readonly chars: number; readonly crossings: 1 } | null {
   const loaded = loadedManifests ?? [...contributionManifests.entries()].map(([pluginId, manifest]) => ({ pluginId, manifest }));
@@ -762,13 +766,28 @@ export function wgpuSlimContributionsView(viewState: unknown): Record<string, un
   return raw;
 }
 
+function unsignedVarintByteLength(value: number): number {
+  if (!Number.isSafeInteger(value) || value < 0) throw new RangeError("unsigned varint length requires a non-negative safe integer");
+  let bytes = 1;
+  while (value >= 128) {
+    value = Math.floor(value / 128);
+    bytes += 1;
+  }
+  return bytes;
+}
+
+/** @emoji 📏️ Exact encoded length of AppCommand::Command for its sequence and two packed vectors. */
+export function wgpuCommandIngressByteLength(sequence: number, commandBytes: Uint8Array, viewBytes: Uint8Array): number {
+  return 1 + unsignedVarintByteLength(sequence) + unsignedVarintByteLength(commandBytes.byteLength) + commandBytes.byteLength + unsignedVarintByteLength(viewBytes.byteLength) + viewBytes.byteLength;
+}
+
 /** @emoji 📕️ Command-ingress size of one setContributions pack crossing — slim view, never the live document. */
-export function wgpuContributionsIngressSize(command: unknown, viewState: unknown): { readonly commandBytes: number; readonly viewBytes: number; readonly ingressBytes: number; readonly ingressPages: number } {
+export function wgpuContributionsIngressSize(command: unknown, viewState: unknown, sequence: number): { readonly commandBytes: number; readonly viewBytes: number; readonly ingressBytes: number; readonly ingressPages: number } {
   const commandBytes = encodePackValue(command);
-  const viewBytes = encodePackValue(viewState);
-  const eventBytes = encodeAppCommand({ Command: { seq: 1, command: Array.from(commandBytes), view_state: Array.from(viewBytes) } });
-  const ingressPages = Math.ceil(eventBytes.byteLength / 4096);
-  return { commandBytes: commandBytes.byteLength, viewBytes: viewBytes.byteLength, ingressBytes: eventBytes.byteLength, ingressPages };
+  const viewBytes = encodePackValue(viewContextWireValue(viewState));
+  const ingressBytes = wgpuCommandIngressByteLength(sequence, commandBytes, viewBytes);
+  const ingressPages = Math.ceil(ingressBytes / 4096);
+  return { commandBytes: commandBytes.byteLength, viewBytes: viewBytes.byteLength, ingressBytes, ingressPages };
 }
 
 export function wgpuSetContributionsCommand(pluginId: string, appId: string, json: string): { readonly address: { readonly owner: { readonly app: { readonly pluginId: string; readonly appId: string } }; readonly commandId: "setContributions" }; readonly arguments: { readonly json: string; readonly page: 0; readonly pageCount: 1 } } {
@@ -1455,8 +1474,8 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
       if (answer.byteLength > GUEST_HOST_ANSWER_CEILING_BYTES) {
         throw new SemioFaultError({
           origin: "os", code: "extension.answer-too-large", severity: "error",
-          message: `extension answer of ${answer.byteLength} B exceeds the ${GUEST_HOST_ANSWER_CEILING_BYTES}-byte host-answer ceiling`,
-          scope: { instanceId: String(instanceId), req: String(req) }, retryable: false,
+          message: `extension answer of ${answer.byteLength} B for request ${req} exceeds the ${GUEST_HOST_ANSWER_CEILING_BYTES}-byte host-answer ceiling`,
+          scope: { instanceId: String(instanceId) }, retryable: false,
         });
       }
       const { prologue, terminal } = guestAnswerPages(answer);
@@ -1607,13 +1626,15 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
     }
     const command = wgpuSetContributionsCommand(pluginId, appId, pack.json);
     const slimView = wgpuSlimContributionsView(viewState);
-    const ingress = wgpuContributionsIngressSize(command, slimView);
+    const sequenceOwner = channelRequests.checkpoint().sequence;
+    if (sequenceOwner === Number.MAX_SAFE_INTEGER) throw new Error("app-channel.sequence-exhausted");
+    const ingress = wgpuContributionsIngressSize(command, slimView, sequenceOwner + 1);
     if (ingress.ingressPages > SHARD_COMMAND_MAXIMUM_PAGES) {
       throw new Error(`[DEBUG] contributions pack ingress ${ingress.ingressPages} pages exceeds ${SHARD_COMMAND_MAXIMUM_PAGES}`);
     }
     const result = await performInvocation(requireChannel(instanceId), instanceId, command, slimView);
     const ticks: InvocationResponse[] = [];
-    for (const effect of result.requestedEffects) {
+    for (const effect of result.requestedEffects ?? []) {
       if (!effect || typeof effect !== "object" || !("dispatchAction" in effect)) continue;
       const dispatch = effect.dispatchAction as { readonly action: string; readonly args?: unknown };
       try {
@@ -1624,7 +1645,7 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
       }
     }
     if (!ticks.length) return result;
-    return { ...ticks[ticks.length - 1]!, requestedEffects: [...result.requestedEffects, ...ticks.flatMap((tick) => tick.requestedEffects)] };
+    return { ...ticks[ticks.length - 1]!, requestedEffects: [...(result.requestedEffects ?? []), ...ticks.flatMap((tick) => tick.requestedEffects ?? [])] };
   };
 
   const handle: WgpuPluginHandle = {

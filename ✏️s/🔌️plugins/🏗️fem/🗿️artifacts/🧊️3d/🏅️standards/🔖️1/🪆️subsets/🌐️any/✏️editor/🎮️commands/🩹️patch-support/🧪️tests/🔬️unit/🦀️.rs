@@ -1,5 +1,5 @@
 use super::*;
-use crate::editor::fem3d::unit_tests::context::{dispatch, fem3d_app};
+use crate::editor::fem3d::unit_tests::context::{dispatch, fem3d_demo_app};
 use crate::editor::fem3d::Fem3dCommand;
 
 fn emit(snapshot: &Fem3dSnapshot, payload: PatchSupport) -> Result<Emit<Fem3dMutation, NoConfigMutation>, Fault> {
@@ -11,7 +11,7 @@ fn emit(snapshot: &Fem3dSnapshot, payload: PatchSupport) -> Result<Emit<Fem3dMut
 
 #[semio_framework_async_macros::async_test]
 async fn patch_support_toggles_dofs_in_canonical_order_and_repoints_the_node_3d() {
-    let mut app = fem3d_app();
+    let mut app = fem3d_demo_app().await;
     dispatch(&mut app, Fem3dCommand::PatchSupport(PatchSupport { id: "ss_0".into(), field: "rz".into(), value: "true".into() })).await;
     dispatch(&mut app, Fem3dCommand::PatchSupport(PatchSupport { id: "ss_0".into(), field: "tx".into(), value: "false".into() })).await;
     let snapshot = app.snapshot().expect("snapshot");

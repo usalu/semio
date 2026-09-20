@@ -135,3 +135,8 @@ impl semio_framework_plugin::WindowTransientOwner for WiresCanvasTransientOwner 
         semio_framework_plugin::WindowTransientOwnerBundle::new(preparation, state, mutation)
     }
 }
+
+//#region 🪢️TaxonomyMounts
+#[path = "🧬️schema/🦀️.rs"]
+pub mod schema;
+//#endregion 🪢️TaxonomyMounts

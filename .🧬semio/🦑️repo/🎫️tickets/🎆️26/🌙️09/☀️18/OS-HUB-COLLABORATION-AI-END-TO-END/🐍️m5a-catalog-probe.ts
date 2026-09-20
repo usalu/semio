@@ -21,7 +21,10 @@ const binOverride = flag("bin", "");
 
 type Response = { id: number | string | null; result?: unknown; error?: { code: number; message: string; data?: unknown } };
 
-const QUERIES = ["draw rectangle", "add a layer to the drawing", "export the document as pdf"] as const;
+const QUERIES = (flag("queries", "") ? flag("queries", "").split("|") : ["draw rectangle", "add a layer to the drawing", "export the document as pdf"]) as readonly string[];
+/** 🔎️ Optional `--kind mutation` narrowing, so the probe can ask the exact question the live agent
+ * loop's (c)/(e) precondition asks. */
+const KIND = flag("kind", "");
 
 function mcpConfigCommand(): { command: string; argv: string[] } {
   const config = JSON.parse(readFileSync(resolve(repoRoot, ".mcp.json"), "utf8")) as { mcpServers: Record<string, { command: string; args: string[] }> };
@@ -93,7 +96,7 @@ async function main(): Promise<void> {
   say(`## context_resolve — catalogHash=${summary?.catalogHash ?? "?"} capabilities=${summary?.capabilityCount ?? "?"}`);
 
   for (const query of QUERIES) {
-    const response = await call("tools/call", { name: "capabilities_search", arguments: { query } });
+    const response = await call("tools/call", { name: "capabilities_search", arguments: KIND ? { query, kind: [KIND] } : { query } });
     const structured = (response.result as { structuredContent?: { results?: Array<Record<string, unknown>>; total?: number; nextCursor?: string | null } } | undefined)?.structuredContent;
     const results = structured?.results ?? [];
     say(`\n## capabilities_search ${JSON.stringify(query)} — ${results.length} result(s), total=${structured?.total ?? "n/a"} nextCursor=${String(structured?.nextCursor ?? "n/a")}`);

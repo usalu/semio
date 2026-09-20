@@ -1,0 +1,148 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "semio.ticket.flow-node-graph-physical/v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "target", "specimen", "cases", "limits"],
+  "properties": {
+    "version": { "const": 1 },
+    "target": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["plugin", "controllerId", "windowId", "surfaceId", "surfaceKind", "reactSelector", "urls"],
+      "properties": {
+        "plugin": { "const": "flow" },
+        "controllerId": { "const": "s.flow.flow@1/*#editor" },
+        "windowId": { "const": "flow-main" },
+        "surfaceId": { "const": "flow.play.main" },
+        "surfaceKind": { "const": "node-graph" },
+        "reactSelector": { "const": "[data-surface-id=\"flow.play.main\"]" },
+        "urls": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["react", "wgpu"],
+          "properties": {
+            "react": { "const": "http://127.0.0.1:6016/?plugin=flow" },
+            "wgpu": { "const": "http://127.0.0.1:6116/?plugin=flow" }
+          }
+        }
+      }
+    },
+    "specimen": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["minimumNodes", "preferredNodeIds"],
+      "properties": {
+        "minimumNodes": { "type": "integer", "minimum": 3, "maximum": 16 },
+        "preferredNodeIds": {
+          "type": "array",
+          "prefixItems": [{ "const": "slider" }, { "const": "add" }, { "const": "preview" }],
+          "items": false,
+          "minItems": 3,
+          "maxItems": 3
+        }
+      }
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 5,
+      "maxItems": 5,
+      "items": {
+        "oneOf": [
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "gesture", "expectedActions", "consequence"],
+            "properties": {
+              "id": { "const": "select-and-escape" },
+              "gesture": { "const": "primary-click-then-escape" },
+              "expectedActions": {
+                "type": "array",
+                "prefixItems": [{ "const": "interactionSelect" }, { "const": "clearSelection" }],
+                "items": false,
+                "minItems": 2,
+                "maxItems": 2
+              },
+              "consequence": { "type": "string", "minLength": 1 }
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "gesture", "delta", "cancelKey", "forbiddenAction", "consequence"],
+            "properties": {
+              "id": { "const": "escape-cancels-node-drag" },
+              "gesture": { "const": "primary-drag-key-release" },
+              "delta": { "$ref": "#/$defs/delta" },
+              "cancelKey": { "const": "Escape" },
+              "forbiddenAction": { "const": "nodeGraphEdit" },
+              "consequence": { "type": "string", "minLength": 1 }
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "gesture", "delta", "expectedAction", "operation", "consequence"],
+            "properties": {
+              "id": { "const": "commit-node-drag" },
+              "gesture": { "const": "primary-drag-release" },
+              "delta": { "$ref": "#/$defs/delta" },
+              "expectedAction": { "const": "nodeGraphEdit" },
+              "operation": { "const": "move" },
+              "consequence": { "type": "string", "minLength": 1 }
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "gesture", "deltaY", "expectedAction", "consequence"],
+            "properties": {
+              "id": { "const": "wheel-zoom" },
+              "gesture": { "const": "wheel" },
+              "deltaY": { "type": "number", "maximum": -1 },
+              "expectedAction": { "const": "nodeGraphViewport" },
+              "consequence": { "type": "string", "minLength": 1 }
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "gesture", "delta", "button", "expectedAction", "forbiddenAction", "consequence"],
+            "properties": {
+              "id": { "const": "middle-button-pan" },
+              "gesture": { "const": "middle-drag-release" },
+              "delta": { "$ref": "#/$defs/delta" },
+              "button": { "const": "middle" },
+              "expectedAction": { "const": "nodeGraphViewport" },
+              "forbiddenAction": { "const": "nodeGraphEdit" },
+              "consequence": { "type": "string", "minLength": 1 }
+            }
+          }
+        ]
+      }
+    },
+    "limits": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["settleMilliseconds", "geometryEpsilonPixels", "cancelTolerancePixels", "minimumCommittedMovementPixels", "surfaceInsetPixels"],
+      "properties": {
+        "settleMilliseconds": { "type": "integer", "minimum": 1000, "maximum": 30000 },
+        "geometryEpsilonPixels": { "type": "number", "exclusiveMinimum": 0, "maximum": 8 },
+        "cancelTolerancePixels": { "type": "number", "minimum": 0, "maximum": 4 },
+        "minimumCommittedMovementPixels": { "type": "number", "minimum": 4, "maximum": 64 },
+        "surfaceInsetPixels": { "type": "number", "minimum": 4, "maximum": 64 }
+      }
+    }
+  },
+  "$defs": {
+    "delta": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["x", "y"],
+      "properties": {
+        "x": { "type": "number", "minimum": 16, "maximum": 160 },
+        "y": { "type": "number", "minimum": 16, "maximum": 160 }
+      }
+    }
+  }
+}

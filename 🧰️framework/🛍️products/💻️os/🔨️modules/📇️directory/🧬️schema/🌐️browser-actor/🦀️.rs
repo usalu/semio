@@ -38,7 +38,7 @@ impl crate::FromValue for DocumentBrowserActorByteLengthV1 {
 }
 
 /// 🛂️ Exact canonical vocabulary admitted by the closed actor compiler.
-pub const DOCUMENT_BROWSER_ACTOR_INTERFACES: [&str; 16] = [
+pub const DOCUMENT_BROWSER_ACTOR_INTERFACES: [&str; 18] = [
     "semio:framework/host-async@1.0.0",
     "semio:framework/pure@1.0.0",
     "wasi:cli/environment@0.2.0",
@@ -52,9 +52,11 @@ pub const DOCUMENT_BROWSER_ACTOR_INTERFACES: [&str; 16] = [
     "wasi:cli/terminal-stdin@0.2.0",
     "wasi:cli/terminal-stdout@0.2.0",
     "wasi:clocks/monotonic-clock@0.2.0",
+    "wasi:clocks/wall-clock@0.2.0",
     "wasi:io/error@0.2.0",
     "wasi:io/poll@0.2.0",
     "wasi:io/streams@0.2.0",
+    "wasi:random/insecure-seed@0.2.9",
 ];
 
 /// 🧷️ Captured package identities supplied independently of the candidate actor.

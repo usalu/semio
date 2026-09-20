@@ -305,12 +305,15 @@ enum SceneIntentEvent {
 struct SceneInteractionIntent {
     generation: u64,
     tree_revision: u64,
+    surface_generation: u64,
+    pointer_id: Option<ui_render::PointerId>,
     window_id: String,
     surface_id: String,
     node: NodeId,
     kind: ui_wgpu::wgpu::SurfaceKind,
     rect: Rect,
     event: SceneIntentEvent,
+    driver_drag: ui_wgpu::wgpu::UiDriverDrag,
     ink_job: Option<crate::scenes::InkInteractionJob>,
     retiring: bool,
 }
@@ -330,7 +333,19 @@ impl Default for SceneIntentQueue {
 }
 
 impl SceneIntentQueue {
-    fn push(&mut self, tree_revision: u64, window_id: &str, surface_id: &str, node: NodeId, kind: ui_wgpu::wgpu::SurfaceKind, rect: Rect, event: SceneIntentEvent) -> Result<(), ui_wgpu::wgpu::BoundedActionFault> {
+    fn push(
+        &mut self,
+        tree_revision: u64,
+        surface_generation: u64,
+        pointer_id: Option<ui_render::PointerId>,
+        window_id: &str,
+        surface_id: &str,
+        node: NodeId,
+        kind: ui_wgpu::wgpu::SurfaceKind,
+        rect: Rect,
+        event: SceneIntentEvent,
+        driver_drag: ui_wgpu::wgpu::UiDriverDrag,
+    ) -> Result<(), ui_wgpu::wgpu::BoundedActionFault> {
         if window_id.len() > SCENE_INTENT_ID_BYTES || surface_id.len() > SCENE_INTENT_ID_BYTES {
             return Err(ui_wgpu::wgpu::BoundedActionFault::StringCredits);
         }
@@ -340,7 +355,7 @@ impl SceneIntentQueue {
         let generation = self.next_generation;
         self.next_generation = self.next_generation.wrapping_add(1).max(1);
         let index = (self.head + self.len) % SCENE_INTENT_CAPACITY;
-        self.slots[index] = Some(SceneInteractionIntent { generation, tree_revision, window_id: window_id.to_owned(), surface_id: surface_id.to_owned(), node, kind, rect, event, ink_job: None, retiring: false });
+        self.slots[index] = Some(SceneInteractionIntent { generation, tree_revision, surface_generation, pointer_id, window_id: window_id.to_owned(), surface_id: surface_id.to_owned(), node, kind, rect, event, driver_drag, ink_job: None, retiring: false });
         self.len += 1;
         Ok(())
     }
@@ -377,6 +392,17 @@ impl SceneIntentQueue {
     fn is_empty(&self) -> bool {
         self.len == 0 && self.retiring.is_none()
     }
+
+    fn cancel_pointer(&mut self, pointer_id: ui_render::PointerId, owners: &[ScenePointerOwner]) {
+        for slot in self.slots.iter_mut().filter_map(Option::as_mut) {
+            if slot.pointer_id == Some(pointer_id)
+                && owners.iter().any(|owner| owner.window_id == slot.window_id && owner.surface_id == slot.surface_id && owner.window_generation == slot.surface_generation)
+                && slot.ink_job.as_ref().is_none_or(|job| job.matches_pointer_owner(slot.surface_generation, pointer_id))
+            {
+                slot.retiring = true;
+            }
+        }
+    }
 }
 
 impl SceneInteractionIntent {
@@ -394,6 +420,103 @@ impl SceneInteractionIntent {
 }
 
 static SCENE_INTENTS: WorkerCell<SceneIntentQueue> = WorkerCell::new();
+const SCENE_POINTER_OWNER_CAPACITY: usize = 16;
+
+#[derive(Clone)]
+struct ScenePointerOwner {
+    pointer_id: ui_render::PointerId,
+    window_id: String,
+    window_generation: u64,
+    surface_id: String,
+    kind: ui_wgpu::wgpu::SurfaceKind,
+}
+
+#[derive(Default)]
+struct ScenePointerOwners {
+    slots: Vec<ScenePointerOwner>,
+}
+
+static SCENE_POINTER_OWNERS: WorkerCell<ScenePointerOwners> = WorkerCell::new();
+
+pub struct ScenePointerCancellation {
+    pub window_id: String,
+    pub surface_id: String,
+    pub kind: ui_wgpu::wgpu::SurfaceKind,
+}
+
+pub fn claim_scene_pointer_owner(
+    window_id: &str,
+    surface_id: &str,
+    kind: ui_wgpu::wgpu::SurfaceKind,
+    pointer_id: ui_render::PointerId,
+) -> bool {
+    if window_id.len() > SCENE_INTENT_ID_BYTES || surface_id.len() > SCENE_INTENT_ID_BYTES {
+        return false;
+    }
+    let Some(window_generation) = UI_ENGINE.with(|cell| cell.borrow().surface_generation(window_id)) else {
+        return false;
+    };
+    SCENE_POINTER_OWNERS.with(|cell| {
+        let mut owners = cell.borrow_mut();
+        owners.slots.retain(|owner| owner.pointer_id != pointer_id);
+        if owners.slots.len() == SCENE_POINTER_OWNER_CAPACITY {
+            return false;
+        }
+        owners.slots.push(ScenePointerOwner { pointer_id, window_id: window_id.to_owned(), window_generation, surface_id: surface_id.to_owned(), kind });
+        true
+    })
+}
+
+pub fn claim_scene_pointer_at(window_id: &str, x: f32, y: f32, pointer_id: ui_render::PointerId) -> bool {
+    let target = UI_ENGINE.with(|cell| {
+        let engine = cell.borrow();
+        let hit = engine.scene_at(window_id, x, y)?;
+        let scene = engine.tree(window_id)?.node(hit.node)?;
+        let UiNode::ComponentScene(scene) = &scene.spec.0 else { return None };
+        Some((scene.surface_id.clone(), scene.component_kind))
+    });
+    target.is_some_and(|(surface_id, kind)| claim_scene_pointer_owner(window_id, &surface_id, kind, pointer_id))
+}
+
+pub fn release_scene_pointer(pointer_id: ui_render::PointerId) {
+    SCENE_POINTER_OWNERS.with(|cell| cell.borrow_mut().slots.retain(|owner| owner.pointer_id != pointer_id));
+}
+
+pub fn cancel_scene_pointer(
+    pointer_id: ui_render::PointerId,
+    _input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>,
+) -> Vec<ScenePointerCancellation> {
+    let owners = SCENE_POINTER_OWNERS.with(|cell| {
+        let mut registry = cell.borrow_mut();
+        let mut cancelled = Vec::new();
+        registry.slots.retain(|owner| {
+            if owner.pointer_id == pointer_id {
+                cancelled.push(owner.clone());
+                false
+            } else {
+                true
+            }
+        });
+        cancelled
+    });
+    let owners: Vec<_> = owners
+        .into_iter()
+        .filter(|owner| UI_ENGINE.with(|cell| cell.borrow().surface_generation(&owner.window_id)) == Some(owner.window_generation))
+        .collect();
+    SCENE_INTENTS.with(|cell| cell.borrow_mut().cancel_pointer(pointer_id, &owners));
+    for owner in &owners {
+        match owner.kind {
+            ui_wgpu::wgpu::SurfaceKind::TextEditor => { crate::engine_canvas::text_editor_pointer_cancel_into(&owner.surface_id); }
+            ui_wgpu::wgpu::SurfaceKind::Paint2d => { crate::engine_canvas::paint2d_pointer_cancel_into(&owner.surface_id); }
+            ui_wgpu::wgpu::SurfaceKind::InkCanvas => crate::scenes::ink_pointer_cancel_into(&owner.surface_id),
+            _ => {}
+        }
+    }
+    owners
+        .into_iter()
+        .map(|owner| ScenePointerCancellation { window_id: owner.window_id, surface_id: owner.surface_id, kind: owner.kind })
+        .collect()
+}
 /// 👆️ Last-seen `(pointer_down, pointer_button)` per `window_id`, so `dispatch_pointer_events` can
 /// detect Down/Up edges from `InputState`'s per-frame aggregate.
 #[cfg(test)]
@@ -431,6 +554,29 @@ pub fn register_retained_hit_targets(window_id: &str, input: &mut ui_wgpu::wgpu:
     })
 }
 
+pub fn register_clipped_retained_hit_targets(window_id: &str, clip: ui_wgpu::wgpu::Rect, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Vec<String> {
+    UI_ENGINE.with(|cell| {
+        let engine = cell.borrow();
+        let mut ids = Vec::new();
+        for registration in engine.window_hit_targets(window_id) {
+            let mut target = registration.to_hit_target();
+            if !registration.overlay {
+                let x = registration.rect.x.max(clip.x);
+                let y = registration.rect.y.max(clip.y);
+                let right = (registration.rect.x + registration.rect.w).min(clip.x + clip.w);
+                let bottom = (registration.rect.y + registration.rect.h).min(clip.y + clip.h);
+                if right <= x || bottom <= y {
+                    continue;
+                }
+                target.rect = ui_wgpu::wgpu::Rect::new(x, y, right - x, bottom - y);
+            }
+            ids.push(registration.control_id.clone());
+            input.register_hit(target);
+        }
+        ids
+    })
+}
+
 /// 🖱️ The retained window whose content holds pointer capture right now — a host routes every move
 /// there until release, so a `Slider`/`Ring` drag survives leaving the control's own rect.
 pub fn retained_pointer_capture_window() -> Option<String> {
@@ -444,17 +590,129 @@ pub fn retained_content_height(window_id: &str) -> Option<f32> {
     UI_ENGINE.with(|cell| cell.borrow().surface_content_height(window_id))
 }
 
+#[cfg(test)]
+/// 🌳️ Whether production reconcile retained `window_id` with a Tree root.
+pub(crate) fn retained_root_is_tree(window_id: &str) -> bool {
+    UI_ENGINE.with(|cell| {
+        let engine = cell.borrow();
+        let Some(tree) = engine.tree(window_id) else { return false };
+        tree.root.and_then(|root| tree.node(root)).is_some_and(|node| matches!(&node.spec.0, ui_wgpu::wgpu::UiNode::Tree(_)))
+    })
+}
+
 /// 🫳️ Retained panel/catalogue drags (`EventRouter::DragSession`) the legacy shell `tree_drag` path never sees.
 pub fn active_retained_drag_sessions() -> Vec<(String, f32, f32, std::collections::HashMap<String, String>)> {
     UI_ENGINE.with(|cell| cell.borrow().active_drag_sessions())
+}
+
+pub fn canvas_catalogue_drag_over(
+    window_id: &str,
+    x: f32,
+    y: f32,
+    drag_data: &std::collections::HashMap<String, String>,
+    input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>,
+) -> bool {
+    if !drag_data.contains_key(crate::scenes::CANVAS_CATALOGUE_DRAG_MIME) {
+        return crate::scenes::cancel_canvas_catalogue_drag(input);
+    }
+    let mut types = drag_data.keys().cloned().collect::<Vec<_>>();
+    types.sort();
+    let outcome = UI_ENGINE.with(|cell| {
+        let engine = cell.borrow();
+        let hit = engine.scene_at(window_id, x, y)?;
+        if hit.kind != ui_wgpu::wgpu::SurfaceKind::Canvas2d {
+            return None;
+        }
+        let generation = engine.tree_revision(window_id)?;
+        let tree = engine.tree(window_id)?;
+        let UiNode::ComponentScene(scene) = &tree.node(hit.node)?.spec.0 else { return None };
+        Some(crate::scenes::canvas_catalogue_drag_over_into(scene, hit.rect, window_id, generation, x, y, &types, input))
+    });
+    match outcome {
+        Some(Ok(accepted)) => accepted,
+        Some(Err(fault)) => {
+            input.record_action_fault(fault);
+            false
+        }
+        None => {
+            crate::scenes::cancel_canvas_catalogue_drag(input);
+            false
+        }
+    }
+}
+
+pub fn canvas_catalogue_drop(
+    window_id: &str,
+    x: f32,
+    y: f32,
+    drag_data: &std::collections::HashMap<String, String>,
+    input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>,
+) -> bool {
+    let Some(raw_payload) = drag_data.get(crate::scenes::CANVAS_CATALOGUE_DRAG_MIME) else {
+        return false;
+    };
+    let outcome = UI_ENGINE.with(|cell| {
+        let engine = cell.borrow();
+        let hit = engine.scene_at(window_id, x, y)?;
+        if hit.kind != ui_wgpu::wgpu::SurfaceKind::Canvas2d {
+            return None;
+        }
+        let generation = engine.tree_revision(window_id)?;
+        let tree = engine.tree(window_id)?;
+        let UiNode::ComponentScene(scene) = &tree.node(hit.node)?.spec.0 else { return None };
+        Some(crate::scenes::canvas_catalogue_drop_into(scene, hit.rect, window_id, generation, x, y, raw_payload, input))
+    });
+    match outcome {
+        Some(Ok(accepted)) => accepted,
+        Some(Err(fault)) => {
+            input.record_action_fault(fault);
+            false
+        }
+        None => {
+            crate::scenes::cancel_canvas_catalogue_drag(input);
+            false
+        }
+    }
 }
 
 pub fn dispatch_ui_event(window_id: &str, event: ui_wgpu::wgpu::UiEvent, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Vec<ui_wgpu::wgpu::UiCommand> {
     #[cfg(all(not(target_arch = "wasm32"), not(test)))]
     pump_clipboard_io_one();
     let commands = UI_ENGINE.with(|cell| cell.borrow_mut().dispatch_event(window_id, event));
-    apply_ui_commands(&commands, input);
+    apply_ui_commands(&commands, None, input);
     commands
+}
+
+pub fn dispatch_ui_pointer_event(
+    window_id: &str,
+    pointer_id: ui_render::PointerId,
+    event: ui_wgpu::wgpu::UiEvent,
+    input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>,
+) -> Vec<ui_wgpu::wgpu::UiCommand> {
+    let commands = UI_ENGINE.with(|cell| cell.borrow_mut().dispatch_event(window_id, event));
+    apply_ui_commands(&commands, Some(pointer_id), input);
+    commands
+}
+
+pub fn dispatch_accessibility_event(
+    window_id: &str,
+    window_generation: u64,
+    node_id: u64,
+    node_key: &str,
+    event: ui_wgpu::wgpu::AccessibilityUiEvent,
+    input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>,
+) -> Option<Vec<ui_wgpu::wgpu::UiCommand>> {
+    if !accessibility_window_is_visible(window_id) {
+        return None;
+    }
+    let commands = UI_ENGINE.with(|cell| cell.borrow_mut().dispatch_accessibility_event(window_id, window_generation, node_id, node_key, event));
+    let commands = commands?;
+    apply_ui_commands(&commands, None, input);
+    Some(commands)
+}
+
+pub fn retained_node_is_select(window_id: &str, node_id: NodeId) -> bool {
+    UI_ENGINE.with(|cell| cell.borrow().tree(window_id).and_then(|tree| tree.node(node_id)).is_some_and(|node| matches!(node.spec.0, UiNode::Select(_))))
 }
 
 /// 🚦️ One gate before the gesture becomes a queued action: a `seq` this surface has
@@ -487,7 +745,7 @@ pub fn dispatch_ui_event(window_id: &str, event: ui_wgpu::wgpu::UiEvent, input: 
  *  - `Scene` → `apply_scene_ui_command`, below (`w4-scene-input`): a real per-event pointer/wheel hit
  *    on a `ComponentScene` leaf, routed into the matching per-`SurfaceKind` handler in `scenes`
  *    instead of that region's own once-per-render-frame `InputState` sample. */
-fn apply_ui_commands(commands: &[ui_wgpu::wgpu::UiCommand], input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) {
+fn apply_ui_commands(commands: &[ui_wgpu::wgpu::UiCommand], pointer_id: Option<ui_render::PointerId>, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) {
     for command in commands {
         match command {
             ui_wgpu::wgpu::UiCommand::App { window_id, intent } => {
@@ -512,7 +770,7 @@ fn apply_ui_commands(commands: &[ui_wgpu::wgpu::UiCommand], input: &mut ui_wgpu:
                 }
             }
             ui_wgpu::wgpu::UiCommand::Scene { window_id, node, kind, rect, event, .. } => {
-                apply_scene_ui_command(window_id, *node, *kind, *rect, event, input);
+                apply_scene_ui_command(window_id, *node, *kind, *rect, event, pointer_id, input);
             }
             ui_wgpu::wgpu::UiCommand::DropCancelled { .. } | ui_wgpu::wgpu::UiCommand::OverlayClosed { .. } | ui_wgpu::wgpu::UiCommand::FocusChanged { .. } => {}
         }
@@ -654,7 +912,7 @@ struct MountedClipboardIo {
     session: Option<semio_framework_job::WorkerJobSession<ui_wgpu::wgpu::ClipboardIoJob>>,
     rejected: Option<semio_framework_job::WorkerJobSessionAdmissionRejected<ui_wgpu::wgpu::ClipboardIoJob>>,
     ticket: Option<semio_framework_job::WorkerJobTicket>,
-    complete: Option<Box<dyn FnOnce(Result<Option<String>, String>)>>,
+    complete: Option<Box<dyn FnOnce(Result<Option<ui_wgpu::wgpu::ClipboardContent>, String>)>>,
 }
 
 #[cfg(all(not(target_arch = "wasm32"), not(test)))]
@@ -669,9 +927,9 @@ thread_local! {
 }
 
 #[cfg(all(not(target_arch = "wasm32"), not(test)))]
-fn submit_clipboard_io(job: ui_wgpu::wgpu::ClipboardIoJob, complete: impl FnOnce(Result<Option<String>, String>) + 'static) {
+fn submit_clipboard_io(job: ui_wgpu::wgpu::ClipboardIoJob, complete: impl FnOnce(Result<Option<ui_wgpu::wgpu::ClipboardContent>, String>) + 'static) {
     use semio_framework_job::{allocate_operation_id, root_cancel_token, BatchDriveConfig, BatchJobParams, Generation, InteractiveStage, INTERACTIVE_LANE_FUEL, INTERACTIVE_LANE_WALL_US};
-    let mut complete = Some(Box::new(complete) as Box<dyn FnOnce(Result<Option<String>, String>)>);
+    let mut complete = Some(Box::new(complete) as Box<dyn FnOnce(Result<Option<ui_wgpu::wgpu::ClipboardContent>, String>)>);
     let mut job = Some(job);
     MOUNTED_CLIPBOARD_IO.with(|registry| {
         let mut registry = registry.borrow_mut();
@@ -790,14 +1048,14 @@ thread_local! {
 fn apply_clipboard_paste_requested(window_id: &str, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) {
     let Some(text) = read_os_clipboard() else { return };
     let commands = UI_ENGINE.with(|cell| cell.borrow_mut().dispatch_event(window_id, ui_wgpu::wgpu::UiEvent::Paste { text }));
-    apply_ui_commands(&commands, input);
+    apply_ui_commands(&commands, None, input);
 }
 
 #[cfg(all(not(target_arch = "wasm32"), not(test)))]
 fn apply_clipboard_paste_requested(window_id: &str, _input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) {
     let window_id = window_id.to_string();
     submit_clipboard_io(ui_wgpu::wgpu::ClipboardIoJob::read(), move |result| {
-        let Ok(Some(text)) = result else { return };
+        let Ok(Some(ui_wgpu::wgpu::ClipboardContent::Text(text))) = result else { return };
         UI_ENGINE.with(|cell| {
             cell.borrow_mut().dispatch_event(&window_id, ui_wgpu::wgpu::UiEvent::Paste { text });
         });
@@ -875,7 +1133,15 @@ fn pointer_button_code(button: ui_wgpu::wgpu::PointerButton) -> i16 {
 /// the surface handlers through this path exactly as React's DOM pointer event delivers them (ticket
 /// 26/09/17/WGPU-RENDERER-REACT-PARITY, `📓️audit-w14-scenes-residual.md` C1 — this used to be a
 /// documented dead end, with `false` hardcoded at every merge-mode call downstream).
-fn apply_scene_ui_command(window_id: &str, node: NodeId, kind: ui_wgpu::wgpu::SurfaceKind, rect: Rect, event: &ui_wgpu::wgpu::UiEvent, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) {
+fn apply_scene_ui_command(
+    window_id: &str,
+    node: NodeId,
+    kind: ui_wgpu::wgpu::SurfaceKind,
+    rect: Rect,
+    event: &ui_wgpu::wgpu::UiEvent,
+    pointer_id: Option<ui_render::PointerId>,
+    input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>,
+) {
     let event = match event {
         ui_wgpu::wgpu::UiEvent::PointerDown { x, y, button, modifiers } => SceneIntentEvent::PointerDown { x: *x, y: *y, button: pointer_button_code(*button), modifiers: *modifiers },
         ui_wgpu::wgpu::UiEvent::PointerUp { x, y, button, modifiers } => SceneIntentEvent::PointerUp { x: *x, y: *y, button: pointer_button_code(*button), modifiers: *modifiers },
@@ -894,14 +1160,27 @@ fn apply_scene_ui_command(window_id: &str, node: NodeId, kind: ui_wgpu::wgpu::Su
         if scene.component_kind != kind || scene.surface_id.len() > SCENE_INTENT_ID_BYTES {
             return None;
         }
-        Some((revision, scene.surface_id.clone()))
+        Some((revision, engine.surface_generation(window_id)?, scene.surface_id.clone(), engine.driver_drag()))
     });
-    let Some((tree_revision, surface_id)) = witness else {
+    let Some((tree_revision, surface_generation, surface_id, driver_drag)) = witness else {
         input.record_action_fault(ui_wgpu::wgpu::BoundedActionFault::Structure);
         return;
     };
-    if let Err(fault) = SCENE_INTENTS.with(|cell| cell.borrow_mut().push(tree_revision, window_id, &surface_id, node, kind, rect, event)) {
+    if matches!(event, SceneIntentEvent::PointerDown { .. }) {
+        if let Some(pointer_id) = pointer_id {
+            if !claim_scene_pointer_owner(window_id, &surface_id, kind, pointer_id) {
+                input.record_action_fault(ui_wgpu::wgpu::BoundedActionFault::ItemCredits);
+                return;
+            }
+        }
+    }
+    if let Err(fault) = SCENE_INTENTS.with(|cell| cell.borrow_mut().push(tree_revision, surface_generation, pointer_id, window_id, &surface_id, node, kind, rect, event, driver_drag)) {
         input.record_action_fault(fault);
+    }
+    if matches!(event, SceneIntentEvent::PointerUp { .. }) {
+        if let Some(pointer_id) = pointer_id {
+            release_scene_pointer(pointer_id);
+        }
     }
 }
 
@@ -969,7 +1248,346 @@ pub fn apply_focused_text_editor_key(key: &ui_wgpu::wgpu::KeyAction, modifiers: 
 }
 //#endregion ✍️TextEditorFocus
 
+//#region 🖋️InkEditorFocus
+struct FocusedInkEditor {
+    window_id: String,
+    window_generation: u64,
+    node: NodeId,
+    surface_id: String,
+}
+
+thread_local! {
+    static FOCUSED_INK_EDITOR: std::cell::RefCell<Option<FocusedInkEditor>> = const { std::cell::RefCell::new(None) };
+}
+
+fn focus_ink_editor(window_id: &str, window_generation: u64, node: NodeId, surface_id: &str) {
+    FOCUSED_INK_EDITOR.with(|cell| *cell.borrow_mut() = Some(FocusedInkEditor { window_id: window_id.to_owned(), window_generation, node, surface_id: surface_id.to_owned() }));
+}
+
+fn focused_ink_editor() -> Option<(String, u64, NodeId, String)> {
+    FOCUSED_INK_EDITOR.with(|cell| cell.borrow().as_ref().map(|focus| (focus.window_id.clone(), focus.window_generation, focus.node, focus.surface_id.clone())))
+}
+
+fn clear_focused_ink_editor(surface_id: &str, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) {
+    crate::scenes::cancel_ink_edit(surface_id, input);
+    FOCUSED_INK_EDITOR.with(|cell| *cell.borrow_mut() = None);
+}
+
+pub fn apply_focused_ink_editor_key(key: &ui_wgpu::wgpu::KeyAction, modifiers: &ui_wgpu::wgpu::PointerModifiers, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> bool {
+    let Some((window_id, generation, node, surface_id)) = focused_ink_editor() else { return false };
+    let outcome = UI_ENGINE.with(|cell| {
+        let engine = cell.borrow();
+        if engine.surface_generation(&window_id) != Some(generation) {
+            return None;
+        }
+        let retained = engine.tree(&window_id).and_then(|tree| tree.node(node))?;
+        let UiNode::ComponentScene(scene) = &retained.spec.0 else { return None };
+        if scene.component_kind != ui_wgpu::wgpu::SurfaceKind::InkCanvas || scene.surface_id != surface_id {
+            return None;
+        }
+        Some(crate::scenes::ink_edit_key_into(scene, key, modifiers, input))
+    });
+    match outcome {
+        Some(Ok(consumed)) => {
+            if !crate::scenes::ink_edit_active(&surface_id) {
+                FOCUSED_INK_EDITOR.with(|cell| *cell.borrow_mut() = None);
+            }
+            consumed
+        }
+        Some(Err(fault)) => {
+            input.record_action_fault(fault);
+            true
+        }
+        None => {
+            clear_focused_ink_editor(&surface_id, input);
+            false
+        }
+    }
+}
+
+pub fn blur_focused_ink_editor_at(x: f32, y: f32, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> bool {
+    let Some((window_id, generation, node, surface_id)) = focused_ink_editor() else { return false };
+    let outcome = UI_ENGINE.with(|cell| {
+        let engine = cell.borrow();
+        if engine.surface_generation(&window_id) != Some(generation) {
+            return None;
+        }
+        let retained = engine.tree(&window_id).and_then(|tree| tree.node(node))?;
+        let UiNode::ComponentScene(scene) = &retained.spec.0 else { return None };
+        if scene.component_kind != ui_wgpu::wgpu::SurfaceKind::InkCanvas || scene.surface_id != surface_id {
+            return None;
+        }
+        Some(crate::scenes::ink_edit_blur_into(scene, x, y, input))
+    });
+    match outcome {
+        Some(Ok(committed)) => {
+            if committed {
+                FOCUSED_INK_EDITOR.with(|cell| *cell.borrow_mut() = None);
+            }
+            committed
+        }
+        Some(Err(fault)) => {
+            input.record_action_fault(fault);
+            true
+        }
+        None => {
+            clear_focused_ink_editor(&surface_id, input);
+            false
+        }
+    }
+}
+//#endregion 🖋️InkEditorFocus
+
+//#region 📋️InkClipboardFocus
+#[derive(Clone)]
+struct InkClipboardAddress {
+    window_id: String,
+    window_generation: u64,
+    node: NodeId,
+    surface_id: String,
+    rect: Rect,
+}
+
+thread_local! {
+    static FOCUSED_INK_SURFACE: std::cell::RefCell<Option<InkClipboardAddress>> = const { std::cell::RefCell::new(None) };
+}
+
+fn focus_ink_surface(window_id: &str, window_generation: u64, node: NodeId, surface_id: &str, rect: Rect) {
+    FOCUSED_INK_SURFACE.with(|cell| *cell.borrow_mut() = Some(InkClipboardAddress { window_id: window_id.to_owned(), window_generation, node, surface_id: surface_id.to_owned(), rect }));
+}
+
+fn focused_ink_surface() -> Option<InkClipboardAddress> {
+    FOCUSED_INK_SURFACE.with(|cell| cell.borrow().clone())
+}
+
+fn with_live_ink_surface<T>(address: &InkClipboardAddress, apply: impl FnOnce(&UiComponentSceneNode) -> T) -> Option<T> {
+    UI_ENGINE.with(|cell| {
+        let engine = cell.borrow();
+        if engine.surface_generation(&address.window_id) != Some(address.window_generation) {
+            return None;
+        }
+        let retained = engine.tree(&address.window_id).and_then(|tree| tree.node(address.node))?;
+        let UiNode::ComponentScene(scene) = &retained.spec.0 else { return None };
+        (scene.component_kind == ui_wgpu::wgpu::SurfaceKind::InkCanvas && scene.surface_id == address.surface_id).then(|| apply(scene))
+    })
+}
+
+fn focused_ink_editor_owns(address: &InkClipboardAddress) -> bool {
+    focused_ink_editor().is_some_and(|(window_id, generation, node, surface_id)| {
+        window_id == address.window_id && generation == address.window_generation && node == address.node && surface_id == address.surface_id && crate::scenes::ink_edit_active(&surface_id)
+    })
+}
+
+fn apply_ink_clipboard_content(
+    address: &InkClipboardAddress,
+    kind: crate::scenes::InkClipboardContentKind,
+    content: &str,
+    input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>,
+) -> bool {
+    let editor = focused_ink_editor_owns(address);
+    let result = with_live_ink_surface(address, |scene| {
+        if editor {
+            if kind == crate::scenes::InkClipboardContentKind::Text {
+                crate::scenes::ink_edit_paste_into(scene, content)
+            } else {
+                Ok(false)
+            }
+        } else {
+            let target = crate::scenes::ink_clipboard_target(scene, address.rect)?;
+            crate::scenes::ink_clipboard_paste_into(scene, target, kind, content, input)
+        }
+    });
+    match result {
+        Some(Ok(consumed)) => consumed,
+        Some(Err(fault)) => {
+            input.record_action_fault(fault);
+            true
+        }
+        None => {
+            FOCUSED_INK_SURFACE.with(|cell| *cell.borrow_mut() = None);
+            false
+        }
+    }
+}
+
+pub fn apply_focused_ink_paste(text: &str, image_data_url: bool, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> bool {
+    let Some(address) = focused_ink_surface() else { return false };
+    let kind = if image_data_url { crate::scenes::InkClipboardContentKind::ImageDataUrl } else { crate::scenes::InkClipboardContentKind::Text };
+    apply_ink_clipboard_content(&address, kind, text, input)
+}
+
+#[cfg(all(not(target_arch = "wasm32"), not(test)))]
+struct PendingInkClipboard {
+    address: InkClipboardAddress,
+    outcome: Option<Result<Option<ui_wgpu::wgpu::ClipboardContent>, ui_wgpu::wgpu::BoundedActionFault>>,
+}
+
+#[cfg(all(not(target_arch = "wasm32"), not(test)))]
+thread_local! {
+    static PENDING_INK_CLIPBOARD: std::cell::RefCell<[Option<PendingInkClipboard>; 32]> = std::cell::RefCell::new(std::array::from_fn(|_| None));
+}
+
+#[cfg(all(not(target_arch = "wasm32"), not(test)))]
+fn queue_ink_clipboard_read(address: InkClipboardAddress) -> Result<(), ui_wgpu::wgpu::BoundedActionFault> {
+    let slot = PENDING_INK_CLIPBOARD.with(|cell| {
+        let mut slots = cell.borrow_mut();
+        let slot = slots.iter().position(Option::is_none)?;
+        slots[slot] = Some(PendingInkClipboard { address, outcome: None });
+        Some(slot)
+    });
+    let Some(slot) = slot else { return Err(ui_wgpu::wgpu::BoundedActionFault::ItemCredits) };
+    submit_clipboard_io(ui_wgpu::wgpu::ClipboardIoJob::read(), move |result| {
+        PENDING_INK_CLIPBOARD.with(|cell| {
+            if let Some(pending) = cell.borrow_mut()[slot].as_mut() {
+                pending.outcome = Some(result.map_err(|_| ui_wgpu::wgpu::BoundedActionFault::Structure));
+            }
+        });
+    });
+    Ok(())
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+fn rgba_png_data_url(width: u32, height: u32, bytes: Vec<u8>) -> Option<String> {
+    use base64::Engine as _;
+    let image = image::RgbaImage::from_raw(width, height, bytes)?;
+    let mut png = Vec::new();
+    image::DynamicImage::ImageRgba8(image).write_to(&mut std::io::Cursor::new(&mut png), image::ImageFormat::Png).ok()?;
+    Some(format!("data:image/png;base64,{}", base64::engine::general_purpose::STANDARD.encode(png)))
+}
+
+#[cfg(all(not(target_arch = "wasm32"), not(test)))]
+pub fn drive_clipboard_io_step(input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> bool {
+    pump_clipboard_io_one();
+    let pending = PENDING_INK_CLIPBOARD.with(|cell| {
+        let mut slots = cell.borrow_mut();
+        let slot = slots.iter().position(|slot| slot.as_ref().is_some_and(|pending| pending.outcome.is_some()))?;
+        slots[slot].take()
+    });
+    let Some(pending) = pending else { return false };
+    match pending.outcome.expect("ready clipboard completion") {
+        Ok(Some(ui_wgpu::wgpu::ClipboardContent::Text(text))) => apply_ink_clipboard_content(&pending.address, crate::scenes::InkClipboardContentKind::Text, &text, input),
+        Ok(Some(ui_wgpu::wgpu::ClipboardContent::ImageRgba8 { width, height, bytes })) => match rgba_png_data_url(width, height, bytes) {
+            Some(data) => apply_ink_clipboard_content(&pending.address, crate::scenes::InkClipboardContentKind::ImageDataUrl, &data, input),
+            None => {
+                input.record_action_fault(ui_wgpu::wgpu::BoundedActionFault::Structure);
+                true
+            }
+        },
+        Ok(None) => false,
+        Err(fault) => {
+            input.record_action_fault(fault);
+            true
+        }
+    }
+}
+
+#[cfg(any(target_arch = "wasm32", test))]
+pub fn drive_clipboard_io_step(_input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> bool {
+    false
+}
+
+pub fn apply_focused_ink_surface_key(key: &ui_wgpu::wgpu::KeyAction, modifiers: &ui_wgpu::wgpu::PointerModifiers, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> bool {
+    let Some(address) = focused_ink_surface() else { return false };
+    if focused_ink_editor_owns(&address) || !modifiers.ctrl_or_meta() || modifiers.alt || modifiers.shift {
+        return false;
+    }
+    let ui_wgpu::wgpu::KeyAction::Char(key) = key else { return false };
+    if key.eq_ignore_ascii_case("c") {
+        let result = with_live_ink_surface(&address, crate::scenes::ink_clipboard_copy_text);
+        match result {
+            Some(Ok(Some(text))) => write_os_clipboard(&text),
+            Some(Err(fault)) => input.record_action_fault(fault),
+            None => FOCUSED_INK_SURFACE.with(|cell| *cell.borrow_mut() = None),
+            Some(Ok(None)) => {}
+        }
+        return true;
+    }
+    if !key.eq_ignore_ascii_case("v") {
+        return false;
+    }
+    #[cfg(all(not(target_arch = "wasm32"), test))]
+    if let Some(text) = read_os_clipboard() {
+        apply_ink_clipboard_content(&address, crate::scenes::InkClipboardContentKind::Text, &text, input);
+    }
+    #[cfg(all(not(target_arch = "wasm32"), not(test)))]
+    if let Err(fault) = queue_ink_clipboard_read(address) {
+        input.record_action_fault(fault);
+    }
+    true
+}
+
+struct InkClipboardStream {
+    id: u64,
+    address: InkClipboardAddress,
+    image_data_url: bool,
+    text: String,
+}
+
+thread_local! {
+    static INK_CLIPBOARD_STREAMS: std::cell::RefCell<[Option<InkClipboardStream>; 32]> = std::cell::RefCell::new(std::array::from_fn(|_| None));
+}
+
+pub fn start_focused_ink_clipboard_stream(stream: u64, image_data_url: bool, declared_bytes: usize) -> Result<bool, &'static str> {
+    if declared_bytes > 3 * (16 * 1024 - 1) {
+        return Err("ink clipboard stream exceeded declared byte credits");
+    }
+    let Some(address) = focused_ink_surface() else { return Ok(false) };
+    let live = with_live_ink_surface(&address, |_| ()).is_some();
+    if !live || (image_data_url && focused_ink_editor_owns(&address)) {
+        return Ok(false);
+    }
+    INK_CLIPBOARD_STREAMS.with(|cell| {
+        let mut slots = cell.borrow_mut();
+        if slots.iter().flatten().any(|mounted| mounted.id == stream) {
+            return Err("ink clipboard stream identifier is already mounted");
+        }
+        let Some(slot) = slots.iter_mut().find(|slot| slot.is_none()) else { return Err("ink clipboard stream credits exhausted") };
+        *slot = Some(InkClipboardStream { id: stream, address, image_data_url, text: String::new() });
+        Ok(true)
+    })
+}
+
+pub fn push_focused_ink_clipboard_stream(stream: u64, text: &str) -> Result<bool, &'static str> {
+    INK_CLIPBOARD_STREAMS.with(|cell| {
+        let mut slots = cell.borrow_mut();
+        let Some(mounted) = slots.iter_mut().flatten().find(|mounted| mounted.id == stream) else { return Ok(false) };
+        if mounted.text.len().checked_add(text.len()).is_none_or(|bytes| bytes >= 16 * 1024) {
+            return Err("ink clipboard stream exceeded payload byte credits");
+        }
+        mounted.text.push_str(text);
+        Ok(true)
+    })
+}
+
+pub fn commit_focused_ink_clipboard_stream(stream: u64, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> bool {
+    let mounted = INK_CLIPBOARD_STREAMS.with(|cell| {
+        let mut slots = cell.borrow_mut();
+        let slot = slots.iter().position(|slot| slot.as_ref().is_some_and(|mounted| mounted.id == stream))?;
+        slots[slot].take()
+    });
+    mounted.is_some_and(|mounted| {
+        let kind = if mounted.image_data_url { crate::scenes::InkClipboardContentKind::ImageDataUrl } else { crate::scenes::InkClipboardContentKind::Text };
+        apply_ink_clipboard_content(&mounted.address, kind, &mounted.text, input)
+    })
+}
+
+pub fn abort_focused_ink_clipboard_stream(stream: u64) -> bool {
+    INK_CLIPBOARD_STREAMS.with(|cell| {
+        let mut slots = cell.borrow_mut();
+        let Some(slot) = slots.iter().position(|slot| slot.as_ref().is_some_and(|mounted| mounted.id == stream)) else { return false };
+        slots[slot] = None;
+        true
+    })
+}
+//#endregion 📋️InkClipboardFocus
+
 pub fn drive_scene_interaction_step(input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> bool {
+    crate::scenes::request_stale_canvas_authority_cancel(|window_id, generation| {
+        UI_ENGINE.with(|cell| cell.borrow().tree_revision(window_id) == Some(generation))
+    });
+    if crate::scenes::canvas_pointer_terminal_step(input) {
+        return true;
+    }
     let Some(mut intent) = SCENE_INTENTS.with(|cell| cell.borrow_mut().pop_front()) else {
         return false;
     };
@@ -977,7 +1595,10 @@ pub fn drive_scene_interaction_step(input: &mut ui_wgpu::wgpu::InputState<Action
         Ok(SceneIntentProgress::Complete) => {}
         Ok(SceneIntentProgress::Pending) => SCENE_INTENTS.with(|cell| cell.borrow_mut().push_front(intent)),
         Err(fault) => {
-            SCENE_INTENTS.with(|cell| cell.borrow_mut().push_front(intent));
+            intent.retiring = true;
+            if !intent.close_step() {
+                SCENE_INTENTS.with(|cell| cell.borrow_mut().push_front(intent));
+            }
             input.record_action_fault(fault);
         }
     }
@@ -1079,6 +1700,7 @@ fn process_scene_interaction(intent: &mut SceneInteractionIntent, input: &mut ui
     let live = UI_ENGINE.with(|cell| {
         let engine = cell.borrow();
         engine.tree_revision(window_id) == Some(intent.tree_revision)
+            && engine.surface_generation(window_id) == Some(intent.surface_generation)
             && engine.tree(window_id).and_then(|tree| tree.node(node)).and_then(|retained| match &retained.spec.0 {
                 UiNode::ComponentScene(scene) => Some(scene.component_kind == kind && scene.surface_id == intent.surface_id),
                 _ => None,
@@ -1161,11 +1783,33 @@ fn process_scene_interaction(intent: &mut SceneInteractionIntent, input: &mut ui
                 return Ok(SceneIntentProgress::Complete);
             };
             let result = match intent.event {
-                SceneIntentEvent::PointerDown { x, y, button, modifiers } => crate::scenes::canvas_pointer_button_into(scene, rect, x, y, true, button, modifiers.shift, input),
-                SceneIntentEvent::PointerUp { x, y, button, modifiers } => crate::scenes::canvas_pointer_button_into(scene, rect, x, y, false, button, modifiers.shift, input),
+                SceneIntentEvent::PointerDown { x, y, button, modifiers } => crate::scenes::canvas_pointer_button_into(
+                    scene,
+                    rect,
+                    window_id,
+                    intent.tree_revision,
+                    x,
+                    y,
+                    true,
+                    button,
+                    crate::scenes::SceneModifiers::from(modifiers),
+                    input,
+                ),
+                SceneIntentEvent::PointerUp { x, y, button, modifiers } => crate::scenes::canvas_pointer_button_into(
+                    scene,
+                    rect,
+                    window_id,
+                    intent.tree_revision,
+                    x,
+                    y,
+                    false,
+                    button,
+                    crate::scenes::SceneModifiers::from(modifiers),
+                    input,
+                ),
                 SceneIntentEvent::PointerMove { x, y, .. } => {
-                    let (down, last_x, last_y) = crate::scenes::scene_pointer_edge_state(&scene.surface_id);
-                    let result = crate::scenes::canvas_pointer_move_into(scene, rect, x, y, down, x - last_x, y - last_y, input);
+                    let (_, last_x, last_y) = crate::scenes::scene_pointer_edge_state(&scene.surface_id);
+                    let result = crate::scenes::canvas_pointer_move_into(scene, rect, window_id, intent.tree_revision, x, y, x - last_x, y - last_y, input);
                     if result.is_ok() {
                         crate::scenes::set_scene_last_pointer_pos(&scene.surface_id, x, y);
                     }
@@ -1188,6 +1832,11 @@ fn process_scene_interaction(intent: &mut SceneInteractionIntent, input: &mut ui
             let UiNode::ComponentScene(scene) = &retained.spec.0 else {
                 return Ok(SceneIntentProgress::Complete);
             };
+            if matches!(intent.event, SceneIntentEvent::PointerDown { button: 0, .. }) {
+                if let Some(generation) = engine.surface_generation(window_id) {
+                    focus_ink_surface(window_id, generation, node, &scene.surface_id, rect);
+                }
+            }
             match intent.event {
                 SceneIntentEvent::Scroll { x, y, delta_y, .. } if delta_y.abs() >= 0.01 => crate::scenes::ink_wheel_into(scene, rect, x, y, delta_y, input).map(|_| SceneIntentProgress::Complete),
                 SceneIntentEvent::Scroll { .. } => Ok(SceneIntentProgress::Complete),
@@ -1199,7 +1848,7 @@ fn process_scene_interaction(intent: &mut SceneInteractionIntent, input: &mut ui
                             SceneIntentEvent::PointerMove { x, y, .. } => crate::scenes::InkInteractionEvent::PointerMove { x, y },
                             SceneIntentEvent::Scroll { .. } => unreachable!(),
                         };
-                        intent.ink_job = crate::scenes::InkInteractionJob::new(operation_generation, scene, event)?;
+                        intent.ink_job = crate::scenes::InkInteractionJob::new(operation_generation, intent.surface_generation, intent.pointer_id, scene, event)?;
                         if intent.ink_job.is_none() {
                             return Ok(SceneIntentProgress::Complete);
                         }
@@ -1208,6 +1857,11 @@ fn process_scene_interaction(intent: &mut SceneInteractionIntent, input: &mut ui
                     match intent.ink_job.as_mut().expect("ink job retained").step(operation_generation, scene, rect, input)? {
                         crate::scenes::InkInteractionStep::Pending => Ok(SceneIntentProgress::Pending),
                         crate::scenes::InkInteractionStep::Complete => {
+                            if intent.ink_job.as_ref().is_some_and(crate::scenes::InkInteractionJob::opened_edit) {
+                                if let Some(generation) = engine.surface_generation(window_id) {
+                                    focus_ink_editor(window_id, generation, node, &scene.surface_id);
+                                }
+                            }
                             intent.retiring = true;
                             Ok(SceneIntentProgress::Pending)
                         }
@@ -1229,13 +1883,13 @@ fn process_scene_interaction(intent: &mut SceneInteractionIntent, input: &mut ui
         };
         match intent.event {
             SceneIntentEvent::PointerDown { x, y, button, modifiers } => {
-                crate::scenes::passive_scene_pointer_button(scene, rect, x, y, true, button, crate::scenes::SceneModifiers::from(modifiers), input)?;
+                crate::scenes::passive_scene_pointer_button(scene, rect, x, y, true, button, crate::scenes::SceneModifiers::from(modifiers), window_id, intent.tree_revision, intent.driver_drag, input)?;
             }
             SceneIntentEvent::PointerUp { x, y, button, modifiers } => {
-                crate::scenes::passive_scene_pointer_button(scene, rect, x, y, false, button, crate::scenes::SceneModifiers::from(modifiers), input)?;
+                crate::scenes::passive_scene_pointer_button(scene, rect, x, y, false, button, crate::scenes::SceneModifiers::from(modifiers), window_id, intent.tree_revision, intent.driver_drag, input)?;
             }
             SceneIntentEvent::PointerMove { x, y, .. } => {
-                crate::scenes::passive_scene_pointer_move(scene, rect, x, y);
+                crate::scenes::passive_scene_pointer_move(scene, rect, x, y, window_id, intent.tree_revision, intent.driver_drag);
             }
             SceneIntentEvent::Scroll { x, y, delta_y, .. } => {
                 if delta_y.abs() >= 0.01 {
@@ -1283,6 +1937,8 @@ struct FrameworkSceneHost<'ctx> {
     /// 🪟️ The window instance this paint belongs to — carried so every engine surface the walk
     /// attaches names its retention owner (`🧑‍🎨engine/🧫️fixtures/🧲️engine-surface-retention/🔣️.json`).
     window_id: &'ctx str,
+    driver_drag: ui_wgpu::wgpu::UiDriverDrag,
+    document_generation: u64,
 }
 
 impl ui_wgpu::wgpu::SceneHost for FrameworkSceneHost<'_> {
@@ -1309,7 +1965,7 @@ impl ui_wgpu::wgpu::SceneHost for FrameworkSceneHost<'_> {
         let mut ctx = framework_widget_context(draw, None, atlas, icons, self.input, self.theme, self.scroll_offsets, self.collapsed_sections, self.open_selects, None, viewport_height);
         let mut hosts = crate::scenes::SceneEngineHosts { world3d_states: &mut *self.world3d_states, world_resources: &mut *self.world_resources, window_id: self.window_id };
         match &slot.content {
-            ui_wgpu::wgpu::SlotContent::Scene(scene) => render_component_scene_step(scene, slot.rect, &mut ctx, cursor, &mut hosts),
+            ui_wgpu::wgpu::SlotContent::Scene(scene) => render_component_scene_step(scene, slot.rect, &mut ctx, cursor, &mut hosts, self.driver_drag, self.document_generation),
             ui_wgpu::wgpu::SlotContent::Image(image) => render_ui_image_step(image, slot.rect, &mut ctx, cursor),
         }
     }
@@ -1388,6 +2044,19 @@ impl UiDocumentFrameCursor {
             UiDocumentFramePhase::Fault => "fault",
         }
     }
+
+    /// 📐️ Whether intrinsic layout is accepted and the cursor has reached retained paint.
+    pub fn layout_is_accepted(&self) -> bool {
+        matches!(self.phase, UiDocumentFramePhase::Paint | UiDocumentFramePhase::Complete)
+    }
+
+    /// 🧭️ Re-solves accepted content against the compact host box before its first paint.
+    pub fn restart_viewport_after_host_reflow(&mut self) {
+        if matches!(self.phase, UiDocumentFramePhase::Paint) {
+            self.phase = UiDocumentFramePhase::Viewport;
+            self.stalled = 0;
+        }
+    }
 }
 
 /// 🧭️ Sets one retained surface's logical flow — the wgpu twin of React's `FlowProvider`, which
@@ -1417,7 +2086,32 @@ fn document_debug_log(line: &str) {
     eprintln!("{line}");
 }
 
-pub(crate) fn render_ui_document_step(cursor: &mut UiDocumentFrameCursor, document: &UiDocumentLease, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>, window_id: &str, controller_id: &str, hosts: &mut crate::scenes::SceneEngineHosts<'_>) -> bool {
+fn apply_retained_document_page(
+    engine: &mut ui_wgpu::wgpu::Ui,
+    cursor: &mut UiDocumentFrameCursor,
+    window_id: &str,
+    page: ui_contract::UiDocumentNodePage,
+    step: &mut semio_framework_job::StepContext<'_>,
+) {
+    if let Err(rejection) = engine.apply_document_page(window_id, page, step) {
+        if rejection.fault == ui_wgpu::wgpu::tree::UiDocumentTreeFault::Generation && (step.is_cancelled() || step.should_yield()) {
+            return;
+        }
+        document_debug_log(&format!("[DEBUG] ui-doc page fault window={window_id} generation={} index={} fault={:?} cancelled={} yielded={}", rejection.generation, rejection.index, rejection.fault, step.is_cancelled(), step.should_yield()));
+        cursor.phase = UiDocumentFramePhase::Fault;
+    }
+}
+
+pub(crate) fn render_ui_document_step(
+    cursor: &mut UiDocumentFrameCursor,
+    document: &UiDocumentLease,
+    bounds: Rect,
+    ctx: &mut FrameworkWidgetContext<'_>,
+    window_id: &str,
+    controller_id: &str,
+    driver_drag: ui_wgpu::wgpu::UiDriverDrag,
+    hosts: &mut crate::scenes::SceneEngineHosts<'_>,
+) -> bool {
     let Ok(header) = document.header() else {
         cursor.phase = UiDocumentFramePhase::Fault;
         return false;
@@ -1437,6 +2131,7 @@ pub(crate) fn render_ui_document_step(cursor: &mut UiDocumentFrameCursor, docume
     let viewport_h = bounds.h.max(1.0);
     UI_ENGINE.with(|cell| {
         let mut engine = cell.borrow_mut();
+        engine.set_driver_drag(driver_drag);
         match cursor.phase {
             // 🚦️ A refused ingress opportunity is a RETRY, never a fault. `begin_document`,
             // `apply_document_page` and `finish_document` all refuse a step whose `StepContext` is
@@ -1483,17 +2178,17 @@ pub(crate) fn render_ui_document_step(cursor: &mut UiDocumentFrameCursor, docume
                                 | ui_wgpu::wgpu::engine::UiDocumentIngressFault::Deadline,
                             ) => {}
                             Err(_fault) => {
+                                document_debug_log(&format!("[DEBUG] ui-doc finish fault window={window_id} generation={generation} fault={_fault:?}"));
                                 cursor.phase = UiDocumentFramePhase::Fault;
                             }
                         }
                     } else {
                         match document.read_node_page(next_page) {
                             Ok(Some(page)) => {
-                                if let Err(_rejection) = engine.apply_document_page(window_id, page, &mut step) {
-                                    cursor.phase = UiDocumentFramePhase::Fault;
-                                }
+                                apply_retained_document_page(&mut engine, cursor, window_id, page, &mut step);
                             }
                             _ => {
+                                document_debug_log(&format!("[DEBUG] ui-doc page read fault window={window_id} generation={generation} index={next_page}"));
                                 cursor.phase = UiDocumentFramePhase::Fault;
                             }
                         }
@@ -1535,6 +2230,7 @@ pub(crate) fn render_ui_document_step(cursor: &mut UiDocumentFrameCursor, docume
                 }
             }
             UiDocumentFramePhase::Paint => {
+                let document_generation = engine.tree_revision(window_id).unwrap_or(generation);
                 let mut scene_host = FrameworkSceneHost {
                     input: ctx.input,
                     theme: ctx.theme,
@@ -1542,6 +2238,8 @@ pub(crate) fn render_ui_document_step(cursor: &mut UiDocumentFrameCursor, docume
                     collapsed_sections: ctx.collapsed_sections,
                     open_selects: ctx.open_selects,
                     window_id,
+                    driver_drag,
+                    document_generation,
                     world3d_states: &mut *hosts.world3d_states,
                     world_resources: &mut *hosts.world_resources,
                 };
@@ -1566,10 +2264,11 @@ pub(crate) fn render_ui_document_step(cursor: &mut UiDocumentFrameCursor, docume
                     }
                     ui_wgpu::wgpu::UiFrameStep::Fault => {
                         document_debug_log(&format!(
-                            "[DEBUG] ui-doc paint fault window={window_id} phase={:?} sync-line={} nodes={:?}",
+                            "[DEBUG] ui-doc paint fault window={window_id} phase={:?} sync-line={} nodes={:?} {}",
                             engine.paint_frame_phase(window_id),
                             engine.paint_frame_sync_fault_line(window_id),
-                            engine.tree(window_id).map(|tree| tree.root.is_some())
+                            engine.tree(window_id).map(|tree| tree.root.is_some()),
+                            engine.paint_stall_census(window_id)
                         ));
                         cursor.phase = UiDocumentFramePhase::Fault;
                     }
@@ -2006,6 +2705,7 @@ struct DumpStructure {
 #[serde(rename_all = "camelCase")]
 struct DumpAccessibilityWindow {
     window_id: String,
+    window_generation: u64,
     nodes: Vec<ui_contract::AccessibilityProjectionNode>,
 }
 
@@ -2040,6 +2740,7 @@ struct DumpFrameStats {
     scene_passes: usize,
     scene_draws: usize,
     scene_instances: usize,
+    frame_latency: crate::frame_latency::FrameLatencySnapshot,
 }
 /// 🧊️ One published preview mesh of one `World3d` surface, as the PAYLOAD states it — never as the
 /// renderer's own mesh store counts it.
@@ -2413,13 +3114,14 @@ fn build_accessibility_dump(engine: &ui_wgpu::wgpu::Ui, requested: Option<&str>)
     let window_ids = dump_window_ids(engine);
     let announced: Vec<String> = match requested.filter(|id| !id.is_empty()) {
         Some(id) => window_ids.iter().filter(|live| live.as_str() == id).cloned().collect(),
-        None => window_ids.clone(),
+        None => ACCESSIBILITY_VISIBLE_WINDOWS.borrow().published.iter().filter(|visible| window_ids.iter().any(|live| live == *visible)).cloned().collect(),
     };
     let mut windows: Vec<DumpAccessibilityWindow> = announced
         .into_iter()
         .map(|window_id| {
             let nodes = engine.tree(&window_id).map(ui_wgpu::wgpu::accessibility::accessibility_projection).unwrap_or_default();
-            DumpAccessibilityWindow { window_id, nodes }
+            let window_generation = engine.surface_generation(&window_id).unwrap_or_default();
+            DumpAccessibilityWindow { window_id, window_generation, nodes }
         })
         .collect();
     // ♿️ …and the chrome around those windows, which owns no retained tree of its own. Announced
@@ -2427,7 +3129,7 @@ fn build_accessibility_dump(engine: &ui_wgpu::wgpu::Ui, requested: Option<&str>)
     // per-window filter above follows.
     let chrome = CHROME_ACCESSIBILITY.borrow().clone();
     if !chrome.is_empty() && requested.filter(|id| !id.is_empty()).is_none_or(|id| id == SHELL_CHROME_ACCESSIBILITY_WINDOW_ID) {
-        windows.push(DumpAccessibilityWindow { window_id: SHELL_CHROME_ACCESSIBILITY_WINDOW_ID.to_string(), nodes: chrome });
+        windows.push(DumpAccessibilityWindow { window_id: SHELL_CHROME_ACCESSIBILITY_WINDOW_ID.to_string(), window_generation: SHELL_CHROME_ACCESSIBILITY_GENERATION, nodes: chrome });
     }
     DumpAccessibility { window_id: requested.filter(|id| !id.is_empty()).map(str::to_string), window_ids, windows }
 }
@@ -2436,7 +3138,7 @@ fn build_accessibility_dump(engine: &ui_wgpu::wgpu::Ui, requested: Option<&str>)
 fn build_frame_stats(engine: &ui_wgpu::wgpu::Ui, requested: Option<&str>) -> DumpFrameStats {
     let window_ids = dump_window_ids(engine);
     let Some(window_id) = dump_window_id(engine, requested) else {
-        return DumpFrameStats { window_id: None, window_ids, draw_calls: 0, quad_count: 0, glyph_count: 0, scene_passes: 0, scene_draws: 0, scene_instances: 0 };
+        return DumpFrameStats { window_id: None, window_ids, draw_calls: 0, quad_count: 0, glyph_count: 0, scene_passes: 0, scene_draws: 0, scene_instances: 0, frame_latency: crate::frame_latency::snapshot() };
     };
     // 📊️ The production paint entry is `frame_into_step`, which appends into the CALLER's draw list
     // and never publishes into the window's own — so `draw_list` answers "empty" no matter how much
@@ -2458,10 +3160,11 @@ fn build_frame_stats(engine: &ui_wgpu::wgpu::Ui, requested: Option<&str>) -> Dum
             scene_passes: census.scene_passes,
             scene_draws: census.scene_draws,
             scene_instances: census.scene_instances,
+            frame_latency: crate::frame_latency::snapshot(),
         };
     }
     let Some(draw) = engine.draw_list(&window_id) else {
-        return DumpFrameStats { window_id: Some(window_id), window_ids, draw_calls: 0, quad_count: 0, glyph_count: 0, scene_passes: 0, scene_draws: 0, scene_instances: 0 };
+        return DumpFrameStats { window_id: Some(window_id), window_ids, draw_calls: 0, quad_count: 0, glyph_count: 0, scene_passes: 0, scene_draws: 0, scene_instances: 0, frame_latency: crate::frame_latency::snapshot() };
     };
     let draw_calls = draw.layers.iter().filter(|layer| layer_is_nonempty(layer)).count();
     let all_instances = draw.layers.iter().flat_map(|layer| layer.ui_instances.iter().chain(layer.overlay_ui_instances.iter()));
@@ -2474,13 +3177,17 @@ fn build_frame_stats(engine: &ui_wgpu::wgpu::Ui, requested: Option<&str>) -> Dum
         }
     }
     let scene_passes = draw.scene_passes.len();
-    let scene_draws = draw.scene_passes.iter().map(|pass| pass.draws.len() + pass.translucent_draws.len() + pass.textured_draws.len() + pass.line_draws.len()).sum();
+    let scene_draws = draw.scene_passes.iter().map(|pass| pass.draws.len() + pass.translucent_draws.len() + pass.material_draws.len() + pass.textured_draws.len() + pass.line_draws.len()).sum();
     let scene_instances = draw
         .scene_passes
         .iter()
-        .map(|pass| pass.draws.iter().chain(pass.translucent_draws.iter()).map(|scene_draw| scene_draw.instances.len()).sum::<usize>() + pass.textured_draws.iter().map(|scene_draw| scene_draw.instances.len()).sum::<usize>())
+        .map(|pass| {
+            pass.draws.iter().chain(pass.translucent_draws.iter()).map(|scene_draw| scene_draw.instances.len()).sum::<usize>()
+                + pass.material_draws.iter().map(|scene_draw| scene_draw.instances.len()).sum::<usize>()
+                + pass.textured_draws.iter().map(|scene_draw| scene_draw.instances.len()).sum::<usize>()
+        })
         .sum();
-    DumpFrameStats { window_id: Some(window_id), window_ids, draw_calls, quad_count, glyph_count, scene_passes, scene_draws, scene_instances }
+    DumpFrameStats { window_id: Some(window_id), window_ids, draw_calls, quad_count, glyph_count, scene_passes, scene_draws, scene_instances, frame_latency: crate::frame_latency::snapshot() }
 }
 //#region 🔬️MeshStats
 /// 🔢️ One published-mesh array's length, or zero when the entry omits it.
@@ -2788,8 +3495,45 @@ pub fn note_chrome_accessibility(nodes: Vec<ui_contract::AccessibilityProjection
 
 /// ♿️ The window id the chrome announces under — a shell-owned surface, never one of the app's.
 pub(crate) const SHELL_CHROME_ACCESSIBILITY_WINDOW_ID: &str = "shell.chrome";
+pub(crate) const SHELL_CHROME_ACCESSIBILITY_GENERATION: u64 = 1;
 
 static CHROME_ACCESSIBILITY: WorkerCell<Vec<ui_contract::AccessibilityProjectionNode>> = WorkerCell::new();
+
+const ACCESSIBILITY_VISIBLE_WINDOW_CAPACITY: usize = 256;
+
+#[derive(Default)]
+struct AccessibilityVisibleWindows {
+    published: Vec<String>,
+    staging: Vec<String>,
+}
+
+static ACCESSIBILITY_VISIBLE_WINDOWS: WorkerCell<AccessibilityVisibleWindows> = WorkerCell::new();
+
+pub fn begin_accessibility_visible_documents() {
+    ACCESSIBILITY_VISIBLE_WINDOWS.borrow_mut().staging.clear();
+}
+
+pub fn note_accessibility_visible_document(window_id: &str) {
+    let mut windows = ACCESSIBILITY_VISIBLE_WINDOWS.borrow_mut();
+    if windows.staging.len() < ACCESSIBILITY_VISIBLE_WINDOW_CAPACITY && !windows.staging.iter().any(|visible| visible == window_id) {
+        windows.staging.push(window_id.to_string());
+    }
+}
+
+pub fn publish_accessibility_visible_documents() {
+    let mut windows = ACCESSIBILITY_VISIBLE_WINDOWS.borrow_mut();
+    let AccessibilityVisibleWindows { published, staging } = &mut *windows;
+    std::mem::swap(published, staging);
+}
+
+fn accessibility_window_is_visible(window_id: &str) -> bool {
+    ACCESSIBILITY_VISIBLE_WINDOWS.borrow().published.iter().any(|visible| visible == window_id)
+}
+
+#[cfg(test)]
+pub(crate) fn accessibility_visible_window_ids() -> Vec<String> {
+    ACCESSIBILITY_VISIBLE_WINDOWS.borrow().published.clone()
+}
 
 pub fn note_chrome_hit_registry(hits: &[ui_wgpu::wgpu::HitTarget<ActionDescriptor>], owners: &std::collections::HashMap<String, (String, Rect)>) {
     if !semio_framework_trace::runtime_diagnostics_enabled() {

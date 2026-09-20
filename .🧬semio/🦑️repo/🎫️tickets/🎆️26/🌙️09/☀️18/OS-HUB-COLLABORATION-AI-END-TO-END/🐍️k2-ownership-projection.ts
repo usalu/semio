@@ -38,12 +38,15 @@ function projection(config: Record<string, any>, expectedRoot: string): unknown 
 }
 
 const write = process.argv.includes("--write");
+const onlyIndex = process.argv.indexOf("--only");
+const only = onlyIndex === -1 ? null : process.argv[onlyIndex + 1]!;
 let rootBad = 0;
 let nameBad = 0;
 let hashBad = 0;
 let machineBad = 0;
 let shown = 0;
 for (const owner of fixture.owners) {
+  if (only !== null && !owner.ownerPath.includes(only)) continue;
   const ownerPath = resolve(repoRoot, owner.ownerPath);
   const expectedRoot = resolve(repoRoot, owner.configurationRoot);
   const loaded = await loadConfigFromFile({ command: "serve", mode: "test" }, ownerPath, expectedRoot, "silent", undefined, "native");

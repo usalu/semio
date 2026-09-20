@@ -1,4 +1,3 @@
-
 use super::*;
 
 fn pending_raster_len(surface_id: &str) -> usize {

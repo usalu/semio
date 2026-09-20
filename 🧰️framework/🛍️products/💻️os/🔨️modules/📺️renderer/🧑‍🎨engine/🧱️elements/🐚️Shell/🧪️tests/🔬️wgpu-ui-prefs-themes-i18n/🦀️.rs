@@ -190,49 +190,29 @@ fn resolve_theme_for_ids_semio_and_mono_differ() {
     assert_eq!(mono_dark.navbar_height, semio_dark.navbar_height);
 }
 
-/// 🧪️ A hex color override is parsed and applied; an invalid hex falls back to the base color
-/// rather than panicking or silently corrupting the theme.
+/// 🧬️ Canonical custom themes save, resolve and delete through the same full document schema.
 #[test]
-fn hex_to_rgba_parses_valid_and_falls_back_on_invalid() {
-    let fallback = Rgba::new(0.1, 0.2, 0.3, 1.0);
-    assert_eq!(hex_to_rgba("#ff0000", fallback), Rgba::from_srgb8(255, 0, 0, 255));
-    assert_eq!(hex_to_rgba("ff0000", fallback), Rgba::from_srgb8(255, 0, 0, 255));
-    assert_eq!(hex_to_rgba("not-a-color", fallback), fallback);
-    assert_eq!(hex_to_rgba("#fff", fallback), fallback);
-}
-
-/// 🧪️ End-to-end custom theme draft flow: begin → mutate → save → resolves with the override
-/// applied → delete falls back to "semio". Explicitly seeds `active_theme_id` rather than
-/// asserting on whatever `load_chrome_prefs` found on disk, so this is independent of any other
-/// test's writes on a reused worker thread.
-#[test]
-fn custom_theme_draft_round_trips_and_deletes() {
-    set_active_theme_id("semio");
-    let id = begin_custom_theme_draft("semio", "My Theme", "wp14-test");
-    assert_eq!(id, "custom.wp14-test");
-    assert!(set_draft_theme_color("light", "background", "#112233"));
-    assert!(!set_draft_theme_color("light", "not-a-field", "#112233"));
-    let saved_id = save_draft_theme().expect("a draft was in progress");
-    assert_eq!(saved_id, id);
+fn canonical_theme_document_round_trips_and_deletes() {
+    let id = "custom.canonical-round-trip";
+    let mut document = shell_theme_document_base().clone();
+    document.id = id.into();
+    document.label = "Canonical Round Trip".into();
+    document.colors.insert("primary".into(), "#112233".into());
+    let text = save_custom_theme_document(id, &document).expect("canonical document saves");
+    assert_eq!(ThemeDocument::parse(&text), Some(document.clone()));
     assert_eq!(active_theme_id(), id);
-    assert!(custom_theme_ids().contains(&id));
-    let resolved = resolve_theme_for_ids(&id, "light");
-    assert_eq!(resolved.background, Rgba::from_srgb8(0x11, 0x22, 0x33, 255));
-    // Untouched fields still fall through to the "semio" base.
-    assert_eq!(resolved.navbar_height, resolve_theme_for_ids("semio", "light").navbar_height);
-    delete_custom_theme(&id);
+    assert!(custom_theme_ids().contains(&id.to_string()));
+    assert_ne!(resolve_theme_for_ids(id, "light").accent, resolve_theme_for_ids("semio", "light").accent);
+    delete_custom_theme(id);
     assert_eq!(active_theme_id(), "semio");
-    assert!(!custom_theme_ids().contains(&id));
+    assert!(!custom_theme_ids().contains(&id.to_string()));
 }
 
-/// 🧪️ `discard_draft_theme` clears an in-progress draft without touching the saved registry.
+/// 🧬️ A five-paint object is not a theme document and cannot enter the registry path.
 #[test]
-fn discard_draft_theme_clears_in_progress_draft() {
-    let id = begin_custom_theme_draft("mono", "Discard Me", "wp14-discard");
-    assert!(set_draft_theme_color("dark", "accent", "#abcdef"));
-    discard_draft_theme();
-    assert_eq!(save_draft_theme(), None);
-    assert!(!custom_theme_ids().contains(&id));
+fn non_document_theme_shapes_are_rejected() {
+    let obsolete = r##"{"id":"custom.old","label":"Old","base":"semio","light":{"background":"#112233"},"dark":{}}"##;
+    assert_eq!(ThemeDocument::parse(obsolete), None);
 }
 
 /// 🧪️ `active_ui_layout`/`set_active_ui_layout` round-trip and reject unknown values (matches

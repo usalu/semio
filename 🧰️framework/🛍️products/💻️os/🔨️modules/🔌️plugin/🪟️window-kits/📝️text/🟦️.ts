@@ -8,7 +8,7 @@ import type { LocalizedLabel, UiComponentSceneNode } from "@semio-tech/framework
 
 export const KIND_ID = "framework.window.text";
 
-export const LABEL: LocalizedLabel = { en: "Text", de: "Text" };
+export const LABEL: LocalizedLabel = { native: { en: "Text", de: "Text" }, reuse: { en: "Text", de: "Text" } };
 
 export type TextView = {
   readonly text: string;

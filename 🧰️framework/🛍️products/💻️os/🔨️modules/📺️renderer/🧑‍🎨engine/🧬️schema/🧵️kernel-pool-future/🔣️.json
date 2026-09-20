@@ -1,0 +1,78 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio.tech/schema/kernel-pool-future-trace",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "cases",
+    "responses"
+  ],
+  "properties": {
+    "cases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "pendingWakes",
+          "expectedPolls"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "pendingWakes": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 16
+          },
+          "expectedPolls": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 17,
+            "items": {
+              "enum": [
+                "pending-wake",
+                "ready"
+              ]
+            }
+          }
+        }
+      }
+    },
+    "responses": {
+      "type": "array",
+      "minItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "delivery",
+          "value"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "delivery": {
+            "enum": [
+              "before-poll",
+              "register-waker",
+              "after-pending"
+            ]
+          },
+          "value": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 4294967295
+          }
+        }
+      }
+    }
+  }
+}

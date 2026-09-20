@@ -503,11 +503,21 @@
         "artifactKind": {
           "type": "string"
         },
+        "cursor": {
+          "description": "The `nextCursor` of a previous page; omit for the first page.",
+          "type": "string"
+        },
         "kind": {
           "items": {
             "type": "string"
           },
           "type": "array"
+        },
+        "limit": {
+          "default": 20,
+          "maximum": 100,
+          "minimum": 1,
+          "type": "integer"
         },
         "owner": {
           "type": "string"
@@ -526,8 +536,17 @@
     },
     "CapabilitiesSearchOutput": {
       "properties": {
+        "nextCursor": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
         "results": {
           "type": "array"
+        },
+        "total": {
+          "type": "integer"
         }
       },
       "type": "object"
@@ -703,6 +722,10 @@
         "catalogHash": {
           "type": "string"
         },
+        "channel": {
+          "description": "🔀️ Which document owner this session's artifact verbs execute against — `\"shell\"` when a live shell is attached over `/bridge` and declared `relayAppCommands` (the agent's edits happen in the window the human is looking at, land in that human's undo history and replicate to their collaborators), `\"headless\"` when this process's own `--folder`/`--hub` workspace owns them. The decision is taken HERE, once per session, and is sticky: a client that reads `\"shell\"` is never silently re-routed onto a different document.",
+          "type": "string"
+        },
         "locale": {
           "type": "string"
         },
@@ -721,6 +744,7 @@
       },
       "required": [
         "catalogHash",
+        "channel",
         "locale",
         "principal",
         "scopes",
@@ -1446,6 +1470,14 @@
         "appId": {
           "type": "string"
         },
+        "artifactKind": {
+          "description": "🗿️ The artifact kind this verb acts on (`s.draw.drawing`), empty for gateway/framework verbs — the cheapest way for an agent to tell two same-titled verbs of different plugins apart.",
+          "type": "string"
+        },
+        "audience": {
+          "description": "🎯️ `agent` on every published hit — carried on the wire so a client can SEE that the catalog is an agent projection rather than having to infer it from what is missing.",
+          "type": "string"
+        },
         "capabilityId": {
           "type": "string"
         },
@@ -1464,6 +1496,8 @@
       },
       "required": [
         "appId",
+        "artifactKind",
+        "audience",
         "capabilityId",
         "description",
         "pluginId",

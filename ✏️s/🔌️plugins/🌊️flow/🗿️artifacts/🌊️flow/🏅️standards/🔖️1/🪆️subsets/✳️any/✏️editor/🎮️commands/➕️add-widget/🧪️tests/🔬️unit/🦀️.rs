@@ -3,6 +3,24 @@ use crate::editor::flow::unit_tests::context::{dispatch, flow_app};
 use crate::editor::flow::FlowCommand;
 use store::{ArtifactPack, SpaceMember};
 
+/// 🪟️ An `ActionMeta` that names one live `flow-main` window instance. Flow's direct-store retained
+/// route reads `context.view_state` before anything else and refuses with `flow-window-view-required`
+/// without it (`✏️editor/🦀️.rs:937`), so a law that dispatches one of those verbs through the bare
+/// `meta("local")` (whose `view_state` is `None`) measures the refusal, not the command.
+fn flow_main_window_meta() -> semio_framework_plugin::ActionMeta {
+    use crate::editor::flow::modes::edit::windows::main::FLOW_PLAY_WINDOW_MAIN;
+
+    semio_framework_plugin::ActionMeta {
+        view_state: Some(semio_framework_plugin::ViewModel {
+            window_id: Some(FLOW_PLAY_WINDOW_MAIN.into()),
+            active_window_kind_id: Some(FLOW_PLAY_WINDOW_MAIN.into()),
+            window_instances: vec![semio_framework_plugin::ViewWindowInstance { id: FLOW_PLAY_WINDOW_MAIN.into(), window_kind_id: FLOW_PLAY_WINDOW_MAIN.into() }],
+            ..Default::default()
+        }),
+        ..semio_framework_plugin::artifact_app_laws::meta("local")
+    }
+}
+
 #[test]
 fn child_add_widget_uses_the_smallest_available_identity_and_the_descriptor_default_payload() {
     use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::geometry::SemioPoint2;
@@ -131,7 +149,11 @@ async fn add_widget_dispatches_one_typed_child_edit_without_repointing_parent_co
     let parent_after = app.snapshot().expect("snapshot");
     let content_after = SemioFlowSnapshot::decode_pack(&app.child_store("content", &child_id).await.expect("Flow child").document_pack_bytes().await.expect("Flow child pack")).expect("Flow child snapshot");
     for receipt in [first, second] {
-        assert_eq!(receipt.lanes, [TypedOperationResultLane::Child, TypedOperationResultLane::Terminal], "each command must publish exactly one acknowledged child group followed by terminal");
+        assert_eq!(
+            receipt.lanes,
+            [TypedOperationResultLane::Child, TypedOperationResultLane::Ui, TypedOperationResultLane::Terminal],
+            "each command must publish exactly one acknowledged child group, then the emit's own UI scope, then terminal — a successful emit always carries a Ui page (`ui_pending`, `🔌️plugin/🦀️.rs:27709`)"
+        );
     }
     assert_eq!(parent_after.content, parent_before.content, "addWidget must preserve the exact parent content coordinate");
     assert_eq!(content_after.nodes.len(), content_before.nodes.len() + 2);
@@ -142,7 +164,7 @@ async fn add_widget_dispatches_one_typed_child_edit_without_repointing_parent_co
     let mut after_first_undo = content_before.clone();
     after_first_undo.nodes.push(inserted[0].clone());
     for expected in [after_first_undo, content_before] {
-        app.handle_action("undo", None, &meta("local")).await.expect("undo child group");
+        semio_framework_plugin::artifact_app_laws::settle_history_verb(&mut app, "undo", meta("local").instance_id).await;
         let content = SemioFlowSnapshot::decode_pack(&app.child_store("content", &child_id).await.expect("Flow child after undo").document_pack_bytes().await.expect("Flow child pack after undo")).expect("Flow child snapshot after undo");
         assert_eq!(content, expected, "each inverse must restore the complete preceding child document in reverse insertion order");
     }
@@ -152,21 +174,40 @@ async fn add_widget_dispatches_one_typed_child_edit_without_repointing_parent_co
 
 #[semio_framework_async_macros::async_test]
 async fn rename_rejects_blank_unchanged_and_taken_ids() {
+    use semio_framework_plugin::app::TypedOperationResultLane;
+    use semio_framework_plugin::artifact_app_laws::{close_registered_fixture_app, meta, settle_registered_typed_operation};
+
     let mut app = flow_app().await;
+    let receiver = meta("local").instance_id;
     for value in ["", " ", "slider"] {
         let result = dispatch(&mut app, FlowCommand::RenameFlowWidget(crate::editor::flow::commands::rename_flow_widget::RenameFlowWidget { old_id: "slider".into(), value: value.into() })).await;
         assert!(result.mutations.is_empty(), "rename to {value:?} must be a no-operation");
+        let lanes = settle_registered_typed_operation(&mut app, receiver).await.map(|receipt| receipt.lanes).unwrap_or_default();
+        assert!(
+            !lanes.iter().any(|lane| matches!(lane, TypedOperationResultLane::Artifact | TypedOperationResultLane::Child)),
+            "rename to {value:?} must publish no durable lane, published {lanes:?}"
+        );
     }
+    close_registered_fixture_app(&mut app);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn patch_flow_widgets_parses_the_raw_value_string_into_the_slider() {
+    use semio_framework_plugin::artifact_app_laws::{close_registered_fixture_app, meta, settle_registered_typed_operation};
+
     let mut app = flow_app().await;
-    dispatch(&mut app, FlowCommand::PatchFlowWidgets(crate::editor::flow::commands::patch_flow_widgets::PatchFlowWidgets { widget_ids: vec!["slider".into()], field: "value".into(), value: "7.5".into() })).await;
+    app.dispatch_typed(
+        FlowCommand::PatchFlowWidgets(crate::editor::flow::commands::patch_flow_widgets::PatchFlowWidgets { widget_ids: vec!["slider".into()], field: "value".into(), value: "7.5".into() }),
+        &flow_main_window_meta(),
+    )
+    .await
+    .expect("dispatch");
+    settle_registered_typed_operation(&mut app, meta("local").instance_id).await.expect("patchFlowWidgets publication");
     let patched = app.snapshot().expect("snapshot");
     let patched_widgets = patched.to_host_snapshot().widgets;
     assert!(
         patched_widgets.iter().any(|widget| matches!(widget, semio_framework_artifact_flow_flow::Widget::InputSlider { id, value, .. } if id == "slider" && (value - 7.5).abs() < f64::EPSILON)),
         "slider must carry the parsed value: {patched_widgets:?}"
     );
+    close_registered_fixture_app(&mut app);
 }

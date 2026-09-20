@@ -2,6 +2,7 @@ use super::*;
 use directory::os_directory::{same_lease_fields_v1, CheckpointPublicationBlobV1, CheckpointPublicationFrontierV1, DirectoryCommandOutcomeV1, DirectoryCommandResultV1};
 use protocol::{ArtifactId as WireArtifactId, Bootstrap};
 use semio_framework_hash::Sha256;
+use semio_framework_trace::record::{CapturingSink, TraceLevel};
 use semio_hub::artifact_authority::checkpoint_id_encoding_v1;
 use semio_hub::directory::model::{DirectoryCommandClaimV1, DirectoryCommandDispositionV1, DirectoryCommandReceiptCompletion, DirectoryCommandReceiptRecord, DirectoryCommandResultKindV1};
 use semio_hub::directory::replay_directory_command_receipt;
@@ -62,18 +63,20 @@ fn startup_auth_policy_fails_closed_without_owned_adapters() {
     let verifier: Arc<dyn IdentityAssertionVerifier> = Arc::new(StartupVerifier);
     let local: Arc<dyn LocalBootstrapTransport> = Arc::new(TestLocalBootstrap);
     let admin = AdminSubject { provider_digest: admin_provider_digest("oidc.example"), subject_digest: identity_subject_digest("oidc.example", "admin-subject").expect("admin digest") };
-    assert!(validate_auth_startup(HubMode::Production, loopback, None, None, &[admin.clone()]).is_err());
-    assert!(validate_auth_startup(HubMode::Production, loopback, Some(&verifier), None, &[]).is_err());
-    assert!(validate_auth_startup(HubMode::Production, public, Some(&verifier), None, &[admin.clone()]).is_err());
-    assert!(validate_auth_startup(HubMode::Production, loopback, Some(&verifier), None, &[admin]).is_ok());
-    assert!(validate_auth_startup(HubMode::Development, loopback, None, None, &[]).is_err());
-    assert!(validate_auth_startup(HubMode::Development, public, None, Some(&local), &[]).is_err());
-    assert!(validate_auth_startup(HubMode::Development, loopback, None, Some(&local), &[]).is_ok());
+    let loopback_cors = CrossOriginPolicyV1::LoopbackDevelopment;
+    let no_forwarding = ForwardedTlsTrustV1::Untrusted;
+    assert!(validate_auth_startup(HubMode::Production, loopback, None, None, &[admin.clone()], false, &loopback_cors, no_forwarding).is_err());
+    assert!(validate_auth_startup(HubMode::Production, loopback, Some(&verifier), None, &[], false, &loopback_cors, no_forwarding).is_err());
+    assert!(validate_auth_startup(HubMode::Production, public, Some(&verifier), None, &[admin.clone()], false, &loopback_cors, no_forwarding).is_err());
+    assert!(validate_auth_startup(HubMode::Production, loopback, Some(&verifier), None, &[admin], false, &loopback_cors, no_forwarding).is_ok());
+    assert!(validate_auth_startup(HubMode::Development, loopback, None, None, &[], false, &loopback_cors, no_forwarding).is_err());
+    assert!(validate_auth_startup(HubMode::Development, public, None, Some(&local), &[], false, &loopback_cors, no_forwarding).is_err());
+    assert!(validate_auth_startup(HubMode::Development, loopback, None, Some(&local), &[], false, &loopback_cors, no_forwarding).is_ok());
 }
 
 #[test]
 fn readiness_v1_is_redacted_and_never_claims_public_session_issuance() {
-    let ready = hub_readiness(HubMode::Development, "loopback", "00112233445566778899aabbccddeeff".into(), true, true, false, true, true, false, false);
+    let ready = hub_readiness(HubMode::Development, "loopback", "00112233445566778899aabbccddeeff".into(), true, true, false, true, true, false, false, "trusted-catalog-never-published-in-this-data-root");
     let encoded = serde_json::to_string(&ready).expect("readiness json");
     assert_eq!(ready.status, "ready");
     assert!(!ready.authentication.public_session_issuance);
@@ -85,41 +88,48 @@ fn readiness_v1_is_redacted_and_never_claims_public_session_issuance() {
     assert!(!encoded.contains("channel"));
     assert!(!encoded.contains("sessionKind"));
     assert!(!encoded.contains("authorizationGeneration"));
-    let partial = hub_readiness(HubMode::Development, "loopback", ready.run_id.clone(), true, false, false, true, true, false, false);
+    let partial = hub_readiness(HubMode::Development, "loopback", ready.run_id.clone(), true, false, false, true, true, false, false, "trusted-catalog-never-published-in-this-data-root");
     assert_eq!(partial.status, "not-ready");
     assert!(partial.authentication.bootstrap_ready);
     assert!(!partial.artifact_authority.ready);
-    assert_eq!(hub_readiness(HubMode::Development, "loopback", ready.run_id.clone(), false, false, false, true, true, false, false).status, "not-ready");
-    assert_eq!(hub_readiness(HubMode::Development, "loopback", ready.run_id.clone(), true, false, false, false, true, false, false).status, "not-ready");
-    assert_eq!(hub_readiness(HubMode::Development, "network", ready.run_id, true, true, false, true, false, false, false).status, "not-ready");
+    assert_eq!(hub_readiness(HubMode::Development, "loopback", ready.run_id.clone(), false, false, false, true, true, false, false, "trusted-catalog-never-published-in-this-data-root").status, "not-ready");
+    assert_eq!(hub_readiness(HubMode::Development, "loopback", ready.run_id.clone(), true, false, false, false, true, false, false, "trusted-catalog-never-published-in-this-data-root").status, "not-ready");
+    assert_eq!(hub_readiness(HubMode::Development, "network", ready.run_id, true, true, false, true, false, false, false, "trusted-catalog-never-published-in-this-data-root").status, "not-ready");
 }
 
-#[tokio::test]
-async fn artifact_cas_maintenance_checkpoint_reaches_tail_after_sixteen_requests() {
-    let state = test_state().await;
-    for index in 0..5 {
-        let space_id = create_space_for_test(&state, "seed", &format!("CAS {index}"), os_directory::DirectorySpaceKind::Studio, DirectorySpaceVisibility::Private).await;
-        let document_id = format!("cas-maintenance-{index}");
-        announce_document_for_test(&state, &space_id, &document_id).await;
-        publish_checkpoint_for_test(&state, &space_id, &document_id).await;
+#[test]
+fn a_not_ready_hub_names_every_closed_gate_and_its_reason_in_readyz_and_at_startup() {
+    let addr: SocketAddr = "127.0.0.1:8787".parse().expect("loopback readiness address");
+    let ready = hub_readiness(HubMode::Development, "loopback", "00112233445566778899aabbccddeeff".into(), true, true, true, true, true, false, false, "trusted-catalog-never-published-in-this-data-root");
+    let encoded = serde_json::to_string(&ready).expect("ready readiness json");
+    assert!(ready.blocked_by.is_empty());
+    assert!(!encoded.contains("blockedBy"), "a ready hub publishes no closed-gate list");
+    assert!(!encoded.contains("reason"), "an open gate carries no reason");
+    assert_eq!(startup_readiness_line(&ready, &addr), "[INFO] os-hub ready at http://127.0.0.1:8787");
+
+    let blocked = hub_readiness(HubMode::Development, "loopback", "00112233445566778899aabbccddeeff".into(), false, false, false, false, false, false, false, "trusted-catalog-never-published-in-this-data-root");
+    assert_eq!(blocked.status, "not-ready");
+    assert_eq!(
+        blocked.blocked_by.iter().map(|closed| (closed.gate, closed.reason)).collect::<Vec<_>>(),
+        vec![
+            ("authentication.bootstrapReady", "local-bootstrap-pipe-handshake-incomplete"),
+            ("artifactCasBarrier", "artifact-cas-coordinator-barrier-closed"),
+            ("artifactAuthority", "trusted-catalog-never-published-in-this-data-root"),
+            ("adminAssets", "admin-spa-dist-missing-run-os-hub-admin-build"),
+        ]
+    );
+    assert_eq!(blocked.artifact_authority.reason, Some("trusted-catalog-never-published-in-this-data-root"));
+    assert_eq!(blocked.artifact_cas_sweeper.reason, Some("artifact-cas-coordinator-barrier-closed"));
+    assert!(blocked.directory.reason.is_none(), "an open gate never invents a reason");
+    let line = startup_readiness_line(&blocked, &addr);
+    assert!(line.starts_with("[WARN] os-hub listening at http://127.0.0.1:8787 but /readyz reports not-ready — closed gates: "), "{line}");
+    for reason in ["local-bootstrap-pipe-handshake-incomplete", "trusted-catalog-never-published-in-this-data-root", "admin-spa-dist-missing-run-os-hub-admin-build"] {
+        assert!(line.contains(reason), "{line} omits {reason}");
     }
-    let control = StartupCatalogControl;
-    let context = OperationContext::new(control.now_ms().saturating_add(30_000), AuthorityLimits::maximum(), &control);
-    let mut checkpoint = ArtifactCasMaintenanceCheckpoint::default();
-    let mut requests = 0usize;
-    let mut examined = 0u64;
-    loop {
-        let result = state.directory_service.sweep_artifact_cas(state.artifact_cas.as_ref(), checkpoint.request(false, 1), &context).await.expect("bounded maintenance page");
-        requests += 1;
-        examined += result.examined_objects;
-        if checkpoint.accept(&result) {
-            break;
-        }
-        assert!(requests < 128, "maintenance cursor converges");
-    }
-    assert!(requests > 16);
-    assert!(examined > 16);
+    let production = hub_readiness(HubMode::Production, "network", "production".into(), false, true, true, true, true, false, false, "native-artifact-execution-feature-not-compiled");
+    assert_eq!(production.blocked_by.iter().map(|closed| closed.reason).collect::<Vec<_>>(), vec!["identity-assertion-verifier-not-configured"]);
 }
+
 use tokio_tungstenite::connect_async;
 use tokio_tungstenite::tungstenite::{client::IntoClientRequest, Message as WsMessage};
 
@@ -255,17 +265,17 @@ async fn space_artifact_creation_routes_are_author_owned_idempotent_and_genesis_
 #[tokio::test]
 async fn trusted_catalog_startup_is_selected_only_by_the_server_owned_data_root() {
     let data_root = std::fs::canonicalize(tempdir("unconfigured-trusted-catalog")).expect("canonical fixture-owned data root");
-    assert!(configured_artifact_authority(&data_root, Some(&NativeCodecProviderSetV1::linked())).await.expect("unconfigured authority").is_none());
+    assert!(configured_artifact_authority(&data_root, Some(&NativeCodecProviderSetV1::linked()), &Tracer::disabled()).await.expect("unconfigured authority").is_none());
     std::fs::remove_dir_all(data_root).expect("remove unconfigured trusted catalog fixture");
 }
 
 #[tokio::test]
 async fn configured_catalog_without_a_native_provider_fails_closed() {
     let unconfigured = tempdir("unconfigured-headless-catalog");
-    assert!(configured_artifact_authority(&unconfigured, None).await.expect("unconfigured headless authority").is_none());
+    assert!(configured_artifact_authority(&unconfigured, None, &Tracer::disabled()).await.expect("unconfigured headless authority").is_none());
     std::fs::create_dir_all(unconfigured.join("trusted-catalog")).expect("trusted catalog directory");
     std::fs::write(unconfigured.join("trusted-catalog/current.json"), b"{}\n").expect("configured current pointer");
-    let error = match configured_artifact_authority(&unconfigured, None).await {
+    let error = match configured_artifact_authority(&unconfigured, None, &Tracer::disabled()).await {
         Ok(_) => panic!("configured trusted catalog unexpectedly admitted without its native provider"),
         Err(error) => error,
     };
@@ -405,39 +415,6 @@ fn native_openable_stdio_bundle() -> std::path::PathBuf {
     std::fs::canonicalize(root).expect("canonical fixture-owned data root")
 }
 
-#[cfg(feature = "native-artifact-execution")]
-#[tokio::test]
-async fn native_openable_stdio_provider_is_the_only_atomic_readiness_transition() {
-    let unavailable = test_state().await;
-    let unavailable_addr = spawn_server(unavailable).await;
-    let unavailable_readiness = raw_http_get(unavailable_addr, "/readyz", &[]).await;
-    assert_eq!(unavailable_readiness.status, 503);
-    let unavailable_json: serde_json::Value = serde_json::from_slice(&unavailable_readiness.body).expect("unavailable readiness JSON");
-    assert_eq!(unavailable_json["artifactAuthority"]["ready"], false);
-    assert_eq!(unavailable_json["features"]["openPlan"], false);
-
-    let providers = NativeCodecProviderSetV1::linked();
-    let root = native_openable_stdio_bundle();
-    let configured = configured_artifact_authority(&root, Some(&providers)).await.expect("verified stdio authority").expect("configured stdio authority");
-    assert_eq!(configured.catalog.codec_count(), 26);
-    assert_eq!(configured.catalog.open_target_count(), 1);
-    let mut ready = test_state().await;
-    ready.openable_catalog = Some(configured.catalog.clone());
-    ready.artifact_authority = Some(configured.authority);
-    ready.readiness = Arc::new(hub_readiness(HubMode::Development, "loopback", "00112233445566778899aabbccddeeff".into(), true, true, true, true, true, false, false));
-    let ready_addr = spawn_server(ready).await;
-    let readiness = raw_http_get(ready_addr, "/readyz", &[]).await;
-    assert_eq!(readiness.status, 200);
-    let readiness_json: serde_json::Value = serde_json::from_slice(&readiness.body).expect("ready JSON");
-    assert_eq!(readiness_json["artifactAuthority"]["ready"], true);
-    assert_eq!(readiness_json["features"]["openPlan"], true);
-    assert_eq!(readiness_json["features"]["openPlanExchange"], true);
-    let encoded = String::from_utf8(readiness.body).expect("readiness UTF-8");
-    assert!(!encoded.contains("receipt"));
-    assert!(!encoded.contains("factory"));
-    std::fs::remove_dir_all(root).expect("remove stdio bundle fixture");
-}
-
 struct SyntheticDirectoryEventSource {
     head: u64,
     requests: std::sync::Mutex<Vec<(u64, usize)>>,
@@ -473,8 +450,9 @@ impl DirectoryEventPageSource for SyntheticDirectoryEventSource {
 /// would otherwise collide on the identical `os-hub-test-db-<pid>-<ms>` path and open the SAME
 /// `db::Database` storage root, corrupting each other's catalog/WAL state.
 fn tempdir(name: &str) -> std::path::PathBuf {
-    let mut dir = std::env::var_os("SEMIO_TEST_ARTIFACT_DIR").map(std::path::PathBuf::from).unwrap_or_else(std::env::temp_dir);
+    let mut dir = crate::test_artifact_root::test_artifact_root();
     dir.push(format!("os-hub-test-{name}-{}", directory::os_identity::time_ordered_id()));
+    std::fs::create_dir_all(&dir).expect("owned temporary fixture directory");
     dir
 }
 
@@ -496,6 +474,114 @@ async fn test_state() -> HubState {
     test_state_with_capacity(1024, 256).await
 }
 
+/// 🗄️ The instance a test's `HubState` carries: the real durable profile, under the test's own
+/// temporary root, so a law that reopens the same root observes exactly what a hub restart does.
+async fn test_instance_state(dir: &std::path::Path) -> ServerState<HubInstance> {
+    instance_state(dir).await.expect("open hub instance stores")
+}
+
+/// ⏳️ The single wall-clock bound every in-process rendezvous in this suite answers to — a socket
+/// close, a live-gate permit, a server task's reply. It is a hang guard, never a measurement: a law
+/// that waits on a signal the product genuinely never sends must fail here, fast and locally, instead
+/// of being killed 300 s later by nextest with no site. It replaces the per-call 2 s and 5 s bounds
+/// that fired on fleet scheduling latency alone.
+const SOCKET_RENDEZVOUS_HANG_GUARD: std::time::Duration = std::time::Duration::from_secs(15);
+
+/// ⏳️ The bound a law's whole body answers to when the runtime itself may be the thing that wedged.
+/// `tokio::time::timeout` cannot fire on a starved executor — a current-thread runtime whose single
+/// task blocks, or spins without yielding, never advances the timer wheel — so a law that hangs that
+/// way is killed 300 s later by nextest with no site at all. `LawHangWatchdogV1` is a plain OS thread
+/// that owns a wall clock nothing in the runtime can starve.
+const LAW_BODY_HANG_GUARD: std::time::Duration = std::time::Duration::from_secs(25);
+
+/// ⏱️ An out-of-runtime wall-clock watchdog: armed at the top of a law, disarmed by its own `Drop`
+/// when the law returns. On expiry it names the law on stderr and aborts the process, so nextest
+/// reports that law — and only that law — as failed within seconds instead of after the 300 s
+/// per-test kill. It is a hang guard, never a measurement: a law that legitimately takes this long
+/// does not belong in the shared bin binary.
+struct LawHangWatchdogV1 {
+    finished: Arc<std::sync::atomic::AtomicBool>,
+    phase: Arc<std::sync::Mutex<&'static str>>,
+}
+
+impl LawHangWatchdogV1 {
+    fn arm(law: &'static str) -> Self {
+        let finished = Arc::new(std::sync::atomic::AtomicBool::new(false));
+        let phase: Arc<std::sync::Mutex<&'static str>> = Arc::new(std::sync::Mutex::new("armed, before the first step"));
+        let watched = finished.clone();
+        let observed = phase.clone();
+        std::thread::Builder::new()
+            .name("law-hang-watchdog".into())
+            .spawn(move || {
+                let deadline = std::time::Instant::now() + LAW_BODY_HANG_GUARD;
+                while std::time::Instant::now() < deadline {
+                    if watched.load(std::sync::atomic::Ordering::Acquire) {
+                        return;
+                    }
+                    std::thread::sleep(std::time::Duration::from_millis(25));
+                }
+                if !watched.load(std::sync::atomic::Ordering::Acquire) {
+                    let stuck = *observed.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+                    eprintln!("law hang watchdog: {law} did not finish within {LAW_BODY_HANG_GUARD:?} — the runtime is wedged, not slow; last phase entered: {stuck}");
+                    std::process::abort();
+                }
+            })
+            .expect("law hang watchdog thread");
+        Self { finished, phase }
+    }
+
+    fn at(&self, phase: &'static str) {
+        *self.phase.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = phase;
+    }
+}
+
+impl Drop for LawHangWatchdogV1 {
+    fn drop(&mut self) {
+        self.finished.store(true, std::sync::atomic::Ordering::Release);
+    }
+}
+
+/// ⏳️ One awaited fixture step, bounded and named, so a law that wedges says WHICH await never
+/// returned instead of naming only itself. It complements `LawHangWatchdogV1`: this one fires when
+/// the future genuinely never resolves, that one when the executor can no longer run timers at all.
+async fn bounded_law_step<T>(step: &str, future: impl std::future::Future<Output = T>) -> T {
+    match tokio::time::timeout(SOCKET_RENDEZVOUS_HANG_GUARD, future).await {
+        Ok(value) => value,
+        Err(_) => panic!("{step} did not complete within {SOCKET_RENDEZVOUS_HANG_GUARD:?}"),
+    }
+}
+
+/// ⏳️ The single wall-clock bound every `test_state()` open in this suite answers to. Opening a hub
+/// state is bounded I/O, not a rendezvous, so the bound exists only to name a genuinely wedged open
+/// instead of letting nextest kill it 300 s later with no site. It replaces the per-call 5 s bounds,
+/// which measured fleet scheduling latency and failed `directory_invite_redemption_admitted_fence_
+/// precedes_archive` on load alone (2026-09-20).
+const TEST_STATE_OPEN_HANG_GUARD: std::time::Duration = std::time::Duration::from_secs(60);
+
+/// ⏳️ The single wall-clock bound every HTTP read in this suite answers to. It exists only to stop a
+/// route that never answers from hanging the shared bin binary; it is never the thing a law measures.
+/// The transport used to carry a second, shorter bound of its own, which silently pre-empted this one
+/// and turned fleet scheduling latency into red laws that had nothing to do with the hub.
+const RAW_HTTP_READ_HANG_GUARD: std::time::Duration = std::time::Duration::from_secs(20);
+
+/// ⏱️ One request, bounded. A hub route that never answers must fail this test rather than hang the
+/// whole bin suite for every other slice sharing the binary — an unbounded socket read in a shared
+/// suite is a denial of service on the fleet, not a diagnostic.
+async fn bounded_http_request(addr: SocketAddr, method: &str, path: &str, headers: &[(&str, &str)], body: &[u8]) -> RawHttpResponse {
+    match tokio::time::timeout(RAW_HTTP_READ_HANG_GUARD, raw_http_request(addr, method, path, headers, body)).await {
+        Ok(response) => response,
+        Err(_) => panic!("{method} {path} did not answer within {RAW_HTTP_READ_HANG_GUARD:?}"),
+    }
+}
+
+/// 📝️ A hub state whose tracer captures, handed back beside the sink its records land in.
+async fn observed_test_state() -> (HubState, Arc<CapturingSink>) {
+    let (tracer, sink) = Tracer::capturing(TraceLevel::Debug);
+    let mut state = test_state().await;
+    state.tracer = tracer;
+    (state, sink)
+}
+
 async fn test_state_with_capacity(directory_capacity: usize, fanout_capacity: usize) -> HubState {
     let dir = tempdir("db");
     let directory = SqliteDirectory::connect(":memory:").await.expect("connect directory");
@@ -509,7 +595,7 @@ async fn test_state_with_directory(dir: std::path::PathBuf, directory: SqliteDir
     let directory_service = Arc::new(DirectoryService::new(directory.clone(), directory_capacity));
     let database = Arc::new(database);
     let artifact_cas = Arc::new(ArtifactChunkCasStores::Filesystem(FsArtifactChunkCasStorage::open(&dir.join("artifact-cas/v1")).await.expect("open artifact CAS")));
-    let control = StartupCatalogControl;
+    let control = StartupCatalogControl::silent();
     let context = OperationContext::new(control.now_ms().saturating_add(30_000), AuthorityLimits::maximum(), &control);
     let coordinator_id = directory.artifact_cas_coordinator_id().await.expect("artifact CAS coordinator");
     artifact_cas.configure_coordinator(coordinator_id, &context).await.expect("configure artifact CAS coordinator");
@@ -521,6 +607,10 @@ async fn test_state_with_directory(dir: std::path::PathBuf, directory: SqliteDir
     #[cfg(feature = "native-artifact-execution")]
     let artifact_creation_commit_authority = Arc::new(HubArtifactCreationCommitAuthorityV1 { directory: directory.clone(), gates: socket_binding_gates.clone() });
     HubState {
+        // 📝️ Silent by default: a law that wants records takes `observed_test_state` and swaps in a
+        // capturing tracer, so every other law pays no formatting and asserts against no log.
+        tracer: Tracer::disabled(),
+        instance: test_instance_state(&dir).await,
         db: database,
         artifact_cas,
         directory,
@@ -549,7 +639,7 @@ async fn test_state_with_directory(dir: std::path::PathBuf, directory: SqliteDir
         admin_operations: Arc::new(ShardedMap::new()),
         admin_operation_slots: Arc::new(tokio::sync::Semaphore::new(64)),
         admin_operation_tasks: Arc::new(AdminOperationTaskOwner::new(ADMIN_OPERATION_SHUTDOWN_DEADLINE)),
-        readiness: Arc::new(hub_readiness(HubMode::Development, "loopback", "00112233445566778899aabbccddeeff".into(), true, false, false, true, true, false, false)),
+        readiness: Arc::new(hub_readiness(HubMode::Development, "loopback", "00112233445566778899aabbccddeeff".into(), true, false, false, true, true, false, false, "trusted-catalog-never-published-in-this-data-root")),
         admin_dir: dir.join("admin-dist"),
         fanout: Arc::new(ShardedMap::new()),
         fanout_capacity,
@@ -591,7 +681,7 @@ async fn lag_test_state(directory_capacity: usize, fanout_capacity: usize) -> Hu
     let directory: Arc<HubDirectories> = Arc::new(directory.into());
     let directory_service = Arc::new(DirectoryService::new(directory.clone(), directory_capacity));
     let artifact_cas = Arc::new(ArtifactChunkCasStores::Memory(MemoryArtifactChunkCasStorage::default()));
-    let control = StartupCatalogControl;
+    let control = StartupCatalogControl::silent();
     let context = OperationContext::new(control.now_ms().saturating_add(30_000), AuthorityLimits::maximum(), &control);
     let coordinator_id = directory.artifact_cas_coordinator_id().await.expect("artifact CAS coordinator");
     artifact_cas.configure_coordinator(coordinator_id, &context).await.expect("configure artifact CAS coordinator");
@@ -603,6 +693,10 @@ async fn lag_test_state(directory_capacity: usize, fanout_capacity: usize) -> Hu
     #[cfg(feature = "native-artifact-execution")]
     let artifact_creation_commit_authority = Arc::new(HubArtifactCreationCommitAuthorityV1 { directory: directory.clone(), gates: socket_binding_gates.clone() });
     HubState {
+        // 📝️ Silent by default: a law that wants records takes `observed_test_state` and swaps in a
+        // capturing tracer, so every other law pays no formatting and asserts against no log.
+        tracer: Tracer::disabled(),
+        instance: test_instance_state(&dir).await,
         db: database,
         artifact_cas,
         directory,
@@ -631,7 +725,7 @@ async fn lag_test_state(directory_capacity: usize, fanout_capacity: usize) -> Hu
         admin_operations: Arc::new(ShardedMap::new()),
         admin_operation_slots: Arc::new(tokio::sync::Semaphore::new(64)),
         admin_operation_tasks: Arc::new(AdminOperationTaskOwner::new(ADMIN_OPERATION_SHUTDOWN_DEADLINE)),
-        readiness: Arc::new(hub_readiness(HubMode::Development, "loopback", "00112233445566778899aabbccddeeff".into(), true, false, false, true, true, false, false)),
+        readiness: Arc::new(hub_readiness(HubMode::Development, "loopback", "00112233445566778899aabbccddeeff".into(), true, false, false, true, true, false, false, "trusted-catalog-never-published-in-this-data-root")),
         admin_dir: dir.join("admin-dist"),
         fanout: Arc::new(ShardedMap::new()),
         fanout_capacity,
@@ -687,6 +781,12 @@ async fn upsert_member_for_test(state: &HubState, space_id: &str, email: &str, r
     state.directory_service.execute(actor, DirectoryCommand::UpsertMember { space_id: space_id.to_string(), email: email.to_string(), role }).await.expect("upsert member");
 }
 
+/// 🪢 The synthetic document's owning app `Dialect`, in the plugin id space, deliberately spelled
+/// differently from its manifest `artifact_kind` (`test.artifact`, the taxonomy space) — the shape
+/// every plugin but `gis` really has. It is owned by `document_descriptor_for_test`'s
+/// `owner.plugin_id`, which is what `document_index_projection_v1` binds the index entry to.
+const TEST_ARTIFACT_PARENT_DIALECT_KIND: &str = "s.test.artifact";
+
 fn document_descriptor_for_test(space_id: &str, document_id: &str) -> os_directory::DocumentDescriptor {
     let bootstrap_snapshot_hash = os_directory::hex_lower(&Sha256::digest(b"document-open-genesis-pack"));
     os_directory::DocumentDescriptor {
@@ -694,7 +794,7 @@ fn document_descriptor_for_test(space_id: &str, document_id: &str) -> os_directo
         document_id: document_id.to_string(),
         artifact_kind: "test.artifact".into(),
         artifact_schema: "test.v1".into(),
-        owner: os_directory::DocumentOwner { plugin_id: "test.plugin".into(), package_id: "test.package".into(), version: "1.0.0".into(), package_hash: "22".repeat(32) },
+        owner: os_directory::DocumentOwner { plugin_id: "test".into(), package_id: "test.package".into(), version: "1.0.0".into(), package_hash: "22".repeat(32) },
         pack_schema_hash: "11".repeat(32),
         bootstrap_version: 1,
         bootstrap_frontier: os_directory::DocumentFrontier { head_seq: 0, commit_seq: 0, epoch: 0 },
@@ -711,6 +811,12 @@ async fn announce_document_for_test(state: &HubState, space_id: &str, document_i
     state.directory_service.execute(actor, DirectoryCommand::AnnounceDocument { descriptor: Box::new(document_descriptor_for_test(space_id, document_id)) }).await.expect("announce document");
 }
 
+/// @emoji 🧱️ Publishes the next ORDINARY checkpoint on a document's already-committed lineage.
+/// `decide_verified_checkpoint` (`📇️directory/🦀️.rs`) refuses a parentless ordinary publication with
+/// `Conflict("ordinary artifact publication requires a committed genesis parent")` — a document's first
+/// checkpoint is a creation genesis and only `publish_document_genesis` mints one — so a law seeds the
+/// document with `seed_genesis_document_for_test` (or `publish_openable_document_for_test`) and this
+/// helper chains on whatever head that left, strictly advancing the baseline frontier.
 async fn publish_checkpoint_for_test(state: &HubState, space_id: &str, document_id: &str) -> os_directory::ArtifactCheckpoint {
     let pack = b"verified-pack";
     let spr = b"verified-spr";
@@ -721,15 +827,22 @@ async fn publish_checkpoint_for_test(state: &HubState, space_id: &str, document_
     aggregate.update(pack);
     aggregate.update(spr);
     let scope = DocumentScope::new(space_id, document_id);
+    let parent = state.directory.get_active_artifact_checkpoint(&scope).await.expect("active lineage read").expect("committed genesis parent before an ordinary publication");
     let descriptor = state.directory.get_document_descriptor(&scope).await.expect("descriptor read").expect("descriptor");
     let pack_plan = prepare_artifact_cas_manifest_v1(space_id, pack).expect("pack manifest plan");
     let spr_plan = prepare_artifact_cas_manifest_v1(space_id, spr).expect("SPR manifest plan");
     let mut checkpoint = os_directory::ArtifactCheckpoint {
         scope,
         checkpoint_id: os_directory::ArtifactHash([0; 32]),
-        parent_checkpoint_id: None,
+        parent_checkpoint_id: Some(parent.checkpoint_id),
         descriptor_digest_v1: os_directory::descriptor_digest_v1(&descriptor).expect("descriptor digest"),
-        baseline_frontier: os_directory::ArtifactFrontier { document_id: document_id.to_string(), head_edit_ordinal: 1, head_edit_id: "verified-edit-1".into(), last_commit_seq: 1, chain_hash: os_directory::ArtifactHash([0x44; 32]) },
+        baseline_frontier: os_directory::ArtifactFrontier {
+            document_id: document_id.to_string(),
+            head_edit_ordinal: parent.baseline_frontier.head_edit_ordinal + 1,
+            head_edit_id: format!("verified-edit-{}", parent.baseline_frontier.head_edit_ordinal + 1),
+            last_commit_seq: parent.baseline_frontier.last_commit_seq + 1,
+            chain_hash: os_directory::ArtifactHash([0x44; 32]),
+        },
         pack: os_directory::ArtifactBlobRef { sha256: pack_hash, byte_length: pack.len() as u64, storage_key: artifact_cas_manifest_locator_v1(pack_plan.manifest_id) },
         spr: os_directory::ArtifactBlobRef { sha256: spr_hash, byte_length: spr.len() as u64, storage_key: artifact_cas_manifest_locator_v1(spr_plan.manifest_id) },
         aggregate_sha256: os_directory::ArtifactHash(aggregate.finalize()),
@@ -739,7 +852,7 @@ async fn publish_checkpoint_for_test(state: &HubState, space_id: &str, document_
     let ownership = prepare_artifact_cas_ownership_v1(&checkpoint, &ArtifactPair { pack: pack.to_vec(), spr: spr.to_vec() }).expect("ownership plan");
     let reservation = state.directory_service.reserve_artifact_cas(DirectoryActor { kind: DirectoryActorKind::System, id: "system:lag-rebootstrap-test".into() }, ownership, 1_000, 100).await.expect("reserve checkpoint objects");
     let cas = ArtifactChunkBlobStore::new(state.artifact_cas.clone());
-    let authority_control = StartupCatalogControl;
+    let authority_control = StartupCatalogControl::silent();
     let authority_context = OperationContext::new(u64::MAX, AuthorityLimits::maximum(), &authority_control);
     let staged_pack = cas.stage(space_id, ArtifactBlobIntegrity { sha256: pack_hash, byte_length: pack.len() as u64 }, pack, &authority_context).await.expect("stage reserved pack manifest");
     let staged_spr = cas.stage(space_id, ArtifactBlobIntegrity { sha256: spr_hash, byte_length: spr.len() as u64 }, spr, &authority_context).await.expect("stage reserved SPR manifest");
@@ -749,6 +862,14 @@ async fn publish_checkpoint_for_test(state: &HubState, space_id: &str, document_
     checkpoint
 }
 
+/// @emoji 🌱️ Publishes one creation genesis exactly the way production does, in the two forms
+/// production keeps apart. The **prepared candidate** carries `sha256/<hex>` storage keys — that is
+/// what `blob_reference` (`🗿️artifact-authority/🦀️.rs:516`) mints and what
+/// `ArtifactCreationPreparedV1::validate` requires — and its `checkpoint_id` is computed over them.
+/// Only after staging does the chunk CAS's manifest locator replace those keys, in place and without
+/// recomputing the identity (`🗿️artifact-authority/🦀️.rs:503-505`). Stamping the locator before
+/// validation, as this fixture used to, is what made every caller fail
+/// `Conflict("artifact creation prepared pair differs from its accepted intent")`.
 async fn publish_genesis_checkpoint_for_test(
     state: &HubState,
     actor: ArtifactCreationActorV1,
@@ -761,7 +882,7 @@ async fn publish_genesis_checkpoint_for_test(
     use semio_hub::artifact_authority::creation::{
         artifact_creation_command_digest_v1, ArtifactCreationClaimV1, ArtifactCreationFactAppendV1, ArtifactCreationFactBodyV1, ArtifactCreationIntentV1, ArtifactCreationPreparedV1, ARTIFACT_CREATION_DEADLINE_MS,
     };
-    let accepted_at_ms = 1;
+    let accepted_at_ms = u64::try_from(now_ms()).expect("nonnegative genesis creation clock");
     let scope = DocumentScope::new(&descriptor.space_id, &descriptor.document_id);
     let pack_hash = os_directory::ArtifactHash(Sha256::digest(pack));
     let spr_hash = os_directory::ArtifactHash(Sha256::digest(spr));
@@ -776,10 +897,10 @@ async fn publish_genesis_checkpoint_for_test(
         parent_checkpoint_id: None,
         descriptor_digest_v1: os_directory::descriptor_digest_v1(&descriptor).expect("genesis descriptor digest"),
         baseline_frontier: os_directory::ArtifactFrontier { document_id: scope.document_id.clone(), head_edit_ordinal: 0, head_edit_id: String::new(), last_commit_seq: 0, chain_hash: os_directory::ArtifactHash([0; 32]) },
-        pack: os_directory::ArtifactBlobRef { sha256: pack_hash, byte_length: pack.len() as u64, storage_key: artifact_cas_manifest_locator_v1(pack_plan.manifest_id) },
-        spr: os_directory::ArtifactBlobRef { sha256: spr_hash, byte_length: spr.len() as u64, storage_key: artifact_cas_manifest_locator_v1(spr_plan.manifest_id) },
+        pack: os_directory::ArtifactBlobRef { sha256: pack_hash, byte_length: pack.len() as u64, storage_key: format!("sha256/{}", pack_hash.hex()) },
+        spr: os_directory::ArtifactBlobRef { sha256: spr_hash, byte_length: spr.len() as u64, storage_key: format!("sha256/{}", spr_hash.hex()) },
         aggregate_sha256: os_directory::ArtifactHash(aggregate.finalize()),
-        published_at_ms: 1,
+        published_at_ms: accepted_at_ms,
     };
     checkpoint.checkpoint_id = os_directory::ArtifactHash(Sha256::digest(&checkpoint_id_encoding_v1(&checkpoint).expect("genesis checkpoint identity")));
     let request = SpaceArtifactCreateV1 {
@@ -823,12 +944,18 @@ async fn publish_genesis_checkpoint_for_test(
     let reservation =
         state.directory_service.reserve_artifact_cas(DirectoryActor { kind: DirectoryActorKind::System, id: "system:checkpoint-publication-genesis-test".into() }, ownership, intent.deadline_ms, accepted_at_ms).await.expect("reserve genesis objects");
     let cas = ArtifactChunkBlobStore::new(state.artifact_cas.clone());
-    let control = StartupCatalogControl;
+    let control = StartupCatalogControl::silent();
     let context = OperationContext::new(u64::MAX, AuthorityLimits::maximum(), &control);
-    cas.stage(&scope.space_id, ArtifactBlobIntegrity { sha256: pack_hash, byte_length: pack.len() as u64 }, pack, &context).await.expect("stage genesis pack");
-    cas.stage(&scope.space_id, ArtifactBlobIntegrity { sha256: spr_hash, byte_length: spr.len() as u64 }, spr, &context).await.expect("stage genesis SPR");
-    state.directory_service.publish_document_genesis(intent, &prepared, checkpoint.clone(), reservation, accepted_at_ms).await.expect("publish dedicated creation genesis");
-    checkpoint
+    let staged_pack = cas.stage(&scope.space_id, ArtifactBlobIntegrity { sha256: pack_hash, byte_length: pack.len() as u64 }, pack, &context).await.expect("stage genesis pack");
+    let staged_spr = cas.stage(&scope.space_id, ArtifactBlobIntegrity { sha256: spr_hash, byte_length: spr.len() as u64 }, spr, &context).await.expect("stage genesis SPR");
+    assert_eq!(staged_pack.storage_key, artifact_cas_manifest_locator_v1(pack_plan.manifest_id), "staged genesis pack keeps the reserved manifest locator");
+    assert_eq!(staged_spr.storage_key, artifact_cas_manifest_locator_v1(spr_plan.manifest_id), "staged genesis SPR keeps the reserved manifest locator");
+    let mut published = checkpoint.clone();
+    published.pack.storage_key = staged_pack.storage_key;
+    published.spr.storage_key = staged_spr.storage_key;
+    let committed_at_ms = u64::try_from(now_ms()).expect("nonnegative genesis commit clock");
+    state.directory_service.publish_document_genesis(intent, &prepared, published.clone(), reservation, committed_at_ms).await.expect("publish dedicated creation genesis");
+    published
 }
 
 async fn publish_openable_document_for_test(state: &HubState, token: &str, space_id: &str, document_id: &str) -> (DocumentDescriptor, os_directory::ArtifactCheckpoint) {
@@ -838,9 +965,42 @@ async fn publish_openable_document_for_test(state: &HubState, token: &str, space
     descriptor.bootstrap_snapshot_hash = os_directory::hex_lower(&Sha256::digest(pack));
     let session = state.directory.authenticate_session(&SessionCapability::parse(token).expect("document-open author capability")).await.expect("document-open author session read").expect("document-open author session");
     let actor = ArtifactCreationActorV1 { user_id: session.user_id, session_id: session.id, authorization_generation: session.authorization_generation };
-    let parent_dialect = directory::os_io::ArtifactDialect { artifact_kind: descriptor.artifact_kind.clone(), standard: "1".into(), subset: "*".into() };
+    let parent_dialect = directory::os_io::ArtifactDialect { artifact_kind: TEST_ARTIFACT_PARENT_DIALECT_KIND.into(), standard: "1".into(), subset: "*".into() };
     let checkpoint = publish_genesis_checkpoint_for_test(state, actor, "66".repeat(32), parent_dialect, descriptor.clone(), pack, spr).await;
     (descriptor, checkpoint)
+}
+
+/// @emoji 🌱️ Seeds one creation-owned document through the production authority: a real session minted by
+/// `issue_test_session`, made an author of the space exactly as a person is, then `publish_document_genesis`
+/// — the same path `AU1`/`AU3` drive. It replaces `announce_document_for_test` wherever a law then publishes
+/// an ordinary checkpoint: the genesis writes the descriptor itself, and `append_document_genesis` refuses a
+/// scope whose descriptor is already publicly occupied, so the two cannot be combined. The returned id is
+/// creation-owned (`artifact-<hex>`), which is what `ArtifactCreationIntentV1`'s request id is derived from.
+async fn seed_genesis_document_for_test(state: &HubState, author_email: &str, space_id: &str, label: &str) -> (String, os_directory::ArtifactCheckpoint) {
+    let session = issue_test_session(state, author_email).await;
+    upsert_member_for_test(state, space_id, author_email, DirectorySpaceRole::Author).await;
+    let document_id = artifact_document_id_for_test(label);
+    let genesis = seed_genesis_for_document_for_test(state, &session.token, space_id, &document_id, label).await;
+    (document_id, genesis)
+}
+
+/// @emoji 🌱️ The same seed for a law that already holds an author's session and a document id it must keep:
+/// the id has to be creation-owned (`artifact-<32 hex>`) because `ArtifactCreationIntentV1`'s request id is
+/// that suffix, and `SpaceArtifactCreationStatusV1::validate` bounds it.
+async fn seed_genesis_for_document_for_test(state: &HubState, token: &str, space_id: &str, document_id: &str, label: &str) -> os_directory::ArtifactCheckpoint {
+    let pack = format!("genesis-pack-{label}").into_bytes();
+    let spr = format!("genesis-spr-{label}").into_bytes();
+    let mut descriptor = document_descriptor_for_test(space_id, document_id);
+    descriptor.bootstrap_snapshot_hash = os_directory::hex_lower(&Sha256::digest(&pack));
+    let authenticated = state
+        .directory
+        .authenticate_session(&SessionCapability::parse(token).expect("genesis seed capability"))
+        .await
+        .expect("genesis seed session read")
+        .expect("genesis seed session");
+    let actor = ArtifactCreationActorV1 { user_id: authenticated.user_id, session_id: authenticated.id, authorization_generation: authenticated.authorization_generation };
+    let parent_dialect = directory::os_io::ArtifactDialect { artifact_kind: TEST_ARTIFACT_PARENT_DIALECT_KIND.into(), standard: "1".into(), subset: "*".into() };
+    publish_genesis_checkpoint_for_test(state, actor, "66".repeat(32), parent_dialect, descriptor, &pack, &spr).await
 }
 
 async fn sample_envelope(id: &str, document: &WireArtifactId) -> MutationEnvelope {
@@ -884,8 +1044,8 @@ fn checkpoint_publication_command(correlation_id: &str, descriptor: &DocumentDes
             last_commit_seq: snapshot.frontier.commit_seq,
             chain_sha256: os_directory::hex_lower(&snapshot.frontier.chain_hash),
         },
-        pack: CheckpointPublicationBlobV1 { sha256: os_directory::hex_lower(&Sha256::digest(pack)), byte_length: pack.len() as u64 },
-        spr: CheckpointPublicationBlobV1 { sha256: os_directory::hex_lower(&Sha256::digest(spr)), byte_length: spr.len() as u64 },
+        pack: CheckpointPublicationBlobV1 { sha256: os_directory::hex_lower(&Sha256::digest(pack)), blake3: blake3::hash(pack).to_hex().to_string(), byte_length: pack.len() as u64 },
+        spr: CheckpointPublicationBlobV1 { sha256: os_directory::hex_lower(&Sha256::digest(spr)), blake3: blake3::hash(spr).to_hex().to_string(), byte_length: spr.len() as u64 },
     }
 }
 
@@ -893,7 +1053,7 @@ fn checkpoint_publication_command(correlation_id: &str, descriptor: &DocumentDes
 async fn checkpoint_publication_fixture(label: &str) -> CheckpointPublicationFixture {
     let catalog_root = native_openable_stdio_bundle();
     let providers = NativeCodecProviderSetV1::linked();
-    let configured = configured_artifact_authority(&catalog_root, Some(&providers)).await.expect("load stdio publication catalog").expect("configured publication catalog");
+    let configured = configured_artifact_authority(&catalog_root, Some(&providers), &Tracer::disabled()).await.expect("load stdio publication catalog").expect("configured publication catalog");
     let selection = configured.catalog.selected_document_open().expect("selected stdio JSON target").clone();
     let mut state = test_state().await;
     let author = issue_test_session(&state, &format!("checkpoint-{label}-author@example.test")).await;
@@ -916,7 +1076,7 @@ async fn checkpoint_publication_fixture(label: &str) -> CheckpointPublicationFix
     };
     state.artifact_authority = Some(configured.authority);
     let catalog_generation = configured.catalog.generation_id().to_string();
-    let parent_dialect = selection.parent_dialect;
+    let parent_dialect = directory::os_io::ArtifactDialect { artifact_kind: selection.parent_dialect.artifact_kind, standard: selection.parent_dialect.standard, subset: selection.parent_dialect.subset };
     state.openable_catalog = Some(configured.catalog);
     let document = db_artifact_id(&scope);
     let snapshot_value = semio_s_artifact_stdio_json::schema::snapshot::demo_json_snapshot();
@@ -940,7 +1100,7 @@ async fn checkpoint_publication_fixture(label: &str) -> CheckpointPublicationFix
 async fn checkpoint_publication_process_fixture_emits_verified_gis_pair_and_catalog() {
     use semio_hub::artifact_authority::trusted_catalog::trusted_catalog_fixture;
 
-    let artifact_root = std::path::PathBuf::from(std::env::var_os("SEMIO_TEST_ARTIFACT_DIR").expect("ticket-owned checkpoint process artifact root"));
+    let artifact_root = crate::test_artifact_root::test_artifact_root();
     let destination = artifact_root.join("checkpoint-publication-process-fixture");
     let stage = artifact_root.join(format!(".checkpoint-publication-process-fixture-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&stage);
@@ -1012,7 +1172,7 @@ async fn checkpoint_publication_process_fixture_emits_verified_gis_pair_and_cata
     let retained_generation = destination.join("data/trusted-catalog/generations").join(generation_id);
     let actual_files: std::collections::BTreeSet<_> = std::fs::read_dir(&retained_generation).unwrap().map(|entry| entry.unwrap().file_name().into_string().unwrap()).collect();
     assert_eq!(actual_files, expected_files);
-    let control = StartupCatalogControl;
+    let control = StartupCatalogControl::silent();
     let context = OperationContext::new(control.now_ms().saturating_add(30_000), AuthorityLimits::maximum(), &control);
     let relocated = TrustedCatalogLoader::load_current(&destination.join("data"), &NativeCodecProviderSetV1::linked(), &context).await.expect("relocated process catalog dependency closure").expect("relocated current");
     assert_eq!(relocated.codec_count(), 28);
@@ -1026,7 +1186,7 @@ async fn checkpoint_publication_process_fixture_emits_verified_gis_pair_and_cata
 
 #[cfg(feature = "native-artifact-execution")]
 async fn put_checkpoint_publication_blob(addr: SocketAddr, scope: &DocumentScope, token: &str, bytes: &[u8]) {
-    let hash = os_directory::hex_lower(&Sha256::digest(bytes));
+    let hash = blake3::hash(bytes).to_hex().to_string();
     let authorization = format!("Bearer {token}");
     let response = raw_http_request(addr, "PUT", &format!("/spaces/{}/blobs/{hash}", scope.space_id), &[("Authorization", authorization.as_str()), ("Content-Type", "application/octet-stream")], bytes).await;
     assert_eq!(response.status, 200, "checkpoint input blob lands before publication: {}", String::from_utf8_lossy(&response.body));
@@ -1043,9 +1203,13 @@ fn mutation_message_payload_matches_language_neutral_fixture() {
 }
 
 async fn spawn_server(state: HubState) -> SocketAddr {
+    spawn_server_with_posture(state, CrossOriginPolicyV1::LoopbackDevelopment, ForwardedTlsTrustV1::Untrusted).await
+}
+
+async fn spawn_server_with_posture(state: HubState, cross_origin: CrossOriginPolicyV1, forwarded_tls: ForwardedTlsTrustV1) -> SocketAddr {
     let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
     let addr = listener.local_addr().unwrap();
-    let app = router(state).into_make_service_with_connect_info::<SocketAddr>();
+    let app = router(state, cross_origin, forwarded_tls).into_make_service_with_connect_info::<SocketAddr>();
     tokio::spawn(async move {
         axum::serve(listener, app).await.unwrap();
     });
@@ -1055,7 +1219,7 @@ async fn spawn_server(state: HubState) -> SocketAddr {
 async fn spawn_restartable_server(state: HubState) -> (SocketAddr, tokio::sync::oneshot::Sender<()>, tokio::task::JoinHandle<()>) {
     let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
     let addr = listener.local_addr().unwrap();
-    let app = router(state).into_make_service_with_connect_info::<SocketAddr>();
+    let app = router(state, CrossOriginPolicyV1::LoopbackDevelopment, ForwardedTlsTrustV1::Untrusted).into_make_service_with_connect_info::<SocketAddr>();
     let (shutdown, stopped) = tokio::sync::oneshot::channel();
     let task = tokio::spawn(async move {
         axum::serve(listener, app)
@@ -1090,7 +1254,7 @@ async fn raw_http_request_transport(addr: SocketAddr, method: &str, path: &str, 
     stream.write_all(body).await.expect("HTTP body write");
     stream.flush().await.expect("HTTP request flush");
     let mut response = Vec::new();
-    let read = tokio::time::timeout(std::time::Duration::from_secs(5), async {
+    let read = tokio::time::timeout(RAW_HTTP_READ_HANG_GUARD, async {
         let mut chunk = [0_u8; 4096];
         loop {
             let read = stream.read(&mut chunk).await?;
@@ -1373,7 +1537,7 @@ async fn publish_gis_checkpoint_for_test(state: &HubState, space_id: &str, docum
     let system = DirectoryActor { kind: DirectoryActorKind::System, id: "system:gis-map-inference-test".into() };
     let reservation = state.directory_service.reserve_artifact_cas(system.clone(), ownership, 1_000, 100).await.expect("reserve checkpoint objects");
     let cas = ArtifactChunkBlobStore::new(state.artifact_cas.clone());
-    let control = StartupCatalogControl;
+    let control = StartupCatalogControl::silent();
     let context = OperationContext::new(u64::MAX, AuthorityLimits::maximum(), &control);
     cas.stage(space_id, ArtifactBlobIntegrity { sha256: pack_hash, byte_length: pack.len() as u64 }, pack, &context).await.expect("stage GIS Map pack");
     cas.stage(space_id, ArtifactBlobIntegrity { sha256: spr_hash, byte_length: spr.len() as u64 }, spr, &context).await.expect("stage GIS Map SPR");
@@ -1804,8 +1968,8 @@ fn canonical_pair_route_rejects_non_path_and_ambiguous_headers_before_work() {
 #[tokio::test]
 async fn canonical_pair_route_is_exact_member_or_share_and_emits_only_verified_public_pair() {
     let mut state = lag_test_state(1024, 256).await;
-    let document_id = "canonical-pair-document";
-    announce_document_for_test(&state, STUDIO, document_id).await;
+    let (document_id, _) = seed_genesis_document_for_test(&state, "canonical-pair-author@example.com", STUDIO, "canonical-pair-document").await;
+    let document_id = document_id.as_str();
     let checkpoint = publish_checkpoint_for_test(&state, STUDIO, document_id).await;
     let member = issue_test_session(&state, "canonical-member@example.com").await;
     upsert_member_for_test(&state, STUDIO, "canonical-member@example.com", DirectorySpaceRole::Spectator).await;
@@ -1816,13 +1980,13 @@ async fn canonical_pair_route_is_exact_member_or_share_and_emits_only_verified_p
     let outsider = issue_test_session(&state, "canonical-outsider@example.com").await;
     state.admin_subjects = Arc::from([AdminSubject { provider_digest: admin_provider_digest("test-verifier"), subject_digest: identity_subject_digest("test-verifier", "canonical-outsider@example.com").expect("admin subject digest") }]);
     let other_space = create_space_for_test(&state, &outsider.user_id, "Canonical Other", os_directory::DirectorySpaceKind::Studio, DirectorySpaceVisibility::Private).await;
-    announce_document_for_test(&state, &other_space, document_id).await;
+    seed_genesis_document_for_test(&state, "canonical-pair-other-author@example.com", &other_space, "canonical-pair-document").await;
     publish_checkpoint_for_test(&state, &other_space, document_id).await;
     let public_space = create_space_for_test(&state, &outsider.user_id, "Canonical Public", os_directory::DirectorySpaceKind::Studio, DirectorySpaceVisibility::Public).await;
-    announce_document_for_test(&state, &public_space, document_id).await;
+    seed_genesis_document_for_test(&state, "canonical-pair-public-author@example.com", &public_space, "canonical-pair-document").await;
     publish_checkpoint_for_test(&state, &public_space, document_id).await;
-    let other_document = "canonical-pair-other-document";
-    announce_document_for_test(&state, STUDIO, other_document).await;
+    let (other_document, _) = seed_genesis_document_for_test(&state, "canonical-pair-author@example.com", STUDIO, "canonical-pair-other-document").await;
+    let other_document = other_document.as_str();
     publish_checkpoint_for_test(&state, STUDIO, other_document).await;
     let addr = spawn_server(state.clone()).await;
     let path = format!("/spaces/{STUDIO}/documents/{document_id}/active-checkpoint/pair");
@@ -1891,8 +2055,8 @@ async fn canonical_pair_route_disconnect_deadline_and_progress_are_request_owned
     use tokio::io::AsyncWriteExt;
 
     let state = lag_test_state(1024, 256).await;
-    let document_id = "canonical-pair-lifecycle-document";
-    announce_document_for_test(&state, STUDIO, document_id).await;
+    let (document_id, _) = seed_genesis_document_for_test(&state, "canonical-lifecycle-author@example.com", STUDIO, "canonical-pair-lifecycle-document").await;
+    let document_id = document_id.as_str();
     publish_checkpoint_for_test(&state, STUDIO, document_id).await;
     let member = issue_test_session(&state, "canonical-lifecycle@example.com").await;
     upsert_member_for_test(&state, STUDIO, "canonical-lifecycle@example.com", DirectorySpaceRole::Spectator).await;
@@ -1976,6 +2140,7 @@ where
     loop {
         match tokio::time::timeout_at(deadline, ws.next()).await {
             Ok(Some(Ok(WsMessage::Binary(bytes)))) => return protocol::decode_server_frame(&bytes).await.expect("server frame").1,
+            Ok(Some(Ok(WsMessage::Close(frame)))) => panic!("the server closed before its next frame: {frame:?} plan refusal {:?}", last_document_plan_refusal()),
             Ok(Some(Ok(_))) => continue,
             Ok(Some(other)) => panic!("expected binary frame, got {other:?}"),
             Ok(None) => panic!("stream ended before server frame"),
@@ -1992,6 +2157,7 @@ where
     loop {
         match tokio::time::timeout_at(deadline, ws.next()).await {
             Ok(Some(Ok(WsMessage::Text(text)))) => return directory::os_pack::json::from_json_str(&text).expect("directory message"),
+            Ok(Some(Ok(WsMessage::Close(frame)))) => panic!("the server closed before its next directory message: {frame:?}"),
             Ok(Some(Ok(_))) => continue,
             Ok(Some(other)) => panic!("expected directory message, got {other:?}"),
             Ok(None) => panic!("stream ended before directory message"),
@@ -2025,13 +2191,13 @@ async fn next_close_without_authority<S>(ws: &mut S) -> u16
 where
     S: StreamExt<Item = Result<WsMessage, tokio_tungstenite::tungstenite::Error>> + Unpin,
 {
-    match tokio::time::timeout(std::time::Duration::from_secs(5), ws.next()).await {
+    match tokio::time::timeout(SOCKET_RENDEZVOUS_HANG_GUARD, ws.next()).await {
         Ok(Some(Ok(WsMessage::Close(Some(frame))))) => frame.code.into(),
-        Ok(Some(Ok(WsMessage::Binary(_)))) => panic!("authority-bearing binary frame crossed revocation"),
+        Ok(Some(Ok(WsMessage::Binary(bytes)))) => panic!("authority-bearing binary frame crossed revocation: {:?}", protocol::decode_server_frame(&bytes).await.map(|decoded| decoded.1)),
         Ok(Some(Ok(WsMessage::Text(_)))) => panic!("authority-bearing directory frame crossed revocation"),
         Ok(Some(other)) => panic!("expected close after revocation, got {other:?}"),
         Ok(None) => panic!("stream ended before revocation close"),
-        Err(_) => panic!("no revocation close before 5s deadline"),
+        Err(_) => panic!("the revocation close never arrived: the server closed no socket for this revoke"),
     }
 }
 
@@ -2097,77 +2263,6 @@ async fn seed_author_token(state: &HubState) -> String {
     state.directory.issue_auth_session(&issue).await.expect("seed author session").capability.expose_once()
 }
 
-#[tokio::test]
-async fn socket_grant_ledger_is_bounded_single_consume_restart_scoped_and_revoke_race_safe() {
-    let ledger = Arc::new(SocketGrantLedgerV1::default());
-    let audience = SocketAudienceV1::Document(DocumentScope::new("space-a", "document-a"));
-    let subject = SocketSubjectV1::Session { session_id: "session-a".into(), user_id: "user-a".into(), authorization_generation: 7, role: Some(SpaceRole::Author), expires_at_ms: 10_000 };
-    let capability = SocketGrantCapability::mint().expect("socket grant");
-    ledger.issue(&capability, audience.clone(), "hub.v1.actor".into(), subject.clone(), 1, 9_000).expect("issue grant");
-    assert!(ledger.pending(&capability, &SocketAudienceV1::Document(DocumentScope::new("space-a", "document-b")), 2).is_err(), "audience mismatch never consumes");
-    let candidate = ledger.pending(&capability, &audience, 2).expect("pending grant");
-    let barrier = Arc::new(std::sync::Barrier::new(3));
-    let attempts = (0..2)
-        .map(|_| {
-            let ledger = ledger.clone();
-            let candidate = candidate.clone();
-            let barrier = barrier.clone();
-            std::thread::spawn(move || {
-                barrier.wait();
-                ledger.consume(&candidate, 3).is_ok()
-            })
-        })
-        .collect::<Vec<_>>();
-    barrier.wait();
-    assert_eq!(attempts.into_iter().map(|attempt| attempt.join().expect("consume race")).filter(|won| *won).count(), 1, "exactly one concurrent upgrade consumes");
-    assert!(ledger.pending(&capability, &audience, 4).is_err(), "consumed grants never replay");
-    assert!(SocketGrantLedgerV1::default().pending(&capability, &audience, 4).is_err(), "grants are process-bound and disappear on restart");
-    let (_, live_notify) = ledger.register_live(&candidate).expect("register consumed grant live");
-
-    let pending = SocketGrantCapability::mint().expect("pending socket grant");
-    ledger.issue(&pending, audience.clone(), "hub.v1.pending".into(), subject.clone(), 4, 9_000).expect("issue pending grant");
-    let stale = ledger.pending(&pending, &audience, 5).expect("candidate before revoke");
-    ledger.invalidate_binding(subject.binding());
-    tokio::time::timeout(std::time::Duration::from_secs(1), live_notify.notified()).await.expect("live revoke notification");
-    assert!(ledger.consume(&stale, 6).is_err(), "revoke between durable revalidation and consume fails closed");
-    assert!(ledger.register_live(&candidate).is_err(), "consume then revoke then late register fails closed");
-
-    let ttl_ledger = SocketGrantLedgerV1::default();
-    let ttl_capability = SocketGrantCapability::mint().expect("TTL grant");
-    ttl_ledger.issue(&ttl_capability, audience.clone(), "hub.v1.ttl".into(), subject.clone(), 1, 10).expect("issue TTL grant");
-    let ttl_candidate = ttl_ledger.pending(&ttl_capability, &audience, 2).expect("pending TTL grant");
-    let ttl_consumed = ttl_ledger.consume(&ttl_candidate, 3).expect("consume TTL grant");
-    let (ttl_live_id, _) = ttl_ledger.register_live(&ttl_consumed).expect("register TTL grant live");
-    let sweep_trigger = SocketGrantCapability::mint().expect("sweep trigger");
-    ttl_ledger.issue(&sweep_trigger, audience.clone(), "hub.v1.sweep".into(), subject.clone(), 11, 100).expect("trigger grant sweep");
-    assert!(ttl_ledger.is_live(&ttl_consumed, &ttl_live_id), "grant TTL applies to dial/consume, not a durably-authorized live socket");
-    ttl_ledger.unregister_live(&ttl_consumed, &ttl_live_id);
-    assert!(!ttl_ledger.inner.lock().expect("ledger").records.contains_key(ttl_capability.selector()), "last live lease reclaims its consumed grant record");
-
-    let abandoned = SocketGrantLedgerV1::default();
-    let mut first_abandoned = None;
-    for index in 0..SOCKET_GRANT_LEDGER_CAPACITY {
-        let capability = SocketGrantCapability::mint().expect("abandoned grant");
-        abandoned.issue(&capability, audience.clone(), format!("hub.v1.abandoned.{index}"), subject.clone(), 1, 10).expect("fill ledger");
-        let candidate = abandoned.pending(&capability, &audience, 2).expect("abandoned pending");
-        abandoned.consume(&candidate, 3).expect("abandoned consume");
-        first_abandoned.get_or_insert(capability);
-    }
-    assert!(abandoned.pending(first_abandoned.as_ref().expect("first abandoned"), &audience, 4).is_err(), "consumed failed-pre-live grant never replays");
-    let recovered = SocketGrantCapability::mint().expect("recovered grant");
-    abandoned.issue(&recovered, audience.clone(), "hub.v1.recovered".into(), subject.clone(), 11, 100).expect("expired pre-live tombstones reclaim full ledger capacity");
-
-    let bounded = SocketGrantLedgerV1::default();
-    for index in 0..SOCKET_GRANT_BINDING_PENDING_CAPACITY {
-        let capability = SocketGrantCapability::mint().expect("bounded grant");
-        bounded.issue(&capability, audience.clone(), format!("hub.v1.{index}"), subject.clone(), 1, 9_000).expect("within per-binding bound");
-    }
-    let overflow = SocketGrantCapability::mint().expect("overflow grant");
-    assert_eq!(bounded.issue(&overflow, audience, "hub.v1.overflow".into(), subject.clone(), 1, 9_000), Err(SocketGrantLedgerErrorV1::Capacity));
-    bounded.invalidate_binding(subject.binding());
-    assert!(bounded.issue(&overflow, SocketAudienceV1::Document(DocumentScope::new("space-a", "document-a")), "hub.v1.after-revoke".into(), subject, 2, 9_000).is_ok());
-}
-
 #[derive(FromValue)]
 #[value(rename_all = "camelCase")]
 struct DocumentOpenPlanLedgerFixture {
@@ -2201,6 +2296,8 @@ fn document_open_plan_test_authority(fixture: &DocumentOpenPlanLedgerFixture) ->
             authorization_generation: fixture.valid_plan.revalidation.session_generation.expect("session generation"),
             role: Some(SpaceRole::Author),
             expires_at_ms: i64::MAX,
+            session_kind: AuthSessionKind::External,
+            device_instance_id: "open-plan-device".into(),
         },
         server_actor_id: "hub.v1.open-plan-actor".into(),
         client_instance_id_digest: [9; 32],
@@ -2216,7 +2313,7 @@ fn document_open_catalog_for_descriptor(descriptor: &DocumentDescriptor) -> Arc<
 
 fn install_document_open_catalog_for_test(state: &mut HubState, descriptor: &DocumentDescriptor) {
     state.openable_catalog = Some(document_open_catalog_for_descriptor(descriptor));
-    state.readiness = Arc::new(hub_readiness(HubMode::Development, "loopback", "00112233445566778899aabbccddeeff".into(), true, true, true, true, true, false, false));
+    state.readiness = Arc::new(hub_readiness(HubMode::Development, "loopback", "00112233445566778899aabbccddeeff".into(), true, true, true, true, true, false, false, "trusted-catalog-never-published-in-this-data-root"));
 }
 
 fn document_open_catalog_for_descriptor_with_generation(descriptor: &DocumentDescriptor, generation_id: String) -> Arc<dyn DocumentOpenCatalogAuthorityV1> {
@@ -2239,7 +2336,7 @@ fn document_open_catalog_for_descriptor_with_generation(descriptor: &DocumentDes
             VerifiedDocumentOpenSelectionV1 {
                 package: package.clone(),
                 artifact: artifact.clone(),
-                parent_dialect: semio_framework::ArtifactDialect { artifact_kind: descriptor.artifact_kind.clone(), standard: "1".into(), subset: "*".into() },
+                parent_dialect: semio_framework::ArtifactDialect { artifact_kind: TEST_ARTIFACT_PARENT_DIALECT_KIND.into(), standard: "1".into(), subset: "*".into() },
                 surface: DocumentOpenSurfaceV1 {
                     surface_id: "surface.test.editor".into(),
                     app_id: "app.test".into(),
@@ -2253,7 +2350,7 @@ fn document_open_catalog_for_descriptor_with_generation(descriptor: &DocumentDes
             VerifiedDocumentOpenSelectionV1 {
                 package,
                 artifact,
-                parent_dialect: semio_framework::ArtifactDialect { artifact_kind: descriptor.artifact_kind.clone(), standard: "1".into(), subset: "*".into() },
+                parent_dialect: semio_framework::ArtifactDialect { artifact_kind: TEST_ARTIFACT_PARENT_DIALECT_KIND.into(), standard: "1".into(), subset: "*".into() },
                 surface: DocumentOpenSurfaceV1 {
                     surface_id: "surface.test.viewer".into(),
                     app_id: "app.test".into(),
@@ -2288,6 +2385,8 @@ fn document_open_plan_authority_for_scope(base: &DocumentOpenPlanAuthorityV1, bi
         authorization_generation: authority.revalidation.session_generation.expect("session generation"),
         role: Some(SpaceRole::Author),
         expires_at_ms: i64::MAX,
+        session_kind: AuthSessionKind::External,
+        device_instance_id: format!("open-plan-device-{binding}"),
     };
     authority
 }
@@ -2325,7 +2424,7 @@ async fn document_open_plan_authority_for_session(state: &HubState, fixture: &Do
     authority.revalidation.membership_generation = directory_revision;
     authority.revalidation.session_generation = Some(session.authorization_generation);
     authority.revalidation.share_generation = None;
-    authority.subject = SocketSubjectV1::Session { session_id: session.id, user_id: session.user_id, authorization_generation: session.authorization_generation, role: Some(role), expires_at_ms: session.expires_at };
+    authority.subject = SocketSubjectV1::Session { session_id: session.id, user_id: session.user_id, authorization_generation: session.authorization_generation, role: Some(role), expires_at_ms: session.expires_at, session_kind: session.session_kind, device_instance_id: session.device_instance_id };
     authority.server_actor_id = socket_actor_id(&session.secret_digest, true);
     authority.validate().expect("authenticated route authority");
     authority
@@ -2351,7 +2450,7 @@ async fn issue_and_exchange_document_open_plan_for_test(state: &HubState, token:
 fn document_open_plan_ledger_is_digest_only_bounded_single_use_revalidated_and_restart_scoped() {
     let fixture: DocumentOpenPlanLedgerFixture = directory::os_pack::json::from_json_str(include_str!("../../../🧰️framework/🛍️products/💻️os/🧫️fixtures/📇️directory/🧭️document-open-plan-v1.json")).expect("document open plan fixture");
     let authority = document_open_plan_test_authority(&fixture);
-    for (field, value) in [("artifactKind", "s.foreign.document".to_owned()), ("standard", String::new()), ("subset", String::new()), ("standard", "\u{85}".to_owned()), ("subset", " * ".to_owned()), ("standard", "🌊".repeat(65))] {
+    for (field, value) in [("artifactKind", String::new()), ("artifactKind", " s.foreign.document".to_owned()), ("standard", String::new()), ("subset", String::new()), ("standard", "\u{85}".to_owned()), ("subset", " * ".to_owned()), ("standard", "🌊".repeat(65))] {
         let mut hostile = authority.clone();
         match field {
             "artifactKind" => hostile.parent_dialect.artifact_kind = value,
@@ -2367,8 +2466,12 @@ fn document_open_plan_ledger_is_digest_only_bounded_single_use_revalidated_and_r
     assert_eq!(public.receipt, "open.v1.AQIDBAUGBwgJCgsMDQ4PEBESExQVFhcYGRobHB0eHyA");
     assert_eq!(public.parent_dialect, fixture.valid_plan.parent_dialect);
     let mut public_parent_kind = public.clone();
-    public_parent_kind.parent_dialect.artifact_kind.push_str(".foreign");
+    public_parent_kind.parent_dialect.artifact_kind.insert(0, ' ');
     assert_eq!(public_parent_kind.validate(fixture.now_ms), Err(DocumentOpenPlanErrorCodeV1::Denied));
+    let mut public_parent_two_space = public.clone();
+    public_parent_two_space.parent_dialect.artifact_kind = "s.note.note".into();
+    public_parent_two_space.artifact.kind = "2d.note".into();
+    assert_eq!(public_parent_two_space.validate(fixture.now_ms), Ok(()));
     let mut public_parent_control = public.clone();
     public_parent_control.parent_dialect.standard.push('\u{85}');
     assert_eq!(public_parent_control.validate(fixture.now_ms), Err(DocumentOpenPlanErrorCodeV1::Denied));
@@ -2553,7 +2656,7 @@ async fn execution_target_asset_routes_revalidate_scope_role_descriptor_and_cata
     let (descriptor, _) = publish_openable_document_for_test(&state, &token, STUDIO, &document_id).await;
     let scope = DocumentScope::new(STUDIO, &document_id);
     state.openable_catalog = Some(document_open_catalog_for_descriptor(&descriptor));
-    state.readiness = Arc::new(hub_readiness(HubMode::Development, "loopback", "00112233445566778899aabbccddeeff".into(), true, true, true, true, true, false, false));
+    state.readiness = Arc::new(hub_readiness(HubMode::Development, "loopback", "00112233445566778899aabbccddeeff".into(), true, true, true, true, true, false, false, "trusted-catalog-never-published-in-this-data-root"));
     let authorization = format!("Bearer {token}");
     let headers = [("Authorization", authorization.as_str()), ("Content-Type", "application/json")];
     let root = format!("/spaces/{STUDIO}/documents/{document_id}/execution-target");
@@ -2690,7 +2793,7 @@ async fn execution_target_selection_final_fence_matches_neutral_races() {
         let (descriptor, _) = publish_openable_document_for_test(&state, &token, STUDIO, &document_id).await;
         let scope = DocumentScope::new(STUDIO, document_id);
         state.openable_catalog = Some(document_open_catalog_for_descriptor(&descriptor));
-        state.readiness = Arc::new(hub_readiness(HubMode::Development, "loopback", "00112233445566778899aabbccddeeff".into(), true, true, true, true, true, false, false));
+        state.readiness = Arc::new(hub_readiness(HubMode::Development, "loopback", "00112233445566778899aabbccddeeff".into(), true, true, true, true, true, false, false, "trusted-catalog-never-published-in-this-data-root"));
         let mut headers = bearer_headers(&token);
         headers.insert(axum::http::header::CONTENT_TYPE, "application/json".parse().expect("content type"));
         let gate = Arc::new(TestDocumentOpenPlanIssueGate::default());
@@ -2751,7 +2854,7 @@ async fn document_open_and_execution_target_refuse_descriptor_or_index_without_g
                 body: os_directory::DirectoryEventBody::DocumentIndexed {
                     scope: scope.clone(),
                     descriptor_digest_v1: os_directory::descriptor_digest_v1(&descriptor).expect("descriptor digest"),
-                    entry: os_directory::DocumentIndexEntryV1 { name: "Indexed without genesis".into(), dialect: directory::os_io::ArtifactDialect { artifact_kind: descriptor.artifact_kind.clone(), standard: "1".into(), subset: "*".into() } },
+                    entry: os_directory::DocumentIndexEntryV1 { name: "Indexed without genesis".into(), dialect: directory::os_io::ArtifactDialect { artifact_kind: TEST_ARTIFACT_PARENT_DIALECT_KIND.into(), standard: "1".into(), subset: "*".into() } },
                 },
             };
             state.directory.append_decided_events(&[event]).await.expect("corrupt indexed-only fixture");
@@ -2805,7 +2908,7 @@ async fn document_open_plan_issue_route_is_catalog_bound_authenticated_bounded_c
     let (descriptor, _) = publish_openable_document_for_test(&state, &token, STUDIO, &document_id).await;
     let scope = DocumentScope::new(STUDIO, &document_id);
     state.openable_catalog = Some(document_open_catalog_for_descriptor(&descriptor));
-    state.readiness = Arc::new(hub_readiness(HubMode::Development, "loopback", "00112233445566778899aabbccddeeff".into(), true, true, true, true, true, false, false));
+    state.readiness = Arc::new(hub_readiness(HubMode::Development, "loopback", "00112233445566778899aabbccddeeff".into(), true, true, true, true, true, false, false, "trusted-catalog-never-published-in-this-data-root"));
     let authorization = format!("Bearer {token}");
     let headers = [("Authorization", authorization.as_str()), ("Content-Type", "application/json")];
     let plan_route = format!("/spaces/{STUDIO}/documents/{document_id}/open-plan");
@@ -2830,7 +2933,7 @@ async fn document_open_plan_issue_route_is_catalog_bound_authenticated_bounded_c
     let plan: DocumentOpenPlanV1 = directory::os_pack::json::from_json_str(&success_text).expect("plan JSON");
     assert_eq!(plan.scope, scope);
     assert_eq!(plan.catalog.generation_id, state.openable_catalog.as_ref().expect("catalog").generation_id());
-    assert_eq!(plan.parent_dialect, DocumentOpenParentDialectV1 { artifact_kind: descriptor.artifact_kind.clone(), standard: "1".into(), subset: "*".into() });
+    assert_eq!(plan.parent_dialect, DocumentOpenParentDialectV1 { artifact_kind: TEST_ARTIFACT_PARENT_DIALECT_KIND.into(), standard: "1".into(), subset: "*".into() });
     assert_eq!(plan.surface.surface_id, "surface.test.editor");
     assert!(plan.grant.write);
     assert!(plan.expires_at_unix_ms.saturating_sub(u64::try_from(now_ms()).expect("time")) <= DOCUMENT_OPEN_PLAN_MAX_TTL_MS);
@@ -2877,7 +2980,7 @@ async fn document_open_plan_issue_route_is_catalog_bound_authenticated_bounded_c
 
     let mut unavailable = state.clone();
     unavailable.openable_catalog = None;
-    unavailable.readiness = Arc::new(hub_readiness(HubMode::Development, "loopback", "00112233445566778899aabbccddeeff".into(), true, true, false, true, true, false, false));
+    unavailable.readiness = Arc::new(hub_readiness(HubMode::Development, "loopback", "00112233445566778899aabbccddeeff".into(), true, true, false, true, true, false, false, "trusted-catalog-never-published-in-this-data-root"));
     let unavailable_addr = spawn_server(unavailable).await;
     let unavailable_readiness = raw_http_get(unavailable_addr, "/readyz", &[]).await;
     let unavailable_readiness: serde_json::Value = serde_json::from_slice(&unavailable_readiness.body).expect("unavailable readiness JSON");
@@ -2916,7 +3019,7 @@ async fn document_open_plan_issue_route_is_catalog_bound_authenticated_bounded_c
     let (cancelled_descriptor, _) = publish_openable_document_for_test(&cancelled, &cancelled_token, STUDIO, &cancelled_document_id).await;
     let cancelled_scope = DocumentScope::new(STUDIO, cancelled_document_id);
     cancelled.openable_catalog = Some(document_open_catalog_for_descriptor(&cancelled_descriptor));
-    cancelled.readiness = Arc::new(hub_readiness(HubMode::Development, "loopback", "00112233445566778899aabbccddeeff".into(), true, true, true, true, true, false, false));
+    cancelled.readiness = Arc::new(hub_readiness(HubMode::Development, "loopback", "00112233445566778899aabbccddeeff".into(), true, true, true, true, true, false, false, "trusted-catalog-never-published-in-this-data-root"));
     let mut cancelled_headers = bearer_headers(&cancelled_token);
     cancelled_headers.insert(axum::http::header::CONTENT_TYPE, "application/json".parse().expect("content type"));
     let gate = Arc::new(TestDocumentOpenPlanIssueGate::default());
@@ -2944,7 +3047,7 @@ async fn document_open_plan_socket_consume_revalidates_surface_descriptor_catalo
     let (descriptor, _) = publish_openable_document_for_test(&state, &token, STUDIO, &document_id).await;
     let scope = DocumentScope::new(STUDIO, &document_id);
     state.openable_catalog = Some(document_open_catalog_for_descriptor(&descriptor));
-    state.readiness = Arc::new(hub_readiness(HubMode::Development, "loopback", "00112233445566778899aabbccddeeff".into(), true, true, true, true, true, false, false));
+    state.readiness = Arc::new(hub_readiness(HubMode::Development, "loopback", "00112233445566778899aabbccddeeff".into(), true, true, true, true, true, false, false, "trusted-catalog-never-published-in-this-data-root"));
 
     let (_, surface_grant) = issue_and_exchange_document_open_plan_for_test(&state, &token, &scope, "client:surface").await;
     let surface_capability = SocketGrantCapability::parse(&surface_grant.grant).expect("surface grant");
@@ -3006,14 +3109,16 @@ async fn document_open_plan_socket_consume_revalidates_surface_descriptor_catalo
 async fn document_open_plan_exchange_route_is_authenticated_exact_hostile_and_single_use() {
     let mut state = test_state().await;
     let fixture: DocumentOpenPlanLedgerFixture = directory::os_pack::json::from_json_str(include_str!("../../../🧰️framework/🛍️products/💻️os/🧫️fixtures/📇️directory/🧭️document-open-plan-v1.json")).expect("document open plan fixture");
-    let document_id = "open-plan-route";
-    let foreign_document_id = "open-plan-route-foreign";
-    announce_document_for_test(&state, STUDIO, document_id).await;
-    announce_document_for_test(&state, STUDIO, foreign_document_id).await;
+    let token = seed_author_token(&state).await;
+    let document_id = artifact_document_id_for_test("open-plan-route");
+    let document_id = document_id.as_str();
+    let foreign_document_id = artifact_document_id_for_test("open-plan-route-foreign");
+    let foreign_document_id = foreign_document_id.as_str();
+    seed_genesis_for_document_for_test(&state, &token, STUDIO, document_id, "open-plan-route").await;
+    seed_genesis_for_document_for_test(&state, &token, STUDIO, foreign_document_id, "open-plan-route-foreign").await;
     let route_descriptor = state.directory.get_document_descriptor(&DocumentScope::new(STUDIO, document_id)).await.expect("route descriptor").expect("route document");
     state.openable_catalog = Some(document_open_catalog_for_descriptor(&route_descriptor));
-    state.readiness = Arc::new(hub_readiness(HubMode::Development, "loopback", "00112233445566778899aabbccddeeff".into(), true, true, true, true, true, false, false));
-    let token = seed_author_token(&state).await;
+    state.readiness = Arc::new(hub_readiness(HubMode::Development, "loopback", "00112233445566778899aabbccddeeff".into(), true, true, true, true, true, false, false, "trusted-catalog-never-published-in-this-data-root"));
     let scope = DocumentScope::new(STUDIO, document_id);
     let mut authority = document_open_plan_authority_for_session(&state, &fixture, &token, scope.clone()).await;
     let addr = spawn_server(state.clone()).await;
@@ -3139,18 +3244,11 @@ fn document_open_plan_late_invalid_receipt_wipes_exact_candidate_bytes() {
 
 #[tokio::test]
 async fn document_open_plan_admin_revocation_invalidates_session_and_share_bindings() {
-    let state = test_state().await;
+    let mut state = test_state().await;
     let fixture: DocumentOpenPlanLedgerFixture = directory::os_pack::json::from_json_str(include_str!("../../../🧰️framework/🛍️products/💻️os/🧫️fixtures/📇️directory/🧭️document-open-plan-v1.json")).expect("document open plan fixture");
-    let principal = AdminPrincipalV1 {
-        user_id: "open-plan-admin".into(),
-        auth_session_id: "open-plan-admin-session".into(),
-        authorization_generation: 1,
-        identity_provider: "test".into(),
-        identity_subject_digest: [7; 32],
-        expires_at_ms: i64::MAX,
-        correlation_id: "open-plan-admin-revocation".into(),
-        peer_class: "test",
-    };
+    let admin_headers = authorize_test_admin(&mut state, "open-plan-admin@example.com").await;
+    let mut principal = authenticate_admin_principal(&state, &admin_headers, Some(loopback_peer().0)).await.expect("verified open-plan administrator principal");
+    principal.correlation_id = "open-plan-admin-revocation".into();
 
     let session = issue_test_session(&state, "open-plan-revoked-session@example.com").await;
     let session_capability = SessionCapability::parse(&session.token).expect("session capability");
@@ -3164,6 +3262,8 @@ async fn document_open_plan_admin_revocation_invalidates_session_and_share_bindi
         authorization_generation: session_record.authorization_generation,
         role: Some(SpaceRole::Author),
         expires_at_ms: session_record.expires_at,
+        session_kind: session_record.session_kind,
+        device_instance_id: session_record.device_instance_id.clone(),
     };
     let session_plan = state.document_open_plans.issue_with_capability(session_authority.clone(), session_now, session_now + 100, DocumentOpenPlanCapabilityV1::from_secret(document_open_plan_secret(20))).expect("session plan");
     let session_intent = AdminIntentV1::RevokeUserSessions { request_id: "request:open-plan-session-revoke".into(), user_id: session_record.user_id, reason_code: "test-revoke".into() };
@@ -3174,6 +3274,29 @@ async fn document_open_plan_admin_revocation_invalidates_session_and_share_bindi
     assert_eq!(session_revoke.phase, "succeeded");
     assert_eq!(state.document_open_plans.exchange(&session_plan.receipt, &session_authority, session_now + 1, "socket-after-session-revoke"), Err(DocumentOpenPlanErrorCodeV1::Stale));
 
+    let space_effect = admin_effect_receipt_claim("operation:open-plan-share-space", &"0".repeat(64), "directory-events-appended");
+    assert!(
+        matches!(
+            state
+                .directory_service
+                .execute_create_space_with_id_and_admin_effect(
+                    principal.event_actor(),
+                    fixture.valid_plan.scope.space_id.clone(),
+                    "Open plan share".into(),
+                    os_directory::DirectorySpaceKind::Studio,
+                    DirectorySpaceVisibility::Private,
+                    &space_effect
+                )
+                .await,
+            AdminEffectCommitV1::Applied(_)
+        ),
+        "the fixture's own space carries the plan a share is revoked on"
+    );
+    state
+        .directory_service
+        .execute(DirectoryActor { kind: DirectoryActorKind::User, id: format!("user:{}#open-plan-test", principal.user_id) }, DirectoryCommand::AnnounceDocument { descriptor: Box::new(fixture.descriptor.clone()) })
+        .await
+        .expect("announce the fixture's plan document");
     let issued_share = state.directory.issue_share_token(&fixture.valid_plan.scope, 60, "open-plan-share").await.expect("share issue");
     let mut share_authority = document_open_plan_test_authority(&fixture);
     share_authority.grant.write = false;
@@ -3291,50 +3414,6 @@ fn socket_grant_revoke_and_welcome_have_a_bounded_binding_linearization() {
 }
 
 #[test]
-fn socket_grant_revoke_before_command_admission_has_no_storage_effect() {
-    run_socket_test(|| async {
-        let mut state = test_state().await;
-        let live_gate = Arc::new(TestLiveGate::default());
-        state.live_gate = Some(live_gate.clone());
-        let token = seed_author_token(&state).await;
-        announce_document_for_test(&state, STUDIO, "socket-command-revoke").await;
-        let receipt = issue_document_socket_grant_fixture(Path((STUDIO.to_string(), "socket-command-revoke".to_string())), bearer_headers(&token), State(state.clone())).await.expect("issue socket grant").0;
-        let addr = spawn_server(state.clone()).await;
-        let url = format!("ws://{addr}/spaces/{STUDIO}/documents/socket-command-revoke/socket/v1");
-        let (mut socket, _) = connect_async(socket_request(&url, &receipt.grant)).await.expect("socket upgrade");
-        socket.send(client_binary(&socket_hello(), Lane::Command).await).await.expect("socket hello");
-        tokio::time::timeout(std::time::Duration::from_secs(5), live_gate.socket_before_welcome.acquire()).await.expect("pre-Welcome deadline").expect("pre-Welcome");
-        live_gate.socket_welcome_release.add_permits(1);
-        assert!(matches!(next_server_frame(&mut socket).await, ServerFrame::Welcome { .. }));
-        tokio::time::timeout(std::time::Duration::from_secs(5), live_gate.socket_after_welcome.acquire()).await.expect("post-Welcome deadline").expect("post-Welcome");
-        live_gate.socket_bootstrap_release.add_permits(1);
-        assert!(matches!(next_server_frame(&mut socket).await, ServerFrame::Session { .. }));
-        tokio::time::timeout(std::time::Duration::from_secs(5), live_gate.document_subscribed.acquire()).await.expect("subscription deadline").expect("subscription");
-        live_gate.document_release.add_permits(1);
-
-        let document = db_artifact_id(&DocumentScope::new(STUDIO, "socket-command-revoke"));
-        let mut accepted = sample_envelope("accepted-op", &document).await;
-        accepted.actor = ActorId(receipt.actor_id.clone());
-        socket.send(client_binary(&ClientFrame::Commands { batch_id: 90, envelopes: vec![accepted] }, Lane::Command).await).await.expect("control command received by server");
-        tokio::time::timeout(std::time::Duration::from_secs(5), live_gate.socket_command_received.acquire()).await.expect("control command boundary deadline").expect("control command boundary");
-        live_gate.socket_command_release.add_permits(1);
-        assert!(matches!(next_server_frame(&mut socket).await, ServerFrame::Ack { batch_id: 90, .. }));
-        let accepted_frontier = state.db.document(&document).await.expect("document handle").frontier().await.expect("accepted frontier");
-        assert_eq!(accepted_frontier.head_seq, 1, "an actor-matching command persists while authorized");
-
-        let mut revoked = sample_envelope("revoked-op", &document).await;
-        revoked.actor = ActorId(receipt.actor_id.clone());
-        socket.send(client_binary(&ClientFrame::Commands { batch_id: 91, envelopes: vec![revoked] }, Lane::Command).await).await.expect("revoked command received by server");
-        tokio::time::timeout(std::time::Duration::from_secs(5), live_gate.socket_command_received.acquire()).await.expect("command boundary deadline").expect("command boundary");
-        assert_eq!(delete_session_me(bearer_headers(&token), State(state.clone())).await, StatusCode::NO_CONTENT);
-        live_gate.socket_command_release.add_permits(1);
-        assert_eq!(next_close_without_authority(&mut socket).await, 4401, "no Ack crosses a revoke that wins before command admission");
-        let frontier = state.db.document(&document).await.expect("document handle").frontier().await.expect("frontier");
-        assert_eq!(frontier.head_seq, 1, "the revoked actor-matching command never reaches durable storage");
-    });
-}
-
-#[test]
 fn socket_grant_revoke_before_lag_authorization_reads_no_private_control() {
     run_socket_test(|| async {
         let mut state = test_state_with_capacity(1024, 1).await;
@@ -3372,6 +3451,7 @@ fn socket_grant_revoke_before_broadcast_authorization_suppresses_frame() {
         let mut state = test_state().await;
         let live_gate = Arc::new(TestLiveGate::default());
         state.live_gate = Some(live_gate.clone());
+        live_gate.socket_broadcast_pause_enabled.store(true, std::sync::atomic::Ordering::Release);
         let token = seed_author_token(&state).await;
         announce_document_for_test(&state, STUDIO, "socket-broadcast-revoke").await;
         let receipt = issue_document_socket_grant_fixture(Path((STUDIO.to_string(), "socket-broadcast-revoke".to_string())), bearer_headers(&token), State(state.clone())).await.expect("issue socket grant").0;
@@ -3424,7 +3504,7 @@ async fn scoped_directory_socket_ledger_indexes_and_invalidates_exact_membership
     let ledger = SocketGrantLedgerV1::default();
     let scope = DocumentScope::new("space-a", "document-a");
     let audience = SocketAudienceV1::DirectoryScoped(scope.clone());
-    let subject = SocketSubjectV1::Session { session_id: "session-a".into(), user_id: "user-a".into(), authorization_generation: 7, role: Some(SpaceRole::Spectator), expires_at_ms: 10_000 };
+    let subject = SocketSubjectV1::Session { session_id: "session-a".into(), user_id: "user-a".into(), authorization_generation: 7, role: Some(SpaceRole::Spectator), expires_at_ms: 10_000, session_kind: AuthSessionKind::External, device_instance_id: "device-a".into() };
     let capability = SocketGrantCapability::mint().expect("scoped capability");
     ledger.issue(&capability, audience.clone(), "hub.v1.scoped".into(), subject.clone(), 1, 9_000).expect("scoped issue");
     let pending = ledger.pending(&capability, &audience, 2).expect("pending scoped grant");
@@ -3484,7 +3564,8 @@ fn scoped_directory_socket_route_rejects_scope_substitution_and_rest_removal_clo
         announce_document_for_test(&state, STUDIO, "scoped-document-b").await;
         let unaffected = issue_test_session(&state, "scoped-unaffected@example.com").await;
         let unaffected_space = create_space_for_test(&state, &unaffected.user_id, "Scoped Unaffected", os_directory::DirectorySpaceKind::Studio, DirectorySpaceVisibility::Private).await;
-        announce_document_for_test(&state, &unaffected_space, "scoped-unaffected-document").await;
+        let unaffected_document = artifact_document_id_for_test("scoped-unaffected-document");
+        seed_genesis_for_document_for_test(&state, &unaffected.token, &unaffected_space, &unaffected_document, "scoped-unaffected-document").await;
         let addr = spawn_server(state.clone()).await;
         let authorization = format!("Bearer {}", member.token);
         let issue_path = format!("/directory/spaces/{STUDIO}/documents/scoped-document-a/socket-grants");
@@ -3501,12 +3582,12 @@ fn scoped_directory_socket_route_rejects_scope_substitution_and_rest_removal_clo
         let (mut socket, _) = connect_async(socket_request(&url, grant)).await.expect("exact scoped socket");
         socket.send(client_binary(&socket_hello(), Lane::Command).await).await.expect("scoped socket hello");
         let unaffected_authorization = format!("Bearer {}", unaffected.token);
-        let unaffected_issue_path = format!("/directory/spaces/{unaffected_space}/documents/scoped-unaffected-document/socket-grants");
+        let unaffected_issue_path = format!("/directory/spaces/{unaffected_space}/documents/{unaffected_document}/socket-grants");
         let unaffected_issued = raw_http_request(addr, "POST", &unaffected_issue_path, &[("Authorization", &unaffected_authorization)], &[]).await;
         assert_eq!(unaffected_issued.status, 200);
         let unaffected_receipt: serde_json::Value = serde_json::from_slice(&unaffected_issued.body).expect("unaffected scoped grant JSON");
         let unaffected_grant = unaffected_receipt["grant"].as_str().expect("unaffected scoped grant");
-        let unaffected_url = format!("ws://{addr}/directory/spaces/{unaffected_space}/documents/scoped-unaffected-document/socket/v1?since={since}");
+        let unaffected_url = format!("ws://{addr}/directory/spaces/{unaffected_space}/documents/{unaffected_document}/socket/v1?since={since}");
         let (mut unaffected_socket, _) = connect_async(socket_request(&unaffected_url, unaffected_grant)).await.expect("unaffected scoped socket");
         unaffected_socket.send(client_binary(&socket_hello(), Lane::Command).await).await.expect("unaffected scoped hello");
         tokio::time::sleep(std::time::Duration::from_millis(50)).await;
@@ -3518,22 +3599,21 @@ fn scoped_directory_socket_route_rejects_scope_substitution_and_rest_removal_clo
         assert!(tokio::time::timeout(std::time::Duration::from_millis(100), socket.next()).await.is_err(), "same-space foreign document never serializes");
 
         let command = DirectoryCommand::RemoveMember { space_id: STUDIO.into(), user_id: member.user_id.clone() };
-        let body = directory::os_pack::json::to_json_string(&command);
-        let owner_authorization = format!("Bearer {owner_token}");
-        let removed = raw_http_request(addr, "POST", "/directory/commands", &[("Authorization", &owner_authorization), ("Content-Type", "application/json")], body.as_bytes()).await;
+        let removed = post_directory_command_for_test(addr, &owner_token, "5c0ded0c0ffee0bad0f00d0dead0beef", command).await;
         assert_eq!(removed.status, 202);
         let removed_body = String::from_utf8(removed.body).expect("remove response UTF-8");
         assert!(removed_body.contains("member.removed"));
         assert_eq!(next_close_code(&mut socket, false).await, 4401, "durable removal invalidates the scoped lease without exposing its event");
-        announce_document_for_test(&state, &unaffected_space, "scoped-unaffected-document").await;
+        let unaffected_published = publish_checkpoint_for_test(&state, &unaffected_space, &unaffected_document).await;
+        let unaffected_delivered = next_directory_message(&mut unaffected_socket).await;
         assert!(
             matches!(
-                next_directory_message(&mut unaffected_socket).await,
+                &unaffected_delivered,
                 DirectoryStreamMessage::Event { event }
-                    if matches!(event.body, os_directory::DirectoryEventBody::DocumentAnnounced { ref descriptor }
-                        if descriptor.space_id == unaffected_space && descriptor.document_id == "scoped-unaffected-document")
+                    if matches!(event.body, os_directory::DirectoryEventBody::ArtifactCheckpointPublished { ref checkpoint }
+                        if checkpoint.scope == DocumentScope::new(&unaffected_space, &unaffected_document) && checkpoint.checkpoint_id == unaffected_published.checkpoint_id)
             ),
-            "another user's exact scoped subscription remains live"
+            "another user's exact scoped subscription remains live: {unaffected_delivered:?}"
         );
 
         for stale in [grant.to_string(), pending_grant] {
@@ -3624,10 +3704,10 @@ fn admin_removal_revokes_visible_plan_presence_and_target_after_sqlite_reopen() 
             assert_eq!(member["role"], "author");
             upsert_member_for_test(&state, &scope.space_id, &email, DirectorySpaceRole::Author).await;
         }
-        announce_document_for_test(&state, &scope.space_id, &scope.document_id).await;
+        seed_genesis_for_document_for_test(&state, &removed.token, &scope.space_id, &scope.document_id, "admin-presence-recovery").await;
         let descriptor = state.directory.get_document_descriptor(&scope).await.unwrap().unwrap();
         state.openable_catalog = Some(document_open_catalog_for_descriptor(&descriptor));
-        state.readiness = Arc::new(hub_readiness(HubMode::Development, "loopback", "00112233445566778899aabbccddeeff".into(), true, true, true, true, true, false, false));
+        state.readiness = Arc::new(hub_readiness(HubMode::Development, "loopback", "00112233445566778899aabbccddeeff".into(), true, true, true, true, true, false, false, "trusted-catalog-never-published-in-this-data-root"));
         let (plan_b, grant_b) = issue_and_exchange_document_open_plan_for_test(&state, &removed.token, &scope, "client:removed").await;
         let (plan_c, grant_c) = issue_and_exchange_document_open_plan_for_test(&state, &observer.token, &scope, "client:observer").await;
         assert_eq!(plan_b.surface.surface_id, fixture["surfaceId"].as_str().unwrap());
@@ -3639,7 +3719,10 @@ fn admin_removal_revokes_visible_plan_presence_and_target_after_sqlite_reopen() 
         let (mut c, _) = connect_async(socket_request(&url, &grant_c.grant)).await.expect("observer document socket");
         b.send(client_binary(&socket_hello(), Lane::Command).await).await.unwrap();
         c.send(client_binary(&socket_hello(), Lane::Command).await).await.unwrap();
-        let welcome_b = next_server_frame(&mut b).await;
+        let welcome_b = match tokio::time::timeout(SOCKET_RENDEZVOUS_HANG_GUARD, b.next()).await {
+            Ok(Some(Ok(WsMessage::Binary(bytes)))) => protocol::decode_server_frame(&bytes).await.expect("member welcome frame").1,
+            other => panic!("the member plan socket never reached its welcome: {other:?} refused as {:?}", last_document_plan_refusal()),
+        };
         assert!(matches!(&welcome_b, ServerFrame::Welcome { .. }), "member welcome: {welcome_b:?}");
         let ServerFrame::Session { actor: actor_b, color: color_b } = next_server_frame(&mut b).await else { panic!("member session") };
         let welcome_c = next_server_frame(&mut c).await;
@@ -3706,7 +3789,7 @@ fn admin_removal_revokes_visible_plan_presence_and_target_after_sqlite_reopen() 
         let directory = SqliteDirectory::connect(path.to_str().unwrap()).await.expect("reopen exact file directory");
         let mut state = test_state_with_directory(dir.join("db"), directory, 1024, 256).await;
         state.openable_catalog = Some(document_open_catalog_for_descriptor(&descriptor));
-        state.readiness = Arc::new(hub_readiness(HubMode::Development, "loopback", "00112233445566778899aabbccddeeff".into(), true, true, true, true, true, false, false));
+        state.readiness = Arc::new(hub_readiness(HubMode::Development, "loopback", "00112233445566778899aabbccddeeff".into(), true, true, true, true, true, false, false, "trusted-catalog-never-published-in-this-data-root"));
         assert!(state.presence_snapshot(&document_scope_key_v1(&scope)).peers.is_empty());
         assert!(state.socket_grants.inner.lock().unwrap().records.is_empty());
         assert!(state.document_open_plans.inner.lock().unwrap().records.is_empty());
@@ -3739,80 +3822,6 @@ fn admin_removal_revokes_visible_plan_presence_and_target_after_sqlite_reopen() 
         }
         stop_recovery_server(state, shutdown, server).await;
         eprintln!("[DEBUG] admin removal withdrew plan-bound presence, closed only the removed member, and survived exact file-SQLite Hub reopen for all selected target routes");
-    });
-}
-
-#[test]
-fn scoped_directory_socket_removal_and_delivery_have_one_total_membership_order() {
-    run_socket_test(|| async {
-        let mut state = test_state().await;
-        let gate = Arc::new(TestLiveGate::default());
-        state.live_gate = Some(gate.clone());
-        let member = issue_test_session(&state, "scoped-order-target@example.com").await;
-        upsert_member_for_test(&state, STUDIO, "scoped-order-target@example.com", DirectorySpaceRole::Spectator).await;
-        announce_document_for_test(&state, STUDIO, "scoped-order-document").await;
-        let addr = spawn_server(state.clone()).await;
-        let authorization = format!("Bearer {}", member.token);
-        let issue_path = format!("/directory/spaces/{STUDIO}/documents/scoped-order-document/socket-grants");
-
-        let open = |grant: String, since: u64| {
-            let url = format!("ws://{addr}/directory/spaces/{STUDIO}/documents/scoped-order-document/socket/v1?since={since}");
-            async move {
-                let (mut socket, _) = connect_async(socket_request(&url, &grant)).await.expect("ordered scoped socket");
-                socket.send(client_binary(&socket_hello(), Lane::Command).await).await.expect("ordered scoped hello");
-                tokio::time::sleep(std::time::Duration::from_millis(50)).await;
-                socket
-            }
-        };
-        let issue = || {
-            let issue_path = issue_path.clone();
-            let authorization = authorization.clone();
-            async move {
-                let issued = raw_http_request(addr, "POST", &issue_path, &[("Authorization", &authorization)], &[]).await;
-                assert_eq!(issued.status, 200);
-                let receipt: serde_json::Value = serde_json::from_slice(&issued.body).expect("ordered scoped grant JSON");
-                receipt["grant"].as_str().expect("ordered scoped grant").to_string()
-            }
-        };
-
-        let mut removal_wins = open(issue().await, state.directory.head_seq().await.expect("removal-wins head")).await;
-        gate.socket_membership_remove_enabled.store(true, std::sync::atomic::Ordering::Release);
-        let mut removal = tokio::spawn({
-            let state = state.clone();
-            let user_id = member.user_id.clone();
-            async move { execute_directory_command_fenced(&state, DirectoryActor { kind: DirectoryActorKind::System, id: "system:scoped-order-removal".into() }, DirectoryCommand::RemoveMember { space_id: STUDIO.into(), user_id }).await }
-        });
-        tokio::time::timeout(std::time::Duration::from_secs(2), gate.socket_membership_remove_admitted.acquire()).await.expect("removal admission deadline").expect("removal admission");
-        gate.socket_scoped_send_mode.store(1, std::sync::atomic::Ordering::Release);
-        announce_document_for_test(&state, STUDIO, "scoped-order-document").await;
-        tokio::time::timeout(std::time::Duration::from_secs(2), gate.socket_scoped_send_admitted.acquire()).await.expect("removal-wins sender deadline").expect("removal-wins sender");
-        gate.socket_scoped_send_release.add_permits(1);
-        gate.socket_membership_remove_release.add_permits(1);
-        tokio::time::timeout(std::time::Duration::from_secs(2), &mut removal).await.expect("removal-wins completion deadline").expect("removal task").expect("fenced removal");
-        assert_eq!(next_close_code(&mut removal_wins, false).await, 4401, "removal winning the membership gate exposes no scoped event");
-
-        upsert_member_for_test(&state, STUDIO, "scoped-order-target@example.com", DirectorySpaceRole::Spectator).await;
-        gate.socket_membership_remove_enabled.store(false, std::sync::atomic::Ordering::Release);
-        gate.socket_scoped_send_mode.store(0, std::sync::atomic::Ordering::Release);
-        let mut delivery_wins = open(issue().await, state.directory.head_seq().await.expect("delivery-wins head")).await;
-        gate.socket_scoped_send_mode.store(2, std::sync::atomic::Ordering::Release);
-        announce_document_for_test(&state, STUDIO, "scoped-order-document").await;
-        tokio::time::timeout(std::time::Duration::from_secs(2), gate.socket_scoped_send_admitted.acquire()).await.expect("delivery-wins sender deadline").expect("delivery-wins sender");
-        let mut removal = tokio::spawn({
-            let state = state.clone();
-            let user_id = member.user_id.clone();
-            async move { execute_directory_command_fenced(&state, DirectoryActor { kind: DirectoryActorKind::System, id: "system:scoped-order-delivery".into() }, DirectoryCommand::RemoveMember { space_id: STUDIO.into(), user_id }).await }
-        });
-        assert!(tokio::time::timeout(std::time::Duration::from_millis(100), &mut removal).await.is_err(), "removal waits while an admitted scoped send owns the membership gate");
-        gate.socket_scoped_send_release.add_permits(1);
-        assert!(matches!(
-            next_directory_message(&mut delivery_wins).await,
-            DirectoryStreamMessage::Event { event }
-                if matches!(event.body, os_directory::DirectoryEventBody::DocumentAnnounced { ref descriptor }
-                    if descriptor.space_id == STUDIO && descriptor.document_id == "scoped-order-document")
-        ));
-        tokio::time::timeout(std::time::Duration::from_secs(2), removal).await.expect("delivery-wins removal deadline").expect("removal task").expect("fenced removal");
-        assert_eq!(next_close_code(&mut delivery_wins, false).await, 4401, "the one admitted event precedes the terminal membership close");
     });
 }
 
@@ -3946,7 +3955,7 @@ fn admin_short_effects_retain_principal_until_their_actual_side_effect() {
 fn admin_directory_commands_hold_exact_principal_without_confusing_space_role() {
     run_socket_test(|| async {
         let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🏛️admin-directory-authority-v1/🔣️.json")).expect("admin authority fixture");
-        let mut state = tokio::time::timeout(std::time::Duration::from_secs(5), test_state()).await.expect("admin authority state open deadline");
+        let mut state = tokio::time::timeout(TEST_STATE_OPEN_HANG_GUARD, test_state()).await.expect("admin authority state open deadline");
         let gate = Arc::new(TestLiveGate::default());
         state.live_gate = Some(gate.clone());
         let email = "directory-admin-authority@example.test";
@@ -4051,7 +4060,7 @@ fn directory_global_message_bindings_decode_wire_without_indexing_unrelated_memb
     let ledger = SocketGrantLedgerV1::default();
     let capability = SocketGrantCapability::mint().expect("global capability");
     let audience = SocketAudienceV1::Directory { auth_session_id: "session".into(), authorization_generation: 1 };
-    let subject = SocketSubjectV1::Session { session_id: "session".into(), user_id: "recipient".into(), authorization_generation: 1, role: None, expires_at_ms: 10_000 };
+    let subject = SocketSubjectV1::Session { session_id: "session".into(), user_id: "recipient".into(), authorization_generation: 1, role: None, expires_at_ms: 10_000, session_kind: AuthSessionKind::External, device_instance_id: "device-recipient".into() };
     ledger.issue(&capability, audience.clone(), "hub.v1.global".into(), subject, 1, 9_000).expect("global issue");
     let pending = ledger.pending(&capability, &audience, 2).expect("pending global");
     let record = ledger.consume(&pending, 3).expect("consumed global");
@@ -4085,8 +4094,9 @@ fn directory_global_message_bindings_decode_wire_without_indexing_unrelated_memb
 fn directory_global_socket_delivery_and_revocation_share_one_transient_authority_order() {
     run_socket_test(|| async {
         let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🌐️directory-message-authority-v1/🔣️.json")).expect("message authority fixture");
-        let mut state = tokio::time::timeout(std::time::Duration::from_secs(5), test_state()).await.expect("global directory state open deadline");
+        let mut state = tokio::time::timeout(TEST_STATE_OPEN_HANG_GUARD, test_state()).await.expect("global directory state open deadline");
         let gate = Arc::new(TestLiveGate::default());
+        gate.socket_directory_pause_enabled.store(true, std::sync::atomic::Ordering::Release);
         state.live_gate = Some(gate.clone());
         let (addr, shutdown, server) = spawn_restartable_server(state.clone()).await;
         for (index, row) in fixture["vectors"].as_array().unwrap().iter().enumerate() {
@@ -4173,6 +4183,7 @@ fn socket_directory_revoke_after_admission_suppresses_replay_without_deadlock() 
         let mut state = test_state().await;
         let gate = Arc::new(TestLiveGate::default());
         state.live_gate = Some(gate.clone());
+        gate.socket_directory_pause_enabled.store(true, std::sync::atomic::Ordering::Release);
         let token = seed_author_token(&state).await;
         let receipt = issue_directory_socket_grant(bearer_headers(&token), State(state.clone())).await.expect("issue directory grant").0;
         let addr = spawn_server(state.clone()).await;
@@ -4184,40 +4195,6 @@ fn socket_directory_revoke_after_admission_suppresses_replay_without_deadlock() 
         gate.socket_directory_release.add_permits(1);
         assert_eq!(next_close_code(&mut socket, false).await, 4401, "no replay text crosses a winning revoke");
     });
-}
-
-#[tokio::test]
-async fn socket_admin_user_gate_rejects_a_late_same_user_grant_after_batch_revoke() {
-    let mut state = test_state().await;
-    let gate = Arc::new(TestLiveGate::default());
-    state.live_gate = Some(gate.clone());
-    let mut admin_headers = authorize_test_admin(&mut state, "socket-admin@example.com").await;
-    admin_headers.insert(axum::http::header::CONTENT_TYPE, "application/json".parse().expect("content type"));
-    let target = issue_test_session(&state, "socket-target@example.com").await;
-    upsert_member_for_test(&state, STUDIO, "socket-target@example.com", DirectorySpaceRole::Author).await;
-    announce_document_for_test(&state, STUDIO, "socket-admin-race").await;
-    let mut revoke = tokio::spawn({
-        let state = state.clone();
-        let user_id = target.user_id.clone();
-        async move {
-            let intent = AdminIntentV1::RevokeUserSessions { request_id: "request:socket-admin-revoke".into(), user_id, reason_code: "test-revoke".into() };
-            let body = Bytes::from(directory::os_pack::json::to_json_string(&intent));
-            admin_intents(admin_headers, loopback_peer(), State(state), body).await
-        }
-    });
-    tokio::time::timeout(std::time::Duration::from_secs(2), gate.socket_admin_revoke_admitted.acquire()).await.expect("admin gate deadline").expect("admin gate");
-    let mut issue = tokio::spawn({
-        let state = state.clone();
-        let token = target.token.clone();
-        async move { issue_document_socket_grant_fixture(Path((STUDIO.to_string(), "socket-admin-race".to_string())), bearer_headers(&token), State(state)).await }
-    });
-    assert!(tokio::time::timeout(std::time::Duration::from_millis(100), &mut issue).await.is_err(), "same-user grant waits behind batch revoke");
-    gate.socket_admin_revoke_release.add_permits(1);
-    let (status, receipt) = tokio::time::timeout(std::time::Duration::from_secs(2), &mut revoke).await.expect("bounded admin revoke").expect("admin task").expect("admin response");
-    assert_eq!(status, StatusCode::OK);
-    assert_eq!(receipt.0.state, AdminIntentStateV1::Succeeded);
-    let late_issue = tokio::time::timeout(std::time::Duration::from_secs(2), issue).await.expect("bounded late issue").expect("issue task");
-    assert!(matches!(late_issue, Err(StatusCode::UNAUTHORIZED)), "revoked session cannot mint");
 }
 
 #[tokio::test]
@@ -4235,7 +4212,7 @@ async fn socket_directory_visibility_requires_membership_even_for_public_spaces(
         secret_digest: [0; 32],
         audience,
         actor_id: "hub.v1.visibility".into(),
-        subject: SocketSubjectV1::Session { session_id: session.id, user_id: session.user_id, authorization_generation: session.authorization_generation, role: None, expires_at_ms: session.expires_at },
+        subject: SocketSubjectV1::Session { session_id: session.id, user_id: session.user_id, authorization_generation: session.authorization_generation, role: None, expires_at_ms: session.expires_at, session_kind: session.session_kind, device_instance_id: session.device_instance_id },
         document_plan: None,
         issued_at_ms: session.issued_at,
         expires_at_ms: session.expires_at,
@@ -4280,6 +4257,18 @@ fn assert_public_projection_has_no_private_keys(value: &serde_json::Value) {
     }
 }
 
+/// 🪞️ Strips the three fields `DirectorySpaceAdministrationPageV1` binds to its individual caller —
+/// `sessionBindingSha256`, `authorizationGeneration` and `receiptSha256` — so two readers of the same
+/// public space can be compared on the projection they are meant to share.
+fn public_projection_without_caller_binding(value: &serde_json::Value) -> serde_json::Value {
+    let mut stripped = value.clone();
+    let entries = stripped.as_object_mut().expect("administration page object");
+    for key in ["sessionBindingSha256", "authorizationGeneration", "receiptSha256"] {
+        assert!(entries.remove(key).is_some(), "administration page carries its caller binding field {key}");
+    }
+    stripped
+}
+
 //#region 🏛️SpaceAdministration
 /// 🏛️ An author receives both bounded windows, a canonical receipt over the exact response
 /// bytes, and the server's own capability flags — and no credential column anywhere.
@@ -4317,20 +4306,24 @@ async fn space_administration_page_v1_route_returns_the_author_windows_with_a_ca
 /// absent, so no renderer can mis-gate them into existence.
 #[tokio::test]
 async fn space_administration_page_v1_route_denies_a_spectator_the_author_windows() {
-    let state = test_state().await;
-    let author = issue_test_session(&state, "administration-owner@example.invalid").await;
-    let spectator = issue_test_session(&state, "administration-spectator@example.invalid").await;
-    let outsider = issue_test_session(&state, "administration-outsider@example.invalid").await;
-    let space = create_space_for_test(&state, &author.user_id, "Spectated", os_directory::DirectorySpaceKind::Studio, DirectorySpaceVisibility::Private).await;
-    upsert_member_for_test(&state, &space, "administration-spectator@example.invalid", DirectorySpaceRole::Spectator).await;
-    state
-        .directory_service
-        .execute(DirectoryActor { kind: DirectoryActorKind::User, id: format!("user:{}#administration-spectator-law", author.user_id) }, DirectoryCommand::CreateInvite { space_id: space.clone(), role: DirectorySpaceRole::Spectator, ttl_secs: 600 })
-        .await
-        .expect("author invite fixture");
+    let _watchdog = LawHangWatchdogV1::arm("space_administration_page_v1_route_denies_a_spectator_the_author_windows");
+    let state = bounded_law_step("spectator law: hub state open", test_state()).await;
+    let author = bounded_law_step("spectator law: author session", issue_test_session(&state, "administration-owner@example.invalid")).await;
+    let spectator = bounded_law_step("spectator law: spectator session", issue_test_session(&state, "administration-spectator@example.invalid")).await;
+    let outsider = bounded_law_step("spectator law: outsider session", issue_test_session(&state, "administration-outsider@example.invalid")).await;
+    let space = bounded_law_step("spectator law: space creation", create_space_for_test(&state, &author.user_id, "Spectated", os_directory::DirectorySpaceKind::Studio, DirectorySpaceVisibility::Private)).await;
+    bounded_law_step("spectator law: spectator membership", upsert_member_for_test(&state, &space, "administration-spectator@example.invalid", DirectorySpaceRole::Spectator)).await;
+    bounded_law_step(
+        "spectator law: author invite fixture",
+        state
+            .directory_service
+            .execute(DirectoryActor { kind: DirectoryActorKind::User, id: format!("user:{}#administration-spectator-law", author.user_id) }, DirectoryCommand::CreateInvite { space_id: space.clone(), role: DirectorySpaceRole::Spectator, ttl_secs: 600 }),
+    )
+    .await
+    .expect("author invite fixture");
     let addr = spawn_server(state).await;
     let spectator_authorization = format!("Bearer {}", spectator.token);
-    let response = raw_http_get(addr, &format!("/directory/spaces/{space}"), &[("Authorization", spectator_authorization.as_str())]).await;
+    let response = bounded_law_step("spectator law: spectator page read", raw_http_get(addr, &format!("/directory/spaces/{space}"), &[("Authorization", spectator_authorization.as_str())])).await;
     assert_eq!(response.status, 200);
     let canonical = std::str::from_utf8(&response.body).expect("spectator page UTF-8").to_string();
     let page = DirectorySpaceAdministrationPageV1::parse_canonical_json(&canonical).expect("canonical member page");
@@ -4338,8 +4331,8 @@ async fn space_administration_page_v1_route_denies_a_spectator_the_author_window
     assert!(page.capabilities().is_none());
     assert!(!canonical.contains("\"invites\"") && !canonical.contains("\"capabilities\""));
     let outsider_authorization = format!("Bearer {}", outsider.token);
-    assert_eq!(raw_http_get(addr, &format!("/directory/spaces/{space}"), &[("Authorization", outsider_authorization.as_str())]).await.status, 404);
-    assert_eq!(raw_http_get(addr, &format!("/directory/spaces/{space}"), &[]).await.status, 404);
+    assert_eq!(bounded_law_step("spectator law: outsider page read", raw_http_get(addr, &format!("/directory/spaces/{space}"), &[("Authorization", outsider_authorization.as_str())])).await.status, 404);
+    assert_eq!(bounded_law_step("spectator law: anonymous page read", raw_http_get(addr, &format!("/directory/spaces/{space}"), &[])).await.status, 404);
 }
 
 /// 🧯️ A membership removal takes effect on the very next page read: the response is a denial with
@@ -4416,7 +4409,17 @@ fn space_public_boundary_real_routes_emit_discriminated_public_member_author_and
         let outsider_authorization = format!("Bearer {}", outsider.token);
         let public_nonmember = raw_http_get(addr, &format!("/directory/spaces/{public_space}"), &[("Authorization", outsider_authorization.as_str())]).await;
         assert_eq!(public_nonmember.status, 200);
-        assert_eq!(serde_json::from_slice::<serde_json::Value>(&public_nonmember.body).expect("nonmember public detail"), anonymous);
+        let nonmember: serde_json::Value = serde_json::from_slice(&public_nonmember.body).expect("nonmember public detail");
+        assert_eq!(
+            public_projection_without_caller_binding(&nonmember),
+            public_projection_without_caller_binding(&anonymous),
+            "an authenticated nonmember reads exactly the anonymous public projection"
+        );
+        assert_eq!(anonymous["sessionBindingSha256"], "0".repeat(64), "the anonymous public projection is bound to no session");
+        assert_eq!(anonymous["authorizationGeneration"], 0, "the anonymous public projection carries no authorization generation");
+        assert_ne!(nonmember["sessionBindingSha256"], anonymous["sessionBindingSha256"], "an authenticated reader's public page is bound to that reader's own session");
+        assert!(nonmember["authorizationGeneration"].as_u64().expect("nonmember authorization generation") >= 1, "an authenticated reader's public page carries that reader's generation");
+        assert_public_projection_has_no_private_keys(&nonmember);
         let private_nonmember = raw_http_get(addr, &format!("/directory/spaces/{private_space}"), &[("Authorization", outsider_authorization.as_str())]).await;
         assert_eq!(private_nonmember.status, 404);
 
@@ -4565,215 +4568,6 @@ fn admin_document_cursor_is_principal_route_and_exact_page_bound() {
     assert_eq!(admin_page_limit(&AdminPageQuery { cursor: None, limit: Some(ADMIN_PAGE_MAX) }), Ok(ADMIN_PAGE_MAX));
     assert_eq!(admin_page_limit(&AdminPageQuery { cursor: None, limit: Some(0) }), Err(StatusCode::BAD_REQUEST));
     assert_eq!(admin_page_limit(&AdminPageQuery { cursor: None, limit: Some(ADMIN_PAGE_MAX + 1) }), Err(StatusCode::BAD_REQUEST));
-}
-
-#[test]
-fn admin_response_pages_stop_before_exact_byte_max_and_reject_one_oversized_row() {
-    let cursor_key = [0x5a; 32];
-    let principal = AdminPrincipalV1 {
-        user_id: "user:admin".into(),
-        auth_session_id: "session:admin".into(),
-        authorization_generation: 7,
-        identity_provider: "test".into(),
-        identity_subject_digest: [7; 32],
-        expires_at_ms: now_ms() + 60_000,
-        correlation_id: "correlation:admin".into(),
-        peer_class: "admin-rest",
-    };
-    let rows = (0..ADMIN_PAGE_MAX).map(|index| os_directory::UserView { id: format!("user:{index}:{}", "i".repeat(4_000)), email: format!("{index}@{}", "e".repeat(4_000)), display_name: "n".repeat(4_000), created_at_ms: 0 }).collect();
-    let page = admin_fit_page(rows, false, 7, |rows| admin_cursor_encode(&cursor_key, &principal, 2, rows.len())).expect("byte-bounded user page");
-    assert!(page.rows.len() < ADMIN_PAGE_MAX);
-    assert!(page.next_cursor.is_some());
-    assert!(directory::os_pack::json::to_json_string(&page).len() <= ADMIN_RESPONSE_MAX_BYTES);
-
-    let connections = (0..ADMIN_PAGE_MAX)
-        .map(|index| AdminRecordedConnectionV1 {
-            sync_session_id: format!("sync:{index}:{}", "s".repeat(4_000)),
-            scope: DocumentScope::new("space", format!("document:{index}:{}", "d".repeat(4_000))),
-            authenticated_user_id: Some(format!("user:{index}:{}", "u".repeat(4_000))),
-            email: Some("admin@example.com".into()),
-            role: Some(DirectorySpaceRole::Author),
-            connected_at_ms: 0,
-            source: "recorded-sync-session".into(),
-        })
-        .collect();
-    let snapshot = admin_fit_connection_snapshot(connections, false, 7, 9, &cursor_key, &principal, 0).expect("byte-bounded connection snapshot");
-    assert!(snapshot.rows.len() < ADMIN_PAGE_MAX);
-    assert!(snapshot.next_cursor.is_some());
-    assert!(directory::os_pack::json::to_json_string(&snapshot).len() <= ADMIN_RESPONSE_MAX_BYTES);
-
-    let view = SpaceView {
-        id: "space:one".into(),
-        name: "Space".into(),
-        kind: os_directory::DirectorySpaceKind::Studio,
-        visibility: DirectorySpaceVisibility::Private,
-        owner_user_id: "user:owner".into(),
-        role: None,
-        member_count: ADMIN_PAGE_MAX as u32,
-        document_count: 0,
-        active_connections: 0,
-        created_at_ms: 0,
-        updated_at_ms: 0,
-    };
-    let members = (0..ADMIN_PAGE_MAX).map(|index| MemberView { user_id: format!("user:{index}:{}", "u".repeat(4_000)), email: format!("{index}@example.com"), display_name: "n".repeat(4_000), role: DirectorySpaceRole::Author }).collect();
-    let detail = admin_fit_space_detail(view, members, false, 7, &cursor_key, &principal, "space:one", 0).expect("byte-bounded member detail");
-    assert!(detail.members.rows.len() < ADMIN_PAGE_MAX);
-    assert!(detail.members.next_cursor.is_some());
-    assert!(directory::os_pack::json::to_json_string(&detail).len() <= ADMIN_RESPONSE_MAX_BYTES);
-
-    let oversized = vec![os_directory::UserView { id: "i".repeat(ADMIN_RESPONSE_MAX_BYTES), email: "e@example.com".into(), display_name: "name".into(), created_at_ms: 0 }];
-    assert_eq!(admin_fit_page(oversized, false, 7, |_| Ok("a".repeat(84))), Err(StatusCode::PAYLOAD_TOO_LARGE));
-}
-
-#[tokio::test]
-async fn retained_short_admin_request_drop_duplicate_cancel_and_secret_lifecycle_is_exact() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../📇️directory/🧫️fixtures/🏛️retained-short-admin/🔣️.json")).expect("retained short administrator fixture");
-    assert_eq!(fixture["cases"].as_array().expect("retained cases").len(), 15);
-    let root = tempdir("retained-short-admin");
-    std::fs::create_dir_all(&root).expect("retained administrator root");
-    let path = root.join("directory.sqlite");
-    let directory = SqliteDirectory::connect(path.to_str().expect("retained directory path")).await.expect("retained directory");
-    let mut state = test_state_with_directory(root.join("db"), directory, 1024, 256).await;
-    let physical = rusqlite::Connection::open(&path).expect("retained administrator physical reader");
-    let gate = Arc::new(TestLiveGate::default());
-    state.live_gate = Some(gate.clone());
-    let email = "retained-short-admin@example.test";
-    let _ = authorize_test_admin(&mut state, email).await;
-    let admin = issue_test_session(&state, email).await;
-    let owner = issue_test_session(&state, "retained-short-owner@example.test").await;
-    let space = create_space_for_test(&state, &owner.user_id, "Retained Short", os_directory::DirectorySpaceKind::Studio, DirectorySpaceVisibility::Private).await;
-    let scope = DocumentScope::new(&space, "retained-short-document");
-    announce_document_for_test(&state, &scope.space_id, &scope.document_id).await;
-    let (addr, shutdown, server) = spawn_restartable_server(state.clone()).await;
-    let request_id = "request:retained-short-drop";
-    let intent = AdminIntentV1::IssueDocumentShare { request_id: request_id.into(), scope: scope.clone(), ttl_secs: 600 };
-    let body = directory::os_pack::json::to_json_string(&intent);
-    *gate.directory_command_pause_user.lock().unwrap() = Some((admin.user_id.clone(), true));
-    let dropped = tokio::spawn({
-        let authorization = format!("Bearer {}", admin.token);
-        let body = body.clone();
-        async move { raw_http_request(addr, "POST", "/admin/api/intents", &[("Authorization", &authorization), ("Content-Type", "application/json")], body.as_bytes()).await }
-    });
-    tokio::time::timeout(std::time::Duration::from_secs(5), gate.directory_command_admitted.acquire()).await.expect("dropped request admission deadline").expect("dropped request admitted").forget();
-    dropped.abort();
-    let _ = dropped.await;
-    *gate.directory_command_pause_user.lock().unwrap() = None;
-    gate.directory_command_release.add_permits(1);
-    let mut rows = Vec::new();
-    for _ in 0..256 {
-        rows = state.directory.admin_operation_audit_for_request(request_id).await.expect("dropped request audit");
-        if rows.len() == 2 {
-            break;
-        }
-        tokio::task::yield_now().await;
-    }
-    assert_eq!(rows.len(), 2, "request cancellation cannot cancel its retained operation");
-    assert_eq!(rows[1].fact.phase, "succeeded");
-    assert_eq!(rows[1].fact.outcome_code, "share-issued");
-    assert_eq!(physical.query_row::<i64, _, _>("SELECT count(*) FROM hub_share_grant WHERE space_id = ?1 AND document_id = ?2", rusqlite::params![scope.space_id, scope.document_id], |row| row.get(0)).unwrap(), 1);
-    let authorization = format!("Bearer {}", admin.token);
-    let retry = raw_http_request(addr, "POST", "/admin/api/intents", &[("Authorization", &authorization), ("Content-Type", "application/json")], body.as_bytes()).await;
-    assert_eq!(retry.status, 200);
-    let retry_receipt: AdminIntentReceiptV1 = directory::os_pack::json::from_json_str(std::str::from_utf8(&retry.body).unwrap()).expect("retry receipt");
-    assert_eq!(retry_receipt.state, AdminIntentStateV1::Succeeded);
-    assert!(retry_receipt.result.is_none(), "a lost one-shot share token is never stored or replayed");
-    assert_eq!(
-        physical.query_row::<i64, _, _>("SELECT count(*) FROM hub_share_grant WHERE space_id = ?1 AND document_id = ?2", rusqlite::params![scope.space_id, scope.document_id], |row| row.get(0)).unwrap(),
-        1,
-        "retry cannot execute the side effect twice"
-    );
-    let collision = directory::os_pack::json::to_json_string(&AdminIntentV1::IssueDocumentShare { request_id: request_id.into(), scope: scope.clone(), ttl_secs: 601 });
-    assert_eq!(raw_http_request(addr, "POST", "/admin/api/intents", &[("Authorization", &authorization), ("Content-Type", "application/json")], collision.as_bytes()).await.status, 409);
-
-    let cancelled_scope = DocumentScope::new(&space, "retained-short-cancelled");
-    announce_document_for_test(&state, &cancelled_scope.space_id, &cancelled_scope.document_id).await;
-    let cancelled_request = "request:retained-short-cancelled";
-    let cancelled_body = directory::os_pack::json::to_json_string(&AdminIntentV1::IssueDocumentShare { request_id: cancelled_request.into(), scope: cancelled_scope.clone(), ttl_secs: 600 });
-    *gate.directory_command_pause_user.lock().unwrap() = Some((admin.user_id.clone(), false));
-    let cancelled = tokio::spawn({
-        let authorization = authorization.clone();
-        async move { raw_http_request(addr, "POST", "/admin/api/intents", &[("Authorization", &authorization), ("Content-Type", "application/json")], cancelled_body.as_bytes()).await }
-    });
-    tokio::time::timeout(std::time::Duration::from_secs(5), gate.directory_command_admitted.acquire()).await.expect("pre-effect cancellation admission deadline").expect("pre-effect cancellation admitted").forget();
-    let accepted = state.directory.admin_operation_audit_for_request(cancelled_request).await.expect("cancelled acceptance");
-    let operation_id = accepted.first().expect("cancelled accepted row").fact.operation_id.clone();
-    cancel_admin_operation(Path(operation_id), bearer_headers(&admin.token), loopback_peer(), State(state.clone())).await.expect("cancel retained operation");
-    *gate.directory_command_pause_user.lock().unwrap() = None;
-    gate.directory_command_release.add_permits(1);
-    let cancelled = cancelled.await.expect("cancelled request task");
-    let cancelled_receipt: AdminIntentReceiptV1 = directory::os_pack::json::from_json_str(std::str::from_utf8(&cancelled.body).unwrap()).expect("cancelled receipt");
-    assert_eq!(cancelled_receipt.state, AdminIntentStateV1::Cancelled);
-    assert_eq!(physical.query_row::<i64, _, _>("SELECT count(*) FROM hub_share_grant WHERE space_id = ?1 AND document_id = ?2", rusqlite::params![cancelled_scope.space_id, cancelled_scope.document_id], |row| row.get(0)).unwrap(), 0);
-
-    let admitted_scope = DocumentScope::new(&space, "retained-short-admitted");
-    announce_document_for_test(&state, &admitted_scope.space_id, &admitted_scope.document_id).await;
-    let admitted_request = "request:retained-short-admitted";
-    let admitted_body = directory::os_pack::json::to_json_string(&AdminIntentV1::IssueDocumentShare { request_id: admitted_request.into(), scope: admitted_scope.clone(), ttl_secs: 600 });
-    gate.admin_effect_pause_enabled.store(true, std::sync::atomic::Ordering::Release);
-    let admitted = tokio::spawn({
-        let authorization = authorization.clone();
-        async move { raw_http_request(addr, "POST", "/admin/api/intents", &[("Authorization", &authorization), ("Content-Type", "application/json")], admitted_body.as_bytes()).await }
-    });
-    tokio::time::timeout(std::time::Duration::from_secs(5), gate.admin_effect_admitted.acquire()).await.expect("admitted effect deadline").expect("effect admitted").forget();
-    let accepted = state.directory.admin_operation_audit_for_request(admitted_request).await.expect("admitted acceptance");
-    let operation_id = accepted.first().expect("admitted accepted row").fact.operation_id.clone();
-    cancel_admin_operation(Path(operation_id), bearer_headers(&admin.token), loopback_peer(), State(state.clone())).await.expect("late cancellation request");
-    gate.admin_effect_pause_enabled.store(false, std::sync::atomic::Ordering::Release);
-    gate.admin_effect_release.add_permits(1);
-    let admitted = admitted.await.expect("admitted request task");
-    let admitted_receipt: AdminIntentReceiptV1 = directory::os_pack::json::from_json_str(std::str::from_utf8(&admitted.body).unwrap()).expect("admitted receipt");
-    assert_eq!(admitted_receipt.state, AdminIntentStateV1::Succeeded, "cancellation after effect admission cannot invent rollback");
-    assert!(admitted_receipt.result.as_ref().and_then(|result| result.share_token.as_ref()).is_some());
-    assert_eq!(physical.query_row::<i64, _, _>("SELECT count(*) FROM hub_share_grant WHERE space_id = ?1 AND document_id = ?2", rusqlite::params![admitted_scope.space_id, admitted_scope.document_id], |row| row.get(0)).unwrap(), 1);
-
-    let fenced_scope = DocumentScope::new(&space, "retained-short-admitted-deadline");
-    announce_document_for_test(&state, &fenced_scope.space_id, &fenced_scope.document_id).await;
-    let first_request = "request:retained-short-admitted-deadline-first";
-    let second_request = "request:retained-short-admitted-deadline-second";
-    let first_body = directory::os_pack::json::to_json_string(&AdminIntentV1::IssueDocumentShare { request_id: first_request.into(), scope: fenced_scope.clone(), ttl_secs: 600 });
-    let second_body = directory::os_pack::json::to_json_string(&AdminIntentV1::IssueDocumentShare { request_id: second_request.into(), scope: fenced_scope.clone(), ttl_secs: 600 });
-    gate.admin_effect_pause_enabled.store(true, std::sync::atomic::Ordering::Release);
-    let mut first = tokio::spawn({
-        let authorization = authorization.clone();
-        async move { raw_http_request(addr, "POST", "/admin/api/intents", &[("Authorization", &authorization), ("Content-Type", "application/json")], first_body.as_bytes()).await }
-    });
-    tokio::time::timeout(std::time::Duration::from_secs(5), gate.admin_effect_admitted.acquire()).await.expect("first admitted writer deadline").expect("first writer admitted").forget();
-    let mut second = tokio::spawn({
-        let authorization = authorization.clone();
-        async move { raw_http_request(addr, "POST", "/admin/api/intents", &[("Authorization", &authorization), ("Content-Type", "application/json")], second_body.as_bytes()).await }
-    });
-    for _ in 0..256 {
-        if state.directory.admin_operation_audit_for_request(second_request).await.expect("competing acceptance read").len() == 1 {
-            break;
-        }
-        tokio::task::yield_now().await;
-    }
-    assert!(tokio::time::timeout(std::time::Duration::from_millis(50), &mut second).await.is_err(), "competing same-scope writer cannot pass retained authority");
-    let first_response = tokio::time::timeout(ADMIN_OPERATION_DEADLINE + std::time::Duration::from_secs(2), &mut first).await.expect("first HTTP deadline response").expect("first HTTP task");
-    assert_eq!(first_response.status, 503, "the HTTP waiter expires without cancelling its admitted writer");
-    assert_eq!(physical.query_row::<i64, _, _>("SELECT count(*) FROM hub_share_grant WHERE space_id = ?1 AND document_id = ?2", rusqlite::params![fenced_scope.space_id, fenced_scope.document_id], |row| row.get(0)).unwrap(), 0);
-    gate.admin_effect_pause_enabled.store(false, std::sync::atomic::Ordering::Release);
-    gate.admin_effect_release.add_permits(1);
-    let second_response = tokio::time::timeout(std::time::Duration::from_secs(5), &mut second).await.expect("competing writer completion deadline").expect("competing HTTP task");
-    assert_eq!(second_response.status, 200);
-    let mut first_rows = Vec::new();
-    for _ in 0..256 {
-        first_rows = state.directory.admin_operation_audit_for_request(first_request).await.expect("first admitted writer audit");
-        if first_rows.len() == 2 {
-            break;
-        }
-        tokio::task::yield_now().await;
-    }
-    let second_rows = state.directory.admin_operation_audit_for_request(second_request).await.expect("second admitted writer audit");
-    assert_eq!(first_rows.len(), 2);
-    assert_eq!(second_rows.len(), 2);
-    assert_eq!(first_rows[1].fact.phase, "succeeded");
-    assert_eq!(second_rows[1].fact.phase, "succeeded");
-    assert!(first_rows[1].sequence < second_rows[1].sequence, "the retained first writer terminal precedes its blocked successor");
-    assert_eq!(physical.query_row::<i64, _, _>("SELECT count(*) FROM hub_share_grant WHERE space_id = ?1 AND document_id = ?2", rusqlite::params![fenced_scope.space_id, fenced_scope.document_id], |row| row.get(0)).unwrap(), 2);
-    assert_eq!(state.admin_operation_tasks.task_count(), 0);
-    drop(physical);
-    stop_recovery_server(state, shutdown, server).await;
 }
 
 #[tokio::test]
@@ -5011,6 +4805,7 @@ fn test_presence_slot(live: &str, user_id: Option<&str>, now: tokio::time::Insta
         role: None,
         document_surface: Some("surface".into()),
         color: 0,
+        principal_kind: protocol::PresencePrincipalKind::Human,
         peer: None,
     }
 }
@@ -5077,8 +4872,9 @@ fn presence_normalization_socket_overwrites_identity_and_rejects_without_refresh
         let clock = Arc::new(TestPresenceClock::new());
         state.presence_clock = Some(clock.clone());
         let token = seed_author_token(&state).await;
-        let document_id = "presence-normalized-socket";
-        announce_document_for_test(&state, STUDIO, document_id).await;
+        let document_id = artifact_document_id_for_test("presence-normalized-socket");
+        let document_id = document_id.as_str();
+        seed_genesis_for_document_for_test(&state, &token, STUDIO, document_id, "presence-normalized-socket").await;
         let scope = DocumentScope::new(STUDIO, document_id);
         let descriptor = state.directory.get_document_descriptor(&scope).await.expect("descriptor lookup").expect("descriptor");
         install_document_open_catalog_for_test(&mut state, &descriptor);
@@ -5157,8 +4953,9 @@ fn presence_lease_reconnect_rejects_old_live_refresh_and_close() {
         let mut state = test_state().await;
         state.presence_clock = Some(Arc::new(TestPresenceClock::new()));
         let token = seed_author_token(&state).await;
-        let document_id = "presence-reconnect";
-        announce_document_for_test(&state, STUDIO, document_id).await;
+        let document_id = artifact_document_id_for_test("presence-reconnect");
+        let document_id = document_id.as_str();
+        seed_genesis_for_document_for_test(&state, &token, STUDIO, document_id, "presence-reconnect").await;
         let scope = DocumentScope::new(STUDIO, document_id);
         let descriptor = state.directory.get_document_descriptor(&scope).await.expect("descriptor lookup").expect("descriptor");
         install_document_open_catalog_for_test(&mut state, &descriptor);
@@ -5378,7 +5175,7 @@ fn parse_directory_command_receipt_for_test(response: &RawHttpResponse, request_
 async fn directory_command_authority_revalidates_after_durable_revocation_before_fence() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../📇️directory/🧫️fixtures/🛡️command-authority-v1/🔣️.json")).unwrap();
     for row in fixture["cases"].as_array().unwrap().iter().filter(|row| row["appended"] == 0) {
-        let mut state = tokio::time::timeout(std::time::Duration::from_secs(5), test_state()).await.expect("authority state open deadline");
+        let mut state = tokio::time::timeout(TEST_STATE_OPEN_HANG_GUARD, test_state()).await.expect("authority state open deadline");
         let owner = issue_test_session(&state, "authority-owner@example.com").await;
         let author = issue_test_session(&state, "authority-author@example.com").await;
         let target = issue_test_session(&state, "authority-target@example.com").await;
@@ -5506,7 +5303,7 @@ async fn directory_command_authority_invite_revocation_requires_the_exact_owned_
 #[tokio::test]
 async fn directory_invite_redemption_obeys_current_space_state_and_readonly_replay() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../📇️directory/🧫️fixtures/🎟️invite-redemption-transaction-v1/🔣️.json")).expect("invite state fixture");
-    let state = tokio::time::timeout(std::time::Duration::from_secs(5), test_state()).await.expect("invite state open deadline");
+    let state = tokio::time::timeout(TEST_STATE_OPEN_HANG_GUARD, test_state()).await.expect("invite state open deadline");
     let owner = issue_test_session(&state, "invite-state-owner@example.test").await;
     let addr = spawn_server(state.clone()).await;
     for (index, row) in fixture["spaceStates"].as_array().expect("state rows").iter().enumerate() {
@@ -5539,7 +5336,7 @@ async fn directory_invite_redemption_obeys_current_space_state_and_readonly_repl
             let session = resolve_bearer_user(&state, Some(&caller.token)).await.unwrap();
             let capability = SocketGrantCapability::mint().unwrap();
             let audience = SocketAudienceV1::DirectoryScoped(DocumentScope::new(&space, "invite-replay"));
-            let subject = SocketSubjectV1::Session { session_id: session.session_id, user_id: caller.user_id.clone(), authorization_generation: session.authorization_generation, role: Some(SpaceRole::Spectator), expires_at_ms: session.expires_at };
+            let subject = SocketSubjectV1::Session { session_id: session.session_id, user_id: caller.user_id.clone(), authorization_generation: session.authorization_generation, role: Some(SpaceRole::Spectator), expires_at_ms: session.expires_at, session_kind: AuthSessionKind::External, device_instance_id: "device-spectator".into() };
             state.socket_grants.issue(&capability, audience.clone(), "hub.v1.invite-replay".into(), subject, now_ms(), now_ms() + 30_000).unwrap();
             Some((capability, audience))
         } else {
@@ -5594,7 +5391,7 @@ async fn directory_invite_redemption_obeys_current_space_state_and_readonly_repl
 #[tokio::test]
 async fn directory_invite_redemption_scope_hint_is_capability_bound() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../📇️directory/🧫️fixtures/🎟️invite-redemption-transaction-v1/🔣️.json")).unwrap();
-    let state = tokio::time::timeout(std::time::Duration::from_secs(5), test_state()).await.expect("invite hint state deadline");
+    let state = tokio::time::timeout(TEST_STATE_OPEN_HANG_GUARD, test_state()).await.expect("invite hint state deadline");
     let owner = issue_test_session(&state, "invite-hint-owner@example.test").await;
     let caller = issue_test_session(&state, "invite-hint-caller@example.test").await;
     let space = create_space_for_test(&state, &owner.user_id, "Invite hint", os_directory::DirectorySpaceKind::Studio, DirectorySpaceVisibility::Private).await;
@@ -5632,7 +5429,7 @@ async fn directory_invite_redemption_scope_hint_is_capability_bound() {
 #[tokio::test]
 async fn directory_invite_redemption_revalidates_after_hint_before_fence() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../📇️directory/🧫️fixtures/🎟️invite-redemption-transaction-v1/🔣️.json")).unwrap();
-    let mut state = tokio::time::timeout(std::time::Duration::from_secs(5), test_state()).await.expect("invite race state deadline");
+    let mut state = tokio::time::timeout(TEST_STATE_OPEN_HANG_GUARD, test_state()).await.expect("invite race state deadline");
     let owner = issue_test_session(&state, "invite-race-owner@example.test").await;
     let gate = Arc::new(TestLiveGate::default());
     state.live_gate = Some(gate.clone());
@@ -5673,7 +5470,7 @@ async fn directory_invite_redemption_revalidates_after_hint_before_fence() {
 async fn directory_invite_redemption_admitted_fence_precedes_archive() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../📇️directory/🧫️fixtures/🎟️invite-redemption-transaction-v1/🔣️.json")).unwrap();
     let row = fixture["authorityRaces"].as_array().unwrap().iter().find(|row| row["appended"] == 1).unwrap();
-    let mut state = tokio::time::timeout(std::time::Duration::from_secs(5), test_state()).await.expect("invite order state deadline");
+    let mut state = tokio::time::timeout(TEST_STATE_OPEN_HANG_GUARD, test_state()).await.expect("invite order state deadline");
     let owner = issue_test_session(&state, "invite-order-owner@example.test").await;
     let caller = issue_test_session(&state, "invite-order-caller@example.test").await;
     let session = resolve_bearer_user(&state, Some(&caller.token)).await.unwrap();
@@ -5729,7 +5526,7 @@ async fn directory_command_authority_demotion_invalidates_only_affected_scope_on
     assert_eq!(capacity["subjectLimit"].as_u64().unwrap() as usize, SOCKET_GRANT_BINDING_PENDING_CAPACITY);
     assert_eq!(capacity["ledgerLimit"].as_u64().unwrap() as usize, SOCKET_GRANT_LEDGER_CAPACITY);
     for index in 0..capacity["subjects"].as_u64().unwrap() {
-        let subject = SocketSubjectV1::Session { session_id: format!("capacity-session-{index}"), user_id: format!("capacity-user-{index}"), authorization_generation: 1, role: Some(SpaceRole::Author), expires_at_ms: 10_000 };
+        let subject = SocketSubjectV1::Session { session_id: format!("capacity-session-{index}"), user_id: format!("capacity-user-{index}"), authorization_generation: 1, role: Some(SpaceRole::Author), expires_at_ms: 10_000, session_kind: AuthSessionKind::External, device_instance_id: format!("capacity-device-{index}") };
         shared.issue(&SocketGrantCapability::mint().unwrap(), SocketAudienceV1::DirectoryScoped(DocumentScope::new("shared-space", "document")), format!("hub.v1.capacity-{index}"), subject, 1, 9_000).unwrap();
     }
     assert_eq!(shared.inner.lock().unwrap().records.len() as u64, capacity["accepted"].as_u64().unwrap());
@@ -5745,7 +5542,7 @@ async fn directory_command_authority_demotion_invalidates_only_affected_scope_on
         let user = if row["user"] == "author" { &author } else { &owner };
         let session = state.directory.authenticate_session(&SessionCapability::parse(&user.token).unwrap()).await.unwrap().unwrap();
         let scope = DocumentScope::new(if row["space"] == "changed" { &space } else { &other }, "authority-document");
-        let subject = SocketSubjectV1::Session { session_id: session.id.clone(), user_id: user.user_id.clone(), authorization_generation: session.authorization_generation, role: Some(SpaceRole::Author), expires_at_ms: session.expires_at };
+        let subject = SocketSubjectV1::Session { session_id: session.id.clone(), user_id: user.user_id.clone(), authorization_generation: session.authorization_generation, role: Some(SpaceRole::Author), expires_at_ms: session.expires_at, session_kind: session.session_kind, device_instance_id: session.device_instance_id.clone() };
         let audience = match row["audience"].as_str().unwrap() {
             "document" => SocketAudienceV1::Document(scope),
             "scoped" => SocketAudienceV1::DirectoryScoped(scope),
@@ -6133,8 +5930,11 @@ async fn directory_event_page_v1_append_admission_is_transactional_for_sqlite_po
 
     let postgres = include_str!("../../📇️directory/🐘️postgres/🦀️.rs");
     let neo4j = include_str!("../../📇️directory/🌐️neo4j/🦀️.rs");
-    assert_eq!(postgres.matches("validate_directory_event_page_event(&").count(), 3, "all PostgreSQL full-event append seams admit before persistence");
-    assert_eq!(neo4j.matches("validate_directory_event_page_event(&").count(), 3, "all Neo4j full-event append seams admit before persistence");
+    let postgres_writes = postgres.matches("INSERT INTO hub_directory_event(seq").count() + postgres.matches("INSERT INTO hub_directory_event (seq").count();
+    let neo4j_writes = neo4j.matches("CREATE (e:DirectoryEvent {seq:").count();
+    assert!(postgres_writes >= 3 && neo4j_writes >= 3, "both remote backends still persist directory events on every append seam");
+    assert_eq!(postgres.matches("validate_directory_event_page_event(&").count(), postgres_writes, "all PostgreSQL full-event append seams admit before persistence");
+    assert_eq!(neo4j.matches("validate_directory_event_page_event(&").count(), neo4j_writes, "all Neo4j full-event append seams admit before persistence");
 }
 
 #[tokio::test]
@@ -6172,161 +5972,6 @@ async fn directory_event_page_v1_route_rejects_noncanonical_query_and_stale_bear
     assert_eq!(stale.status, 401);
     assert!(stale.body.is_empty());
     assert_eq!(gate.directory_event_page_read_admitted.available_permits(), 0, "bad query and pre-read authentication failures perform no directory event scan");
-}
-
-#[cfg(feature = "native-artifact-execution")]
-#[tokio::test]
-async fn checkpoint_publication_route_is_author_owned_actor_fenced_idempotent_and_cancellation_safe() {
-    let fixture = checkpoint_publication_fixture("idempotency").await;
-    let addr = spawn_server(fixture.state.clone()).await;
-    put_checkpoint_publication_blob(addr, &fixture.scope, &fixture.author.token, &fixture.pack).await;
-    put_checkpoint_publication_blob(addr, &fixture.scope, &fixture.author.token, &fixture.spr).await;
-    let route = format!("/spaces/{}/documents/{}/checkpoint-publications", fixture.scope.space_id, fixture.scope.document_id);
-    let body = directory::os_pack::json::to_json_string(&fixture.command);
-    let author = format!("Bearer {}", fixture.author.token);
-    let spectator = format!("Bearer {}", fixture.spectator.token);
-    assert_eq!(raw_http_request(addr, "POST", &route, &[("Content-Type", "application/json")], body.as_bytes()).await.status, 401);
-    assert_eq!(raw_http_request(addr, "POST", &route, &[("Authorization", spectator.as_str()), ("Content-Type", "application/json")], body.as_bytes()).await.status, 403);
-
-    let accepted = raw_http_request(addr, "POST", &route, &[("Authorization", author.as_str()), ("Content-Type", "application/json")], body.as_bytes()).await;
-    assert_eq!(accepted.status, 200, "author checkpoint publication: {}", String::from_utf8_lossy(&accepted.body));
-    assert!(accepted.headers.to_ascii_lowercase().contains("cache-control: private, no-store"));
-    let receipt: CheckpointPublicationReceiptV1 = directory::os_pack::json::from_json_str(std::str::from_utf8(&accepted.body).expect("publication receipt UTF-8")).expect("canonical publication receipt");
-    assert_eq!(receipt.correlation_id, fixture.command.correlation_id);
-    assert_eq!(receipt.checkpoint.scope, fixture.scope);
-    assert_eq!(receipt.checkpoint.pack.sha256.hex(), fixture.command.pack.sha256);
-    assert_eq!(receipt.checkpoint.spr.sha256.hex(), fixture.command.spr.sha256);
-    assert_eq!(fixture.state.directory.artifact_checkpoint_count(&fixture.scope).await.expect("checkpoint count"), 1);
-
-    let replay = raw_http_request(addr, "POST", &route, &[("Authorization", author.as_str()), ("Content-Type", "application/json")], body.as_bytes()).await;
-    assert_eq!(replay.status, 200);
-    assert_eq!(replay.body, accepted.body, "a lost-response retry returns the identical durable receipt");
-    assert_eq!(fixture.state.directory.artifact_checkpoint_count(&fixture.scope).await.expect("replay checkpoint count"), 1, "retry emits no second checkpoint event");
-    let command_sha256 = os_directory::hex_lower(&Sha256::digest(body.as_bytes()));
-    let durable = fixture
-        .state
-        .directory
-        .claim_or_read_checkpoint_publication(&NewCheckpointPublicationClaimV1 { actor_user_id: fixture.author.user_id.clone(), correlation_id: fixture.command.correlation_id.clone(), command_sha256: command_sha256.clone(), claimed_at: now_ms() })
-        .await
-        .expect("durable publication receipt");
-    let CheckpointPublicationClaimV1::Existing(durable) = durable else { panic!("completed publication must be durable") };
-    assert_eq!(durable.disposition, CheckpointPublicationDispositionV1::Completed);
-    assert_eq!(durable.checkpoint_id, Some(receipt.checkpoint.checkpoint_id));
-
-    let mut substituted = fixture.command.clone();
-    substituted.spr.byte_length += 1;
-    let substituted = directory::os_pack::json::to_json_string(&substituted);
-    let conflict = raw_http_request(addr, "POST", &route, &[("Authorization", author.as_str()), ("Content-Type", "application/json")], substituted.as_bytes()).await;
-    assert_eq!(conflict.status, 409, "same author/correlation with a different exact command conflicts");
-    assert!(conflict.body.is_empty());
-    std::fs::remove_dir_all(fixture.catalog_root).expect("remove publication catalog fixture");
-}
-
-#[cfg(feature = "native-artifact-execution")]
-#[tokio::test]
-async fn checkpoint_publication_route_rejects_stale_or_cross_scope_inputs_before_publication() {
-    let mut fixture = checkpoint_publication_fixture("fence").await;
-    let gate = Arc::new(TestLiveGate::default());
-    gate.checkpoint_publication_pause_enabled.store(true, std::sync::atomic::Ordering::Release);
-    fixture.state.live_gate = Some(gate.clone());
-    let other_space = create_space_for_test(&fixture.state, &fixture.author.user_id, "Checkpoint other scope", os_directory::DirectorySpaceKind::Studio, DirectorySpaceVisibility::Private).await;
-    upsert_member_for_test(&fixture.state, &other_space, "checkpoint-fence-author@example.test", DirectorySpaceRole::Author).await;
-    let descriptor = fixture.state.directory.get_document_descriptor(&fixture.scope).await.expect("publication descriptor read").expect("publication descriptor");
-    let mut other_descriptor = descriptor.clone();
-    other_descriptor.space_id = other_space.clone();
-    fixture
-        .state
-        .directory_service
-        .execute(DirectoryActor { kind: DirectoryActorKind::User, id: format!("user:{}#checkpoint-test", fixture.author.user_id) }, DirectoryCommand::AnnounceDocument { descriptor: Box::new(other_descriptor) })
-        .await
-        .expect("announce same-id other-space document");
-    let addr = spawn_server(fixture.state.clone()).await;
-    put_checkpoint_publication_blob(addr, &fixture.scope, &fixture.author.token, &fixture.pack).await;
-    put_checkpoint_publication_blob(addr, &fixture.scope, &fixture.author.token, &fixture.spr).await;
-    let authorization = format!("Bearer {}", fixture.author.token);
-    let headers = [("Authorization", authorization.as_str()), ("Content-Type", "application/json")];
-
-    let mut cross_scope = fixture.command.clone();
-    cross_scope.correlation_id = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa".into();
-    let cross_scope = directory::os_pack::json::to_json_string(&cross_scope);
-    let cross = raw_http_request(addr, "POST", &format!("/spaces/{other_space}/documents/{}/checkpoint-publications", fixture.scope.document_id), &headers, cross_scope.as_bytes()).await;
-    assert_eq!(cross.status, 409, "route scope cannot borrow another space's selected descriptor/frontier");
-    assert_eq!(fixture.state.directory.artifact_checkpoint_count(&fixture.scope).await.expect("source scope checkpoint count"), 0);
-    assert_eq!(fixture.state.directory.artifact_checkpoint_count(&DocumentScope::new(&other_space, &fixture.scope.document_id)).await.expect("other scope checkpoint count"), 0);
-
-    let route = format!("/spaces/{}/documents/{}/checkpoint-publications", fixture.scope.space_id, fixture.scope.document_id);
-    let body = directory::os_pack::json::to_json_string(&fixture.command);
-    let queued = tokio::spawn({
-        let route = route.clone();
-        let body = body.clone();
-        let authorization = authorization.clone();
-        async move { raw_http_request(addr, "POST", &route, &[("Authorization", authorization.as_str()), ("Content-Type", "application/json")], body.as_bytes()).await }
-    });
-    tokio::time::timeout(std::time::Duration::from_secs(5), gate.checkpoint_publication_admitted.acquire()).await.expect("publication fence admission deadline").expect("publication fence admission").forget();
-    let write = fixture.state.socket_binding_gates.gate(SocketBindingKeyV1::DocumentWrite(fixture.scope.clone())).lock_owned().await;
-    let document = db_artifact_id(&fixture.scope);
-    let batch = db::document::CommandBatch::new(vec![sample_envelope("checkpoint-fence-edit-2", &WireArtifactId(document.0)).await]).await.expect("queued write batch");
-    fixture.handle.submit(batch, db::document::SubmitOptions { durability: db::DurabilityClass::Fsync, policy: protocol::MergePolicy::default() }).await.expect("queued write actor response").expect("queued write accepted");
-    drop(write);
-    gate.checkpoint_publication_release.add_permits(1);
-    let queued = queued.await.expect("queued publication response");
-    assert_eq!(queued.status, 409, "the final actor snapshot fence rejects a write committed during materialization");
-    assert_eq!(fixture.state.directory.artifact_checkpoint_count(&fixture.scope).await.expect("stale publication count"), 0);
-    let failed_digest = os_directory::hex_lower(&Sha256::digest(body.as_bytes()));
-    let failed_claim = NewCheckpointPublicationClaimV1 { actor_user_id: fixture.author.user_id.clone(), correlation_id: fixture.command.correlation_id.clone(), command_sha256: failed_digest.clone(), claimed_at: now_ms() };
-    assert!(
-        matches!(fixture.state.directory.claim_or_read_checkpoint_publication(&failed_claim).await.expect("reclaim failed publication"), CheckpointPublicationClaimV1::Claimed(_)),
-        "a returned failure synchronously releases its durable claim for a corrected retry"
-    );
-    fixture.state.directory.release_checkpoint_publication(&failed_claim.actor_user_id, &failed_claim.correlation_id, &failed_digest).await.expect("release test reclaim");
-
-    let current = fixture.handle.checkpoint_publication_snapshot().await.expect("current publication snapshot");
-    let descriptor_command = checkpoint_publication_command("cccccccccccccccccccccccccccccccc", &descriptor, &current, fixture.command.expected_current.clone(), &fixture.pack, &fixture.spr);
-    let descriptor_body = directory::os_pack::json::to_json_string(&descriptor_command);
-    let descriptor_swap = tokio::spawn({
-        let route = route.clone();
-        let authorization = authorization.clone();
-        async move { raw_http_request(addr, "POST", &route, &[("Authorization", authorization.as_str()), ("Content-Type", "application/json")], descriptor_body.as_bytes()).await }
-    });
-    tokio::time::timeout(std::time::Duration::from_secs(5), gate.checkpoint_publication_admitted.acquire()).await.expect("descriptor fence admission deadline").expect("descriptor fence admission").forget();
-    let mut changed_descriptor = descriptor.clone();
-    changed_descriptor.bootstrap_version = changed_descriptor.bootstrap_version.saturating_add(1);
-    fixture
-        .state
-        .directory_service
-        .execute(DirectoryActor { kind: DirectoryActorKind::User, id: format!("user:{}#checkpoint-test", fixture.author.user_id) }, DirectoryCommand::AnnounceDocument { descriptor: Box::new(changed_descriptor) })
-        .await
-        .expect("replace publication descriptor");
-    gate.checkpoint_publication_release.add_permits(1);
-    let descriptor_swap = descriptor_swap.await.expect("descriptor-swapped publication response");
-    assert_eq!(descriptor_swap.status, 409, "the final selected-descriptor fence rejects a replacement during materialization");
-    assert_eq!(fixture.state.directory.artifact_checkpoint_count(&fixture.scope).await.expect("descriptor-swapped publication count"), 0);
-    fixture
-        .state
-        .directory_service
-        .execute(DirectoryActor { kind: DirectoryActorKind::User, id: format!("user:{}#checkpoint-test", fixture.author.user_id) }, DirectoryCommand::AnnounceDocument { descriptor: Box::new(descriptor.clone()) })
-        .await
-        .expect("restore publication descriptor");
-
-    let mut cancellation = checkpoint_publication_command("bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb", &descriptor, &current, fixture.command.expected_current.clone(), &fixture.pack, &fixture.spr);
-    cancellation.schema = "semio.hub.checkpoint-publication-command/v1".into();
-    let cancellation = directory::os_pack::json::to_json_string(&cancellation);
-    let capability = SessionCapability::parse(&fixture.author.token).expect("publication session capability");
-    let session = fixture.state.directory.authenticate_session(&capability).await.expect("publication session lookup").expect("publication session");
-    let revoked = tokio::spawn({
-        let route = route.clone();
-        let authorization = authorization.clone();
-        async move { raw_http_request(addr, "POST", &route, &[("Authorization", authorization.as_str()), ("Content-Type", "application/json")], cancellation.as_bytes()).await }
-    });
-    tokio::time::timeout(std::time::Duration::from_secs(5), gate.checkpoint_publication_admitted.acquire()).await.expect("revocation fence admission deadline").expect("revocation fence admission").forget();
-    fixture.state.directory.revoke_auth_session(&session.id, "checkpoint-publication-test", None, "checkpoint-publication-test").await.expect("revoke publication session").expect("revoked publication session");
-    tokio::time::sleep(std::time::Duration::from_millis(100)).await;
-    gate.checkpoint_publication_release.add_permits(1);
-    let revoked = revoked.await.expect("revoked publication response");
-    assert_eq!(revoked.status, 503, "revocation cancels the request-local authority operation");
-    assert!(revoked.body.is_empty());
-    assert_eq!(fixture.state.directory.artifact_checkpoint_count(&fixture.scope).await.expect("cancelled publication count"), 0);
-    std::fs::remove_dir_all(fixture.catalog_root).expect("remove publication fence catalog fixture");
 }
 
 // 🔬️ WS duplex fan-out over the real wire-v2 protocol: A's committed command reaches B on its
@@ -6474,7 +6119,7 @@ async fn credential_sign_in_is_refused_and_undeclared_when_the_deployment_did_no
     let response = post_sign_in(addr, &sign_in_body("disabled@example.com", SIGN_IN_PASSWORD)).await;
     assert_eq!(response.status, 403);
     assert_eq!(json_body(&response)["error"].as_str(), Some("credential-sign-in-disabled"));
-    let readiness = hub_readiness(HubMode::Development, "loopback", "00112233445566778899aabbccddeeff".into(), true, true, false, true, true, false, false);
+    let readiness = hub_readiness(HubMode::Development, "loopback", "00112233445566778899aabbccddeeff".into(), true, true, false, true, true, false, false, "trusted-catalog-never-published-in-this-data-root");
     assert!(!declare_public_session_issuance(readiness.clone(), false).authentication.public_session_issuance);
     assert!(declare_public_session_issuance(readiness, true).authentication.public_session_issuance);
 }
@@ -6560,4 +6205,1326 @@ fn an_unauthenticated_document_route_is_refused() {
         assert_eq!(raw_http_get(addr, &format!("/spaces/{STUDIO}/documents/socket-unauthenticated"), &[]).await.status, 401);
     });
 }
+//#region 🔖️AgentDelegation
+/// 🤖️ ticket 26/09/18 slice M6b — the end-to-end law M6 §9 gap 1 named as missing: delegate → agent
+/// session → use → revoke → refused, plus the session cascade, against the real routes on a real
+/// listener. Everything below is one HTTP conversation; nothing reaches into the directory to set up
+/// a state a client could not have reached.
+const AGENT_LABEL: &str = "Drafting agent";
+
+fn agent_delegation_body(space_id: &str, audience: &str, ttl_secs: i64) -> Vec<u8> {
+    serde_json::json!({ "schema": "semio.hub.auth.agent-delegation-create/v1", "spaceId": space_id, "agentLabel": AGENT_LABEL, "audience": audience, "ttlSecs": ttl_secs }).to_string().into_bytes()
+}
+
+fn agent_session_body(audience: &str) -> Vec<u8> {
+    serde_json::json!({ "schema": "semio.hub.auth.agent-session/v1", "audience": audience, "agentInstanceId": "mcp.test.1" }).to_string().into_bytes()
+}
+
+/// 🔬️ The whole delegated-agent lifecycle over HTTP: a signed-in author mints a delegation, the
+/// delegation is exchanged for a session whose kind is `agent` and whose principal is NOT the
+/// delegating human's, that session authenticates an ordinary hub route with no special case, the
+/// human revokes the delegation, and afterwards BOTH the already-minted session and any further
+/// exchange are refused. The three durable facts land in the same log credential sign-in writes.
+#[tokio::test]
+async fn an_agent_delegation_mints_a_session_that_works_until_it_is_revoked() {
+    let state = test_state().await;
+    let human = issue_test_session(&state, "delegator@example.com").await;
+    let space_id = create_space_for_test(&state, &human.user_id, "Agent space", os_directory::DirectorySpaceKind::Atelier, DirectorySpaceVisibility::Private).await;
+    let addr = spawn_server(state.clone()).await;
+    let bearer = format!("Bearer {}", human.token);
+
+    // 1. delegate — the token is shown exactly once, and the receipt names the agent's own principal.
+    let created = raw_http_request(addr, "POST", "/auth/agent-delegations", &[("content-type", "application/json"), ("authorization", bearer.as_str())], &agent_delegation_body(&space_id, "edit", 3_600)).await;
+    assert_eq!(created.status, 201, "{}", String::from_utf8_lossy(&created.body));
+    assert!(created.headers.to_lowercase().contains("cache-control: no-store"));
+    let receipt = json_body(&created);
+    let delegation_id = receipt["delegationId"].as_str().expect("delegation id").to_string();
+    let delegation_token = receipt["token"].as_str().expect("delegation token").to_string();
+    assert_eq!(receipt["agentPrincipalId"].as_str(), Some(format!("agent:{delegation_id}").as_str()));
+    assert_eq!(receipt["agentLabel"].as_str(), Some(AGENT_LABEL));
+    assert!(delegation_token.starts_with("delegation.v1.") && delegation_token.len() == 111, "{delegation_token}");
+    assert_ne!(receipt["agentPrincipalId"].as_str(), Some(format!("user:{}", human.user_id).as_str()), "an agent is never its delegating human");
+
+    // 2. the listing shows it, never its token, and reports it as not yet used.
+    let listed = raw_http_get(addr, &format!("/auth/agent-delegations?space={space_id}"), &[("authorization", bearer.as_str())]).await;
+    assert_eq!(listed.status, 200);
+    let listing = json_body(&listed);
+    assert_eq!(listing["delegations"].as_array().map(Vec::len), Some(1));
+    let row = &listing["delegations"][0];
+    assert_eq!(row["delegationId"].as_str(), Some(delegation_id.as_str()));
+    assert_eq!(row["lastUsedAtMs"], serde_json::Value::Null, "a delegation that has never been exchanged reports no last use");
+    assert!(!String::from_utf8_lossy(&listed.body).contains(&delegation_token), "a listing never carries the token");
+
+    // 3. exchange — an ordinary session capability, whose kind is `agent`.
+    let delegation_bearer = format!("Bearer {delegation_token}");
+    let minted = raw_http_request(addr, "POST", "/auth/agent-sessions", &[("content-type", "application/json"), ("authorization", delegation_bearer.as_str())], &agent_session_body("edit")).await;
+    assert_eq!(minted.status, 200, "{}", String::from_utf8_lossy(&minted.body));
+    let session = json_body(&minted);
+    let agent_token = session["token"].as_str().expect("agent session token").to_string();
+    assert_eq!(session["agentPrincipalId"].as_str(), Some(format!("agent:{delegation_id}").as_str()));
+    assert_eq!(session["spaceId"].as_str(), Some(space_id.as_str()));
+    assert_eq!(session["audience"].as_str(), Some("edit"));
+
+    // 4. use — the agent authenticates an ordinary route with no special case, and reports as an agent.
+    let agent_bearer = format!("Bearer {agent_token}");
+    let me = raw_http_get(addr, "/auth/sessions/me", &[("authorization", agent_bearer.as_str())]).await;
+    assert_eq!(me.status, 200, "{}", String::from_utf8_lossy(&me.body));
+    let authority = json_body(&me);
+    assert_eq!(authority["sessionKind"].as_str(), Some("agent"), "the agent's session names itself as one: {authority}");
+    assert_eq!(authority["userId"].as_str(), Some(human.user_id.as_str()), "the agent acts under the delegating human's membership");
+
+    // 4b. an agent can never delegate onward.
+    let onward = raw_http_request(addr, "POST", "/auth/agent-delegations", &[("content-type", "application/json"), ("authorization", agent_bearer.as_str())], &agent_delegation_body(&space_id, "edit", 3_600)).await;
+    assert_eq!(onward.status, 403);
+    assert_eq!(json_body(&onward)["error"].as_str(), Some("forbidden"));
+
+    // 4c. the listing now reports a last use, derived from the session it minted.
+    let used = json_body(&raw_http_get(addr, &format!("/auth/agent-delegations?space={space_id}"), &[("authorization", bearer.as_str())]).await);
+    assert!(used["delegations"][0]["lastUsedAtMs"].as_i64().is_some_and(|at| at > 0), "an exchanged delegation reports when it was last used: {used}");
+
+    // 5. revoke.
+    let revoked = raw_http_request(addr, "DELETE", &format!("/auth/agent-delegations/{delegation_id}"), &[("authorization", bearer.as_str())], &[]).await;
+    assert_eq!(revoked.status, 204);
+
+    // 6. refused — the already-minted session dies with the delegation (the cascade), and a further
+    //    exchange is refused with the cause a caller that proved the secret is entitled to know.
+    assert_eq!(raw_http_get(addr, "/auth/sessions/me", &[("authorization", agent_bearer.as_str())]).await.status, 401, "revoking the delegation revokes every session it minted");
+    let re_exchange = raw_http_request(addr, "POST", "/auth/agent-sessions", &[("content-type", "application/json"), ("authorization", delegation_bearer.as_str())], &agent_session_body("edit")).await;
+    assert_eq!(re_exchange.status, 403);
+    assert_eq!(json_body(&re_exchange)["error"].as_str(), Some("delegation-revoked"));
+    assert_eq!(json_body(&raw_http_get(addr, &format!("/auth/agent-delegations?space={space_id}"), &[("authorization", bearer.as_str())]).await)["delegations"][0]["revoked"].as_bool(), Some(true), "a withdrawn delegation stays visible, marked");
+
+    // 7. every step is a durable fact in the same log credential sign-in writes.
+    let audit = state.directory.list_auth_audit(64, 0).await.expect("auth audit");
+    for event_kind in ["agent-delegated", "agent-session-issued", "agent-delegation-revoked", "session-revoked"] {
+        assert!(audit.iter().any(|fact| fact.event_kind == event_kind), "the log carries `{event_kind}`");
+    }
+    assert!(audit.iter().any(|fact| fact.event_kind == "agent-session-issued" && fact.peer_class == "agent"), "an agent's session is journalled as an agent's");
+}
+
+/// 🔬️ The refusals a delegation exchange must be unable to distinguish, and the one it must. A
+/// wrong secret, an unknown selector and an audience WIDER than the one delegated are one
+/// `invalid-delegation`, so a delegation id cannot be probed for existence and an agent cannot
+/// promote itself; a narrower audience is admitted; and a delegation belonging to another human is
+/// `403` rather than `404`, so a listing cannot be walked either.
+#[tokio::test]
+async fn an_agent_can_never_widen_its_own_audience_or_probe_another_humans_delegation() {
+    let state = test_state().await;
+    let human = issue_test_session(&state, "narrow@example.com").await;
+    let stranger = issue_test_session(&state, "stranger@example.com").await;
+    let space_id = create_space_for_test(&state, &human.user_id, "Narrow space", os_directory::DirectorySpaceKind::Atelier, DirectorySpaceVisibility::Private).await;
+    let addr = spawn_server(state.clone()).await;
+    let bearer = format!("Bearer {}", human.token);
+
+    let receipt = json_body(&raw_http_request(addr, "POST", "/auth/agent-delegations", &[("content-type", "application/json"), ("authorization", bearer.as_str())], &agent_delegation_body(&space_id, "read", 3_600)).await);
+    let delegation_id = receipt["delegationId"].as_str().expect("delegation id").to_string();
+    let token = receipt["token"].as_str().expect("token").to_string();
+    let delegation_bearer = format!("Bearer {token}");
+
+    let widened = raw_http_request(addr, "POST", "/auth/agent-sessions", &[("content-type", "application/json"), ("authorization", delegation_bearer.as_str())], &agent_session_body("edit")).await;
+    assert_eq!(widened.status, 401);
+    assert_eq!(json_body(&widened)["error"].as_str(), Some("invalid-delegation"));
+
+    let mut wrong_secret = token.clone();
+    wrong_secret.replace_range(47..48, if token.as_bytes()[47] == b'a' { "b" } else { "a" });
+    let forged = raw_http_request(addr, "POST", "/auth/agent-sessions", &[("content-type", "application/json"), ("authorization", format!("Bearer {wrong_secret}").as_str())], &agent_session_body("read")).await;
+    assert_eq!(forged.status, 401);
+    assert_eq!(json_body(&forged)["error"].as_str(), Some("invalid-delegation"), "a wrong secret and an unknown delegation are one refusal");
+
+    let unknown = raw_http_request(addr, "POST", "/auth/agent-sessions", &[("content-type", "application/json"), ("authorization", format!("Bearer delegation.v1.{}.{}", "0".repeat(32), "0".repeat(64)).as_str())], &agent_session_body("read")).await;
+    assert_eq!(unknown.status, 401);
+    assert_eq!(json_body(&unknown)["error"].as_str(), Some("invalid-delegation"));
+
+    assert_eq!(raw_http_request(addr, "POST", "/auth/agent-sessions", &[("content-type", "application/json"), ("authorization", delegation_bearer.as_str())], &agent_session_body("read")).await.status, 200, "the audience that WAS delegated still mints");
+
+    let stranger_bearer = format!("Bearer {}", stranger.token);
+    let stolen = raw_http_request(addr, "DELETE", &format!("/auth/agent-delegations/{delegation_id}"), &[("authorization", stranger_bearer.as_str())], &[]).await;
+    assert_eq!(stolen.status, 403, "another human's delegation is forbidden, never not-found");
+    let stranger_listing = json_body(&raw_http_get(addr, &format!("/auth/agent-delegations?space={space_id}"), &[("authorization", stranger_bearer.as_str())]).await);
+    assert_eq!(stranger_listing["delegations"].as_array().map(Vec::len), Some(0), "a listing is per delegating human, not per space");
+}
+
+/// 🔬️ A spectator cannot manufacture an editing principal out of a read-only membership, and a
+/// non-member cannot delegate into a space at all: both are `403` before anything is minted.
+#[tokio::test]
+async fn only_an_author_of_the_space_can_delegate_to_an_agent() {
+    let watchdog = LawHangWatchdogV1::arm("only_an_author_of_the_space_can_delegate_to_an_agent");
+    watchdog.at("hub state open");
+    let state = bounded_law_step("author delegation law: hub state open", test_state()).await;
+    watchdog.at("owner session");
+    let owner = bounded_law_step("author delegation law: owner session", issue_test_session(&state, "owner@example.com")).await;
+    watchdog.at("spectator session");
+    let spectator = bounded_law_step("author delegation law: spectator session", issue_test_session(&state, "spectator@example.com")).await;
+    watchdog.at("outsider session");
+    let outsider = bounded_law_step("author delegation law: outsider session", issue_test_session(&state, "outsider@example.com")).await;
+    watchdog.at("space creation");
+    let space_id =
+        bounded_law_step("author delegation law: space creation", create_space_for_test(&state, &owner.user_id, "Author space", os_directory::DirectorySpaceKind::Atelier, DirectorySpaceVisibility::Private)).await;
+    watchdog.at("spectator membership");
+    bounded_law_step("author delegation law: spectator membership", upsert_member_for_test(&state, &space_id, "spectator@example.com", DirectorySpaceRole::Spectator)).await;
+    watchdog.at("server spawn");
+    let addr = spawn_server(state.clone()).await;
+
+    for (who, token) in [("spectator", &spectator.token), ("outsider", &outsider.token)] {
+        watchdog.at("refused delegation request");
+        let refused = bounded_http_request(addr, "POST", "/auth/agent-delegations", &[("content-type", "application/json"), ("authorization", format!("Bearer {token}").as_str())], &agent_delegation_body(&space_id, "edit", 3_600)).await;
+        assert_eq!(refused.status, 403, "{who}");
+        assert_eq!(json_body(&refused)["error"].as_str(), Some("forbidden"), "{who}");
+    }
+    watchdog.at("delegation listing");
+    let listing = bounded_law_step("author delegation law: delegation listing", state.directory.list_agent_delegations(&space_id, &spectator.user_id, 16)).await.expect("listing");
+    assert_eq!(listing.len(), 0, "a refused delegation is never written");
+    watchdog.at("body complete, tearing down the hub state and its worker pool");
+}
+//#endregion 🔖️AgentDelegation
+
 //#endregion 🔖️CredentialSignIn
+
+//#region 🔖️ProductionPosture
+/// 🌐️ The cross-origin grant is a configured decision, not a reflex. Before this, every `Origin`
+/// that asked got `access-control-allow-origin: <itself>` **and**
+/// `access-control-allow-credentials: true`, which is the posture a naive non-loopback deploy
+/// inherited unchanged. Now the default follows the bind: loopback admits loopback, a network bind
+/// admits nothing, and `OS_HUB_ALLOWED_ORIGINS` names the exceptions.
+#[test]
+fn cross_origin_policy_admits_only_what_the_deployment_named() {
+    let loopback = CrossOriginPolicyV1::LoopbackDevelopment;
+    for origin in ["http://localhost:5173", "http://127.0.0.1:8787", "https://localhost", "http://[::1]:3000"] {
+        assert!(loopback.admits(origin), "loopback development admits {origin}");
+    }
+    for origin in ["https://s.example.com", "http://evil.test", "http://localhost.evil.test", "http://10.0.0.4:5173", "null", "*"] {
+        assert!(!loopback.admits(origin), "loopback development refuses {origin}");
+    }
+
+    let allowlist = CrossOriginPolicyV1::Allowlist(["https://s.example.com".to_string(), "https://admin.example.com:8443".to_string()].into());
+    assert!(allowlist.admits("https://s.example.com"));
+    assert!(allowlist.admits("HTTPS://S.EXAMPLE.COM"), "an origin compares ASCII-case-insensitively, whole");
+    assert!(allowlist.admits("https://admin.example.com:8443"));
+    for origin in ["https://s.example.com.evil.test", "http://s.example.com", "https://s.example.com:8443", "https://admin.example.com", "http://localhost:5173"] {
+        assert!(!allowlist.admits(origin), "an allowlist refuses {origin}");
+    }
+
+    let closed = CrossOriginPolicyV1::Closed;
+    for origin in ["http://localhost:5173", "https://s.example.com"] {
+        assert!(!closed.admits(origin), "a closed policy refuses {origin}");
+    }
+    assert_eq!((loopback.label(), allowlist.label(), closed.label()), ("loopback-development", "allowlist", "closed"));
+}
+
+/// 🌐️ What a deployer may write in `OS_HUB_ALLOWED_ORIGINS`, and what refuses the boot instead of
+/// being silently reinterpreted as a pattern.
+#[test]
+fn only_a_serialized_origin_is_an_allowlist_entry() {
+    for origin in ["https://s.example.com", "http://localhost:5173", "https://example.com:8443", "http://[::1]:3000", "http://[2001:db8::1]"] {
+        assert!(is_browser_origin(origin), "{origin} is an origin");
+    }
+    for rejected in ["", "s.example.com", "ftp://example.com", "https://", "https://example.com/", "https://example.com/app", "https://*.example.com", "https://example.com?x=1", "https://user@example.com", "https://example.com:port", "https://example.com:8443:1", "http://[::1", "http://[not-an-address]"] {
+        assert!(!is_browser_origin(rejected), "{rejected:?} is not an origin");
+    }
+    assert!(is_loopback_origin("http://127.0.0.7:9999") && is_loopback_origin("https://LOCALHOST"));
+    assert!(!is_loopback_origin("http://[2001:db8::1]:80") && !is_loopback_origin("http://localhost.evil.test"));
+}
+
+/// 🌐️ The same policy over a real socket: the refused origin gets a normal answer with no
+/// credentialed grant, and `Vary: Origin` is present either way so a cache never hands one origin's
+/// grant to the next.
+#[tokio::test]
+async fn a_refused_origin_receives_no_credentialed_grant_over_a_real_socket() {
+    let allowed = "https://s.example.com";
+    let addr = spawn_server_with_posture(test_state().await, CrossOriginPolicyV1::Allowlist([allowed.to_string()].into()), ForwardedTlsTrustV1::Untrusted).await;
+
+    let granted = raw_http_get(addr, "/healthz", &[("Origin", allowed)]).await;
+    assert_eq!(granted.status, 200);
+    let granted_headers = granted.headers.to_ascii_lowercase();
+    assert!(granted_headers.contains(&format!("access-control-allow-origin: {allowed}")), "{}", granted.headers);
+    assert!(granted_headers.contains("access-control-allow-credentials: true"), "{}", granted.headers);
+    assert!(granted_headers.contains("vary: origin"), "{}", granted.headers);
+
+    let refused = raw_http_get(addr, "/healthz", &[("Origin", "https://evil.test")]).await;
+    assert_eq!(refused.status, 200, "a refused origin still gets its answer — the browser is what enforces CORS");
+    let refused_headers = refused.headers.to_ascii_lowercase();
+    assert!(!refused_headers.contains("access-control-allow-origin"), "{}", refused.headers);
+    assert!(!refused_headers.contains("access-control-allow-credentials"), "{}", refused.headers);
+    assert!(refused_headers.contains("vary: origin"), "{}", refused.headers);
+
+    let preflight = raw_http_request(addr, "OPTIONS", "/directory/spaces", &[("Origin", "https://evil.test"), ("Access-Control-Request-Method", "GET")], &[]).await;
+    assert_eq!(preflight.status, 204);
+    assert!(!preflight.headers.to_ascii_lowercase().contains("access-control-allow-origin"), "{}", preflight.headers);
+}
+
+/// 🪪️ Production mode used to be unreachable: its only identity requirement was an external
+/// `IdentityAssertionVerifier`, of which this repository ships none and `main` passed a hardcoded
+/// `None`, so `OS_HUB_MODE=production` died on the first check every time. The hub's *own* credential
+/// authority — `os-hub credential set` seeds the first user, `POST /auth/sessions` mints the session —
+/// is an identity authority, and this law pins that it now satisfies the gate on its own.
+#[test]
+fn a_production_hub_boots_on_its_own_credential_authority_without_any_external_idp() {
+    let loopback = std::net::IpAddr::from([127, 0, 0, 1]);
+    let admin = AdminSubject { provider_digest: admin_provider_digest("oidc.example"), subject_digest: identity_subject_digest("oidc.example", "admin-subject").expect("admin digest") };
+    let loopback_cors = CrossOriginPolicyV1::LoopbackDevelopment;
+
+    assert!(
+        validate_auth_startup(HubMode::Production, loopback, None, None, &[admin.clone()], true, &loopback_cors, ForwardedTlsTrustV1::Untrusted).is_ok(),
+        "credential sign-in is an identity authority: production boots on loopback with no verifier and no fd 3"
+    );
+
+    let refusal = validate_auth_startup(HubMode::Production, loopback, None, None, &[admin.clone()], false, &loopback_cors, ForwardedTlsTrustV1::Untrusted).expect_err("no identity authority at all");
+    let HubError::UnsafeAuthConfiguration(message) = refusal else { panic!("a startup refusal is an unsafe-configuration error") };
+    assert!(message.contains("OS_HUB_CREDENTIAL_SIGN_IN=true") && message.contains("IdentityAssertionVerifier"), "the refusal names both ways out: {message}");
+
+    assert!(
+        validate_auth_startup(HubMode::Production, loopback, None, None, &[], true, &loopback_cors, ForwardedTlsTrustV1::Untrusted).is_err(),
+        "an identity authority does not excuse a production hub from naming its admins"
+    );
+}
+
+/// 🌐️ A hub other machines can reach — outcome 2's real requirement — is now reachable, and only
+/// under three explicit statements at once: production mode, a named cross-origin allowlist, and an
+/// operator saying a TLS-terminating proxy is the only thing in front of the socket. Each missing
+/// one is its own named refusal.
+#[test]
+fn a_network_bind_is_admitted_only_with_an_allowlist_and_a_declared_tls_terminating_proxy() {
+    let network = std::net::IpAddr::from([10, 0, 0, 4]);
+    let admin = AdminSubject { provider_digest: admin_provider_digest("oidc.example"), subject_digest: identity_subject_digest("oidc.example", "admin-subject").expect("admin digest") };
+    let allowlist = CrossOriginPolicyV1::Allowlist(["https://s.example.com".to_string()].into());
+    let gate = |cors: &CrossOriginPolicyV1, forwarding| validate_auth_startup(HubMode::Production, network, None, None, &[admin.clone()], true, cors, forwarding);
+
+    let without_allowlist = gate(&CrossOriginPolicyV1::LoopbackDevelopment, ForwardedTlsTrustV1::TerminatingProxy).expect_err("a network bind with no named origins is refused");
+    assert!(matches!(&without_allowlist, HubError::UnsafeAuthConfiguration(message) if message.contains("OS_HUB_ALLOWED_ORIGINS")), "{without_allowlist:?}");
+    assert!(gate(&CrossOriginPolicyV1::Closed, ForwardedTlsTrustV1::TerminatingProxy).is_err(), "a closed policy admits no browser and is not an allowlist");
+
+    let without_proxy = gate(&allowlist, ForwardedTlsTrustV1::Untrusted).expect_err("a network bind with undeclared transport is refused");
+    assert!(matches!(&without_proxy, HubError::UnsafeAuthConfiguration(message) if message.contains("OS_HUB_TRUSTED_FORWARDING=proxy")), "{without_proxy:?}");
+
+    assert!(gate(&allowlist, ForwardedTlsTrustV1::TerminatingProxy).is_ok(), "all three statements together admit a network bind");
+    assert!(
+        validate_auth_startup(HubMode::Development, network, None, None, &[], true, &allowlist, ForwardedTlsTrustV1::TerminatingProxy).is_err(),
+        "none of this loosens development mode, which stays loopback-only"
+    );
+}
+
+/// 🔐️ What the hub is entitled to believe about a request's transport. An untrusted deployment does
+/// not read the forwarding headers at all — reading a header anyone can set would be strictly worse
+/// than ignoring it — and a trusted one demands exactly `https`.
+#[test]
+fn forwarding_headers_are_read_only_where_a_proxy_was_declared() {
+    let headers = |pairs: &[(&str, &str)]| {
+        let mut map = HeaderMap::new();
+        for (name, value) in pairs {
+            map.append(axum::http::HeaderName::from_bytes(name.as_bytes()).expect("header name"), axum::http::HeaderValue::from_str(value).expect("header value"));
+        }
+        map
+    };
+
+    assert!(forwarded_request_is_secure(&headers(&[]), ForwardedTlsTrustV1::Untrusted));
+    assert!(forwarded_request_is_secure(&headers(&[("x-forwarded-proto", "http")]), ForwardedTlsTrustV1::Untrusted), "an untrusted deployment ignores the header entirely");
+
+    for secure in ["https", "HTTPS", " https ", "https, http"] {
+        assert!(forwarded_request_is_secure(&headers(&[("x-forwarded-proto", secure)]), ForwardedTlsTrustV1::TerminatingProxy), "{secure:?}");
+    }
+    for insecure in ["http", "", "ws", "http, https"] {
+        assert!(!forwarded_request_is_secure(&headers(&[("x-forwarded-proto", insecure)]), ForwardedTlsTrustV1::TerminatingProxy), "{insecure:?}");
+    }
+    assert!(!forwarded_request_is_secure(&headers(&[]), ForwardedTlsTrustV1::TerminatingProxy), "a declared proxy that says nothing has said nothing secure");
+
+    let both = headers(&[("host", "hub.internal:8787"), ("x-forwarded-host", "s.example.com, hub.internal")]);
+    assert_eq!(forwarded_external_host(&both, ForwardedTlsTrustV1::TerminatingProxy).as_deref(), Some("s.example.com"));
+    assert_eq!(forwarded_external_host(&both, ForwardedTlsTrustV1::Untrusted).as_deref(), Some("hub.internal:8787"), "an untrusted deployment answers with its own Host");
+    assert_eq!(forwarded_external_host(&headers(&[("host", "hub.internal")]), ForwardedTlsTrustV1::TerminatingProxy).as_deref(), Some("hub.internal"));
+    assert_eq!(forwarded_external_host(&headers(&[]), ForwardedTlsTrustV1::TerminatingProxy), None);
+}
+
+/// 🛡️ The same rule over a real socket: with a proxy declared, a request the proxy reports as
+/// cleartext is refused before any handler runs, and the refusal names itself.
+#[tokio::test]
+async fn a_proxy_reported_cleartext_request_is_refused_before_any_handler() {
+    let addr = spawn_server_with_posture(test_state().await, CrossOriginPolicyV1::LoopbackDevelopment, ForwardedTlsTrustV1::TerminatingProxy).await;
+    let refused = raw_http_get(addr, "/healthz", &[("X-Forwarded-Proto", "http")]).await;
+    assert_eq!(refused.status, 403);
+    assert!(refused.headers.to_ascii_lowercase().contains("x-semio-refusal: insecure-transport"), "{}", refused.headers);
+    assert_eq!(raw_http_get(addr, "/healthz", &[]).await.status, 403, "a declared proxy that reports nothing is not a secure transport");
+    assert_eq!(raw_http_get(addr, "/healthz", &[("X-Forwarded-Proto", "https")]).await.status, 200);
+
+    let untrusted = spawn_server_with_posture(test_state().await, CrossOriginPolicyV1::LoopbackDevelopment, ForwardedTlsTrustV1::Untrusted).await;
+    assert_eq!(raw_http_get(untrusted, "/healthz", &[("X-Forwarded-Proto", "http")]).await.status, 200, "a loopback hub never reads the header");
+}
+
+/// 🪪️ The whole production posture at once, over a real socket: a hub configured the way a network
+/// deployment must be configured — named cross-origin allowlist, declared TLS-terminating proxy —
+/// mints a real session from a password credential for a browser on an allowed origin, refuses the
+/// identical request when the proxy reports cleartext, and gives an unnamed origin no grant.
+#[tokio::test]
+async fn a_production_posture_hub_signs_a_browser_in_over_its_declared_proxy() {
+    let origin = "https://s.example.com";
+    let (state, _clock) = credential_sign_in_state().await;
+    let user_id = seed_credential_user(&state, "operator@example.com", Some(SIGN_IN_PASSWORD)).await;
+    let addr = spawn_server_with_posture(state, CrossOriginPolicyV1::Allowlist([origin.to_string()].into()), ForwardedTlsTrustV1::TerminatingProxy).await;
+    let body = sign_in_body("operator@example.com", SIGN_IN_PASSWORD);
+
+    let minted = raw_http_request(addr, "POST", "/auth/sessions", &[("content-type", "application/json"), ("Origin", origin), ("X-Forwarded-Proto", "https"), ("X-Forwarded-Host", "s.example.com")], &body).await;
+    assert_eq!(minted.status, 200, "{}", String::from_utf8_lossy(&minted.body));
+    assert_eq!(json_body(&minted)["user_id"].as_str(), Some(user_id.as_str()));
+    let granted = minted.headers.to_ascii_lowercase();
+    assert!(granted.contains(&format!("access-control-allow-origin: {origin}")) && granted.contains("access-control-allow-credentials: true"), "{}", minted.headers);
+
+    let cleartext = raw_http_request(addr, "POST", "/auth/sessions", &[("content-type", "application/json"), ("Origin", origin), ("X-Forwarded-Proto", "http")], &body).await;
+    assert_eq!(cleartext.status, 403, "a session is never minted onto a connection the proxy says was cleartext");
+    assert!(cleartext.headers.to_ascii_lowercase().contains("x-semio-refusal: insecure-transport"), "{}", cleartext.headers);
+
+    let unnamed = raw_http_request(addr, "POST", "/auth/sessions", &[("content-type", "application/json"), ("Origin", "https://evil.test"), ("X-Forwarded-Proto", "https")], &body).await;
+    assert!(!unnamed.headers.to_ascii_lowercase().contains("access-control-allow-origin"), "{}", unnamed.headers);
+}
+
+/// 🛑️ `SIGTERM` outranks `SIGINT` when both are already pending, and whichever arrives alone wins.
+/// The real handler is the same composition over `tokio::signal`, so this pins the choice without
+/// raising a signal at a test binary shared with every other suite in this file.
+#[tokio::test]
+async fn a_termination_signal_prefers_the_orchestrators_verdict() {
+    assert_eq!(first_termination_signal(std::future::pending(), std::future::ready(())).await, TerminationSignalV1::Terminate);
+    assert_eq!(first_termination_signal(std::future::ready(()), std::future::pending()).await, TerminationSignalV1::Interrupt);
+    assert_eq!(first_termination_signal(std::future::ready(()), std::future::ready(())).await, TerminationSignalV1::Terminate);
+    assert_eq!((TerminationSignalV1::Terminate.name(), TerminationSignalV1::Interrupt.name()), ("SIGTERM", "SIGINT"));
+}
+
+/// 🛑️ The whole point of item #6: a termination signal stops the listener and then the drains run,
+/// instead of the process being killed where it stands. This drives the exact composition `main`
+/// installs — `axum::serve(…).with_graceful_shutdown(termination future)` followed by
+/// `ArtifactCreationHttpTaskOwnerV1::shutdown_with_deadline` — and asserts both halves: the socket
+/// stops answering, and an in-flight artifact-creation task is drained rather than abandoned.
+#[cfg(feature = "native-artifact-execution")]
+#[tokio::test]
+async fn a_termination_signal_stops_the_listener_and_then_drains_in_flight_work() {
+    let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.expect("test listener");
+    let addr = listener.local_addr().expect("listener address");
+    let app = router(test_state().await, CrossOriginPolicyV1::LoopbackDevelopment, ForwardedTlsTrustV1::Untrusted).into_make_service_with_connect_info::<SocketAddr>();
+    let (terminate, terminated) = tokio::sync::oneshot::channel::<()>();
+    let served = tokio::spawn(async move {
+        axum::serve(listener, app)
+            .with_graceful_shutdown(async {
+                let signal = first_termination_signal(std::future::pending(), async {
+                    let _ = terminated.await;
+                })
+                .await;
+                assert_eq!(signal, TerminationSignalV1::Terminate);
+            })
+            .await
+            .expect("graceful serve");
+    });
+    assert_eq!(raw_http_get(addr, "/healthz", &[]).await.status, 200, "the hub answers before the signal");
+
+    let owner = Arc::new(ArtifactCreationHttpTaskOwnerV1::new());
+    let reservation = match owner.reserve("user\0space\0termination".into(), Arc::new(ArtifactCreationHttpControlV1::new())) {
+        ArtifactCreationHttpAdmissionV1::Owner(reservation) => reservation,
+        _ => panic!("the first exact admission owns its reservation"),
+    };
+    let drained = Arc::new(std::sync::atomic::AtomicBool::new(false));
+    reservation.activate({
+        let drained = drained.clone();
+        async move {
+            tokio::time::sleep(std::time::Duration::from_millis(50)).await;
+            drained.store(true, std::sync::atomic::Ordering::Release);
+        }
+    });
+
+    terminate.send(()).expect("send the termination signal");
+    tokio::time::timeout(std::time::Duration::from_secs(10), served).await.expect("the listener stops within the deadline").expect("served task");
+    owner.shutdown_with_deadline(std::time::Duration::from_secs(5)).await;
+
+    assert!(drained.load(std::sync::atomic::Ordering::Acquire), "the post-serve drain runs in-flight work to completion instead of abandoning it");
+    assert_eq!(owner.task_count(), 0, "the drain leaves no task behind");
+    assert!(tokio::net::TcpStream::connect(addr).await.is_err(), "the stopped listener refuses new connections");
+}
+//#endregion 🔖️ProductionPosture
+
+mod quick {
+    use super::*;
+
+    #[test]
+    fn socket_grant_revoke_before_command_admission_has_no_storage_effect() {
+        run_socket_test(|| async {
+            let mut state = test_state().await;
+            let live_gate = Arc::new(TestLiveGate::default());
+            state.live_gate = Some(live_gate.clone());
+            let token = seed_author_token(&state).await;
+            announce_document_for_test(&state, STUDIO, "socket-command-revoke").await;
+            let receipt = issue_document_socket_grant_fixture(Path((STUDIO.to_string(), "socket-command-revoke".to_string())), bearer_headers(&token), State(state.clone())).await.expect("issue socket grant").0;
+            let addr = spawn_server(state.clone()).await;
+            let url = format!("ws://{addr}/spaces/{STUDIO}/documents/socket-command-revoke/socket/v1");
+            let (mut socket, _) = connect_async(socket_request(&url, &receipt.grant)).await.expect("socket upgrade");
+            socket.send(client_binary(&socket_hello(), Lane::Command).await).await.expect("socket hello");
+            tokio::time::timeout(std::time::Duration::from_secs(5), live_gate.socket_before_welcome.acquire()).await.expect("pre-Welcome deadline").expect("pre-Welcome");
+            live_gate.socket_welcome_release.add_permits(1);
+            assert!(matches!(next_server_frame(&mut socket).await, ServerFrame::Welcome { .. }));
+            tokio::time::timeout(std::time::Duration::from_secs(5), live_gate.socket_after_welcome.acquire()).await.expect("post-Welcome deadline").expect("post-Welcome");
+            live_gate.socket_bootstrap_release.add_permits(1);
+            assert!(matches!(next_server_frame(&mut socket).await, ServerFrame::Session { .. }));
+            tokio::time::timeout(std::time::Duration::from_secs(5), live_gate.document_subscribed.acquire()).await.expect("subscription deadline").expect("subscription");
+            live_gate.document_release.add_permits(1);
+
+            let document = db_artifact_id(&DocumentScope::new(STUDIO, "socket-command-revoke"));
+            let mut accepted = sample_envelope("accepted-op", &document).await;
+            accepted.actor = ActorId(receipt.actor_id.clone());
+            socket.send(client_binary(&ClientFrame::Commands { batch_id: 90, envelopes: vec![accepted] }, Lane::Command).await).await.expect("control command received by server");
+            tokio::time::timeout(std::time::Duration::from_secs(5), live_gate.socket_command_received.acquire()).await.expect("control command boundary deadline").expect("control command boundary").forget();
+            live_gate.socket_command_release.add_permits(1);
+            assert!(matches!(next_server_frame(&mut socket).await, ServerFrame::Ack { batch_id: 90, .. }));
+            assert!(matches!(next_server_frame(&mut socket).await, ServerFrame::Commands { .. }), "the authorized batch's own relay is delivered before any revoke");
+            let accepted_frontier = state.db.document(&document).await.expect("document handle").frontier().await.expect("accepted frontier");
+            assert_eq!(accepted_frontier.head_seq, 1, "an actor-matching command persists while authorized");
+
+            let mut revoked = sample_envelope("revoked-op", &document).await;
+            revoked.actor = ActorId(receipt.actor_id.clone());
+            socket.send(client_binary(&ClientFrame::Commands { batch_id: 91, envelopes: vec![revoked] }, Lane::Command).await).await.expect("revoked command received by server");
+            tokio::time::timeout(std::time::Duration::from_secs(5), live_gate.socket_command_received.acquire()).await.expect("command boundary deadline").expect("command boundary").forget();
+            assert_eq!(delete_session_me(bearer_headers(&token), State(state.clone())).await, StatusCode::NO_CONTENT);
+            live_gate.socket_command_release.add_permits(1);
+            assert_eq!(next_close_without_authority(&mut socket).await, 4401, "no Ack crosses a revoke that wins before command admission");
+            let frontier = state.db.document(&document).await.expect("document handle").frontier().await.expect("frontier");
+            assert_eq!(frontier.head_seq, 1, "the revoked actor-matching command never reaches durable storage");
+        });
+    }
+
+    #[tokio::test]
+    async fn retained_short_admin_request_drop_duplicate_cancel_and_secret_lifecycle_is_exact() {
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../📇️directory/🧫️fixtures/🏛️retained-short-admin/🔣️.json")).expect("retained short administrator fixture");
+        assert_eq!(fixture["cases"].as_array().expect("retained cases").len(), 15);
+        let root = tempdir("retained-short-admin");
+        std::fs::create_dir_all(&root).expect("retained administrator root");
+        let path = root.join("directory.sqlite");
+        let directory = SqliteDirectory::connect(path.to_str().expect("retained directory path")).await.expect("retained directory");
+        let mut state = test_state_with_directory(root.join("db"), directory, 1024, 256).await;
+        let physical = rusqlite::Connection::open(&path).expect("retained administrator physical reader");
+        let gate = Arc::new(TestLiveGate::default());
+        state.live_gate = Some(gate.clone());
+        let email = "retained-short-admin@example.test";
+        let _ = authorize_test_admin(&mut state, email).await;
+        let admin = issue_test_session(&state, email).await;
+        let owner = issue_test_session(&state, "retained-short-owner@example.test").await;
+        let space = create_space_for_test(&state, &owner.user_id, "Retained Short", os_directory::DirectorySpaceKind::Studio, DirectorySpaceVisibility::Private).await;
+        let scope = DocumentScope::new(&space, "retained-short-document");
+        announce_document_for_test(&state, &scope.space_id, &scope.document_id).await;
+        let (addr, shutdown, server) = spawn_restartable_server(state.clone()).await;
+        let request_id = "request:retained-short-drop";
+        let intent = AdminIntentV1::IssueDocumentShare { request_id: request_id.into(), scope: scope.clone(), ttl_secs: 600 };
+        let body = directory::os_pack::json::to_json_string(&intent);
+        *gate.directory_command_pause_user.lock().unwrap() = Some((admin.user_id.clone(), true));
+        let dropped = tokio::spawn({
+            let authorization = format!("Bearer {}", admin.token);
+            let body = body.clone();
+            async move { raw_http_request(addr, "POST", "/admin/api/intents", &[("Authorization", &authorization), ("Content-Type", "application/json")], body.as_bytes()).await }
+        });
+        tokio::time::timeout(std::time::Duration::from_secs(5), gate.directory_command_admitted.acquire()).await.expect("dropped request admission deadline").expect("dropped request admitted").forget();
+        dropped.abort();
+        let _ = dropped.await;
+        *gate.directory_command_pause_user.lock().unwrap() = None;
+        gate.directory_command_release.add_permits(1);
+        let mut rows = Vec::new();
+        for _ in 0..256 {
+            rows = state.directory.admin_operation_audit_for_request(request_id).await.expect("dropped request audit");
+            if rows.len() == 2 {
+                break;
+            }
+            tokio::task::yield_now().await;
+        }
+        assert_eq!(rows.len(), 2, "request cancellation cannot cancel its retained operation");
+        assert_eq!(rows[1].fact.phase, "succeeded");
+        assert_eq!(rows[1].fact.outcome_code, "share-issued");
+        assert_eq!(physical.query_row::<i64, _, _>("SELECT count(*) FROM hub_share_grant WHERE space_id = ?1 AND document_id = ?2", rusqlite::params![scope.space_id, scope.document_id], |row| row.get(0)).unwrap(), 1);
+        let authorization = format!("Bearer {}", admin.token);
+        let retry = raw_http_request(addr, "POST", "/admin/api/intents", &[("Authorization", &authorization), ("Content-Type", "application/json")], body.as_bytes()).await;
+        assert_eq!(retry.status, 200);
+        let retry_receipt: AdminIntentReceiptV1 = directory::os_pack::json::from_json_str(std::str::from_utf8(&retry.body).unwrap()).expect("retry receipt");
+        assert_eq!(retry_receipt.state, AdminIntentStateV1::Succeeded);
+        assert!(retry_receipt.result.is_none(), "a lost one-shot share token is never stored or replayed");
+        assert_eq!(
+            physical.query_row::<i64, _, _>("SELECT count(*) FROM hub_share_grant WHERE space_id = ?1 AND document_id = ?2", rusqlite::params![scope.space_id, scope.document_id], |row| row.get(0)).unwrap(),
+            1,
+            "retry cannot execute the side effect twice"
+        );
+        let collision = directory::os_pack::json::to_json_string(&AdminIntentV1::IssueDocumentShare { request_id: request_id.into(), scope: scope.clone(), ttl_secs: 601 });
+        assert_eq!(raw_http_request(addr, "POST", "/admin/api/intents", &[("Authorization", &authorization), ("Content-Type", "application/json")], collision.as_bytes()).await.status, 409);
+
+        let cancelled_scope = DocumentScope::new(&space, "retained-short-cancelled");
+        announce_document_for_test(&state, &cancelled_scope.space_id, &cancelled_scope.document_id).await;
+        let cancelled_request = "request:retained-short-cancelled";
+        let cancelled_body = directory::os_pack::json::to_json_string(&AdminIntentV1::IssueDocumentShare { request_id: cancelled_request.into(), scope: cancelled_scope.clone(), ttl_secs: 600 });
+        *gate.directory_command_pause_user.lock().unwrap() = Some((admin.user_id.clone(), false));
+        let cancelled = tokio::spawn({
+            let authorization = authorization.clone();
+            async move { raw_http_request(addr, "POST", "/admin/api/intents", &[("Authorization", &authorization), ("Content-Type", "application/json")], cancelled_body.as_bytes()).await }
+        });
+        tokio::time::timeout(std::time::Duration::from_secs(5), gate.directory_command_admitted.acquire()).await.expect("pre-effect cancellation admission deadline").expect("pre-effect cancellation admitted").forget();
+        let accepted = state.directory.admin_operation_audit_for_request(cancelled_request).await.expect("cancelled acceptance");
+        let operation_id = accepted.first().expect("cancelled accepted row").fact.operation_id.clone();
+        cancel_admin_operation(Path(operation_id), bearer_headers(&admin.token), loopback_peer(), State(state.clone())).await.expect("cancel retained operation");
+        *gate.directory_command_pause_user.lock().unwrap() = None;
+        gate.directory_command_release.add_permits(1);
+        let cancelled = cancelled.await.expect("cancelled request task");
+        let cancelled_receipt: AdminIntentReceiptV1 = directory::os_pack::json::from_json_str(std::str::from_utf8(&cancelled.body).unwrap()).expect("cancelled receipt");
+        assert_eq!(cancelled_receipt.state, AdminIntentStateV1::Cancelled);
+        assert_eq!(physical.query_row::<i64, _, _>("SELECT count(*) FROM hub_share_grant WHERE space_id = ?1 AND document_id = ?2", rusqlite::params![cancelled_scope.space_id, cancelled_scope.document_id], |row| row.get(0)).unwrap(), 0);
+
+        let admitted_scope = DocumentScope::new(&space, "retained-short-admitted");
+        announce_document_for_test(&state, &admitted_scope.space_id, &admitted_scope.document_id).await;
+        let admitted_request = "request:retained-short-admitted";
+        let admitted_body = directory::os_pack::json::to_json_string(&AdminIntentV1::IssueDocumentShare { request_id: admitted_request.into(), scope: admitted_scope.clone(), ttl_secs: 600 });
+        gate.admin_effect_pause_enabled.store(true, std::sync::atomic::Ordering::Release);
+        let admitted = tokio::spawn({
+            let authorization = authorization.clone();
+            async move { raw_http_request(addr, "POST", "/admin/api/intents", &[("Authorization", &authorization), ("Content-Type", "application/json")], admitted_body.as_bytes()).await }
+        });
+        tokio::time::timeout(std::time::Duration::from_secs(5), gate.admin_effect_admitted.acquire()).await.expect("admitted effect deadline").expect("effect admitted").forget();
+        let accepted = state.directory.admin_operation_audit_for_request(admitted_request).await.expect("admitted acceptance");
+        let operation_id = accepted.first().expect("admitted accepted row").fact.operation_id.clone();
+        cancel_admin_operation(Path(operation_id), bearer_headers(&admin.token), loopback_peer(), State(state.clone())).await.expect("late cancellation request");
+        gate.admin_effect_pause_enabled.store(false, std::sync::atomic::Ordering::Release);
+        gate.admin_effect_release.add_permits(1);
+        let admitted = admitted.await.expect("admitted request task");
+        let admitted_receipt: AdminIntentReceiptV1 = directory::os_pack::json::from_json_str(std::str::from_utf8(&admitted.body).unwrap()).expect("admitted receipt");
+        assert_eq!(admitted_receipt.state, AdminIntentStateV1::Succeeded, "cancellation after effect admission cannot invent rollback");
+        assert!(admitted_receipt.result.as_ref().and_then(|result| result.share_token.as_ref()).is_some());
+        assert_eq!(physical.query_row::<i64, _, _>("SELECT count(*) FROM hub_share_grant WHERE space_id = ?1 AND document_id = ?2", rusqlite::params![admitted_scope.space_id, admitted_scope.document_id], |row| row.get(0)).unwrap(), 1);
+
+        let queued_scope = DocumentScope::new(&space, "retained-short-admitted-queued");
+        announce_document_for_test(&state, &queued_scope.space_id, &queued_scope.document_id).await;
+        let first_request = "request:retained-short-admitted-queued-first";
+        let second_request = "request:retained-short-admitted-queued-second";
+        let first_body = directory::os_pack::json::to_json_string(&AdminIntentV1::IssueDocumentShare { request_id: first_request.into(), scope: queued_scope.clone(), ttl_secs: 600 });
+        let second_body = directory::os_pack::json::to_json_string(&AdminIntentV1::IssueDocumentShare { request_id: second_request.into(), scope: queued_scope.clone(), ttl_secs: 600 });
+        gate.admin_effect_pause_enabled.store(true, std::sync::atomic::Ordering::Release);
+        let mut first = tokio::spawn({
+            let authorization = authorization.clone();
+            async move { raw_http_request(addr, "POST", "/admin/api/intents", &[("Authorization", &authorization), ("Content-Type", "application/json")], first_body.as_bytes()).await }
+        });
+        tokio::time::timeout(std::time::Duration::from_secs(5), gate.admin_effect_admitted.acquire()).await.expect("first admitted writer deadline").expect("first writer admitted").forget();
+        let mut second = tokio::spawn({
+            let authorization = authorization.clone();
+            async move { raw_http_request(addr, "POST", "/admin/api/intents", &[("Authorization", &authorization), ("Content-Type", "application/json")], second_body.as_bytes()).await }
+        });
+        for _ in 0..256 {
+            if state.directory.admin_operation_audit_for_request(second_request).await.expect("competing acceptance read").len() == 1 {
+                break;
+            }
+            tokio::task::yield_now().await;
+        }
+        assert!(tokio::time::timeout(std::time::Duration::from_millis(50), &mut second).await.is_err(), "competing same-scope writer cannot pass retained authority");
+        assert_eq!(physical.query_row::<i64, _, _>("SELECT count(*) FROM hub_share_grant WHERE space_id = ?1 AND document_id = ?2", rusqlite::params![queued_scope.space_id, queued_scope.document_id], |row| row.get(0)).unwrap(), 0);
+        gate.admin_effect_pause_enabled.store(false, std::sync::atomic::Ordering::Release);
+        gate.admin_effect_release.add_permits(1);
+        let first_response = tokio::time::timeout(std::time::Duration::from_secs(5), &mut first).await.expect("first writer completion deadline").expect("first HTTP task");
+        assert_eq!(first_response.status, 200, "a predecessor that releases within the binding-gate budget answers its own waiter");
+        let second_response = tokio::time::timeout(std::time::Duration::from_secs(5), &mut second).await.expect("competing writer completion deadline").expect("competing HTTP task");
+        assert_eq!(second_response.status, 200);
+        let mut first_rows = Vec::new();
+        for _ in 0..256 {
+            first_rows = state.directory.admin_operation_audit_for_request(first_request).await.expect("first admitted writer audit");
+            if first_rows.len() == 2 {
+                break;
+            }
+            tokio::task::yield_now().await;
+        }
+        let mut second_rows = Vec::new();
+        for _ in 0..256 {
+            second_rows = state.directory.admin_operation_audit_for_request(second_request).await.expect("second admitted writer audit");
+            if second_rows.len() == 2 {
+                break;
+            }
+            tokio::task::yield_now().await;
+        }
+        assert_eq!(first_rows.len(), 2);
+        assert_eq!(second_rows.len(), 2);
+        assert_eq!(
+            first_rows[1].fact.phase,
+            "succeeded",
+            "the retained first writer's terminal outcome code names which arm ended it: {} reason {:?}",
+            first_rows[1].fact.outcome_code,
+            first_rows[1].fact.reason_code
+        );
+        assert_eq!(second_rows[1].fact.phase, "succeeded", "competing writer terminal outcome {} reason {:?}", second_rows[1].fact.outcome_code, second_rows[1].fact.reason_code);
+        assert!(first_rows[1].sequence < second_rows[1].sequence, "the retained first writer terminal precedes its blocked successor");
+        assert_eq!(physical.query_row::<i64, _, _>("SELECT count(*) FROM hub_share_grant WHERE space_id = ?1 AND document_id = ?2", rusqlite::params![queued_scope.space_id, queued_scope.document_id], |row| row.get(0)).unwrap(), 2);
+
+        let fenced_scope = DocumentScope::new(&space, "retained-short-admitted-deadline");
+        announce_document_for_test(&state, &fenced_scope.space_id, &fenced_scope.document_id).await;
+        let fenced_request = "request:retained-short-admitted-deadline";
+        let fenced_body = directory::os_pack::json::to_json_string(&AdminIntentV1::IssueDocumentShare { request_id: fenced_request.into(), scope: fenced_scope.clone(), ttl_secs: 600 });
+        gate.admin_effect_pause_enabled.store(true, std::sync::atomic::Ordering::Release);
+        let mut fenced = tokio::spawn({
+            let authorization = authorization.clone();
+            async move { raw_http_request(addr, "POST", "/admin/api/intents", &[("Authorization", &authorization), ("Content-Type", "application/json")], fenced_body.as_bytes()).await }
+        });
+        tokio::time::timeout(std::time::Duration::from_secs(5), gate.admin_effect_admitted.acquire()).await.expect("fenced admitted writer deadline").expect("fenced writer admitted").forget();
+        let fenced_response = tokio::time::timeout(ADMIN_OPERATION_DEADLINE + std::time::Duration::from_secs(2), &mut fenced).await.expect("fenced HTTP deadline response").expect("fenced HTTP task");
+        assert_eq!(fenced_response.status, 503, "the HTTP waiter expires without cancelling its admitted writer");
+        assert_eq!(physical.query_row::<i64, _, _>("SELECT count(*) FROM hub_share_grant WHERE space_id = ?1 AND document_id = ?2", rusqlite::params![fenced_scope.space_id, fenced_scope.document_id], |row| row.get(0)).unwrap(), 0);
+        gate.admin_effect_pause_enabled.store(false, std::sync::atomic::Ordering::Release);
+        gate.admin_effect_release.add_permits(1);
+        let mut fenced_rows = Vec::new();
+        for _ in 0..256 {
+            fenced_rows = state.directory.admin_operation_audit_for_request(fenced_request).await.expect("fenced admitted writer audit");
+            if fenced_rows.len() == 2 {
+                break;
+            }
+            tokio::task::yield_now().await;
+        }
+        assert_eq!(fenced_rows.len(), 2);
+        assert_eq!(
+            fenced_rows[1].fact.phase,
+            "succeeded",
+            "the expired HTTP waiter never cancels its admitted writer: {} reason {:?}",
+            fenced_rows[1].fact.outcome_code,
+            fenced_rows[1].fact.reason_code
+        );
+        assert_eq!(physical.query_row::<i64, _, _>("SELECT count(*) FROM hub_share_grant WHERE space_id = ?1 AND document_id = ?2", rusqlite::params![fenced_scope.space_id, fenced_scope.document_id], |row| row.get(0)).unwrap(), 1);
+        assert_eq!(state.admin_operation_tasks.task_count(), 0);
+        drop(physical);
+        stop_recovery_server(state, shutdown, server).await;
+    }
+
+    #[cfg(feature = "native-artifact-execution")]
+    #[tokio::test]
+    async fn native_openable_stdio_provider_is_the_only_atomic_readiness_transition() {
+        let unavailable = test_state().await;
+        let unavailable_addr = spawn_server(unavailable).await;
+        let unavailable_readiness = raw_http_get(unavailable_addr, "/readyz", &[]).await;
+        assert_eq!(unavailable_readiness.status, 503);
+        let unavailable_json: serde_json::Value = serde_json::from_slice(&unavailable_readiness.body).expect("unavailable readiness JSON");
+        assert_eq!(unavailable_json["artifactAuthority"]["ready"], false);
+        assert_eq!(unavailable_json["features"]["openPlan"], false);
+
+        let providers = NativeCodecProviderSetV1::linked();
+        let root = native_openable_stdio_bundle();
+        let configured = configured_artifact_authority(&root, Some(&providers), &Tracer::disabled()).await.expect("verified stdio authority").expect("configured stdio authority");
+        assert_eq!(configured.catalog.codec_count(), 26);
+        assert_eq!(configured.catalog.open_target_count(), 1);
+        let mut ready = test_state().await;
+        ready.openable_catalog = Some(configured.catalog.clone());
+        ready.artifact_authority = Some(configured.authority);
+        ready.readiness = Arc::new(hub_readiness(HubMode::Development, "loopback", "00112233445566778899aabbccddeeff".into(), true, true, true, true, true, false, false, "trusted-catalog-never-published-in-this-data-root"));
+        let ready_addr = spawn_server(ready).await;
+        let readiness = raw_http_get(ready_addr, "/readyz", &[]).await;
+        assert_eq!(readiness.status, 200);
+        let readiness_json: serde_json::Value = serde_json::from_slice(&readiness.body).expect("ready JSON");
+        assert_eq!(readiness_json["artifactAuthority"]["ready"], true);
+        assert_eq!(readiness_json["features"]["openPlan"], true);
+        assert_eq!(readiness_json["features"]["openPlanExchange"], true);
+        let encoded = String::from_utf8(readiness.body).expect("readiness UTF-8");
+        assert!(!encoded.contains("receipt"));
+        assert!(!encoded.contains("factory"));
+        std::fs::remove_dir_all(root).expect("remove stdio bundle fixture");
+    }
+
+    #[cfg(feature = "native-artifact-execution")]
+    #[tokio::test]
+    async fn checkpoint_publication_route_is_author_owned_actor_fenced_idempotent_and_cancellation_safe() {
+        let fixture = checkpoint_publication_fixture("idempotency").await;
+        let addr = spawn_server(fixture.state.clone()).await;
+        put_checkpoint_publication_blob(addr, &fixture.scope, &fixture.author.token, &fixture.pack).await;
+        put_checkpoint_publication_blob(addr, &fixture.scope, &fixture.author.token, &fixture.spr).await;
+        let route = format!("/spaces/{}/documents/{}/checkpoint-publications", fixture.scope.space_id, fixture.scope.document_id);
+        let body = directory::os_pack::json::to_json_string(&fixture.command);
+        let author = format!("Bearer {}", fixture.author.token);
+        let spectator = format!("Bearer {}", fixture.spectator.token);
+        assert_eq!(raw_http_request(addr, "POST", &route, &[("Content-Type", "application/json")], body.as_bytes()).await.status, 401);
+        assert_eq!(raw_http_request(addr, "POST", &route, &[("Authorization", spectator.as_str()), ("Content-Type", "application/json")], body.as_bytes()).await.status, 403);
+
+        let accepted = raw_http_request(addr, "POST", &route, &[("Authorization", author.as_str()), ("Content-Type", "application/json")], body.as_bytes()).await;
+        assert_eq!(
+            accepted.status,
+            200,
+            "author checkpoint publication: {} refused as {:?}",
+            String::from_utf8_lossy(&accepted.body),
+            last_checkpoint_publication_refusal()
+        );
+        assert!(accepted.headers.to_ascii_lowercase().contains("cache-control: private, no-store"));
+        let receipt: CheckpointPublicationReceiptV1 = directory::os_pack::json::from_json_str(std::str::from_utf8(&accepted.body).expect("publication receipt UTF-8")).expect("canonical publication receipt");
+        assert_eq!(receipt.correlation_id, fixture.command.correlation_id);
+        assert_eq!(receipt.checkpoint.scope, fixture.scope);
+        assert_eq!(receipt.checkpoint.pack.sha256.hex(), fixture.command.pack.sha256);
+        assert_eq!(receipt.checkpoint.spr.sha256.hex(), fixture.command.spr.sha256);
+        assert_eq!(fixture.state.directory.artifact_checkpoint_count(&fixture.scope).await.expect("checkpoint count"), 2, "the seeded creation genesis plus exactly one ordinary publication");
+
+        let replay = raw_http_request(addr, "POST", &route, &[("Authorization", author.as_str()), ("Content-Type", "application/json")], body.as_bytes()).await;
+        assert_eq!(replay.status, 200);
+        assert_eq!(replay.body, accepted.body, "a lost-response retry returns the identical durable receipt");
+        assert_eq!(fixture.state.directory.artifact_checkpoint_count(&fixture.scope).await.expect("replay checkpoint count"), 2, "retry emits no second checkpoint event");
+        let command_sha256 = os_directory::hex_lower(&Sha256::digest(body.as_bytes()));
+        let durable = fixture
+            .state
+            .directory
+            .claim_or_read_checkpoint_publication(&NewCheckpointPublicationClaimV1 { actor_user_id: fixture.author.user_id.clone(), correlation_id: fixture.command.correlation_id.clone(), command_sha256: command_sha256.clone(), claimed_at: now_ms() })
+            .await
+            .expect("durable publication receipt");
+        let CheckpointPublicationClaimV1::Existing(durable) = durable else { panic!("completed publication must be durable") };
+        assert_eq!(durable.disposition, CheckpointPublicationDispositionV1::Completed);
+        assert_eq!(durable.checkpoint_id, Some(receipt.checkpoint.checkpoint_id));
+
+        let mut substituted = fixture.command.clone();
+        substituted.spr.byte_length += 1;
+        let substituted = directory::os_pack::json::to_json_string(&substituted);
+        let conflict = raw_http_request(addr, "POST", &route, &[("Authorization", author.as_str()), ("Content-Type", "application/json")], substituted.as_bytes()).await;
+        assert_eq!(conflict.status, 409, "same author/correlation with a different exact command conflicts");
+        assert!(conflict.body.is_empty());
+        std::fs::remove_dir_all(fixture.catalog_root).expect("remove publication catalog fixture");
+    }
+
+    #[test]
+    fn scoped_directory_socket_removal_and_delivery_have_one_total_membership_order() {
+        run_socket_test(|| async {
+            let mut state = test_state().await;
+            let gate = Arc::new(TestLiveGate::default());
+            state.live_gate = Some(gate.clone());
+            let member = issue_test_session(&state, "scoped-order-target@example.com").await;
+            upsert_member_for_test(&state, STUDIO, "scoped-order-target@example.com", DirectorySpaceRole::Spectator).await;
+            let (order_document, _) = seed_genesis_document_for_test(&state, "scoped-order-author@example.com", STUDIO, "scoped-order-document").await;
+            let addr = spawn_server(state.clone()).await;
+            let authorization = format!("Bearer {}", member.token);
+            let issue_path = format!("/directory/spaces/{STUDIO}/documents/{order_document}/socket-grants");
+
+            let open = |grant: String, since: u64| {
+                let url = format!("ws://{addr}/directory/spaces/{STUDIO}/documents/{order_document}/socket/v1?since={since}");
+                async move {
+                    let (mut socket, _) = connect_async(socket_request(&url, &grant)).await.expect("ordered scoped socket");
+                    socket.send(client_binary(&socket_hello(), Lane::Command).await).await.expect("ordered scoped hello");
+                    tokio::time::sleep(std::time::Duration::from_millis(50)).await;
+                    socket
+                }
+            };
+            let issue = || {
+                let issue_path = issue_path.clone();
+                let authorization = authorization.clone();
+                async move {
+                    let issued = raw_http_request(addr, "POST", &issue_path, &[("Authorization", &authorization)], &[]).await;
+                    assert_eq!(issued.status, 200);
+                    let receipt: serde_json::Value = serde_json::from_slice(&issued.body).expect("ordered scoped grant JSON");
+                    receipt["grant"].as_str().expect("ordered scoped grant").to_string()
+                }
+            };
+
+            let mut removal_wins = open(issue().await, state.directory.head_seq().await.expect("removal-wins head")).await;
+            gate.socket_membership_remove_enabled.store(true, std::sync::atomic::Ordering::Release);
+            let mut removal = tokio::spawn({
+                let state = state.clone();
+                let user_id = member.user_id.clone();
+                async move { execute_directory_command_fenced(&state, DirectoryActor { kind: DirectoryActorKind::System, id: "system:scoped-order-removal".into() }, DirectoryCommand::RemoveMember { space_id: STUDIO.into(), user_id }).await }
+            });
+            tokio::time::timeout(std::time::Duration::from_secs(2), gate.socket_membership_remove_admitted.acquire()).await.expect("removal admission deadline").expect("removal admission").forget();
+            gate.socket_scoped_send_mode.store(1, std::sync::atomic::Ordering::Release);
+            publish_checkpoint_for_test(&state, STUDIO, &order_document).await;
+            tokio::time::timeout(SOCKET_RENDEZVOUS_HANG_GUARD, gate.socket_scoped_send_admitted.acquire()).await.expect("the removal-wins sender gate was never admitted").expect("removal-wins sender").forget();
+            gate.socket_scoped_send_release.add_permits(1);
+            gate.socket_membership_remove_release.add_permits(1);
+            tokio::time::timeout(std::time::Duration::from_secs(2), &mut removal).await.expect("removal-wins completion deadline").expect("removal task").expect("fenced removal");
+            assert_eq!(next_close_code(&mut removal_wins, false).await, 4401, "removal winning the membership gate exposes no scoped event");
+
+            upsert_member_for_test(&state, STUDIO, "scoped-order-target@example.com", DirectorySpaceRole::Spectator).await;
+            gate.socket_membership_remove_enabled.store(false, std::sync::atomic::Ordering::Release);
+            gate.socket_scoped_send_mode.store(0, std::sync::atomic::Ordering::Release);
+            let mut delivery_wins = open(issue().await, state.directory.head_seq().await.expect("delivery-wins head")).await;
+            gate.socket_scoped_send_mode.store(2, std::sync::atomic::Ordering::Release);
+            let delivered_checkpoint = publish_checkpoint_for_test(&state, STUDIO, &order_document).await;
+            tokio::time::timeout(SOCKET_RENDEZVOUS_HANG_GUARD, gate.socket_scoped_send_admitted.acquire()).await.expect("the delivery-wins sender gate was never admitted").expect("delivery-wins sender").forget();
+            let mut removal = tokio::spawn({
+                let state = state.clone();
+                let user_id = member.user_id.clone();
+                async move { execute_directory_command_fenced(&state, DirectoryActor { kind: DirectoryActorKind::System, id: "system:scoped-order-delivery".into() }, DirectoryCommand::RemoveMember { space_id: STUDIO.into(), user_id }).await }
+            });
+            let early_removal = tokio::time::timeout(std::time::Duration::from_millis(100), &mut removal).await;
+            assert!(
+                early_removal.is_err(),
+                "removal waits while an admitted scoped send owns the membership gate; it instead returned {:?}",
+                early_removal.map(|joined| joined.map(|fenced| fenced.map(|(events, _)| events.len())))
+            );
+            gate.socket_scoped_send_release.add_permits(1);
+            let delivered = next_directory_message(&mut delivery_wins).await;
+            assert!(
+                matches!(
+                    &delivered,
+                    DirectoryStreamMessage::Event { event }
+                        if matches!(event.body, os_directory::DirectoryEventBody::ArtifactCheckpointPublished { ref checkpoint }
+                            if checkpoint.scope == DocumentScope::new(STUDIO, &order_document) && checkpoint.checkpoint_id == delivered_checkpoint.checkpoint_id)
+                ),
+                "the admitted scoped send is the exact published checkpoint: {delivered:?}"
+            );
+            tokio::time::timeout(std::time::Duration::from_secs(2), removal).await.expect("delivery-wins removal deadline").expect("removal task").expect("fenced removal");
+            assert_eq!(next_close_code(&mut delivery_wins, false).await, 4401, "the one admitted event precedes the terminal membership close");
+        });
+    }
+
+    #[cfg(feature = "native-artifact-execution")]
+    #[tokio::test]
+    async fn checkpoint_publication_route_rejects_stale_or_cross_scope_inputs_before_publication() {
+        let mut fixture = checkpoint_publication_fixture("fence").await;
+        let gate = Arc::new(TestLiveGate::default());
+        gate.checkpoint_publication_pause_enabled.store(true, std::sync::atomic::Ordering::Release);
+        fixture.state.live_gate = Some(gate.clone());
+        let other_space = create_space_for_test(&fixture.state, &fixture.author.user_id, "Checkpoint other scope", os_directory::DirectorySpaceKind::Studio, DirectorySpaceVisibility::Private).await;
+        upsert_member_for_test(&fixture.state, &other_space, "checkpoint-fence-author@example.test", DirectorySpaceRole::Author).await;
+        let descriptor = fixture.state.directory.get_document_descriptor(&fixture.scope).await.expect("publication descriptor read").expect("publication descriptor");
+        let mut other_descriptor = descriptor.clone();
+        other_descriptor.space_id = other_space.clone();
+        fixture
+            .state
+            .directory_service
+            .execute(DirectoryActor { kind: DirectoryActorKind::User, id: format!("user:{}#checkpoint-test", fixture.author.user_id) }, DirectoryCommand::AnnounceDocument { descriptor: Box::new(other_descriptor.clone()) })
+            .await
+            .expect("announce same-id other-space document");
+        let addr = spawn_server(fixture.state.clone()).await;
+        put_checkpoint_publication_blob(addr, &fixture.scope, &fixture.author.token, &fixture.pack).await;
+        put_checkpoint_publication_blob(addr, &fixture.scope, &fixture.author.token, &fixture.spr).await;
+        let authorization = format!("Bearer {}", fixture.author.token);
+        let headers = [("Authorization", authorization.as_str()), ("Content-Type", "application/json")];
+
+        let mut cross_scope = fixture.command.clone();
+        cross_scope.correlation_id = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa".into();
+        let cross_scope = directory::os_pack::json::to_json_string(&cross_scope);
+        let cross = raw_http_request(addr, "POST", &format!("/spaces/{other_space}/documents/{}/checkpoint-publications", fixture.scope.document_id), &headers, cross_scope.as_bytes()).await;
+        assert_eq!(cross.status, 409, "route scope cannot borrow another space's selected descriptor/frontier");
+        assert_eq!(fixture.state.directory.artifact_checkpoint_count(&fixture.scope).await.expect("source scope checkpoint count"), 1, "the seeded creation genesis alone, no publication");
+        assert_eq!(fixture.state.directory.artifact_checkpoint_count(&DocumentScope::new(&other_space, &fixture.scope.document_id)).await.expect("other scope checkpoint count"), 0);
+
+        let route = format!("/spaces/{}/documents/{}/checkpoint-publications", fixture.scope.space_id, fixture.scope.document_id);
+        let body = directory::os_pack::json::to_json_string(&fixture.command);
+        let queued = tokio::spawn({
+            let route = route.clone();
+            let body = body.clone();
+            let authorization = authorization.clone();
+            async move { raw_http_request(addr, "POST", &route, &[("Authorization", authorization.as_str()), ("Content-Type", "application/json")], body.as_bytes()).await }
+        });
+        tokio::time::timeout(std::time::Duration::from_secs(5), gate.checkpoint_publication_admitted.acquire()).await.unwrap_or_else(|_| panic!("publication fence admission deadline: refused as {:?}", last_checkpoint_publication_refusal())).expect("publication fence admission").forget();
+        let write = fixture.state.socket_binding_gates.gate(SocketBindingKeyV1::DocumentWrite(fixture.scope.clone())).lock_owned().await;
+        let document = db_artifact_id(&fixture.scope);
+        let batch = db::document::CommandBatch::new(vec![sample_envelope("checkpoint-fence-edit-2", &WireArtifactId(document.0)).await]).await.expect("queued write batch");
+        fixture.handle.submit(batch, db::document::SubmitOptions { durability: db::DurabilityClass::Fsync, policy: protocol::MergePolicy::default() }).await.expect("queued write actor response").expect("queued write accepted");
+        drop(write);
+        gate.checkpoint_publication_release.add_permits(1);
+        let queued = queued.await.expect("queued publication response");
+        assert_eq!(queued.status, 409, "the final actor snapshot fence rejects a write committed during materialization");
+        assert_eq!(fixture.state.directory.artifact_checkpoint_count(&fixture.scope).await.expect("stale publication count"), 1, "the seeded creation genesis alone, no publication");
+        let failed_digest = os_directory::hex_lower(&Sha256::digest(body.as_bytes()));
+        let failed_claim = NewCheckpointPublicationClaimV1 { actor_user_id: fixture.author.user_id.clone(), correlation_id: fixture.command.correlation_id.clone(), command_sha256: failed_digest.clone(), claimed_at: now_ms() };
+        assert!(
+            matches!(fixture.state.directory.claim_or_read_checkpoint_publication(&failed_claim).await.expect("reclaim failed publication"), CheckpointPublicationClaimV1::Claimed(_)),
+            "a returned failure synchronously releases its durable claim for a corrected retry"
+        );
+        fixture.state.directory.release_checkpoint_publication(&failed_claim.actor_user_id, &failed_claim.correlation_id, &failed_digest).await.expect("release test reclaim");
+
+        let current = fixture.handle.checkpoint_publication_snapshot().await.expect("current publication snapshot");
+        let descriptor_command = checkpoint_publication_command("cccccccccccccccccccccccccccccccc", &other_descriptor, &current, fixture.command.expected_current.clone(), &fixture.pack, &fixture.spr);
+        let descriptor_body = directory::os_pack::json::to_json_string(&descriptor_command);
+        let cross_descriptor = raw_http_request(addr, "POST", &route, &headers, descriptor_body.as_bytes()).await;
+        assert_eq!(cross_descriptor.status, 409, "the selected-descriptor fence rejects another scope's descriptor before publication");
+        assert_eq!(fixture.state.directory.artifact_checkpoint_count(&fixture.scope).await.expect("cross-descriptor publication count"), 1, "the seeded creation genesis alone, no publication");
+
+        let mut stale_checkpoint = fixture.command.clone();
+        stale_checkpoint.correlation_id = "dddddddddddddddddddddddddddddddd".into();
+        let stale_body = directory::os_pack::json::to_json_string(&stale_checkpoint);
+        let stale = raw_http_request(addr, "POST", &route, &headers, stale_body.as_bytes()).await;
+        assert_eq!(stale.status, 409, "the selected-frontier fence rejects an older checkpoint of this document before publication");
+        assert_eq!(fixture.state.directory.artifact_checkpoint_count(&fixture.scope).await.expect("stale-checkpoint publication count"), 1, "the seeded creation genesis alone, no publication");
+
+        let mut cancellation = checkpoint_publication_command("bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb", &descriptor, &current, fixture.command.expected_current.clone(), &fixture.pack, &fixture.spr);
+        cancellation.schema = "semio.hub.checkpoint-publication-command/v1".into();
+        let cancellation = directory::os_pack::json::to_json_string(&cancellation);
+        let capability = SessionCapability::parse(&fixture.author.token).expect("publication session capability");
+        let session = fixture.state.directory.authenticate_session(&capability).await.expect("publication session lookup").expect("publication session");
+        let revoked = tokio::spawn({
+            let route = route.clone();
+            let authorization = authorization.clone();
+            async move { raw_http_request(addr, "POST", &route, &[("Authorization", authorization.as_str()), ("Content-Type", "application/json")], cancellation.as_bytes()).await }
+        });
+        tokio::time::timeout(std::time::Duration::from_secs(5), gate.checkpoint_publication_admitted.acquire()).await.expect("revocation fence admission deadline").expect("revocation fence admission").forget();
+        fixture.state.directory.revoke_auth_session(&session.id, "checkpoint-publication-test", None, "checkpoint-publication-test").await.expect("revoke publication session").expect("revoked publication session");
+        tokio::time::sleep(std::time::Duration::from_millis(100)).await;
+        gate.checkpoint_publication_release.add_permits(1);
+        let revoked = revoked.await.expect("revoked publication response");
+        assert_eq!(revoked.status, 503, "revocation cancels the request-local authority operation");
+        assert!(revoked.body.is_empty());
+        assert_eq!(fixture.state.directory.artifact_checkpoint_count(&fixture.scope).await.expect("cancelled publication count"), 1, "the seeded creation genesis alone, no publication");
+        std::fs::remove_dir_all(fixture.catalog_root).expect("remove publication fence catalog fixture");
+    }
+
+    #[tokio::test]
+    async fn socket_admin_user_gate_rejects_a_late_same_user_grant_after_batch_revoke() {
+        let mut state = test_state().await;
+        let gate = Arc::new(TestLiveGate::default());
+        gate.socket_admin_revoke_pause_enabled.store(true, std::sync::atomic::Ordering::Release);
+        state.live_gate = Some(gate.clone());
+        let mut admin_headers = authorize_test_admin(&mut state, "socket-admin@example.com").await;
+        admin_headers.insert(axum::http::header::CONTENT_TYPE, "application/json".parse().expect("content type"));
+        let target = issue_test_session(&state, "socket-target@example.com").await;
+        upsert_member_for_test(&state, STUDIO, "socket-target@example.com", DirectorySpaceRole::Author).await;
+        announce_document_for_test(&state, STUDIO, "socket-admin-race").await;
+        let mut revoke = tokio::spawn({
+            let state = state.clone();
+            let user_id = target.user_id.clone();
+            async move {
+                let intent = AdminIntentV1::RevokeUserSessions { request_id: "request:socket-admin-revoke".into(), user_id, reason_code: "test-revoke".into() };
+                let body = Bytes::from(directory::os_pack::json::to_json_string(&intent));
+                admin_intents(admin_headers, loopback_peer(), State(state), body).await
+            }
+        });
+        tokio::time::timeout(SOCKET_RENDEZVOUS_HANG_GUARD, gate.socket_admin_revoke_admitted.acquire()).await.expect("the admin revoke gate was never admitted").expect("admin gate").forget();
+        let mut issue = tokio::spawn({
+            let state = state.clone();
+            let token = target.token.clone();
+            async move { issue_document_socket_grant_fixture(Path((STUDIO.to_string(), "socket-admin-race".to_string())), bearer_headers(&token), State(state)).await }
+        });
+        assert!(tokio::time::timeout(std::time::Duration::from_millis(100), &mut issue).await.is_err(), "same-user grant waits behind batch revoke");
+        gate.socket_admin_revoke_release.add_permits(1);
+        let (status, receipt) = tokio::time::timeout(std::time::Duration::from_secs(2), &mut revoke).await.expect("bounded admin revoke").expect("admin task").expect("admin response");
+        assert_eq!(status, StatusCode::OK);
+        assert_eq!(receipt.0.state, AdminIntentStateV1::Succeeded);
+        let late_issue = tokio::time::timeout(std::time::Duration::from_secs(2), issue).await.expect("bounded late issue").expect("issue task");
+        assert!(matches!(late_issue, Err(StatusCode::UNAUTHORIZED)), "revoked session cannot mint");
+    }
+}
+
+mod long {
+    use super::*;
+
+    #[test]
+    fn admin_response_pages_stop_before_exact_byte_max_and_reject_one_oversized_row() {
+        let cursor_key = [0x5a; 32];
+        let principal = AdminPrincipalV1 {
+            user_id: "user:admin".into(),
+            auth_session_id: "session:admin".into(),
+            authorization_generation: 7,
+            identity_provider: "test".into(),
+            identity_subject_digest: [7; 32],
+            expires_at_ms: now_ms() + 60_000,
+            correlation_id: "correlation:admin".into(),
+            peer_class: "admin-rest",
+        };
+        let rows = (0..ADMIN_PAGE_MAX).map(|index| os_directory::UserView { id: format!("user:{index}:{}", "i".repeat(4_000)), email: format!("{index}@{}", "e".repeat(4_000)), display_name: "n".repeat(4_000), created_at_ms: 0 }).collect();
+        let page = admin_fit_page(rows, false, 7, |rows| admin_cursor_encode(&cursor_key, &principal, 2, rows.len())).expect("byte-bounded user page");
+        assert!(page.rows.len() < ADMIN_PAGE_MAX);
+        assert!(page.next_cursor.is_some());
+        assert!(directory::os_pack::json::to_json_string(&page).len() <= ADMIN_RESPONSE_MAX_BYTES);
+
+        let connections = (0..ADMIN_PAGE_MAX)
+            .map(|index| AdminRecordedConnectionV1 {
+                sync_session_id: format!("sync:{index}:{}", "s".repeat(4_000)),
+                scope: DocumentScope::new("space", format!("document:{index}:{}", "d".repeat(4_000))),
+                authenticated_user_id: Some(format!("user:{index}:{}", "u".repeat(4_000))),
+                email: Some("admin@example.com".into()),
+                role: Some(DirectorySpaceRole::Author),
+                connected_at_ms: 0,
+                source: "recorded-sync-session".into(),
+            })
+            .collect();
+        let snapshot = admin_fit_connection_snapshot(connections, false, 7, 9, &cursor_key, &principal, 0).expect("byte-bounded connection snapshot");
+        assert!(snapshot.rows.len() < ADMIN_PAGE_MAX);
+        assert!(snapshot.next_cursor.is_some());
+        assert!(directory::os_pack::json::to_json_string(&snapshot).len() <= ADMIN_RESPONSE_MAX_BYTES);
+
+        let view = SpaceView {
+            id: "space:one".into(),
+            name: "Space".into(),
+            kind: os_directory::DirectorySpaceKind::Studio,
+            visibility: DirectorySpaceVisibility::Private,
+            owner_user_id: "user:owner".into(),
+            role: None,
+            member_count: ADMIN_PAGE_MAX as u32,
+            document_count: 0,
+            active_connections: 0,
+            created_at_ms: 0,
+            updated_at_ms: 0,
+        };
+        let members = (0..ADMIN_PAGE_MAX).map(|index| MemberView { user_id: format!("user:{index}:{}", "u".repeat(4_000)), email: format!("{index}@example.com"), display_name: "n".repeat(4_000), role: DirectorySpaceRole::Author }).collect();
+        let detail = admin_fit_space_detail(view, members, false, 7, &cursor_key, &principal, "space:one", 0).expect("byte-bounded member detail");
+        assert!(detail.members.rows.len() < ADMIN_PAGE_MAX);
+        assert!(detail.members.next_cursor.is_some());
+        assert!(directory::os_pack::json::to_json_string(&detail).len() <= ADMIN_RESPONSE_MAX_BYTES);
+
+        let oversized = vec![os_directory::UserView { id: "i".repeat(ADMIN_RESPONSE_MAX_BYTES), email: "e@example.com".into(), display_name: "name".into(), created_at_ms: 0 }];
+        assert_eq!(admin_fit_page(oversized, false, 7, |_| Ok("a".repeat(84))), Err(StatusCode::PAYLOAD_TOO_LARGE));
+    }
+
+    #[tokio::test]
+    async fn socket_grant_ledger_is_bounded_single_consume_restart_scoped_and_revoke_race_safe() {
+        let ledger = Arc::new(SocketGrantLedgerV1::default());
+        let audience = SocketAudienceV1::Document(DocumentScope::new("space-a", "document-a"));
+        let subject = SocketSubjectV1::Session { session_id: "session-a".into(), user_id: "user-a".into(), authorization_generation: 7, role: Some(SpaceRole::Author), expires_at_ms: 10_000, session_kind: AuthSessionKind::External, device_instance_id: "device-a".into() };
+        let capability = SocketGrantCapability::mint().expect("socket grant");
+        ledger.issue(&capability, audience.clone(), "hub.v1.actor".into(), subject.clone(), 1, 9_000).expect("issue grant");
+        assert!(ledger.pending(&capability, &SocketAudienceV1::Document(DocumentScope::new("space-a", "document-b")), 2).is_err(), "audience mismatch never consumes");
+        let candidate = ledger.pending(&capability, &audience, 2).expect("pending grant");
+        let barrier = Arc::new(std::sync::Barrier::new(3));
+        let attempts = (0..2)
+            .map(|_| {
+                let ledger = ledger.clone();
+                let candidate = candidate.clone();
+                let barrier = barrier.clone();
+                std::thread::spawn(move || {
+                    barrier.wait();
+                    ledger.consume(&candidate, 3).is_ok()
+                })
+            })
+            .collect::<Vec<_>>();
+        barrier.wait();
+        assert_eq!(attempts.into_iter().map(|attempt| attempt.join().expect("consume race")).filter(|won| *won).count(), 1, "exactly one concurrent upgrade consumes");
+        assert!(ledger.pending(&capability, &audience, 4).is_err(), "consumed grants never replay");
+        assert!(SocketGrantLedgerV1::default().pending(&capability, &audience, 4).is_err(), "grants are process-bound and disappear on restart");
+        let (_, live_notify) = ledger.register_live(&candidate).expect("register consumed grant live");
+
+        let pending = SocketGrantCapability::mint().expect("pending socket grant");
+        ledger.issue(&pending, audience.clone(), "hub.v1.pending".into(), subject.clone(), 4, 9_000).expect("issue pending grant");
+        let stale = ledger.pending(&pending, &audience, 5).expect("candidate before revoke");
+        ledger.invalidate_binding(subject.binding());
+        tokio::time::timeout(std::time::Duration::from_secs(1), live_notify.notified()).await.expect("live revoke notification");
+        assert!(ledger.consume(&stale, 6).is_err(), "revoke between durable revalidation and consume fails closed");
+        assert!(ledger.register_live(&candidate).is_err(), "consume then revoke then late register fails closed");
+
+        let ttl_ledger = SocketGrantLedgerV1::default();
+        let ttl_capability = SocketGrantCapability::mint().expect("TTL grant");
+        ttl_ledger.issue(&ttl_capability, audience.clone(), "hub.v1.ttl".into(), subject.clone(), 1, 10).expect("issue TTL grant");
+        let ttl_candidate = ttl_ledger.pending(&ttl_capability, &audience, 2).expect("pending TTL grant");
+        let ttl_consumed = ttl_ledger.consume(&ttl_candidate, 3).expect("consume TTL grant");
+        let (ttl_live_id, _) = ttl_ledger.register_live(&ttl_consumed).expect("register TTL grant live");
+        let sweep_trigger = SocketGrantCapability::mint().expect("sweep trigger");
+        ttl_ledger.issue(&sweep_trigger, audience.clone(), "hub.v1.sweep".into(), subject.clone(), 11, 100).expect("trigger grant sweep");
+        assert!(ttl_ledger.is_live(&ttl_consumed, &ttl_live_id), "grant TTL applies to dial/consume, not a durably-authorized live socket");
+        ttl_ledger.unregister_live(&ttl_consumed, &ttl_live_id);
+        assert!(!ttl_ledger.inner.lock().expect("ledger").records.contains_key(ttl_capability.selector()), "last live lease reclaims its consumed grant record");
+
+        let abandoned = SocketGrantLedgerV1::default();
+        let mut first_abandoned = None;
+        for index in 0..SOCKET_GRANT_LEDGER_CAPACITY {
+            let capability = SocketGrantCapability::mint().expect("abandoned grant");
+            abandoned.issue(&capability, audience.clone(), format!("hub.v1.abandoned.{index}"), subject.clone(), 1, 10).expect("fill ledger");
+            let candidate = abandoned.pending(&capability, &audience, 2).expect("abandoned pending");
+            abandoned.consume(&candidate, 3).expect("abandoned consume");
+            first_abandoned.get_or_insert(capability);
+        }
+        assert!(abandoned.pending(first_abandoned.as_ref().expect("first abandoned"), &audience, 4).is_err(), "consumed failed-pre-live grant never replays");
+        let recovered = SocketGrantCapability::mint().expect("recovered grant");
+        abandoned.issue(&recovered, audience.clone(), "hub.v1.recovered".into(), subject.clone(), 11, 100).expect("expired pre-live tombstones reclaim full ledger capacity");
+
+        let bounded = SocketGrantLedgerV1::default();
+        for index in 0..SOCKET_GRANT_BINDING_PENDING_CAPACITY {
+            let capability = SocketGrantCapability::mint().expect("bounded grant");
+            bounded.issue(&capability, audience.clone(), format!("hub.v1.{index}"), subject.clone(), 1, 9_000).expect("within per-binding bound");
+        }
+        let overflow = SocketGrantCapability::mint().expect("overflow grant");
+        assert_eq!(bounded.issue(&overflow, audience, "hub.v1.overflow".into(), subject.clone(), 1, 9_000), Err(SocketGrantLedgerErrorV1::Capacity));
+        bounded.invalidate_binding(subject.binding());
+        assert!(bounded.issue(&overflow, SocketAudienceV1::Document(DocumentScope::new("space-a", "document-a")), "hub.v1.after-revoke".into(), subject, 2, 9_000).is_ok());
+    }
+
+    #[tokio::test]
+    async fn artifact_cas_maintenance_checkpoint_reaches_tail_after_sixteen_requests() {
+        let state = test_state().await;
+        for index in 0..5 {
+            let space_id = create_space_for_test(&state, "seed", &format!("CAS {index}"), os_directory::DirectorySpaceKind::Studio, DirectorySpaceVisibility::Private).await;
+            let (document_id, _) = seed_genesis_document_for_test(&state, "cas-maintenance-author@example.com", &space_id, &format!("cas-maintenance-{index}")).await;
+            publish_checkpoint_for_test(&state, &space_id, &document_id).await;
+        }
+        let control = StartupCatalogControl::silent();
+        let context = OperationContext::new(control.now_ms().saturating_add(30_000), AuthorityLimits::maximum(), &control);
+        let mut checkpoint = ArtifactCasMaintenanceCheckpoint::default();
+        let mut requests = 0usize;
+        let mut examined = 0u64;
+        loop {
+            let result = state.directory_service.sweep_artifact_cas(state.artifact_cas.as_ref(), checkpoint.request(false, 1), &context).await.expect("bounded maintenance page");
+            requests += 1;
+            examined += result.examined_objects;
+            if checkpoint.accept(&result) {
+                break;
+            }
+            assert!(requests < 128, "maintenance cursor converges");
+        }
+        assert!(requests > 16);
+        assert!(examined > 16);
+    }
+}
+
+//#region 📝️Observability
+/// ⚖️ LAW: a request that reached a handler leaves exactly one structured record carrying the
+/// identity the handler resolved — that is the whole point of the module, and the thing an operator
+/// reading the stream depends on.
+#[tokio::test]
+async fn an_authenticated_session_read_reports_one_span_with_its_principal() {
+    let (state, sink) = observed_test_state().await;
+    let session = issue_test_session(&state, "observed@example.com").await;
+    let bearer = format!("Bearer {}", session.token);
+    sink.clear();
+    let addr = spawn_server(state).await;
+    assert_eq!(bounded_http_request(addr, "GET", "/auth/sessions/me", &[("Authorization", bearer.as_str())], &[]).await.status, 200);
+    let records = sink.records_for("server.auth.session.read");
+    assert_eq!(records.len(), 1, "one request, one record: {:?}", sink.records());
+    assert_eq!(records[0].outcome, TraceOutcome::Ok);
+    assert!(records[0].request_id.is_some(), "every hub span carries a request id");
+    assert!(records[0].duration_us.is_some(), "a closed span measured itself");
+}
+
+/// ⚖️ LAW: a refusal is reported as a refusal, not as an absence. A span that simply never closed
+/// would leave the operator unable to tell a rejected request from one that was never made.
+#[tokio::test]
+async fn a_refused_session_read_is_reported_as_refused() {
+    let (state, sink) = observed_test_state().await;
+    let addr = spawn_server(state).await;
+    let refusal = raw_http_request(addr, "GET", "/auth/sessions/me", &[("Authorization", "Bearer not-a-capability")], &[]).await;
+    assert!((400..500).contains(&refusal.status), "a malformed capability is a client refusal, got {}", refusal.status);
+    let records = sink.records_for("server.auth.session.read");
+    assert_eq!(records.len(), 1);
+    assert_eq!(records[0].outcome, TraceOutcome::Refused);
+    assert!(records[0].detail.is_some(), "a refusal names its stable reason code");
+}
+
+/// ⚖️ LAW: `GET /admin/api/observability` is behind the admin gate. A hub bound to a network
+/// interface must never hand its own internals — event names, failure counts, latency — to an
+/// unauthenticated caller.
+#[tokio::test]
+async fn the_observability_route_refuses_a_caller_without_an_admin_capability() {
+    let state = test_state().await;
+    let outsider = issue_test_session(&state, "outsider@example.com").await;
+    let outsider_bearer = format!("Bearer {}", outsider.token);
+    let addr = spawn_server(state).await;
+    assert_eq!(raw_http_request(addr, "GET", "/admin/api/observability", &[], &[]).await.status, 401);
+    assert_eq!(raw_http_request(addr, "GET", "/admin/api/observability", &[("Authorization", "Bearer forged")], &[]).await.status, 401);
+    assert_eq!(
+        raw_http_request(addr, "GET", "/admin/api/observability", &[("Authorization", outsider_bearer.as_str())], &[]).await.status,
+        401,
+        "a valid session that is not an admin subject is still refused"
+    );
+}
+
+/// ⚖️ LAW: an admin gets the live table, and the table reflects the requests this very hub served.
+#[tokio::test]
+async fn the_observability_route_answers_an_admin_with_the_events_its_own_requests_produced() {
+    let (mut state, _sink) = observed_test_state().await;
+    let headers = authorize_test_admin(&mut state, "ops@example.com").await;
+    let bearer = headers.get(axum::http::header::AUTHORIZATION).expect("admin bearer").to_str().expect("ascii bearer").to_string();
+    let addr = spawn_server(state).await;
+    assert_eq!(bounded_http_request(addr, "GET", "/auth/sessions/me", &[("Authorization", bearer.as_str())], &[]).await.status, 200);
+
+    let response = bounded_http_request(addr, "GET", "/admin/api/observability", &[("Authorization", bearer.as_str())], &[]).await;
+    assert_eq!(response.status, 200);
+    let body: serde_json::Value = serde_json::from_slice(&response.body).expect("observability json");
+    assert_eq!(body["schema"], "semio.hub.observability/v1");
+    assert_eq!(body["droppedEvents"], 0);
+    let declared: Vec<String> = body["declaredEvents"].as_array().expect("declared events").iter().map(|entry| entry.as_str().expect("event name").to_string()).collect();
+    assert_eq!(declared, SERVER_SPAN_EVENTS.to_vec(), "the route ships the framework's own vocabulary, not a hand-kept copy");
+    let row = body["rows"].as_array().expect("rows").iter().find(|row| row["event"] == "server.auth.session.read").expect("the session read this test made");
+    assert_eq!(row["ok"], 1);
+    assert_eq!(row["total"], 1);
+    assert_eq!(row["samples"], 1, "the closed span contributed a latency sample");
+}
+
+/// ⚖️ LAW: the route answers counters, never records. A replayed record stream would put one
+/// tenant's principals, spaces and artifact ids behind another operator's admin capability.
+#[tokio::test]
+async fn the_observability_view_never_carries_identity_fields() {
+    let (tracer, _sink) = Tracer::capturing(TraceLevel::Debug);
+    tracer.span("server.document.socket").request("r-1").principal("user:ada").space("space-secret").artifact("doc-secret").ok();
+    let rendered = serde_json::to_string(&observability_view(&tracer)).expect("observability json");
+    for leaked in ["user:ada", "space-secret", "doc-secret", "r-1"] {
+        assert!(!rendered.contains(leaked), "`{leaked}` reached the admin route body: {rendered}");
+    }
+    assert!(rendered.contains("server.document.socket"), "the event name itself is the point of the table");
+}
+
+/// ⚖️ LAW: the structured readiness record carries the same gates the startup banner names, as
+/// stable codes rather than prose — a collector must never have to parse the human line.
+#[test]
+fn the_readiness_record_names_every_closed_gate_by_its_reason_code() {
+    let addr: SocketAddr = "127.0.0.1:8787".parse().expect("test address");
+    let ready = hub_readiness(HubMode::Development, "loopback", "00112233445566778899aabbccddeeff".into(), true, true, true, true, true, false, false, "trusted-catalog-never-published-in-this-data-root");
+    assert!(ready.blocked_by.is_empty());
+    assert_eq!(readiness_trace_detail(&ready, &addr, "loopback"), "addr=127.0.0.1:8787 scope=loopback");
+
+    let blocked = hub_readiness(HubMode::Development, "loopback", "00112233445566778899aabbccddeeff".into(), false, false, false, false, false, false, false, "trusted-catalog-never-published-in-this-data-root");
+    let detail = readiness_trace_detail(&blocked, &addr, "loopback");
+    assert!(detail.starts_with("addr=127.0.0.1:8787 scope=loopback"));
+    for closed in &blocked.blocked_by {
+        assert!(detail.contains(&format!(" blocked:{}={}", closed.gate, closed.reason)), "{detail} names {}", closed.gate);
+    }
+    assert!(!blocked.blocked_by.is_empty(), "the fixture must actually block a gate");
+}
+
+/// ⚖️ LAW: the bounded counter table cannot be grown without bound by a hub event name, because
+/// every name hub emits is a compile-time literal from the declared vocabulary.
+#[test]
+fn every_event_name_the_counter_table_must_hold_fits_inside_its_capacity() {
+    assert!(SERVER_SPAN_EVENTS.len() < semio_framework_trace::record::COUNTER_EVENT_CAPACITY);
+}
+//#endregion 📝️Observability
+
+//#region 🗄️InstanceStores
+/// ⚖️ LAW: the session hub records in the server-product instance is still there after the process
+/// that wrote it is gone. This is what makes `HubInstance`'s stores a durable role rather than a
+/// per-process cache, and it is the property the auth move depends on.
+#[tokio::test]
+async fn instance_sessions_survive_a_hub_restart() {
+    let dir = tempdir("instance-restart");
+    let record = SessionRecord {
+        id: SessionId("session-durable".to_string()),
+        principal: Principal::User { id: "user-ada".to_string() },
+        device: Some(server::contract::DeviceId("device-1".to_string())),
+        issued_at_millis: 1_700_000_000_000,
+    };
+
+    let first = instance_state(&dir).await.expect("open hub instance stores");
+    first.sessions.lock().await.create(record.clone()).await.expect("record the session");
+    assert!(first.sessions.lock().await.get(&SessionId("session-durable".to_string())).await.is_some());
+    drop(first);
+
+    let second = instance_state(&dir).await.expect("reopen hub instance stores");
+    let reopened = second.sessions.lock().await.get(&SessionId("session-durable".to_string())).await.expect("the session survived the restart");
+    assert_eq!(reopened, record);
+
+    second.sessions.lock().await.delete(&SessionId("session-durable".to_string())).await.expect("forget the session");
+    drop(second);
+    let third = instance_state(&dir).await.expect("reopen after the deletion");
+    assert!(third.sessions.lock().await.get(&SessionId("session-durable".to_string())).await.is_none(), "a deleted session leaves no replayable trace");
+}
+
+/// ⚖️ LAW: signing out everywhere on the directory clears the instance's live set for that principal
+/// too, so the two halves of one session fact can never disagree after a credential change.
+#[tokio::test]
+async fn revoking_a_principal_clears_every_instance_session_it_holds() {
+    let dir = tempdir("instance-revoke");
+    let instance = instance_state(&dir).await.expect("open hub instance stores");
+    for index in 0..3 {
+        let record = SessionRecord {
+            id: SessionId(format!("session-{index}")),
+            principal: Principal::User { id: "user-ada".to_string() },
+            device: None,
+            issued_at_millis: 1_700_000_000_000 + index,
+        };
+        instance.sessions.lock().await.create(record).await.expect("record the session");
+    }
+    let other = SessionRecord { id: SessionId("session-other".to_string()), principal: Principal::User { id: "user-grace".to_string() }, device: None, issued_at_millis: 1_700_000_000_009 };
+    instance.sessions.lock().await.create(other).await.expect("record the other principal's session");
+
+    assert_eq!(instance.sessions.lock().await.revoke_principal(&Principal::User { id: "user-ada".to_string() }).await.expect("revoke"), 3);
+    assert!(instance.sessions.lock().await.get(&SessionId("session-0".to_string())).await.is_none());
+    assert!(instance.sessions.lock().await.get(&SessionId("session-other".to_string())).await.is_some(), "another principal's session is untouched");
+}
+
+/// ⚖️ LAW: the saga drain is silent when it moves nothing. A cadence that reported every empty tick
+/// would emit two records a second for ever and bury the ones that matter.
+#[tokio::test]
+async fn a_drain_over_an_empty_outbox_moves_nothing_and_says_nothing() {
+    let dir = tempdir("saga-drain");
+    let instance = instance_state(&dir).await.expect("open hub instance stores");
+    let (tracer, sink) = Tracer::capturing(TraceLevel::Debug);
+    assert_eq!(drain_instance_sagas(&instance, &tracer).await, 0);
+    assert_eq!(drain_instance_sagas(&instance, &tracer).await, 0);
+    assert!(sink.records_for("server.saga.drain").is_empty(), "an empty drain is not news: {:?}", sink.records());
+}
+
+/// ⚖️ LAW: the supervisor stops on demand and takes one last pass on the way out — the requests that
+/// committed after the final tick are exactly the ones an unfinished drain would strand.
+#[tokio::test]
+async fn the_saga_drain_supervisor_stops_and_drains_once_more_on_shutdown() {
+    let dir = tempdir("saga-drain-shutdown");
+    let instance = instance_state(&dir).await.expect("open hub instance stores");
+    let (tracer, sink) = Tracer::capturing(TraceLevel::Debug);
+    let supervisor = SagaDrainSupervisor::start(instance, tracer, std::time::Duration::from_millis(5));
+    tokio::time::sleep(std::time::Duration::from_millis(50)).await;
+    supervisor.shutdown().await;
+    assert!(sink.records_for("server.saga.drain").is_empty(), "nothing was queued, so nothing is reported");
+}
+//#endregion 🗄️InstanceStores

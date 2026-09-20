@@ -1,0 +1,140 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/renderer/ink-canvas-domain-interaction-v1.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "scene", "viewport", "document", "identity", "forbiddenActions", "cases"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "scene": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["surfaceId", "controllerId", "domainId", "domainGranularityId", "hoverChannel", "selectionJson", "hoveredId"],
+      "properties": {
+        "surfaceId": { "type": "string", "minLength": 1 },
+        "controllerId": { "type": "string", "minLength": 1 },
+        "domainId": { "const": "blocks" },
+        "domainGranularityId": { "const": "block" },
+        "hoverChannel": { "const": "pointer" },
+        "selectionJson": { "type": "string", "minLength": 2 },
+        "hoveredId": { "type": "string", "minLength": 1 }
+      }
+    },
+    "viewport": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["width", "height"],
+      "properties": {
+        "width": { "type": "number", "exclusiveMinimum": 0 },
+        "height": { "type": "number", "exclusiveMinimum": 0 }
+      }
+    },
+    "document": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["schema", "id", "camera", "blocks"],
+      "properties": {
+        "schema": { "const": "ink.document" },
+        "id": { "type": "string", "minLength": 1 },
+        "camera": { "type": "object" },
+        "blocks": {
+          "type": "array",
+          "minItems": 2,
+          "items": {
+            "type": "object",
+            "required": ["id", "interactionId", "kind", "x", "y", "width", "height", "visible", "locked"],
+            "properties": {
+              "id": { "type": "string", "minLength": 1 },
+              "interactionId": { "type": "string", "pattern": "^note-play-block:" },
+              "kind": { "type": "string", "minLength": 1 },
+              "x": { "type": "number" },
+              "y": { "type": "number" },
+              "width": { "type": "number", "exclusiveMinimum": 0 },
+              "height": { "type": "number", "exclusiveMinimum": 0 },
+              "visible": { "type": "boolean" },
+              "locked": { "type": "boolean" }
+            }
+          }
+        }
+      }
+    },
+    "identity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["requiresInteractionId", "missingInteractionId", "rawIdFallback", "incomingPaintIds"],
+      "properties": {
+        "requiresInteractionId": { "const": true },
+        "missingInteractionId": { "const": "refuse-target" },
+        "rawIdFallback": { "const": false },
+        "incomingPaintIds": { "const": "raw" }
+      }
+    },
+    "forbiddenActions": {
+      "const": ["setHover", "setSelection"]
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 6,
+      "maxItems": 6,
+      "items": { "$ref": "#/definitions/case" }
+    }
+  },
+  "definitions": {
+    "point": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["x", "y"],
+      "properties": { "x": { "type": "number" }, "y": { "type": "number" } }
+    },
+    "gesture": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "x", "y"],
+          "properties": { "kind": { "const": "move" }, "x": { "type": "number" }, "y": { "type": "number" } }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "blockId", "shiftKey"],
+          "properties": { "kind": { "const": "down" }, "blockId": { "type": "string", "minLength": 1 }, "shiftKey": { "type": "boolean" } }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "x", "y", "shiftKey"],
+          "properties": { "kind": { "const": "down" }, "x": { "type": "number" }, "y": { "type": "number" }, "shiftKey": { "type": "boolean" } }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "from", "to"],
+          "properties": { "kind": { "const": "marquee" }, "from": { "$ref": "#/definitions/point" }, "to": { "$ref": "#/definitions/point" } }
+        }
+      ]
+    },
+    "case": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "gesture", "action", "args"],
+      "properties": {
+        "id": { "enum": ["pointer-hover", "pointer-leave", "replace-pick", "additive-pick", "background-clear", "rectangle-marquee"] },
+        "gesture": { "$ref": "#/definitions/gesture" },
+        "action": { "enum": ["interactionHover", "interactionSelect"] },
+        "args": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["domainId", "targets"],
+          "properties": {
+            "domainId": { "const": "blocks" },
+            "channel": { "const": "pointer" },
+            "targets": { "type": "string" },
+            "merge": { "enum": ["replace", "additive"] },
+            "method": { "enum": ["pick", "rectangle"] }
+          }
+        }
+      }
+    }
+  }
+}

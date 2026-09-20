@@ -1,0 +1,469 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio.tech/schema/os/shell-command-palette-parity.json",
+  "title": "Shell Command Palette Parity",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "geometry",
+    "controls",
+    "interaction",
+    "accessibility",
+    "normalization",
+    "locales",
+    "producer",
+    "items",
+    "queries"
+  ],
+  "properties": {
+    "geometry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "uiSpacingPx",
+        "desktopMaxWidthPx",
+        "viewportInsetUiSpacing",
+        "inputHeightUiSpacing",
+        "inputPaddingXUiSpacing",
+        "inputGapUiSpacing",
+        "inputIconUiSpacing",
+        "listMaxHeightUiSpacing",
+        "groupPaddingUiSpacing",
+        "headingPaddingXUiSpacing",
+        "headingPaddingYUiSpacing",
+        "rowPaddingXUiSpacing",
+        "rowPaddingYUiSpacing",
+        "emptyPaddingYUiSpacing"
+      ],
+      "properties": {
+        "uiSpacingPx": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "desktopMaxWidthPx": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "viewportInsetUiSpacing": {
+          "type": "number",
+          "minimum": 0
+        },
+        "inputHeightUiSpacing": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "inputPaddingXUiSpacing": {
+          "type": "number",
+          "minimum": 0
+        },
+        "inputGapUiSpacing": {
+          "type": "number",
+          "minimum": 0
+        },
+        "inputIconUiSpacing": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "listMaxHeightUiSpacing": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "groupPaddingUiSpacing": {
+          "type": "number",
+          "minimum": 0
+        },
+        "headingPaddingXUiSpacing": {
+          "type": "number",
+          "minimum": 0
+        },
+        "headingPaddingYUiSpacing": {
+          "type": "number",
+          "minimum": 0
+        },
+        "rowPaddingXUiSpacing": {
+          "type": "number",
+          "minimum": 0
+        },
+        "rowPaddingYUiSpacing": {
+          "type": "number",
+          "minimum": 0
+        },
+        "emptyPaddingYUiSpacing": {
+          "type": "number",
+          "minimum": 0
+        }
+      }
+    },
+    "controls": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "searchDialogId",
+        "searchInputId",
+        "searchListId",
+        "searchCloseId",
+        "findDialogId",
+        "findInputId",
+        "findListId",
+        "findCloseId"
+      ],
+      "properties": {
+        "searchDialogId": {
+          "const": "ui.search.dialog"
+        },
+        "searchInputId": {
+          "const": "ui.search.input"
+        },
+        "findDialogId": {
+          "const": "ui.find.dialog"
+        },
+        "findInputId": {
+          "const": "ui.find.input"
+        },
+        "searchListId": {
+          "const": "ui.search.list"
+        },
+        "searchCloseId": {
+          "const": "ui.search.close"
+        },
+        "findListId": {
+          "const": "ui.find.list"
+        },
+        "findCloseId": {
+          "const": "ui.find.close"
+        }
+      }
+    },
+    "locales": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "en",
+        "de"
+      ],
+      "properties": {
+        "en": {
+          "$ref": "#/$defs/locale"
+        },
+        "de": {
+          "$ref": "#/$defs/locale"
+        }
+      }
+    },
+    "producer": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "baseOrder",
+        "hostSuffixOrder",
+        "forbiddenIds",
+        "stagedCommand",
+        "localizedCommands"
+      ],
+      "properties": {
+        "baseOrder": {
+          "$ref": "#/$defs/uniqueIds"
+        },
+        "hostSuffixOrder": {
+          "$ref": "#/$defs/uniqueIds"
+        },
+        "forbiddenIds": {
+          "$ref": "#/$defs/uniqueIds"
+        },
+        "stagedCommand": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "id",
+            "label",
+            "actionPrefix",
+            "expandedKey"
+          ],
+          "properties": {
+            "id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "label": {
+              "type": "string",
+              "pattern": "…$"
+            },
+            "actionPrefix": {
+              "const": "command-form:"
+            },
+            "expandedKey": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        },
+        "localizedCommands": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "labels"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "labels": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "en",
+                  "de"
+                ],
+                "properties": {
+                  "en": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "de": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "items": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "$ref": "#/$defs/item"
+      }
+    },
+    "queries": {
+      "type": "array",
+      "minItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "query",
+          "expectedIds"
+        ],
+        "properties": {
+          "query": {
+            "type": "string"
+          },
+          "expectedIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "uniqueItems": true
+          }
+        }
+      }
+    },
+    "interaction": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "activation",
+        "cancelledRelease",
+        "dismissalQuery",
+        "selectionQuery"
+      ],
+      "properties": {
+        "activation": {
+          "const": "uncancelledPrimaryReleaseOnSameRow"
+        },
+        "cancelledRelease": {
+          "const": "keepOpen"
+        },
+        "dismissalQuery": {
+          "const": "preserve"
+        },
+        "selectionQuery": {
+          "const": "clear"
+        }
+      }
+    },
+    "accessibility": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "inputRole",
+        "listRole",
+        "groupRole",
+        "itemRole",
+        "emptyRole",
+        "dialogRole",
+        "closeRole",
+        "inputEditable",
+        "inputControlsList",
+        "inputOwnsActiveDescendant"
+      ],
+      "properties": {
+        "inputRole": {
+          "const": "combobox"
+        },
+        "listRole": {
+          "const": "listbox"
+        },
+        "groupRole": {
+          "const": "group"
+        },
+        "itemRole": {
+          "const": "option"
+        },
+        "emptyRole": {
+          "const": "status"
+        },
+        "dialogRole": {
+          "const": "dialog"
+        },
+        "closeRole": {
+          "const": "button"
+        },
+        "inputEditable": {
+          "const": true
+        },
+        "inputControlsList": {
+          "const": true
+        },
+        "inputOwnsActiveDescendant": {
+          "const": true
+        }
+      }
+    },
+    "normalization": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "form",
+        "stripCategory",
+        "limit",
+        "cases"
+      ],
+      "properties": {
+        "form": {
+          "const": "NFKD"
+        },
+        "stripCategory": {
+          "const": "M"
+        },
+        "limit": {
+          "const": 96
+        },
+        "cases": {
+          "type": "array",
+          "minItems": 4,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "value",
+              "expected"
+            ],
+            "properties": {
+              "value": {
+                "type": "string"
+              },
+              "expected": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "uniqueIds": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "uniqueItems": true
+    },
+    "locale": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "searchTitle",
+        "searchDescription",
+        "searchPlaceholder",
+        "findTitle",
+        "findDescription",
+        "findPlaceholder",
+        "empty",
+        "close"
+      ],
+      "properties": {
+        "searchTitle": {
+          "type": "string",
+          "minLength": 1
+        },
+        "searchDescription": {
+          "type": "string",
+          "minLength": 1
+        },
+        "searchPlaceholder": {
+          "type": "string",
+          "minLength": 1
+        },
+        "findTitle": {
+          "type": "string",
+          "minLength": 1
+        },
+        "findDescription": {
+          "type": "string",
+          "minLength": 1
+        },
+        "findPlaceholder": {
+          "type": "string",
+          "minLength": 1
+        },
+        "empty": {
+          "type": "string",
+          "minLength": 1
+        },
+        "close": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "item": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "label",
+        "category"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "label": {
+          "type": "string",
+          "minLength": 1
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1
+        },
+        "category": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

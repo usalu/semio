@@ -9,9 +9,9 @@ import { semioBackboneVitePlugin, semioBlobVitePlugin, semioActivationVitePlugin
 import { semioExtensionStoreVitePlugin } from "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏪️store/📥️installation/🟦️.ts";
 import { browserArtifactVitePlugin } from "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/📦️distribution/⚡️vite/🟦️.ts";
 import { repoCacheDirectory } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🟦️.ts";
-import { playGisMapTileServeMode } from "../../🔨️modules/📦️site/🗺️map-tiles/🟦️.ts";
+import { playGisMapTileServeMode } from "../../🔨️modules/📦️site/🗺️tile-serve-mode/🟦️.ts";
 import { playRuntimeAssetSources } from "../../🔨️modules/🧩️runtime/📦️assets/🟦️.ts";
-import { playActivationComponents, readPlayActivation } from "../../🔨️modules/🧩️runtime/♻️activation/🟦️.ts";
+import { playActivationComponents, playExtensionDirectory, readPlayActivation } from "../../🔨️modules/🧩️runtime/♻️activation/🟦️.ts";
 import { playUnionReceiptVitePlugin } from "../../🔨️modules/🧩️runtime/♻️activation/🌐️vite/🟦️.ts";
 import { PLAY_HOST, PLAY_RUNTIME_TARGETS, playRuntimeModuleLayout } from "../../🔨️modules/🧩️runtime/🟦️.ts";
 
@@ -30,7 +30,7 @@ export default defineConfig(({ command }) => {
   const development = command === "serve" ? readPlayActivation(repoRoot) : undefined;
   const pluginModulesDir = path.join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist", profile, "🔌️plugin-modules");
   const installedExtensionsDir = development?.extensionsDirectory ?? pluginModulesDir;
-  const extensionDir = (name: string): string => development?.extensionDirectories.get(name) ?? path.join(pluginModulesDir, name);
+  const extensionDir = (name: string): string => playExtensionDirectory(name, pluginModulesDir, development?.extensionDirectories);
   return {
     root: playDir,
     base: "./",
@@ -62,7 +62,7 @@ export default defineConfig(({ command }) => {
       port: Number(process.env.SEMIO_TECH_PLAY_PORT ?? 6033),
       strictPort: true,
       fs: { allow: [repoRoot, pluginModulesDir, installedExtensionsDir, ...extensionModuleDirNames.map(extensionDir)] },
-      watch: { ignored: ["**/📇️registry/🤖️generated/**", "**/🤖️generated/**", "**/.vscode/launch.json"] },
+      watch: process.env.SEMIO_TECH_PLAY_FROZEN === "true" ? null : { ignored: ["**/📇️registry/🤖️generated/**", "**/🤖️generated/**", "**/.vscode/launch.json"] },
     },
     plugins: [
       ...semioHostHtmlVitePlugin(repoRoot, { title: "semio · Play", entry: "./🟦️.tsx", bodyClass: "h-screen w-screen overflow-hidden bg-background text-foreground", cnameHost: PLAY_HOST }),

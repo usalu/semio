@@ -122,7 +122,7 @@ pub enum Ifc2x3SavMutation {
 
 /// 📇️ Kebab-case spelling of every `Ifc2x3SavMutation` variant, in declaration order — the
 /// `ifc-2x3-sav` catalog in `../../🔣️oracle.json` is required to match verbatim.
-pub const KINDS: &[&str] = &["no-mutation", "set-snapshot", "set-view-definition", "set-analysis-model", "set-load-group", "set-group-assignment"];
+pub const KINDS: &[&str] = &["set-snapshot", "set-view-definition", "set-analysis-model", "set-load-group", "set-group-assignment"];
 
 impl Ifc2x3SavMutation {
     /// 🏷️ This mutation's own kebab-case kind — the single spelling `KINDS`, the `ifc-2x3-sav`

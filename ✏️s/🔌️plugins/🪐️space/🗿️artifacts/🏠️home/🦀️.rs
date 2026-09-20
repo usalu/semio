@@ -474,6 +474,11 @@ pub mod viewer {
         mod component;
         pub use component::*;
 #[path = "."]
+pub mod config {
+    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎚️config/🧬️schema/🦀️.rs"]
+    pub mod schema;
+}
+#[path = "."]
 pub mod presence {
     #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/👥️presence/🧬️schema/🦀️.rs"]
     pub mod schema;

@@ -160,7 +160,7 @@ impl actor_bindings::semio::framework::host_async::HostWithStore<DescribeHostSta
         Err(describe_must_be_pure("artifact-read"))
     }
 
-    async fn artifact_write(_accessor: &wasmtime::component::Accessor<DescribeHostState, Self>, _params: actor_bindings::semio::framework::effects::DocumentWriteParams) -> Result<Vec<u8>, Vec<u8>> {
+    async fn artifact_write(_accessor: &wasmtime::component::Accessor<DescribeHostState, Self>, _params: actor_bindings::semio::framework::effects::ArtifactWriteParams) -> Result<Vec<u8>, Vec<u8>> {
         Err(describe_must_be_pure("artifact-write"))
     }
 

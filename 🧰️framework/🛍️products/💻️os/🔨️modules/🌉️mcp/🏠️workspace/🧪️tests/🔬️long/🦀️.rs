@@ -232,6 +232,54 @@ fn plugin_artifact_channel_mutation_verbs_are_real_round_trips_never_not_wired()
     assert_ne!(redo_error.code, "channel.not-wired");
 }
 
+/// ⚖️ LAW: a real `AppCommand` driven into a real compiled guest comes back as a real `AppFrame`.
+///
+/// 🧭️ The answer of an `AppCommand` travels as `Effect::SendMessage{target: Shell{instance}}`
+/// carrying encoded `AppFrame` bytes, correlated by the frame's own `in_reply_to` against the
+/// command's own `seq` — it is NOT an `Effect::Respond`. The reactor publishes `Respond` for exactly
+/// one inbound event, `Event::Request` (`⚛️reactor/🔄️turn/🦀️.rs`'s `inbound_request_effects`, the
+/// extension-capability seam); a command's frames go through `route_app_frame`, which addresses the
+/// shell endpoint. Reading the wrong lane is why every mutation verb answered "the guest
+/// acknowledged command seq 1 and then went idle without publishing a response for it" once the
+/// compiled runtime made turns atomic (ticket 26/09/18, WR1 §5.4 → WR2).
+///
+/// Skipped with a clear message when `note.wasm` is not built — never a fabricated pass.
+#[test]
+fn a_real_app_command_is_answered_over_the_shell_message_lane_not_the_respond_lane() {
+    let Ok(repo_root) = find_repo_root() else {
+        eprintln!("skipped: repo root not found from this test binary's CARGO_MANIFEST_DIR");
+        return;
+    };
+    let Ok(registry) = load_plugin_registry(&repo_root) else {
+        eprintln!("skipped: plugin registry not generated");
+        return;
+    };
+    let Ok(entry) = find_plugin_entry(&registry, "note") else {
+        eprintln!("skipped: `note` not in the plugin registry");
+        return;
+    };
+    if resolve_plugin_wasm_path(&repo_root, entry).is_err() {
+        eprintln!("skipped: note.wasm not built at target/wasm32-wasip2/{{wasm-dev,wasm-release}}");
+        return;
+    }
+    let dir = store::test_support::tempdir().expect("tempdir");
+    let workspace = HeadlessWorkspace::open_folder(dir.path().to_path_buf(), "agent:command-response-test".to_string(), Vec::new(), empty_catalog()).expect("opens");
+    let mut channel = workspace.open_artifact_channel("note").expect("a real channel to `note`");
+
+    let read = channel.exchange(0, vec![AppCommand::ReadArtifact]);
+    println!("[WR2] real ReadArtifact round trip: {read:?}");
+    let fault = read.as_ref().err();
+    assert!(
+        !fault.is_some_and(|fault| fault.message.contains("went idle without publishing a response")),
+        "the command's answer is a `SendMessage{{Shell}}` frame, not an `Effect::Respond`; a host that reads the respond lane sees an idle guest: {read:?}"
+    );
+    let frames = read.expect("`note` answers its own genesis document");
+    match frames.first() {
+        Some(AppFrame::Artifact { pack, .. }) => assert!(!pack.is_empty(), "the guest's genesis document pack is empty: {frames:?}"),
+        other => panic!("ReadArtifact must answer a real Artifact frame, received {other:?}"),
+    }
+}
+
 #[test]
 fn attempt_plugin_activation_against_a_real_note_wasm_when_available() {
     let repo_root = match find_repo_root() {
@@ -270,3 +318,161 @@ fn attempt_plugin_activation_against_a_real_note_wasm_when_available() {
         }
     }
 }
+
+//#region 🔖️TwoPhaseTypedCommand
+/// 🧭️ The one mutation verb this file's two-phase laws drive, resolved out of the REAL compiled
+/// catalog rather than spelled here: a capability id is `{plugin}.{app}.{action}` and an app id is
+/// itself a dotted canonical surface ref (`s.note.note@1/*#editor`), so it cannot be written by hand
+/// without pinning a schema version this law has no business knowing.
+fn note_mutation_capability_id() -> Option<String> {
+    crate::build_catalog().entries.iter().map(|entry| entry.id.as_str().to_string()).find(|id| id.starts_with("note.") && id.ends_with(".addBlock"))
+}
+
+/// 🧬️ The witness these laws compare on: the DOCUMENT itself, read back off the live guest.
+///
+/// 🧭️ Deliberately not `ReadHistory`. The command log is append-only and an undo does not remove
+/// the row it walks back — `transaction_commit` appends `transaction:{txn_id}` and
+/// `transaction_undo` only moves the store's own cursor — so a history stamp answers "one command
+/// has been recorded" both before and after an undo and could never tell an applied edit from a
+/// reverted one. An event-sourced document also keeps its genesis container in `pack` and every edit
+/// in the `spr` sidecar (AP1 §3: 515/223 → 515/612 across a real mutation), so both lanes are
+/// summed and the content is folded, never just `pack.len()`.
+fn document_witness(channel: &mut PluginArtifactChannel, instance: u32) -> String {
+    match channel.exchange(instance, vec![AppCommand::ReadArtifact]) {
+        Ok(frames) => match frames.first() {
+            Some(AppFrame::Artifact { pack, spr }) => {
+                let fold = |bytes: &[u8]| bytes.iter().fold(1469598103934665603u64, |hash, byte| (hash ^ u64::from(*byte)).wrapping_mul(1099511628211));
+                format!("pack:{}/{:016x} spr:{}/{:016x}", pack.len(), fold(pack), spr.len(), fold(spr))
+            }
+            other => format!("<unexpected {other:?}>"),
+        },
+        Err(fault) => format!("<fault {}: {}>", fault.code, fault.message),
+    }
+}
+
+fn history_stamp(channel: &mut PluginArtifactChannel, instance: u32) -> String {
+    match channel.exchange(instance, vec![AppCommand::ReadHistory]) {
+        Ok(frames) => match frames.first() {
+            Some(AppFrame::HistorySnapshot(stamp)) => format!("{}@{}", stamp.cursor, stamp.head_edit_id),
+            other => format!("<unexpected {other:?}>"),
+        },
+        Err(fault) => format!("<fault {}: {}>", fault.code, fault.message),
+    }
+}
+
+/// ⚖️ LAW (WR4): the agent lane's two phases are genuinely two — and the second one applies ONCE.
+///
+/// This is the whole of `action_prepare`/`action_invoke`/`history_undo` driven against `🗒️note`'s
+/// real compiled guest, asserting the four properties the split exists to give:
+///
+/// 1. **prepare produces ops** — a real `AppFrame::Emit` with at least one document-lane op, which
+///    is only possible if the guest resolved the owner-qualified address, admitted the window view,
+///    passed the interactive-job classification and ran `A::command_from_action` + `A::handle`.
+/// 2. **prepare applies NOTHING** — the head is byte-identical across it. Before WR4 the pure lane
+///    refused outright (`interactive-job.missing-exact-key`); the failure mode this pins is the
+///    opposite one, a prepare routed through the applying dispatch lane, which would move the head
+///    here and then move it again at commit (`RoutingArtifactChannel` caches ONE guest per plugin).
+/// 3. **invoke applies exactly once** — `TransactionPrepare{ops}` + `TransactionCommit` moves the
+///    head by one edit, whose group id is the transaction's own.
+/// 4. **undo reverts that one application** — the head returns to the prepare-time baseline, which
+///    is the assertion that would fail if anything had applied twice.
+///
+/// A fifth property is asserted in the same run: a prepared handle that is never invoked retires
+/// without effect (a second `PureCommand` whose ops are dropped leaves the head where it was).
+///
+/// Skipped with a clear message when `note.wasm` is not built — never a fabricated pass.
+#[test]
+fn a_prepared_action_applies_nothing_and_its_commit_applies_exactly_once() {
+    let Ok(repo_root) = find_repo_root() else {
+        eprintln!("skipped: repo root not found from this test binary's CARGO_MANIFEST_DIR");
+        return;
+    };
+    let Ok(registry) = load_plugin_registry(&repo_root) else {
+        eprintln!("skipped: plugin registry not generated");
+        return;
+    };
+    let Ok(entry) = find_plugin_entry(&registry, "note") else {
+        eprintln!("skipped: `note` not in the plugin registry");
+        return;
+    };
+    if resolve_plugin_wasm_path(&repo_root, entry).is_err() {
+        eprintln!("skipped: note.wasm not built at target/wasm32-wasip2/{{wasm-dev,wasm-release}}");
+        return;
+    }
+    let Some(capability_id) = note_mutation_capability_id() else {
+        eprintln!("skipped: the compiled catalog publishes no `note.….addBlock` capability");
+        return;
+    };
+    let dir = store::test_support::tempdir().expect("tempdir");
+    let workspace = HeadlessWorkspace::open_folder(dir.path().to_path_buf(), "agent:two-phase-test".to_string(), Vec::new(), empty_catalog()).expect("opens");
+    let mut channel = workspace.open_artifact_channel("note").expect("a real channel to `note`");
+    let input = serde_json::json!({ "kind": "text", "x": 40, "y": 40 });
+
+    let baseline = document_witness(&mut channel, 0);
+    assert_eq!(history_stamp(&mut channel, 0), "0@", "a freshly opened `note` has no recorded command yet");
+    let prepared = channel.exchange(0, vec![AppCommand::PureCommand { capability_id: capability_id.clone(), input: input.clone() }]);
+    println!("[WR4] prepare {capability_id}: {prepared:?}");
+    let ops = match prepared.expect("the guest previews its own verb").into_iter().next() {
+        Some(AppFrame::Emit { ops, .. }) => ops,
+        other => panic!("PureCommand must answer a real Emit frame, received {other:?}"),
+    };
+    assert!(!ops.document.is_empty(), "a previewed mutation that produced no document-lane op previewed nothing: {ops:?}");
+    let after_prepare = document_witness(&mut channel, 0);
+    assert_eq!(baseline, after_prepare, "PREPARE APPLIED: the head moved during a phase whose whole contract is that it does not ({baseline} → {after_prepare})");
+
+    let txn = "wr4-two-phase".to_string();
+    let prepare_frames = channel
+        .exchange(
+            0,
+            vec![AppCommand::TransactionPrepare {
+                txn_id: txn.clone(),
+                ops: PreparedOps { document: ops.document.clone(), config: Vec::new(), draft: Vec::new() },
+                label: "wr4 two-phase probe".to_string(),
+                origin: crate::actions::MutationOrigin::Agent { principal: "agent:two-phase-test".to_string(), invocation_id: "wr4-inv-1".to_string() },
+            }],
+        )
+        .expect("the guest stages the prepared ops");
+    println!("[WR4] stage: {prepare_frames:?}");
+    let staged = document_witness(&mut channel, 0);
+    assert_eq!(baseline, staged, "STAGING APPLIED: TransactionPrepare must stash, never apply ({baseline} → {staged})");
+
+    let committed = channel.exchange(0, vec![AppCommand::TransactionCommit { txn_id: txn.clone() }]).expect("the guest commits the staged ops");
+    println!("[WR4] commit: {committed:?}");
+    let after_commit = document_witness(&mut channel, 0);
+    assert_ne!(baseline, after_commit, "COMMIT APPLIED NOTHING: the one phase that is supposed to mutate left the document at {baseline}");
+    // 🧮️ **Exactly once**, stated as a count rather than as a diff. `transaction_commit` lands this
+    //    member's whole prepared roster as ONE `Edit` and records ONE command row, so a cursor of
+    //    exactly 1 over a document that had none is the assertion that a second application never
+    //    happened — which is the failure mode routing `prepare` through the shell's applying
+    //    dispatch lane would produce (`RoutingArtifactChannel` caches one guest per plugin, so the
+    //    prepare-time apply and the commit-time apply would land on the same store).
+    assert_eq!(history_stamp(&mut channel, 0), format!("1@transaction:{txn}"), "APPLIED MORE THAN ONCE: exactly one transaction was committed, so exactly one command row may exist");
+
+    let undone = channel.exchange(0, vec![AppCommand::TransactionUndo { group_id: txn.clone() }]).expect("the guest undoes its own transaction group");
+    println!("[WR4] undo: {undone:?}");
+    let after_undo = document_witness(&mut channel, 0);
+    println!("[WR4] after undo: {after_undo} (commit was {after_commit}, baseline {baseline})");
+    // ↩️ **One undo is enough**, stated as the refusal of a second. The document bytes cannot say
+    //    this: `note` is event-sourced, so the revert is itself appended to the `.spr` sidecar and
+    //    the stream GROWS (measured here: 223 → 671 on the commit → 765 on the undo). What does say
+    //    it is `VcsArtifactApp::transaction_undo`'s own precondition — it refuses unless the store's
+    //    TAIL edit belongs to the named group — so a second undo of the same group must be refused
+    //    by name. Had the commit applied twice, the group would still own the tail and this would
+    //    succeed.
+    let twice = channel.exchange(0, vec![AppCommand::TransactionUndo { group_id: txn.clone() }]);
+    println!("[WR4] second undo of the same group: {twice:?}");
+    let refusal = twice.expect_err("a group with one application left has nothing for a second undo to walk back");
+    assert!(
+        refusal.message.contains("does not belong to group"),
+        "DOUBLE APPLY: a second undo of group {txn:?} was not refused for the reason that proves one application ({}: {})",
+        refusal.code,
+        refusal.message
+    );
+
+    let settled = document_witness(&mut channel, 0);
+    let abandoned = channel.exchange(0, vec![AppCommand::PureCommand { capability_id: capability_id.clone(), input }]).expect("a second preview answers");
+    println!("[WR4] abandoned prepare: {abandoned:?}");
+    let after_abandon = document_witness(&mut channel, 0);
+    assert_eq!(settled, after_abandon, "A PREPARED HANDLE THAT IS NEVER INVOKED LEFT AN EFFECT: the document moved from {settled} to {after_abandon}");
+}
+//#endregion 🔖️TwoPhaseTypedCommand

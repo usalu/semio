@@ -66,7 +66,9 @@ fn action_of(value: &Value) -> Option<ActionDescriptor> {
 }
 
 fn tree_item(value: &Value) -> UiTreeItemNode {
-    UiTreeItemNode { window: None, granularity: None,
+    UiTreeItemNode {
+        window: None,
+        granularity: None,
         id: value["id"].as_str().expect("item id").to_string(),
         label: Label::data(value["label"].as_str().unwrap_or_default()),
         description: None,
@@ -94,7 +96,8 @@ fn ui_node(value: &Value) -> UiNode {
                 .as_array()
                 .expect("sections")
                 .iter()
-                .map(|section| UiTreeSectionNode { window: None,
+                .map(|section| UiTreeSectionNode {
+                    window: None,
                     id: section["id"].as_str().expect("section id").to_string(),
                     label: section["label"].as_str().map(Label::data),
                     default_open: section["defaultOpen"].as_bool(),
@@ -115,6 +118,7 @@ fn ui_node(value: &Value) -> UiNode {
                 "node-graph" => SurfaceKind::NodeGraph,
                 "tiled-map" => SurfaceKind::TiledMap,
                 "board-2d" => SurfaceKind::Board2d,
+                "table" => SurfaceKind::Table,
                 other => panic!("fixture surface kind {other}"),
             },
             pane_id: None,
@@ -165,11 +169,13 @@ fn kind_name(kind: HitKind) -> &'static str {
         HitKind::Ring => "ring",
         HitKind::IconSelect => "iconSelect",
         HitKind::TreeItem => "treeItem",
+        HitKind::TreeDragHandle => "treeDragHandle",
         HitKind::TreeDropTarget => "treeDropTarget",
         HitKind::PanelTab => "panelTab",
         HitKind::NavbarItem => "navbarItem",
         HitKind::Window => "window",
         HitKind::World3d => "world3d",
+        HitKind::ComponentScene => "componentScene",
         HitKind::PanelResize => "panelResize",
         HitKind::DockSplit => "dockSplit",
         HitKind::DockJoinCorner => "dockJoinCorner",

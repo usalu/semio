@@ -1,0 +1,1011 @@
+{
+  "$schema": "../../🧬️schema/🎨️scene-shading/🔣️.json",
+  "schema": "framework.world3d.scene-shading/v1",
+  "reference": {
+    "threeRevision": "182",
+    "fiberVersion": "9.7.0",
+    "toneMapping": "ACESFilmic",
+    "outputColorSpace": "srgb",
+    "workingColorSpace": "linear-srgb",
+    "exposure": 1
+  },
+  "scene": {
+    "viewport": [
+      64,
+      64
+    ],
+    "camera": {
+      "position": [
+        0,
+        0,
+        4
+      ],
+      "target": [
+        0,
+        0,
+        0
+      ],
+      "up": [
+        0,
+        1,
+        0
+      ],
+      "fov": 45
+    },
+    "geometry": {
+      "positions": [
+        -1.5,
+        -1.5,
+        0,
+        1.5,
+        -1.5,
+        0,
+        0,
+        1.5,
+        0
+      ],
+      "normals": [
+        0,
+        0,
+        1,
+        0,
+        0,
+        1,
+        0,
+        0,
+        1
+      ],
+      "colors": [
+        0.25,
+        0.5,
+        0.75,
+        1,
+        0.25,
+        0.5,
+        0.75,
+        1,
+        0.25,
+        0.5,
+        0.75,
+        1
+      ],
+      "indices": [
+        0,
+        1,
+        2
+      ]
+    },
+    "material": {
+      "metalness": 0,
+      "roughness": 1,
+      "emissive": [
+        0,
+        0,
+        0
+      ],
+      "emissiveIntensity": 0,
+      "opacity": 1
+    },
+    "fallbackLights": {
+      "ambient": {
+        "color": [
+          1,
+          1,
+          1
+        ],
+        "intensity": 1.15
+      },
+      "hemisphere": {
+        "position": [
+          0,
+          0,
+          1
+        ],
+        "skyHex": "#ffffff",
+        "groundHex": "#9aa0ab",
+        "sky": [
+          1,
+          1,
+          1
+        ],
+        "ground": [
+          0.3231432091022285,
+          0.3515325994898463,
+          0.407240211891531
+        ],
+        "intensity": 1.35
+      },
+      "directional": [
+        {
+          "position": [
+            12,
+            18,
+            10
+          ],
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "intensity": 2.4
+        },
+        {
+          "position": [
+            -14,
+            -10,
+            6
+          ],
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "intensity": 1.2
+        },
+        {
+          "position": [
+            0,
+            0,
+            -16
+          ],
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "intensity": 0.75
+        }
+      ]
+    },
+    "sunLight": {
+      "direction": [
+        0.45,
+        0.6,
+        0.6614378278
+      ],
+      "color": [
+        1,
+        0.72,
+        0.36
+      ],
+      "intensity": 3.25
+    }
+  },
+  "appearances": {
+    "light": {
+      "panelHex": "#c9c8bd",
+      "panelLinear": [
+        0.58407842,
+        0.57758044,
+        0.50888132,
+        1
+      ]
+    },
+    "dark": {
+      "panelHex": "#1d2b2f",
+      "panelLinear": [
+        0.01228649,
+        0.02415763,
+        0.02842604,
+        1
+      ]
+    }
+  },
+  "provenanceCases": [
+    {
+      "id": "semantic-light",
+      "source": "semanticNeutral",
+      "appearance": "light",
+      "sourceLinear": [
+        1,
+        1,
+        1,
+        1
+      ],
+      "expectedNeutralLinear": [
+        0.58407842,
+        0.57758044,
+        0.50888132,
+        1
+      ]
+    },
+    {
+      "id": "semantic-dark",
+      "source": "semanticNeutral",
+      "appearance": "dark",
+      "sourceLinear": [
+        1,
+        1,
+        1,
+        1
+      ],
+      "expectedNeutralLinear": [
+        0.01228649,
+        0.02415763,
+        0.02842604,
+        1
+      ]
+    },
+    {
+      "id": "authored-light",
+      "source": "authored",
+      "appearance": "light",
+      "sourceLinear": [
+        0.25,
+        0.5,
+        0.75,
+        0.8
+      ],
+      "expectedNeutralLinear": [
+        0.25,
+        0.5,
+        0.75,
+        0.8
+      ]
+    },
+    {
+      "id": "environment-dark",
+      "source": "environment",
+      "appearance": "dark",
+      "sourceLinear": [
+        0.72,
+        0.18,
+        0.06,
+        0.65
+      ],
+      "expectedNeutralLinear": [
+        0.72,
+        0.18,
+        0.06,
+        0.65
+      ]
+    }
+  ],
+  "styleCases": [
+    {
+      "id": "neutral-vertex",
+      "kind": "neutral",
+      "hasVertexColors": true,
+      "baseColor": [
+        1,
+        1,
+        1,
+        1
+      ],
+      "vertexColorWeight": 1,
+      "emissiveIntensity": 0,
+      "opacity": 1
+    },
+    {
+      "id": "disabled-vertex",
+      "kind": "disabled",
+      "hasVertexColors": true,
+      "baseColor": [
+        1,
+        1,
+        1,
+        0.45
+      ],
+      "vertexColorWeight": 1,
+      "emissiveIntensity": 0,
+      "opacity": 0.45
+    },
+    {
+      "id": "selected-solid",
+      "kind": "selected",
+      "hasVertexColors": true,
+      "baseColor": [
+        1,
+        0.03433981,
+        0.07818742,
+        1
+      ],
+      "vertexColorWeight": 0,
+      "emissiveIntensity": 0.35,
+      "opacity": 1
+    },
+    {
+      "id": "hovered-solid",
+      "kind": "hovered",
+      "hasVertexColors": true,
+      "baseColor": [
+        0.19806932,
+        0.22322796,
+        0.20507874,
+        1
+      ],
+      "vertexColorWeight": 0,
+      "emissiveIntensity": 0.08,
+      "opacity": 1
+    },
+    {
+      "id": "highlighted-solid",
+      "kind": "highlighted",
+      "hasVertexColors": true,
+      "baseColor": [
+        0.03433981,
+        0.63759687,
+        0.52099557,
+        1
+      ],
+      "vertexColorWeight": 0,
+      "emissiveIntensity": 0.2,
+      "opacity": 1
+    },
+    {
+      "id": "provisional-solid",
+      "kind": "provisional",
+      "hasVertexColors": true,
+      "baseColor": [
+        0.03433981,
+        0.63759687,
+        0.52099557,
+        0.62
+      ],
+      "vertexColorWeight": 0,
+      "emissiveIntensity": 0.2,
+      "opacity": 0.62
+    }
+  ],
+  "materialCases": [
+    {
+      "id": "inline-standard-default",
+      "geometryKind": "inline",
+      "source": {
+        "metalness": 0,
+        "roughness": 1
+      },
+      "environment": null,
+      "expected": {
+        "metalness": 0,
+        "roughness": 1
+      },
+      "side": "double",
+      "depthWrite": true
+    },
+    {
+      "id": "glb-source-material-replaced",
+      "geometryKind": "glb",
+      "source": {
+        "metalness": 0.85,
+        "roughness": 0.12
+      },
+      "environment": null,
+      "expected": {
+        "metalness": 0,
+        "roughness": 1
+      },
+      "side": "front",
+      "depthWrite": true
+    },
+    {
+      "id": "glb-environment-material",
+      "geometryKind": "glb",
+      "source": {
+        "metalness": 0.85,
+        "roughness": 0.12
+      },
+      "environment": {
+        "metalness": 0.35,
+        "roughness": 0.58
+      },
+      "expected": {
+        "metalness": 0.35,
+        "roughness": 0.58
+      },
+      "side": "front",
+      "depthWrite": true
+    }
+  ],
+  "mixedMaterialScope": {
+    "environment": {
+      "metalness": 0.35,
+      "roughness": 0.58
+    },
+    "scale": 0.45,
+    "cases": [
+      {
+        "id": "mixed-scope-inline-default",
+        "geometryKind": "inline",
+        "position": [-0.8, 0, 0],
+        "samplePosition": [16, 32],
+        "expected": {
+          "metalness": 0,
+          "roughness": 1
+        }
+      },
+      {
+        "id": "mixed-scope-glb-environment",
+        "geometryKind": "glb",
+        "position": [0.8, 0, 0],
+        "samplePosition": [48, 32],
+        "expected": {
+          "metalness": 0.35,
+          "roughness": 0.58
+        }
+      }
+    ]
+  },
+  "textureCases": [
+    {
+      "id": "paint-texture-neutral-vertex",
+      "texelRgba8": [96, 176, 224, 255],
+      "mapColorSpace": "none",
+      "styleKind": "neutral",
+      "baseColor": [1, 1, 1, 1],
+      "vertexColor": [0.25, 0.5, 0.75, 1],
+      "preserveVertexColor": true,
+      "emissiveIntensity": 0,
+      "opacity": 1,
+      "depthWrite": true
+    },
+    {
+      "id": "paint-texture-selected-solid",
+      "texelRgba8": [96, 176, 224, 255],
+      "mapColorSpace": "none",
+      "styleKind": "selected",
+      "baseColor": [1, 0.0343398068, 0.0781874218, 1],
+      "vertexColor": [0.25, 0.5, 0.75, 1],
+      "preserveVertexColor": false,
+      "emissiveIntensity": 0.35,
+      "opacity": 1,
+      "depthWrite": true
+    },
+    {
+      "id": "paint-texture-disabled-vertex",
+      "texelRgba8": [96, 176, 224, 255],
+      "mapColorSpace": "none",
+      "styleKind": "disabled",
+      "baseColor": [1, 1, 1, 0.45],
+      "vertexColor": [0.25, 0.5, 0.75, 1],
+      "preserveVertexColor": true,
+      "emissiveIntensity": 0,
+      "opacity": 0.45,
+      "depthWrite": true
+    }
+  ],
+  "celebration": {
+    "spinSeconds": 1.2,
+    "stops": [
+      {
+        "hex": "#ff344f",
+        "linear": [1, 0.0343398068, 0.0781874218]
+      },
+      {
+        "hex": "#34d1bf",
+        "linear": [0.0343398068, 0.637596874, 0.5209955732]
+      },
+      {
+        "hex": "#fa9500",
+        "linear": [0.9559733532, 0.3005437944, 0]
+      }
+    ],
+    "cases": [
+      {
+        "id": "celebrated-phase-0",
+        "phaseSeconds": 0,
+        "localPosition": [1, 0, 0],
+        "opacity": 1,
+        "side": "double",
+        "depthWrite": true
+      },
+      {
+        "id": "celebrated-phase-quarter",
+        "phaseSeconds": 0.3,
+        "localPosition": [1, 0, 0],
+        "opacity": 1,
+        "side": "double",
+        "depthWrite": true
+      },
+      {
+        "id": "celebrated-phase-half",
+        "phaseSeconds": 0.6,
+        "localPosition": [1, 0, 0],
+        "opacity": 1,
+        "side": "double",
+        "depthWrite": true
+      },
+      {
+        "id": "celebrated-phase-three-quarter-transparent",
+        "phaseSeconds": 0.9,
+        "localPosition": [1, 0, 0],
+        "opacity": 0.62,
+        "side": "double",
+        "depthWrite": false
+      }
+    ]
+  },
+  "depthOrderCases": [
+    {
+      "id": "standard-transparent-projected-depth",
+      "expectedDrawOrder": [
+        "far-red-inserted-second",
+        "near-blue-inserted-first"
+      ],
+      "layers": [
+        {
+          "id": "near-blue-inserted-first",
+          "position": [1, 0, 0],
+          "localCenter": [-1, 0, 0.5],
+          "color": [0.08, 0.18, 0.92, 0.55],
+          "opacity": 0.55,
+          "depthWrite": true
+        },
+        {
+          "id": "far-red-inserted-second",
+          "position": [-1, 0, 0],
+          "localCenter": [1, 0, -0.5],
+          "color": [0.92, 0.08, 0.12, 0.5],
+          "opacity": 0.5,
+          "depthWrite": true
+        }
+      ]
+    },
+    {
+      "id": "standard-transparent-equal-depth-red-first",
+      "expectedDrawOrder": [
+        "red-stable-first",
+        "blue-stable-second"
+      ],
+      "layers": [
+        {
+          "id": "red-stable-first",
+          "position": [-1, 0, 0.5],
+          "localCenter": [1, 0, -0.5],
+          "color": [0.92, 0.08, 0.12, 0.5],
+          "opacity": 0.5,
+          "depthWrite": true
+        },
+        {
+          "id": "blue-stable-second",
+          "position": [1, 0, -0.5],
+          "localCenter": [-1, 0, 0.5],
+          "color": [0.08, 0.18, 0.92, 0.55],
+          "opacity": 0.55,
+          "depthWrite": true
+        }
+      ]
+    },
+    {
+      "id": "standard-transparent-equal-depth-blue-first",
+      "expectedDrawOrder": [
+        "blue-stable-first",
+        "red-stable-second"
+      ],
+      "layers": [
+        {
+          "id": "blue-stable-first",
+          "position": [1, 0, -0.5],
+          "localCenter": [-1, 0, 0.5],
+          "color": [0.08, 0.18, 0.92, 0.55],
+          "opacity": 0.55,
+          "depthWrite": true
+        },
+        {
+          "id": "red-stable-second",
+          "position": [-1, 0, 0.5],
+          "localCenter": [1, 0, -0.5],
+          "color": [0.92, 0.08, 0.12, 0.5],
+          "opacity": 0.5,
+          "depthWrite": true
+        }
+      ]
+    }
+  ],
+  "math": {
+    "normalTransforms": [
+      {
+        "id": "nonuniform",
+        "modelScale": [
+          2,
+          1,
+          0.5
+        ],
+        "objectNormal": [
+          0.5773502692,
+          0.5773502692,
+          0.5773502692
+        ],
+        "expectedWorldNormal": [
+          0.2182178902,
+          0.4364357805,
+          0.8728715609
+        ],
+        "oracle": "three.Matrix3.getNormalMatrix"
+      },
+      {
+        "id": "singular-finite-fallback",
+        "modelScale": [
+          0,
+          1,
+          1
+        ],
+        "objectNormal": [
+          0.5773502692,
+          0.5773502692,
+          0.5773502692
+        ],
+        "expectedWorldNormal": [
+          0,
+          0.7071067812,
+          0.7071067812
+        ],
+        "oracle": "finite-model-linear-fallback"
+      }
+    ],
+    "indirectLambert": {
+      "irradiance": [
+        1,
+        1,
+        1
+      ],
+      "baseColor": [
+        0.25,
+        0.5,
+        0.75
+      ],
+      "metalness": 0,
+      "expectedDiffuse": [
+        0.0795774715,
+        0.1591549431,
+        0.2387324146
+      ]
+    },
+    "directSamples": [
+      {
+        "id": "rough-dielectric",
+        "normal": [
+          0,
+          0,
+          1
+        ],
+        "view": [
+          0,
+          0,
+          1
+        ],
+        "light": [
+          0.2672612419,
+          0.5345224838,
+          0.8017837257
+        ],
+        "radiance": [
+          2.4,
+          2.4,
+          2.4
+        ],
+        "baseColor": [
+          0.25,
+          0.5,
+          0.75
+        ],
+        "metalness": 0,
+        "roughness": 1
+      },
+      {
+        "id": "mixed-metal",
+        "normal": [
+          0.2182178902,
+          0.4364357805,
+          0.8728715609
+        ],
+        "view": [
+          0,
+          0,
+          1
+        ],
+        "light": [
+          0.6,
+          0,
+          0.8
+        ],
+        "radiance": [
+          3.25,
+          2.34,
+          1.17
+        ],
+        "baseColor": [
+          0.72,
+          0.18,
+          0.06
+        ],
+        "metalness": 0.4,
+        "roughness": 0.62
+      }
+    ],
+    "acesInputs": [
+      {
+        "id": "in-range",
+        "linearRgb": [
+          0.25,
+          0.5,
+          0.75
+        ]
+      },
+      {
+        "id": "hdr-white",
+        "linearRgb": [
+          4,
+          4,
+          4
+        ]
+      },
+      {
+        "id": "hdr-colored",
+        "linearRgb": [
+          6,
+          1.5,
+          0.25
+        ]
+      }
+    ]
+  },
+  "pixelOracle": {
+    "status": "recorded",
+    "producer": "Installed Three r182 WebGLRenderer in Chromium, ANGLE Metal Apple M1 Max; actual readPixels reference, no WGPU parity assertion",
+    "profile": {
+      "samplePosition": [
+        32,
+        32
+      ],
+      "clearRgba": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "antialias": false,
+      "premultipliedAlpha": false,
+      "maximumRgbError": 1
+    },
+    "rows": [
+      {
+        "id": "semantic-light",
+        "rgba8": [
+          215,
+          215,
+          210,
+          255
+        ]
+      },
+      {
+        "id": "semantic-dark",
+        "rgba8": [
+          23,
+          37,
+          42,
+          255
+        ]
+      },
+      {
+        "id": "authored-light",
+        "rgba8": [
+          144,
+          167,
+          179,
+          204
+        ]
+      },
+      {
+        "id": "environment-dark",
+        "rgba8": [
+          152,
+          100,
+          61,
+          166
+        ]
+      },
+      {
+        "id": "neutral-vertex",
+        "rgba8": [
+          180,
+          208,
+          223,
+          255
+        ]
+      },
+      {
+        "id": "disabled-vertex",
+        "rgba8": [
+          81,
+          94,
+          100,
+          115
+        ]
+      },
+      {
+        "id": "selected-solid",
+        "rgba8": [
+          255,
+          110,
+          119,
+          255
+        ]
+      },
+      {
+        "id": "hovered-solid",
+        "rgba8": [
+          157,
+          165,
+          160,
+          255
+        ]
+      },
+      {
+        "id": "highlighted-solid",
+        "rgba8": [
+          155,
+          225,
+          216,
+          255
+        ]
+      },
+      {
+        "id": "provisional-solid",
+        "rgba8": [
+          96,
+          139,
+          134,
+          158
+        ]
+      },
+      {
+        "id": "indirect-lambert",
+        "rgba8": [
+          77,
+          118,
+          145,
+          255
+        ]
+      },
+      {
+        "id": "rough-dielectric",
+        "rgba8": [
+          128,
+          167,
+          191,
+          255
+        ]
+      },
+      {
+        "id": "mixed-metal",
+        "rgba8": [
+          203,
+          91,
+          33,
+          255
+        ]
+      },
+      {
+        "id": "aces-in-range",
+        "rgba8": [
+          164,
+          197,
+          215,
+          255
+        ]
+      },
+      {
+        "id": "aces-hdr-white",
+        "rgba8": [
+          250,
+          250,
+          250,
+          255
+        ]
+      },
+      {
+        "id": "aces-hdr-colored",
+        "rgba8": [
+          255,
+          240,
+          202,
+          255
+        ]
+      },
+      {
+        "id": "sun-neutral-light",
+        "rgba8": [
+          208,
+          197,
+          173,
+          255
+        ]
+      },
+      {
+        "id": "disabled-over-light",
+        "rgba8": [
+          192,
+          204,
+          204,
+          255
+        ]
+      },
+      {
+        "id": "provisional-over-dark",
+        "rgba8": [
+          107,
+          156,
+          152,
+          255
+        ]
+      },
+      {
+        "id": "ordered-transparent-overlap",
+        "rgba8": [
+          158,
+          212,
+          213,
+          255
+        ]
+      }
+    ]
+  },
+  "s2PixelOracle": {
+    "status": "recorded",
+    "producer": "Installed Three r182 WebGLRenderer in Chromium readPixels",
+    "profile": {
+      "samplePosition": [32, 32],
+      "clearRgba": [0, 0, 0, 0],
+      "antialias": false,
+      "premultipliedAlpha": false,
+      "maximumRgbError": 1
+    },
+    "rows": [
+      { "id": "inline-standard-default", "rgba8": [215, 215, 210, 255] },
+      { "id": "glb-source-material-replaced", "rgba8": [215, 215, 210, 255] },
+      { "id": "glb-environment-material", "rgba8": [199, 198, 192, 255] },
+      { "id": "mixed-scope-inline-default", "rgba8": [215, 215, 210, 255] },
+      { "id": "mixed-scope-glb-environment", "rgba8": [199, 199, 192, 255] },
+      { "id": "paint-texture-neutral-vertex", "rgba8": [130, 189, 218, 255] },
+      { "id": "paint-texture-selected-solid", "rgba8": [237, 68, 104, 255] },
+      { "id": "paint-texture-disabled-vertex", "rgba8": [59, 85, 98, 115] },
+      { "id": "celebrated-phase-0", "rgba8": [252, 11, 21, 255] },
+      { "id": "celebrated-phase-quarter", "rgba8": [67, 126, 106, 255] },
+      { "id": "celebrated-phase-half", "rgba8": [129, 119, 65, 255] },
+      { "id": "celebrated-phase-three-quarter-transparent", "rgba8": [153, 36, 3, 158] },
+      { "id": "standard-transparent-projected-depth", "rgba8": [121, 107, 155, 198] },
+      { "id": "standard-transparent-equal-depth-red-first", "rgba8": [121, 107, 155, 198] },
+      { "id": "standard-transparent-equal-depth-blue-first", "rgba8": [157, 99, 126, 197] }
+    ]
+  },
+  "compositingCases": [
+    {
+      "id": "disabled-over-light",
+      "clearLinearRgba": [
+        0.58407842,
+        0.57758044,
+        0.50888132,
+        1
+      ],
+      "layers": [
+        "disabled-vertex"
+      ]
+    },
+    {
+      "id": "provisional-over-dark",
+      "clearLinearRgba": [
+        0.01228649,
+        0.02415763,
+        0.02842604,
+        1
+      ],
+      "layers": [
+        "provisional-solid"
+      ]
+    },
+    {
+      "id": "ordered-transparent-overlap",
+      "clearLinearRgba": [
+        0.1,
+        0.2,
+        0.3,
+        1
+      ],
+      "layers": [
+        "authored-light",
+        "provisional-solid"
+      ]
+    }
+  ]
+}

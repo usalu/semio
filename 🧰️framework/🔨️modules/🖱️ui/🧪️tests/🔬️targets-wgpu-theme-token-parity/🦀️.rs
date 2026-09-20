@@ -204,6 +204,15 @@ fn outcome_paints_decode_to_the_same_hex_react_paints() {
 }
 
 #[test]
+fn semantic_panel_decodes_to_reacts_live_css_alias_and_custom_theme_input() {
+    assert_eq!(hex_of(Theme::light().panel), generated_palette_hex("light-5-7"));
+    assert_eq!(hex_of(Theme::dark().panel), generated_palette_hex("dark-7-9"));
+    let mono = Theme::mono(false);
+    assert_eq!(mono.panel, Rgba::from_token(&ui_styling::CHROME_MONO_LIGHT.panel), "a premade theme owns its semantic panel token");
+    assert_ne!(mono.panel, Rgba::from_token(&ui_styling::CHROME_MONO_LIGHT.level_panel), "the semantic --panel alias remains distinct from the hierarchy level ramp");
+}
+
+#[test]
 fn every_theme_metric_is_a_multiple_of_the_shared_ui_spacing() {
     let theme = Theme::dark();
     let step = ui_styling::metrics::chrome::UI_SPACING_COMPACT_PX as f32;
@@ -267,7 +276,7 @@ fn the_mono_premade_is_a_real_theme_off_its_own_generated_palettes() {
 #[test]
 fn the_mono_premade_shares_every_derived_surface_rule_with_the_default_theme() {
     let mono = Theme::mono(false);
-    assert_eq!(mono.panel, Rgba::from_token(&ui_styling::CHROME_MONO_LIGHT.level_panel), "panel is the level ramp, exactly as `from_chrome` derives it for semio");
+    assert_eq!(mono.panel, Rgba::from_token(&ui_styling::CHROME_MONO_LIGHT.panel), "panel follows the premade theme's semantic alias");
     assert_eq!(mono.navbar, Rgba::from_token(&ui_styling::CHROME_MONO_LIGHT.level_window));
     assert_eq!(mono.temporary, Rgba::from_token(&ui_styling::CHROME_MONO_LIGHT.level_menu));
     assert_eq!(mono.text_muted, Rgba::from_token(&ui_styling::CHROME_MONO_LIGHT.muted_foreground), "the hand-port read hover_interactive_fill here — a wrong source");

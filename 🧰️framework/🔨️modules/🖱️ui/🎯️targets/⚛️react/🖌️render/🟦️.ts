@@ -84,6 +84,9 @@ export const fireEvent = {
   click(target: Element, init?: UiTestEventInit): boolean {
     return testingFireEvent.click(target, init);
   },
+  doubleClick(target: Element, init?: UiTestEventInit): boolean {
+    return testingFireEvent.doubleClick(target, init);
+  },
   dragOver(target: Element, init?: UiTestEventInit): boolean {
     return testingFireEvent.dragOver(target, init);
   },
@@ -100,6 +103,9 @@ export const fireEvent = {
   },
   mouseUp(target: Element, init?: UiTestEventInit): boolean {
     return testingFireEvent.mouseUp(target, init);
+  },
+  mouseLeave(target: Element, init?: UiTestEventInit): boolean {
+    return testingFireEvent.mouseLeave(target, init);
   },
   /** 🔢️ A numeric entry commits on the blur boundary (pointer away, Tab, or `Enter`, which blurs), so a
    * law about "one action per committed value, not one per keystroke" has to play focus and blur too. */

@@ -374,5 +374,18 @@ mod conformance_laws {
         assert_eq!(decoded, demo, "shipped .pack.semio fixture does not decode back to demo_xlsx_snapshot()");
         assert_eq!(store::ArtifactPack::encode_pack(&demo), FIXTURE_PACK, "encode_pack(demo_xlsx_snapshot()) drifted from the shipped .pack.semio fixture");
     }
+
+    /// 🖊️ The ONLY way those two fixtures are ever refreshed: `print_dsl`/`encode_pack` of the demo
+    /// itself, never a hand edit (`fixture_honesty_law` above is what that honesty means). Run it
+    /// deliberately after a codec change — `cargo test -p semio-s-artifact-stdio-xlsx --lib --
+    /// --ignored zzz_write` — then re-run the law. Same shape as tiff's `zzz_write_native_tiff_fixture`.
+    #[semio_framework_async_macros::async_test]
+    #[ignore]
+    async fn zzz_write_demo_fixtures() {
+        let demo = demo_xlsx_snapshot();
+        let assets = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/📚️examples/🎬️demo/🖼️assets");
+        std::fs::write(assets.join("🗣️.dsl.semio"), store::ArtifactDsl::print_dsl(&demo)).expect("write 🗣️.dsl.semio");
+        std::fs::write(assets.join("🎒️.pack.semio"), store::ArtifactPack::encode_pack(&demo)).expect("write 🎒️.pack.semio");
+    }
 }
 //#endregion 🔖️ConformanceLaws

@@ -345,7 +345,7 @@
           ]
         },
         {
-          "mutationId": "move-grip-2d",
+          "mutationId": "move-grip2d",
           "sourceMutationDirectoryName": "📍move-grip-2d",
           "mutationDirectoryName": "📍move-grip-2d",
           "scenarios": [
@@ -356,7 +356,7 @@
           ]
         },
         {
-          "mutationId": "move-grip-3d",
+          "mutationId": "move-grip3d",
           "sourceMutationDirectoryName": "🧭move-grip-3d",
           "mutationDirectoryName": "🧭move-grip-3d",
           "scenarios": [
@@ -455,7 +455,7 @@
           ]
         },
         {
-          "mutationId": "resize-grip-3d",
+          "mutationId": "resize-grip3d",
           "sourceMutationDirectoryName": "📏resize-grip-3d",
           "mutationDirectoryName": "📏resize-grip-3d",
           "scenarios": [
@@ -488,7 +488,7 @@
           ]
         },
         {
-          "mutationId": "update-part-2d",
+          "mutationId": "update-part2d",
           "sourceMutationDirectoryName": "🖌️update-part-2d",
           "mutationDirectoryName": "🖌️update-part-2d",
           "scenarios": [
@@ -499,7 +499,7 @@
           ]
         },
         {
-          "mutationId": "update-part-3d",
+          "mutationId": "update-part3d",
           "sourceMutationDirectoryName": "🧊update-part-3d",
           "mutationDirectoryName": "🧊update-part-3d",
           "scenarios": [
@@ -517,8 +517,8 @@
         "change-part-kind-description",
         "change-part-kind-icon",
         "change-part-kind-unit",
-        "update-part-2d",
-        "update-part-3d",
+        "update-part2d",
+        "update-part3d",
         "create-representation",
         "delete-representation",
         "rename-representation",
@@ -537,9 +537,9 @@
         "change-grip-kind-default-rope-kind",
         "create-grip",
         "delete-grip",
-        "move-grip-2d",
-        "move-grip-3d",
-        "resize-grip-3d",
+        "move-grip2d",
+        "move-grip3d",
+        "resize-grip3d",
         "change-grip-grip-kind",
         "add-compatibility-rule",
         "remove-compatibility-rule",
@@ -1071,7 +1071,7 @@
           ]
         },
         {
-          "id": "move-grip-2d",
+          "id": "move-grip2d",
           "capability": "block-5d-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
@@ -1079,7 +1079,7 @@
             "applied"
           ],
           "productionDispatch": {
-            "operation": "move-grip-2d",
+            "operation": "move-grip2d",
             "bridgeVersion": 1,
             "variant": "MoveGrip2d"
           },
@@ -1091,7 +1091,7 @@
           ]
         },
         {
-          "id": "move-grip-3d",
+          "id": "move-grip3d",
           "capability": "block-5d-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
@@ -1099,7 +1099,7 @@
             "applied"
           ],
           "productionDispatch": {
-            "operation": "move-grip-3d",
+            "operation": "move-grip3d",
             "bridgeVersion": 1,
             "variant": "MoveGrip3d"
           },
@@ -1270,7 +1270,7 @@
           ]
         },
         {
-          "id": "resize-grip-3d",
+          "id": "resize-grip3d",
           "capability": "block-5d-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
@@ -1278,7 +1278,7 @@
             "applied"
           ],
           "productionDispatch": {
-            "operation": "resize-grip-3d",
+            "operation": "resize-grip3d",
             "bridgeVersion": 1,
             "variant": "ResizeGrip3d"
           },
@@ -1328,14 +1328,14 @@
           ]
         },
         {
-          "id": "update-part-2d",
+          "id": "update-part2d",
           "capability": "block-5d-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied"
           ],
           "productionDispatch": {
-            "operation": "update-part-2d",
+            "operation": "update-part2d",
             "bridgeVersion": 1,
             "variant": "UpdatePart2d"
           },
@@ -1347,14 +1347,14 @@
           ]
         },
         {
-          "id": "update-part-3d",
+          "id": "update-part3d",
           "capability": "block-5d-1-mutate",
           "payloadSchema": "🧬️.schema.json",
           "outcomes": [
             "applied"
           ],
           "productionDispatch": {
-            "operation": "update-part-3d",
+            "operation": "update-part3d",
             "bridgeVersion": 1,
             "variant": "UpdatePart3d"
           },

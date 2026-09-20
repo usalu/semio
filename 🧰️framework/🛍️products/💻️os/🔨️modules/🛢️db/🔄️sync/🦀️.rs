@@ -1523,6 +1523,12 @@ struct DatabaseSyncHelloState {
     returned_generation: std::sync::atomic::AtomicU64,
 }
 
+/// 🔬️ How many retained sync-hello slots still hold their `WorkerPoolUse` clone. A database
+/// shutdown that never leaves its `PoolUse` phase is blocked by one of these registry families.
+pub fn database_sync_hello_live_slots() -> usize {
+    database_sync_hello_registry().lock().unwrap_or_else(std::sync::PoisonError::into_inner).iter().filter(|slot| slot.is_some()).count()
+}
+
 fn database_sync_hello_registry() -> &'static std::sync::Mutex<[Option<std::sync::Arc<DatabaseSyncHelloState>>; DATABASE_SYNC_HELLO_SLOTS]> {
     static REGISTRY: std::sync::OnceLock<std::sync::Mutex<[Option<std::sync::Arc<DatabaseSyncHelloState>>; DATABASE_SYNC_HELLO_SLOTS]>> = std::sync::OnceLock::new();
     REGISTRY.get_or_init(|| std::sync::Mutex::new(std::array::from_fn(|_| None)))

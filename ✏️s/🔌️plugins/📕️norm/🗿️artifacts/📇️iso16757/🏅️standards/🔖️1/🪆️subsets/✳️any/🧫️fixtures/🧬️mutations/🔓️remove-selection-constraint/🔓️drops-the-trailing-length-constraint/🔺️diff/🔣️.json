@@ -11,7 +11,7 @@
         "operator": "Equal",
         "value": {
           "kind": "decimal",
-          "value": 600
+          "value": 600.0
         }
       }
     ],

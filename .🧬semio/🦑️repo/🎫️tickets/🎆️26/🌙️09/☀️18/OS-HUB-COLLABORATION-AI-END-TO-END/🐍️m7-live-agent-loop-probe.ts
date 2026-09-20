@@ -271,8 +271,18 @@ try {
   });
   record("(b) tool call → running row → result", sawRunning !== null && sawResult !== null, `running=${JSON.stringify(sawRunning)} settled=${JSON.stringify(sawResult)} call=${describe(settledCall)}`);
 
+  // 🎯️ The mutation candidates, read off the LIVE catalog — needed by (c) as well as (e), because a
+  //    gateway-owned read verb settles in milliseconds and never gives the cancel affordance a frame
+  //    to exist in. A plugin `action_invoke` stays in flight for seconds, which is the honest shape of
+  //    "an in-flight call" anyway.
+  const found = await gateway.call("capabilities_search", { query: "delete selection clear", kind: ["mutation"] });
+  const candidates = ((structured(found).results ?? []) as Record<string, any>[]).map((row) => String(row.capabilityId));
+  const gateTarget = candidates.find((id) => id.startsWith(`${PLUGIN}.`)) ?? candidates[0] ?? null;
+
   // (c) U1's cancel button cancels an in-flight call.
-  const longCall = gateway.call("inference_run", { documentId: "probe", prompt: "summarise this document" }).catch((error) => ({ error: { message: String(error) } }) as Record<string, any>);
+  const longCall = gateTarget
+    ? gateway.call("action_invoke", { capabilityId: gateTarget, input: {} }).catch((error) => ({ error: { message: String(error) } }) as Record<string, any>)
+    : Promise.resolve({ error: { message: "no mutation capability to keep in flight" } } as Record<string, any>);
   const cancelTarget = await until("a cancellable row", 30_000, 100, async () => {
     const view = await readShell(page);
     return view.cancelButtons.find((id) => id) ?? null;
@@ -289,12 +299,12 @@ try {
     const settled = await longCall;
     cancelOk = cancelling !== null;
     cancelDetail = `row=${JSON.stringify(cancelling)} call=${describe(settled as Record<string, any>)}`;
+  } else {
+    await longCall;
   }
   record("(c) cancel button cancels an in-flight call", cancelOk, cancelDetail);
 
   // (e) a destructive capability raises the approval affordance in the panel.
-  const found = await gateway.call("capabilities_search", { query: "delete selection clear", kind: ["mutation"] });
-  const candidates = ((structured(found).results ?? []) as Record<string, any>[]).map((row) => String(row.capabilityId));
   console.log(`  destructive candidates: ${candidates.slice(0, 8).join(", ") || "(none)"}`);
 
   /** ⛩️ Invokes `capabilityId` without awaiting, decides the approval in the SHELL with `decision`,
@@ -321,7 +331,6 @@ try {
   // 🎯️ Gate a capability of the plugin THIS session is running: every other plugin's `.wasm` in the
   // shared target dir was linked before A2's `-zstack-size` fix and traps in `InstanceOpen` long
   // before the approval gate, which would score A2's open defect as an M7 failure.
-  const gateTarget = candidates.find((id) => id.startsWith(`${PLUGIN}.`)) ?? candidates[0] ?? null;
   if (gateTarget === null) {
     record("(e) approval affordance", false, "the live catalog exposed no destructive capability to gate");
   } else {

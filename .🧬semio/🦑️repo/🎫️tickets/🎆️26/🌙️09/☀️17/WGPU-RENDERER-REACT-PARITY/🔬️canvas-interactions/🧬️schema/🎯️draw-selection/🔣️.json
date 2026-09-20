@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio.tech/schema/probe/draw-selection.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "engagementFieldId", "searchToggleId", "layerRowIdPrefix", "cases"],
+  "properties": {
+    "version": { "const": 1 },
+    "engagementFieldId": { "const": "drawing-canvas-engagement" },
+    "searchToggleId": { "const": "framework.window.drawingComposite.search.toggle" },
+    "layerRowIdPrefix": { "const": "drawing-play-layers.shape." },
+    "cases": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "prefixItems": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["id", "mergeMode", "namePrefix", "expectedConsequence"],
+          "properties": {
+            "id": { "const": "single-selection-rename" },
+            "mergeMode": { "const": "replace" },
+            "namePrefix": { "type": "string", "minLength": 1, "maxLength": 32 },
+            "expectedConsequence": { "const": "selected-row-renamed" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["id", "mergeMode", "namePrefix", "expectedConsequence"],
+          "properties": {
+            "id": { "const": "multi-selection-rename" },
+            "mergeMode": { "const": "add" },
+            "namePrefix": { "type": "string", "minLength": 1, "maxLength": 32 },
+            "expectedConsequence": { "const": "no-row-renamed" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["id", "mergeMode", "namePrefix", "expectedConsequence"],
+          "properties": {
+            "id": { "const": "subtracted-selection-rename" },
+            "mergeMode": { "const": "subtract" },
+            "namePrefix": { "type": "string", "minLength": 1, "maxLength": 32 },
+            "expectedConsequence": { "const": "original-row-renamed" }
+          }
+        }
+      ],
+      "items": false
+    }
+  }
+}

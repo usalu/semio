@@ -5,7 +5,7 @@ import { EXTENSION_TARGETS, PLUGIN_BUILD_TARGETS } from "../../../../🧰️fram
 import { PLAYGROUND_BUILD_TARGETS } from "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🎮️playgrounds/🟦️.ts";
 
 export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: any, repoRoot: string): Promise<void> {
-  const { playActivationLanes, playRuntimeComponentIds, mergePlayActivationReceipts } = dependencies;
+  const { playActivationLanes, playPaneClosureRoot, playRuntimeComponentIds, mergePlayActivationReceipts, playExtensionDirectory } = dependencies;
   const { describe, expect, it } = vitest;
 
   //#region 🧪️PlayActivationTests
@@ -19,11 +19,11 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     it("covers exactly the play union with pane lanes only", () => {
       const components = [...PLUGIN_BUILD_TARGETS, ...EXTENSION_TARGETS];
       const covered = new Set<string>();
-      for (const variant of playActivationLanes()) for (const id of runtimeComponentClosure(components, [PLAYGROUND_BUILD_TARGETS.find(row => row.variant === variant)!.pluginId])) covered.add(id);
+      for (const variant of playActivationLanes()) for (const id of runtimeComponentClosure(components, [playPaneClosureRoot(PLAYGROUND_BUILD_TARGETS.find(row => row.variant === variant)!)])) covered.add(id);
       expect([...covered].sort()).toEqual([...playRuntimeComponentIds()].sort());
     });
 
-    it("never picks a lane that would need stdio", () => {
+    it("leaves the host shell lane out", () => {
       expect(playActivationLanes()).not.toContain("s");
     });
 
@@ -64,6 +64,22 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     it("refuses a release receipt", () => {
       const release = lane("energy", [["energy", "d", 7]]);
       expect(() => mergePlayActivationReceipts([{ ...release, receipt: { ...release.receipt, profile: "release" } }], ["energy"], "energy")).toThrow(/not a dev activation: release/);
+    });
+  });
+
+  describe("playExtensionDirectory", () => {
+    const modules = join("/repo", "dist", "release", "plugin-modules");
+
+    it("serves a development extension from the lane that staged it", () => {
+      expect(playExtensionDirectory("flow-extension-math", modules, new Map([["flow-extension-math", "/repo/lane/flow/extensions/flow-extension-math"]]))).toBe("/repo/lane/flow/extensions/flow-extension-math");
+    });
+
+    it("falls back to the build profile's plugin-module root when no lane staged it", () => {
+      expect(playExtensionDirectory("flow-extension-math", modules, new Map())).toBe(join(modules, "flow-extension-math"));
+    });
+
+    it("falls back the same way in a build, where there is no activation at all", () => {
+      expect(playExtensionDirectory("flow-extension-math", modules)).toBe(join(modules, "flow-extension-math"));
     });
   });
   //#endregion 🧪️PlayActivationTests

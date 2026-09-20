@@ -8,11 +8,11 @@
   "partNumberInputs": {
     "height": {
       "kind": "decimal",
-      "value": 750
+      "value": 750.0
     },
     "length": {
       "kind": "decimal",
-      "value": 1200
+      "value": 1200.0
     }
   },
   "scriptLimits": null,

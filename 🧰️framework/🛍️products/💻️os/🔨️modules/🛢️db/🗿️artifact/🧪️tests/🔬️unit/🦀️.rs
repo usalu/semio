@@ -245,9 +245,9 @@ async fn artifact_authority_drop_reuses_registered_retirement_slot_beyond_capaci
             pool.clone(),
             move || async move {
                 if ordinal == 0 {
-                    ArtifactEngine::create_retained(engine_document, engine_storage, ArtifactEngineConfig::default(), 0).await
+                    ArtifactEngine::create_retained(engine_document, engine_storage, ArtifactEngineConfig::default(), 0).await.map(Box::new)
                 } else {
-                    ArtifactEngine::open_retained(engine_document, engine_storage, ArtifactEngineConfig::default(), 0).await.map(|(engine, _)| engine)
+                    ArtifactEngine::open_retained(engine_document, engine_storage, ArtifactEngineConfig::default(), 0).await.map(|(engine, _)| Box::new(engine))
                 }
             },
             MailboxCapacities::uniform(4),
@@ -1212,7 +1212,7 @@ async fn journal_authority() -> (ArtifactAuthority, StdArc<db_storage::DbBackend
     let pool = Arc::new(semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::InteractiveNative, 3)));
     let storage = storage().await;
     let engine_storage = storage.clone();
-    let authority = ArtifactAuthority::spawn(pool.clone(), move || ArtifactEngine::create_retained(protocol::ArtifactId("map-a".to_string()), engine_storage, ArtifactEngineConfig::default(), 0), MailboxCapacities::uniform(16)).await.unwrap();
+    let authority = ArtifactAuthority::spawn(pool.clone(), move || async move { ArtifactEngine::create_retained(protocol::ArtifactId("map-a".to_string()), engine_storage, ArtifactEngineConfig::default(), 0).await.map(Box::new) }, MailboxCapacities::uniform(16)).await.unwrap();
     (authority, storage, pool)
 }
 
@@ -1540,7 +1540,7 @@ async fn document_authority_submits_and_queries_over_finite_pool_turns() {
     let pool = Arc::new(semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::InteractiveNative, 3)));
     let storage = storage().await;
     let document = document_id().await;
-    let authority = ArtifactAuthority::spawn(pool.clone(), move || ArtifactEngine::create_retained(document, storage, ArtifactEngineConfig::default(), 0), MailboxCapacities::uniform(16)).await.unwrap();
+    let authority = ArtifactAuthority::spawn(pool.clone(), move || async move { ArtifactEngine::create_retained(document, storage, ArtifactEngineConfig::default(), 0).await.map(Box::new) }, MailboxCapacities::uniform(16)).await.unwrap();
 
     let batch = CommandBatch::new(vec![envelope("op-1", &[], "alice", &[("name", serde_json::json!("hi"))]).await]).await.unwrap();
     let receipt = authority.submit(batch, SubmitOptions::default(), 0).await.unwrap();
@@ -1566,7 +1566,7 @@ async fn document_authority_spawn_propagates_a_build_failure_synchronously() {
     let pool = Arc::new(semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::InteractiveNative, 3)));
     let result = ArtifactAuthority::spawn(
         pool.clone(),
-        || async { Err::<ArtifactEngine<AllowAll, NullVersionGraph>, ArtifactEngineOpenRejected>(ArtifactEngineOpenRejected::BeforeWal(DbError::InvalidArgument("boom".to_string()))) },
+        || async { Err::<Box<ArtifactEngine<AllowAll, NullVersionGraph>>, ArtifactEngineOpenRejected>(ArtifactEngineOpenRejected::BeforeWal(DbError::InvalidArgument("boom".to_string()))) },
         MailboxCapacities::uniform(4),
     );
     let rejected = match result.await {

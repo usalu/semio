@@ -12,7 +12,7 @@
   "tIntC": null,
   "solarAbsorptance": null,
   "irradianceWM2": null,
-  "moistureMuExterior": 20,
+  "moistureMuExterior": 20.0,
   "moistureMuInterior": null,
   "envelopeAreaM2": null,
   "bb2DetailsConform": null,

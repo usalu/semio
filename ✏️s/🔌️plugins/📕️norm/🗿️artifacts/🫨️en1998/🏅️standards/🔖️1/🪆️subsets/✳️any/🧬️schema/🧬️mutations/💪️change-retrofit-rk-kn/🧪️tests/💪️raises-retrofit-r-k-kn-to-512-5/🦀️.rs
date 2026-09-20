@@ -67,7 +67,7 @@ async fn change_retrofit_rk_kn_committed_json_is_canonical() {
     }
     let reencoded = serde_json::to_value(mutation()).expect("change-retrofit-rk-kn mutation encodes");
     let original: serde_json::Value = serde_json::from_str(MUTATION).expect("change-retrofit-rk-kn mutation reparses");
-    assert_eq!(reencoded, original, "change-retrofit-rk-kn/raises-retrofit-r-k-kn-to-512-5: committed mutation JSON is not the canonical externally-tagged ChangeRetrofitRKKn form carrying newRetrofitRKKn");
+    assert_eq!(reencoded, original, "change-retrofit-rk-kn/raises-retrofit-r-k-kn-to-512-5: committed mutation JSON is not the canonical internally-tagged ChangeRetrofitRKKn form carrying mutation and newRetrofitRKKn");
 }
 
 /// 🎯️ The declared outcome holds: `change-retrofit-rk-kn` at 512.5 is applied, not rejected, and carries no

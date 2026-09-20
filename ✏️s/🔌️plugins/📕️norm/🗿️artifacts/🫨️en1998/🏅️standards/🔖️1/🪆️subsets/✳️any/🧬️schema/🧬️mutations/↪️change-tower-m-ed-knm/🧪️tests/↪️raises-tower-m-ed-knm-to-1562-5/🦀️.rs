@@ -67,7 +67,7 @@ async fn change_tower_m_ed_knm_committed_json_is_canonical() {
     }
     let reencoded = serde_json::to_value(mutation()).expect("change-tower-m-ed-knm mutation encodes");
     let original: serde_json::Value = serde_json::from_str(MUTATION).expect("change-tower-m-ed-knm mutation reparses");
-    assert_eq!(reencoded, original, "change-tower-m-ed-knm/raises-tower-m-ed-knm-to-1562-5: committed mutation JSON is not the canonical externally-tagged ChangeTowerMEdKnm form carrying newTowerMEdKnm");
+    assert_eq!(reencoded, original, "change-tower-m-ed-knm/raises-tower-m-ed-knm-to-1562-5: committed mutation JSON is not the canonical internally-tagged ChangeTowerMEdKnm form carrying mutation and newTowerMEdKnm");
 }
 
 /// 🎯️ The declared outcome holds: `change-tower-m-ed-knm` at 1562.5 is applied, not rejected, and carries no

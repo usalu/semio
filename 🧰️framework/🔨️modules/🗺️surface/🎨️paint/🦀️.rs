@@ -377,6 +377,8 @@ pub struct RasterHost {
     /// 🕹️ (c) Preview/Effect — selection ids, read from the framework's `DomainSelection` via
     /// [`RasterHost::sync_interaction`].
     selected_ids: Vec<String>,
+    paint_gesture_layer: Option<String>,
+    paint_gesture_before: HashMap<usize, [u8; 4]>,
     /// 🖐️ (c) Preview/Effect — pan-gesture-in-progress flag, discarded on release.
     panning: bool,
     /// 🖌️ (c) Preview/Effect — paint-gesture-in-progress flag, discarded on release.
@@ -419,12 +421,20 @@ impl RasterHost {
             panning: false,
             painting: false,
             last_paint: None,
+            paint_gesture_layer: None,
+            paint_gesture_before: HashMap::new(),
             pan_last: None,
             show_selection_chrome: true,
             theme_clear,
             checkerboard_light_cell,
             checkerboard_dark_cell,
         }
+    }
+
+    /// 👻️ World coordinates to surface-local pixels through the raster canvas's live camera.
+    pub fn world_to_screen_point(&self, wx: f64, wy: f64) -> (f64, f64) {
+        let point = camera::world_to_screen(&self.camera, &self.viewport, Point::new(wx, wy));
+        (point.x, point.y)
     }
 
     pub fn set_canvas_theme_from_json(&mut self, json: &str) -> Result<(), FrameworkSurfacePaintError> {
@@ -468,6 +478,8 @@ impl RasterHost {
         }
         if self.active_utility.starts_with("paint") {
             self.painting = true;
+            self.paint_gesture_layer = Some(self.selected_ids.first().cloned().unwrap_or_else(|| "bg".into()));
+            self.paint_gesture_before.clear();
             let point = self.screen_to_world(sx, sy);
             self.last_paint = Some(point);
             self.paint_at(point);
@@ -499,6 +511,30 @@ impl RasterHost {
         self.pan_last = None;
         self.painting = false;
         self.last_paint = None;
+        self.paint_gesture_layer = None;
+        self.paint_gesture_before.clear();
+    }
+
+    pub fn pointer_cancel_screen(&mut self) {
+        self.panning = false;
+        self.pan_last = None;
+        self.painting = false;
+        self.last_paint = None;
+        let Some(layer_id) = self.paint_gesture_layer.take() else {
+            self.paint_gesture_before.clear();
+            return;
+        };
+        let key = Self::layer_pixel_buffer_key(&layer_id);
+        if let Some(buf) = self.buffers.paint.get_mut(&key) {
+            for (index, rgba) in self.paint_gesture_before.drain() {
+                if let Some(pixel) = buf.get_mut(index..index.saturating_add(4)) {
+                    pixel.copy_from_slice(&rgba);
+                }
+            }
+            self.images.insert(key, image_from_rgba(512, 512, buf.clone()));
+        } else {
+            self.paint_gesture_before.clear();
+        }
     }
 
     fn layer_pixel_buffer_key(id: &str) -> String {
@@ -523,7 +559,9 @@ impl RasterHost {
         let (width, height) = (512u32, 512u32);
         let brush_opacity = self.brush_opacity;
         let is_eraser = self.active_utility == "paintEraser";
-        let buf = self.ensure_layer_buffer(&layer_id, width, height);
+        let key = Self::layer_pixel_buffer_key(&layer_id);
+        self.ensure_layer_buffer(&layer_id, width, height);
+        let buf = self.buffers.paint.get_mut(&key).expect("ensured raster layer buffer");
         let cx = world.x.round() as i32;
         let cy = world.y.round() as i32;
         let r = radius as i32;
@@ -538,6 +576,9 @@ impl RasterHost {
                     continue;
                 }
                 let idx = ((y as u32 * width + x as u32) * 4) as usize;
+                if self.painting && self.paint_gesture_layer.as_deref() == Some(layer_id.as_str()) && !self.paint_gesture_before.contains_key(&idx) {
+                    self.paint_gesture_before.insert(idx, [buf[idx], buf[idx + 1], buf[idx + 2], buf[idx + 3]]);
+                }
                 let alpha = (brush_opacity * 255.0) as u8;
                 if is_eraser {
                     buf[idx + 3] = buf[idx + 3].saturating_sub(alpha);
@@ -551,7 +592,7 @@ impl RasterHost {
         }
         let rgba = buf.clone();
         let image = image_from_rgba(width, height, rgba);
-        self.images.insert(Self::layer_pixel_buffer_key(&layer_id), image);
+        self.images.insert(key, image);
     }
 
     fn stroke_paint(&mut self, from: Point, to: Point) {
@@ -1014,6 +1055,8 @@ pub struct RasterHostRetirement {
     active_utility: String,
     hovered_id: Option<String>,
     selected_ids: Vec<String>,
+    paint_gesture_layer: Option<String>,
+    paint_gesture_before: HashMap<usize, [u8; 4]>,
     released: bool,
 }
 
@@ -1033,13 +1076,15 @@ impl RasterHostRetirement {
             panning: _,
             painting: _,
             last_paint: _,
+            paint_gesture_layer,
+            paint_gesture_before,
             pan_last: _,
             show_selection_chrome: _,
             theme_clear: _,
             checkerboard_light_cell: _,
             checkerboard_dark_cell: _,
         } = host;
-        Self { layers, images, paint, mask, active_utility, hovered_id, selected_ids, released: false }
+        Self { layers, images, paint, mask, active_utility, hovered_id, selected_ids, paint_gesture_layer, paint_gesture_before, released: false }
     }
 
     fn close_layer_step(&mut self) -> bool {
@@ -1063,16 +1108,21 @@ impl RasterHostRetirement {
         if !self.close_layer_step() || !self.images.close_step() || !Self::close_map_step(&mut self.paint) || !Self::close_map_step(&mut self.mask) || self.selected_ids.pop().is_some() {
             return false;
         }
-        if self.active_utility.pop().is_some() || self.hovered_id.as_mut().is_some_and(|id| id.pop().is_some()) {
+        if let Some(key) = self.paint_gesture_before.keys().next().copied() {
+            self.paint_gesture_before.remove(&key);
+            return false;
+        }
+        if self.active_utility.pop().is_some() || self.hovered_id.as_mut().is_some_and(|id| id.pop().is_some()) || self.paint_gesture_layer.as_mut().is_some_and(|id| id.pop().is_some()) {
             return false;
         }
         self.hovered_id = None;
+        self.paint_gesture_layer = None;
         self.released = true;
         true
     }
 
     pub fn terminal_is_empty(&self) -> bool {
-        self.released && self.layers.is_empty() && self.images.is_empty() && self.paint.is_empty() && self.mask.is_empty() && self.selected_ids.is_empty() && self.active_utility.is_empty() && self.hovered_id.is_none()
+        self.released && self.layers.is_empty() && self.images.is_empty() && self.paint.is_empty() && self.mask.is_empty() && self.selected_ids.is_empty() && self.active_utility.is_empty() && self.hovered_id.is_none() && self.paint_gesture_layer.is_none() && self.paint_gesture_before.is_empty()
     }
 }
 
@@ -1212,6 +1262,11 @@ impl RasterSession {
     #[wasm_bindgen(js_name = pointerUpScreen)]
     pub fn pointer_up_screen(&mut self, sx: f64, sy: f64) {
         self.state.borrow_mut().host.pointer_up_screen(sx, sy);
+    }
+
+    #[wasm_bindgen(js_name = pointerCancelScreen)]
+    pub fn pointer_cancel_screen(&mut self) {
+        self.state.borrow_mut().host.pointer_cancel_screen();
     }
 
     #[wasm_bindgen(js_name = syncDocumentJson)]

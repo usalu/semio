@@ -11,7 +11,7 @@ use crate::app::{
 };
 use crate::ViewModel;
 use protocol::MutationDiff;
-use semio_framework::{ActionKind, Fault, IconName, ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolOperationSpec};
+use semio_framework::{action_bus, ActionKind, Fault, IconName, ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolOperationSpec};
 use semio_framework_value_derive::{FromValue, ToValue};
 use serde::{Deserialize, Serialize};
 use store::EngineHandles;
@@ -123,6 +123,10 @@ struct DummyFixtureJob {
     command: Option<Box<DummyCommand>>,
     completion: Option<ArtifactToolCompletion<DummyApp>>,
     count: i32,
+    /// 📄️ See `TxnFixtureJob::raw` — a factory that does not own the admitted retained wire pages
+    /// alongside its typed payload is refused with `interactive-job.dispatch`.
+    raw: Option<action_bus::RetainedToolWireInput>,
+    page: usize,
     closing: bool,
 }
 
@@ -132,6 +136,10 @@ impl semio_framework_job::InteractiveJob for DummyFixtureJob {
             return semio_framework_job::StepOutcome::Cancelled;
         }
         if cx.should_yield() {
+            return semio_framework_job::StepOutcome::Yield;
+        }
+        if self.raw.as_ref().is_some_and(|raw| self.page < raw.page_count()) {
+            self.page += 1;
             return semio_framework_job::StepOutcome::Yield;
         }
         let Some(DummyCommand::Increment) = self.command.as_deref() else {
@@ -148,9 +156,16 @@ impl semio_framework_job::InteractiveJob for DummyFixtureJob {
         self.closing = true;
     }
 
-    fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
+    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
         if !self.closing || maximum_items == 0 {
             return semio_framework_job::InteractiveJobCloseStep::Blocked;
+        }
+        if let Some(raw) = self.raw.as_mut() {
+            if raw.terminal_is_empty() {
+                self.raw = None;
+                return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+            }
+            return raw.close_step(1, maximum_bytes);
         }
         if self.command.take().is_some() || self.completion.take().is_some() {
             return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
@@ -159,7 +174,7 @@ impl semio_framework_job::InteractiveJob for DummyFixtureJob {
     }
 
     fn terminal_is_empty(&self) -> bool {
-        self.closing && self.command.is_none() && self.completion.is_none()
+        self.closing && self.raw.is_none() && self.command.is_none() && self.completion.is_none()
     }
 }
 
@@ -183,6 +198,19 @@ impl ToolJobFactory for DummyFixtureFactory {
         ToolExecutionContract::resumable(4_096, 1, 1, 4_096, 500, 1, 1)
     }
     fn create_job(&mut self, _operation: semio_framework_job::Operation, payload: Self::Payload) -> Result<Self::Job, semio_framework::ToolJobFactoryError> {
+        Ok(payload)
+    }
+    fn create_job_from_wire_pages_with_payload(
+        &mut self,
+        _operation: semio_framework_job::Operation,
+        mut payload: Self::Payload,
+        input: action_bus::RetainedToolWireInput,
+        checkpoint: Option<action_bus::RetainedToolWireInput>,
+    ) -> Result<Self::Job, (semio_framework::ToolJobFactoryError, action_bus::RetainedToolWireInput, Option<action_bus::RetainedToolWireInput>)> {
+        if checkpoint.is_some() {
+            return Err((semio_framework::ToolJobFactoryError::new("dummy fixture resume starts a fresh command owner"), input, checkpoint));
+        }
+        payload.raw = Some(input);
         Ok(payload)
     }
 }
@@ -223,7 +251,7 @@ struct DummyApp;
 
 impl ArtifactApp for DummyApp {
     const DIALECT: crate::Dialect = crate::Dialect { artifact_kind: "s.test.dummy", standard: crate::StandardId("1"), subset: crate::SubsetId::ANY };
-    const APP_ID: &'static str = "testkit-dummy";
+    const APP_ID: &'static str = "s.test.dummy@1/*#editor";
     const DOCUMENT_SCHEMA: &'static str = "semio.testkit/v1";
     type Snapshot = DummySnapshot;
     type Mutation = DummyMutation;
@@ -238,7 +266,7 @@ impl ArtifactApp for DummyApp {
     type Command = DummyCommand;
 
     crate::bounded_first_step_tool_proofs! {
-        owner: DummyApp, owner_file: "plugin/🧪️tests/🧬️mutation-fixtures-dummy/🦀️.rs", controller: "testkit-dummy", artifact_schema: "semio.testkit/v1",
+        owner: DummyApp, owner_file: "plugin/🧪️tests/🧬️mutation-fixtures-dummy/🦀️.rs", controller: "s.test.dummy@1/*#editor", artifact_schema: "semio.testkit/v1",
         factory: "DummyFixtureFactory", factory_type: DummyFixtureFactory,
         contract: ToolExecutionContract::resumable(4_096, 1, 1, 4_096, 500, 1, 1), tools: ["increment"]
     }
@@ -248,8 +276,12 @@ impl ArtifactApp for DummyApp {
     }
 
     async fn build_tool_job(request: ArtifactOwnedToolJobRequest<Self>) -> Result<Option<ToolOperationSpec>, Fault> {
-        let job = DummyFixtureJob { command: Some(request.command), completion: Some(request.completion), count: request.snapshot.count, closing: false };
+        let job = DummyFixtureJob { command: Some(request.command), completion: Some(request.completion), count: request.snapshot.count, raw: None, page: 0, closing: false };
         Ok(Some(ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, job, request.operation)))
+    }
+
+    fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
+        Some(crate::app::bounded_config_store_one_item_preparation_factory::<Self::Snapshot, Self::Mutation>("testkit-dummy-artifact-retained", 4_096))
     }
 
     fn build_document_store_owners() -> Option<store::DocumentStoreOwners<Self::Snapshot, Self::Mutation>> {
@@ -284,6 +316,15 @@ impl ArtifactApp for DummyApp {
     }
     fn build_transient_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Transient>>> {
         Some(crate::app::mutation_fixture::no_state::transient_local_root_retirement_factory())
+    }
+
+    /// 🪪️ The tool id this variant dispatches under. Without it the `ArtifactApp` default answers
+    /// `"typed-command"`, which matches no registered factory key, so every `dispatch_typed` on this
+    /// fixture is `interactive-job.missing-factory` before it reaches the reducer.
+    async fn command_id(command: &DummyCommand) -> &'static str {
+        match command {
+            DummyCommand::Increment => DUMMY_TOOL_ID,
+        }
     }
 
     async fn initial_snapshot() -> DummySnapshot {

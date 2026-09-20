@@ -1,0 +1,37 @@
+{
+  "schema": "semio.ui.prepared-raster-residency.v1",
+  "capacity": { "items": 256, "bytes": 268435456, "retirementUnitsPerStep": 1 },
+  "sources": ["worldReference", "worldPaint", "uiRaster", "overlayRaster"],
+  "scenarios": [
+    {
+      "name": "three hundred distinct reference replacements",
+      "events": ["commit reference-000", "replace and commit through reference-299", "release previous owner after each replacement"],
+      "expected": { "live": ["reference-299"], "staged": [], "paintable": ["reference-299"], "maxLiveItems": 2, "admissionRecovered": true }
+    },
+    {
+      "name": "two windows share one raster",
+      "events": ["commit window-left:image-A and window-right:image-A", "close window-left", "commit window-right:image-A"],
+      "expected": { "live": ["image-A"], "staged": [], "paintable": ["image-A"], "maxLiveItems": 1 }
+    },
+    {
+      "name": "final owner closes",
+      "events": ["commit window-right:image-A", "close window-right", "commit empty frame", "release previous owner"],
+      "expected": { "live": [], "staged": [], "paintable": [], "maxLiveItems": 1 }
+    },
+    {
+      "name": "aborted replacement preserves committed image",
+      "events": ["commit image-A", "stage image-B", "abort image-B"],
+      "expected": { "live": ["image-A"], "staged": [], "paintable": ["image-A"], "maxLiveItems": 1 }
+    },
+    {
+      "name": "paint and overlay consumers publish ownership",
+      "events": ["commit world-paint, ui-image, overlay-image"],
+      "expected": { "live": ["world-paint", "ui-image", "overlay-image"], "staged": [], "paintable": ["world-paint", "ui-image", "overlay-image"], "maxLiveItems": 3 }
+    },
+    {
+      "name": "budget admission retires one unowned resource per step",
+      "events": ["fill 256 historical rasters", "publish candidate image-B", "retire one unowned live raster", "admit image-B"],
+      "expected": { "live": ["image-B"], "staged": [], "paintable": ["image-B"], "maxLiveItems": 256, "admissionRecovered": true }
+    }
+  ]
+}

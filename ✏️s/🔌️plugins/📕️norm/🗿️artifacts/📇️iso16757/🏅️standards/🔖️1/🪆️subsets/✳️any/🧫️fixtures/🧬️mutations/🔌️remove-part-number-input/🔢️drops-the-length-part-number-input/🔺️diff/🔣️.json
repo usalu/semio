@@ -8,7 +8,7 @@
   "partNumberInputs": {
     "height": {
       "kind": "decimal",
-      "value": 600
+      "value": 600.0
     }
   },
   "scriptLimits": null,

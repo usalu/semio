@@ -7,7 +7,8 @@
     "canvasPointerDown",
     "canvasPointerMove",
     "canvasPointerUp",
-    "canvasWheel"
+    "canvasWheel",
+    "setActiveExample"
   ],
   "maximumTextBytes": 8192,
   "rejectedAdditionalBytes": 1,

@@ -2996,6 +2996,11 @@ pub fn dag_screen_to_world(host: &DagHost, sx: f64, sy: f64) -> (f64, f64) {
     (point.x, point.y)
 }
 
+/// 👻️ World coordinates to surface-local pixels through the DAG's live camera.
+pub fn dag_world_to_screen(host: &DagHost, wx: f64, wy: f64) -> (f64, f64) {
+    host.world_to_screen_point(wx, wy)
+}
+
 /// 🪟️ Takes a pending double-click open request for an app instance node.
 pub fn dag_take_pending_open_instance_id(host: &mut DagHost) -> Option<String> {
     host.pending_open_instance_id.take()
@@ -5620,6 +5625,18 @@ impl DagHost {
         self.process_engine_events();
         self.sync_node_positions_from_engine();
         self.sync_camera_from_engine();
+    }
+
+    pub fn pointer_cancel_screen(&mut self) -> bool {
+        self.pan_anchor = None;
+        self.minimap_widget_drag = None;
+        self.widget_drag = None;
+        self.pending_port_insert = None;
+        let cancelled = self.engine.pointer_cancel_screen();
+        self.pending_graph_edits.clear();
+        self.sync_node_positions_from_engine();
+        self.sync_camera_from_engine();
+        cancelled
     }
 
     pub fn set_canvas_theme_from_json(&mut self, json: &str) -> Result<(), DagError> {

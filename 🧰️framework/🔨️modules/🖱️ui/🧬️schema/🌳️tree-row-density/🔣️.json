@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio.tech/schema/ui/tree-row-density-v1.json",
+  "title": "Tree Row Density Fixture",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "rowHeightPx", "rowIconPx", "intrinsicContentHeightPx", "categoryCount", "actionCount", "visibleViewportHeightPx", "firstRows", "terminalRowId", "scrollDeltaPx"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "rowHeightPx": { "type": "number", "exclusiveMinimum": 0 },
+    "rowIconPx": { "type": "number", "exclusiveMinimum": 0 },
+    "intrinsicContentHeightPx": { "type": "number", "exclusiveMinimum": 0 },
+    "categoryCount": { "type": "integer", "minimum": 1 },
+    "actionCount": { "type": "integer", "minimum": 2 },
+    "visibleViewportHeightPx": { "type": "number", "exclusiveMinimum": 0 },
+    "firstRows": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "terminalRowId": { "type": "string", "minLength": 1 },
+    "scrollDeltaPx": { "type": "number", "exclusiveMinimum": 0 }
+  }
+}

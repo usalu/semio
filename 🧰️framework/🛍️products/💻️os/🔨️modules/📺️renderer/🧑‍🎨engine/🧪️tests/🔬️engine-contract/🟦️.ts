@@ -1,9 +1,10 @@
+import gizmoTipBoundsFixture from "../../../../../../../🔨️modules/🖱️ui/🧫️fixtures/🧭️gizmo-tip-bounds/🔣️.json";
 import { act as reactAct, createElement, useLayoutEffect, useState, type ReactElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { flushSync } from "react-dom";
 import type { BackboneWorkerResponse } from "@semio-tech/framework-os";
 import { applyPatch } from "fast-json-patch";
-import { Layout, UIDialog, chromePanelSafeArea, childElementId, createTutorialClock, isElementId, singleTreeLeaf, uiI18n, type Anchor, type SafeAreaYield } from "@semio-tech/ui-react";
+import { COMPACT_UI_DRIVER, DEFAULT_UI_DRIVER, Layout, TreeContext, TreeItem, UIDialog, UiDriverProvider, chromePanelSafeArea, childElementId, closestCenter, createTutorialClock, deriveTreeDragRoles, isElementId, singleTreeLeaf, treeDataActivation, uiI18n, type Anchor, type SafeAreaYield } from "@semio-tech/ui-react";
 import { createWorldProjectionTemplates, worldCameraReportTargetV1, worldProjectionSwitchTreeItems } from "@semio-tech/infinite-world-r3f";
 import { resolvePluginCanvasStatus, type PluginSupervisorState } from "../../🧱️elements/🐚️Shell/🟦️.tsx";
 import bootCanvasFixture from "../../🧱️elements/🐚️Shell/🧫️fixtures/🔣️.json";
@@ -51,6 +52,9 @@ import Ajv2020 from "ajv/dist/2020";
 import deepEqual from "fast-deep-equal";
 import viewport2dSchema from "../../../../../../../🔨️modules/🖱️ui/🪟️viewport/◻️2d/🧬️schema/🔣️.json";
 import viewportPoseFixture from "../../../../../../../🔨️modules/🖱️ui/🪟️viewport/🧪️tests/🧫️fixtures/🪟️poses/🔣️.json";
+import treeDragHandleFixture from "../../../../../../../🔨️modules/🖱️ui/🧫️fixtures/🌳️tree-drag-handles/🔣️.json";
+import sceneListTransferFixture from "../../../../../../../🔨️modules/🖱️ui/🧫️fixtures/🔀️scene-list-transfer/🔣️.json" with { type: "json" };
+import { BlockListHost } from "../../🧱️elements/🧩️BlockListHost/🟦️.tsx";
 import dialogOriginFixture from "../../🧱️elements/🏛️ShellHost/🧫️fixtures/🗨️dialog-origin/🔣️.json";
 import { createAdmittedShellInstanceV1, shellDialogOriginIsCurrentV1, shellDialogOriginV1, shellEffectSourceIsCurrentV1, type ShellDialogOriginV1 } from "../../🧱️elements/🏛️ShellHost/🗨️dialog-origin/🟦️.ts";
 import admittedInstanceFixture from "../../🧱️elements/🏛️ShellHost/🧫️fixtures/🗨️dialog-origin/🛂️admission/🔣️.json";
@@ -85,6 +89,11 @@ import type { DialogDefinition, TutorialDefinition, TutorialUiChange, TutorialUi
 import presenceOverlayFixture from "../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧫️fixtures/👥️presence-overlay.json";
 import uiContractSchema from "../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧬️schema/🔣️.json";
 import { createRequire } from "node:module";
+import * as THREE from "three";
+import uiRenderSchema from "../../../../../../../🔨️modules/🖱️ui/🖌️render/🧬️schema/🔣️.json" with { type: "json" };
+import world3dLightingFixture from "../../../../♾️infinite/🌍️world/🧫️fixtures/🌞️scene-lighting/🔣️.json" with { type: "json" };
+import world3dShadowFixture from "../../../../♾️infinite/🌍️world/🧫️fixtures/🌑️scene-shadows/🔣️.json" with { type: "json" };
+import world3dShadowParityFixture from "../../../../♾️infinite/🌍️world/🧫️fixtures/🌑️scene-shadow-parity/🔣️.json" with { type: "json" };
 import type * as AccessibilityOracle from "dom-accessibility-api" with { "resolution-mode": "require" };
 import { decodeLocalInteractionCaptureJson, LOCAL_INTERACTION_CAPTURE_MAX_BYTES } from "@semio-tech/framework-replication";
 import { unresolvedActionArgs } from "@semio-tech/framework";
@@ -262,7 +271,8 @@ describe("catalog-resolved artifact creation kinds", () => {
     expect(english.args[0]?.schema).toMatchObject({ kind: "string", options: [{ label: "GIS Map" }] });
     expect(german.args[0]?.schema).toMatchObject({ kind: "string", options: [{ label: "GIS-Karte" }] });
     const option = english.args[0]?.schema.kind === "string" ? english.args[0].schema.options[0] : undefined;
-    expect(option?.value).toBe('{"kindId":"s.gis.gismap","schema":"gis.map","dialect":{"artifactKind":"s.gis.gismap","standard":"1","subset":"*"},"label":{"en":"GIS Map","de":"GIS-Karte"}}');
+    expect(option?.value).toBe('{"kindId":"s.gis.gismap","dialect":{"artifactKind":"s.gis.gismap","standard":"1","subset":"*"},"label":{"en":"GIS Map","de":"GIS-Karte"}}');
+    expect(JSON.parse(option?.value ?? "null").kindId).toBe("s.gis.gismap");
     expect(JSON.stringify(english)).not.toContain("s.gis.viewer");
   });
 
@@ -534,7 +544,7 @@ describe("Shell dialog origin", () => {
       const restore = vi.fn(async () => {});
       let resolve!: (snapshot: { pack: Uint8Array; spr: Uint8Array }) => void;
       const run = new OwnedTutorialRunV1("tour", dialogOriginFixture.owner, () => epoch === 1 && shellDialogOriginIsCurrentV1(dialogOriginFixture.owner, current), {
-        read: () => new Promise((done) => { resolve = done; }), drain: async () => {}, restore,
+        read: () => new Promise<{ pack: Uint8Array; spr: Uint8Array }>((done) => { resolve = done; }), drain: async () => {}, restore,
       });
       const started = run.start();
       let oracleCurrent = true;
@@ -1561,6 +1571,7 @@ describe("app-owned surface session factories", () => {
     const views = [render(content(a, createA, "pane.a")), render(content(a, createA, "pane.b")), render(content(b, createB, "pane.a")), render(content(b, createB, "pane.b"))];
     try {
       await waitFor(() => sessions.forEach((session) => expect(session.attach_canvas).toHaveBeenCalledOnce()));
+      await waitFor(() => sessions.forEach((session) => expect(session.setSelectionIdsJsonSilent).toHaveBeenCalledWith("[]")));
       sessions.forEach((session) => vi.mocked(session.setSelectionIdsJsonSilent!).mockClear());
       vi.mocked(sessions[0]!.drainEventsJson).mockReturnValueOnce(JSON.stringify([{ name: "select", payload: { ids: boardSessionFixture.isolation.selection } }]));
       const canvas = views[0]!.container.querySelector("canvas")!;
@@ -1617,7 +1628,7 @@ describe("app-owned surface session factories", () => {
     const session: flowSessionLoader.Board2dWasmSession = {
       attach_canvas: vi.fn(() => attached.promise), setSize: vi.fn(), renderFrame: vi.fn(), parseFixtureJson: () => true,
       syncDescriptorJson: vi.fn(), setKindCatalogsJson: vi.fn(), setCamera: vi.fn(), setSelectionIdsJson: vi.fn(), setCanvasThemeJson: vi.fn(),
-      pointerDownScreen: vi.fn(), pointerMoveScreen: vi.fn(), pointerUpScreen: vi.fn(), wheelScreen: vi.fn(),
+      pointerDownScreen: vi.fn(), pointerMoveScreen: vi.fn(), pointerUpScreen: vi.fn(), pointerCancelScreen: vi.fn(), wheelScreen: vi.fn(),
       drainEventsJson: () => "[]", cameraJson: () => '{"x":0,"y":0,"zoom":1}', gpuReady: () => true, free: vi.fn(),
     };
     const bounds = vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockReturnValue(new DOMRect(0, 0, 640, 480));
@@ -1734,6 +1745,7 @@ import { ENTWERFEN_MIT_BESTAND_BRAND_IDS, ENTWERFEN_MIT_BESTAND_GENERAL_INTRODUC
 import { Footer, navbarFillItem, progressPanelTabSelection, resolvePanelBranchBodyLeaf, resolveTranslationLabel, SelectionMarquee, uiDataLabel, formatKeybindingShortcut, buildKeysByActionId, type PanelTabNode, type TreeDataSection } from "@semio-tech/ui-react";
 import { renderUiControl } from "../../🧱️elements/🗣️Interpreter/🟦️.tsx";
 import { worldHoverPaintIdV1 } from "../../🧱️elements/🌐️World3dHost/🟦️.tsx";
+import type { GumballPose } from "../../../../../../../🔨️modules/🖱️ui/🧱️elements/🎬️Scene/🟦️.tsx";
 import { WorldOrbitProjectionSwitchPane, world3dProjectionPaneElementId, resolveClickInstanceIdFromProjected, world3dInstancePickUsesInteractionDomain, world3dMarqueePointerCaptureArmed, world3dProjectedAabbContainsClick, world3dFrameCameraFromBounds, world3dFrameDistanceForRadius, world3dBoundsRadius, world3dAutoFitOwed, world3dAutoFitKey, world3dFrameCameraFromInstances, world3dSuggestionsGestureArmed, world3dRetainLocalVortexHover, leftoverHoveredVortexFullIdV1, leftoverOverlayCarryingSelectionV1, leftoverSelectIdsMustNameHoverPickV1, leftoverOverlayCarryingUtilityV1, leftoverOverlayArmedBrushUtilityV1, leftoverTreeItemSelectedV1, leftoverWorldOverlayAppliesV1, mergeWorldInteractionWithLeftoverV1, mergeWorldSelectionWithLeftoverV1, gumballPreviewWorldPoint, world3dSuggestionsGestureConsumesContextMenu, world3dSuggestionsRightDownRoutesOnWindowCapture, worldVortexHitProxy, worldInstanceMeshRaycast, applyWorldInstanceMeshRaycast } from "../../🧱️elements/🌐️World3dHost/🟦️.tsx";
 import { leftoverInspectionPanelHash, leftoverInspectionRefreshScope, uiRefreshSectionUnchanged } from "../../🧱️elements/🔌️PluginRuntime/🟦️.tsx";
 
@@ -1818,6 +1830,8 @@ import {
   resolveHostSnapshotWidgetInstanceId,
   Paint2dHost,
   TableHost,
+  tableStepperClampedDelta,
+  tableStepperKeyDelta,
   resolveMapInteractionSync,
   GraphTimelineHost,
   TextEditorHost,
@@ -2215,9 +2229,10 @@ describe("framework sync utilities", () => {
     expect(close).toHaveBeenCalledTimes(1);
   });
 
-  it("offers a file picker affordance for file sync and a folder picker for folder sync", () => {
+  it("offers localized file and folder picker affordances through the owned browse control", async () => {
     const browseFile = vi.fn();
     const browseFolder = vi.fn();
+    await uiI18n.changeLanguage("en");
     const file = render(
       createElement(SyncAttachCard, {
         activeUri: null,
@@ -2234,9 +2249,12 @@ describe("framework sync utilities", () => {
         onBrowsePath: browseFile,
       }),
     );
-    file.getByTitle("Browse…").click();
+    const fileBrowse = document.querySelector<HTMLElement>("[data-semio-sync-browse]");
+    expect(computeAccessibleName(fileBrowse!)).toBe("Browse");
+    fileBrowse?.click();
     expect(browseFile).toHaveBeenCalledTimes(1);
     file.unmount();
+    await uiI18n.changeLanguage("de");
     const folder = render(
       createElement(SyncAttachCard, {
         activeUri: null,
@@ -2253,7 +2271,9 @@ describe("framework sync utilities", () => {
         onBrowsePath: browseFolder,
       }),
     );
-    folder.getByTitle("Browse…").click();
+    const folderBrowse = document.querySelector<HTMLElement>("[data-semio-sync-browse]");
+    expect(computeAccessibleName(folderBrowse!)).toBe("Durchsuchen");
+    folderBrowse?.click();
     expect(browseFolder).toHaveBeenCalledTimes(1);
     folder.unmount();
     const remote = render(
@@ -2274,6 +2294,10 @@ describe("framework sync utilities", () => {
     );
     expect(remote.container.querySelector("[data-semio-sync-browse]")).toBeNull();
     remote.unmount();
+    const { spacesUiLabel } = await import("../../🎯️targets/⚛️react/🟦️.tsx");
+    expect(spacesUiLabel("ui.sync.browse", "en")).toBe("Browse…");
+    expect(spacesUiLabel("ui.sync.browse", "de")).toBe("Durchsuchen…");
+    await uiI18n.changeLanguage("en");
   });
 
   it("builds three sync backbone toggles", async () => {
@@ -2300,14 +2324,13 @@ describe("framework sync utilities", () => {
   });
 
   it("matches the sync backbone path picker fixture", async () => {
-    const { readFileSync } = await import("node:fs");
-    const fixture = JSON.parse(readFileSync(new URL("../../../../🧫️fixtures/🔗️sync-backbone-path-picker/🔣️.json", import.meta.url), "utf8")) as {
+    const fixture = (await import("../../../../../🧫️fixtures/🔗️sync-backbone-path-picker/🔣️.json")).default as {
       react: { helpers: string[]; hostIoOps?: string[] };
       wgpu: { hostIoOps: string[] };
     };
     const helpers = await import("../../🧱️elements/🛠️ShellHelpers/🟦️.tsx");
     for (const name of fixture.react.helpers) expect(typeof (helpers as Record<string, unknown>)[name]).toBe("function");
-    const hostIo = readFileSync(new URL("../../../🎯️targets/🧊️wgpu/🚪️host-io/🟦️.ts", import.meta.url), "utf8");
+    const { default: hostIo } = await import("../../🎯️targets/🧊️wgpu/🚪️host-io/🟦️.ts?raw");
     for (const op of fixture.wgpu.hostIoOps) expect(hostIo).toContain(op);
   });
 });
@@ -4093,11 +4116,12 @@ describe("framework renderer types", () => {
 describe("owned declarative controls", () => {
   it("renders and dispatches a panel input through the Interpreter export", () => {
     const onAction = vi.fn();
-    const { getByRole } = render(renderUiControl({ type: "input", id: "name", inputKind: "text", value: "before", onChange: { controllerId: "test", action: "rename", args: { retained: true } } }, onAction, "panel.name"));
-    const input = getByRole("textbox");
+    const view = render(renderUiControl({ type: "input", id: "name", inputKind: "text", value: "before", onChange: { controllerId: "test", action: "rename", args: { retained: true } } }, onAction, "panel.name"));
+    const input = view.container.querySelector<HTMLInputElement>('input[data-ui-path="panel.name"]')!;
     expect(input.getAttribute("data-ui-path")).toBe("panel.name");
     fireEvent.change(input, { target: { value: "after" } });
     expect(onAction).toHaveBeenCalledWith({ controllerId: "test", action: "rename", args: { retained: true, value: "after" } });
+    view.unmount();
   });
 
   it("dispatches a declarative select through the owned listbox", () => {
@@ -4406,6 +4430,51 @@ describe("framework renderer hosts", () => {
       }),
     );
     expect(markup).toContain("semio-node-graph-host");
+  });
+
+  it("retires a mounted graph gesture without synthesizing an up or graph commit", async () => {
+    const attachCanvas = vi.fn(async () => {});
+    const pointerDownScreen = vi.fn();
+    const pointerUpScreen = vi.fn();
+    const pointerCancelScreen = vi.fn();
+    const onAction = vi.fn();
+    const session = {
+      attachCanvas, setSize: () => {}, renderFrame: vi.fn(), syncFromSceneJson: () => {}, syncFromScenePack: () => {}, setCanvasThemeJson: () => {},
+      pointerDownScreen, pointerMoveScreen: () => {}, pointerUpScreen, pointerCancelScreen, wheelScreen: () => {}, labelOverlayPaintStateJson: () => '{"labels":[]}',
+      sliderOverlayStateJson: () => "{}", selectionUnionBoundsScreenJson: () => "{}", selectionPreviewPointsJson: () => "[]", selectionPreviewCrossing: () => false,
+      selectionPreviewMethod: () => "rectangle", selectedNodeIdsJson: () => "[]", hoveredNodeId: () => null, hoveredChannelJson: () => "{}",
+      viewport: () => ({ x: 0, y: 0, zoom: 1 }), pickTargetsAtScreenJson: () => "[]", setHover: () => {}, setHoverChannel: () => {}, alignSelection: () => {},
+      hostSnapshotJson: () => "{}", takePendingOpenInstanceId: () => null, free: vi.fn(),
+    } as unknown as Awaited<ReturnType<typeof flowSessionLoader.createGraphSession>>;
+    const factory = vi.spyOn(flowSessionLoader, "createGraphSession").mockResolvedValue(session);
+    const bounds = vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockReturnValue(new DOMRect(0, 0, 640, 480));
+    const canvasContext = vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockReturnValue(null);
+    const view = render(createElement(NodeGraphHost, {
+      node: { type: "componentScene", surfaceId: "graph.cancel", controllerId: "graph", componentKind: "node-graph", nodeGraph: {
+        nodes: [{ id: "node-a", instanceId: "app-a", label: "Draw", x: 10, y: 20, width: 160, height: 80, inputs: [], outputs: [] }], edges: [], viewport: { x: 0, y: 0, zoom: 1 }, editable: true,
+      } }, onAction,
+    }));
+    try {
+      await waitFor(() => expect(attachCanvas).toHaveBeenCalledOnce());
+      const surface = view.container.querySelector('.semio-node-graph-host [class*="z-30"]') as HTMLElement;
+      await waitFor(() => {
+        fireEvent.pointerDown(surface, { pointerId: 11, button: 0, clientX: 20, clientY: 20 });
+        expect(pointerDownScreen).toHaveBeenCalled();
+      });
+      const downsBeforeCancel = pointerDownScreen.mock.calls.length;
+      const actionsBeforeCancel = onAction.mock.calls.length;
+      fireEvent.pointerCancel(surface, { pointerId: 11, clientX: 30, clientY: 20 });
+      expect(pointerCancelScreen).toHaveBeenCalledOnce();
+      expect(pointerUpScreen).not.toHaveBeenCalled();
+      expect(onAction.mock.calls.slice(actionsBeforeCancel).map(([action]) => action.action)).toEqual(["interactionHover"]);
+      fireEvent.pointerDown(surface, { pointerId: 12, button: 0, clientX: 40, clientY: 20 });
+      expect(pointerDownScreen).toHaveBeenCalledTimes(downsBeforeCancel + 1);
+    } finally {
+      view.unmount();
+      factory.mockRestore();
+      bounds.mockRestore();
+      canvasContext.mockRestore();
+    }
   });
 
   it("renders editable node graph host with find items", () => {
@@ -4722,7 +4791,7 @@ describe("framework renderer hosts", () => {
     for (const value of graphParameterFixture.cases) expect(command({ widgetId: value.widgetId, value: value.request, surfaceId: value.surfaceId })).toBe(true);
   });
 
-  it("dispatches graph parameter keyboard and drag events from the mounted FlowGraphCanvasHost without fixture reads or end commits", async () => {
+  it("dispatches graph parameter keyboard and drag events as bounded nodeGraphEdit operations with explicit commits", async () => {
     const task = <T,>(value: T) => ({ result: Promise.resolve(value), subscribe: () => () => {}, cancel: vi.fn() });
     const scheduler = { invalidate: vi.fn(), beginContinuous: vi.fn(), endContinuous: vi.fn(), dispose: vi.fn() };
     const schedulerSpy = vi.spyOn(flowSessionLoader, "createDemandFrameScheduler").mockReturnValue(scheduler);
@@ -4740,7 +4809,7 @@ describe("framework renderer hosts", () => {
       for (const item of graphParameterFixture.cases) {
         const row = { widgetId: item.widgetId, label: item.label, ...item.before, x: 0, y: 0, w: 100, h: 16 };
         const methods: Record<string, ReturnType<typeof vi.fn>> = {
-          snapshotJson: vi.fn(() => { throw new Error("slider must not serialize the fixture"); }),
+          documentJson: vi.fn(() => { throw new Error("slider must not serialize the fixture"); }),
           sliderOverlayStateJson: vi.fn(() => task(JSON.stringify({ camera: { x: 0, y: 0, zoom: 1 }, sliders: [row] }))),
           labelOverlayPaintStateJson: vi.fn(() => task("{}")),
           setSliderValue: vi.fn((_id: string, value: number) => { row.value = value; return task(undefined); }),
@@ -4771,7 +4840,7 @@ describe("framework renderer hosts", () => {
         slider.focus();
         fireEvent.keyDown(slider, { key: "ArrowRight" });
         fireEvent.keyUp(slider, { key: "ArrowRight" });
-        await waitFor(() => expect(onAction).toHaveBeenLastCalledWith({ controllerId: item.controllerId, action: graphParameterFixture.action, args: { surfaceId: item.surfaceId, widgetId: item.widgetId, value: 3 } }));
+        await waitFor(() => expect(onAction).toHaveBeenLastCalledWith({ controllerId: item.controllerId, action: graphParameterFixture.action, args: { surfaceId: item.surfaceId, operations: [{ operation: "setSlider", widgetId: item.widgetId, value: 3, gesture: `${item.surfaceId}:${item.widgetId}`, commit: true }] } }));
         expect(document.activeElement).toBe(slider);
         expect(computeAccessibleName(slider)).toBe(item.label);
         expect(root.id).toBe(stableId);
@@ -4779,16 +4848,23 @@ describe("framework renderer hosts", () => {
         methods.sliderOverlayStateJson!.mockImplementationOnce(() => ({ ...task(""), result: new Promise<string>((resolve) => { staleOverlay = resolve; }) }));
         fireEvent.pointerDown(root, { pointerId: 1, pointerType: "mouse", button: 0, buttons: 1, clientX: 40, clientY: 8 });
         fireEvent.pointerMove(root, { pointerId: 1, pointerType: "mouse", buttons: 1, clientX: 80, clientY: 8 });
-        await waitFor(() => expect(onAction).toHaveBeenLastCalledWith({ controllerId: item.controllerId, action: graphParameterFixture.action, args: { surfaceId: item.surfaceId, widgetId: item.widgetId, value: 8 } }));
+        await waitFor(() => {
+          const event = onAction.mock.calls.at(-1)?.[0];
+          expect(event).toMatchObject({ controllerId: item.controllerId, action: graphParameterFixture.action, args: { surfaceId: item.surfaceId, operations: [{ operation: "setSlider", widgetId: item.widgetId, value: 8, commit: false }] } });
+          expect(event.args.operations[0].gesture).toMatch(new RegExp(`^${item.surfaceId}:${item.widgetId}:\\d+$`));
+        });
         await waitFor(() => expect(slider.getAttribute("aria-valuenow")).toBe("8"));
         await reactAct(async () => { staleOverlay?.(JSON.stringify({ sliders: [{ ...row, value: 4 }] })); });
         expect(slider.getAttribute("aria-valuenow")).toBe("8");
         const count = onAction.mock.calls.length;
+        const gesture = onAction.mock.calls.at(-1)?.[0].args.operations[0].gesture;
         fireEvent.pointerUp(root, { pointerId: 1, button: 0, clientX: 80, clientY: 8 });
+        await waitFor(() => expect(onAction).toHaveBeenCalledTimes(count + 1));
+        expect(onAction).toHaveBeenLastCalledWith({ controllerId: item.controllerId, action: graphParameterFixture.action, args: { surfaceId: item.surfaceId, operations: [{ operation: "setSlider", widgetId: item.widgetId, value: 8, gesture, commit: true }] } });
         fireEvent.pointerCancel(root, { pointerId: 1 });
-        expect(onAction).toHaveBeenCalledTimes(count);
+        expect(onAction).toHaveBeenCalledTimes(count + 1);
         expect(methods.documentJson).not.toHaveBeenCalled();
-        expect(onAction.mock.calls.every(([event]) => event.action === graphParameterFixture.action && Object.keys(event.args).sort().join() === "surfaceId,value,widgetId")).toBe(true);
+        expect(onAction.mock.calls.every(([event]) => event.action === graphParameterFixture.action && Object.keys(event.args).sort().join() === "operations,surfaceId" && event.args.operations.every((operation: Record<string, unknown>) => Object.keys(operation).sort().join() === "commit,gesture,operation,value,widgetId"))).toBe(true);
         view.unmount();
       }
       expect(timerSpy.mock.calls.some(([, delay]) => delay === 80)).toBe(false);
@@ -5604,8 +5680,8 @@ describe("framework renderer hosts", () => {
     expect(world3dMarqueePointerCaptureArmed(4)).toBe(false);
     expect(world3dMarqueePointerCaptureArmed(5)).toBe(true);
     expect(world3dInstancePickUsesInteractionDomain(undefined)).toBe(false);
-    expect(world3dInstancePickUsesInteractionDomain({ id: "seed-left-001" })).toBe(false);
-    expect(world3dInstancePickUsesInteractionDomain({ id: "seed-left-001", interactionId: "port@0" })).toBe(true);
+    expect(world3dInstancePickUsesInteractionDomain({})).toBe(false);
+    expect(world3dInstancePickUsesInteractionDomain({ interactionId: "port@0" })).toBe(true);
   });
 
   it("paints the pane's own raycast hover before the guest echoes it, and the guest's when the pointer is elsewhere", () => {
@@ -5748,8 +5824,8 @@ describe("framework renderer hosts", () => {
       sourceId: "pane.top",
       transformMode: "transform",
       handleKind: "moveX" as const,
-      before: { position: [0, 0, 0], quaternion: [0, 0, 0, 1], scale: [1, 1, 1] },
-      after: { position: [2, 0, 0], quaternion: [0, 0, 0, 1], scale: [1, 1, 1] },
+      before: { position: [0, 0, 0], quaternion: [0, 0, 0, 1], scale: [1, 1, 1] } satisfies GumballPose,
+      after: { position: [2, 0, 0], quaternion: [0, 0, 0, 1], scale: [1, 1, 1] } satisfies GumballPose,
       instanceIds: ["object-a"],
       pivot: [0, 0, 0] as const,
     };
@@ -5766,7 +5842,7 @@ describe("framework renderer hosts", () => {
 
   it("mergeWorldSelectionWithLeftoverV1 keeps guest transformMode when leftover still stamps move-era gumball pose", () => {
     const merged = mergeWorldSelectionWithLeftoverV1(
-      { method: "click", ids: ["object-a"], transformMode: "transform", gumballActive: true, gumballTarget: [1, 2, 3] },
+      { ids: ["object-a"], transformMode: "transform", gumballActive: true, gumballTarget: [1, 2, 3] },
       { ids: ["object-a"], hoveredId: null, gumballActive: true, gumballAnchorId: "object-a" },
       [{ id: "object-a", position: [1, 2, 3] }],
     );
@@ -5775,10 +5851,10 @@ describe("framework renderer hosts", () => {
 
   it("gumball rotate handles commit rotateSelection under transform mode even when transformMode was move", () => {
     const base = { mode: "object", ids: ["obj-1"] };
-    const before = { position: [0, 0, 0], quaternion: [0, 0, 0, 1], scale: [1, 1, 1] };
-    const after = { position: [0, 0, 0], quaternion: [0, 0.7071067811865476, 0, 0.7071067811865476], scale: [1, 1, 1] };
+    const before: GumballPose = { position: [0, 0, 0], quaternion: [0, 0, 0, 1], scale: [1, 1, 1] };
+    const after: GumballPose = { position: [0, 0, 0], quaternion: [0, 0.7071067811865476, 0, 0.7071067811865476], scale: [1, 1, 1] };
     expect(gumballTransformDeltaBetweenPoses("move", before, after, base, "rotateY")?.action).toBe("rotateSelection");
-    const translateAfter = { position: [2, 0, 0], quaternion: [0, 0, 0, 1], scale: [1, 1, 1] };
+    const translateAfter: GumballPose = { position: [2, 0, 0], quaternion: [0, 0, 0, 1], scale: [1, 1, 1] };
     expect(gumballPreviewWorldPoint([0, 0, 0], "transform", before, translateAfter, "moveX", [1, 0, 0])).toEqual([3, 0, 0]);
   });
 
@@ -6271,9 +6347,9 @@ describe("framework renderer hosts", () => {
       disabled: { meshColor: "#999999", lineColor: "#888888", emissiveIntensity: 0, opacity: 0.45 },
     } as Parameters<typeof semanticColorsFromPalette>[0];
     const colors = semanticColorsFromPalette(palette);
-    expect(colors.hover).toBe("#aaaaaa");
-    expect(colors.edgeHover).toBe("#333333");
-    expect(colors.edgeHover).not.toBe(colors.hover);
+    expect(colors.hover).toBe("#00ff00");
+    expect(colors.edgeHover).toBe("#00ff00");
+    expect(colors.edgeHover).toBe(colors.hover);
     expect(colors.select).toBe("#0000ff");
   });
 
@@ -6369,6 +6445,48 @@ describe("framework renderer hosts", () => {
     );
     expect(markup).toContain("semio-text-editor-host");
     expect(markup).toContain("hello");
+  });
+
+  it("retires a mounted text selection drag without synthesizing an up or a second selection action", async () => {
+    const attachCanvas = vi.fn(async () => {});
+    const pointerDownScreen = vi.fn();
+    const pointerUpScreen = vi.fn();
+    const pointerCancelScreen = vi.fn();
+    const onAction = vi.fn();
+    const session = {
+      attachCanvas, setSize: () => {}, renderFrame: vi.fn(), syncFromSceneJson: () => {}, syncFromScenePack: () => {}, setText: () => {}, text: () => "hello",
+      caret: () => 2, anchor: () => 1, pointerDownScreen, pointerMoveScreen: () => {}, pointerUpScreen, pointerCancelScreen, wheelScrollScreen: () => {},
+      insertText: () => {}, backspace: () => {}, deleteForward: () => {}, selectAll: () => {}, replaceSelection: () => {}, selectionText: () => "e",
+      hoverTokenRangeJson: () => "null", setHoverRange: () => {}, cameraJson: () => "{}", setCanvasThemeJson: () => {}, moveLeft: () => {}, moveRight: () => {},
+      moveUp: () => {}, moveDown: () => {}, moveLineStart: () => {}, moveLineEnd: () => {}, tabInsertText: () => "  ", setSelectionRange: () => {},
+      selectSpanAt: () => {}, selectSpanAtScreen: () => {}, pickTargetsAtScreenJson: () => "[]", free: vi.fn(),
+    } as unknown as flowSessionLoader.EditorWasmSession;
+    const factory = vi.spyOn(flowSessionLoader, "createEditorSession").mockResolvedValue(session);
+    const bounds = vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockReturnValue(new DOMRect(0, 0, 640, 480));
+    const view = render(createElement(TextEditorHost, {
+      node: { type: "componentScene", surfaceId: "writer.cancel", controllerId: "writer", componentKind: "text-editor", textEditor: { buffer: "hello", language: "jack" } }, onAction,
+    }));
+    try {
+      await waitFor(() => expect(attachCanvas).toHaveBeenCalledOnce());
+      const surfaces = view.container.querySelectorAll(".semio-text-editor-host div.absolute.inset-0");
+      const surface = surfaces.item(surfaces.length - 1) as HTMLElement;
+      await waitFor(() => {
+        fireEvent.pointerDown(surface, { pointerId: 4, button: 0, clientX: 12, clientY: 14 });
+        expect(pointerDownScreen).toHaveBeenCalled();
+      });
+      const downsBeforeCancel = pointerDownScreen.mock.calls.length;
+      const actionsBeforeCancel = onAction.mock.calls.length;
+      fireEvent.pointerCancel(surface, { pointerId: 4, clientX: 20, clientY: 14 });
+      expect(pointerCancelScreen).toHaveBeenCalledOnce();
+      expect(pointerUpScreen).not.toHaveBeenCalled();
+      expect(onAction).toHaveBeenCalledTimes(actionsBeforeCancel);
+      fireEvent.pointerDown(surface, { pointerId: 5, button: 0, clientX: 24, clientY: 14 });
+      expect(pointerDownScreen).toHaveBeenCalledTimes(downsBeforeCancel + 1);
+    } finally {
+      view.unmount();
+      factory.mockRestore();
+      bounds.mockRestore();
+    }
   });
 
   it("renders text editor host with hover/newline/rename scene fields", () => {
@@ -6490,6 +6608,112 @@ describe("framework renderer hosts", () => {
     expect(onAction).toHaveBeenCalledWith({ controllerId: "s-home", action: "deleteSpace", args: { spaceId: "abc" } });
   });
 
+  // 🪜️ Ticket 26/09/18 slice B3f: `TableCell::Stepper` is 🪵️sourcing's ONLY document mutation, and
+  // the wgpu table widget drives it by merging `{ delta: ±step }` into the cell's own descriptor and
+  // suppressing the press at the bound (`🎞️Scenes/🎯️targets/🧊️wgpu/🦀️.rs`, `render_table_cell` /
+  // `table_cell_hit`). These lock the React host to the same contract, plus the spinbutton keyboard
+  // route and the touch-sizing slots the stylesheet grows at phone width.
+  const stepperTableNode = (value: number) => ({
+    type: "componentScene" as const,
+    surfaceId: "window:sourcing-pool",
+    controllerId: "sourcing-curation",
+    componentKind: "table" as const,
+    table: {
+      columnsJson: JSON.stringify([
+        { id: "name", label: "Name" },
+        { id: "curated", label: "Curated" },
+      ]),
+      rowsJson: JSON.stringify([
+        {
+          id: "beam-glulam-gl24h",
+          name: { kind: "text", value: "Glulam GL24h" },
+          curated: { kind: "stepper", value, min: 0, max: 3, step: 1, action: { controllerId: "sourcing-curation", action: "curationSetCount", args: { objectId: "beam-glulam-gl24h" } } },
+        },
+      ]),
+    },
+  });
+  const renderStepperTable = (value: number, onAction: (action: unknown) => void) => render(createElement(UiDriverProvider, { driver: DEFAULT_UI_DRIVER }, createElement(TableHost, { node: stepperTableNode(value) as never, onAction: onAction as never })));
+
+  it("renders a stepper cell as a spinbutton with decrement, live value and increment controls", () => {
+    const { container } = renderStepperTable(1, vi.fn());
+    const readout = container.querySelector<HTMLInputElement>('[id="window:sourcing-pool.beam-glulam-gl24h.curated"]');
+    expect(readout?.getAttribute("role")).toBe("spinbutton");
+    expect(readout?.getAttribute("aria-valuenow")).toBe("1");
+    expect(readout?.getAttribute("aria-valuemin")).toBe("0");
+    expect(readout?.getAttribute("aria-valuemax")).toBe("3");
+    expect(readout?.getAttribute("aria-label")).toBe("Curated");
+    expect(container.querySelector('[data-stepper-control="decrement"]')).not.toBeNull();
+    expect(container.querySelector('[data-stepper-control="increment"]')).not.toBeNull();
+    expect(container.querySelector('[data-slot="table-stepper"]')?.getAttribute("data-stepper-for")).toBe("window:sourcing-pool.beam-glulam-gl24h.curated");
+  });
+
+  it("dispatches the cell's own descriptor with the wgpu host's {delta} patch on increment and decrement", () => {
+    const onAction = vi.fn();
+    const { container } = renderStepperTable(1, onAction);
+    fireEvent.click(container.querySelector('[data-stepper-control="increment"]')!);
+    expect(onAction).toHaveBeenLastCalledWith({ controllerId: "sourcing-curation", action: "curationSetCount", args: { objectId: "beam-glulam-gl24h", delta: 1 } });
+    fireEvent.click(container.querySelector('[data-stepper-control="decrement"]')!);
+    expect(onAction).toHaveBeenLastCalledWith({ controllerId: "sourcing-curation", action: "curationSetCount", args: { objectId: "beam-glulam-gl24h", delta: -1 } });
+  });
+
+  it("disables the stepper control that would leave the cell's min/max bounds", () => {
+    const atMin = renderStepperTable(0, vi.fn());
+    expect(atMin.container.querySelector<HTMLButtonElement>('[data-stepper-control="decrement"]')?.disabled).toBe(true);
+    expect(atMin.container.querySelector<HTMLButtonElement>('[data-stepper-control="increment"]')?.disabled).toBe(false);
+    const atMax = renderStepperTable(3, vi.fn());
+    expect(atMax.container.querySelector<HTMLButtonElement>('[data-stepper-control="decrement"]')?.disabled).toBe(false);
+    expect(atMax.container.querySelector<HTMLButtonElement>('[data-stepper-control="increment"]')?.disabled).toBe(true);
+  });
+
+  it("steps a stepper cell from the keyboard: arrows by one step, Home and End onto the bounds", () => {
+    const onAction = vi.fn();
+    const { container } = renderStepperTable(1, onAction);
+    const readout = container.querySelector('[id="window:sourcing-pool.beam-glulam-gl24h.curated"]')!;
+    fireEvent.keyDown(readout, { key: "ArrowUp" });
+    expect(onAction).toHaveBeenLastCalledWith(expect.objectContaining({ args: { objectId: "beam-glulam-gl24h", delta: 1 } }));
+    fireEvent.keyDown(readout, { key: "ArrowDown" });
+    expect(onAction).toHaveBeenLastCalledWith(expect.objectContaining({ args: { objectId: "beam-glulam-gl24h", delta: -1 } }));
+    fireEvent.keyDown(readout, { key: "End" });
+    expect(onAction).toHaveBeenLastCalledWith(expect.objectContaining({ args: { objectId: "beam-glulam-gl24h", delta: 2 } }));
+    fireEvent.keyDown(readout, { key: "Home" });
+    expect(onAction).toHaveBeenLastCalledWith(expect.objectContaining({ args: { objectId: "beam-glulam-gl24h", delta: -1 } }));
+    onAction.mockClear();
+    fireEvent.keyDown(readout, { key: "a" });
+    expect(onAction).not.toHaveBeenCalled();
+  });
+
+  it("never dispatches a keyboard step that would cross a bound", () => {
+    const onAction = vi.fn();
+    const { container } = renderStepperTable(3, onAction);
+    const readout = container.querySelector('[id="window:sourcing-pool.beam-glulam-gl24h.curated"]')!;
+    fireEvent.keyDown(readout, { key: "PageUp" });
+    expect(onAction).not.toHaveBeenCalled();
+    fireEvent.keyDown(readout, { key: "PageDown" });
+    expect(onAction).toHaveBeenLastCalledWith(expect.objectContaining({ args: { objectId: "beam-glulam-gl24h", delta: -3 } }));
+  });
+
+  it("keeps the stepper buttons on the button-group slots the touch stylesheet sizes at phone width", () => {
+    const { container } = renderStepperTable(1, vi.fn());
+    const increment = container.querySelector('[data-stepper-control="increment"]');
+    expect(increment?.getAttribute("data-slot")).toBe("button-group-item");
+    expect(increment?.closest('[data-slot="button-group"]')).not.toBeNull();
+    expect(increment?.getAttribute("aria-label")).toBe("Increase Curated");
+    expect(container.querySelector('[data-stepper-control="decrement"]')?.getAttribute("aria-label")).toBe("Decrease Curated");
+  });
+
+  it("tableStepperKeyDelta and tableStepperClampedDelta agree with the wgpu segment contract", () => {
+    const cell = { value: 2, min: 0, max: 5, step: 0.5 };
+    expect(tableStepperKeyDelta("ArrowUp", cell)).toBe(0.5);
+    expect(tableStepperKeyDelta("ArrowDown", cell)).toBe(-0.5);
+    expect(tableStepperKeyDelta("PageUp", cell)).toBe(5);
+    expect(tableStepperKeyDelta("Home", cell)).toBe(-2);
+    expect(tableStepperKeyDelta("End", cell)).toBe(3);
+    expect(tableStepperKeyDelta("Enter", cell)).toBe(0);
+    expect(tableStepperClampedDelta(5, cell)).toBe(3);
+    expect(tableStepperClampedDelta(-9, cell)).toBe(-2);
+    expect(tableStepperClampedDelta(1, { value: 5, min: 0, max: 5 })).toBe(0);
+  });
+
   it("renders vcs history host with an ancestor graph fork", () => {
     const columns = [
       {
@@ -6556,6 +6780,7 @@ describe("framework renderer hosts", () => {
       pointerDownScreen: () => {},
       pointerMoveScreen: () => {},
       pointerUpScreen: () => {},
+      pointerCancelScreen: () => {},
       syncDocumentJson: () => {},
       uploadLayerImage: () => {},
       uploadRasterImageKey: () => {},
@@ -6607,11 +6832,55 @@ describe("framework renderer hosts", () => {
     expect(session.free).toHaveBeenCalledOnce();
   });
 
+  it("retires a mounted paint gesture on pointer cancel without an up or action commit", async () => {
+    const attachCanvas = vi.fn(async () => {});
+    const pointerDownScreen = vi.fn();
+    const pointerUpScreen = vi.fn();
+    const pointerCancelScreen = vi.fn();
+    const onAction = vi.fn();
+    const session: flowSessionLoader.RasterWasmSession = {
+      gpuReady: () => true, attachCanvas, setSize: () => {}, renderFrame: vi.fn(), setCamera: () => {}, wheelScreen: () => {},
+      pointerDownScreen, pointerMoveScreen: () => {}, pointerUpScreen, pointerCancelScreen, syncDocumentJson: () => {}, uploadLayerImage: () => {}, uploadRasterImageKey: () => {},
+      setActiveUtility: () => {}, setBrushSize: () => {}, setBrushOpacity: () => {}, syncInteraction: () => {}, setCanvasThemeJson: () => {},
+      cameraJson: () => '{"x":0,"y":0,"zoom":1}', setViewMode: () => {}, pickTargetsAtScreenJson: () => "[]", marqueeHitsJson: () => "[]",
+      navigatorFitCameraJson: () => '{"x":0,"y":0,"zoom":1}', navigatorViewportOverlayJson: () => '{"x":0,"y":0,"width":1,"height":1}', free: vi.fn(),
+    };
+    const factory = vi.spyOn(flowSessionLoader, "createRasterSession").mockResolvedValue(session);
+    const originalObserver = globalThis.ResizeObserver;
+    vi.stubGlobal("ResizeObserver", class { observe() {} unobserve() {} disconnect() {} });
+    const bounds = vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockReturnValue(new DOMRect(0, 0, 640, 480));
+    const view = render(createElement(Paint2dHost, {
+      node: { type: "componentScene", surfaceId: "raster.cancel", controllerId: "raster", componentKind: "paint-2d", paint2d: {
+        documentSyncJson: '{"schema":"raster.document","id":"raster","layers":[]}', assetsJson: "{}", cameraJson: '{"x":0,"y":0,"zoom":1}',
+        selectionJson: "[]", activeUtility: "paintBrush", brushSize: 24, brushOpacity: 1, viewMode: "composite",
+      } }, onAction,
+    }));
+    try {
+      const surface = view.container.querySelector('.semio-paint-2d-canvas-surface [class*="z-30"]') as HTMLElement;
+      Object.defineProperty(surface, "hasPointerCapture", { configurable: true, value: () => false });
+      await waitFor(() => expect(attachCanvas).toHaveBeenCalledOnce());
+      const actionsBeforeCancel = onAction.mock.calls.length;
+      fireEvent.pointerDown(surface, { pointerId: 7, button: 0, clientX: 10, clientY: 12 });
+      expect(pointerDownScreen).toHaveBeenCalledOnce();
+      fireEvent.pointerCancel(surface, { pointerId: 7, button: 0, clientX: 20, clientY: 22 });
+      expect(pointerCancelScreen).toHaveBeenCalledOnce();
+      expect(pointerUpScreen).not.toHaveBeenCalled();
+      expect(onAction.mock.calls.slice(actionsBeforeCancel).map(([action]) => action.action)).toEqual(["interactionHover"]);
+      fireEvent.pointerDown(surface, { pointerId: 8, button: 0, clientX: 30, clientY: 32 });
+      expect(pointerDownScreen).toHaveBeenCalledTimes(2);
+    } finally {
+      view.unmount();
+      factory.mockRestore();
+      bounds.mockRestore();
+      vi.stubGlobal("ResizeObserver", originalObserver);
+    }
+  });
+
   it("synchronizes raster selection and hover through the current native interaction API", async () => {
     const syncInteraction = vi.fn();
     const session: flowSessionLoader.RasterWasmSession = {
       gpuReady: () => true, attachCanvas: async () => {}, setSize: () => {}, renderFrame: () => {}, setCamera: () => {}, wheelScreen: () => {},
-      pointerDownScreen: () => {}, pointerMoveScreen: () => {}, pointerUpScreen: () => {}, syncDocumentJson: () => {}, uploadLayerImage: () => {}, uploadRasterImageKey: () => {},
+      pointerDownScreen: () => {}, pointerMoveScreen: () => {}, pointerUpScreen: () => {}, pointerCancelScreen: () => {}, syncDocumentJson: () => {}, uploadLayerImage: () => {}, uploadRasterImageKey: () => {},
       setActiveUtility: () => {}, setBrushSize: () => {}, setBrushOpacity: () => {}, syncInteraction, setCanvasThemeJson: () => {},
       cameraJson: () => '{"x":0,"y":0,"zoom":1}', setViewMode: () => {}, pickTargetsAtScreenJson: () => "[]", marqueeHitsJson: () => "[]",
       navigatorFitCameraJson: () => '{"x":0,"y":0,"zoom":1}', navigatorViewportOverlayJson: () => '{"x":0,"y":0,"width":1,"height":1}', free: vi.fn(),
@@ -6893,7 +7162,6 @@ describe("ink canvas host", () => {
     id: "semio",
     title: "Semio Note",
     camera: { x: 0, y: 0, zoom: 1 },
-    activeUtility: "selectDirect",
     gridVisible: true,
     snapEnabled: false,
     pencilWidth: 3,
@@ -6944,7 +7212,7 @@ describe("ink canvas host", () => {
           controllerId: "note-play",
           componentKind: "ink-canvas",
           inkCanvas: {
-            snapshotJson: JSON.stringify(semioInkDocument),
+            documentJson: JSON.stringify(semioInkDocument),
             selectionJson: "[]",
             activeUtility: "selectDirect",
             viewMode: "composite",
@@ -6969,7 +7237,7 @@ describe("ink canvas host", () => {
     };
     const compositeMarkup = renderToStaticMarkup(
       createElement(InkCanvasHost, {
-        node: { ...baseNode, inkCanvas: { snapshotJson: JSON.stringify(semioInkDocument), selectionJson: "[]", activeUtility: "selectDirect", viewMode: "composite", interactive: true } },
+        node: { ...baseNode, inkCanvas: { documentJson: JSON.stringify(semioInkDocument), selectionJson: "[]", activeUtility: "selectDirect", viewMode: "composite", interactive: true } },
         onAction: noopAction,
       }) as ReactElement,
     );
@@ -6977,7 +7245,7 @@ describe("ink canvas host", () => {
 
     const navigatorMarkup = renderToStaticMarkup(
       createElement(InkCanvasHost, {
-        node: { ...baseNode, inkCanvas: { snapshotJson: JSON.stringify(semioInkDocument), selectionJson: "[]", activeUtility: "selectDirect", viewMode: "navigator", interactive: false } },
+        node: { ...baseNode, inkCanvas: { documentJson: JSON.stringify(semioInkDocument), selectionJson: "[]", activeUtility: "selectDirect", viewMode: "navigator", interactive: false } },
         onAction: noopAction,
       }) as ReactElement,
     );
@@ -8257,6 +8525,38 @@ describe("window action panel — staging and single dispatch (P1/P2)", () => {
     return [...render(createElement("div", null, node)).container.querySelectorAll('[id^="action."]')].map((row) => row.id);
   };
 
+  // 📜️ A LONG rail must still reach its staged-argument form. `Tree` clips itself, so a rail taller than
+  // the pane used to hide its own last rows: generation3d's 32-row rail rendered a 960 px tree inside a
+  // 901 px pane body at 1600×1000 and put the expanded `addWidget` form's `kind` combobox at y=1038 —
+  // outside the viewport, `click` timed out, and the verb dispatched with no staged argument
+  // (ticket 26/09/18 B3c §4.3, re-measured by FL1). jsdom lays nothing out, so what this law can hold is
+  // the structure that makes the band reachable: the rail is the scroll container, it may shrink inside
+  // its pane, and the staged form — control AND execute — renders inside it rather than beside it.
+  it("a 32-row rail scrolls its own band and keeps the staged-argument form inside it", () => {
+    const rows: ResolvedActionDefinition[] = Array.from({ length: 32 }, (_, index) => ({
+      id: `row${index}`,
+      label: `Row ${index}`,
+      iconId: "box",
+      semantics: actionSemanticsForKind("mutation"),
+      kind: "mutation",
+      inPalette: true,
+      args: index === 31 ? [{ id: "kind", label: "Kind", schema: { kind: "string", options: ["inputSlider", "note"] }, required: true }] : [],
+    }));
+    const { container } = render(createElement(Harness, { actions: rows, onExecute: vi.fn() }));
+    const pane = container.querySelector('[data-slot="window-action-pane"]');
+    expect(pane).toBeTruthy();
+    const paneClass = pane!.className;
+    expect(paneClass).toContain("overflow-y-auto");
+    expect(paneClass).toContain("min-h-0");
+    expect(paneClass).toContain("flex-1");
+    expect(container.querySelectorAll('[id^="action.row"]').length).toBeGreaterThanOrEqual(32);
+    fireEvent.click(rowByText(container, "Row 31…"));
+    const control = pane!.querySelector('[id="action.row31.arg.kind"]');
+    const execute = [...pane!.querySelectorAll("button")].find((button) => button.id.includes("row31") && button.id.endsWith("execute"));
+    expect(control).toBeTruthy();
+    expect(execute).toBeTruthy();
+  });
+
   it("renders only palette-eligible rows, and no rail at all when every declared action is dispatch plumbing", () => {
     const action = (id: string, inPalette: boolean, category?: string): ActionDefinition => ({ id, label: id, iconId: "box", semantics: actionSemanticsForKind("shell"), kind: "shell", inPalette, ...(category === undefined ? {} : { category }), args: [] });
     expect(paneRowIds([action("worldPointerDown", false), action("exportFixture", true, "file"), action("interactionSelect", false)])).toEqual(["action.category.file", "action.exportFixture"]);
@@ -8270,7 +8570,7 @@ describe("palette redirect and keybinding rule (P3/P4)", () => {
   const zeroAction: ActionDefinition = { id: "flatten", label: "Flatten", iconId: "box", semantics: actionSemanticsForKind("mutation"), kind: "mutation", inPalette: true, args: [] };
 
   it("only actions with a user-facing arg redirect to a staged form (P3 decision)", () => {
-    const hiddenAction: ActionDefinition = { ...zeroAction, id: "toolRunStart", args: [{ id: "toolId", label: "Tool", schema: { kind: "string" }, presentation: { kind: "hidden" }, required: true }] };
+    const hiddenAction: ActionDefinition = { ...zeroAction, id: "toolRunStart", args: [{ id: "toolId", label: "Tool", schema: { kind: "string", options: [] }, presentation: { kind: "hidden" }, required: true }] };
     expect(actionRequiresStagedForm(argAction)).toBe(true);
     expect(actionRequiresStagedForm(zeroAction)).toBe(false);
     expect(actionRequiresStagedForm(hiddenAction)).toBe(false);
@@ -8508,29 +8808,24 @@ describe("registry-derived utilities and activation (P5)", () => {
   // ~3.5 turns/s (`📓️2026-09-12-wave-B33-full-run-vs-fresh-lane.md` §3). The behavioural halves are the
   // "coalescing action dispatcher" and "in-flight skipping interval" laws; this is the wiring half, so a
   // future edit cannot quietly hand a gate the void `dispatch` again.
-  it("every self-gating world lane dispatches through the awaitable twin", async () => {
-    const { readFileSync, existsSync } = await import("node:fs");
-    const { resolve } = await import("node:path");
-    const relative = "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🌐️World3dHost/🟦️.tsx";
-    let root = process.cwd();
-    for (let hop = 0; hop < 12 && !existsSync(resolve(root, relative)); hop += 1) root = resolve(root, "..");
-    expect(existsSync(resolve(root, relative))).toBe(true);
-    const source = readFileSync(resolve(root, relative), "utf8");
-    const twin = source.indexOf("const dispatchSettled = useCallback(");
-    expect(twin, "[DEBUG] the awaitable twin of dispatch is gone").toBeGreaterThan(0);
-    const twinBody = source.slice(twin, twin + 500);
-    expect(twinBody, "[DEBUG] the twin must return onAction's own promise — that is the settle the gates measure").toContain("Promise.resolve(");
-    expect(twinBody).toContain("onAction({");
-    for (const site of [
-      'return dispatchSettled("interactionHover", world3dHoverActionArgs(interactionDomainId, interactionGranularity, target));',
-      'return dispatchSettled("interactionHover", args);',
-      'createCoalescingActionDispatcher<string | null>((fullId) => dispatchSettled("targetBrushSuggestions", fullId ? { fullId } : {}))',
-    ]) {
-      expect(source.includes(site), `[DEBUG] a gated lane must read: ${site}`).toBe(true);
-    }
-    for (const swallowed of ['dispatch("targetBrushSuggestions"', 'dispatch("interactionHover"']) {
-      expect(source.includes(swallowed), `[DEBUG] ${swallowed} hands the in-flight gate a discarded promise — use dispatchSettled`).toBe(false);
-    }
+  it("every self-gating world lane returns the controlled round trip it coalesces", async () => {
+    const first = Promise.withResolvers<void>();
+    const sent: string[] = [];
+    const lane = createCoalescingActionDispatcher<string>((value) => {
+      sent.push(value);
+      return sent.length === 1 ? first.promise : Promise.resolve();
+    });
+    lane("marker-a");
+    lane("marker-b");
+    lane("marker-c");
+    expect(sent).toEqual(["marker-a"]);
+    first.resolve();
+    await waitFor(() => expect(sent).toEqual(["marker-a", "marker-c"]));
+
+    const { default: source } = await import("../../🧱️elements/🌐️World3dHost/🟦️.tsx?raw");
+    for (const action of ["interactionHover", "referenceHover", "worldVortexHover"]) expect(source).toMatch(new RegExp(`return dispatchSettled\\(\\"${action}\\"`));
+    expect(source).toMatch(/createCoalescingActionDispatcher<string \| null>\(\(fullId\) => dispatchSettled\("targetBrushSuggestions"/);
+    expect(source).not.toMatch(/return dispatch\("(?:interactionHover|targetBrushSuggestions|worldVortexHover)"/);
   });
 
   // 🖌️ Ticket 26/09/13/INTERACTIVE-TOOLS-VISIBLE-PROCESS lane W2-C: the brush candidate search is a read-only
@@ -9089,7 +9384,7 @@ describe("shell option locks (SEMIO_LOCKED_*)", () => {
     const pose = leftoverWorldGumballPoseV1({ gumballActive: true, gumballAnchorId: "seed-left-001", ids: ["seed-left-001"] }, [{ id: "seed-left-001", position: [1, 2, 3] }]);
     expect(pose.transformMode).toBe("transform");
     expect(pose.gumballTarget).toEqual([1, 2, 3]);
-    const gumballArgs = world3dGumballSelectionArgsV1({ ids: ["seed-left-001"], gumballActive: true, componentIds: [9] });
+    const gumballArgs = world3dGumballSelectionArgsV1({ ids: ["seed-left-001"], componentIds: [9] });
     expect(gumballArgs.ids).toEqual(["seed-left-001"]);
     expect(gumballArgs.mode).toBe("object");
   });
@@ -9217,19 +9512,21 @@ describe("shell option locks (SEMIO_LOCKED_*)", () => {
     expect(world.leftoverWorldWindowOverlayV1(perspective)).toBeNull();
   });
 
-  it("one arm authority publishes the armed pane's own overlay, and every leftover publication names its scope", async () => {
-    const { default: shellSource } = await import("../../🧱️elements/🏛️ShellHost/🟦️.tsx?raw");
-    const authority = shellSource.slice(shellSource.indexOf("const setActiveUtilityForWindow = useCallback("));
-    const body = authority.slice(0, authority.indexOf("}, []);"));
-    expect(body, "the ONE place a window's arm changes must publish that pane's leftover overlay — a `setActiveUtility` EFFECT (an engagement verb's brush) otherwise armed the host map while the pane's stale `select` overlay kept masking the guest's own armed body").toContain("publishLeftoverWorldSelectionV1(");
-    expect(body).toContain('{ kind: "window", windowId }');
-    expect(shellSource, "the effect route must share that authority, never mirror the arm on its own").toContain("setActiveUtilityForWindow(windowId, utilityId || null)");
-    const publications = [...shellSource.matchAll(/publishLeftoverWorldSelectionV1\(/g)];
-    expect(publications.length, "every publication site is accounted for").toBeGreaterThanOrEqual(3);
-    for (const match of publications) {
-      expect(shellSource.slice(match.index!, match.index! + 700), `the publication at ${match.index} must name its scope`).toMatch(/\{ kind: "(window|document|allWindows)"/);
-    }
-    console.warn("[DEBUG] leftover publication authority", JSON.stringify({ publications: publications.length }));
+  it("one arm authority publishes the armed pane's own overlay through explicit window scope", async () => {
+    const world = await import("../../🧱️elements/🌐️World3dHost/🟦️.tsx");
+    const a = "generation3d-preview#a";
+    const b = "generation3d-preview#b";
+    const documentSelection = { ids: ["solid-a"], hoveredId: null, gumballActive: false, gumballAnchorId: null, activeUtility: "select" } as const;
+    world.publishLeftoverWorldSelectionV1(null, { kind: "allWindows" });
+    world.publishLeftoverWorldSelectionV1(documentSelection, { kind: "document" });
+    world.publishLeftoverWorldSelectionV1({ ...documentSelection, activeUtility: "brush" }, { kind: "window", windowId: a });
+    world.publishLeftoverWorldSelectionV1({ ...documentSelection, activeUtility: "volumeBrush" }, { kind: "window", windowId: b });
+    expect(world.leftoverWorldWindowOverlayV1(a)).toMatchObject({ ids: ["solid-a"], activeUtility: "brush" });
+    expect(world.leftoverWorldWindowOverlayV1(b)).toMatchObject({ ids: ["solid-a"], activeUtility: "volumeBrush" });
+    expect(world.leftoverWorldSelectionOverlayV1()).toMatchObject({ ids: ["solid-a"], activeUtility: "select" });
+    world.publishLeftoverWorldSelectionV1(null, { kind: "allWindows" });
+    expect(world.leftoverWorldWindowOverlayV1(a)).toBeNull();
+    expect(world.leftoverWorldWindowOverlayV1(b)).toBeNull();
   });
 
   it("carries an armed mode tool id across hover leftovers without overriding the published utility", () => {
@@ -9334,7 +9631,7 @@ describe("shell option locks (SEMIO_LOCKED_*)", () => {
     const guestSilent = { ids: [] as string[], activeObjectId: null };
     const covered = mergeWorldSelectionWithLeftoverV1(guestSilent, world.leftoverWorldWindowOverlayV1(previewWindow), boxShell);
     expect(covered.ids, "the cover the overlay exists for").toEqual(["shell@solid"]);
-    expect(covered.activeObjectId).toBe("shell@solid");
+    expect(covered.activeObjectId).toBe("shell@solid#0");
 
     // 🧹️ The NEXT example's document offers none of those ids, so the same overlay is covering nothing.
     const sphereCut = [{ id: "brep_bool_cut_5@solid#0", interactionId: "brep_bool_cut_5@solid", meshId: "eval-brep_bool_cut_5@solid#0" }];
@@ -9351,7 +9648,7 @@ describe("shell option locks (SEMIO_LOCKED_*)", () => {
     world.publishLeftoverWorldSelectionV1(repicked, { kind: "window", windowId: previewWindow });
     const afterRepick = mergeWorldSelectionWithLeftoverV1(guestSilent, world.leftoverWorldWindowOverlayV1(previewWindow), sphereCut);
     expect(afterRepick.ids).toEqual(["brep_bool_cut_5@solid"]);
-    expect(afterRepick.activeObjectId).toBe("brep_bool_cut_5@solid");
+    expect(afterRepick.activeObjectId).toBe("brep_bool_cut_5@solid#0");
 
     // 🕳️ A pane that has drawn nothing yet has no membership information and keeps every id, the same
     // rule the guest's topology pruning uses for a domain it has no entry for.
@@ -9767,7 +10064,7 @@ describe("buildCommandCategoryTree / buildCommandCategoryTabs (command palette a
     expect(tree.sections).toHaveLength(1);
     const row = tree.sections[0]!.items!.find((item) => item.id === "command.os.os.resetDock")!;
     expect(row.label).toBe("Reset Dock");
-    row.onClick?.({} as never, {} as never);
+    row.onClick?.(...treeDataActivation());
     expect(onExecute).toHaveBeenCalledWith(zeroArgCommand);
   });
 
@@ -9785,7 +10082,7 @@ describe("buildCommandCategoryTree / buildCommandCategoryTabs (command palette a
     expect(collapsedTree.sections).toHaveLength(1);
     const collapsedRow = collapsedTree.sections[0]!.items!.find((item) => item.id === "command.os.os.setThemeId")!;
     expect(collapsedRow.label).toBe("Set Theme…");
-    collapsedRow.onClick?.({} as never, {} as never);
+    collapsedRow.onClick?.(...treeDataActivation());
     expect(onToggleExpanded).toHaveBeenCalledWith("os:os.setThemeId");
 
     const expandedTree = buildCommandCategoryTree([argCommand, secondArgCommand], "os:os.setThemeId", {}, vi.fn(), vi.fn(), vi.fn(), vi.fn());
@@ -10385,7 +10682,7 @@ describe("per-window element ids", () => {
   it("styles the projection pane body like window options — transparent payload, no nested ribbon glass", () => {
     mountUnfoldedPane("puzzle3d-main-top");
     const paneId = world3dProjectionPaneElementId("puzzle3d-main-top");
-    const body = document.querySelector(`#${CSS.escape(paneId)} [data-slot="pane-body"]`) as HTMLElement | null;
+    const body = document.getElementById(paneId)?.querySelector('[data-slot="pane-body"]') as HTMLElement | null;
     const switchRoot = document.querySelector("[data-world-projection-kind-switch]") as HTMLElement | null;
     expect(body?.className).toContain("p-tiny");
     expect(body?.hasAttribute("data-window-silhouette-content")).toBe(true);
@@ -11544,7 +11841,7 @@ describe("window-kind action scoping", () => {
       ["s.procedural.generation3d@1/*#editor", "nodeGraphEdit", ["procedural-main"]],
       ["s.procedural.generation3d@1/*#editor", "setShowMode", ["generation3d-generate-preview", "procedural-preview"]],
       ["s.procedural.generation3d@1/*#editor", "setSunAzimuth", ["generation3d-generate-preview", "procedural-preview"]],
-      ["s.procedural.generation3d@1/*#editor", "translateSelection", ["procedural-preview"]],
+      ["s.procedural.generation3d@1/*#editor", "translateSelection", ["generation3d-generate-preview", "procedural-preview"]],
       ["s.procedural.generation3d@1/*#viewer", "setShowMode", ["procedural-view-preview"]],
       ["s.procedural.generation3d@1/*#viewer", "setCamera", ["procedural-view-preview"]],
       ["s.procedural.generation2d@1/*#editor", "addGeneration", ["generation2d-generations"]],
@@ -12443,5 +12740,329 @@ describe("🎫️ the shell says what it holds", () => {
     const pinnedControlsBox = { start: 0, end: controls };
     expect(Math.max(pinnedStripBox.start, pinnedControlsBox.start) < Math.min(pinnedStripBox.end, pinnedControlsBox.end), "fails-before: pinned to the body, the strip painted over the fold control").toBe(true);
   });
+
+  it("the shared World3d lighting fixture builds React's actual light and standard-material values", async () => {
+    const validate = new Ajv({ strict: true, allErrors: true }).addSchema(uiRenderSchema)
+      .getSchema(`${uiRenderSchema.$id}#/$defs/World3dLightingFixture`);
+    expect(validate?.(world3dLightingFixture), JSON.stringify(validate?.errors)).toBe(true);
+
+    const { sunPositionFromAzimuthElevation } = await import("@semio-tech/ui-react");
+    const request = world3dLightingFixture.iconRenderRequest;
+    const environment = world3dLightingFixture.worldEnvironment;
+    const ambient = new THREE.AmbientLight(request.lights.ambientColor, request.lights.ambientIntensity);
+    const sun = new THREE.DirectionalLight(request.lights.sunColor, request.lights.sunIntensity);
+    sun.position.fromArray(sunPositionFromAzimuthElevation(request.lights.sunAzimuth, request.lights.sunElevation));
+    const material = new THREE.MeshStandardMaterial({
+      color: request.material.color,
+      metalness: request.material.metalness,
+      roughness: request.material.roughness,
+      emissive: request.material.emissive,
+      emissiveIntensity: request.material.emissiveIntensity,
+    });
+
+    expect(ambient.intensity).toBe(environment.ambient.intensity);
+    expect(ambient.color.getHexString()).toBe(environment.ambient.color.slice(1));
+    expect(sun.intensity).toBe(environment.sun.intensity);
+    expect(sun.color.getHexString()).toBe(environment.sun.color.slice(1));
+    expect(sun.position.clone().normalize().toArray()).toEqual([
+      Math.cos(THREE.MathUtils.degToRad(environment.sun.elevation)) * Math.cos(THREE.MathUtils.degToRad(environment.sun.azimuth)),
+      Math.cos(THREE.MathUtils.degToRad(environment.sun.elevation)) * Math.sin(THREE.MathUtils.degToRad(environment.sun.azimuth)),
+      Math.sin(THREE.MathUtils.degToRad(environment.sun.elevation)),
+    ].map((value) => expect.closeTo(value, 12)));
+    expect(material.metalness).toBe(environment.material.metalness);
+    expect(material.roughness).toBe(environment.material.roughness);
+    expect(material.emissive.getHexString()).toBe(environment.material.emissive.slice(1));
+    expect(material.emissiveIntensity).toBe(environment.material.emissiveIntensity);
+    expect(material.emissive.clone().multiplyScalar(material.emissiveIntensity).toArray().some((channel) => channel > 0), "the oracle's neutral emissive contributes radiance").toBe(true);
+  });
+
+  it("the shared Tree drag fixture matches React's handle and surface drivers", () => {
+    for (const row of treeDragHandleFixture.rows) {
+      const dragData = "dragData" in row ? row.dragData : undefined;
+      const roles = deriveTreeDragRoles({ draggable: row.draggable, dragData }, false);
+      expect(roles).toEqual(row.role ? [row.role] : []);
+      // 🧭️ Annotated, not inferred: the two fixture rows differ in which id lists are empty, so the
+      // imported JSON types one `labelStarts`/`visibleHandles` as `never[]` and `.includes(id)` refuses.
+      const driverCases: readonly { readonly id: string; readonly drag: string; readonly visibleHandles: readonly string[]; readonly labelStarts: readonly string[]; readonly handleStarts: readonly string[] }[] = treeDragHandleFixture.drivers;
+      for (const driverCase of driverCases) {
+        const driver = driverCase.drag === "surface" ? COMPACT_UI_DRIVER : DEFAULT_UI_DRIVER;
+        const markup = renderToStaticMarkup(
+          createElement(
+            UiDriverProvider,
+            { driver },
+            createElement(
+              TreeContext.Provider,
+              { value: { level: 0, isLastAtLevel: [], showLines: true, isTree: true, indentMultiplier: 1 } },
+              createElement(TreeItem, {
+                id: row.id,
+                label: row.label,
+                draggable: row.draggable,
+                dragRoles: roles,
+                dragInitiation: "handle",
+                dragData,
+              }),
+            ),
+          ),
+        );
+        const visible = driverCase.visibleHandles.includes(row.id);
+        const labelStarts = driverCase.labelStarts.includes(row.id);
+        expect(markup.includes('data-slot="drag-handle"')).toBe(visible);
+        expect(/data-slot="tree-item-row"[^>]*\sdraggable="true"/.test(markup), `${driverCase.id}:${row.id}`).toBe(labelStarts);
+        if (visible) {
+          expect(markup).toContain(`data-drag-role="${row.role}"`);
+        }
+      }
+    }
+  });
+
+  it("the shared scene-list transfer fixture matches React data transfer and dnd-kit geometry", async () => {
+    const fixture = sceneListTransferFixture;
+    const validate = new Ajv({ strict: true, allErrors: true }).addSchema(uiRenderSchema)
+      .getSchema(`${uiRenderSchema.$id}#/$defs/SceneListTransferFixture`);
+    expect(validate?.(fixture), JSON.stringify(validate?.errors)).toBe(true);
+    await uiI18n.changeLanguage("en");
+
+    const transferValues = new Map<string, string>();
+    const transferTypes: string[] = [];
+    const dataTransfer = {
+      effectAllowed: "uninitialized",
+      dropEffect: "none",
+      types: transferTypes,
+      setData(type: string, value: string) {
+        if (!transferValues.has(type)) transferTypes.push(type);
+        transferValues.set(type, value);
+      },
+      getData(type: string) {
+        return transferValues.get(type) ?? "";
+      },
+      clearData(type?: string) {
+        if (type === undefined) {
+          transferValues.clear();
+          transferTypes.splice(0);
+        } else {
+          transferValues.delete(type);
+          const index = transferTypes.indexOf(type);
+          if (index >= 0) transferTypes.splice(index, 1);
+        }
+      },
+      files: [],
+      items: [],
+      setDragImage() {},
+    } as unknown as DataTransfer;
+    const tableSource = fixture.table.source;
+    const sourceNode = {
+      surfaceId: tableSource.surfaceId,
+      controllerId: "controller.table-a",
+      table: {
+        columnsJson: JSON.stringify([{ id: "label", label: "Label" }]),
+        rowsJson: JSON.stringify([{ id: tableSource.rowId, label: "Asset 7", _drag: tableSource.payload }]),
+        rowDragMime: tableSource.mime,
+      },
+    };
+    const destinationNode = {
+      surfaceId: fixture.table.destination.surfaceId,
+      controllerId: fixture.table.destination.dropAction.controllerId,
+      table: {
+        columnsJson: JSON.stringify([{ id: "label", label: "Label" }]),
+        rowsJson: JSON.stringify([]),
+        dropActionJson: JSON.stringify(fixture.table.destination.dropAction),
+      },
+    };
+    const destinationAction = vi.fn();
+    const sourceView = render(createElement(UiDriverProvider, { driver: DEFAULT_UI_DRIVER }, createElement(TableHost, { node: sourceNode as never, onAction: vi.fn() })));
+    const destinationView = render(createElement(UiDriverProvider, { driver: DEFAULT_UI_DRIVER }, createElement(TableHost, { node: destinationNode as never, onAction: destinationAction })));
+    try {
+      const row = sourceView.container.querySelector("tbody tr") as HTMLTableRowElement;
+      const handle = row.querySelector('[data-slot="drag-handle"]') as HTMLElement;
+      expect(handle).not.toBeNull();
+      expect(row.draggable, "Handle leaves the row inert before its handle arms").toBe(false);
+      fireEvent.pointerDown(handle, { button: 0, isPrimary: true });
+      expect(row.draggable, "the real native-drag arm makes the row draggable").toBe(true);
+      fireEvent.dragStart(row, { dataTransfer });
+      expect(dataTransfer.types).toEqual([tableSource.mime]);
+      expect(JSON.parse(dataTransfer.getData(tableSource.mime))).toEqual(tableSource.payload);
+      fireEvent.drop(destinationView.container.querySelector(".semio-table-host") as HTMLElement, { dataTransfer });
+      expect(destinationAction).toHaveBeenCalledTimes(1);
+      expect(destinationAction.mock.calls[0]![0]).toEqual(fixture.table.expectedAction);
+    } finally {
+      sourceView.unmount();
+      destinationView.unmount();
+    }
+
+    const blockNode = {
+      surfaceId: fixture.blockList.surfaceId,
+      controllerId: "controller.block-list",
+      blockList: {
+        stepsJson: JSON.stringify(fixture.blockList.steps),
+        paletteJson: JSON.stringify(fixture.blockList.palette),
+      },
+    };
+    for (const driverCase of fixture.drivers) {
+      const driver = driverCase.drag === "surface" ? COMPACT_UI_DRIVER : DEFAULT_UI_DRIVER;
+      const actions = vi.fn();
+      const view = render(createElement(UiDriverProvider, { driver }, createElement(BlockListHost, { node: blockNode as never, onAction: actions })));
+      try {
+        const expectedHandleCount = driverCase.drag === "handle"
+          ? fixture.blockList.steps.length + fixture.blockList.steps.reduce((count, step) => count + step.blocks.length, 0) + fixture.blockList.palette.length
+          : 0;
+        expect(view.container.querySelectorAll('[data-slot="drag-handle"]')).toHaveLength(expectedHandleCount);
+        const paletteRow = view.container.querySelector(".semio-palette > div") as HTMLDivElement;
+        expect(paletteRow.draggable).toBe(driverCase.drag === "surface");
+      } finally {
+        view.unmount();
+      }
+    }
+
+    const rect = (top: number) => ({ top, bottom: top + 20, left: 0, right: 100, width: 100, height: 20 });
+    const collisionWinner = (ids: readonly string[], targetIndex: number) => {
+      const droppableRects = new Map(ids.map((id, index) => [id, rect(index * 40)]));
+      const droppableContainers = ids.map((id) => ({ id, disabled: false, data: { current: {} }, node: { current: null }, rect: { current: null } }));
+      return closestCenter({ collisionRect: rect(targetIndex * 40), droppableRects, droppableContainers } as never)[0]?.id;
+    };
+    expect(collisionWinner(fixture.blockList.steps.map((step) => step.id), 1)).toBe("publish");
+    expect(collisionWinner(fixture.blockList.steps[0]!.blocks.map((block) => block.id), 1)).toBe("clean");
+    expect(fixture.journeys.find((journey) => journey.id === "step-prepare-after-publish")?.expectedAction).toEqual({ controllerId: "controller.block-list", action: "moveStep", args: { stepId: "prepare", index: 1 } });
+    expect(fixture.journeys.find((journey) => journey.id === "block-load-after-clean")?.expectedAction).toEqual({ controllerId: "controller.block-list", action: "moveBlock", args: { blockId: "load", fromStepId: "prepare", toStepId: "prepare", index: 1 } });
+  });
+
+  it("the shared shadow fixture matches Three's directional camera and IconRender caster contract", async () => {
+    const validate = new Ajv({ strict: true, allErrors: true }).addSchema(uiRenderSchema)
+      .getSchema(`${uiRenderSchema.$id}#/$defs/World3dShadowFixture`);
+    expect(validate?.(world3dShadowFixture), JSON.stringify(validate?.errors)).toBe(true);
+
+    const { sunPositionFromAzimuthElevation } = await import("@semio-tech/ui-react");
+    const environment = world3dShadowFixture.worldEnvironment;
+    const sun = new THREE.DirectionalLight(environment.sun.color, environment.sun.intensity);
+    sun.position.fromArray(sunPositionFromAzimuthElevation(environment.sun.azimuth, environment.sun.elevation));
+    sun.castShadow = environment.shadow.enabled;
+    sun.shadow.mapSize.set(world3dShadowFixture.iconRender.mapSize, world3dShadowFixture.iconRender.mapSize);
+    sun.updateMatrixWorld();
+    sun.target.updateMatrixWorld();
+    sun.shadow.updateMatrices(sun);
+
+    expect(sun.castShadow).toBe(true);
+    expect(sun.shadow.mapSize.toArray()).toEqual([1024, 1024]);
+    expect(sun.shadow.matrix.elements).toEqual(world3dShadowFixture.oracle.shadowMatrix.map((value) => expect.closeTo(value, 12)));
+    expect([sun.shadow.camera.left, sun.shadow.camera.right, sun.shadow.camera.top, sun.shadow.camera.bottom, sun.shadow.camera.near, sun.shadow.camera.far]).toEqual([-5, 5, 5, -5, 0.5, 500]);
+
+    const subject = new THREE.Mesh(new THREE.BoxGeometry(), new THREE.MeshStandardMaterial());
+    subject.castShadow = environment.shadow.enabled && world3dShadowFixture.iconRender.materialPresent;
+    subject.receiveShadow = environment.shadow.enabled && world3dShadowFixture.iconRender.materialPresent;
+    expect([subject.castShadow, subject.receiveShadow]).toEqual([true, true]);
+  });
+
+  it("the neutral exact-shadow corpus matches React roles and current Three PCF", () => {
+    const fixture = world3dShadowParityFixture;
+    const validate = new Ajv({ strict: true, allErrors: true }).addSchema(uiRenderSchema)
+      .getSchema(`${uiRenderSchema.$id}#/$defs/World3dShadowParityFixture`);
+    expect(validate?.(fixture), JSON.stringify(validate?.errors)).toBe(true);
+    const worldSun = new THREE.DirectionalLight();
+    expect(worldSun.shadow.mapSize.toArray()).toEqual([fixture.profiles.world.mapSize, fixture.profiles.world.mapSize]);
+    expect(worldSun.shadow.bias).toBe(fixture.profiles.world.bias);
+    expect(worldSun.shadow.normalBias).toBe(fixture.profiles.world.normalBias);
+    expect(worldSun.shadow.radius).toBe(fixture.profiles.world.radius);
+    expect(worldSun.shadow.intensity).toBe(fixture.profiles.world.intensity);
+    expect(worldSun.shadow.intensity).not.toBe(fixture.profiles.world.opacityInput);
+    expect(worldSun.shadow.radius).not.toBe(fixture.profiles.world.softnessInput);
+    expect(fixture.profiles.world.consumesOpacity).toBe(false);
+    expect(fixture.profiles.world.consumesSoftness).toBe(false);
+
+    const iconSun = new THREE.DirectionalLight();
+    iconSun.shadow.mapSize.set(fixture.profiles.iconPng.mapSize, fixture.profiles.iconPng.mapSize);
+    expect(iconSun.shadow.mapSize.toArray()).toEqual([1024, 1024]);
+    expect(fixture.profiles.iconPng.usesShadowMap).toBe(true);
+    expect(fixture.profiles.iconSvg.usesShadowMap).toBe(false);
+
+    for (const row of fixture.roles) {
+      const mesh = new THREE.Mesh(new THREE.BoxGeometry(), new THREE.MeshStandardMaterial({ transparent: row.transparent }));
+      if (row.kind === "glb") {
+        mesh.castShadow = true;
+        mesh.receiveShadow = true;
+      } else if (row.kind === "terrain") {
+        mesh.receiveShadow = true;
+      } else if (row.kind === "icon" && row.materialPresent) {
+        mesh.castShadow = true;
+        mesh.receiveShadow = true;
+      }
+      expect([mesh.castShadow, mesh.receiveShadow], row.kind).toEqual([row.casts, row.receives]);
+    }
+
+    const cameraRow = fixture.frusta.mainCamera;
+    const camera = new THREE.PerspectiveCamera(cameraRow.fov, cameraRow.aspect, cameraRow.near, cameraRow.far);
+    camera.position.fromArray(cameraRow.position);
+    camera.up.fromArray(cameraRow.up);
+    camera.lookAt(new THREE.Vector3().fromArray(cameraRow.target));
+    camera.updateProjectionMatrix();
+    camera.updateMatrixWorld();
+    const mainFrustum = new THREE.Frustum().setFromProjectionMatrix(new THREE.Matrix4().multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse));
+
+    const sunRow = fixture.frusta.sun;
+    const azimuth = THREE.MathUtils.degToRad(sunRow.azimuth);
+    const elevation = THREE.MathUtils.degToRad(sunRow.elevation);
+    const shadowSun = new THREE.DirectionalLight();
+    shadowSun.position.set(Math.cos(elevation) * Math.cos(azimuth) * sunRow.distance, Math.cos(elevation) * Math.sin(azimuth) * sunRow.distance, Math.sin(elevation) * sunRow.distance);
+    shadowSun.updateMatrixWorld();
+    shadowSun.target.updateMatrixWorld();
+    shadowSun.shadow.updateMatrices(shadowSun);
+    const lightFrustum = shadowSun.shadow.getFrustum();
+    const box = (bounds: { readonly min: readonly number[]; readonly max: readonly number[] }) => new THREE.Box3(new THREE.Vector3().fromArray(bounds.min), new THREE.Vector3().fromArray(bounds.max));
+    const caster = box(fixture.frusta.offscreenCasterBounds);
+    const receiver = box(fixture.frusta.visibleReceiverBounds);
+    expect(mainFrustum.intersectsBox(caster)).toBe(fixture.frusta.offscreenCasterMainVisible);
+    expect(lightFrustum.intersectsBox(caster)).toBe(fixture.frusta.offscreenCasterLightVisible);
+    expect(mainFrustum.intersectsBox(receiver)).toBe(fixture.frusta.visibleReceiverMainVisible);
+    expect(lightFrustum.intersectsBox(receiver)).toBe(fixture.frusta.visibleReceiverLightVisible);
+
+    const pcfSource = THREE.ShaderChunk.shadowmap_pars_fragment;
+    expect(pcfSource).toContain("interleavedGradientNoise( gl_FragCoord.xy )");
+    expect(pcfSource).toContain("vogelDiskSample( 4, 5, phi )");
+    expect(pcfSource).toContain("shadowCoord.x >= 0.0 && shadowCoord.x <= 1.0");
+    expect(pcfSource).toContain("shadowCoord.z <= 1.0");
+    const fract = (value: number) => value - Math.floor(value);
+    const [fragmentX, fragmentY] = fixture.pcf.fragmentPosition;
+    const noise = fract(52.9829189 * fract(fragmentX * 0.06711056 + fragmentY * 0.00583715));
+    const rotation = noise * 6.28318530718;
+    const offsets = Array.from({ length: fixture.pcf.sampleCount }, (_, index) => {
+      const radius = Math.sqrt((index + 0.5) / fixture.pcf.sampleCount);
+      const theta = index * 2.399963229728653 + rotation;
+      return [Math.cos(theta) * radius, Math.sin(theta) * radius];
+    });
+    expect(noise).toBeCloseTo(fixture.pcf.interleavedGradientNoise, 12);
+    expect(rotation).toBeCloseTo(fixture.pcf.rotation, 12);
+    expect(offsets).toEqual(fixture.pcf.unitOffsets.map((row) => row.map((value) => expect.closeTo(value, 12))));
+  });
 });
 //#endregion 🎫️RemainingReds
+
+
+it("the neutral gizmo head corpus matches Three sprite scale and circle bounds", () => {
+  const camera = new THREE.PerspectiveCamera();
+  camera.position.fromArray(gizmoTipBoundsFixture.camera.position);
+  camera.up.fromArray(gizmoTipBoundsFixture.camera.up);
+  camera.lookAt(new THREE.Vector3().fromArray(gizmoTipBoundsFixture.camera.target));
+  camera.updateMatrixWorld(true);
+  const viewRotation = new THREE.Matrix4().extractRotation(camera.matrixWorldInverse);
+  const axes = [[1, 0, 0], [-1, 0, 0], [0, 1, 0], [0, -1, 0], [0, 0, 1], [0, 0, -1]];
+  for (const [index, axis] of axes.entries()) {
+    const point = new THREE.Vector3().fromArray(axis).applyMatrix4(viewRotation);
+    expect([point.x * gizmoTipBoundsFixture.groupScale, -point.y * gizmoTipBoundsFixture.groupScale, point.z]).toEqual(gizmoTipBoundsFixture.axisOffsets[index].map(value => expect.closeTo(value, 6)));
+  }
+  for (const row of gizmoTipBoundsFixture.cases) {
+    const sprite = new THREE.Sprite();
+    const group = new THREE.Group();
+    group.scale.setScalar(gizmoTipBoundsFixture.groupScale);
+    sprite.scale.setScalar((row.prominent ? 1 : 0.65) * gizmoTipBoundsFixture.axisHeadScale * (row.hovered ? 1.1 : 1));
+    group.add(sprite);
+    group.updateMatrixWorld(true);
+    const radius = sprite.getWorldScale(new THREE.Vector3()).x * (row.prominent ? 16 : 12) / gizmoTipBoundsFixture.textureSize;
+    expect(radius).toBeCloseTo(row.radius, 8);
+    const geometry = new THREE.CircleGeometry(radius, 64);
+    geometry.computeBoundingBox();
+    const size = geometry.boundingBox!.getSize(new THREE.Vector3());
+    expect(size.x).toBeCloseTo(row.radius * 2, 5);
+    expect(size.y).toBeCloseTo(row.radius * 2, 5);
+    expect(size.x).toBeLessThanOrEqual(gizmoTipBoundsFixture.maxHeadDiameter + 0.00001);
+    geometry.dispose();
+    sprite.material.dispose();
+  }
+});

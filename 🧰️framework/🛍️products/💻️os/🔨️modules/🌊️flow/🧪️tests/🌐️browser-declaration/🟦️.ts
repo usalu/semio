@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { readFileSync, realpathSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
+import type { MethodDeclaration } from "typescript";
 import { flowBrowserDeclaration } from "../../🕸️wasm/🌐️browser/📝️declaration/📤️projection/🟦️.ts";
 import { flowWasmContract } from "../../🕸️wasm/🧪️tests/🧬️schema-oracle/🛂️admission/🟦️.ts";
 
@@ -43,7 +44,7 @@ export async function testFlowBrowserDeclaration(packageRoot: string): Promise<v
   assert.deepEqual(names.slice().sort(), runtime);
   assert.equal(names.filter((name) => ![...fixture.canvasMethods, "close", "free"].includes(name)).length, fixture.operationMethods);
   for (const sample of fixture.samples) {
-    const method = methods.find((value) => value.name.getText(parsed) === sample.name);
+    const method: MethodDeclaration | undefined = methods.find((value) => value.name.getText(parsed) === sample.name);
     assert.ok(method);
     assert.deepEqual(method.parameters.map((parameter) => parameter.getText(parsed)), sample.parameters);
     assert.equal(method.type?.getText(parsed), fixture.result);

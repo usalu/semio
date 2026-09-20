@@ -209,7 +209,50 @@ fn is_ideographic(ch: char) -> bool {
 /// 🀄️ UAX#14 `CL`/`NS` — a closing bracket, a full stop, a comma or a small kana never starts a line,
 /// so the ideographic break opportunity before it is suppressed.
 fn is_no_break_before(ch: char) -> bool {
-    matches!(ch, '、' | '。' | '，' | '．' | '！' | '？' | '：' | '；' | '」' | '』' | '）' | '】' | '］' | '｝' | '〉' | '》' | '〕' | '〗' | '〙' | '〛' | 'ー' | '々' | 'ぁ' | 'ぃ' | 'ぅ' | 'ぇ' | 'ぉ' | 'っ' | 'ゃ' | 'ゅ' | 'ょ' | 'ァ' | 'ィ' | 'ゥ' | 'ェ' | 'ォ' | 'ッ' | 'ャ' | 'ュ' | 'ョ' | '・' | '゠')
+    matches!(
+        ch,
+        '、' | '。'
+            | '，'
+            | '．'
+            | '！'
+            | '？'
+            | '：'
+            | '；'
+            | '」'
+            | '』'
+            | '）'
+            | '】'
+            | '］'
+            | '｝'
+            | '〉'
+            | '》'
+            | '〕'
+            | '〗'
+            | '〙'
+            | '〛'
+            | 'ー'
+            | '々'
+            | 'ぁ'
+            | 'ぃ'
+            | 'ぅ'
+            | 'ぇ'
+            | 'ぉ'
+            | 'っ'
+            | 'ゃ'
+            | 'ゅ'
+            | 'ょ'
+            | 'ァ'
+            | 'ィ'
+            | 'ゥ'
+            | 'ェ'
+            | 'ォ'
+            | 'ッ'
+            | 'ャ'
+            | 'ュ'
+            | 'ョ'
+            | '・'
+            | '゠'
+    )
 }
 
 /// 🀄️ UAX#14 `OP` — an opening bracket never ends a line, so the ideographic break opportunity after

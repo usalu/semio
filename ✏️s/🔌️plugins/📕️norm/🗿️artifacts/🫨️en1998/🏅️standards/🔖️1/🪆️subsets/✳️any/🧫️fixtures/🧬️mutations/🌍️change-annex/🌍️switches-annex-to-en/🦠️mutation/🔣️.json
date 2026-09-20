@@ -1,5 +1,4 @@
 {
-  "ChangeAnnex": {
-    "newAnnex": "en"
-  }
+  "mutation": "changeAnnex",
+  "newAnnex": "en"
 }

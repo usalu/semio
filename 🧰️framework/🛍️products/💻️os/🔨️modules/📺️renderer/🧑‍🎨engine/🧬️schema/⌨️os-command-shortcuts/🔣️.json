@@ -1,0 +1,57 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "commandId", "bindings", "collision", "retiredChord", "route"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "commandId": { "const": "os.toggleFullscreen" },
+    "bindings": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["platform", "chord"],
+        "properties": {
+          "platform": { "enum": ["windows", "linux", "macOs"] },
+          "chord": { "enum": ["f11", "control+meta+f"] }
+        }
+      }
+    },
+    "collision": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["event", "matches", "refuses"],
+      "properties": {
+        "event": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["key", "ctrl", "meta", "shift", "alt"],
+          "properties": {
+            "key": { "const": "f" },
+            "ctrl": { "const": true },
+            "meta": { "const": true },
+            "shift": { "const": false },
+            "alt": { "const": false }
+          }
+        },
+        "matches": { "const": "control+meta+f" },
+        "refuses": { "const": "mod+f" }
+      }
+    },
+    "retiredChord": { "const": "mod+shift+f" },
+    "route": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["owner", "argless", "withArguments"],
+      "properties": {
+        "owner": { "const": "os" },
+        "argless": { "const": "applyOsCommand" },
+        "withArguments": { "const": "openCommandDialog" }
+      }
+    }
+  }
+}

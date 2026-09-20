@@ -22,8 +22,12 @@ pub(crate) const LAYOUT_CATALOGUE_KINDS_SECTION: &str = "layout-catalogue.kinds"
 
 /// 🛍️ The full creation roster this catalogue windows over — the page item plus every frame kind.
 const LAYOUT_CATALOGUE_ROSTER: &[(&str, &str)] = &[("page", "file"), ("rect", "square"), ("text", "type"), ("image", "image")];
-const LAYOUT_CATALOGUE_DRAG_MIME: &str = "application/x-semio-catalogue-item";
-const LAYOUT_CATALOGUE_KIND_MIME_PREFIX: &str = "application/x-semio-catalogue-kind.";
+pub(crate) const LAYOUT_CATALOGUE_DRAG_MIME: &str = "application/x-semio-catalogue-item";
+pub(crate) const LAYOUT_CATALOGUE_KIND_MIME_PREFIX: &str = "application/x-semio-catalogue-kind.";
+
+pub(crate) fn catalogue_kind(kind: &str) -> Option<&'static str> {
+    LAYOUT_CATALOGUE_ROSTER.iter().find_map(|(candidate, _)| (*candidate == kind).then_some(*candidate))
+}
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition

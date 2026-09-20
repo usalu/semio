@@ -7,6 +7,6 @@ use std::collections::BTreeMap;
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.forms.forms.try-window-transient")]
 pub struct FormsTryWindowTransient {
-    #[state(window_transient)]
+    #[state(transient)]
     pub try_values: BTreeMap<String, Vec<String>>,
 }

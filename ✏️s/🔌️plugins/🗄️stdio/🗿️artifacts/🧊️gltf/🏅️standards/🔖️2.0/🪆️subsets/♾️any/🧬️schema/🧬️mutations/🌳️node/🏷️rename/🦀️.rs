@@ -8,18 +8,18 @@ use dsl::DslValue;
 //#region 🔖️Payload
 pub const ID: &str = "s.stdio.gltf.mutation.change-node-name.v1";
 
-/// 🕳️ `value`/`before`/`after` need no `#[value(...)]` attribute at all (not even `deserialize_with
-/// = "required_option"`, the `serde` equivalent needed here): `serde`'s derive implicitly treats
-/// EVERY `Option<T>` field as if `#[serde(default)]` were present (silently defaults to `None` on
-/// a missing key) unless overridden — `required_option` existed only to defeat that leniency. This
-/// derive has the OPPOSITE default: a field with no `#[value(default)]` is required regardless of
-/// its type, so a bare `Option<String>` field already rejects a missing key while still decoding a
-/// present `null` as `None` (the blanket `impl<T: FromValue> FromValue for Option<T>` handles that
-/// distinction on its own) — exactly the semantics `required_option` was hand-rolled to get.
+/// 🕳️ `value`/`before`/`after` carry `#[value(required)]` (the `serde` equivalent this leaf once
+/// hand-rolled as `deserialize_with = "required_option"`): this derive, like `serde`'s, decodes a
+/// MISSING `Option<T>` key as `None` unless the field says otherwise, and `required` is exactly
+/// the opt-out — a present wire key is mandatory even for an `Option<T>`. That is what makes a
+/// rename's nullable witnesses honest: `{"before": null}` (the name genuinely was absent) and a
+/// wire that simply forgot to record `before` must not decode to the same value. A present `null`
+/// still decodes as `None` through the blanket `impl<T: FromValue> FromValue for Option<T>`.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct GltfChangeNodeNamePayload {
     pub node: u32,
+    #[value(required)]
     pub value: Option<String>,
 }
 
@@ -27,7 +27,9 @@ pub struct GltfChangeNodeNamePayload {
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct GltfChangeNodeNameRestore {
     pub node: u32,
+    #[value(required)]
     pub before: Option<String>,
+    #[value(required)]
     pub after: Option<String>,
 }
 //#endregion 🔖️Payload

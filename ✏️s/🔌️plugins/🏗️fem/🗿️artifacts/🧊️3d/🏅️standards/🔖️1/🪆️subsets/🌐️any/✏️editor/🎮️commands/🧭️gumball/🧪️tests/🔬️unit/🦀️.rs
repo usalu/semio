@@ -1,11 +1,11 @@
 use super::*;
 use crate::editor::fem3d::modes::edit::windows::model;
-use crate::editor::fem3d::unit_tests::context::{dispatch, fem3d_app, view, Fem3dApp};
+use crate::editor::fem3d::unit_tests::context::{dispatch, fem3d_demo_app, view, Fem3dApp};
 use crate::editor::fem3d::Fem3dCommand;
 use semio_framework_plugin::{ArtifactView, ConfigView, HistoryView, NoConfig, ViewModel};
 
 fn demo() -> Fem3dSnapshot {
-    crate::standards::v1::subsets::any::schema::snapshot::text::fem3d_boot_snapshot()
+    crate::standards::v1::subsets::any::schema::snapshot::text::fem3d_demo_snapshot()
 }
 
 fn node_position(app: &Fem3dApp, id: &str) -> [f64; 3] {
@@ -40,7 +40,7 @@ fn translate_selection_coalesces_with_the_gumball_key_and_refreshes_both_windows
 /// empty id list against the live framework selection.
 #[semio_framework_async_macros::async_test]
 async fn a_drag_of_incremental_steps_accumulates_on_the_live_app() {
-    let mut app = fem3d_app();
+    let mut app = fem3d_demo_app().await;
     let before = node_position(&app, "n20_l1");
     for _ in 0..3 {
         dispatch(&mut app, Fem3dCommand::TranslateSelection(translate_selection::TranslateSelection { ids: vec!["n20_l1".into()], dx: 0.1, dy: 0.0, dz: 0.0 })).await;
@@ -95,7 +95,7 @@ async fn transform_brackets_complete_empty() {
         assert!(emit.artifact_mutations.is_empty() && emit.window_config_mutations.is_empty() && emit.effects.is_empty(), "{}: a bracket writes nothing", command.command_id());
         assert!(matches!(emit.ui_scope, UiDirtyScope::None), "{}: a bracket refreshes nothing", command.command_id());
     }
-    let mut app = fem3d_app();
+    let mut app = fem3d_demo_app().await;
     let before = app.snapshot().expect("snapshot");
     dispatch(&mut app, Fem3dCommand::TransformBegin(transform_begin::TransformBegin {})).await;
     dispatch(&mut app, Fem3dCommand::TransformEnd(transform_end::TransformEnd {})).await;

@@ -1,5 +1,4 @@
 {
-  "ChangeRetrofitEDKn": {
-    "newRetrofitEDKn": 337.5
-  }
+  "mutation": "changeRetrofitEDKn",
+  "newRetrofitEDKn": 337.5
 }

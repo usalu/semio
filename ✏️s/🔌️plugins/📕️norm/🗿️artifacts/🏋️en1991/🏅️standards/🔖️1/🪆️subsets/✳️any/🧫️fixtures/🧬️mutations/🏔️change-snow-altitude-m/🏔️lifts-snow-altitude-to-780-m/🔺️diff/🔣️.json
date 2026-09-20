@@ -10,7 +10,7 @@
   "fireResistanceMin": null,
   "fireMemberCapacityC": null,
   "snowZone": null,
-  "snowAltitudeM": 780,
+  "snowAltitudeM": 780.0,
   "enSKKnM2": null,
   "windZone": null,
   "enVBMS": null,

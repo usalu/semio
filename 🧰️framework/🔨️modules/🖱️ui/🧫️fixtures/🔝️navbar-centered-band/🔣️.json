@@ -3,7 +3,12 @@
     "centeredItemNeverCrossesOccupiedChrome": true,
     "fullyOccupiedBarKeepsWholeWidth": true,
     "emptyFlowChildIsFreeRoom": true,
-    "itemWiderThanBandStartsAtBandLeft": true
+    "itemWiderThanBandStartsAtBandLeft": true,
+    "topMiddleBelongsToCenteredCluster": true,
+    "footerTrailingOrder": ["presence", "hubConnection", "bottomRight"],
+    "mobileNavbarOmitsDesktopCenterControls": true,
+    "mobileFooterKeepsHubConnection": true,
+    "dockCapDepthUsesControlAndPadding": true
   },
   "occupancy": [
     { "name": "a filler renders nothing, so its box is free room", "childElementCount": 0, "textContent": "", "occupies": false },
@@ -97,6 +102,28 @@
       "band": { "left": 700, "right": 1000 },
       "contentWidth": 200,
       "left": 700
+    }
+  ],
+  "dockCapMetrics": [
+    {
+      "name": "default tokens happen to make the dock cap as deep as the navbar",
+      "spacing": 3.2,
+      "navbarHeightUiSpacing": 9,
+      "controlHeightUiSpacing": 7,
+      "paddingUiSpacing": 1,
+      "navbarHeight": 28.8,
+      "controlHeight": 22.4,
+      "capDepth": 28.8
+    },
+    {
+      "name": "custom navbar height remains independent from the padded dock cap",
+      "spacing": 4,
+      "navbarHeightUiSpacing": 13,
+      "controlHeightUiSpacing": 6,
+      "paddingUiSpacing": 2,
+      "navbarHeight": 52,
+      "controlHeight": 24,
+      "capDepth": 40
     }
   ]
 }

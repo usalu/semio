@@ -1,9 +1,14 @@
 // #region 🔌️Adapters
 import * as React from "react";
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import Ajv2020 from "ajv/dist/2020.js";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectScrollDownButton, SelectSeparator, SelectTrigger, SelectValue, resolveSelectPlacement } from "../../🟦️.tsx";
 import { Dialog, DialogContent, DialogPortal, DialogTitle } from "../../../💬️Dialog/🟦️.tsx";
+import retainedSelectOriginFixture from "../../../../🧫️fixtures/🔽️retained-select-origin/🔣️.json";
+import retainedSelectOriginSchema from "../../../../🧬️schema/🔽️retained-select-origin/🔣️.json";
+import retainedSelectAccessibilityFixture from "../../../../🧫️fixtures/♿️retained-select-accessibility/🔣️.json";
+import retainedSelectAccessibilitySchema from "../../../../🧬️schema/♿️retained-select-accessibility/🔣️.json";
 // #endregion 🔌️Adapters
 
 // #region ☑️SelectMatrix
@@ -27,6 +32,97 @@ function BasicSelect(props: Omit<React.ComponentProps<typeof Select>, "id"> = {}
 }
 
 describe("Select", () => {
+  it("mounts listbox options only while expanded and commits one option through the React authority", async () => {
+    const validate = new Ajv2020({ strict: true, allErrors: true }).compile(retainedSelectAccessibilitySchema);
+    expect(validate(retainedSelectAccessibilityFixture), JSON.stringify(validate.errors)).toBe(true);
+    const committed = vi.fn();
+    render(
+      <Select id="retained-select-accessibility" defaultValue={retainedSelectAccessibilityFixture.select.value} onValueChange={committed}>
+        <SelectTrigger aria-label={retainedSelectAccessibilityFixture.select.label}><SelectValue /></SelectTrigger>
+        <SelectContent>
+          {retainedSelectAccessibilityFixture.select.options.map((option) => <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>)}
+        </SelectContent>
+      </Select>,
+    );
+    const trigger = screen.getByRole("combobox", { name: retainedSelectAccessibilityFixture.select.label });
+    expect([trigger.getAttribute("role")]).toEqual(retainedSelectAccessibilityFixture.closedRoles);
+    expect(screen.queryByRole("listbox")).toBeNull();
+    fireEvent.click(trigger);
+    const listbox = await screen.findByRole("listbox");
+    const options = screen.getAllByRole("option");
+    expect([trigger, listbox, ...options].map((node) => node.getAttribute("role"))).toEqual(retainedSelectAccessibilityFixture.openRoles);
+    expect(options.map((node) => node.getAttribute("aria-selected") === "true")).toEqual(retainedSelectAccessibilityFixture.select.options.map((option) => option.selected));
+    fireEvent.click(options.find((node) => node.textContent === "Dark")!);
+    expect(committed).toHaveBeenCalledTimes(retainedSelectAccessibilityFixture.activation.expectedActions);
+    expect(committed).toHaveBeenCalledWith(retainedSelectAccessibilityFixture.activation.expectedValue);
+    expect(screen.queryByRole("listbox")).toBeNull();
+    await waitFor(() => expect(document.activeElement).toBe(trigger));
+  });
+
+  it("mounts scoped bottom and flipped-top content at the fixture's viewport-local origin", async () => {
+    const validate = new Ajv2020({ strict: true, allErrors: true }).compile(retainedSelectOriginSchema);
+    expect(validate(retainedSelectOriginFixture), JSON.stringify(validate.errors)).toBe(true);
+    const [originX, originY] = retainedSelectOriginFixture.viewport.origin;
+    const [viewportWidth, viewportHeight] = retainedSelectOriginFixture.viewport.size;
+    for (const testCase of retainedSelectOriginFixture.cases) {
+      const root = document.createElement("section"), app = document.createElement("div"), layer = document.createElement("div");
+      root.style.position = "relative";
+      layer.style.position = "absolute";
+      root.append(app, layer);
+      document.body.appendChild(root);
+      root.getBoundingClientRect = () => ({ x: originX, y: originY, top: originY, right: originX + viewportWidth, bottom: originY + viewportHeight, left: originX, width: viewportWidth, height: viewportHeight, toJSON: () => ({}) });
+      const view = render(
+        <Dialog defaultOpen isolationRoot={root}>
+          <DialogPortal container={layer}>
+            <DialogContent showCloseButton={false}>
+              <DialogTitle>Select origin</DialogTitle>
+            </DialogContent>
+          </DialogPortal>
+          <Select id={`select-origin-${testCase.id}`} defaultOpen defaultValue="alpha">
+            <SelectTrigger aria-label={testCase.id}>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent sideOffset={retainedSelectOriginFixture.sideOffset} collisionPadding={retainedSelectOriginFixture.collisionPadding}>
+              <SelectItem value="alpha">Alpha</SelectItem>
+              <SelectItem value="beta">Beta</SelectItem>
+              <SelectItem value="gamma">Gamma</SelectItem>
+            </SelectContent>
+          </Select>
+        </Dialog>,
+        { container: app, baseElement: root },
+      );
+      try {
+        const trigger = view.getByRole("combobox", { name: testCase.id, hidden: true });
+        const content = await view.findByRole("listbox");
+        const [triggerX, triggerY, triggerWidth, triggerHeight] = testCase.triggerLocal;
+        trigger.getBoundingClientRect = () => ({
+          x: originX + triggerX,
+          y: originY + triggerY,
+          top: originY + triggerY,
+          right: originX + triggerX + triggerWidth,
+          bottom: originY + triggerY + triggerHeight,
+          left: originX + triggerX,
+          width: triggerWidth,
+          height: triggerHeight,
+          toJSON: () => ({}),
+        });
+        content.getBoundingClientRect = () => ({ x: 0, y: 0, top: 0, right: testCase.menuLocal[2], bottom: testCase.menuLocal[3], left: 0, width: testCase.menuLocal[2], height: testCase.menuLocal[3], toJSON: () => ({}) });
+        fireEvent(window, new Event("resize"));
+        await waitFor(() => expect(content.style.visibility).not.toBe("hidden"));
+        expect(content.dataset.side).toBe(testCase.side);
+        const mounted = [Number.parseFloat(content.style.left), Number.parseFloat(content.style.top)];
+        expect(mounted[0]).toBeCloseTo(testCase.menuLocal[0]);
+        expect(mounted[1]).toBeCloseTo(testCase.menuLocal[1]);
+        const global = [originX + mounted[0], originY + mounted[1], Number.parseFloat(content.style.getPropertyValue("--semio-select-trigger-width")), testCase.menuLocal[3]];
+        global.forEach((value, index) => expect(value).toBeCloseTo(testCase.menuGlobal[index]!));
+        expect(view.getAllByRole("option")).toHaveLength(retainedSelectOriginFixture.row.itemCount);
+      } finally {
+        view.unmount();
+        root.remove();
+      }
+    }
+  });
+
   it("owns fallback value, projected text, pointer selection, and focus return", async () => {
     const changes = vi.fn();
     render(<BasicSelect onValueChange={changes} />);

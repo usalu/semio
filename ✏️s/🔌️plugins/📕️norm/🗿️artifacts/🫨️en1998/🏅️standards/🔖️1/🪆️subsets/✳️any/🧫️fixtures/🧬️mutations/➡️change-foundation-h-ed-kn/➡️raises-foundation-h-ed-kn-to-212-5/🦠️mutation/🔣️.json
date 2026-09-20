@@ -1,5 +1,4 @@
 {
-  "ChangeFoundationHEdKn": {
-    "newFoundationHEdKn": 212.5
-  }
+  "mutation": "changeFoundationHEdKn",
+  "newFoundationHEdKn": 212.5
 }

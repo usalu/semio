@@ -54,7 +54,7 @@
   "generationReferenceKwh": null,
   "dataCenterSupplyC": null,
   "hStWK": null,
-  "thetaStC": 55,
+  "thetaStC": 55.0,
   "thetaAmbC": null,
   "storageTH": null,
   "storageAllowanceKwh": null,

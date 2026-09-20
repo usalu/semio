@@ -132,6 +132,27 @@ pub enum UiDriverLabels {
     Icons,
 }
 
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub enum UiDriverLabelTier {
+    Beginner,
+    #[default]
+    Normal,
+}
+
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub enum UiDriverDrag {
+    #[default]
+    Handle,
+    Surface,
+}
+
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub enum UiDriverReveal {
+    #[default]
+    Always,
+    Hover,
+}
+
 /// 🎙️ React's `UiDriverTooltips` axis — how rich a chrome control's hover tooltip may be
 /// (`🧱️elements/🚗️UiDriver/🟦️.tsx:23`). `None` is what `COMPACT_UI_DRIVER` ships, and it is the axis
 /// value `useControlTooltipText` reads FIRST (`🏷️Label/🟦️.tsx:188`: `if (driver.tooltips === "none")
@@ -163,20 +184,35 @@ impl UiDriverTooltips {
     }
 }
 
-/// 🚗️ The two axes of a resolved `UiDriver` this target can act on. `resolveUiDriver`
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub enum UiDriverHotkeys {
+    #[default]
+    Inline,
+    Tooltip,
+    None,
+}
+
+/// 🚗️ The seven axes of a resolved `UiDriver`. `resolveUiDriver`
 /// (`🚗️UiDriver/🟦️.tsx:80-84`) resolves a custom driver first, then a builtin, then
 /// `DEFAULT_UI_DRIVER` — [`UiDriverChrome::builtin`] is the builtin half of that ladder.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub struct UiDriverChrome {
     pub labels: UiDriverLabels,
+    pub label_tier: UiDriverLabelTier,
+    pub drag: UiDriverDrag,
+    pub chrome: UiDriverReveal,
+    pub gumball: UiDriverReveal,
     pub tooltips: UiDriverTooltips,
+    pub hotkeys: UiDriverHotkeys,
 }
 
 impl UiDriverChrome {
     /// 🚗️ `DEFAULT_UI_DRIVER` (`🚗️UiDriver/🟦️.tsx:41`).
-    pub const DEFAULT: Self = Self { labels: UiDriverLabels::Full, tooltips: UiDriverTooltips::Full };
+    pub const DEFAULT: Self =
+        Self { labels: UiDriverLabels::Full, label_tier: UiDriverLabelTier::Normal, drag: UiDriverDrag::Handle, chrome: UiDriverReveal::Always, gumball: UiDriverReveal::Always, tooltips: UiDriverTooltips::Full, hotkeys: UiDriverHotkeys::Inline };
     /// 🚗️ `COMPACT_UI_DRIVER` (`🚗️UiDriver/🟦️.tsx:43`) — icon-only chrome and NO tooltips.
-    pub const COMPACT: Self = Self { labels: UiDriverLabels::Icons, tooltips: UiDriverTooltips::None };
+    pub const COMPACT: Self =
+        Self { labels: UiDriverLabels::Icons, label_tier: UiDriverLabelTier::Normal, drag: UiDriverDrag::Surface, chrome: UiDriverReveal::Hover, gumball: UiDriverReveal::Hover, tooltips: UiDriverTooltips::None, hotkeys: UiDriverHotkeys::None };
 
     /// 🚗️ The builtin driver named by `id`, falling back to the default exactly as
     /// `resolveUiDriver` does for an id no driver carries.
@@ -187,18 +223,51 @@ impl UiDriverChrome {
         }
     }
 
-    /// 🚗️ Overrides whichever axes a custom driver's own config declares, leaving the rest at the
-    /// resolved builtin. `labels`/`tooltips` are the two this target reads; the other six axes
-    /// (`labelTier`, `drag`, `chrome`, `gumball`, `hotkeys`, plus the id/label pair) are either
-    /// already honoured elsewhere in the shell or have no canvas expression yet.
-    pub fn with_axes(mut self, labels: Option<&str>, tooltips: Option<&str>) -> Self {
+    /// 🚗️ Overrides every axis declared by the shared driver document.
+    pub fn with_axes(mut self, labels: Option<&str>, label_tier: Option<&str>, drag: Option<&str>, chrome: Option<&str>, gumball: Option<&str>, tooltips: Option<&str>, hotkeys: Option<&str>) -> Self {
         if let Some("icons") = labels {
             self.labels = UiDriverLabels::Icons;
         } else if let Some("full") = labels {
             self.labels = UiDriverLabels::Full;
         }
+        if let Some(value) = label_tier {
+            self.label_tier = match value {
+                "beginner" => UiDriverLabelTier::Beginner,
+                "normal" => UiDriverLabelTier::Normal,
+                _ => self.label_tier,
+            };
+        }
+        if let Some(value) = drag {
+            self.drag = match value {
+                "handle" => UiDriverDrag::Handle,
+                "surface" => UiDriverDrag::Surface,
+                _ => self.drag,
+            };
+        }
+        if let Some(value) = chrome {
+            self.chrome = match value {
+                "always" => UiDriverReveal::Always,
+                "hover" => UiDriverReveal::Hover,
+                _ => self.chrome,
+            };
+        }
+        if let Some(value) = gumball {
+            self.gumball = match value {
+                "always" => UiDriverReveal::Always,
+                "hover" => UiDriverReveal::Hover,
+                _ => self.gumball,
+            };
+        }
         if let Some(tooltips) = tooltips.and_then(UiDriverTooltips::from_axis) {
             self.tooltips = tooltips;
+        }
+        if let Some(value) = hotkeys {
+            self.hotkeys = match value {
+                "tooltip" => UiDriverHotkeys::Tooltip,
+                "none" => UiDriverHotkeys::None,
+                "inline" => UiDriverHotkeys::Inline,
+                _ => self.hotkeys,
+            };
         }
         self
     }

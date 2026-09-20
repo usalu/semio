@@ -1,0 +1,78 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio.tech/schema/ui/retained-select-origin.json",
+  "title": "Retained Select Origin Geometry",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "viewport", "sideOffset", "collisionPadding", "row", "cases"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "viewport": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["origin", "size"],
+      "properties": {
+        "origin": { "$ref": "#/$defs/point" },
+        "size": { "$ref": "#/$defs/size" }
+      }
+    },
+    "sideOffset": { "type": "number", "minimum": 0 },
+    "collisionPadding": { "type": "number", "minimum": 0 },
+    "row": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["lineHeight", "padding", "itemCount", "menuHeight"],
+      "properties": {
+        "lineHeight": { "type": "number", "exclusiveMinimum": 0 },
+        "padding": { "type": "number", "minimum": 0 },
+        "itemCount": { "type": "integer", "minimum": 1 },
+        "menuHeight": { "type": "number", "exclusiveMinimum": 0 }
+      }
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "triggerLocal", "side", "menuLocal", "menuGlobal", "firstOptionGlobal"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "triggerLocal": { "$ref": "#/$defs/rect" },
+          "side": { "enum": ["bottom", "top"] },
+          "menuLocal": { "$ref": "#/$defs/rect" },
+          "menuGlobal": { "$ref": "#/$defs/rect" },
+          "firstOptionGlobal": { "$ref": "#/$defs/rect" }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "point": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "prefixItems": [{ "type": "number" }, { "type": "number" }],
+      "items": false
+    },
+    "size": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "prefixItems": [{ "type": "number", "exclusiveMinimum": 0 }, { "type": "number", "exclusiveMinimum": 0 }],
+      "items": false
+    },
+    "rect": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "prefixItems": [
+        { "type": "number" },
+        { "type": "number" },
+        { "type": "number", "exclusiveMinimum": 0 },
+        { "type": "number", "exclusiveMinimum": 0 }
+      ],
+      "items": false
+    }
+  }
+}

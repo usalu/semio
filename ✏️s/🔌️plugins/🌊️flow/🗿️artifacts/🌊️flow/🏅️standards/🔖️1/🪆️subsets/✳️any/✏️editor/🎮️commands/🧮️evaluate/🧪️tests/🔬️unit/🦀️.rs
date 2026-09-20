@@ -12,7 +12,7 @@ async fn evaluate_updates_preview_state_without_operations() {
 #[semio_framework_async_macros::async_test]
 async fn resolving_a_node_output_re_arms_the_tick_chain() {
     let mut app = flow_app().await;
-    let result = dispatch(&mut app, FlowCommand::FlowEvalResolve(crate::editor::flow::commands::flow_eval_resolve::FlowEvalResolve { node_hash: 42, output_json: "{}".into() })).await;
+    let result = dispatch(&mut app, FlowCommand::FlowEvalResolve(crate::editor::flow::commands::flow_eval_resolve::FlowEvalResolve { window_id: FLOW_PLAY_WINDOW_MAIN.into(), node_hash: 42, output_json: "{}".into() })).await;
     assert!(result.mutations.is_empty(), "resolving is not a document edit");
 }
 

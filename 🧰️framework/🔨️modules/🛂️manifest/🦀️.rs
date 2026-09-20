@@ -369,6 +369,26 @@ impl ActionArgDef {
         Self::with_schema(id, label, ArgSchema::Vec3 { unit: None })
     }
 
+    /// @emoji 📜️ A list-of-strings argument — the shape every multi-entity verb takes (`ids`,
+    /// `layerIds`), previously unexpressible, so those verbs published an empty input schema.
+    pub fn text_list(id: impl Into<String>, label: impl Into<LocalizedLabel>) -> Self {
+        Self::with_schema(id, label, ArgSchema::Array { items: Box::new(Self::plain_string(None)), min_items: None, max_items: None })
+    }
+
+    /// @emoji 🧱️ A record argument — the `#[dsl(block)]` payload shape a typed command decodes with
+    /// `dsl::from_dsl_value` (`setFrame.frame`, `setSource.source`), previously unexpressible, so
+    /// those verbs published an empty input schema and no agent could ever call them.
+    pub fn object(id: impl Into<String>, label: impl Into<LocalizedLabel>, fields: Vec<ActionArgDef>) -> Self {
+        Self::with_schema(id, label, ArgSchema::Object { fields })
+    }
+
+    /// @emoji 🧬️ A JSON-text argument — a `String` wire field that actually carries a JSON document
+    /// (`patchLayer.value`, `setFixtureJson.json`), tagged `x-semio-format: json` so a client knows
+    /// to send JSON text rather than a bare word.
+    pub fn json_text(id: impl Into<String>, label: impl Into<LocalizedLabel>) -> Self {
+        Self::with_schema(id, label, Self::plain_string(Some(ArgFormat::Json)))
+    }
+
     /// @emoji 🗂️ A host-resolved artifact-kind choice — see `ActionArgControl::ArtifactKind`.
     pub fn artifact_kind(id: impl Into<String>, label: impl Into<LocalizedLabel>, roles: Vec<AppRole>) -> Self {
         Self::with_schema(id, label, Self::plain_string(Some(ArgFormat::ArtifactKind { roles })))
@@ -1019,9 +1039,11 @@ impl ActionDefinition {
         self
     }
 
-    /// @emoji ⚠️ Marks this action destructive: sets `effects.destructive` and raises `policy.approval`
-    /// to `WhenDestructive` (a no-op if it was already `Always`).
-    pub async fn destructive(mut self) -> Self {
+    /// @emoji ⚠️ Marks this action destructive: it discards user content no later verb reconstructs
+    /// (delete, clear, replace-the-whole-document). Sets `effects.destructive` and raises
+    /// `policy.approval` to `WhenDestructive` (a no-op if it was already `Always`), which is the one
+    /// fact the MCP gateway's approval gate reads before committing an agent's invocation.
+    pub fn destructive(mut self) -> Self {
         self.semantics.effects.destructive = true;
         if self.semantics.policy.approval == ApprovalMode::Never {
             self.semantics.policy.approval = ApprovalMode::WhenDestructive;
@@ -1677,7 +1699,7 @@ impl CommandDefinition {
     }
 
     /// @emoji ⚠️ Marks this command destructive — see `ActionDefinition::destructive`.
-    pub async fn destructive(mut self) -> Self {
+    pub fn destructive(mut self) -> Self {
         self.semantics.effects.destructive = true;
         if self.semantics.policy.approval == ApprovalMode::Never {
             self.semantics.policy.approval = ApprovalMode::WhenDestructive;
@@ -2680,7 +2702,7 @@ pub struct TutorialUiSnapshot {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub layout: Option<WindowLayout>,
-    /// 📑️ Active tab id per panel group; groups absent from the map are collapsed/closed.
+    /// 📑️ Active tab id per concrete panel anchor; anchors absent from the map are collapsed/closed.
     #[serde(default, skip_serializing_if = "std::collections::HashMap::is_empty")]
     #[value(default, skip_serializing_if = "std::collections::HashMap::is_empty")]
     pub active_panel_tab_by_group: std::collections::HashMap<String, String>,
@@ -2735,7 +2757,7 @@ pub enum TutorialUiChange {
     Layout {
         layout: WindowLayout,
     },
-    /// 📑️ `tab_id: None` collapses/closes the group.
+    /// 📑️ `group` carries the concrete anchor id; `tab_id: None` closes that anchor.
     PanelTab {
         group: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -3082,7 +3104,11 @@ pub fn apply_tutorial_ui_change(state: &mut TutorialUiSnapshot, change: &Tutoria
         },
         TutorialUiChange::PanelState { panel_json } => state.panel_json = Some(panel_json.clone()),
         TutorialUiChange::Selection { domain_id, granularity, ids } => {
-            state.interaction_selection.insert(domain_id.clone(), DomainSelection { granularity: granularity.clone(), ids: ids.clone(), anchor_id: None });
+            if ids.is_empty() {
+                state.interaction_selection.remove(domain_id);
+            } else {
+                state.interaction_selection.insert(domain_id.clone(), DomainSelection { granularity: granularity.clone(), ids: ids.clone(), anchor_id: None });
+            }
         }
         TutorialUiChange::Dialog { id, .. } => state.open_dialog_id = id.clone(),
         TutorialUiChange::TreeExpansion { id, expanded } => {
@@ -3660,6 +3686,18 @@ pub struct AppDefinition {
     pub default_mode_id: String,
     /// 🚧️ See `modes` above — `WindowKinds` is `NonEmptyVec<WindowKindDefinition>`.
     pub window_kinds: WindowKinds,
+    /// 🕹️ The app-wide action roster: every action dispatchable in ANY window of this app that no
+    /// window kind claims as its own, including the framework-injected History/Clipboard/tutorial
+    /// constants. A window kind's dispatchable set is `WindowKindDefinition.actions` followed by
+    /// this roster minus the ids some window claims — [`resolve_window_actions`], whose TypeScript
+    /// twin is `resolveWindowActions` (`🎯️action-bus/🟦️.ts`). Kept here rather than copied into
+    /// every window kind because a copy made the package descriptor grow as
+    /// `apps × window kinds × actions`: 21 distinct rows were stored 675 times in one plugin, and
+    /// the duplicates were 31.9 % of every shipped descriptor's bytes (ticket
+    /// 26/09/18/OS-HUB-COLLABORATION-AI-END-TO-END, slice DS1).
+    #[serde(default)]
+    #[value(default)]
+    pub actions: Vec<ActionDefinition>,
     pub panel_tabs: Vec<PanelTabDefinition>,
     pub keybindings: Vec<Keybinding>,
     /// 🧰️ The interactive utilities this app exposes (referenced by `WindowKindDefinition.utilities`).
@@ -3838,10 +3876,30 @@ fn action_is_panel_eligible(action: &ActionDefinition) -> bool {
     action.kind != ActionKind::History && action.id != SET_ACTIVE_UTILITY_ACTION_ID && action.id != SET_ACTIVE_TOOL_ACTION_ID
 }
 
-/// @emoji 📇️ Resolves the actions a window kind presents in its panel from its authoritative
-/// owned definitions, preserving declaration order and excluding framework-only rail actions.
-pub fn resolve_window_actions<'a>(_app: &'a AppDefinition, window_kind: &'a WindowKindDefinition) -> Vec<&'a ActionDefinition> {
-    window_kind.actions.iter().filter(|action| action_is_panel_eligible(action)).collect()
+/// @emoji 🕹️ THE window action predicate — every [`ActionDefinition`] dispatchable in `window`, in
+/// the order a shell must offer them: the window kind's OWN roster first, then every
+/// [`AppDefinition::actions`] row that no window kind of this app claims for itself. An id declared
+/// by ANY window kind is that window's authored declaration and is never re-offered from the app
+/// roster. The plugin builder used to bake this union into every window kind by cloning, which made
+/// a package descriptor grow as `apps × window kinds × actions` — see `AppDefinition::actions`.
+/// TypeScript twin: `resolveWindowActions` (`🎯️action-bus/🟦️.ts`).
+pub fn window_kind_actions<'a>(app: &'a AppDefinition, window: &'a WindowKindDefinition) -> Vec<&'a ActionDefinition> {
+    let claimed: std::collections::BTreeSet<&str> = app.window_kinds.iter().flat_map(|kind| kind.actions.iter().map(|action| action.id.as_str())).collect();
+    let mut seen: std::collections::BTreeSet<&str> = std::collections::BTreeSet::new();
+    let mut resolved: Vec<&'a ActionDefinition> = Vec::with_capacity(window.actions.len() + app.actions.len());
+    for action in window.actions.iter().chain(app.actions.iter().filter(|action| !claimed.contains(action.id.as_str()))) {
+        if seen.insert(action.id.as_str()) {
+            resolved.push(action);
+        }
+    }
+    resolved
+}
+
+/// @emoji 📇️ Resolves the actions a window kind presents in its panel — [`window_kind_actions`]
+/// minus the framework-only rail actions (the six History verbs and the injected
+/// `setActiveUtility`/`setActiveTool`), preserving declaration order.
+pub fn resolve_window_actions<'a>(app: &'a AppDefinition, window_kind: &'a WindowKindDefinition) -> Vec<&'a ActionDefinition> {
+    window_kind_actions(app, window_kind).into_iter().filter(|action| action_is_panel_eligible(action)).collect()
 }
 
 /// @emoji 🛠️ Resolves the tools the active mode presents, in declared order — references into

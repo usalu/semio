@@ -1,0 +1,66 @@
+{
+  "version": 1,
+  "target": {
+    "plugin": "flow",
+    "controllerId": "s.flow.flow@1/*#editor",
+    "windowId": "flow-main",
+    "surfaceId": "flow.play.main",
+    "surfaceKind": "node-graph",
+    "reactSelector": "[data-surface-id=\"flow.play.main\"]",
+    "urls": {
+      "react": "http://127.0.0.1:6016/?plugin=flow",
+      "wgpu": "http://127.0.0.1:6116/?plugin=flow"
+    }
+  },
+  "specimen": {
+    "minimumNodes": 3,
+    "preferredNodeIds": ["slider", "add", "preview"]
+  },
+  "cases": [
+    {
+      "id": "select-and-escape",
+      "gesture": "primary-click-then-escape",
+      "expectedActions": ["interactionSelect", "clearSelection"],
+      "consequence": "The clicked node paints selected, publishes its exact node id, and Escape clears that framework selection."
+    },
+    {
+      "id": "escape-cancels-node-drag",
+      "gesture": "primary-drag-key-release",
+      "delta": { "x": 48, "y": 32 },
+      "cancelKey": "Escape",
+      "forbiddenAction": "nodeGraphEdit",
+      "consequence": "Escape terminally retires the in-flight node drag: release publishes no move and restores the original node geometry."
+    },
+    {
+      "id": "commit-node-drag",
+      "gesture": "primary-drag-release",
+      "delta": { "x": 84, "y": 48 },
+      "expectedAction": "nodeGraphEdit",
+      "operation": "move",
+      "consequence": "The released node persists at a new layout position and publishes exactly one move operation for the targeted id."
+    },
+    {
+      "id": "wheel-zoom",
+      "gesture": "wheel",
+      "deltaY": -180,
+      "expectedAction": "nodeGraphViewport",
+      "consequence": "Wheel zoom changes live node screen geometry and persists one settled viewport with a changed zoom."
+    },
+    {
+      "id": "middle-button-pan",
+      "gesture": "middle-drag-release",
+      "delta": { "x": 72, "y": 48 },
+      "button": "middle",
+      "expectedAction": "nodeGraphViewport",
+      "forbiddenAction": "nodeGraphEdit",
+      "consequence": "Middle-button pan translates live graph geometry and persists the camera without mutating any node layout."
+    }
+  ],
+  "limits": {
+    "settleMilliseconds": 12000,
+    "geometryEpsilonPixels": 1,
+    "cancelTolerancePixels": 1,
+    "minimumCommittedMovementPixels": 12,
+    "surfaceInsetPixels": 24
+  }
+}

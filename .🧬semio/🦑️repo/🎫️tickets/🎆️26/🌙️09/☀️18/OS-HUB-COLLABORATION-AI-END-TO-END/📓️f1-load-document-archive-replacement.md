@@ -114,13 +114,84 @@ change for this, so no `LoadDocument`/`setActiveExample` user under `✏️s/�
 
 ## 6. Live proof — architect · animate · writer (deliverable 3)
 
-**NOT DONE.** Outstanding. Recipes `📜️b1a-activate.sh` / `📜️b1a-serve.sh`, probe
-`🐍️b1a-boot-probe.mjs` (ports architect 6090 · animate 6051 · writer 6062).
+**(filling — session 4.)** Inherited state re-verified first: `git status` shows
+`🔌️plugin/🦀️.rs`, the new `🧾️document-archive-load-legs` suite and the `include!` row all still on
+disk, and `🗑️generated/f1-repro-run3.txt` is this tree's own 6-passed capture.
 
-## 7. B1a leftovers (deliverable 4)
+Method (unchanged from B1a, one activation + one detached serve per plugin):
 
-**NOT STARTED** — writer's missing pane-reachable mutating verb, animate's empty default layout,
-vcs's fold-contract violation, and the vcs/animate `DocumentStoreOwners` unit tests.
+```
+zsh  …/📜️b1a-activate.sh <variant>
+nohup zsh …/📜️b1a-serve.sh <variant> <port> >/dev/null 2>&1 & disown
+SEMIO_F1_PLUGIN=<variant> SEMIO_F1_PORT=<port> bun …/🐍️f1-bar-probe.mjs
+```
+
+`🐍️f1-bar-probe.mjs` (**new**, this slice) is `🐍️b1a-boot-probe.mjs` plus the two steps B1a never
+reached: **redo** (`framework.history.redo` — the same tree-row-with-a-control shape as undo, so it
+needs the same `aria-controls` expander) and an explicit **example-load witness**
+(`exampleLoadFaults` counts every console line naming `setActiveExample` / `loadDocumentArchive` /
+`document archive`, and `bar` is false while any exists). Captures land as
+`🗑️generated/f1-<plugin>-console.txt` via the new `SEMIO_F1_PREFIX`.
+
+### 6.1 architect — **PASS, and it settles §4(b)**
+
+`🗑️generated/f1-architect-console.txt`, 2026-09-19 23:58 CEST, activation receipt
+`b1a-architect-activate.txt` (`exit=0`, 34 m 47 s, `component-dev` 29 m 53 s), serve on 6090.
+
+```
+F1 architect {"ready":"architect","shellError":null,"loadsClean":true,"exampleRendered":true,
+ "dispatched":true,"action":"setAdjacencyKind","undoWorks":true,"redoWorks":true,
+ "exampleLoadFaults":0,"faultLines":0,"consoleLines":9,"bar":true}
+```
+
+`undo` `{appEntriesBefore:1, appEntriesAfter:2, cursorBefore:3, cursorAfter:4, canRedo:true,
+signatureRestored:true}` · `redo` `{appEntriesAfter:3, canUndo:true, canRedo:false,
+signatureReapplied:true}` — both with empty `faults`.
+
+**The `loadDocumentArchive` refusal is gone on the live server**: B1a measured architect at
+`faultLines: 1`, that one line being the archive-replacement sentence; it is now **0**, and the nine
+remaining console lines are the dev server's staleness notice, vite's connect chatter and the React
+DevTools banner. So:
+
+- §4(a) — the missing identity stamp — **was the whole live defect**. architect's boot
+  `setActiveExample` travels the plain `dispatch_emit_inner` lane, which is exactly the lane §5 fix
+  #1 taught to stamp.
+- §4(b)'s generation-fence hypothesis is **refuted for architect**: nothing in the live run needed
+  it, and the new typed refusal record minted no fault at all.
+
+### 6.2 animate · writer — **blocked by a live peer refactor, not by this slice**
+
+animate's activation (22:17, `b1a-animate-activate.txt`) died with
+`Cargo artifact build failed: ✏️s/🔌️plugins/🎞️animate/📦️packages/🦀️rust/Cargo.toml` after **11 ×
+`E0308`** in a crate this slice does not own:
+
+```
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/…/🖼️image/🧬️schema/🧬️mutations/⏱️set-frame-delay/🦠️mutation/🦀️.rs:9
+  expected `SemioImageDiff`, found `MutationOutcome<SemioImageDiff>`
+```
+
+`apply_semio_image_mutation` now returns `protocol::MutationOutcome<SemioImageDiff>` (it ends in
+`MutationOutcome::apply_to`, which answers `Self`), while all eleven `🦠️mutation/🦀️.rs` leaves still
+declare `-> SemioImageDiff`. The eleven **parent** modules
+(`…/🧬️mutations/<verb>/🦀️.rs`) are ` M` in `git status` right now — a peer's refactor is mid-flight
+through this crate — so this worker did not edit them (rule 3: never repair a peer's half-landed
+refactor).
+
+`semio-s-artifact-stdio-semio` is a workspace dependency of **writer, mathematical, sequence and
+animate** but not of **architect or vcs**, which is exactly why architect activated and animate did
+not. vcs was activated instead while the peer lands; animate/writer are retried below.
+
+Measured results and the rest of the batch: see the bar table in §7.
+
+## 7. B1a leftovers (deliverable 4) — per-plugin bar
+
+**(filling — session 4.)** Root fixes landed so far, before any live re-measurement:
+
+| # | plugin | defect | root fix |
+|---|---|---|---|
+| F1-a | 🌿️vcs | `incrementCounter` refused `batched item candidate failed its exact fixed fold contract` | its one-item preflight hard-coded `work_items: 1`. A point-invertible mutation folds **two** staged rows (`forwards` + `inverse`), which is exactly what `ArtifactStoreOneItemFootprint`'s own docstring says never to write at a call site. Now `for_one_invertible_item(…)`. `…/🌿️vcs/…/✏️editor/🦀️.rs:664` |
+| F1-b | ✒️writer | same shape, unmeasured but identical by construction | `admit_writer_artifact_mutation` declared `work_items: 1` for `EditText`, whose `inverse_writer_mutation` yields a row — so writer's retained `Artifact` lane could never fold one edit. Now `for_one_invertible_item(payload.text.len())`. `…/✒️writer/…/✏️editor/🦀️.rs:875` |
+| F1-c | 🎞️animate | boots with **zero** panes and zero window kinds | **framework defect, not animate's.** `create_default_layout(ids, "stack", …)` minted `Axis { kind: "stack", children: [Stack[window]] }` — an *axis* node wearing the *stack* discriminator. The React seed resolver (`🛠️ShellHelpers/🟦️.tsx` `convertFrameworkLayoutNodeToModeLayout` / `collectFrameworkLayoutWindowSeeds`) reads a `stack` node's children as window leaves, so it read the inner **stack** as a window and minted `id: undefined`. `stack` is not an axis direction; the call now returns `create_stack_layout(...)`. `🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🧩️component/🦀️.rs:960`. animate was the only caller passing `"stack"` in the whole repo. |
 
 ## 8. Honest gaps
 
@@ -138,3 +209,190 @@ vcs's fold-contract violation, and the vcs/animate `DocumentStoreOwners` unit te
 | `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs` | typed replacement-refusal record (§2), stamp on the plain dispatch and refresh-poll lanes (§5) |
 | `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧾️document-archive-load-legs/🦀️.rs` | **new** — the four tests of §3 |
 | `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs` | one `include!` row for the new suite |
+
+---
+
+## Session 5 (2026-09-20, from ~01:20)
+
+Resumed after the desktop app restart cut session 4 at ~01:15. Inherited state re-established by
+inspection, not by assumption:
+
+- **Two of the predecessor's detached vite serves survived** and are this slice's own (named by their
+  own captures): pid `52100` → port **6090** = `architect` (`🗑️generated/f1-architect-console.txt`
+  line `serve pid 52100`), pid `32281` → port **6075** = `vcs` (`f1-vcs-console.txt` line
+  `serve pid 32281`). The other four live vites (234/6121, 34692/6313, 43140/7502, 91700/6120) are
+  peers' and were left alone. Both slice servers were reused; nothing was re-activated for them.
+- **`🗑️generated/f1-vcs-console.txt` (2026-09-20 00:46) is a session-4 capture the report never
+  recorded.** Its result is folded into the matrix below.
+- The peer refactor that killed animate's 22:17 activation (§6.2, `MutationOutcome<SemioImageDiff>`
+  vs `SemioImageDiff` in eleven `🗄️stdio/🧿️semio/…/🖼️image` mutation leaves) **has landed**: the leaf
+  `⏱️set-frame-delay/🦠️mutation/🦀️.rs:9` now declares
+  `-> protocol::MutationOutcome<SemioImageDiff>`. animate/writer/mathematical/sequence are therefore
+  activatable again.
+
+### Bar matrix (6 plugins × 7 columns, measured only)
+
+`—` = not measured in this session; a row is only filled from a capture in `🗑️generated/`.
+
+| plugin | boot | example loads | dispatch mutates | undo | redo | no console faults | BAR |
+|---|---|---|---|---|---|---|---|
+| 🏛️architect | **yes** | **yes** | **yes** `setAdjacencyKind` | **yes** | **yes** | **yes** (0) | ✅️ **PASS** |
+| 🌿️vcs | **yes** | **yes** | **yes** `incrementCounter` | **yes** | **yes** | **yes** (0) | ✅️ **PASS** |
+| 🎞️animate | **yes** (1 pane, 26 actions — was 0 panes) | **yes** | no — every document verb `BatchOnlyPendingRewrite` | not reached | — | no (15) | ❌️ |
+| ✒️writer | **yes** | renders, **but** the archive is refused `InvalidReference` | **yes** — canvas gesture `apply` | **yes** | **yes** | no (11: 1 archive + 10 × `textSelect`) | ❌️ |
+| ➗️mathematical | — | — | — | — | — | — | not re-measured (see remaining work) |
+| 🎬️sequence | — | — | — | — | — | — | not re-measured (see remaining work) |
+
+### What is fixed and proven (deliverable 1)
+
+**architect re-proved on the session-5 tree, live.** `🗑️generated/f1s5-architect-console.txt`,
+2026-09-20 01:26 CEST, against the inherited serve on 6090 (no re-activation):
+
+```
+F1S5 architect {"ready":"architect","shellError":null,"loadsClean":true,"exampleRendered":true,
+ "dispatched":true,"action":"setAdjacencyKind","undoWorks":true,"redoWorks":true,
+ "exampleLoadFaults":0,"faultLines":0,"consoleLines":9,"bar":true}
+```
+
+So the §5 framework fix (stamp `Effect::LoadDocument` on the plain-dispatch and refresh-poll lanes)
+is **proven live on architect twice, on two different days' captures**, and §4(a) — the missing
+identity stamp — remains the whole measured live defect. §4(b)'s generation-fence hypothesis is
+still refuted for architect and still unmeasured elsewhere.
+
+### vcs — PASS, and it is the second live proof of the framework fix
+
+`🗑️generated/f1s5-vcs-console.txt`, 2026-09-20 06:37 CEST. Fresh activation
+(`b1a-vcs-activate.txt` `exit=0`, 18 m 8 s, `component-dev` 14 m 57 s) + fresh detached serve on
+6075 — the session-4 serve was restarted because its staged module predated the F9 edit.
+
+```
+F1S5 vcs {"ready":"vcs","shellError":null,"loadsClean":true,"exampleRendered":true,
+ "dispatched":true,"action":"incrementCounter","undoWorks":true,"redoWorks":true,
+ "exampleLoadFaults":0,"faultLines":0,"consoleLines":8,"bar":true}
+```
+
+Two of this slice's own fixes are now proven at runtime rather than by construction:
+
+- **F1-a (`for_one_invertible_item`)** — `incrementCounter` had been refused
+  `batched item candidate failed its exact fixed fold contract`; it now dispatches, appends an
+  app-owned ledger entry, undoes (`canRedo` true, signature restored) and redoes
+  (signature reapplied), all with empty `faults`.
+- **F9 on vcs** (wired by the session-4 worker at 00:51:55, i.e. AFTER its 00:43 activation, which
+  is exactly why the 00:46 capture still showed `exampleRendered:false` and an empty combobox).
+  The navbar example picker now renders — the shell offers examples only to an app that declares
+  `setActiveExample` on some window kind
+  (`📺️renderer/🧑‍🎨engine/🧪️tests/🔬️engine-contract/🟦️.ts:9033`) — and the boot
+  `setActiveExample` lands its document with `exampleLoadFaults: 0`.
+
+### Machine conditions this session (they are the limiting factor, and they are measured)
+
+- **A peer's half-landed refactor killed the first animate activation at 01:32:58** —
+  `error[E0063]: missing field 'principal_kind' in initializer of 'PresencePeer'`,
+  `🧰️framework/🔨️modules/📡️replication/📡️wire/🦀️.rs:1952` (slice M6's agent presence kind). The peer
+  landed the missing field at **01:33:21**, 23 seconds later; rule 3 was kept (nothing of the peer's
+  was edited) and the activation was simply re-launched at 01:33:32.
+- **The shared cargo build-dir lock is fleet-jammed.** At 02:15 there were **32 live `cargo`
+  processes**, nearly all at 0 % CPU with no `rustc` child; `sample` of this slice's own
+  (`cargo rustc --locked … 🎞️animate`, pid 1968) shows
+  `cargo::core::compiler::prebuild_lock_exclusive → LockManager::lock → flock` on
+  `⚡️cache/cargo/target/debug/.cargo-lock`. It is **contention, not deadlock** — a handful of peers'
+  `rustc` processes were burning 12–22 % CPU at every sample, and several sampled cargos were NOT in
+  `prebuild_lock_exclusive`. `kernel_task` sat at 50–61 % (thermal) with load average 110–160.
+  This slice's animate activation waited **> 57 min for the lock without ever starting a `rustc`**,
+  which is what preamble rule 14 says to record rather than fight. No peer process was killed.
+- Consequence: only **one** cargo-bearing activation could be paid for at a time, so `vcs` and
+  `writer` were chained behind animate (`📜️f1-activate-chain.sh`, **new**, strictly sequential) and
+  `mathematical`/`sequence` were left at code-review depth rather than half-landed — see
+  "Remaining work, precisely specified".
+
+### animate — the two inherited framework fixes are PROVEN, one plugin defect is left
+
+`🗑️generated/f1s5-animate-console.txt`, 2026-09-20 07:12 CEST; activation `exit=0`, 22 m 54 s
+(`component-dev` 19 m 46 s), serve 6051.
+
+```
+F1S5 animate {"ready":"animate","shellError":null,"loadsClean":false,"exampleRendered":true,
+ "dispatched":true,"action":"setActiveExample","undoWorks":false,"redoWorks":true,
+ "exampleLoadFaults":0,"faultLines":15,"consoleLines":23,"bar":false}
+```
+
+- **§7 F1-c (the `create_default_layout(ids, "stack", …)` axis/stack confusion,
+  `🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🧩️component/🦀️.rs:960`) is proven live.** B1a measured
+  animate at **zero panes and zero window kinds**; it now boots `windowKinds: ["tile-editor"]`,
+  `panes: ["window:tile-editor"]` and an Actions pane with **26 rows**.
+- **The `Effect::LoadDocument` fix is proven on a third plugin**: `exampleLoadFaults: 0`, and none of
+  the 15 fault lines is an archive-replacement or genesis-projection sentence. B1a's animate boot
+  died on `module.vcs: validation failed …` / the shared archive refusal; both are gone.
+- **What is left is F1, not the archive.** Thirteen of the fifteen fault lines are the same shape:
+  `UI dispatch rejected action:<id> with interactive-job classification BatchOnlyPendingRewrite`
+  for `seedGrid`, `addTile`, `deleteTile`, `deleteSelection`, `renameTiles`, `patchTileCrops`,
+  `setFrame`. `validate_ui_dispatch_classification` admits only `Migrated`, and animate's manifest
+  still declares **every** document verb `BatchOnlyPendingRewrite`
+  (`…/🎞️animate/…/✏️editor/🦀️.rs:914-930`); its retained roster is only
+  `["setActiveExample", "engagementInput", "noMutation"]` (`:269`) and it owns a **config**
+  one-item preparation factory but no **artifact** one (`:638`), so promoting a document verb is the
+  two-part change B1a described. The probe consequently scored `setActiveExample` itself as the
+  dispatched verb, which is a document *replacement*, not an undoable mutation — hence
+  `undoWorks:false`. The remaining two fault lines are `drawImage … HTMLImageElement is in the
+  'broken' state` from the tile preview's missing demo image.
+
+### writer — the second archive shape is root-caused and fixed (data, not framework)
+
+`🗑️generated/f1s5-writer-console.txt`, 2026-09-20 06:50 CEST; activation `exit=0`, 8 m 17 s,
+serve 6062, probe run with `SEMIO_F1_GESTURE=canvas` (writer's mutating verbs are editor gestures,
+no Actions-pane row — B1a's "product decision" bullet).
+
+```
+F1S5 writer {"ready":"writer","shellError":null,"loadsClean":false,"exampleRendered":true,
+ "dispatched":true,"action":"canvas-gesture:apply","undoWorks":true,"redoWorks":true,
+ "exampleLoadFaults":1,"faultLines":11,"consoleLines":73,"bar":false}
+```
+
+**Dispatch, undo and redo all work through the editor canvas** — the first time writer has passed
+any of those three. Two defects remain, and the first is this slice's own subject.
+
+**W1 — `document archive genesis child projection failed: child restore projection: InvalidReference`.**
+This is *not* the identity-stamp defect (§4(a)); it is the second shape B1a saw, and it is a **data**
+defect in two committed example assets. `complete_document_archive_genesis`
+(`🔌️plugin/🦀️.rs:23258`) projects the hydrated candidate parent through
+`store::ChildRestoreProjection`, whose visitor
+(`🏪️store/🦀️.rs:3171`) refuses a child whose `child_id != target.artifact_id`. Writer's
+`document` slot is content-addressed by construction — `document_child_handle`
+(`…/✒️writer/🗿️artifacts/✒️writer/🦀️.rs:64`) sets `target.artifact_id = child_id` — but both
+hand-authored `.dsl.semio` example assets carried a *different*, human-written target:
+
+| asset | committed `child_id` | committed target (decoded) |
+|---|---|---|
+| `…/✳️any/🖼️assets/🎬️demo/🗣️.dsl.semio` | `document-926a496d334505c6` | `jack-document!s.stdio.semio@v1/document` |
+| `…/📚️examples/🎬️demo/🖼️assets/🧪️dag-example/🗣️.dsl.semio` | `document-76a05fef01e1c7ae` | `dag-jack-document!s.stdio.semio@v1/document` |
+
+`jack_example_document()` parses the asset verbatim (`dec_child`,
+`…/🚪️io/📸️snapshot/📝️text/🦀️.rs:42`) and then only *attaches* text, so the mismatched handle
+reached the archive unchanged and every `setActiveExample` died in the genesis projection.
+**Fixed**: both assets' target artifact ids now equal their `child_id`. The law already had a test —
+`every_demo_asset_is_the_printers_own_content_addressed_output`
+(`…/📚️examples/🎬️demo/🧪️tests/🧩️example/🦀️.rs`) — and it was **red on the committed tree**. Running it
+also exposed a second, smaller defect in the test itself: the printer emits no trailing newline
+while a committed text file must end with one, so the assertion could never pass even on correct
+data. The comparison now strips exactly one trailing `\n` from the asset, and the test's
+`eprintln!("[DEBUG] canonical …")` is gone (rule 10).
+
+`CARGO_TARGET_DIR=…/target-f1 cargo test -p semio-s-artifact-writer-writer --lib -- every_demo_asset primary_asset`
+→ **3 passed, 0 failed** (`🗑️generated/f1-writer-asset-test.txt`). The live re-probe of writer on a
+re-activated server is NOT yet run, so W1 is fixed-and-unit-proven, not yet runtime-proven.
+
+> **Overlap note (coordinator, 08:20):** B2c found the same class across **13** committed
+> `*.dsl.semio` assets (writer ×2, animate ×2, sequence ×4 among them) and is fixing them at the
+> producer. Writer's two were already corrected and gated here before that message arrived; the
+> remaining eleven are B2c's and were not touched.
+
+**W2 — `textSelect` is declared by no window kind (10 of writer's 11 fault lines).** The framework's
+text-editor surface dispatches a fixed id set — `textEdit`, `textSelect`, `textHover`,
+`requestCompletions`, `commitRename`, `formatDocument`
+(`🧰️framework/🔨️modules/🖱️ui/🎬️scene/🟦️.ts:924`) — and writer declares five of the six; every caret
+move therefore logs a console **error** plus a refusal warning. The worked precedent is
+`🔱️trinity/🔌️jack`, which routes `textSelect` through a retained **`WindowTransient`** lane
+(`…/🔌️jack/…/✏️editor/🦀️.rs:378,388,1103,1136`) — selection is per-window transient state, not a
+document mutation. Not landed by this slice.
+
+### Work landed this session

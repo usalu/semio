@@ -1,10 +1,12 @@
 // #region gpu
 //! 🖥️ WebGPU device, surface, and frame loop.
 
-use crate::wgpu::draw::{FrameBuffers, MeshGpuTable, RasterTextureAdmission, RasterTextureCleanupStep, RasterTextureStageFault, RasterTextureTable, RasterTextureWitness, RasterUploadPixels, PreparedCompositeTarget, SceneColorTarget, UiPipelines, SCENE_MIP_LEVELS};
+use crate::wgpu::draw::{
+    FrameBuffers, MeshGpuTable, PreparedCompositeTarget, RasterTextureAdmission, RasterTextureCleanupStep, RasterTextureStageFault, RasterTextureTable, RasterTextureWitness, RasterUploadPixels, SceneColorTarget, UiPipelines, SCENE_MIP_LEVELS,
+};
 #[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
 use crate::wgpu::prepared::OffscreenPresentToken;
-use crate::wgpu::prepared::{DrawMeasureCursor, PreparedRenderEviction, PreparedRenderGate, PreparedRenderPacket, PreparedRenderUpload, UiPresentToken, PREPARED_RENDER_COMMAND_PAGES, PREPARED_RENDER_COMMAND_PAGE_ITEMS};
+use crate::wgpu::prepared::{DrawMeasureCursor, PreparedRenderEviction, PreparedRenderGate, PreparedRenderPacket, PreparedRenderUpload, RasterContentIdentity, UiPresentToken, PREPARED_RENDER_COMMAND_PAGES, PREPARED_RENDER_COMMAND_PAGE_ITEMS};
 use crate::wgpu::text::FontAtlas;
 use std::sync::atomic::{AtomicPtr, AtomicU8, Ordering};
 #[cfg(not(target_os = "wasi"))]
@@ -50,7 +52,11 @@ fn address_prepared_glass_region(region: usize, len: usize) -> Result<Option<usi
     if region < len {
         return Ok(Some(region));
     }
-    if region == len { Ok(None) } else { Err(len) }
+    if region == len {
+        Ok(None)
+    } else {
+        Err(len)
+    }
 }
 
 /// ⚖️ Admits ONE measured opportunity against [`PREPARED_GPU_OPPORTUNITY_CEILING_US`]. `Ok` carries
@@ -62,7 +68,11 @@ fn admit_prepared_gpu_opportunity(run: u32, elapsed_us: u64) -> Result<u32, u32>
         return Ok(0);
     }
     let run = run.saturating_add(1);
-    if run >= semio_framework_job::SUSTAINED_OVERRUN_QUARANTINE_STEPS { Err(run) } else { Ok(run) }
+    if run >= semio_framework_job::SUSTAINED_OVERRUN_QUARANTINE_STEPS {
+        Err(run)
+    } else {
+        Ok(run)
+    }
 }
 
 const PREPARED_GPU_ABANDONMENT_SLOTS: usize = 64;
@@ -89,14 +99,19 @@ enum PreparedDrawTarget {
 fn prepared_draw_scalar_glass_region(draw: &crate::wgpu::draw::DrawList, cursor: DrawMeasureCursor) -> Option<usize> {
     let layer = match cursor {
         DrawMeasureCursor::LayerUi { layer, .. } | DrawMeasureCursor::LayerVector { layer, .. } | DrawMeasureCursor::LayerRaster { layer, .. } => layer,
-        DrawMeasureCursor::PassInstance { pass, .. } | DrawMeasureCursor::PassLineVertex { pass, .. } | DrawMeasureCursor::PassTexturedInstance { pass, .. } => draw.scene_passes.get(pass)?.layer_index,
+        DrawMeasureCursor::PassInstance { pass, .. } | DrawMeasureCursor::PassMaterialInstance { pass, .. } | DrawMeasureCursor::PassLineVertex { pass, .. } | DrawMeasureCursor::PassTexturedInstance { pass, .. } => draw.scene_passes.get(pass)?.layer_index,
         _ => return None,
     };
     draw.layers.get(layer)?.foreground_of
 }
 
 fn prepared_draw_scalar_is_glass_foreground(draw: &crate::wgpu::draw::DrawList, cursor: DrawMeasureCursor) -> bool {
-    prepared_draw_scalar_glass_region(draw, cursor).is_some()
+    let overlay = matches!(cursor, DrawMeasureCursor::LayerUi { overlay: true, .. } | DrawMeasureCursor::LayerVector { overlay: true, .. } | DrawMeasureCursor::LayerRaster { overlay: true, .. });
+    overlay || prepared_draw_scalar_glass_region(draw, cursor).is_some()
+}
+
+fn prepared_draw_scalar_uses_world_encoded_attachment(cursor: DrawMeasureCursor) -> bool {
+    matches!(cursor, DrawMeasureCursor::PassInstance { .. } | DrawMeasureCursor::PassMaterialInstance { .. } | DrawMeasureCursor::PassTexturedInstance { .. } | DrawMeasureCursor::PassLineVertex { .. })
 }
 
 /// 🫧 Whether `outer` fully covers `inner` — the containment CSS stacking gives a later
@@ -124,11 +139,7 @@ fn prepared_glass_region_covers(outer: [f32; 4], inner: [f32; 4]) -> bool {
 fn prepared_foreground_scalar_is_enclosed(draw: &crate::wgpu::draw::DrawList, overlay_after: Option<&crate::wgpu::draw::DrawList>, cursor: DrawMeasureCursor) -> bool {
     let Some(region) = prepared_draw_scalar_glass_region(draw, cursor) else { return false };
     let Some(own) = draw.glass_regions.get(region).map(|glass| glass.rect) else { return false };
-    draw.glass_regions
-        .iter()
-        .skip(region.saturating_add(1))
-        .chain(overlay_after.into_iter().flat_map(|overlay| overlay.glass_regions.iter()))
-        .any(|glass| prepared_glass_region_covers(glass.rect, own))
+    draw.glass_regions.iter().skip(region.saturating_add(1)).chain(overlay_after.into_iter().flat_map(|overlay| overlay.glass_regions.iter())).any(|glass| prepared_glass_region_covers(glass.rect, own))
 }
 
 /// 🎟️ Generation-qualified retained surface and command submission cursor.
@@ -310,7 +321,10 @@ impl GpuContext {
         let size = window.inner_size();
         let css_width = size.width as f32 / dpr;
         let css_height = size.height as f32 / dpr;
-        let instance = wgpu::Instance::new(wgpu::InstanceDescriptor { backends: if cfg!(target_arch = "wasm32") { wgpu::Backends::BROWSER_WEBGPU } else { wgpu::Backends::PRIMARY }, ..wgpu::InstanceDescriptor::new_with_display_handle(Box::new(window.clone())) });
+        let instance = wgpu::Instance::new(wgpu::InstanceDescriptor {
+            backends: if cfg!(target_arch = "wasm32") { wgpu::Backends::BROWSER_WEBGPU } else { wgpu::Backends::PRIMARY },
+            ..wgpu::InstanceDescriptor::new_with_display_handle(Box::new(window.clone()))
+        });
         let surface = instance.create_surface(wgpu::SurfaceTarget::Window(Box::new(window))).map_err(|err| format!("surface: {err:?}"))?;
         Self::from_surface(instance, surface, css_width, css_height, dpr).await
     }
@@ -558,12 +572,28 @@ impl GpuContext {
                 }
             }
             #[cfg(test)]
-            PreparedRenderUpload::Raster { key, pixels, width, height } => self.ensure_raster_texture_step(key, RasterUploadPixels::Contiguous(pixels), *width, *height, candidate, expected).map_err(str::to_owned)?,
+            PreparedRenderUpload::Raster { key, pixels, width, height } => {
+                let identity = RasterContentIdentity::test_pixels(*width, *height, pixels).ok_or_else(|| "raster test identity overflowed".to_string())?;
+                if !self.raster_store.prepare_admission_step(key, *width, *height, identity, candidate).map_err(str::to_owned)? {
+                    return Ok(false);
+                }
+                self.ensure_raster_texture_step(key, RasterUploadPixels::Contiguous(pixels), *width, *height, candidate, expected).map_err(str::to_owned)?
+            }
             PreparedRenderUpload::RasterPages { key, pixels } => {
                 if pixels.frame_generation() != packet.preview_generation() {
                     return Err("prepared raster producer generation is stale".into());
                 }
+                if !self.raster_store.prepare_admission_step(key, pixels.width(), pixels.height(), pixels.content_identity(), candidate).map_err(str::to_owned)? {
+                    return Ok(false);
+                }
                 self.ensure_raster_texture_step(key, RasterUploadPixels::Pages(pixels), pixels.width(), pixels.height(), candidate, expected).map_err(str::to_owned)?
+            }
+            PreparedRenderUpload::SceneRaster { key, lease } => {
+                let descriptor = lease.identity().descriptor();
+                if !self.raster_store.prepare_admission_step(key, descriptor.width, descriptor.height, lease.identity().content(), candidate).map_err(str::to_owned)? {
+                    return Ok(false);
+                }
+                self.ensure_raster_texture_step(key, RasterUploadPixels::Scene(lease), descriptor.width, descriptor.height, candidate, expected).map_err(str::to_owned)?
             }
             PreparedRenderUpload::Mesh { key, version, lease } => self.ensure_mesh_step(key, *version, *lease).map_err(str::to_owned)?,
         };
@@ -655,8 +685,8 @@ impl GpuContext {
                 if let Some(DrawMeasureCursor::Glass(region)) = command.draw_cursor() {
                     let overlay_owner = command.packet_overlay();
                     let draw = if overlay_owner { packet.overlay.as_ref().ok_or_else(|| "prepared glass overlay owner was missing".to_string())? } else { &packet.draw };
-                    let addressed = address_prepared_glass_region(region, draw.glass_regions.len())
-                        .map_err(|len| format!("prepared glass region cursor was stale: region {region} of {len} on the {} owner", if overlay_owner { "overlay" } else { "draw" }))?;
+                    let addressed =
+                        address_prepared_glass_region(region, draw.glass_regions.len()).map_err(|len| format!("prepared glass region cursor was stale: region {region} of {len} on the {} owner", if overlay_owner { "overlay" } else { "draw" }))?;
                     if let Some(glass) = addressed.and_then(|index| draw.glass_regions.get(index)) {
                         let Some(scene) = self.scene_color.as_ref() else { return Err("prepared scene target was missing".to_string()) };
                         let Some(composite) = self.composite_color.as_ref() else { return Err("prepared composite target was missing".to_string()) };
@@ -717,9 +747,18 @@ impl GpuContext {
 
     fn encode_prepared_draw_scalar(&mut self, packet: &PreparedRenderPacket, cursor: DrawMeasureCursor, packet_overlay: bool, target: PreparedDrawTarget) -> Result<(), String> {
         let draw = if packet_overlay { packet.overlay.as_ref().ok_or_else(|| "prepared overlay owner was missing".to_string())? } else { &packet.draw };
+        let world_encoded = prepared_draw_scalar_uses_world_encoded_attachment(cursor);
         let color_view = match target {
-            PreparedDrawTarget::Scene => self.scene_color.as_ref().map(|scene| scene.mip_view(0)).ok_or_else(|| "prepared scene target was missing".to_string())?,
-            PreparedDrawTarget::Composite => self.composite_color.as_ref().map(PreparedCompositeTarget::view).ok_or_else(|| "prepared composite target was missing".to_string())?,
+            PreparedDrawTarget::Scene => self
+                .scene_color
+                .as_ref()
+                .map(|scene| if world_encoded { scene.world_encoded_view() } else { scene.mip_view(0) })
+                .ok_or_else(|| "prepared scene target was missing".to_string())?,
+            PreparedDrawTarget::Composite => self
+                .composite_color
+                .as_ref()
+                .map(|composite| if world_encoded { composite.world_encoded_view() } else { composite.view() })
+                .ok_or_else(|| "prepared composite target was missing".to_string())?,
         };
         let Some(depth) = self.depth_view.as_ref() else { return Err("prepared depth owner was missing".to_string()) };
         let width = self.logical_width;
@@ -730,7 +769,9 @@ impl GpuContext {
                 let instances = if overlay { &layer.overlay_ui_instances } else { &layer.ui_instances };
                 let instance = instances.get(item).ok_or_else(|| "prepared UI scalar cursor was stale".to_string())?;
                 let mut encoder = self.device.create_command_encoder(&wgpu::CommandEncoderDescriptor { label: Some("prepared_ui_scalar") });
-                self.pipelines.encode_prepared_ui_scalar(&self.device, &self.queue, &mut encoder, color_view, depth, &mut self.frame_buffers, &self.raster_store, instance, None, layer.scissor, width, height, packet.time_seconds).map_err(str::to_owned)?;
+                self.pipelines
+                    .encode_prepared_ui_scalar(&self.device, &self.queue, &mut encoder, color_view, depth, &mut self.frame_buffers, &self.raster_store, instance, None, layer.scissor, width, height, packet.time_seconds)
+                    .map_err(str::to_owned)?;
                 self.queue.submit(Some(encoder.finish()));
             }
             DrawMeasureCursor::LayerVector { layer, item, overlay } if item % 3 == 2 => {
@@ -742,14 +783,37 @@ impl GpuContext {
                 self.pipelines.encode_prepared_vector_triangle(&self.device, &self.queue, &mut encoder, color_view, depth, &mut self.frame_buffers, triangle, layer.scissor, width, height, packet.time_seconds).map_err(str::to_owned)?;
                 self.queue.submit(Some(encoder.finish()));
             }
-            DrawMeasureCursor::LayerRaster { layer, raster } => {
+            DrawMeasureCursor::LayerRaster { layer, raster, overlay } => {
                 let layer = draw.layers.get(layer).ok_or_else(|| "prepared raster layer cursor was stale".to_string())?;
-                let (key, instance) = layer.raster_instances.get(raster).ok_or_else(|| "prepared raster scalar cursor was stale".to_string())?;
+                let instances = if overlay { &layer.overlay_raster_instances } else { &layer.raster_instances };
+                let (key, instance) = instances.get(raster).ok_or_else(|| "prepared raster scalar cursor was stale".to_string())?;
                 let mut encoder = self.device.create_command_encoder(&wgpu::CommandEncoderDescriptor { label: Some("prepared_raster_scalar") });
                 self.pipelines
                     .encode_prepared_ui_scalar(&self.device, &self.queue, &mut encoder, color_view, depth, &mut self.frame_buffers, &self.raster_store, instance, Some(key), layer.scissor, width, height, packet.time_seconds)
                     .map_err(str::to_owned)?;
                 self.queue.submit(Some(encoder.finish()));
+            }
+            DrawMeasureCursor::PassShadowBegin(pass) => {
+                let pass_owner = draw.scene_passes.get(pass).ok_or_else(|| "prepared shadow pass cursor was stale".to_string())?;
+                let mut encoder = self.device.create_command_encoder(&wgpu::CommandEncoderDescriptor { label: Some("prepared_world_shadow_clear") });
+                self.pipelines.encode_prepared_world_shadow_begin(&self.device, &mut encoder, pass_owner);
+                self.queue.submit(Some(encoder.finish()));
+            }
+            DrawMeasureCursor::PassShadowInstance { pass, draw: draw_index, instance } => {
+                let pass_owner = draw.scene_passes.get(pass).ok_or_else(|| "prepared shadow pass cursor was stale".to_string())?;
+                let draw_owner = pass_owner.shadow_draws.get(draw_index).ok_or_else(|| "prepared shadow draw cursor was stale".to_string())?;
+                if !draw_owner.shadow_role.casts {
+                    return Err("prepared shadow draw did not own the caster role".to_string());
+                }
+                let instance_owner = draw_owner.instances.get(instance).ok_or_else(|| "prepared shadow instance cursor was stale".to_string())?;
+                let mut encoder = self.device.create_command_encoder(&wgpu::CommandEncoderDescriptor { label: Some("prepared_world_shadow_instance") });
+                let drawn = self
+                    .pipelines
+                    .encode_prepared_world_shadow_instance(&self.device, &self.queue, &mut encoder, &mut self.frame_buffers, &self.mesh_store, pass_owner, &draw_owner.mesh_key, draw_owner.mesh_version, instance_owner)
+                    .map_err(str::to_owned)?;
+                if drawn {
+                    self.queue.submit(Some(encoder.finish()));
+                }
             }
             DrawMeasureCursor::PassInstance { pass, draw: draw_index, instance, translucent } => {
                 let pass_owner = draw.scene_passes.get(pass).ok_or_else(|| "prepared world pass cursor was stale".to_string())?;
@@ -771,7 +835,37 @@ impl GpuContext {
                         &draw_owner.mesh_key,
                         draw_owner.mesh_version,
                         instance_owner,
+                        draw_owner.shadow_role.receives,
                         translucent,
+                        width,
+                        height,
+                    )
+                    .map_err(str::to_owned)?;
+                if !drawn {
+                    self.missing_world_mesh = Some((draw_owner.mesh_key.clone(), draw_owner.mesh_version));
+                    return Ok(());
+                }
+                self.queue.submit(Some(encoder.finish()));
+            }
+            DrawMeasureCursor::PassMaterialInstance { pass, draw: draw_index, instance, .. } => {
+                let pass_owner = draw.scene_passes.get(pass).ok_or_else(|| "prepared material pass cursor was stale".to_string())?;
+                let draw_owner = pass_owner.material_draws.get(draw_index).ok_or_else(|| "prepared material draw cursor was stale".to_string())?;
+                let instance_owner = draw_owner.instances.get(instance).ok_or_else(|| "prepared material instance cursor was stale".to_string())?;
+                let mut encoder = self.device.create_command_encoder(&wgpu::CommandEncoderDescriptor { label: Some("prepared_world_material") });
+                let drawn = self
+                    .pipelines
+                    .encode_prepared_world_material(
+                        &self.device,
+                        &self.queue,
+                        &mut encoder,
+                        color_view,
+                        depth,
+                        &mut self.frame_buffers,
+                        &self.mesh_store,
+                        &self.raster_store,
+                        pass_owner,
+                        draw_owner,
+                        instance_owner,
                         width,
                         height,
                     )
@@ -787,9 +881,7 @@ impl GpuContext {
                 let draw_owner = pass_owner.textured_draws.get(draw_index).ok_or_else(|| "prepared textured draw cursor was stale".to_string())?;
                 let instance_owner = draw_owner.instances.get(instance).ok_or_else(|| "prepared textured instance cursor was stale".to_string())?;
                 let mut encoder = self.device.create_command_encoder(&wgpu::CommandEncoderDescriptor { label: Some("prepared_world_textured") });
-                self.pipelines
-                    .encode_prepared_world_textured(&self.device, &self.queue, &mut encoder, color_view, depth, &mut self.frame_buffers, &self.raster_store, pass_owner, instance_owner)
-                    .map_err(str::to_owned)?;
+                self.pipelines.encode_prepared_world_textured(&self.device, &self.queue, &mut encoder, color_view, depth, &mut self.frame_buffers, &self.raster_store, pass_owner, instance_owner).map_err(str::to_owned)?;
                 self.queue.submit(Some(encoder.finish()));
             }
             DrawMeasureCursor::PassLineVertex { pass, draw: draw_index, vertex } if vertex % 2 == 1 => {
@@ -867,8 +959,36 @@ impl GpuContext {
         self.dpr
     }
 
-    pub fn reserve_engine_texture(&mut self, key: &str, width: u32, height: u32, candidate: RasterTextureWitness, expected: RasterTextureWitness) -> Result<RasterTextureAdmission, String> {
-        self.raster_store.reserve_engine_texture(key, width, height, candidate, expected).map_err(str::to_owned)
+    pub fn reserve_engine_texture(&mut self, key: &str, width: u32, height: u32, identity: RasterContentIdentity, candidate: RasterTextureWitness, expected: RasterTextureWitness) -> Result<RasterTextureAdmission, String> {
+        self.raster_store.reserve_engine_texture(key, width, height, identity, candidate, expected).map_err(str::to_owned)
+    }
+
+    pub fn begin_raster_ownership(&mut self, witness: RasterTextureWitness) -> Result<(), String> {
+        self.raster_store.begin_candidate_ownership(witness).map_err(str::to_owned)
+    }
+
+    pub fn publish_raster_ownership(&mut self, witness: RasterTextureWitness, key: &str) -> Result<(), String> {
+        self.raster_store.publish_candidate_ownership(witness, key).map_err(str::to_owned)
+    }
+
+    pub fn seal_raster_ownership(&mut self, witness: RasterTextureWitness) -> Result<(), String> {
+        self.raster_store.seal_candidate_ownership(witness).map_err(str::to_owned)
+    }
+
+    pub fn prepare_raster_admission_step(&mut self, key: &str, width: u32, height: u32, identity: RasterContentIdentity, witness: RasterTextureWitness) -> Result<bool, String> {
+        self.raster_store.prepare_admission_step(key, width, height, identity, witness).map_err(str::to_owned)
+    }
+
+    pub fn raster_content_is_reusable(&self, key: &str, identity: RasterContentIdentity, candidate: RasterTextureWitness, expected: RasterTextureWitness) -> Result<bool, String> {
+        self.raster_store.content_is_reusable(key, identity, candidate, expected).map_err(str::to_owned)
+    }
+
+    pub fn release_previous_raster_ownership(&mut self) {
+        self.raster_store.release_previous_ownership();
+    }
+
+    pub fn retire_unowned_raster_step(&mut self) -> Result<bool, String> {
+        self.raster_store.retire_unowned_step().map_err(str::to_owned)
     }
 
     pub fn cancel_engine_texture_admission(&mut self, admission: RasterTextureAdmission) -> Result<(), String> {
@@ -885,14 +1005,6 @@ impl GpuContext {
 
     pub fn validate_engine_target_view_allocation(&self, admission: &RasterTextureAdmission, expected: RasterTextureWitness) -> Result<(), String> {
         self.raster_store.validate_engine_target_view_allocation(admission, expected).map_err(str::to_owned)
-    }
-
-    pub fn validate_engine_replacement_texture_allocation(&self, admission: &RasterTextureAdmission, expected: RasterTextureWitness) -> Result<(), String> {
-        self.raster_store.validate_engine_replacement_texture_allocation(admission, expected).map_err(str::to_owned)
-    }
-
-    pub fn validate_engine_replacement_view_allocation(&self, admission: &RasterTextureAdmission, expected: RasterTextureWitness) -> Result<(), String> {
-        self.raster_store.validate_engine_replacement_view_allocation(admission, expected).map_err(str::to_owned)
     }
 
     pub fn retain_engine_allocation_fault(&mut self, admission: RasterTextureAdmission, texture: Option<wgpu::Texture>, view: Option<wgpu::TextureView>) {

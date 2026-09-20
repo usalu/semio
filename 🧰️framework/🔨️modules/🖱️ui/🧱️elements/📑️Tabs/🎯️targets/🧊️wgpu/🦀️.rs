@@ -157,7 +157,18 @@ pub fn build_tabs(id: &str, rows: &[TabRow], value: &str, orientation: TabsOrien
 
 /// 📑️ A plain `Stack` wrapper — `direction` is the string vocabulary the contract's own stack carries.
 fn stack(id: String, horizontal: bool, children: Vec<UiNode>) -> UiNode {
-    UiNode::Stack(UiStackNode { direction: if horizontal { "row".to_string() } else { "column".to_string() }, gap: None, padding: None, id: Some(id), presence: UiPresence::default(), activate: None, drop_action: None, drop_overlay: None, menu: None, children })
+    UiNode::Stack(UiStackNode {
+        direction: if horizontal { "row".to_string() } else { "column".to_string() },
+        gap: None,
+        padding: None,
+        id: Some(id),
+        presence: UiPresence::default(),
+        activate: None,
+        drop_action: None,
+        drop_overlay: None,
+        menu: None,
+        children,
+    })
 }
 
 //#endregion 📑️Build

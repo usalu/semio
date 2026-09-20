@@ -1,12 +1,42 @@
+# Direct identities: set-snapshot, set-version-info.
+#
+# `DwgMutation`'s OpText is the SHARED canonical-JSON op codec
+# (`impl_serde_op_codec!(DwgMutation, "dwg-mutation")`, 📇️registry/🧬️contract/🦀️.rs): `print_op` is
+# `pack::json_to_string(json_from_dsl_value(to_value(self)))` and nothing else, so the real wire of
+# every kind is one internally-tagged JSON object — `{"mutation":"setSnapshot","snapshot":{…}}` /
+# `{"mutation":"setVersionInfo","version":…,"maintenanceVersion":…,"codepage":…}` — with
+# `#[value(tag = "mutation", rename_all = "camelCase")]` fixing the discriminant key and the
+# camelCase kind spellings. A grammar is a DESCRIPTION of that printer, so it describes JSON. The
+# version this replaced described a keyword-and-record op text (`"set-snapshot" "snapshot" record`,
+# kebab kinds, `IDENT "="` fields) that no printer in this crate has emitted since the shared codec
+# landed, and `ops_grammar_conformance_law` failed on the very first case.
+#
+# The discriminant is NOT spelled as a literal production here: literals in this dialect match a
+# token's text, and `"mutation"` would match the bare IDENT `mutation`, never the quoted member name
+# the JSON wire actually carries — the two kinds are enumerated above instead, the way the sibling
+# 📸️jpg/📷️png mutation grammars enumerate theirs. `kinds_match_enum_and_catalog`
+# (🧬️mutations/🧪️tests) is what keeps that list honest against the enum and both oracle catalogs.
+#
+# Dialect notes carried over from the 🧾️json artifact's own snapshot grammar (same lexer):
+# comma-repeated tails group with `{...}*`, never `(...)*` (bare parens are macro-call syntax);
+# a production may not be named `string`/`extension`/`use`/`start`/`comment` (header directives);
+# `string double backslash` turns on JSON escape decoding for every TEXT token; whitespace is lexer
+# trivia, so no `ws` production is needed.
 dialect grammar
 grammar stdio.dwg.ac1024.mutations
 start op
 comment none
+string double backslash
 
-op = set-snapshot | set-version-info
-set-snapshot = "set-snapshot" "snapshot" record
-set-version-info = "set-version-info" "version" "=" value "maintenance-version" "=" INT "codepage" "=" INT
-field = IDENT "=" value
-value = field | TEXT | IDENT | INT | FLOAT | "true" | "false" | "null" | list | record
-list = "[" value* "]"
-record = "{" field* "}"
+op = object
+
+value = object | array | json-string | number | "true" | "false" | "null"
+
+object = "{" "}" | "{" member {"," member}* "}"
+member = json-string ":" value
+
+array = "[" "]" | "[" value {"," value}* "]"
+
+json-string = TEXT
+
+number = INT | FLOAT

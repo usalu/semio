@@ -66,21 +66,14 @@ fn the_inert_probe_chords_claim_no_shell_verb_and_reserve_nothing() {
     println!("[DEBUG] inert probe chords mod+k / mod+alt+1 / mod+alt+2 claim nothing; mod+p still opens the palette");
 }
 
-/// ⚖️ LAW: `mod+shift+f` IS the full-screen row, and taking it journals NO action — React's
-/// `chord-fullscreen`/`chord-fullscreen-exit` steps each journal an empty set and move no surface.
-/// The verb is a pure chrome latch (`fullscreen_toggle_requested`), never a dispatch, and the surface
-/// census (`chrome_surface_census`) has no fullscreen term at all.
+/// ⚖️ LAW: the historical probe's `mod+shift+f` remains inert, exactly as React measured it. The
+/// actual full-screen chord is platform-scoped in `build_os_commands` and is covered at the
+/// normalized host ingress in `wgpu-winit-app-p3c`.
 #[test]
-fn the_fullscreen_chord_flips_a_chrome_latch_and_journals_nothing() {
+fn the_historical_fullscreen_probe_chord_is_inert() {
     let (action, modifiers) = probe_chord("mod+shift+f");
-    assert_eq!(shell_shortcut_for(&action, &modifiers), Some(ShellShortcut::ToggleFullscreen));
-    assert!(ShellShortcut::ToggleFullscreen.is_async(), "the full-screen verb takes the async funnel");
-
-    let mut shell = ShellState::new(Vec::new(), String::new());
-    assert!(!shell.fullscreen_toggle_requested, "sanity: nothing requested yet");
-    semio_framework_async::block_on(shell.apply_os_command("os.toggleFullscreen", None)).expect("the os command runs");
-    assert!(shell.fullscreen_toggle_requested, "the chord arms the host's own full-screen request");
-    assert!(shell.deferred_actions.is_empty(), "…and arms no action, which is why React's journal for both fullscreen steps is empty");
+    assert_eq!(shell_shortcut_for(&action, &modifiers), None);
+    assert!(!is_reserved_shell_chord(&action, &modifiers));
 }
 
 //#endregion ⌨️InertProbeChords

@@ -2,7 +2,7 @@
 //! (packet W1c of ticket 26/09/17/WGPU-RENDERER-REACT-PARITY).
 //!
 //! Two contracts are pinned here:
-//! - `SHELL_SHORTCUT_ROWS` is a verbatim transcription of React's `SHELL_KEYBINDINGS`
+//! - `SHELL_SHORTCUT_ROWS` is the executable chrome subset of React's `SHELL_KEYBINDINGS`
 //!   (`🔨️modules/🖱️ui/🔨️modules/🕹️control-keybinding-context/🟦️.tsx`), every row resolves to a verb that
 //!   actually runs, and every row's chord is reserved against app keybindings — a row can never be
 //!   reserved-but-dead or dispatched-but-shadowable.
@@ -41,16 +41,13 @@ fn chord_event(chord: &str) -> (ui_wgpu::wgpu::KeyAction, PointerModifiers) {
     (action, modifiers)
 }
 
-/// ⚖️ LAW: the wgpu table IS React's `SHELL_KEYBINDINGS` — same control ids, same chords, same count.
-/// Transcribed rather than imported because the two renderers cannot share a literal; this law is what
-/// keeps the transcription honest, and it is the row that catches a drifting chord (`os.toggleFullscreen`
-/// was `f11`/`ctrl+meta+f`-only here while React has always ALSO bound `mod+shift+f`).
+/// ⚖️ LAW: the wgpu table is React's executable chrome-control subset. OS commands are excluded:
+/// their platform-scoped `CommandDefinition.keybindings` are matched by the command route itself.
 #[test]
 fn the_shortcut_table_transcribes_every_react_shell_keybinding_row() {
     let expected: Vec<(&str, &str)> = vec![
         ("ui.search.toggle", "mod+p"),
         ("ui.find.toggle", "mod+f"),
-        ("os.toggleFullscreen", "mod+shift+f"),
         ("ui.nav.back", "mod+["),
         ("ui.nav.forward", "mod+]"),
         ("ui.nav.up", "mod+up"),
@@ -70,8 +67,8 @@ fn the_shortcut_table_transcribes_every_react_shell_keybinding_row() {
         ("playground.navbar.roles.editor", "mod+alt+e"),
         ("playground.navbar.roles.viewer", "mod+alt+v"),
     ];
-    assert_eq!(SHELL_SHORTCUT_ROWS.to_vec(), expected, "every accelerator row of React's SHELL_KEYBINDINGS, verbatim");
-    eprintln!("[DEBUG] wgpu shell shortcut table: {} rows transcribed from React's SHELL_KEYBINDINGS", SHELL_SHORTCUT_ROWS.len());
+    assert_eq!(SHELL_SHORTCUT_ROWS.to_vec(), expected, "every executable chrome accelerator row");
+    assert!(!SHELL_SHORTCUT_ROWS.iter().any(|(id, _)| *id == "os.toggleFullscreen"));
 }
 
 /// ⚖️ LAW: every row resolves to a verb, every chord of every row resolves to that same verb, and every
@@ -88,7 +85,7 @@ fn every_row_dispatches_its_verb_and_outranks_app_keybindings() {
             chords += 1;
         }
     }
-    assert_eq!(chords, 29, "21 rows, eight of which spell both the ctrl and the meta accelerator");
+    assert_eq!(chords, 28, "20 rows, eight of which spell both the ctrl and the meta accelerator");
     eprintln!("[DEBUG] wgpu shell shortcut table: {chords} chords dispatch and reserve their verb");
 }
 
@@ -194,10 +191,24 @@ fn the_overlay_chords_toggle_through_the_same_table() {
     let (action, modifiers) = chord_event("mod+f");
     shell.handle_keyboard(action.clone(), &modifiers, &mut input);
     assert_eq!(shell.overlay_state, OverlayState::Find);
-    assert_eq!(input.focused_id.as_deref(), Some("shell.find.input"));
+    assert_eq!(input.focused_id.as_deref(), Some("ui.find.input"));
     shell.handle_keyboard(action, &modifiers, &mut input);
     assert_eq!(shell.overlay_state, OverlayState::None, "the same chord closes it");
     assert_eq!(input.focused_id, None);
+}
+
+#[test]
+fn dismissing_and_reopening_a_palette_preserves_its_query() {
+    let mut shell = ShellState::new(Vec::new(), String::new());
+    let mut input = InputState::<ActionDescriptor>::default();
+    let (action, modifiers) = chord_event("mod+p");
+    shell.handle_keyboard(action.clone(), &modifiers, &mut input);
+    shell.set_palette_query(ShellPaletteKind::Search, "Rück".into(), &mut input);
+    shell.handle_keyboard(action.clone(), &modifiers, &mut input);
+    assert_eq!(shell.search_query, "Rück", "dismissal preserves the editable query");
+    shell.handle_keyboard(action, &modifiers, &mut input);
+    assert_eq!(shell.search_query, "Rück", "reopening seeds the preserved query");
+    assert_eq!(input.focused_id.as_deref(), Some("ui.search.input"));
 }
 
 fn two_window_shell() -> ShellState {
@@ -279,6 +290,38 @@ fn the_palette_ranking_bounds_and_orders_the_way_react_does() {
     assert_eq!(rank_fuzzy_items(many, "command", &[(|item: &String| Some(item.as_str()), 2.0)], FUZZY_SEARCH_THRESHOLD, FUZZY_SEARCH_LIMIT).len(), FUZZY_SEARCH_LIMIT, "React's limit of 20 is this target's limit too");
 }
 
+#[test]
+fn fuzzy_normalization_matches_the_neutral_nfkd_oracle() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🔎️ShellSearch/🧫️fixtures/🔣️.json")).expect("neutral palette fixture");
+    for row in fixture["normalization"]["cases"].as_array().expect("normalization cases") {
+        let value = row["value"].as_str().expect("normalization value");
+        let expected = row["expected"].as_str().expect("normalization expected");
+        assert_eq!(normalize_fuzzy_text(value), expected, "{value:?}");
+    }
+    assert_eq!(normalize_fuzzy_text("Rückgängig"), normalize_fuzzy_text("Ru\u{308}ckga\u{308}ngig"));
+}
+
+#[test]
+fn built_in_command_labels_match_the_neutral_react_locale_oracle() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🔎️ShellSearch/🧫️fixtures/🔣️.json")).expect("neutral palette fixture");
+    let mut shell = ShellState::new(Vec::new(), String::new());
+    for row in fixture["producer"]["localizedCommands"].as_array().expect("localized command rows") {
+        let command_id = row["id"].as_str().expect("localized command id");
+        for locale in ["en", "de"] {
+            shell.locale_id = locale.to_string();
+            let actual = shell
+                .build_os_commands()
+                .into_iter()
+                .find(|command| command.id == command_id)
+                .expect("native registry contains the canonical React command")
+                .label
+                .resolve(shell.active_terminology(), shell.active_locale())
+                .to_string();
+            assert_eq!(actual, row["labels"][locale].as_str().expect("localized command label"), "{command_id}:{locale}");
+        }
+    }
+}
+
 /// ⚖️ LAW: the weighted fields are React's — a hit in the label outranks the same hit in the group
 /// heading, which is what makes typing a command's name beat typing its category.
 #[test]
@@ -322,18 +365,15 @@ fn the_palette_lists_and_executes_every_in_palette_command() {
     let items = shell.command_search_items();
     let by_id = |id: &str| items.iter().find(|item| item.id == id).unwrap_or_else(|| panic!("{id} is missing from the palette: {:?}", items.iter().map(|item| item.id.as_str()).collect::<Vec<_>>()));
 
-    let fire = by_id("command.app:test:test-app:app.fire");
+    let fire = by_id("command.app.test.test-app.app.fire");
     assert_eq!(fire.label, "Fire", "a zero-arg command carries its plain label");
     assert!(fire.action.as_deref().is_some_and(|action| action.starts_with("command:")), "and fires across the command boundary: {:?}", fire.action);
 
-    for option in ["one", "two"] {
-        let row = by_id(&format!("command.app:test:test-app:app.pick.{option}"));
-        assert_eq!(row.label, if option == "one" { "Pick: One" } else { "Pick: Two" }, "a single-select command expands one concrete row per option");
-        let invocation: semio_framework::manifest::CommandInvocation = dsl::os_pack::json::from_json_str(row.action.as_deref().expect("row action").strip_prefix("command:").expect("command invocation")).expect("invocation parses");
-        assert_eq!(invocation.arguments.len(), 1, "with exactly the one argument bound");
-    }
-
-    for (id, label) in [("command.app:test:test-app:app.compose", "Compose…"), ("command.app:test:test-app:app.rename", "Rename…")] {
+    for (id, label) in [
+        ("command.app.test.test-app.app.pick", "Pick…"),
+        ("command.app.test.test-app.app.compose", "Compose…"),
+        ("command.app.test.test-app.app.rename", "Rename…"),
+    ] {
         let row = by_id(id);
         assert_eq!(row.label, label, "a command whose args cannot be expanded carries React's `…` suffix");
         assert!(row.action.as_deref().is_some_and(|action| action.starts_with("command-form:")), "and redirects to its staged form rather than firing a guess: {:?}", row.action);
@@ -341,16 +381,17 @@ fn the_palette_lists_and_executes_every_in_palette_command() {
     eprintln!("[DEBUG] wgpu palette: {} rows, every declared command reachable", items.len());
 }
 
-/// ⚖️ LAW: os commands still expand per option and still route to the LOCAL os funnel (never across the
-/// command boundary, which refuses an `Os` owner outright).
+/// ⚖️ LAW: an arg-carrying os command is the same single staged row React publishes; only a
+/// zero-arg os command routes to the local os funnel.
 #[test]
-fn os_commands_keep_their_local_per_option_rows() {
+fn os_arg_commands_are_single_staged_rows() {
     let shell = palette_shell();
     let items = shell.command_search_items();
-    let appearance: Vec<&SearchPaletteItem> = items.iter().filter(|item| item.id.starts_with("command.os:os.setAppearance")).collect();
-    assert_eq!(appearance.len(), 3, "system / light / dark");
-    assert!(appearance.iter().all(|item| item.action.as_deref().is_some_and(|action| action.starts_with("os-command:os.setAppearance:"))));
-    let fullscreen = items.iter().find(|item| item.id == "command.os:os.toggleFullscreen").expect("the fullscreen command is in the palette");
+    let appearance: Vec<&SearchPaletteItem> = items.iter().filter(|item| item.id.starts_with("command.os.os.setAppearance")).collect();
+    assert_eq!(appearance.len(), 1);
+    assert_eq!(appearance[0].label, "Set Appearance…");
+    assert_eq!(appearance[0].action.as_deref(), Some("command-form:os:os.setAppearance"));
+    let fullscreen = items.iter().find(|item| item.id == "command.os.os.toggleFullscreen").expect("the fullscreen command is in the palette");
     assert!(fullscreen.description.is_some(), "React's palette row shows the command's resolved chords as its description");
     assert!(matches!(fullscreen.category, Some(CommandOwnerAddress::Os)));
 }
@@ -363,31 +404,244 @@ fn picking_an_arg_carrying_command_opens_its_form() {
     shell.sync_dock_tabs();
     shell.overlay_state = OverlayState::Search;
     shell.search_query = "Compose".into();
-    let index = shell.filtered_search_items().iter().position(|item| item.id == "command.app:test:test-app:app.compose").expect("the query finds the command");
+    let index = shell.filtered_search_items().iter().position(|item| item.id == "command.app.test.test-app.app.compose").expect("the query finds the command");
     semio_framework_async::block_on(shell.activate_search_item(index)).expect("activating a form redirect never faults");
     assert!(shell.anchor_open(PanelAnchor::BottomMiddle), "the bottom-middle Command anchor — React's own home for the command panel");
     assert_eq!(shell.anchor_state(PanelAnchor::BottomMiddle).path.first().map(String::as_str), Some("framework.category.command"));
+    assert_eq!(shell.anchor_state(PanelAnchor::BottomMiddle).path.last().map(String::as_str), Some("command.category.app"));
     assert_eq!(shell.expanded_command_id.as_deref(), Some("app:test:test-app:app.compose"));
     assert_eq!(shell.overlay_state, OverlayState::None, "and the palette closes behind it");
+}
+
+fn publish_palette_chrome(shell: &mut ShellState, input: &mut InputState<ActionDescriptor>) {
+    while input.retire_hit_step() {}
+    shell.screen_w = 1280.0;
+    shell.screen_h = 720.0;
+    let mut frame = ShellChromeFrameCursor { phase: ShellChromeFramePhase::Overlay, setup: 0, child: ShellChromeChildCursor::default(), ..ShellChromeFrameCursor::default() };
+    let mut draw = DrawList::default();
+    let mut overlay = DrawList::default();
+    let mut atlas = FontAtlas::builtin();
+    let icons = IconAtlas::default();
+    let theme = Theme::light();
+    let mut world_resources = infinite_world::world::World3dBuildContext::new(infinite_world::world::WorldCursorWakeAuthority::new());
+    for _ in 0..65_536 {
+        if shell.render_chrome_step(&mut frame, &mut draw, &mut overlay, &mut atlas, &icons, input, &theme, &mut world_resources) {
+            return;
+        }
+    }
+    panic!("palette chrome walk did not reach publication");
+}
+
+/// ⚖️ LAW: the normal chrome walk publishes a real dialog textbox and row; the accessibility
+/// value route filters that SAME plan, and Enter activates the existing command funnel before the
+/// next publication retires the dialog.
+#[test]
+fn the_command_palette_publishes_filters_and_activates_through_normal_chrome() {
+    let mut shell = palette_shell();
+    shell.sync_dock_tabs();
+    let mut input = InputState::<ActionDescriptor>::default();
+    let (action, modifiers) = chord_event("mod+p");
+    shell.handle_keyboard(action, &modifiers, &mut input);
+    assert_eq!(input.focused_id.as_deref(), Some("ui.search.input"), "the authored React textbox owns focus immediately");
+    assert!(shell.chrome_surface_census().iter().any(|(id, level, _)| id == "ui.search.dialog" && *level == "dialog"), "the open command surface is a dialog in the chrome census");
+
+    publish_palette_chrome(&mut shell, &mut input);
+    let input_hit = input.hits().iter().find(|hit| hit.control_id.as_deref() == Some("ui.search.input") && hit.kind == HitKind::Input).expect("the normal walk published the palette textbox");
+    assert!((input_hit.rect.w - 512.0).abs() < 0.01, "React's sm:max-w-lg width is the hit geometry too: {:?}", input_hit.rect);
+    assert!(input.hits().iter().any(|hit| hit.control_id.as_deref().is_some_and(|id| id.starts_with("ui.search.item."))), "the normal walk publishes command rows, not empty glass");
+    let input_node = shell.chrome_accessibility_nodes(input.hits()).into_iter().find(|node| node.key == "ui.search.input").expect("palette textbox is projected to accessibility");
+    assert_eq!(input_node.role, "combobox");
+    assert!(input_node.editable);
+    assert_eq!(input_node.controls.as_deref(), Some("ui.search.list"));
+    assert_eq!(input_node.value_text.as_deref(), Some(""));
+    assert!(input_node.focused, "shortcut focus and accessibility focus are the same input");
+    let target = ui_render::AccessibilityTarget {
+        window_id: crate::interpreter::SHELL_CHROME_ACCESSIBILITY_WINDOW_ID.to_string(),
+        window_generation: crate::interpreter::SHELL_CHROME_ACCESSIBILITY_GENERATION,
+        node_id: input_node.node_id,
+        node_key: input_node.key,
+    };
+    assert!(semio_framework_async::block_on(shell.handle_accessibility_event(&target, &ui_render::AccessibilityEvent::Value("Set Theme".into()), &mut input)).expect("palette accessibility value"));
+    assert_eq!(shell.search_query, "Set Theme");
+
+    publish_palette_chrome(&mut shell, &mut input);
+    let rows = shell
+        .chrome_accessibility_nodes(input.hits())
+        .into_iter()
+        .filter(|node| node.role == "option")
+        .collect::<Vec<_>>();
+    assert_eq!(rows.len(), 1, "the query is reflected by the published row set: {rows:?}");
+    assert_eq!(rows[0].key, fixture_staged_palette_id());
+    assert_eq!(rows[0].label.as_deref(), Some("Set Theme…"), "the deterministic result is the staged command");
+    semio_framework_async::block_on(shell.handle_keyboard_async(ui_wgpu::wgpu::KeyAction::Enter, &PointerModifiers::default(), &mut input)).expect("palette activation");
+    assert_eq!(shell.overlay_state, OverlayState::None);
+    assert_eq!(input.focused_id, None, "closing the dialog retires textbox focus");
+    assert!(shell.anchor_open(PanelAnchor::BottomMiddle), "activation reaches the existing Command panel funnel");
+    assert_eq!(shell.anchor_state(PanelAnchor::BottomMiddle).path.last().map(String::as_str), Some("command.category.appearance"));
+    assert_eq!(shell.expanded_command_id.as_deref(), Some("os:os.setThemeId"));
+    publish_palette_chrome(&mut shell, &mut input);
+    assert!(!shell.chrome_surface_census().iter().any(|(_, level, _)| *level == "dialog"), "the closed palette is absent from the next dialog census");
+    assert!(!input.hits().iter().any(|hit| hit.control_id.as_deref().is_some_and(|id| id.starts_with("ui.search."))), "its published textbox and rows retire together");
+}
+
+/// ⚖️ LAW: Find uses the same published textbox/row plan as Search, and a physical row click
+/// activates its existing selection funnel and retires the modal focus owner.
+#[test]
+fn find_publishes_filters_and_activates_with_a_physical_row_click() {
+    let mut shell = ShellState::new(Vec::new(), String::new());
+    shell.find_items
+        .try_push(ShellFindItem {
+            id: "media.node".into(),
+            label: "Media Node".into(),
+            description: Some("Canvas".into()),
+            category: Some("Nodes".into()),
+            surface_id: "canvas".into(),
+            node_id: "node-7".into(),
+        })
+        .expect("bounded find fixture");
+    let mut input = InputState::<ActionDescriptor>::default();
+    let (action, modifiers) = chord_event("mod+f");
+    shell.handle_keyboard(action, &modifiers, &mut input);
+    publish_palette_chrome(&mut shell, &mut input);
+    let input_node = shell.chrome_accessibility_nodes(input.hits()).into_iter().find(|node| node.key == "ui.find.input").expect("Find textbox projects to accessibility");
+    assert_eq!(input_node.role, "combobox");
+    let target = ui_render::AccessibilityTarget {
+        window_id: crate::interpreter::SHELL_CHROME_ACCESSIBILITY_WINDOW_ID.to_string(),
+        window_generation: crate::interpreter::SHELL_CHROME_ACCESSIBILITY_GENERATION,
+        node_id: input_node.node_id,
+        node_key: input_node.key,
+    };
+    assert!(semio_framework_async::block_on(shell.handle_accessibility_event(&target, &ui_render::AccessibilityEvent::Value("Media".into()), &mut input)).expect("Find accessibility value"));
+    publish_palette_chrome(&mut shell, &mut input);
+    let row = input.hits().iter().find(|hit| hit.control_id.as_deref() == Some("ui.find.item.0")).expect("filtered Find row publishes a physical hit").rect;
+    assert_eq!(shell.chrome_accessibility_nodes(input.hits()).into_iter().find(|node| node.key == "media.node").and_then(|node| node.label), Some("Media Node".into()));
+    let x = row.x + row.w * 0.5;
+    let y = row.y + row.h * 0.5;
+    semio_framework_async::block_on(shell.handle_pointer_button(x, y, true, 0, &mut input, &Theme::light())).expect("Find physical row press");
+    assert_eq!(shell.overlay_state, OverlayState::Find, "press only arms the click");
+    semio_framework_async::block_on(shell.handle_pointer_button(x, y, false, 0, &mut input, &Theme::light())).expect("Find physical row release");
+    assert_eq!(shell.overlay_state, OverlayState::None);
+    assert_eq!(input.focused_id, None);
+}
+
+fn fixture_staged_palette_id() -> String {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🔎️ShellSearch/🧫️fixtures/🔣️.json")).expect("neutral palette fixture");
+    fixture["producer"]["stagedCommand"]["id"].as_str().expect("staged palette id").to_string()
+}
+
+#[test]
+fn palette_dialog_absorbs_interior_clicks_and_rows_activate_only_on_same_row_release() {
+    let mut shell = palette_shell();
+    shell.overlay_state = OverlayState::Search;
+    shell.search_open = true;
+    shell.search_query = "Fire".into();
+    let mut input = InputState::<ActionDescriptor>::default();
+    publish_palette_chrome(&mut shell, &mut input);
+    let dialog = input.hits().iter().find(|hit| hit.control_id.as_deref() == Some("ui.search.dialog")).expect("full dialog background hit").rect;
+    let row = input.hits().iter().find(|hit| hit.control_id.as_deref() == Some("ui.search.item.0")).expect("first row").rect;
+    let group = shell
+        .command_palette_plan(&Theme::light(), 1280.0, 720.0)
+        .expect("open palette plan")
+        .entries
+        .into_iter()
+        .find_map(|entry| match entry {
+            ShellPalettePlanEntry::Group { rect, .. } => Some(rect),
+            _ => None,
+        })
+        .expect("palette group heading");
+    let heading_point = (group.x + group.w * 0.5, group.y + group.h * 0.5);
+    assert_eq!(input.hit_at(heading_point.0, heading_point.1).and_then(|hit| hit.control_id.as_deref()), Some("ui.search.dialog"), "group/padding area belongs to the dialog");
+    semio_framework_async::block_on(shell.handle_pointer_button(heading_point.0, heading_point.1, true, 0, &mut input, &Theme::light())).expect("dialog interior press");
+    assert_eq!(shell.overlay_state, OverlayState::Search, "interior glass does not dismiss its dialog");
+
+    let x = row.x + row.w * 0.5;
+    let y = row.y + row.h * 0.5;
+    semio_framework_async::block_on(shell.handle_pointer_button(x, y, true, 0, &mut input, &Theme::light())).expect("row press");
+    semio_framework_async::block_on(shell.handle_pointer_button(dialog.x + 1.0, dialog.y + dialog.h - 1.0, false, 0, &mut input, &Theme::light())).expect("cancelled release");
+    assert_eq!(shell.overlay_state, OverlayState::Search, "release away from the armed row cancels activation");
+    assert_eq!(shell.search_query, "Fire", "cancellation preserves the query");
+    assert_eq!(shell.search_selected, 0, "cancellation preserves the selected row");
+    semio_framework_async::block_on(shell.handle_pointer_button(0.0, 0.0, true, 0, &mut input, &Theme::light())).expect("outside press");
+    assert_eq!(shell.overlay_state, OverlayState::None, "an outside press dismisses the modal even over underlying chrome");
+    assert_eq!(shell.search_query, "Fire", "outside dismissal preserves the query");
+}
+
+#[test]
+fn palette_accessibility_is_a_dialog_tree_with_close_list_groups_status_and_stable_items() {
+    let mut shell = palette_shell();
+    shell.overlay_state = OverlayState::Search;
+    shell.search_open = true;
+    let mut input = InputState::<ActionDescriptor>::default();
+    publish_palette_chrome(&mut shell, &mut input);
+    let nodes = shell.chrome_accessibility_nodes(input.hits());
+    assert_eq!(nodes.first().map(|node| (node.key.as_str(), node.role.as_str(), node.depth)), Some(("ui.search.dialog", "dialog", 0)));
+    let close = nodes.iter().find(|node| node.key == "ui.search.close").expect("accessible Close");
+    assert_eq!((close.role.as_str(), close.depth, close.actionable), ("button", 1, true));
+    let input_node = nodes.iter().find(|node| node.key == "ui.search.input").expect("editable combobox");
+    assert_eq!((input_node.role.as_str(), input_node.depth, input_node.editable, input_node.controls.as_deref()), ("combobox", 1, true, Some("ui.search.list")));
+    let list = nodes.iter().find(|node| node.key == "ui.search.list").expect("owned listbox");
+    assert_eq!((list.role.as_str(), list.depth), ("listbox", 1));
+    assert!(nodes.iter().any(|node| node.role == "group" && node.depth == 2));
+    assert!(nodes.iter().any(|node| node.role == "option" && node.depth == 3 && node.key.starts_with("command.")), "option keys are canonical palette item IDs");
+    assert!(input_node.active_descendant.as_ref().is_some_and(|key| nodes.iter().any(|node| &node.key == key && node.selected == Some(true))));
+
+    shell.set_palette_query(ShellPaletteKind::Search, "zzzz".into(), &mut input);
+    publish_palette_chrome(&mut shell, &mut input);
+    let empty_nodes = shell.chrome_accessibility_nodes(input.hits());
+    assert!(empty_nodes.iter().any(|node| node.role == "status" && node.live == "polite"), "no-results is an announced status");
+    let close = empty_nodes.iter().find(|node| node.key == "ui.search.close").expect("accessible close after filtering");
+    let target = ui_render::AccessibilityTarget {
+        window_id: crate::interpreter::SHELL_CHROME_ACCESSIBILITY_WINDOW_ID.to_string(),
+        window_generation: crate::interpreter::SHELL_CHROME_ACCESSIBILITY_GENERATION,
+        node_id: close.node_id,
+        node_key: close.key.clone(),
+    };
+    assert!(semio_framework_async::block_on(shell.handle_accessibility_event(&target, &ui_render::AccessibilityEvent::Activate, &mut input)).expect("accessible Close activation"));
+    assert_eq!(shell.overlay_state, OverlayState::None);
+    assert_eq!(shell.search_query, "zzzz", "Close preserves the query");
 }
 
 /// ⚖️ LAW: the palette's own rows come in React's declaration order — panels, windows, commands, then
 /// the host-app verbs — because that order is what the ranker breaks ties on and what a cold palette shows.
 #[test]
 fn the_palette_rows_follow_the_react_declaration_order() {
-    let shell = palette_shell();
-    shell.build_search_items().iter().fold(0usize, |rank, item| {
+    let shell = super::panel_anchor_model_tests::host_test_shell();
+    assert!(shell.space_mode);
+    let items = shell.build_search_items();
+    items.iter().fold(0usize, |rank, item| {
         let bucket = match item.id.split('.').next() {
             Some("panel") => 0,
             Some("window") => 1,
             Some("command") => 2,
-            Some("keybinding") => 3,
+            Some("spawn") => 3,
             Some("studio") => 4,
             other => panic!("unknown palette row family {other:?}"),
         };
         assert!(bucket >= rank, "palette row {} is out of React's declaration order", item.id);
         bucket
     });
+    let ids = items.iter().map(|item| item.id.as_str()).collect::<Vec<_>>();
+    assert_eq!(&ids[ids.len() - 5..], ["spawn.space", "spawn.space", "studio.undo", "studio.redo", "studio.home"]);
+    assert!(!ids.iter().any(|id| id.starts_with("keybinding.") || matches!(*id, "studio.commitCheckpoint" | "studio.goHome")));
+    let home = items.iter().find(|item| item.id == "studio.home").expect("home row");
+    assert_eq!(home.group, "Navigation");
+
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🔎️ShellSearch/🧫️fixtures/🔣️.json")).expect("neutral palette fixture");
+    let staged = &fixture["producer"]["stagedCommand"];
+    let staged_id = staged["id"].as_str().expect("staged fixture id");
+    let staged_row = items.iter().find(|item| item.id == staged_id).expect("native producer publishes the fixture's canonical React id");
+    assert_eq!(staged_row.label, staged["label"].as_str().expect("staged fixture label"));
+    let staged_action = format!("{}{}", staged["actionPrefix"].as_str().unwrap(), staged["expandedKey"].as_str().unwrap());
+    assert_eq!(staged_row.action.as_deref(), Some(staged_action.as_str()));
+    for forbidden in fixture["producer"]["forbiddenIds"].as_array().expect("forbidden fixture ids") {
+        assert!(!ids.contains(&forbidden.as_str().expect("forbidden id")));
+    }
+}
+
+#[test]
+fn a_palette_without_a_session_is_empty_like_react() {
+    let shell = ShellState::new(Vec::new(), String::new());
+    assert!(shell.build_search_items().is_empty());
 }
 
 //#endregion 🎛️CommandPalette

@@ -44,14 +44,10 @@ fn journey_state() -> World3dState {
     state.pick_bounds = state.bounds;
     state.active_utility = "select".into();
     state.interaction_objects.revision = state.interaction_revision;
-    let data = mesh_oracle_from_buffers(
-        vec![-0.5, -0.5, 0.0, 0.5, -0.5, 0.0, 0.5, 0.5, 0.0, -0.5, 0.5, 0.0],
-        vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0],
-        vec![0, 1, 2, 0, 2, 3],
-    );
+    let data = mesh_oracle_from_buffers(vec![-0.5, -0.5, 0.0, 0.5, -0.5, 0.0, 0.5, 0.5, 0.0, -0.5, 0.5, 0.0], vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0], vec![0, 1, 2, 0, 2, 3]);
     store_mesh(&mut state, "mesh".into(), publish_oracle_mesh(data));
     let mesh_version = *state.mesh_versions.get("mesh").expect("mesh version");
-    state.draws.push(SceneDraw3d { mesh_key: "mesh".into(), mesh_version, instances: vec![Instance3d { id: "object".into(), model: Mat4::identity(), color: [1.0; 4], selected: false, hovered: false }] });
+    state.draws.push(SceneDraw3d { mesh_key: "mesh".into(), mesh_version, instances: vec![Instance3d { id: "object".into(), model: Mat4::identity(), color: [1.0; 4], selected: false, hovered: false, material: Default::default() }], shadow_role: Default::default() });
     state
 }
 
@@ -387,11 +383,7 @@ fn a_leave_from_outside_the_pick_rect_clears_the_hover_without_faulting() {
 fn a_draw_whose_mesh_has_not_landed_is_skipped_by_every_interaction_cursor() {
     let mut state = journey_state();
     let resident = journal_of_a_click(&mut journey_state());
-    state.draws.push(SceneDraw3d {
-        mesh_key: "mesh:🧊️still-loading".into(),
-        mesh_version: 7,
-        instances: vec![Instance3d { id: "unlanded".into(), model: Mat4::identity(), color: [1.0; 4], selected: false, hovered: false }],
-    });
+    state.draws.push(SceneDraw3d { mesh_key: "mesh:🧊️still-loading".into(), mesh_version: 7, instances: vec![Instance3d { id: "unlanded".into(), model: Mat4::identity(), color: [1.0; 4], selected: false, hovered: false, material: Default::default() }], shadow_role: Default::default() });
     state.interaction_revision = state.interaction_revision.wrapping_add(1);
 
     assert_eq!(journal_of_a_click(&mut state), resident, "🫥️ the unpublished draw changes nothing the pane journals");
@@ -436,7 +428,10 @@ fn a_frame_driven_hover_clear_is_owed_once_and_never_saturates_the_queue() {
         let depth = state.interaction_authority.as_ref().expect("authority").queue.len;
         assert!(depth <= 1, "🚪️ frame {frame}: at most ONE leave is ever in flight, never a queue full of them (depth {depth})");
     }
-    assert!(!world3d_hover_clear_is_owed(&state) && world3d_hover_is_published(&state), "🚪️ nothing more is owed while the leave waits, although the hover is still PUBLISHED — which is exactly why the published predicate cannot gate a frame-driven caller");
+    assert!(
+        !world3d_hover_clear_is_owed(&state) && world3d_hover_is_published(&state),
+        "🚪️ nothing more is owed while the leave waits, although the hover is still PUBLISHED — which is exactly why the published predicate cannot gate a frame-driven caller"
+    );
 
     assert_eq!(journal(&mut state), expected("modal-open", "wgpu"), "🚪️ and answering it publishes React's own single hover clear");
     assert!(!world3d_hover_clear_is_owed(&state), "🚪️ after which nothing is owed and no later frame enqueues anything");

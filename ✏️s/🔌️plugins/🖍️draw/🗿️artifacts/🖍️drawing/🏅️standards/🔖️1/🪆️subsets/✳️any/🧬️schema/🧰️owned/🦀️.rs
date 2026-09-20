@@ -389,7 +389,7 @@ impl store::ErasedSnapshotRetirement for DrawingOwnedRetirement {
 
 impl Drop for DrawingOwnedRetirement {
     fn drop(&mut self) {
-        assert!(store::ErasedSnapshotRetirement::terminal_is_empty(self), "Drawing owner reached Drop before cursor retirement reached terminal-empty");
+        assert!(store::ErasedSnapshotRetirement::terminal_is_empty(self) || std::thread::panicking(), "Drawing owner reached Drop before cursor retirement reached terminal-empty");
     }
 }
 
@@ -441,7 +441,7 @@ impl store::ErasedSnapshotRetirement for DrawingSnapshotRootRetirement {
 
 impl Drop for DrawingSnapshotRootRetirement {
     fn drop(&mut self) {
-        assert!(self.owner.is_none() && self.retirement.is_none(), "Drawing snapshot root reached Drop before exact Arc handback");
+        assert!((self.owner.is_none() && self.retirement.is_none()) || std::thread::panicking(), "Drawing snapshot root reached Drop before exact Arc handback");
     }
 }
 
@@ -606,7 +606,10 @@ macro_rules! drawing_owned_field_authority {
 
         impl Drop for $authority {
             fn drop(&mut self) {
-                assert!(matches!(self.state, $state::Published | $state::Complete) && self.value.is_none() && self.retirement.is_none(), concat!("Drawing ", $kind, " decode reached Drop before publication or bounded retirement"));
+                assert!(
+                    (matches!(self.state, $state::Published | $state::Complete) && self.value.is_none() && self.retirement.is_none()) || std::thread::panicking(),
+                    concat!("Drawing ", $kind, " decode reached Drop before publication or bounded retirement")
+                );
             }
         }
     };
@@ -913,7 +916,7 @@ impl DrawingMutationArenaOwnerBuilder {
 
 impl Drop for DrawingMutationArenaOwnerBuilder {
     fn drop(&mut self) {
-        assert!(self.terminal_is_empty(), "Drawing mutation arena owner builder reached Drop before exact construction handoff or retirement");
+        assert!(self.terminal_is_empty() || std::thread::panicking(), "Drawing mutation arena owner builder reached Drop before exact construction handoff or retirement");
     }
 }
 
@@ -1110,7 +1113,7 @@ impl DrawingMutationArenaPoolBootstrap {
 
 impl Drop for DrawingMutationArenaPoolBootstrap {
     fn drop(&mut self) {
-        assert!(self.terminal_is_empty(), "Drawing mutation arena pool bootstrap reached Drop before exact handoff or fault retirement");
+        assert!(self.terminal_is_empty() || std::thread::panicking(), "Drawing mutation arena pool bootstrap reached Drop before exact handoff or fault retirement");
     }
 }
 
@@ -1994,7 +1997,7 @@ impl DrawingLayerCloneAuthority {
 
 impl Drop for DrawingLayerCloneAuthority {
     fn drop(&mut self) {
-        assert!(self.terminal_is_empty(), "Drawing layer clone reached Drop before exact handoff or cursor retirement");
+        assert!(self.terminal_is_empty() || std::thread::panicking(), "Drawing layer clone reached Drop before exact handoff or cursor retirement");
     }
 }
 
@@ -2384,7 +2387,7 @@ impl DrawingContainerRebuildAuthority {
 
 impl Drop for DrawingContainerRebuildAuthority {
     fn drop(&mut self) {
-        assert!(self.terminal_is_empty(), "Drawing container rebuild reached Drop before exact handoff or cursor retirement");
+        assert!(self.terminal_is_empty() || std::thread::panicking(), "Drawing container rebuild reached Drop before exact handoff or cursor retirement");
     }
 }
 
@@ -2471,7 +2474,7 @@ impl DrawingFillCloneAuthority {
 
 impl Drop for DrawingFillCloneAuthority {
     fn drop(&mut self) {
-        assert!(self.terminal_is_empty(), "Drawing fill clone reached Drop before exact handoff or retirement");
+        assert!(self.terminal_is_empty() || std::thread::panicking(), "Drawing fill clone reached Drop before exact handoff or retirement");
     }
 }
 
@@ -2557,7 +2560,7 @@ impl DrawingStrokeCloneAuthority {
 
 impl Drop for DrawingStrokeCloneAuthority {
     fn drop(&mut self) {
-        assert!(self.terminal_is_empty(), "Drawing stroke clone reached Drop before exact handoff or retirement");
+        assert!(self.terminal_is_empty() || std::thread::panicking(), "Drawing stroke clone reached Drop before exact handoff or retirement");
     }
 }
 
@@ -3469,7 +3472,7 @@ impl DrawingMutationDigestAuthority {
 
 impl Drop for DrawingMutationDigestAuthority {
     fn drop(&mut self) {
-        assert!(self.terminal_is_empty(), "Drawing mutation digest reached Drop before exact terminal close");
+        assert!(self.terminal_is_empty() || std::thread::panicking(), "Drawing mutation digest reached Drop before exact terminal close");
     }
 }
 
@@ -3797,7 +3800,7 @@ impl DrawingDuplicateRewriteAuthority {
 
 impl Drop for DrawingDuplicateRewriteAuthority {
     fn drop(&mut self) {
-        assert!(self.terminal_is_empty(), "Drawing duplicate rewrite reached Drop before staged id/name retirement");
+        assert!(self.terminal_is_empty() || std::thread::panicking(), "Drawing duplicate rewrite reached Drop before staged id/name retirement");
     }
 }
 
@@ -4684,7 +4687,7 @@ impl DrawingMutationCandidateAuthority {
 
 impl Drop for DrawingMutationCandidateAuthority {
     fn drop(&mut self) {
-        assert!(self.terminal_is_empty(), "Drawing mutation candidate reached Drop before atomic handoff or cursor retirement");
+        assert!(self.terminal_is_empty() || std::thread::panicking(), "Drawing mutation candidate reached Drop before atomic handoff or cursor retirement");
     }
 }
 
@@ -5481,7 +5484,7 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<DrawingSnapsho
 
 impl Drop for DrawingStoreInitializationAuthority {
     fn drop(&mut self) {
-        assert!(self.terminal_is_empty_inner(), "Drawing store initialization authority reached Drop before exact candidate handoff or retained rejection close");
+        assert!(self.terminal_is_empty_inner() || std::thread::panicking(), "Drawing store initialization authority reached Drop before exact candidate handoff or retained rejection close");
     }
 }
 

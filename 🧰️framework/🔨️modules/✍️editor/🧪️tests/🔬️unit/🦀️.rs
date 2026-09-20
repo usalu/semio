@@ -442,6 +442,22 @@ fn pointer_down_screen_primary_button_still_starts_a_drag_selection() {
 }
 
 #[test]
+fn pointer_cancel_screen_retires_drag_and_preserves_published_selection() {
+    let mut host = EditorHost::new();
+    host.set_text("alpha beta".into());
+    host.pointer_down_screen(0.0, 0.0, 0);
+    let published = (host.anchor(), host.caret());
+    host.pointer_move_screen(200.0, 24.5, 1);
+    assert_ne!((host.anchor(), host.caret()), published);
+    let latest_published = (host.anchor(), host.caret());
+    host.pointer_cancel_screen();
+    assert_eq!((host.anchor(), host.caret()), latest_published);
+    assert!(!host.drag_selecting);
+    host.pointer_down_screen(68.0, 24.5, 0);
+    assert!(host.drag_selecting, "the next primary down is admitted");
+}
+
+#[test]
 fn pointer_move_screen_sets_hover_without_drag() {
     let mut host = EditorHost::new();
     host.set_text("MATCH".into());

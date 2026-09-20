@@ -5,6 +5,6 @@ use crate::standards::v1::subsets::image::schema::mutations::set_frame_delay;
 
 /// ▶️ Applies a set-frame-delay mutation.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn apply(snapshot: &mut SemioImageSnapshot, index: usize, delay_ms: u32) -> SemioImageDiff {
+pub fn apply(snapshot: &mut SemioImageSnapshot, index: usize, delay_ms: u32) -> protocol::MutationOutcome<SemioImageDiff> {
     apply_semio_image_mutation(snapshot, &SemioImageMutation::SetFrameDelay(set_frame_delay::SetFrameDelay { index, delay_ms }))
 }

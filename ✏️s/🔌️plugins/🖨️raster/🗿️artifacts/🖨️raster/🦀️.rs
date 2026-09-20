@@ -56,9 +56,13 @@ impl<V> RasterOwnedMapPageBacking<V> {
     }
 }
 
+/// 🔒️ Fail-closed, but never a SECOND panic while an earlier one unwinds: a destructor that panics
+/// during cleanup is a non-unwinding abort that kills the whole process (SIGABRT) and erases every
+/// other test's result. Same `std::thread::panicking()` guard the framework's `OrderedMap`,
+/// `ValueRetirement`, `Dictionary` and `MutationDag` destructors carry.
 impl<V> Drop for RasterOwnedMapPageBacking<V> {
     fn drop(&mut self) {
-        assert!(self.page.is_none(), "Raster owned map page backing reached Drop before exact release");
+        assert!(self.page.is_none() || std::thread::panicking(), "Raster owned map page backing reached Drop before exact release");
     }
 }
 
@@ -89,7 +93,7 @@ impl<V> RasterOwnedMapEntry<V> {
 
 impl<V> Drop for RasterOwnedMapEntry<V> {
     fn drop(&mut self) {
-        assert!(self.terminal_is_empty(), "Raster owned map entry reached Drop before exact pair handback");
+        assert!(self.terminal_is_empty() || std::thread::panicking(), "Raster owned map entry reached Drop before exact pair handback");
     }
 }
 
@@ -269,6 +273,17 @@ impl<V> RasterOwnedMap<V> {
     pub fn keys(&self) -> RasterOwnedMapKeys<'_, V> {
         RasterOwnedMapKeys { inner: self.iter() }
     }
+
+    /// 🧹️ Empties this map entry by entry and releases every page backing, leaving it in the only
+    /// state its `Drop` guard admits. Every route that can abandon a half-built map (a codec whose
+    /// next entry refuses, a layer forest that is not planted) closes it through here rather than
+    /// hand-rolling the same two loops.
+    pub fn retire(&mut self) {
+        while self.take_last_entry().is_some() {}
+        while let Some(page) = self.take_empty_page_backing() {
+            page.release();
+        }
+    }
 }
 
 impl<V> Default for RasterOwnedMap<V> {
@@ -277,17 +292,28 @@ impl<V> Default for RasterOwnedMap<V> {
     }
 }
 
+/// 🔒️ Fail-closed on a bare drop, but silent while another panic unwinds — a second panic inside a
+/// destructor during cleanup aborts the process instead of failing one test (that is exactly how one
+/// red raster test used to take the whole binary down with SIGABRT). The pages are still handed back
+/// to the allocator on the unwinding path so nothing leaks.
 impl<V> Drop for RasterOwnedMap<V> {
     fn drop(&mut self) {
-        assert!(self.length == 0 && self.pages.iter().all(Option::is_none), "Raster owned map reached Drop before every entry and page backing was explicitly retired");
+        assert!((self.length == 0 && self.pages.iter().all(Option::is_none)) || std::thread::panicking(), "Raster owned map reached Drop before every entry and page backing was explicitly retired");
         unsafe { std::mem::ManuallyDrop::drop(&mut self.pages) };
     }
 }
 
+/// 🧬️ A real deep copy: the map is a FIXED-capacity paged owner (64 entries over 8 pages), so
+/// copying it is bounded by construction and needs no retained page authority. It used to answer an
+/// EMPTY map for a populated source, which silently deleted every asset and every adjustment
+/// parameter on any `RasterSnapshot::clone` — and `ArtifactStore` clones the open document.
 impl<V: Clone> Clone for RasterOwnedMap<V> {
     fn clone(&self) -> Self {
-        assert!(self.is_empty(), "Populated Raster owned maps require the retained page clone authority");
-        Self::new()
+        let mut copy = Self::new();
+        for (key, value) in self.iter() {
+            copy.insert(key.clone(), value.clone()).map_err(|rejected| rejected.reason).expect("a Raster owned map copy fits the capacity its source already fits");
+        }
+        copy
     }
 }
 
@@ -342,42 +368,59 @@ impl<'a, V> IntoIterator for &'a RasterOwnedMap<V> {
     }
 }
 
+/// 🗂️ The map's real DSL projection, key-ordered exactly as [`RasterOwnedMap::iter`] walks it.
 impl<V: dsl::DslField> dsl::DslField for RasterOwnedMap<V> {
     fn shape() -> dsl::Shape {
         dsl::Shape::Map(Box::new(V::shape()))
     }
 
     fn to_value(&self) -> dsl::FieldValue {
-        assert!(self.is_empty(), "Populated Raster owned map DSL materialization is forbidden; interactive production routes require the retained page output authority");
-        dsl::FieldValue::Map(Vec::new())
+        dsl::FieldValue::Map(self.iter().map(|(key, value)| (key.clone(), value.to_value())).collect())
     }
 
     fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
         let dsl::FieldValue::Map(entries) = value else { return Err(format!("expected Map, found {value:?}")) };
-        if !entries.is_empty() {
-            return Err("populated Raster maps require the retained page decoder".into());
+        let mut out = Self::new();
+        for (key, item) in entries {
+            let admitted = V::from_value(item).and_then(|item| out.insert(key.clone(), item).map_err(|rejected| rejected.reason.to_string()));
+            if let Err(error) = admitted {
+                out.retire();
+                return Err(error);
+            }
         }
-        Ok(Self::new())
+        Ok(out)
     }
 }
 
-/// 🛑 First-party analog of `serialize_empty_owned_map` above — same "populated map is forbidden"
-/// contract, mirrored onto `dsl::ToValue`/`dsl::FromValue` so a `RasterOwnedMap` field stays valid
-/// inside a `#[derive(dsl::ToValue, dsl::FromValue)]` type without ever exposing real map contents.
-impl<V> dsl::ToValue for RasterOwnedMap<V> {
+/// 🗂️ The same real projection on `dsl::ToValue`/`dsl::FromValue`, so a `RasterOwnedMap` field
+/// carries its true contents inside a `#[derive(dsl::ToValue, dsl::FromValue)]` type.
+///
+/// 🩸️ Both directions used to refuse a populated map ("interactive production routes require the
+/// retained page output authority") — a retained page authority this artifact never grew. Every
+/// whole-document route therefore trapped or silently emptied the document: `ArtifactStore`'s own
+/// `encode_pack` ("default-options pack encode is infallible"), the `.raster` DSL printer whose
+/// committed demo carrier is itself populated, the `s.stdio.json` export/import serializers, and the
+/// `apply_raster_mutation_json` oracle bridge whose committed before-documents carry both layers and
+/// assets. The map is FIXED-capacity (64 entries over 8 pages of 16 KiB), so a whole-map projection
+/// is bounded by construction and no paging authority is owed.
+impl<V: dsl::ToValue> dsl::ToValue for RasterOwnedMap<V> {
     fn to_value(&self) -> dsl::DslValue {
-        assert!(self.is_empty(), "Populated Raster owned map serialization is forbidden; interactive production routes require the retained page output authority");
-        dsl::DslValue::Object(Vec::new())
+        dsl::DslValue::Object(self.iter().map(|(key, value)| (key.clone(), value.to_value())).collect())
     }
 }
 
-impl<V> dsl::FromValue for RasterOwnedMap<V> {
+impl<V: dsl::FromValue> dsl::FromValue for RasterOwnedMap<V> {
     fn from_value(value: dsl::DslValue) -> Result<Self, dsl::ValueError> {
         let dsl::DslValue::Object(entries) = value else { return Err(dsl::ValueError::new("expected an object for a Raster owned map")) };
-        if !entries.is_empty() {
-            return Err(dsl::ValueError::new("Raster maps require the retained page decoder"));
+        let mut out = Self::new();
+        for (key, item) in entries {
+            let admitted = V::from_value(item).and_then(|item| out.insert(key, item).map_err(|rejected| dsl::ValueError::new(rejected.reason)));
+            if let Err(error) = admitted {
+                out.retire();
+                return Err(error);
+            }
         }
-        Ok(Self::new())
+        Ok(out)
     }
 }
 //#endregion 🗂️OwnedMap
@@ -524,6 +567,26 @@ pub enum RasterLayerNode {
         #[value(default)]
         params: RasterOwnedMap<dsl::DslValue>,
     },
+}
+
+/// 🧽️ Closes one layer subtree's owned roots. An `Adjustment` layer carries a
+/// `RasterOwnedMap<dsl::DslValue>` of parameters whose `Drop` is fail-closed, and a `Group` hides
+/// arbitrarily many of them below it, so every seam that throws a layer away — a displaced replay
+/// projection, a cold diff, an inverted `create-layer` — closes it through here instead of dropping
+/// it and aborting the guest.
+pub fn retire_raster_layer(layer: RasterLayerNode) {
+    match layer {
+        RasterLayerNode::Adjustment { mut params, .. } => params.retire(),
+        RasterLayerNode::Group { children, .. } => retire_raster_layers(children),
+        RasterLayerNode::Pixel { .. } => {}
+    }
+}
+
+/// 🧼️ [`retire_raster_layer`] over a whole forest, in document order.
+pub fn retire_raster_layers(layers: Vec<RasterLayerNode>) {
+    for layer in layers {
+        retire_raster_layer(layer);
+    }
 }
 
 mod asset_data_base64 {

@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "owner": "ui.search.input",
+  "value": "Set Theme",
+  "sequence": ["focus", "advance-to-projection", "blur", "refocus", "drain"],
+  "expected": {
+    "owner": "ui.search.input",
+    "value": "Set Theme",
+    "fault": null,
+    "duplicateProjectionFault": "Protocol"
+  }
+}

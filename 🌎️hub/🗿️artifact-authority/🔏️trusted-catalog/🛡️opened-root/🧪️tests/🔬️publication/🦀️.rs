@@ -17,8 +17,7 @@ impl AuthorityOperationControl for Control {
 
 fn fixture_root() -> std::path::PathBuf {
     static NEXT: AtomicU64 = AtomicU64::new(0);
-    let artifact = std::env::var_os("SEMIO_TEST_ARTIFACT_DIR").expect("ticket-owned artifact root");
-    let root = std::path::PathBuf::from(artifact).join(format!("publication-owner-{}-{}", std::process::id(), NEXT.fetch_add(1, Ordering::SeqCst)));
+    let root = crate::test_artifact_root::test_artifact_root().join(format!("publication-owner-{}-{}", std::process::id(), NEXT.fetch_add(1, Ordering::SeqCst)));
     std::fs::create_dir_all(root.join("trusted-catalog")).unwrap();
     root
 }

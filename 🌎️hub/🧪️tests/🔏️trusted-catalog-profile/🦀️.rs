@@ -164,5 +164,5 @@ pub async fn verified_gis_map_integration_profile(root: &Path) -> Result<Verifie
 pub fn unique_profile_root(label: &str) -> PathBuf {
     static SEQUENCE: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
     let sequence = SEQUENCE.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
-    std::env::var_os("SEMIO_TEST_ARTIFACT_DIR").map_or_else(std::env::temp_dir, PathBuf::from).join(format!("semio-hub-gis-map-{label}-{}-{sequence}", std::process::id()))
+    crate::test_artifact_root::test_artifact_root().join(format!("semio-hub-gis-map-{label}-{}-{sequence}", std::process::id()))
 }

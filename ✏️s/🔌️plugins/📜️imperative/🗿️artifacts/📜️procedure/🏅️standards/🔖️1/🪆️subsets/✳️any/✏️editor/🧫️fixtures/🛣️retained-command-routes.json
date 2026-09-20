@@ -82,6 +82,14 @@
         "config"
       ],
       "reason": "one bounded step: the contributions json lands as a single config mutation"
+    },
+    {
+      "id": "setActiveExample",
+      "disposition": "Migrated",
+      "lanes": [
+        "host-only"
+      ],
+      "reason": "one bounded step: the example asset is decoded once and handed to the host as a whole-document Effect::LoadDocument, which publishes through neither store lane"
     }
   ]
 }

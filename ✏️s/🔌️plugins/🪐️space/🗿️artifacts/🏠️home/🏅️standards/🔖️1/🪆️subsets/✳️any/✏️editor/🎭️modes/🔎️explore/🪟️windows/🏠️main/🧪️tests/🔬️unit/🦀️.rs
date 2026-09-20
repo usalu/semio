@@ -28,6 +28,20 @@ fn observe<R>(node: semio_framework_plugin::BuiltNode, inspect: impl FnOnce(&sem
     }
 }
 
+/// 🔑️ The first node in the tree that carries two children under one key, reported as
+/// `(parent key, sibling keys)` — the same pair the reactor's `ComponentTreeProducer` refuses with
+/// `DuplicateSiblingKey`, but named at the authoring boundary where it can be read.
+fn first_duplicate_sibling(node: &semio_framework_plugin::BuiltNode) -> Option<(String, Vec<String>)> {
+    let keys: Vec<String> = node.children.iter().map(|child| child.key.as_str().to_owned()).collect();
+    let mut unique = keys.clone();
+    unique.sort();
+    unique.dedup();
+    if unique.len() != keys.len() {
+        return Some((node.key.as_str().to_owned(), keys));
+    }
+    node.children.iter().find_map(first_duplicate_sibling)
+}
+
 fn row<'a>(root: &'a semio_framework_plugin::BuiltNode, key: &str) -> &'a semio_framework_plugin::BuiltNode {
     root.children.iter().find(|node| node.key.as_str() == key).expect("Home row key present")
 }
@@ -170,6 +184,28 @@ async fn empty_catalog_still_renders_the_create_space_button() {
     observe(render_rows_wrapped_for_test(&[]).await.expect("empty Home rows with create action"), |root| {
         assert!(root.children.iter().any(|child| matches!(&child.component, semio_framework_ui_contract::Component::Button(_))), "the create button must survive the empty-table branch too");
     });
+}
+
+/// 🪟️ The window body the shell actually publishes must SURVIVE the producer, not merely build.
+/// Every other law here inspects the built node or projects the row subtree; none projected the
+/// wrapped body of a SIGNED-OUT human, which is the ordinary first paint of the whole product — and
+/// that tree was refused by the UI document with `DuplicateSiblingKey`, so `s-home-main` was never
+/// published and the `s` host showed a fault box instead of a landing page (ticket 26/09/18, S3,
+/// measured live at `http://127.0.0.1:6071/`). Projecting is the assertion: it runs the same
+/// `ComponentTreeProducer` the reactor runs.
+#[semio_framework_async_macros::async_test]
+async fn the_signed_out_window_body_survives_the_component_tree_producer() {
+    let duplicate = observe(render_rows_wrapped_for_test(&[]).await.expect("empty Home body"), |root| first_duplicate_sibling(root));
+    assert_eq!(duplicate, None, "no node in the signed-out body may carry two children with one key");
+    let json = project(render_rows_wrapped_for_test(&[]).await.expect("empty Home body"));
+    assert!(json.contains("No studios yet"), "the signed-out body publishes the empty-state message: {json}");
+    assert!(json.contains("s-home-create-space"), "the signed-out body publishes the create button: {json}");
+}
+
+#[semio_framework_async_macros::async_test]
+async fn the_signed_in_window_body_survives_the_component_tree_producer() {
+    let json = project(render_rows_wrapped_for_test(&[one_hub_row(), one_local_row()]).await.expect("populated Home body"));
+    assert!(json.contains("Fabrication") && json.contains("Fixture Studio"), "the populated body publishes both rows: {json}");
 }
 
 /// 🧪️ `render`'s own composition, isolated from `crate::list_all_space_catalog_entries()`'s

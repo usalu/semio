@@ -47,31 +47,6 @@ fn artifact_chunk_cas_manifest_boundaries_are_canonical_and_space_scoped() {
 }
 
 #[test]
-fn artifact_chunk_cas_neutral_fixture_matches_repository_sha256() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧫️fixtures/🧱️artifact-chunk-cas/🔣️.json")).expect("fixture JSON");
-    let space_id = fixture["spaceId"].as_str().expect("space id");
-    let assert_vector = |vector: &serde_json::Value| {
-        let length = usize::try_from(vector["length"].as_u64().expect("length")).expect("bounded length");
-        let plan = prepare_artifact_cas_manifest_v1(space_id, &bytes(length)).expect("plan vector");
-        assert_eq!(hex_lower(&plan.manifest.raw_sha256.0), vector["rawSha256"].as_str().expect("raw hash"));
-        assert_eq!(plan.manifest.chunks.len() as u64, vector["chunkCount"].as_u64().expect("chunk count"));
-        assert_eq!(plan.manifest_bytes.len() as u64, vector["manifestBytes"].as_u64().expect("manifest bytes"));
-        assert_eq!(hex_lower(&plan.manifest_id.0), vector["manifestId"].as_str().expect("manifest id"));
-        assert_eq!(plan.manifest.chunks.first().map(|chunk| hex_lower(&chunk.chunk_id.0)), vector["firstChunkId"].as_str().map(str::to_string));
-        assert_eq!(plan.manifest.chunks.last().map(|chunk| hex_lower(&chunk.chunk_id.0)), vector["lastChunkId"].as_str().map(str::to_string));
-    };
-    for vector in fixture["vectors"].as_array().expect("vectors") {
-        assert_vector(vector);
-    }
-    assert_vector(&fixture["largePair"]["pack"]);
-    let ledger = &fixture["retentionLedger"];
-    assert_eq!(ledger["reservationMaximumTtlMs"].as_u64(), Some(crate::directory::ARTIFACT_CAS_RESERVATION_MAX_TTL_MS));
-    assert_eq!(ledger["reservationGraceMs"].as_u64(), Some(ARTIFACT_CAS_RESERVATION_GRACE_MS));
-    assert_eq!(ledger["sweepPageMaximum"].as_u64(), Some(crate::directory::ARTIFACT_CAS_SWEEP_PAGE_MAX as u64));
-    assert_eq!(ledger["sweepObjectMaximum"].as_u64(), Some(crate::directory::ARTIFACT_CAS_SWEEP_OBJECT_MAX as u64));
-}
-
-#[test]
 fn artifact_chunk_cas_ownership_codec_is_canonical_scoped_and_locator_exact() {
     let pair = ArtifactPair { pack: bytes(ARTIFACT_CAS_CHUNK_BYTES + 1), spr: bytes(1) };
     let mut checkpoint = ArtifactCheckpoint {
@@ -132,40 +107,6 @@ async fn fenced_delete_law<S: ArtifactChunkCasStorage>(storage: Arc<S>, space_id
     assert_eq!(storage.delete_if_unreferenced(&key, &fence, &context).await.expect("fenced delete"), ArtifactCasDeleteOutcome::Deleted);
     assert_eq!(storage.delete_if_unreferenced(&key, &fence, &context).await.expect("idempotent fenced delete"), ArtifactCasDeleteOutcome::Missing);
     assert!(adapter.read(space_id, &staged, &context).await.is_err());
-}
-
-#[tokio::test]
-async fn artifact_chunk_cas_memory_roundtrip_crosses_legacy_payload_ceiling() {
-    let storage = Arc::new(MemoryArtifactChunkCasStorage::default());
-    storage_roundtrip_law(storage.clone()).await;
-    fenced_delete_law(storage, "memory-delete-space").await;
-}
-
-#[tokio::test]
-async fn artifact_chunk_cas_filesystem_roundtrip_restart_and_collision_checks() {
-    let root = std::env::temp_dir().join(format!("semio-artifact-cas-{}", std::process::id()));
-    if root.exists() {
-        std::fs::remove_dir_all(&root).expect("clean stale fixture")
-    }
-    let storage = Arc::new(FsArtifactChunkCasStorage::open(&root).await.expect("open filesystem CAS"));
-    storage_roundtrip_law(storage).await;
-    let reopened = Arc::new(FsArtifactChunkCasStorage::open(&root).await.expect("reopen filesystem CAS"));
-    let raw = bytes(496 * 1024 + 1);
-    let expected = ArtifactBlobIntegrity { sha256: ArtifactHash(Sha256::digest(&raw)), byte_length: raw.len() as u64 };
-    let control = control();
-    let context = OperationContext::new(10, AuthorityLimits::maximum(), &control);
-    let plan = prepare_artifact_cas_manifest_v1("space-a", &raw).expect("restart plan");
-    let staged = StagedArtifactBlob { storage_key: artifact_cas_manifest_locator_v1(plan.manifest_id), integrity: expected };
-    let adapter = ArtifactChunkBlobStore::new(reopened.clone());
-    assert_eq!(adapter.read("space-a", &staged, &context).await.expect("read after restart"), raw);
-    let first = &plan.manifest.chunks[0];
-    let first_key = ArtifactCasObjectKey { space_id: "space-a".into(), kind: ArtifactCasObjectKind::Chunk, digest: first.chunk_id };
-    let mut corrupted = bytes(first.byte_length as usize);
-    corrupted[0] ^= 1;
-    tokio::fs::write(reopened.object_path(&first_key).expect("chunk path"), corrupted).await.expect("inject one-bit corruption");
-    assert!(adapter.read("space-a", &staged, &context).await.is_err());
-    fenced_delete_law(reopened, "filesystem-delete-space").await;
-    std::fs::remove_dir_all(root).expect("remove fixture");
 }
 
 #[tokio::test]
@@ -252,14 +193,6 @@ async fn artifact_chunk_cas_filesystem_rejects_symlinked_space_lock_and_metadata
     std::fs::remove_dir_all(outside).expect("remove symlink outside");
 }
 
-#[cfg(feature = "sqlite")]
-#[tokio::test]
-async fn artifact_chunk_cas_sqlite_roundtrip_crosses_legacy_payload_ceiling() {
-    let storage = Arc::new(SqliteArtifactChunkCasStorage::memory().await.expect("SQLite CAS"));
-    storage_roundtrip_law(storage.clone()).await;
-    fenced_delete_law(storage, "sqlite-delete-space").await;
-}
-
 #[tokio::test]
 async fn artifact_chunk_cas_cancellation_and_max_plus_one_fail_before_storage() {
     let storage = MemoryArtifactChunkCasStorage::default();
@@ -270,4 +203,79 @@ async fn artifact_chunk_cas_cancellation_and_max_plus_one_fail_before_storage() 
     assert!(matches!(storage.put_if_absent(&key, &[1], &context).await, Err(AuthorityError::Cancelled)));
     assert!(prepare_artifact_cas_manifest_v1("space", &vec![0; AUTHORITY_MAX_PAIR_BYTES as usize + 1]).is_err());
     assert!(artifact_cas_chunk_id_v1("space", &vec![0; ARTIFACT_CAS_CHUNK_BYTES + 1]).is_err());
+}
+
+mod quick {
+    use super::*;
+
+    #[tokio::test]
+    async fn artifact_chunk_cas_filesystem_roundtrip_restart_and_collision_checks() {
+        let root = std::env::temp_dir().join(format!("semio-artifact-cas-{}", std::process::id()));
+        if root.exists() {
+            std::fs::remove_dir_all(&root).expect("clean stale fixture")
+        }
+        let storage = Arc::new(FsArtifactChunkCasStorage::open(&root).await.expect("open filesystem CAS"));
+        storage_roundtrip_law(storage).await;
+        let reopened = Arc::new(FsArtifactChunkCasStorage::open(&root).await.expect("reopen filesystem CAS"));
+        let raw = bytes(496 * 1024 + 1);
+        let expected = ArtifactBlobIntegrity { sha256: ArtifactHash(Sha256::digest(&raw)), byte_length: raw.len() as u64 };
+        let control = control();
+        let context = OperationContext::new(10, AuthorityLimits::maximum(), &control);
+        let plan = prepare_artifact_cas_manifest_v1("space-a", &raw).expect("restart plan");
+        let staged = StagedArtifactBlob { storage_key: artifact_cas_manifest_locator_v1(plan.manifest_id), integrity: expected };
+        let adapter = ArtifactChunkBlobStore::new(reopened.clone());
+        assert_eq!(adapter.read("space-a", &staged, &context).await.expect("read after restart"), raw);
+        let first = &plan.manifest.chunks[0];
+        let first_key = ArtifactCasObjectKey { space_id: "space-a".into(), kind: ArtifactCasObjectKind::Chunk, digest: first.chunk_id };
+        let mut corrupted = bytes(first.byte_length as usize);
+        corrupted[0] ^= 1;
+        tokio::fs::write(reopened.object_path(&first_key).expect("chunk path"), corrupted).await.expect("inject one-bit corruption");
+        assert!(adapter.read("space-a", &staged, &context).await.is_err());
+        fenced_delete_law(reopened, "filesystem-delete-space").await;
+        std::fs::remove_dir_all(root).expect("remove fixture");
+    }
+
+    #[tokio::test]
+    async fn artifact_chunk_cas_memory_roundtrip_crosses_legacy_payload_ceiling() {
+        let storage = Arc::new(MemoryArtifactChunkCasStorage::default());
+        storage_roundtrip_law(storage.clone()).await;
+        fenced_delete_law(storage, "memory-delete-space").await;
+    }
+
+    #[cfg(feature = "sqlite")]
+    #[tokio::test]
+    async fn artifact_chunk_cas_sqlite_roundtrip_crosses_legacy_payload_ceiling() {
+        let storage = Arc::new(SqliteArtifactChunkCasStorage::memory().await.expect("SQLite CAS"));
+        storage_roundtrip_law(storage.clone()).await;
+        fenced_delete_law(storage, "sqlite-delete-space").await;
+    }
+}
+
+mod long {
+    use super::*;
+
+    #[test]
+    fn artifact_chunk_cas_neutral_fixture_matches_repository_sha256() {
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧫️fixtures/🧱️artifact-chunk-cas/🔣️.json")).expect("fixture JSON");
+        let space_id = fixture["spaceId"].as_str().expect("space id");
+        let assert_vector = |vector: &serde_json::Value| {
+            let length = usize::try_from(vector["length"].as_u64().expect("length")).expect("bounded length");
+            let plan = prepare_artifact_cas_manifest_v1(space_id, &bytes(length)).expect("plan vector");
+            assert_eq!(hex_lower(&plan.manifest.raw_sha256.0), vector["rawSha256"].as_str().expect("raw hash"));
+            assert_eq!(plan.manifest.chunks.len() as u64, vector["chunkCount"].as_u64().expect("chunk count"));
+            assert_eq!(plan.manifest_bytes.len() as u64, vector["manifestBytes"].as_u64().expect("manifest bytes"));
+            assert_eq!(hex_lower(&plan.manifest_id.0), vector["manifestId"].as_str().expect("manifest id"));
+            assert_eq!(plan.manifest.chunks.first().map(|chunk| hex_lower(&chunk.chunk_id.0)), vector["firstChunkId"].as_str().map(str::to_string));
+            assert_eq!(plan.manifest.chunks.last().map(|chunk| hex_lower(&chunk.chunk_id.0)), vector["lastChunkId"].as_str().map(str::to_string));
+        };
+        for vector in fixture["vectors"].as_array().expect("vectors") {
+            assert_vector(vector);
+        }
+        assert_vector(&fixture["largePair"]["pack"]);
+        let ledger = &fixture["retentionLedger"];
+        assert_eq!(ledger["reservationMaximumTtlMs"].as_u64(), Some(crate::directory::ARTIFACT_CAS_RESERVATION_MAX_TTL_MS));
+        assert_eq!(ledger["reservationGraceMs"].as_u64(), Some(ARTIFACT_CAS_RESERVATION_GRACE_MS));
+        assert_eq!(ledger["sweepPageMaximum"].as_u64(), Some(crate::directory::ARTIFACT_CAS_SWEEP_PAGE_MAX as u64));
+        assert_eq!(ledger["sweepObjectMaximum"].as_u64(), Some(crate::directory::ARTIFACT_CAS_SWEEP_OBJECT_MAX as u64));
+    }
 }

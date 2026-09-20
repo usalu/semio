@@ -16,7 +16,7 @@
 //! `dpr` is what the renderer divides by. Ticket 26/09/17/WGPU-RENDERER-REACT-PARITY packet W1g.
 
 use serde::Deserialize;
-use ui_render::{DispatchEvent, EventModifiers, ImeEvent, PointerButton, PointerId, PointerInfo, PointerKind};
+use ui_render::{AccessibilityEvent, AccessibilityTarget, DispatchEvent, EventModifiers, ImeEvent, PointerButton, PointerId, PointerInfo, PointerKind};
 
 #[derive(Deserialize)]
 pub(crate) struct BrowserBatch {
@@ -27,6 +27,13 @@ pub(crate) struct BrowserBatch {
 #[derive(Deserialize)]
 #[serde(tag = "kind", rename_all = "kebab-case", rename_all_fields = "camelCase")]
 pub(crate) enum BrowserWireEvent {
+    PointerCancel {
+        pointer_id: u64,
+        pointer_kind: BrowserPointerKind,
+        pressure: Option<f32>,
+        tilt_x: Option<f32>,
+        tilt_y: Option<f32>,
+    },
     PointerMove {
         pointer_id: u64,
         pointer_kind: BrowserPointerKind,
@@ -35,6 +42,10 @@ pub(crate) enum BrowserWireEvent {
         pressure: Option<f32>,
         tilt_x: Option<f32>,
         tilt_y: Option<f32>,
+        shift: bool,
+        ctrl: bool,
+        alt: bool,
+        meta: bool,
     },
     PointerDown {
         pointer_id: u64,
@@ -45,6 +56,10 @@ pub(crate) enum BrowserWireEvent {
         tilt_x: Option<f32>,
         tilt_y: Option<f32>,
         button: BrowserPointerButton,
+        shift: bool,
+        ctrl: bool,
+        alt: bool,
+        meta: bool,
     },
     PointerUp {
         pointer_id: u64,
@@ -55,12 +70,20 @@ pub(crate) enum BrowserWireEvent {
         tilt_x: Option<f32>,
         tilt_y: Option<f32>,
         button: BrowserPointerButton,
+        shift: bool,
+        ctrl: bool,
+        alt: bool,
+        meta: bool,
     },
     Wheel {
         x: f32,
         y: f32,
         delta_x: f32,
         delta_y: f32,
+        shift: bool,
+        ctrl: bool,
+        alt: bool,
+        meta: bool,
     },
     Resize {
         width: u32,
@@ -83,6 +106,38 @@ pub(crate) enum BrowserWireEvent {
     },
     ImeStart,
     ImeCancel,
+    HubDocumentStatus {
+        document_key: String,
+        remote: crate::shell::ShellHubRemoteV1,
+    },
+    HubDocumentClose {
+        document_key: String,
+    },
+    AccessibilityFocus {
+        window_id: String,
+        window_generation: u64,
+        node_id: u64,
+        node_key: String,
+    },
+    AccessibilityBlur {
+        window_id: String,
+        window_generation: u64,
+        node_id: u64,
+        node_key: String,
+    },
+    AccessibilityActivate {
+        window_id: String,
+        window_generation: u64,
+        node_id: u64,
+        node_key: String,
+    },
+    AccessibilityValue {
+        window_id: String,
+        window_generation: u64,
+        node_id: u64,
+        node_key: String,
+        value: String,
+    },
     TextChunk {
         stream_id: u64,
         target: TextTarget,
@@ -99,6 +154,7 @@ pub(crate) enum BrowserWireEvent {
 pub(crate) enum TextTarget {
     Text,
     Paste,
+    PasteImageDataUrl,
     ImeUpdate,
     ImeCommit,
 }
@@ -154,21 +210,38 @@ impl From<BrowserPointerButton> for PointerButton {
 /// with the host that owns that state.
 pub(crate) fn stateless_dispatch(event: &BrowserWireEvent) -> Option<DispatchEvent> {
     Some(match event {
-        BrowserWireEvent::PointerMove { pointer_id, pointer_kind, x, y, pressure, tilt_x, tilt_y } => {
-            DispatchEvent::PointerMove { pointer: pointer(*pointer_id, *pointer_kind, *pressure, *tilt_x, *tilt_y), x: *x, y: *y }
+        BrowserWireEvent::PointerCancel { pointer_id, pointer_kind, pressure, tilt_x, tilt_y } => DispatchEvent::PointerCancel { pointer: pointer(*pointer_id, *pointer_kind, *pressure, *tilt_x, *tilt_y) },
+        BrowserWireEvent::PointerMove { pointer_id, pointer_kind, x, y, pressure, tilt_x, tilt_y, shift, ctrl, alt, meta } => {
+            DispatchEvent::PointerMove { pointer: pointer(*pointer_id, *pointer_kind, *pressure, *tilt_x, *tilt_y), x: *x, y: *y, modifiers: EventModifiers { shift: *shift, ctrl: *ctrl, alt: *alt, meta: *meta } }
         }
-        BrowserWireEvent::PointerDown { pointer_id, pointer_kind, x, y, pressure, tilt_x, tilt_y, button } => {
-            DispatchEvent::PointerDown { pointer: pointer(*pointer_id, *pointer_kind, *pressure, *tilt_x, *tilt_y), x: *x, y: *y, button: (*button).into() }
+        BrowserWireEvent::PointerDown { pointer_id, pointer_kind, x, y, pressure, tilt_x, tilt_y, button, shift, ctrl, alt, meta } => {
+            DispatchEvent::PointerDown { pointer: pointer(*pointer_id, *pointer_kind, *pressure, *tilt_x, *tilt_y), x: *x, y: *y, button: (*button).into(), modifiers: EventModifiers { shift: *shift, ctrl: *ctrl, alt: *alt, meta: *meta } }
         }
-        BrowserWireEvent::PointerUp { pointer_id, pointer_kind, x, y, pressure, tilt_x, tilt_y, button } => {
-            DispatchEvent::PointerUp { pointer: pointer(*pointer_id, *pointer_kind, *pressure, *tilt_x, *tilt_y), x: *x, y: *y, button: (*button).into() }
+        BrowserWireEvent::PointerUp { pointer_id, pointer_kind, x, y, pressure, tilt_x, tilt_y, button, shift, ctrl, alt, meta } => {
+            DispatchEvent::PointerUp { pointer: pointer(*pointer_id, *pointer_kind, *pressure, *tilt_x, *tilt_y), x: *x, y: *y, button: (*button).into(), modifiers: EventModifiers { shift: *shift, ctrl: *ctrl, alt: *alt, meta: *meta } }
         }
-        BrowserWireEvent::Wheel { x, y, delta_x, delta_y } => DispatchEvent::Scroll { x: *x, y: *y, delta_x: *delta_x, delta_y: *delta_y },
+        BrowserWireEvent::Wheel { x, y, delta_x, delta_y, shift, ctrl, alt, meta } => DispatchEvent::Scroll { x: *x, y: *y, delta_x: *delta_x, delta_y: *delta_y, modifiers: EventModifiers { shift: *shift, ctrl: *ctrl, alt: *alt, meta: *meta } },
         BrowserWireEvent::KeyDown { key, shift, ctrl, alt, meta } => DispatchEvent::KeyDown { key: key.clone(), modifiers: EventModifiers { shift: *shift, ctrl: *ctrl, alt: *alt, meta: *meta } },
         BrowserWireEvent::KeyUp { key, shift, ctrl, alt, meta } => DispatchEvent::KeyUp { key: key.clone(), modifiers: EventModifiers { shift: *shift, ctrl: *ctrl, alt: *alt, meta: *meta } },
         BrowserWireEvent::ImeStart => DispatchEvent::Ime(ImeEvent::Start),
         BrowserWireEvent::ImeCancel => DispatchEvent::Ime(ImeEvent::Cancel),
-        BrowserWireEvent::Resize { .. } | BrowserWireEvent::TextChunk { .. } => return None,
+        BrowserWireEvent::AccessibilityFocus { window_id, window_generation, node_id, node_key } => DispatchEvent::Accessibility {
+            target: AccessibilityTarget { window_id: window_id.clone(), window_generation: *window_generation, node_id: *node_id, node_key: node_key.clone() },
+            event: AccessibilityEvent::Focus,
+        },
+        BrowserWireEvent::AccessibilityBlur { window_id, window_generation, node_id, node_key } => DispatchEvent::Accessibility {
+            target: AccessibilityTarget { window_id: window_id.clone(), window_generation: *window_generation, node_id: *node_id, node_key: node_key.clone() },
+            event: AccessibilityEvent::Blur,
+        },
+        BrowserWireEvent::AccessibilityActivate { window_id, window_generation, node_id, node_key } => DispatchEvent::Accessibility {
+            target: AccessibilityTarget { window_id: window_id.clone(), window_generation: *window_generation, node_id: *node_id, node_key: node_key.clone() },
+            event: AccessibilityEvent::Activate,
+        },
+        BrowserWireEvent::AccessibilityValue { window_id, window_generation, node_id, node_key, value } => DispatchEvent::Accessibility {
+            target: AccessibilityTarget { window_id: window_id.clone(), window_generation: *window_generation, node_id: *node_id, node_key: node_key.clone() },
+            event: AccessibilityEvent::Value(value.clone()),
+        },
+        BrowserWireEvent::Resize { .. } | BrowserWireEvent::HubDocumentStatus { .. } | BrowserWireEvent::HubDocumentClose { .. } | BrowserWireEvent::TextChunk { .. } => return None,
     })
 }
 

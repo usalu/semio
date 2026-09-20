@@ -6436,7 +6436,15 @@ function rustStringValue(token: RustToken | undefined): string | null {
   }
 }
 
-/** 🧱️ Tokenizes Rust while discarding nested comments and keeping strings/chars/raw strings atomic. */
+/** 🧱️ Tokenizes Rust while discarding nested comments and keeping strings/chars/raw strings atomic.
+ *
+ * A character literal is read through its escape sequence (`\n`, `\\`, `\'`, `\"`, `\xNN`, `\u{…}`)
+ * rather than assumed to be one character wide, and a `'` that does not close that way stays a
+ * lifetime/label tick. Reading only `'x'` made `'\"'` lex as two punctuation marks followed by an
+ * OPEN string, so every token from there to the next `"` was swallowed and the rest of the file's
+ * module graph vanished — `🗄️stdio`'s `📰️xml` snapshot leaf
+ * (`…/🧬️schema/📸️snapshot/🦀️.rs:294`) is exactly that shape, and its `#[cfg(test)] mod tests`
+ * mount was therefore invisible to `validateRustTaxonomyMounts` although `rustc` compiles it. */
 export function rustTokens(source: string): RustToken[] {
   const tokens: RustToken[] = [];
   const punctuation = ["::", "=>", "->", "..=", "...", "..", "&&", "||", "<=", ">=", "==", "!=", "<<=", ">>=", "<<", ">>"];
@@ -6492,10 +6500,22 @@ export function rustTokens(source: string): RustToken[] {
       tokens.push({ kind: "string", text: source.slice(start, index), start, end: index });
       continue;
     }
-    if (character === "'" && source[index + 2] === "'") {
-      index += 3;
-      tokens.push({ kind: "string", text: source.slice(start, index), start, end: index });
-      continue;
+    if (character === "'") {
+      let cursor = index + 1;
+      if (source[cursor] === "\\") {
+        const selector = source[cursor + 1];
+        cursor += 2;
+        if (selector === "x") cursor += 2;
+        else if (selector === "u" && source[cursor] === "{") {
+          const close = source.indexOf("}", cursor);
+          cursor = close < 0 ? source.length : close + 1;
+        }
+      } else if (cursor < source.length) cursor += String.fromCodePoint(source.codePointAt(cursor)!).length;
+      if (source[cursor] === "'") {
+        index = cursor + 1;
+        tokens.push({ kind: "string", text: source.slice(start, index), start, end: index });
+        continue;
+      }
     }
     if (source.startsWith("r#", index) && source[index + 2] && rustIdentifierPart(source[index + 2]!) && !/[0-9]/u.test(source[index + 2]!)) {
       index += 2;

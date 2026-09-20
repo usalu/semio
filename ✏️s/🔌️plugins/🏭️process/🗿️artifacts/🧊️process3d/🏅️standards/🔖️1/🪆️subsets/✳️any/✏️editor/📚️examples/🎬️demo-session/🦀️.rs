@@ -11,3 +11,9 @@ pub const PRIMARY_TEXT: &str = include_str!("🖼️assets/🎮️.cmd.semio");
 pub fn source() -> ExampleSource {
     ExampleSource::new(ID, label(), PRIMARY_TEXT, ICON)
 }
+
+//#region 🪢️TaxonomyMounts
+#[cfg(test)]
+#[path = "🧪️tests/🧩️example/🦀️.rs"]
+mod example;
+//#endregion 🪢️TaxonomyMounts

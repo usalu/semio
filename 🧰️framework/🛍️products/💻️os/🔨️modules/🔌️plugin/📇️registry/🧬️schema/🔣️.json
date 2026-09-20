@@ -142,8 +142,8 @@
         "version": { "type": "integer", "minimum": 1, "maximum": 65536 },
         "cases": {
           "type": "array",
-          "minItems": 12,
-          "maxItems": 12,
+          "minItems": 13,
+          "maxItems": 13,
           "items": {
             "type": "object",
             "additionalProperties": false,

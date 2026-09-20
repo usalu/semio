@@ -269,3 +269,10 @@ pub fn create_din4108_app() -> semio_framework_plugin::AppDefinition {
 pub(crate) mod unit_tests;
 //#endregion ð§ªï¸UnitTests
 
+//#region 🪢️TaxonomyMounts
+#[path = "📚️examples/🎬️demo-session/🦀️.rs"]
+pub mod demo_session;
+#[cfg(test)]
+#[path = "📚️examples/🎬️demo-session/🧪️tests/🧩️example/🦀️.rs"]
+mod example;
+//#endregion 🪢️TaxonomyMounts

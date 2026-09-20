@@ -44,6 +44,11 @@ futures = "0.3"
 semio-framework-async = { workspace = true }
 semio-framework-job = { workspace = true }
 semio-framework-hash = { path = "../../../🧰️framework/🔨️modules/🔏️hash/📦️packages/🦀️rust", package = "semio-framework-hash" }
+# 📝️ The framework's own zero-dependency observability primitives (`⏱️trace/📝️record/🦀️.rs`):
+# structured span records with request id / principal / space / artifact / outcome / duration, a
+# level, and an injectable sink. `AGENTS.md` forbids a runtime dependency on `tracing`, and a
+# second, hub-local logger would be exactly the drift the shared module exists to prevent.
+semio-framework-trace = { workspace = true }
 semio-s-plugin-stdio = { path = "../../../✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust", default-features = false, optional = true }
 semio-s-artifact-stdio-json = { workspace = true, optional = true }
 semio-s-artifact-stdio-semio = { workspace = true, optional = true }

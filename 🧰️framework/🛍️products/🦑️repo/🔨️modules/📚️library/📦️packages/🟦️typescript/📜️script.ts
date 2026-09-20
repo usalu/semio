@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 /** 🧭️ `@semio-tech/repo-lib` router: `bun ./📜️script.ts <typecheck|test [level]|workspaces <--write|--check>>`. */
 import { join } from "node:path";
-import { BundleScript, ScriptRouter, runBundleScriptMain, runBunx, resolveTestLevel, runTestBudgeted } from "./🟦️.ts";
+import { BundleScript, ScriptRouter, TEST_LEVEL_BUDGET_MS, runBundleScriptMain, runBunx, resolveTestLevel, runTestBudgeted } from "./🟦️.ts";
 import { repoTestArtifactEnvironment } from "../../🏃️process/🌿️environment/🧪️test-output/🟦️.ts";
 import { runTransactionV2 } from "../../🔄️transactions/🧪️verification/📋️orchestration/🟦️.ts";
 import { GoTestScript } from "../../🧪️execution/🐹️go/🟦️.ts";
@@ -157,7 +157,7 @@ class TestScript extends BundleScript {
     if (segments[0] === "vitest-configuration-ownership") {
       if (segments.length !== 1) throw new Error("Expected test vitest-configuration-ownership");
       const source = join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🎚️vitest-configuration-ownership/🟦️.ts");
-      await runTestBudgeted(process.execPath, ["test", source], { cwd: this.repoRoot, budgetMs: 120_000 });
+      await runTestBudgeted(process.execPath, ["test", source], { cwd: this.repoRoot, budgetMs: TEST_LEVEL_BUDGET_MS.long });
       return;
     }
     if (segments[0] === "tool-configuration-ownership") {

@@ -1,5 +1,4 @@
 {
-  "ChangeMassT": {
-    "newMassT": 812.5
-  }
+  "mutation": "changeMassT",
+  "newMassT": 812.5
 }

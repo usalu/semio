@@ -314,6 +314,108 @@ async fn the_hub_instance_builds_a_server_over_its_durable_stores() {
     assert!(server.state().blobs.lock().await.is_durable());
     server.state().sessions.lock().await.create(conformance::session_record("s1", Principal::User { id: "alice".into() })).await.expect("created");
     assert_eq!(server.state().sessions.lock().await.get(&SessionId("s1".into())).await.map(|record| record.principal), Some(Principal::User { id: "alice".into() }));
-    assert!(dir.join("sessions").read_dir().expect("readable").count() == 1);
+    let session_files = store_entries(&dir.join("sessions"));
+    assert_eq!(session_files.len(), 2, "one session record next to the format stamp: {session_files:?}");
+    assert!(session_files.contains(&STORE_FORMAT_FILE.to_string()), "the session store stamps its format: {session_files:?}");
 }
 //#endregion 🔖️Server
+
+//#region 🔖️Format
+/// 📁️ Every entry name directly under `dir`, sorted.
+fn store_entries(dir: &Path) -> Vec<String> {
+    let mut names: Vec<String> = std::fs::read_dir(dir).expect("readable").map(|entry| entry.expect("entry").file_name().to_string_lossy().into_owned()).collect();
+    names.sort();
+    names
+}
+
+/// 📐️ The stamp on `dir`, as this build would read it back.
+fn read_stamp(dir: &Path) -> StoreFormatStamp {
+    serde_json::from_slice(&std::fs::read(dir.join(STORE_FORMAT_FILE)).expect("a stamped store")).expect("a readable stamp")
+}
+
+/// 📐️ Creation stamps all four durable roles, each with its own name, and reopening an unchanged
+/// data root is not a second creation.
+#[tokio::test]
+async fn every_durable_store_stamps_its_format_on_creation() {
+    let dir = scratch("format-creation");
+    let _stores = durable(&dir).await;
+    for (role, store) in [("authority", "authority"), ("projections", "projections"), ("blobs", "blobs"), ("sessions", "sessions")] {
+        let stamp = read_stamp(&dir.join(role));
+        assert_eq!(stamp, StoreFormatStamp { schema: STORE_FORMAT_SCHEMA.to_string(), store: store.to_string(), version: STORE_FORMAT_VERSION });
+    }
+    let _reopened = durable(&dir).await;
+    assert_eq!(read_stamp(&dir.join("authority")).version, STORE_FORMAT_VERSION, "a reopen keeps the stamp it found");
+    assert!(HubInstance::open(&StorageProfile::Ephemeral).await.is_ok(), "an ephemeral profile owns no directory to stamp");
+}
+
+/// 📐️ The whole point of the stamp: a data root written by a later build is refused, in a message
+/// that names both versions, instead of being folded by a reader that does not understand it.
+#[tokio::test]
+async fn a_store_written_by_a_newer_build_is_refused_with_both_versions_named() {
+    for role in ["authority", "projections", "blobs", "sessions"] {
+        let dir = scratch(&format!("format-newer-{role}"));
+        let _created = durable(&dir).await;
+        let path = dir.join(role).join(STORE_FORMAT_FILE);
+        std::fs::write(&path, serde_json::to_vec(&StoreFormatStamp { schema: STORE_FORMAT_SCHEMA.to_string(), store: role.to_string(), version: STORE_FORMAT_VERSION + 1 }).expect("encoded")).expect("written");
+        let Err(refusal) = HubInstance::open(&StorageProfile::Embedded { data_dir: dir.display().to_string() }).await else { panic!("a newer format is refused") };
+        let StorageError::Backend(message) = refusal else { panic!("a format refusal is a backend error: {refusal:?}") };
+        assert!(message.contains(&format!("format v{}", STORE_FORMAT_VERSION + 1)), "{message}");
+        assert!(message.contains(&format!("v{STORE_FORMAT_VERSION}")), "{message}");
+        assert!(message.contains(role), "{message}");
+    }
+}
+
+/// 📐️ An older format is refused for the opposite reason, and the message says why there is nothing
+/// to run: this product has no migration framework by design.
+#[tokio::test]
+async fn a_store_written_by_an_older_build_is_refused_because_nothing_migrates_it() {
+    let dir = scratch("format-older");
+    let _created = durable(&dir).await;
+    let path = dir.join("authority").join(STORE_FORMAT_FILE);
+    std::fs::write(&path, br#"{"schema":"semio/hub/store-format/v1","store":"authority","version":0}"#).expect("written");
+    let Err(refusal) = HubInstance::open(&StorageProfile::Embedded { data_dir: dir.display().to_string() }).await else { panic!("an older format is refused") };
+    let StorageError::Backend(message) = refusal else { panic!("a format refusal is a backend error: {refusal:?}") };
+    assert!(message.contains("no migration framework"), "{message}");
+}
+
+/// 📐️ A stamp that names another role or another schema is a mis-pointed data root, not a version
+/// question, and refuses on its own terms. An unreadable stamp refuses rather than being ignored.
+#[tokio::test]
+async fn a_mispointed_or_unreadable_stamp_refuses_the_open() {
+    let dir = scratch("format-mispointed");
+    let _created = durable(&dir).await;
+    let path = dir.join("blobs").join(STORE_FORMAT_FILE);
+
+    std::fs::write(&path, serde_json::to_vec(&StoreFormatStamp { schema: STORE_FORMAT_SCHEMA.to_string(), store: "authority".to_string(), version: STORE_FORMAT_VERSION }).expect("encoded")).expect("written");
+    let Err(wrong_role) = HubInstance::open(&StorageProfile::Embedded { data_dir: dir.display().to_string() }).await else { panic!("a mis-pointed store is refused") };
+    assert!(matches!(&wrong_role, StorageError::Backend(message) if message.contains("\"authority\"") && message.contains("\"blobs\"")), "{wrong_role:?}");
+
+    std::fs::write(&path, serde_json::to_vec(&StoreFormatStamp { schema: "semio/hub/store-format/v2".to_string(), store: "blobs".to_string(), version: STORE_FORMAT_VERSION }).expect("encoded")).expect("written");
+    let Err(wrong_schema) = HubInstance::open(&StorageProfile::Embedded { data_dir: dir.display().to_string() }).await else { panic!("a foreign stamp schema is refused") };
+    assert!(matches!(&wrong_schema, StorageError::Backend(message) if message.contains(STORE_FORMAT_SCHEMA)), "{wrong_schema:?}");
+
+    std::fs::write(&path, b"not json").expect("written");
+    let Err(unreadable) = HubInstance::open(&StorageProfile::Embedded { data_dir: dir.display().to_string() }).await else { panic!("an unreadable stamp is refused") };
+    assert!(matches!(&unreadable, StorageError::Backend(message) if message.contains("unreadable hub store format stamp")), "{unreadable:?}");
+}
+
+/// 📐️ A data root that predates the stamp keeps working: exactly one format has ever existed, so an
+/// unstamped store is adopted at v1 and its records survive the adoption. Delete this law together
+/// with the adoption branch the day a v2 exists.
+#[tokio::test]
+async fn an_unstamped_store_is_adopted_at_the_current_version_without_losing_records() {
+    let dir = scratch("format-adoption");
+    let actor = conformance::actor_key("adopted");
+    {
+        let mut stores = durable(&dir).await;
+        stores.authority.append_events(&actor, &[conformance::event_record(&actor, 1)], &[]).await.expect("appended");
+    }
+    for role in ["authority", "projections", "blobs", "sessions"] {
+        std::fs::remove_file(dir.join(role).join(STORE_FORMAT_FILE)).expect("un-stamped");
+    }
+    let stores = durable(&dir).await;
+    assert_eq!(stores.authority.last_seq(&actor).await.unwrap(), 1, "adoption replays the records that were already there");
+    assert_eq!(read_stamp(&dir.join("authority")).version, STORE_FORMAT_VERSION);
+    assert_eq!(read_stamp(&dir.join("sessions")).store, "sessions");
+}
+//#endregion 🔖️Format

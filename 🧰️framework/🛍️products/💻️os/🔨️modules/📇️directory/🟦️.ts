@@ -117,7 +117,13 @@ function upsertMember(space: DirectorySpace, users: Map<string, UserView>, userI
 /** 🧮️ Pure fold: `model × event -> model`. Idempotent — an event whose `seq` does not strictly
  * advance `model.cursor` (already-applied or out-of-order-old) is ignored wholesale. Returns a new
  * model (shallow-copies `spaces`/`users`, deep-copies only the touched space) rather than mutating
- * `model` in place, matching the Rust twin's by-value `fold(model, event) -> model` signature. */
+ * `model` in place, matching the Rust twin's by-value `fold(model, event) -> model` signature.
+ *
+ * 🪢 `document.indexed` joins its announced descriptor by `documentId` alone. The entry's
+ * `dialect.artifactKind` is the owning app's `Dialect` (`s.note.note`) while the descriptor's
+ * `artifactKind` is the manifest `ArtifactKindSpec.id` (`2d.note`) — two id spaces that coincide for
+ * `gis` alone, so joining on their equality silently dropped every other plugin's presentation row.
+ * The entry's own grammar is bounded by `validDocumentIndexEntryV1`. */
 export function fold(model: DirectoryReadModel, event: DirectoryEvent): DirectoryReadModel {
   if (event.seq <= model.cursor) return model;
   const spaces = new Map(model.spaces);
@@ -202,7 +208,7 @@ export function fold(model: DirectoryReadModel, event: DirectoryEvent): Director
     case "document.indexed":
       withSpace(body.scope.spaceId, (space) => {
         if (!validDocumentIndexEntryV1(body.entry) || body.descriptorDigestV1.length !== 32 || body.descriptorDigestV1.some((byte) => !Number.isInteger(byte) || byte < 0 || byte > 255) || !body.descriptorDigestV1.some((byte) => byte !== 0) || !event.userId || new TextEncoder().encode(event.userId).length > 256 || event.spaceId !== body.scope.spaceId || space.indexedDocuments.some((row) => row.descriptor.documentId === body.scope.documentId)) return;
-        const descriptor = space.documents.find((document) => document.documentId === body.scope.documentId && document.artifactKind === body.entry.dialect.artifactKind);
+        const descriptor = space.documents.find((document) => document.documentId === body.scope.documentId);
         if (descriptor) space.indexedDocuments.push({ descriptor, descriptorDigestV1: body.descriptorDigestV1, entry: body.entry, createdAtMs: event.recordedAtMs, createdBy: event.userId });
       });
       break;

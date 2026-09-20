@@ -5700,3 +5700,54 @@ pub mod viewer {
         }
     }
 }
+
+//#region 🪢️TaxonomyMounts
+#[path = "🏅️standards/🔖️v1/🪆️subsets/✉️base/📚️examples/🌊️pipeline/🦀️.rs"]
+pub mod v1_subsets_base_examples_pipeline;
+#[path = "🏅️standards/🔖️v1/🪆️subsets/✉️base/📚️examples/🌐️envelope/🦀️.rs"]
+pub mod v1_subsets_base_examples_envelope;
+#[path = "🏅️standards/🔖️v1/🪆️subsets/✉️base/📚️examples/🎥️clip/🦀️.rs"]
+pub mod v1_subsets_base_examples_clip;
+#[path = "🏅️standards/🔖️v1/🪆️subsets/✉️base/📚️examples/🎵️tone/🦀️.rs"]
+pub mod v1_subsets_base_examples_tone;
+#[path = "🏅️standards/🔖️v1/🪆️subsets/✉️base/📚️examples/🏢️building/🦀️.rs"]
+pub mod v1_subsets_base_examples_building;
+#[path = "🏅️standards/🔖️v1/🪆️subsets/✉️base/📚️examples/📐️drawing/🦀️.rs"]
+pub mod v1_subsets_base_examples_drawing;
+#[path = "🏅️standards/🔖️v1/🪆️subsets/✉️base/📚️examples/📽️deck/🦀️.rs"]
+pub mod v1_subsets_base_examples_deck;
+#[path = "🏅️standards/🔖️v1/🪆️subsets/✉️base/📚️examples/🕸️graph/🦀️.rs"]
+pub mod v1_subsets_base_examples_graph;
+#[path = "🏅️standards/🔖️v1/🪆️subsets/✉️base/📚️examples/🖍️sketch/🦀️.rs"]
+pub mod v1_subsets_base_examples_sketch;
+#[path = "🏅️standards/🔖️v1/🪆️subsets/✉️base/📚️examples/🖼️swatch/🦀️.rs"]
+pub mod v1_subsets_base_examples_swatch;
+#[path = "🏅️standards/🔖️v1/🪆️subsets/✉️base/📚️examples/🗒️memo/🦀️.rs"]
+pub mod v1_subsets_base_examples_memo;
+#[path = "🏅️standards/🔖️v1/🪆️subsets/✉️base/📚️examples/🚶️walk/🦀️.rs"]
+pub mod v1_subsets_base_examples_walk;
+#[path = "🏅️standards/🔖️v1/🪆️subsets/✉️base/📚️examples/🧊️solid/🦀️.rs"]
+pub mod v1_subsets_base_examples_solid;
+#[path = "🏅️standards/🔖️v1/🪆️subsets/🌊️flow/📚️examples/🌊️pipeline/🦀️.rs"]
+pub mod v1_subsets_flow_examples_pipeline;
+#[path = "🏅️standards/🔖️v1/🪆️subsets/🎞️animation/📚️examples/🚶️walk/🦀️.rs"]
+pub mod v1_subsets_animation_examples_walk;
+#[path = "🏅️standards/🔖️v1/🪆️subsets/🎬️video/📚️examples/🎥️clip/🦀️.rs"]
+pub mod v1_subsets_video_examples_clip;
+#[path = "🏅️standards/🔖️v1/🪆️subsets/🏛️model/📚️examples/🏢️building/🦀️.rs"]
+pub mod v1_subsets_model_examples_building;
+#[path = "🏅️standards/🔖️v1/🪆️subsets/📐️cad/📚️examples/📐️drawing/🦀️.rs"]
+pub mod v1_subsets_cad_examples_drawing;
+#[path = "🏅️standards/🔖️v1/🪆️subsets/📑️document/📚️examples/🗒️memo/🦀️.rs"]
+pub mod v1_subsets_document_examples_memo;
+#[path = "🏅️standards/🔖️v1/🪆️subsets/📽️presentation/📚️examples/📽️deck/🦀️.rs"]
+pub mod v1_subsets_presentation_examples_deck;
+#[path = "🏅️standards/🔖️v1/🪆️subsets/🔊️audio/📚️examples/🎵️tone/🦀️.rs"]
+pub mod v1_subsets_audio_examples_tone;
+#[path = "🏅️standards/🔖️v1/🪆️subsets/🔢️value/📚️examples/🕸️graph/🦀️.rs"]
+pub mod v1_subsets_value_examples_graph;
+#[path = "🏅️standards/🔖️v1/🪆️subsets/🧊️brep/📚️examples/🧊️solid/🦀️.rs"]
+pub mod v1_subsets_brep_examples_solid;
+#[path = "📚️examples/📃️note/🦀️.rs"]
+pub mod examples_note;
+//#endregion 🪢️TaxonomyMounts

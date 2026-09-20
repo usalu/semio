@@ -5,7 +5,7 @@
   "hT": null,
   "hV": null,
   "climate": null,
-  "internalGainsWM2": 5,
+  "internalGainsWM2": 5.0,
   "solarGainsKwh": null,
   "systemLossesKwh": null,
   "renewableKwh": null,

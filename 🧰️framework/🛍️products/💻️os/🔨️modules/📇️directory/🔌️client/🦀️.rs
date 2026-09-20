@@ -731,6 +731,20 @@ impl Drop for LocalHubCredential {
 }
 
 impl LocalHubCredential {
+    /// 🎫️ Seals a capability returned by the public session-mint route. The token stays in
+    /// this non-serializable, zeroing owner and can only be consumed through [`DirectoryClient`].
+    pub fn from_minted_session(hub_origin: &str, capability: &str) -> Result<Self, DirectoryClientError> {
+        let absolute = hub_origin
+            .strip_prefix("https://")
+            .or_else(|| hub_origin.strip_prefix("http://"))
+            .is_some_and(|authority| !authority.is_empty() && !authority.chars().any(|character| matches!(character, '/' | '?' | '#' | '@')));
+        let browser_proxy = hub_origin.starts_with('/') && !hub_origin.starts_with("//") && !hub_origin.chars().any(|character| character.is_control() || matches!(character, '?' | '#'));
+        if !(absolute || browser_proxy) || !valid_session_capability(capability) {
+            return Err(DirectoryClientError::Unauthorized);
+        }
+        Ok(Self { hub_origin: hub_origin.trim_end_matches('/').to_string(), capability: capability.as_bytes().into() })
+    }
+
     #[cfg(not(target_arch = "wasm32"))]
     pub fn read_inherited(expected_class: &str) -> Result<Self, DirectoryClientError> {
         #[cfg(unix)]
@@ -752,6 +766,20 @@ impl LocalHubCredential {
         let mut pipe = inherited_windows_file()?;
         let bytes = read_local_hub_credential_frame(&mut pipe, None)?;
         decode_local_hub_credential(&bytes.bytes, expected_class, None)
+    }
+
+    /// 🤖️ Adopts a session capability this process obtained over the network rather than from the
+    /// inherited fd-3 pipe — the shape `semio-os-mcp --hub` needs after exchanging an agent
+    /// delegation at `POST /auth/agent-sessions`. The capability is held under exactly the same
+    /// redacting `Debug`, constant-time comparison and zero-on-drop discipline as an inherited one;
+    /// what it deliberately does NOT do is pin `hub_origin` to loopback, because an agent session
+    /// is issued by whichever hub the delegation names and the caller has already run that origin
+    /// through `validate_hub_origin`.
+    pub fn adopt_session_capability(hub_origin: &str, capability: &str) -> Result<Self, DirectoryClientError> {
+        if hub_origin.is_empty() || !valid_session_capability(capability) {
+            return Err(DirectoryClientError::Unauthorized);
+        }
+        Ok(Self { hub_origin: hub_origin.to_string(), capability: capability.as_bytes().into() })
     }
 
     #[cfg(test)]
@@ -975,6 +1003,38 @@ impl<T: DirectoryTransport> DirectoryClient<T> {
         }
         let source = String::from_utf8(response.body).map_err(|error| DirectoryClientError::Decode(error.to_string()))?;
         DirectorySessionAuthorityV1::parse_canonical_json(&source).ok_or_else(|| DirectoryClientError::Decode("directory session authority response is not canonical".into()))
+    }
+
+    /// 🚪️ Revokes the held session (or the browser cookie session when this client has no
+    /// bearer). A successful empty `204` is accepted without attempting JSON decoding.
+    pub async fn sign_out(&self, ctx: &OperationContext) -> Result<(), DirectoryClientError> {
+        if ctx.cancel.is_cancelled().await {
+            return Err(DirectoryClientError::Cancelled);
+        }
+        let bearer = self.credential.as_ref().map(|credential| credential.capability()).transpose()?;
+        let response = self.transport.http(ctx, HttpMethod::Delete, &self.url("/auth/sessions/me"), bearer, None).await?;
+        match response.status {
+            200 | 204 | 401 => Ok(()),
+            status => Err(DirectoryClientError::Http { status, body: String::from_utf8_lossy(&response.body).into_owned() }),
+        }
+    }
+
+    /// 🎟️ Redeems one bounded invitation capability through the authenticated client. The
+    /// capability is path-safe by admission and never appears in a query string.
+    pub async fn redeem_invite(&self, ctx: &OperationContext, capability: &str) -> Result<(), DirectoryClientError> {
+        if capability.is_empty() || capability.len() > 256 || !capability.bytes().all(|byte| byte.is_ascii_alphanumeric() || matches!(byte, b'.' | b'_' | b'~' | b'-')) {
+            return Err(DirectoryClientError::Decode("directory invitation capability is invalid".into()));
+        }
+        if ctx.cancel.is_cancelled().await {
+            return Err(DirectoryClientError::Cancelled);
+        }
+        let bearer = self.credential.as_ref().map(|credential| credential.capability()).transpose()?;
+        let response = self.transport.http(ctx, HttpMethod::Post, &self.url(&format!("/directory/invites/{capability}/redeem")), bearer, Some(Vec::new())).await?;
+        match response.status {
+            200 | 204 => Ok(()),
+            401 => Err(DirectoryClientError::Unauthorized),
+            status => Err(DirectoryClientError::Http { status, body: String::from_utf8_lossy(&response.body).into_owned() }),
+        }
     }
 
     /// 🪪️ Fetches the authenticated server-selected execution-target manifest for one exact

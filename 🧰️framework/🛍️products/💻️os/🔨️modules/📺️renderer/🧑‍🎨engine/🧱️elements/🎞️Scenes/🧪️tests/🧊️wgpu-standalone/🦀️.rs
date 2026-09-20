@@ -301,7 +301,6 @@ pub fn handle_scene_pointer_move(scene: &UiComponentSceneNode, bounds: Rect, x: 
                 SceneDragMode::MapPan => {}
                 // 🫳️ A row transfer resolves on the RELEASE (`scene_transfer_drop_action`), so the
                 // move itself carries no state of its own — the same no-op the pan modes take.
-                SceneDragMode::RowTransfer { .. } => {}
                 SceneDragMode::InkPan { start_x, start_y, camera_x, camera_y, zoom } => {
                     let dx = (x - start_x) as f64;
                     let dy = (y - start_y) as f64;
@@ -319,7 +318,7 @@ pub fn handle_scene_pointer_move(scene: &UiComponentSceneNode, bounds: Rect, x: 
                     let mut events = Vec::new();
                     let mut new_overrides = Vec::new();
                     for (id, (ox, oy)) in origins.iter() {
-                        if let Some(block) = find_ink_item(&doc.blocks, id) {
+                        if let Some(block) = test_find_ink_item(&doc.blocks, id) {
                             let updated = ink_item_with_position(block, ox + dx, oy + dy);
                             events.push(json!({ "operation": "updateBlock", "blockId": id, "block": updated }));
                             new_overrides.push((id.clone(), updated));
@@ -343,7 +342,7 @@ pub fn handle_scene_pointer_move(scene: &UiComponentSceneNode, bounds: Rect, x: 
                     let mut events = Vec::new();
                     let mut new_overrides = Vec::new();
                     for id in selected_ids {
-                        if let Some(block) = find_ink_item(&doc.blocks, id) {
+                        if let Some(block) = test_find_ink_item(&doc.blocks, id) {
                             let updated = scale_ink_item(block, *from, to);
                             events.push(json!({ "operation": "updateBlock", "blockId": id, "block": updated }));
                             new_overrides.push((id.clone(), updated));
@@ -362,7 +361,7 @@ pub fn handle_scene_pointer_move(scene: &UiComponentSceneNode, bounds: Rect, x: 
                     let camera = ink_current_camera(scene);
                     let (world_x, world_y) = ink_screen_to_world(camera, inner, x, y);
                     let doc: InkDocumentJson = scene.ink_canvas.as_ref().map(|n| serde_json::from_str(&n.document_json).unwrap_or_default()).unwrap_or_default();
-                    let current = state.ink_overrides.get(block_id).cloned().or_else(|| find_ink_item(&doc.blocks, block_id).cloned());
+                    let current = state.ink_overrides.get(block_id).cloned().or_else(|| test_find_ink_item(&doc.blocks, block_id).cloned());
                     if let Some(mut block) = current {
                         let bx = ink_item_num(&block, "x");
                         let by = ink_item_num(&block, "y");
@@ -584,7 +583,7 @@ fn paint2d_navigator_overlay_rect(content_camera_json: &str, content_viewport_js
 
 
 #[cfg(test)]
-fn find_ink_item<'a>(blocks: &'a [Value], id: &str) -> Option<&'a Value> {
+fn test_find_ink_item<'a>(blocks: &'a [Value], id: &str) -> Option<&'a Value> {
     flatten_ink_items(blocks).into_iter().find(|block| ink_item_id(block) == id)
 }
 
@@ -789,7 +788,7 @@ fn ink_pointer_down(scene: &UiComponentSceneNode, inner: Rect, x: f32, y: f32, b
                 let move_ids: Vec<String> = if selected_ids.contains(&top_id) { selected_ids.clone() } else { vec![top_id.clone()] };
                 let mut origins = HashMap::new();
                 for id in &move_ids {
-                    if let Some(b) = find_ink_item(&doc.blocks, id) {
+                    if let Some(b) = test_find_ink_item(&doc.blocks, id) {
                         let eff = state.ink_overrides.get(id).unwrap_or(b);
                         origins.insert(id.clone(), (ink_item_num(eff, "x"), ink_item_num(eff, "y")));
                     }
@@ -820,7 +819,7 @@ fn ink_pointer_up(scene: &UiComponentSceneNode, inner: Rect, x: f32, y: f32) -> 
         SceneDragMode::InkMove { origins, .. } => {
             let mut events = Vec::new();
             for id in origins.keys() {
-                if let Some(block) = state.ink_overrides.get(id).cloned().or_else(|| find_ink_item(&doc.blocks, id).cloned()) {
+                if let Some(block) = state.ink_overrides.get(id).cloned().or_else(|| test_find_ink_item(&doc.blocks, id).cloned()) {
                     let updated = if doc.snap_enabled.unwrap_or(false) {
                         let spacing = doc.snap_grid_spacing.unwrap_or(8.0);
                         let (sx, sy) = ink_snap_point(ink_item_num(&block, "x"), ink_item_num(&block, "y"), spacing);

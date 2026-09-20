@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "semio.ui.retained-select-accessibility.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "window", "select", "closedRoles", "openRoles", "activation"],
+  "properties": {
+    "schema": { "const": "semio.ui.retained-select-accessibility.v1" },
+    "window": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "generation"],
+      "properties": { "id": { "type": "string", "minLength": 1 }, "generation": { "type": "integer", "minimum": 1 } }
+    },
+    "select": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["nodeId", "key", "label", "value", "listboxKey", "options"],
+      "properties": {
+        "nodeId": { "type": "integer", "minimum": 1 },
+        "key": { "type": "string", "minLength": 1 },
+        "label": { "type": "string", "minLength": 1 },
+        "value": { "type": "string" },
+        "listboxKey": { "type": "string", "minLength": 1 },
+        "options": {
+          "type": "array",
+          "minItems": 2,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["key", "value", "label", "selected"],
+            "properties": {
+              "key": { "type": "string", "minLength": 1 },
+              "value": { "type": "string" },
+              "label": { "type": "string", "minLength": 1 },
+              "selected": { "type": "boolean" }
+            }
+          }
+        }
+      }
+    },
+    "closedRoles": { "type": "array", "items": { "type": "string" } },
+    "openRoles": { "type": "array", "items": { "type": "string" } },
+    "activation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["optionKey", "expectedValue", "expectedActions", "openAfter"],
+      "properties": {
+        "optionKey": { "type": "string", "minLength": 1 },
+        "expectedValue": { "type": "string" },
+        "expectedActions": { "const": 1 },
+        "openAfter": { "const": false }
+      }
+    }
+  }
+}

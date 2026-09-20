@@ -1,0 +1,26 @@
+{
+  "description": "🛰️ Language-agnostic twin of the structured server-span vocabulary in `⏱️trace/📝️record/🦀️.rs`. `outcomes` is the closed set a span may end with, each with the level it is emitted at unless the caller overrides it; `events` is the declared server span/event name set an operator may alert on. A server is never refused an event outside `events` — the list is the contract of what is guaranteed to exist, not a whitelist — but anything an alert, a dashboard or a non-Rust consumer binds to must be here, so Rust and every twin read one file instead of keeping two hand-written copies.",
+  "outcomes": [
+    { "name": "started", "level": "debug" },
+    { "name": "ok", "level": "info" },
+    { "name": "refused", "level": "warn" },
+    { "name": "failed", "level": "error" },
+    { "name": "cancelled", "level": "info" }
+  ],
+  "levels": ["off", "error", "warn", "info", "debug"],
+  "events": [
+    "server.artifact.maintenance",
+    "server.auth.credential.change",
+    "server.auth.session.mint",
+    "server.auth.session.read",
+    "server.auth.session.revoke",
+    "server.boot",
+    "server.catalog.publication",
+    "server.directory.command",
+    "server.directory.socket",
+    "server.document.socket",
+    "server.rate-limit",
+    "server.readiness",
+    "server.saga.drain"
+  ]
+}

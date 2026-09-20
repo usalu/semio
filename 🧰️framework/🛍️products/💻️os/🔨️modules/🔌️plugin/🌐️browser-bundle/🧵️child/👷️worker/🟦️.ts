@@ -24,6 +24,10 @@ const wasiPort = Object.freeze({
     if (phase !== "loading" && phase !== "active") throw new Error("browser actor child: retired WASI clock");
     return BigInt(Math.floor(performance.now() * 1_000_000));
   },
+  wallNs(): bigint {
+    if (phase !== "loading" && phase !== "active") throw new Error("browser actor child: retired WASI clock");
+    return BigInt(Date.now()) * 1_000_000n;
+  },
   write(channel: "stdout" | "stderr", bytes: Uint8Array): void {
     if ((phase !== "loading" && phase !== "active") || (channel !== "stdout" && channel !== "stderr") || !(bytes instanceof Uint8Array) || bytes.byteLength > BROWSER_ACTOR_CHILD_LIMITS.wasiOutputBytes - wasiOutputBytes || wasiOutputWrites >= BROWSER_ACTOR_CHILD_LIMITS.wasiOutputWrites) throw new Error("browser actor child: WASI output capacity");
     measureChildValue(bytes, BROWSER_ACTOR_CHILD_LIMITS.messageBytes);

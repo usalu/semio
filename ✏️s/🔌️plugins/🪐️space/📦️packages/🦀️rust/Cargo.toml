@@ -21,6 +21,16 @@ variant = "s"
 ports = { react = 6070, wgpu = 6066 }
 user_ports = { react = [6072, 6073], wgpu = [6067, 6068] }
 
+[[package.metadata.semio.playground]]
+variant = "home"
+app = "s.space.home@1/*#editor"
+ports = { react = 6108, wgpu = 6208 }
+
+[[package.metadata.semio.playground]]
+variant = "space"
+app = "s.space.space@1/*#editor"
+ports = { react = 6109, wgpu = 6209 }
+
 [lib]
 crate-type = ["cdylib", "rlib"]
 path = "../../🦀️.rs"

@@ -477,30 +477,31 @@ mod native {
                 E::CursorMoved { device_id, position } => {
                     self.last_pointer_pos = (position.x as f32, position.y as f32);
                     let pointer = event::pointer_info_for_mouse(&mut self.pointers, *device_id);
-                    Some(DispatchEvent::PointerMove { pointer, x: self.last_pointer_pos.0, y: self.last_pointer_pos.1 })
+                    Some(DispatchEvent::PointerMove { pointer, x: self.last_pointer_pos.0, y: self.last_pointer_pos.1, modifiers: self.modifiers })
                 }
                 E::MouseInput { device_id, state, button } => {
                     let pointer = event::pointer_info_for_mouse(&mut self.pointers, *device_id);
                     let button = event::pointer_button_from_winit(*button)?;
                     let (x, y) = self.last_pointer_pos;
                     Some(match state {
-                        ElementState::Pressed => DispatchEvent::PointerDown { pointer, x, y, button },
-                        ElementState::Released => DispatchEvent::PointerUp { pointer, x, y, button },
+                        ElementState::Pressed => DispatchEvent::PointerDown { pointer, x, y, button, modifiers: self.modifiers },
+                        ElementState::Released => DispatchEvent::PointerUp { pointer, x, y, button, modifiers: self.modifiers },
                     })
                 }
                 E::MouseWheel { delta, .. } => {
                     let (delta_x, delta_y) = event::normalize_wheel_delta_native(*delta);
                     let (x, y) = self.last_pointer_pos;
-                    Some(DispatchEvent::Scroll { x, y, delta_x, delta_y })
+                    Some(DispatchEvent::Scroll { x, y, delta_x, delta_y, modifiers: self.modifiers })
                 }
                 E::Touch(touch) => {
                     let pointer = event::pointer_info_for_touch(&mut self.pointers, touch);
                     let x = touch.location.x as f32;
                     let y = touch.location.y as f32;
                     Some(match touch.phase {
-                        TouchPhase::Started => DispatchEvent::PointerDown { pointer, x, y, button: ui_render::PointerButton::Primary },
-                        TouchPhase::Moved => DispatchEvent::PointerMove { pointer, x, y },
-                        TouchPhase::Ended | TouchPhase::Cancelled => DispatchEvent::PointerUp { pointer, x, y, button: ui_render::PointerButton::Primary },
+                        TouchPhase::Started => DispatchEvent::PointerDown { pointer, x, y, button: ui_render::PointerButton::Primary, modifiers: self.modifiers },
+                        TouchPhase::Moved => DispatchEvent::PointerMove { pointer, x, y, modifiers: self.modifiers },
+                        TouchPhase::Ended => DispatchEvent::PointerUp { pointer, x, y, button: ui_render::PointerButton::Primary, modifiers: self.modifiers },
+                        TouchPhase::Cancelled => DispatchEvent::PointerCancel { pointer },
                     })
                 }
                 E::KeyboardInput { event, .. } => {

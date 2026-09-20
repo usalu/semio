@@ -20,7 +20,7 @@
     "treeSection": "A labelled tree section row registers HitKind treeItem under 'section.chevron.<section id>' over its header band of one rowHeightPx. An unlabelled section has no header band and registers nothing.",
     "button": "A Button registers HitKind button under its own id, dispatching its action. A Stack that carries an activate action and is not a tree row registers the same way.",
     "input": "An Input registers HitKind input, a Select select, a Toggle toggle, a Slider slider, a NumberStepper numberStepper, a Ring ring and an IconSelect iconSelect — each under the node's own id, with no dispatched action: the retained event router owns what a press on those means (🧫️fixtures/🎛️retained-control-commit/🔣️.json is what it means). The last three registered NOTHING before ticket 26/09/09/PROCEDURAL-3D-END-TO-END, so a press on a generation's stepper, ring or icon field resolved the WINDOW beneath it.",
-    "engineSurface": "A world-3d surface canvas registers HitKind world3d under its surface id. Every other bespoke-dispatch surface reuses the scrollRegion + '.pane' / '.map' convention the shell's scroll_region_is_scene_surface already reads, so a wheel over one propagates to the scene instead of scrolling the window that hosts it.",
+    "engineSurface": "A world-3d surface canvas registers HitKind world3d under its surface id. Node-graph, board-2d and tiled-map reuse the scrollRegion + '.pane' / '.map' convention the shell's scroll_region_is_scene_surface already reads. A retained list surface such as Table registers componentScene under its surface id so Shell can route semantic row geometry through the scene host.",
     "container": "A plain container (a Stack with no activate, a Section, a Group, a Field), a Text, a Separator and a Tree's own frame register nothing — they are pass-through, and the pointer falls to whatever is registered beneath them.",
     "zeroArea": "An entry with no area is never registered: a mounted-but-unplaced node must not take the pointer from the node drawn there.",
     "frameBuffering": "The registry a pointer resolves against is the LAST COMPLETE frame's, never the one a frame build is assembling. A build retires the previous generation one entry per boundary step and re-mints its own into a second, non-resolvable buffer; the two swap only when the build's chrome walk runs to the end. An abandoned build publishes nothing, so the last complete registry stays resolvable. A single-buffer registry — one the frame build drains while hit_at scans it — is the defect this rule pins."
@@ -78,6 +78,15 @@
       "tree": { "kind": "surface", "surfaceId": "generation3d-flow", "controllerId": "s.procedural.generation3d", "surfaceKind": "node-graph" },
       "expected": [{ "controlId": "generation3d-flow.pane", "kind": "scrollRegion", "action": null, "rect": [3.0, 54.0, 600.0, 400.0] }],
       "probes": [{ "why": "the middle of the graph pane", "x": 303.0, "y": 254.0, "controlId": "generation3d-flow.pane", "kind": "scrollRegion", "action": null, "wheelPropagatesToScene": true }]
+    },
+    {
+      "name": "a-table-canvas-routes-through-the-semantic-scene-hit",
+      "why": "Table row and transfer geometry belongs to the retained scene host, so the flat registry must publish the semantic ComponentScene kind instead of a generic target.",
+      "windowId": "catalogue-assets-window",
+      "body": { "x": 40.0, "y": 80.0, "w": 320.0, "h": 240.0 },
+      "tree": { "kind": "surface", "surfaceId": "catalogue-assets", "controllerId": "s.catalogue", "surfaceKind": "table" },
+      "expected": [{ "controlId": "catalogue-assets", "kind": "componentScene", "action": null, "rect": [40.0, 80.0, 320.0, 240.0] }],
+      "probes": [{ "why": "the table host owns row hit geometry", "x": 200.0, "y": 200.0, "controlId": "catalogue-assets", "kind": "componentScene", "action": null, "wheelPropagatesToScene": false }]
     },
     {
       "name": "a-plain-container-never-takes-the-pointer",

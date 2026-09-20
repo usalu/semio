@@ -70,7 +70,7 @@
         "successorOwnsFreshClient": true
       }
     },
-    "successorProof": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+    "successorCapability": "session.v1.cccccccccccccccccccccccccccccccc.9999999999999999999999999999999999999999999999999999999999999999",
     "unknownPhase": "indeterminate",
     "terminalPhase": "cancelled",
     "reconcilePath": "POST /_semio/hub/spaces/sp-inference/documents/doc-inference/inference/gis-map/jobs/reconcile",

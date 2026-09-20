@@ -1,5 +1,4 @@
 {
-  "ChangeKSoil": {
-    "newKSoil": 262500.0
-  }
+  "mutation": "changeKSoil",
+  "newKSoil": 262500.0
 }

@@ -80,7 +80,7 @@ fn cad_actions() -> Vec<ActionDefinition> {
         action("addObject", "Add Object", "Objekt hinzufügen", ActionKind::Mutation).use_when(["add a new object", "create an object", "ein objekt hinzufügen"]),
         action("patchObject", "Patch Object", "Objekt anpassen", ActionKind::Mutation),
         action("patchSelection", "Patch Selection", "Auswahl anpassen", ActionKind::Mutation),
-        action("deleteObject", "Delete Object", "Objekt löschen", ActionKind::Mutation).use_when(["delete an object", "remove an object", "ein objekt löschen"]),
+        action("deleteObject", "Delete Object", "Objekt löschen", ActionKind::Mutation).destructive().use_when(["delete an object", "remove an object", "ein objekt löschen"]),
         action("duplicateObject", "Duplicate Object", "Objekt duplizieren", ActionKind::Mutation).use_when(["duplicate the object", "copy the object", "objekt duplizieren"]),
         action("addNode", "Add Node", "Knoten hinzufügen", ActionKind::Mutation).use_when(["add a node to the model", "einen knoten hinzufügen"]),
         action("renameNode", "Rename Node", "Knoten umbenennen", ActionKind::Mutation).use_when(["rename a node", "einen knoten umbenennen"]),
@@ -103,14 +103,14 @@ fn cad_actions() -> Vec<ActionDefinition> {
         action("applyTransformation", "Apply Transformation", "Transformation anwenden", ActionKind::Mutation).use_when(["apply a transformation", "eine transformation anwenden"]),
         action("importCadFile", "Import CAD File", "CAD-Datei importieren", ActionKind::Mutation).use_when(["import a cad file", "eine cad-datei importieren"]),
         action("patchCadPlayReference", "Patch Play Reference", "Play-Referenz anpassen", ActionKind::Mutation),
-        action("engagementSubmit", "Submit Engagement", "Eingabe abschließen", ActionKind::Mutation),
+        action("engagementSubmit", "Submit Engagement", "Eingabe abschließen", ActionKind::Mutation).input_event(),
         action("focusModelDefinition", "Focus Model Definition", "Modelldefinition fokussieren", ActionKind::Mutation).use_when(["focus a model definition", "eine modelldefinition fokussieren"]).with_args([ActionArgDef::select(
             "modelDefinitionId",
             LocalizedLabel::native("Model Definition", "Modelldefinition"),
             vec![ActionArgOption::new("primary", LocalizedLabel::native("Primary", "Primär")), ActionArgOption::new("secondary", LocalizedLabel::native("Secondary", "Sekundär"))],
         )
         .required()]),
-        action("setActiveExample", "Set Active Example", "Aktives Beispiel festlegen", ActionKind::Mutation).use_when(["load an example", "open a demo model", "ein beispiel laden"]).with_args([ActionArgDef::select(
+        action("setActiveExample", "Set Active Example", "Aktives Beispiel festlegen", ActionKind::Mutation).destructive().use_when(["load an example", "open a demo model", "ein beispiel laden"]).with_args([ActionArgDef::select(
             "exampleId",
             LocalizedLabel::native("Example", "Beispiel"),
             vec![ActionArgOption::new("empty", LocalizedLabel::native("Empty", "Leer")), ActionArgOption::new("demo", LocalizedLabel::native("Demo", "Demo")), ActionArgOption::new("capsule", LocalizedLabel::native("Capsule", "Kapsel"))],
@@ -176,6 +176,7 @@ pub fn cad_app() -> AppDefinition {
             output_schema: None,
             capabilities: Vec::new(),
         }),
+        actions: Vec::new(),
         panel_tabs: Vec::new(),
         keybindings: Vec::new(),
         utilities: vec![UtilityDefinition::new("select", LocalizedLabel::native("Select", "Auswählen"), IconName::from("mouse-pointer"))],
@@ -231,24 +232,24 @@ fn note_actions() -> Vec<ActionDefinition> {
         action("setEraserRadius", "Set Eraser Radius", "Radiergummi-Radius festlegen", ActionKind::Mutation).use_when(["change the eraser size", "die radiergröße ändern"]),
         action("addBlock", "Add Block", "Block hinzufügen", ActionKind::Mutation).use_when(["add a block", "insert a new block", "einen block hinzufügen"]),
         action("moveBlock", "Move Block", "Block verschieben", ActionKind::Mutation).use_when(["move a block", "einen block verschieben"]),
-        action("deleteBlock", "Delete Block", "Block löschen", ActionKind::Mutation).use_when(["delete a block", "einen block löschen"]),
-        action("deleteSelection", "Delete Selection", "Auswahl löschen", ActionKind::Mutation).use_when(["delete the selection", "remove the selected items", "die auswahl löschen"]),
+        action("deleteBlock", "Delete Block", "Block löschen", ActionKind::Mutation).destructive().use_when(["delete a block", "einen block löschen"]),
+        action("deleteSelection", "Delete Selection", "Auswahl löschen", ActionKind::Mutation).destructive().use_when(["delete the selection", "remove the selected items", "die auswahl löschen"]),
         action("duplicateBlock", "Duplicate Block", "Block duplizieren", ActionKind::Mutation).use_when(["duplicate a block", "einen block duplizieren"]),
         action("duplicateSelection", "Duplicate Selection", "Auswahl duplizieren", ActionKind::Mutation).use_when(["duplicate the selection", "copy the selected items", "die auswahl duplizieren"]),
         action("patchBlocks", "Patch Blocks", "Blöcke anpassen", ActionKind::Mutation),
-        action("setActiveExample", "Set Active Example", "Aktives Beispiel festlegen", ActionKind::Mutation).use_when(["load a note example", "open a sketch template", "eine notizvorlage laden"]),
-        action("setFixtureJson", "Set Fixture JSON", "Fixture-JSON festlegen", ActionKind::Mutation).in_palette(false),
-        action("inkApplyEvents", "Apply Ink Events", "Zeichenereignisse anwenden", ActionKind::Mutation).in_palette(false),
-        action("engagementSubmit", "Submit Engagement", "Eingabe abschließen", ActionKind::Mutation),
+        action("setActiveExample", "Set Active Example", "Aktives Beispiel festlegen", ActionKind::Mutation).destructive().use_when(["load a note example", "open a sketch template", "eine notizvorlage laden"]),
+        action("setFixtureJson", "Set Fixture JSON", "Fixture-JSON festlegen", ActionKind::Mutation).destructive().in_palette(false),
+        action("inkApplyEvents", "Apply Ink Events", "Zeichenereignisse anwenden", ActionKind::Mutation).input_event().in_palette(false),
+        action("engagementSubmit", "Submit Engagement", "Eingabe abschließen", ActionKind::Mutation).input_event(),
         action("nudgeSelection", "Nudge Selection", "Auswahl anstoßen", ActionKind::Mutation),
-        action("nudgeSelectionUp", "Nudge Selection Up", "Auswahl nach oben schieben", ActionKind::Mutation).use_when(["nudge the selection up", "move the selection up a step", "die auswahl nach oben schieben"]),
-        action("nudgeSelectionDown", "Nudge Selection Down", "Auswahl nach unten schieben", ActionKind::Mutation),
-        action("nudgeSelectionLeft", "Nudge Selection Left", "Auswahl nach links schieben", ActionKind::Mutation),
-        action("nudgeSelectionRight", "Nudge Selection Right", "Auswahl nach rechts schieben", ActionKind::Mutation),
-        action("nudgeSelectionUpFast", "Nudge Selection Up Fast", "Auswahl schnell nach oben schieben", ActionKind::Mutation),
-        action("nudgeSelectionDownFast", "Nudge Selection Down Fast", "Auswahl schnell nach unten schieben", ActionKind::Mutation),
-        action("nudgeSelectionLeftFast", "Nudge Selection Left Fast", "Auswahl schnell nach links schieben", ActionKind::Mutation),
-        action("nudgeSelectionRightFast", "Nudge Selection Right Fast", "Auswahl schnell nach rechts schieben", ActionKind::Mutation),
+        action("nudgeSelectionUp", "Nudge Selection Up", "Auswahl nach oben schieben", ActionKind::Mutation).input_event().use_when(["nudge the selection up", "move the selection up a step", "die auswahl nach oben schieben"]),
+        action("nudgeSelectionDown", "Nudge Selection Down", "Auswahl nach unten schieben", ActionKind::Mutation).input_event(),
+        action("nudgeSelectionLeft", "Nudge Selection Left", "Auswahl nach links schieben", ActionKind::Mutation).input_event(),
+        action("nudgeSelectionRight", "Nudge Selection Right", "Auswahl nach rechts schieben", ActionKind::Mutation).input_event(),
+        action("nudgeSelectionUpFast", "Nudge Selection Up Fast", "Auswahl schnell nach oben schieben", ActionKind::Mutation).input_event(),
+        action("nudgeSelectionDownFast", "Nudge Selection Down Fast", "Auswahl schnell nach unten schieben", ActionKind::Mutation).input_event(),
+        action("nudgeSelectionLeftFast", "Nudge Selection Left Fast", "Auswahl schnell nach links schieben", ActionKind::Mutation).input_event(),
+        action("nudgeSelectionRightFast", "Nudge Selection Right Fast", "Auswahl schnell nach rechts schieben", ActionKind::Mutation).input_event(),
         action("engagementInput", "Engagement Input", "Interaktionseingabe", ActionKind::View).in_palette(false),
         action("navigatorEngagementInput", "Navigator Engagement Input", "Navigator-Interaktionseingabe", ActionKind::View).in_palette(false),
         action("setCamera", "Set Camera", "Kamera festlegen", ActionKind::View).use_when(["change the camera view", "die kameraansicht ändern"]),
@@ -287,6 +288,7 @@ pub fn note_app() -> AppDefinition {
             output_schema: None,
             capabilities: Vec::new(),
         }),
+        actions: Vec::new(),
         panel_tabs: Vec::new(),
         keybindings: Vec::new(),
         utilities: vec![UtilityDefinition::new("pencil", LocalizedLabel::native("Pencil", "Stift"), IconName::from("pencil"))],
@@ -358,6 +360,7 @@ fn colliding_app(controller_id: &str) -> AppDefinition {
             output_schema: None,
             capabilities: Vec::new(),
         }),
+        actions: Vec::new(),
         panel_tabs: Vec::new(),
         keybindings: Vec::new(),
         utilities: Vec::new(),
@@ -420,6 +423,127 @@ pub fn note_and_cad_source() -> CatalogSource {
     CatalogSource { descriptors: vec![note_descriptor(), cad_descriptor()], os_commands: Vec::new(), shell: Vec::new(), gateway: crate::core_tool_capabilities() }
 }
 //#endregion 🔖️CombinedSource
+
+//#region 🔖️DrawFixture
+/// 🖍️ The exact shape the coordinator measured live against the `semio` MCP server on 2026-09-19:
+/// one drawing editor whose intent-level verbs sit beside its raw pointer/engagement vocabulary,
+/// every verb's title made of the same two or three tokens ("Layer", "Canvas", "Document"). Before
+/// M5a this compiled into 20 hits for `"draw rectangle"` at two distinct scores with an empty
+/// description on every one. Transcribed from the real `✏️s/🔌️plugins/🖍️draw` editor declaration —
+/// same ids, same kinds, same `in_palette`, same audience markers, same argument vocabulary — so a
+/// regression in the plugin's own declarations shows up here as a failing law, and this crate still
+/// never depends on the plugin crate (see this module's header).
+fn draw_actions() -> Vec<ActionDefinition> {
+    let layer_kind = ActionArgDef::select(
+        "kind",
+        LocalizedLabel::native("Layer Kind", "Ebenenart"),
+        vec![
+            ActionArgOption::new("shape:rect", LocalizedLabel::native("Rectangle", "Rechteck")),
+            ActionArgOption::new("shape:ellipse", LocalizedLabel::native("Ellipse", "Ellipse")),
+            ActionArgOption::new("path", LocalizedLabel::native("Path", "Pfad")),
+        ],
+    );
+    vec![
+        action("addLayer", "Add Layer", "Ebene hinzufügen", ActionKind::Mutation)
+            .describe(LocalizedLabel::native(
+                "Appends a new layer of the given kind (a rectangle, ellipse, line, polygon, freehand path, text, image, group, boolean or trace) to the top of the drawing.",
+                "Fügt der Zeichnung oben eine neue Ebene der angegebenen Art hinzu (Rechteck, Ellipse, Linie, Polygon, Pfad, Text, Bild, Gruppe, Boolean oder Nachzeichnung).",
+            ))
+            .use_when(["draw a rectangle", "add a rectangle", "draw an ellipse or circle", "add a new layer"])
+            .with_args([layer_kind]),
+        action("patchLayer", "Patch Layer", "Ebene aktualisieren", ActionKind::Mutation)
+            .describe(LocalizedLabel::native("Sets one named property of one layer — its name, opacity, visibility, lock, blend mode, fill colour, stroke width or transform.", "Setzt eine benannte Eigenschaft einer Ebene."))
+            .use_when(["rename a layer", "change the fill colour", "set the stroke width"])
+            .with_args([ActionArgDef::text("layerId", LocalizedLabel::native("Layer", "Ebene")).required(), ActionArgDef::text("field", LocalizedLabel::native("Field", "Feld")).required()]),
+        ActionDefinition { icon_id: IconName::from("download"), ..action("exportDocument", "Export PDF", "PDF exportieren", ActionKind::View) }
+            .describe(LocalizedLabel::native("Renders the drawing to a downloadable file — a vector-painted PDF page or an SVG document.", "Rendert die Zeichnung in eine herunterladbare Datei — PDF oder SVG."))
+            .use_when(["export the document as pdf", "download the drawing"]),
+        action("deleteLayer", "Delete Layer", "Ebene löschen", ActionKind::Mutation)
+            .describe(LocalizedLabel::native("Removes one layer from the drawing by id — the layer's geometry is gone unless the edit is undone.", "Entfernt eine Ebene anhand ihrer Id aus der Zeichnung — die Geometrie ist fort, sofern die Änderung nicht rückgängig gemacht wird."))
+            .use_when(["delete this layer", "remove the selected shape"])
+            .destructive()
+            .with_args([ActionArgDef::text("layerId", LocalizedLabel::native("Layer", "Ebene")).required()]),
+        action("canvasPointerDown", "Canvas Pointer Down", "Leinwand-Zeiger gedrückt", ActionKind::Mutation).input_event(),
+        action("canvasPointerMove", "Canvas Pointer Move", "Leinwand-Zeiger bewegen", ActionKind::View).input_event(),
+        action("canvasDoubleClick", "Canvas Double Click", "Leinwand-Doppelklick", ActionKind::Mutation).input_event(),
+        action("canvasEscape", "Canvas Escape", "Leinwand abbrechen", ActionKind::View).input_event(),
+        action("engagementInput", "Engagement Input", "Eingabe", ActionKind::View).input_event(),
+        action("setCamera", "Set Camera", "Kamera festlegen", ActionKind::View).in_palette(false),
+    ]
+}
+
+pub fn draw_app() -> AppDefinition {
+    let dialect = ArtifactDialect { artifact_kind: "s.draw.drawing".to_string(), standard: "1".to_string(), subset: "*".to_string() };
+    AppDefinition {
+        id: "s.draw.drawing@1/*#editor".to_string(),
+        role: AppRole::Editor,
+        dialect,
+        label: LocalizedLabel::native("Editor", "Editor"),
+        breadcrumb: vec!["semio".to_string(), "drawing".to_string()],
+        icon_id: Some(IconName::from("drawing")),
+        controller_id: "draw".to_string(),
+        modes: Modes::one(ModeDefinition { id: "edit".to_string(), label: LocalizedLabel::native("Edit", "Bearbeiten"), icon_id: IconName::from("pencil"), tools: Vec::new(), layout_id: None, commands: Vec::new() }),
+        default_mode_id: "edit".to_string(),
+        window_kinds: WindowKinds::one(WindowKindDefinition {
+            id: "canvas".to_string(),
+            label: LocalizedLabel::native("Canvas", "Leinwand"),
+            body_key: "canvas".to_string(),
+            surface_kind: SurfaceKind::Canvas2d,
+            icon_id: IconName::from("pen-tool"),
+            options: Default::default(),
+            actions: draw_actions(),
+            utilities: Vec::new(),
+            interactions: Vec::new(),
+            params_schema: None,
+            artifact_snapshot_schema: None,
+            input_event_schema: None,
+            output_schema: None,
+            capabilities: Vec::new(),
+        }),
+        actions: Vec::new(),
+        panel_tabs: Vec::new(),
+        keybindings: Vec::new(),
+        utilities: Vec::new(),
+        tools: Vec::new(),
+        commands: Vec::new(),
+        interactions: Vec::new(),
+        named_layouts: Vec::new(),
+        default_layout: None,
+        terminologies: Vec::new(),
+        terminology_breadcrumbs: Default::default(),
+        introduction: None,
+        tutorials: Vec::new(),
+        dialogs: Vec::new(),
+        media_inputs: Vec::new(),
+        media_outputs: Vec::new(),
+        artifact_kinds: Vec::new(),
+        config: Default::default(),
+        command_grammar: Default::default(),
+        io: Default::default(),
+    }
+}
+
+pub fn draw_descriptor() -> PackageDescriptor {
+    wrap_descriptor("semio:draw", manifest::PluginManifest {
+        plugin_id: "draw".to_string(),
+        label: "Draw".to_string(),
+        version: "0.1.0".to_string(),
+        apps: vec![draw_app()],
+        examples: Vec::new(),
+        capabilities: Vec::new(),
+        topic_contributions: Vec::new(),
+        commands: Vec::new(),
+        artifact_kinds: Vec::new(),
+        dependencies: Vec::new(),
+        contributions: Vec::new(),
+    })
+}
+
+/// 🖍️ note + cad + draw — the source the M5a agent-usability laws compile against.
+pub fn note_cad_and_draw_source() -> CatalogSource {
+    CatalogSource { descriptors: vec![note_descriptor(), cad_descriptor(), draw_descriptor()], os_commands: Vec::new(), shell: Vec::new(), gateway: crate::core_tool_capabilities() }
+}
+//#endregion 🔖️DrawFixture
 
 //#region 🔖️Eval
 /// 📖️ Parses the embedded conformance fixture — `≥60` natural-language requests (English + German,

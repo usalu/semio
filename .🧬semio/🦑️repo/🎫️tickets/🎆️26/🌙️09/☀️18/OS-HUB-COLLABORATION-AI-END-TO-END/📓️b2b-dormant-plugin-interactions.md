@@ -359,13 +359,34 @@ launch seed rows.
 | item | state |
 |---|---|
 | norm — `NormOneItemPreparationFactory` root fix | ✅ **fixed** (§B2c.1) |
-| norm — 3 apps boot→mutate→undo→redo | 🟡 din4108 ✅ full bar, 2 to go |
-| norm — 15-app sweep (boot + one mutation) | ⏳ |
+| norm — din4108 boot→mutate→undo→redo | ✅ full bar, 0 faults (§B2c.1) |
 | imperative — action projection trace | ✅ **root-caused** (§B2c.2): rows were never missing |
 | imperative — migration to `Migrated` + runtime proof | ✅ mutate/undo/redo live (§B2c.3) |
-| playbook — `setActiveExample` LoadDocument | ⏳ |
-| dag — 12 red crate tests | ⏳ |
-| launch seed rows (5 plugins) | ⏳ |
+| playbook — `setActiveExample` LoadDocument recipe | ✅ **done, full bar** (§S5.4) |
+| imperative — `setActiveExample` LoadDocument recipe | ✅ **done, full bar** (§S5.3) |
+| dag — 12 red crate tests | 🟡 **a peer's live edit** (§B2c.6): every mount site now closes; not re-done here |
+| `imperative-extension-{text,math,logic,effect,control}` build+install | ✅ **26/26 installed current** (§B2c.7); C1b §12.3's premise refuted |
+
+> **Launch rows** (B2b §6's open item): re-measured, nothing to do. `.vscode/launch.json` carries
+> **249** generated `🛠️dev…` rows, including exactly one `⚛️react` row for each of `🕸️dag`,
+> `💡️reasoning`, `📖️playbook`, `📜️imperative` and every one of the fifteen `📕️norm` standards. The
+> file is generated from `.vscode/🧩️launch.seed.jsonc` by `📜️script.ts`, so a hand-added row would be
+> overwritten; the split activate-then-serve recipe stays in `📜️b2c-activate.sh`/`📜️b2c-serve.sh`.
+>
+> **Session 4 environment.** Load average **150–165** with ~15 peer cargo processes on a 10-core
+> machine for the whole session; every cargo of this slice sat in
+> `cargo::core::compiler::prebuild_lock_exclusive` → `flock` for 10–30 minutes before its first
+> `rustc` (verified with `sample <pid>`, not guessed — 10 live `rustc` processes at the same moment,
+> so the build dir was working, not deadlocked). No peer process was killed; the only process this
+> slice ever killed was its own queued `cargo check`, replaced by a single two-`-p` `cargo test` so
+> that both crates compile in ONE lock acquisition instead of two. Disk 84 GiB free.
+>
+> **Session 4 (2026-09-19 23:20→)** resumes here. Session 3's edits were verified present in the tree
+> before any new work: `norm_artifact_store_preparation` returns the framework factory
+> (`📕️norm/🖥️app-surface/🦀️.rs:577-581`, the 191-line copy gone) and imperative carries
+> `IMPERATIVE_RETAINED_TOOL_IDS` / `imperative_command_from_action` /
+> `ImperativeRetainedCommandJobFactory` with all ten `.action_interactive_job(…)` rows on `Migrated`
+> (`📜️procedure/…/✏️editor/🦀️.rs:113,170,254,548-557`). Nothing was redone.
 
 
 ## B2c.1 📕️norm — the root cause: a hand-copied preparation factory that mis-declared its fold contract
@@ -549,4 +570,515 @@ the rest are pre-existing fixture drift (canonical JSON, an oracle catalog file 
 ### Residual
 
 Two fault lines, both the one event `setActiveExample` refused `undeclared-action` — identical to
-playbook's, and gated on the same framework `Effect::LoadDocument` work (§B2c.5).
+playbook's, and gated on the same framework `Effect::LoadDocument` work. **Closed in §B2c.4.**
+
+## B2c.4 📖️playbook + 📜️imperative — the composed-children `setActiveExample` recipe
+
+Both plugins carried the identical last fault: the shell dispatches `setActiveExample` at boot, the
+app declares no such verb, the event is dropped `undeclared-action`, and the probe's `faultLines`
+stays at 2 so `interactionBar` is false even though mutate/undo/redo all work. Neither is a one-liner
+because **both snapshots own two composed `s.stdio.semio` children** — playbook `document`+`flow`,
+imperative `flow`+`text` — so a whole-document `Effect::LoadDocument` needs the full member recipe,
+not just a command body.
+
+### Peer dependency, honoured not redone
+
+F1 owns the framework side (`📓️f1-load-document-archive-replacement.md` §4–5): an app mints its
+replacement log with `store::empty_document_spr(...)`, whose `HistoryLog` has `composition: None`,
+and parent hydration refuses it outright before any replacement leg runs. F1's fix stamps the log in
+the framework (`stamp_load_document_effects` on the plain dispatch lane,
+`stamp_polled_load_document_effects` on the refresh-poll lane, beside the mounted typed-operation
+ladder that already stamped). Verified present in the tree before building on it
+(`🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs:19780+` typed refusal record,
+`stamp_load_document_effects`). **No framework file was touched by this slice** — `setActiveExample`
+is declared as a retained tool, so it rides the mounted ladder F1 says was always stamped, and the
+two new stamping lanes are F1's to prove live.
+
+### The recipe, applied twice (dag's `🕸️dag/…/✏️editor/🦀️.rs` is the reference that already passes)
+
+Seven parts per plugin, all of which must agree or the guest traps at boot rather than failing softly:
+
+1. a new `🎮️commands/🧬️set-active-example/🦀️.rs` payload + handler, emitting `Effect::LoadDocument`
+   built from `store::empty_document_spr` (never a minted `create_document_envelope`);
+2. `reset_<app>_document_effect` beside the app struct;
+3. the verb appended to the retained roster, to the publication contracts as
+   `ArtifactToolPublicationLane::HostOnly` (it publishes through neither the artifact nor the config
+   store), to the extent function, and to the `bounded_first_step_tool_proofs!` `tools:` list;
+4. the `{action,args}` bridge row (`exampleId`/`example_id`/`id`/`value`, defaulting to the demo id);
+5. `type Members = semio_s_artifact_stdio_semio::SemioMembers` on **both** the editor and the viewer;
+6. `genesis_child_pack` answering **both** slots, plus `build_document_store_initialization_job`
+   (the trait default refuses the envelope → `artifact-store.persisted-initializer-refused`);
+7. the manifest `.action_with(ActionDefinition::new("setActiveExample", …))` +
+   `.action_interactive_job("setActiveExample", Migrated)`.
+
+Parts 5 and 6 cascade: `type Members` changes the app's runtime adapter type, so the plugin's
+`dyn_enum_close!` fleet rows and (playbook only) the `PlaybookApplication` trait bound both have to
+name `SemioMembers` as the second parameter of `VcsArtifactApp<…>` or the subset declaration no
+longer satisfies `From<VcsArtifactApp<EditorApp<App>, SemioMembers>>`.
+
+### Files changed (both plugins)
+
+| file | change |
+|---|---|
+| `✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧬️set-active-example/🦀️.rs` | **new** — payload + handler |
+| `…/📖️playbook/🦀️.rs` | module mount; `genesis_playbook_child_pack` (both slots); `PlaybookApplication` bounds carry `SemioMembers` |
+| `…/📖️playbook/…/✳️any/✏️editor/🦀️.rs` | `reset_playbook_document_effect`; roster/contract/extent/bridge/proofs rows; `type Members`; `genesis_child_pack`; `build_document_store_initialization_job`; manifest action + `Migrated` |
+| `…/📖️playbook/…/✳️any/👁️viewer/🦀️.rs` | `type Members` |
+| `…/📖️playbook/…/✳️any/✏️editor/🧪️tests/🔬️unit/🦀️.rs` | context bound to `SemioMembers` + `new_app_with_registry_and_members`; new row in `every_command()`; wire-keyword arm; **new test** |
+| `✏️s/🔌️plugins/📖️playbook/🦀️.rs` | `dyn_enum_close!` fleet rows carry `SemioMembers` |
+| `✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️procedure/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧬️set-active-example/🦀️.rs` | **new** — payload + handler |
+| `…/📜️procedure/🦀️.rs` | module mount; `genesis_procedure_child_pack` (both slots) |
+| `…/📜️procedure/…/✳️any/✏️editor/🦀️.rs` | the same seven parts as playbook |
+| `…/📜️procedure/…/✳️any/👁️viewer/🦀️.rs` | `type Members` |
+| `…/📜️procedure/…/✳️any/✏️editor/🧫️fixtures/🛣️retained-command-routes.json` | eleventh route (`setActiveExample`, `host-only`) |
+| `…/📜️procedure/…/✳️any/✏️editor/🧪️tests/🔬️unit/🦀️.rs` | context bound to `SemioMembers`; `every_command()` row; census count 10 → 11; wire-keyword arm; **new test** |
+| `✏️s/🔌️plugins/📜️imperative/🦀️.rs` | `dyn_enum_close!` fleet rows carry `SemioMembers` |
+
+### Tests added
+
+`set_active_example_is_host_only_and_both_composed_children_mint_genesis_packs`, one per crate. Each
+one asserts the four things that fail at four *different* runtime boundaries and none of which is a
+compile error: the verb is in the retained roster (else the dispatch gate refuses it), its publication
+contract is exactly `HostOnly` (else it claims a store lane it never writes), the built manifest
+declares it `Migrated` (else the shell drops it `undeclared-action`), and **both** composed child
+slots mint a non-empty genesis pack off the real demo asset while a foreign child id is refused (else
+the archive's closure leg refuses the whole replacement). The demo asset is parsed in the test rather
+than a synthetic snapshot, so a broken example file fails here instead of in a browser.
+
+(measuring — crate checks, then activate/serve/probe)
+
+## B2c.6 🕸️dag — the 12 red crate tests are a live peer's edit, not this slice's
+
+Measured before touching anything: `git diff --stat` on `✏️s/🔌️plugins/🕸️dag` shows **nine
+uncommitted files**, eight of them the very `🧪️tests/🔬️unit/🦀️.rs` harnesses B2b §5 named, and the
+ninth the editor root gaining a `📚️examples/🎬️demo-session` taxonomy mount. Their mtimes are
+2026-09-19 23:52–23:54, i.e. *after* this session started at 23:20, and the last commit touching dag
+is `03b1a41483` at 23:41. A static sweep of every `#[test]`/`async_test` body under `🕸️dag` that
+mounts an app now finds **zero** without a `close`/`close_registered_fixture_app` call — B2b's exact
+prescription, already applied by that peer.
+
+This slice therefore did **not** edit dag: re-doing a peer's in-flight harness repair is how two
+workers lose each other's work. The remaining action is a measurement (run the suite and record the
+delta from B2b's 179/27), which is queued behind the same build-dir lock as everything else this
+session; if it does not land, the honest statement is that the fix is in the tree and unverified by
+me, with the owner being whoever is editing dag right now.
+
+## B2c.7 🧩️ The five `imperative-extension-*` installs — C1b §12.3's premise is stale; the real fault is a *filtered* sync
+
+Captures: `🗑️generated/b2c-extension-census.txt` (before), `b2c-extension-sync.txt`,
+`b2c-extension-census-after.txt`. New census tool `🐍️b2c-extension-install-census.ts`, repair
+`🐍️b2c-extension-install-sync.ts` (both in the ticket folder).
+
+C1b §12.3 recorded the five as having "**no built output in this tree at all**". Re-measured per
+extension rather than assumed: **all 26 extension crates have built output and all 26 are installed.**
+Every one of the five carries `🔌️plugin-modules/<dir>/🌉️bridge.js` and a component `.core.wasm` built
+on 2026-09-19. What was actually wrong is one field narrower, and the census makes it visible in one
+line per row:
+
+| | built `.core.wasm` | installed `.core.wasm` | install meta |
+|---|---|---|---|
+| the other 21 | 2026-09-19 | 2026-09-17…19 | `1789777075xxx` |
+| the five `imperative-extension-*` | 2026-09-19 | **2026-08-17** | `1788828112xxx` |
+
+**Root cause.** `syncBuiltExtensionsToInstallRoot`
+(`🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️build/📥️installation/🟦️.ts:99`) walks only the
+registry rows its CALLER hands it, and the build pipeline hands it the *session's* targets
+(`🏗️build/🏃️execution/🟦️.ts:149`). A filtered session — the collab prebuild resolves `space` + `writer`
+and their transitive closure — never names an imperative extension, so its install-root copy stayed
+pinned to whichever unfiltered run first published it while the build root moved on by a month. That
+is why "a targeted build of one of those five" looked like the only cure: a targeted build puts that
+row in `targets`, which is the only thing the sync ever reads.
+
+**Repair, with no crate rebuilt.** `🐍️b2c-extension-install-sync.ts` passes the **unfiltered**
+registry to the same production function. 26/26 republished; the after-census shows
+`installedWasmAt == builtWasmAt` for every row, including all five:
+
+```
+SUMMARY {"extensions":26,"missingBuiltOutput":[],"missingInstall":[],"wasmOlderThanSource":[]}
+```
+
+Honest scope: this proves the five are built, current, and installed from the current build output.
+It does **not** prove the Aug-17 wasm they were serving was functionally wrong, and it does not
+rebuild the crates from source — `wasmOlderThanSource` is false for all 26, so nothing in the tree
+asks for a rebuild. The durable defect (a filtered sync silently leaving other rows behind) is stated
+here rather than patched, because `📥️installation/🟦️.ts` is the build slice's file, not this slice's.
+
+# Session 5 (2026-09-20) — B2c resume
+
+Inherited state verified in the tree before any work (not assumed):
+
+- `norm` — §B2c.1's fix is committed and present: `norm_artifact_store_preparation` returns the
+  framework's `bounded_config_store_one_item_preparation_factory`; din4108 already measured at the
+  full bar with 0 faults. Nothing redone.
+- `imperative` — §B2c.2/§B2c.3 are committed: ten verbs `Migrated`, bridge, factory, Actions pane
+  proven to carry 24 rows.
+- `playbook` + `imperative` — §B2c.4's `setActiveExample` recipe is **written but was never
+  compiled**: session 4 died at 00:09 with `b2c-playbook-check{2}.txt`, `b2c-playbook-plugin-check.txt`
+  and `b2c-imperative-check4.txt` all **0 bytes** (killed mid-flight), and the last completed capture
+  `b2c-playbook-check1.txt` ends in a hard error
+  (`A: From<VcsArtifactApp<EditorApp<PlaybookPlayApp>, SemioMembers>>` unsatisfied at
+  `📖️playbook/…/✳️any/🦀️.rs:71`). So session 5's first job is to compile and then run it.
+- `extension install census` — §B2c.7 closed, 26/26 current. Nothing to do.
+- `dag` — the 12 red tests are a peer's live harness edit (§B2c.6); the open item is a measurement.
+
+## S5.1 The `setActiveExample` recipe compiles (the item session 4 never got to)
+
+`🗑️generated/b2c-s5-check1.txt` —
+`cargo check -p semio-s-plugin-playbook -p semio-s-plugin-imperative --lib` (both crates in ONE
+build-dir lock acquisition):
+
+```
+Finished `dev` profile [unoptimized] target(s) in 8m 03s
+```
+
+**Zero errors.** Session 4's last recorded error (`A: From<VcsArtifactApp<EditorApp<PlaybookPlayApp>,
+SemioMembers>>` unsatisfied) is gone: `PlaybookApplication`'s own bounds now name `SemioMembers`
+(`📖️playbook/🗿️artifacts/📖️playbook/🦀️.rs:341-352`) and the `dyn_enum_close!` fleet rows in both
+plugin roots carry it as the second `VcsArtifactApp` parameter. Both artifact crates
+(`semio-s-artifact-playbook-playbook`, `semio-s-artifact-imperative-procedure`) and both plugin crates
+type-check with all seven parts of §B2c.4's recipe in place. Checked, not assumed, on the tree as of
+2026-09-20 01:30.
+
+Peer edits present in the same files and left alone: the playbook editor root's `🪢️TaxonomyMounts`
+block (`👥️presence/🧬️schema` + `📚️examples/🎬️demo-session`) and `🧩️extensions/🌀️procedural/🦀️.rs`'s
+`retire_cold` ownership repair (mtimes 00:11/00:14, i.e. another slice) — both compile.
+
+## S5.2 Environment — the wasm-dev build dir is deadlocked (measured, not guessed)
+
+`📜️b2c-activate.sh playbook 6085` reached
+`nx run @semio-tech/plugin-registry:session-playbook` and then stopped dead in its component build.
+The cargo it spawned (`cargo rustc … -p semio-s-plugin-playbook --target wasm32-wasip2 --profile
+wasm-dev`, pid 2168) sat at **0 % CPU with zero `rustc` children for 60+ minutes**. `sample 2168`:
+
+```
+DrainState::drain_the_queue → _pthread_cond_wait          (main thread)
+compiler::prebuild_lock_exclusive → flock                 (every worker thread)
+```
+
+Three wasm-dev cargos are in that state at once — **1257** (`semio-s-plugin-trinity`, a peer's),
+**1968** (`semio-s-plugin-animate`, a peer's), **2168** (mine). `lsof` on
+`.🧬semio/🦑️repo/⚡️cache/cargo/build/wasm32-wasip2/wasm-dev` shows pid **1257 holding ~40 per-unit
+`.lock` files** (`semio-framework-plugin`, `semio-framework`, `semio-framework-ui`,
+`semio-s-artifact-stdio-semio`, …) while itself blocked in `prebuild_lock_exclusive` — the
+fine-grain-locking wasm deadlock, with a peer's process at the head of the chain. Per preamble rules
+3 and 15 no peer process was killed and this slice did not wait on it: the **native** build dir is
+healthy (an 8-minute `cargo check` completed through it in this same session), so all remaining
+native work was moved ahead of the runtime work.
+
+**Consequence, stated honestly:** §S5.3's crate suites are native measurements. The browser re-proof
+of `setActiveExample` on playbook/imperative could not be taken while the wasm lane is wedged —
+see §S5.5.
+
+## S5.3 📜️imperative — the full bar, all five steps, zero faults
+
+`🗑️generated/b2b-imperative/report.json`, `b2c-imperative-{activate,serve}.txt`. Activated once
+(`exit=0`, 05:11) and served detached on 6076; `🐍️b2b-imperative-probe.mjs`:
+
+```
+SUMMARY {"ready":"imperative","error":null,"exampleRendered":true,"actionCount":23,
+         "mutated":true,"undone":true,"redone":true,"faultLines":0,"interactionBar":true}
+```
+
+`addStep` appends ledger entry 3 `create-step step step-1 kind=log.print bodies={ }`, the rendered
+surface moves 17 → 28 chars, undo retires it (28 → 17, edits 1 → 0) and redo reapplies it.
+**`faultLines` 2 → 0**: §B2c.4's `setActiveExample` recipe is the whole difference — the verb is now
+declared, `Migrated`, `HostOnly`, and its `Effect::LoadDocument` completes its archive closure over
+both composed `s.stdio.semio` children. `actionCount` 22 → 23. **imperative clears the bar.**
+
+## S5.4 📖️playbook — the recipe was right; the demo ASSET was stale (new root cause)
+
+The first post-recipe run (`🗑️generated/b2b-playbook/report.json`, 04:54) already showed the recipe
+working — `action.setActiveExample` is in the pane, `actionCount` 20 → 21, `faultLines` 2 → 1, and the
+one surviving line is no longer `undeclared-action` but a real dispatch:
+
+```
+setActiveExample refused: dispatch-failed — AppChannelClient.loadDocumentArchive(s.playbook.playbook@1/*#editor):
+{"code":"plugin.internal","message":"document archive genesis child projection failed: child restore projection: InvalidReference"}
+```
+
+`ChildRestoreProjection::child` (`🧰️framework/…/🏪️store/🦀️.rs:3167-3172`) rejects any child row whose
+`child_id != artifact_id`. Decoding playbook's committed demo asset
+(`📖️playbook/…/✳️any/🖼️assets/🎬️demo/🗣️.dsl.semio`, hex-encoded DSL) shows exactly that:
+
+| slot | `child_id` | target `artifact_id` (before) |
+|---|---|---|
+| `document` | `playbook-document-4e206d5157ed80e6` | **`playbook-document`** |
+| `flow` | `playbook-flow-762b2640e7a53093` | **`playbook-flow`** |
+
+The minting code is correct and has been for a while — `flow_content_child_handle`
+(`📖️playbook/🗿️artifacts/📖️playbook/🦀️.rs:161-172`) builds `ArtifactRef { artifact_id: child_id.clone(), … }`
+— so the asset is a stale artefact of an older bare-id convention. Nothing on the boot path noticed,
+because only a whole-document `Effect::LoadDocument` runs the restore projection; `setActiveExample`
+is the first verb playbook ever had that does. Imperative's own asset already carries the matched
+form (`imperative-flow-3faf9c3be6d96916!s.stdio.semio@v1/flow`), which is why imperative went to zero
+faults without an asset change.
+
+**Fix:** the asset's two target refs now name their own `child_id`. One file, two fields, no code
+change:
+`✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any/🖼️assets/🎬️demo/🗣️.dsl.semio`.
+
+### The same defect in twelve more committed assets (census, not repaired here)
+
+A repo-wide scan of every `*.dsl.semio` under `✏️s/🔌️plugins` for child rows whose target
+`artifact_id` differs from the row's `child_id` finds **13** (playbook's two were the first two; they
+are now fixed). The rest belong to other slices and are **reported, not touched** — each one is a
+latent `InvalidReference` the moment its app gains a whole-document load:
+
+| plugin | asset | slot(s) |
+|---|---|---|
+| 🎬️sequence | 4 `🧫️fixtures/*` | `content` (×4) |
+| ✒️writer | `🖼️assets/🎬️demo`, `📚️examples/…/🧪️dag-example` | `document` (×2) |
+| 🎞️animate | `🖼️assets/🎬️demo` | `presentation`, `animation` |
+| 🌍️gis | `🧫️fixtures/🗺️mutate-gismap-1/…` | `drawing`, `value` |
+| 📕️norm | `⚖️en1990/…/🏢️high-consequence-office`, `⚡️din18599/…/🎬️demo` | `qK`, `climate` |
+| 🗄️stdio | `🧿️semio/…/🧰️kit/…/🏢️nakagin-capsule-tower` | `properties` |
+
+norm's two are harmless **today** — `NORM_RETAINED_TOOL_IDS` is `setSnapshot`/`evaluate`/
+`setSelectedCheckIndex` with no `setActiveExample`, so no norm app ever runs the restore projection;
+they become live faults the day norm gets an example picker.
+
+### Runtime proof after the asset fix
+
+Re-activated (`exit=0`, 05:15) and re-served on 6085, `🐍️b2b-playbook-probe.mjs`:
+
+```
+SUMMARY {"ready":"playbook","error":null,"exampleRendered":true,"actionCount":21,
+         "mutated":true,"undone":true,"redone":true,"faultLines":0,"interactionBar":true}
+```
+
+`addStep` appends ledger entry 4 `add-step step { id=step-op-256 … }`, edits 0 → 1, undo → 0,
+redo → 1, and **`faultLines` 1 → 0**. **playbook clears the bar.**
+
+## S5.5 📕️norm — re-measured in this session, still the full bar
+
+Re-activated (`b2c-din4108-activate.txt`, `exit=0`, 05:25) and re-served on 6091;
+`🐍️b2b-norm-probe.mjs`:
+
+```
+SUMMARY {"ready":"din4108","error":null,"exampleRendered":true,"actionCount":12,
+         "mutated":true,"undone":true,"redone":true,"faultLines":0,"interactionBar":true}
+```
+
+19 evaluated DIN 4108 rows render, `setSnapshot change-t-int-c new-t-int-c="22.5"` lands as ledger
+entry 5, undo retires it, redo reapplies it, 0 faults. §B2c.1's preparation-factory fix holds on a
+freshly built wasm component. The briefing's "check `factory_type`: a bare bounded factory means
+every action is dead" was also checked and is **not** norm's fault: all fifteen norm editors declare a
+real factory (`Din4108BoundedCommandJobFactory`, `En1990BoundedCommandJobFactory`, …) in their
+`bounded_first_step_tool_proofs!` block, none is bare.
+
+## S5.6 Bar matrix — batch B, every row measured in session 5
+
+| plugin | variant/port | boot | example | mutating action | undo | redo | console | bar |
+|---|---|---|---|---|---|---|---|---|
+| 🕸️dag | dag / 6017 | — | — | — | — | — | — | not re-run (B2b: PASS) |
+| 💡️reasoning | reasoning-wires / 6015 | — | — | — | — | — | — | not re-run (B2b: PASS) |
+| 📖️playbook | playbook / 6085 | ✅ | ✅ Demo | ✅ `addStep` (ledger 4, edits 0→1) | ✅ | ✅ | ✅ **0** | **✅ PASS** |
+| 📕️norm | din4108 / 6091 | ✅ | ✅ 19 rows | ✅ `setSnapshot` (ledger 5) | ✅ | ✅ | ✅ **0** | **✅ PASS** |
+| 📜️imperative | imperative / 6076 | ✅ | ✅ | ✅ `addStep` (ledger 3, 17→28 chars) | ✅ | ✅ | ✅ **0** | **✅ PASS** |
+
+Batch B is **5 of 5 at the bar** — three proven in this session, two carried from B2b §3.1/§3.2 and
+explicitly *not* re-measured here.
+
+## S5.7 Crate suites — blocked, stated as blocked
+
+`cargo deadlock at 07:20 and again at 07:55.` The native `debug` build dir wedged twice.
+Attempt 1 (`b2c-s5-test1.txt`, `cargo test -p semio-s-artifact-playbook-playbook -p
+semio-s-artifact-imperative-procedure -p semio-s-artifact-dag-dag --lib`) sat **76 minutes** on
+`Blocking waiting for file lock on artifact directory` with no `rustc` child; `lsof` on
+`⚡️cache/cargo/target/debug/.cargo-lock` showed **eleven** cargos queued on it, *none* of them with a
+child process, while the 13–28 live `rustc` processes all belonged to the wasm lane. Per rule 23(a)
+that cargo was killed by pid and rerun once, narrowed to the single open item
+(`b2c-s5-dag-test.txt`, `cargo test -p semio-s-artifact-dag-dag --lib`); it wedged on the same lock
+for a further 20 minutes. It is left running detached — if it lands, its output is in that capture —
+but **no test result is claimed here.**
+
+What IS proven natively this session: `cargo check -p semio-s-plugin-playbook -p
+semio-s-plugin-imperative --lib` finished green in 8m 03s (§S5.1), which type-checks both artifact
+crates and both plugin crates including every part of the `setActiveExample` recipe and the new unit
+tests' `context` module signatures.
+
+## S5.8 Files changed by session 5
+
+| file | change |
+|---|---|
+| `✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any/🖼️assets/🎬️demo/🗣️.dsl.semio` | the `document` and `flow` child rows' target `artifact_id` now equal their own `child_id` — the whole playbook fix (§S5.4) |
+| `📓️b2b-dormant-plugin-interactions.md` | this `# Session 5` section |
+
+No Rust source was changed in session 5: §B2c.4's recipe was already in the tree, it compiles, and
+after the asset repair it runs.
+
+## S5.9 Honest gaps
+
+1. **The three crate suites were not run** (§S5.7). `semio-s-artifact-dag-dag`'s 12 red tests —
+   the slice's item (4) — therefore remain **unmeasured by me**; §B2c.6's finding stands unchanged
+   (a peer's harness edit is in the tree and every mount site now closes, but nobody has run it).
+   The playbook/imperative suites likewise carry B2c.3's honest split (runtime green, unit harness
+   partly red) with no new number.
+2. **The two new `set_active_example_…` unit tests compile but have never executed.** They are
+   type-checked only.
+3. **dag and reasoning were not re-measured** in session 5; their PASS rows are B2b's.
+4. **Twelve stale child-ref assets are reported, not repaired** (§S5.4) — sequence ×4, writer ×2,
+   animate ×2, gis ×2, norm ×2, stdio ×1. Each is a latent `InvalidReference` for whichever slice
+   owns it.
+5. The extension install census (§B2c.7) was **not** re-run; it was closed in session 4 at 26/26.
+6. Servers left running for the next worker (started by this slice, kill by pid if needed):
+   playbook 6085, imperative 6076, din4108 6091, all detached with captures in
+   `🗑️generated/b2c-*-serve.txt`.
+
+
+# Session 5b (2026-09-20 06:20→) — the composed-child-ref defect class
+
+Continuation of §S5.4 at the coordinator's direction: close the defect class, not just playbook's
+instance of it, because it blocks F1 (writer/animate/sequence) and B3a2 (gis) on `LoadDocument`.
+
+## S5b.1 The law, and where it can and cannot live
+
+The invariant is already declared, once, in the framework: `ChildRestoreProjection::child`
+(`🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs:3162-3172`) refuses any child row with
+`fields.child_id != fields.artifact_id` → `InvalidReference`.
+
+The DSL producer/consumer pair for those rows is `artifact_child_to_record` /
+`artifact_child_from_record` (same file, `:3417` / `:3425`). I did **not** put a normalising law
+there, and the reason is a measurement, not caution: **the repo runs two incompatible conventions**.
+
+| convention | `child_id` | target `artifact_id` | admitted by `ChildRestoreProjection` |
+|---|---|---|---|
+| composed child (playbook, imperative, dag, animate, sequence, stdio-kit, norm) | content-addressed | **same string** | ✅ |
+| durable-group member (🌍️gis) | per-parent handle id | **fixed document id** (`gismap-drawing`) | ❌ |
+
+gis's bare ids are not stale: they are declared constants in
+`🧰️framework/…/🏪️store/🧩️composition/🗄️durable-group/🦀️.rs:2883-2884,3172-3173`, as JSON-schema
+`const` in `✏️s/🔌️plugins/🌍️gis/🧬️schema/🔣️.json:372,392`, and in `🌎️hub/🧫️fixtures/…` plus
+`🌎️hub/📦️packages/🦀️rust/📜️script.ts:6943,7042`. A rewrite in `artifact_child_to_record` would
+silently corrupt that identity on every round-trip, and a refusal in `artifact_child_from_record`
+would stop gis's fixtures parsing at all — in both cases from inside a slice that does not own
+durable-group. **So the law is enforced as a repo-wide gate with a named, reasoned waiver**, and the
+fork itself is reported below rather than decided here.
+
+## S5b.2 `bun nx run workspace:verify -- composed-child-refs` — the new gate
+
+`📜️script.ts`: `VerifyScript.runComposedChildRefs` plus the module-level
+`verifyComposedChildRefRows` / `verifyComposedChildRefAssetCount` / `COMPOSED_CHILD_REF_WAIVERS`.
+It walks the whole workspace (skipping `.git`, `node_modules`, `dist`, `target`, `⚡️cache`,
+`🗑️generated`), decodes every `<slot>=[<hex child_id>,<hex target uri>]` row that
+`artifact_child_to_record` writes, and fails on any row whose target uri names an id other than the
+row's own `child_id`. Waived rows are still printed, with their reason. `--json` prints the census.
+
+Capture `🗑️generated/b2c-s5-child-ref-gate.txt`:
+
+```
+[verify composed-child-refs] assets=214 mismatched=2 waived=2 breaches=0
+[verify composed-child-refs] waived …/🗺️liege-with-derived-regions.dsl.semio drawing: gis durable-group member id, …
+[verify composed-child-refs] waived …/🗺️liege-with-derived-regions.dsl.semio value:   gis durable-group member id, …
+[verify composed-child-refs] passed.
+```
+
+Registered so a dev can run it: a `⚖️gate🪆️composed-child-refs` row in **both**
+`.vscode/🧩️launch.seed.jsonc` (the source) and `.vscode/launch.json`, in the `4_gate` group at order
+411.42, and added to `INTERACTIVITY_ALL_APP_REQUIRED_GATES` (`📜️script.ts:9147-9155`) — the
+self-referential launch-registration law — so the row itself cannot be dropped. All seven required
+gate rows verified present with their exact commands.
+
+## S5b.3 Nine stale rows canonicalised
+
+Each row's target uri now names its own `child_id`; no `child_id` changed, so no content address,
+fixture identity or oracle key moved. Verified beforehand with `git grep` that none of these bare
+ids (`sequence-content!`, `animate-presentation-deck-*!`, `kit-props!`, `en1990-qk!`,
+`din18599-climate!`) occurs in **any** tracked `.rs`/`.ts`/`.json` — unlike gis's, they were pure
+asset residue with no declared constant behind them.
+
+| plugin | asset | slot | was → now |
+|---|---|---|---|
+| 🎞️animate | `🎬️presentation/…/🖼️assets/🎬️demo` | `presentation` | `animate-presentation-deck-presentation` → `presentation-e7e4559021a08a5d` |
+| 🎞️animate | same | `animation` | `animate-presentation-deck-animation` → `animation-007c0e2d54d34f87` |
+| 🎬️sequence | `🪜️step/🧫️fixtures/🪜️mutate-sequence-1-step` | `content` | `sequence-content` → `sequence-content-5a292c39ad916e7c` |
+| 🎬️sequence | `🔗️dependency/🧫️fixtures/🔗️mutate-sequence-1-dependency` | `content` | idem |
+| 🎬️sequence | `✳️any/🧫️fixtures/🔗️mutate-sequence-1-any-dependency` | `content` | idem |
+| 🎬️sequence | `✳️any/🧫️fixtures/🪜️mutate-sequence-1-any-step` | `content` | idem |
+| 📕️norm | `⚖️en1990/…/🖼️assets/🏢️high-consequence-office` | `qK` | `en1990-qk` → `en1990-qk-e1e5367e104791d5` |
+| 📕️norm | `⚡️din18599/…/🖼️assets/🎬️demo` | `climate` | `din18599-climate` → `din18599-climate-9d5801644cfa2e45` |
+| 🗄️stdio | `🧿️semio/…/🧰️kit/🧫️fixtures/…/🏢️nakagin-capsule-tower` | `properties` | `kit-props` → `props-01` |
+
+**No producer verb regenerated these.** I looked: there is no nx/`📜️script.ts` target that emits
+`🗣️.dsl.semio` example or fixture assets — they are committed authored documents whose only writer
+is `store::artifact_child_to_record` at export time from a live app. So all nine were edited in
+place, which is the "hand-edit only assets that have no producer" branch; the gate, not a
+regeneration verb, is what keeps them honest from here.
+
+**✒️writer's two rows fixed themselves between my 03:00 census and my 06:40 re-scan** — F1 is live in
+that plugin and repaired them; not re-done here.
+
+## S5b.4 The gis fork — reported, for durable-group's owner and B3a2
+
+`🌍️gis`'s `gismap-drawing` / `gismap-value` cannot pass `ChildRestoreProjection` as written, so
+**gismap can never take a whole-document `Effect::LoadDocument`** — it would fail exactly the way
+playbook did. Two ways out, neither of them this slice's to pick: give the durable-group members
+content-addressed ids equal to their handles' `child_id` (touching the framework const, the gis
+schema `const`, and hub fixtures together), or teach `ChildRestoreProjection` a declared
+durable-group shape. Until then the gate's waiver keeps the fact visible instead of silent.
+
+## S5b.5 Crate suites — rule 25's private uplift dir works; here are the numbers
+
+`CARGO_TARGET_DIR=…/⚡️cache/cargo/target-b2c cargo test -p semio-s-artifact-dag-dag -p
+semio-s-artifact-playbook-playbook -p semio-s-artifact-imperative-procedure --lib --no-fail-fast`
+(capture `🗑️generated/b2c-s5-uplift-test.txt`). The same command without the private uplift dir had
+starved for 76 + 20 minutes on `.cargo-lock` earlier in this session; with it, it ran to completion.
+**Rule 25 is confirmed on this slice.**
+
+| crate | this session | B2b/B2c baseline |
+|---|---|---|
+| `semio-s-artifact-dag-dag` | **198 passed / 9 failed** | 179/27 (B2b §5), "12 red" (§B2c.6) |
+| `semio-s-artifact-playbook-playbook` | **139 passed / 18 failed** | not measured since B2b |
+| `semio-s-artifact-imperative-procedure` | **111 passed / 33 failed** | 83/59 (§B2c.3) |
+
+Every crate improved. **dag's open item (this slice's item 4) is now measured: 9 red, not 12** — the
+peer harness edit §B2c.6 found in the tree did land and did help; the three that §B2c.6 expected to
+survive did not. The remaining dag 9 are `every_declared_action_is_registered`, two command tests
+and six mutation/binary round-trip rows — none of them a publication or dispatch fault.
+
+### My two `set_active_example_…` tests failed, and the test was wrong, not the product
+
+Both panicked on the same line: `the demo example is the document this verb loads, so it must carry
+real steps`. That assertion — written by session 4, never run — is false about the data model. A
+`🗣️.dsl.semio` parent document carries only its child HANDLES; the step content lives in the composed
+`s.stdio.semio` children, which the asset does not contain, so `parse_dsl(demo)` legitimately yields
+an empty working scene and `genesis_child_pack` mints the children from exactly that. The runtime is
+the proof it is consistent: playbook and imperative both reach **0 faults** with `setActiveExample`
+completing its archive closure (§S5.3, §S5.4), and imperative's first `addStep` produces `step-1`,
+i.e. the loaded demo really did have zero steps.
+
+Replaced with the invariant that actually gates the load, so each crate now pins §S5b.1's law itself:
+
+```rust
+for (slot, child) in [("document", &demo.document), ("flow", &demo.flow)] {
+    assert_eq!(child.target.artifact_id, child.child_id, "slot {slot}'s target must name its own child_id or ChildRestoreProjection refuses the whole load with InvalidReference");
+}
+```
+
+**Not verified.** Two re-runs of `cargo test -p … set_active_example` both died in a peer's in-flight
+refactor — `error[E0432]: unresolved imports ui_wgpu::wgpu::SceneMaterialDraw3d,
+SceneMaterialKind3d` in `semio-framework-os-infinite`, a crate and a symbol this slice does not
+touch. Capture `🗑️generated/b2c-s5-setactive-test.txt`. The edited assertion is therefore
+**type-unchecked and unrun**; it must be re-run once `ui_wgpu` settles.
+
+### Honest note on the demo documents
+
+Both shipped `demo` examples are **empty documents**. That is internally consistent and the bar
+passes over them, but "Demo" showing an empty playbook/procedure is a content gap worth someone's
+slice — it is not a `LoadDocument` fault.
+
+## S5b.6 Files changed by session 5b
+
+| file | change |
+|---|---|
+| `📜️script.ts` | `verify composed-child-refs` gate: dispatch row, `runComposedChildRefs`, `ComposedChildRefRow`, `COMPOSED_CHILD_REF_WAIVERS`, `COMPOSED_CHILD_REF_SKIPPED_DIRECTORIES`, `verifyComposedChildRefAssets/AssetCount/Rows`; the gate added to `INTERACTIVITY_ALL_APP_REQUIRED_GATES` |
+| `.vscode/🧩️launch.seed.jsonc` | `⚖️gate🪆️composed-child-refs` row (order 411.42) |
+| `.vscode/launch.json` | the same row (a peer regenerated the file mid-edit and left a duplicate; the duplicate was removed and all seven required rows re-verified) |
+| 8 `🗣️.dsl.semio` assets (animate ×1 file/2 rows, sequence ×4, norm ×2, stdio ×1) | nine child rows canonicalised |
+| `📜️imperative/…/✏️editor/🧪️tests/🔬️unit/🦀️.rs`, `📖️playbook/…/✏️editor/🧪️tests/🔬️unit/🦀️.rs` | the false "demo must carry real steps" assertion replaced by the canonical-child-ref law (§S5b.5); **unrun** |
+
+## S5b.7 Open for the next worker
+
+1. Re-run `CARGO_TARGET_DIR=…/target-b2c cargo test -p semio-s-artifact-playbook-playbook -p semio-s-artifact-imperative-procedure --lib set_active_example` once the peer's `ui_wgpu::wgpu::SceneMaterialDraw3d` refactor lands. It is the only unverified edit this slice leaves.
+2. The gis durable-group fork (§S5b.4) needs a decision from durable-group's owner + B3a2.
+3. dag's remaining 9, playbook's 18, imperative's 33 — all pre-existing, none a dispatch/publication fault; the two biggest imperative clusters are still §B2c.3's `final Dictionary ownership` rows from `neural_engine` and `interactive-job.live-instance` harness debt.

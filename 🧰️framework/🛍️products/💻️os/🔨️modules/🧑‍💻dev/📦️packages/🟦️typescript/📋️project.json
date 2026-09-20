@@ -282,6 +282,26 @@
       },
       "outputs": []
     },
+    "cold-boot-check-s": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "dependsOn": ["activate-s-react-dev"],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts cold-boot-check s react dev"
+      },
+      "outputs": []
+    },
+    "s-host-foreign-kind-s": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": ".",
+        "command": "bun .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️18/OS-HUB-COLLABORATION-AI-END-TO-END/🐍️s2-s-host-foreign-kind-probe.mjs",
+        "forwardAllArgs": true
+      },
+      "outputs": []
+    },
     "generate-distribution": {
       "executor": "nx:run-commands",
       "options": {

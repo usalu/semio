@@ -215,6 +215,67 @@ export function hubSessionMintRequestJsonV1(credential: HubSignInCredentialV1): 
 }
 //#endregion 🔖️MintWire
 
+//#region 🔖️Capability
+export const HUB_SESSION_CAPABILITY_STORAGE_KEY_V1 = "semio.os.hub-session-capability.v1";
+
+/** 🎫️ One minted hub session as this browsing context remembers it. The token is the whole
+ * capability, so it is held in a store whose lifetime matches a browsing context — not the
+ * connection book, which is durable hub IDENTITY (origin, label, last user) and deliberately carries
+ * no secret. `origin` is stored beside it because a capability minted by one hub must never be
+ * offered to another. */
+export interface HubSessionCapabilityV1 {
+  readonly origin: string;
+  readonly token: string;
+  readonly userId: string;
+}
+
+const HUB_SESSION_CAPABILITY_SCHEMA_V1 = "semio.os.hub-session-capability.v1";
+
+/** 📥️ Decodes a remembered capability, refusing anything that is not exactly one: a tampered store,
+ * a token of the wrong shape, or a capability minted for a different hub than the one being asked
+ * about all yield `null`, so a reload can only ever restore a session this hub actually issued. */
+export function parseHubSessionCapabilityV1(source: string | null, origin: string): HubSessionCapabilityV1 | null {
+  if (source === null) return null;
+  let value: unknown;
+  try {
+    value = JSON.parse(source);
+  } catch {
+    return null;
+  }
+  if (value === null || typeof value !== "object" || Array.isArray(value)) return null;
+  const object = value as Record<string, unknown>;
+  if (object.schema !== HUB_SESSION_CAPABILITY_SCHEMA_V1) return null;
+  const keys = Object.keys(object).sort().join(",");
+  if (keys !== "origin,schema,token,userId") return null;
+  if (typeof object.origin !== "string" || object.origin !== origin) return null;
+  if (typeof object.token !== "string" || !HUB_SESSION_TOKEN.test(object.token)) return null;
+  if (typeof object.userId !== "string" || object.userId.length === 0 || object.userId.length > 256 || /\p{Cc}/u.test(object.userId)) return null;
+  return { origin: object.origin, token: object.token, userId: object.userId };
+}
+
+/** 🔎️ Restores the capability this browsing context holds for `origin`, or `null`. A throwing or
+ * blocked store is an absent session, never a failure: the shell must still start locally. */
+export function readHubSessionCapabilityV1(storage: HubConnectionStorageV1 | null, origin: string): HubSessionCapabilityV1 | null {
+  try {
+    return parseHubSessionCapabilityV1(storage?.getItem(HUB_SESSION_CAPABILITY_STORAGE_KEY_V1) ?? null, origin);
+  } catch {
+    return null;
+  }
+}
+
+/** 💾️ Remembers the capability just minted, so a page reload re-bootstraps the same hub session
+ * instead of dropping the human back to a sign-in form. `null` forgets it — a sign-out, a `401`, or
+ * a hub switch. */
+export function writeHubSessionCapabilityV1(storage: HubConnectionStorageV1 | null, capability: HubSessionCapabilityV1 | null): void {
+  try {
+    if (capability === null) storage?.setItem(HUB_SESSION_CAPABILITY_STORAGE_KEY_V1, "");
+    else storage?.setItem(HUB_SESSION_CAPABILITY_STORAGE_KEY_V1, JSON.stringify({ origin: capability.origin, schema: HUB_SESSION_CAPABILITY_SCHEMA_V1, token: capability.token, userId: capability.userId }));
+  } catch {
+    return;
+  }
+}
+//#endregion 🔖️Capability
+
 //#region 🔖️Device
 const HUB_DEVICE_INSTANCE_STORAGE_KEY_V1 = "semio.os.hub-device-instance.v1";
 

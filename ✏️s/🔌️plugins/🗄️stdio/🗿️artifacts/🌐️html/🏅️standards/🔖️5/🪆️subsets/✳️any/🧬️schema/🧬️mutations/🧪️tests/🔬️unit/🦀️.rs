@@ -21,7 +21,11 @@ async fn insert_then_remove_node_apply_and_inverse() {
     let mut after = base.clone();
     apply_html_mutation(&mut after, &insert);
     match node_at(&after, &[0]).unwrap() {
-        HtmlNode::Element { children, .. } => assert_eq!(children.len(), 2),
+        HtmlNode::Element { children, .. } => {
+            assert_eq!(children.len(), 3, "body is [<p>, trailing-newline text] before the insert (normalize_html_root_whitespace)");
+            let HtmlNode::Element { name, .. } = &children[1] else { panic!("expected the inserted element at index 1, got {:?}", children[1]) };
+            assert_eq!(name, "span");
+        }
         other => panic!("unexpected node {other:?}"),
     }
     let inverses = Mutation::inverse(&insert, &base);
@@ -84,7 +88,7 @@ async fn remove_node_inverse_restores_removed_node() {
     let mut after = base.clone();
     apply_html_mutation(&mut after, &remove);
     match node_at(&after, &[0]).unwrap() {
-        HtmlNode::Element { children, .. } => assert!(children.is_empty()),
+        HtmlNode::Element { children, .. } => assert_eq!(children, &vec![HtmlNode::Text { text: "\n".into() }], "removing body's only element leaves just the trailing-newline text node"),
         other => panic!("unexpected node {other:?}"),
     }
     for inv in Mutation::inverse(&remove, &base) {

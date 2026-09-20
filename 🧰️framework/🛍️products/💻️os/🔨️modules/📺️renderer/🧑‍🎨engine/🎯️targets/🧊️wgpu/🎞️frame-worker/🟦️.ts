@@ -10,6 +10,7 @@ import { INTERACTIVE_WORKER_DESCRIPTORS, InteractiveWorkerScheduler } from "../�
 import { loadPluginModule, pluginHandleForBridge, primeContributionManifest } from "../🐚️plugin-bridge/🟦️.ts";
 import { createLazyPluginInstallDoor } from "./🧩️lazy-install/🟦️.ts";
 import { meshAssetTransportUrl } from "../../../../../../../../🔨️modules/🖼️assets/🥽️mesh/🟦️.ts";
+import { concatenateReferenceImageSource, decodeReferenceImage, referenceImageBitmapForStage, referenceImageSourceDigest, referenceImageSourceDimensions, referenceImageTargetSize, streamReferenceImageBitmapRows, type ReferenceImageDimensions } from "../🖼️reference-image-decode/🟦️.ts";
 
 //#region 🔖️Bindings
 /** @emoji 🔢️ `generation` and `sequence` are `u64` on the renderer's own `#[wasm_bindgen]` exports
@@ -23,10 +24,15 @@ type BrowserRendererWorkerHandle = {
   enqueueBatch(eventsJson: string, generation: bigint): void;
   tick(timestampMs: number, sequence: bigint, generation: bigint): string;
   pollAssetRequest(): string;
+  assetResponseCurrent(): boolean;
+  beginReferenceImage(width: number, height: number, digest: string): number;
+  pushReferenceImageRows(offset: number, pixels: Uint8Array): boolean;
+  sealReferenceImage(): boolean;
   reserveAssetResponse(byteCredits: number): boolean;
   pushAssetResponsePage(bytes: Uint8Array): void;
   sealAssetResponse(): boolean;
   abortAssetResponse(): void;
+  rejectAssetResponse(): boolean;
   closeStep(): boolean;
 };
 
@@ -282,6 +288,8 @@ let jobsCloseComplete = false;
 let closeOwner: "runtime" | "jobs" = "runtime";
 let assetPumping = false;
 let assetAbort: AbortController | undefined;
+let nextImageDecodeRequestId = 1;
+let pageImageDecode: { readonly requestId: number; readonly resolve: (bitmap: ImageBitmap) => void; readonly reject: (error: Error) => void } | undefined;
 
 scope.onmessage = (event: MessageEvent<BrowserFrameUiMessage>) => void receive(event.data);
 
@@ -307,6 +315,10 @@ async function receive(message: BrowserFrameUiMessage): Promise<void> {
     return;
   }
   if (message.kind === "shard-port") return;
+  if (message.kind === "image-decode-result" && message.lifecycle !== lifecycle) {
+    message.bitmap?.close();
+    return;
+  }
   if (message.lifecycle !== lifecycle) return;
   if (message.kind === "close") {
     if (closed || closing) return;
@@ -319,6 +331,10 @@ async function receive(message: BrowserFrameUiMessage): Promise<void> {
   }
   if (message.kind === "host-io-result") {
     settleHostIo(message);
+    return;
+  }
+  if (message.kind === "image-decode-result") {
+    settlePageImageDecode(message);
     return;
   }
   if (message.kind === "host-appearance") {
@@ -351,6 +367,7 @@ async function receive(message: BrowserFrameUiMessage): Promise<void> {
     });
     outcome = lastStepOutcome;
     lastFrame = { cursor: result.cursor, fullscreen: result.fullscreen };
+    if (pageImageDecode && runtime && !runtime.assetResponseCurrent()) cancelPageImageDecode();
     if (result.quarantined) quarantined = { code: result.faultCode ?? "renderer-quarantine", detail: result.faultDetail ?? "renderer quarantined its own frame step" };
     const sustained = outcome?.verdict === "sustained-overrun";
     const degrade = quarantined ?? (sustained ? { code: "worker-step-overrun", detail: `frame step executed ${outcome!.executingMs.toFixed(3)} ms for ${outcome!.consecutive} consecutive steps` } : undefined);
@@ -418,6 +435,7 @@ function beginClose(): void {
   jobsCloseComplete = interactiveJobs === undefined;
   assetAbort?.abort();
   assetAbort = undefined;
+  cancelPageImageDecode();
   if (runtime) {
     try {
       ownedStep("asset-abort", () => runtime!.abortAssetResponse());
@@ -580,9 +598,45 @@ async function boot(message: Extract<BrowserFrameUiMessage, { kind: "boot" }>): 
 type AssetRequest = {
   readonly available: boolean;
   readonly url?: string;
+  readonly referenceImage?: boolean;
   readonly responseByteCapacity?: number;
   readonly pageByteCapacity?: number;
 };
+
+function requestPageImageDecode(source: Uint8Array<ArrayBuffer>, dimensions: ReferenceImageDimensions): Promise<ImageBitmap> {
+  if (pageImageDecode) return Promise.reject(new Error("reference-image-decode-credits"));
+  const requestId = nextImageDecodeRequestId++;
+  return new Promise<ImageBitmap>((resolve, reject) => {
+    pageImageDecode = { requestId, resolve, reject };
+    try {
+      post({ kind: "image-decode", lifecycle, requestId, source, dimensions }, [source.buffer]);
+    } catch (error) {
+      pageImageDecode = undefined;
+      reject(error instanceof Error ? error : new Error(String(error)));
+    }
+  });
+}
+
+function settlePageImageDecode(message: Extract<BrowserFrameUiMessage, { readonly kind: "image-decode-result" }>): void {
+  const pending = pageImageDecode;
+  if (!pending || pending.requestId !== message.requestId) {
+    message.bitmap?.close();
+    return;
+  }
+  pageImageDecode = undefined;
+  if (message.bitmap) pending.resolve(message.bitmap);
+  else pending.reject(new Error(message.detail ?? "reference-image-decode-refused"));
+}
+
+function cancelPageImageDecode(): void {
+  const pending = pageImageDecode;
+  if (!pending) return;
+  pageImageDecode = undefined;
+  try {
+    post({ kind: "image-decode-cancel", lifecycle, requestId: pending.requestId });
+  } catch {}
+  pending.reject(new DOMException("reference image generation retired", "AbortError"));
+}
 
 function scheduleAssetPump(): void {
   if (assetPumping || !runtime || closed || closing || failed || quarantined) return;
@@ -591,9 +645,11 @@ function scheduleAssetPump(): void {
 }
 
 async function pumpAsset(): Promise<void> {
+  let activeRequest: AssetRequest | undefined;
   try {
     if (!runtime || closed || closing || failed || quarantined) return;
     const request = ownedStep("asset-request", () => JSON.parse(runtime!.pollAssetRequest()) as AssetRequest);
+    activeRequest = request;
     if (!request.available) return;
     if (!request.url || request.responseByteCapacity !== ASSET_RESPONSE_BYTE_CAPACITY || request.pageByteCapacity !== ASSET_RESPONSE_PAGE_BYTES) {
       throw new Error("asset-request-protocol: request descriptor did not match fixed Worker credits");
@@ -612,19 +668,72 @@ async function pumpAsset(): Promise<void> {
     if (!reserved) throw new Error("asset-reserve-busy: the renderer never freed its interaction state for the response credits");
     const reader = ownedStep("asset-stream-reader", () => response.body!.getReader({ mode: "byob" }) as ReadableStreamBYOBReader);
     let received = 0;
+    const referenceChunks: Uint8Array<ArrayBuffer>[] = [];
     for (;;) {
+      if (request.referenceImage && !ownedStep("reference-image-current", () => runtime!.assetResponseCurrent())) {
+        assetAbort.abort();
+        throw new DOMException("reference image generation retired", "AbortError");
+      }
       const pageOwner = ownedStep("asset-page-owner", () => new Uint8Array(ASSET_RESPONSE_PAGE_BYTES));
       const chunk = await monitoredSuspension("asset-stream-read", () => reader.read(pageOwner));
+      if (request.referenceImage && !ownedStep("reference-image-current", () => runtime!.assetResponseCurrent())) {
+        assetAbort.abort();
+        throw new DOMException("reference image generation retired", "AbortError");
+      }
       if (chunk.done) break;
       const bytes = chunk.value;
       if (bytes.byteLength === 0 || bytes.byteLength > ASSET_RESPONSE_PAGE_BYTES) throw new Error("asset-response-page: stream violated fixed BYOB page credits");
       received += bytes.byteLength;
       if (received > (declared ?? ASSET_RESPONSE_BYTE_CAPACITY)) throw new Error("asset-response-overflow: stream exceeded admitted bytes");
       ownedStep("asset-page", () => runtime!.pushAssetResponsePage(bytes));
+      if (request.referenceImage) referenceChunks.push(Uint8Array.from(bytes));
       await macrotask();
     }
     ownedStep("asset-stream-release", () => reader.releaseLock());
     if (declared !== undefined && received !== declared) throw new Error("asset-response-short-read: stream ended before declared bytes");
+    if (request.referenceImage) {
+      if (!ownedStep("reference-image-current", () => runtime!.assetResponseCurrent())) throw new DOMException("reference image generation retired", "AbortError");
+      const source = ownedStep("reference-image-source", () => concatenateReferenceImageSource(referenceChunks));
+      const dimensions = ownedStep("reference-image-dimensions", () => referenceImageSourceDimensions(source));
+      const digest = await monitoredSuspension("reference-image-digest", () => referenceImageSourceDigest(source), suspensionLedger);
+      if (!ownedStep("reference-image-current", () => runtime!.assetResponseCurrent())) throw new DOMException("reference image generation retired", "AbortError");
+      const [width, height] = referenceImageTargetSize(dimensions.width, dimensions.height);
+      let stageMode = 0;
+      for (let attempt = 0; attempt < ASSET_SEAL_ATTEMPTS && stageMode === 0; attempt++) {
+        if (!ownedStep("reference-image-current", () => runtime!.assetResponseCurrent())) throw new DOMException("reference image generation retired", "AbortError");
+        stageMode = ownedStep("reference-image-begin", () => runtime!.beginReferenceImage(width, height, digest));
+        if (stageMode === 0) {
+          post({ kind: "wake", lifecycle });
+          await macrotask();
+        }
+      }
+      if (stageMode === 0) throw new Error("reference-image-begin-busy");
+      if (stageMode !== 1 && stageMode !== 2) throw new Error("reference-image-begin-mode");
+      const bitmap = await referenceImageBitmapForStage(
+        stageMode,
+        () => monitoredSuspension("reference-image-decode", () => decodeReferenceImage(new Blob([source], { type: dimensions.mediaType }), dimensions, () => runtime?.assetResponseCurrent() === true), suspensionLedger),
+        () => monitoredSuspension("reference-image-page-decode", () => requestPageImageDecode(source, dimensions), suspensionLedger),
+      );
+      if (bitmap) {
+        try {
+          await streamReferenceImageBitmapRows(
+            bitmap,
+            width,
+            height,
+            (offset, pixels) => runtime!.pushReferenceImageRows(offset, pixels),
+            () => ownedStep("reference-image-current", () => runtime!.assetResponseCurrent()),
+            async () => {
+              post({ kind: "wake", lifecycle });
+              await macrotask();
+            },
+            (operation) => ownedStep("reference-image-row-strip", operation),
+          );
+        } finally {
+          ownedStep("reference-image-bitmap-close", () => bitmap.close());
+        }
+      }
+      if (!ownedStep("reference-image-seal", () => runtime!.sealReferenceImage())) throw new Error("reference-image-seal-busy");
+    }
     // 🔏️ The seal needs the renderer's own interaction state, which a live apply owns for the length
     // of that apply. `sealAssetResponse` answers `false` for exactly that — back-pressure, not a
     // refusal — and leaves the request untouched, so this comes back on the next macrotask instead of
@@ -632,18 +741,28 @@ async function pumpAsset(): Promise<void> {
     // (ticket 26/09/17/WGPU-RENDERER-REACT-PARITY).
     let sealed = false;
     for (let attempt = 0; attempt < ASSET_SEAL_ATTEMPTS && !sealed; attempt++) {
+      if (request.referenceImage && !ownedStep("reference-image-current", () => runtime!.assetResponseCurrent())) throw new DOMException("reference image generation retired", "AbortError");
       sealed = ownedStep("asset-seal", () => runtime!.sealAssetResponse());
       if (!sealed) await macrotask();
     }
     if (!sealed) throw new Error("asset-seal-busy: the renderer never freed its interaction state for the sealed response");
     post({ kind: "wake", lifecycle });
   } catch (error) {
+    const cancelled = error instanceof DOMException && error.name === "AbortError";
     if (runtime) {
       try {
-        ownedStep("asset-abort", () => runtime!.abortAssetResponse());
+        if (activeRequest?.referenceImage && !cancelled) {
+          let rejected = false;
+          for (let attempt = 0; attempt < ASSET_SEAL_ATTEMPTS && !rejected; attempt++) {
+            rejected = ownedStep("asset-reject", () => runtime!.rejectAssetResponse());
+            if (!rejected) await macrotask();
+          }
+          if (!rejected) ownedStep("asset-abort", () => runtime!.abortAssetResponse());
+        } else ownedStep("asset-abort", () => runtime!.abortAssetResponse());
       } catch {}
     }
-    if (!closing && !closed) fault("asset-stream-fault", error instanceof Error ? error.message : String(error));
+    if (activeRequest?.referenceImage && !closing && !closed && !failed) post({ kind: "wake", lifecycle });
+    if (!activeRequest?.referenceImage && !cancelled && !closing && !closed) fault("asset-stream-fault", error instanceof Error ? error.message : String(error));
   } finally {
     assetAbort = undefined;
     assetPumping = false;
@@ -753,8 +872,8 @@ const lazyPluginInstalls = createLazyPluginInstallDoor({
 (globalThis as { semioWgpuCancelPluginInstall?: (pluginId: string) => boolean }).semioWgpuCancelPluginInstall = (pluginId) => lazyPluginInstalls.cancel(pluginId);
 //#endregion 🧩️LazyPluginInstall
 
-function post(message: BrowserFrameWorkerMessage): void {
-  scope.postMessage(message);
+function post(message: BrowserFrameWorkerMessage, transfer: Transferable[] = []): void {
+  scope.postMessage(message, transfer);
 }
 
 function fault(code: string, detail: string): void {

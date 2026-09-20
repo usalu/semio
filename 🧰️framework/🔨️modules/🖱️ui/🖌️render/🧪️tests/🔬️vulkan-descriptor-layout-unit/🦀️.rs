@@ -1,4 +1,3 @@
-
 use super::*;
 use ui_render::{UI_CONTENT_PIPELINE, VECTOR_PIPELINE};
 

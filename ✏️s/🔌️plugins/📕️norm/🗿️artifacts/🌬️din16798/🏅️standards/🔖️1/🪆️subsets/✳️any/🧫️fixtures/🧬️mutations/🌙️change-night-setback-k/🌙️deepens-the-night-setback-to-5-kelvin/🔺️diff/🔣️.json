@@ -29,7 +29,7 @@
   "fanQVM3S": null,
   "fanTRunH": null,
   "fanEnergyReferenceKwh": null,
-  "nightSetbackK": 5,
+  "nightSetbackK": 5.0,
   "hrMDotKgS": null,
   "hrCpJKgk": null,
   "hrDeltaTC": null,

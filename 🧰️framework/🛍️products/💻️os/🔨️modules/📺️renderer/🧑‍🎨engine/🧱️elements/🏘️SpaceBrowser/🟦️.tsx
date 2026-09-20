@@ -84,7 +84,7 @@ function CreateSpaceForm({ disabled, onCreateSpace }: { readonly disabled: boole
       <h3 className="text-sm font-medium">{titleLabel}</h3>
       <div className="flex flex-col gap-1">
         <label htmlFor={`${id}-name`} className="text-xs text-muted-foreground">{nameLabel}</label>
-        <input id={`${id}-name`} name="spaceName" required value={name} disabled={disabled} onChange={(event) => setName(event.target.value)} className="w-full min-w-0 rounded-sm border px-single py-1 text-sm" />
+        <input id={`${id}-name`} data-element-alias="os.hub.spaces.createName" name="spaceName" required value={name} disabled={disabled} onChange={(event) => setName(event.target.value)} className="w-full min-w-0 rounded-sm border px-single py-1 text-sm" />
       </div>
       <div className="flex flex-col gap-2 sm:flex-row">
         <div className="flex min-w-0 flex-1 flex-col gap-1">
@@ -102,7 +102,7 @@ function CreateSpaceForm({ disabled, onCreateSpace }: { readonly disabled: boole
           </select>
         </div>
       </div>
-      <Button icon="plus" type="submit" variant="outline" aria-label={submitLabel} disabled={disabled || !valid}>{submitLabel}</Button>
+      <Button id="os.hub.spaces.createSubmit" icon="plus" type="submit" variant="outline" aria-label={submitLabel} disabled={disabled || !valid}>{submitLabel}</Button>
     </form>
   );
 }
@@ -183,21 +183,21 @@ function InvitePanel({ row, invite, redemption, disabled, onCreateInvite, onCopy
           <div className="flex flex-col gap-2 sm:flex-row">
             <div className="flex min-w-0 flex-1 flex-col gap-1">
               <label htmlFor={`${id}-role`} className="text-xs text-muted-foreground">{roleLabel}</label>
-              <select id={`${id}-role`} value={role} disabled={disabled} onChange={(event) => setRole(event.target.value === "author" ? "author" : "spectator")} className="w-full min-w-0 rounded-sm border px-single py-1 text-sm">
+              <select id={`${id}-role`} data-element-alias="os.hub.invite.role" value={role} disabled={disabled} onChange={(event) => setRole(event.target.value === "author" ? "author" : "spectator")} className="w-full min-w-0 rounded-sm border px-single py-1 text-sm">
                 <option value="spectator">{spectatorLabel}</option>
                 <option value="author">{authorLabel}</option>
               </select>
             </div>
             <div className="flex min-w-0 flex-1 flex-col gap-1">
               <label htmlFor={`${id}-ttl`} className="text-xs text-muted-foreground">{expiryLabel}</label>
-              <select id={`${id}-ttl`} value={String(ttlSecs)} disabled={disabled} onChange={(event) => setTtlSecs(Number.parseInt(event.target.value, 10))} className="w-full min-w-0 rounded-sm border px-single py-1 text-sm">
+              <select id={`${id}-ttl`} data-element-alias="os.hub.invite.expiry" value={String(ttlSecs)} disabled={disabled} onChange={(event) => setTtlSecs(Number.parseInt(event.target.value, 10))} className="w-full min-w-0 rounded-sm border px-single py-1 text-sm">
                 <option value={String(INVITE_TTL_CHOICES_SECS_V1[0])}>{hourLabel}</option>
                 <option value={String(INVITE_TTL_CHOICES_SECS_V1[1])}>{dayLabel}</option>
                 <option value={String(INVITE_TTL_CHOICES_SECS_V1[2])}>{weekLabel}</option>
               </select>
             </div>
           </div>
-          <Button icon="users" type="submit" variant="outline" aria-label={createLabel} disabled={disabled}>{createLabel}</Button>
+          <Button id="os.hub.invite.create" icon="users" type="submit" variant="outline" aria-label={createLabel} disabled={disabled}>{createLabel}</Button>
         </form>
       )}
 
@@ -206,7 +206,7 @@ function InvitePanel({ row, invite, redemption, disabled, onCreateInvite, onCopy
           <p className="text-xs text-muted-foreground">{readyLabel}</p>
           <output htmlFor={`${id}-invite`} className="break-all text-xs">{invite.link}</output>
           <div className="flex flex-col gap-2 sm:flex-row">
-            <Button icon="copy" type="button" variant="outline" aria-label={copyLabel} onClick={onCopyInvite}>{copyLabel}</Button>
+            <Button id="os.hub.invite.copy" icon="copy" type="button" variant="outline" aria-label={copyLabel} onClick={onCopyInvite}>{copyLabel}</Button>
             <Button icon="x" type="button" variant="outline" aria-label={dismissLabel} onClick={onDismissInvite}>{dismissLabel}</Button>
           </div>
           {invite.copy === "copied" ? <p className="text-xs">{copiedLabel}</p> : null}
@@ -225,6 +225,7 @@ function InvitePanel({ row, invite, redemption, disabled, onCreateInvite, onCopy
         <label htmlFor={`${id}-redeem`} className="text-xs text-muted-foreground">{redeemFieldLabel}</label>
         <input
           id={`${id}-redeem`}
+          data-element-alias="os.hub.invite.redeemField"
           name="invitation"
           required
           value={typed}
@@ -351,7 +352,7 @@ export function SpaceBrowser({
           {rows.length === 0 ? (
             <p className="text-sm text-muted-foreground">{search.trim().length > 0 ? noMatchesLabel : emptyLabel}</p>
           ) : (
-            <ul role="list" aria-label={listLabel} className="flex flex-col gap-1">
+            <ul role="list" data-element-alias="os.hub.spaces.list" aria-label={listLabel} className="flex flex-col gap-1">
               {rows.map((row) => (
                 <SpaceRow
                   key={row.id}

@@ -13,7 +13,11 @@ use semio_framework_plugin::{INTERACTION_SELECT_ACTION_ID, InteractionTarget, Pl
 async fn delete_selection_removes_the_live_selected_node() {
     seed_draw_plugin().await;
     let mut app = app_with_registry().await;
+    // 🔁️ A retained tool command only returns an admission receipt — the document is not published
+    // until the operation settles, so every dispatch here is followed by its settle step.
+    let receiver = meta("local").instance_id;
     dispatch(&mut app, SpaceCommand::SpawnApp(spawn_app::SpawnApp { plugin_id: "draw".into(), app_id: test_surface_id("draw").await, x: 10.0, y: 10.0 })).await;
+    let _ = semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app, receiver).await.expect("spawnApp publication");
     let before = app.snapshot().expect("snapshot");
     let node_id = before.graph.nodes.first().expect("spawned node").id.clone();
     let targets = pack::to_json_string(&vec![InteractionTarget { granularity: "instance".into(), id: node_id.clone() }]);
@@ -23,8 +27,10 @@ async fn delete_selection_removes_the_live_selected_node() {
         ("merge".to_string(), semio_framework::DslValue::String("replace".into())),
         ("method".to_string(), semio_framework::DslValue::String("pick".into())),
     ]);
-    app.handle_action(INTERACTION_SELECT_ACTION_ID, Some(&args), &meta("local")).await.expect("interactionSelect");
+    let admitted = app.handle_action(INTERACTION_SELECT_ACTION_ID, Some(&args), &meta("local")).await.expect("interactionSelect");
+    let _ = semio_framework_plugin::app::settle_framework_reserved_admission(&mut app, admitted).await.expect("interactionSelect admission");
     dispatch(&mut app, SpaceCommand::DeleteSelection(DeleteSelection {})).await;
+    let _ = semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app, receiver).await.expect("deleteSelection publication");
     let after = app.snapshot().expect("snapshot");
     assert!(!after.graph.nodes.iter().any(|node| node.id == node_id), "selected node must be deleted");
 }

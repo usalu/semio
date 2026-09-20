@@ -755,3 +755,21 @@ async fn demo_example_load_settles_through_the_host_document_archive_door() {
     artifact_app_laws::close_registered_fixture_app(&mut app);
 }
 //#endregion 🔖️ExampleArchiveLoad
+
+//#region 📬️StorePreparation
+/// 🧺️ The retained `Artifact` lane folds a point-invertible item as TWO staged rows — the forward
+/// `EditText` plus the row `inverse_writer_mutation` yields for it — and `fold_batch_item` refuses
+/// the candidate outright when the declaration is smaller than `forwards.len() + inverse.len()`.
+/// `admit_writer_artifact_mutation` used to declare `1`, so writer's retained text edits could never
+/// fold (ticket 26/09/18, slice F1).
+#[test]
+fn the_artifact_preflight_declares_room_for_the_inverse_it_will_stage() {
+    let base = jack_snapshot();
+    let mutation = WriterMutation::EditText(crate::op::EditText { text: format!("{}\nsemio", crate::writer_text(&base)) });
+    let inverse = crate::op::inverse_writer_mutation(&base, &mutation);
+    let footprint = admit_writer_artifact_mutation(&mutation).expect("an EditText inside the retained envelope is admitted");
+    assert_eq!(footprint.work_items, store::ARTIFACT_STORE_ONE_ITEM_INVERTIBLE_WORK_ITEMS);
+    assert!(1 + inverse.len() <= footprint.work_items, "declared {} rows for 1 forward + {} inverse", footprint.work_items, inverse.len());
+    assert!(footprint.is_admissible());
+}
+//#endregion 📬️StorePreparation

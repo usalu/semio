@@ -1654,6 +1654,7 @@ fn preview_payload_has_meshes_and_instances() {
         fov_y: config.preview_camera.fov as f32 * std::f32::consts::PI / 180.0,
         near: 0.1,
         far: 1000.0,
+        ..Camera3d::default()
     };
     let view_proj = camera.view_proj(600.0, 1000.0);
     let planes = frustum_planes(view_proj);

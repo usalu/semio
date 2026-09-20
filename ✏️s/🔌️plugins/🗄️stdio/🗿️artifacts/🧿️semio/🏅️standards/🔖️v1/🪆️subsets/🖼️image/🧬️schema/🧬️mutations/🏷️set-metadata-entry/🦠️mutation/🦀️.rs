@@ -5,6 +5,6 @@ use crate::standards::v1::subsets::image::schema::mutations::set_metadata_entry;
 
 /// ▶️ Applies a set-metadata-entry mutation (inserts or updates, keyed by `key`).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn apply(snapshot: &mut SemioImageSnapshot, key: String, value: String) -> SemioImageDiff {
+pub fn apply(snapshot: &mut SemioImageSnapshot, key: String, value: String) -> protocol::MutationOutcome<SemioImageDiff> {
     apply_semio_image_mutation(snapshot, &SemioImageMutation::SetMetadataEntry(set_metadata_entry::SetMetadataEntry { key, value }))
 }

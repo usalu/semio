@@ -1149,3 +1149,8 @@ pub fn create_rewriting_app() -> semio_framework_plugin::AppDefinition {
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+//#region 🪢️TaxonomyMounts
+#[path = "🎮️commands/🗑️delete-rule-clause/🦀️.rs"]
+pub mod delete_rule_clause;
+//#endregion 🪢️TaxonomyMounts

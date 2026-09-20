@@ -17,8 +17,9 @@ fn json_sample_dict() -> pack::json::Value {
 async fn get_reads_value() {
     let mut reg = Registry::new();
     register(&mut reg);
+    let reg = neural_engine::ColdOwner::new(reg);
     let input = Dictionary::new().insert("dictionary", Value::Dictionary(sample_dict())).insert("key", Value::Dictionary(text_dictionary("number".into())));
-    let out = reg.dispatch("dictionary.get", &input).unwrap();
+    let out = reg.dispatch_cold("dictionary.get", input).unwrap();
     let value = out.get("value").and_then(|v| v.as_dictionary()).expect("value channel");
     assert_eq!(value.schema(), Some("number"));
 }
@@ -27,8 +28,9 @@ async fn get_reads_value() {
 async fn set_inserts_key() {
     let mut reg = Registry::new();
     register(&mut reg);
+    let reg = neural_engine::ColdOwner::new(reg);
     let input = Dictionary::new().insert("dictionary", Value::Dictionary(Dictionary::with_schema("dictionary"))).insert("key", Value::Dictionary(text_dictionary("text".into()))).insert("value", Value::Dictionary(text_dictionary("new".into())));
-    let out = reg.dispatch("dictionary.set", &input).unwrap();
+    let out = reg.dispatch_cold("dictionary.set", input).unwrap();
     let dictionary = out.get("dictionaryOut").and_then(|v| v.as_dictionary()).expect("dictionaryOut channel");
     assert!(dictionary.get("text").is_some());
 }
@@ -37,10 +39,11 @@ async fn set_inserts_key() {
 async fn merge_combines_dicts() {
     let mut reg = Registry::new();
     register(&mut reg);
+    let reg = neural_engine::ColdOwner::new(reg);
     let items = Dictionary::new()
         .insert("0", Value::Dictionary(Dictionary::with_schema("dictionary").insert("a", Value::Dictionary(number_dictionary(1.0)))))
         .insert("1", Value::Dictionary(Dictionary::with_schema("dictionary").insert("b", Value::Dictionary(text_dictionary("x".into())))));
-    let out = reg.dispatch("dictionary.merge", &Dictionary::new().insert("items", Value::Dictionary(items))).unwrap();
+    let out = reg.dispatch_cold("dictionary.merge", Dictionary::new().insert("items", Value::Dictionary(items))).unwrap();
     let dictionary = out.get("dictionary").and_then(|v| v.as_dictionary()).expect("dictionary channel");
     assert_eq!(dictionary.schema(), Some("dictionary"));
     assert!(dictionary.get("a").is_some());

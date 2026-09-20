@@ -113,6 +113,92 @@ fn drawing_internal_action(id: &str, label: impl Into<LocalizedLabel>, kind: Act
     semio_framework_plugin::ActionDefinition { in_palette: false, ..semio_framework_plugin::ActionDefinition::bounded_catalog(id, label, kind) }
 }
 
+/// 🖱️ A raw canvas/engagement input event — the canvas dispatches it, the MCP capability catalog
+/// never publishes it (`CapabilityAudience::Input`).
+fn drawing_input_event(id: &str, label: impl Into<LocalizedLabel>, kind: ActionKind) -> semio_framework_plugin::ActionDefinition {
+    semio_framework_plugin::ActionDefinition::bounded_catalog(id, label, kind).input_event()
+}
+
+/// 🗂️ The `kind` argument shared by `addLayer`/`dropLayerKind` — the exact vocabulary
+/// `schema::create_layer_by_kind` branches on, so the published JSON Schema enumerates what the
+/// guest really accepts instead of leaving an agent to guess "rectangle".
+fn drawing_layer_kind_arg() -> semio_framework_plugin::ActionArgDef {
+    semio_framework_plugin::ActionArgDef::select(
+        "kind",
+        LocalizedLabel::native("Layer Kind", "Ebenenart"),
+        vec![
+            semio_framework_plugin::ActionArgOption::new("shape:rect", LocalizedLabel::native("Rectangle", "Rechteck")),
+            semio_framework_plugin::ActionArgOption::new("shape:ellipse", LocalizedLabel::native("Ellipse", "Ellipse")),
+            semio_framework_plugin::ActionArgOption::new("shape:line", LocalizedLabel::native("Line", "Linie")),
+            semio_framework_plugin::ActionArgOption::new("shape:polygon", LocalizedLabel::native("Polygon", "Polygon")),
+            semio_framework_plugin::ActionArgOption::new("path", LocalizedLabel::native("Path", "Pfad")),
+            semio_framework_plugin::ActionArgOption::new("text", LocalizedLabel::native("Text", "Text")),
+            semio_framework_plugin::ActionArgOption::new("image", LocalizedLabel::native("Image", "Bild")),
+            semio_framework_plugin::ActionArgOption::new("group", LocalizedLabel::native("Group", "Gruppe")),
+            semio_framework_plugin::ActionArgOption::new("boolean", LocalizedLabel::native("Boolean", "Boolean")),
+            semio_framework_plugin::ActionArgOption::new("trace", LocalizedLabel::native("Trace", "Nachzeichnung")),
+        ],
+    )
+    .default_value(&"path")
+}
+
+/// 🪪️ The `layerId` argument shared by every single-layer verb.
+fn drawing_layer_id_arg() -> semio_framework_plugin::ActionArgDef {
+    semio_framework_plugin::ActionArgDef::text("layerId", LocalizedLabel::native("Layer", "Ebene")).required()
+}
+
+/// 🎯️ The layer-tree drop target shared by `moveLayer`/`dropLayerKind`.
+fn drawing_target_row_arg() -> semio_framework_plugin::ActionArgDef {
+    semio_framework_plugin::ActionArgDef::text("targetRowId", LocalizedLabel::native("Target Row", "Zielzeile")).required()
+}
+
+/// ↕️ Where a moved/dropped layer lands relative to the target row.
+fn drawing_drop_position_arg() -> semio_framework_plugin::ActionArgDef {
+    semio_framework_plugin::ActionArgDef::select(
+        "dropPosition",
+        LocalizedLabel::native("Drop Position", "Ablageposition"),
+        vec![
+            semio_framework_plugin::ActionArgOption::new("before", LocalizedLabel::native("Before", "Davor")),
+            semio_framework_plugin::ActionArgOption::new("after", LocalizedLabel::native("After", "Danach")),
+            semio_framework_plugin::ActionArgOption::new("inside", LocalizedLabel::native("Inside", "Hinein")),
+        ],
+    )
+    .default_value(&"after")
+}
+
+/// 🩹️ The patchable layer property vocabulary — the exact `field` arm set of
+/// `schema::mutations::drawing_op_for_layer_field`.
+fn drawing_layer_field_arg() -> semio_framework_plugin::ActionArgDef {
+    semio_framework_plugin::ActionArgDef::select(
+        "field",
+        LocalizedLabel::native("Field", "Feld"),
+        vec![
+            semio_framework_plugin::ActionArgOption::new("name", LocalizedLabel::native("Name", "Name")),
+            semio_framework_plugin::ActionArgOption::new("opacity", LocalizedLabel::native("Opacity", "Deckkraft")),
+            semio_framework_plugin::ActionArgOption::new("visible", LocalizedLabel::native("Visible", "Sichtbar")),
+            semio_framework_plugin::ActionArgOption::new("locked", LocalizedLabel::native("Locked", "Gesperrt")),
+            semio_framework_plugin::ActionArgOption::new("blendMode", LocalizedLabel::native("Blend Mode", "Mischmodus")),
+            semio_framework_plugin::ActionArgOption::new("booleanOperation", LocalizedLabel::native("Boolean Operation", "Boolean-Operation")),
+            semio_framework_plugin::ActionArgOption::new("fillColor", LocalizedLabel::native("Fill Colour", "Füllfarbe")),
+            semio_framework_plugin::ActionArgOption::new("strokeWidth", LocalizedLabel::native("Stroke Width", "Strichstärke")),
+            semio_framework_plugin::ActionArgOption::new("transformX", LocalizedLabel::native("Transform X", "Transformation X")),
+            semio_framework_plugin::ActionArgOption::new("transformY", LocalizedLabel::native("Transform Y", "Transformation Y")),
+            semio_framework_plugin::ActionArgOption::new("transformScaleX", LocalizedLabel::native("Scale X", "Skalierung X")),
+            semio_framework_plugin::ActionArgOption::new("transformScaleY", LocalizedLabel::native("Scale Y", "Skalierung Y")),
+            semio_framework_plugin::ActionArgOption::new("transformRotation", LocalizedLabel::native("Rotation", "Drehung")),
+            semio_framework_plugin::ActionArgOption::new("traceThreshold", LocalizedLabel::native("Trace Threshold", "Schwellenwert")),
+            semio_framework_plugin::ActionArgOption::new("traceSimplify", LocalizedLabel::native("Trace Simplify", "Vereinfachung")),
+        ],
+    )
+    .required()
+}
+
+/// 🔤️ The patch `value` — one `String` wire field carrying JSON text, so one verb covers bool,
+/// number and string properties (see `patch_layer::patch_value_json`).
+fn drawing_layer_value_arg() -> semio_framework_plugin::ActionArgDef {
+    semio_framework_plugin::ActionArgDef::json_text("value", LocalizedLabel::native("Value", "Wert")).describe("JSON text: a quoted string for name/blendMode/fillColor, a number for opacity/strokeWidth/transforms, true/false for visible/locked.").required()
+}
+
 /// 🧰️ One canvas utility declaration (id/label/icon reused verbatim from the retired `utilities()` impl).
 fn drawing_utility(id: &str, label: impl Into<LocalizedLabel>, icon: &str, group: &str, category: UtilityCategory) -> UtilityDefinition {
     UtilityDefinition { group: Some(group.into()), category: Some(category), ..UtilityDefinition::new(id, label, icon) }
@@ -1706,64 +1792,184 @@ pub fn create_drawing_app() -> semio_framework_plugin::AppDefinition {
             .panel_tab_def(catalogue_panel::definition())
             .panel_tab_def(properties_panel::definition())
             // ✏️ Palette-visible content operations.
-            .mutation("addLayer", LocalizedLabel::native("Add Layer", "Ebene hinzufügen"))
+            .action_with(
+                semio_framework_plugin::ActionDefinition::bounded_catalog("addLayer", LocalizedLabel::native("Add Layer", "Ebene hinzufügen"), ActionKind::Mutation)
+                    .describe(LocalizedLabel::native(
+                        "Appends a new layer of the given kind (a rectangle, ellipse, line, polygon, freehand path, text, image, group, boolean or trace) to the top of the drawing.",
+                        "Fügt der Zeichnung oben eine neue Ebene der angegebenen Art hinzu (Rechteck, Ellipse, Linie, Polygon, Pfad, Text, Bild, Gruppe, Boolean oder Nachzeichnung).",
+                    ))
+                    .use_when(["draw a rectangle", "add a rectangle", "draw an ellipse or circle", "add a line", "add a polygon", "add a text layer", "add a new layer"])
+                    .with_args([drawing_layer_kind_arg()]),
+            )
             .action_interactive_job("addLayer", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .mutation("combineBoolean", LocalizedLabel::native("Combine Boolean", "Boolean kombinieren"))
+            .action_with(
+                semio_framework_plugin::ActionDefinition::bounded_catalog("combineBoolean", LocalizedLabel::native("Combine Boolean", "Boolean kombinieren"), ActionKind::Mutation)
+                    .describe(LocalizedLabel::native(
+                        "Combines two or more existing layers into one boolean layer (union, intersect, subtract or exclude). Defaults to the current selection when no ids are given.",
+                        "Verbindet zwei oder mehr vorhandene Ebenen zu einer Boolean-Ebene (Vereinigung, Schnitt, Differenz oder Ausschluss). Ohne Ids wird die aktuelle Auswahl verwendet.",
+                    ))
+                    .use_when(["union these shapes", "subtract one shape from another", "intersect the selection", "combine shapes"])
+                    .with_args([
+                        semio_framework_plugin::ActionArgDef::select(
+                            "operation",
+                            LocalizedLabel::native("Operation", "Operation"),
+                            vec![
+                                semio_framework_plugin::ActionArgOption::new("union", LocalizedLabel::native("Union", "Vereinigung")),
+                                semio_framework_plugin::ActionArgOption::new("intersect", LocalizedLabel::native("Intersect", "Schnitt")),
+                                semio_framework_plugin::ActionArgOption::new("subtract", LocalizedLabel::native("Subtract", "Differenz")),
+                                semio_framework_plugin::ActionArgOption::new("exclude", LocalizedLabel::native("Exclude", "Ausschluss")),
+                            ],
+                        )
+                        .default_value(&"union")
+                        .required(),
+                        semio_framework_plugin::ActionArgDef::text_list("ids", LocalizedLabel::native("Layer Ids", "Ebenen-Ids")).describe("Ids of the layers to combine; empty uses the current selection."),
+                    ]),
+            )
             .action_interactive_job("combineBoolean", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .mutation("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"))
+            .action_with(
+                semio_framework_plugin::ActionDefinition::bounded_catalog("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"), ActionKind::Mutation)
+                    .describe(LocalizedLabel::native(
+                        "Replaces the whole drawing with one of the plugin's declared playground examples, by example id.",
+                        "Ersetzt die gesamte Zeichnung durch eines der deklarierten Beispiele des Plugins, anhand der Beispiel-Id.",
+                    ))
+                    .use_when(["load the demo drawing", "open an example"])
+                    .with_args([semio_framework_plugin::ActionArgDef::text("exampleId", LocalizedLabel::native("Example", "Beispiel")).required()]),
+            )
             .action_interactive_job("setActiveExample", semio_framework_plugin::InteractiveJobClassification::Migrated)
             // 📤️ Export — a host download effect (`DownloadMediaExport`), never a document operation.
-            .action_with(semio_framework_plugin::ActionDefinition { icon_id: "download".into(), ..semio_framework_plugin::ActionDefinition::bounded_catalog("exportDocument", LocalizedLabel::native("Export PDF", "PDF exportieren"), ActionKind::View) })
+            .action_with(
+                semio_framework_plugin::ActionDefinition { icon_id: "download".into(), ..semio_framework_plugin::ActionDefinition::bounded_catalog("exportDocument", LocalizedLabel::native("Export PDF", "PDF exportieren"), ActionKind::View) }
+                    .describe(LocalizedLabel::native(
+                        "Renders the drawing to a downloadable file — a vector-painted PDF page or an SVG document.",
+                        "Rendert die Zeichnung in eine herunterladbare Datei — eine vektorgezeichnete PDF-Seite oder ein SVG-Dokument.",
+                    ))
+                    .use_when(["export the document as pdf", "save this drawing as an svg", "download the drawing"])
+                    .with_args([semio_framework_plugin::ActionArgDef::select(
+                        "format",
+                        LocalizedLabel::native("Format", "Format"),
+                        vec![
+                            semio_framework_plugin::ActionArgOption::new("pdf", LocalizedLabel::native("PDF", "PDF")),
+                            semio_framework_plugin::ActionArgOption::new("svg", LocalizedLabel::native("SVG", "SVG")),
+                        ],
+                    )
+                    .default_value(&export_document::DEFAULT_EXPORT_FORMAT)]),
+            )
             .action_interactive_job("exportDocument", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            // 🔧️ Internal content operations — inspector/layer-panel/import-bound, not palette commands.
-            .action_with(drawing_internal_action("setSnapshot", LocalizedLabel::native("Set Document", "Dokument festlegen"), ActionKind::Mutation))
+            // 🔧️ Internal content operations — inspector/layer-panel/import-bound, not palette commands,
+            // but every one of them is an intent an agent can hold, so they stay agent-addressable.
+            .action_with(
+                drawing_internal_action("setSnapshot", LocalizedLabel::native("Set Document", "Dokument festlegen"), ActionKind::Mutation)
+                    .describe(LocalizedLabel::native("Replaces the entire drawing document with a supplied snapshot.", "Ersetzt das gesamte Zeichnungsdokument durch einen übergebenen Snapshot."))
+                    .use_when(["replace the whole drawing"]),
+            )
             .action_interactive_job("setSnapshot", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_with(drawing_internal_action("commitDocument", LocalizedLabel::native("Commit Document", "Dokument übernehmen"), ActionKind::Mutation))
+            .action_with(
+                drawing_internal_action("commitDocument", LocalizedLabel::native("Commit Document", "Dokument übernehmen"), ActionKind::Mutation)
+                    .describe(LocalizedLabel::native("Commits a supplied snapshot as the drawing's next revision.", "Schreibt einen übergebenen Snapshot als nächste Revision der Zeichnung fest."))
+                    .use_when(["commit this document state"]),
+            )
             .action_interactive_job("commitDocument", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_with(drawing_internal_action("setFixtureJson", LocalizedLabel::native("Set Fixture Json", "Fixture-JSON festlegen"), ActionKind::Mutation))
+            .action_with(
+                drawing_internal_action("setFixtureJson", LocalizedLabel::native("Set Fixture Json", "Fixture-JSON festlegen"), ActionKind::Mutation)
+                    .describe(LocalizedLabel::native("Loads a whole drawing document from JSON text.", "Lädt ein vollständiges Zeichnungsdokument aus JSON-Text."))
+                    .use_when(["load this drawing from json"])
+                    .with_args([semio_framework_plugin::ActionArgDef::json_text("json", LocalizedLabel::native("Document JSON", "Dokument-JSON")).required()]),
+            )
             .action_interactive_job("setFixtureJson", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_with(drawing_internal_action("setSelectedOpacity", LocalizedLabel::native("Set Selected Opacity", "Deckkraft der Auswahl festlegen"), ActionKind::Mutation))
+            .action_with(
+                drawing_internal_action("setSelectedOpacity", LocalizedLabel::native("Set Selected Opacity", "Deckkraft der Auswahl festlegen"), ActionKind::Mutation)
+                    .describe(LocalizedLabel::native("Sets the opacity of every currently selected layer, from 0 (invisible) to 1 (opaque).", "Setzt die Deckkraft aller ausgewählten Ebenen, von 0 (unsichtbar) bis 1 (deckend)."))
+                    .use_when(["make the selection half transparent", "change the opacity"])
+                    .with_args([semio_framework_plugin::ActionArgDef::slider("value", LocalizedLabel::native("Opacity", "Deckkraft"), 0.0, 1.0).required()]),
+            )
             .action_interactive_job("setSelectedOpacity", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_with(drawing_internal_action("engagementSubmit", LocalizedLabel::native("Engagement Submit", "Eingabe bestätigen"), ActionKind::Mutation))
+            .action_with(drawing_input_event("engagementSubmit", LocalizedLabel::native("Engagement Submit", "Eingabe bestätigen"), ActionKind::Mutation))
             .action_interactive_job("engagementSubmit", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_with(drawing_internal_action("dropLayerKind", LocalizedLabel::native("Drop Layer Kind", "Ebenenart ablegen"), ActionKind::Mutation))
+            .action_with(
+                drawing_internal_action("dropLayerKind", LocalizedLabel::native("Drop Layer Kind", "Ebenenart ablegen"), ActionKind::Mutation)
+                    .describe(LocalizedLabel::native("Creates a layer of the given kind at a drop target in the layer tree.", "Erzeugt eine Ebene der angegebenen Art an einer Ablagestelle im Ebenenbaum."))
+                    .with_args([drawing_layer_kind_arg(), drawing_target_row_arg(), drawing_drop_position_arg()]),
+            )
             .action_interactive_job("dropLayerKind", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_with(drawing_internal_action("moveLayer", LocalizedLabel::native("Move Layer", "Ebene verschieben"), ActionKind::Mutation))
+            .action_with(
+                drawing_internal_action("moveLayer", LocalizedLabel::native("Move Layer", "Ebene verschieben"), ActionKind::Mutation)
+                    .describe(LocalizedLabel::native("Reorders one layer within the layer tree, before or after a target row or inside a group.", "Ordnet eine Ebene im Ebenenbaum um — vor oder nach einer Zielzeile oder in eine Gruppe hinein."))
+                    .use_when(["move a layer up", "reorder the layers", "put this layer in the group"])
+                    .with_args([drawing_layer_id_arg(), drawing_target_row_arg(), drawing_drop_position_arg()]),
+            )
             .action_interactive_job("moveLayer", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_with(drawing_internal_action("deleteLayer", LocalizedLabel::native("Delete Layer", "Ebene löschen"), ActionKind::Mutation))
+            .action_with(
+                drawing_internal_action("deleteLayer", LocalizedLabel::native("Delete Layer", "Ebene löschen"), ActionKind::Mutation)
+                    .describe(LocalizedLabel::native("Removes one layer from the drawing by id.", "Entfernt eine Ebene anhand ihrer Id aus der Zeichnung."))
+                    .use_when(["delete a layer", "remove this shape"])
+                    .with_args([drawing_layer_id_arg()]),
+            )
             .action_interactive_job("deleteLayer", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_with(drawing_internal_action("duplicateLayer", LocalizedLabel::native("Duplicate Layer", "Ebene duplizieren"), ActionKind::Mutation))
+            .action_with(
+                drawing_internal_action("duplicateLayer", LocalizedLabel::native("Duplicate Layer", "Ebene duplizieren"), ActionKind::Mutation)
+                    .describe(LocalizedLabel::native("Copies one layer and inserts the copy next to the original.", "Kopiert eine Ebene und fügt die Kopie neben dem Original ein."))
+                    .use_when(["duplicate this layer", "copy the shape"])
+                    .with_args([drawing_layer_id_arg()]),
+            )
             .action_interactive_job("duplicateLayer", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_with(drawing_internal_action("toggleLayerVisible", LocalizedLabel::native("Toggle Layer Visible", "Ebenensichtbarkeit umschalten"), ActionKind::Mutation))
+            .action_with(
+                drawing_internal_action("toggleLayerVisible", LocalizedLabel::native("Toggle Layer Visible", "Ebenensichtbarkeit umschalten"), ActionKind::Mutation)
+                    .describe(LocalizedLabel::native("Flips one layer between visible and hidden.", "Schaltet eine Ebene zwischen sichtbar und ausgeblendet um."))
+                    .use_when(["hide this layer", "show the layer again"])
+                    .with_args([drawing_layer_id_arg()]),
+            )
             .action_interactive_job("toggleLayerVisible", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_with(drawing_internal_action("patchLayer", LocalizedLabel::native("Patch Layer", "Ebene aktualisieren"), ActionKind::Mutation))
+            .action_with(
+                drawing_internal_action("patchLayer", LocalizedLabel::native("Patch Layer", "Ebene aktualisieren"), ActionKind::Mutation)
+                    .describe(LocalizedLabel::native(
+                        "Sets one named property of one layer — its name, opacity, visibility, lock, blend mode, boolean operation, fill colour, stroke width, transform or trace parameters.",
+                        "Setzt eine benannte Eigenschaft einer Ebene — Name, Deckkraft, Sichtbarkeit, Sperre, Mischmodus, Boolean-Operation, Füllfarbe, Strichstärke, Transformation oder Nachzeichnungsparameter.",
+                    ))
+                    .use_when(["rename a layer", "change the fill colour", "set the stroke width", "rotate or move a layer", "lock a layer"])
+                    .with_args([drawing_layer_id_arg(), drawing_layer_field_arg(), drawing_layer_value_arg()]),
+            )
             .action_interactive_job("patchLayer", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_with(drawing_internal_action("patchLayers", LocalizedLabel::native("Patch Layers", "Ebenen aktualisieren"), ActionKind::Mutation))
+            .action_with(
+                drawing_internal_action("patchLayers", LocalizedLabel::native("Patch Layers", "Ebenen aktualisieren"), ActionKind::Mutation)
+                    .describe(LocalizedLabel::native("Sets the same named property on several layers at once — see Patch Layer for the field vocabulary.", "Setzt dieselbe benannte Eigenschaft auf mehreren Ebenen gleichzeitig — siehe Ebene aktualisieren für die Feldliste."))
+                    .use_when(["set the colour of all selected layers", "hide several layers"])
+                    .with_args([semio_framework_plugin::ActionArgDef::text_list("layerIds", LocalizedLabel::native("Layer Ids", "Ebenen-Ids")).required(), drawing_layer_field_arg(), drawing_layer_value_arg()]),
+            )
             .action_interactive_job("patchLayers", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            // 🖱️ Internal pointer/gesture vocabulary — commit-time handlers emit operations, the rest are pure View.
-            .action_with(semio_framework_plugin::ActionDefinition { in_palette: false, ..semio_framework_plugin::ActionDefinition::new("canvasPointerDown", LocalizedLabel::native("Canvas Pointer Down", "Leinwand-Zeiger gedrückt"), ActionKind::Mutation, "mouse-pointer") })
+            // 🖱️ Internal pointer/gesture vocabulary — commit-time handlers emit operations, the rest are
+            // pure View. All of it is `CapabilityAudience::Input`: the canvas feeds these, agents never do.
+            .action_with(semio_framework_plugin::ActionDefinition::new("canvasPointerDown", LocalizedLabel::native("Canvas Pointer Down", "Leinwand-Zeiger gedrückt"), ActionKind::Mutation, "mouse-pointer").input_event())
             .action_interactive_job("canvasPointerDown", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_with(semio_framework_plugin::ActionDefinition { in_palette: false, ..semio_framework_plugin::ActionDefinition::new("canvasPointerUp", LocalizedLabel::native("Canvas Pointer Up", "Leinwand-Zeiger losgelassen"), ActionKind::Mutation, "mouse-pointer") })
+            .action_with(semio_framework_plugin::ActionDefinition::new("canvasPointerUp", LocalizedLabel::native("Canvas Pointer Up", "Leinwand-Zeiger losgelassen"), ActionKind::Mutation, "mouse-pointer").input_event())
             .action_interactive_job("canvasPointerUp", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_with(drawing_internal_action("canvasDoubleClick", LocalizedLabel::native("Canvas Double Click", "Leinwand-Doppelklick"), ActionKind::Mutation))
+            .action_with(drawing_input_event("canvasDoubleClick", LocalizedLabel::native("Canvas Double Click", "Leinwand-Doppelklick"), ActionKind::Mutation))
             .action_interactive_job("canvasDoubleClick", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_with(drawing_internal_action("canvasCommitDraft", LocalizedLabel::native("Canvas Commit Draft", "Leinwand-Entwurf übernehmen"), ActionKind::Mutation))
+            .action_with(drawing_input_event("canvasCommitDraft", LocalizedLabel::native("Canvas Commit Draft", "Leinwand-Entwurf übernehmen"), ActionKind::Mutation))
             .action_interactive_job("canvasCommitDraft", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_with(semio_framework_plugin::ActionDefinition { in_palette: false, ..semio_framework_plugin::ActionDefinition::new("canvasPointerMove", LocalizedLabel::native("Canvas Pointer Move", "Leinwand-Zeiger bewegen"), ActionKind::View, "mouse-pointer") })
+            .action_with(semio_framework_plugin::ActionDefinition::new("canvasPointerMove", LocalizedLabel::native("Canvas Pointer Move", "Leinwand-Zeiger bewegen"), ActionKind::View, "mouse-pointer").input_event())
             .action_interactive_job("canvasPointerMove", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_with(drawing_internal_action("canvasEscape", LocalizedLabel::native("Canvas Escape", "Leinwand abbrechen"), ActionKind::View))
+            .action_with(drawing_input_event("canvasEscape", LocalizedLabel::native("Canvas Escape", "Leinwand abbrechen"), ActionKind::View))
             .action_interactive_job("canvasEscape", semio_framework_plugin::InteractiveJobClassification::Migrated)
             // 👁️ Ephemeral view state — selection/hover are framework-owned now (see `.interaction(...)`
             // below): interactionSelect/interactionHover/clearSelection/selectAll/setSelectionMode/
             // setInteractionGranularity auto-inject, never declared here (ticket
             // 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM).
-            .action_with(semio_framework_plugin::ActionDefinition { in_palette: false, ..semio_framework_plugin::ActionDefinition::new("engagementInput", LocalizedLabel::native("Engagement Input", "Eingabe"), ActionKind::View, "hand") })
+            .action_with(semio_framework_plugin::ActionDefinition::new("engagementInput", LocalizedLabel::native("Engagement Input", "Eingabe"), ActionKind::View, "hand").input_event())
             .action_interactive_job("engagementInput", semio_framework_plugin::InteractiveJobClassification::Migrated)
             // 📷️ Camera — session-only runtime pose, never a document operation.
             .action_with(semio_framework_plugin::ActionDefinition { in_palette: false, ..semio_framework_plugin::ActionDefinition::new("setCamera", LocalizedLabel::native("Set Camera", "Kamera festlegen"), ActionKind::View, "camera") })
             .action_interactive_job("setCamera", semio_framework_plugin::InteractiveJobClassification::Migrated)
             .action_with(drawing_internal_action("setCameraZoom", LocalizedLabel::native("Set Camera Zoom", "Kamerazoom festlegen"), ActionKind::View))
             .action_interactive_job("setCameraZoom", semio_framework_plugin::InteractiveJobClassification::Migrated)
+            // 🤖️ Named after a drag-and-drop gesture but fully specified by its arguments, so an
+            // agent can reach it: declared `Agent` on purpose, which is also what stops the
+            // capability audit asking about it again.
+            .action_audience("dropLayerKind", semio_framework_plugin::CapabilityAudience::Agent)
+            // ⚠️ Discards content no later verb reconstructs — the gateway asks a human first.
+            .action_destructive("deleteLayer")
+            .action_destructive("setSnapshot")
+            .action_destructive("setFixtureJson")
+            .action_destructive("setActiveExample")
             // 🧰️ Canvas utilities — one exclusive set per window, active utility host-owned (never a document operation).
             .utility(drawing_utility("selectMarquee", LocalizedLabel::native("Marquee Select", "Rahmenauswahl"), "square-dashed", "Select", UtilityCategory::Selection))
             .utility(drawing_utility("selectLasso", LocalizedLabel::native("Lasso Select", "Lasso-Auswahl"), "lasso", "Select", UtilityCategory::Selection))
@@ -1807,6 +2013,15 @@ pub fn create_drawing_app() -> semio_framework_plugin::AppDefinition {
             .keybinding("escape", "canvasEscape")
             .keybinding("enter", "canvasCommitDraft")
             .default_layout(edit::layout())
+            // 🎯️ Typed channel surface — the SAME `drawing_io()` the trait's `io()` override returns,
+            // declared on the manifest so the committed descriptor carries it too. Without this the
+            // app shipped a DEFAULT `AppIo` (`artifactSchema: ""`, `ports: []`) while
+            // `DrawingPlayApp::export_media` answered `vector:out` for real, so every host that reads
+            // the descriptor to decide what a drawing can be exported through — the MCP gateway's
+            // `installed_artifact_kinds` among them — saw an app with no export surface at all
+            // (`📓️wr2-headless-command-response-wire.md` §7.2, measured as `declaredExportFormats: []`).
+            // Mirrors `writer_io()`/`lowpoly_io()`'s identical wiring.
+            .io(drawing_io())
             // 📚️ Examples are declared once, on the subset (`🪆️subsets/✳️any/🦀️.rs`'s `examples()`,
             // reached by the shell through `SubsetDeclaration.examples`), never a second time on this
             // builder — `setActiveExample` resolves its `example_id` against that same slice, so the
@@ -1825,3 +2040,11 @@ pub(crate) mod unit_tests;
 #[path = "🧪️tests/🔬️archive-load/🦀️.rs"]
 mod archive_load_tests;
 //#endregion 🧪️UnitTests
+
+//#region 🪢️TaxonomyMounts
+#[path = "📚️examples/🎬️demo-session/🦀️.rs"]
+pub mod demo_session;
+#[cfg(test)]
+#[path = "📚️examples/🎬️demo-session/🧪️tests/🧩️example/🦀️.rs"]
+mod example;
+//#endregion 🪢️TaxonomyMounts

@@ -5,8 +5,9 @@ use flow_extension_sdk::{build_manifest_json, evaluate_json, FlowExtensionComman
 async fn concat_joins_text() {
     let mut reg = Registry::new();
     register(&mut reg);
+    let reg = neural_engine::ColdOwner::new(reg);
     let input = Dictionary::new().insert("a", Value::Dictionary(text_dictionary("hi".into()))).insert("b", Value::Dictionary(text_dictionary("!".into())));
-    let out = reg.dispatch("text.concat", &input).unwrap();
+    let out = reg.dispatch_cold("text.concat", input).unwrap();
     let text = out.get("text").and_then(|v| v.as_dictionary()).expect("text channel");
     assert_eq!(text.schema(), Some("text"));
     assert_eq!(text.get("value").and_then(|v| v.as_atom()).and_then(|a| a.as_str()), Some("hi!"));

@@ -84,9 +84,21 @@ pub fn mint_session_id(principal: &str, counter: u64) -> String {
     format!("sess_{}", framework_hash::hash_bytes(format!("{principal}:{now_ms}:{counter}").as_bytes()))
 }
 
-/// 🪪️ `context.resolve` — the token-cheap summary every session opens with.
+/// 🪪️ `context.resolve` — the token-cheap summary every session opens with. `channel` is stamped
+/// [`crate::shell_channel::ChannelKind::Headless`] here and re-stamped by
+/// `registry_override_context_resolve` on a gateway that actually holds a
+/// [`crate::shell_channel::SessionChannelBinding`]: this function has no bridge to ask, and a
+/// summary must never claim a shell route it cannot prove.
 pub fn resolve_context(catalog: &Catalog, session_id: String, principal: &str, scopes: Vec<String>, active_artifact_id: Option<String>, locale: &str) -> ContextSummary {
-    ContextSummary { session_id, principal: principal.to_string(), scopes, active_artifact_id, catalog_hash: catalog.hash.clone(), locale: locale.to_string() }
+    ContextSummary {
+        session_id,
+        principal: principal.to_string(),
+        scopes,
+        active_artifact_id,
+        catalog_hash: catalog.hash.clone(),
+        locale: locale.to_string(),
+        channel: crate::shell_channel::ChannelKind::Headless.label().to_string(),
+    }
 }
 //#endregion 🔖️ContextResolve
 
@@ -203,11 +215,18 @@ impl ResourceRegistry for WorkspaceResourceRegistry {
         ];
         if let Some(workspace) = &self.workspace {
             if let Ok(live) = workspace.list_resources() {
-                resources.extend(live.into_iter().filter(|resource| resource.uri != "semio://workspace"));
+                resources.extend(live);
             }
         }
         resources.extend(crate::ui::ui_resources(self.bridge.as_ref()));
         resources.extend(crate::inference::inference_resources(self.workspace.as_ref()));
+        // 🆔️ A resource URI is an identity: a client that keys off it must never see the same one
+        // twice (`📓️g7-mcp-agent-and-collaboration-audit.md` §6 P2.11 — the bound workspace re-reports
+        // `semio://workspace` AND `semio://workspace/artifacts`, both of which this registry already
+        // declares statically). First declaration wins; a URI-specific `filter` here only ever
+        // covered whichever pair someone had noticed.
+        let mut seen: std::collections::BTreeSet<String> = std::collections::BTreeSet::new();
+        resources.retain(|resource| seen.insert(resource.uri.clone()));
         resources
     }
 
@@ -262,12 +281,44 @@ impl ResourceRegistry for WorkspaceResourceRegistry {
         Err(GatewayError::new(GatewayErrorCode::NotFound, format!("unknown resource: {uri}")))
     }
 
-    fn subscribe(&self, _uri: &str) -> Result<(), GatewayError> {
-        Ok(())
+    /// 🔔️ Validates that `uri` is one THIS registry can serve — the subscription set itself lives on
+    /// the connection (`McpServer::subscriptions`), because a subscription is per-client and this
+    /// registry is shared. `Ok(())` therefore means "this URI exists and changes to it will be
+    /// pushed", and a URI nothing here projects is a loud `NOT_FOUND` rather than the silent
+    /// forever-wait the unconditional `Ok(())` used to promise
+    /// (`📓️g7-mcp-agent-and-collaboration-audit.md` §6 P1.6).
+    fn subscribe(&self, uri: &str) -> Result<(), GatewayError> {
+        if Self::is_subscribable(self, uri) {
+            return Ok(());
+        }
+        Err(GatewayError::new(GatewayErrorCode::NotFound, format!("cannot subscribe to unknown resource: {uri}")))
     }
 
-    fn unsubscribe(&self, _uri: &str) -> Result<(), GatewayError> {
-        Ok(())
+    fn unsubscribe(&self, uri: &str) -> Result<(), GatewayError> {
+        if Self::is_subscribable(self, uri) {
+            return Ok(());
+        }
+        Err(GatewayError::new(GatewayErrorCode::NotFound, format!("cannot unsubscribe from unknown resource: {uri}")))
+    }
+}
+
+impl WorkspaceResourceRegistry {
+    /// 🔔️ A URI is subscribable when it is either listed right now, or a well-formed instance of one
+    /// of this registry's declared templates — an artifact a client wants to watch BEFORE it opens
+    /// must be subscribable, or the subscribe→mutate→updated round trip has a race no client can win.
+    fn is_subscribable(&self, uri: &str) -> bool {
+        if self.list().iter().any(|resource| resource.uri == uri) {
+            return true;
+        }
+        if let Some(id) = uri.strip_prefix("semio://capability/") {
+            return !id.is_empty() && self.catalog.get(id).is_some();
+        }
+        let Some(rest) = uri.strip_prefix("semio://artifact/") else { return false };
+        let (artifact_id, sub) = match rest.split_once('/') {
+            Some((artifact_id, sub)) => (artifact_id, sub),
+            None => (rest, ""),
+        };
+        !artifact_id.is_empty() && matches!(sub, "" | "history" | "validation" | "inference")
     }
 }
 //#endregion 🔖️WorkspaceResourceRegistry

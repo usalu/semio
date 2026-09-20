@@ -1,6 +1,6 @@
 {
   "useClass": "Residential",
-  "heatedAreaM2": 100,
+  "heatedAreaM2": 100.0,
   "occupants": 4,
   "hT": 92.5,
   "hV": 40.75,
@@ -16,10 +16,10 @@
     }
   },
   "internalGainsWM2": 3.5,
-  "solarGainsKwh": 84,
-  "systemLossesKwh": 450,
-  "renewableKwh": 1500,
-  "annualLimitKwh": 7500,
+  "solarGainsKwh": 84.0,
+  "systemLossesKwh": 450.0,
+  "renewableKwh": 1500.0,
+  "annualLimitKwh": 7500.0,
   "energyCarrier": "natural_gas",
-  "referenceQPKwh": 10000
+  "referenceQPKwh": 10000.0
 }

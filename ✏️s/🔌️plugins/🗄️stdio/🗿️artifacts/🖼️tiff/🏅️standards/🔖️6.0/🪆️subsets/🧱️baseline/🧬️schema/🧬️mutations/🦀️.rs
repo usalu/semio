@@ -95,6 +95,13 @@ pub mod set_strip_offsets;
 /// every variant to wrap exactly one leaf payload and a unit variant wraps none.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations)]
 #[mutations(snapshot = TiffSnapshot, diff = TiffDiff, schema = "TiffBaselineMutation")]
+// 🏷️ Adjacently tagged on the `mutation` discriminant, kebab-case — the same wire shape the
+// sibling `🧾️document` subset's `TiffMutation` and the sibling artifact's `JpgBaselineMutation`
+// carry, and the one [`KINDS`] (and the committed `🔣️.json` beside this file) spells out. Without
+// it the aggregate serialized externally tagged (`{"SetCompression": …}`), which carries no
+// `mutation` member at all and left `kinds_match_enum_variants_in_declaration_order` measuring a
+// discriminant this vocabulary never wrote.
+#[value(tag = "mutation", content = "payload", rename_all = "kebab-case")]
 pub enum TiffBaselineMutation {
     SetSnapshot(set_snapshot::SetSnapshot),
     SetCompression(set_compression::SetCompression),

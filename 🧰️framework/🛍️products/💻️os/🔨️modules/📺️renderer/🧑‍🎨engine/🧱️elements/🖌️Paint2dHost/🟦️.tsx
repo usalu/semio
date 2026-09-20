@@ -121,6 +121,7 @@ function noopPaint2dSession(): RasterWasmSession {
     pointerDownScreen: () => {},
     pointerMoveScreen: () => {},
     pointerUpScreen: () => {},
+    pointerCancelScreen: () => {},
     syncDocumentJson: () => {},
     uploadLayerImage: () => {},
     uploadRasterImageKey: () => {},
@@ -516,6 +517,21 @@ function Paint2dCanvasSurface({
     [clientPoint, commitMarqueeSelection, isNavigator, pickInteraction, scene.activeUtility],
   );
 
+  const onPointerCancel = useCallback(
+    (event: ReactPointerEvent<HTMLDivElement>) => {
+      const session = sessionRef.current;
+      if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);
+      panRef.current = null;
+      marqueeRef.current = { tracking: false, active: false, start: { x: 0, y: 0 }, points: [] };
+      setMarqueeOverlay(null);
+      pickInteraction.onCanvasPointerLeave();
+      if (isNavigator || !session) return;
+      session.pointerCancelScreen();
+      session.renderFrame();
+    },
+    [isNavigator, pickInteraction],
+  );
+
   const onWheel = useCallback(
     (event: ReactWheelEvent<HTMLDivElement>) => {
       event.preventDefault();
@@ -596,6 +612,7 @@ function Paint2dCanvasSurface({
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
         onPointerUp={onPointerUp}
+        onPointerCancel={onPointerCancel}
         onPointerLeave={() => pickInteraction.onCanvasPointerLeave()}
         onWheel={onWheel}
         onContextMenu={onContextMenu}

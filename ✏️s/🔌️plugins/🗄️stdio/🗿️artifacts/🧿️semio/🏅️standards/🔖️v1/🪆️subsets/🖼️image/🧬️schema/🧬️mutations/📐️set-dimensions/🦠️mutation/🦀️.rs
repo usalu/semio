@@ -5,6 +5,6 @@ use crate::standards::v1::subsets::image::schema::mutations::set_dimensions;
 
 /// ▶️ Applies a set-dimensions mutation.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn apply(snapshot: &mut SemioImageSnapshot, width: u32, height: u32) -> SemioImageDiff {
+pub fn apply(snapshot: &mut SemioImageSnapshot, width: u32, height: u32) -> protocol::MutationOutcome<SemioImageDiff> {
     apply_semio_image_mutation(snapshot, &SemioImageMutation::SetDimensions(set_dimensions::SetDimensions { width, height }))
 }

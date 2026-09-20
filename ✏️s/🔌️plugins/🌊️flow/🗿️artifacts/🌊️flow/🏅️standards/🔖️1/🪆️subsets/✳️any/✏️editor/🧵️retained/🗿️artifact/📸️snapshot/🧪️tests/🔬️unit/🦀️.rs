@@ -97,7 +97,7 @@ mod tests {
 
     #[test]
     fn child_typed_handoff_preserves_mismatched_owner_then_retires_exact_scene() {
-        let root = Arc::new(FlowWorkingScene { widgets: vec![semio_framework_artifact_flow_flow::Widget::InputNote { id: "note".into(), text: "🌊".repeat(4096) }], ..Default::default() });
+        let root = Arc::new(FlowWorkingScene { widgets: vec![semio_framework_artifact_flow_flow::Widget::InputNote { id: "note".into(), text: "🌊".repeat(4096) }], synapses: Vec::new(), layout: Default::default() });
         let weak = Arc::downgrade(&root);
         let mut child = crate::flow_content_child_from_digest([0; 32], root);
         assert!(child.take_local_owner::<String>().is_err());

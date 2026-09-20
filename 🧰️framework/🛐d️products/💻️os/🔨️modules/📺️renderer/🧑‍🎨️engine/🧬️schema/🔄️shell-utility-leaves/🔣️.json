@@ -1,0 +1,60 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "sync", "taskManager"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "sync": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["panelId", "anchor", "detachedLabel", "choiceIds", "attached"],
+      "properties": {
+        "panelId": { "const": "s-sync-status" },
+        "anchor": { "const": "bottom-left" },
+        "detachedLabel": { "$ref": "#/definitions/localized" },
+        "choiceIds": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "uniqueItems": true,
+          "items": { "enum": ["framework.sync.file", "framework.sync.folder", "framework.sync.remote"] }
+        },
+        "attached": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["uri", "selectedChoiceId", "detachAvailable"],
+          "properties": {
+            "uri": { "type": "string", "minLength": 1 },
+            "selectedChoiceId": { "enum": ["framework.sync.file", "framework.sync.folder", "framework.sync.remote"] },
+            "detachAvailable": { "const": true }
+          }
+        }
+      }
+    },
+    "taskManager": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["panelId", "commandId", "anchor", "state", "message", "actorActions"],
+      "properties": {
+        "panelId": { "const": "os.task-manager" },
+        "commandId": { "const": "os.openTaskManager" },
+        "anchor": { "const": "bottom-right" },
+        "state": { "const": "no-runtime" },
+        "message": { "$ref": "#/definitions/localized" },
+        "actorActions": { "type": "array", "maxItems": 0 }
+      }
+    }
+  },
+  "definitions": {
+    "localized": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["en", "de"],
+      "properties": {
+        "en": { "type": "string", "minLength": 1 },
+        "de": { "type": "string", "minLength": 1 }
+      }
+    }
+  }
+}

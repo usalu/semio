@@ -4,14 +4,45 @@ use super::*;
 #[test]
 fn authenticated_hub_workspace_cli_contains_no_hub_credential_carrier() {
     let stdio = parse_stdio_args(&mut ["--hub", "http://127.0.0.1:8787", "--space", "space-a"].into_iter().map(str::to_string)).unwrap();
-    assert_eq!(stdio.hub, Some(HubOptions { base_url: "http://127.0.0.1:8787".into(), space_id: "space-a".into() }));
+    assert_eq!(stdio.hub, Some(HubOptions { base_url: "http://127.0.0.1:8787".into(), space_id: "space-a".into(), credential: None }));
     assert!(parse_stdio_args(&mut ["--hub", "http://127.0.0.1:8787", "--space", "space-a", "--token", "forbidden"].into_iter().map(str::to_string)).is_err());
 
     let options = parse_http_args(&mut ["--hub", "http://127.0.0.1:8787", "--space", "space-a"].into_iter().map(str::to_string)).unwrap();
     let hub = options.hub.expect("authenticated hub binding");
-    assert_eq!(hub, HubOptions { base_url: "http://127.0.0.1:8787".into(), space_id: "space-a".into() });
+    assert_eq!(hub, HubOptions { base_url: "http://127.0.0.1:8787".into(), space_id: "space-a".into(), credential: None });
     assert!(parse_http_args(&mut ["--token", "forbidden"].into_iter().map(str::to_string)).is_err());
     assert!(parse_http_args(&mut ["--bridge-token-file", "forbidden"].into_iter().map(str::to_string)).is_err());
+}
+
+/// 🤖️ The delegated-agent flags carry a LOCATION, never a secret: `--credential-file` is the only
+/// shape an MCP client configuration can express, and argv is world-readable through `ps`, so a
+/// token-shaped flag stays rejected.
+#[test]
+fn the_delegated_agent_credential_is_a_path_and_never_a_secret_in_argv() {
+    let stdio = parse_stdio_args(&mut ["--hub", "http://127.0.0.1:7501", "--space", "space-a", "--credential-file", "/home/ada/.semio/agent.json"].into_iter().map(str::to_string)).unwrap();
+    assert_eq!(
+        stdio.hub,
+        Some(HubOptions { base_url: "http://127.0.0.1:7501".into(), space_id: "space-a".into(), credential: Some(AgentCredentialSource::File("/home/ada/.semio/agent.json".into())) })
+    );
+    assert!(format!("{:?}", stdio.hub).contains("agent.json"), "the path is printable — it is not the secret");
+
+    let http = parse_http_args(&mut ["--hub", "http://127.0.0.1:7501", "--space", "space-a", "--credential-fd", "5"].into_iter().map(str::to_string)).unwrap();
+    assert_eq!(http.hub.expect("hub binding").credential, Some(AgentCredentialSource::Descriptor(5)));
+
+    for refused in [
+        vec!["--hub", "http://127.0.0.1:7501", "--space", "space-a", "--credential-file", "/a", "--credential-fd", "5"],
+        vec!["--credential-file", "/a"],
+        vec!["--hub", "http://127.0.0.1:7501", "--space", "space-a", "--credential-token", "delegation.v1.deadbeef"],
+        vec!["--hub", "http://127.0.0.1:7501", "--space", "space-a", "--credential-fd", "3"],
+        vec!["--hub", "http://127.0.0.1:7501", "--space", "space-a", "--credential-fd", "0"],
+        vec!["--hub", "http://127.0.0.1:7501", "--space", "space-a", "--credential-fd", "not-a-number"],
+    ] {
+        assert!(parse_stdio_args(&mut refused.clone().into_iter().map(str::to_string)).is_err(), "{refused:?} must be refused");
+    }
+
+    // 🔢️ `http` mode does not use stdio for MCP framing, so descriptor 0 is admissible there.
+    assert!(parse_http_args(&mut ["--hub", "http://127.0.0.1:7501", "--space", "space-a", "--credential-fd", "0"].into_iter().map(str::to_string)).is_ok());
+    assert!(parse_http_args(&mut ["--hub", "http://127.0.0.1:7501", "--space", "space-a", "--credential-fd", "3"].into_iter().map(str::to_string)).is_err());
 }
 
 #[test]

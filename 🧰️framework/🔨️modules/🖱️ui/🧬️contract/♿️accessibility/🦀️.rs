@@ -169,6 +169,20 @@ pub struct AccessibilityProjectionNode {
     #[serde(default, skip_serializing_if = "is_default")]
     pub focused: bool,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub checked: Option<bool>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub selected: Option<bool>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub expanded: Option<bool>,
+    #[serde(default, skip_serializing_if = "is_default")]
+    pub editable: bool,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub controls: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub active_descendant: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub level: Option<usize>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub rect: Option<[f32; 4]>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub value_min: Option<f64>,
@@ -198,6 +212,12 @@ pub struct AccessibilityValue {
 /// default.
 pub fn accessibility_value(component: &crate::Component) -> AccessibilityValue {
     match component {
+        crate::Component::Input(props) => AccessibilityValue { min: props.min, max: props.max, now: props.value.as_str().parse().ok(), text: Some(props.value.as_str().to_string()), busy: false },
+        crate::Component::Select(props) => AccessibilityValue { text: Some(props.value.as_str().to_string()), ..AccessibilityValue::default() },
+        crate::Component::Slider(props) => AccessibilityValue { min: Some(props.min), max: Some(props.max), now: Some(props.value), text: props.unit.as_ref().map(|unit| format!("{} {}", props.value, unit.as_str())), busy: false },
+        crate::Component::NumberStepper(props) => AccessibilityValue { now: Some(props.value), text: Some(props.value.to_string()), ..AccessibilityValue::default() },
+        crate::Component::Ring(props) => AccessibilityValue { min: Some(0.0), max: Some(1.0), now: Some(props.t), text: Some(props.t.to_string()), busy: false },
+        crate::Component::IconSelect(props) => AccessibilityValue { text: Some(props.value.as_str().to_string()), ..AccessibilityValue::default() },
         crate::Component::Progress(props) => match props.total {
             Some(total) => AccessibilityValue { min: Some(0.0), max: Some(total), now: Some(props.completed), text: Some(props.value_text.0.as_str().to_string()), busy: false },
             None => AccessibilityValue { busy: true, ..AccessibilityValue::default() },
@@ -225,6 +245,21 @@ pub fn accessibility_projection_node(record: &crate::UiNodeRecord, depth: usize)
         focusable: accessibility_is_focusable(&record.component, activatable),
         actionable: activatable || !record.bindings.is_empty(),
         focused: false,
+        checked: match &record.component {
+            crate::Component::Toggle(props) => Some(props.on),
+            _ => None,
+        },
+        selected: None,
+        expanded: match &record.component {
+            crate::Component::Select(_) => Some(false),
+            crate::Component::TreeSection(props) => Some(props.default_open.unwrap_or(true)),
+            crate::Component::TreeItem(props) if props.default_open.is_some() || !record.children.is_empty() => Some(props.default_open.unwrap_or(true)),
+            _ => None,
+        },
+        editable: false,
+        controls: None,
+        active_descendant: None,
+        level: matches!(record.component, crate::Component::TreeItem(_)).then_some(depth.saturating_add(1)),
         rect: None,
         value_min: value.min,
         value_max: value.max,

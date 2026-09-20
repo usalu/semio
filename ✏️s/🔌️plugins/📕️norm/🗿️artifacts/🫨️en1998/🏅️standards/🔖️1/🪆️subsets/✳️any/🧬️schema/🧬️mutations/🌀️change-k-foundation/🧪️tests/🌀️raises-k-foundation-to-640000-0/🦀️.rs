@@ -67,7 +67,7 @@ async fn change_k_foundation_committed_json_is_canonical() {
     }
     let reencoded = serde_json::to_value(mutation()).expect("change-k-foundation mutation encodes");
     let original: serde_json::Value = serde_json::from_str(MUTATION).expect("change-k-foundation mutation reparses");
-    assert_eq!(reencoded, original, "change-k-foundation/raises-k-foundation-to-640000-0: committed mutation JSON is not the canonical externally-tagged ChangeKFoundation form carrying newKFoundation");
+    assert_eq!(reencoded, original, "change-k-foundation/raises-k-foundation-to-640000-0: committed mutation JSON is not the canonical internally-tagged ChangeKFoundation form carrying mutation and newKFoundation");
 }
 
 /// 🎯️ The declared outcome holds: `change-k-foundation` at 640000.0 is applied, not rejected, and carries no

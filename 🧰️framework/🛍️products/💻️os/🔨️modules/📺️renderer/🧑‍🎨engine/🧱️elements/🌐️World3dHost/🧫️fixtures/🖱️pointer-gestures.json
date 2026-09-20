@@ -99,7 +99,7 @@
  "gestures": [
   {
    "id": "instance-pick-replaces",
-   "why": "A bare pick on a rendered instance selects the TOPOLOGY id the instance stands for (`interactionId`), never the render id, at object granularity.",
+   "why": "A bare pick selects the topology interactionId at the instance granularity, falling back to the declared scene granularity.",
    "kind": "instance-pick",
    "instanceId": "extrude@solid#0",
    "modifiers": {
@@ -114,7 +114,7 @@
     "method": "pick",
     "targets": [
      {
-      "granularity": "object",
+      "granularity": "handle",
       "id": "extrude@solid"
      }
     ]
@@ -137,7 +137,7 @@
     "method": "pick",
     "targets": [
      {
-      "granularity": "object",
+      "granularity": "handle",
       "id": "extrude@solid"
      }
     ]
@@ -160,7 +160,7 @@
     "method": "pick",
     "targets": [
      {
-      "granularity": "object",
+      "granularity": "handle",
       "id": "extrude@solid"
      }
     ]
@@ -183,7 +183,7 @@
     "method": "pick",
     "targets": [
      {
-      "granularity": "object",
+      "granularity": "handle",
       "id": "extrude@solid"
      }
     ]
@@ -206,7 +206,7 @@
     "method": "pick",
     "targets": [
      {
-      "granularity": "object",
+      "granularity": "handle",
       "id": "extrude@solid"
      }
     ]
@@ -229,7 +229,7 @@
     "method": "pick",
     "targets": [
      {
-      "granularity": "object",
+      "granularity": "handle",
       "id": "extrude@solid"
      }
     ]
@@ -259,7 +259,7 @@
   },
   {
    "id": "instance-hover",
-   "why": "Hover reports the scene's OWN declared granularity (`domainGranularityId`), not the object granularity a pick uses, and travels on the `pointer` channel.",
+   "why": "Hover resolves the same instance target and scene granularity fallback as a pick, on the pointer channel.",
    "kind": "instance-hover",
    "instanceId": "extrude@solid#0",
    "expect": {
@@ -363,10 +363,10 @@
     "action": "interactionSelect",
     "domainId": "graph",
     "merge": "replace",
-    "method": "pick",
+    "method": "rectangle",
     "targets": [
      {
-      "granularity": "object",
+      "granularity": "handle",
       "id": "extrude@solid"
      }
     ]
@@ -378,7 +378,7 @@
   "selectionArgsBuilder": "world3dSelectionActionArgs",
   "hoverArgsBuilder": "world3dHoverActionArgs",
   "cameraArgsBuilder": "worldCameraSetCameraDispatchArgs",
-  "targetsBuilder": "interactionTargetsForInstances",
+  "targetsBuilder": "world3dInstanceInteractionTargets",
   "selectionTargetsAreASet": "const targets = [...new Set(ids)].map((id) => ({ granularity, id }));",
   "mergeVocabularyFixture": "🧰️framework/🔨️modules/🕹️interaction/🧫️fixtures/🎯️merge-modes.json",
   "mergeIsNotTranslated": "export function world3dSelectionActionArgs(domainId: string, granularity: string, ids: readonly string[], merge: MergeMode) {",
@@ -388,6 +388,8 @@
   ],
   "deadVerbs": [
    "graphPointerDown"
-  ]
+  ],
+  "selectionTargetsArgsBuilder": "world3dSelectionTargetsActionArgs",
+  "instanceTargetBuilder": "world3dInstanceInteractionTarget"
  }
 }

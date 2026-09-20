@@ -1,0 +1,38 @@
+{
+  "version": 1,
+  "mime": "application/x-semio-catalogue-item",
+  "surface": {
+    "id": "canvas-pointer-transfer",
+    "controllerId": "canvas-pointer-controller",
+    "left": 100,
+    "top": 200,
+    "width": 320,
+    "height": 180
+  },
+  "cases": [
+    {
+      "id": "inside-release",
+      "rawPayload": "{\"pluginId\":\"s.system\",\"appId\":\"layout\",\"kindId\":\"vertical\"}",
+      "moves": [{ "x": 132, "y": 248 }],
+      "terminal": "up",
+      "terminalPoint": { "x": 132, "y": 248 },
+      "expectedActions": ["canvasDragOver", "canvasDragLeave", "canvasDrop"]
+    },
+    {
+      "id": "outside-release",
+      "rawPayload": "{\"pluginId\":\"s.system\",\"appId\":\"layout\",\"kindId\":\"horizontal\"}",
+      "moves": [{ "x": 180, "y": 260 }, { "x": 460, "y": 420 }],
+      "terminal": "up",
+      "terminalPoint": { "x": 460, "y": 420 },
+      "expectedActions": ["canvasDragOver", "canvasDragLeave"]
+    },
+    {
+      "id": "cancel",
+      "rawPayload": "{\"pluginId\":\"s.system\",\"appId\":\"layout\",\"kindId\":\"overlay\"}",
+      "moves": [{ "x": 260, "y": 300 }],
+      "terminal": "cancel",
+      "terminalPoint": { "x": 260, "y": 300 },
+      "expectedActions": ["canvasDragOver", "canvasDragLeave"]
+    }
+  ]
+}

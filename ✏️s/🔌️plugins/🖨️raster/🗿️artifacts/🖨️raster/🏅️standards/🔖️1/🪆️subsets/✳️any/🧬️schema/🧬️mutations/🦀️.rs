@@ -36,7 +36,7 @@ use super::resize_layer;
 /// collection.
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::Mutations)]
 #[value(tag = "mutation", rename_all = "camelCase")]
-#[mutations(snapshot = RasterSnapshot, diff = RasterDiff, schema = "raster.raster")]
+#[mutations(snapshot = RasterSnapshot, diff = RasterDiff, schema = "raster.raster", retire_cold = retire_raster_mutation)]
 pub enum RasterMutation {
     CreateLayer(create_layer::CreateLayer),
     DeleteLayer(delete_layer::DeleteLayer),
@@ -50,6 +50,16 @@ pub enum RasterMutation {
     ChangeLayerAdjustmentKind(change_layer_adjustment_kind::ChangeLayerAdjustmentKind),
     AddLayerAsset(add_layer_asset::AddLayerAsset),
     RemoveLayerAsset(remove_layer_asset::RemoveLayerAsset),
+}
+
+/// 🧯️ Cold disposal of a scratch mutation nobody will apply again — the store retires decoded
+/// arrivals, replay clones and rebased inverses through `Mutation::retire_cold`, and `CreateLayer`
+/// is the one leaf that owns a layer subtree (so, through an `Adjustment`, a fail-closed
+/// `RasterOwnedMap`). Every other leaf carries plain scalars and needs nothing.
+pub fn retire_raster_mutation(mutation: RasterMutation) {
+    if let RasterMutation::CreateLayer(value) = mutation {
+        crate::retire_raster_layer(*value.layer);
+    }
 }
 
 /// ⚡️ Convenience wrapper kept for existing in-plugin callers (`RasterBuilderConstruction::mutate`,

@@ -1,5 +1,6 @@
 import { cleanup, fireEvent, render, screen } from "@semio-tech/ui-react/test";
 import { setUiLocale } from "@semio-tech/ui-react";
+import { isShellLocale } from "@semio-tech/framework";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import Ajv from "ajv";
 import deepEqual from "fast-deep-equal";
@@ -15,6 +16,7 @@ import {
   decodeBackboneWorkerResponse,
   directoryAdministrationCommandAllowedV1,
   encodeBackboneWorkerRequest,
+  parseDirectoryCommandOutcomeV1,
   encodeBackboneWorkerResponse,
   type BackboneWorkerRequest,
   type BackboneWorkerResponse,
@@ -41,7 +43,7 @@ afterEach(cleanup);
 
 const SPACE = "space-admin-01";
 
-const authorPage = (): DirectorySpaceAdministrationPageV1 => ({
+const authorPage = (): Extract<DirectorySpaceAdministrationPageV1, { access: "author" }> => ({
   access: "author",
   schema: "semio.directory.space-administration-page.v1",
   sessionBindingSha256: "a".repeat(64),
@@ -196,7 +198,7 @@ describe("ShellHost space administration state", () => {
     expect(shellSpaceAdministrationRequest(state(withdrawn), { kind: "delete-space" }, "4".repeat(32))).toBeNull();
     expect(shellSpaceAdministrationRequest(state(memberPage()), { kind: "delete-space" }, "4".repeat(32))).toBeNull();
     const receiptSha256 = "d".repeat(64);
-    for (const outcome of deleteFixture.acceptedOutcomes) {
+    for (const outcome of deleteFixture.acceptedOutcomes.map(parseDirectoryCommandOutcomeV1)) {
       const deleted = reduceShellSpaceAdministrationState(author, workerState({ phase: "deleted", receiptSha256, outcome }), 1, null);
       expect(deleted, outcome).toEqual({ operationEpoch: 1, spaceId: SPACE, phase: "deleted", page: null, receiptSha256 });
     }
@@ -268,6 +270,7 @@ describe("SpaceAdministrationPane", () => {
 
   it("edits properties in both locales without optimistic publication and withdraws controls with authority", async () => {
     for (const labels of propertiesFixture.locales) {
+      if (!isShellLocale(labels.locale)) throw new Error(`unowned fixture locale: ${labels.locale}`);
       await setUiLocale(labels.locale);
       try {
         const intents: SpaceAdministrationIntentV1[] = [];
@@ -354,6 +357,7 @@ describe("SpaceAdministrationPane", () => {
 
   it("requires an explicit accessible confirmation in both locales and never deletes optimistically", async () => {
     for (const labels of deleteFixture.locales) {
+      if (!isShellLocale(labels.locale)) throw new Error(`unowned fixture locale: ${labels.locale}`);
       await setUiLocale(labels.locale);
       try {
         const intents: SpaceAdministrationIntentV1[] = [];

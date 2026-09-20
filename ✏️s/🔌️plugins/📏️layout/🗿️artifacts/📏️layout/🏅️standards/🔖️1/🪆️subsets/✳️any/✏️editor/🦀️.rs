@@ -479,11 +479,43 @@ mod args_bridge {
         T::from_value(value).map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new("app.command.invalid-args"), format!("layout action '{action}' arguments do not decode: {error}")))
     }
 
+    fn catalogue_args(action: &str, args: Option<&DslValue>) -> Result<DslValue, Fault> {
+        use catalogue_panel::{catalogue_kind, LAYOUT_CATALOGUE_DRAG_MIME, LAYOUT_CATALOGUE_KIND_MIME_PREFIX};
+        let invalid = || Fault::new(FaultOrigin::App, FaultCode::new("app.command.invalid-args"), format!("layout action '{action}' requires one supported catalogue kind"));
+        let mut folded = fold(args, &[], &[]);
+        let DslValue::Object(entries) = &mut folded else { return Err(invalid()) };
+        let field = |name: &str| entries.iter().find_map(|(key, value)| (key == name).then_some(value));
+        let kind = if action == "canvasDragOver" {
+            let Some(DslValue::Array(types)) = field("types") else { return Err(invalid()) };
+            let mut has_base = false;
+            let mut kind = None;
+            for value in types {
+                let DslValue::String(mime) = value else { return Err(invalid()) };
+                has_base |= mime == LAYOUT_CATALOGUE_DRAG_MIME;
+                if let Some(candidate) = mime.strip_prefix(LAYOUT_CATALOGUE_KIND_MIME_PREFIX) {
+                    if kind.is_some() { return Err(invalid()); }
+                    kind = Some(catalogue_kind(candidate).ok_or_else(invalid)?);
+                }
+            }
+            if !has_base { return Err(invalid()); }
+            kind.ok_or_else(invalid)?
+        } else {
+            let Some(DslValue::String(raw)) = field("drag_data") else { return Err(invalid()) };
+            let value = dsl::json::from_json_str::<DslValue>(raw).map_err(|_| invalid())?;
+            let DslValue::Object(payload) = value else { return Err(invalid()) };
+            let [(key, DslValue::String(kind))] = payload.as_slice() else { return Err(invalid()) };
+            if key != "kind" { return Err(invalid()); }
+            catalogue_kind(kind).ok_or_else(invalid)?
+        };
+        entries.retain(|(key, _)| !matches!(key.as_str(), "types" | "drag_data"));
+        put(entries, "kind", DslValue::String(kind.into()));
+        Ok(folded)
+    }
+
     pub fn command_from_action(action: &str, args: Option<&DslValue>) -> Result<LayoutCommand, Fault> {
         const PAGE: &[(&str, &str)] = &[("id", "page_id"), ("value", "page_id")];
         const TEXT: &[(&str, &str)] = &[("text", "value"), ("input", "value")];
         let text = |value: &str| DslValue::String(value.into());
-        let zero = || DslValue::Number(dsl::Number::Float(0.0));
         let plain = || fold(args, &[], &[]);
         Ok(match action {
             "setActivePage" => LayoutCommand::SetActivePage(decode(action, fold(args, PAGE, &[]))?),
@@ -492,14 +524,14 @@ mod args_bridge {
             "canvasPointerDown" => LayoutCommand::CanvasPointerDown(decode(action, fold(args, &[("shift_key", "extend")], &[("button", DslValue::Number(dsl::Number::Int(0))), ("extend", DslValue::Bool(false))]))?),
             "canvasPointerMove" => LayoutCommand::CanvasPointerMove(decode(action, fold(args, &[], &[("samples", DslValue::Array(Vec::new()))]))?),
             "canvasPointerUp" => LayoutCommand::CanvasPointerUp(decode(action, fold(args, &[], &[("cancelled", DslValue::Bool(false))]))?),
-            "canvasDragOver" => LayoutCommand::CanvasDragOver(decode(action, fold(args, &[("drop_kind", "kind")], &[]))?),
+            "canvasDragOver" => LayoutCommand::CanvasDragOver(decode(action, catalogue_args(action, args)?)?),
             "canvasDragLeave" => LayoutCommand::CanvasDragLeave(decode(action, plain())?),
             "setCamera" => LayoutCommand::SetCamera(decode(action, nest_camera(plain()))?),
             "addFrame" => LayoutCommand::AddFrame(decode(action, fold(args, &[("value", "kind")], &[("kind", text("rect"))]))?),
             "addPage" => LayoutCommand::AddPage(decode(action, plain())?),
             "patchPage" => LayoutCommand::PatchPage(decode(action, with_text_value(fold(args, &[("id", "page_id")], &[("value", text(""))])))?),
             "patchFrame" => LayoutCommand::PatchFrame(decode(action, with_text_value(fold(args, &[("id", "frame_id")], &[("value", text(""))])))?),
-            "canvasDrop" => LayoutCommand::CanvasDrop(decode(action, fold(args, &[("drop_kind", "kind")], &[("x", zero()), ("y", zero()), ("width", zero()), ("height", zero())]))?),
+            "canvasDrop" => LayoutCommand::CanvasDrop(decode(action, catalogue_args(action, args)?)?),
             "exportPng" => LayoutCommand::ExportPng(decode(action, fold(args, PAGE, &[]))?),
             "exportSvg" => LayoutCommand::ExportSvg(decode(action, fold(args, PAGE, &[]))?),
             "exportPdf" => LayoutCommand::ExportPdf(decode(action, fold(args, PAGE, &[]))?),
@@ -1174,6 +1206,32 @@ pub fn create_layout_app() -> semio_framework_plugin::AppDefinition {
             .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new("setCamera", LocalizedLabel::native("Set Camera", "Kamera festlegen"), ActionKind::View, "camera") })
             // 🐚️ Engagement submit — routes typed export intents through the host, emits only shell effects.
             .action_with(layout_internal_action("engagementSubmit", LocalizedLabel::native("Engagement Submit", "Eingabe bestätigen"), ActionKind::Shell))
+            // 💬️ Agent-facing descriptions (ticket 26/09/18 slice M5a) — EN first, DE second.
+            .action_describe("addPage", LocalizedLabel::native("Appends a new page to the layout document.", "Fügt dem Layoutdokument eine neue Seite hinzu."))
+            .action_use_when("addPage", vec!["add a page".into(), "new page in the layout".into()])
+            .action_describe("addFrame", LocalizedLabel::native("Places a new frame on a page — the box that holds an image, a text block or a nested artifact.", "Platziert einen neuen Rahmen auf einer Seite — den Kasten für Bild, Textblock oder eingebettetes Artefakt."))
+            .action_use_when("addFrame", vec!["add a frame".into(), "place an image box".into(), "add a text frame".into()])
+            .action_describe("patchPage", LocalizedLabel::native("Sets one named property of one page — its size, orientation, margins or name.", "Setzt eine benannte Eigenschaft einer Seite — Größe, Ausrichtung, Ränder oder Name."))
+            .action_use_when("patchPage", vec!["make the page A4".into(), "change the page margins".into()])
+            .action_describe("patchFrame", LocalizedLabel::native("Sets one named property of one frame — its position, size, content binding or style.", "Setzt eine benannte Eigenschaft eines Rahmens — Position, Größe, Inhaltsbindung oder Stil."))
+            .action_use_when("patchFrame", vec!["move a frame".into(), "resize this frame".into()])
+            .action_describe("deleteSelection", LocalizedLabel::native("Removes the selected pages or frames from the layout.", "Entfernt die ausgewählten Seiten oder Rahmen aus dem Layout."))
+            .action_describe("exportPdf", LocalizedLabel::native("Renders the whole layout to a downloadable PDF.", "Rendert das gesamte Layout in eine herunterladbare PDF-Datei."))
+            .action_use_when("exportPdf", vec!["export the document as pdf".into(), "print this layout to pdf".into()])
+            .action_describe("exportPng", LocalizedLabel::native("Renders the layout to downloadable PNG raster images.", "Rendert das Layout in herunterladbare PNG-Rasterbilder."))
+            .action_describe("exportSvg", LocalizedLabel::native("Renders the layout to a downloadable SVG vector document.", "Rendert das Layout in ein herunterladbares SVG-Vektordokument."))
+            .action_describe("exportPackage", LocalizedLabel::native("Bundles the layout and every asset it references into one downloadable package.", "Bündelt das Layout und alle referenzierten Assets in ein herunterladbares Paket."))
+            .action_describe("setActivePage", LocalizedLabel::native("Brings one page of the layout into view.", "Holt eine Seite des Layouts in die Ansicht."))
+            .action_describe("focusPreflightIssue", LocalizedLabel::native("Scrolls to and highlights one reported preflight issue.", "Springt zu einem gemeldeten Preflight-Problem und hebt es hervor."))
+            // 🖱️ Raw input plumbing — the canvas feeds these, agents never do.
+            .action_audience("canvasDrop", semio_framework_plugin::CapabilityAudience::Input)
+            .action_audience("canvasDragOver", semio_framework_plugin::CapabilityAudience::Input)
+            .action_audience("canvasDragLeave", semio_framework_plugin::CapabilityAudience::Input)
+            .action_audience("canvasPointerDown", semio_framework_plugin::CapabilityAudience::Input)
+            .action_audience("canvasPointerMove", semio_framework_plugin::CapabilityAudience::Input)
+            .action_audience("canvasPointerUp", semio_framework_plugin::CapabilityAudience::Input)
+            .action_audience("engagementInput", semio_framework_plugin::CapabilityAudience::Input)
+            .action_audience("engagementSubmit", semio_framework_plugin::CapabilityAudience::Input)
             .action_interactive_job("setActivePage", InteractiveJobClassification::Migrated)
             .action_interactive_job("focusPreflightIssue", InteractiveJobClassification::Migrated)
             .action_interactive_job("engagementInput", InteractiveJobClassification::Migrated)
@@ -1242,3 +1300,11 @@ pub fn create_layout_app() -> semio_framework_plugin::AppDefinition {
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 pub(crate) mod unit_tests;
 //#endregion 🧪️UnitTests
+
+//#region 🪢️TaxonomyMounts
+#[path = "📚️examples/🎬️demo-session/🦀️.rs"]
+pub mod demo_session;
+#[cfg(test)]
+#[path = "📚️examples/🎬️demo-session/🧪️tests/🧩️example/🦀️.rs"]
+mod example;
+//#endregion 🪢️TaxonomyMounts

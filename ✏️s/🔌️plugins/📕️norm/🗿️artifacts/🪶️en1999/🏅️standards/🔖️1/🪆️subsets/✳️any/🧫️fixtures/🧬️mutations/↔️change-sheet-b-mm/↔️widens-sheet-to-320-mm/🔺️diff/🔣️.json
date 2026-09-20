@@ -17,7 +17,7 @@
   "weldThroatMm": null,
   "weldLengthMm": null,
   "betaW": null,
-  "sheetBMm": 320,
+  "sheetBMm": 320.0,
   "sheetTMm": null,
   "sheetKSigma": null,
   "sheetWElMm3": null,

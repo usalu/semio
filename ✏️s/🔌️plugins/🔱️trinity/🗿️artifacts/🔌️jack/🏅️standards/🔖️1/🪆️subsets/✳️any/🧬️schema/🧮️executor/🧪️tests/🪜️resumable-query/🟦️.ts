@@ -2,6 +2,9 @@ import assert from "node:assert/strict";
 import { Database } from "bun:sqlite";
 import fixture from "./../../🧫️fixtures/🪜️resumable-query/🔣️.json";
 
+/** 🔗️ The node half of an `<node>@<port>` endpoint — the whole value when it names no port. */
+const endpointNode = (endpoint: string): string => endpoint.slice(0, endpoint.indexOf("@") === -1 ? endpoint.length : endpoint.indexOf("@"));
+
 /** 🔎️ SQLite independently validates the neutral graph-query results and mutation counts. */
 export function testResumableQueryOracle(): void {
   for (const test of fixture.cases) {
@@ -10,14 +13,18 @@ export function testResumableQueryOracle(): void {
       database.run("CREATE TABLE nodes (id TEXT PRIMARY KEY, kind TEXT, name TEXT, label TEXT)");
       database.run("CREATE TABLE edges (id TEXT PRIMARY KEY, kind TEXT, source TEXT, target TEXT)");
       for (const node of fixture.graph.nodes) database.run("INSERT INTO nodes (id, kind, name) VALUES (?, ?, ?)", [node.id, node.kind, node.name]);
-      for (const edge of fixture.graph.edges) database.run("INSERT INTO edges VALUES (?, ?, ?, ?)", [edge.id, edge.kind, edge.source.split("@")[0], edge.target.split("@")[0]]);
-      const oracle = test.oracle;
-      const mutations = "mutate" in oracle ? database.run(oracle.mutate).changes : 0;
-      const rows = "select" in oracle ? database.query(oracle.select).values() : [];
+      for (const edge of fixture.graph.edges) database.run("INSERT INTO edges VALUES (?, ?, ?, ?)", [edge.id, edge.kind, endpointNode(edge.source), endpointNode(edge.target)]);
+      // 🧭️ The six fixture cases carry four different oracle shapes, so the imported JSON's element
+      // type declares every statement OPTIONAL. `"mutate" in oracle` answers the key's presence but
+      // leaves `oracle.mutate` `string | undefined`; reading it through a local binding is what makes
+      // the absent case a branch the compiler can see rather than an `undefined` handed to SQLite.
+      const oracle: Partial<Record<"mutate" | "select" | "nodes" | "edges", string>> = test.oracle;
+      const mutations = oracle.mutate === undefined ? 0 : database.run(oracle.mutate).changes;
+      const rows = oracle.select === undefined ? [] : database.query(oracle.select).values();
       assert.deepEqual(rows, test.rows, test.query);
       assert.equal(mutations, test.mutations, test.query);
-      if ("nodes" in oracle && "nodeIds" in test) assert.deepEqual(database.query(oracle.nodes).values().flat(), test.nodeIds, test.query);
-      if ("edges" in oracle && "edgeIds" in test) assert.deepEqual(database.query(oracle.edges).values().flat(), test.edgeIds, test.query);
+      if (oracle.nodes !== undefined && "nodeIds" in test) assert.deepEqual(database.query(oracle.nodes).values().flat(), test.nodeIds, test.query);
+      if (oracle.edges !== undefined && "edgeIds" in test) assert.deepEqual(database.query(oracle.edges).values().flat(), test.edgeIds, test.query);
     } finally {
       database.close();
     }

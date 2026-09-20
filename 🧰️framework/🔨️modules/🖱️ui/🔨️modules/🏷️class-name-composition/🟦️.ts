@@ -15,7 +15,12 @@ const CLASS_GROUPS: readonly ClassGroup[] = [
   ["display", /^(?:block|inline-block|inline|flex|inline-flex|table|inline-table|table-(?:caption|cell|column|column-group|footer-group|header-group|row-group|row)|flow-root|grid|inline-grid|contents|list-item|hidden)$/],
   ["inset-x", /^-?inset-x-/],
   ["inset-y", /^-?inset-y-/],
-  ["inset-start", /^-?(?:top|right|bottom|left|start|end)-/],
+  ["inset-top", /^-?top-/],
+  ["inset-right", /^-?right-/],
+  ["inset-bottom", /^-?bottom-/],
+  ["inset-left", /^-?left-/],
+  ["inset-start", /^-?start-/],
+  ["inset-end", /^-?end-/],
   ["inset", /^-?inset-/],
   ["z", /^-?z-/],
   ["float", /^float-/],
@@ -182,9 +187,9 @@ const CLASS_GROUPS: readonly ClassGroup[] = [
 ] as const;
 
 const CONFLICTS: Readonly<Record<string, readonly string[]>> = {
-  inset: ["inset-x", "inset-y", "inset-start"],
-  "inset-x": ["inset-start"],
-  "inset-y": ["inset-start"],
+  inset: ["inset-x", "inset-y", "inset-top", "inset-right", "inset-bottom", "inset-left", "inset-start", "inset-end"],
+  "inset-x": ["inset-right", "inset-left", "inset-start", "inset-end"],
+  "inset-y": ["inset-top", "inset-bottom"],
   overflow: ["overflow-x", "overflow-y"],
   overscroll: ["overscroll-x", "overscroll-y"],
   gap: ["gap-x", "gap-y"],

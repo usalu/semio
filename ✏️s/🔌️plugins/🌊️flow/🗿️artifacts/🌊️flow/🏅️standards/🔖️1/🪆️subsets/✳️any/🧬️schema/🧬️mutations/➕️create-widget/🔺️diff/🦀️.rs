@@ -13,5 +13,5 @@ pub fn diff(payload: &CreateWidget, base: &FlowSnapshot) -> protocol::MutationOu
     }
     let index = payload.index.min(scene.widgets.len());
     scene.widgets.insert(index, payload.widget.clone());
-    protocol::MutationOutcome::new(diff_replace_content(scene.widgets, scene.synapses, scene.layout))
+    protocol::MutationOutcome::new({ let (widgets, synapses, layout) = scene.into_parts(); diff_replace_content(widgets, synapses, layout) })
 }

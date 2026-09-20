@@ -190,7 +190,7 @@ async function captureBrowserCodegenSources(entrypoint: string, roots: readonly 
   const buildCwd = process.cwd();
   const snapshots = new Map<string, Readonly<{ bytes: Uint8Array; row: BrowserCodegenSourceDigest }>>();
   const admission = { remaining: 8 * 1024 * 1024 };
-  const result = await Bun.build({ entrypoints: [entrypoint], root: admittedRoots[0].path, target: "browser", format: "esm", splitting: false, minify: false, write: false, metafile: true, external: ["node:fs/promises"], plugins: [{ name: "semio-browser-codegen-snapshot", setup(build) {
+  const result = await Bun.build({ entrypoints: [entrypoint], root: admittedRoots[0].path, target: "browser", format: "esm", splitting: false, minify: false, metafile: true, external: ["node:fs/promises"], plugins: [{ name: "semio-browser-codegen-snapshot", setup(build) {
     build.onLoad({ filter: /.*/, namespace: "file" }, args => {
       check();
       if (!args.path.endsWith(".js")) throw new Error("browser actor artifact: compiler source type");
@@ -332,7 +332,8 @@ async function buildClosedBrowserActorArtifactOwned(component: Uint8Array, contr
     const manifest = parseBrowserActorCodegenManifest(JSON.parse(generated.stdout));
     control.progress?.("codegen", snapshot.byteLength, snapshot.byteLength);
     const admission = { remaining: browserActorMaximumBytes };
-    const read = (name: string, maximum: number): Uint8Array => readStableBuildFile(join(evidence, name), maximum, admission, check);
+    const evidenceDirectory = evidence;
+    const read = (name: string, maximum: number): Uint8Array => readStableBuildFile(join(evidenceDirectory, name), maximum, admission, check);
     const source = new TextDecoder("utf-8", { fatal: true }).decode(read("browser-actor.js", 8 * 1024 * 1024));
     const cores = manifest.files.filter(name => name.endsWith(".wasm")).map(name => ({ name, bytes: read(name, browserActorMaximumBytes) }));
     const output = await closedBrowserActorBundleFromRuntime(source, cores, { importInterfaces: manifest.importInterfaces, cancelled: control.cancelled, progress: (completed, total) => control.progress?.("closure", completed, total) }, actorRuntime);
@@ -432,8 +433,8 @@ export async function activate(identity, port, control = {}) {
   try {
     if (${wasiRequired}) {
       if (typeof WebAssembly.Suspending !== "function" || typeof WebAssembly.promising !== "function") throw new Error("browser actor bundle: JSPI unavailable");
-      if (!port.wasi || typeof port.wasi.nowNs !== "function" || typeof port.wasi.write !== "function") throw new Error("browser actor bundle: WASI port required");
-      wasi = createBrowserWasiActivation({ nowNs: () => port.wasi.nowNs(), write: (channel, bytes) => port.wasi.write(channel, bytes), exit(status) { closeOnExit(); port.wasi.exit?.(status); } }, control.signal);
+      if (!port.wasi || typeof port.wasi.nowNs !== "function" || typeof port.wasi.wallNs !== "function" || typeof port.wasi.write !== "function") throw new Error("browser actor bundle: WASI port required");
+      wasi = createBrowserWasiActivation({ nowNs: () => port.wasi.nowNs(), wallNs: () => port.wasi.wallNs(), write: (channel, bytes) => port.wasi.write(channel, bytes), exit(status) { closeOnExit(); port.wasi.exit?.(status); } }, control.signal);
     }
     component = await instantiateFreshComponent({${imports}}, control);
   }
@@ -488,7 +489,7 @@ export async function activate(identity, port, control = {}) {
 `;
   if (control.cancelled?.()) throw new Error("browser actor bundle: cancelled");
   const loadedRuntime = new Set<string>();
-  const build = await Bun.build({ entrypoints: ["semio:closed-browser-actor"], target: "browser", format: "esm", splitting: false, minify: false, write: false, plugins: [{ name: "semio-closed-browser-actor", setup(builder) {
+  const build = await Bun.build({ entrypoints: ["semio:closed-browser-actor"], target: "browser", format: "esm", splitting: false, minify: false, plugins: [{ name: "semio-closed-browser-actor", setup(builder) {
     builder.onResolve({ filter: /^semio:closed-browser-actor$/ }, () => ({ path: "actor.ts", namespace: "semio-actor" }));
     builder.onResolve({ filter: /^semio:actor-(host|wasi)$/ }, args => ({ path: args.path.slice("semio:actor-".length), namespace: "semio-runtime" }));
     builder.onResolve({ filter: /.*/, namespace: "semio-runtime" }, () => { throw new Error("browser actor bundle: runtime import denied"); });

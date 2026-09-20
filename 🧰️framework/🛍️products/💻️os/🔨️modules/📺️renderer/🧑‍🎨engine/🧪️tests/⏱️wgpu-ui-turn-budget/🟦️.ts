@@ -11,7 +11,7 @@ import {
   setTurnDiagnostics,
 } from "../../🎯️targets/🧊️wgpu/⏱️turn-budget/🟦️.ts";
 import { BrowserFrameTransport, type BrowserFrameUiMessage, type BrowserFrameWorkerMessage, type BrowserFrameWorkerPort, type BrowserFrameWorkerStepReport } from "../../🎯️targets/🧊️wgpu/🚚️browser-frame-transport/🟦️.ts";
-import { resolveWgpuBootDescriptor, type WgpuBootDescriptor, type WgpuHostAppearance } from "../../🎯️targets/🧊️wgpu/🧭️boot-descriptor/🟦️.ts";
+import { resolveWgpuBootDescriptor, type WgpuBootDescriptor, type WgpuHostAppearance, type WgpuHostStorageSnapshot } from "../../🎯️targets/🧊️wgpu/🧭️boot-descriptor/🟦️.ts";
 
 /** @emoji 🧭️ One resolved boot descriptor for a fixture transport — the shared resolver, never a hand
  * rolled literal, so these fixtures cannot drift from the shape the three real doors produce
@@ -23,6 +23,7 @@ function testBootDescriptor(variant: string): WgpuBootDescriptor {
 /** @emoji 🌓️ The appearance a realm that read nothing publishes — React's own no-window default. */
 const TEST_HOST_APPEARANCE: WgpuHostAppearance = { preference: "", systemDark: false };
 const TEST_HOST_PLATFORM = "MacIntel";
+const TEST_HOST_STORAGE: WgpuHostStorageSnapshot = {};
 
 /** @emoji 🧵️ A frame Worker whose own steps all fit their ceiling — this suite measures the UI isolate. */
 const ADMITTED_WORKER_STEPS: BrowserFrameWorkerStepReport = { degraded: false, recordedOverruns: 0, sustainedOverruns: 0, worstStepMs: 0, worstStepSite: "" };
@@ -68,7 +69,7 @@ function harness(options: { now?: () => number; onProgress?: (stage: string) => 
   const continuations: Array<() => void> = [];
   const transport = new BrowserFrameTransport({
     worker,
-    boot: { bindingsModuleUrl: "renderer.js", bindingsWasmUrl: "renderer.wasm", canvas: {} as OffscreenCanvas, width: 1, height: 1, dpr: 1, locale: "en", descriptor: testBootDescriptor("generation3d"), appearance: TEST_HOST_APPEARANCE, platform: TEST_HOST_PLATFORM },
+    boot: { bindingsModuleUrl: "renderer.js", bindingsWasmUrl: "renderer.wasm", canvas: {} as OffscreenCanvas, width: 1, height: 1, dpr: 1, locale: "en", descriptor: testBootDescriptor("generation3d"), appearance: TEST_HOST_APPEARANCE, platform: TEST_HOST_PLATFORM, storage: TEST_HOST_STORAGE },
     ...(options.now ? { now: options.now } : {}),
     setTimer: (callback, delayMs) => (delayMs === 0 ? continuations.push(callback) : 0),
     clearTimer: () => {},

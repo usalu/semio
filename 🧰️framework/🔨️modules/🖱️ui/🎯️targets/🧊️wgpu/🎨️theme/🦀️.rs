@@ -5,10 +5,10 @@ use crate::wgpu::geometry::Rect;
 use crate::wgpu::presence_bar::{presence_color, PresenceAppearance, PresenceHsl};
 use ui_styling::appearance::AppearanceName;
 use ui_styling::{
-    levels,
+    colors, levels,
     metrics::{chrome as chrome_metrics, dom, typography},
-    colors, opacities, radii, strokes, ChromePalette, DiagramPalette, OutcomePalette, CHROME_DARK, CHROME_LIGHT, CHROME_MONO_DARK, CHROME_MONO_LIGHT, DIAGRAM_DARK, DIAGRAM_LIGHT,
-    DIAGRAM_MONO_DARK, DIAGRAM_MONO_LIGHT, OUTCOME_DARK, OUTCOME_LIGHT, OUTCOME_MONO_DARK, OUTCOME_MONO_LIGHT,
+    opacities, radii, strokes, ChromePalette, DiagramPalette, OutcomePalette, CHROME_DARK, CHROME_LIGHT, CHROME_MONO_DARK, CHROME_MONO_LIGHT, DIAGRAM_DARK, DIAGRAM_LIGHT, DIAGRAM_MONO_DARK, DIAGRAM_MONO_LIGHT, OUTCOME_DARK, OUTCOME_LIGHT,
+    OUTCOME_MONO_DARK, OUTCOME_MONO_LIGHT,
 };
 
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -245,7 +245,7 @@ fn presence_rgba(hsl: PresenceHsl) -> Rgba {
 fn from_chrome(chrome: &ChromePalette, outcome: &OutcomePalette, diagram: &DiagramPalette, presence_appearance: PresenceAppearance) -> Theme {
     Theme {
         background: Rgba::from_token(&chrome.base),
-        panel: Rgba::from_token(&chrome.level_panel),
+        panel: Rgba::from_token(&chrome.panel),
         panel_border: Rgba::from_token(&chrome.border_normal),
         navbar: Rgba::from_token(&chrome.level_window),
         text: Rgba::from_token(&chrome.foreground),

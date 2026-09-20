@@ -2248,6 +2248,7 @@ pub fn create_lowpoly_app() -> semio_framework_plugin::AppDefinition {
             .mutation("unwrapActive", LocalizedLabel::native("Unwrap", "Abwickeln"))
             .mutation("markUvSeam", LocalizedLabel::native("Mark Seam", "Naht markieren"))
             .mutation("clearSeam", LocalizedLabel::native("Clear Seam", "Naht entfernen"))
+            .action_destructive("clearSeam")
             .mutation("translateSelection", LocalizedLabel::native("Translate Selection", "Auswahl verschieben"))
             .mutation("rotateSelection", LocalizedLabel::native("Rotate Selection", "Auswahl drehen"))
             .mutation("scaleSelection", LocalizedLabel::native("Scale Selection", "Auswahl skalieren"))
@@ -2265,12 +2266,14 @@ pub fn create_lowpoly_app() -> semio_framework_plugin::AppDefinition {
             .shell_action("loadMeshRequest", LocalizedLabel::native("Load Mesh…", "Mesh laden…"))
             .action_with(semio_framework_plugin::ActionDefinition { in_palette: false, ..semio_framework_plugin::ActionDefinition::bounded_catalog("importMeshFile", LocalizedLabel::native("Import Mesh File", "Mesh-Datei importieren"), semio_framework_plugin::ActionKind::Mutation) })
             .mutation("engagementSubmit", LocalizedLabel::native("Engagement Submit", "Eingabe bestätigen"))
+            .action_audience("engagementSubmit", semio_framework_plugin::CapabilityAudience::Input)
             // 👁️ Ephemeral view state — selection, camera, hover, and the gesture drafts that emit no operations
             // mid-drag (paint ticks, gumball scratch, eyedropper sample).
             .view_action("setActiveObject", LocalizedLabel::native("Set Active Object", "Aktives Objekt festlegen"))
             .view_action("setActivePaintLayer", LocalizedLabel::native("Set Active Paint Layer", "Aktive Malebene festlegen"))
             .view_action("setUtilityParam", LocalizedLabel::native("Set Utility Param", "Werkzeugparameter festlegen"))
             .action_with(semio_framework_plugin::ActionDefinition::new("engagementInput", LocalizedLabel::native("Engagement Input", "Eingabe"), semio_framework_plugin::ActionKind::View, "hand"))
+            .action_audience("engagementInput", semio_framework_plugin::CapabilityAudience::Input)
             .view_action("toggleShowEdges", LocalizedLabel::native("Toggle Show Edges", "Kantenanzeige umschalten"))
             .action_with(semio_framework_plugin::ActionDefinition::new("toggleSun", LocalizedLabel::native("Toggle Sun", "Sonne umschalten"), semio_framework_plugin::ActionKind::View, "sun"))
             .action_with(semio_framework_plugin::ActionDefinition::new("setSunAzimuth", LocalizedLabel::native("Set Sun Azimuth", "Sonnenazimut festlegen"), semio_framework_plugin::ActionKind::View, "sun"))
@@ -2281,7 +2284,9 @@ pub fn create_lowpoly_app() -> semio_framework_plugin::AppDefinition {
             .action_with(semio_framework_plugin::ActionDefinition::new("paintStroke", LocalizedLabel::native("Paint Stroke", "Malstrich"), semio_framework_plugin::ActionKind::View, "paintbrush"))
             .action_with(semio_framework_plugin::ActionDefinition::new("paintAt", LocalizedLabel::native("Paint At", "Malen bei"), semio_framework_plugin::ActionKind::View, "paintbrush"))
             .action_with(semio_framework_plugin::ActionDefinition::new("canvasPointerDown", LocalizedLabel::native("Canvas Pointer Down", "Leinwand-Zeiger gedrückt"), semio_framework_plugin::ActionKind::View, "mouse-pointer"))
+            .action_audience("canvasPointerDown", semio_framework_plugin::CapabilityAudience::Input)
             .action_with(semio_framework_plugin::ActionDefinition::new("canvasPointerMove", LocalizedLabel::native("Canvas Pointer Move", "Leinwand-Zeiger bewegt"), semio_framework_plugin::ActionKind::View, "mouse-pointer"))
+            .action_audience("canvasPointerMove", semio_framework_plugin::CapabilityAudience::Input)
             .action_with(semio_framework_plugin::ActionDefinition::new("paintSample", LocalizedLabel::native("Paint Sample", "Farbe aufnehmen"), semio_framework_plugin::ActionKind::View, "paintbrush"))
             .action_with(semio_framework_plugin::ActionDefinition::new("transformBegin", LocalizedLabel::native("Transform Begin", "Transformation beginnen"), semio_framework_plugin::ActionKind::View, "move"))
             // 📝️ Staged argument forms for the P1 actions — the panel form seeds from these defaults and
@@ -2444,3 +2449,11 @@ mod mounted_tests;
 
 #[cfg(test)]
 use semio_framework_plugin::InteractionRef;
+
+//#region 🪢️TaxonomyMounts
+#[path = "📚️examples/🎬️demo-session/🦀️.rs"]
+pub mod demo_session;
+#[cfg(test)]
+#[path = "📚️examples/🎬️demo-session/🧪️tests/🧩️example/🦀️.rs"]
+mod example;
+//#endregion 🪢️TaxonomyMounts

@@ -67,7 +67,7 @@ async fn change_tank_v_rd_kn_committed_json_is_canonical() {
     }
     let reencoded = serde_json::to_value(mutation()).expect("change-tank-v-rd-kn mutation encodes");
     let original: serde_json::Value = serde_json::from_str(MUTATION).expect("change-tank-v-rd-kn mutation reparses");
-    assert_eq!(reencoded, original, "change-tank-v-rd-kn/raises-tank-v-rd-kn-to-537-5: committed mutation JSON is not the canonical externally-tagged ChangeTankVRdKn form carrying newTankVRdKn");
+    assert_eq!(reencoded, original, "change-tank-v-rd-kn/raises-tank-v-rd-kn-to-537-5: committed mutation JSON is not the canonical internally-tagged ChangeTankVRdKn form carrying mutation and newTankVRdKn");
 }
 
 /// 🎯️ The declared outcome holds: `change-tank-v-rd-kn` at 537.5 is applied, not rejected, and carries no

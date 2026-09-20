@@ -42,7 +42,7 @@
           "const": "semio.flow.graph-parameter.v1"
         },
         "action": {
-          "const": "setGraphParameter"
+          "const": "nodeGraphEdit"
         },
         "cases": {
           "type": "array",
@@ -131,7 +131,7 @@
       }
     },
     "GraphParameterCommand": {
-      "description": "🎚️ The `setGraphParameter` command a slider gesture dispatches: exactly one widget, one numeric value, and optionally the surface it was raised on. No document or fixture payload may ride along.",
+      "description": "🎚️ The `nodeGraphEdit` command a slider gesture dispatches: exactly one widget, one numeric value, and optionally the surface it was raised on. No document or fixture payload may ride along.",
       "type": "object",
       "additionalProperties": false,
       "required": [

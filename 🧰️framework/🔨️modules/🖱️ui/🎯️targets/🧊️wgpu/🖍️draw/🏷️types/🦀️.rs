@@ -159,6 +159,7 @@ pub struct DrawLayer {
     pub raster_instances: Vec<(String, UiInstance)>,
     pub vector_vertices: Vec<VectorVertex>,
     pub overlay_ui_instances: Vec<UiInstance>,
+    pub overlay_raster_instances: Vec<(String, UiInstance)>,
     pub overlay_vector_vertices: Vec<VectorVertex>,
 }
 
@@ -184,6 +185,21 @@ pub struct DrawList {
     /// chrome landing on top of its own content (ticket 26/09/17 packet W15a). Nothing else changes
     /// bucket: a caller that never opens a pair paints exactly where it always did.
     overlay_route: u32,
+}
+
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub struct RasterKeepCursorV1 {
+    phase: u8,
+    outer: usize,
+    middle: usize,
+    inner: usize,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum RasterKeepStepV1<'a> {
+    Pending,
+    Key(&'a str),
+    Complete,
 }
 
 #[derive(Clone, Copy)]
@@ -216,6 +232,71 @@ impl Default for DrawList {
     }
 }
 
+impl DrawList {
+    pub fn raster_keep_step<'a>(&'a self, cursor: &mut RasterKeepCursorV1) -> RasterKeepStepV1<'a> {
+        match cursor.phase {
+            0 => {
+                let Some(pass) = self.scene_passes.get(cursor.outer) else {
+                    cursor.phase = 1;
+                    cursor.outer = 0;
+                    cursor.middle = 0;
+                    cursor.inner = 0;
+                    return RasterKeepStepV1::Pending;
+                };
+                let Some(draw) = pass.textured_draws.get(cursor.middle) else {
+                    cursor.outer += 1;
+                    cursor.middle = 0;
+                    cursor.inner = 0;
+                    return RasterKeepStepV1::Pending;
+                };
+                let Some(instance) = draw.instances.get(cursor.inner) else {
+                    cursor.middle += 1;
+                    cursor.inner = 0;
+                    return RasterKeepStepV1::Pending;
+                };
+                cursor.inner += 1;
+                RasterKeepStepV1::Key(instance.texture_key.as_str())
+            }
+            1 => {
+                let Some(pass) = self.scene_passes.get(cursor.outer) else {
+                    cursor.phase = 2;
+                    cursor.outer = 0;
+                    cursor.middle = 0;
+                    cursor.inner = 0;
+                    return RasterKeepStepV1::Pending;
+                };
+                let Some(draw) = pass.material_draws.get(cursor.middle) else {
+                    cursor.outer += 1;
+                    cursor.middle = 0;
+                    return RasterKeepStepV1::Pending;
+                };
+                cursor.middle += 1;
+                match &draw.material {
+                    crate::wgpu::kernel_3d_scene::SceneMaterialKind3d::Painted { texture_key } => RasterKeepStepV1::Key(texture_key.as_str()),
+                    crate::wgpu::kernel_3d_scene::SceneMaterialKind3d::Standard | crate::wgpu::kernel_3d_scene::SceneMaterialKind3d::Celebration { .. } => RasterKeepStepV1::Pending,
+                }
+            }
+            2 | 3 => {
+                let Some(layer) = self.layers.get(cursor.outer) else {
+                    cursor.phase += 1;
+                    cursor.outer = 0;
+                    cursor.inner = 0;
+                    return RasterKeepStepV1::Pending;
+                };
+                let instances = if cursor.phase == 2 { &layer.raster_instances } else { &layer.overlay_raster_instances };
+                let Some((key, _)) = instances.get(cursor.inner) else {
+                    cursor.outer += 1;
+                    cursor.inner = 0;
+                    return RasterKeepStepV1::Pending;
+                };
+                cursor.inner += 1;
+                RasterKeepStepV1::Key(key.as_str())
+            }
+            _ => RasterKeepStepV1::Complete,
+        }
+    }
+}
+
 fn prepared_scene_pass_usage(pass: &ScenePass3d) -> Option<(usize, usize)> {
     let mut items = 1usize;
     let mut bytes = size_of::<ScenePass3d>();
@@ -224,10 +305,22 @@ fn prepared_scene_pass_usage(pass: &ScenePass3d) -> Option<(usize, usize)> {
         bytes = bytes.checked_add(next_bytes)?;
         Some(())
     };
+    include(pass.shadow_draws.len(), pass.shadow_draws.capacity().checked_mul(size_of::<crate::wgpu::kernel_3d_scene::SceneDraw3d>())?)?;
     include(pass.draws.len(), pass.draws.capacity().checked_mul(size_of::<crate::wgpu::kernel_3d_scene::SceneDraw3d>())?)?;
     include(pass.translucent_draws.len(), pass.translucent_draws.capacity().checked_mul(size_of::<crate::wgpu::kernel_3d_scene::SceneDraw3d>())?)?;
-    for draw in pass.draws.iter().chain(pass.translucent_draws.iter()) {
+    for draw in pass.shadow_draws.iter().chain(pass.draws.iter()).chain(pass.translucent_draws.iter()) {
         include(draw.mesh_key.len(), draw.mesh_key.capacity())?;
+        include(draw.instances.len(), draw.instances.capacity().checked_mul(size_of::<crate::wgpu::kernel_3d_scene::Instance3d>())?)?;
+        for instance in &draw.instances {
+            include(instance.id.len(), instance.id.capacity())?;
+        }
+    }
+    include(pass.material_draws.len(), pass.material_draws.capacity().checked_mul(size_of::<crate::wgpu::kernel_3d_scene::SceneMaterialDraw3d>())?)?;
+    for draw in &pass.material_draws {
+        include(draw.mesh_key.len(), draw.mesh_key.capacity())?;
+        if let crate::wgpu::kernel_3d_scene::SceneMaterialKind3d::Painted { texture_key } = &draw.material {
+            include(texture_key.len(), texture_key.capacity())?;
+        }
         include(draw.instances.len(), draw.instances.capacity().checked_mul(size_of::<crate::wgpu::kernel_3d_scene::Instance3d>())?)?;
         for instance in &draw.instances {
             include(instance.id.len(), instance.id.capacity())?;
@@ -274,7 +367,20 @@ impl std::error::Error for RetainedOutputError {}
 impl DrawList {
     /// 🪣 Creates an allocation-free transfer slot for a later exact draw admission.
     pub fn empty() -> Self {
-        Self { scene_passes: Vec::new(), layers: Vec::new(), glass_regions: Vec::new(), scissor_stack: Vec::new(), clip_stack: Vec::new(), glass_content_stack: Vec::new(), screen_h: 0.0, clock_seconds: 0.0, retained_output: None, prepared_items: 0, prepared_bytes: 0, overlay_route: 0 }
+        Self {
+            scene_passes: Vec::new(),
+            layers: Vec::new(),
+            glass_regions: Vec::new(),
+            scissor_stack: Vec::new(),
+            clip_stack: Vec::new(),
+            glass_content_stack: Vec::new(),
+            screen_h: 0.0,
+            clock_seconds: 0.0,
+            retained_output: None,
+            prepared_items: 0,
+            prepared_bytes: 0,
+            overlay_route: 0,
+        }
     }
 
     /// 🎟️ Pre-admits fixed candidate backing before a retained paint child transfers output.
@@ -287,6 +393,7 @@ impl DrawList {
         let layer = self.layers.last_mut().ok_or(RetainedOutputError::Capacity)?;
         layer.ui_instances.try_reserve_exact(items).map_err(|_| RetainedOutputError::Allocation)?;
         layer.overlay_ui_instances.try_reserve_exact(items).map_err(|_| RetainedOutputError::Allocation)?;
+        layer.overlay_raster_instances.try_reserve_exact(items).map_err(|_| RetainedOutputError::Allocation)?;
         layer.vector_vertices.try_reserve_exact(vertices).map_err(|_| RetainedOutputError::Allocation)?;
         layer.overlay_vector_vertices.try_reserve_exact(vertices).map_err(|_| RetainedOutputError::Allocation)?;
         layer.raster_instances.try_reserve_exact(items).map_err(|_| RetainedOutputError::Allocation)?;
@@ -369,6 +476,41 @@ impl DrawList {
                 pass.textured_draws.pop();
                 return false;
             }
+            if let Some(draw) = pass.material_draws.last_mut() {
+                if let Some(instance) = draw.instances.last_mut() {
+                    if instance.id.pop().is_some() {
+                        return false;
+                    }
+                    if instance.id.capacity() > 0 {
+                        instance.id = String::new();
+                        return false;
+                    }
+                    draw.instances.pop();
+                    return false;
+                }
+                if draw.instances.capacity() > 0 {
+                    draw.instances = Vec::new();
+                    return false;
+                }
+                if let crate::wgpu::kernel_3d_scene::SceneMaterialKind3d::Painted { texture_key } = &mut draw.material {
+                    if texture_key.pop().is_some() {
+                        return false;
+                    }
+                    if texture_key.capacity() > 0 {
+                        *texture_key = String::new();
+                        return false;
+                    }
+                }
+                if draw.mesh_key.pop().is_some() {
+                    return false;
+                }
+                if draw.mesh_key.capacity() > 0 {
+                    draw.mesh_key = String::new();
+                    return false;
+                }
+                pass.material_draws.pop();
+                return false;
+            }
             if let Some(draw) = pass.translucent_draws.last_mut() {
                 if let Some(instance) = draw.instances.last_mut() {
                     if instance.id.pop().is_some() {
@@ -432,8 +574,38 @@ impl DrawList {
                 pass.draws.pop();
                 return false;
             }
+            if let Some(draw) = pass.shadow_draws.last_mut() {
+                if let Some(instance) = draw.instances.last_mut() {
+                    if instance.id.pop().is_some() {
+                        return false;
+                    }
+                    if instance.id.capacity() > 0 {
+                        instance.id = String::new();
+                        return false;
+                    }
+                    draw.instances.pop();
+                    return false;
+                }
+                if draw.instances.capacity() > 0 {
+                    draw.instances = Vec::new();
+                    return false;
+                }
+                if draw.mesh_key.pop().is_some() {
+                    return false;
+                }
+                if draw.mesh_key.capacity() > 0 {
+                    draw.mesh_key = String::new();
+                    return false;
+                }
+                pass.shadow_draws.pop();
+                return false;
+            }
             if pass.textured_draws.capacity() > 0 {
                 pass.textured_draws = Vec::new();
+                return false;
+            }
+            if pass.material_draws.capacity() > 0 {
+                pass.material_draws = Vec::new();
                 return false;
             }
             if pass.translucent_draws.capacity() > 0 {
@@ -446,6 +618,10 @@ impl DrawList {
             }
             if pass.draws.capacity() > 0 {
                 pass.draws = Vec::new();
+                return false;
+            }
+            if pass.shadow_draws.capacity() > 0 {
+                pass.shadow_draws = Vec::new();
                 return false;
             }
             self.scene_passes.pop();
@@ -474,6 +650,17 @@ impl DrawList {
                 layer.raster_instances.pop();
                 return false;
             }
+            if let Some((key, _)) = layer.overlay_raster_instances.last_mut() {
+                if key.pop().is_some() {
+                    return false;
+                }
+                if key.capacity() > 0 {
+                    *key = String::new();
+                    return false;
+                }
+                layer.overlay_raster_instances.pop();
+                return false;
+            }
             if layer.overlay_vector_vertices.pop().is_some() || layer.overlay_ui_instances.pop().is_some() || layer.vector_vertices.pop().is_some() || layer.ui_instances.pop().is_some() {
                 return false;
             }
@@ -483,6 +670,10 @@ impl DrawList {
             }
             if layer.overlay_ui_instances.capacity() > 0 {
                 layer.overlay_ui_instances = Vec::new();
+                return false;
+            }
+            if layer.overlay_raster_instances.capacity() > 0 {
+                layer.overlay_raster_instances = Vec::new();
                 return false;
             }
             if layer.vector_vertices.capacity() > 0 {
@@ -644,6 +835,16 @@ impl DrawList {
             &mut layer.overlay_vector_vertices
         } else {
             &mut layer.vector_vertices
+        }
+    }
+
+    fn active_raster_instances(&mut self) -> &mut Vec<(String, UiInstance)> {
+        let overlay = self.overlay_route > 0;
+        let layer = self.active_layer();
+        if overlay {
+            &mut layer.overlay_raster_instances
+        } else {
+            &mut layer.raster_instances
         }
     }
 
@@ -824,6 +1025,14 @@ impl DrawList {
         self.active_layer().overlay_ui_instances.push(UiInstance::solid(rect, color));
     }
 
+    /// 🔵️ Paints a rounded overlay with the same extent and radius contract as the main UI lane.
+    pub fn push_rounded_overlay(&mut self, rect: [f32; 4], color: Rgba, radius: f32) {
+        if !self.claim_retained_output(1, size_of::<UiInstance>()) {
+            return;
+        }
+        self.active_layer().overlay_ui_instances.push(UiInstance::rounded(rect, color, radius, 0.0, color));
+    }
+
     pub fn push_textured(&mut self, rect: [f32; 4], uv_rect: [f32; 4], color: Rgba) {
         if !self.claim_retained_output(1, size_of::<UiInstance>()) {
             return;
@@ -839,7 +1048,7 @@ impl DrawList {
         if !self.claim_retained_output(1, bytes) {
             return;
         }
-        self.active_layer().raster_instances.push((key.to_string(), UiInstance::raster(rect, uv_rect, alpha)));
+        self.active_raster_instances().push((key.to_string(), UiInstance::raster(rect, uv_rect, alpha)));
     }
 
     pub fn push_line(&mut self, x0: f32, y0: f32, x1: f32, y1: f32, color: Rgba, width: f32) {
@@ -1106,24 +1315,31 @@ pub mod gizmo {
         pub prominent: bool,
     }
 
+    /// 🔘️ Matches the visible circle inside React's 64px sprite at its 22px group scale.
+    pub fn orbit_view_gizmo_head_radius(prominent: bool, hovered: bool) -> f32 {
+        let sprite_scale = if prominent { 1.0 } else { 0.65 };
+        let texture_radius = if prominent { 16.0 } else { 12.0 };
+        22.0 * 0.62 * sprite_scale * texture_radius / 64.0 * if hovered { 1.1 } else { 1.0 }
+    }
+
     pub fn orbit_view_gizmo_tips(camera: &Camera3d, viewport: Rect) -> Vec<OrbitViewGizmoTip> {
         let (margin_x, margin_y) = orbit_view_gizmo_placement(viewport);
         let origin_x = viewport.x + viewport.w - margin_x;
         let origin_y = viewport.y + viewport.h - margin_y;
-        let axis_len = (viewport.w.min(viewport.h) * 0.04).clamp(14.0, 24.0);
+        let axis_len = 22.0;
         let forward = camera.position.sub_m(camera.target);
         let forward_len = forward.length_m();
         if forward_len < 1e-5 {
             return Vec::new();
         }
         let forward = forward.scale_m(1.0 / forward_len);
-        let right = forward.cross_m(camera.up);
+        let right = camera.up.cross_m(forward);
         let right_len = right.length_m();
         if right_len < 1e-5 {
             return Vec::new();
         }
         let right = right.scale_m(1.0 / right_len);
-        let up = right.cross_m(forward).normalize_m();
+        let up = forward.cross_m(right).normalize_m();
         let neutral = Rgba::from_token(&ui_styling::colors::GRAY).with_alpha(0.9);
         let axes = [
             (Vec3 { x: 1.0, y: 0.0, z: 0.0 }, spatial_axis_rgba(0, 1.0), true),
@@ -1182,8 +1398,6 @@ pub mod gizmo {
             .min_by(|a, b| a.1.partial_cmp(&b.1).unwrap_or(std::cmp::Ordering::Equal))
             .map(|(index, _)| index)
     }
-
-    
 }
 //#endregion gizmo
 // #endregion draw_types

@@ -67,7 +67,7 @@ async fn change_annex_committed_json_is_canonical() {
     }
     let reencoded = serde_json::to_value(mutation()).expect("change-annex mutation encodes");
     let original: serde_json::Value = serde_json::from_str(MUTATION).expect("change-annex mutation reparses");
-    assert_eq!(reencoded, original, "change-annex/switches-annex-to-en: committed mutation JSON is not the canonical externally-tagged ChangeAnnex form carrying newAnnex");
+    assert_eq!(reencoded, original, "change-annex/switches-annex-to-en: committed mutation JSON is not the canonical internally-tagged ChangeAnnex form carrying mutation and newAnnex");
 }
 
 /// 🎯️ The declared outcome holds: `change-annex` at en is applied, not rejected, and carries no

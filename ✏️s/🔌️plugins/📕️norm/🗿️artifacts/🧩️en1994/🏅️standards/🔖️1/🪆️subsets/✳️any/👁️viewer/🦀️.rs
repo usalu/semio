@@ -53,6 +53,8 @@ impl ArtifactViewer for En1994Viewer {
     const DIALECT: Dialect = EN1994_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = EN1994_DOCUMENT_SCHEMA;
 
+    semio_s_artifact_norm_contract::norm_exact_viewer_store_ownership!();
+
     fn initial_snapshot() -> En1994Snapshot {
         En1994Snapshot::default()
     }

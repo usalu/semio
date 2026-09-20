@@ -1,0 +1,19 @@
+{
+  "schema": "semio.ui.retained-select-accessibility.v1",
+  "window": { "id": "framework.settings.general", "generation": 7 },
+  "select": {
+    "nodeId": 11,
+    "key": "framework.settings.general/framework.settings.appearance",
+    "label": "Appearance",
+    "value": "system",
+    "listboxKey": "framework.settings.general/framework.settings.appearance::listbox",
+    "options": [
+      { "key": "framework.settings.general/framework.settings.appearance::option::system", "value": "system", "label": "System", "selected": true },
+      { "key": "framework.settings.general/framework.settings.appearance::option::light", "value": "light", "label": "Light", "selected": false },
+      { "key": "framework.settings.general/framework.settings.appearance::option::dark", "value": "dark", "label": "Dark", "selected": false }
+    ]
+  },
+  "closedRoles": ["combobox"],
+  "openRoles": ["combobox", "listbox", "option", "option", "option"],
+  "activation": { "optionKey": "framework.settings.general/framework.settings.appearance::option::dark", "expectedValue": "dark", "expectedActions": 1, "openAfter": false }
+}

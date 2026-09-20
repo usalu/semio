@@ -227,11 +227,16 @@ pub struct BoundedAction {
     node_len: usize,
     byte_len: usize,
     root: Option<u16>,
+    batch_remaining: u8,
 }
 
 impl BoundedAction {
     pub fn owned_bytes(&self) -> usize {
         self.byte_len
+    }
+
+    fn batch_remaining(&self) -> usize {
+        usize::from(self.batch_remaining)
     }
 
     pub fn into_descriptor(self) -> Result<ActionDescriptor, BoundedActionFault> {
@@ -321,6 +326,7 @@ impl BoundedActionBuilder {
                 node_len: 0,
                 byte_len: 0,
                 root: None,
+                batch_remaining: 1,
             },
             parents: [None; ACTION_DEPTH_CAPACITY],
             depth: 0,
@@ -717,7 +723,9 @@ impl BoundedActionBatchReservation<'_> {
 
     fn publish_staged(&mut self) {
         for index in 0..self.len {
-            self.queue.push_reserved(self.actions[index].take().expect("reserved batch action"));
+            let mut action = self.actions[index].take().expect("reserved batch action");
+            action.batch_remaining = (self.len - index) as u8;
+            self.queue.push_reserved(action);
         }
     }
 }
@@ -937,9 +945,15 @@ impl BoundedActionQueue {
                 return Err(BoundedActionFault::Structure);
             }
         }
-        for index in 0..prepared.claims.len() {
-            let action = prepared.actions[index].take().expect("validated claimed batch action");
-            self.publish_claimed(action.claim, action.action)?;
+        let len = prepared.claims.len();
+        for index in 0..len {
+            let mut action = prepared.actions[index].take().expect("validated claimed batch action");
+            let slot = self.validate_claim(action.claim)?;
+            self.claims[slot] = None;
+            self.claimed_items -= 1;
+            self.claimed_bytes -= action.claim.byte_credits;
+            action.action.batch_remaining = (len - index) as u8;
+            self.push_reserved(action.action);
         }
         prepared.claims.len = 0;
         prepared.len = 0;
@@ -999,12 +1013,71 @@ impl BoundedActionQueue {
         action
     }
 
+    pub fn front_batch_len(&self) -> Result<Option<usize>, BoundedActionFault> {
+        if self.len == 0 {
+            return Ok(None);
+        }
+        let remaining = self.slots[self.head].as_ref().ok_or(BoundedActionFault::Structure)?.batch_remaining();
+        if remaining == 0 || remaining > ACTION_BATCH_ITEM_CAPACITY || remaining > self.len {
+            return Err(BoundedActionFault::Structure);
+        }
+        for offset in 0..remaining {
+            let index = (self.head + offset) % ACTION_QUEUE_ITEM_CAPACITY;
+            if self.slots[index].as_ref().map(BoundedAction::batch_remaining) != Some(remaining - offset) {
+                return Err(BoundedActionFault::Structure);
+            }
+        }
+        Ok(Some(remaining))
+    }
+
+    fn shorten_batch_before(&mut self, index: usize) {
+        if index >= self.len {
+            return;
+        }
+        let slot = (self.head + index) % ACTION_QUEUE_ITEM_CAPACITY;
+        let Some(mut expected) = self.slots[slot].as_ref().map(|action| action.batch_remaining.saturating_add(1)) else { return };
+        let mut offset = index;
+        while offset > 0 && usize::from(expected) <= ACTION_BATCH_ITEM_CAPACITY {
+            offset -= 1;
+            let previous = (self.head + offset) % ACTION_QUEUE_ITEM_CAPACITY;
+            let Some(action) = self.slots[previous].as_mut() else { break };
+            if action.batch_remaining != expected {
+                break;
+            }
+            action.batch_remaining -= 1;
+            expected = expected.saturating_add(1);
+        }
+    }
+
     pub fn pop_back(&mut self) -> Option<BoundedAction> {
         if self.len == 0 {
             return None;
         }
+        self.shorten_batch_before(self.len - 1);
         let index = (self.head + self.len - 1) % ACTION_QUEUE_ITEM_CAPACITY;
         let action = self.slots[index].take();
+        self.len -= 1;
+        if let Some(action) = action.as_ref() {
+            self.bytes -= action.owned_bytes();
+        }
+        action
+    }
+
+    /// 🧾️ Removes one owned action by logical FIFO index while preserving every remaining entry's
+    /// order and byte accounting. Token-addressed host journals use this when a later publication
+    /// becomes releasable before an earlier refusing surface.
+    pub fn remove_at(&mut self, index: usize) -> Option<BoundedAction> {
+        if index >= self.len {
+            return None;
+        }
+        self.shorten_batch_before(index);
+        let slot = (self.head + index) % ACTION_QUEUE_ITEM_CAPACITY;
+        let action = self.slots[slot].take();
+        for offset in index..self.len - 1 {
+            let current = (self.head + offset) % ACTION_QUEUE_ITEM_CAPACITY;
+            let next = (self.head + offset + 1) % ACTION_QUEUE_ITEM_CAPACITY;
+            self.slots[current] = self.slots[next].take();
+        }
         self.len -= 1;
         if let Some(action) = action.as_ref() {
             self.bytes -= action.owned_bytes();

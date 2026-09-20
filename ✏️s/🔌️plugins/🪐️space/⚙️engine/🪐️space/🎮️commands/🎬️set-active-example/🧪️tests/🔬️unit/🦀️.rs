@@ -74,7 +74,10 @@ async fn open_studio_loads_ephemeral_created_studio() {
     let doc = ArtifactView::new(&home_projection, &history);
     let home_config = semio_s_artifact_space_home::editor::home::config::HomeConfig::default();
     let home_cfg = ConfigView { snapshot: &home_config, window: None };
-    let create = create_studio::handle(&create_studio::CreateStudio { name: "Ephemeral Open".into(), kind: "catalog".into(), folder_path: None }, &doc, &home_cfg).expect("handle");
+    // 🪪️ Minting a studio needs the host session identity that owns it — `create_studio::handle` is
+    // the identity-less entry point and now always refuses (`s.home.session-identity-required`).
+    let identity = semio_framework_plugin::ViewSessionIdentity { user_id: "u1".into(), display_name: "Ada".into() };
+    let create = create_studio::handle_with_identity(&create_studio::CreateStudio { name: "Ephemeral Open".into(), kind: "catalog".into(), folder_path: None }, &doc, &home_cfg, &identity).expect("handle");
     let space_id = create
         .effects
         .iter()
@@ -102,7 +105,9 @@ async fn create_space_navigates_without_download_and_opens_empty() {
     let doc = ArtifactView::new(&home_projection, &history);
     let home_config = semio_s_artifact_space_home::editor::home::config::HomeConfig::default();
     let home_cfg = ConfigView { snapshot: &home_config, window: None };
-    let emit = create_studio::handle(&create_studio::CreateStudio { name: "Fresh Studio".into(), kind: "catalog".into(), folder_path: None }, &doc, &home_cfg).expect("handle");
+    // 🪪️ See `open_studio_loads_ephemeral_created_studio`: the identity-less entry point refuses.
+    let identity = semio_framework_plugin::ViewSessionIdentity { user_id: "u1".into(), display_name: "Ada".into() };
+    let emit = create_studio::handle_with_identity(&create_studio::CreateStudio { name: "Fresh Studio".into(), kind: "catalog".into(), folder_path: None }, &doc, &home_cfg, &identity).expect("handle");
     assert!(!emit.effects.iter().any(|effect| matches!(effect, Effect::DownloadMediaExport { .. })), "create must not download a file");
     let uri = emit
         .effects

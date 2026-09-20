@@ -1,10 +1,11 @@
 use super::*;
-use crate::editor::dag::unit_tests::context::{new_app, render as render_body};
+use crate::editor::dag::unit_tests::context::{close, new_app, render as render_body};
 
 #[semio_framework_async_macros::async_test]
 async fn renders_every_node_kind() {
     let mut app = new_app().await;
     let json = render_body(&mut app, DAG_PLAY_BODY_CATALOGUE).await;
+    close(&mut app);
     for kind in ["computation", "slider", "select", "screen", "note", "preview"] {
         assert!(json.contains(kind), "catalogue must list the {kind} kind: {json}");
     }

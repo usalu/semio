@@ -1,5 +1,4 @@
 {
-  "ChangeFoundationAreaM2": {
-    "newFoundationAreaM2": 144.0
-  }
+  "mutation": "changeFoundationAreaM2",
+  "newFoundationAreaM2": 144.0
 }

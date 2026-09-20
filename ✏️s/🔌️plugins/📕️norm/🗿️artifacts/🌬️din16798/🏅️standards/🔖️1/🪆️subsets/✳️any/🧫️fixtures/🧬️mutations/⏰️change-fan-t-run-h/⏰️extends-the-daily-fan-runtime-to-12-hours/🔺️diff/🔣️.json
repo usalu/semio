@@ -27,7 +27,7 @@
   "humidificationRequiredKgH": null,
   "humidificationProvidedKgH": null,
   "fanQVM3S": null,
-  "fanTRunH": 12,
+  "fanTRunH": 12.0,
   "fanEnergyReferenceKwh": null,
   "nightSetbackK": null,
   "hrMDotKgS": null,

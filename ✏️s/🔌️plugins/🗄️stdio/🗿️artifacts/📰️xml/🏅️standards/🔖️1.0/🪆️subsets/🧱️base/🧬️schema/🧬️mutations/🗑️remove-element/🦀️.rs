@@ -21,7 +21,11 @@ pub struct RemoveElementPayload {
 #[value(tag = "phase", content = "value", rename_all = "camelCase")]
 pub enum RemoveElementMutation {
     Apply(RemoveElementPayload),
-    Restore(XmlDiff),
+    /// 📦️ Boxed on purpose: `XmlDiff` is the largest thing this leaf can hold, and an inline
+    /// variant of that size pushes the whole leaf past the neutral inline-ownership budget
+    /// (`🧫️fixtures/📦️inline-layout/🔣️.json`, 128 B) every ephemeral transfer of it is measured
+    /// against — same boxing the sibling `🧊️gltf` leaves use for their own `Restore` arm.
+    Restore(Box<XmlDiff>),
 }
 
 impl protocol::MutationKind<XmlSnapshot, super::XmlMutation> for RemoveElementMutation {
@@ -33,7 +37,7 @@ impl protocol::MutationKind<XmlSnapshot, super::XmlMutation> for RemoveElementMu
                 &payload.path.0,
                 XmlNodeDiff::Element(XmlElementDiff { name: None, attributes: None, children: Some(XmlChildrenDiff { removed: vec![payload.index], modified: Vec::new(), added: Vec::new() }) }),
             )),
-            Self::Restore(diff) => protocol::MutationOutcome::new(diff.clone()),
+            Self::Restore(diff) => protocol::MutationOutcome::new(diff.as_ref().clone()),
         }
     }
 
@@ -43,7 +47,7 @@ impl protocol::MutationKind<XmlSnapshot, super::XmlMutation> for RemoveElementMu
             return Vec::new();
         }
         let inverse = <XmlDiff as protocol::DiffAlgebra<XmlSnapshot>>::inverse(outcome.diff(), base);
-        vec![super::XmlMutation::RemoveElement(Self::Restore(inverse))]
+        vec![super::XmlMutation::RemoveElement(Self::Restore(Box::new(inverse)))]
     }
 
     fn label(&self) -> String {

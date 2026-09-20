@@ -2,7 +2,7 @@ pub(crate) mod context {
     use super::super::*;
     use semio_framework_plugin::artifact_app_laws::meta;
     use semio_framework_plugin::{EditorApp, InvocationResult, PluginApp, VcsArtifactApp, ViewModel};
-    use semio_s_artifact_stdio_semio::{create_semio_member, SemioMembers};
+    use semio_s_artifact_stdio_semio::SemioMembers;
     use store::ArtifactPack;
     
     pub type FlowApp = VcsArtifactApp<EditorApp<FlowPlayApp>, SemioMembers>;
@@ -43,12 +43,9 @@ pub(crate) mod context {
     }
     
     /// 🧪️ A self-closing app wired to the real manifest registry — the ONE construction a law that only
-    /// proves boot/dispatch should use, so the store's own terminal-empty witness is honoured. It
-    /// deliberately does NOT `register_content_child`: a registered child member keeps the child
-    /// snapshot disposer "waiting on external ownership" forever, which is a separate, pre-existing
-    /// test context debt (`📓️flow-catalog-authority-2026-09-10.md` §7) and not something a boot law should
-    /// have to carry. `FlowSnapshot::default()` already caches the working scene on its content handle,
-    /// so every route that only reads the scene works without it.
+    /// proves boot/dispatch should use, so the store's own terminal-empty witness is honoured. The
+    /// `content` child is composed by the runtime itself from `FlowPlayApp::genesis_child_pack`, the
+    /// same way a live shell composes it, so no fixture registers a member by hand any more.
     pub async fn flow_app_closing() -> FlowAppFixture {
         install_first_party_light_flow_extensions_for_tests();
         let definition = create_flow_app();
@@ -89,21 +86,6 @@ pub(crate) mod context {
         });
     }
     
-    pub(crate) async fn register_content_child(app: &mut FlowApp) {
-        let snapshot = app.snapshot().expect("Flow parent snapshot");
-        let fixture = snapshot.to_host_snapshot();
-        let content = crate::flow_content_snapshot_from_working(&fixture.widgets, &fixture.synapses, &fixture.layout);
-        // 🧹️ `FlowHostSnapshot` owns an `OrderedMap` layout root that rejects a bare drop ("ordered-map root
-        // must be explicitly retired before drop") — retired here so the shared fixture builder cannot
-        // abort a whole test binary (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-        let mut retirement = semio_framework_artifact_flow_flow::retained::FlowRetirement::default();
-        retirement.push(semio_framework_artifact_flow_flow::retained::FlowOwner::HostSnapshot(fixture));
-        retirement.retire_cold();
-        let dialect = snapshot.content.target.dialect.clone();
-        let member = create_semio_member(&snapshot.content.child_id, &dialect, &content.encode_pack()).await.expect("Flow child member");
-        app.register_child("content", snapshot.content.child_id, dialect, member).await.expect("register Flow content child");
-    }
-    
     /// 🧪️ Uses the real registered application so every concrete tool factory has declared authority.
     pub async fn flow_app() -> FlowApp {
         flow_app_with_registry().await
@@ -116,7 +98,6 @@ pub(crate) mod context {
         let registry = AppActionRegistry::from_definition(&definition);
         let mut app = VcsArtifactApp::<EditorApp<FlowPlayApp>, SemioMembers>::with_registry(EditorApp::default(), registry).await;
         app.bind_instance_id(meta("local").instance_id).await;
-        register_content_child(&mut app).await;
         app
     }
     
@@ -265,7 +246,11 @@ async fn retained_add_widget_dispatches_one_acknowledged_child_group_and_retires
     .await;
     assert!(started.mutations.is_empty(), "retained addWidget must not publish through its immediate invocation result");
     let lanes = semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app, 1).await.expect("retained addWidget publication and exact ACK").lanes;
-    assert_eq!(lanes, [TypedOperationResultLane::Child, TypedOperationResultLane::Terminal]);
+    assert_eq!(
+        lanes,
+        [TypedOperationResultLane::Child, TypedOperationResultLane::Ui, TypedOperationResultLane::Terminal],
+        "one acknowledged child group, the emit's own UI scope, then terminal — the framework publishes a Ui page for every successful emit (`ui_pending`, `🔌️plugin/🦀️.rs:27709`), which its own contract fixture declares as `artifactPublications: 1, uiPublications: 1, terminalReceipts: 1` (`🔌️plugin/🧫️fixtures/⏳️completion/🔣️.json:5`)"
+    );
     assert!(!PluginApp::has_pending_typed_operations(&app));
     let parent_after = app.snapshot().expect("Flow parent after retained addWidget");
     assert_eq!(parent_after.content, parent_before.content, "retained addWidget must preserve the exact parent content coordinate");
@@ -449,8 +434,8 @@ pub(super) fn every_command() -> Vec<FlowCommand> {
         FlowCommand::SelectGeneration(select_generation::SelectGeneration { id: "g1".into() }),
         FlowCommand::RenameGeneration(rename_generation::RenameGeneration { id: "g1".into(), name: "Copy".into() }),
         FlowCommand::UpdateGenerationValues(update_generation_values::UpdateGenerationValues { generation_id: Some("g1".into()), question_id: "q1".into(), value: dsl::DslValue::float(5.0) }),
-        FlowCommand::FlowEvalTick(flow_eval_tick::FlowEvalTick {}),
-        FlowCommand::FlowEvalResolve(flow_eval_resolve::FlowEvalResolve { node_hash: 42, output_json: "{}".into() }),
+        FlowCommand::FlowEvalTick(flow_eval_tick::FlowEvalTick { window_id: main::FLOW_PLAY_WINDOW_MAIN.into(), window_kind_id: main::FLOW_PLAY_WINDOW_MAIN.into() }),
+        FlowCommand::FlowEvalResolve(flow_eval_resolve::FlowEvalResolve { window_id: main::FLOW_PLAY_WINDOW_MAIN.into(), node_hash: 42, output_json: "{}".into() }),
     ]
 }
 //#endregion 🔖️CommandSurface
@@ -512,14 +497,36 @@ async fn interaction_topology_registers_every_widget_and_synapse_as_a_root() {
 //#region 🔖️CrossCutting
 #[semio_framework_async_macros::async_test]
 async fn undo_restores_fixture_after_add_widget() {
+    use semio_framework_plugin::artifact_app_laws::{close_registered_fixture_app, settle_history_verb, settle_registered_typed_operation};
+
+    // 🧩️ Measured on the CHILD document, not on `to_host_snapshot()`. `addWidget` publishes on the
+    // `Child` lane and its own law asserts that the parent's `content` coordinate is unchanged, and
+    // `to_host_snapshot` reads exactly that coordinate's cached scene (`🌊️flow/🦀️.rs:271`) — so a
+    // parent-side widget count can never move for this verb and read `3, expected 4` whatever the
+    // command did. The child store is the surface the command writes and the window reads.
     let mut app = flow_app().await;
-    let before = app.snapshot().expect("snapshot").to_host_snapshot().widgets.len();
+    let receiver = meta("local").instance_id;
+    let child_id = app.snapshot().expect("snapshot").content.child_id.clone();
+    let before = flow_child_node_count(&app, &child_id).await;
     dispatch(&mut app, FlowCommand::AddWidget(add_widget::AddWidget { kind: "inputNote".into(), neuron_kind: None, x: Some(40.0), y: Some(40.0) })).await;
-    assert_eq!(app.snapshot().expect("snapshot").to_host_snapshot().widgets.len(), before + 1);
-    app.handle_action("undo", None, &meta("local")).await.expect("undo");
-    assert_eq!(app.snapshot().expect("snapshot").to_host_snapshot().widgets.len(), before);
-    app.handle_action("redo", None, &meta("local")).await.expect("redo");
-    assert_eq!(app.snapshot().expect("snapshot").to_host_snapshot().widgets.len(), before + 1);
+    settle_registered_typed_operation(&mut app, receiver).await.expect("addWidget child publication");
+    assert_eq!(flow_child_node_count(&app, &child_id).await, before + 1, "addWidget must land one node in the content child");
+    settle_history_verb(&mut app, "undo", receiver).await;
+    assert_eq!(flow_child_node_count(&app, &child_id).await, before, "undo must retire the child-lane group");
+    settle_history_verb(&mut app, "redo", receiver).await;
+    assert_eq!(flow_child_node_count(&app, &child_id).await, before + 1, "redo must reapply the child-lane group");
+    close_registered_fixture_app(&mut app);
+}
+
+/// 🧩️ The `content` child's node count — the authoritative witness for every `Child`-lane verb.
+async fn flow_child_node_count(app: &FlowApp, child_id: &str) -> usize {
+    use semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::snapshot::SemioFlowSnapshot;
+    use store::{ArtifactPack, SpaceMember};
+
+    SemioFlowSnapshot::decode_pack(&app.child_store("content", child_id).await.expect("Flow content child").document_pack_bytes().await.expect("Flow content child pack"))
+        .expect("Flow content child snapshot")
+        .nodes
+        .len()
 }
 
 #[semio_framework_async_macros::async_test]

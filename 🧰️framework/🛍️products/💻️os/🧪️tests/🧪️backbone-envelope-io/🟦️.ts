@@ -567,7 +567,7 @@ export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, 
       expect(encodeAppCommand({ resolveConflict: { seq: 0, conflict_id: "", resolution: 0 } })[0]).toBe(26);
       expect(encodeAppCommand({ readConflicts: { seq: 0 } })[0]).toBe(27);
       expect(encodeAppCommand({ presence: { seq: 0, own_color: null, peers: [] } })[0]).toBe(28);
-      expect(encodeAppCommand({ LocalInteractionQuery: { seq: 0, command: { kind: "read", requestId: 0 } } })[0]).toBe(29);
+      expect(encodeAppCommand({ LocalInteractionQuery: { seq: 0, command: { kind: "read", requestId: "0" } } })[0]).toBe(29);
       expect(encodeAppCommand({ LoadWindowConfig: { seq: 0, entry: { window_id: "", window_kind_id: "", envelope_pack: [] } } })[0]).toBe(30);
       expect(encodeAppCommand({ ReadWindowConfigs: { seq: 0 } })[0]).toBe(31);
       expect(encodeAppCommand({ LoadDocumentArchive: { seq: 0, archive: { parent_pack: [], parent_spr: [], members: [] } } })[0]).toBe(32);
@@ -1286,7 +1286,7 @@ export async function registerTests2(vitest: NonNullable<ImportMeta["vitest"]>, 
         let refuseEnqueue = false;
         const client = new AppChannelClient({
           outcomes: broadcast.stream,
-          enqueue: (_instanceId: number, commands: Uint8Array[]) => {
+          enqueue: (_instanceId: number, commands: readonly Uint8Array[]) => {
             if (refuseEnqueue) throw new Error("document-cache.enqueue");
             sent = Object.values(decodeAppCommand(commands[0]!))[0]!.seq;
           },

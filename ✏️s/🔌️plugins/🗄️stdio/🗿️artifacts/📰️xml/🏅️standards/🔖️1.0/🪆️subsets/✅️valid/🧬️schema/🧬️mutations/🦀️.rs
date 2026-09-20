@@ -285,7 +285,16 @@ pub(crate) fn agg_inverse(this: &XmlValidMutation, base: &XmlSnapshot) -> Vec<Xm
             None => Vec::new(),
         },
         XmlValidMutation::SetExternalSubset(_) => vec![XmlValidMutation::SetExternalSubset(set_external_subset::SetExternalSubset { external_id: base.doc.doctype.as_ref().and_then(|doctype| doctype.external_id.clone()) })],
-        XmlValidMutation::SetStandalone(_) => vec![XmlValidMutation::SetStandalone(set_standalone::SetStandalone { standalone: base.doc.declaration.as_ref().and_then(|declaration| declaration.standalone) })],
+        // 🏳️ `set-standalone` on a document that carries NO declaration at all MATERIALIZES one
+        // (`agg_diff`'s `(None, Some(value))` arm writes a fresh `version 1.0` declaration), and no
+        // `set-standalone` can ever take that declaration away again — its own axis is the
+        // `standalone` pseudo-attribute, not the declaration's existence. So the honest inverse of
+        // that case is the whole-document restore, exactly as `DeclareDoctype` above falls back to
+        // `SetSnapshot` when the base had no DOCTYPE to declare back.
+        XmlValidMutation::SetStandalone(_) => match base.doc.declaration.as_ref() {
+            Some(declaration) => vec![XmlValidMutation::SetStandalone(set_standalone::SetStandalone { standalone: declaration.standalone })],
+            None => vec![XmlValidMutation::SetSnapshot(set_snapshot::SetSnapshot { snapshot: base.clone() })],
+        },
         XmlValidMutation::DeclareEntity(_) | XmlValidMutation::SetInternalSubset(_) => match base.doc.doctype.as_ref() {
             Some(doctype) => vec![XmlValidMutation::SetInternalSubset(set_internal_subset::SetInternalSubset { declarations: doctype.declarations.clone() })],
             None => Vec::new(),

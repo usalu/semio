@@ -19,8 +19,8 @@ import type { ActionDescriptor, NodeGraphScene, UiComponentSceneNode } from "@se
 /** 🕸️ Two connected workflow nodes, matching the shape `framework/os/renderer/js/react/index.test.ts` exercises for `NodeGraphHost`. */
 const WORKFLOW_SCENE: NodeGraphScene = {
   nodes: [
-    { id: "node-a", instanceId: "app-a", label: "Draw", x: 10, y: 20, inputs: [{ id: "in", resourceKind: "2d.drawing" }], outputs: [{ id: "out", resourceKind: "2d.drawing" }] },
-    { id: "node-b", instanceId: "app-b", label: "Composite", x: 260, y: 60, inputs: [{ id: "in", resourceKind: "2d.drawing" }], outputs: [] },
+    { id: "node-a", instanceId: "app-a", label: "Draw", x: 10, y: 20, width: 180, height: 96, inputs: [{ id: "in", resourceKind: "2d.drawing" }], outputs: [{ id: "out", resourceKind: "2d.drawing" }] },
+    { id: "node-b", instanceId: "app-b", label: "Composite", x: 260, y: 60, width: 180, height: 96, inputs: [{ id: "in", resourceKind: "2d.drawing" }], outputs: [] },
   ],
   edges: [{ id: "edge-1", sourceNodeId: "node-a", sourcePortId: "out", targetNodeId: "node-b", targetPortId: "in" }],
   viewport: { x: 0, y: 0, zoom: 1 },

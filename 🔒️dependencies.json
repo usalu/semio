@@ -255,6 +255,7 @@
         "✏️s/🔌️plugins/📐️cad/📦️packages/🟦️typescript/package.json",
         "✏️s/🔌️plugins/🧩️puzzle/📦️packages/🟦️typescript/package.json",
         "🌎️hub/🔨️modules/🛡️admin/📦️packages/🟦️typescript/package.json",
+        "🏢️semio-tech/🎡️play/package.json",
         "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/package.json",
         "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/package.json"
       ],
@@ -390,6 +391,7 @@
         "✏️s/🔌️plugins/📐️cad/📦️packages/🟦️typescript/package.json",
         "✏️s/🔌️plugins/🧩️puzzle/📦️packages/🟦️typescript/package.json",
         "🌎️hub/🔨️modules/🛡️admin/📦️packages/🟦️typescript/package.json",
+        "🏢️semio-tech/🎡️play/package.json",
         "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/package.json",
         "🧰️framework/🛍️products/🎤️presentation/📦️packages/🟦️typescript/🎯️targets/⚛️react/package.json",
         "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/package.json"
@@ -1480,6 +1482,7 @@
         "✏️s/🔌️plugins/🪵️sourcing/📦️packages/🟦️typescript/package.json",
         "🌎️hub/📦️packages/🟦️typescript/package.json",
         "🌎️hub/🔨️modules/🛡️admin/📦️packages/🟦️typescript/package.json",
+        "🏢️semio-tech/🎡️play/package.json",
         "🧰️framework/🔨️modules/🎠️kernel/📦️packages/🟦️typescript/package.json",
         "🧰️framework/🔨️modules/📡️replication/📦️packages/🟦️typescript/package.json",
         "🧰️framework/🔨️modules/🔄️machine/📦️packages/🟦️typescript/package.json",
@@ -1543,6 +1546,7 @@
         "✏️s/🔌️plugins/📐️cad/📦️packages/🟦️typescript/package.json",
         "✏️s/🔌️plugins/🧩️puzzle/📦️packages/🟦️typescript/package.json",
         "🌎️hub/🔨️modules/🛡️admin/📦️packages/🟦️typescript/package.json",
+        "🏢️semio-tech/🎡️play/package.json",
         "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/📦️packages/🟦️typescript/package.json",
         "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🖼️canvas/🎨️react-renderer/📦️packages/🟦️typescript/package.json",
         "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/package.json",

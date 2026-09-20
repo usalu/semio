@@ -107,7 +107,7 @@
               "type": "string",
               "minLength": 1,
               "maxLength": 256,
-              "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/-]*$"
+              "pattern": "^(?:\\*|[A-Za-z0-9][A-Za-z0-9._:/-]*)$"
             }
           }
         }
@@ -3538,7 +3538,7 @@
           "type": "string",
           "minLength": 1,
           "maxLength": 256,
-          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/-]*$"
+          "pattern": "^(?:\\*|[A-Za-z0-9][A-Za-z0-9._:/-]*)$"
         }
       }
     },
@@ -3641,7 +3641,7 @@
               "type": "string",
               "minLength": 1,
               "maxLength": 256,
-              "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/-]*$"
+              "pattern": "^(?:\\*|[A-Za-z0-9][A-Za-z0-9._:/-]*)$"
             }
           }
         }
@@ -3854,10 +3854,14 @@
       "additionalProperties": false,
       "required": [
         "sha256",
+        "blake3",
         "byteLength"
       ],
       "properties": {
         "sha256": {
+          "$ref": "#/$defs/CheckpointPublicationCommandHash"
+        },
+        "blake3": {
           "$ref": "#/$defs/CheckpointPublicationCommandHash"
         },
         "byteLength": {
@@ -3911,7 +3915,7 @@
     },
     "DocumentBrowserActorInterfaces": {
       "type": "array",
-      "maxItems": 16,
+      "maxItems": 18,
       "uniqueItems": true,
       "items": {
         "enum": [
@@ -3928,9 +3932,11 @@
           "wasi:cli/terminal-stdin@0.2.0",
           "wasi:cli/terminal-stdout@0.2.0",
           "wasi:clocks/monotonic-clock@0.2.0",
+          "wasi:clocks/wall-clock@0.2.0",
           "wasi:io/error@0.2.0",
           "wasi:io/poll@0.2.0",
-          "wasi:io/streams@0.2.0"
+          "wasi:io/streams@0.2.0",
+          "wasi:random/insecure-seed@0.2.9"
         ]
       }
     },
@@ -4185,9 +4191,18 @@
         },
         "statusCases": {
           "const": [
-            { "generation": "current", "admitted": true },
-            { "generation": "rotated", "admitted": false },
-            { "generation": "missing", "admitted": false }
+            {
+              "generation": "current",
+              "admitted": true
+            },
+            {
+              "generation": "rotated",
+              "admitted": false
+            },
+            {
+              "generation": "missing",
+              "admitted": false
+            }
           ]
         },
         "refreshCases": {
@@ -4198,14 +4213,53 @@
           "items": {
             "type": "object",
             "additionalProperties": false,
-            "required": ["id", "owner", "authority", "origin", "message", "admitted"],
+            "required": [
+              "id",
+              "owner",
+              "authority",
+              "origin",
+              "message",
+              "admitted"
+            ],
             "properties": {
-              "id": { "type": "string", "pattern": "^[a-z][a-z0-9-]*$" },
-              "owner": { "enum": ["current", "absent", "ready", "opening"] },
-              "authority": { "enum": ["current", "unavailable", "rotated-generation", "replaced-runtime"] },
-              "origin": { "enum": ["current", "replaced-session", "replaced-client", "other-document"] },
-              "message": { "enum": ["current", "replaced-request", "rotated-generation"] },
-              "admitted": { "type": "boolean" }
+              "id": {
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9-]*$"
+              },
+              "owner": {
+                "enum": [
+                  "current",
+                  "absent",
+                  "ready",
+                  "opening"
+                ]
+              },
+              "authority": {
+                "enum": [
+                  "current",
+                  "unavailable",
+                  "rotated-generation",
+                  "replaced-runtime"
+                ]
+              },
+              "origin": {
+                "enum": [
+                  "current",
+                  "replaced-session",
+                  "replaced-client",
+                  "other-document"
+                ]
+              },
+              "message": {
+                "enum": [
+                  "current",
+                  "replaced-request",
+                  "rotated-generation"
+                ]
+              },
+              "admitted": {
+                "type": "boolean"
+              }
             }
           }
         },
@@ -4319,14 +4373,100 @@
         },
         "mountCases": {
           "const": [
-            { "id": "same-generation", "actions": ["current"], "accepted": [true], "outcome": "ready", "committed": true },
-            { "id": "rotated-generation", "actions": ["rotated"], "accepted": [false], "outcome": "failed", "committed": false },
-            { "id": "missing-generation", "actions": ["missing"], "accepted": [false], "outcome": "failed", "committed": false },
-            { "id": "closed-before-mount", "actions": ["close", "current"], "accepted": [false], "outcome": "failed", "committed": false },
-            { "id": "duplicate-current", "actions": ["current", "current"], "accepted": [true, true], "outcome": "ready", "committed": true },
-            { "id": "refused-before-current", "actions": ["rotated", "current"], "accepted": [false, false], "outcome": "failed", "committed": false },
-            { "id": "closed-after-mount", "actions": ["current", "close", "current"], "accepted": [true, false], "outcome": "ready", "committed": false },
-            { "id": "rebootstrap-before-port-ready", "actions": ["close"], "accepted": [], "outcome": "failed", "committed": false }
+            {
+              "id": "same-generation",
+              "actions": [
+                "current"
+              ],
+              "accepted": [
+                true
+              ],
+              "outcome": "ready",
+              "committed": true
+            },
+            {
+              "id": "rotated-generation",
+              "actions": [
+                "rotated"
+              ],
+              "accepted": [
+                false
+              ],
+              "outcome": "failed",
+              "committed": false
+            },
+            {
+              "id": "missing-generation",
+              "actions": [
+                "missing"
+              ],
+              "accepted": [
+                false
+              ],
+              "outcome": "failed",
+              "committed": false
+            },
+            {
+              "id": "closed-before-mount",
+              "actions": [
+                "close",
+                "current"
+              ],
+              "accepted": [
+                false
+              ],
+              "outcome": "failed",
+              "committed": false
+            },
+            {
+              "id": "duplicate-current",
+              "actions": [
+                "current",
+                "current"
+              ],
+              "accepted": [
+                true,
+                true
+              ],
+              "outcome": "ready",
+              "committed": true
+            },
+            {
+              "id": "refused-before-current",
+              "actions": [
+                "rotated",
+                "current"
+              ],
+              "accepted": [
+                false,
+                false
+              ],
+              "outcome": "failed",
+              "committed": false
+            },
+            {
+              "id": "closed-after-mount",
+              "actions": [
+                "current",
+                "close",
+                "current"
+              ],
+              "accepted": [
+                true,
+                false
+              ],
+              "outcome": "ready",
+              "committed": false
+            },
+            {
+              "id": "rebootstrap-before-port-ready",
+              "actions": [
+                "close"
+              ],
+              "accepted": [],
+              "outcome": "failed",
+              "committed": false
+            }
           ]
         },
         "cases": {

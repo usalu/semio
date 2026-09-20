@@ -14,8 +14,8 @@ fn command(row: &Value) -> FlowCommand {
         "contextMenuAt" => FlowCommand::ContextMenuAt(context_menu_at::ContextMenuAt { id: text(&fields[0]) }),
         "openSpotlight" => FlowCommand::OpenSpotlight(open_spotlight::OpenSpotlight {}),
         "replaceImage" => FlowCommand::ReplaceImage(replace_image::ReplaceImage { id: text(&fields[0]) }),
-        "flowEvalTick" => FlowCommand::FlowEvalTick(flow_eval_tick::FlowEvalTick {}),
-        "flowEvalResolve" => FlowCommand::FlowEvalResolve(flow_eval_resolve::FlowEvalResolve { node_hash: fields[0]["value"].as_str().unwrap().parse().unwrap(), output_json: text(&fields[1]) }),
+        "flowEvalTick" => FlowCommand::FlowEvalTick(flow_eval_tick::FlowEvalTick { window_id: text(&fields[0]), window_kind_id: text(&fields[1]) }),
+        "flowEvalResolve" => FlowCommand::FlowEvalResolve(flow_eval_resolve::FlowEvalResolve { window_id: text(&fields[0]), node_hash: fields[1]["value"].as_str().unwrap().parse().unwrap(), output_json: text(&fields[2]) }),
         _ => unreachable!(),
     }
 }
@@ -88,6 +88,5 @@ fn host_wire_witness_matches_real_opbinary_for_all_six_routes() {
             close(cursor, &root);
         }
     }
-    eprintln!("[DEBUG] Flow actual OpBinary six-route wire parity/cancel/fault laws reached terminal emptiness");
 }
 //#endregion 🧪️Laws

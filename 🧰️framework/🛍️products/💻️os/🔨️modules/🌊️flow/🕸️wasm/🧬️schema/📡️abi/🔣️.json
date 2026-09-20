@@ -108,6 +108,7 @@
     "traceDrawingBitmap": 2605,
     "booleanDrawingSegments": 2606,
     "dispose": 2607,
+    "pointerCancelScreen": 2608,
     "snapshotJson": 2609,
     "synchronizeSnapshotJson": 2610
   },
@@ -817,6 +818,7 @@
         "type": "bool"
       }
     ],
+    "pointerCancelScreen": [],
     "setSelectionOptions": [
       {
         "name": "method",

@@ -1,12 +1,15 @@
 import assert from "node:assert/strict";
 import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
-import Ajv from "ajv";
+import Ajv, { type AnySchema } from "ajv";
 import { parseJackArtifact } from "../../🟦️.ts";
 import { parseJackSnapshot } from "../../📸️snapshot/🟦️.ts";
 import { parseJackDiff } from "../../🔺️diff/🟦️.ts";
 
 const json = (url: URL): unknown => JSON.parse(readFileSync(url, "utf8"));
+
+/** 🧬️ Reads one JSON Schema document — the same `JSON.parse`, typed as what Ajv actually takes. */
+const schema = (url: URL): AnySchema => JSON.parse(readFileSync(url, "utf8"));
 
 /** 🪪️ Proves Jack's production parsers and Ajv share the native child-handle document boundary. */
 export function testJackDocumentContract(): void {
@@ -17,11 +20,11 @@ export function testJackDocumentContract(): void {
     invalidDocuments: unknown[];
     invalidDiffs: unknown[];
   };
-  const ioSchema = json(new URL("../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🧬️schema/🔣️.json", import.meta.url));
-  const childSchema = json(new URL("../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🔣️.json", import.meta.url));
-  const artifactSchema = json(new URL("../../🔣️.json", import.meta.url));
-  const snapshotSchema = json(new URL("../../📸️snapshot/🔣️.json", import.meta.url));
-  const diffSchema = json(new URL("../../🔺️diff/🔣️.json", import.meta.url));
+  const ioSchema = schema(new URL("../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🧬️schema/🔣️.json", import.meta.url));
+  const childSchema = schema(new URL("../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🔣️.json", import.meta.url));
+  const artifactSchema = schema(new URL("../../🔣️.json", import.meta.url));
+  const snapshotSchema = schema(new URL("../../📸️snapshot/🔣️.json", import.meta.url));
+  const diffSchema = schema(new URL("../../🔺️diff/🔣️.json", import.meta.url));
   const snapshot = json(new URL(cases.snapshotFixture, import.meta.url));
   const diff = json(new URL(cases.diffFixture, import.meta.url));
   const ajv = new Ajv({ strict: true, allErrors: true });

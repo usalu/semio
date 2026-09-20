@@ -547,6 +547,15 @@ describe("🌱️ native second implementation", () => {
     expect(breaches[0]!.id).toBe("native-second-implementation-unearned");
   });
 
+  test("an evidence record missing its schema-required format reports a breach instead of crashing contract validation", () => {
+    const manifest = nativeManifest("s.norm.test-code", [["change-a", "test-code-1-mutate"]]);
+    const registry = registryWith("test/owner", [entry("missing-format", ["test-code-1-mutate"], { nativeSecondImplementation: {} as never })], [manifest]);
+    const breaches = nativeSecondImplementationBreaches(registry);
+    expect(breaches).toHaveLength(1);
+    expect(breaches[0]!.id).toBe("native-second-implementation-unearned");
+    expect(breaches[0]!.summary).toContain("format");
+  });
+
   test("a real interchange format is refused however good the survey reads", () => {
     const manifest = nativeManifest("s.stdio.png", [["change-a", "png-1-2-mutate"]]);
     const registry = registryWith("test/owner", [entry("png-claims-native", ["png-1-2-mutate"], { nativeSecondImplementation: earnedEvidence("s.stdio.png", ["png-1-2-mutate"]) })], [manifest]);

@@ -58,13 +58,13 @@
     "candidateEntry": "admit_candidate",
     "witnessType": "RasterTextureWitness",
     "mintPhase": "BeginGpu",
-    "consumePhase": "Engine",
+    "consumePhase": "Ownership",
     "commitPhase": "Acknowledge",
-    "framePhaseOrder": ["BeginGpu", "Engine", "Uploads", "Stage", "Render", "CloseGpu", "Acknowledge", "ProgressAcknowledge", "Fullscreen", "Directives"],
+    "framePhaseOrder": ["BeginGpu", "Ownership", "Engine", "Uploads", "Stage", "Render", "CloseGpu", "Acknowledge", "ProgressAcknowledge", "Fullscreen", "Directives"],
     "authority": "RuntimeRasterOperationAuthority",
     "authorityBegin": "begin",
     "authorityRelease": "release",
-    "retirementModes": ["Abort", "Commit", "Close"],
+    "retirementModes": ["Abort", "Commit", "Unowned", "Close"],
     "retiredFieldsAreNotOnTheScanCursor": ["candidate_retired", "presenting_retired"]
   }
 }

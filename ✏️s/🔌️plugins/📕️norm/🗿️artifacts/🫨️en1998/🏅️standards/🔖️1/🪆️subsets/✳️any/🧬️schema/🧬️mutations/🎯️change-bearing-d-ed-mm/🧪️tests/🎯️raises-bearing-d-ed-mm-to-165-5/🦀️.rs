@@ -67,7 +67,7 @@ async fn change_bearing_d_ed_mm_committed_json_is_canonical() {
     }
     let reencoded = serde_json::to_value(mutation()).expect("change-bearing-d-ed-mm mutation encodes");
     let original: serde_json::Value = serde_json::from_str(MUTATION).expect("change-bearing-d-ed-mm mutation reparses");
-    assert_eq!(reencoded, original, "change-bearing-d-ed-mm/raises-bearing-d-ed-mm-to-165-5: committed mutation JSON is not the canonical externally-tagged ChangeBearingDEdMm form carrying newBearingDEdMm");
+    assert_eq!(reencoded, original, "change-bearing-d-ed-mm/raises-bearing-d-ed-mm-to-165-5: committed mutation JSON is not the canonical internally-tagged ChangeBearingDEdMm form carrying mutation and newBearingDEdMm");
 }
 
 /// 🎯️ The declared outcome holds: `change-bearing-d-ed-mm` at 165.5 is applied, not rejected, and carries no

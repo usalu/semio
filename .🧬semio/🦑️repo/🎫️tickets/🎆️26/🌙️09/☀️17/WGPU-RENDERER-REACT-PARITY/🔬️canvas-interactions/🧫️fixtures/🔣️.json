@@ -1,0 +1,229 @@
+{
+  "version": 3,
+  "targets": {
+    "draw": {
+      "plugin": "draw",
+      "surfaceKind": "canvas-2d",
+      "controllerId": "s.draw.drawing@1/*#editor",
+      "windowId": "drawing-composite",
+      "surfaceId": "drawing.play.composite",
+      "reactSelector": "[data-ui-surface-shell][data-ui-node-key=\"drawing.play.composite\"] .semio-canvas-2d-host[data-surface-id=\"window:drawing-composite\"] canvas",
+      "urls": {
+        "react": "http://127.0.0.1:6064/?plugin=draw",
+        "wgpu": "http://127.0.0.1:6164/?plugin=draw"
+      }
+    },
+    "layout": {
+      "plugin": "layout",
+      "surfaceKind": "canvas-2d",
+      "controllerId": "s.layout.layout@1/*#editor",
+      "windowId": "layout-blueprint",
+      "surfaceId": "layout.play.blueprint",
+      "reactSelector": "[data-ui-surface-shell][data-ui-node-key=\"layout.play.blueprint\"] .semio-canvas-2d-host[data-surface-id=\"window:layout-blueprint\"] canvas",
+      "initialExampleId": "demo",
+      "urls": {
+        "react": "http://127.0.0.1:6079/?plugin=layout",
+        "wgpu": "http://127.0.0.1:6179/?plugin=layout"
+      }
+    },
+    "note": {
+      "plugin": "note",
+      "surfaceKind": "ink-canvas",
+      "controllerId": "s.note.note@1/*#editor",
+      "windowId": "note-composite",
+      "surfaceId": "note.play.composite",
+      "reactSelector": "[data-ui-surface-shell][data-ui-node-key=\"note.play.composite\"] [data-surface-id=\"window:note-composite\"]",
+      "initialExampleId": "demo",
+      "initialTextBlockId": "text-semio",
+      "urls": {
+        "react": "http://127.0.0.1:6080/?plugin=note",
+        "wgpu": "http://127.0.0.1:6180/?plugin=note"
+      }
+    }
+  },
+  "layoutCatalogue": {
+    "transport": "pointer-catalogue",
+    "mime": "application/x-semio-catalogue-item",
+    "kindMimePrefix": "application/x-semio-catalogue-kind.",
+    "catalogueTabId": "framework.panel.catalogue",
+    "artifactTabId": "framework.panel.artifact",
+    "transferHandlePrefix": "tree.drag.transfer.",
+    "pageSectionId": "layout-document.pages",
+    "frameSectionId": "layout-document.frames",
+    "seed": {
+      "exampleId": "demo",
+      "reset": "browser-reload",
+      "pages": 2,
+      "frames": 3
+    },
+    "previewAction": "canvasDragOver",
+    "leaveAction": "canvasDragLeave",
+    "dropAction": "canvasDrop",
+    "cases": [
+      {
+        "id": "page-catalogue-drop",
+        "kind": "page",
+        "sourceId": "layout-catalogue.page",
+        "dragPayload": "{\"kind\":\"page\"}",
+        "previewPixels": "unchanged",
+        "createdCollection": "pages",
+        "createdDelta": 1,
+        "consequence": "The MIME witness publishes a preview action without document mutation; leaving restores the seed, while dropping creates one active blank page and retires the preview."
+      },
+      {
+        "id": "rect-catalogue-drop",
+        "kind": "rect",
+        "sourceId": "layout-catalogue.rect",
+        "dragPayload": "{\"kind\":\"rect\"}",
+        "previewPixels": "changed",
+        "createdCollection": "frames",
+        "createdDelta": 1,
+        "consequence": "The Rectangle row shows the bounded drop-preview layer, leaving removes it without a drop, and dropping creates exactly one rectangle frame."
+      },
+      {
+        "id": "text-catalogue-drop",
+        "kind": "text",
+        "sourceId": "layout-catalogue.text",
+        "dragPayload": "{\"kind\":\"text\"}",
+        "previewPixels": "changed",
+        "createdCollection": "frames",
+        "createdDelta": 1,
+        "consequence": "The Text row shows the bounded drop-preview layer, leaving removes it without a drop, and dropping creates exactly one text frame."
+      },
+      {
+        "id": "image-catalogue-drop",
+        "kind": "image",
+        "sourceId": "layout-catalogue.image",
+        "dragPayload": "{\"kind\":\"image\"}",
+        "previewPixels": "changed",
+        "createdCollection": "frames",
+        "createdDelta": 1,
+        "consequence": "The Image row shows the bounded drop-preview layer, leaving removes it without a drop, and dropping creates exactly one image frame."
+      }
+    ]
+  },
+  "drawSelection": {
+    "version": 1,
+    "engagementFieldId": "drawing-canvas-engagement",
+    "searchToggleId": "framework.window.drawingComposite.search.toggle",
+    "layerRowIdPrefix": "drawing-play-layers.shape.",
+    "cases": [
+      {
+        "id": "single-selection-rename",
+        "mergeMode": "replace",
+        "namePrefix": "Physical Single",
+        "expectedConsequence": "selected-row-renamed"
+      },
+      {
+        "id": "multi-selection-rename",
+        "mergeMode": "add",
+        "namePrefix": "Physical Multi",
+        "expectedConsequence": "no-row-renamed"
+      },
+      {
+        "id": "subtracted-selection-rename",
+        "mergeMode": "subtract",
+        "namePrefix": "Physical Subtracted",
+        "expectedConsequence": "original-row-renamed"
+      }
+    ]
+  },
+  "drawCases": [
+    {
+      "id": "primary-draw",
+      "input": "Trusted primary-pointer drag after physically selecting shapeRect.",
+      "expectedActions": ["canvasPointerDown", "canvasPointerMove", "canvasPointerUp"],
+      "consequence": "Layer count increases once and the canvas screenshot hash changes."
+    },
+    {
+      "id": "primary-select",
+      "input": "Trusted primary-pointer click after physically selecting selectDirect.",
+      "expectedActions": ["canvasPointerDown", "canvasPointerUp"],
+      "consequence": "Submitting the engagement input renames exactly the physically selected layer row."
+    },
+    {
+      "id": "selection-modifiers",
+      "input": "Trusted Shift-click then platform-modifier-click on separate drawn shapes.",
+      "expectedActions": ["canvasPointerDown", "canvasPointerUp"],
+      "consequence": "Engagement rename is inert for the two-item selection; after Control/Meta subtracts the second item, submitting renames the original selected layer row."
+    },
+    {
+      "id": "escape-cancel",
+      "input": "Trusted pointer input starts a pen draft, followed by a physical Escape key.",
+      "expectedActions": ["canvasPointerDown", "canvasEscape"],
+      "consequence": "No layer is committed and the draft preview disappears."
+    },
+    {
+      "id": "double-click-commit",
+      "input": "Trusted Playwright double-click while a draft utility is active.",
+      "expectedActions": ["canvasDoubleClick"],
+      "consequence": "Exactly one draft commit is observable in the layer count and canvas hash."
+    }
+  ],
+  "inkCases": [
+    {
+      "id": "selected-block-copy",
+      "clipboardKind": "text",
+      "payload": null,
+      "expectedAction": null,
+      "expectedOperations": [],
+      "consequence": "The selected demo text block writes one strict ink.clipboard payload without embedding assets."
+    },
+    {
+      "id": "structured-text-paste",
+      "clipboardKind": "text",
+      "payload": "{\"schema\":\"ink.clipboard\",\"blocks\":[{\"id\":\"probe-text\",\"name\":\"Probe Text\",\"kind\":\"text\",\"x\":8,\"y\":16,\"width\":80,\"height\":40,\"rotation\":0,\"visible\":true,\"locked\":false,\"paragraphs\":[{\"runs\":[{\"text\":\"Clipboard block\"}]}],\"fontSize\":18,\"fontWeight\":\"normal\",\"align\":\"left\"}]}",
+      "expectedAction": "inkApplyEvents",
+      "expectedOperations": ["addBlock"],
+      "consequence": "One re-identified text block appears and the source id is not retained."
+    },
+    {
+      "id": "plain-text-paste",
+      "clipboardKind": "text",
+      "payload": "Hello\nWelt",
+      "expectedAction": "inkApplyEvents",
+      "expectedOperations": ["addBlock"],
+      "consequence": "One text block containing both localized lines appears."
+    },
+    {
+      "id": "tiny-rgba-paste",
+      "clipboardKind": "image",
+      "mime": "image/png",
+      "base64": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAFgwJ/lXHgVwAAAABJRU5ErkJggg==",
+      "width": 1,
+      "height": 1,
+      "expectedAction": "inkApplyEvents",
+      "expectedOperations": ["putAsset", "addBlock"],
+      "consequence": "One natural 1 by 1 PNG asset and one image block are published atomically."
+    },
+    {
+      "id": "editor-priority",
+      "clipboardKind": "text",
+      "payload": " editor-owned ",
+      "expectedAction": null,
+      "expectedOperations": [],
+      "consequence": "The active text editor receives the paste and no block-level inkApplyEvents action is dispatched."
+    },
+    {
+      "id": "exact-pointer-cancel",
+      "clipboardKind": null,
+      "payload": null,
+      "expectedAction": null,
+      "expectedOperations": [],
+      "consequence": "Chromium touchCancel emits no terminal scene action; the next independent Down and Up commits once."
+    }
+  ],
+  "cancellation": {
+    "producer": "chromium-cdp-touchCancel",
+    "address": ["windowId", "surfaceGeneration", "pointerId"],
+    "cancelDeltaActions": [],
+    "nextGestureAction": "inkApplyEvents",
+    "nextGesturePhase": "commit"
+  },
+  "limits": {
+    "clipboardItems": 16,
+    "clipboardTextBytes": 16383,
+    "actionStringBytes": 4096,
+    "settleMilliseconds": 15000
+  }
+}

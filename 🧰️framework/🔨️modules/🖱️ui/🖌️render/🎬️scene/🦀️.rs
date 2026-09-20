@@ -254,13 +254,16 @@ pub enum StencilPolicy {
 
 //#region Surface
 
-/// 🧊️ One instance of a resident mesh, positioned/tinted/flagged. `model` is a row-major 4x4 matrix.
+/// 🧊️ One instance of a resident mesh with its resolved static material policy. `model` is a
+/// row-major 4x4 matrix.
 #[derive(Clone, Copy, Debug)]
 pub struct MeshInstance {
     pub model: [f32; 16],
     pub color: [f32; 4],
-    pub selected: bool,
-    pub hovered: bool,
+    pub preserve_vertex_color: bool,
+    pub emissive_intensity: f32,
+    pub metalness: f32,
+    pub roughness: f32,
 }
 
 /// 🧊️ One mesh's instances within a [`SurfacePass`].
@@ -297,6 +300,49 @@ pub struct SurfaceTexturedDraw {
     pub instances: Vec<TexturedMeshInstance>,
 }
 
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct SurfaceLighting {
+    pub ambient_color: [f32; 3],
+    pub ambient_intensity: f32,
+    pub sun_color: [f32; 3],
+    pub sun_intensity: f32,
+    pub sun_enabled: bool,
+}
+
+impl Default for SurfaceLighting {
+    fn default() -> Self {
+        Self { ambient_color: [1.0; 3], ambient_intensity: 1.15, sun_color: [1.0; 3], sun_intensity: 0.85, sun_enabled: false }
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct SurfaceMaterial {
+    pub metalness: f32,
+    pub roughness: f32,
+    pub emissive: [f32; 3],
+    pub emissive_intensity: f32,
+}
+
+impl Default for SurfaceMaterial {
+    fn default() -> Self {
+        Self { metalness: 0.0, roughness: 1.0, emissive: [0.0; 3], emissive_intensity: 0.0 }
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct SurfaceShadow {
+    pub enabled: bool,
+    pub opacity: f32,
+    pub softness: f32,
+    pub view_proj: [f32; 16],
+}
+
+impl Default for SurfaceShadow {
+    fn default() -> Self {
+        Self { enabled: false, opacity: 1.0, softness: 1.0, view_proj: [0.0; 16] }
+    }
+}
+
 /// 🌐️ One 3D world pass anchored to a specific 2D layer (`layer_index`), with watermarks recording
 /// how many quad/vector instances that layer held when the pass was pushed — a backend interleaves
 /// this pass's draws between the 2D content before and after that point within the same layer. Ported
@@ -308,7 +354,11 @@ pub struct SurfaceTexturedDraw {
 pub struct SurfacePass {
     pub viewport: [f32; 4],
     pub view_proj: [f32; 16],
+    pub camera_position: [f32; 3],
     pub light_dir: [f32; 3],
+    pub lighting: SurfaceLighting,
+    pub neutral_material: SurfaceMaterial,
+    pub shadow: SurfaceShadow,
     pub draws: Vec<SurfaceMeshDraw>,
     pub translucent_draws: Vec<SurfaceMeshDraw>,
     pub line_draws: Vec<SurfaceLineDraw>,

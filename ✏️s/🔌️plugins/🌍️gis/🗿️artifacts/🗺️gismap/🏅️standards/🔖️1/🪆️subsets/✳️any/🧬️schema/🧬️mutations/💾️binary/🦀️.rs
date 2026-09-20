@@ -258,7 +258,7 @@ impl store::ErasedSnapshotRetirement for GisMapOwnedRetirement {
 
 impl Drop for GisMapOwnedRetirement {
     fn drop(&mut self) {
-        assert!(store::ErasedSnapshotRetirement::terminal_is_empty(self), "GIS owner reached Drop before cursor retirement reached terminal-empty");
+        assert!(std::thread::panicking() || store::ErasedSnapshotRetirement::terminal_is_empty(self), "GIS owner reached Drop before cursor retirement reached terminal-empty");
     }
 }
 
@@ -310,7 +310,7 @@ impl store::ErasedSnapshotRetirement for GisMapSnapshotRootRetirement {
 
 impl Drop for GisMapSnapshotRootRetirement {
     fn drop(&mut self) {
-        assert!(self.owner.is_none() && self.retirement.is_none(), "GIS snapshot root reached Drop before exact Arc handback");
+        assert!(std::thread::panicking() || (self.owner.is_none() && self.retirement.is_none()), "GIS snapshot root reached Drop before exact Arc handback");
     }
 }
 
@@ -475,7 +475,7 @@ macro_rules! gis_map_owned_field_authority {
 
         impl Drop for $authority {
             fn drop(&mut self) {
-                assert!(matches!(self.state, $state::Published | $state::Complete) && self.value.is_none() && self.retirement.is_none(), concat!("GIS ", $kind, " decode reached Drop before publication or bounded retirement"));
+                assert!(std::thread::panicking() || (matches!(self.state, $state::Published | $state::Complete) && self.value.is_none() && self.retirement.is_none()), concat!("GIS ", $kind, " decode reached Drop before publication or bounded retirement"));
             }
         }
     };
@@ -731,7 +731,7 @@ impl GisMapSnapshotCloneAuthority {
 
 impl Drop for GisMapSnapshotCloneAuthority {
     fn drop(&mut self) {
-        assert!(self.terminal_is_empty(), "GIS snapshot clone reached Drop before exact handoff or cursor retirement");
+        assert!(std::thread::panicking() || self.terminal_is_empty(), "GIS snapshot clone reached Drop before exact handoff or cursor retirement");
     }
 }
 
@@ -1241,7 +1241,7 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<GisMapSnapshot
 
 impl Drop for GisMapStoreInitializationAuthority {
     fn drop(&mut self) {
-        assert!(self.terminal_is_empty_inner(), "GIS store initialization authority reached Drop before exact candidate handoff or retained rejection close");
+        assert!(std::thread::panicking() || self.terminal_is_empty_inner(), "GIS store initialization authority reached Drop before exact candidate handoff or retained rejection close");
     }
 }
 

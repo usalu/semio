@@ -1,5 +1,4 @@
 {
-  "ChangeBearingDRdMm": {
-    "newBearingDRdMm": 312.5
-  }
+  "mutation": "changeBearingDRdMm",
+  "newBearingDRdMm": 312.5
 }

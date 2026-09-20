@@ -1271,6 +1271,24 @@ impl FlowHost {
         self.commit_gesture_history();
     }
 
+    pub fn pointer_cancel_screen(&mut self) {
+        self.interaction_revision = self.interaction_revision.wrapping_add(1);
+        self.pan_anchor = None;
+        self.dag.pointer_cancel_screen();
+        self.gesture_changed_content = false;
+        if !self.gesture_active {
+            return;
+        }
+        self.gesture_active = false;
+        let Some(mut baseline) = self.pending_history_baseline.take() else {
+            return;
+        };
+        baseline.camera = self.host_snapshot.camera.clone();
+        let stale = std::mem::replace(&mut self.host_snapshot, baseline);
+        stale.retire_cold();
+        self.rebuild_dag();
+    }
+
     /// 🔗️ Drains the wire edits the last gesture performed, in the GUEST's own sub-operation
     /// vocabulary: `{"operations":[{"operation":"connect",…}|{"operation":"disconnect","synapseId":…}],"hostSnapshotChanged":bool}`.
     /// The renderer dispatches exactly those operations as a `nodeGraphEdit`, instead of re-publishing

@@ -1,7 +1,10 @@
 {
   "cargoPackage": "semio-framework-os-mcp",
   "cargoBinary": "semio-os-mcp",
-  "profile": "debug",
+  "profiles": {
+    "build": "debug",
+    "build-release": "release"
+  },
   "pathCases": [
     {
       "name": "posix staged default",
@@ -45,5 +48,6 @@
       "expected": "C:\\workspace\\semio\\🧰️framework\\🛍️products\\💻️os\\🔨️modules\\🌉️mcp\\📦️packages\\🦀️rust\\dist\\build\\semio-os-mcp.exe"
     }
   ],
-  "artifactRoot": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust/dist/build"
+  "artifactRoot": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust/dist/build",
+  "releaseArtifactRoot": "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust/dist/build-release"
 }

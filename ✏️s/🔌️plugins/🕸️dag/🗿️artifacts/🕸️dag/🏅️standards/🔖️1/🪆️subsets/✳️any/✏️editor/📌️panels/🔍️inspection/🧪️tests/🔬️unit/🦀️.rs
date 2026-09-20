@@ -1,5 +1,5 @@
 use super::*;
-use crate::editor::dag::unit_tests::context::{new_app, render as render_body};
+use crate::editor::dag::unit_tests::context::{close, new_app, render as render_body};
 
 #[semio_framework_async_macros::async_test]
 async fn definition_binds_the_framework_inspection_tab_to_this_body_key() {
@@ -11,7 +11,9 @@ async fn definition_binds_the_framework_inspection_tab_to_this_body_key() {
 #[semio_framework_async_macros::async_test]
 async fn renders_the_select_a_node_placeholder_when_nothing_is_selected() {
     let mut app = new_app().await;
-    assert!(render_body(&mut app, DAG_PLAY_BODY_INSPECTOR).await.contains("Select a node"));
+    let json = render_body(&mut app, DAG_PLAY_BODY_INSPECTOR).await;
+    close(&mut app);
+    assert!(json.contains("Select a node"));
 }
 
 /// 🕹️ `render` carries no `InteractionView` (`DagPlayApp::render` always calls this panel's own
@@ -25,7 +27,10 @@ async fn renders_id_name_and_kind_fields_for_a_single_selected_node() {
     let node_id = document.nodes().first().map(|node| node.id.clone()).expect("node");
     let labels = crate::editor::dag::terminology::dag_play_labels(&semio_framework_plugin::ViewModel::default());
     let node = render(&document, &[node_id.clone()], labels).expect("inspector component tree");
-    let json = serde_json::to_string(&node).unwrap();
+    // 🖼️ A `BuiltNode`'s children live on the retained page transport — `serde_json` of the node
+    // itself refuses them ("BuiltChildren requires retained page transport"); the fixture projection
+    // is what materialises and then retires them.
+    let json = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).expect("inspector tree projection");
     assert!(json.contains(&node_id));
     assert!(json.contains("Name") || json.contains("Kind"));
 }

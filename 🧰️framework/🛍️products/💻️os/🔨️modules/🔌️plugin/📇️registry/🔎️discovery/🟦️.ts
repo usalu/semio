@@ -135,16 +135,14 @@ for (const area of PLUGIN_AREAS) {
 
 
 /** @emoji 🗺️ Merges every declared plugin area's `AreaState` to the most permissive member, so one
- * still-migrating area can never be silently masked by a sibling area that already reached `clean`. */
+ * still-exempt area can never be silently masked by a sibling area that already reached `clean`. */
 export function mergeAreaStates(states: readonly AreaState[]): AreaState {
-  if (states.includes("legacy")) return "legacy";
-  if (states.includes("mixed")) return "mixed";
-  return "clean";
+  return states.includes("exempt") ? "exempt" : "clean";
 }
 
 
 /** @emoji 🌳️ Declared taxonomy-tree maturity across every plugin area, independent of the package-layout
- * maturity in `areas`. `legacy`/`mixed` ⇒ findings are warn-only; `clean` ⇒ they fail the gate. */
+ * maturity in `areas`. `exempt` ⇒ findings are warn-only; `clean` ⇒ they fail the gate. */
 export const PLUGIN_AREAS_STATE: AreaState = mergeAreaStates(PLUGIN_AREAS.map((area) => TAXONOMY.areas[area]));
 
 
@@ -507,8 +505,10 @@ export type GeneratePluginRegistryOptions = {
 
 
 
-/** @emoji 🎯️ Resolves a playground variant/alias or bare plugin id to its wasm registry plugin id. */
-export function resolveRegistryPluginIdForFilter(pluginFilter: string, repoRoot = getWorkspaceRoot()): string {
+/** @emoji 🎮️ The owning plugin id and the app scope of the playground row a variant/alias names, or
+ * `undefined` for a filter that names no playground row. A row carrying `app` boots that ONE artifact
+ * app; a row without one boots its crate's default session (the OS shell, for the host crate). */
+export function resolvePlaygroundFilterRow(pluginFilter: string, repoRoot = getWorkspaceRoot()): { readonly pluginId: string; readonly app?: string } | undefined {
   for (const manifestPath of findPluginCargoFiles(repoRoot)) {
     const text = readFileSync(manifestPath, "utf8");
     let componentPackage: string;
@@ -522,10 +522,17 @@ export function resolveRegistryPluginIdForFilter(pluginFilter: string, repoRoot 
       const variant = body.match(/^variant\s*=\s*"([^"]+)"/m)?.[1];
       if (!variant) continue;
       const aliases = parseTomlStringArray(body, "aliases");
-      if (variant === pluginFilter || aliases.includes(pluginFilter)) return componentPackage;
+      const app = body.match(/^app\s*=\s*"([^"]+)"/m)?.[1];
+      if (variant === pluginFilter || aliases.includes(pluginFilter)) return { pluginId: componentPackage, ...(app ? { app } : {}) };
     }
   }
-  return pluginFilter;
+  return undefined;
+}
+
+
+/** @emoji 🎯️ Resolves a playground variant/alias or bare plugin id to its wasm registry plugin id. */
+export function resolveRegistryPluginIdForFilter(pluginFilter: string, repoRoot = getWorkspaceRoot()): string {
+  return resolvePlaygroundFilterRow(pluginFilter, repoRoot)?.pluginId ?? pluginFilter;
 }
 
 
@@ -540,19 +547,23 @@ export function pluginEntryHasHost(pluginId: string, repoRoot: string): boolean 
 
 
 
-/** @emoji 🏠️ True when the filter resolves to a plugin crate that declares `[package.metadata.semio].host`. */
+/** @emoji 🏠️ True when the filter boots the host SESSION: a playground row of the crate that declares
+ * `[package.metadata.semio].host` AND names no `app`. The host crate also ships ordinary artifact apps
+ * (`🪐️space`'s Home and Space); a row naming one of them is a single-app playground like any other. */
 export function isHostPluginFilter(pluginFilter?: string, repoRoot = getWorkspaceRoot()): boolean {
   if (!pluginFilter) return true;
-  return pluginEntryHasHost(resolveRegistryPluginIdForFilter(pluginFilter, repoRoot), repoRoot);
+  const row = resolvePlaygroundFilterRow(pluginFilter, repoRoot);
+  if (row?.app !== undefined) return false;
+  return pluginEntryHasHost(row?.pluginId ?? pluginFilter, repoRoot);
 }
 
 
 
 /** 🎯️ Resolves aliases and runtime dependencies within the supplied catalog, or discovers an omitted catalog. */
-export function resolveRegistryPluginIdsForFilter(filterPlaygroundPlugin: string, allEntries: readonly PluginRegistryEntry[] = generatePluginRegistry(getWorkspaceRoot()), playgrounds?: readonly { readonly variant: string; readonly aliases: readonly string[]; readonly pluginId: string }[]): readonly string[] {
-  const variantRow = playgrounds?.find((p) => p.variant === filterPlaygroundPlugin || p.aliases.includes(filterPlaygroundPlugin));
-  const targetPluginId = variantRow?.pluginId ?? (playgrounds === undefined ? resolveRegistryPluginIdForFilter(filterPlaygroundPlugin) : filterPlaygroundPlugin);
-  return allEntries.some(row => row.pluginId === targetPluginId) ? runtimeComponentClosure(allEntries, [targetPluginId]) : [];
+export function resolveRegistryPluginIdsForFilter(filterPlaygroundPlugin: string, allEntries: readonly PluginRegistryEntry[] = generatePluginRegistry(getWorkspaceRoot()), playgrounds?: readonly { readonly variant: string; readonly aliases: readonly string[]; readonly pluginId: string; readonly app?: string }[]): readonly string[] {
+  const variantRow = playgrounds?.find((p) => p.variant === filterPlaygroundPlugin || p.aliases.includes(filterPlaygroundPlugin)) ?? (playgrounds === undefined ? resolvePlaygroundFilterRow(filterPlaygroundPlugin) : undefined);
+  const targetPluginId = variantRow?.pluginId ?? filterPlaygroundPlugin;
+  return allEntries.some(row => row.pluginId === targetPluginId) ? runtimeComponentClosure(allEntries, [{ id: targetPluginId, appScoped: variantRow?.app !== undefined }]) : [];
 }
 
 

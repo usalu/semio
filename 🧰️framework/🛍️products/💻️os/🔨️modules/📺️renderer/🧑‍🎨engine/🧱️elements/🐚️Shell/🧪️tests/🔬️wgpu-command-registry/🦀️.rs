@@ -34,6 +34,7 @@ pub(super) fn test_app(commands: Vec<CommandDefinition>, mode_commands: Vec<Comm
         .expect("non-empty"),
         panel_tabs: vec![PanelTabDefinition { kind: PanelTabKind::App("tab".into()), label: LocalizedLabel::data("Tab"), group: PanelGroup::Workbench, body_key: Some("tab.body".into()), children: vec![] }],
         keybindings: vec![],
+        actions: vec![],
         utilities: vec![],
         tools: vec![],
         commands,
@@ -766,9 +767,9 @@ fn build_os_commands_covers_every_wired_setting() {
     let shell = test_shell_state();
     let commands = shell.build_os_commands();
     let ids: Vec<String> = commands.iter().map(|command| command.id.clone()).collect();
-    assert_eq!(ids, vec!["os.toggleFullscreen", "os.setAppearance", "os.setDriver", "os.setLocale", "os.setTerminology", "os.setThemeId", "os.resetDock",]);
+    assert_eq!(ids, vec!["os.toggleFullscreen", "os.setAppearance", "os.setDriver", "os.setLocale", "os.setTerminology", "os.setThemeId", "os.openTaskManager", "os.openHub", "os.resetDock",]);
     let icons: Vec<&str> = commands.iter().map(|command| command.icon_id.as_str()).collect();
-    assert_eq!(icons, vec!["code", "settings", "settings", "settings", "settings", "settings", "panel-left"]);
+    assert_eq!(icons, vec!["code", "settings", "settings", "settings", "settings", "settings", "cpu", "users", "panel-left"]);
 }
 
 #[test]
@@ -862,15 +863,15 @@ fn command_category_label_titleizes_hyphenated_ids() {
 }
 
 #[test]
-fn command_search_items_expands_select_options_and_tags_os_category() {
+fn command_search_items_stages_arg_commands_and_tags_os_category() {
     let mut shell = test_shell_state();
     shell.session = Some(ActiveSession { plugin_id: "test".into(), instance_id: 0, app: test_app(vec![], vec![]), view_state: ViewModel::default() });
     let items = shell.command_search_items();
-    let appearance_dark = items.iter().find(|item| item.id == "command.os:os.setAppearance.dark").expect("expanded dark option present");
-    assert_eq!(appearance_dark.label, "Set Appearance: Dark");
-    assert_eq!(appearance_dark.action.as_deref(), Some("os-command:os.setAppearance:dark"));
-    assert_eq!(appearance_dark.category, Some(CommandOwnerAddress::Os));
-    let reset_dock = items.iter().find(|item| item.id == "command.os:os.resetDock").expect("zero-arg reset dock present");
+    let appearance = items.iter().find(|item| item.id == "command.os.os.setAppearance").expect("one staged appearance command present");
+    assert_eq!(appearance.label, "Set Appearance…");
+    assert_eq!(appearance.action.as_deref(), Some("command-form:os:os.setAppearance"));
+    assert_eq!(appearance.category, Some(CommandOwnerAddress::Os));
+    let reset_dock = items.iter().find(|item| item.id == "command.os.os.resetDock").expect("zero-arg reset dock present");
     assert_eq!(reset_dock.action.as_deref(), Some("os-command:os.resetDock"));
     assert!(reset_dock.dispatch_action.is_none());
 }
@@ -928,8 +929,8 @@ fn build_command_panel_ui_groups_rows_under_category_headers() {
     };
     // 🗂️ One section per distinct `CommandDefinition.category`: fullscreen is in window,
     // appearance contains setAppearance/setThemeId, layout contains setDriver/resetDock, and
-    // language contains setLocale/setTerminology.
-    assert_eq!(panel.children.len(), 4);
+    // language contains setLocale/setTerminology, and general contains the route-owned Hub opener.
+    assert_eq!(panel.children.len(), 5);
 }
 
 // 🔎️ The three laws below used to be asserted against this target's own hand-rolled

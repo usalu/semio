@@ -98,7 +98,7 @@ fn check(id: &str) {
         GrantBytes::CommandMinusOne => command_bytes - 1,
         GrantBytes::ExactCommand => command_bytes,
     };
-    let mut job = TxnFixtureJob { command: Some(command), completion: Some(completion), count: 0, closing: false };
+    let mut job = TxnFixtureJob { command: Some(command), completion: Some(completion), count: 0, raw: None, page: 0, closing: false };
     if case.begin_close {
         job.begin_close();
     }

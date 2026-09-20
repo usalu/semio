@@ -49,3 +49,12 @@ pub fn plugin() -> Result<Plugin<ProcessApps>, PluginAssemblyError> {
         .requests(CapabilityRequest { id: CapabilityId("artifacts.write".into()), scope: "plugin".into(), reason: "persist process3d machine-assignment edits to the open document".into(), optional: false })
         .try_build()
 }
+
+//#region 🪢️TaxonomyMounts
+#[path = "🎟️capabilities/🦀️.rs"]
+pub mod capabilities;
+#[path = "📜️manifest/🦀️.rs"]
+pub mod manifest;
+#[path = "🔧️setup/🦀️.rs"]
+pub mod setup;
+//#endregion 🪢️TaxonomyMounts

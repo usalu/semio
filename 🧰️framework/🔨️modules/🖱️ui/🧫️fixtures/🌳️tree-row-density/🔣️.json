@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "rowHeightPx": 24,
+  "rowIconPx": 16,
+  "intrinsicContentHeightPx": 1344,
+  "categoryCount": 1,
+  "actionCount": 55,
+  "visibleViewportHeightPx": 480,
+  "firstRows": ["action.clearSelection", "action.selectAll"],
+  "terminalRowId": "action.engagementAbort",
+  "scrollDeltaPx": 864
+}

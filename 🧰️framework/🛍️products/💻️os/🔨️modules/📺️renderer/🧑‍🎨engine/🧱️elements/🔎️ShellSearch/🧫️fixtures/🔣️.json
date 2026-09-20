@@ -1,0 +1,196 @@
+{
+  "geometry": {
+    "uiSpacingPx": 3.2,
+    "desktopMaxWidthPx": 512,
+    "viewportInsetUiSpacing": 7,
+    "inputHeightUiSpacing": 9,
+    "inputPaddingXUiSpacing": 3,
+    "inputGapUiSpacing": 1,
+    "inputIconUiSpacing": 5,
+    "listMaxHeightUiSpacing": 93.75,
+    "groupPaddingUiSpacing": 1,
+    "headingPaddingXUiSpacing": 1,
+    "headingPaddingYUiSpacing": 1,
+    "rowPaddingXUiSpacing": 1,
+    "rowPaddingYUiSpacing": 3,
+    "emptyPaddingYUiSpacing": 7
+  },
+  "controls": {
+    "searchDialogId": "ui.search.dialog",
+    "searchInputId": "ui.search.input",
+    "findDialogId": "ui.find.dialog",
+    "findInputId": "ui.find.input",
+    "searchListId": "ui.search.list",
+    "searchCloseId": "ui.search.close",
+    "findListId": "ui.find.list",
+    "findCloseId": "ui.find.close"
+  },
+  "interaction": {
+    "activation": "uncancelledPrimaryReleaseOnSameRow",
+    "cancelledRelease": "keepOpen",
+    "dismissalQuery": "preserve",
+    "selectionQuery": "clear"
+  },
+  "accessibility": {
+    "inputRole": "combobox",
+    "listRole": "listbox",
+    "groupRole": "group",
+    "itemRole": "option",
+    "emptyRole": "status",
+    "dialogRole": "dialog",
+    "closeRole": "button",
+    "inputEditable": true,
+    "inputControlsList": true,
+    "inputOwnsActiveDescendant": true
+  },
+  "normalization": {
+    "form": "NFKD",
+    "stripCategory": "M",
+    "limit": 96,
+    "cases": [
+      {
+        "value": "Rückgängig",
+        "expected": "ruckgangig"
+      },
+      {
+        "value": "Rückgängig",
+        "expected": "ruckgangig"
+      },
+      {
+        "value": "Prüfpunkt festschreiben",
+        "expected": "prufpunkt festschreiben"
+      },
+      {
+        "value": "Ｓｅｔ Ｔｈｅｍｅ",
+        "expected": "set theme"
+      },
+      {
+        "value": "Oﬃce",
+        "expected": "office"
+      }
+    ]
+  },
+  "locales": {
+    "en": {
+      "searchTitle": "Search",
+      "searchDescription": "Search for items",
+      "searchPlaceholder": "Search...",
+      "findTitle": "Find",
+      "findDescription": "Find items in this view",
+      "findPlaceholder": "Find...",
+      "empty": "No results found.",
+      "close": "Close"
+    },
+    "de": {
+      "searchTitle": "Suche",
+      "searchDescription": "Nach Elementen suchen",
+      "searchPlaceholder": "Suchen...",
+      "findTitle": "Finden",
+      "findDescription": "Elemente in dieser Ansicht finden",
+      "findPlaceholder": "Finden...",
+      "empty": "Keine Ergebnisse gefunden.",
+      "close": "Schliessen"
+    }
+  },
+  "producer": {
+    "baseOrder": [
+      "panel.catalogue",
+      "window.canvas",
+      "command.os.os.resetDock",
+      "command.os.os.setThemeId"
+    ],
+    "hostSuffixOrder": [
+      "spawn.plugin.space",
+      "studio.undo",
+      "studio.redo",
+      "studio.home"
+    ],
+    "forbiddenIds": [
+      "keybinding.Mod+K",
+      "studio.commitCheckpoint",
+      "studio.goHome"
+    ],
+    "stagedCommand": {
+      "id": "command.os.os.setThemeId",
+      "label": "Set Theme…",
+      "actionPrefix": "command-form:",
+      "expandedKey": "os:os.setThemeId"
+    },
+    "localizedCommands": [
+      {
+        "id": "os.setThemeId",
+        "labels": {
+          "en": "Set Theme",
+          "de": "Thema festlegen"
+        }
+      }
+    ]
+  },
+  "items": [
+    {
+      "id": "panel.catalogue",
+      "label": "Catalogue",
+      "category": "Panels"
+    },
+    {
+      "id": "window.canvas",
+      "label": "Canvas",
+      "category": "Windows"
+    },
+    {
+      "id": "command.os.os.resetDock",
+      "label": "Reset Dock Layout",
+      "category": "Layout"
+    },
+    {
+      "id": "command.os.os.setThemeId",
+      "label": "Set Theme…",
+      "category": "Appearance"
+    },
+    {
+      "id": "spawn.plugin.space",
+      "label": "Spawn semio · space",
+      "category": "Catalogue"
+    },
+    {
+      "id": "studio.undo",
+      "label": "Undo",
+      "category": "Space"
+    },
+    {
+      "id": "studio.redo",
+      "label": "Redo",
+      "category": "Space"
+    },
+    {
+      "id": "studio.home",
+      "label": "Go Home",
+      "category": "Navigation"
+    }
+  ],
+  "queries": [
+    {
+      "query": "",
+      "expectedIds": [
+        "panel.catalogue",
+        "window.canvas",
+        "command.os.os.resetDock",
+        "command.os.os.setThemeId",
+        "spawn.plugin.space",
+        "studio.undo",
+        "studio.redo",
+        "studio.home"
+      ]
+    },
+    {
+      "query": "Set Theme",
+      "expectedIds": [
+        "command.os.os.setThemeId"
+      ]
+    },
+    {
+      "query": "zzzz",
+      "expectedIds": []
+    }
+  ]
+}

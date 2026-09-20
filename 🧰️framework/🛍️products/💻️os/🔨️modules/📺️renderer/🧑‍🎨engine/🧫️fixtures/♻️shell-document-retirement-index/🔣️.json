@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "capacity": 512,
+  "wordBits": 64,
+  "wordCount": 8,
+  "indexBytes": 72,
+  "initial": {
+    "cursor": 129,
+    "occupied": [1, 130, 511]
+  },
+  "steps": [
+    { "op": "closePage", "slot": 130, "terminal": false, "nextCursor": 131, "occupiedCount": 3 },
+    { "op": "closePage", "slot": 511, "terminal": true, "nextCursor": 0, "occupiedCount": 2 },
+    { "op": "admit", "slot": 0, "epoch": 1, "occupiedCount": 3 },
+    { "op": "closePage", "slot": 0, "terminal": false, "nextCursor": 1, "occupiedCount": 3 },
+    { "op": "closePage", "slot": 1, "terminal": true, "nextCursor": 2, "occupiedCount": 2 },
+    { "op": "admit", "slot": 1, "epoch": 2, "occupiedCount": 3 },
+    { "op": "closePage", "slot": 130, "terminal": true, "nextCursor": 131, "occupiedCount": 2 },
+    { "op": "closePage", "slot": 0, "terminal": true, "nextCursor": 1, "occupiedCount": 1 },
+    { "op": "closePage", "slot": 1, "terminal": true, "nextCursor": 2, "occupiedCount": 0 }
+  ]
+}

@@ -1,9 +1,9 @@
 use super::*;
-use crate::editor::fem3d::unit_tests::context::{dispatch, fem3d_app};
+use crate::editor::fem3d::unit_tests::context::{dispatch, fem3d_demo_app};
 use crate::editor::fem3d::Fem3dCommand;
 
 fn demo() -> Fem3dSnapshot {
-    crate::standards::v1::subsets::any::schema::snapshot::text::fem3d_boot_snapshot()
+    crate::standards::v1::subsets::any::schema::snapshot::text::fem3d_demo_snapshot()
 }
 
 fn emit(snapshot: &Fem3dSnapshot, payload: PatchNode) -> Result<Emit<Fem3dMutation, NoConfigMutation>, Fault> {
@@ -15,7 +15,7 @@ fn emit(snapshot: &Fem3dSnapshot, payload: PatchNode) -> Result<Emit<Fem3dMutati
 
 #[semio_framework_async_macros::async_test]
 async fn patch_node_moves_an_ordinate_on_the_live_demo_3d() {
-    let mut app = fem3d_app();
+    let mut app = fem3d_demo_app().await;
     dispatch(&mut app, Fem3dCommand::PatchNode(PatchNode { id: "n20_l1".into(), field: "z".into(), value: "3.1".into() })).await;
     let snapshot = app.snapshot().expect("snapshot");
     let node = snapshot.nodes.iter().find(|node| node.id == "n20_l1").expect("n20_l1 survives the patch");

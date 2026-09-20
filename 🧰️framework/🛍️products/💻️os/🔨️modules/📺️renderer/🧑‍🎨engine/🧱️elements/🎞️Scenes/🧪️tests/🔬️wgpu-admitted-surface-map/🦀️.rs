@@ -1,4 +1,3 @@
-
 use super::*;
 
 #[test]
@@ -85,7 +84,9 @@ fn production_surface_authority_has_no_hash_map_or_structural_deref() {
 /// 🧾️ `elementSizeBytes`/`ownerSizeBytes` are a RECEIPT, not a ceiling. `World3dState` is the surface
 /// payload of a live element and every field added to it moves both numbers — `brush_mesh_run:
 /// Option<WorldBrushMeshRun>` moved the slot from 22 752 to 22 920 bytes and the owner from 48 608 to
-/// 48 944. A mismatch therefore says "the payload grew, re-measure and recommit the receipt"; what the
+/// 48 944. The bounded camera-fit request/owner/cursor then moved the slot from 23 208 to 23 336
+/// bytes (+128) and the two-slot owner from 49 528 to 49 784 (+256). A mismatch therefore says "the
+/// payload grew, re-measure and recommit the receipt"; what the
 /// law actually defends is the two invariants around the numbers: the owner stays far smaller than
 /// `capacity × elementSizeBytes` (so the slots live on the heap and not in an inline `[T; N]` field),
 /// and the whole table still constructs inside `boundedThreadStackBytes`. Recommitting the measured
@@ -98,11 +99,21 @@ fn admitted_surface_slot_tables_are_heap_first_and_fit_a_bounded_thread_stack() 
         .expect("🧱️ the budget lists its tables")
         .iter()
         .filter(|table| table["guard"] == "renderer::scenes")
-        .map(|table| semio_framework_async::FixedSlotTableBudget::new(table["owner"].as_str().expect("owner"), table["capacity"].as_u64().expect("capacity") as usize, table["elementSizeBytes"].as_u64().expect("element bytes") as usize, table["ownerSizeBytes"].as_u64().expect("owner bytes") as usize))
+        .map(|table| {
+            semio_framework_async::FixedSlotTableBudget::new(
+                table["owner"].as_str().expect("owner"),
+                table["capacity"].as_u64().expect("capacity") as usize,
+                table["elementSizeBytes"].as_u64().expect("element bytes") as usize,
+                table["ownerSizeBytes"].as_u64().expect("owner bytes") as usize,
+            )
+        })
         .collect();
-    let measured = vec![
-        semio_framework_async::FixedSlotTableBudget::new("scenes::AdmittedSurfaceMap<World3dState>", SCENE_SURFACE_CAPACITY, size_of::<Option<AdmittedSurfaceEntry<infinite_world::world::World3dState>>>(), size_of::<AdmittedSurfaceMap<infinite_world::world::World3dState>>()),
-    ];
+    let measured = vec![semio_framework_async::FixedSlotTableBudget::new(
+        "scenes::AdmittedSurfaceMap<World3dState>",
+        SCENE_SURFACE_CAPACITY,
+        size_of::<Option<AdmittedSurfaceEntry<infinite_world::world::World3dState>>>(),
+        size_of::<AdmittedSurfaceMap<infinite_world::world::World3dState>>(),
+    )];
     semio_framework_async::assert_fixed_slot_tables(
         "renderer::scenes",
         fixture["boundedThreadStackBytes"].as_u64().expect("bounded stack budget") as usize,
@@ -110,7 +121,7 @@ fn admitted_surface_slot_tables_are_heap_first_and_fit_a_bounded_thread_stack() 
         &declared,
         &measured,
         || {
-        drop(AdmittedSurfaceMap::<infinite_world::world::World3dState>::default());
+            drop(AdmittedSurfaceMap::<infinite_world::world::World3dState>::default());
         },
     );
 }

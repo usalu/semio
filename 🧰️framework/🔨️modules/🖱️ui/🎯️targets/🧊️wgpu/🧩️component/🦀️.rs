@@ -957,7 +957,17 @@ pub mod layout {
         WindowLayout { root: WindowLayoutRoot::Stack(WindowLayoutStackNode { kind: kind_stack(), size: None, active_window_kind_id: None, children }) }
     }
 
+    /// 🪟️ `direction` is an AXIS direction (`row`/`column`). `stack` is not an axis — it is the
+    /// tabbed leaf container — so a `stack` request is answered with the single stack root
+    /// [`create_stack_layout`] mints. Minting `Axis { kind: "stack" }` instead put a stack node
+    /// under a node the whole shell reads AS a stack, and every consumer that walks a stack's
+    /// children as window leaves (the React seed resolver
+    /// `convertFrameworkLayoutNodeToModeLayout`) then produced windows with no id — which is how
+    /// `🎞️animate` booted with zero panes (ticket 26/09/18, slice F1).
     pub fn create_default_layout(window_ids: &[String], direction: &str, sizes: Option<&[f64]>, titles: Option<&[String]>) -> WindowLayout {
+        if direction == kind_stack() {
+            return create_stack_layout(window_ids, titles);
+        }
         let mut children = Vec::with_capacity(window_ids.len());
         for (index, id) in window_ids.iter().enumerate() {
             let window = create_window_layout(id.clone(), titles.and_then(|rows| rows.get(index).cloned()).or_else(|| Some(id.clone())), None, None);
@@ -2641,7 +2651,10 @@ pub mod ui {
                 max: None,
                 step: None,
                 accept: None,
-                on_submit: None, on_abort: None, on_repeat_last: None, presence: UiPresence::default(),
+                on_submit: None,
+                on_abort: None,
+                on_repeat_last: None,
+                presence: UiPresence::default(),
             })),
             description: None,
             required: None,
@@ -2733,12 +2746,15 @@ pub mod ui {
         UiNode::Tree(if tree_sections.is_empty() {
             UiTreeNode {
                 menu: None,
-                sections: vec![UiTreeSectionNode { window: None,
+                sections: vec![UiTreeSectionNode {
+                    window: None,
                     id: "empty".into(),
                     label: None,
                     default_open: None,
                     presence: UiPresence::default(),
-                    items: vec![UiTreeItemNode { window: None, granularity: None,
+                    items: vec![UiTreeItemNode {
+                        window: None,
+                        granularity: None,
                         id: "empty".into(),
                         label: Label::data("—"),
                         description: None,
@@ -2766,7 +2782,9 @@ pub mod ui {
 
     fn ui_declarative_child_to_tree_item(node: &UiNode, fallback_id: String) -> UiTreeItemNode {
         match node {
-            UiNode::Text(text) => UiTreeItemNode { window: None, granularity: None,
+            UiNode::Text(text) => UiTreeItemNode {
+                window: None,
+                granularity: None,
                 menu: None,
                 id: format!("{}.text", fallback_id),
                 label: text.value.clone(),
@@ -2784,7 +2802,9 @@ pub mod ui {
             },
             UiNode::Field(field) => {
                 let description = if let UiNode::Input(input) = field.child.as_ref() { input.placeholder.clone().map(Label::into_string).or_else(|| if input.value.is_empty() { None } else { Some(input.value.clone()) }) } else { None };
-                UiTreeItemNode { window: None, granularity: None,
+                UiTreeItemNode {
+                    window: None,
+                    granularity: None,
                     menu: None,
                     id: field.id.clone(),
                     label: field.label.clone(),
@@ -2801,7 +2821,9 @@ pub mod ui {
                     dimmed: None,
                 }
             }
-            UiNode::Button(button) => UiTreeItemNode { window: None, granularity: None,
+            UiNode::Button(button) => UiTreeItemNode {
+                window: None,
+                granularity: None,
                 menu: None,
                 id: button.id.clone().unwrap_or(fallback_id),
                 label: button.label.clone(),
@@ -2825,7 +2847,9 @@ pub mod ui {
                 for (index, child) in group.children.iter().enumerate() {
                     items.push(ui_declarative_child_to_tree_item(child, format!("{}.{}", group.id, index)));
                 }
-                UiTreeItemNode { window: None, granularity: None,
+                UiTreeItemNode {
+                    window: None,
+                    granularity: None,
                     menu: None,
                     id: group.id.clone(),
                     label: group.label.clone(),
@@ -2847,7 +2871,9 @@ pub mod ui {
             UiNode::NumberStepper(stepper) => tree_control_item(stepper.id.clone(), UiControlNode::NumberStepper(stepper.clone())),
             UiNode::Ring(ring) => tree_control_item(ring.id.clone(), UiControlNode::Ring(ring.clone())),
             UiNode::IconSelect(icon_select) => tree_control_item(icon_select.id.clone(), UiControlNode::IconSelect(icon_select.clone())),
-            UiNode::Separator(_) => UiTreeItemNode { window: None, granularity: None,
+            UiNode::Separator(_) => UiTreeItemNode {
+                window: None,
+                granularity: None,
                 menu: None,
                 id: format!("{}.sep", fallback_id),
                 label: Label::data("—"),
@@ -2863,7 +2889,9 @@ pub mod ui {
                 control: None,
                 dimmed: None,
             },
-            other => UiTreeItemNode { window: None, granularity: None,
+            other => UiTreeItemNode {
+                window: None,
+                granularity: None,
                 menu: None,
                 id: fallback_id,
                 label: Label::data(format!("{other:?}")),
@@ -2883,7 +2911,9 @@ pub mod ui {
     }
 
     fn tree_control_item(id: String, control: UiControlNode) -> UiTreeItemNode {
-        UiTreeItemNode { window: None, granularity: None,
+        UiTreeItemNode {
+            window: None,
+            granularity: None,
             menu: None,
             id,
             label: Label::data(String::new()),
@@ -2996,9 +3026,9 @@ pub mod ui {
         world3d_snapshot_admit_page, world3d_snapshot_begin, world3d_snapshot_begin_close, world3d_snapshot_claim_draw_permit, world3d_snapshot_close_step, world3d_snapshot_seal, world3d_snapshot_terminal_is_empty, world3d_snapshot_with_page,
         world3d_snapshot_write_terminal_is_empty, BlockListScene, Board2dScene, Canvas2dRejectedSnapshotPage, Canvas2dScene, Canvas2dSnapshotDescriptor, Canvas2dSnapshotFault, Canvas2dSnapshotLease, Canvas2dSnapshotPage, Canvas2dSnapshotWriteToken,
         DiffViewScene, EventFeedScene, GraphTimelineScene, IconRenderScene, InkCanvasScene, NodeGraphEdgeRecord, NodeGraphFindItem, NodeGraphHover, NodeGraphNodeRecord, NodeGraphOperatorChannelRecord, NodeGraphOperatorRecord,
-        NodeGraphOperatorVariadicRecord, NodeGraphPortRecord, NodeGraphScene, Paint2dScene, SceneDoc, TableScene, TextEditorScene, TiledMapScene, VirtualFileSystemScene, World3dRejectedSnapshotPage, World3dScene,
-        World3dSnapshotDescriptor, World3dSnapshotDrawPermit, World3dSnapshotFault, World3dSnapshotItem, World3dSnapshotLease, World3dSnapshotPage, World3dSnapshotPageKind, World3dSnapshotSpan, World3dSnapshotWriteToken,
-        WORLD3D_SNAPSHOT_PAGE_CAPACITY, WORLD3D_SNAPSHOT_PAGE_ITEM_CAPACITY,
+        NodeGraphOperatorVariadicRecord, NodeGraphPortRecord, NodeGraphScene, Paint2dScene, SceneDoc, TableScene, TextEditorScene, TiledMapScene, VirtualFileSystemScene, World3dRejectedSnapshotPage, World3dScene, World3dSnapshotDescriptor,
+        World3dSnapshotDrawPermit, World3dSnapshotFault, World3dSnapshotItem, World3dSnapshotLease, World3dSnapshotPage, World3dSnapshotPageKind, World3dSnapshotSpan, World3dSnapshotWriteToken, WORLD3D_SNAPSHOT_PAGE_CAPACITY,
+        WORLD3D_SNAPSHOT_PAGE_ITEM_CAPACITY,
     };
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]

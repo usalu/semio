@@ -1,0 +1,39 @@
+{
+  "schemaVersion": 1,
+  "axes": [
+    { "key": "labels", "labelKey": "settings.driver.labels", "options": ["full", "icons"] },
+    { "key": "labelTier", "labelKey": "settings.driver.labelTier", "options": ["beginner", "normal"] },
+    { "key": "drag", "labelKey": "settings.driver.drag", "options": ["handle", "surface"] },
+    { "key": "chrome", "labelKey": "settings.driver.chrome", "options": ["always", "hover"] },
+    { "key": "gumball", "labelKey": "settings.driver.gumball", "options": ["always", "hover"] },
+    { "key": "tooltips", "labelKey": "settings.driver.tooltips", "options": ["full", "minimal", "none"] },
+    { "key": "hotkeys", "labelKey": "settings.driver.hotkeys", "options": ["inline", "tooltip", "none"] }
+  ],
+  "builtins": {
+    "default": { "id": "default", "label": "Default", "labels": "full", "labelTier": "normal", "drag": "handle", "chrome": "always", "gumball": "always", "tooltips": "full", "hotkeys": "inline" },
+    "compact": { "id": "compact", "label": "Compact", "labels": "icons", "labelTier": "normal", "drag": "surface", "chrome": "hover", "gumball": "hover", "tooltips": "none", "hotkeys": "none" }
+  },
+  "transitions": {
+    "edit": { "selected": "default", "key": "labels", "value": "icons", "dirty": true, "liveValue": "icons", "persistedValue": "full" },
+    "select": { "selected": "compact", "dirty": false, "liveValue": "none" },
+    "save": { "label": " Focus Flow ", "id": "custom.focus-flow", "selected": "custom.focus-flow", "dirty": false, "saveLabel": "" },
+    "delete": { "id": "custom.focus-flow", "selected": "default", "dirty": false }
+  },
+  "controls": [
+    "framework.settings.driver.labels",
+    "framework.settings.driver.labelTier",
+    "framework.settings.driver.drag",
+    "framework.settings.driver.chrome",
+    "framework.settings.driver.gumball",
+    "framework.settings.driver.tooltips",
+    "framework.settings.driver.hotkeys",
+    "framework.settings.driver.saveLabel",
+    "framework.settings.driver.save",
+    "framework.settings.driver.delete"
+  ],
+  "oracles": {
+    "reactDriver": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🚗️UiDriver/🟦️.tsx",
+    "reactPanel": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/📌️ChromePanels/🟦️.tsx",
+    "reactHost": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🟦️.tsx"
+  }
+}

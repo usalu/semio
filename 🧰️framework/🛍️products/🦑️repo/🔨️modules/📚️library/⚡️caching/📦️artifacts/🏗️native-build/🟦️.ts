@@ -1,11 +1,81 @@
-import { chmodSync, copyFileSync, lstatSync, mkdirSync, mkdtempSync, rmSync } from "node:fs";
+import { chmodSync, copyFileSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
-import { spawn } from "node:child_process";
+import { spawn, spawnSync } from "node:child_process";
+import { createHash } from "node:crypto";
 import { createInterface } from "node:readline";
 import { getWorkspaceRoot } from "../../../🗂️workspaces/🟦️.ts";
 import { startNativeProgress } from "../../../🏃️process/🎛️owned-execution/🟦️.ts";
 import { stageArtifacts } from "../🟦️.ts";
+
+/** ✍️ Re-signs a native executable on macOS, ad-hoc, and does nothing anywhere else.
+ *
+ * A Mach-O binary carries its code signature inside the file, and the kernel validates it against
+ * the bytes on disk. A copied or rewritten executable whose signature no longer matches is not
+ * rejected with a message — it is `SIGKILL`ed without one. Signing every distribution copy ad-hoc
+ * (`--sign -`) is what keeps that from happening. This is *not* Developer ID signing or
+ * notarization: a binary signed this way still trips Gatekeeper when it arrives from the internet
+ * on someone else's Mac, which needs a signing identity this repository does not have. */
+export function signExecutableForDistribution(binary: string): void {
+  if (process.platform !== "darwin") return;
+  const signed = spawnSync("codesign", ["--force", "--sign", "-", binary], { stdio: ["ignore", "inherit", "inherit"] });
+  if (signed.status !== 0) throw new Error(`codesign refused ${binary} (status ${signed.status ?? "unknown"})`);
+}
+
+/** 📥️ Places an executable at `destination`: remove, copy, then sign — never an overwrite in place.
+ *
+ * Writing over a running or previously-signed Mach-O binary is the exact shape that produces a
+ * silent `SIGKILL` on the next launch, so the old inode is unlinked first and the fresh copy is
+ * signed afterwards. */
+export function installExecutable(source: string, destination: string): void {
+  mkdirSync(dirname(destination), { recursive: true });
+  rmSync(destination, { force: true });
+  copyFileSync(source, destination);
+  chmodSync(destination, lstatSync(source).mode & 0o777);
+  signExecutableForDistribution(destination);
+}
+
+/** 🏷️ The one version every crate in this workspace carries (`[workspace.package] version`). */
+export function workspaceCargoVersion(repoRoot = getWorkspaceRoot()): string {
+  const manifest = readFileSync(join(repoRoot, "Cargo.toml"), "utf8");
+  const heading = "[workspace.package]";
+  const start = manifest.indexOf(heading);
+  if (start < 0) throw new Error("Cargo.toml declares no [workspace.package] section");
+  const rest = manifest.slice(start + heading.length);
+  const end = rest.indexOf("\n[");
+  const version = /^\s*version\s*=\s*"([^"]+)"/m.exec(end < 0 ? rest : rest.slice(0, end));
+  if (!version) throw new Error("Cargo.toml declares no [workspace.package] version");
+  return version[1];
+}
+
+/** 🚚️ Packages one already-built native executable as a versioned, checksummed local tarball.
+ *
+ * This is the last mile a release build was missing: a compiled binary sitting in a project's
+ * `dist/` is not something an operator can be handed. It produces
+ * `<output>/<name>-<version>-<platform>-<arch>.tar.gz` plus a `.sha256` next to it, and **uploads
+ * nothing anywhere** — where the artifact goes afterwards is a deployment decision this repository
+ * does not take. Returns the tarball path. */
+export function packageNativeRelease(options: { readonly binary: string; readonly name: string; readonly version: string; readonly output: string; readonly platform?: NodeJS.Platform; readonly arch?: string }): string {
+  const platform = options.platform ?? process.platform;
+  const arch = options.arch ?? process.arch;
+  if (!lstatSync(options.binary).isFile()) throw new Error(`no release binary at ${options.binary}`);
+  mkdirSync(options.output, { recursive: true });
+  const filename = `${options.name}-${options.version}-${platform}-${arch}.tar.gz`;
+  const tarball = join(options.output, filename);
+  const payload = mkdtempSync(join(options.output, "payload-"));
+  try {
+    installExecutable(options.binary, join(payload, `${options.name}-${options.version}`, options.name));
+    rmSync(tarball, { force: true });
+    const archived = spawnSync("tar", ["-czf", tarball, "-C", payload, `${options.name}-${options.version}`], { stdio: ["ignore", "inherit", "inherit"] });
+    if (archived.status !== 0) throw new Error(`tar refused ${tarball} (status ${archived.status ?? "unknown"})`);
+  } finally {
+    rmSync(payload, { recursive: true, force: true });
+  }
+  const digest = createHash("sha256").update(readFileSync(tarball)).digest("hex");
+  writeFileSync(`${tarball}.sha256`, `${digest}  ${filename}\n`);
+  console.log(`[publish] ${tarball}\n[publish] sha256 ${digest}`);
+  return tarball;
+}
 
 /** 📦️ Captures Cargo's declared deliverables, including link dependencies, without copying compiler state. */
 export async function buildCargoArtifacts(manifest: string, args: string[] = [], repoRoot = getWorkspaceRoot(), options: { command?: "build" | "rustc"; output?: string; validate?: (files: ReadonlyMap<string, string>) => void } = {}): Promise<void> {

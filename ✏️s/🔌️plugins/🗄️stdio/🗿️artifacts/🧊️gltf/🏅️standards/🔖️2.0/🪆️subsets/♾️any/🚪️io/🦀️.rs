@@ -633,3 +633,14 @@ pub mod io_registry {
     }
 }
 //#endregion 🚪️DerivedIoRegistry
+
+//#region 🪢️TaxonomyMounts
+#[path = "📤️export/🧵️serializers/🗿️artifacts/🔣️json/🦀️.rs"]
+pub mod serializers_artifacts_json;
+#[path = "📤️export/🧵️serializers/🗿️artifacts/🦀️.rs"]
+pub mod export_serializers_artifacts;
+#[path = "📥️import/🧩️deserializers/🗿️artifacts/🔣️json/🦀️.rs"]
+pub mod deserializers_artifacts_json;
+#[path = "📥️import/🧩️deserializers/🗿️artifacts/🦀️.rs"]
+pub mod import_deserializers_artifacts;
+//#endregion 🪢️TaxonomyMounts

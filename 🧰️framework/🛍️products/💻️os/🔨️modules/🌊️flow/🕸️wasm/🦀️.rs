@@ -5391,6 +5391,50 @@ impl FlowActionState for FlowAction2607 {
     }
 }
 
+struct FlowAction2608 {
+    program: FlowProgramState,
+}
+
+impl FlowActionState for FlowAction2608 {
+    #[cfg(test)]
+    fn operation(&self) -> u16 {
+        2_608
+    }
+
+    fn advance(&mut self, domain: &mut FlowDomainAdapter, args: &FlowArguments, budget: AbiWorkBudget) -> FlowFeatureStep {
+        if budget.cancelled || budget.interrupted || budget.deadline_ms.is_some_and(|deadline| budget.now_ms >= deadline) || budget.byte_credit == 0 {
+            return FlowFeatureStep::Failed(abi_failure(if budget.cancelled {
+                AbiErrorCode::Cancelled
+            } else if budget.interrupted {
+                AbiErrorCode::Interrupted
+            } else if budget.deadline_ms.is_some_and(|deadline| budget.now_ms >= deadline) {
+                AbiErrorCode::DeadlineExceeded
+            } else {
+                AbiErrorCode::NoCredit
+            }));
+        }
+        match self.program.phase {
+            FlowProgramPhase::Decode => self.program.decode_step(args),
+            FlowProgramPhase::Validate => self.program.validate_step(args),
+            FlowProgramPhase::Checkpoint => self.program.checkpoint_step(2_608),
+            FlowProgramPhase::Domain if self.program.domain_cursor == 0 => self.program.domain_ready_step(),
+            FlowProgramPhase::Domain => {
+                let result: Result<Vec<u8>, FlowFailure> = flow_result! {
+                    {
+                        domain.host.pointer_cancel_screen();
+                        ok()
+                    }
+                };
+                self.program.finish_domain(result)
+            }
+            FlowProgramPhase::Encode => self.program.encode_step(),
+            FlowProgramPhase::Publish => self.program.publish_step(domain, 2_608),
+            FlowProgramPhase::Complete => self.program.complete_step(),
+            FlowProgramPhase::Sealed => FlowFeatureStep::Yield,
+        }
+    }
+}
+
 struct FlowAction2609 {
     program: FlowProgramState,
 }
@@ -5579,6 +5623,7 @@ fn flow_action(operation: u16, arguments: &FlowArguments) -> Option<Box<dyn Flow
         2_605 => Some(Box::new(FlowAction2605 { program: FlowProgramState::new(arguments) })),
         2_606 => Some(Box::new(FlowAction2606 { program: FlowProgramState::new(arguments) })),
         2_607 => Some(Box::new(FlowAction2607 { program: FlowProgramState::new(arguments) })),
+        2_608 => Some(Box::new(FlowAction2608 { program: FlowProgramState::new(arguments) })),
         2_609 => Some(Box::new(FlowAction2609 { program: FlowProgramState::new(arguments) })),
         2_610 => Some(Box::new(FlowAction2610 { program: FlowProgramState::new(arguments) })),
         _ => None,

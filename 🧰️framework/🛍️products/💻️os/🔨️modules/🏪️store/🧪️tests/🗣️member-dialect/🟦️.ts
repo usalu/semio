@@ -4,7 +4,6 @@ const testSourceUrl = new URL("../../🧩️composition/🪪️member-dialect/�
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import Ajv from "ajv";
-import Ajv from "ajv";
 import { createRequire } from "node:module";
 import { testInitialChildIdentityFixture } from "../🪪️initial-child-identity/🟦️.ts";
 
@@ -72,7 +71,7 @@ export function testMemberDialectFixture(): void {
     assert.equal(projected, oracle, row.id);
     assert.equal(projected, row.projected, row.id);
     const canonical = (refs: Array<{ slot: string; childId: string }>) => refs.toSorted((a, b) => JSON.stringify([a.slot, a.childId]).localeCompare(JSON.stringify([b.slot, b.childId])));
-    const admitted = projected && row.incoming.length === row.parent.length && row.incoming.every((ref: object, index: number) => row.parent.some((expected: object) => Object.entries(expected).every(([key, value]) => ref[key] === value)) && !row.incoming.slice(0, index).some((prior: { childId: string }) => prior.childId === ref["childId"]));
+    const admitted = projected && row.incoming.length === row.parent.length && row.incoming.every((ref: Record<string, unknown>, index: number) => row.parent.some((expected: object) => Object.entries(expected).every(([key, value]) => ref[key] === value)) && !row.incoming.slice(0, index).some((prior: { childId: string }) => prior.childId === ref["childId"]));
     assert.equal(admitted, projected && ajv.compile({ const: canonical(row.parent) })(canonical(row.incoming)), row.id);
     assert.equal(admitted, row.accepted, row.id);
   }

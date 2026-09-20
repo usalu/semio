@@ -5,12 +5,22 @@ import { BundleScript, discoverPackages, getWorkspaceRoot, inspectRustModuleGrap
 import { registrySchemaValidator } from "../✅️catalog-verification/🟦️.ts";
 import { EXAMPLES_DIRNAME, EXAMPLE_ASSETS_DIRNAME, EXAMPLE_RUST_LEAF, EXAMPLE_TESTS_DIRNAME, EXAMPLE_TS_LEAF, FORBIDDEN_EXAMPLE_PLURAL_DIRS, PLUGIN_AREAS, RUST_LANG, TAXONOMY, isExampleSlugName, primaryFilenameForKind } from "../🔎️discovery/🟦️.ts";
 import { PlaygroundEntry } from "../🎮️playground/🔎️discovery/🟦️.ts";
+import type { SemanticFacetPrimaryFileProjectionContract } from "../../../../../🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts";
 
 
 //#endregion 🎮️PlaygroundSession
 
-/** @emoji 🚦️ Cross-checks the flattened playground catalog for global uniqueness, multi-app crate discipline, and resolvable file-backed asset declarations; returns human-readable violations. */
-export function validatePlaygroundRegistry(playgrounds: PlaygroundEntry[], repoRoot: string): string[] {
+/** @emoji 🚦️ Cross-checks the flattened playground catalog for global uniqueness, multi-app crate discipline, and resolvable file-backed asset declarations; returns human-readable violations.
+ *
+ * `hostPluginIds` names the plugin(s) whose crate declares `[package.metadata.semio].host`. The
+ * multi-app rule below must not fire on that crate's SHELL row: `defaultHostVariant`
+ * (`🎮️playground/🔎️discovery/🟦️.ts:210-214`) states the opposite contract in its own comment — "the
+ * host crate also ships ordinary artifact apps as their own single-app playgrounds (Home, Space); the
+ * row that boots the SHELL is the one naming no `app`" — and it *requires* exactly one app-less row
+ * there. Without this exemption the two laws contradict each other and the whole gate aborts before
+ * a single taxonomy row is rendered, which is what `🪐️space` did the moment its Home/Space app
+ * variants were declared beside the `s` shell. */
+export function validatePlaygroundRegistry(playgrounds: PlaygroundEntry[], repoRoot: string, hostPluginIds: ReadonlySet<string>): string[] {
   const errors: string[] = [];
   const variantOwners = new Map<string, string>();
   const aliasOwners = new Map<string, string>();
@@ -63,8 +73,14 @@ export function validatePlaygroundRegistry(playgrounds: PlaygroundEntry[], repoR
   }
   for (const group of entriesByCrate.values()) {
     if (group.length <= 1) continue;
+    // 🏠️ On the host crate the single app-less row IS the shell session, required by
+    // `defaultHostVariant`; a SECOND app-less row there is still a violation, and so is any app-less
+    // row on a crate that declares no host table.
+    const hostShellRows = group.filter((entry) => hostPluginIds.has(entry.pluginId) && !entry.app);
     for (const entry of group) {
-      if (!entry.app) errors.push(`playground variant "${entry.variant}" in ${entry.cratePath} must set "app" (crate declares ${group.length} playground entries)`);
+      if (entry.app) continue;
+      if (hostShellRows.length === 1 && hostShellRows[0] === entry) continue;
+      errors.push(`playground variant "${entry.variant}" in ${entry.cratePath} must set "app" (crate declares ${group.length} playground entries)`);
     }
   }
   return errors;
@@ -154,6 +170,19 @@ export const TAXONOMY_LEAF_FILENAME = primaryFilenameForKind(TAXONOMY.ecosystems
 /** 🥒️ Gherkin feature leaf that marks a directory as a repository test-platform case. */
 export const TEST_FEATURE_FILENAME = primaryFilenameForKind(TAXONOMY.testFeatureFileKindId);
 
+/** @emoji 🧭️ One `semantic-facet-primary-file` projection contract, read through its own discriminant.
+ *
+ * `semanticOwnedFileProjectionContracts` holds a union, and its `exact-owner-path-catalog` member
+ * names `sourceBasenames` rather than one `sourceFilename` — so a lookup that simply reads
+ * `.sourceFilename` is asking a contract that may not have one. Refusing by name here keeps the
+ * taxonomy the single authority and makes a retired contract id a loud failure. */
+function semanticFacetPrimaryProjection(contractId: string): SemanticFacetPrimaryFileProjectionContract {
+  const contract = TAXONOMY.semanticOwnedFileProjectionContracts[contractId];
+  if (contract === undefined) throw new Error(`taxonomy declares no ${contractId} owned-file projection contract`);
+  if (contract.contractKind !== "semantic-facet-primary-file") throw new Error(`${contractId} is a ${contract.contractKind} contract, not a semantic-facet-primary-file one`);
+  return contract;
+}
+
 /** 📌️ The tracked marker that makes a lane DELIBERATELY empty rather than missing.
  *
  * Resolved from `semanticOwnedFileProjectionContracts["artifact-empty-facet-primary-markdown-v1"]`
@@ -161,7 +190,7 @@ export const TEST_FEATURE_FILENAME = primaryFilenameForKind(TAXONOMY.testFeature
  * A plugin-root lane carrying only this marker publishes nothing on purpose: 33 of the 34 plugins
  * declare no plugin-scope command, and a stub `🦀️.rs` for each would put 33 entries into
  * `PluginManifest::commands` that no plugin actually offers. */
-export const PLUGIN_EMPTY_LANE_FILENAME = TAXONOMY.semanticOwnedFileProjectionContracts["artifact-empty-facet-primary-markdown-v1"].sourceFilename;
+export const PLUGIN_EMPTY_LANE_FILENAME = semanticFacetPrimaryProjection("artifact-empty-facet-primary-markdown-v1").sourceFilename;
 
 /** @emoji 🚪️ Rust entry filename and its Shape V2 home relative to the owner root. */
 export const RUST_LIBRARY_ENTRY_CONTRACT_ID = TAXONOMY.ecosystems[RUST_LANG].entryContractIds.find((contractId) => TAXONOMY.configurableEntryContracts[contractId]?.role === "library");
@@ -172,7 +201,13 @@ export const RUST_ENTRY_FILENAME = TAXONOMY.configurableEntryContracts[RUST_LIBR
 
 export const RUST_ENTRY_DIR_FROM_OWNER = TAXONOMY.rustEntryPathRules.entryDirFromOwner.split("/");
 
-export const WINDOW_EMPTY_FACET_FILENAME = primaryFilenameForKind(TAXONOMY.windowEmptyFacetFileKindId);
+/** @emoji 📌️ The empty-facet marker a surface/mode/window lane carries, resolved from the SAME
+ * projection contract as `PLUGIN_EMPTY_LANE_FILENAME`. `windowEmptyFacetFileKindId` names the file
+ * KIND (`markdown`), whose primary filename is the generic `📝️.md`; the contract names the FILE
+ * (`📌️.empty.md`) and cites that kind as its `fileKindAuthority`. Deriving the name from the kind
+ * dropped the contract's own spelling, so `new surface` wrote a marker no lane on disk uses — 4265
+ * markers are `📌️.empty.md` and the only `📝️.md` lanes in the plugin tree came from that drift. */
+export const WINDOW_EMPTY_FACET_FILENAME = PLUGIN_EMPTY_LANE_FILENAME;
 
 
 /** @emoji 🧭️ Plugin roots discovered via the shared package contract (`role = "plugin"`, rust, owner
@@ -538,7 +573,11 @@ export function validateTaxonomyTree(pluginRoot: string, pluginId: string): stri
   for (const { abs: surfaceAbs, label } of surfaceDirs) {
     const surfaceExamples = join(surfaceAbs, EXAMPLES_DIRNAME);
     if (!existsSync(surfaceExamples)) continue;
-    const surfaceSets = listDirs(surfaceExamples);
+    // 🧪️ `🧪️tests`/`🧫️fixtures` beside the example slugs are the examples' OWN test owners, not a
+    // fourth example — the same exclusion the subset-level walk makes below. Without it a surface's
+    // `📚️examples/🧪️tests/` is asked for a `🦀️.rs`, a `🟦️.ts`, an `🖼️assets/` and a `🧪️tests/` of its
+    // own, and `🧪️tests` even passes the emoji+VS16+kebab slug pattern, so nothing else catches it.
+    const surfaceSets = listDirs(surfaceExamples).filter((name) => name !== TAXONOMY.testsDirName && name !== TAXONOMY.testFixturesDirName);
     if (surfaceSets.length === 0) {
       findings.push(`${pluginId}: surface "${label}" ${EXAMPLES_DIRNAME} has no example slug`);
     }

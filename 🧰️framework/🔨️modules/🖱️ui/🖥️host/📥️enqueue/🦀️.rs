@@ -109,8 +109,8 @@ pub struct InputGeneration(pub u64);
 
 impl InputGeneration {
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
-    pub fn next(self) -> Self {
-        Self(self.0.wrapping_add(1))
+    pub fn checked_next(self) -> Option<Self> {
+        self.0.checked_add(1).map(Self)
     }
 }
 
@@ -124,6 +124,7 @@ pub struct PointerMoveSample {
     pub pointer: ui_render::PointerInfo,
     pub x: f32,
     pub y: f32,
+    pub modifiers: ui_render::EventModifiers,
     pub generation: InputGeneration,
 }
 
@@ -135,6 +136,7 @@ pub struct ScrollSample {
     pub y: f32,
     pub delta_x: f32,
     pub delta_y: f32,
+    pub modifiers: ui_render::EventModifiers,
     pub generation: InputGeneration,
 }
 
@@ -177,6 +179,7 @@ impl CoalesceSlot {
                 existing.y = sample.y;
                 existing.delta_x += sample.delta_x;
                 existing.delta_y += sample.delta_y;
+                existing.modifiers = sample.modifiers;
                 existing.generation = sample.generation;
             }
             None => self.scroll = Some(sample),
@@ -237,8 +240,7 @@ pub enum EnqueueOutcome {
 
 /// 📬️ The whole enqueue-only sink a [`crate::window::WindowDelegate`] host writes into:
 /// [`CoalesceSlot`] for replaceable state plus a bounded [`DiscreteEvent`] queue for everything else.
-/// Preallocated once at construction (`with_capacity`), never reallocated on the hot path short of
-/// genuine overflow.
+/// Backing is admitted with the first discrete event and retained until explicit terminal retirement.
 pub struct EventQueue {
     #[cfg(test)]
     root: Option<std::num::NonZeroU64>,
@@ -252,7 +254,7 @@ pub struct EventQueue {
 impl EventQueue {
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn new() -> Self {
-        Self { #[cfg(test)] root: None, coalesced: CoalesceSlot::new(), discrete: std::collections::VecDeque::with_capacity(DISCRETE_QUEUE_CAPACITY), generation: InputGeneration::default(), overflow_count: 0, discrete_bytes: 0 }
+        Self { #[cfg(test)] root: None, coalesced: CoalesceSlot::new(), discrete: std::collections::VecDeque::new(), generation: InputGeneration::default(), overflow_count: 0, discrete_bytes: 0 }
     }
 
     #[cfg(test)]
@@ -278,35 +280,50 @@ impl EventQueue {
     /// directly with the raw event.
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn enqueue(&mut self, _ui: UiThreadToken, event: DispatchEvent) -> EnqueueOutcome {
-        self.generation = self.generation.next();
-        let generation = self.generation;
-        match event {
-            DispatchEvent::PointerMove { pointer, x, y } => {
-                self.coalesced.coalesce_pointer_move(PointerMoveSample { pointer, x, y, generation });
+        let Some(generation) = self.generation.checked_next() else {
+            self.overflow_count = self.overflow_count.saturating_add(1);
+            return EnqueueOutcome::Overflow;
+        };
+        let outcome = match event {
+            DispatchEvent::PointerMove { pointer, x, y, modifiers } => {
+                self.coalesced.coalesce_pointer_move(PointerMoveSample { pointer, x, y, modifiers, generation });
                 EnqueueOutcome::Accepted
             }
-            DispatchEvent::Scroll { x, y, delta_x, delta_y } => {
-                self.coalesced.coalesce_scroll(ScrollSample { x, y, delta_x, delta_y, generation });
+            DispatchEvent::Scroll { x, y, delta_x, delta_y, modifiers } => {
+                self.coalesced.coalesce_scroll(ScrollSample { x, y, delta_x, delta_y, modifiers, generation });
                 EnqueueOutcome::Accepted
             }
             other => self.push_discrete(other, generation),
+        };
+        if outcome == EnqueueOutcome::Accepted {
+            self.generation = generation;
         }
+        outcome
     }
 
     /// 📐️ [`crate::window::WindowMetrics`] funnels through here rather than [`Self::enqueue`] — it is
     /// not a [`ui_render::DispatchEvent`] variant at all (see `window.rs`'s own `WindowDelegate::
     /// handle_metrics`), but is exactly as replaceable as pointer move/scroll.
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
-    pub fn enqueue_metrics(&mut self, _ui: UiThreadToken, physical_width: u32, physical_height: u32, scale_factor: f32) {
-        self.generation = self.generation.next();
-        self.coalesced.coalesce_metrics(MetricsSample { physical_width, physical_height, scale_factor, generation: self.generation });
+    pub fn enqueue_metrics(&mut self, _ui: UiThreadToken, physical_width: u32, physical_height: u32, scale_factor: f32) -> EnqueueOutcome {
+        let Some(generation) = self.generation.checked_next() else {
+            self.overflow_count = self.overflow_count.saturating_add(1);
+            return EnqueueOutcome::Overflow;
+        };
+        self.coalesced.coalesce_metrics(MetricsSample { physical_width, physical_height, scale_factor, generation });
+        self.generation = generation;
+        EnqueueOutcome::Accepted
     }
 
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn push_discrete(&mut self, event: DispatchEvent, generation: InputGeneration) -> EnqueueOutcome {
         let bytes = event_owned_bytes(&event);
         if bytes > DISCRETE_EVENT_BYTE_CAPACITY || self.discrete.len() >= DISCRETE_QUEUE_CAPACITY || self.discrete_bytes.saturating_add(bytes) > DISCRETE_QUEUE_BYTE_CAPACITY {
-            self.overflow_count += 1;
+            self.overflow_count = self.overflow_count.saturating_add(1);
+            return EnqueueOutcome::Overflow;
+        }
+        if self.discrete.capacity() < DISCRETE_QUEUE_CAPACITY && self.discrete.try_reserve_exact(DISCRETE_QUEUE_CAPACITY - self.discrete.len()).is_err() {
+            self.overflow_count = self.overflow_count.saturating_add(1);
             return EnqueueOutcome::Overflow;
         }
         self.discrete.push_back(DiscreteEvent { event, generation });
@@ -354,11 +371,15 @@ impl EventQueue {
             self.discrete_bytes = self.discrete_bytes.saturating_sub(event_owned_bytes(&event.event));
             return false;
         }
+        if self.discrete.capacity() != 0 {
+            self.discrete = std::collections::VecDeque::new();
+            return false;
+        }
         true
     }
 
     pub fn terminal_is_empty(&self) -> bool {
-        self.is_empty()
+        self.is_empty() && self.discrete.capacity() == 0
     }
 }
 
@@ -382,6 +403,14 @@ fn event_owned_bytes(event: &DispatchEvent) -> usize {
         DispatchEvent::KeyDown { key, .. } | DispatchEvent::KeyUp { key, .. } => key.len(),
         DispatchEvent::TextInput { text } | DispatchEvent::Paste { text } | DispatchEvent::TextEditChunk { text, .. } => text.len(),
         DispatchEvent::Ime(ui_render::ImeEvent::Update { text, .. }) | DispatchEvent::Ime(ui_render::ImeEvent::Commit { text }) => text.len(),
+        DispatchEvent::Accessibility { target, event } => {
+            target.window_id.len()
+                + target.node_key.len()
+                + match event {
+                    ui_render::AccessibilityEvent::Value(value) => value.len(),
+                    ui_render::AccessibilityEvent::Focus | ui_render::AccessibilityEvent::Blur | ui_render::AccessibilityEvent::Activate => 0,
+                }
+        }
         _ => 0,
     }
 }

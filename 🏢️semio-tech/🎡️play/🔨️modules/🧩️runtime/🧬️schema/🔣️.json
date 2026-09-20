@@ -36,9 +36,15 @@
         "label": { "type": "string", "minLength": 1 },
         "tagline": { "type": "string", "minLength": 1 },
         "description": { "type": "string", "minLength": 1 },
-        "icon": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" }
+        "icon": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
+        "example": { "$ref": "#/$defs/PlayExampleId" }
       }
     },
-    "PlayVariant": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" }
+    "PlayVariant": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
+    "PlayExampleId": {
+      "description": "The curated example this pane boots on, as the owning app's plugin manifest declares it; absent when the app declares no example for its dialect.",
+      "type": "string",
+      "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+    }
   }
 }

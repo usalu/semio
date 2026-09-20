@@ -67,7 +67,7 @@ async fn change_height_m_committed_json_is_canonical() {
     }
     let reencoded = serde_json::to_value(mutation()).expect("change-height-m mutation encodes");
     let original: serde_json::Value = serde_json::from_str(MUTATION).expect("change-height-m mutation reparses");
-    assert_eq!(reencoded, original, "change-height-m/raises-height-m-to-18-75: committed mutation JSON is not the canonical externally-tagged ChangeHeightM form carrying newHeightM");
+    assert_eq!(reencoded, original, "change-height-m/raises-height-m-to-18-75: committed mutation JSON is not the canonical internally-tagged ChangeHeightM form carrying mutation and newHeightM");
 }
 
 /// 🎯️ The declared outcome holds: `change-height-m` at 18.75 is applied, not rejected, and carries no

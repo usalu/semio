@@ -11,6 +11,14 @@
 //! serialized through it by a production call site outside this module (the `wasm32-wasip2`
 //! component build) — see its own doc comment. `extras`/`extensions` are typed via this module's
 //! own [`GltfJson`] value enum, never `serde_json::Value`.
+//!
+//! 🔀️ The two codecs AGREE on empty arrays, and must: `🚪️io`'s `.gltf`/`.glb` writer serializes the
+//! real file through `#[value]` (`to_json_string_pretty` → `pack::json`), not through `serde`, and
+//! glTF 2.0 declares `scene.nodes`, `node.children`, `mesh.weights`, … optional with `minItems: 1`
+//! — an empty array on the wire is a spec-INVALID `.gltf`. Both therefore carry
+//! `skip_serializing_if = "Vec::is_empty"`, which `glb_json_padding_is_space_and_bin_padding_is_zero`
+//! also depends on (it predicts the JSON chunk's real length with `serde_json`). `#[value(default)]`
+//! keeps the read direction lenient, so an encoder that does spell `"children": []` still decodes.
 
 use crate::engine::{GltfAccessorType, GltfComponentType};
 use crate::STDIO_GLTF_DOCUMENT_SCHEMA;
@@ -171,6 +179,31 @@ impl dsl::FromValue for GltfJson {
         })
     }
 }
+
+/// 🕳️ The field codec EVERY `extras`/`extensions` slot uses, because absence and a present JSON
+/// `null` are DIFFERENT states here and the blanket `impl<T: FromValue> FromValue for Option<T>`
+/// folds both into `None`. `change-node-extra-data`'s own vocabulary spells the distinction out
+/// (`GltfDataPresence::{Absent, Present { value }}`, and `Present { value: Null }` is a legal,
+/// separately-validated state), so a snapshot that loses it cannot round-trip its own mutations —
+/// `"extras": null` decoded to `None`, re-encoded to nothing, and the canonical vector's projection
+/// failed on the missing key. Paired with the field's bare `#[value(default)]`, a MISSING key still
+/// decodes to `None`; only a present one reaches this.
+pub mod present_json {
+    use super::GltfJson;
+
+    // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+    pub fn to_value(value: &Option<GltfJson>) -> dsl::DslValue {
+        match value {
+            Some(inner) => dsl::ToValue::to_value(inner),
+            None => dsl::DslValue::Null,
+        }
+    }
+
+    // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+    pub fn from_value(value: dsl::DslValue) -> Result<Option<GltfJson>, dsl::ValueError> {
+        <GltfJson as dsl::FromValue>::from_value(value).map(Some)
+    }
+}
 //#endregion 🔖️GltfJson
 
 //#region 🔖️OrderedAttrMap
@@ -314,10 +347,10 @@ pub struct GltfAsset {
     #[value(default, skip_serializing_if = "Option::is_none", rename = "minVersion")]
     pub min_version: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[value(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none", with = "present_json")]
     pub extensions: Option<GltfJson>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[value(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none", with = "present_json")]
     pub extras: Option<GltfJson>,
 }
 
@@ -341,10 +374,10 @@ pub struct GltfScene {
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub name: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[value(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none", with = "present_json")]
     pub extensions: Option<GltfJson>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[value(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none", with = "present_json")]
     pub extras: Option<GltfJson>,
 }
 //#endregion 🔖️Scene
@@ -390,10 +423,10 @@ pub struct GltfNode {
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub name: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[value(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none", with = "present_json")]
     pub extensions: Option<GltfJson>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[value(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none", with = "present_json")]
     pub extras: Option<GltfJson>,
 }
 //#endregion 🔖️Node
@@ -440,10 +473,10 @@ pub struct GltfPrimitive {
     #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub targets: Vec<GltfMorphTarget>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[value(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none", with = "present_json")]
     pub extensions: Option<GltfJson>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[value(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none", with = "present_json")]
     pub extras: Option<GltfJson>,
 }
 
@@ -462,10 +495,10 @@ pub struct GltfMesh {
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub name: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[value(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none", with = "present_json")]
     pub extensions: Option<GltfJson>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[value(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none", with = "present_json")]
     pub extras: Option<GltfJson>,
 }
 //#endregion 🔖️Mesh
@@ -537,10 +570,10 @@ pub struct GltfAccessor {
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub name: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[value(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none", with = "present_json")]
     pub extensions: Option<GltfJson>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[value(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none", with = "present_json")]
     pub extras: Option<GltfJson>,
 }
 //#endregion 🔖️Accessor
@@ -566,10 +599,10 @@ pub struct GltfBufferView {
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub name: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[value(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none", with = "present_json")]
     pub extensions: Option<GltfJson>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[value(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none", with = "present_json")]
     pub extras: Option<GltfJson>,
 }
 //#endregion 🔖️BufferView
@@ -589,10 +622,10 @@ pub struct GltfBuffer {
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub name: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[value(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none", with = "present_json")]
     pub extensions: Option<GltfJson>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[value(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none", with = "present_json")]
     pub extras: Option<GltfJson>,
 }
 //#endregion 🔖️Buffer
@@ -609,10 +642,10 @@ pub struct GltfTextureInfo {
     #[value(default = "default_zero_u64", skip_serializing_if = "is_zero_u64", rename = "texCoord")]
     pub tex_coord: u64,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[value(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none", with = "present_json")]
     pub extensions: Option<GltfJson>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[value(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none", with = "present_json")]
     pub extras: Option<GltfJson>,
 }
 
@@ -629,10 +662,10 @@ pub struct GltfNormalTextureInfo {
     #[value(default = "default_one_f64", skip_serializing_if = "is_one_f64")]
     pub scale: f64,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[value(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none", with = "present_json")]
     pub extensions: Option<GltfJson>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[value(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none", with = "present_json")]
     pub extras: Option<GltfJson>,
 }
 
@@ -649,10 +682,10 @@ pub struct GltfOcclusionTextureInfo {
     #[value(default = "default_one_f64", skip_serializing_if = "is_one_f64")]
     pub strength: f64,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[value(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none", with = "present_json")]
     pub extensions: Option<GltfJson>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[value(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none", with = "present_json")]
     pub extras: Option<GltfJson>,
 }
 
@@ -677,10 +710,10 @@ pub struct GltfPbrMetallicRoughness {
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub metallic_roughness_texture: Option<GltfTextureInfo>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[value(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none", with = "present_json")]
     pub extensions: Option<GltfJson>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[value(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none", with = "present_json")]
     pub extras: Option<GltfJson>,
 }
 
@@ -743,10 +776,10 @@ pub struct GltfMaterial {
     #[value(default, skip_serializing_if = "is_false")]
     pub double_sided: bool,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[value(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none", with = "present_json")]
     pub extensions: Option<GltfJson>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[value(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none", with = "present_json")]
     pub extras: Option<GltfJson>,
 }
 
@@ -785,10 +818,10 @@ pub struct GltfTexture {
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub name: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[value(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none", with = "present_json")]
     pub extensions: Option<GltfJson>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[value(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none", with = "present_json")]
     pub extras: Option<GltfJson>,
 }
 
@@ -811,10 +844,10 @@ pub struct GltfImage {
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub name: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[value(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none", with = "present_json")]
     pub extensions: Option<GltfJson>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[value(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none", with = "present_json")]
     pub extras: Option<GltfJson>,
 }
 
@@ -839,10 +872,10 @@ pub struct GltfSampler {
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub name: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[value(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none", with = "present_json")]
     pub extensions: Option<GltfJson>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[value(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none", with = "present_json")]
     pub extras: Option<GltfJson>,
 }
 
@@ -872,10 +905,10 @@ pub struct GltfSkin {
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub name: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[value(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none", with = "present_json")]
     pub extensions: Option<GltfJson>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[value(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none", with = "present_json")]
     pub extras: Option<GltfJson>,
 }
 //#endregion 🔖️Skin
@@ -909,10 +942,10 @@ pub struct GltfAnimationChannelTarget {
     pub node: Option<usize>,
     pub path: GltfAnimationPath,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[value(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none", with = "present_json")]
     pub extensions: Option<GltfJson>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[value(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none", with = "present_json")]
     pub extras: Option<GltfJson>,
 }
 
@@ -924,10 +957,10 @@ pub struct GltfAnimationChannel {
     pub sampler: usize,
     pub target: GltfAnimationChannelTarget,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[value(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none", with = "present_json")]
     pub extensions: Option<GltfJson>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[value(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none", with = "present_json")]
     pub extras: Option<GltfJson>,
 }
 
@@ -962,10 +995,10 @@ pub struct GltfAnimationSampler {
     pub interpolation: GltfInterpolation,
     pub output: usize,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[value(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none", with = "present_json")]
     pub extensions: Option<GltfJson>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[value(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none", with = "present_json")]
     pub extras: Option<GltfJson>,
 }
 
@@ -984,10 +1017,10 @@ pub struct GltfAnimation {
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub name: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[value(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none", with = "present_json")]
     pub extensions: Option<GltfJson>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[value(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none", with = "present_json")]
     pub extras: Option<GltfJson>,
 }
 //#endregion 🔖️Animation
@@ -1003,10 +1036,10 @@ pub struct GltfOrthographic {
     pub zfar: f64,
     pub znear: f64,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[value(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none", with = "present_json")]
     pub extensions: Option<GltfJson>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[value(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none", with = "present_json")]
     pub extras: Option<GltfJson>,
 }
 
@@ -1024,10 +1057,10 @@ pub struct GltfPerspective {
     pub zfar: Option<f64>,
     pub znear: f64,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[value(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none", with = "present_json")]
     pub extensions: Option<GltfJson>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[value(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none", with = "present_json")]
     pub extras: Option<GltfJson>,
 }
 
@@ -1274,10 +1307,10 @@ pub struct GltfDocument {
     #[value(default, skip_serializing_if = "Vec::is_empty", rename = "extensionsRequired")]
     pub extensions_required: Vec<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[value(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none", with = "present_json")]
     pub extensions: Option<GltfJson>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[value(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none", with = "present_json")]
     pub extras: Option<GltfJson>,
 }
 

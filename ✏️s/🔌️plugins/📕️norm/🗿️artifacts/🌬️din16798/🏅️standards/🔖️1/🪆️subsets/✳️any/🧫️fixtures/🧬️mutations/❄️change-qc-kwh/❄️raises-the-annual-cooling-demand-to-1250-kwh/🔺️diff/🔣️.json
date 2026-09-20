@@ -50,7 +50,7 @@
   "coolingReferenceKwh": null,
   "chillerType": null,
   "eerActual": null,
-  "qCKwh": 1250,
+  "qCKwh": 1250.0,
   "generationReferenceKwh": null,
   "dataCenterSupplyC": null,
   "hStWK": null,

@@ -98,15 +98,82 @@ fn gpu_publish_freshness_uses_the_live_cpu_identity_metrics_document_and_scene()
 }
 
 #[cfg(test)]
+fn raster_lifecycle_packet(scene_revision: u64, metrics_generation: u64) -> EngineCanvasPacket {
+    let id = EngineSurfaceId::try_from_str("raster-lifecycle").expect("bounded raster lifecycle identity");
+    EngineCanvasPacket {
+        surface: EngineSurfaceIdentity { token: EngineSurfaceToken { slot: 0, generation: 7 }, id },
+        document_generation: 5,
+        scene_revision,
+        metrics_generation,
+        scene: canvas::Scene::new(),
+        scene_retirement: None,
+        scene_retirement_faulted: false,
+        clear: Color::new([0.0, 0.0, 0.0, 1.0]),
+        width: 64,
+        height: 48,
+    }
+}
+
+#[cfg(test)]
 #[test]
-fn normal_replacement_drains_displaced_renderer_view_texture_before_next_candidate() {
+fn gpu_candidate_executes_reuse_publication_changed_tuple_rejection_and_metrics_invalidation() {
+    let expected = ui_wgpu::wgpu::RasterTextureWitness { scene_revision: 5, preview_generation: 7, operation: 11 };
+    let packet = raster_lifecycle_packet(9, 13);
+    let mut fresh_slot = EngineGpuSlot::new();
+    fresh_slot.id = Some(packet.surface.id);
+    fresh_slot.generation = packet.surface.token.generation;
+    fresh_slot.candidate = Some(EngineGpuCandidate::new(&packet, expected, 17));
+    fresh_slot.candidate.as_mut().expect("fresh candidate").phase = EngineGpuBuildPhase::Publish;
+    assert_eq!(fresh_slot.publish_candidate(&packet, expected, 17), Ok(false));
+    assert!(fresh_slot.candidate.as_ref().is_some_and(EngineGpuCandidate::terminal_is_empty));
+
+    let changed = raster_lifecycle_packet(10, 13);
+    let mut changed_slot = EngineGpuSlot::new();
+    changed_slot.id = Some(packet.surface.id);
+    changed_slot.generation = packet.surface.token.generation;
+    changed_slot.candidate = Some(EngineGpuCandidate::new(&packet, expected, 17));
+    changed_slot.candidate.as_mut().expect("changed candidate").phase = EngineGpuBuildPhase::Publish;
+    assert_eq!(changed_slot.publish_candidate(&changed, expected, 17).expect_err("changed tuple rejects publication"), "engine CPU/GPU publication freshness changed");
+    assert_eq!(changed_slot.candidate.as_ref().map(|candidate| candidate.phase), Some(EngineGpuBuildPhase::ClosingAdmission));
+
+    let mut presenter = EngineCanvasPresenter::default();
+    {
+        let slot = &mut presenter.slots_mut().expect("presenter slots")[0];
+        slot.id = Some(packet.surface.id);
+        slot.generation = packet.surface.token.generation;
+        slot.candidate = Some(EngineGpuCandidate::new(&packet, expected, 17));
+        slot.candidate.as_mut().expect("metrics candidate").phase = EngineGpuBuildPhase::Publish;
+    }
+    assert!(presenter.observe_primary_metrics_generation(18));
+    assert!(!presenter.invalidate_primary_metrics_step());
+    assert_eq!(presenter.slots().expect("presenter slots")[0].candidate.as_ref().map(|candidate| candidate.phase), Some(EngineGpuBuildPhase::ClosingAdmission));
+    let mut completed = None;
+    for turn in 0..=ENGINE_SURFACE_CAPACITY {
+        if presenter.invalidate_primary_metrics_step() {
+            completed = Some(turn);
+            break;
+        }
+    }
+    assert_eq!(completed, Some(ENGINE_SURFACE_CAPACITY - 1));
+    let slot = &mut presenter.slots_mut().expect("presenter slots")[0];
+    let candidate = slot.candidate.take().expect("invalidated candidate");
+    assert_eq!(candidate.phase, EngineGpuBuildPhase::ClosingAdmission);
+    slot.id = None;
+    assert!(presenter.terminal_is_empty());
+}
+
+#[cfg(test)]
+#[test]
+fn rendered_target_transfers_to_the_table_without_an_unused_second_target() {
     let source = include_str!("../../🎯️targets/🧊️wgpu/🦀️.rs");
     let start = source.find("pub(crate) fn realize_step").unwrap_or(0);
     let end = source[start..].find("pub(crate) fn close_active_candidate_step").map(|offset| start + offset).unwrap_or(source.len());
     let mounted = &source[start..end];
-    assert!(mounted.contains("if let Some(retirement) = slot.retirement.as_mut()"));
-    assert!(mounted.contains("retirement.close_step() && retirement.terminal_is_empty()"));
-    assert!(source.contains("self.retirement = Some(EngineGpuRetirement::new(displaced))"));
+    assert!(mounted.contains("build.phase = EngineGpuBuildPhase::RetireRenderer"));
+    assert!(mounted.contains("if build.renderer.take().is_some()"));
+    assert_eq!(mounted.matches("create_target_texture(gpu.device(), build.width, build.height)").count(), 1);
+    assert!(!source.contains("replacement_texture"));
+    assert!(!source.contains("EngineGpuSurface"));
 }
 
 #[cfg(test)]

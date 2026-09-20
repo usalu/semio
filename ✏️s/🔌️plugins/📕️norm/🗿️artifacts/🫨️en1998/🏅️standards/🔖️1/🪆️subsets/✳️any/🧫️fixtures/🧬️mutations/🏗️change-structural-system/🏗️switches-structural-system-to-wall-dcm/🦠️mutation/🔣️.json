@@ -1,5 +1,4 @@
 {
-  "ChangeStructuralSystem": {
-    "newStructuralSystem": "wall_dcm"
-  }
+  "mutation": "changeStructuralSystem",
+  "newStructuralSystem": "wall_dcm"
 }

@@ -27,7 +27,7 @@
   "stainlessWPlMm3": null,
   "stainlessFYMpa": null,
   "platedLambdaP": 1.25,
-  "platedSigmaEdMpa": 275,
+  "platedSigmaEdMpa": 275.0,
   "siloTMm": null,
   "siloRMm": null,
   "shellSigmaXEdMpa": null,

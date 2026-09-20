@@ -1349,8 +1349,10 @@ pub fn create_fem2d_app() -> semio_framework_plugin::AppDefinition {
                 ActionArgDef::number("deformationScale", LocalizedLabel::native("Deformation Scale", "Verformungsmaßstab")),
             ])
             .mutation("removeSelection", LocalizedLabel::native("Remove Selection", "Auswahl entfernen"))
+            .action_destructive("removeSelection")
             .action_with(semio_framework_plugin::ActionDefinition::new("setCamera", LocalizedLabel::native("Set Camera", "Kamera festlegen"), semio_framework_plugin::ActionKind::View, "camera"))
             .action_with(semio_framework_plugin::ActionDefinition::new("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"), semio_framework_plugin::ActionKind::Mutation, "panel-left"))
+            .action_destructive("setActiveExample")
             // 📚️ The option id is the bundled example's own `ExampleSource` id, because the shell's
             // navbar switcher dispatches `setActiveExample { exampleId }` straight from
             // `PluginManifest.examples` (`ShellHost`'s `dispatchActiveExample`) — a select option that

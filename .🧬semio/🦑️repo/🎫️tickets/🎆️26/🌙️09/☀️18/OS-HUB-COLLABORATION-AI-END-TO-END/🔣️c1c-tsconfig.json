@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "extends": "../../../../../../../tsconfig.json",
+  "compilerOptions": {
+    "incremental": false,
+    "tsBuildInfoFile": null,
+    "types": [
+      "bun",
+      "node",
+      "react",
+      "react-dom",
+      "vite/client"
+    ]
+  },
+  "include": [],
+  "files": [
+    "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🔐️sign-in/🟦️.ts",
+    "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🏘️spaces/🟦️.ts",
+    "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔗️HubConnection/🟦️.tsx",
+    "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔐️HubSignIn/🟦️.tsx",
+    "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏘️SpaceBrowser/🟦️.tsx",
+    "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔐️HubSignIn/🧪️tests/🧩️component/🟦️.tsx",
+    "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏘️SpaceBrowser/🧪️tests/🧩️component/🟦️.tsx",
+    "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔐️HubSignIn/📖️stories/🧪️.story.tsx",
+    "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏘️SpaceBrowser/📖️stories/🧪️.story.tsx",
+    "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔗️HubConnection/🏛️workspace/🟦️.tsx",
+    "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🟦️.tsx",
+    "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👷️worker/🟦️.ts",
+    "../../../../../../../🧰️framework/🛍️products/💻️os/🟦️.ts",
+    "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🪪️session-refresh/🪪️session-port/🟦️.ts",
+    "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🪪️session-refresh/🟦️.ts",
+    "../../../../../../../🧰️framework/🛍️products/💻️os/🧪️tests/🧪️space-artifact-creation-owner/🟦️.ts"
+  ]
+}

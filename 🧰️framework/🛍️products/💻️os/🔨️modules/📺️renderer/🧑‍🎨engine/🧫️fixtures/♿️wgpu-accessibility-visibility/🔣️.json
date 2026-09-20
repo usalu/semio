@@ -1,0 +1,8 @@
+{
+  "schema": "semio.renderer.wgpu.accessibility-visibility.v1",
+  "liveWindows": ["perspective", "framework.settings.application", "framework.settings.general"],
+  "visibleWindows": ["perspective", "framework.settings.general"],
+  "unnamedPublished": ["perspective", "framework.settings.general", "shell.chrome"],
+  "requestedDiagnostic": { "requested": "framework.settings.application", "published": ["framework.settings.application"] },
+  "hiddenEvent": { "windowId": "framework.settings.application", "accepted": false }
+}

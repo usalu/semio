@@ -2735,6 +2735,8 @@ export const uiChromeTranslationBundles = {
               map: { label: { normal: "Karte", beginner: "Karte" } },
               canvas: { label: { normal: "Leinwand", beginner: "Leinwand" } },
               chrome: { label: { normal: "Oberfläche", beginner: "Oberfläche" } },
+              outcome: { label: { normal: "Ergebnis", beginner: "Farben für Fehler und Erfolg" } },
+              diagram: { label: { normal: "Diagramm", beginner: "Farben für Diagramme" } },
             },
             contrast: {
               label: { label: { normal: "Kontrast", beginner: "Lesbarkeit des Textes" } },
@@ -2943,6 +2945,11 @@ export const uiChromeTranslationBundles = {
         blockList: {
           steps: { label: { normal: "Schritte", beginner: "Schritte" } },
           addStep: { label: { normal: "Schritt hinzufügen", beginner: "Schritt hinzufügen" } },
+        },
+        tableStepper: {
+          decrement: { label: { normal: "Verringern", beginner: "Weniger" } },
+          increment: { label: { normal: "Erhöhen", beginner: "Mehr" } },
+          value: { label: { normal: "Wert", beginner: "Wert" } },
         },
         docs: {
           navigation: {
@@ -3162,6 +3169,9 @@ export const uiChromeTranslationBundles = {
           role: {
             author: { label: { normal: "Bearbeitet", beginner: "Bearbeitet" } },
             spectator: { label: { normal: "Betrachtet", beginner: "Betrachtet" } },
+          },
+          kind: {
+            agent: { label: { normal: "KI-Agent", beginner: "Ein KI-Agent, dem jemand Zugriff erteilt hat" } },
           },
         },
       },
@@ -3611,6 +3621,8 @@ export const uiChromeTranslationBundles = {
               map: { label: { normal: "Map", beginner: "Map" } },
               canvas: { label: { normal: "Canvas", beginner: "Canvas" } },
               chrome: { label: { normal: "Chrome", beginner: "Chrome" } },
+              outcome: { label: { normal: "Outcome", beginner: "Colors for errors and success" } },
+              diagram: { label: { normal: "Diagram", beginner: "Colors for diagrams" } },
             },
             contrast: {
               label: { label: { normal: "Contrast", beginner: "How readable the text is" } },
@@ -3819,6 +3831,11 @@ export const uiChromeTranslationBundles = {
         blockList: {
           steps: { label: { normal: "Steps", beginner: "Steps" } },
           addStep: { label: { normal: "Add Step", beginner: "Add Step" } },
+        },
+        tableStepper: {
+          decrement: { label: { normal: "Decrease", beginner: "Less" } },
+          increment: { label: { normal: "Increase", beginner: "More" } },
+          value: { label: { normal: "Value", beginner: "Value" } },
         },
         docs: {
           navigation: {
@@ -4038,6 +4055,9 @@ export const uiChromeTranslationBundles = {
           role: {
             author: { label: { normal: "Editing", beginner: "Editing" } },
             spectator: { label: { normal: "Viewing", beginner: "Viewing" } },
+          },
+          kind: {
+            agent: { label: { normal: "AI agent", beginner: "An AI agent someone gave access to" } },
           },
         },
       },
@@ -6270,8 +6290,12 @@ export function applyTutorialUiChange(state: TutorialUiSnapshot, change: Tutoria
     }
     case "panelState":
       return { ...state, panelJson: change.panelJson };
-    case "selection":
-      return { ...state, interactionSelection: { ...state.interactionSelection, [change.domainId]: { granularity: change.granularity, ids: [...change.ids] } } };
+    case "selection": {
+      const next = { ...state.interactionSelection };
+      if (change.ids.length === 0) delete next[change.domainId];
+      else next[change.domainId] = { granularity: change.granularity, ids: [...change.ids] };
+      return { ...state, interactionSelection: next };
+    }
     case "dialog":
       return { ...state, openDialogId: change.id };
     case "treeExpansion": {
@@ -8464,8 +8488,8 @@ export { Footer, type FooterProps };
 // #endregion 🎮️Footer
 
 // #region 🪨️Layout
-import { Layout, type LayoutMobilePanelProps, type LayoutProps } from "../../🧱️elements/📐️Layout/🟦️.tsx";
-export { Layout, type LayoutMobilePanelProps, type LayoutProps };
+import { Layout, type LayoutMobilePanelProps, type LayoutProps, layoutPanelReserveStyle } from "../../🧱️elements/📐️Layout/🟦️.tsx";
+export { Layout, type LayoutMobilePanelProps, type LayoutProps, layoutPanelReserveStyle };
 // #endregion 🪨️Layout
 
 // #region 🌐️Popover
@@ -9652,6 +9676,7 @@ import {
   detailPanelPropertyRowClassName,
   detailPanelPropertyStackedToInlineHysteresisPx,
   getActiveCatalogueDragPayload,
+  getActiveCataloguePointerDragPayload,
   getTreeItemOrderedIds,
   getTreeNextSelectionState,
   getTreeSiblingGapPx,
@@ -9665,6 +9690,7 @@ import {
   shouldDispatchTreeRowPointerLeave,
   syncTreeSelectionPath,
   treeCompactSiblingGapPx,
+  treeDataActivation,
   treeFoldChevronIcon,
   treeHeaderMainClassName,
   treeHeaderRowClassName,
@@ -9763,6 +9789,7 @@ export {
   detailPanelPropertyRowClassName,
   detailPanelPropertyStackedToInlineHysteresisPx,
   getActiveCatalogueDragPayload,
+  getActiveCataloguePointerDragPayload,
   getTreeItemOrderedIds,
   getTreeNextSelectionState,
   getTreeSiblingGapPx,
@@ -9776,6 +9803,7 @@ export {
   shouldDispatchTreeRowPointerLeave,
   syncTreeSelectionPath,
   treeCompactSiblingGapPx,
+  treeDataActivation,
   treeFoldChevronIcon,
   treeHeaderMainClassName,
   treeHeaderRowClassName,

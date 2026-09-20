@@ -26,8 +26,8 @@ pub fn descriptor_type_for(kind: BindingKind) -> vk::DescriptorType {
     match kind {
         BindingKind::UniformBuffer { dynamic_offset: false, .. } => vk::DescriptorType::UNIFORM_BUFFER,
         BindingKind::UniformBuffer { dynamic_offset: true, .. } => vk::DescriptorType::UNIFORM_BUFFER_DYNAMIC,
-        BindingKind::Texture2D => vk::DescriptorType::SAMPLED_IMAGE,
-        BindingKind::Sampler => vk::DescriptorType::SAMPLER,
+        BindingKind::Texture2D | BindingKind::DepthTexture2D => vk::DescriptorType::SAMPLED_IMAGE,
+        BindingKind::Sampler | BindingKind::ComparisonSampler => vk::DescriptorType::SAMPLER,
     }
 }
 

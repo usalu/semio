@@ -1,0 +1,48 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "snap", "referenceResidency", "oracles"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "snap": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["point", "factor", "disabled", "enabled"],
+      "properties": {
+        "point": { "$ref": "#/definitions/point" },
+        "factor": { "type": "number", "exclusiveMinimum": 0 },
+        "disabled": { "$ref": "#/definitions/point" },
+        "enabled": { "$ref": "#/definitions/point" }
+      }
+    },
+    "referenceResidency": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["removedUrl", "replacementUrl", "distinctReplacementCount", "maximumResidentUrls"],
+      "properties": {
+        "removedUrl": { "type": "string", "minLength": 1 },
+        "replacementUrl": { "type": "string", "minLength": 1 },
+        "distinctReplacementCount": { "type": "integer", "minimum": 257 },
+        "maximumResidentUrls": { "const": 1 }
+      }
+    },
+    "oracles": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["reactWorld3d", "thirdPartyVector"],
+      "properties": {
+        "reactWorld3d": { "type": "string", "minLength": 1 },
+        "thirdPartyVector": { "const": "three.Vector3.round" }
+      }
+    }
+  },
+  "definitions": {
+    "point": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": { "type": "number" }
+    }
+  }
+}

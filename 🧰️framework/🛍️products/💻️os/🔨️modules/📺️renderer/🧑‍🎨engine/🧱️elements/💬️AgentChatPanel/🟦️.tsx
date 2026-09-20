@@ -18,6 +18,7 @@ import { type ReactElement, useEffect, useRef, useState } from "react";
 import { Button, Textarea, useLabel } from "@semio-tech/ui-react";
 import { AgentPresence, type AgentPresenceProps } from "../🚦️AgentPresence/🟦️.tsx";
 import { agentUiLabel, type AgentConversationEntry } from "../🔗️AgentBridge/🟦️.tsx";
+import { approvalSecondsRemaining, parseApprovalSummary } from "../🤖️AgentApprovals/🟦️.tsx";
 import { type ApprovalDecision } from "../../../../🌉️mcp/🧵️bridge/🟦️.ts";
 // #endregion 🔌️Adapters
 
@@ -45,6 +46,21 @@ export type AgentChatPanelProps = AgentPresenceProps & {
  * row without depending on its position in the feed. */
 function entryElementId(entry: AgentConversationEntry): string {
   return `framework.chat.entry.${entry.kind}.${entry.id}`;
+}
+
+/** ⏱️ Whole seconds left on a parked approval, re-read once a second while it is pending.
+ * `null` means the producer named no budget, so nothing is counted rather than a number invented.
+ * The ticker only runs while there IS something to count: a resolved row, and a summary with no
+ * `timeoutMs`, both schedule nothing. */
+function useApprovalCountdown(timeoutMs: number | null, requestedAtMs: number, pending: boolean): number | null {
+  const [nowMs, setNowMs] = useState(() => Date.now());
+  useEffect(() => {
+    if (!pending || timeoutMs === null) return;
+    const ticker = window.setInterval(() => setNowMs(Date.now()), 1000);
+    return () => window.clearInterval(ticker);
+  }, [pending, timeoutMs]);
+  if (!pending) return null;
+  return approvalSecondsRemaining(timeoutMs, requestedAtMs, nowMs);
 }
 
 /** 💬️ One conversation row. Split out so the feed's own markup stays readable and so every row gets
@@ -76,6 +92,16 @@ function AgentChatEntry({
   const denyLabel = useLabel(agentUiLabel("os.agent.approvals.decisionDeny"));
   const approveOnceLabel = useLabel(agentUiLabel("os.agent.approvals.decisionOnce"));
   const approveSessionLabel = useLabel(agentUiLabel("os.agent.approvals.decisionSession"));
+  const approvalVerbLabel = useLabel(agentUiLabel("os.agent.chat.approvalVerb"));
+  const approvalTargetLabel = useLabel(agentUiLabel("os.agent.chat.approvalTarget"));
+  const requestedByLabel = useLabel(agentUiLabel("os.agent.approvals.requestedBy"));
+  const approvalExpiredLabel = useLabel(agentUiLabel("os.agent.chat.approvalExpired"));
+  // 🧾️ The parked approval, read out of the ONE wire string the gateway sends (`🛡️policy`'s
+  // `ApprovalRequest::shell_summary`). Parsed unconditionally — hooks may not run behind a branch —
+  // and only rendered on an approval row.
+  const approval = parseApprovalSummary(entry.kind === "approval" ? entry.summary : "");
+  const secondsLeft = useApprovalCountdown(entry.kind === "approval" ? approval.timeoutMs : null, entry.kind === "approval" ? entry.atMs : 0, entry.kind === "approval" && entry.state === "pending");
+  const countdownLabel = useLabel(agentUiLabel("os.agent.chat.approvalCountdown"), { seconds: String(secondsLeft ?? 0) });
 
   const toolState = entry.kind === "toolCall" ? (entry.state === "running" ? runningLabel : entry.state === "cancelling" ? cancellingLabel : entry.state === "failed" ? failedLabel : succeededLabel) : "";
   const state = entry.kind === "toolCall" ? toolState : entry.kind === "approval" ? (entry.state === "pending" ? approvalPendingLabel : (entry.decision ?? "")) : "";
@@ -108,7 +134,40 @@ function AgentChatEntry({
         </span>
       </div>
       {entry.kind === "userMessage" ? <p className="whitespace-pre-wrap break-words text-xs text-foreground">{entry.text}</p> : null}
-      {entry.kind === "approval" ? <p className="whitespace-pre-wrap break-words text-xs text-foreground">{entry.summary}</p> : null}
+      {entry.kind === "approval" ? (
+        // 🧾️ WHO asked, WHAT it does, WHAT it touches — the three facts a human needs to decide,
+        // each omitted rather than blanked when the producer did not send it. A row missing every
+        // rich field still shows its `diffSummary`, which for a plain-text producer is the whole
+        // wire string, so this surface never goes empty.
+        <div className="flex min-w-0 flex-col gap-single text-xs text-foreground">
+          {approval.capabilityTitle ? (
+            <p className="min-w-0 break-words" data-semio-agent-chat-approval-verb={approval.capabilityId ?? ""}>
+              <span className="text-2xs font-semibold uppercase tracking-wide text-muted-foreground">{approvalVerbLabel}: </span>
+              <span className="font-medium">{approval.capabilityTitle}</span>
+            </p>
+          ) : null}
+          {approval.description ? <p className="min-w-0 whitespace-pre-wrap break-words text-muted-foreground">{approval.description}</p> : null}
+          {approval.artifactKind ? (
+            <p className="min-w-0 break-words text-muted-foreground" data-semio-agent-chat-approval-target={approval.artifactKind}>
+              <span className="text-2xs font-semibold uppercase tracking-wide">{approvalTargetLabel}: </span>
+              {approval.artifactKind}
+            </p>
+          ) : null}
+          <p className="min-w-0 whitespace-pre-wrap break-words">{approval.diffSummary}</p>
+          {approval.requestedBy ? (
+            <p className="min-w-0 break-words text-2xs text-muted-foreground">
+              {requestedByLabel}: {approval.requestedBy}
+            </p>
+          ) : null}
+          {secondsLeft !== null ? (
+            // ⏳️ A live region, because the number changes without the human doing anything: a
+            // screen reader is told politely, never interrupted mid-sentence.
+            <p role="status" aria-live="polite" data-semio-agent-chat-approval-countdown={String(secondsLeft)} className="min-w-0 break-words text-2xs text-muted-foreground">
+              {secondsLeft > 0 ? countdownLabel : approvalExpiredLabel}
+            </p>
+          ) : null}
+        </div>
+      ) : null}
       {decidable ? (
         <div role="group" aria-label={approvalActionsLabel} data-semio-agent-chat-approval={entry.id} className="flex flex-wrap items-center gap-single">
           <Button type="button" variant="ghost" icon="x" id={`framework.chat.approval.deny.${entry.id}`} text={denyLabel} aria-label={denyLabel} onClick={() => onResolveApproval?.(entry.id, "deny")} />

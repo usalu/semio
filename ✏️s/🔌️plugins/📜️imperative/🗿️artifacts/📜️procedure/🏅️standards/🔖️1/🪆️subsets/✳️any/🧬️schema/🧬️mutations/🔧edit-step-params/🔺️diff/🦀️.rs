@@ -18,7 +18,8 @@ pub fn diff(payload: &super::EditStepParams, base: &ProcedureSnapshot) -> protoc
     let mut path = crate::procedure_working_scene(base).path;
     if let Some(list) = crate::mutations::resolve_path_mut(&mut path, &payload.path_ref) {
         if let Some(step) = list.iter_mut().find(|step| step.id == payload.id) {
-            step.params = payload.new_params.clone();
+            // 🧊️ Retire the DISPLACED dictionary rather than dropping it in place.
+            neural_engine::ColdRetire::retire_cold(std::mem::replace(&mut step.params, payload.new_params.clone()));
         }
     }
     protocol::MutationOutcome::new(crate::diff_replace_flow(&path))

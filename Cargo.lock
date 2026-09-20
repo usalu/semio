@@ -6383,6 +6383,7 @@ name = "semio-framework-ui-render"
 version = "0.1.0"
 dependencies = [
  "bytemuck",
+ "naga",
  "parley",
  "semio-framework-geometry",
  "semio-framework-ui-contract",
@@ -6467,6 +6468,7 @@ dependencies = [
  "semio-framework-schema",
  "semio-framework-schema-registry",
  "semio-framework-server",
+ "semio-framework-trace",
  "semio-s-artifact-gis-gismap",
  "semio-s-artifact-stdio-json",
  "semio-s-artifact-stdio-semio",

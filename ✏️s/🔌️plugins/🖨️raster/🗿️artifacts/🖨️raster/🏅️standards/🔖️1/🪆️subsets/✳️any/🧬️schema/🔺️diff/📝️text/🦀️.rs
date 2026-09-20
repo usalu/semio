@@ -180,9 +180,6 @@ pub fn patch_layer_in_tree(layers: &mut [RasterLayerNode], target_id: &str, patc
 impl RasterDiff {
     /// 🧬️ Applies sparse document changes to the artifact.
     pub fn apply_to_artifact(&self, artifact: &RasterArtifact) -> protocol::MutationApplyResult<RasterArtifact> {
-        if !artifact.assets.is_empty() {
-            return Err(protocol::MutationApplyError::new("mutation.apply.retained-owner-required", "populated Raster maps require the retained initialization authority"));
-        }
         if self.assets.as_ref().is_some_and(|assets| assets.entries.values().any(Option::is_none)) {
             return Err(protocol::MutationApplyError::new("mutation.apply.retained-owner-required", "asset removal requires the retained Raster initialization authority"));
         }
@@ -204,7 +201,16 @@ impl RasterDiff {
                 next.title = title.clone();
             }
             if let Some(delta) = &self.layers {
-                next.layers = apply_layers_delta(&next.layers, delta).map_err(|error| error.under(["layers"]))?;
+                let displaced = std::mem::take(&mut next.layers);
+                let applied = apply_layers_delta(&displaced, delta);
+                crate::retire_raster_layers(displaced);
+                match applied {
+                    Ok(layers) => next.layers = layers,
+                    Err(error) => {
+                        crate::standards::v1::subsets::any::schema::snapshot::retire_raster_artifact(next);
+                        return Err(error.under(["layers"]));
+                    }
+                }
             }
             if let Some(assets) = &self.assets {
                 for (key, value) in &assets.entries {
@@ -306,10 +312,15 @@ fn validate_assets_delta<T>(assets: &crate::RasterOwnedMap<T>, delta: &RasterAss
 }
 
 impl MutationDiff<RasterSnapshot> for RasterDiff {
+    /// 🧬️ Applies the sparse delta to a snapshot, POPULATED maps included. `RasterOwnedMap::clone` is
+    /// a real deep copy bounded by construction (64 entries over 8 pages) and needs no retained page
+    /// authority, so the blanket "populated Raster maps require the retained initialization
+    /// authority" refusal that used to head this function only ever stopped the framework's own
+    /// history folds: `redo` re-applies the reinstated edit's forwards through here, and so do a fold
+    /// to base, a `.spr` reload and a remote ingest — every one of them was refused on a demo-shaped
+    /// document (🖨️raster's redo clause, measured 2026-09-20). Asset REMOVAL is a genuinely retained
+    /// operation and is still rejected below, before any ownership is cloned.
     fn apply(&self, snapshot: &RasterSnapshot) -> protocol::MutationApplyResult<RasterSnapshot> {
-        if !snapshot.assets.is_empty() {
-            return Err(protocol::MutationApplyError::new("mutation.apply.retained-owner-required", "populated Raster maps require the retained initialization authority"));
-        }
         if self.assets.as_ref().is_some_and(|assets| assets.entries.values().any(Option::is_none)) {
             return Err(protocol::MutationApplyError::new("mutation.apply.retained-owner-required", "asset removal requires the retained Raster initialization authority"));
         }
@@ -331,7 +342,16 @@ impl MutationDiff<RasterSnapshot> for RasterDiff {
                 next.title = title.clone();
             }
             if let Some(delta) = &self.layers {
-                next.layers = apply_layers_delta(&next.layers, delta).map_err(|error| error.under(["layers"]))?;
+                let displaced = std::mem::take(&mut next.layers);
+                let applied = apply_layers_delta(&displaced, delta);
+                crate::retire_raster_layers(displaced);
+                match applied {
+                    Ok(layers) => next.layers = layers,
+                    Err(error) => {
+                        crate::standards::v1::subsets::any::schema::snapshot::retire_raster_snapshot(next);
+                        return Err(error.under(["layers"]));
+                    }
+                }
             }
             if let Some(assets) = &self.assets {
                 for (key, value) in &assets.entries {
@@ -378,6 +398,24 @@ impl MutationDiff<RasterSnapshot> for RasterDiff {
             (None, Some(src)) => self.assets = Some(src),
             _ => {}
         }
+    }
+
+    fn retire_cold(self) {
+        let RasterDiff { artifact, schema: _, id: _, title: _, layers, assets: _ } = self;
+        if let Some(artifact) = artifact {
+            let RasterArtifact { schema: _, id: _, title: _, layers, mut assets } = *artifact;
+            crate::retire_raster_layers(layers);
+            assets.retire();
+        }
+        if let Some(layers) = layers {
+            for insertion in layers.added {
+                crate::retire_raster_layer(insertion.layer);
+            }
+        }
+    }
+
+    fn retire_projection(projection: RasterSnapshot) {
+        crate::standards::v1::subsets::any::schema::snapshot::retire_raster_snapshot(projection);
     }
 }
 //#endregion 🔖️Apply

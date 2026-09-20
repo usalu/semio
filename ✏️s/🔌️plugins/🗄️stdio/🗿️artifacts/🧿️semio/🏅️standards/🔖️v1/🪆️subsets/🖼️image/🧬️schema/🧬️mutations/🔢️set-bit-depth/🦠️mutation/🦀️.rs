@@ -5,6 +5,6 @@ use crate::standards::v1::subsets::image::schema::mutations::set_bit_depth;
 
 /// ▶️ Applies a set-bit-depth mutation.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn apply(snapshot: &mut SemioImageSnapshot, bit_depth: u8) -> SemioImageDiff {
+pub fn apply(snapshot: &mut SemioImageSnapshot, bit_depth: u8) -> protocol::MutationOutcome<SemioImageDiff> {
     apply_semio_image_mutation(snapshot, &SemioImageMutation::SetBitDepth(set_bit_depth::SetBitDepth { bit_depth }))
 }

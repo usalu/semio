@@ -179,14 +179,14 @@ export function createBrowserHostImports(options = {}) {
     const kind = value.pointerType === "touch" ? 1 : value.pointerType === "pen" ? 2 : 0;
     body.i32(value.pointerId); body.u8(kind); body.f32(value.pressure || Number.NaN);
     body.f32(value.tiltX || Number.NaN); body.f32(value.tiltY || Number.NaN);
-    body.f32(value.offsetX); body.f32(value.offsetY); body.i16(value.button ?? 0);
+    body.f32(value.offsetX); body.f32(value.offsetY); body.i16(value.button ?? 0); body.u8(modifierBits(value));
     event(record, code, body.finish(), latestKey);
   };
 
   const emitWheel = (record, value) => {
     const scale = value.deltaMode === 1 ? 40 : value.deltaMode === 2 ? record.canvas.clientHeight : 1;
     const body = prefix(record); body.f32(value.offsetX); body.f32(value.offsetY);
-    body.f32(value.deltaX * scale); body.f32(value.deltaY * scale);
+    body.f32(value.deltaX * scale); body.f32(value.deltaY * scale); body.u8(modifierBits(value));
     event(record, 1807, body.finish());
   };
 

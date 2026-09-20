@@ -9,13 +9,17 @@
 //! this tree pins the guard branches, which mint nothing.
 //!
 //! ✂️ `disconnect-steps` is the only sequence verb addressed at an EDGE rather than a step, and its
-//! single guard searches `scene.edges`, never `scene.steps`. The committed `content` handle is left
-//! unseeded, so the scene has no edges and that guard fires on an id that is an edge id, not a step
-//! id — the distinction the diagnostic's own message spells out.
+//! single guard searches `scene.edges`, never `scene.steps`. The committed `content` handle is
+//! materialized to an EXPLICITLY EMPTY scene, so the scene has no edges and that guard fires on an id
+//! that is an edge id, not a step id — the distinction the diagnostic's own message spells out. (A
+//! composed child handle carries no scene of its own once decoded from JSON, and
+//! `sequence_working_scene` now REQUIRES a materialized child rather than silently reading an empty
+//! one, so the emptiness this case depends on is stated here instead of inferred from an unresolved
+//! handle.)
 
 use crate::diff::SequenceDiff;
 use crate::mutations::{apply_sequence_mutation, inverse_sequence_mutation, SequenceMutation};
-use crate::SequenceSnapshot;
+use crate::{SequenceSnapshot, SequenceWorkingScene};
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/✂️disconnect-steps/🚫️rejects-disconnecting-a-missing-edge/📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/✂️disconnect-steps/🚫️rejects-disconnecting-a-missing-edge/📸️snapshot/➡️after/🔣️.json");
@@ -27,7 +31,9 @@ fn mutation() -> SequenceMutation {
     dsl::os_pack::from_json_str(MUTATION).expect("mutation decodes")
 }
 fn before() -> SequenceSnapshot {
-    dsl::os_pack::from_json_str(BEFORE).expect("before snapshot decodes")
+    let mut snapshot: SequenceSnapshot = dsl::os_pack::from_json_str(BEFORE).expect("before snapshot decodes");
+    snapshot.content.set_local_owner(std::sync::Arc::new(SequenceWorkingScene::default()));
+    snapshot
 }
 fn expected_after() -> SequenceSnapshot {
     dsl::os_pack::from_json_str(AFTER).expect("after snapshot decodes")

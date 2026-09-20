@@ -67,7 +67,7 @@ async fn change_retrofit_limit_state_committed_json_is_canonical() {
     }
     let reencoded = serde_json::to_value(mutation()).expect("change-retrofit-limit-state mutation encodes");
     let original: serde_json::Value = serde_json::from_str(MUTATION).expect("change-retrofit-limit-state mutation reparses");
-    assert_eq!(reencoded, original, "change-retrofit-limit-state/switches-retrofit-limit-state-to-near-collapse: committed mutation JSON is not the canonical externally-tagged ChangeRetrofitLimitState form carrying newRetrofitLimitState");
+    assert_eq!(reencoded, original, "change-retrofit-limit-state/switches-retrofit-limit-state-to-near-collapse: committed mutation JSON is not the canonical internally-tagged ChangeRetrofitLimitState form carrying mutation and newRetrofitLimitState");
 }
 
 /// 🎯️ The declared outcome holds: `change-retrofit-limit-state` at near_collapse is applied, not rejected, and carries no

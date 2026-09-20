@@ -1,5 +1,4 @@
 {
-  "ChangePeriodRatio": {
-    "newPeriodRatio": 3.5
-  }
+  "mutation": "changePeriodRatio",
+  "newPeriodRatio": 3.5
 }

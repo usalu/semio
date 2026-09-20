@@ -67,7 +67,7 @@ async fn change_tank_radius_m_committed_json_is_canonical() {
     }
     let reencoded = serde_json::to_value(mutation()).expect("change-tank-radius-m mutation encodes");
     let original: serde_json::Value = serde_json::from_str(MUTATION).expect("change-tank-radius-m mutation reparses");
-    assert_eq!(reencoded, original, "change-tank-radius-m/raises-tank-radius-m-to-5-75: committed mutation JSON is not the canonical externally-tagged ChangeTankRadiusM form carrying newTankRadiusM");
+    assert_eq!(reencoded, original, "change-tank-radius-m/raises-tank-radius-m-to-5-75: committed mutation JSON is not the canonical internally-tagged ChangeTankRadiusM form carrying mutation and newTankRadiusM");
 }
 
 /// 🎯️ The declared outcome holds: `change-tank-radius-m` at 5.75 is applied, not rejected, and carries no

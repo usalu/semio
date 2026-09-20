@@ -906,6 +906,15 @@ pub struct McpServer {
     /// 🧭️ The live mirror of what the connected client advertised, shared with the transport that
     /// owns the server→client request channel. Always present; empty until `initialize` lands.
     client_features: Arc<ClientFeatures>,
+    /// 🔔️ THIS connection's live `resources/subscribe` set — always present and always registered
+    /// with the process-wide broker, so `"resources": {"subscribe": true}` is a promise this server
+    /// keeps rather than advertises. With no notification sink bound (every test tier, and stdio
+    /// before a transport publishes one) the set still records faithfully and simply delivers
+    /// nothing.
+    subscriptions: Arc<crate::notify::ResourceSubscriptions>,
+    /// 📤️ Where this connection's unprompted notifications go, filled by whichever transport owns
+    /// the socket.
+    notifications: Option<crate::notify::NotificationSlot>,
 }
 
 impl McpServer {
@@ -922,7 +931,26 @@ impl McpServer {
             initialized: false,
             conversation: None,
             client_features: Arc::new(ClientFeatures::default()),
+            subscriptions: crate::notify::ResourceSubscriptions::registered(),
+            notifications: None,
         }
+    }
+
+    /// 📤️ Publishes this connection's server→client notification lane into the server, so
+    /// `resources/updated`, `resources/list_changed` and `progress` reach the real client. Builder-
+    /// shaped for the same reason [`McpServer::publishing_conversation_to`] is: every existing caller
+    /// has no sink at all.
+    #[must_use]
+    pub fn publishing_notifications_into(mut self, slot: crate::notify::NotificationSlot) -> Self {
+        self.subscriptions.bind_sink(slot.clone());
+        self.notifications = Some(slot);
+        self
+    }
+
+    /// 🔔️ This connection's live subscription set — what a test asserts `resources/subscribe`
+    /// actually recorded.
+    pub fn subscriptions(&self) -> &Arc<crate::notify::ResourceSubscriptions> {
+        &self.subscriptions
     }
 
     /// 🧭️ The client-capability mirror this server fills at `initialize` — handed to the transport
@@ -990,7 +1018,7 @@ impl McpServer {
                 DispatchOutcome::NoResponse
             }
             METHOD_PING => DispatchOutcome::Result(serde_json::json!({})),
-            METHOD_NOTIFICATIONS_CANCELLED => DispatchOutcome::NoResponse,
+            METHOD_NOTIFICATIONS_CANCELLED => self.handle_notifications_cancelled(request),
             other => self.dispatch_versioned(other, request),
         }
     }
@@ -1007,14 +1035,14 @@ impl McpServer {
             self.negotiated_version = Some(requested);
         }
         match method {
-            METHOD_TOOLS_LIST => self.handle_tools_list(),
+            METHOD_TOOLS_LIST => self.handle_tools_list(request),
             METHOD_TOOLS_CALL => self.handle_tools_call(request),
-            METHOD_RESOURCES_LIST => self.handle_resources_list(),
-            METHOD_RESOURCES_TEMPLATES_LIST => self.handle_resources_templates_list(),
+            METHOD_RESOURCES_LIST => self.handle_resources_list(request),
+            METHOD_RESOURCES_TEMPLATES_LIST => self.handle_resources_templates_list(request),
             METHOD_RESOURCES_READ => self.handle_resources_read(request),
             METHOD_RESOURCES_SUBSCRIBE => self.handle_resources_subscribe(request),
             METHOD_RESOURCES_UNSUBSCRIBE => self.handle_resources_unsubscribe(request),
-            METHOD_PROMPTS_LIST => self.handle_prompts_list(),
+            METHOD_PROMPTS_LIST => self.handle_prompts_list(request),
             METHOD_PROMPTS_GET => self.handle_prompts_get(request),
             other => DispatchOutcome::Error(METHOD_NOT_FOUND, format!("method not found: {other}"), None),
         }
@@ -1061,16 +1089,59 @@ impl McpServer {
         }))
     }
 
-    fn handle_tools_list(&self) -> DispatchOutcome {
+    /// 📄️ The page offset a `*/list` request asked for. An absent `cursor` is page one; a cursor this
+    /// server did not mint is `INVALID_PARAMS` (the spec's own requirement), never a silently-wrong
+    /// page of results.
+    fn requested_offset(request: &JsonRpcRequest) -> Result<usize, DispatchOutcome> {
+        match request.params.as_ref().and_then(|params| params.get("cursor")) {
+            None | Some(serde_json::Value::Null) => Ok(0),
+            Some(serde_json::Value::String(cursor)) => crate::notify::decode_cursor(cursor).ok_or_else(|| DispatchOutcome::Error(INVALID_PARAMS, format!("unknown cursor: {cursor}"), Some(serde_json::json!({ "cursor": cursor })))),
+            Some(other) => Err(DispatchOutcome::Error(INVALID_PARAMS, "cursor must be a string".to_string(), Some(serde_json::json!({ "cursor": other })))),
+        }
+    }
+
+    /// 📄️ One page of an already-stably-ordered list, rendered into the result object `key` names,
+    /// with `nextCursor` present only when there IS a next page.
+    fn paged_result(key: &str, items: Vec<serde_json::Value>, offset: usize, ttl_ms: u64) -> DispatchOutcome {
+        let page = crate::notify::paginate(items, offset, crate::notify::DEFAULT_PAGE_SIZE);
+        let mut result = serde_json::json!({ "resultType": "complete", key: page.items, "ttlMs": ttl_ms, "cacheScope": "public" });
+        if let (Some(object), Some(next)) = (result.as_object_mut(), page.next_cursor) {
+            object.insert("nextCursor".to_string(), serde_json::json!(next));
+        }
+        DispatchOutcome::Result(result)
+    }
+
+    fn handle_tools_list(&self, request: &JsonRpcRequest) -> DispatchOutcome {
+        let offset = match Self::requested_offset(request) {
+            Ok(offset) => offset,
+            Err(outcome) => return outcome,
+        };
         let mut tools = self.tools.list();
         tools.sort_by(|a, b| a.name.cmp(&b.name));
-        DispatchOutcome::Result(serde_json::json!({ "resultType": "complete", "tools": tools, "ttlMs": 300_000, "cacheScope": "public" }))
+        Self::paged_result("tools", tools.into_iter().map(|tool| serde_json::to_value(tool).unwrap_or(serde_json::Value::Null)).collect(), offset, 300_000)
+    }
+
+    /// 📈️ The client's own opaque `_meta.progressToken`, bound to this connection's notification
+    /// lane. Absent token, or no sink bound, is the ordinary call: no scope is entered and the job
+    /// registry's poll-based surface is unchanged.
+    fn progress_binding(&self, request: &JsonRpcRequest, params: &serde_json::Value) -> Option<crate::notify::ProgressBinding> {
+        let token = params.get("_meta").and_then(|meta| meta.get("progressToken")).cloned()?;
+        if token.is_null() {
+            return None;
+        }
+        let slot = self.notifications.clone()?;
+        let request_id = request.id.as_ref().map(|id| serde_json::to_value(id).unwrap_or(serde_json::Value::Null));
+        Some(crate::notify::ProgressBinding { token, request_id, slot })
     }
 
     fn handle_tools_call(&self, request: &JsonRpcRequest) -> DispatchOutcome {
         let Some(params) = request.params.as_ref() else { return DispatchOutcome::Error(INVALID_PARAMS, "tools/call requires params".to_string(), None) };
         let Some(name) = params.get("name").and_then(|value| value.as_str()) else { return DispatchOutcome::Error(INVALID_PARAMS, "tools/call requires params.name".to_string(), None) };
         let arguments = params.get("arguments").cloned().unwrap_or(serde_json::Value::Null);
+        // 📈️ Held across the whole call: every job the tool mints while this guard is alive is bound
+        // to the client's token, so its progress is PUSHED as `notifications/progress` instead of
+        // only being readable by polling `job_get`.
+        let _progress = crate::notify::enter_progress_scope(self.progress_binding(request, params));
         // 💬️ The ONE real dispatch point every tool call passes through — so the shell's agent
         // panel shows the agent's actual calls, in order, with their real arguments and outcomes,
         // rather than a second bookkeeping path that could drift from what ran.
@@ -1084,12 +1155,19 @@ impl McpServer {
             conversation.finish_tool_call(invocation_id, name, ok, &summary);
         }
         match outcome {
-            Ok(result) => DispatchOutcome::Result(serde_json::json!({
-                "resultType": "complete",
-                "content": result.content,
-                "structuredContent": result.structured_content,
-                "isError": result.is_error,
-            })),
+            Ok(result) => {
+                // 🔔️ A committed mutation, an undo/redo, a created artifact — the declared table in
+                // `📣️notify` says which tool changed which resource, and every connection subscribed
+                // to one of those URIs is told. This is the one call site that makes
+                // `"resources": {"subscribe": true}` real.
+                crate::notify::broadcast_tool_result_changes(name, result.is_error, result.structured_content.as_ref());
+                DispatchOutcome::Result(serde_json::json!({
+                    "resultType": "complete",
+                    "content": result.content,
+                    "structuredContent": result.structured_content,
+                    "isError": result.is_error,
+                }))
+            }
             Err(error) => {
                 let (code, message, data) = error.to_json_rpc_parts();
                 DispatchOutcome::Error(code, message, Some(data))
@@ -1097,12 +1175,34 @@ impl McpServer {
         }
     }
 
-    fn handle_resources_list(&self) -> DispatchOutcome {
-        DispatchOutcome::Result(serde_json::json!({ "resultType": "complete", "resources": self.resources.list(), "ttlMs": 300_000, "cacheScope": "public" }))
+    /// 🛑️ MCP's own request-scoped cancellation, mapped onto the very `job_registry().request_cancel`
+    /// path the `job_cancel` tool uses: every job minted while the named request was running is
+    /// asked to stop. A request that minted no job, or one already finished, is a silent no-op —
+    /// the spec forbids answering a notification either way.
+    fn handle_notifications_cancelled(&self, request: &JsonRpcRequest) -> DispatchOutcome {
+        let Some(request_id) = request.params.as_ref().and_then(|params| params.get("requestId")) else {
+            return DispatchOutcome::NoResponse;
+        };
+        for job_id in crate::notify::jobs_for_request(request_id) {
+            let _ = crate::ui::job_registry().request_cancel(&job_id);
+        }
+        DispatchOutcome::NoResponse
     }
 
-    fn handle_resources_templates_list(&self) -> DispatchOutcome {
-        DispatchOutcome::Result(serde_json::json!({ "resultType": "complete", "resourceTemplates": self.resources.templates(), "ttlMs": 300_000, "cacheScope": "public" }))
+    fn handle_resources_list(&self, request: &JsonRpcRequest) -> DispatchOutcome {
+        let offset = match Self::requested_offset(request) {
+            Ok(offset) => offset,
+            Err(outcome) => return outcome,
+        };
+        Self::paged_result("resources", self.resources.list().into_iter().map(|resource| serde_json::to_value(resource).unwrap_or(serde_json::Value::Null)).collect(), offset, 300_000)
+    }
+
+    fn handle_resources_templates_list(&self, request: &JsonRpcRequest) -> DispatchOutcome {
+        let offset = match Self::requested_offset(request) {
+            Ok(offset) => offset,
+            Err(outcome) => return outcome,
+        };
+        Self::paged_result("resourceTemplates", self.resources.templates().into_iter().map(|template| serde_json::to_value(template).unwrap_or(serde_json::Value::Null)).collect(), offset, 300_000)
     }
 
     fn handle_resources_read(&self, request: &JsonRpcRequest) -> DispatchOutcome {
@@ -1123,7 +1223,12 @@ impl McpServer {
             return DispatchOutcome::Error(INVALID_PARAMS, "resources/subscribe requires params.uri".to_string(), None);
         };
         match self.resources.subscribe(uri) {
-            Ok(()) => DispatchOutcome::Result(serde_json::json!({})),
+            // 🔔️ The registry validated that this URI is one it can serve; recording it here is what
+            // makes a later `notifications/resources/updated` actually reach THIS connection.
+            Ok(()) => {
+                self.subscriptions.subscribe(uri);
+                DispatchOutcome::Result(serde_json::json!({}))
+            }
             Err(error) => {
                 let (code, message, data) = error.to_json_rpc_parts();
                 DispatchOutcome::Error(code, message, Some(data))
@@ -1136,7 +1241,10 @@ impl McpServer {
             return DispatchOutcome::Error(INVALID_PARAMS, "resources/unsubscribe requires params.uri".to_string(), None);
         };
         match self.resources.unsubscribe(uri) {
-            Ok(()) => DispatchOutcome::Result(serde_json::json!({})),
+            Ok(()) => {
+                self.subscriptions.unsubscribe(uri);
+                DispatchOutcome::Result(serde_json::json!({}))
+            }
             Err(error) => {
                 let (code, message, data) = error.to_json_rpc_parts();
                 DispatchOutcome::Error(code, message, Some(data))
@@ -1144,8 +1252,12 @@ impl McpServer {
         }
     }
 
-    fn handle_prompts_list(&self) -> DispatchOutcome {
-        DispatchOutcome::Result(serde_json::json!({ "resultType": "complete", "prompts": self.prompts.list(), "ttlMs": 600_000, "cacheScope": "public" }))
+    fn handle_prompts_list(&self, request: &JsonRpcRequest) -> DispatchOutcome {
+        let offset = match Self::requested_offset(request) {
+            Ok(offset) => offset,
+            Err(outcome) => return outcome,
+        };
+        Self::paged_result("prompts", self.prompts.list().into_iter().map(|prompt| serde_json::to_value(prompt).unwrap_or(serde_json::Value::Null)).collect(), offset, 600_000)
     }
 
     fn handle_prompts_get(&self, request: &JsonRpcRequest) -> DispatchOutcome {

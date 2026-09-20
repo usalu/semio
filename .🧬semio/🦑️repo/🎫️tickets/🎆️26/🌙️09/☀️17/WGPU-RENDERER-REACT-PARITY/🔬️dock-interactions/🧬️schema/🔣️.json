@@ -1,0 +1,121 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio.tech/schema/probes/dock-interactions-physical.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "target", "selectors", "template", "cases"],
+  "properties": {
+    "version": { "const": 1 },
+    "target": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["plugin", "urls", "viewport", "minimumWindows", "minimumStacks", "tabsPerSelectedStack", "dragThresholdPx"],
+      "properties": {
+        "plugin": { "const": "puzzle3d" },
+        "urls": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["react", "wgpu"],
+          "properties": {
+            "react": { "type": "string", "pattern": "^http://127\\.0\\.0\\.1:" },
+            "wgpu": { "type": "string", "pattern": "^http://127\\.0\\.0\\.1:" }
+          }
+        },
+        "viewport": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["width", "height"],
+          "properties": {
+            "width": { "type": "integer", "minimum": 1024 },
+            "height": { "type": "integer", "minimum": 720 }
+          }
+        },
+        "minimumWindows": { "const": 2 },
+        "minimumStacks": { "const": 2 },
+        "tabsPerSelectedStack": { "const": 1 },
+        "dragThresholdPx": { "const": 6 }
+      }
+    },
+    "selectors": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["reactMode", "reactStack", "reactBody", "reactTab", "reactHandle", "reactIndicator", "wgpuTabPrefix", "wgpuHandleSuffix"],
+      "properties": {
+        "reactMode": { "const": "[data-slot=\"mode\"]" },
+        "reactStack": { "const": "[data-slot=\"mode-dock-stack\"][data-stack-path]" },
+        "reactBody": { "const": "[data-slot=\"mode-dock-stack-body\"]" },
+        "reactTab": { "const": "[data-slot=\"mode-dock-tab\"][data-window-id]" },
+        "reactHandle": { "const": "[data-slot=\"drag-handle\"]" },
+        "reactIndicator": { "const": "[data-slot=\"mode-dock-drop-indicator\"]" },
+        "wgpuTabPrefix": { "const": "dock.tab." },
+        "wgpuHandleSuffix": { "const": ".drag" }
+      }
+    },
+    "template": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mime", "displayCategoryId", "rowSuffix", "selectionId", "semantic", "neutralPayload"],
+      "properties": {
+        "mime": { "const": "application/x-compose-window-template" },
+        "displayCategoryId": { "const": "framework.category.display" },
+        "rowSuffix": { "const": ".projection.parallel.orthographic" },
+        "selectionId": { "const": "orthographic" },
+        "semantic": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["projection", "direction", "up", "vectorTolerance"],
+          "properties": {
+            "projection": { "const": "orthographic" },
+            "direction": { "const": [0, 0, 1] },
+            "up": { "const": [0, 1, 0] },
+            "vectorTolerance": { "type": "number", "exclusiveMinimum": 0, "maximum": 0.25 }
+          }
+        },
+        "neutralPayload": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["windowKindId", "templateId"],
+          "properties": {
+            "windowKindId": { "type": "string", "minLength": 1 },
+            "templateId": { "type": "string", "minLength": 1 }
+          }
+        }
+      }
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 8,
+      "maxItems": 8,
+      "prefixItems": [
+        { "$ref": "#/$defs/splitLeft" },
+        { "$ref": "#/$defs/splitRight" },
+        { "$ref": "#/$defs/splitTop" },
+        { "$ref": "#/$defs/splitBottom" },
+        { "$ref": "#/$defs/merge" },
+        { "$ref": "#/$defs/reorder" },
+        { "$ref": "#/$defs/cancel" },
+        { "$ref": "#/$defs/template" }
+      ],
+      "items": false
+    }
+  },
+  "$defs": {
+    "base": {
+      "type": "object",
+      "required": ["id", "kind", "consequence"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "kind": { "enum": ["split", "merge", "reorder", "cancel", "template"] },
+        "consequence": { "type": "string", "minLength": 1 }
+      }
+    },
+    "splitLeft": { "allOf": [{ "$ref": "#/$defs/base" }, { "type": "object", "additionalProperties": false, "required": ["id", "kind", "side", "expectedRelation", "stackCountDelta", "consequence"], "properties": { "id": { "const": "split-left" }, "kind": { "const": "split" }, "side": { "const": "left" }, "expectedRelation": { "const": "source-left-of-target" }, "stackCountDelta": { "const": 0 }, "consequence": { "type": "string" } } }] },
+    "splitRight": { "allOf": [{ "$ref": "#/$defs/base" }, { "type": "object", "additionalProperties": false, "required": ["id", "kind", "side", "expectedRelation", "stackCountDelta", "consequence"], "properties": { "id": { "const": "split-right" }, "kind": { "const": "split" }, "side": { "const": "right" }, "expectedRelation": { "const": "source-right-of-target" }, "stackCountDelta": { "const": 0 }, "consequence": { "type": "string" } } }] },
+    "splitTop": { "allOf": [{ "$ref": "#/$defs/base" }, { "type": "object", "additionalProperties": false, "required": ["id", "kind", "side", "expectedRelation", "stackCountDelta", "consequence"], "properties": { "id": { "const": "split-top" }, "kind": { "const": "split" }, "side": { "const": "top" }, "expectedRelation": { "const": "source-above-target" }, "stackCountDelta": { "const": 0 }, "consequence": { "type": "string" } } }] },
+    "splitBottom": { "allOf": [{ "$ref": "#/$defs/base" }, { "type": "object", "additionalProperties": false, "required": ["id", "kind", "side", "expectedRelation", "stackCountDelta", "consequence"], "properties": { "id": { "const": "split-bottom" }, "kind": { "const": "split" }, "side": { "const": "bottom" }, "expectedRelation": { "const": "source-below-target" }, "stackCountDelta": { "const": 0 }, "consequence": { "type": "string" } } }] },
+    "merge": { "allOf": [{ "$ref": "#/$defs/base" }, { "type": "object", "additionalProperties": false, "required": ["id", "kind", "targetPosition", "stackCountDelta", "consequence"], "properties": { "id": { "const": "tab-merge" }, "kind": { "const": "merge" }, "targetPosition": { "const": "after" }, "stackCountDelta": { "const": -1 }, "consequence": { "type": "string" } } }] },
+    "reorder": { "allOf": [{ "$ref": "#/$defs/base" }, { "type": "object", "additionalProperties": false, "required": ["id", "kind", "setup", "targetPosition", "stackCountDelta", "consequence"], "properties": { "id": { "const": "tab-reorder" }, "kind": { "const": "reorder" }, "setup": { "const": "merge-after" }, "targetPosition": { "const": "before" }, "stackCountDelta": { "const": -1 }, "consequence": { "type": "string" } } }] },
+    "cancel": { "allOf": [{ "$ref": "#/$defs/base" }, { "type": "object", "additionalProperties": false, "required": ["id", "kind", "mechanism", "consequence"], "properties": { "id": { "const": "escape-cancel" }, "kind": { "const": "cancel" }, "mechanism": { "const": "Escape" }, "consequence": { "type": "string" } } }] },
+    "template": { "allOf": [{ "$ref": "#/$defs/base" }, { "type": "object", "additionalProperties": false, "required": ["id", "kind", "targetPosition", "windowCountDelta", "consequence"], "properties": { "id": { "const": "template-configuration" }, "kind": { "const": "template" }, "targetPosition": { "const": "after" }, "windowCountDelta": { "const": 1 }, "consequence": { "type": "string" } } }] }
+  }
+}

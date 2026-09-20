@@ -67,7 +67,7 @@ async fn change_retrofit_knowledge_level_committed_json_is_canonical() {
     }
     let reencoded = serde_json::to_value(mutation()).expect("change-retrofit-knowledge-level mutation encodes");
     let original: serde_json::Value = serde_json::from_str(MUTATION).expect("change-retrofit-knowledge-level mutation reparses");
-    assert_eq!(reencoded, original, "change-retrofit-knowledge-level/switches-retrofit-knowledge-level-to-kl3: committed mutation JSON is not the canonical externally-tagged ChangeRetrofitKnowledgeLevel form carrying newRetrofitKnowledgeLevel");
+    assert_eq!(reencoded, original, "change-retrofit-knowledge-level/switches-retrofit-knowledge-level-to-kl3: committed mutation JSON is not the canonical internally-tagged ChangeRetrofitKnowledgeLevel form carrying mutation and newRetrofitKnowledgeLevel");
 }
 
 /// 🎯️ The declared outcome holds: `change-retrofit-knowledge-level` at kl3 is applied, not rejected, and carries no

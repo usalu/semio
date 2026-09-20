@@ -220,6 +220,7 @@ function WasmEditorSurface({
       pointerDownScreen: () => {},
       pointerMoveScreen: () => {},
       pointerUpScreen: () => {},
+      pointerCancelScreen: () => {},
       wheelScrollScreen: () => {},
       insertText: () => {},
       backspace: () => {},
@@ -387,6 +388,12 @@ function WasmEditorSurface({
           session.pointerUpScreen(event.clientX - rect.left, event.clientY - rect.top, event.buttons);
           session.renderFrame();
           emitSelection();
+        }}
+        onPointerCancel={() => {
+          const session = sessionRef.current;
+          if (!session) return;
+          session.pointerCancelScreen();
+          session.renderFrame();
         }}
         onWheel={(event) => {
           const session = sessionRef.current;

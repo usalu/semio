@@ -82,6 +82,13 @@ fn upsert_member(space: &mut DirectorySpace, email: String, display_name: String
 
 /// 🧮️ Pure fold: `model × event -> model`. Idempotent — an event whose `seq` does not strictly
 /// advance `model.cursor` (already-applied or out-of-order-old) is ignored wholesale.
+///
+/// 🪢 `DocumentIndexed` joins its announced descriptor by `document_id` alone. The entry's
+/// `dialect.artifact_kind` is the owning app's `Dialect` (`s.note.note`) while the descriptor's
+/// `artifact_kind` is the manifest `ArtifactKindSpec::id` (`2d.note`) — two id spaces that coincide
+/// for `gis` alone, so joining on their equality silently dropped every other plugin's presentation
+/// row. The entry's own grammar is bounded by `DocumentIndexEntryV1::validate` above, which is the
+/// one gate this fold and `validate_directory_event_page_event` share.
 // 🚫️async: E1 pure accessor — the only real caller is `Iterator::fold` below (`FnMut(B, Item) -> B`,
 // signature fixed outside this repo); the TS twin (`🟦️.ts` `export function fold`) is
 // already sync too — see R9, R10 residue #1.
@@ -182,7 +189,7 @@ pub fn fold(model: DirectoryReadModel, event: &DirectoryEvent) -> DirectoryReadM
                     && event.space_id.as_deref() == Some(scope.space_id.as_str())
                     && !space.indexed_documents.iter().any(|row| row.descriptor.document_id == scope.document_id)
                 {
-                    if let Some(descriptor) = space.documents.iter().find(|descriptor| descriptor.document_id == scope.document_id && descriptor.artifact_kind == entry.dialect.artifact_kind) {
+                    if let Some(descriptor) = space.documents.iter().find(|descriptor| descriptor.document_id == scope.document_id) {
                         space.indexed_documents.push(DirectoryIndexedDocumentViewV1 {
                             descriptor: descriptor.clone(),
                             descriptor_digest_v1: *descriptor_digest_v1,

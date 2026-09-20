@@ -2059,7 +2059,7 @@ mod extension_guest {
         let manifest_json = semio_framework::io::resolve_ready(super::extension_manifest_json());
         let flow_topic = flow_extension_topic_contribution(FLOW_APP_ID, EXTENSION_ID, EXTENSION_LABEL, "brep", &manifest_json);
         let procedural3d_topic = flow_extension_topic_contribution(PROCEDURAL3D_APP_ID, EXTENSION_ID, EXTENSION_LABEL, "brep", &manifest_json);
-        let bundle = ExtensionBundle::new("flow-extension-brep", "Brep", "0.3.0").extends("flow");
+        let bundle = ExtensionBundle::new("flow-extension-brep", "Brep", "0.3.0").extends("flow").depends_on("flow", semio_framework::VersionReq::Any);
         let bundle = bundle.mode(ExecutionMode::Linked);
         let bundle = bundle.contributes_topic(flow_topic.topic, flow_topic.payload);
         let bundle = bundle.contributes_topic(procedural3d_topic.topic, procedural3d_topic.payload);

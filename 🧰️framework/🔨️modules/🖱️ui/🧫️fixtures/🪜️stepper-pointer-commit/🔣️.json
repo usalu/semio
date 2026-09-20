@@ -1,0 +1,8 @@
+{
+  "cases": [
+    { "id": "plus-release", "segment": "plus", "terminal": "release-inside", "pressActions": 1, "terminalActions": 0, "deltaSteps": 1 },
+    { "id": "minus-release-outside", "segment": "minus", "terminal": "release-outside", "pressActions": 1, "terminalActions": 0, "deltaSteps": -1 },
+    { "id": "plus-cancel", "segment": "plus", "terminal": "cancel", "pressActions": 1, "terminalActions": 0, "deltaSteps": 1 },
+    { "id": "value-release", "segment": "value", "terminal": "release-inside", "pressActions": 0, "terminalActions": 0, "deltaSteps": 0 }
+  ]
+}

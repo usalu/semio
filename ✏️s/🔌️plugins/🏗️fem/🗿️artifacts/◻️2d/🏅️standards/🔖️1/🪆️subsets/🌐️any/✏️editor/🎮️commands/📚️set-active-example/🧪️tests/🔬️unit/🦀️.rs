@@ -41,7 +41,7 @@ fn set_active_example_unknown_id_resets_to_empty_document_2d() {
 #[test]
 fn set_active_example_is_declared_as_operation_2d() {
     let definition = crate::editor::fem2d::create_fem2d_app();
-    let action = definition.window_kinds.iter().flat_map(|window| window.actions.iter()).find(|action| action.id == "setActiveExample").expect("setActiveExample declared");
+    let action = definition.window_kinds.iter().flat_map(|window| semio_framework::window_kind_actions(&definition, window)).find(|action| action.id == "setActiveExample").expect("setActiveExample declared");
     assert!(matches!(action.kind, semio_framework_plugin::ActionKind::Mutation), "loading an example emits a document-replace effect, so it is a Mutation");
     assert!(!action.args.is_empty(), "the palette stages the example choice via a declared select arg");
 }
@@ -52,7 +52,7 @@ fn set_active_example_is_declared_as_operation_2d() {
 #[test]
 fn the_declared_example_option_is_the_bundled_example_id_2d() {
     let definition = crate::editor::fem2d::create_fem2d_app();
-    let action = definition.window_kinds.iter().flat_map(|window| window.actions.iter()).find(|action| action.id == "setActiveExample").expect("setActiveExample declared");
+    let action = definition.window_kinds.iter().flat_map(|window| semio_framework::window_kind_actions(&definition, window)).find(|action| action.id == "setActiveExample").expect("setActiveExample declared");
     let example = action.args.iter().find(|arg| arg.id == "exampleId").expect("exampleId arg declared");
     match example.control() {
         semio_framework::ActionArgControl::Select { options } => {

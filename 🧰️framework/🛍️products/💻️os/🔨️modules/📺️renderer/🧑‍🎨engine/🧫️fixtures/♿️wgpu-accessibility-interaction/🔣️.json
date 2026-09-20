@@ -1,0 +1,332 @@
+{
+  "schema": "semio.renderer.wgpu.accessibility-interaction.v1",
+  "note": "A language-neutral, node-addressed accessibility interaction contract. Every event carries the stable window id, the retained window instance generation, the published node id, and the node key that must still identify that node. The renderer rejects an absent window, a retired generation, or an id/key mismatch before focus, activation, or value routing. No row contains pointer coordinates: assistive technology addresses the semantic node directly.",
+  "limits": {
+    "windowIdBytes": 512,
+    "nodeKeyBytes": 512,
+    "valueCodeUnits": 1024,
+    "losslessItems": 64
+  },
+  "projection": {
+    "windowId": "procedural-main",
+    "windowGeneration": 7,
+    "nodes": [
+      {
+        "nodeId": 1,
+        "nodeKey": "#parameters",
+        "depth": 0,
+        "role": "form",
+        "label": "Generation parameters",
+        "focusable": false,
+        "actionable": false,
+        "focused": false
+      },
+      {
+        "nodeId": 2,
+        "nodeKey": "#apply",
+        "depth": 1,
+        "role": "button",
+        "label": "Apply generation",
+        "focusable": true,
+        "actionable": true,
+        "focused": false,
+        "disabled": false
+      },
+      {
+        "nodeId": 3,
+        "nodeKey": "#width-field",
+        "depth": 1,
+        "role": "group",
+        "label": "Width",
+        "focusable": false,
+        "actionable": false,
+        "focused": false
+      },
+      {
+        "nodeId": 4,
+        "nodeKey": "#width",
+        "depth": 2,
+        "role": "textbox",
+        "label": "Width in millimetres",
+        "focusable": true,
+        "actionable": true,
+        "focused": false,
+        "disabled": false,
+        "value": "12"
+      },
+      {
+        "nodeId": 5,
+        "nodeKey": "#enabled",
+        "depth": 1,
+        "role": "switch",
+        "label": "Enabled",
+        "focusable": true,
+        "actionable": true,
+        "focused": false,
+        "disabled": false,
+        "checked": true
+      },
+      {
+        "nodeId": 6,
+        "nodeKey": "#features",
+        "depth": 1,
+        "role": "tree",
+        "label": "Features",
+        "focusable": false,
+        "actionable": false,
+        "focused": false
+      },
+      {
+        "nodeId": 7,
+        "nodeKey": "#feature-a",
+        "depth": 2,
+        "role": "treeitem",
+        "label": "Feature A",
+        "focusable": true,
+        "actionable": true,
+        "focused": false,
+        "selected": true,
+        "expanded": false,
+        "level": 1
+      }
+    ]
+  },
+  "mirrorProjection": {
+    "windowId": "shell.chrome.accessibility",
+    "windowGeneration": 1,
+    "nodes": [
+      {
+        "nodeId": 1,
+        "key": "settings.field",
+        "depth": 0,
+        "role": "group",
+        "label": "Iterations",
+        "live": "off"
+      },
+      {
+        "nodeId": 2,
+        "key": "settings.iterations",
+        "depth": 1,
+        "role": "spinbutton",
+        "label": "Iterations",
+        "description": "Whole-number iterations",
+        "live": "off",
+        "focusable": true,
+        "actionable": true,
+        "valueMin": 1,
+        "valueMax": 10,
+        "valueNow": 3,
+        "valueText": "3"
+      },
+      {
+        "nodeId": 3,
+        "key": "settings.status",
+        "depth": 0,
+        "role": "paragraph",
+        "label": "Ready",
+        "live": "polite"
+      },
+      {
+        "nodeId": 4,
+        "key": "framework.settings",
+        "depth": 0,
+        "role": "switch",
+        "label": "Settings",
+        "live": "off",
+        "focusable": true,
+        "actionable": true,
+        "checked": true
+      },
+      {
+        "nodeId": 5,
+        "key": "framework.settings.general",
+        "depth": 0,
+        "role": "tab",
+        "label": "General",
+        "live": "off",
+        "focusable": true,
+        "actionable": true,
+        "focused": true,
+        "selected": true
+      }
+    ]
+  },
+  "events": [
+    {
+      "id": "focus-apply",
+      "dom": {
+        "type": "focus"
+      },
+      "wire": {
+        "kind": "accessibility-focus",
+        "windowId": "procedural-main",
+        "windowGeneration": 7,
+        "nodeId": 2,
+        "nodeKey": "#apply"
+      },
+      "expected": {
+        "accepted": true,
+        "focusedNodeId": 2,
+        "actions": 0
+      }
+    },
+    {
+      "id": "activate-apply",
+      "dom": {
+        "type": "click"
+      },
+      "wire": {
+        "kind": "accessibility-activate",
+        "windowId": "procedural-main",
+        "windowGeneration": 7,
+        "nodeId": 2,
+        "nodeKey": "#apply"
+      },
+      "expected": {
+        "accepted": true,
+        "focusedNodeId": 2,
+        "actions": 1
+      }
+    },
+    {
+      "id": "focus-width",
+      "dom": {
+        "type": "focus"
+      },
+      "wire": {
+        "kind": "accessibility-focus",
+        "windowId": "procedural-main",
+        "windowGeneration": 7,
+        "nodeId": 4,
+        "nodeKey": "#width"
+      },
+      "expected": {
+        "accepted": true,
+        "focusedNodeId": 4,
+        "actions": 0
+      }
+    },
+    {
+      "id": "replace-width",
+      "dom": {
+        "type": "input",
+        "value": "42"
+      },
+      "wire": {
+        "kind": "accessibility-value",
+        "windowId": "procedural-main",
+        "windowGeneration": 7,
+        "nodeId": 4,
+        "nodeKey": "#width",
+        "value": "42"
+      },
+      "expected": {
+        "accepted": true,
+        "focusedNodeId": 4,
+        "actions": 1,
+        "value": "42"
+      }
+    }
+  ],
+  "rejections": [
+    {
+      "id": "retired-window-generation",
+      "wire": {
+        "kind": "accessibility-activate",
+        "windowId": "procedural-main",
+        "windowGeneration": 6,
+        "nodeId": 2,
+        "nodeKey": "#apply"
+      },
+      "current": {
+        "windowGeneration": 7,
+        "nodeId": 2,
+        "nodeKey": "#apply"
+      },
+      "reason": "stale-window-generation"
+    },
+    {
+      "id": "retired-window-id",
+      "wire": {
+        "kind": "accessibility-activate",
+        "windowId": "retired-window",
+        "windowGeneration": 7,
+        "nodeId": 2,
+        "nodeKey": "#apply"
+      },
+      "current": null,
+      "reason": "window-not-live"
+    },
+    {
+      "id": "reused-node-id-with-another-key",
+      "wire": {
+        "kind": "accessibility-activate",
+        "windowId": "procedural-main",
+        "windowGeneration": 7,
+        "nodeId": 2,
+        "nodeKey": "#retired-apply"
+      },
+      "current": {
+        "windowGeneration": 7,
+        "nodeId": 2,
+        "nodeKey": "#apply"
+      },
+      "reason": "stale-node-identity"
+    }
+  ],
+  "hierarchy": [
+    {
+      "nodeKey": "#parameters",
+      "children": [
+        "#apply",
+        "#width-field",
+        "#enabled",
+        "#features"
+      ]
+    },
+    {
+      "nodeKey": "#width-field",
+      "children": [
+        "#width"
+      ]
+    },
+    {
+      "nodeKey": "#features",
+      "children": [
+        "#feature-a"
+      ]
+    }
+  ],
+  "exactOnce": {
+    "mirrorActivateEvents": 1,
+    "retainedActivateActions": 1,
+    "canvasKeyEvents": 0,
+    "staleActivateActions": 0
+  },
+  "nestedPanelSelection": {
+    "rootId": "framework.settings",
+    "appFirstLeafId": "pane-fixture.panel.settings",
+    "targetLeafId": "framework.settings.general",
+    "expectedPath": [
+      "framework.settings",
+      "framework.settings.general"
+    ],
+    "requiredControlId": "framework.settings.appearance",
+    "pointerRects": [
+      {
+        "id": "unmeasured",
+        "x": 1390.0,
+        "y": 51.2,
+        "width": 24.0,
+        "height": 24.0
+      },
+      {
+        "id": "measured",
+        "x": 1390.0,
+        "y": 787.2,
+        "width": 24.0,
+        "height": 24.0
+      }
+    ]
+  }
+}

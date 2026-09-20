@@ -386,15 +386,8 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
 
       it("drops a dispatch-action whose action id never survived the boundary", async () => {
         const { default: fixture } = await import("../../🧱️elements/🔌️PluginRuntime/🧫️fixtures/🎯️host-effect-address.json");
-        const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
-        try {
-          // The pre-fix flat read: the payload sits at the top level, so `params.action` is absent.
-          expect(wireEffectToFriendly({ tag: "dispatch-action", val: { ...fixture.dispatchAction } })).toBeNull();
-          expect(wireEffectToFriendly({ tag: "dispatch-action", val: { req: fixture.dispatchAction.req, params: { action: "", delayMs: 0 } } })).toBeNull();
-          expect(warn).toHaveBeenCalledTimes(2);
-        } finally {
-          warn.mockRestore();
-        }
+        expect(wireEffectToFriendly({ tag: "dispatch-action", val: { ...fixture.dispatchAction } })).toBeNull();
+        expect(wireEffectToFriendly({ tag: "dispatch-action", val: { req: fixture.dispatchAction.req, params: { action: "", delayMs: 0 } } })).toBeNull();
       });
 
       it("refuses an unaddressed invocation with a typed renderer fault naming its window kind", async () => {
@@ -3242,18 +3235,32 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
       const adapted = await adaptPluginHandle("fixture", { handle, release: async () => {} });
       await adapted.createApp("app.demo");
       const seen: unknown[] = [];
+      const alsoSeen: unknown[] = [];
       const unsubscribe = adapted.subscribeOperationCompletions(instanceId, (completion) => seen.push(completion));
-      pendingCompletionEffects.set(instanceId, [{ tag: "notify", val: { message: "done" } }]);
+      // 🏁️ A SECOND subscriber on the SAME instance is the real shell (the visible session's completion
+      // pass and Home's directory-bootstrap receipt settle both bind `session.instanceId`). One channel
+      // registration fans out to both: two registrations would race for the leftover map, and whichever
+      // drained it first would leave the other a completion with no effects and no terminal output.
+      const unsubscribeSecond = adapted.subscribeOperationCompletions(instanceId, (completion) => alsoSeen.push(completion));
+      pendingCompletionEffects.set(instanceId, [
+        { tag: "notify", val: { message: "done" } },
+        { tag: "typed-operation-terminal-output", val: { schema: "semio.space.home.directory-projection-receipt.v1", throughSeqInclusive: 8 } },
+      ]);
       pendingTurnEffects.set(instanceId, [{ tag: "notify", val: { message: "invocation" } }]);
       push({ instanceId, frames: [encodeAppFrame({ OperationCompleted: { operation: 9, revision: 3, ui_scope: [], history_patch: Array.from(encodePackValue({ cursor: 2, upserts: [] })) } })] });
       for (let tick = 0; tick < 8 && seen.length === 0; tick += 1) await Promise.resolve();
       expect(seen).toHaveLength(1);
       expect(seen[0]).toMatchObject({ instanceId, operation: 9, revision: 3, requestedEffects: [{ notify: { message: "done" } }] });
+      // 🧾️ The terminal value the operation published is the completion's own carrier — a job-routed
+      // verb never drains it inside a host call, so without this field it was decoded and then dropped.
+      expect(seen[0]).toMatchObject({ terminalOutput: { schema: "semio.space.home.directory-projection-receipt.v1", throughSeqInclusive: 8 } });
+      expect(alsoSeen).toEqual(seen);
       expect(pendingCompletionEffects.has(instanceId)).toBe(false);
       expect(pendingTurnEffects.get(instanceId)).toEqual([{ tag: "notify", val: { message: "invocation" } }]);
       unsubscribe();
+      unsubscribeSecond();
       pendingTurnEffects.delete(instanceId);
-      console.info("[DEBUG] one typed-operation completion reached its subscriber once with its own effects");
+      console.info("[DEBUG] one typed-operation completion reached both subscribers once, with its own effects and its terminal output");
     });
   });
 
@@ -3564,6 +3571,49 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
         testState.sharedShardClient = previous.shard;
         globalThis.fetch = previous.fetch;
       }
+    });
+  });
+
+  /** 🎬️ The React DOM host's OWN activation reason, at the one call site that has it: `createApp`.
+   *
+   * `🎬️activation-owner` already proves `activationReasonForAppId` → `activationEventEnvelope` → the
+   * guest's WIT `activate`, but it drives `ActivationRegistry` directly. Nothing held the REACT host to
+   * passing the real reason into it, which is why `🔌️PluginRuntime`'s `createApp` sat on a literal
+   * `"manual"` until 2026-09-19 (`📓️o2-activation-follow-ups.md` §5 gap 1) with every suite green. The
+   * law is the host's: opening a foreign artifact kind activates its owner `on-artifact-kind:<kind>`,
+   * and a bare landing app id stays `manual` — which marshals to NO guest event at all, the honest
+   * delivery for a trigger the WIT variant has no case for. */
+  describe("react host activation reason", () => {
+    it("activates a foreign-kind open as on-artifact-kind:<kind> and a landing app as manual", async () => {
+      const { activationEventEnvelope } = await import("@semio-tech/framework");
+      const previous = { registry: testState.sharedActivationRegistry, shard: testState.sharedShardClient, fetch: globalThis.fetch };
+      const activations: { readonly pluginId: string; readonly actorId: string; readonly reason: string }[] = [];
+      testState.sharedActivationRegistry = {
+        registerManifest: () => {},
+        activate: async (pluginId: string, actorId: string, reason: string) => { activations.push({ pluginId, actorId, reason }); },
+        touch: () => {},
+        cancel: () => {},
+      } as unknown as ActivationRegistry;
+      testState.sharedShardClient = {
+        captureInstanceLifecycle: () => { throw new Error("fixture-open-not-configured"); },
+        dispose: () => {},
+      } as unknown as ShardClient;
+      globalThis.fetch = stubFetch(async () => new Response(JSON.stringify({ manifest: { pluginId: "beta", apps: [] } }), { headers: { "content-type": "application/json" } }));
+      let handle: PluginWasmHandle | undefined;
+      try {
+        handle = await loadPluginModule("beta", "https://fixture.invalid/plugin.js");
+        await expect(handle.createApp("s.beta.sheet@1/*#editor")).rejects.toThrow("fixture-open-not-configured");
+        await expect(handle.createApp("home")).rejects.toThrow("fixture-open-not-configured");
+      } finally {
+        await handle?.dispose().catch(() => {});
+        testState.sharedActivationRegistry = previous.registry;
+        testState.sharedShardClient = previous.shard;
+        globalThis.fetch = previous.fetch;
+      }
+      expect(activations.map((entry) => entry.reason)).toEqual(["on-artifact-kind:s.beta.sheet", "manual"]);
+      expect(activations.map((entry) => entry.pluginId)).toEqual(["beta", "beta"]);
+      expect(activationEventEnvelope(activations[0]!.reason as "on-artifact-kind:s.beta.sheet")).toEqual({ kind: "activate", payload: { instance: 0, reason: { tag: "on-artifact-kind", val: "s.beta.sheet" } } });
+      expect(activationEventEnvelope(activations[1]!.reason as "manual")).toBeUndefined();
     });
   });
 

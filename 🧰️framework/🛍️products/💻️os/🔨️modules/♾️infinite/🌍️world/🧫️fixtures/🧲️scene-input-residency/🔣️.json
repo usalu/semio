@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "snap": {
+    "point": [1.4, -2.6, 0],
+    "factor": 1,
+    "disabled": [1.4, -2.6, 0],
+    "enabled": [1, -3, 0]
+  },
+  "referenceResidency": {
+    "removedUrl": "/reference/a.png",
+    "replacementUrl": "/reference/b.png",
+    "distinctReplacementCount": 300,
+    "maximumResidentUrls": 1
+  },
+  "oracles": {
+    "reactWorld3d": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🌐️World3dHost/🟦️.tsx",
+    "thirdPartyVector": "three.Vector3.round"
+  }
+}

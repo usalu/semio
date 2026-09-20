@@ -25,6 +25,7 @@
     { "id": "native-full-catalog", "selected": ["full-artifact-catalog"], "catalog": 36, "apps": false, "exports": false },
     { "id": "transitive-home-and-full", "selected": ["home-io", "full-artifact-catalog"], "catalog": 36, "apps": false, "exports": false },
     { "id": "component-apps-without-exports", "selected": ["component-app-assembly"], "catalog": 36, "apps": true, "exports": false },
+    { "id": "library-full-app-fleet", "selected": ["full-app-catalog"], "catalog": 36, "apps": true, "exports": false },
     { "id": "root-component", "selected": ["plugin-root"], "catalog": 36, "apps": true, "exports": true },
     { "id": "default-component", "selected": ["default"], "catalog": 36, "apps": true, "exports": true }
   ]

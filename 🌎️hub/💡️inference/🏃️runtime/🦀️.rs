@@ -176,6 +176,113 @@ pub enum GisMapApprovalCommitErrorV1 {
     Storage,
 }
 
+/// 🔎️ The exact arm one retained GIS-map approval commit answered `Conflict` from. The inference
+/// route maps `Conflict` onto `InferenceRouteErrorV1::Conflict` one-to-one and carries no body, so a
+/// law that reads the taxonomy cannot name the refusal. The returned error and the wire are
+/// identical in production; only a test build records which arm produced it.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum GisMapCommitConflictArmV1 {
+    PreflightCheckpointDiffers,
+    PreflightIdentityOrStoresDiffer,
+    PreflightWriterMissing,
+    PublishStateMissing,
+    PublishIdentityDiffers,
+    PublishStateMissingAfterSnapshot,
+    PublishIdentityDiffersAfterSnapshot,
+    PublishProjectedFrontierDiffers,
+    PublishResponseDiffers,
+    VerifyFenceStateDiffers,
+    VerifyWalVerifier,
+    VerifyStateDiffersAfterWitness,
+    VerifyPublishedStateDiffers,
+    VerifyPublicationFrontierMissing,
+    VerifyUndoVerifier,
+    VerifyApplyVerifier,
+    VerifyCheckpointApplyMissing,
+    VerifyReceiptStateDiffers,
+    DriveGenerationDiffers,
+    DriveUndoGenerationDiffers,
+    PublisherRegionDiffers,
+    PublisherProposalStateOrGate,
+    PublisherCheckpointApplyState,
+}
+
+#[cfg(test)]
+static LAST_GIS_MAP_COMMIT_CONFLICT_ARM: std::sync::Mutex<Option<GisMapCommitConflictArmV1>> = std::sync::Mutex::new(None);
+
+/// 🧾️ Answers the unchanged `Conflict` after recording which arm produced it.
+pub fn gis_map_commit_conflict(arm: GisMapCommitConflictArmV1) -> GisMapApprovalCommitErrorV1 {
+    #[cfg(test)]
+    {
+        *LAST_GIS_MAP_COMMIT_CONFLICT_ARM.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(arm);
+    }
+    let _ = arm;
+    GisMapApprovalCommitErrorV1::Conflict
+}
+
+/// 🔬️ The last recorded conflict arm of this process, for laws that only see the taxonomy.
+#[cfg(test)]
+pub fn last_gis_map_commit_conflict_arm() -> Option<GisMapCommitConflictArmV1> {
+    *LAST_GIS_MAP_COMMIT_CONFLICT_ARM.lock().unwrap_or_else(std::sync::PoisonError::into_inner)
+}
+
+static LAST_ABANDONED_ASSEMBLY_TURN: std::sync::Mutex<Option<String>> = std::sync::Mutex::new(None);
+
+/// 🧾️ Records what ONE abandoned `Assembly` turn did, so a law that only sees "still Assembly after
+/// its budget" learns whether the turn is spinning on `Progress(<phase>)` or looping on a named
+/// `Err`. `Continue` and `Retry` are the same symptom and different defects.
+fn record_abandoned_assembly_turn(outcome: &str) {
+    #[cfg(test)]
+    {
+        *LAST_ABANDONED_ASSEMBLY_TURN.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(outcome.to_owned());
+    }
+    let _ = outcome;
+}
+
+static LAST_GIS_MAP_PREPARE_CONFLICT: std::sync::Mutex<Option<String>> = std::sync::Mutex::new(None);
+
+/// 🧾️ Records WHICH retained state refused a joining request and on which conjunct.
+/// `prepare_retained_document` returns a bare `Conflict` from six arms, so a request refused before
+/// the drive loop ever runs prints neither a conflict arm nor an identity mismatch — it names
+/// nothing at all. This names the state and the false conjunct.
+fn record_prepare_conflict(reason: &str) {
+    #[cfg(test)]
+    {
+        *LAST_GIS_MAP_PREPARE_CONFLICT.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(reason.to_owned());
+    }
+    let _ = reason;
+}
+
+/// 🔬️ The last retained-document join refusal of this process.
+#[cfg(test)]
+pub fn last_gis_map_prepare_conflict() -> Option<String> {
+    LAST_GIS_MAP_PREPARE_CONFLICT.lock().unwrap_or_else(std::sync::PoisonError::into_inner).clone()
+}
+
+static LAST_GIS_MAP_IDENTITY_MISMATCH: std::sync::Mutex<Option<&'static str>> = std::sync::Mutex::new(None);
+
+/// 🧾️ Records which conjunct of a retained-identity join was false, so a `Conflict` against an
+/// already-retained publication names a field instead of a bool.
+fn record_identity_mismatch(field: &'static str) {
+    #[cfg(test)]
+    {
+        *LAST_GIS_MAP_IDENTITY_MISMATCH.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(field);
+    }
+    let _ = field;
+}
+
+/// 🔬️ The last retained-identity join mismatch of this process.
+#[cfg(test)]
+pub fn last_gis_map_identity_mismatch() -> Option<&'static str> {
+    *LAST_GIS_MAP_IDENTITY_MISMATCH.lock().unwrap_or_else(std::sync::PoisonError::into_inner)
+}
+
+/// 🔬️ The last abandoned `Assembly` turn of this process.
+#[cfg(test)]
+pub fn last_abandoned_assembly_turn() -> Option<String> {
+    LAST_ABANDONED_ASSEMBLY_TURN.lock().unwrap_or_else(std::sync::PoisonError::into_inner).clone()
+}
+
 /// 🧾️ A committed publication receipt: only a real committed-WAL witness may reconcile the outbox.
 pub struct GisMapApprovalReceiptV1 {
     pub witness: CommittedInferenceWalWitnessV1,
@@ -244,6 +351,13 @@ pub trait GisMapApprovalCommitterV1: Send + Sync {
     fn commit<'a>(&'a self, request: GisMapApprovalCommitRequestV1<'a>) -> std::pin::Pin<Box<dyn Future<Output = Result<GisMapApprovalReceiptV1, GisMapApprovalCommitErrorV1>> + Send + 'a>>;
     fn undo<'a>(&'a self, request: GisMapApprovalUndoCommitRequestV1<'a>) -> std::pin::Pin<Box<dyn Future<Output = Result<GisMapApprovalUndoCommitReceiptV1, GisMapApprovalCommitErrorV1>> + Send + 'a>>;
     fn close<'a>(&'a self) -> std::pin::Pin<Box<dyn Future<Output = Result<(), GisMapApprovalCommitErrorV1>> + Send + 'a>>;
+
+    /// ⏰️ The document's OWN hybrid logical clock, as the retained parent Store carries it, or
+    /// `None` while no Store is mounted for this scope — which is exactly the genesis case, where the
+    /// document has no history to be after. The approval stamp is minted from this, never from the
+    /// hub's wall clock alone, so the stamp the command hash is computed over is strictly after the
+    /// document's last edit by construction.
+    fn document_clock<'a>(&'a self, scope: &'a DocumentScope) -> std::pin::Pin<Box<dyn Future<Output = Option<protocol::HybridLogicalTimestamp>> + Send + 'a>>;
 }
 
 /// 🚧️ Fail-closed committer for every deployment where no composition transaction is registered.
@@ -269,6 +383,10 @@ impl GisMapApprovalCommitterV1 for UnavailableGisMapApprovalCommitterV1 {
 
     fn close<'a>(&'a self) -> std::pin::Pin<Box<dyn Future<Output = Result<(), GisMapApprovalCommitErrorV1>> + Send + 'a>> {
         Box::pin(async { Ok(()) })
+    }
+
+    fn document_clock<'a>(&'a self, _scope: &'a DocumentScope) -> std::pin::Pin<Box<dyn Future<Output = Option<protocol::HybridLogicalTimestamp>> + Send + 'a>> {
+        Box::pin(async { None })
     }
 }
 
@@ -329,7 +447,7 @@ struct GisMapClosingStoresV1 {
 
 pub enum RetainedGisMapDocumentStateV1 {
     Recovery {
-        owner: GisMapRecoveryOwnerV1,
+        owner: Arc<tokio::sync::Mutex<GisMapRecoveryOwnerV1>>,
         handle: db::ArtifactHandle,
         scope: DocumentScope,
         generation: u64,
@@ -934,30 +1052,70 @@ impl RetainedGisMapApprovalCommitterV1 {
     }
 
     fn identity_matches(identity: &GisMapCommitIdentityV1, candidate: &GisMapCommitIdentityV1) -> bool {
-        identity.scope == candidate.scope
-            && identity.actor == candidate.actor
-            && identity.mutation_id == candidate.mutation_id
-            && identity.command_hash == candidate.command_hash
-            && identity.job_id == candidate.job_id
-            && identity.proposal_hash == candidate.proposal_hash
-            && identity.base_frontier == candidate.base_frontier
-            && identity.descriptor_digest == candidate.descriptor_digest
-            && identity.base_digest == candidate.base_digest
-            && Arc::ptr_eq(&identity.document_write, &candidate.document_write)
-            && match (&identity.operation, &candidate.operation) {
-                (GisMapCommitOperationV1::Approval, GisMapCommitOperationV1::Approval) => true,
-                (
-                    GisMapCommitOperationV1::Undo { target_id: left_target, idempotency_key: left_key, original_job_id: left_job, original_command: left_command },
-                    GisMapCommitOperationV1::Undo { target_id: right_target, idempotency_key: right_key, original_job_id: right_job, original_command: right_command },
-                ) => left_target == right_target && left_key == right_key && left_job == right_job && left_command.as_slice() == right_command.as_slice(),
-                _ => false,
+        match Self::first_identity_mismatch(identity, candidate) {
+            None => true,
+            Some(field) => {
+                record_identity_mismatch(field);
+                false
             }
-            && match (&identity.ingress, &candidate.ingress) {
-                (Some(left), Some(right)) => Arc::ptr_eq(left, right),
-                (None, Some(_)) => true,
-                (None, None) => true,
-                _ => false,
-            }
+        }
+    }
+
+    /// 🔬️ The FIRST field on which a retained identity and a joining candidate differ, in the order
+    /// the join compares them. `identity_matches` answers a bool, so a request refused as `Conflict`
+    /// against a retained publication cannot say which of its twelve conjuncts was false. This names
+    /// it for the recorder.
+    fn first_identity_mismatch(identity: &GisMapCommitIdentityV1, candidate: &GisMapCommitIdentityV1) -> Option<&'static str> {
+        if identity.scope != candidate.scope {
+            return Some("scope");
+        }
+        if identity.actor != candidate.actor {
+            return Some("actor");
+        }
+        if identity.mutation_id != candidate.mutation_id {
+            return Some("mutation_id");
+        }
+        if identity.command_hash != candidate.command_hash {
+            return Some("command_hash");
+        }
+        if identity.job_id != candidate.job_id {
+            return Some("job_id");
+        }
+        if identity.proposal_hash != candidate.proposal_hash {
+            return Some("proposal_hash");
+        }
+        if identity.base_frontier != candidate.base_frontier {
+            return Some("base_frontier");
+        }
+        if identity.descriptor_digest != candidate.descriptor_digest {
+            return Some("descriptor_digest");
+        }
+        if identity.base_digest != candidate.base_digest {
+            return Some("base_digest");
+        }
+        if !Arc::ptr_eq(&identity.document_write, &candidate.document_write) {
+            return Some("document_write");
+        }
+        let operation = match (&identity.operation, &candidate.operation) {
+            (GisMapCommitOperationV1::Approval, GisMapCommitOperationV1::Approval) => true,
+            (
+                GisMapCommitOperationV1::Undo { target_id: left_target, idempotency_key: left_key, original_job_id: left_job, original_command: left_command },
+                GisMapCommitOperationV1::Undo { target_id: right_target, idempotency_key: right_key, original_job_id: right_job, original_command: right_command },
+            ) => left_target == right_target && left_key == right_key && left_job == right_job && left_command.as_slice() == right_command.as_slice(),
+            _ => false,
+        };
+        if !operation {
+            return Some("operation");
+        }
+        let ingress = match (&identity.ingress, &candidate.ingress) {
+            (Some(left), Some(right)) => Arc::ptr_eq(left, right),
+            (None, Some(_)) | (None, None) => true,
+            _ => false,
+        };
+        if !ingress {
+            return Some("ingress");
+        }
+        None
     }
 
     fn reserve_operations(&self) -> Result<[semio_framework_job::OperationId; 3], GisMapApprovalCommitErrorV1> {
@@ -997,31 +1155,35 @@ impl RetainedGisMapApprovalCommitterV1 {
         let parent_reference = directory::os_io::ArtifactRef { artifact_id: parent_id, dialect: directory::os_io::ArtifactDialect { artifact_kind: "s.gis.gismap".into(), standard: "1".into(), subset: "*".into() } };
         let admission = directory::os_store::durable_group::DurableOwnedMapRecoveryAdmissionV1::new(parent, Self::drawing_store(&drawing_id, parent_reference.clone(), drawing), Self::value_store(&value_id, parent_reference, value));
         let recovery = handle.durable_group_recovery_retained(admission);
-        documents.insert(key, RetainedGisMapDocumentStateV1::Recovery { owner: recovery, handle, scope, generation: observed.authority_generation, document_write, fence });
+        documents.insert(key, RetainedGisMapDocumentStateV1::Recovery { owner: Arc::new(tokio::sync::Mutex::new(recovery)), handle, scope, generation: observed.authority_generation, document_write, fence });
         Ok(true)
     }
 
     async fn finish_document_recovery(&self, key: &str) -> Result<(), GisMapApprovalCommitErrorV1> {
+        let (scan, scan_handle) = {
+            let documents = self.documents.lock().await;
+            let Some(state) = documents.get(key) else { return Err(GisMapApprovalCommitErrorV1::Unavailable) };
+            let RetainedGisMapDocumentStateV1::Recovery { owner, handle, .. } = state else { return Ok(()) };
+            (owner.clone(), handle.clone())
+        };
+        let advanced = {
+            let mut owner = scan.lock().await;
+            if !owner.scan_is_active() && scan_handle.resume_durable_group_recovery(&mut owner).is_err() {
+                return Err(GisMapApprovalCommitErrorV1::Storage);
+            }
+            match owner.advance().await {
+                Ok(true) => Ok((owner.recovered_checkpoint(), owner.take_terminal_owners())),
+                Ok(false) | Err(_) => Err(GisMapApprovalCommitErrorV1::Storage),
+            }
+        };
         let mut documents = self.documents.lock().await;
         let Some(state) = documents.remove(key) else { return Err(GisMapApprovalCommitErrorV1::Unavailable) };
-        let RetainedGisMapDocumentStateV1::Recovery { mut owner, handle, scope, generation, document_write, fence } = state else {
+        let RetainedGisMapDocumentStateV1::Recovery { owner, handle, scope, generation, document_write, fence } = state else {
             documents.insert(key.to_owned(), state);
             return Ok(());
         };
-        if !owner.scan_is_active() {
-            if let Err(_) = handle.resume_durable_group_recovery(&mut owner) {
-                documents.insert(key.to_owned(), RetainedGisMapDocumentStateV1::Recovery { owner, handle, scope, generation, document_write, fence });
-                return Err(GisMapApprovalCommitErrorV1::Storage);
-            }
-        }
-        match owner.advance().await {
-            Ok(true) => {
-                let recovered_checkpoint = owner.recovered_checkpoint();
-                let Some(owners) = owner.take_terminal_owners() else {
-                    documents.insert(key.to_owned(), RetainedGisMapDocumentStateV1::Recovery { owner, handle, scope, generation, document_write, fence });
-                    return Err(GisMapApprovalCommitErrorV1::Storage);
-                };
-                drop(owner);
+        match advanced {
+            Ok((recovered_checkpoint, Some(owners))) => {
                 let owners = Self::restored_stores(owners.parent, owners.drawing, owners.value, handle, scope, generation, document_write.gate.clone(), fence);
                 if let Some(checkpoint) = recovered_checkpoint {
                     documents.insert(key.to_owned(), RetainedGisMapDocumentStateV1::Recovered { owners, checkpoint, document_write });
@@ -1030,7 +1192,7 @@ impl RetainedGisMapApprovalCommitterV1 {
                 }
                 Ok(())
             }
-            Ok(false) | Err(_) => {
+            Ok((_, None)) | Err(_) => {
                 documents.insert(key.to_owned(), RetainedGisMapDocumentStateV1::Recovery { owner, handle, scope, generation, document_write, fence });
                 Err(GisMapApprovalCommitErrorV1::Storage)
             }
@@ -1152,6 +1314,7 @@ impl RetainedGisMapApprovalCommitterV1 {
                 match documents.get(&key) {
                     Some(RetainedGisMapDocumentStateV1::Recovery { scope: stored, document_write, .. }) => {
                         if stored != scope || !Arc::ptr_eq(&document_write.gate, &gate) {
+                            record_prepare_conflict("Recovery/scope-or-gate");
                             return Err(GisMapApprovalCommitErrorV1::Conflict);
                         }
                         if Self::request_matches(document_write, &request) {
@@ -1161,10 +1324,17 @@ impl RetainedGisMapApprovalCommitterV1 {
                         }
                     }
                     Some(RetainedGisMapDocumentStateV1::Ready { owners, document_write, .. }) => {
-                        if owners.scope != *scope
-                            || !Arc::ptr_eq(&owners.document_write, &gate)
-                            || !Self::stores_match(owners, &<GisMapParentSnapshotV1 as directory::ArtifactPack>::decode_pack(base.pack.as_slice()).map_err(|_| GisMapApprovalCommitErrorV1::Rejected)?)
-                        {
+                        let snapshot = <GisMapParentSnapshotV1 as directory::ArtifactPack>::decode_pack(base.pack.as_slice()).map_err(|_| GisMapApprovalCommitErrorV1::Rejected)?;
+                        if owners.scope != *scope {
+                            record_prepare_conflict("Ready/scope");
+                            return Err(GisMapApprovalCommitErrorV1::Conflict);
+                        }
+                        if !Arc::ptr_eq(&owners.document_write, &gate) {
+                            record_prepare_conflict("Ready/document_write");
+                            return Err(GisMapApprovalCommitErrorV1::Conflict);
+                        }
+                        if !Self::stores_match(owners, &snapshot) {
+                            record_prepare_conflict("Ready/stores_match");
                             return Err(GisMapApprovalCommitErrorV1::Conflict);
                         }
                         match document_write {
@@ -1174,10 +1344,17 @@ impl RetainedGisMapApprovalCommitterV1 {
                         }
                     }
                     Some(RetainedGisMapDocumentStateV1::Published { owners, document_write, .. }) => {
-                        if owners.scope != *scope
-                            || !Arc::ptr_eq(&owners.document_write, &gate)
-                            || !Self::stores_match(owners, &<GisMapParentSnapshotV1 as directory::ArtifactPack>::decode_pack(base.pack.as_slice()).map_err(|_| GisMapApprovalCommitErrorV1::Rejected)?)
-                        {
+                        let snapshot = <GisMapParentSnapshotV1 as directory::ArtifactPack>::decode_pack(base.pack.as_slice()).map_err(|_| GisMapApprovalCommitErrorV1::Rejected)?;
+                        if owners.scope != *scope {
+                            record_prepare_conflict("Published/scope");
+                            return Err(GisMapApprovalCommitErrorV1::Conflict);
+                        }
+                        if !Arc::ptr_eq(&owners.document_write, &gate) {
+                            record_prepare_conflict("Published/document_write");
+                            return Err(GisMapApprovalCommitErrorV1::Conflict);
+                        }
+                        if !Self::stores_match(owners, &snapshot) {
+                            record_prepare_conflict("Published/stores_match");
                             return Err(GisMapApprovalCommitErrorV1::Conflict);
                         }
                         match document_write {
@@ -1188,6 +1365,7 @@ impl RetainedGisMapApprovalCommitterV1 {
                     }
                     Some(RetainedGisMapDocumentStateV1::Recovered { owners, document_write, .. }) => {
                         if owners.scope != *scope || !Arc::ptr_eq(&owners.document_write, &gate) || !Arc::ptr_eq(&document_write.gate, &gate) {
+                            record_prepare_conflict("Recovered/scope-or-gate");
                             return Err(GisMapApprovalCommitErrorV1::Conflict);
                         }
                         if Self::request_matches(document_write, &request) {
@@ -1198,6 +1376,14 @@ impl RetainedGisMapApprovalCommitterV1 {
                     }
                     Some(RetainedGisMapDocumentStateV1::Verification { owners, identity, document_write, .. }) | Some(RetainedGisMapDocumentStateV1::Publishing { owners, identity, document_write, .. }) => {
                         if owners.scope != *scope || !Arc::ptr_eq(&owners.document_write, &gate) || !Arc::ptr_eq(&document_write.gate, &gate) || identity.base_frontier != base.frontier || identity.base_digest != base.digest() {
+                            record_prepare_conflict(&format!(
+                                "Verification|Publishing/scope={} owners_gate={} lease_gate={} base_frontier={} base_digest={}",
+                                owners.scope == *scope,
+                                Arc::ptr_eq(&owners.document_write, &gate),
+                                Arc::ptr_eq(&document_write.gate, &gate),
+                                identity.base_frontier == base.frontier,
+                                identity.base_digest == base.digest(),
+                            ));
                             return Err(GisMapApprovalCommitErrorV1::Conflict);
                         }
                         if Self::request_matches(document_write, &request) {
@@ -1208,6 +1394,13 @@ impl RetainedGisMapApprovalCommitterV1 {
                     }
                     Some(RetainedGisMapDocumentStateV1::Assembly { scope: stored, identity, document_write, .. }) | Some(RetainedGisMapDocumentStateV1::Journal { scope: stored, identity, document_write, .. }) => {
                         if stored != scope || !Arc::ptr_eq(&identity.document_write, &gate) || identity.base_frontier != base.frontier || identity.base_digest != base.digest() {
+                            record_prepare_conflict(&format!(
+                                "Assembly|Journal/scope={} identity_gate={} base_frontier={} base_digest={}",
+                                stored == scope,
+                                Arc::ptr_eq(&identity.document_write, &gate),
+                                identity.base_frontier == base.frontier,
+                                identity.base_digest == base.digest(),
+                            ));
                             return Err(GisMapApprovalCommitErrorV1::Conflict);
                         }
                         if Self::request_matches(document_write, &request) {
@@ -1420,6 +1613,7 @@ impl RetainedGisMapApprovalCommitterV1 {
                     Ok(DurableOwnedThreeStoreMapAssemblyAdvanceV1::Terminal) => {
                         let terminal = owner.take_terminal_owners().expect("terminal assembly returns every owner");
                         drop(owner);
+                        eprintln!("[WARN] inference runtime: fixed-three assembly refused before the journal for {key} — {:?}", terminal.failure);
                         let owners = Self::restored_stores(terminal.parent, terminal.drawing, terminal.value, handle, scope, generation, identity.document_write.clone(), fence);
                         documents.insert(key.to_owned(), RetainedGisMapDocumentStateV1::Ready { owners, pending: None, document_write: None });
                         GisMapCommitTurnV1::Rejected(GisMapApprovalCommitErrorV1::Rejected)
@@ -1595,11 +1789,13 @@ impl RetainedGisMapApprovalCommitterV1 {
                         drop(document_write);
                         GisMapAbandonedTurnV1::Aborted
                     }
-                    Ok(_) => {
+                    Ok(progress) => {
+                        record_abandoned_assembly_turn(&format!("Continue on {progress:?} [{}]", owner.closing_witness()));
                         documents.insert(key.to_owned(), RetainedGisMapDocumentStateV1::Assembly { owner, handle, scope, generation, identity, document_write, fence });
                         GisMapAbandonedTurnV1::Continue
                     }
-                    Err(_) => {
+                    Err(error) => {
+                        record_abandoned_assembly_turn(&format!("Retry on {error:?} [{}]", owner.closing_witness()));
                         documents.insert(key.to_owned(), RetainedGisMapDocumentStateV1::Assembly { owner, handle, scope, generation, identity, document_write, fence });
                         GisMapAbandonedTurnV1::Retry
                     }
@@ -1701,6 +1897,7 @@ impl RetainedGisMapApprovalCommitterV1 {
             self.announce_state_change();
             let retry = match turn {
                 GisMapAbandonedTurnV1::Complete | GisMapAbandonedTurnV1::Aborted => {
+                    record_abandoned_assembly_turn(&format!("driver leaving on {turn:?}"));
                     if matches!(&identity.operation, GisMapCommitOperationV1::Undo { .. }) {
                         return;
                     }
@@ -1737,7 +1934,7 @@ impl RetainedGisMapApprovalCommitterV1 {
 
     async fn finish_preflight(&self, key: &str, candidate: &GisMapCommitIdentityV1, snapshot: &GisMapParentSnapshotV1, observed: &db::CheckpointPublicationSnapshot) -> Result<(), GisMapApprovalCommitErrorV1> {
         if !Self::checkpoint_matches_frontier(observed, observed.authority_generation, &candidate.base_frontier, &candidate.scope) {
-            return Err(GisMapApprovalCommitErrorV1::Conflict);
+            return Err(gis_map_commit_conflict(GisMapCommitConflictArmV1::PreflightCheckpointDiffers));
         }
         let mut documents = self.documents.lock().await;
         let Some(state) = documents.remove(key) else { return Err(GisMapApprovalCommitErrorV1::Unavailable) };
@@ -1747,11 +1944,11 @@ impl RetainedGisMapApprovalCommitterV1 {
         };
         if !Self::identity_matches(&identity, candidate) || owners.generation != observed.authority_generation || !Self::stores_match(&owners, snapshot) {
             documents.insert(key.to_owned(), RetainedGisMapDocumentStateV1::Ready { owners, pending: Some(identity), document_write });
-            return Err(GisMapApprovalCommitErrorV1::Conflict);
+            return Err(gis_map_commit_conflict(GisMapCommitConflictArmV1::PreflightIdentityOrStoresDiffer));
         }
         let Some(document_write) = document_write else {
             documents.insert(key.to_owned(), RetainedGisMapDocumentStateV1::Ready { owners, pending: Some(identity), document_write: None });
-            return Err(GisMapApprovalCommitErrorV1::Conflict);
+            return Err(gis_map_commit_conflict(GisMapCommitConflictArmV1::PreflightWriterMissing));
         };
         match self.build_assembly(owners, identity, snapshot, document_write) {
             Ok(state) => {
@@ -1797,10 +1994,10 @@ impl RetainedGisMapApprovalCommitterV1 {
         let (handle, scope) = {
             let documents = self.documents.lock().await;
             let Some(RetainedGisMapDocumentStateV1::Publishing { owners, identity: stored, receipt: stored_receipt, document_write: _ }) = documents.get(key) else {
-                return Err(GisMapApprovalCommitErrorV1::Conflict);
+                return Err(gis_map_commit_conflict(GisMapCommitConflictArmV1::PublishStateMissing));
             };
             if !Self::identity_matches(stored, identity) || stored_receipt != receipt || owners.generation != generation {
-                return Err(GisMapApprovalCommitErrorV1::Conflict);
+                return Err(gis_map_commit_conflict(GisMapCommitConflictArmV1::PublishIdentityDiffers));
             }
             (owners.handle.clone(), owners.scope.clone())
         };
@@ -1808,10 +2005,10 @@ impl RetainedGisMapApprovalCommitterV1 {
         let (request, document_write) = {
             let documents = self.documents.lock().await;
             let Some(RetainedGisMapDocumentStateV1::Publishing { owners, identity: stored, receipt: stored_receipt, document_write }) = documents.get(key) else {
-                return Err(GisMapApprovalCommitErrorV1::Conflict);
+                return Err(gis_map_commit_conflict(GisMapCommitConflictArmV1::PublishStateMissingAfterSnapshot));
             };
             if !Self::identity_matches(stored, identity) || stored_receipt != receipt || owners.generation != generation || owners.scope != scope {
-                return Err(GisMapApprovalCommitErrorV1::Conflict);
+                return Err(gis_map_commit_conflict(GisMapCommitConflictArmV1::PublishIdentityDiffersAfterSnapshot));
             }
             let projected = Self::publication_frontier(&owners.scope, &actor_snapshot).ok_or(GisMapApprovalCommitErrorV1::Storage)?;
             if actor_snapshot.authority_generation != generation
@@ -1819,7 +2016,7 @@ impl RetainedGisMapApprovalCommitterV1 {
                 || projected.last_commit_seq != identity.base_frontier.last_commit_seq.checked_add(1).ok_or(GisMapApprovalCommitErrorV1::Capacity)?
                 || projected.head_edit_id != identity.mutation_id
             {
-                return Err(GisMapApprovalCommitErrorV1::Conflict);
+                return Err(gis_map_commit_conflict(GisMapCommitConflictArmV1::PublishProjectedFrontierDiffers));
             }
             let files = semio_framework::io::resolve_ready(owners.parent.as_ref().ok_or(GisMapApprovalCommitErrorV1::Storage)?.snapshot_pack()).map_err(|_| GisMapApprovalCommitErrorV1::Storage)?;
             if files.pack.is_empty() || files.spr.is_empty() {
@@ -1850,7 +2047,7 @@ impl RetainedGisMapApprovalCommitterV1 {
             || published.pack.sha256.hex() != expected_pack_hash
             || published.spr.sha256.hex() != expected_spr_hash
         {
-            return Err(GisMapApprovalCommitErrorV1::Conflict);
+            return Err(gis_map_commit_conflict(GisMapCommitConflictArmV1::PublishResponseDiffers));
         }
         Ok(published)
     }
@@ -1867,7 +2064,7 @@ impl RetainedGisMapApprovalCommitterV1 {
                 {
                     owners.fence.clone()
                 }
-                _ => return Err(GisMapApprovalCommitErrorV1::Conflict),
+                _ => return Err(gis_map_commit_conflict(GisMapCommitConflictArmV1::VerifyFenceStateDiffers)),
             }
         };
         let target = InferenceWalTargetV1 {
@@ -1886,7 +2083,7 @@ impl RetainedGisMapApprovalCommitterV1 {
             .verify(target, fence, control)
             .await
             .map_err(|error| match error {
-                InferenceErrorV1::Conflict | InferenceErrorV1::Invalid | InferenceErrorV1::Denied => GisMapApprovalCommitErrorV1::Conflict,
+                InferenceErrorV1::Conflict | InferenceErrorV1::Invalid | InferenceErrorV1::Denied => gis_map_commit_conflict(GisMapCommitConflictArmV1::VerifyWalVerifier),
                 _ => GisMapApprovalCommitErrorV1::Storage,
             })?
             .ok_or(GisMapApprovalCommitErrorV1::Storage)?;
@@ -1908,7 +2105,7 @@ impl RetainedGisMapApprovalCommitterV1 {
                 }
                 state => {
                     documents.insert(key.to_owned(), state);
-                    return Err(GisMapApprovalCommitErrorV1::Conflict);
+                    return Err(gis_map_commit_conflict(GisMapCommitConflictArmV1::VerifyStateDiffersAfterWitness));
                 }
             }
         };
@@ -1923,23 +2120,23 @@ impl RetainedGisMapApprovalCommitterV1 {
                         let files = semio_framework::io::resolve_ready(owners.parent.as_ref().ok_or(GisMapApprovalCommitErrorV1::Storage)?.snapshot_pack()).map_err(|_| GisMapApprovalCommitErrorV1::Storage)?;
                         (owners.handle.clone(), sha256(&files.pack))
                     }
-                    _ => return Err(GisMapApprovalCommitErrorV1::Conflict),
+                    _ => return Err(gis_map_commit_conflict(GisMapCommitConflictArmV1::VerifyPublishedStateDiffers)),
                 }
             };
             let snapshot = handle.checkpoint_publication_snapshot().await.map_err(|_| GisMapApprovalCommitErrorV1::Storage)?;
-            (Self::publication_wire_frontier(&Self::publication_frontier(&identity.scope, &snapshot).ok_or(GisMapApprovalCommitErrorV1::Conflict)?), after_base_digest)
+            (Self::publication_wire_frontier(&Self::publication_frontier(&identity.scope, &snapshot).ok_or_else(|| gis_map_commit_conflict(GisMapCommitConflictArmV1::VerifyPublicationFrontierMissing))?), after_base_digest)
         };
         let (_newly_reconciled, undo) = match &identity.operation {
             GisMapCommitOperationV1::Approval => {
                 let reconciliation = self.ledger.reconcile_committed_approval(&identity.job_id, &witness, generation, &after_frontier, &identity.descriptor_digest, &after_base_digest, identity.journal_now_ms).map_err(|error| match error {
-                    InferenceErrorV1::Conflict | InferenceErrorV1::Invalid | InferenceErrorV1::Denied => GisMapApprovalCommitErrorV1::Conflict,
+                    InferenceErrorV1::Conflict | InferenceErrorV1::Invalid | InferenceErrorV1::Denied => gis_map_commit_conflict(GisMapCommitConflictArmV1::VerifyUndoVerifier),
                     _ => GisMapApprovalCommitErrorV1::Storage,
                 })?;
                 (reconciliation.applied, reconciliation.undo)
             }
             GisMapCommitOperationV1::Undo { target_id, .. } => {
                 let applied = self.ledger.reconcile_committed_gis_map_approval_undo(target_id, &witness, generation, &after_frontier).map_err(|error| match error {
-                    InferenceErrorV1::Conflict | InferenceErrorV1::Invalid | InferenceErrorV1::Denied => GisMapApprovalCommitErrorV1::Conflict,
+                    InferenceErrorV1::Conflict | InferenceErrorV1::Invalid | InferenceErrorV1::Denied => gis_map_commit_conflict(GisMapCommitConflictArmV1::VerifyApplyVerifier),
                     _ => GisMapApprovalCommitErrorV1::Storage,
                 })?;
                 (applied, directory::os_directory::GisMapApprovalUndoHandleV1 { target_id: target_id.clone(), expected_current: after_frontier.clone() })
@@ -1949,7 +2146,7 @@ impl RetainedGisMapApprovalCommitterV1 {
         let Some(state) = documents.remove(key) else { return Err(GisMapApprovalCommitErrorV1::Unavailable) };
         match state {
             RetainedGisMapDocumentStateV1::Publishing { owners, identity: stored, receipt: stored_receipt, document_write } if Self::identity_matches(&stored, identity) && stored_receipt == receipt => {
-                let notification = published.as_ref().map_or(Err(GisMapApprovalCommitErrorV1::Conflict), |checkpoint| match std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| self.publisher.checkpoint_applied(checkpoint))) {
+                let notification = published.as_ref().map_or_else(|| Err(gis_map_commit_conflict(GisMapCommitConflictArmV1::VerifyCheckpointApplyMissing)), |checkpoint| match std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| self.publisher.checkpoint_applied(checkpoint))) {
                     Ok(result) => result,
                     Err(_) => Err(GisMapApprovalCommitErrorV1::Storage),
                 });
@@ -1966,7 +2163,7 @@ impl RetainedGisMapApprovalCommitterV1 {
             }
             state => {
                 documents.insert(key.to_owned(), state);
-                return Err(GisMapApprovalCommitErrorV1::Conflict);
+                return Err(gis_map_commit_conflict(GisMapCommitConflictArmV1::VerifyReceiptStateDiffers));
             }
         }
         Ok(GisMapApprovalReceiptV1 { witness, document_generation: generation, applied: true, undo, frontier: after_frontier })
@@ -1999,7 +2196,7 @@ impl RetainedGisMapApprovalCommitterV1 {
                 GisMapCommitTurnV1::Preflight { handle, generation } => {
                     let observed = handle.checkpoint_publication_snapshot().await.map_err(|_| GisMapApprovalCommitErrorV1::Storage)?;
                     if observed.authority_generation != generation {
-                        break Err(GisMapApprovalCommitErrorV1::Conflict);
+                        break Err(gis_map_commit_conflict(GisMapCommitConflictArmV1::DriveGenerationDiffers));
                     }
                     self.finish_preflight(&key, &identity, &snapshot, &observed).await?;
                 }
@@ -2046,7 +2243,7 @@ impl RetainedGisMapApprovalCommitterV1 {
                 GisMapCommitTurnV1::Preflight { handle, generation } => {
                     let observed = handle.checkpoint_publication_snapshot().await.map_err(|_| GisMapApprovalCommitErrorV1::Storage)?;
                     if observed.authority_generation != generation {
-                        break Err(GisMapApprovalCommitErrorV1::Conflict);
+                        break Err(gis_map_commit_conflict(GisMapCommitConflictArmV1::DriveUndoGenerationDiffers));
                     }
                     self.finish_preflight(&key, &identity, &snapshot, &observed).await?;
                 }
@@ -2369,6 +2566,16 @@ impl GisMapApprovalCommitterV1 for RetainedGisMapApprovalCommitterV1 {
 
     fn close<'a>(&'a self) -> std::pin::Pin<Box<dyn Future<Output = Result<(), GisMapApprovalCommitErrorV1>> + Send + 'a>> {
         Box::pin(RetainedGisMapApprovalCommitterV1::close(self))
+    }
+
+    fn document_clock<'a>(&'a self, scope: &'a DocumentScope) -> std::pin::Pin<Box<dyn Future<Output = Option<protocol::HybridLogicalTimestamp>> + Send + 'a>> {
+        Box::pin(async move {
+            let documents = self.documents.lock().await;
+            match documents.get(&document_key(scope)) {
+                Some(RetainedGisMapDocumentStateV1::Ready { owners, .. }) | Some(RetainedGisMapDocumentStateV1::Published { owners, .. }) => owners.parent.as_ref().map(directory::os_store::ArtifactStore::clock_now),
+                _ => None,
+            }
+        })
     }
 }
 
@@ -2826,7 +3033,7 @@ impl HubInferenceRuntimeV1 {
     }
 
     /// ✍️ Rebuilds the sole `CreateRegion` and its inverse server-side and stamps one canonical envelope.
-    pub fn server_stamped_command(&self, identity: &InferenceIdentityV1, job_id: &str, base: &InferenceMapBaseV1, proposal_hash: &str, now_ms: u64) -> Result<InferencePrivateBytesV1, InferenceRouteErrorV1> {
+    pub fn server_stamped_command(&self, identity: &InferenceIdentityV1, job_id: &str, base: &InferenceMapBaseV1, proposal_hash: &str, document_clock: Option<protocol::HybridLogicalTimestamp>, now_ms: u64) -> Result<InferencePrivateBytesV1, InferenceRouteErrorV1> {
         use semio_s_artifact_gis_gismap::mutations::inverse_gis_map_mutation;
         let (snapshot, inference) = deterministic_map_inference(base, job_id)?;
         let mutation = inference.bounds_proposal(&snapshot, job_id).map_err(|_| InferenceRouteErrorV1::Conflict)?;
@@ -2846,13 +3053,13 @@ impl HubInferenceRuntimeV1 {
             diff_payload: &proposal_bytes,
             inverse_schema: GIS_DOCUMENT_SCHEMA,
             inverse_payload: &inverse_bytes,
-            timestamp: protocol::HybridLogicalTimestamp { actor: 1, physical_ms: now_ms, logical: 0 },
+            timestamp: approval_stamp_v1(document_clock, now_ms),
         })?;
         Ok(InferencePrivateBytesV1::new(bytes, super::command::COMMAND_MAX_BYTES)?)
     }
 
     /// ↩️ Rebuilds the original fixed-three work and stamps only its exact typed inverse.
-    fn server_stamped_undo_command(&self, target: &super::sqlite::GisMapApprovalUndoTargetV1, idempotency_key: &str, base: &InferenceMapBaseV1, now_ms: u64) -> Result<GisMapPreparedUndoCommandV1, InferenceRouteErrorV1> {
+    fn server_stamped_undo_command(&self, target: &super::sqlite::GisMapApprovalUndoTargetV1, idempotency_key: &str, base: &InferenceMapBaseV1, document_clock: Option<protocol::HybridLogicalTimestamp>, now_ms: u64) -> Result<GisMapPreparedUndoCommandV1, InferenceRouteErrorV1> {
         use directory::Inference as _;
         use semio_s_artifact_gis_gismap::mutations::{apply_gis_map_mutation, GisMapMutation};
         use semio_s_artifact_gis_gismap::standards::v1::subsets::any::schema::inferences::GisMapInference;
@@ -2891,7 +3098,7 @@ impl HubInferenceRuntimeV1 {
             diff_payload: &diff,
             inverse_schema: GIS_DOCUMENT_SCHEMA,
             inverse_payload: &inverse,
-            timestamp: protocol::HybridLogicalTimestamp { actor: 1, physical_ms: now_ms, logical: 0 },
+            timestamp: approval_stamp_v1(document_clock, now_ms),
         })?;
         let command_hash = sha256(&bytes);
         Ok(GisMapPreparedUndoCommandV1 { operation_id, proposal_hash, mutation_id, command_hash, command: InferencePrivateBytesV1::new(bytes, super::command::COMMAND_MAX_BYTES)? })
@@ -3405,7 +3612,8 @@ pub async fn approve_gis_map_job(context: InferenceApprovalRouteContextV1<'_>, j
     let base_control = InferenceMapBaseControlV1 { deadline_ms: context.now_ms.saturating_add(super::schema::JOB_MAX_LIFETIME_MS), now_ms: context.now_ms, control };
     let base = map_base(context.rebootstrap, &context.scope, base_control.deadline_ms, &base_control).await?;
     runtime.compare_frozen(&identity, &context.scope, &base)?;
-    let command = runtime.server_stamped_command(&identity, &approval.job_id, &base, &approval.proposal_hash, context.now_ms)?;
+    let document_clock = runtime.committer().document_clock(&context.scope).await;
+    let command = runtime.server_stamped_command(&identity, &approval.job_id, &base, &approval.proposal_hash, document_clock, context.now_ms)?;
     let prepared = runtime.ledger().prepare_approval(&approval.job_id, &identity, &approval.proposal_hash, &command, context.now_ms)?;
     let committed = runtime.commit_approval(&identity, &approval.job_id, &approval.proposal_hash, &command, &base, base_control.deadline_ms, context.now_ms, context.document_write, ingress).await?;
     Ok(InferenceApprovalReceiptV1 {
@@ -3458,7 +3666,8 @@ pub async fn undo_gis_map_approval(context: InferenceApprovalRouteContextV1<'_>,
         return Err(InferenceRouteErrorV1::Conflict);
     }
     super::authorization::check_live_inference_author(context.directory, &identity, &context.scope, || i64::try_from(context.now_ms).unwrap_or(i64::MAX), &base_control.control).await?;
-    let prepared = runtime.server_stamped_undo_command(&target, &request.idempotency_key, &base, context.now_ms)?;
+    let document_clock = runtime.committer().document_clock(&context.scope).await;
+    let prepared = runtime.server_stamped_undo_command(&target, &request.idempotency_key, &base, document_clock, context.now_ms)?;
     match runtime.ledger().prepare_gis_map_approval_undo(&target, &request.idempotency_key, &prepared.operation_id, &prepared.proposal_hash, &prepared.mutation_id, &prepared.command_hash, &prepared.command)? {
         super::sqlite::GisMapApprovalUndoAdmissionV1::Replayed(receipt) => return Ok(receipt),
         super::sqlite::GisMapApprovalUndoAdmissionV1::Prepared => {}
@@ -3482,6 +3691,23 @@ fn session_reader<'a>(session: &'a crate::directory::model::AuthSessionRecord, s
 //#endregion 🛣️Routes
 
 /// 🔑️ Renders the exact full document key every envelope and witness compares byte for byte.
+/// ⏰️ Mints one approval stamp that is strictly after the document's own last edit.
+///
+/// The hub's `now_ms` alone is not enough: two approvals in the same millisecond, or an approval in
+/// the same millisecond as the previous edit, both produce `logical: 0` and the authority mint then
+/// refuses them because the stamp is not strictly after the Store's clock. Carrying the document's
+/// clock into the mint makes the stamp dominate by construction, and it is the stamp the command
+/// hash is computed over, so the WAL proof rebuilds the identical command from `meta.timestamp`.
+/// `None` is the genesis case — no Store is mounted because the document has no history yet — and
+/// then the hub's own tick is already after everything the document knows.
+fn approval_stamp_v1(document_clock: Option<protocol::HybridLogicalTimestamp>, now_ms: u64) -> protocol::HybridLogicalTimestamp {
+    match document_clock {
+        Some(clock) if now_ms > clock.physical_ms => protocol::HybridLogicalTimestamp { actor: 1, physical_ms: now_ms, logical: 0 },
+        Some(clock) => protocol::HybridLogicalTimestamp { actor: 1, physical_ms: clock.physical_ms, logical: clock.logical.saturating_add(1) },
+        None => protocol::HybridLogicalTimestamp { actor: 1, physical_ms: now_ms, logical: 0 },
+    }
+}
+
 pub fn document_key(scope: &DocumentScope) -> String {
     format!("v1:{}:{}:{}{}", scope.space_id.len(), scope.document_id.len(), scope.space_id, scope.document_id)
 }

@@ -1,0 +1,115 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "snapshot", "mutated", "deltas", "afterDeltas", "gestureMatrix"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "snapshot": { "$ref": "#/definitions/snapshot" },
+    "mutated": { "$ref": "#/definitions/snapshot" },
+    "afterDeltas": { "$ref": "#/definitions/snapshot" },
+    "deltas": {
+      "type": "array",
+      "minItems": 6,
+      "items": {
+        "oneOf": [
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["kind", "domainId", "granularity", "ids"],
+            "properties": {
+              "kind": { "const": "selection" },
+              "domainId": { "type": "string", "minLength": 1 },
+              "granularity": { "type": "string", "minLength": 1 },
+              "ids": { "type": "array", "items": { "type": "string" }, "uniqueItems": true }
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["kind", "id", "expanded"],
+            "properties": { "kind": { "const": "treeExpansion" }, "id": { "type": "string", "minLength": 1 }, "expanded": { "type": "boolean" } }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["kind", "id"],
+            "properties": { "kind": { "const": "dialog" }, "id": { "type": ["string", "null"] } }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["kind", "group", "tabId"],
+            "properties": { "kind": { "const": "panelTab" }, "group": { "$ref": "#/definitions/anchor" }, "tabId": { "type": ["string", "null"] } }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["kind", "open"],
+            "properties": { "kind": { "const": "commandPanel" }, "open": { "type": "boolean" } }
+          }
+        ]
+      }
+    },
+    "gestureMatrix": {
+      "type": "array",
+      "minItems": 5,
+      "maxItems": 5,
+      "items": {
+        "type": "object",
+        "required": ["kind", "id"],
+        "properties": {
+          "kind": { "enum": ["scene", "canvas", "entity", "curve", "domain"] },
+          "id": { "type": "string", "minLength": 1 },
+          "position": { "type": "array", "minItems": 3, "maxItems": 3, "items": { "type": "number" } },
+          "x": { "type": "number" },
+          "y": { "type": "number" },
+          "domain": { "type": "string" },
+          "entity": { "type": "string" },
+          "offset": { "type": "array", "minItems": 2, "maxItems": 2, "items": { "type": "number" } },
+          "t": { "type": "number" },
+          "value": { "type": "number" }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "anchor": { "enum": ["top-left", "top-middle", "top-right", "right-middle", "bottom-right", "bottom-middle", "bottom-left", "left-middle"] },
+    "selection": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["granularity", "ids"],
+        "properties": {
+          "granularity": { "type": "string", "minLength": 1 },
+          "ids": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+          "anchorId": { "type": "string" }
+        }
+      }
+    },
+    "tabs": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "top-left": { "type": "string" }, "top-middle": { "type": "string" }, "top-right": { "type": "string" }, "right-middle": { "type": "string" },
+        "bottom-right": { "type": "string" }, "bottom-middle": { "type": "string" }, "bottom-left": { "type": "string" }, "left-middle": { "type": "string" }
+      }
+    },
+    "snapshot": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["focusedWindowId", "activeUtilityByWindowId", "activeToolId", "activePanelTabByGroup", "interactionSelection", "openDialogId", "expandedTreeIds", "commandPanelOpen"],
+      "properties": {
+        "focusedWindowId": { "type": "string" },
+        "activeUtilityByWindowId": { "type": "object", "additionalProperties": { "type": "string" } },
+        "activeToolId": { "type": "string" },
+        "activePanelTabByGroup": { "$ref": "#/definitions/tabs" },
+        "interactionSelection": { "$ref": "#/definitions/selection" },
+        "openDialogId": { "type": "string" },
+        "expandedTreeIds": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 }, "uniqueItems": true },
+        "commandPanelOpen": { "type": "boolean" }
+      }
+    }
+  }
+}

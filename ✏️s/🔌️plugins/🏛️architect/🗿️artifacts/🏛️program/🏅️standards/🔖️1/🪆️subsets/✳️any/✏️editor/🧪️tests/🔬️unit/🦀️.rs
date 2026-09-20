@@ -9,8 +9,14 @@ pub(crate) mod context {
     /// `PluginBuilder::editor::<ArchitectPlayApp>` builds it.
     pub type ArchitectApp = VcsArtifactApp<EditorApp<ArchitectPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>;
     
+    /// 🧪️ The app instance every test builds — registry-backed, because there is no other kind.
+    /// `EditorApp<ArchitectPlayApp>` publishes a `bounded_first_step_tool_proofs!` roster, and
+    /// `with_registry_on_bus` joins that roster against the registry's `Migrated` tool ids
+    /// (`AppActionRegistry::validate_tool_job_rows`): an empty registry declares none of them, so the
+    /// registry-LESS `VcsArtifactApp::new` fails construction outright with
+    /// `interactive-job.catalog-authority … generated_migrated=false, migrated={}`.
     pub async fn new_app() -> ArchitectApp {
-        VcsArtifactApp::<EditorApp<ArchitectPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>::new(EditorApp::default()).await
+        app_with_registry().await
     }
     
     /// 🚧️ SDK GAP (w0-f-report Gap 3): `new_app_with_registry`/`assert_declared_actions_bridge_to_commands`

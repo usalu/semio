@@ -484,6 +484,7 @@
       },
       "chrome": {
         "base": { "token": "light" },
+        "panel": { "token": "light-5-7" },
         "foreground": { "token": "dark" },
         "muted": { "token": "light-8-9" },
         "mutedForeground": { "token": "gray" },
@@ -588,6 +589,7 @@
       },
       "chrome": {
         "base": { "token": "dark" },
+        "panel": { "token": "dark-7-9" },
         "foreground": { "token": "light" },
         "muted": { "token": "dark-8-9" },
         "mutedForeground": { "token": "gray" },

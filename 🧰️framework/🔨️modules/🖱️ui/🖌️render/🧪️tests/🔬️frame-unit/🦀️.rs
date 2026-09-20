@@ -255,7 +255,7 @@ fn a_click_three_levels_deep_bubbles_to_the_root_through_the_built_tree() {
 
     let mut dispatcher = crate::Dispatcher::new();
     let pointer = crate::PointerInfo { id: crate::PointerId(1), kind: crate::PointerKind::Mouse, pressure: None, tilt: None };
-    dispatcher.dispatch(tree, &crate::DispatchEvent::PointerDown { pointer, x, y, button: crate::PointerButton::Primary });
+    dispatcher.dispatch(tree, &crate::DispatchEvent::PointerDown { pointer, x, y, button: crate::PointerButton::Primary, modifiers: crate::EventModifiers::default() });
 
     assert_eq!(dispatcher.capture_of(crate::PointerId(1)).map(|(element, _)| element), Some(tree.node(leaf_node).unwrap().element), "the press must capture the actual nested leaf, resolved through the built tree");
     assert!(dispatcher.is_hovered(tree.node(mid_node).unwrap().element), "bubbling must reach the mid ancestor through the built parent link — this is what PrepaintCx::with_children threads");

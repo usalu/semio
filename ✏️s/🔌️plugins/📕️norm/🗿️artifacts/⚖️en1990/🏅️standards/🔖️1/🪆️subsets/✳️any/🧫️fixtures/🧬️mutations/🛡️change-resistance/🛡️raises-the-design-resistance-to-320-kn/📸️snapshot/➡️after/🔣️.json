@@ -1,5 +1,5 @@
 {
-  "gK": 45,
+  "gK": 45.0,
   "qK": {
     "childId": "en1990-qk-7904dd65836c8ff4",
     "target": {
@@ -11,8 +11,8 @@
       }
     }
   },
-  "resistanceKn": 320,
+  "resistanceKn": 320.0,
   "consequenceClass": 2,
   "annex": "De",
-  "seismicAEdKn": 0
+  "seismicAEdKn": 0.0
 }

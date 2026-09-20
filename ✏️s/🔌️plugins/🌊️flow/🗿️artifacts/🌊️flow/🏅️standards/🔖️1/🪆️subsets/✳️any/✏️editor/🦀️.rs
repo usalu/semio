@@ -1593,10 +1593,14 @@ fn flow_scalar_command_view(command: &FlowCommand) -> Result<store::os_pack::Sca
     use store::os_pack::{ScalarRecordField as Field, ScalarRecordView};
     let ordinal = FlowCommand::TOOL_JOB_IDS.iter().position(|id| *id == command.command_id()).ok_or("Flow scalar command ordinal missing")? as u64;
     let fields = match command {
-        FlowCommand::Evaluate(_) | FlowCommand::OpenSpotlight(_) | FlowCommand::FlowEvalTick(_) => [None, None, None],
+        FlowCommand::Evaluate(_) | FlowCommand::OpenSpotlight(_) => [None, None, None],
         FlowCommand::ContextMenuAt(command) => [Some(Field::Text(&command.id)), None, None],
         FlowCommand::ReplaceImage(command) => [Some(Field::Text(&command.id)), None, None],
-        FlowCommand::FlowEvalResolve(command) => [Some(Field::U64(command.node_hash)), Some(Field::Text(&command.output_json)), None],
+        // 📏️ Three slots, at most two of them text (`🎒️pack/🔎️scalar-witness`) — which is exactly what
+        // an ADDRESSED evaluation hop and its answer need, and the reason the answer carries no
+        // `extensionId`/`ok`/`fault_*`.
+        FlowCommand::FlowEvalTick(command) => [Some(Field::Text(&command.window_id)), Some(Field::Text(&command.window_kind_id)), None],
+        FlowCommand::FlowEvalResolve(command) => [Some(Field::Text(&command.window_id)), Some(Field::U64(command.node_hash)), Some(Field::Text(&command.output_json))],
         _ => return Err("Flow command does not have an admitted scalar record witness"),
     };
     Ok(ScalarRecordView { ordinal, fields })
@@ -1659,8 +1663,8 @@ impl semio_framework_job::InteractiveJob for FlowHostEffectJob {
             let view = ArtifactView::with_children(payload.snapshot.as_ref(), &payload.history, (*payload.children).clone());
             let emit = payload.instance_owner.with_mut::<FlowInstanceOperationOwner, _>(|owner| {
                 owner.with_session(|session| match &payload.command {
-                    FlowCommand::Evaluate(_) => Ok(evaluate::evaluate_result(&payload.snapshot, &payload.config, session)),
-                    FlowCommand::FlowEvalTick(_) => Ok(flow_eval_tick::tick_result(&payload.snapshot, &payload.config, session)),
+                    FlowCommand::Evaluate(_) => Ok(evaluate::evaluate_result(&payload.snapshot, &payload.config, session, main::FLOW_PLAY_WINDOW_MAIN, main::FLOW_PLAY_WINDOW_MAIN)),
+                    FlowCommand::FlowEvalTick(command) => Ok(flow_eval_tick::tick_result(&payload.snapshot, &payload.config, session, &command.window_id, &command.window_kind_id)),
                     FlowCommand::FlowEvalResolve(command) => flow_eval_resolve::handle(command, &view, &ConfigView { snapshot: &NoConfig {}, window: None }, session),
                     FlowCommand::ContextMenuAt(_) | FlowCommand::OpenSpotlight(_) | FlowCommand::ReplaceImage(_) => Ok(Emit::default()),
                     _ => Err(Fault::from("flow-host-effect-route-mismatch")),
@@ -2352,10 +2356,113 @@ impl ArtifactEditor for FlowPlayApp {
         FlowSnapshot::default()
     }
 
+    /// 🌱️ Derives the `content` child at boot and on every archive load, so a live shell composes the
+    /// child that every `Child`-lane verb reads — see [`crate::flow_genesis_content_pack`].
+    fn genesis_child_pack(snapshot: &Self::Snapshot, slot: &str, child_id: &str) -> Option<Vec<u8>> {
+        crate::flow_genesis_content_pack(snapshot, slot, child_id)
+    }
+
     /// 🏷️ The manifest action id each command was declared under — supplied wholesale by
     /// manifest declaration (host-pushed/internally-chained, not user-facing actions).
     fn command_id(command: &FlowCommand) -> &'static str {
         command.command_id()
+    }
+
+    /// 🎯️ Maps host action id + JSON args onto `FlowCommand`, the bridge every app owes the shell's
+    /// `{action, args}` wire. Without it the trait's default refuses EVERY id, and the one caller that
+    /// cannot avoid this channel is the host's own re-arm: `Effect::dispatchAction` is delivered through
+    /// `handle_action`, so flow's `flowEvalTick` chain died on its first hop with
+    /// `action 'flowEvalTick' is not a framework-reserved action` and the node graph never evaluated
+    /// (16 refusal lines per boot, measured on :6016, ticket 26/09/18 slice B3c). Mirrors
+    /// `Generation2dPlayApp::command_from_action`, which is why that sibling's identical eval chain runs.
+    fn command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result<Self::Command, Fault> {
+        let args = args.cloned().unwrap_or(dsl::DslValue::Null);
+        let str_arg = |keys: &[&str]| -> Option<String> { keys.iter().find_map(|key| args.get(key).and_then(|value| value.as_str()).map(str::to_string)) };
+        let f64_arg = |keys: &[&str]| -> Option<f64> { keys.iter().find_map(|key| args.get(key).and_then(|value| value.as_f64())) };
+        let u64_arg = |keys: &[&str]| -> Option<u64> { keys.iter().find_map(|key| args.get(key).and_then(|value| value.as_u64().or_else(|| value.as_f64().map(|number| number as u64)))) };
+        let bool_arg = |keys: &[&str]| -> Option<bool> { keys.iter().find_map(|key| args.get(key).and_then(dsl::DslValue::as_bool)) };
+        let string_list = |keys: &[&str]| -> Vec<String> {
+            keys.iter()
+                .find_map(|key| args.get(key).and_then(dsl::DslValue::as_array))
+                .map_or_else(Vec::new, |items| items.iter().filter_map(|item| item.as_str().map(str::to_string)).collect())
+        };
+        // 🧵️ `operations: [op, …]` decoded through the ops' own `FromValue`, the same derive the binary
+        // command codec uses — a malformed row is dropped rather than failing the whole edit, because
+        // both callers of this shape (`nodeGraphEdit`, `spotlightCommit`) are also routed through their
+        // own job factory and this bridge is their fallback, not their contract.
+        fn graph_operations<T: dsl::FromValue>(args: &dsl::DslValue) -> Vec<T> {
+            args.get("operations")
+                .and_then(dsl::DslValue::as_array)
+                .map_or_else(Vec::new, |items| items.iter().filter_map(|item| T::from_value(item.clone()).ok()).collect())
+        }
+        match action {
+            "addWidget" => Ok(FlowCommand::AddWidget(add_widget::AddWidget { kind: str_arg(&["kind"]).unwrap_or_else(|| "inputSlider".into()), neuron_kind: str_arg(&["neuronKind", "neuron_kind"]), x: f64_arg(&["x"]), y: f64_arg(&["y"]) })),
+            "removeWidget" => Ok(FlowCommand::RemoveWidget(remove_widget::RemoveWidget { widget_id: str_arg(&["widgetId", "widget_id", "id"]).unwrap_or_default() })),
+            "duplicateWidget" => Ok(FlowCommand::DuplicateWidget(duplicate_widget::DuplicateWidget { widget_id: str_arg(&["widgetId", "widget_id", "id"]).unwrap_or_default() })),
+            "deleteSelection" => Ok(FlowCommand::DeleteSelection(delete_selection::DeleteSelection {})),
+            "disconnect" => Ok(FlowCommand::Disconnect(disconnect::Disconnect { synapse_id: str_arg(&["synapseId", "synapse_id", "id"]).unwrap_or_default() })),
+            "connectMediaPorts" => Ok(FlowCommand::ConnectMediaPorts(connect_media_ports::ConnectMediaPorts {
+                source_node_id: str_arg(&["sourceNodeId", "source_node_id"]).unwrap_or_default(),
+                source_port_id: str_arg(&["sourcePortId", "source_port_id"]).unwrap_or_default(),
+                target_node_id: str_arg(&["targetNodeId", "target_node_id"]).unwrap_or_default(),
+                target_port_id: str_arg(&["targetPortId", "target_port_id"]).unwrap_or_default(),
+            })),
+            "moveMediaNode" => Ok(FlowCommand::MoveMediaNode(move_media_node::MoveMediaNode { node_id: str_arg(&["nodeId", "node_id", "id"]).unwrap_or_default(), x: f64_arg(&["x"]).unwrap_or(0.0), y: f64_arg(&["y"]).unwrap_or(0.0) })),
+            "reorganize" => Ok(FlowCommand::Reorganize(reorganize::Reorganize {})),
+            "patchFlowWidgets" => Ok(FlowCommand::PatchFlowWidgets(patch_flow_widgets::PatchFlowWidgets {
+                widget_ids: string_list(&["widgetIds", "widget_ids", "ids"]),
+                field: str_arg(&["field"]).unwrap_or_default(),
+                value: str_arg(&["value"]).unwrap_or_default(),
+            })),
+            "renameFlowWidget" => Ok(FlowCommand::RenameFlowWidget(rename_flow_widget::RenameFlowWidget { old_id: str_arg(&["oldId", "old_id", "id"]).unwrap_or_default(), value: str_arg(&["value", "name"]).unwrap_or_default() })),
+            "nodeGraphEdit" => Ok(FlowCommand::NodeGraphEdit(node_graph_edit::NodeGraphEdit { operations: graph_operations(&args) })),
+            "spotlightCommit" => Ok(FlowCommand::SpotlightCommit(spotlight_commit::SpotlightCommit { operations: graph_operations(&args) })),
+            "runExtensionAction" => Ok(FlowCommand::RunExtensionAction(run_extension_action::RunExtensionAction { action_id: str_arg(&["actionId", "action_id", "id"]).unwrap_or_default() })),
+            "evaluate" => Ok(FlowCommand::Evaluate(evaluate::Evaluate {})),
+            "focusSelection" => Ok(FlowCommand::FocusSelection(focus_selection::FocusSelection {})),
+            "nodeGraphViewport" => Ok(FlowCommand::NodeGraphViewport(node_graph_viewport::NodeGraphViewport {
+                viewport: match args.get("viewport").cloned() {
+                    None => semio_framework_os_kernel::Viewport2d::default(),
+                    Some(value) => dsl::from_dsl_value(value).map_err(|error| Fault::from(format!("invalid nodeGraphViewport viewport: {error}")))?,
+                },
+            })),
+            "setLodMode" => Ok(FlowCommand::SetLodMode(set_lod_mode::SetLodMode { value: str_arg(&["value", "mode"]).unwrap_or_default() })),
+            "setProximityDistance" => Ok(FlowCommand::SetProximityDistance(set_proximity_distance::SetProximityDistance { value: f64_arg(&["value", "distance"]).unwrap_or_default() })),
+            "setGridVisible" => Ok(FlowCommand::SetGridVisible(set_grid_visible::SetGridVisible { pressed: bool_arg(&["pressed", "value", "visible"]) })),
+            "setGridSnapEnabled" => Ok(FlowCommand::SetGridSnapEnabled(set_grid_snap_enabled::SetGridSnapEnabled { pressed: bool_arg(&["pressed", "value", "enabled"]) })),
+            "setGridFactor" => Ok(FlowCommand::SetGridFactor(set_grid_factor::SetGridFactor { value: f64_arg(&["value", "factor"]).unwrap_or_default() })),
+            "contextMenuAt" => Ok(FlowCommand::ContextMenuAt(context_menu_at::ContextMenuAt { id: str_arg(&["id"]).unwrap_or_default() })),
+            "setPreviewOff" => Ok(FlowCommand::SetPreviewOff(set_preview_off::SetPreviewOff { ids: string_list(&["ids", "widgetIds", "widget_ids"]), value: bool_arg(&["value", "off"]).unwrap_or(false) })),
+            "openSpotlight" => Ok(FlowCommand::OpenSpotlight(open_spotlight::OpenSpotlight {})),
+            "replaceImage" => Ok(FlowCommand::ReplaceImage(replace_image::ReplaceImage { id: str_arg(&["id", "widgetId", "widget_id"]).unwrap_or_default() })),
+            "setCatalogueSections" => Ok(FlowCommand::SetCatalogueSections(set_catalogue_sections::SetCatalogueSections { sections_json: str_arg(&["sectionsJson", "sections_json"]).or_else(|| args.get("sections").map(dsl::json::to_json_string)).unwrap_or_else(|| "[]".into()) })),
+            "toggleExtension" => Ok(FlowCommand::ToggleExtension(toggle_extension::ToggleExtension { id: str_arg(&["id", "extensionId", "extension_id"]).unwrap_or_default(), enabled: bool_arg(&["enabled", "value"]).unwrap_or(false) })),
+            "addGeneration" => Ok(FlowCommand::AddGeneration(add_generation::AddGeneration {})),
+            "removeGeneration" => Ok(FlowCommand::RemoveGeneration(remove_generation::RemoveGeneration { id: str_arg(&["id"]).unwrap_or_default() })),
+            "selectGeneration" => Ok(FlowCommand::SelectGeneration(select_generation::SelectGeneration { id: str_arg(&["id"]).unwrap_or_default() })),
+            "renameGeneration" => Ok(FlowCommand::RenameGeneration(rename_generation::RenameGeneration { id: str_arg(&["id"]).unwrap_or_default(), name: str_arg(&["name"]).unwrap_or_default() })),
+            "updateGenerationValues" => Ok(FlowCommand::UpdateGenerationValues(update_generation_values::UpdateGenerationValues {
+                generation_id: str_arg(&["generationId", "generation_id"]),
+                question_id: str_arg(&["questionId", "question_id"]).unwrap_or_default(),
+                value: args.get("value").cloned().unwrap_or(dsl::DslValue::Null),
+            })),
+            // 🪟️ Both hops are ADDRESSED: `windowId` rides on the tick's own args and is echoed back
+            // onto the answer by `reactor::extension_response_args`, so a hop discharges the latch of
+            // the window it evaluated instead of whichever window happened to be current.
+            "flowEvalTick" => Ok(FlowCommand::FlowEvalTick(flow_eval_tick::FlowEvalTick {
+                window_id: str_arg(&["windowId", "window_id"]).unwrap_or_else(|| main::FLOW_PLAY_WINDOW_MAIN.into()),
+                window_kind_id: str_arg(&["windowKindId", "window_kind_id"]).unwrap_or_else(|| main::FLOW_PLAY_WINDOW_MAIN.into()),
+            })),
+            "flowEvalResolve" => Ok(FlowCommand::FlowEvalResolve(flow_eval_resolve::FlowEvalResolve {
+                window_id: str_arg(&["windowId", "window_id"]).unwrap_or_else(|| main::FLOW_PLAY_WINDOW_MAIN.into()),
+                node_hash: u64_arg(&["nodeHash", "node_hash"]).unwrap_or_default(),
+                output_json: str_arg(&["outputJson", "output_json"]).unwrap_or_default(),
+            })),
+            other => Err(Fault::from(format!(
+                "action '{other}' is not a framework-reserved action (history/clipboard/revert/filter/noteShellCommand) — \
+                 app actions are dispatched exclusively through the typed command channel now (see `dispatch_typed_command`)"
+            ))),
+        }
     }
 
     /// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: `deleteSelection`/`focusSelection`/
@@ -2410,15 +2517,33 @@ impl ArtifactEditor for FlowPlayApp {
         InteractionTopology { domains }
     }
 
-    /// 🧵️ Arms a `flowEvalTick` chain whenever the main snapshot has pending (uncomputed) nodes — covers
-    /// every mutation path (edits, undo/redo, example load, remote operations) in one place. Pure:
-    /// recomputes the probe fresh from the snapshot and the driver's persisted baseline each call.
-    fn pending_effects(_owner: &semio_framework_plugin::ArtifactInstanceOperationOwnerHandle, doc: &ArtifactView<'_, FlowSnapshot>, cfg: &ConfigView<'_, NoConfig>, _view: Option<&semio_framework_plugin::ViewModel>) -> Vec<Effect> {
-        let mut session = FlowEvalSession::new();
-        let effects = evaluate::evaluate_result(doc.snapshot, &main::config::current(cfg), &mut session).effects;
-        // 🧹️ A throwaway evaluation session refuses a bare drop; it is closed, never dropped.
-        session.retire_cold();
-        effects
+    /// 🧵️ Arms a `flowEvalTick` chain for every ATTACHED main window whose evaluation the snapshot
+    /// still owes — covers every mutation path (edits, undo/redo, example load, remote operations) in
+    /// one place.
+    ///
+    /// 🔒️ The probe runs against the app instance's RETAINED session, never a throwaway one. A
+    /// throwaway session has an empty tick latch by construction, so every host refresh answered
+    /// "nothing owes a hop yet" and minted another one for the identical snapshot: 2015 ×
+    /// `transient read registry is busy or exhausted` in ~3 s and the shell down with it, measured on
+    /// :6016 (ticket 26/09/18 §5.3). Latches of windows that have left the roster are dropped here,
+    /// because a detached window's latch can never be discharged by a hop.
+    fn pending_effects(owner: &semio_framework_plugin::ArtifactInstanceOperationOwnerHandle, doc: &ArtifactView<'_, FlowSnapshot>, cfg: &ConfigView<'_, NoConfig>, view: Option<&semio_framework_plugin::ViewModel>) -> Vec<Effect> {
+        let windows: Vec<(String, String)> = view
+            .map(|view| view.window_instances.iter().filter(|window| window.window_kind_id == main::FLOW_PLAY_WINDOW_MAIN).map(|window| (window.id.clone(), window.window_kind_id.clone())).collect())
+            .unwrap_or_default();
+        if windows.is_empty() {
+            return Vec::new();
+        }
+        let config = main::config::current(cfg);
+        owner
+            .with_mut::<FlowInstanceOperationOwner, _>(|instance| {
+                instance.with_session(|session| {
+                    let live: Vec<&str> = windows.iter().map(|(id, _)| id.as_str()).collect();
+                    session.retain_window_tick_latches(&live);
+                    windows.iter().flat_map(|(window_id, window_kind_id)| evaluate::evaluate_result(doc.snapshot, &config, session, window_id, window_kind_id).effects).collect::<Vec<Effect>>()
+                })
+            })
+            .unwrap_or_default()
     }
 
     fn render(body_key: &str, doc: &ArtifactView<'_, FlowSnapshot>, cfg: &ConfigView<'_, NoConfig>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
@@ -2621,10 +2746,12 @@ pub fn create_flow_app() -> AppDefinition {
         // ✏️ Document-mutating actions — dispatched as VCS operations with true inverses.
         .mutation("addWidget", LocalizedLabel::native("Add Widget", "Widget hinzufügen"))
         .mutation("removeWidget", LocalizedLabel::native("Remove Widget", "Widget entfernen"))
+        .action_destructive("removeWidget")
         // 🌉️ COMPOSITE — plans create-widget then connect-widgets (ticket 26/08/16/…-COMPOSITE-MUTATIONS).
         .mutation("duplicateWidget", LocalizedLabel::native("Duplicate Widget", "Widget duplizieren"))
         // 🗂️ Referenced by flow_context_menu_items — categorized for grouped-context-menu disclosure.
         .action_with(ActionDefinition::bounded_catalog("deleteSelection", LocalizedLabel::native("Delete Selection", "Auswahl löschen"), ActionKind::Mutation).with_category("selection"))
+        .action_destructive("deleteSelection")
         .mutation("disconnect", LocalizedLabel::native("Disconnect", "Trennen"))
         .mutation("connectMediaPorts", LocalizedLabel::native("Connect Ports", "Anschlüsse verbinden"))
         .mutation("moveMediaNode", LocalizedLabel::native("Move Node", "Knoten verschieben"))
@@ -2688,6 +2815,7 @@ pub fn create_flow_app() -> AppDefinition {
         .action_interactive_job("toggleExtension", semio_framework_plugin::InteractiveJobClassification::Migrated)
         .action_interactive_job("addGeneration", semio_framework_plugin::InteractiveJobClassification::Migrated)
         .action_interactive_job("removeGeneration", semio_framework_plugin::InteractiveJobClassification::Migrated)
+        .action_destructive("removeGeneration")
         .action_interactive_job("selectGeneration", semio_framework_plugin::InteractiveJobClassification::Migrated)
         .action_interactive_job("renameGeneration", semio_framework_plugin::InteractiveJobClassification::Migrated)
         .action_interactive_job("updateGenerationValues", semio_framework_plugin::InteractiveJobClassification::Migrated)
@@ -2760,3 +2888,11 @@ mod interactive_job_tests;
 
 #[cfg(test)]
 use crate::flow_content_child_handle_bounded;
+
+//#region 🪢️TaxonomyMounts
+#[path = "📚️examples/🎬️demo-session/🦀️.rs"]
+pub mod demo_session;
+#[cfg(test)]
+#[path = "📚️examples/🎬️demo-session/🧪️tests/🧩️example/🦀️.rs"]
+mod example;
+//#endregion 🪢️TaxonomyMounts

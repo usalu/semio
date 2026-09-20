@@ -139,6 +139,7 @@ use crate::ui::{
     tutorial_slice,
     validate_tutorial,
     window_element_id,
+    window_kind_actions,
 };
 // 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM W1: the wave-0 interaction
 // definition family lives at the crate root, not under `crate::ui` — see the equivalent `use`
@@ -218,7 +219,6 @@ async fn action_definition_semantics_default_from_kind_and_builders_compose() {
 
     let action = ActionDefinition::bounded_catalog("deleteSelection", LocalizedLabel::data("Delete"), ActionKind::Mutation)
         .destructive()
-        .await
         .use_when(["delete the selected objects", "remove selection"])
         .example("deleteSelection removes every currently selected object")
         .await;
@@ -395,6 +395,7 @@ pub(super) async fn app_with(actions: Vec<ActionDefinition>, window_actions: Vec
             output_schema: None,
             capabilities: Vec::new(),
         }),
+        actions: Vec::new(),
         panel_tabs: vec![],
         keybindings: vec![],
         utilities: vec![],
@@ -441,6 +442,56 @@ async fn resolve_window_actions_excludes_history_and_set_active_utility_orphans(
     let resolved: Vec<&str> = resolve_window_actions(&app, window).iter().map(|a| a.id.as_str()).collect();
     assert_eq!(resolved, vec!["add"], "history + setActiveUtility are never panel-eligible orphans");
     assert!(!resolved.contains(&SET_ACTIVE_UTILITY_ACTION_ID));
+}
+
+/// 🕹️ The app-roster join, which is what keeps a package descriptor from growing as
+/// `apps × window kinds × actions`: the roster is stored ONCE on the app and resolved per window,
+/// a window's own declaration for the same id wins, and an id some OTHER window claims is never
+/// re-offered from the roster. Ticket 26/09/18/OS-HUB-COLLABORATION-AI-END-TO-END, slice DS1.
+#[semio_framework_async_macros::async_test]
+async fn window_kind_actions_join_the_app_roster_without_copying_it() {
+    let mut app = app_with(vec![ActionDefinition::bounded_catalog("add", LocalizedLabel::data("Add"), ActionKind::Mutation)], vec![]).await;
+    let owned = app.window_kinds.first().actions.clone();
+    app.window_kinds = WindowKinds::new(
+        WindowKindDefinition { id: "main".into(), actions: owned.clone(), ..app.window_kinds.first().clone() },
+        vec![WindowKindDefinition { id: "side".into(), actions: Vec::new(), ..app.window_kinds.first().clone() }],
+    );
+    app.actions = vec![
+        ActionDefinition::new("undo", LocalizedLabel::data("Undo"), ActionKind::History, "undo-2"),
+        ActionDefinition::bounded_catalog("remove", LocalizedLabel::data("Remove"), ActionKind::Mutation),
+        ActionDefinition::bounded_catalog("add", LocalizedLabel::data("Roster Add"), ActionKind::Mutation),
+    ];
+    let main: Vec<&str> = window_kind_actions(&app, app.window_kinds.first()).iter().map(|action| action.id.as_str()).collect();
+    assert_eq!(main, vec!["add", "undo", "remove"], "own roster first, then the unclaimed app rows");
+    let side: Vec<&str> = window_kind_actions(&app, app.window_kinds.iter().nth(1).unwrap()).iter().map(|action| action.id.as_str()).collect();
+    assert_eq!(side, vec!["undo", "remove"], "an id another window claims is never re-offered from the roster");
+    assert_eq!(window_kind_actions(&app, app.window_kinds.first())[0].label, LocalizedLabel::data("Add"), "the window's own declaration wins over the roster twin");
+    assert!(app.window_kinds.iter().all(|kind| !kind.actions.iter().any(|action| action.id == "undo")), "the roster is never copied into a window kind");
+}
+
+/// 🧯️ THE descriptor-growth law. A package descriptor is admitted WHOLE by the hub
+/// (`TRUSTED_DESCRIPTOR_MAX_BYTES`) and by every document open plan
+/// (`DOCUMENT_EXECUTION_TARGET_DESCRIPTOR_MAX_BYTES`), both 4 MiB. Before this law the plugin
+/// builder cloned the whole app roster into every window kind, so 21 distinct action rows were
+/// stored 675 times in one plugin and duplicates were 31.9 % of every shipped descriptor's bytes —
+/// which is why `semio-s-plugin-stdio` (176 app surfaces) could not be published at all. No action
+/// row may appear in more than one window kind of the same app.
+#[semio_framework_async_macros::async_test]
+async fn no_action_definition_is_stored_twice_inside_one_app() {
+    let mut app = app_with(vec![ActionDefinition::bounded_catalog("add", LocalizedLabel::data("Add"), ActionKind::Mutation)], vec![]).await;
+    let owned = app.window_kinds.first().actions.clone();
+    app.window_kinds = WindowKinds::new(
+        WindowKindDefinition { id: "main".into(), actions: owned.clone(), ..app.window_kinds.first().clone() },
+        vec![WindowKindDefinition { id: "side".into(), actions: Vec::new(), ..app.window_kinds.first().clone() }],
+    );
+    app.actions = vec![ActionDefinition::new("undo", LocalizedLabel::data("Undo"), ActionKind::History, "undo-2")];
+    let mut seen: std::collections::BTreeMap<String, usize> = std::collections::BTreeMap::new();
+    for action in app.actions.iter().chain(app.window_kinds.iter().flat_map(|kind| kind.actions.iter())) {
+        *seen.entry(action.id.clone()).or_default() += 1;
+    }
+    let repeated: Vec<&String> = seen.iter().filter(|(_, count)| **count > 1).map(|(id, _)| id).collect();
+    assert!(repeated.is_empty(), "action rows stored more than once in app {}: {repeated:?}", app.id);
+    assert_eq!(window_kind_actions(&app, app.window_kinds.iter().nth(1).unwrap()).len(), 1, "the side window still resolves the roster it does not store");
 }
 
 //#region 🔖️InteractionTests

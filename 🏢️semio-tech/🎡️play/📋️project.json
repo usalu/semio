@@ -19,6 +19,7 @@
       ],
       "dependsOn": [
         "@semio-tech/framework-os-dev:prepare-demonstrator-react-dev",
+        "@semio-tech/framework-os-dev:prepare-imperative-react-dev",
         "@semio-tech/framework-os-dev:prepare-playbook-react-dev",
         "@semio-tech/framework-os-dev:prepare-flow-react-dev",
         "@semio-tech/framework-os-dev:prepare-lowpoly-react-dev",
@@ -39,11 +40,11 @@
         "@semio-tech/framework-os-dev:prepare-mathematical-react-dev",
         "@semio-tech/framework-os-dev:prepare-reasoning-wires-react-dev",
         "@semio-tech/framework-os-dev:prepare-dag-react-dev",
-        "@semio-tech/framework-os-dev:prepare-imperative-react-dev",
         "@semio-tech/framework-os-dev:prepare-trinity-jack-react-dev",
         "@semio-tech/framework-os-dev:prepare-animate-react-dev",
         "@semio-tech/framework-os-dev:prepare-sequence-react-dev",
-        "@semio-tech/framework-os-dev:prepare-vcs-react-dev"
+        "@semio-tech/framework-os-dev:prepare-vcs-react-dev",
+        "@semio-tech/framework-os-dev:prepare-home-react-dev"
       ],
       "options": {
         "cwd": "🏢️semio-tech/🎡️play",
@@ -63,6 +64,7 @@
       ],
       "dependsOn": [
         "@semio-tech/framework-os-dev:prepare-demonstrator-react-release",
+        "@semio-tech/framework-os-dev:prepare-imperative-react-release",
         "@semio-tech/framework-os-dev:prepare-playbook-react-release",
         "@semio-tech/framework-os-dev:prepare-flow-react-release",
         "@semio-tech/framework-os-dev:prepare-lowpoly-react-release",
@@ -83,11 +85,11 @@
         "@semio-tech/framework-os-dev:prepare-mathematical-react-release",
         "@semio-tech/framework-os-dev:prepare-reasoning-wires-react-release",
         "@semio-tech/framework-os-dev:prepare-dag-react-release",
-        "@semio-tech/framework-os-dev:prepare-imperative-react-release",
         "@semio-tech/framework-os-dev:prepare-trinity-jack-react-release",
         "@semio-tech/framework-os-dev:prepare-animate-react-release",
         "@semio-tech/framework-os-dev:prepare-sequence-react-release",
-        "@semio-tech/framework-os-dev:prepare-vcs-react-release"
+        "@semio-tech/framework-os-dev:prepare-vcs-react-release",
+        "@semio-tech/framework-os-dev:prepare-home-react-release"
       ],
       "options": {
         "cwd": "🏢️semio-tech/🎡️play",
@@ -110,6 +112,7 @@
       "dependsOn": [
         "prepare-dev",
         "@semio-tech/framework-os-dev:activate-demonstrator-react-dev",
+        "@semio-tech/framework-os-dev:activate-imperative-react-dev",
         "@semio-tech/framework-os-dev:activate-playbook-react-dev",
         "@semio-tech/framework-os-dev:activate-flow-react-dev",
         "@semio-tech/framework-os-dev:activate-lowpoly-react-dev",
@@ -130,11 +133,11 @@
         "@semio-tech/framework-os-dev:activate-mathematical-react-dev",
         "@semio-tech/framework-os-dev:activate-reasoning-wires-react-dev",
         "@semio-tech/framework-os-dev:activate-dag-react-dev",
-        "@semio-tech/framework-os-dev:activate-imperative-react-dev",
         "@semio-tech/framework-os-dev:activate-trinity-jack-react-dev",
         "@semio-tech/framework-os-dev:activate-animate-react-dev",
         "@semio-tech/framework-os-dev:activate-sequence-react-dev",
-        "@semio-tech/framework-os-dev:activate-vcs-react-dev"
+        "@semio-tech/framework-os-dev:activate-vcs-react-dev",
+        "@semio-tech/framework-os-dev:activate-home-react-dev"
       ],
       "options": {
         "cwd": "🏢️semio-tech/🎡️play",

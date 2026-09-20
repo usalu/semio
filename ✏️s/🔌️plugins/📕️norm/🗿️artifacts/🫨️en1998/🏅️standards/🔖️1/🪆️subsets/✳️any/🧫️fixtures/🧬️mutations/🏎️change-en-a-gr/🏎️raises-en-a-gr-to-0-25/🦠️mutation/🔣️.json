@@ -1,5 +1,4 @@
 {
-  "ChangeEnAGr": {
-    "newEnAGr": 0.25
-  }
+  "mutation": "changeEnAGr",
+  "newEnAGr": 0.25
 }

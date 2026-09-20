@@ -28,7 +28,7 @@
   "liquidSRMaxMm": null,
   "anchorHEfMm": null,
   "anchorCracked": null,
-  "anchorFUkMpa": 900,
+  "anchorFUkMpa": 900.0,
   "anchorFYkMpa": null,
   "anchorASMm2": null,
   "anchorDMm": null,

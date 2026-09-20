@@ -7,6 +7,7 @@
   "interpreterSource": "🧱️elements/🗣️Interpreter/🎯️targets/🧊️wgpu/🦀️.rs",
   "shellSource": "🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/🦀️.rs",
   "reactInterpreterSource": "🧱️elements/🗣️Interpreter/🟦️.tsx",
+  "reactShellHelpersSource": "🧱️elements/🛠️ShellHelpers/🟦️.tsx",
   "projection": "ui_node_from_record",
   "cursor": "UiDocumentReconcileCursor",
   "engineEntry": "step_document_reconcile",

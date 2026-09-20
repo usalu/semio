@@ -19,7 +19,7 @@
 
 use crate::editor::equation::commands::set_artifact;
 use crate::editor::equation::commands::set_points;
-use crate::editor::equation::commands::{node_graph_edit, node_graph_viewport, set_algorithm, set_directed};
+use crate::editor::equation::commands::{node_graph_edit, node_graph_viewport, set_active_example, set_algorithm, set_directed};
 use crate::editor::equation::modes::edit;
 use crate::editor::equation::modes::edit::windows::graph::config::{EquationCamera, EquationGraphWindowConfigMutation, EquationGraphWindowConfigOwner};
 use crate::editor::equation::modes::edit::windows::{geometry as geometry_window, graph as graph_window};
@@ -43,6 +43,18 @@ use ui_wgpu::wgpu::{NodeGraphEdgeRecord, NodeGraphNodeRecord};
 
 //#region 🔖️Constants
 pub const MATH_APP_ID: &str = "equation-play";
+
+/// 🧬️ The whole-document replacement `setActiveExample` emits. The spr is built with
+/// `store::empty_document_spr`, NEVER by minting an `ArtifactEnvelope` to print one: an envelope is
+/// a terminal store shell whose `Drop` asserts that its app-owned bounded retirement authority
+/// detached every nested owner first, and nothing on this path ever mounts or retires it — the
+/// envelope route panics inside the guest (`🗒️note`/`✒️writer`/`🕸️dag` all take this route). The log
+/// is edit-free by construction, which is exactly what a whole-document replace carries.
+pub fn reset_equation_document_effect(document: &EquationSnapshot) -> semio_framework_plugin::Effect {
+    let pack = EquationSnapshot::encode_pack(document);
+    let spr = semio_framework_plugin::resolve_ready(store::empty_document_spr(MATH_APP_ID, MATH_DOCUMENT_SCHEMA));
+    semio_framework_plugin::Effect::LoadDocument { pack, spr }
+}
 pub use geometry_window::MATH_PLAY_BODY_GEOMETRY;
 pub use graph_window::MATH_PLAY_BODY_GRAPH;
 //#endregion 🔖️Constants
@@ -198,12 +210,13 @@ semio_framework_plugin::app_commands! {
         "nodeGraphEdit" as "node-graph-edit" => node_graph_edit::NodeGraphEdit,
         "nodeGraphViewport" as "node-graph-viewport" => node_graph_viewport::NodeGraphViewport,
         "setPoints" as "set-points" => set_points::SetPoints,
+        "setActiveExample" as "set-active-example" => set_active_example::SetActiveExample,
     }
 }
 //#endregion 🔖️Commands
 
 //#region 🧵️RetainedCommands
-const EQUATION_TOOL_IDS: &[&str] = &["setDocument", "setAlgorithm", "setDirected", "nodeGraphEdit", "nodeGraphViewport", "setPoints"];
+const EQUATION_TOOL_IDS: &[&str] = &["setDocument", "setAlgorithm", "setDirected", "nodeGraphEdit", "nodeGraphViewport", "setPoints", "setActiveExample"];
 const EQUATION_RETAINED_PAYLOAD_SCHEMA: &str = "semio.equation/v1.tool-command.v1";
 const EQUATION_RETAINED_RAW_BYTES: usize = 65_536;
 const EQUATION_RETAINED_WORK_ITEMS: usize = 65_536;
@@ -214,6 +227,9 @@ const EQUATION_MAX_EDIT_JSON_BYTES: usize = 8_192;
 const EQUATION_MAX_EDIT_OPERATIONS: usize = 16;
 const EQUATION_MAX_DELETE_IDS: usize = 256;
 const EQUATION_MAX_TEXT_BYTES: usize = 256;
+/// 🧬️ The `nodeGraphEdit` argument the Actions pane stages by default — one `addNode` operation, in
+/// the exact shape `EquationEditOperation::from_value` admits (`operation`/`x`/`y`).
+const EQUATION_DEFAULT_EDIT_OPERATIONS: &str = r#"[{"operation":"addNode","x":120.0,"y":80.0}]"#;
 
 const EQUATION_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] = &[
     ArtifactToolPublicationContract { tool_id: "setDocument", lanes: &[ArtifactToolPublicationLane::Artifact] },
@@ -222,6 +238,7 @@ const EQUATION_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] = &[
     ArtifactToolPublicationContract { tool_id: "nodeGraphEdit", lanes: &[ArtifactToolPublicationLane::Artifact] },
     ArtifactToolPublicationContract { tool_id: "nodeGraphViewport", lanes: &[ArtifactToolPublicationLane::WindowConfig] },
     ArtifactToolPublicationContract { tool_id: "setPoints", lanes: &[ArtifactToolPublicationLane::Artifact] },
+    ArtifactToolPublicationContract { tool_id: "setActiveExample", lanes: &[ArtifactToolPublicationLane::HostOnly] },
 ];
 
 fn equation_contract() -> ToolExecutionContract {
@@ -264,11 +281,23 @@ fn equation_edit_preflight(payload: &node_graph_edit::NodeGraphEdit) -> Option<u
 }
 
 fn equation_command_extent(command: &EquationCommand, snapshot: &EquationSnapshot) -> Option<usize> {
-    let scene = crate::equation_scene_owner(snapshot)?;
+    // 🎬️ Answered BEFORE the scene lookup: loading an example is what makes a scene owner exist, so
+    // measuring this verb against one would refuse it at exactly the boot moment it is dispatched.
+    if let EquationCommand::SetActiveExample(payload) = command {
+        return (payload.example_id.len() <= EQUATION_MAX_TEXT_BYTES).then_some(1);
+    }
+    // 🧩️ The FAIL-SOFT projection, never `equation_scene_owner`: the working scene is an ephemeral
+    // artifact-instance owner that only a mutation in THIS session mints, so a document arriving by
+    // `Effect::LoadDocument`/archive decode carries none — see `crate::equation_scene`'s own doc
+    // comment, which `genesis_equation_child_pack` already relies on. Measuring the extent against
+    // the owner refused every document verb on exactly the documents the user just loaded.
+    let scene = crate::equation_scene(snapshot);
     if !equation_graph_shape_admitted(&scene.graph) || scene.geometry.points.len() > EQUATION_MAX_POINTS {
         return None;
     }
     let extent = match command {
+        // 🎬️ Answered above, before the scene lookup; this arm is unreachable by construction.
+        EquationCommand::SetActiveExample(_) => return None,
         EquationCommand::NodeGraphViewport(_) => 1,
         EquationCommand::SetAlgorithm(payload) if payload.algorithm.len() <= EQUATION_MAX_TEXT_BYTES && payload.seed.as_ref().is_none_or(|seed| seed.len() <= EQUATION_MAX_TEXT_BYTES) => {
             2_usize.checked_add(scene.graph.nodes.len())?.checked_add(scene.graph.edges.len())?
@@ -457,13 +486,20 @@ impl EquationRetainedCommandWork {
         Ok(ArtifactCommandWorkStep::Progress { stage, preview: br#"{"en":"Preparing Equation command","de":"Gleichungs-Befehl wird vorbereitet"}"# })
     }
 
+    /// 🧩️ Reads the scene the phases mutate through the same fail-soft projection
+    /// `equation_command_extent` measures, so the admission and the work never disagree about which
+    /// document is editable. A decoded archive owns no live scene; its projection is the empty one
+    /// the committed asset itself describes, which is a legal base for every phase.
     fn source_scene(snapshot: &EquationSnapshot) -> Result<Arc<crate::EquationWorkingScene>, Fault> {
-        crate::equation_scene_owner(snapshot).ok_or_else(|| Fault::from("equation-command-scene-unresolved"))
+        Ok(crate::equation_scene_owner(snapshot).unwrap_or_else(|| Arc::new(crate::equation_scene(snapshot))))
     }
 
     fn initialize(&mut self, command: &EquationCommand, snapshot: &EquationSnapshot) -> Result<(), Fault> {
         let source = Self::source_scene(snapshot)?;
         match command {
+            // 🎬️ Completed in `step` before any phase runs — it exists to CREATE the scene these
+            // phases read, so reaching the phase machine at all is a routing defect.
+            EquationCommand::SetActiveExample(_) => return Err(Fault::from("equation-set-active-example-is-not-a-phased-command")),
             EquationCommand::SetAlgorithm(payload) => {
                 let mut graph = EquationGraph { directed: source.graph.directed, nodes: Vec::new(), edges: Vec::new(), algorithm: payload.algorithm.clone(), algorithm_seed: payload.seed.clone() };
                 graph.nodes.try_reserve_exact(source.graph.nodes.len()).map_err(|_| Fault::from("equation-command-node-reserve"))?;
@@ -513,6 +549,7 @@ impl EquationRetainedCommandWork {
         use crate::standards::v1::subsets::geometry::schema::mutations::replace_points::ReplacePoints;
         use crate::standards::v1::subsets::graph::schema::mutations::replace_graph::ReplaceGraph;
         Ok(match command {
+            EquationCommand::SetActiveExample(_) => return Err(Fault::from("equation-set-active-example-is-not-a-phased-command")),
             EquationCommand::SetAlgorithm(_) => Emit::commit(vec![EquationMutation::ReplaceGraph(ReplaceGraph { graph: self.graph.take().ok_or_else(|| Fault::from("equation-command-graph-owner"))? })], "setAlgorithm"),
             EquationCommand::SetDirected(_) => Emit::mutations(vec![EquationMutation::ReplaceGraph(ReplaceGraph { graph: self.graph.take().ok_or_else(|| Fault::from("equation-command-graph-owner"))? })]),
             EquationCommand::NodeGraphEdit(_) if self.graph_changed => Emit::mutations(vec![EquationMutation::ReplaceGraph(ReplaceGraph { graph: self.graph.take().ok_or_else(|| Fault::from("equation-command-graph-owner"))? })]),
@@ -579,6 +616,10 @@ impl ArtifactCommandWork<EditorApp<EquationPlayApp>> for EquationRetainedCommand
         let semio_framework_plugin::retained_command::ArtifactCommandInputs { command, snapshot, config: _config, history: _history, interaction: _interaction, hover: _hover, context, operation: _operation } = *input;
         if equation_command_extent(command, snapshot) != Some(self.extent) || self.cursor > self.extent {
             return Err(Fault::from("equation-command-extent-drift"));
+        }
+        // 🎬️ One step, no scene: the whole-document replacement is a host-applied effect.
+        if let EquationCommand::SetActiveExample(payload) = command {
+            return set_active_example::emit(&payload.example_id).map(ArtifactCommandWorkStep::Complete);
         }
         let source = Self::source_scene(snapshot)?;
         match self.phase {
@@ -1060,7 +1101,13 @@ where
         if lane != store::HistoryLane::Document || description.is_some_and(|value| value.len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES) {
             return Err("Equation Store preparation rejected its lane or description envelope".into());
         }
-        Ok(store::ArtifactStoreOneItemFootprint { work_items: 1, retained_bytes: store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES })
+        // 🧺️ `work_items` counts staged edit ROWS, never mutations: `fold_batch_item` compares
+        // `forwards.len() + inverse.len()`, so a point-invertible item costs 2 and the hand-written
+        // `1` fail-closed EVERY durable equation gesture with `batched item candidate failed its
+        // exact fixed fold contract`. The two mutations this editor ever emits — `ReplaceGraph` and
+        // `ReplacePoints` — both yield exactly one inverse row, which is what this constructor
+        // declares; the number is never written at the call site.
+        Ok(store::ArtifactStoreOneItemFootprint::for_one_invertible_item(store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES))
     }
 
     fn begin(&self, request: store::ArtifactStoreOneItemPreparationRequest<P, M>) -> Result<Box<dyn store::ArtifactStoreOneItemPreparation<P, M>>, store::ArtifactStoreOneItemPreparationRequest<P, M>> {
@@ -1161,6 +1208,10 @@ where
 pub struct EquationPlayApp;
 
 impl ArtifactEditor for EquationPlayApp {
+    /// 🧩️ Composes `s.stdio.semio@v1/*` children (`text`/`table`/`value`), so every bundle of this
+    /// surface opens them through the same roster. The react shell's `loadDocumentPair` sends
+    /// `members: []`, so an undeclared-but-derivable child makes the archive closure `Incomplete`.
+    type Members = semio_s_artifact_stdio_semio::SemioMembers;
     type Snapshot = EquationSnapshot;
     type Mutation = EquationMutation;
     type Config = NoConfig;
@@ -1187,6 +1238,18 @@ impl ArtifactEditor for EquationPlayApp {
 
     fn build_document_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
         Some(Box::new(semio_framework_plugin::ArtifactDocumentStoreDisposer::<Self::Snapshot, Self::Mutation>::new()))
+    }
+
+    /// 📥️ Admits the whole-document replacement `reset_equation_document_effect` emits. The trait
+    /// default owns no retained initialization authority, so the host refuses the app's own archive
+    /// with `artifact-store.persisted-initializer-refused` AFTER the guest has already accepted the
+    /// verb — which is what every `setActiveExample` would hit without this.
+    fn build_document_store_initialization_job(
+        envelope: store::ArtifactEnvelope<Self::Snapshot, Self::Mutation>,
+        operation: semio_framework_job::OperationId,
+        generation: semio_framework_job::Generation,
+    ) -> Result<semio_framework_plugin::ArtifactStoreInitializationJob<Self::Snapshot, Self::Mutation>, store::ArtifactEnvelope<Self::Snapshot, Self::Mutation>> {
+        Ok(semio_framework_plugin::bounded_document_store_initialization_job(envelope, MATH_DOCUMENT_SCHEMA, operation, generation))
     }
 
     fn build_config_store_owners() -> Option<store::DocumentStoreOwners<Self::Config, Self::ConfigMutation>> {
@@ -1243,6 +1306,7 @@ impl ArtifactEditor for EquationPlayApp {
             "nodeGraphEdit" => ToolExecutionContract::resumable(65_536, 2_048, 1, 65_536, 7_500, 1, 1),
             "nodeGraphViewport" => ToolExecutionContract::resumable(65_536, 2_048, 1, 65_536, 7_500, 1, 1),
             "setPoints" => ToolExecutionContract::resumable(65_536, 2_048, 1, 65_536, 7_500, 1, 1),
+            "setActiveExample" => ToolExecutionContract::resumable(65_536, 2_048, 1, 65_536, 7_500, 1, 1),
         }
     }
 
@@ -1288,6 +1352,12 @@ impl ArtifactEditor for EquationPlayApp {
         Ok(Some(semio_framework::ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
     }
 
+    /// 🌱️ The derivable `notation`/`results`/`computed` members — see
+    /// `crate::genesis_equation_child_pack`.
+    fn genesis_child_pack(snapshot: &Self::Snapshot, slot: &str, child_id: &str) -> Option<Vec<u8>> {
+        crate::genesis_equation_child_pack(snapshot, slot, child_id)
+    }
+
     fn initial_snapshot() -> EquationSnapshot {
         EquationSnapshot::default()
     }
@@ -1320,9 +1390,18 @@ impl ArtifactEditor for EquationPlayApp {
             "setDirected" => Ok(EquationCommand::SetDirected(set_directed::SetDirected {
                 directed: args.and_then(|value| value.get("directed").or_else(|| value.get("value"))).and_then(dsl::DslValue::as_bool).unwrap_or(false),
             })),
-            "nodeGraphEdit" => Ok(EquationCommand::NodeGraphEdit(node_graph_edit::NodeGraphEdit { operations_json: args.and_then(|value| value.get("operations")).map_or_else(|| "[]".into(), dsl::json::to_json_string) })),
+            // 🧬️ A staged `json_text` argument arrives as a STRING already holding the JSON document
+            // (the `setFixtureJson.json`/`patchLayer.value` shape); re-stringifying it would wrap the
+            // array in quotes and `equation_edit_preflight` would refuse it as a non-array. A
+            // structured `DslValue` (an engagement or an MCP caller) still prints normally.
+            "nodeGraphEdit" => Ok(EquationCommand::NodeGraphEdit(node_graph_edit::NodeGraphEdit {
+                operations_json: args.and_then(|value| value.get("operations")).map_or_else(|| "[]".into(), |value| value.as_str().map_or_else(|| json::to_json_string(value), str::to_string)),
+            })),
             "nodeGraphViewport" => Ok(EquationCommand::NodeGraphViewport(node_graph_viewport::NodeGraphViewport { viewport: decode(action, args, "viewport")? })),
             "setPoints" => Ok(EquationCommand::SetPoints(set_points::SetPoints { geometry: decode(action, args, "geometry")? })),
+            "setActiveExample" => Ok(EquationCommand::SetActiveExample(set_active_example::SetActiveExample {
+                example_id: text_arg(&["exampleId", "example_id", "id", "value"]).unwrap_or_else(|| crate::examples::demo::ID.into()),
+            })),
             other => Err(Fault::from(format!("equation: unhandled action id {other}"))),
         }
     }
@@ -1404,6 +1483,7 @@ pub fn create_equation_app() -> semio_framework_plugin::AppDefinition {
         .default_layout(edit::layout())
         // ✏️ Document-mutating actions — dispatched as VCS operations with true inverses.
         .mutation("setDocument", LocalizedLabel::native("Set Document", "Dokument festlegen"))
+        .action_destructive("setDocument")
         .mutation("setAlgorithm", LocalizedLabel::native("Set Algorithm", "Algorithmus festlegen"))
         .mutation("setDirected", LocalizedLabel::native("Set Directed", "Gerichtet festlegen"))
         .mutation("nodeGraphEdit", LocalizedLabel::native("Node Graph Edit", "Knotengraph bearbeiten"))
@@ -1415,6 +1495,18 @@ pub fn create_equation_app() -> semio_framework_plugin::AppDefinition {
         .action_interactive_job("nodeGraphEdit", InteractiveJobClassification::Migrated)
         .action_interactive_job("nodeGraphViewport", InteractiveJobClassification::Migrated)
         .action_interactive_job("setPoints", InteractiveJobClassification::Migrated)
+        // 📚️ The playground navbar dispatches `setActiveExample` on boot for its example combobox,
+        // and the shell offers that combobox only to an app that declares the verb on some window
+        // kind. Undeclared, it was dropped before dispatch — this app's only console ERROR at boot,
+        // and the reason every document verb then refused: `equation_command_extent` needs a scene
+        // owner, and nothing but the example load ever produced one.
+        .action_with(semio_framework_plugin::ActionDefinition::new("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"), semio_framework_plugin::ActionKind::Mutation, "panel-left"))
+        .action_interactive_job("setActiveExample", InteractiveJobClassification::Migrated)
+        .action_args("setActiveExample", vec![
+            ActionArgDef::select("exampleId", LocalizedLabel::native("Example", "Beispiel"), vec![ActionArgOption::new(crate::examples::demo::ID, crate::examples::demo::label())])
+                .required()
+                .default_value(&crate::examples::demo::ID),
+        ])
         // 📝️ Staged argument forms for the graph analysis controls.
         .action_args("setAlgorithm", vec![
             ActionArgDef::select("algorithm", LocalizedLabel::native("Algorithm", "Algorithmus"), vec![
@@ -1426,6 +1518,16 @@ pub fn create_equation_app() -> semio_framework_plugin::AppDefinition {
         ])
         .action_args("setDirected", vec![
             ActionArgDef::toggle("directed", LocalizedLabel::native("Directed", "Gerichtet")).default_value(&true),
+        ])
+        // 🧬️ The equation's own EDIT verb, staged as JSON text — the only document verb whose whole
+        // payload the Actions pane can carry (`setDocument`/`setPoints`/`nodeGraphViewport` take
+        // structured `<block>` arguments no pane control produces). The default is one `addNode`
+        // operation, so the verb is dispatchable, invertible and visible in the graph window
+        // straight from the pane instead of only from a canvas engagement.
+        .action_args("nodeGraphEdit", vec![
+            ActionArgDef::json_text("operations", LocalizedLabel::native("Operations", "Operationen"))
+                .required()
+                .default_value(&EQUATION_DEFAULT_EDIT_OPERATIONS),
         ])
         // 🎯️ Typed channel surface (HEADLESS-APP-ENGINE-BINARY-COMMAND-PROTOCOL-FOUNDATIONS /
         // WORKFLOWS-END-TO-END-TYPED-PORTS) — `equation_io()` (this file's own `🔖️Io` region) is
@@ -1442,3 +1544,11 @@ pub fn create_equation_app() -> semio_framework_plugin::AppDefinition {
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 pub(crate) mod unit_tests;
 //#endregion 🧪️UnitTests
+
+//#region 🪢️TaxonomyMounts
+#[path = "📚️examples/🎬️demo-session/🦀️.rs"]
+pub mod demo_session;
+#[cfg(test)]
+#[path = "📚️examples/🎬️demo-session/🧪️tests/🧩️example/🦀️.rs"]
+mod example;
+//#endregion 🪢️TaxonomyMounts

@@ -207,7 +207,9 @@ export function defaultHostVariant(entries: readonly PluginRegistryEntry[], play
     throw new Error(`📇️registry: expected exactly one plugin crate to declare [package.metadata.semio].host, found ${hostEntries.length}${hostEntries.length > 0 ? ` (${hostEntries.map((entry) => entry.pluginId).join(", ")})` : ""}`);
   }
   const hostPluginId = hostEntries[0].pluginId;
-  const hostPlayground = playgrounds.find((entry) => entry.pluginId === hostPluginId);
-  if (!hostPlayground) throw new Error(`📇️registry: host plugin "${hostPluginId}" declares no [[package.metadata.semio.playground]] variant`);
-  return hostPlayground.variant;
+  // 🏠️ The host crate also ships ordinary artifact apps as their own single-app playgrounds (Home,
+  // Space); the row that boots the SHELL is the one naming no `app`.
+  const hostPlaygrounds = playgrounds.filter((entry) => entry.pluginId === hostPluginId && entry.app === undefined);
+  if (hostPlaygrounds.length !== 1) throw new Error(`📇️registry: host plugin "${hostPluginId}" declares ${hostPlaygrounds.length} app-less [[package.metadata.semio.playground]] variants, expected exactly one`);
+  return hostPlaygrounds[0].variant;
 }

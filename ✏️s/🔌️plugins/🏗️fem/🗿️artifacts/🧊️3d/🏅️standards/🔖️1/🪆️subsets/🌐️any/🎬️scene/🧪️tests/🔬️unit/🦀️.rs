@@ -1,7 +1,7 @@
 use super::*;
 
 fn demo() -> Fem3dSnapshot {
-    crate::standards::v1::subsets::any::schema::snapshot::text::fem3d_boot_snapshot()
+    crate::standards::v1::subsets::any::schema::snapshot::text::fem3d_demo_snapshot()
 }
 
 fn instances(doc: &Fem3dSnapshot) -> Vec<Value> {

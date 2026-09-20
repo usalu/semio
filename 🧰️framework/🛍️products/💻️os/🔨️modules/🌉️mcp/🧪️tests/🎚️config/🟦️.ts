@@ -25,7 +25,6 @@ export default defineConfig({
   test: {
     root: testRoot,
     name: "@semio-tech/framework-os-mcp",
-    mode: "test",
     environment: "node",
     include: [resolve(root, "../../🧪️tests/*/🟦️.ts")],
     exclude: [resolve(root, "../../🧪️tests/🧪️resolvemcpbinarypath/🟦️.ts")],

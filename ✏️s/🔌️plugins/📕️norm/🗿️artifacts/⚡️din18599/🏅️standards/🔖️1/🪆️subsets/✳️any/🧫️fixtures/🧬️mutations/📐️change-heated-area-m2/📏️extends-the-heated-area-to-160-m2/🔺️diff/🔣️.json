@@ -1,6 +1,6 @@
 {
   "useClass": null,
-  "heatedAreaM2": 160,
+  "heatedAreaM2": 160.0,
   "occupants": null,
   "hT": null,
   "hV": null,

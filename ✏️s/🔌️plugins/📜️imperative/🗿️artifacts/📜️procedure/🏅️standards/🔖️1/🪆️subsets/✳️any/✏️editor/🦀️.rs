@@ -93,12 +93,14 @@ semio_framework_plugin::app_commands! {
         "setStepParamsAt" as "set-step-params-at" => set_step_params_at::SetStepParamsAt,
         "run" as "run" => run::Run,
         "setContributions" as "contributions" => set_contributions::SetContributions,
+        "setActiveExample" as "active-example" => set_active_example::SetActiveExample,
     }
 }
 
 // 🧷️ `app_commands!` addresses each payload module by a single identifier, so every `🎮️commands/*`
 // payload module is imported here under its own flat name.
 use crate::editor::procedure::commands::run;
+use crate::editor::procedure::commands::set_active_example;
 use crate::editor::procedure::commands::set_contributions;
 use crate::editor::procedure::commands::{add_step, add_step_at, move_step, move_step_at, remove_step, remove_step_at, set_step_params, set_step_params_at};
 //#endregion 🔖️Commands
@@ -111,7 +113,7 @@ use crate::editor::procedure::commands::{add_step, add_step_at, move_step, move_
 /// ONE registered factory type. All ten verbs were `BatchOnlyPendingRewrite`, so every row of this
 /// app's Actions pane was refused at the dispatch gate (ticket 26/09/18 slice B2c).
 const IMPERATIVE_RETAINED_TOOL_IDS: &[&str] =
-    &["addStep", "addStepAt", "removeStep", "removeStepAt", "moveStep", "moveStepAt", "setStepParams", "setStepParamsAt", "run", "setContributions"];
+    &["addStep", "addStepAt", "removeStep", "removeStepAt", "moveStep", "moveStepAt", "setStepParams", "setStepParamsAt", "run", "setContributions", "setActiveExample"];
 const IMPERATIVE_RETAINED_PAYLOAD_SCHEMA: &str = "imperative.procedure.tool-command.v1";
 const IMPERATIVE_RETAINED_RAW_BYTES: usize = 8_192;
 const IMPERATIVE_RETAINED_WORK_ITEMS: usize = 64;
@@ -131,6 +133,7 @@ const IMPERATIVE_RETAINED_PUBLICATION_CONTRACTS: &[semio_framework_plugin::Artif
     semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setStepParamsAt", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Artifact] },
     semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "run", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Config] },
     semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setContributions", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::Config] },
+    semio_framework_plugin::ArtifactToolPublicationContract { tool_id: "setActiveExample", lanes: &[semio_framework_plugin::ArtifactToolPublicationLane::HostOnly] },
 ];
 
 fn imperative_retained_contract() -> semio_framework::ToolExecutionContract {
@@ -141,6 +144,7 @@ fn imperative_retained_contract() -> semio_framework::ToolExecutionContract {
 fn imperative_retained_extent(command: &ImperativeCommand, _snapshot: &ProcedureSnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
     let bytes = match command {
         ImperativeCommand::SetContributions(payload) => payload.json.len(),
+        ImperativeCommand::SetActiveExample(payload) => payload.example_id.len(),
         _ => 0,
     };
     (bytes <= IMPERATIVE_RETAINED_RAW_BYTES && IMPERATIVE_RETAINED_TOOL_IDS.contains(&command.command_id())).then_some(1)
@@ -226,6 +230,7 @@ fn imperative_command_from_action(action: &str, args: Option<&dsl::DslValue>) ->
         })),
         "run" => Ok(ImperativeCommand::Run(run::Run {})),
         "setContributions" => Ok(ImperativeCommand::SetContributions(set_contributions::SetContributions { json: text(&["json", "value"], "{}") })),
+        "setActiveExample" => Ok(ImperativeCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: text(&["exampleId", "example_id", "id", "value"], crate::examples::demo::ID) })),
         other => Err(Fault::new(
             semio_framework_plugin::FaultOrigin::App,
             semio_framework_plugin::FaultCode::new("imperative.unhandled-action"),
@@ -313,7 +318,22 @@ impl semio_framework_plugin::ArtifactOwnedToolJobFactory for ImperativeRetainedC
 #[derive(Default)]
 pub struct ImperativePlayApp;
 
+/// 🧬️ The whole-document replacement `setActiveExample` emits. `store::empty_document_spr` (never a
+/// minted `create_document_envelope`) is what keeps the guest off the `terminal shell reached Drop
+/// before its app-owned bounded retirement authority detached` trap on this path; the framework
+/// re-stamps the log with the live mount's identity before hydration sees it
+/// (`store::stamp_document_spr_identity`), so no app ever states its own mount.
+pub fn reset_procedure_document_effect(document: &ProcedureSnapshot) -> semio_framework_plugin::Effect {
+    let pack = <ProcedureSnapshot as ArtifactPack>::encode_pack(document);
+    let spr = semio_framework_plugin::resolve_ready(store::empty_document_spr("procedure", PROCEDURE_DOCUMENT_SCHEMA));
+    semio_framework_plugin::Effect::LoadDocument { pack, spr }
+}
+
 impl ArtifactEditor for ImperativePlayApp {
+    /// 🧩️ The roster both composed `s.stdio.semio` children (`flow`, `text`) open through. A
+    /// `NoMembers` editor cannot materialise the children `genesis_child_pack` derives, so every
+    /// whole-document load fails its archive closure leg before any of them is opened.
+    type Members = semio_s_artifact_stdio_semio::SemioMembers;
     type Snapshot = ProcedureSnapshot;
     type Mutation = ProcedureMutation;
     type Config = ImperativeConfig;
@@ -384,7 +404,7 @@ impl ArtifactEditor for ImperativePlayApp {
         factory: "ImperativeRetainedCommandJobFactory",
         factory_type: ImperativeRetainedCommandJobFactory,
         contract: semio_framework::ToolExecutionContract::bounded_first_step(8_192, 64, 64, 16_384, 7_500),
-        tools: ["addStep", "addStepAt", "removeStep", "removeStepAt", "moveStep", "moveStepAt", "setStepParams", "setStepParamsAt", "run", "setContributions"]
+        tools: ["addStep", "addStepAt", "removeStep", "removeStepAt", "moveStep", "moveStepAt", "setStepParams", "setStepParamsAt", "run", "setContributions", "setActiveExample"]
     }
 
     fn register_tool_job_factories(registry: &mut semio_framework_plugin::ArtifactToolFactoryRegistry<'_, semio_framework_plugin::EditorApp<Self>>) -> Result<(), Fault> {
@@ -436,6 +456,22 @@ impl ArtifactEditor for ImperativePlayApp {
 
     fn app_schema() -> Option<::framework_schema::AppSchemaDescriptor> {
         Some(crate::editor::procedure::config::schema::app_schema_descriptor())
+    }
+
+    /// 🏗️ Admits the whole-document replacement `reset_procedure_document_effect` emits for every
+    /// example switch. The trait default refuses the envelope, so the host answers every
+    /// `setActiveExample` with `artifact-store.persisted-initializer-refused` at the archive-load
+    /// boundary.
+    fn build_document_store_initialization_job(
+        envelope: store::ArtifactEnvelope<Self::Snapshot, Self::Mutation>,
+        operation: semio_framework_job::OperationId,
+        generation: semio_framework_job::Generation,
+    ) -> Result<semio_framework_plugin::ArtifactStoreInitializationJob<Self::Snapshot, Self::Mutation>, store::ArtifactEnvelope<Self::Snapshot, Self::Mutation>> {
+        Ok(semio_framework_plugin::bounded_document_store_initialization_job(envelope, PROCEDURE_DOCUMENT_SCHEMA, operation, generation))
+    }
+
+    fn genesis_child_pack(snapshot: &Self::Snapshot, slot: &str, child_id: &str) -> Option<Vec<u8>> {
+        crate::genesis_procedure_child_pack(snapshot, slot, child_id)
     }
 
     fn initial_snapshot() -> ProcedureSnapshot {
@@ -537,7 +573,9 @@ pub fn create_imperative_app() -> semio_framework_plugin::AppDefinition {
             .mutation("addStep", LocalizedLabel::native("Add Step", "Schritt hinzufügen"))
             .mutation("addStepAt", LocalizedLabel::native("Add Step At", "Schritt bei Position hinzufügen"))
             .mutation("removeStep", LocalizedLabel::native("Remove Step", "Schritt entfernen"))
+            .action_destructive("removeStep")
             .mutation("removeStepAt", LocalizedLabel::native("Remove Step At", "Schritt bei Position entfernen"))
+            .action_destructive("removeStepAt")
             .mutation("moveStep", LocalizedLabel::native("Move Step", "Schritt verschieben"))
             .mutation("moveStepAt", LocalizedLabel::native("Move Step At", "Schritt bei Position verschieben"))
             .mutation("setStepParams", LocalizedLabel::native("Set Step Params", "Schrittparameter festlegen"))
@@ -545,6 +583,14 @@ pub fn create_imperative_app() -> semio_framework_plugin::AppDefinition {
             // 👁️ Ephemeral view state / runtime effect — `run` evaluates into config. Step selection/
             // hover are no longer declared here: framework-owned, injected via `.interaction(...)` below.
             .action_with(semio_framework_plugin::ActionDefinition::new("run", LocalizedLabel::native("Run", "Ausführen"), ActionKind::View, "play"))
+            // 🧬️ The example picker's verb. The subset registers `crate::examples::demo`, so the shell
+            // dispatches this at boot and on every navbar pick; with no declaration at all every one of
+            // those was dropped `undeclared-action` before it reached the app.
+            .action_with(
+                semio_framework_plugin::ActionDefinition::new("setActiveExample", LocalizedLabel::native("Set Active Example", "Beispiel setzen"), ActionKind::View, "file")
+                    .with_args(vec![ActionArgDef::text("exampleId", LocalizedLabel::native("Example", "Beispiel")).default_value(&crate::examples::demo::ID)]),
+            )
+            .action_interactive_job("setActiveExample", InteractiveJobClassification::Migrated)
             .action_interactive_job("setContributions", InteractiveJobClassification::Migrated)
             .action_interactive_job("addStep", InteractiveJobClassification::Migrated)
             .action_interactive_job("addStepAt", InteractiveJobClassification::Migrated)
@@ -609,3 +655,12 @@ pub fn create_imperative_app() -> semio_framework_plugin::AppDefinition {
 pub(crate) mod unit_tests;
 //#endregion 🧪️UnitTests
 
+//#region 🪢️TaxonomyMounts
+#[path = "👥️presence/🧬️schema/🦀️.rs"]
+pub mod schema;
+#[path = "📚️examples/🎬️demo-session/🦀️.rs"]
+pub mod demo_session;
+#[cfg(test)]
+#[path = "📚️examples/🎬️demo-session/🧪️tests/🧩️example/🦀️.rs"]
+mod example;
+//#endregion 🪢️TaxonomyMounts

@@ -1,6 +1,6 @@
 
 use super::*;
-use crate::catalog::{Catalog, CatalogSource, compile};
+use crate::catalog::{CapabilityAudience, Catalog, CatalogSource, compile};
 use crate::protocol::ToolRegistry;
 use crate::protocol::is_valid_tool_name;
 use semio_framework::{Locale, Terminology};
@@ -17,8 +17,9 @@ fn plugin_only_catalog(plugin_id: &str) -> Arc<Catalog> {
     let capability = CapabilityDefinition {
         id: CapabilityRef(format!("{plugin_id}.probe")),
         version: 1,
-        owner: CapabilityOwner::Plugin { plugin_id: plugin_id.to_string(), app_id: None, window_kind_id: None, mode_id: None },
+        owner: CapabilityOwner::Plugin { plugin_id: plugin_id.to_string(), label: None, app_id: None, window_kind_id: None, mode_id: None },
         kind: CapabilityKind::Query,
+        audience: CapabilityAudience::Agent,
         title: "Probe".to_string(),
         description: "test fixture".to_string(),
         artifact_kind: None,

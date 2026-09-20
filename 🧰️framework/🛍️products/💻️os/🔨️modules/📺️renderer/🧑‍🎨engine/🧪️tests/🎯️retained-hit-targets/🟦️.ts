@@ -66,7 +66,7 @@ const sceneRegistration = (surfaceId: string, surfaceKind: string): { kind: stri
   if (surfaceKind === "world-3d") return { kind: "world3d", controlId: surfaceId };
   if (surfaceKind === "node-graph" || surfaceKind === "board-2d") return { kind: "scrollRegion", controlId: `${surfaceId}.pane` };
   if (surfaceKind === "tiled-map") return { kind: "scrollRegion", controlId: `${surfaceId}.map` };
-  return { kind: "generic", controlId: surfaceId };
+  return { kind: "componentScene", controlId: surfaceId };
 };
 
 /** 🖱️ `ShellState::wheel_propagates_to_scene_surface`, re-derived — the predicate the wheel gate stands on. */

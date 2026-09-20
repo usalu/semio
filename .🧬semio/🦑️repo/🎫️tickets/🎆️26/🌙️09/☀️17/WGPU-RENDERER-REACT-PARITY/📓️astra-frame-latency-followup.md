@@ -1,0 +1,13 @@
+# Frame Latency Follow-up
+
+Checkpoint11 recorded a2.2716s worker tick and a nested2.271199s transactionRouteIntents scope. Checkpoint12 independently recorded a2.4135s transactionRouteIntents maximum and a2.4156s worker-step overrun before the later General Settings crash. These are actual browser CPU scope measurements; they are not GPU durations, and nested stages cannot be summed.
+
+Source inspection shows that `AppFrameTransaction::step` starts its stage timer before asset decode pumping and before matching its internal phase. The RouteIntents stage covers BrushMesh and the whole Build phase, including `frame_before_input_step`. That builder walks prepared-resource retirement, theme, input, icon atlas, complete shell chrome construction, and resource transfer. Consequently the existing label cannot attribute the multi-second maximum specifically to input routing.
+
+The asset decode loop checks its deadline between bounded decoder units, but the first unit and every called builder substep must still be inspected for synchronous work. The worker Tick timer wraps the entire redraw call. `ProgramBridge::render_with_document` has its own retainedExchange timer, which also spans asynchronous waiting. Current receipts locate the problem broadly but do not establish its exact cause.
+
+The next performance audit should identify the longest synchronous transaction subphase with a real browser CPU profile or a bounded explicit subphase measurement, then verify cancellation and progress through the actual worker pump. Increasing frame fuel or time ceilings is not acceptance. No production performance change was made by this follow-up.
+
+The paired interaction probe now records the first worker panic/page crash as fatal, stops dependent steps for that renderer, classifies them unmeasured with the original crash, and flushes console evidence after each completed step. Its syntax bundle passed via Bun/Nx with external packages; an earlier attempt to bundle Playwright internals failed on optional chromium-bidi imports and was not a source syntax failure. A new browser run remains required to exercise the crash-reporting path.
+
+The optional `SEMIO_PROBE_CPU_PROFILE=1` mode now attaches Chrome's Profiler to actual dedicated workers before they start, with a1000µs sampling interval. It writes raw CPU profiles and sampled self/inclusive function totals beneath the run's WGPU generated directory. It is disabled for ordinary parity receipts; profiler overhead prevents calling its durations a clean baseline. The extended probe syntax bundle passed. Actual profiler runtime validation remains pending activation13/React7 completion. Terra's completed independent source audit is `📓️astra-terra-frame-performance.md`.

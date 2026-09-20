@@ -19,7 +19,7 @@ use crate::artifact_authority::creation::{
 use crate::directory::error::{DirectoryError, DirectoryResult};
 use crate::directory::model::*;
 use crate::directory::{
-    ACTIVE_SYNC_SESSION_READ_MAX, ADMIN_PAGE_MAX, ARTIFACT_CAS_RESERVATION_MAX_TTL_MS, ARTIFACT_CAS_SWEEP_PAGE_MAX, ARTIFACT_CHECKPOINT_LINEAGE_MAX, AUTH_AUDIT_PAGE_MAX, AUTH_TEXT_MAX_BYTES, ArtifactCasSweepCandidatePage, DirectoryAppendOutcomeV1,
+    ACTIVE_SYNC_SESSION_READ_MAX, ADMIN_PAGE_MAX, AGENT_DELEGATED_EVENT, AGENT_DELEGATION_PAGE_MAX, AGENT_DELEGATION_REVOKED_EVENT, AGENT_IDENTITY_PROVIDER, ARTIFACT_CAS_RESERVATION_MAX_TTL_MS, ARTIFACT_CAS_SWEEP_PAGE_MAX, ARTIFACT_CHECKPOINT_LINEAGE_MAX, AUTH_AUDIT_PAGE_MAX, AUTH_TEXT_MAX_BYTES, ArtifactCasSweepCandidatePage, DirectoryAppendOutcomeV1,
     DirectoryProjectionRejectionV1, HubClock, HubDirectory, InviteCapability, InviteRedemptionPreflight, InviteRedemptionScopeHintV1, InviteRedemptionSpaceStateV1, NewDirectoryEvent, ProjectionRebuildControl, SessionCapability, ShareCapability,
     UNCONTROLLED_PROJECTION_REBUILD, active_capability, admin_operation_effect_receipt_v1, auth_audit, bounded_event_read, checkpoint_projection_rebuild, directory_command_result_kind_from_str, directory_command_result_kind_str,
     directory_projection_rejection_v1, directory_projection_space_v1, invite_redemption_preflight, kind_to_str, prepare_auth_session, prepare_invite, prepare_share_token, role_from_wire, role_to_wire, same_admin_operation_request,
@@ -152,8 +152,22 @@ CREATE TABLE IF NOT EXISTS hub_auth_session (
     revoked_reason TEXT,
     authorization_generation INTEGER NOT NULL CHECK (authorization_generation >= 1),
     device_instance_id TEXT NOT NULL,
-    session_kind TEXT NOT NULL CHECK (session_kind IN ('external', 'development-local'))
+    session_kind TEXT NOT NULL CHECK (session_kind IN ('external', 'development-local', 'agent'))
 );
+CREATE TABLE IF NOT EXISTS hub_agent_delegation (
+    id TEXT PRIMARY KEY,
+    selector TEXT NOT NULL UNIQUE,
+    secret_digest BLOB NOT NULL CHECK (length(secret_digest) = 32),
+    space_id TEXT NOT NULL REFERENCES hub_space(id) ON DELETE CASCADE,
+    delegating_user_id TEXT NOT NULL REFERENCES hub_user(id) ON DELETE CASCADE,
+    agent_label TEXT NOT NULL,
+    audience TEXT NOT NULL CHECK (audience IN ('read', 'edit')),
+    created_at INTEGER NOT NULL,
+    expires_at INTEGER NOT NULL,
+    revoked_at INTEGER,
+    revoked_reason TEXT
+);
+CREATE INDEX IF NOT EXISTS idx_agent_delegation_owner ON hub_agent_delegation (space_id, delegating_user_id, created_at DESC);
 CREATE TABLE IF NOT EXISTS hub_artifact_creation_fact (
     actor_user_id TEXT NOT NULL,
     request_id TEXT NOT NULL,
@@ -1829,6 +1843,96 @@ impl HubDirectory for SqliteDirectory {
         tx.commit().map_err(backend)?;
         Ok(())
     }
+
+    async fn create_agent_delegation(&self, issued: &IssuedAgentDelegation, correlation_id: &str, peer_class: &str) -> DirectoryResult<()> {
+        let record = &issued.record;
+        let audit = auth_audit(record.created_at, AGENT_DELEGATED_EVENT, None, Some(&record.delegating_user_id), Some(&record.delegating_user_id), Some(AGENT_IDENTITY_PROVIDER), "success", Some(record.audience.as_str()), correlation_id, peer_class)?;
+        let mut conn = self.lock()?;
+        let tx = conn.transaction().map_err(backend)?;
+        tx.execute(
+            "INSERT INTO hub_agent_delegation (id, selector, secret_digest, space_id, delegating_user_id, agent_label, audience, created_at, expires_at, revoked_at, revoked_reason) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, NULL, NULL)",
+            rusqlite::params![record.id, record.selector, record.secret_digest.as_slice(), record.space_id, record.delegating_user_id, record.agent_label, record.audience.as_str(), record.created_at, record.expires_at],
+        )
+        .map_err(backend)?;
+        insert_auth_audit(&tx, &audit)?;
+        tx.commit().map_err(backend)?;
+        Ok(())
+    }
+
+    async fn list_agent_delegations(&self, space_id: &str, delegating_user_id: &str, limit: usize) -> DirectoryResult<Vec<AgentDelegationRow>> {
+        if limit == 0 || limit > AGENT_DELEGATION_PAGE_MAX {
+            return Err(DirectoryError::Conflict(format!("agent delegation limit must be 1..={AGENT_DELEGATION_PAGE_MAX}")));
+        }
+        let conn = self.lock()?;
+        let mut statement = conn
+            .prepare(
+                "SELECT d.id, d.space_id, d.delegating_user_id, d.agent_label, d.audience, d.created_at, d.expires_at, d.revoked_at, \
+                 (SELECT MAX(s.issued_at) FROM hub_auth_session s WHERE s.device_instance_id = d.id AND s.session_kind = 'agent') \
+                 FROM hub_agent_delegation d WHERE d.space_id = ?1 AND d.delegating_user_id = ?2 ORDER BY d.created_at DESC, d.id DESC LIMIT ?3",
+            )
+            .map_err(backend)?;
+        let rows = statement
+            .query_map(rusqlite::params![space_id, delegating_user_id, i64::try_from(limit).map_err(backend)?], |row| {
+                let audience: String = row.get(4)?;
+                let revoked_at: Option<i64> = row.get(7)?;
+                let last_used_at: Option<i64> = row.get(8)?;
+                Ok((row.get::<_, String>(0)?, row.get::<_, String>(1)?, row.get::<_, String>(2)?, row.get::<_, String>(3)?, audience, row.get::<_, i64>(5)?, row.get::<_, i64>(6)?, revoked_at, last_used_at))
+            })
+            .map_err(backend)?
+            .collect::<Result<Vec<_>, _>>()
+            .map_err(backend)?;
+        rows.into_iter()
+            .map(|(delegation_id, space_id, delegating_user_id, agent_label, audience, created_at_ms, expires_at_ms, revoked_at, last_used_at_ms)| {
+                Ok(AgentDelegationRow {
+                    delegation_id,
+                    space_id,
+                    delegating_user_id,
+                    agent_label,
+                    audience: AgentAudience::parse(&audience).ok_or_else(|| DirectoryError::Backend("stored agent delegation audience is invalid".into()))?,
+                    created_at_ms,
+                    expires_at_ms,
+                    revoked: revoked_at.is_some(),
+                    last_used_at_ms,
+                })
+            })
+            .collect()
+    }
+
+    async fn revoke_agent_delegation(&self, delegation_id: &str, delegating_user_id: &str, reason: &str, correlation_id: &str, now_ms: i64) -> DirectoryResult<Option<Vec<RevokedAuthSession>>> {
+        validate_bounded_auth_text(reason, "agent delegation revoke reason", AUTH_TEXT_MAX_BYTES)?;
+        let audit = auth_audit(now_ms, AGENT_DELEGATION_REVOKED_EVENT, None, Some(delegating_user_id), Some(delegating_user_id), Some(AGENT_IDENTITY_PROVIDER), "success", Some(reason), correlation_id, "server")?;
+        let mut conn = self.lock()?;
+        let tx = conn.transaction().map_err(backend)?;
+        let owned: i64 = tx
+            .query_row("SELECT COUNT(*) FROM hub_agent_delegation WHERE id = ?1 AND delegating_user_id = ?2", rusqlite::params![delegation_id, delegating_user_id], |row| row.get(0))
+            .map_err(backend)?;
+        if owned == 0 {
+            return Ok(None);
+        }
+        tx.execute("UPDATE hub_agent_delegation SET revoked_at = ?2, revoked_reason = ?3 WHERE id = ?1 AND revoked_at IS NULL", rusqlite::params![delegation_id, now_ms, reason]).map_err(backend)?;
+        let mut statement = tx.prepare("SELECT id, user_id, authorization_generation, identity_provider FROM hub_auth_session WHERE device_instance_id = ?1 AND session_kind = 'agent' AND revoked_at IS NULL ORDER BY id").map_err(backend)?;
+        let sessions: Vec<(String, String, i64, String)> =
+            statement.query_map([delegation_id], |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?, row.get(3)?))).map_err(backend)?.collect::<Result<Vec<_>, _>>().map_err(backend)?;
+        drop(statement);
+        let mut revoked = Vec::with_capacity(sessions.len());
+        for (id, user_id, generation, provider) in sessions {
+            let next_generation = generation.checked_add(1).ok_or_else(|| DirectoryError::Conflict("authorization generation overflow".into()))?;
+            tx.execute("UPDATE hub_auth_session SET revoked_at = ?2, revoked_reason = ?3, authorization_generation = ?4 WHERE id = ?1 AND revoked_at IS NULL", rusqlite::params![id, now_ms, reason, next_generation]).map_err(backend)?;
+            let session_audit = auth_audit(now_ms, "session-revoked", Some(&id), Some(&user_id), Some(delegating_user_id), Some(&provider), "success", Some(reason), correlation_id, "server")?;
+            insert_auth_audit(&tx, &session_audit)?;
+            revoked.push(RevokedAuthSession { id, authorization_generation: u64::try_from(next_generation).map_err(backend)?, revoked_at: now_ms });
+        }
+        insert_auth_audit(&tx, &audit)?;
+        tx.commit().map_err(backend)?;
+        Ok(Some(revoked))
+    }
+
+    async fn load_agent_delegation(&self, selector: &str) -> DirectoryResult<Option<AgentDelegationRecord>> {
+        let conn = self.lock()?;
+        conn.query_row("SELECT id, selector, secret_digest, space_id, delegating_user_id, agent_label, audience, created_at, expires_at, revoked_at, revoked_reason FROM hub_agent_delegation WHERE selector = ?1", [selector], agent_delegation_row)
+            .optional()
+            .map_err(backend)
+    }
     //#endregion
 
     //#region AdminOperations
@@ -2901,6 +3005,26 @@ fn auth_session_row(row: &rusqlite::Row<'_>) -> rusqlite::Result<AuthSessionReco
         authorization_generation: u64::try_from(generation).unwrap_or(0),
         device_instance_id: row.get(11)?,
         session_kind: AuthSessionKind::parse(&session_kind).unwrap_or(AuthSessionKind::External),
+    })
+}
+
+/// 🤖️ Rehydrates one `hub_agent_delegation` row. A stored audience outside the enum is a corrupt
+/// projection, never a silently-defaulted `read`.
+fn agent_delegation_row(row: &rusqlite::Row<'_>) -> rusqlite::Result<AgentDelegationRecord> {
+    let digest: Vec<u8> = row.get(2)?;
+    let audience: String = row.get(6)?;
+    Ok(AgentDelegationRecord {
+        id: row.get(0)?,
+        selector: row.get(1)?,
+        secret_digest: <[u8; 32]>::try_from(digest.as_slice()).map_err(|_| rusqlite::Error::IntegralValueOutOfRange(2, 0))?,
+        space_id: row.get(3)?,
+        delegating_user_id: row.get(4)?,
+        agent_label: row.get(5)?,
+        audience: AgentAudience::parse(&audience).ok_or(rusqlite::Error::IntegralValueOutOfRange(6, 0))?,
+        created_at: row.get(7)?,
+        expires_at: row.get(8)?,
+        revoked_at: row.get(9)?,
+        revoked_reason: row.get(10)?,
     })
 }
 

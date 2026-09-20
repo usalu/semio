@@ -24,3 +24,16 @@ async fn definition_binds_the_framework_catalogue_tab_to_this_body_key() {
     assert_eq!(definition.id(), FRAMEWORK_PANEL_TAB_CATALOGUE_ID);
     assert_eq!(definition.body_key.as_deref(), Some(LAYOUT_PLAY_BODY_CATALOGUE));
 }
+
+#[test]
+fn catalogue_declares_the_neutral_kind_witness_and_drop_payload() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../../../🧫️fixtures/🛍️canvas-catalogue/🔣️.json" )).expect("neutral catalogue producer");
+    for case in fixture["cases"].as_array().unwrap().iter().filter(|case| case["action"] == "canvasDrop" && case["kind"].is_string()) {
+        let kind = case["kind"].as_str().unwrap();
+        let item = catalogue_tree_item(kind, Label::data(kind), "square").expect("catalogue row");
+        let semio_framework_plugin::Component::TreeItem(props) = &item.component else { panic!("catalogue row component") };
+        let entries = props.drag_data.as_ref().expect("catalogue drag data").iter().map(|(mime, raw)| (mime.as_str(), raw.as_str())).collect::<Vec<_>>();
+        let kind_mime = format!("{}{}", fixture["kindMimePrefix"].as_str().unwrap(), kind);
+        assert_eq!(entries, vec![(fixture["mime"].as_str().unwrap(), case["args"]["dragData"].as_str().unwrap()), (kind_mime.as_str(), "")]);
+    }
+}

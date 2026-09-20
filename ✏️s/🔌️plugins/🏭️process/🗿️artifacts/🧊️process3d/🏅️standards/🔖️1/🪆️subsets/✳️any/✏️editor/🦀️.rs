@@ -1806,23 +1806,30 @@ pub fn create_process3d_app() -> AppDefinition {
             .mutation("addStep", LocalizedLabel::native("Add Step", "Schritt hinzufügen"))
             .mutation("setStock", LocalizedLabel::native("Set Stock", "Rohteil festlegen"))
             .action_with(ActionDefinition::new("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"), ActionKind::Mutation, "panel-left"))
+            .action_destructive("setActiveExample")
             .mutation("removeSelectedStep", LocalizedLabel::native("Remove Selected Step", "Ausgewählten Schritt entfernen"))
+            .action_destructive("removeSelectedStep")
             // 🐚️ Palette-visible host round-trips.
             .shell_action("exportModel", LocalizedLabel::native("Export Model", "Modell exportieren"))
             .shell_action("loadModelRequest", LocalizedLabel::native("Load Model…", "Modell laden…"))
             // 🔧️ Internal document mutations dispatched by panel/viewport wiring (not palette-worthy).
             .action_with(internal_action("setSnapshot", LocalizedLabel::native("Set Document", "Dokument festlegen"), ActionKind::Mutation))
+            .action_destructive("setSnapshot")
             .action_with(internal_action("addWorkshopMachine", LocalizedLabel::native("Add Machine", "Maschine hinzufügen"), ActionKind::Mutation))
             .action_with(internal_action("removeWorkshopMachine", LocalizedLabel::native("Remove Machine", "Maschine entfernen"), ActionKind::Mutation))
+            .action_destructive("removeWorkshopMachine")
             .action_with(internal_action("updateWorkshopMachine", LocalizedLabel::native("Update Machine", "Maschine aktualisieren"), ActionKind::Mutation))
             .action_with(internal_action("importModelFile", LocalizedLabel::native("Import Model File", "Modelldatei importieren"), ActionKind::Mutation))
             .action_with(internal_action("removeStep", LocalizedLabel::native("Remove Step", "Schritt entfernen"), ActionKind::Mutation))
+            .action_destructive("removeStep")
             .action_with(internal_action("moveStep", LocalizedLabel::native("Move Step", "Schritt verschieben"), ActionKind::Mutation))
             .action_with(internal_action("updateStep", LocalizedLabel::native("Update Step", "Schritt aktualisieren"), ActionKind::Mutation))
             .action_with(internal_action("setStepEnabled", LocalizedLabel::native("Set Step Enabled", "Schrittaktivierung festlegen"), ActionKind::Mutation))
             .action_with(internal_action("patchInspector", LocalizedLabel::native("Patch Inspector", "Inspektor aktualisieren"), ActionKind::Mutation))
             .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new("worldPointerDown", LocalizedLabel::native("World Pointer Down", "Welt-Zeiger gedrückt"), ActionKind::Mutation, "mouse-pointer") })
+            .action_audience("worldPointerDown", semio_framework_plugin::CapabilityAudience::Input)
             .action_with(internal_action("worldFaceDragEnd", LocalizedLabel::native("World Face Drag End", "Welt-Flächenzug beendet"), ActionKind::Mutation))
+            .action_audience("worldFaceDragEnd", semio_framework_plugin::CapabilityAudience::Input)
             // ⏱️ Document-cursor navigation operations (NOT framework History — they move the replay cursor).
             .action_with(internal_action("setCursor", LocalizedLabel::native("Set Cursor", "Cursor festlegen"), ActionKind::Mutation))
             .action_with(internal_action("stepCursor", LocalizedLabel::native("Step Cursor", "Cursor schrittweise bewegen"), ActionKind::Mutation))
@@ -1830,6 +1837,7 @@ pub fn create_process3d_app() -> AppDefinition {
             .action_with(internal_action("stepCursorForward", LocalizedLabel::native("Step Cursor Forward", "Cursor vorwärts"), ActionKind::Mutation))
             // 🎛️ Engagement session command line (a separate system from utility selection).
             .action_with(internal_action("engagementSubmit", LocalizedLabel::native("Engagement Submit", "Eingabe bestätigen"), ActionKind::Mutation))
+            .action_audience("engagementSubmit", semio_framework_plugin::CapabilityAudience::Input)
             .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new("engagementInput", LocalizedLabel::native("Engagement Input", "Eingabe"), ActionKind::View, "hand") })
             .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new("engagementAbort", LocalizedLabel::native("Engagement Abort", "Eingabe abbrechen"), ActionKind::View, "hand") })
             // 👁️ Ephemeral view state — camera, sun. Selection/hover are the framework-owned

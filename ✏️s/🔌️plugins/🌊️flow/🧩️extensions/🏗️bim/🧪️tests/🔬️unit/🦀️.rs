@@ -1,8 +1,10 @@
 use super::*;
 use flow_extension_sdk::{build_manifest_json, evaluate_invoke_json, evaluate_json, flow_extension_topic_contribution};
 
-fn channel_payload(out: &Dictionary, channel: &str) -> Dictionary {
-    out.get(channel).and_then(|v| v.as_dictionary()).cloned().expect("channel payload")
+/// 🧊️ One channel payload, cloned straight into a cold boundary: the clone outlives the OUT
+/// dictionary it came from, so it becomes the FINAL owner of its own pairs and must be retired.
+fn channel_payload(out: &Dictionary, channel: &str) -> neural_engine::ColdOwner<Dictionary> {
+    neural_engine::ColdOwner::new(out.get(channel).and_then(|v| v.as_dictionary()).cloned().expect("channel payload"))
 }
 
 /// 🌱️ Wire-shape twin of [`super::number_dictionary`], built with the first-party
@@ -15,8 +17,8 @@ fn json_number(value: f64) -> pack::json::Value {
 async fn wall_element_emits_wall_schema() {
     let mut reg = Registry::new();
     register(&mut reg);
-    let out = reg
-        .dispatch("bim.element.wall", &Dictionary::new().insert("length", Value::Dictionary(number_dictionary(5.0))).insert("height", Value::Dictionary(number_dictionary(3.0))).insert("thickness", Value::Dictionary(number_dictionary(0.2))))
+    let reg = neural_engine::ColdOwner::new(reg);
+    let out = reg.dispatch_cold("bim.element.wall", Dictionary::new().insert("length", Value::Dictionary(number_dictionary(5.0))).insert("height", Value::Dictionary(number_dictionary(3.0))).insert("thickness", Value::Dictionary(number_dictionary(0.2))))
         .unwrap();
     let wall = channel_payload(&out, "wall");
     assert_eq!(wall.schema(), Some("wall"));
@@ -27,29 +29,30 @@ async fn wall_element_emits_wall_schema() {
 async fn assemble_story_splits_spaces() {
     let mut reg = Registry::new();
     register(&mut reg);
+    let reg = neural_engine::ColdOwner::new(reg);
     let wall = channel_payload(
-        &reg.dispatch("bim.element.wall", &Dictionary::new().insert("length", Value::Dictionary(number_dictionary(4.0))).insert("height", Value::Dictionary(number_dictionary(2.8))).insert("thickness", Value::Dictionary(number_dictionary(0.2))))
+        &reg.dispatch_cold("bim.element.wall", Dictionary::new().insert("length", Value::Dictionary(number_dictionary(4.0))).insert("height", Value::Dictionary(number_dictionary(2.8))).insert("thickness", Value::Dictionary(number_dictionary(0.2))))
             .unwrap(),
         "wall",
     );
     let space = channel_payload(
-        &reg.dispatch("bim.element.space", &Dictionary::new().insert("name", Value::Dictionary(text_dictionary("Lobby"))).insert("area", Value::Dictionary(number_dictionary(40.0))).insert("height", Value::Dictionary(number_dictionary(3.0))))
+        &reg.dispatch_cold("bim.element.space", Dictionary::new().insert("name", Value::Dictionary(text_dictionary("Lobby"))).insert("area", Value::Dictionary(number_dictionary(40.0))).insert("height", Value::Dictionary(number_dictionary(3.0))))
             .unwrap(),
         "space",
     );
     let slab = channel_payload(
-        &reg.dispatch("bim.element.slab", &Dictionary::new().insert("width", Value::Dictionary(number_dictionary(10.0))).insert("depth", Value::Dictionary(number_dictionary(8.0))).insert("thickness", Value::Dictionary(number_dictionary(0.25))))
+        &reg.dispatch_cold("bim.element.slab", Dictionary::new().insert("width", Value::Dictionary(number_dictionary(10.0))).insert("depth", Value::Dictionary(number_dictionary(8.0))).insert("thickness", Value::Dictionary(number_dictionary(0.25))))
             .unwrap(),
         "slab",
     );
     let story = channel_payload(
-        &reg.dispatch(
+        &reg.dispatch_cold(
             "bim.assemble.story",
-            &Dictionary::new()
+            Dictionary::new()
                 .insert("elevation", Value::Dictionary(number_dictionary(0.0)))
                 .insert("height", Value::Dictionary(number_dictionary(3.0)))
-                .insert("slab", Value::Dictionary(slab))
-                .insert("elements", Value::Dictionary(Dictionary::new().insert("0", Value::Dictionary(wall)).insert("1", Value::Dictionary(space)))),
+                .insert("slab", Value::Dictionary(slab.into_inner()))
+                .insert("elements", Value::Dictionary(Dictionary::new().insert("0", Value::Dictionary(wall.into_inner())).insert("1", Value::Dictionary(space.into_inner())))),
         )
         .unwrap(),
         "story",
@@ -66,21 +69,22 @@ async fn assemble_story_splits_spaces() {
 async fn assemble_building_and_measure_floor_area() {
     let mut reg = Registry::new();
     register(&mut reg);
+    let reg = neural_engine::ColdOwner::new(reg);
     let slab = channel_payload(
-        &reg.dispatch("bim.element.slab", &Dictionary::new().insert("width", Value::Dictionary(number_dictionary(10.0))).insert("depth", Value::Dictionary(number_dictionary(8.0))).insert("thickness", Value::Dictionary(number_dictionary(0.25))))
+        &reg.dispatch_cold("bim.element.slab", Dictionary::new().insert("width", Value::Dictionary(number_dictionary(10.0))).insert("depth", Value::Dictionary(number_dictionary(8.0))).insert("thickness", Value::Dictionary(number_dictionary(0.25))))
             .unwrap(),
         "slab",
     );
     let story = channel_payload(
-        &reg.dispatch("bim.assemble.story", &Dictionary::new().insert("height", Value::Dictionary(number_dictionary(3.0))).insert("slab", Value::Dictionary(slab)).insert("elements", Value::Dictionary(Dictionary::new()))).unwrap(),
+        &reg.dispatch_cold("bim.assemble.story", Dictionary::new().insert("height", Value::Dictionary(number_dictionary(3.0))).insert("slab", Value::Dictionary(slab.into_inner())).insert("elements", Value::Dictionary(Dictionary::new()))).unwrap(),
         "story",
     );
     let building = channel_payload(
-        &reg.dispatch("bim.assemble.building", &Dictionary::new().insert("name", Value::Dictionary(text_dictionary("Tower"))).insert("stories", Value::Dictionary(Dictionary::new().insert("0", Value::Dictionary(story))))).unwrap(),
+        &reg.dispatch_cold("bim.assemble.building", Dictionary::new().insert("name", Value::Dictionary(text_dictionary("Tower"))).insert("stories", Value::Dictionary(Dictionary::new().insert("0", Value::Dictionary(story.into_inner()))))).unwrap(),
         "building",
     );
     assert_eq!(building.schema(), Some("building"));
-    let area = channel_payload(&reg.dispatch("bim.measure.floorArea", &Dictionary::new().insert("building", Value::Dictionary(building))).unwrap(), "floorArea");
+    let area = channel_payload(&reg.dispatch_cold("bim.measure.floorArea", Dictionary::new().insert("building", Value::Dictionary(building.into_inner()))).unwrap(), "floorArea");
     assert_eq!(area.schema(), Some("number"));
     assert_eq!(read_field_number(&area, "value"), Some(80.0));
 }
@@ -89,26 +93,27 @@ async fn assemble_building_and_measure_floor_area() {
 async fn measure_gross_volume() {
     let mut reg = Registry::new();
     register(&mut reg);
+    let reg = neural_engine::ColdOwner::new(reg);
     let slab = channel_payload(
-        &reg.dispatch("bim.element.slab", &Dictionary::new().insert("width", Value::Dictionary(number_dictionary(10.0))).insert("depth", Value::Dictionary(number_dictionary(10.0))).insert("thickness", Value::Dictionary(number_dictionary(0.25))))
+        &reg.dispatch_cold("bim.element.slab", Dictionary::new().insert("width", Value::Dictionary(number_dictionary(10.0))).insert("depth", Value::Dictionary(number_dictionary(10.0))).insert("thickness", Value::Dictionary(number_dictionary(0.25))))
             .unwrap(),
         "slab",
     );
     let story = channel_payload(
-        &reg.dispatch("bim.assemble.story", &Dictionary::new().insert("height", Value::Dictionary(number_dictionary(3.0))).insert("slab", Value::Dictionary(slab)).insert("elements", Value::Dictionary(Dictionary::new()))).unwrap(),
+        &reg.dispatch_cold("bim.assemble.story", Dictionary::new().insert("height", Value::Dictionary(number_dictionary(3.0))).insert("slab", Value::Dictionary(slab.into_inner())).insert("elements", Value::Dictionary(Dictionary::new()))).unwrap(),
         "story",
     );
     let building = channel_payload(
-        &reg.dispatch("bim.assemble.building", &Dictionary::new().insert("name", Value::Dictionary(text_dictionary("Block"))).insert("stories", Value::Dictionary(Dictionary::new().insert("0", Value::Dictionary(story))))).unwrap(),
+        &reg.dispatch_cold("bim.assemble.building", Dictionary::new().insert("name", Value::Dictionary(text_dictionary("Block"))).insert("stories", Value::Dictionary(Dictionary::new().insert("0", Value::Dictionary(story.into_inner()))))).unwrap(),
         "building",
     );
-    let volume = channel_payload(&reg.dispatch("bim.measure.grossVolume", &Dictionary::new().insert("building", Value::Dictionary(building))).unwrap(), "grossVolume");
+    let volume = channel_payload(&reg.dispatch_cold("bim.measure.grossVolume", Dictionary::new().insert("building", Value::Dictionary(building.into_inner()))).unwrap(), "grossVolume");
     assert_eq!(read_field_number(&volume, "value"), Some(300.0));
 }
 
 #[semio_framework_async_macros::async_test]
 async fn manifest_lists_bim_operators() {
-    let json = build_manifest_json("bim", "Bim", "0.1.0", &module_registry(), vec!["onStartup".into()], vec![], vec![], vec![]);
+    let json = build_manifest_json("bim", "Bim", "0.1.0", &neural_engine::ColdOwner::new(module_registry()), vec!["onStartup".into()], vec![], vec![], vec![]);
     assert!(json.contains("flow.extension"));
     assert!(json.contains("bim.element.wall"));
     assert!(json.contains("bim.assemble.building"));
@@ -118,7 +123,7 @@ async fn manifest_lists_bim_operators() {
 
 #[semio_framework_async_macros::async_test]
 async fn evaluate_json_wall() {
-    let reg = module_registry();
+    let reg = neural_engine::ColdOwner::new(module_registry());
     let input_json = pack::json::to_string(&pack::json::object([("length".to_string(), json_number(4.0)), ("height".to_string(), json_number(2.8)), ("thickness".to_string(), json_number(0.2))]));
     let out_json = evaluate_json(&reg, "bim.element.wall", &input_json);
     let out = pack::json::parse(&out_json).unwrap();
@@ -129,10 +134,11 @@ async fn evaluate_json_wall() {
 async fn schema_component_round_trips_wall() {
     let mut reg = Registry::new();
     register(&mut reg);
+    let reg = neural_engine::ColdOwner::new(reg);
     let built =
-        reg.dispatch("bim.wall", &Dictionary::new().insert("length", Value::Dictionary(number_dictionary(5.0))).insert("height", Value::Dictionary(number_dictionary(3.0))).insert("thickness", Value::Dictionary(number_dictionary(0.2)))).unwrap();
+        reg.dispatch_cold("bim.wall", Dictionary::new().insert("length", Value::Dictionary(number_dictionary(5.0))).insert("height", Value::Dictionary(number_dictionary(3.0))).insert("thickness", Value::Dictionary(number_dictionary(0.2)))).unwrap();
     let wall = channel_payload(&built, "wallOut");
-    let deconstructed = reg.dispatch("bim.wall", &Dictionary::new().insert("wall", Value::Dictionary(wall))).unwrap();
+    let deconstructed = reg.dispatch_cold("bim.wall", Dictionary::new().insert("wall", Value::Dictionary(wall.into_inner()))).unwrap();
     assert_eq!(deconstructed.get("lengthOut").and_then(|value| value.as_dictionary()).and_then(|dictionary| dictionary.get("value")).and_then(|value| value.as_atom()).and_then(|atom| atom.as_f64()), Some(5.0));
 }
 
@@ -140,14 +146,14 @@ async fn schema_component_round_trips_wall() {
 async fn extension_bundle_extends_flow_and_evaluates() {
     use semio_framework_plugin::{extension_activate, extension_invoke, extension_manifest, install_extension_bundle, ExtensionBundle};
 
-    let manifest_json = build_manifest_json("bim", "Bim", "0.1.0", &module_registry(), vec!["onStartup".into()], vec![], vec![], vec![]);
+    let manifest_json = build_manifest_json("bim", "Bim", "0.1.0", &neural_engine::ColdOwner::new(module_registry()), vec!["onStartup".into()], vec![], vec![], vec![]);
     let flow_topic = flow_extension_topic_contribution("flow-play", "bim", "Bim", "bim", &manifest_json);
     let procedural3d_topic = flow_extension_topic_contribution("procedural3d-play", "bim", "Bim", "bim", &manifest_json);
     let bundle = ExtensionBundle::new("flow-extension-bim", "Bim", "0.1.0")
         .extends("flow")
         .contributes_topic(flow_topic.topic, flow_topic.payload)
         .contributes_topic(procedural3d_topic.topic, procedural3d_topic.payload)
-        .handler("evaluate", |req| Ok(evaluate_invoke_json(&module_registry(), req).unwrap()));
+        .handler("evaluate", |req| Ok(evaluate_invoke_json(&neural_engine::ColdOwner::new(module_registry()), req).unwrap()));
     install_extension_bundle(bundle).await;
     extension_activate().await.unwrap();
     let installed = extension_manifest().await;

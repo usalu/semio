@@ -126,24 +126,31 @@ fn authenticated_hub_discovery_uses_retained_selection_and_never_installed_fallb
 
 #[cfg(not(target_arch = "wasm32"))]
 #[test]
-fn pending_response_close_releases_one_exact_fixed_page() {
+fn pending_response_close_releases_one_grant_at_a_time() {
     let mut response = PendingResponsePage::Empty;
-    response.admit(semio_framework::kernel::RequestOutcome::Ok(vec![7; semio_framework::kernel::COMMAND_PAGE_MAXIMUM_BYTES]));
-    assert_eq!(response.close_step(semio_framework::kernel::COMMAND_PAGE_MAXIMUM_BYTES - 1), (false, 0));
-    assert_eq!(response.close_step(semio_framework::kernel::COMMAND_PAGE_MAXIMUM_BYTES), (true, semio_framework::kernel::COMMAND_PAGE_MAXIMUM_BYTES));
+    response.admit_frame(&vec![7; semio_framework::kernel::COMMAND_PAGE_MAXIMUM_BYTES]);
+    assert_eq!(response.close_step(semio_framework::kernel::COMMAND_PAGE_MAXIMUM_BYTES - 1), (false, semio_framework::kernel::COMMAND_PAGE_MAXIMUM_BYTES - 1));
+    assert_eq!(response.close_step(semio_framework::kernel::COMMAND_PAGE_MAXIMUM_BYTES), (true, 1));
     assert!(response.terminal_is_empty());
 }
 
+/// ⚖️ LAW: an answer past the declared host-answer ceiling is a typed fault, a second answer for the
+/// same sequence is a typed fault, and a command that settled silently answers a stamped `Done` —
+/// the reply-stamp rule the React host applies (`commandIngressNeedsReplyStampV1`), without which
+/// every verb whose guest has nothing to say would hang on an answer that is never coming.
 #[cfg(not(target_arch = "wasm32"))]
 #[test]
-fn pending_response_faults_oversize_and_duplicate_without_retaining_app_frame() {
+fn pending_response_faults_oversize_and_duplicate_and_stamps_a_silent_settlement() {
     let mut oversized = PendingResponsePage::Empty;
-    oversized.admit(semio_framework::kernel::RequestOutcome::Ok(vec![1; semio_framework::kernel::COMMAND_PAGE_MAXIMUM_BYTES + 1]));
+    oversized.admit_frame(&vec![1; semio_framework::kernel::COMMAND_MAXIMUM_BYTES + 1]);
     assert_eq!(oversized.take(9).unwrap_err().code, "channel.not-wired");
     let mut duplicate = PendingResponsePage::Empty;
-    duplicate.admit(semio_framework::kernel::RequestOutcome::Err(vec![2]));
-    duplicate.admit(semio_framework::kernel::RequestOutcome::Ok(vec![3]));
-    assert!(duplicate.take(10).unwrap_err().message.contains("more than one response"));
+    duplicate.admit_frame(&[2]);
+    duplicate.admit_frame(&[3]);
+    assert!(duplicate.take(10).unwrap_err().message.contains("more than one frame"));
+    let mut silent = PendingResponsePage::Empty;
+    silent.stamp_settled();
+    assert_eq!(silent.take(11).expect("a settled command answers"), store::AppFrame::Done { in_reply_to: 11 });
 }
 
 #[cfg(not(target_arch = "wasm32"))]

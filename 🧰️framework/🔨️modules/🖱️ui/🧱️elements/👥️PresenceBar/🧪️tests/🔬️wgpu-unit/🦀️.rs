@@ -1,4 +1,3 @@
-
 use super::*;
 
 fn peer(actor: &str, label: &str, role: Option<PresenceRole>) -> PresencePeerRow {

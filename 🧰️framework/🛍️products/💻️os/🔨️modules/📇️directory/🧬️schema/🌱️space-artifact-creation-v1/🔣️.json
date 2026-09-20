@@ -250,6 +250,90 @@
       "accepted": true
     },
     {
+      "id": "ready-two-space-dialect",
+      "value": {
+        "schema": "semio.hub.space-artifact-creation-status/v1",
+        "requestId": "1234567890abcdef1234567890abcdef",
+        "spaceId": "space-fixture",
+        "catalogGenerationId": "1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef",
+        "phase": "ready",
+        "ready": {
+          "artifactId": "artifact-11223344556677889900aabbccddeeff",
+          "kindId": "2d.note",
+          "artifactSchema": "note.document",
+          "parentDialect": {
+            "artifactKind": "s.note.note",
+            "standard": "1",
+            "subset": "*"
+          }
+        }
+      },
+      "accepted": true
+    },
+    {
+      "id": "ready-any-subset",
+      "value": {
+        "schema": "semio.hub.space-artifact-creation-status/v1",
+        "requestId": "1234567890abcdef1234567890abcdef",
+        "spaceId": "space-fixture",
+        "catalogGenerationId": "1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef",
+        "phase": "ready",
+        "ready": {
+          "artifactId": "artifact-11223344556677889900aabbccddeeff",
+          "kindId": "s.gis.map",
+          "artifactSchema": "gis.map",
+          "parentDialect": {
+            "artifactKind": "s.gis.map",
+            "standard": "1",
+            "subset": "*"
+          }
+        }
+      },
+      "accepted": true
+    },
+    {
+      "id": "ready-embedded-wildcard-subset",
+      "value": {
+        "schema": "semio.hub.space-artifact-creation-status/v1",
+        "requestId": "1234567890abcdef1234567890abcdef",
+        "spaceId": "space-fixture",
+        "catalogGenerationId": "1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef",
+        "phase": "ready",
+        "ready": {
+          "artifactId": "artifact-11223344556677889900aabbccddeeff",
+          "kindId": "s.gis.map",
+          "artifactSchema": "gis.map",
+          "parentDialect": {
+            "artifactKind": "s.gis.map",
+            "standard": "1",
+            "subset": "gis.*"
+          }
+        }
+      },
+      "accepted": false
+    },
+    {
+      "id": "ready-wildcard-prefixed-subset",
+      "value": {
+        "schema": "semio.hub.space-artifact-creation-status/v1",
+        "requestId": "1234567890abcdef1234567890abcdef",
+        "spaceId": "space-fixture",
+        "catalogGenerationId": "1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef",
+        "phase": "ready",
+        "ready": {
+          "artifactId": "artifact-11223344556677889900aabbccddeeff",
+          "kindId": "s.gis.map",
+          "artifactSchema": "gis.map",
+          "parentDialect": {
+            "artifactKind": "s.gis.map",
+            "standard": "1",
+            "subset": "*any"
+          }
+        }
+      },
+      "accepted": false
+    },
+    {
       "id": "accepted",
       "value": {
         "schema": "semio.hub.space-artifact-creation-status/v1",
@@ -421,7 +505,7 @@
       "accepted": false
     },
     {
-      "id": "ready-kind-mismatch",
+      "id": "ready-dialect-kind-unbounded",
       "value": {
         "schema": "semio.hub.space-artifact-creation-status/v1",
         "requestId": "1234567890abcdef1234567890abcdef",
@@ -433,7 +517,7 @@
           "kindId": "s.gis.map",
           "artifactSchema": "gis.map",
           "parentDialect": {
-            "artifactKind": "foreign.kind",
+            "artifactKind": "",
             "standard": "1",
             "subset": "any"
           }
@@ -595,6 +679,78 @@
       "accepted": true
     },
     {
+      "id": "two-space-dialect",
+      "value": {
+        "schema": "semio.hub.space-artifact-creation-catalog/v1",
+        "spaceId": "space-fixture",
+        "catalogGenerationId": "1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef",
+        "kinds": [
+          {
+            "kindId": "2d.note",
+            "schema": "note.document",
+            "dialect": {
+              "artifactKind": "s.note.note",
+              "standard": "1",
+              "subset": "*"
+            },
+            "label": {
+              "en": "2D Note",
+              "de": "2D-Notiz"
+            }
+          }
+        ]
+      },
+      "accepted": true
+    },
+    {
+      "id": "any-subset",
+      "value": {
+        "schema": "semio.hub.space-artifact-creation-catalog/v1",
+        "spaceId": "space-fixture",
+        "catalogGenerationId": "1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef",
+        "kinds": [
+          {
+            "kindId": "s.gis.map",
+            "schema": "gis.map",
+            "dialect": {
+              "artifactKind": "s.gis.map",
+              "standard": "1",
+              "subset": "*"
+            },
+            "label": {
+              "en": "GIS Map",
+              "de": "GIS-Karte"
+            }
+          }
+        ]
+      },
+      "accepted": true
+    },
+    {
+      "id": "embedded-wildcard-subset",
+      "value": {
+        "schema": "semio.hub.space-artifact-creation-catalog/v1",
+        "spaceId": "space-fixture",
+        "catalogGenerationId": "1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef",
+        "kinds": [
+          {
+            "kindId": "s.gis.map",
+            "schema": "gis.map",
+            "dialect": {
+              "artifactKind": "s.gis.map",
+              "standard": "1",
+              "subset": "any.*"
+            },
+            "label": {
+              "en": "GIS Map",
+              "de": "GIS-Karte"
+            }
+          }
+        ]
+      },
+      "accepted": false
+    },
+    {
       "id": "empty",
       "value": {
         "schema": "semio.hub.space-artifact-creation-catalog/v1",
@@ -614,15 +770,22 @@
           {
             "kindId": "s.gis.map",
             "schema": "gis.map",
-            "dialect": { "artifactKind": "s.gis.map", "standard": "1", "subset": "any" },
-            "label": { "en": "GIS Map", "de": "GIS-Karte" }
+            "dialect": {
+              "artifactKind": "s.gis.map",
+              "standard": "1",
+              "subset": "any"
+            },
+            "label": {
+              "en": "GIS Map",
+              "de": "GIS-Karte"
+            }
           }
         ]
       },
       "accepted": false
     },
     {
-      "id": "kind-dialect-mismatch",
+      "id": "kind-dialect-unbounded",
       "value": {
         "schema": "semio.hub.space-artifact-creation-catalog/v1",
         "spaceId": "space-fixture",
@@ -631,8 +794,15 @@
           {
             "kindId": "s.gis.map",
             "schema": "gis.map",
-            "dialect": { "artifactKind": "foreign.kind", "standard": "1", "subset": "any" },
-            "label": { "en": "GIS Map", "de": "GIS-Karte" }
+            "dialect": {
+              "artifactKind": "",
+              "standard": "1",
+              "subset": "any"
+            },
+            "label": {
+              "en": "GIS Map",
+              "de": "GIS-Karte"
+            }
           }
         ]
       },
@@ -648,8 +818,14 @@
           {
             "kindId": "s.gis.map",
             "schema": "gis.map",
-            "dialect": { "artifactKind": "s.gis.map", "standard": "1", "subset": "any" },
-            "label": { "en": "GIS Map" }
+            "dialect": {
+              "artifactKind": "s.gis.map",
+              "standard": "1",
+              "subset": "any"
+            },
+            "label": {
+              "en": "GIS Map"
+            }
           }
         ]
       },
@@ -665,14 +841,28 @@
           {
             "kindId": "s.gis.terrain",
             "schema": "gis.terrain",
-            "dialect": { "artifactKind": "s.gis.terrain", "standard": "1", "subset": "any" },
-            "label": { "en": "GIS Terrain", "de": "GIS-Gelände" }
+            "dialect": {
+              "artifactKind": "s.gis.terrain",
+              "standard": "1",
+              "subset": "any"
+            },
+            "label": {
+              "en": "GIS Terrain",
+              "de": "GIS-Gelände"
+            }
           },
           {
             "kindId": "s.gis.map",
             "schema": "gis.map",
-            "dialect": { "artifactKind": "s.gis.map", "standard": "1", "subset": "any" },
-            "label": { "en": "GIS Map", "de": "GIS-Karte" }
+            "dialect": {
+              "artifactKind": "s.gis.map",
+              "standard": "1",
+              "subset": "any"
+            },
+            "label": {
+              "en": "GIS Map",
+              "de": "GIS-Karte"
+            }
           }
         ]
       },
@@ -688,14 +878,28 @@
           {
             "kindId": "s.gis.map",
             "schema": "gis.map",
-            "dialect": { "artifactKind": "s.gis.map", "standard": "1", "subset": "any" },
-            "label": { "en": "GIS Map", "de": "GIS-Karte" }
+            "dialect": {
+              "artifactKind": "s.gis.map",
+              "standard": "1",
+              "subset": "any"
+            },
+            "label": {
+              "en": "GIS Map",
+              "de": "GIS-Karte"
+            }
           },
           {
             "kindId": "s.gis.map",
             "schema": "gis.map",
-            "dialect": { "artifactKind": "s.gis.map", "standard": "1", "subset": "any" },
-            "label": { "en": "GIS Map", "de": "GIS-Karte" }
+            "dialect": {
+              "artifactKind": "s.gis.map",
+              "standard": "1",
+              "subset": "any"
+            },
+            "label": {
+              "en": "GIS Map",
+              "de": "GIS-Karte"
+            }
           }
         ]
       },

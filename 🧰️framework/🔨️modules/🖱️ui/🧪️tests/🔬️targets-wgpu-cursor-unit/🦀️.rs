@@ -1,8 +1,7 @@
-
 use super::*;
-use crate::wgpu::Label;
 use crate::wgpu::component::ui::UiPresence;
 use crate::wgpu::geometry::Rect;
+use crate::wgpu::Label;
 use std::collections::HashMap;
 
 fn hit(kind: HitKind, axis: Option<DragAxis>) -> HitTarget<()> {
@@ -81,7 +80,10 @@ fn hovering_an_input_uses_the_text_cursor() {
         step: None,
         accept: None,
         on_change: ActionDescriptor { controller_id: "c".into(), action: "a".into(), args: None },
-        on_submit: None, on_abort: None, on_repeat_last: None, presence: UiPresence::default(),
+        on_submit: None,
+        on_abort: None,
+        on_repeat_last: None,
+        presence: UiPresence::default(),
         menu: None,
     }));
     assert_eq!(resolve_semio_cursor_from_tree(&tree, Some(id), None), SemioCursor::Text);
@@ -125,23 +127,16 @@ fn a_disabled_node_uses_the_not_allowed_cursor_before_any_other_affordance() {
         step: None,
         accept: None,
         on_change: ActionDescriptor { controller_id: "ctrl".into(), action: "go".into(), args: None },
-        on_submit: None, on_abort: None, on_repeat_last: None, presence: UiPresence::disabled_if(true),
+        on_submit: None,
+        on_abort: None,
+        on_repeat_last: None,
+        presence: UiPresence::disabled_if(true),
         menu: None,
     }));
     assert_eq!(resolve_semio_cursor_from_tree(&tree, Some(input), None), SemioCursor::NotAllowed);
 
-    let (mut tree, stack) = leaf(UiNode::Stack(UiStackNode {
-        direction: "vertical".into(),
-        gap: None,
-        padding: None,
-        id: None,
-        presence: UiPresence::disabled_if(true),
-        activate: None,
-        drop_action: None,
-        drop_overlay: None,
-        children: Vec::new(),
-        menu: None,
-    }));
+    let (mut tree, stack) =
+        leaf(UiNode::Stack(UiStackNode { direction: "vertical".into(), gap: None, padding: None, id: None, presence: UiPresence::disabled_if(true), activate: None, drop_action: None, drop_overlay: None, children: Vec::new(), menu: None }));
     tree.node_mut(stack).unwrap().flags.set(NodeFlags::DRAG_SOURCE, true);
     assert_eq!(resolve_semio_cursor_from_tree(&tree, Some(stack), None), SemioCursor::NotAllowed);
 }

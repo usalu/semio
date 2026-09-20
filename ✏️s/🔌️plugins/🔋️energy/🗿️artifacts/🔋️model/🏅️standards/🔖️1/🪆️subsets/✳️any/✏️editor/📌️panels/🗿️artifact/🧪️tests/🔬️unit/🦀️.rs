@@ -82,6 +82,24 @@ fn section_key(suffix: &str) -> String {
     format!("{TREE_NAMESPACE}.{suffix}")
 }
 
+/// 🔑️ The WINDOW PATH a nested container is addressed by — the enclosing windowed containers'
+/// keys, outermost first, then the node's own key (`TreeWindows::path_of`). A zone lives inside the
+/// `zones` section and a surface inside its zone, so a host request for either names the whole path,
+/// never the bare id.
+fn window_path(segments: &[&str]) -> String {
+    segments.join(semio_framework_plugin::TREE_WINDOW_PATH_SEPARATOR)
+}
+
+/// 🏘️ The demo's single zone, addressed through the `zones` section it hangs in.
+fn zone_path(zone_key: &str) -> String {
+    window_path(&[&section_key("zones"), zone_key])
+}
+
+/// 🟫️ One surface of the demo's single zone, addressed through zone and section.
+fn surface_path(zone_key: &str, surface_key: &str) -> String {
+    window_path(&[&section_key("zones"), zone_key, surface_key])
+}
+
 /// 🧫️ The demo's zone row children: no spaces, six surfaces.
 const DEMO_ZONE_CHILDREN: usize = 6;
 
@@ -251,7 +269,7 @@ async fn an_oversized_document_stamps_every_containers_total_and_materialises_on
 /// with ten thousand entities cheap to paint, and what the host's expand arrow reads.
 #[semio_framework_async_macros::async_test]
 async fn a_closed_container_stamps_its_total_and_materialises_no_child() {
-    let view = hosted(vec![request("1", Some(false), 0, 64)]);
+    let view = hosted(vec![request(&zone_path("1"), Some(false), 0, 64)]);
     let tree = tree_of(&panel(&demo(), &nothing(), Locale::En, &view));
     let zone = node_at(&tree, "1").expect("the zone row");
     assert_eq!(window_of(zone).0, DEMO_ZONE_CHILDREN, "a closed zone still reports everything it owns: {zone}");
@@ -269,13 +287,13 @@ async fn a_closed_container_stamps_its_total_and_materialises_no_child() {
 #[semio_framework_async_macros::async_test]
 async fn a_tree_window_request_materialises_exactly_its_slice_of_a_surface_group() {
     let south_wall = "40";
-    let view = hosted(vec![request(south_wall, Some(true), 1, 1)]);
+    let view = hosted(vec![request(&surface_path("1", south_wall), Some(true), 1, 1)]);
     let tree = tree_of(&panel(&demo(), &nothing(), Locale::En, &view));
     let wall = node_at(&tree, south_wall).expect("the south wall row");
     assert_eq!(window_of(wall), (2, 1), "the wall reports both its windows and that the slice starts at the second: {wall}");
     assert_eq!(child_keys(wall), vec!["51"], "exactly entries [1, 2) are built: {wall}");
 
-    let whole = hosted(vec![opened(south_wall)]);
+    let whole = hosted(vec![opened(&surface_path("1", south_wall))]);
     let tree = tree_of(&panel(&demo(), &nothing(), Locale::En, &whole));
     assert_eq!(child_keys(node_at(&tree, south_wall).expect("the south wall row")), vec!["50", "51"], "and a wide window builds both");
 }
@@ -298,14 +316,14 @@ async fn a_wide_zone_keeps_every_surface_reachable_and_no_window_is_ever_collaps
 
     // 🧭️ The reader scrolls to the tail of the zone: the last surfaces are built, the zone's total is
     // unchanged, and the east wall reached through its own window still owns its opening.
-    let view = hosted(vec![request("1", Some(true), (surfaces - 4) as u32, 4), opened("41")]);
+    let view = hosted(vec![request(&zone_path("1"), Some(true), (surfaces - 4) as u32, 4), opened(&surface_path("1", "41"))]);
     let json = panel(&snapshot, &nothing(), Locale::En, &view);
     let tree = tree_of(&json);
     let zone = node_at(&tree, "1").expect("the zone row");
     assert_eq!(window_of(zone), (surfaces, surfaces - 4), "the zone reports every wall it owns and where the slice starts: {zone}");
     assert_eq!(child_keys(zone).len(), 4, "and builds exactly the four the host asked for: {zone}");
 
-    let head = hosted(vec![request("1", Some(true), 0, 8), opened("41")]);
+    let head = hosted(vec![request(&zone_path("1"), Some(true), 0, 8), opened(&surface_path("1", "41"))]);
     let tree = tree_of(&panel(&snapshot, &nothing(), Locale::En, &head));
     let east_wall = node_at(&tree, "41").expect("the east wall row");
     assert_eq!(child_keys(east_wall), vec!["50"], "its own window is materialised, not collapsed: {east_wall}");

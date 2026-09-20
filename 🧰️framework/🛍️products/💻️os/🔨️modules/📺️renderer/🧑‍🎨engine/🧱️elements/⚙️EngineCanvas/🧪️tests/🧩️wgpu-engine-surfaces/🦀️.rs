@@ -12,7 +12,10 @@
 //! (`🧱️elements/🌍️World3dHost/🟦️.tsx`), the other implementation of this same host.
 
 use super::*;
-use infinite_world::world::{begin_world3d_dynamic_retirement, enqueue_world3d_event, step_world3d_dynamic_retirement, world3d_dynamic_retirement_terminal_is_empty, step_world3d_draw_rebuild, step_world3d_interaction, step_world3d_scene_bridge, step_world3d_snapshot, World3dBuildContext, World3dSceneBridgeStep, World3dSnapshotApplyStep, World3dState, WorldCursorWakeAuthority, WorldDrawRebuildStep, WorldInteractionAuthorityStep, WorldInteractionIntent};
+use infinite_world::world::{
+    begin_world3d_dynamic_retirement, enqueue_world3d_event, step_world3d_draw_rebuild, step_world3d_dynamic_retirement, step_world3d_interaction, step_world3d_scene_bridge, step_world3d_snapshot, world3d_dynamic_retirement_terminal_is_empty,
+    World3dBuildContext, World3dSceneBridgeStep, World3dSnapshotApplyStep, World3dState, WorldCursorWakeAuthority, WorldDrawRebuildStep, WorldInteractionAuthorityStep, WorldInteractionIntent,
+};
 use ui_wgpu::wgpu::{Board2dScene, DrawList, FontAtlas, IconAtlas, InputState, SurfaceKind, TiledMapScene, UiPresence, World3dScene};
 
 const ENGINE_SURFACES_FIXTURE: &str = include_str!("../../🧫️fixtures/🧩️wgpu-engine-surfaces/🔣️.json");
@@ -75,11 +78,7 @@ fn world3d_preview_scene_with_selection(surface_id: &str, fixture: &Value, selec
 fn tiled_map_scene(surface_id: &str, fixture: &Value) -> UiComponentSceneNode {
     let map = &fixture["tiledMap"];
     let mut scene = scene_shell(surface_id, SurfaceKind::TiledMap);
-    scene.tiled_map = Some(TiledMapScene {
-        selection_json: json_text(&map["selectionJson"]),
-        hover_json: json_text(&map["hoverJson"]),
-        ..TiledMapScene::base(json_text(&map["mapFixtureJson"]), json_text(&map["cameraJson"]))
-    });
+    scene.tiled_map = Some(TiledMapScene { selection_json: json_text(&map["selectionJson"]), hover_json: json_text(&map["hoverJson"]), ..TiledMapScene::base(json_text(&map["mapFixtureJson"]), json_text(&map["cameraJson"])) });
     scene
 }
 
@@ -151,7 +150,7 @@ fn paint_scene(scene: &UiComponentSceneNode, bounds: Rect, states: crate::scenes
         let mut hosts = crate::scenes::SceneEngineHosts { world3d_states: &mut world3d_states, world_resources: &mut world_resources, window_id: "law-window" };
         let mut cursor = ui_wgpu::wgpu::ScenePaintCursor::default();
         for _ in 0..4096 {
-            match crate::scenes::render_component_scene_step(scene, bounds, &mut ctx, &mut cursor, &mut hosts) {
+            match crate::scenes::render_component_scene_step(scene, bounds, &mut ctx, &mut cursor, &mut hosts, ui_wgpu::wgpu::UiDriverDrag::Handle, 1) {
                 ui_wgpu::wgpu::ScenePaintStep::Pending => continue,
                 ui_wgpu::wgpu::ScenePaintStep::Complete => break,
                 ui_wgpu::wgpu::ScenePaintStep::Fault => panic!("engine surface scene paint faulted"),
@@ -413,10 +412,9 @@ fn tiled_map_and_board_windows_attach_their_engines_on_the_same_production_seam(
     drop_world3d_states(map_frame.world3d_states);
     let map_draw = map_frame.draw;
     let map_expect = &fixture["tiledMap"]["expect"];
-    let (positions, routes, selected, hovered) = with_map_host("tiled-map-attach", |host| {
-        (host.features.positions.len(), host.features.routes.len(), host.selected_position_ids().map(str::to_owned).collect::<Vec<_>>(), host.hovered_id().map(str::to_owned))
-    })
-    .expect("the first painted frame constructs the map engine");
+    let (positions, routes, selected, hovered) =
+        with_map_host("tiled-map-attach", |host| (host.features.positions.len(), host.features.routes.len(), host.selected_position_ids().map(str::to_owned).collect::<Vec<_>>(), host.hovered_id().map(str::to_owned)))
+            .expect("the first painted frame constructs the map engine");
     assert_eq!(positions, map_expect["positions"].as_u64().expect("positions") as usize, "the descriptor reaches the host whole");
     assert_eq!(routes, map_expect["routes"].as_u64().expect("routes") as usize);
     assert_eq!(selected, map_expect["selectedIds"].as_array().expect("selected").iter().map(|id| id.as_str().expect("id").to_owned()).collect::<Vec<_>>(), "React's resolveMapInteractionSync granularity rule, reproduced");
@@ -431,7 +429,11 @@ fn tiled_map_and_board_windows_attach_their_engines_on_the_same_production_seam(
     let (nodes, edges, board_selection) = with_board_host("board2d-attach", |host| (host.nodes.len(), host.edges.len(), host.selection.iter().cloned().collect::<Vec<String>>())).expect("the first painted frame constructs the board engine");
     assert_eq!(nodes, board_expect["nodes"].as_u64().expect("nodes") as usize, "the fixture reaches the board host whole");
     assert_eq!(edges, board_expect["edges"].as_u64().expect("edges") as usize);
-    assert_eq!(board_selection, board_expect["selectedIds"].as_array().expect("selected").iter().map(|id| id.as_str().expect("id").to_owned()).collect::<Vec<_>>(), "parse_fixture_json resets selection, so the sync re-applies it silently right after — React's applyFixtureToSession rule");
+    assert_eq!(
+        board_selection,
+        board_expect["selectedIds"].as_array().expect("selected").iter().map(|id| id.as_str().expect("id").to_owned()).collect::<Vec<_>>(),
+        "parse_fixture_json resets selection, so the sync re-applies it silently right after — React's applyFixtureToSession rule"
+    );
     let board_key = engine_raster_key("board2d-attach").expect("bounded engine raster key");
     assert!(board_draw.layers.iter().flat_map(|layer| layer.raster_instances.iter()).any(|(key, _)| key == &board_key), "the painted board is composited into the window draw list under {board_key}");
 
@@ -491,7 +493,14 @@ fn engine_canvas_slot_tables_are_heap_first_and_fit_a_bounded_thread_stack() {
         .expect("🧱️ the budget lists its tables")
         .iter()
         .filter(|table| table["guard"] == "renderer::engine_canvas")
-        .map(|table| semio_framework_async::FixedSlotTableBudget::new(table["owner"].as_str().expect("owner"), table["capacity"].as_u64().expect("capacity") as usize, table["elementSizeBytes"].as_u64().expect("element bytes") as usize, table["ownerSizeBytes"].as_u64().expect("owner bytes") as usize))
+        .map(|table| {
+            semio_framework_async::FixedSlotTableBudget::new(
+                table["owner"].as_str().expect("owner"),
+                table["capacity"].as_u64().expect("capacity") as usize,
+                table["elementSizeBytes"].as_u64().expect("element bytes") as usize,
+                table["ownerSizeBytes"].as_u64().expect("owner bytes") as usize,
+            )
+        })
         .collect();
     let measured = vec![
         semio_framework_async::FixedSlotTableBudget::new("engine_canvas::EngineSurfaceRegistry", ENGINE_SURFACE_CAPACITY, size_of::<EngineSurfaceSlot>(), size_of::<EngineSurfaceRegistry>()),
@@ -505,9 +514,9 @@ fn engine_canvas_slot_tables_are_heap_first_and_fit_a_bounded_thread_stack() {
         &declared,
         &measured,
         || {
-        drop(EngineSurfaceRegistry::default());
-        drop(StagedEngineScenes::default());
-        drop(EngineCanvasBuildContext::default());
+            drop(EngineSurfaceRegistry::default());
+            drop(StagedEngineScenes::default());
+            drop(EngineCanvasBuildContext::default());
         },
     );
 }
@@ -534,9 +543,7 @@ fn tiled_map_paint_reserves_the_visible_tiles_react_fetches() {
     let frame = paint_scene(&map_scene, bounds, crate::scenes::AdmittedSurfaceMap::default());
     drop_world3d_states(frame.world3d_states);
 
-    let pending = ENGINE_SURFACES
-        .with(|cell| cell.borrow().get("tiled-map-tiles").map(|entry| entry.map_sync_cache.tile_pending.iter().copied().collect::<Vec<_>>()))
-        .expect("the painted frame constructed the map engine");
+    let pending = ENGINE_SURFACES.with(|cell| cell.borrow().get("tiled-map-tiles").map(|entry| entry.map_sync_cache.tile_pending.iter().copied().collect::<Vec<_>>())).expect("the painted frame constructed the map engine");
     assert!(!pending.is_empty(), "a painted map must offer its visible tiles to the asset lane; nothing was reserved");
     assert!(pending.iter().any(|(vector, ..)| !*vector), "the raster lane must be offered in the default `combined` render mode");
     let held = with_map_host("tiled-map-tiles", |host| pending.iter().any(|(vector, z, x, y)| if *vector { host.has_vector_tile(&map_tiles::tile_key(*z, *x, *y)) } else { host.has_tile(&map_tiles::tile_key(*z, *x, *y)) })).expect("map host");

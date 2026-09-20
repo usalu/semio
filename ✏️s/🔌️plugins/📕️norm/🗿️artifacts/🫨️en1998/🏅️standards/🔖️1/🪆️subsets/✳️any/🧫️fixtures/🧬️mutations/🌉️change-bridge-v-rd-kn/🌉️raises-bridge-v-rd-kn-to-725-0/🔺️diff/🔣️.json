@@ -15,7 +15,7 @@
   "enGroundType": null,
   "enSpectrumType": null,
   "periodRatio": null,
-  "bridgeVRdKn": 725,
+  "bridgeVRdKn": 725.0,
   "bearingDEdMm": null,
   "bearingDRdMm": null,
   "retrofitKnowledgeLevel": null,

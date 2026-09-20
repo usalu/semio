@@ -188,6 +188,82 @@ async fn app_command_transaction_redo_round_trips() {
 }
 //#endregion 🔖️Transaction
 
+//#region 🔖️PagedRouteAdmission
+/// 🧵️ Drives the GUEST's own retained ingress — `PagedAppCommandDecodeCursor`, the decoder compiled
+/// into every component — rather than the flat host-side `decode_app_command` every round-trip law
+/// above uses. A route the flat decoder reads and the paged cursor refuses is exactly the gap this
+/// admission law exists to catch (`plugin.command-route-state-machine-required`).
+async fn assert_paged_route_admits(command: &AppCommand) {
+    let encoded = encode_app_command(command).await.expect("route command encodes");
+    let mut cursor = PagedAppCommandDecodeCursor::new(encoded);
+    for _ in 0..1024 {
+        match cursor.step().expect("paged route decode step") {
+            Some(decoded) => {
+                assert_eq!(&decoded, command, "paged ingress decodes the route byte for byte");
+                return;
+            }
+            None => continue,
+        }
+    }
+    panic!("paged ingress never completed a route command within its step ceiling");
+}
+
+#[semio_framework_async_macros::async_test]
+async fn paged_ingress_admits_every_media_route() {
+    assert_paged_route_admits(&AppCommand::MediaIn { seq: 14, port: "camera".to_string(), descriptor: vec![1], data: vec![2, 3] }).await;
+    assert_paged_route_admits(&AppCommand::MediaOut { seq: 15, port: "vector:out".to_string(), request: Vec::new() }).await;
+    assert_paged_route_admits(&AppCommand::MediaFingerprint { seq: 16, port: "camera".to_string() }).await;
+}
+
+#[semio_framework_async_macros::async_test]
+async fn paged_ingress_admits_every_transaction_route() {
+    assert_paged_route_admits(&AppCommand::TransactionPrepare { seq: 1, txn_id: "t".to_string(), mutation_id: "m".to_string(), payload: vec![9], prepared_ops: Vec::new(), label: String::new(), origin: Vec::new() }).await;
+    assert_paged_route_admits(&AppCommand::TransactionPrepare { seq: 2, txn_id: "t".to_string(), mutation_id: String::new(), payload: Vec::new(), prepared_ops: vec![vec![1], vec![2, 2]], label: "l".to_string(), origin: vec![9] }).await;
+    assert_paged_route_admits(&AppCommand::TransactionCommit { seq: 3, txn_id: "t".to_string() }).await;
+    assert_paged_route_admits(&AppCommand::TransactionRollback { seq: 4, txn_id: "t".to_string() }).await;
+    assert_paged_route_admits(&AppCommand::TransactionUndo { seq: 5, group_id: "g".to_string() }).await;
+    assert_paged_route_admits(&AppCommand::TransactionRedo { seq: 6, group_id: "g".to_string() }).await;
+}
+
+/// 🚪️ The routes that still require their own reserved ingress authority stay refused BY NAME, so
+/// "admitted" never becomes "everything is admitted": `Presence` (tag 28) owns
+/// `PresenceCommandCursor`'s one-exact-page-per-peer admission, and every tag no route declares is
+/// still a typed refusal rather than a silent drop.
+#[semio_framework_async_macros::async_test]
+async fn paged_ingress_still_refuses_an_undeclared_route_by_name() {
+    let mut pages = CommandPageSet::try_new(1).expect("one fixed page");
+    pages.try_push(FixedCommandPage::try_copy_from(&[22, 1, 0, 0, 0, 0]).expect("undeclared route page")).unwrap_or_else(|(fault, _page)| panic!("admit undeclared route page: {fault:?}"));
+    let command = PagedCommand::try_from_pages(pages).unwrap_or_else(|(fault, _pages)| panic!("admit undeclared route command: {fault:?}"));
+    let mut cursor = PagedAppCommandDecodeCursor::new(command);
+    let fault = cursor.step().expect_err("an undeclared route is refused");
+    assert_eq!(fault.code.0, "plugin.command-route-state-machine-required");
+}
+
+/// 🧹️ A refused route releases what it has already accumulated ONE field at a time under the
+/// caller's own grant — the same bounded-retirement contract `LoadDocumentArchive` keeps — so a
+/// faulted media command can never free a whole payload in one step.
+#[semio_framework_async_macros::async_test]
+async fn a_cancelled_media_route_releases_one_field_at_a_time() {
+    let command = AppCommand::MediaIn { seq: 7, port: "camera".to_string(), descriptor: vec![1; 64], data: vec![2; 64] };
+    let encoded = encode_app_command(&command).await.expect("media route encodes");
+    let mut cursor = PagedAppCommandDecodeCursor::new(encoded);
+    cursor.step().expect("port field");
+    cursor.step().expect("descriptor field");
+    let mut releases = 0;
+    for _ in 0..1024 {
+        let (empty, released) = cursor.close_step(COMMAND_PAGE_MAXIMUM_BYTES);
+        if released != 0 {
+            releases += 1;
+        }
+        if empty {
+            break;
+        }
+    }
+    assert!(releases >= 2, "a cancelled media route released {releases} field(s), not one per step");
+    assert!(cursor.terminal_is_empty(), "a cancelled media route retires empty");
+}
+//#endregion 🔖️PagedRouteAdmission
+
 //#region 🔖️Opening
 #[semio_framework_async_macros::async_test]
 async fn app_command_open_artifact_round_trips_resolved_and_explicit_forms() {

@@ -9,9 +9,14 @@ pub(crate) mod context {
     /// `ArtifactApp` — `EditorApp<AnimatePresentationPlayApp>` (SDK adapter, contract §2.1) is the real
     /// `ArtifactApp` implementor `VcsArtifactApp` wraps, exactly the way `PluginBuilder::editor::<E>`
     /// builds it.
-    /// 🧪️ A bare app instance — no `AppActionRegistry`, so undeclared internal commands dispatch freely.
+    /// 🧪️ The app instance every test builds — registry-backed, because there is no other kind.
+    /// `EditorApp<AnimatePresentationPlayApp>` publishes a `bounded_first_step_tool_proofs!` roster, and
+    /// `with_registry_on_bus` joins that roster against the registry's `Migrated` tool ids
+    /// (`AppActionRegistry::validate_tool_job_rows`): an empty registry declares none of them, so the
+    /// registry-LESS `VcsArtifactApp::new` fails construction outright with
+    /// `interactive-job.catalog-authority … generated_migrated=false, migrated={}`.
     pub async fn presentation_app() -> PresentationApp {
-        VcsArtifactApp::<EditorApp<AnimatePresentationPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>::new(EditorApp::default()).await
+        presentation_app_with_registry().await
     }
     
     /// 🧪️ Adapts `create_animate_presentation_app`'s `AppDefinition` (contract §2.4) into the

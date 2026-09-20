@@ -1,0 +1,278 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/framework/os/renderer/reference-image-decode.json",
+  "title": "Reference Image Decode Contract",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "decodedByteCapacity",
+    "sourcePixelCapacity",
+    "readbackStripByteCapacity",
+    "readbackMode",
+    "yieldAfterEveryStrip",
+    "reactRoutedExtensions",
+    "reactRoutedMediaTypes",
+    "browserMetadataFormats",
+    "browserWorkerBitmapFormats",
+    "browserPageBitmapFormats",
+    "browserPageDecodeCapacity",
+    "nativeDecodeFormats",
+    "unimplementedWgpuFormats",
+    "pixelFormat",
+    "colorSpaceConversion",
+    "alpha",
+    "orientation",
+    "resampling",
+    "oracle",
+    "cases"
+  ],
+  "properties": {
+    "decodedByteCapacity": {
+      "type": "integer",
+      "minimum": 4
+    },
+    "sourcePixelCapacity": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "readbackStripByteCapacity": {
+      "const": 1048576
+    },
+    "readbackMode": {
+      "const": "row-strip"
+    },
+    "yieldAfterEveryStrip": {
+      "const": true
+    },
+    "pixelFormat": {
+      "const": "srgb-rgba8"
+    },
+    "colorSpaceConversion": {
+      "const": "browser-default-to-srgb"
+    },
+    "alpha": {
+      "const": "straight"
+    },
+    "orientation": {
+      "const": "from-image"
+    },
+    "resampling": {
+      "const": "linear"
+    },
+    "oracle": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "sampleCapacity",
+        "meanChannelDeltaMax",
+        "maxChannelDeltaMax"
+      ],
+      "properties": {
+        "sampleCapacity": {
+          "type": "integer",
+          "minimum": 16
+        },
+        "meanChannelDeltaMax": {
+          "type": "number",
+          "minimum": 0
+        },
+        "maxChannelDeltaMax": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        }
+      }
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 4,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "url",
+          "sourceDigest",
+          "sourceWidth",
+          "sourceHeight",
+          "sourceOrientation",
+          "expectedWidth",
+          "expectedHeight",
+          "expectedRowsPerStrip",
+          "expectedStripCount",
+          "currentGeneration",
+          "expected"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "url": {
+            "type": "string",
+            "minLength": 1
+          },
+          "sourceDigest": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "sourceWidth": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "sourceHeight": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "sourceOrientation": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 8
+          },
+          "expectedWidth": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "expectedHeight": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "expectedRowsPerStrip": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "expectedStripCount": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "currentGeneration": {
+            "type": "boolean"
+          },
+          "expected": {
+            "enum": [
+              "decode",
+              "reuse",
+              "replace",
+              "cancel"
+            ]
+          }
+        }
+      }
+    },
+    "browserMetadataFormats": {
+      "type": "array",
+      "minItems": 6,
+      "maxItems": 6,
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "image/png",
+          "image/jpeg",
+          "image/gif",
+          "image/webp",
+          "image/bmp",
+          "image/svg+xml"
+        ]
+      }
+    },
+    "browserWorkerBitmapFormats": {
+      "type": "array",
+      "minItems": 5,
+      "maxItems": 5,
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "image/png",
+          "image/jpeg",
+          "image/gif",
+          "image/webp",
+          "image/bmp"
+        ]
+      },
+      "description": "Formats measured to decode through createImageBitmap inside the frame Worker."
+    },
+    "browserPageBitmapFormats": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "const": "image/svg+xml"
+      },
+      "description": "Required page Image to transferable ImageBitmap fallback when the dedicated Worker has no DOM decoder."
+    },
+    "browserPageDecodeCapacity": {
+      "const": 1
+    },
+    "nativeDecodeFormats": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "image/png",
+          "image/jpeg",
+          "image/gif",
+          "image/webp"
+        ]
+      }
+    },
+    "reactRoutedExtensions": {
+      "type": "array",
+      "minItems": 11,
+      "maxItems": 11,
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "png",
+          "jpg",
+          "jpeg",
+          "gif",
+          "webp",
+          "bmp",
+          "avif",
+          "tif",
+          "tiff",
+          "svg",
+          "pdf"
+        ]
+      },
+      "description": "URL extensions routed by React referenceMediaKindFromUrl; routing does not assert host browser codec support."
+    },
+    "reactRoutedMediaTypes": {
+      "type": "array",
+      "minItems": 9,
+      "maxItems": 9,
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "image/png",
+          "image/jpeg",
+          "image/gif",
+          "image/webp",
+          "image/bmp",
+          "image/avif",
+          "image/tiff",
+          "image/svg+xml",
+          "application/pdf"
+        ]
+      },
+      "description": "Media types represented by the React image/SVG/PDF routing contract."
+    },
+    "unimplementedWgpuFormats": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "image/avif",
+          "image/tiff",
+          "application/pdf"
+        ]
+      },
+      "description": "React-routed media types without a complete WGPU decode/raster path."
+    }
+  }
+}

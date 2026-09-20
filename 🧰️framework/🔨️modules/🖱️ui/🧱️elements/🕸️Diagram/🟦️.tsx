@@ -1145,6 +1145,10 @@ export interface DiagramProps {
   onNodesChangeReactFlow?: (changes: any[]) => void;
   onEdgesChangeReactFlow?: (changes: any[]) => void;
   onConnect?: (connection: any) => void;
+  /** 🚦️ Refuses a connection while it is being dragged — forwarded straight to React Flow, which is
+   * the only place it can gate a drop. It was missing from this contract, so `🕸️NodeGraph`'s own
+   * validity guard was being dropped at the boundary instead of being asked. */
+  isValidConnection?: (connection: Connection | Edge) => boolean;
   onNodeClick?: (event: React.MouseEvent, node: Node) => void;
   onNodeDoubleClick?: (event: React.MouseEvent, node: Node) => void;
   onNodeMouseEnter?: (event: React.MouseEvent, node: Node) => void;
@@ -1217,6 +1221,7 @@ const DiagramInner: React.FC<DiagramProps> = ({
   onNodesChangeReactFlow,
   onEdgesChangeReactFlow,
   onConnect,
+  isValidConnection,
   onNodeClick,
   onNodeDoubleClick,
   onNodeMouseEnter,
@@ -1702,6 +1707,7 @@ const DiagramInner: React.FC<DiagramProps> = ({
         onNodesChange={handleNodesChange}
         onEdgesChange={handleEdgesChange}
         onConnect={stableOnConnect}
+        isValidConnection={isValidConnection}
         onInit={handleInit}
         onNodeClick={onNodeClick}
         onNodeDoubleClick={onNodeDoubleClick}

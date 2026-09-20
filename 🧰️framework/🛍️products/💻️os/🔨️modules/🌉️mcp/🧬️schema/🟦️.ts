@@ -163,7 +163,7 @@ export type ArtifactInferenceRequestV1 = {
   readonly "budgets": ArtifactInferenceBudgetV1;
   readonly "cancellationId": string;
   readonly "canonicalPayload": readonly number[];
-  readonly "dependencies": readonly readonly JsonValue[][];
+  readonly "dependencies": readonly (readonly JsonValue[])[];
   readonly "generation": number;
   readonly "inferenceSchema": string;
   readonly "inferenceSchemaVersion": number;
@@ -240,14 +240,18 @@ export type CapabilitiesDescribeOutput = { readonly [key: string]: JsonValue };
 
 export type CapabilitiesSearchInput = {
   readonly "artifactKind"?: string;
+  readonly "cursor"?: string;
   readonly "kind"?: readonly string[];
+  readonly "limit"?: number;
   readonly "owner"?: string;
   readonly "query": string;
   readonly "requiresScope"?: string;
 };
 
 export type CapabilitiesSearchOutput = {
+  readonly "nextCursor"?: string | null;
   readonly "results"?: readonly JsonValue[];
+  readonly "total"?: number;
 };
 
 export type CapabilityActionInput = { readonly [key: string]: JsonValue };
@@ -290,6 +294,7 @@ export type ContextResolveOutput = { readonly [key: string]: JsonValue };
 export type ContextSummary = {
   readonly "activeArtifactId"?: string | null;
   readonly "catalogHash": string;
+  readonly "channel": string;
   readonly "locale": string;
   readonly "principal": string;
   readonly "scopes": readonly string[];
@@ -493,6 +498,8 @@ export type RevisionStamp = {
 
 export type SearchHit = {
   readonly "appId": string;
+  readonly "artifactKind": string;
+  readonly "audience": string;
   readonly "capabilityId": string;
   readonly "description": string;
   readonly "pluginId": string;

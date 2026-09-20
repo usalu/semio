@@ -14,7 +14,7 @@
   "enSKKnM2": null,
   "windZone": null,
   "enVBMS": null,
-  "deltaTK": 45,
+  "deltaTK": 45.0,
   "constructionActivity": null,
   "accidentalMassT": null,
   "accidentalSpeedKmH": null,

@@ -1,28 +1,14 @@
 //! 📜️ 📜️ Trinity Rewriting app command — `node-graph-edit`.
 
 use semio_s_artifact_trinity_jack::JackWorkingScene;
-use crate::standards::v1::subsets::any::schema;
 
 use crate::rewriting_snapshot_mutations;
 use crate::standards::v1::subsets::any::schema::mutations::text::RewriteRuleMutation;
-use crate::standards::v1::subsets::any::schema::Rhs;
 use crate::RewritingSnapshot;
 use pack::JsonValue as Value;
 use semio_framework_plugin::Emit;
 use semio_framework_plugin::NoConfigMutation;
 use semio_s_artifact_trinity_jack::{Graph, JackSnapshot};
-
-/// 🧭️ One addressable rule-clause node in the LHS/RHS semantic graphs (`lhs-where`, `rhs-create-N`,
-/// `rhs-merge-N`, `rhs-set-N`, `rhs-delete-N`, `rhs-parameter-N`) — parsed back from its synthetic
-/// node id by `parse_clause_ref`.
-enum RuleClauseRef {
-    LhsWhere,
-    RhsCreate(usize),
-    RhsMerge(usize),
-    RhsSet(usize),
-    RhsDelete(usize),
-    RhsParameter(usize),
-}
 
 fn parse_fixture_json(json: &str) -> Option<JackSnapshot> {
     JackSnapshot::from_json(json).ok()
@@ -42,66 +28,6 @@ fn apply_semantic_layout_edit(rule_layout: &mut std::collections::BTreeMap<Strin
             rule_layout.insert(node.id.clone(), crate::LayoutPoint { x: node.x, y: node.y });
             changed = true;
         }
-    }
-    changed
-}
-fn parse_clause_ref(node_id: &str) -> Option<RuleClauseRef> {
-    if node_id == "lhs-where" {
-        return Some(RuleClauseRef::LhsWhere);
-    }
-    let (prefix, index) = node_id.rsplit_once('-')?;
-    let index: usize = index.parse().ok()?;
-    match prefix {
-        "rhs-create" => Some(RuleClauseRef::RhsCreate(index)),
-        "rhs-merge" => Some(RuleClauseRef::RhsMerge(index)),
-        "rhs-set" => Some(RuleClauseRef::RhsSet(index)),
-        "rhs-delete" => Some(RuleClauseRef::RhsDelete(index)),
-        "rhs-parameter" => Some(RuleClauseRef::RhsParameter(index)),
-        _ => None,
-    }
-}
-fn remove_at<T>(items: &mut Vec<T>, index: usize) -> bool {
-    if index < items.len() {
-        items.remove(index);
-        true
-    } else {
-        false
-    }
-}
-fn delete_rule_clause(state: &mut RewritingSnapshot, node_id: &str) -> bool {
-    let Some(clause_ref) = parse_clause_ref(node_id) else {
-        return false;
-    };
-    let Ok(mut lhs) = pack::from_json_str::<schema::Lhs>(&state.lhs_json) else {
-        return false;
-    };
-    let Ok(mut rhs) = pack::from_json_str::<Rhs>(&state.rhs_json) else {
-        return false;
-    };
-    let changed = match clause_ref {
-        RuleClauseRef::LhsWhere => {
-            let had = lhs.where_clause.is_some();
-            lhs.where_clause = None;
-            had
-        }
-        RuleClauseRef::RhsCreate(index) => remove_at(&mut rhs.create, index),
-        RuleClauseRef::RhsMerge(index) => remove_at(&mut rhs.merge, index),
-        RuleClauseRef::RhsSet(index) => remove_at(&mut rhs.set, index),
-        RuleClauseRef::RhsDelete(index) => remove_at(&mut rhs.delete, index),
-        RuleClauseRef::RhsParameter(index) => {
-            if index < rhs.parameters.len() {
-                let removed = rhs.parameters.remove(index);
-                state.parameter_bindings.remove(&removed.name);
-                true
-            } else {
-                false
-            }
-        }
-    };
-    if changed {
-        state.lhs_json = pack::to_json_string(&lhs);
-        state.rhs_json = pack::to_json_string(&rhs);
-        state.rule_layout.remove(node_id);
     }
     changed
 }
@@ -150,7 +76,7 @@ fn apply_rewriting_node_graph_edit_operations(state: &mut RewritingSnapshot, sel
                 } else if surface_id == crate::editor::rewriting::TRINITY_REWRITING_PLAY_SURFACE_LHS || surface_id == crate::editor::rewriting::TRINITY_REWRITING_PLAY_SURFACE_RHS {
                     let mut deleted = false;
                     for id in selected_node_ids {
-                        deleted |= delete_rule_clause(state, id);
+                        deleted |= crate::editor::rewriting::delete_rule_clause::delete_rule_clause(state, id);
                     }
                     if deleted {
                         changed = true;

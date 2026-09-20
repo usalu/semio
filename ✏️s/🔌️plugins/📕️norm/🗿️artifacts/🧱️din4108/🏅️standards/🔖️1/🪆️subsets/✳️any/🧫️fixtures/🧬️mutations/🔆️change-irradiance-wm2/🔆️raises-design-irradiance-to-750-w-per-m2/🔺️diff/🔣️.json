@@ -11,7 +11,7 @@
   "airtightnessClass": null,
   "tIntC": null,
   "solarAbsorptance": null,
-  "irradianceWM2": 750,
+  "irradianceWM2": 750.0,
   "moistureMuExterior": null,
   "moistureMuInterior": null,
   "envelopeAreaM2": null,

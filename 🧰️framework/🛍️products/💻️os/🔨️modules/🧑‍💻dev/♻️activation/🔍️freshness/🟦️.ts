@@ -1,6 +1,6 @@
 /** 🧩️ Semantic activation freshness owner. */
 
-import { ACTIVATION_RECEIPT_FILE, PLAYGROUND_SESSION_OUTPUT_ROOT_ENV, developmentRuntimeRoot, newestComponentSourceMtime, nextActivationReceipt, playgroundSessionOutputPath, pluginModulesRoot, publishActivationReceipt, readActivationReceipt, stagedModuleMtime, stagedModuleReportLines, stagedModuleVerdict, type StagedModuleFacts, type StagedModuleVerdict } from "../🟦️.ts";
+import { ACTIVATION_RECEIPT_FILE, PLAYGROUND_SESSION_OUTPUT_ROOT_ENV, developmentRuntimeRoot, newestComponentSourceMtime, nextActivationReceipt, playgroundSessionOutputPath, pluginModulesRoot, publishActivationReceipt, readActivationReceipt, stagedModuleMtime, stagedModuleReportLines, stagedModuleVerdict, type PreparedComponentFacts, type StagedModuleFacts, type StagedModuleVerdict } from "../🟦️.ts";
 
 import { constants as fsConstants, createReadStream, createWriteStream, copyFileSync, cpSync, existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathSync, renameSync, rmSync, rmdirSync, statSync, unlinkSync, watch, writeFileSync } from "node:fs";
 
@@ -22,6 +22,24 @@ import { resolveCatalogFilterPluginId } from "../../../🔌️plugin/🏗️buil
 
 
 
+
+/** @emoji 🩺️ Reads one component's staged module directory into the pure facts
+ * {@link preparedComponentVerdict} decides on — the ONE disk reader the preparation pass and the
+ * activation receipt share, so "prepared" means the same thing in both. A crate that never compiled
+ * leaves no directory, and an unreadable descriptor is a fact here, never a thrown error. */
+export function stagedComponentFacts(moduleRoot: string, pluginId: string): PreparedComponentFacts {
+  const directory = join(moduleRoot, moduleDirectoryName(pluginId));
+  if (!existsSync(directory)) return { pluginId, directoryPresent: false, bridgePresent: false, artifactMarkerPresent: false };
+  let descriptorPluginId: string | undefined;
+  try { descriptorPluginId = JSON.parse(readFileSync(join(directory, "🔣️.json"), "utf8")).manifest?.pluginId as string | undefined; } catch { descriptorPluginId = undefined; }
+  return {
+    pluginId,
+    directoryPresent: true,
+    descriptorPluginId,
+    bridgePresent: existsSync(join(directory, MODULE_BRIDGE_FILE)),
+    artifactMarkerPresent: existsSync(join(directory, ".nx-artifact.json")),
+  };
+}
 
 /** @emoji 🔎️ Collects one variant's staged-module freshness facts out of the ONE staging root: the
  * activation receipt names what was activated, each component's owner tree supplies the newest source

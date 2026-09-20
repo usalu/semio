@@ -28,3 +28,12 @@ impl protocol::MutationKind<BcfSnapshot, BcfMutation> for SetSnapshot {
     }
 }
 //#endregion 🔖️Payload
+
+//#region 🪢️TaxonomyMounts
+#[path = "↩️inverse/🦀️.rs"]
+pub mod inverse;
+#[path = "🔺️diff/🦀️.rs"]
+pub mod diff;
+#[path = "🦠️mutation/🦀️.rs"]
+pub mod mutation;
+//#endregion 🪢️TaxonomyMounts

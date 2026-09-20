@@ -64,6 +64,94 @@ fn the_display_windows_leaf_publishes_reacts_kind_and_projection_ids() {
     assert!(kind_row < parallel, "🔃️ React RENDERS the plain kind leaf first, then Parallel, then Perspective");
 }
 
+struct DisplayTreeSceneHost;
+
+impl ui_wgpu::wgpu::SceneHost for DisplayTreeSceneHost {
+    fn paint_slot_step(
+        &mut self,
+        _slot: &ui_wgpu::wgpu::SceneSlot<'_>,
+        _cursor: &mut ui_wgpu::wgpu::ScenePaintCursor,
+        _draw: &mut ui_wgpu::wgpu::DrawList,
+        _atlas: &mut ui_wgpu::wgpu::FontAtlas,
+        _icons: Option<&ui_wgpu::wgpu::IconAtlas>,
+    ) -> ui_wgpu::wgpu::ScenePaintStep {
+        ui_wgpu::wgpu::ScenePaintStep::Fault
+    }
+}
+
+fn settle_display_tree(engine: &mut ui_wgpu::wgpu::Ui, atlas: &mut ui_wgpu::wgpu::FontAtlas) {
+    engine.set_viewport(FRAMEWORK_DISPLAY_WINDOWS_TAB_ID, 300.0, 240.0);
+    let pool = semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 1));
+    let operation = semio_framework_job::allocate_operation_id();
+    let cancel = semio_framework_job::CancelToken::root_now();
+    let mut preview_sequence = 0;
+    for _ in 0..64 {
+        for _ in 0..16_384 {
+            let mut cx = semio_framework_job::StepContext::new(operation, semio_framework_job::Generation(0), semio_framework_job::StepBudget::new(1, u64::MAX), cancel.clone(), || Some(0), &mut preview_sequence);
+            if matches!(engine.step_layouts(&pool, atlas, &mut cx), ui_wgpu::wgpu::UiLayoutStep::Idle) {
+                break;
+            }
+        }
+        if !engine.layout_is_dirty(FRAMEWORK_DISPLAY_WINDOWS_TAB_ID) {
+            break;
+        }
+        engine.request_layout(FRAMEWORK_DISPLAY_WINDOWS_TAB_ID);
+    }
+    assert!(!engine.layout_is_dirty(FRAMEWORK_DISPLAY_WINDOWS_TAB_ID), "Display branch layout settles");
+    for _ in 0..131_072 {
+        match engine.frame_step::<DisplayTreeSceneHost>(FRAMEWORK_DISPLAY_WINDOWS_TAB_ID, 300.0, 240.0, atlas, None, None) {
+            ui_wgpu::wgpu::UiFrameStep::Pending => {}
+            ui_wgpu::wgpu::UiFrameStep::Ready => return,
+            step => panic!("Display branch paint answered {step:?}"),
+        }
+    }
+    panic!("Display branch paint did not settle");
+}
+
+fn press_display_tree(engine: &mut ui_wgpu::wgpu::Ui, rect: ui_wgpu::wgpu::Rect) {
+    let x = rect.x + rect.w * 0.5;
+    let y = rect.y + rect.h * 0.5;
+    engine.dispatch_event(FRAMEWORK_DISPLAY_WINDOWS_TAB_ID, ui_wgpu::wgpu::UiEvent::PointerDown { x, y, button: ui_wgpu::wgpu::PointerButton::Primary, modifiers: ui_wgpu::wgpu::EventModifiers::default() });
+    engine.dispatch_event(FRAMEWORK_DISPLAY_WINDOWS_TAB_ID, ui_wgpu::wgpu::UiEvent::PointerUp { x, y, button: ui_wgpu::wgpu::PointerButton::Primary, modifiers: ui_wgpu::wgpu::EventModifiers::default() });
+}
+
+#[test]
+fn an_expandable_display_template_publishes_a_real_gutter_toggle_and_retires_its_children_when_closed() {
+    let mut shell = display_shell();
+    shell.session.as_mut().expect("Display fixture session").app.window_kinds.first_mut().surface_kind = ui_wgpu::wgpu::SurfaceKind::World3d;
+    let mut body = shell.build_display_windows_ui();
+    let UiNode::Stack(panel) = &mut body else { panic!("Display body is a panel stack") };
+    let UiNode::Tree(tree) = panel.children.first_mut().expect("Display panel tree") else { panic!("Display panel child is a Tree") };
+    tree.sections.first_mut().expect("Display kind section").default_open = Some(true);
+
+    let parallel_id = "framework.display.windows.main.projection.parallel";
+    let child_id = "framework.display.windows.main.projection.parallel.orthographic";
+    let chevron_id = format!("tree.chevron.{parallel_id}");
+    let child_label_id = format!("tree.label.{child_id}");
+    let mut engine = ui_wgpu::wgpu::Ui::new();
+    engine.apply_tree(FRAMEWORK_DISPLAY_WINDOWS_TAB_ID, &body);
+    engine.set_window_flow(FRAMEWORK_DISPLAY_WINDOWS_TAB_ID, ui_contract::UiFlow::for_anchor(ui_contract::Anchor::Bottom));
+    let mut atlas = ui_wgpu::wgpu::FontAtlas::builtin();
+    settle_display_tree(&mut engine, &mut atlas);
+
+    let chevron = engine
+        .window_hit_targets(FRAMEWORK_DISPLAY_WINDOWS_TAB_ID)
+        .iter()
+        .find(|hit| hit.control_id == chevron_id)
+        .unwrap_or_else(|| panic!("a painted childful Display row publishes its own fold gutter; hits={:?}", engine.window_hit_targets(FRAMEWORK_DISPLAY_WINDOWS_TAB_ID).iter().map(|hit| hit.control_id.as_str()).collect::<Vec<_>>()))
+        .rect;
+    assert!(!engine.window_hit_targets(FRAMEWORK_DISPLAY_WINDOWS_TAB_ID).iter().any(|hit| hit.control_id == child_label_id), "the closed Parallel branch publishes no child hit");
+
+    press_display_tree(&mut engine, chevron);
+    settle_display_tree(&mut engine, &mut atlas);
+    assert!(engine.window_hit_targets(FRAMEWORK_DISPLAY_WINDOWS_TAB_ID).iter().any(|hit| hit.control_id == child_label_id), "the gutter opens Parallel and publishes Orthographic");
+
+    let chevron = engine.window_hit_targets(FRAMEWORK_DISPLAY_WINDOWS_TAB_ID).iter().find(|hit| hit.control_id == chevron_id).expect("the open branch keeps its gutter").rect;
+    press_display_tree(&mut engine, chevron);
+    settle_display_tree(&mut engine, &mut atlas);
+    assert!(!engine.window_hit_targets(FRAMEWORK_DISPLAY_WINDOWS_TAB_ID).iter().any(|hit| hit.control_id == child_label_id), "closing Parallel retires Orthographic from the published hit generation");
+}
+
 /// 🖥️ **The Layout census.** React's save section (name box + Save, disabled on a blank name), the
 /// list section, `groupPath` folding, and a user layout's own `framework.display.delete.<id>` action.
 #[test]
@@ -147,7 +235,7 @@ fn a_tool_leaf_publishes_its_own_measures_under_their_own_ids() {
     let tab_id = format!("{FRAMEWORK_TOOL_PANEL_TAB_PREFIX}fill");
     let keys = published_keys(&shell, &tab_id, &shell.build_tool_panel_ui("fill"));
     assert!(keys.iter().any(|key| key.ends_with("tool.fill.options")), "🛠️ the headerless options section is React's own `tool.<id>.options`");
-    assert_eq!(keys.iter().filter(|key| key.contains("/tool.fill.")).count(), 1, "🛠️ with no measures in hand React renders the section and nothing else");
+    assert_eq!(keys.iter().filter(|key| key.contains("/tool.fill.")).count(), 2, "🛠️ the stable panel root and empty options section are the only tool-owned records without measures");
 
     shell.tool_measures.insert(
         "fill".into(),

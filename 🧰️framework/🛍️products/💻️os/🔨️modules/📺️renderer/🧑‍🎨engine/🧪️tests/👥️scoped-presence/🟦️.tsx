@@ -1,4 +1,5 @@
 import { cleanup, fireEvent, render, screen } from "@semio-tech/ui-react/test";
+import { PresenceBar, uiI18n } from "@semio-tech/ui-react";
 import Ajv from "ajv";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
@@ -81,6 +82,46 @@ describe("scope-safe Shell presence", () => {
     ]);
     expect(scopedPresencePeersV1(event(a), b.scope)).toEqual([]);
     expect(scopedPresencePeersV1({ ...event(a), verifiedSurfaceId: "map@1/*#viewer" }, a.scope)).toEqual([]);
+  });
+
+  // 🤖️ Outcome 3 × 4: an AI agent acting under a delegated credential is its own principal, and a
+  // human collaborator must be able to SEE that in the roster rather than mistaking it for the
+  // person who delegated to it.
+  it("projects an agent peer as its own principal and badges it distinctly from the delegating human", () => {
+    const [a] = fixture.cases;
+    const agentPeer = { ...a.peer, actor: "actor-agent", userId: "user-a", label: "Drafting agent", principalKind: "agent" as const };
+    const withAgent = { ...event(a), event: { kind: "presence" as const, peers: [a.peer, agentPeer] } };
+    const projected = scopedPresencePeersV1(withAgent, a.scope);
+
+    expect(projected).toHaveLength(2);
+    expect(projected[0]?.isAgent).toBeUndefined();
+    expect(projected[1]).toMatchObject({ actor: "actor-agent", label: "Drafting agent", isAgent: true });
+    expect(projected[1]?.actor, "the agent is a separate roster row, never folded into its delegating human").not.toBe(projected[0]?.actor);
+
+    // 🛡️ Absent and "human" are the same thing — a client cannot promote itself by omitting it.
+    const claimedHuman = { ...event(a), event: { kind: "presence" as const, peers: [{ ...agentPeer, principalKind: "human" as const }] } };
+    expect(scopedPresencePeersV1(claimedHuman, a.scope)[0]?.isAgent).toBeUndefined();
+  });
+
+  it("renders the agent badge inside the accessible name, in en and de", async () => {
+    const peers = [
+      { actor: "actor-a", label: "Ada", role: "author" as const, connectedAtMs: 101, color: 2 },
+      { actor: "actor-agent", label: "Drafting agent", role: "author" as const, connectedAtMs: 102, color: 3, isAgent: true },
+    ];
+    for (const [locale, agentWord] of [["en", "AI agent"], ["de", "KI-Agent"]] as const) {
+      await uiI18n.changeLanguage(locale);
+      const { container } = render(<PresenceBar id="s-presence-peers" peers={peers} />);
+      const agentRow = container.querySelector('[data-row-id="peer:actor-agent"]');
+      const humanRow = container.querySelector('[data-row-id="peer:actor-a"]');
+      expect(agentRow?.getAttribute("data-presence-kind")).toBe("agent");
+      expect(humanRow?.getAttribute("data-presence-kind")).toBe("human");
+      expect(agentRow?.getAttribute("aria-label"), `${locale}: the badge belongs to the accessible name`).toContain(agentWord);
+      expect(humanRow?.getAttribute("aria-label")).not.toContain(agentWord);
+      expect(container.querySelector('[data-row-id="peer-agent-badge:actor-agent"]')).not.toBeNull();
+      expect(container.querySelector('[data-row-id="peer-agent-badge:actor-a"]'), "a person never gets the robot badge").toBeNull();
+      cleanup();
+    }
+    await uiI18n.changeLanguage("en");
   });
 
   it("decodes missing or mismatched private authority as an empty roster", () => {

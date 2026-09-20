@@ -180,6 +180,12 @@ export type PluginWasmHandle = {
   /** 📖️ Binary pack+spr document read (`AppCommand::ReadDocument`) — the channel-native counterpart
    * to {@link loadAppDocumentPack}; `null` when the reply carries no `AppFrame::Document` frame. */
   readonly readAppDocumentPack?: (instanceId: number) => Promise<{ readonly pack: Uint8Array; readonly spr: Uint8Array; readonly ops?: string } | null>;
+  /** 📤️ Media OUT port read (`AppCommand::MediaOut`) — the agent-facing export counterpart to
+   * {@link readAppDocumentPack}: it returns the guest's own exported bytes over the bridge instead
+   * of driving the UI's download path, which hands the HUMAN a file and is the wrong outcome for an
+   * agent (`📓️lb1-live-bridge-action-routing.md` §11.1, `📓️wr3-headless-routes-view-state-export.md`
+   * §4.4). `null` when the reply carries no `AppFrame::Media` frame. */
+  readonly exportAppMedia?: (instanceId: number, port: string) => Promise<{ readonly port: string; readonly descriptor: Uint8Array; readonly data: Uint8Array } | null>;
   /** 📂️ Binary pack+spr document load (`AppCommand::LoadDocument`) — the Wave-1 channel-native path. */
   readonly loadAppDocumentPack?: (instanceId: number, pack: Uint8Array, spr: Uint8Array) => Promise<void>;
   /** 🗃️ Complete root plus recursive owned-member closure for durable document persistence. */
@@ -1074,8 +1080,15 @@ const pendingTurnEffects = new Map<number, WireVariant[]>();
 /** 🏁️ One typed operation's terminal publication, delivered to every subscriber of
  * {@link PluginWasmHandle.subscribeOperationCompletions}. A mounted operation finishes turns long
  * after the command that started it resolved, so NOTHING in the invocation response describes its
- * outcome — `uiScope`, `historyPatch` and `requestedEffects` are that outcome, and this is their only
- * delivery path. */
+ * outcome — `uiScope`, `historyPatch`, `requestedEffects` and `terminalOutput` are that outcome, and
+ * this is their only delivery path.
+ *
+ * 🧾️ `terminalOutput` is the operation's terminal result value, the exact carrier
+ * {@link invocationFromFrames} substitutes into `InvocationResponse.output` when the terminal page is
+ * drained inside a host call's own turn. A job-routed verb never drains it there — its admitting reply
+ * is the `{ operationId, generation }` handle — so without this field the value a caller dispatched
+ * the verb FOR (the Home directory-projection receipt) was decoded off the wire, carried in
+ * `pendingCompletionEffects`, and then dropped unread. `undefined` when the operation published none. */
 export type PluginOperationCompletion = Readonly<{
   instanceId: number;
   operation: number;
@@ -1083,6 +1096,7 @@ export type PluginOperationCompletion = Readonly<{
   uiScope: InvocationResponse["uiScope"];
   historyPatch: HistoryPatch | undefined;
   requestedEffects: readonly Effect[];
+  terminalOutput: unknown;
 }>;
 
 /** 🎯️ Per-instance leftover effects produced by the CONTINUATION turns
@@ -1091,6 +1105,28 @@ export type PluginOperationCompletion = Readonly<{
  * A completion frame can ride the very outcome that resolves a command, so a shared map would let the
  * completion subscriber steal an in-flight invocation's own effects. Two owners, two carriers. */
 const pendingCompletionEffects = new Map<number, WireVariant[]>();
+
+/** 🏁️ One instance's single `AppChannelClient.onOperationCompleted` registration and the subscribers
+ * it fans out to. ONE registration per instance is the whole point: a completion's carriers live in
+ * {@link pendingCompletionEffects}, which the publishing callback must DRAIN (an undrained map grows
+ * without bound), so a second channel-level registration on the same instance would find it already
+ * emptied and publish a completion with no effects and no terminal output at all. The shell really
+ * does subscribe twice on one instance — the visible session's completion pass and the Home directory
+ * bootstrap's receipt settle both bind `session.instanceId` — and before this fanout the second
+ * subscriber silently received nothing. */
+const completionFanouts = new Map<number, { readonly listeners: Set<(completion: PluginOperationCompletion) => void>; readonly dispose: () => void }>();
+
+/** 🧾️ The single terminal value a completed typed operation published, read out of the accumulated
+ * completion leftover. `consumeTypedOperationEffects` tags that value `terminal-output` when the
+ * TERMINAL page rode the same turn and `pending-output` when it did not — across a multi-turn drain
+ * both spellings reach here, and the completion frame itself is the terminal witness, so either is the
+ * operation's terminal result. More than one is a contract violation, exactly as in
+ * {@link invocationFromFrames}. */
+function typedOperationTerminalOutputV1(leftover: readonly WireVariant[]): unknown {
+  const outputs = leftover.filter((effect) => effect.tag === TYPED_OPERATION_TERMINAL_OUTPUT || effect.tag === TYPED_OPERATION_PENDING_OUTPUT);
+  if (outputs.length > 1) throw new Error("typed-operation returned more than one terminal output");
+  return outputs[0]?.val;
+}
 
 /** 📏️ Fixed retained authority for {@link pendingCompletionEffects}: an operation publishes at most
  * one host effect per continuation turn, so a completion that never arrives would otherwise
@@ -2604,6 +2640,7 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
     uiReadsByInstance.delete(instanceId);
     pendingTurnEffects.delete(instanceId);
     pendingCompletionEffects.delete(instanceId);
+    completionFanouts.delete(instanceId);
     teardownPluginActor(actorId);
     closingInstances.delete(instanceId);
   };
@@ -2653,7 +2690,7 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
     const length = raw instanceof Uint8Array || Array.isArray(raw) ? raw.length : 0;
     if (!length || length > BACKBONE_HOT_MESSAGE_MAXIMUM_BYTES || (Array.isArray(raw) && raw.some(value => !Number.isInteger(value) || value < 0 || value > 255))) throw new Error("actor-document-port.message-size");
     const bytes = raw instanceof Uint8Array ? raw : Uint8Array.from(raw as number[]);
-    if (decodeBackboneMessage(bytes).kind === "snapshot") throw new Error("actor-document-port.snapshot-requires-cold-pair");
+    if (decodeBackboneMessage(bytes).kind === "genesis") throw new Error("actor-document-port.genesis-requires-cold-pair");
     return bytes;
   };
   /** 💼️ In-flight `spawn-job` drives, keyed `actorId#job`. A guest re-emitting the same `job` id
@@ -3209,8 +3246,8 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
       if (answer.byteLength > GUEST_HOST_ANSWER_CEILING_BYTES) {
         throw new SemioFaultError({
           origin: "os", code: "extension.answer-too-large", severity: "error",
-          message: `extension answer of ${answer.byteLength} B exceeds the ${GUEST_HOST_ANSWER_CEILING_BYTES}-byte host-answer ceiling`,
-          scope: { instanceId: String(instanceId), req: String(req) }, retryable: false,
+          message: `extension answer of ${answer.byteLength} B for request ${req} exceeds the ${GUEST_HOST_ANSWER_CEILING_BYTES}-byte host-answer ceiling`,
+          scope: { instanceId: String(instanceId) }, retryable: false,
         });
       }
       // 📄️ The guest is handed this answer through ONE `cabi_realloc` per event, and a block its
@@ -3794,6 +3831,13 @@ export async function adaptPluginHandle(pluginId: string, lease: { readonly hand
         ? { pack: new Uint8Array(documentFrame.Document.pack), spr: new Uint8Array(documentFrame.Document.spr), ops: documentFrame.Document.ops }
         : null;
     },
+    exportAppMedia: async (instanceId, port) => {
+      const frames = await requireChannel(instanceId).mediaOut(port);
+      const errorFrame = frames.find((frame): frame is Extract<AppFrameValue, { readonly Error: unknown }> => "Error" in frame);
+      if (errorFrame) throw new Error(`exportAppMedia failed: ${faultDisplayMessage(errorFrame.Error.fault, decodePackValue)}`);
+      const mediaFrame = frames.find((frame): frame is Extract<AppFrameValue, { readonly Media: unknown }> => "Media" in frame);
+      return mediaFrame ? { port: mediaFrame.Media.port, descriptor: new Uint8Array(mediaFrame.Media.descriptor), data: new Uint8Array(mediaFrame.Media.data) } : null;
+    },
     loadAppDocumentPack: async (instanceId, pack, spr) => {
       const frames = await requireChannel(instanceId).loadDocument(pack, spr);
       const errorFrame = frames.find((frame): frame is Extract<AppFrameValue, { readonly Error: unknown }> => "Error" in frame);
@@ -3890,22 +3934,42 @@ export async function adaptPluginHandle(pluginId: string, lease: { readonly hand
       if (!localInteractionIdentityEquals(capture.identity, identity)) throw new Error("local-interaction.capture-authority");
       return capture;
     },
-    subscribeOperationCompletions: (instanceId, listener) =>
-      requireChannel(instanceId).onOperationCompleted((completion) => {
-        const leftover = pendingCompletionEffects.get(instanceId) ?? [];
-        pendingCompletionEffects.delete(instanceId);
-        listener({
-          instanceId,
-          operation: completion.operation,
-          revision: completion.revision,
-          uiScope: completion.uiScope as InvocationResponse["uiScope"],
-          historyPatch: completion.historyPatch as HistoryPatch | undefined,
-          requestedEffects: leftover
-            .filter((effect) => effect.tag !== TYPED_OPERATION_TERMINAL_OUTPUT && effect.tag !== TYPED_OPERATION_PENDING_OUTPUT && effect.tag !== TYPED_OPERATION_TERMINAL_SEEN)
-            .map(wireEffectToFriendly)
-            .filter((effect): effect is Effect => effect !== null),
+    subscribeOperationCompletions: (instanceId, listener) => {
+      const channel = requireChannel(instanceId);
+      let fanout = completionFanouts.get(instanceId);
+      if (!fanout) {
+        const listeners = new Set<(completion: PluginOperationCompletion) => void>();
+        const dispose = channel.onOperationCompleted((completion) => {
+          const leftover = pendingCompletionEffects.get(instanceId) ?? [];
+          pendingCompletionEffects.delete(instanceId);
+          const published: PluginOperationCompletion = {
+            instanceId,
+            operation: completion.operation,
+            revision: completion.revision,
+            uiScope: completion.uiScope as InvocationResponse["uiScope"],
+            historyPatch: completion.historyPatch as HistoryPatch | undefined,
+            requestedEffects: leftover
+              .filter((effect) => effect.tag !== TYPED_OPERATION_TERMINAL_OUTPUT && effect.tag !== TYPED_OPERATION_PENDING_OUTPUT && effect.tag !== TYPED_OPERATION_TERMINAL_SEEN)
+              .map(wireEffectToFriendly)
+              .filter((effect): effect is Effect => effect !== null),
+            terminalOutput: typedOperationTerminalOutputV1(leftover),
+          };
+          for (const subscriber of [...listeners]) {
+            try { subscriber(published); }
+            catch (error) { console.error("operation-completion subscriber failed", error); }
+          }
         });
-      }),
+        fanout = { listeners, dispose };
+        completionFanouts.set(instanceId, fanout);
+      }
+      const bound = fanout;
+      bound.listeners.add(listener);
+      return () => {
+        if (!bound.listeners.delete(listener) || bound.listeners.size > 0) return;
+        if (completionFanouts.get(instanceId) === bound) completionFanouts.delete(instanceId);
+        bound.dispose();
+      };
+    },
     // 🎞️ Operation progress changed what a refresh renders, so it counts as guest ingress: a refresh pass submitted before
     // the turn that produced it — a drain poll, or a refresh turn that advanced the operation — must not answer the progress
     // refresh it asks for, or the lane drops every later frame of a running tool run, its last one included.

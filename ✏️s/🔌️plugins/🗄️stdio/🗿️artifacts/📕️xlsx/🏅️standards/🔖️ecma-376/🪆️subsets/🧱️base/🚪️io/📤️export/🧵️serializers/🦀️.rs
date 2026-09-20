@@ -273,6 +273,17 @@ fn regenerate_workbook_parts(opc: &mut OpcPackage, workbook: &XlsxWorkbook) {
     if !opc.relationships_for("").iter().any(|r| is_rel_type(&r.rel_type, "/officeDocument")) {
         opc.add_relationship("", "rId1", REL_TYPE_OFFICE_DOCUMENT, WORKBOOK_PART);
     }
+
+    // 🔤️ Path-ascending is this format's part NORMAL FORM, and it has to be: `retain` above keeps
+    // unmodeled parts where they were and then re-appends `workbook.xml`/`sharedStrings.xml`/every
+    // worksheet after them, so the order this function produces otherwise depends on what it was
+    // handed — while `semio_s_artifact_stdio_zip`'s decoder hands every package back in
+    // `name`-ascending order (its own canonical member order). Without this, `codec_retention_law`'s
+    // `decode_pack(encode_pack(x)) == x` fails on part ORDER alone (`OpcPackage`'s derived
+    // `PartialEq` is order-sensitive), every content byte being identical. Sorting HERE makes the
+    // builder's output a fixed point of the codec under either decoder policy, since
+    // `encode_opc_with_package_order` then writes exactly that order too.
+    opc.parts.sort_by(|left, right| left.path.cmp(&right.path));
 }
 
 /// 🏗️ Assembles a brand-new, minimal-but-valid OPC package around `workbook` — correct

@@ -514,6 +514,69 @@ fn next_authority_generation() -> Result<u64, HubBindingError> {
     NEXT_HUB_AUTHORITY_GENERATION.try_update(Ordering::SeqCst, Ordering::SeqCst, |current| current.checked_add(1)).map_err(|_| HubBindingError::CapacityExceeded)
 }
 
+/// 🤖️ Exchanges a delegated agent credential for a hub session, once, at process start.
+///
+/// This is the only network call `semio-os-mcp` makes before it has a session: `POST
+/// /auth/agent-sessions` with the delegation as the bearer. It runs on its own short-lived
+/// `TokioHostRuntime` because the real hub binding driver does not exist yet — the credential this
+/// returns is what builds it.
+///
+/// The delegation token is read exactly once here and is never logged, never copied into
+/// `HubOptions`, and never written anywhere: what leaves this function is a session capability.
+#[cfg(not(target_arch = "wasm32"))]
+pub fn exchange_agent_session(base_url: &str, credential: &crate::agent_credential::AgentCredentialV1) -> Result<crate::agent_credential::AgentSessionGrantV1, GatewayError> {
+    use semio_framework_actor::{ActorId, PackageId};
+    use semio_framework_async::{ProcessKind, ScopeOwner, TraceId, WorkerPoolConfig};
+    use semio_framework_os_kernel::os_directory::client::{native::NativeDirectoryTransport, DirectoryTransport, HttpMethod};
+    use semio_framework_os_services::{ComputePool, TokioHostRuntime};
+
+    let origin = base_url.trim_end_matches('/');
+    if origin != credential.hub_origin().trim_end_matches('/') {
+        return Err(GatewayError::new(GatewayErrorCode::PermissionDenied, "--hub origin does not match the origin this agent credential was issued for"));
+    }
+    // 🧵️ `process_worker_pool` SEALS the process-wide configuration on its first call, and this
+    // exchange is the first thing a `--hub --credential-file` process does — before
+    // `NativeHubBindingDriver::connect`, before the workspace, before the transport. Sizing it at a
+    // literal `1` therefore sealed the whole process at one core and made every later subsystem's
+    // `available_parallelism()` request a hard assertion failure (observed live 2026-09-20: the
+    // agent principal was adopted, the next line panicked with "process worker pool configuration
+    // mismatch … left: cores: 10, right: cores: 1"). Every other pool site in this crate reads
+    // `available_parallelism()`; this one must agree with them, not undercut them.
+    let cores = std::thread::available_parallelism().map_or(1, std::num::NonZeroUsize::get);
+    let pool = semio_framework_async::process_worker_pool(WorkerPoolConfig::new(ProcessKind::InteractiveNative, cores));
+    let runtime = Arc::new(TokioHostRuntime::with_pool(pool.clone()));
+    let scope = runtime.open_scope_now(ScopeOwner::Service("mcp-agent-session-exchange"), None);
+    let compute = Arc::new(ComputePool::with_pool(1, pool));
+    let transport = NativeDirectoryTransport::with_new_http_pool_now(runtime.clone(), scope, compute, 1024 * 1024, 1, PackageId("semio-framework-os-mcp".to_string()), ActorId(0x4d43_5002));
+    let cancel = semio_framework_async::CancelToken::root_now();
+    let operation_now = runtime.block_on(runtime.now_ms());
+    let ctx = OperationContext {
+        actor: 0x4d43_5002,
+        generation: 0,
+        trace: TraceId(operation_now),
+        lane: 1,
+        deadline_ms: Some(operation_now.saturating_add(HUB_BINDING_OPERATION_TIMEOUT_MS)),
+        cancel: cancel.child_now(),
+        capability: None,
+    };
+    let body = crate::agent_credential::agent_session_request_body(credential.audience(), &agent_instance_id());
+    let url = format!("{origin}/auth/agent-sessions");
+    let response = runtime
+        .block_on(transport.http(&ctx, HttpMethod::Post, &url, Some(credential.expose_for_exchange()), Some(body)))
+        .map_err(|error| GatewayError::new(GatewayErrorCode::PluginUnavailable, format!("the hub at {origin} did not answer the agent-session exchange: {error:?}")).retryable())?;
+    if response.status != 200 {
+        return Err(crate::agent_credential::agent_exchange_error(response.status, &response.body));
+    }
+    crate::agent_credential::decode_agent_session_grant(&response.body)
+}
+
+/// 🔖️ A per-process instance id, so two agents sharing one delegation still get separate sessions
+/// and therefore separate presence rows.
+#[cfg(not(target_arch = "wasm32"))]
+fn agent_instance_id() -> String {
+    format!("mcp.{}", std::process::id())
+}
+
 pub fn validate_hub_origin(base_url: &str, space_id: &str) -> Result<(), GatewayError> {
     pair::normalize_hub_origin(base_url).map_err(|_| GatewayError::new(GatewayErrorCode::InputInvalid, "--hub requires a bounded origin-only http(s) URL"))?;
     validate_identity("space id", space_id).map_err(|error| GatewayError::new(GatewayErrorCode::InputInvalid, error.to_string()))?;

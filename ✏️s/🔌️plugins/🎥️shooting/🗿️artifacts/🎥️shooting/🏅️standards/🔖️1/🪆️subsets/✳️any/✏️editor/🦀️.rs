@@ -940,6 +940,7 @@ pub fn create_shooting_app() -> semio_framework_plugin::AppDefinition {
             // 🛠️ Dev-only whole-document import — kept out of the command palette.
             .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::bounded_catalog("importSnapshotJson", LocalizedLabel::native("Set Fixture Json", "Fixture-JSON festlegen"), ActionKind::Mutation) })
             .action_with(ActionDefinition::new("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"), ActionKind::Mutation, "panel-left"))
+            .action_destructive("setActiveExample")
             .mutation("setActiveShot", LocalizedLabel::native("Set Active Shot", "Aktive Aufnahme festlegen"))
             .mutation("setActiveAsset", LocalizedLabel::native("Set Active Asset", "Aktives Objekt festlegen"))
             .action_with(ActionDefinition::new("setCamera", LocalizedLabel::native("Set Camera", "Kamera festlegen"), ActionKind::View, "camera"))
@@ -970,7 +971,9 @@ pub fn create_shooting_app() -> semio_framework_plugin::AppDefinition {
             .view_action("setCameraDraftLabel", LocalizedLabel::native("Set Camera Draft Label", "Kamera-Entwurfsbezeichnung festlegen"))
             .view_action("setCenterModel", LocalizedLabel::native("Set Center Model", "Modellzentrierung festlegen"))
             .action_with(ActionDefinition::new("worldPointerDown", LocalizedLabel::native("World Pointer Down", "Welt-Zeiger gedrückt"), ActionKind::View, "mouse-pointer"))
+            .action_audience("worldPointerDown", semio_framework_plugin::CapabilityAudience::Input)
             .view_action("worldPointerMove", LocalizedLabel::native("World Pointer Move", "Welt-Zeiger bewegt"))
+            .action_audience("worldPointerMove", semio_framework_plugin::CapabilityAudience::Input)
             // 🕹️ The framework-owned "assets" interaction domain (ticket
             // 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM) — the 3d scene's asset pick/marquee
             // selection and pointer hover; auto-injects interactionSelect/interactionHover/
@@ -1087,3 +1090,11 @@ pub(crate) mod unit_tests;
 #[cfg(test)]
 #[path = "🧪️tests/🔬️window-action-contract/🦀️.rs"]
 mod window_action_contract;
+
+//#region 🪢️TaxonomyMounts
+#[path = "📚️examples/🎬️demo-session/🦀️.rs"]
+pub mod demo_session;
+#[cfg(test)]
+#[path = "📚️examples/🎬️demo-session/🧪️tests/🧩️example/🦀️.rs"]
+mod example;
+//#endregion 🪢️TaxonomyMounts

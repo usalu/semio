@@ -1,0 +1,51 @@
+{
+  "provenance": "shared neutral Tree drag-driver contract",
+  "rules": [
+    "handle drivers expose a dedicated trailing affordance",
+    "surface drivers initiate from a draggable row",
+    "transfer payloads and local sort rows use distinct semantic roles"
+  ],
+  "rowWidth": 200,
+  "rows": [
+    {
+      "id": "transfer",
+      "label": "Transfer",
+      "draggable": true,
+      "dragData": {
+        "application/x-semio-window-template": "{\"windowKindId\":\"world\",\"templateId\":\"default\"}"
+      },
+      "role": "transfer",
+      "handleIcon": "move"
+    },
+    {
+      "id": "sort",
+      "label": "Sort",
+      "draggable": true,
+      "role": "sort",
+      "handleIcon": "grip-vertical"
+    },
+    {
+      "id": "static",
+      "label": "Static",
+      "draggable": false,
+      "role": null,
+      "handleIcon": null
+    }
+  ],
+  "drivers": [
+    {
+      "id": "default",
+      "drag": "handle",
+      "visibleHandles": ["transfer", "sort"],
+      "labelStarts": [],
+      "handleStarts": ["transfer", "sort"]
+    },
+    {
+      "id": "compact",
+      "drag": "surface",
+      "visibleHandles": [],
+      "labelStarts": ["transfer", "sort"],
+      "handleStarts": []
+    }
+  ]
+}

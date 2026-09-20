@@ -67,7 +67,11 @@ async fn change_schema_command_mutates_the_schema_field() {
 
 #[semio_framework_async_macros::async_test]
 async fn registry_backed_editor_installs_its_exact_bounded_command_proof() {
-    let _app = semio_framework_plugin::artifact_app_laws::new_app_with_registry::<EditorApp<PlaygroundEditor>>(context::playground_editor_manifest_for_tests).await;
+    // 🔚 A registered fixture app owns a real artifact store, which panics at Drop unless it walked
+    // its bounded close loop first (`artifact store reached Drop without its exact terminal-empty
+    // shallow-shell witness`).
+    let mut app = semio_framework_plugin::artifact_app_laws::new_app_with_registry::<EditorApp<PlaygroundEditor>>(context::playground_editor_manifest_for_tests).await;
+    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app);
 }
 
 #[semio_framework_async_macros::async_test]

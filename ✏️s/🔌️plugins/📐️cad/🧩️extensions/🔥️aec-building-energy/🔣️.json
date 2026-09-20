@@ -1,48 +1,57 @@
 {
-  "contributions": {
+  "descriptorVersion": 1,
+  "packageId": "semio:cad-extension-aec-building-energy",
+  "role": "extension",
+  "manifest": {
+    "pluginId": "cad-extension-aec-building-energy",
+    "label": "CAD AEC Building Energy",
+    "version": "0.1.0",
+    "apps": [],
+    "examples": [],
+    "capabilities": [],
     "topicContributions": [
       {
+        "topic": "cad.computer",
         "payload": {
           "appId": "cad-play",
           "computersJson": "{\"modelDefinitionIds\":[\"aec.building.energy\"],\"statComputers\":[\"energy.demand\"],\"propertyComputers\":[\"energy.heatedvolume\"],\"importProfiles\":[{\"modelDefinitionId\":\"aec.building.energy\",\"layerTypology\":{\"baseplate\":\"energy.energy.baseplate\",\"hull\":\"energy.energy.hull\",\"roof\":\"energy.energy.roof\",\"slab\":\"energy.energy.baseplate\",\"wall\":\"energy.energy.externalwall\",\"walls\":\"energy.energy.externalwall\",\"window\":\"energy.energy.windows\",\"windows\":\"energy.energy.windows\"},\"fallbackTypology\":\"energy.energy.hull\",\"preferPresentationLayers\":true,\"presentationGeometry\":\"wireframe\",\"namespacedDomain\":\"energy\"}],\"transformationAppliers\":[]}",
           "iconId": "zap",
           "label": "AEC Building Energy",
           "moduleId": "aec-building-energy"
-        },
-        "topic": "cad.computer"
+        }
+      }
+    ],
+    "commands": [],
+    "artifactKinds": [],
+    "dependencies": [
+      {
+        "pluginId": "cad",
+        "version": "*"
       }
     ]
   },
-  "descriptorVersion": 1,
   "execution": "declarative",
-  "hashes": {
-    "coreWasmSha256": "5b7454e9351ef8b3fe773a05e76e14fcad88c7c002e8442ea394bd9c051ba381",
-    "descriptorSha256": "da7fbc88c25bb278428de3da0a9edcf71dec9c15b09b816277996a5a7842912e",
-    "wasmSha256": "443bec3bdaf7eb177c3c3423c6ae31e39f37a55582e7016ebd5ad2db0667142c"
+  "executionProtocol": {
+    "appChannelVersion": 17
   },
-  "manifest": {
-    "apps": [],
-    "artifactKinds": [],
-    "capabilities": [],
-    "commands": [],
-    "examples": [],
-    "label": "CAD AEC Building Energy",
-    "pluginId": "cad-extension-aec-building-energy",
+  "quotas": {},
+  "contributions": {
     "topicContributions": [
       {
+        "topic": "cad.computer",
         "payload": {
           "appId": "cad-play",
           "computersJson": "{\"modelDefinitionIds\":[\"aec.building.energy\"],\"statComputers\":[\"energy.demand\"],\"propertyComputers\":[\"energy.heatedvolume\"],\"importProfiles\":[{\"modelDefinitionId\":\"aec.building.energy\",\"layerTypology\":{\"baseplate\":\"energy.energy.baseplate\",\"hull\":\"energy.energy.hull\",\"roof\":\"energy.energy.roof\",\"slab\":\"energy.energy.baseplate\",\"wall\":\"energy.energy.externalwall\",\"walls\":\"energy.energy.externalwall\",\"window\":\"energy.energy.windows\",\"windows\":\"energy.energy.windows\"},\"fallbackTypology\":\"energy.energy.hull\",\"preferPresentationLayers\":true,\"presentationGeometry\":\"wireframe\",\"namespacedDomain\":\"energy\"}],\"transformationAppliers\":[]}",
           "iconId": "zap",
           "label": "AEC Building Energy",
           "moduleId": "aec-building-energy"
-        },
-        "topic": "cad.computer"
+        }
       }
-    ],
-    "version": "0.1.0"
+    ]
   },
-  "packageId": "",
-  "quotas": {},
-  "role": "extension"
+  "hashes": {
+    "wasmSha256": "f4bf5707710d5575812dc53da3ffd72073a3d14d1330b44db81f9399334c2b80",
+    "coreWasmSha256": "25ec6a1eb23952336f38dcbc9154166a28f2253525f86a85ca0578df5223d416",
+    "descriptorSha256": "90885bfb4073121afac9523873d3d721b9f762cc6589ac505ba2795bea85615b"
+  }
 }

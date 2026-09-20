@@ -67,7 +67,7 @@ async fn change_v_rd_kn_committed_json_is_canonical() {
     }
     let reencoded = serde_json::to_value(mutation()).expect("change-v-rd-kn mutation encodes");
     let original: serde_json::Value = serde_json::from_str(MUTATION).expect("change-v-rd-kn mutation reparses");
-    assert_eq!(reencoded, original, "change-v-rd-kn/raises-v-rd-kn-to-925-0: committed mutation JSON is not the canonical externally-tagged ChangeVRdKn form carrying newVRdKn");
+    assert_eq!(reencoded, original, "change-v-rd-kn/raises-v-rd-kn-to-925-0: committed mutation JSON is not the canonical internally-tagged ChangeVRdKn form carrying mutation and newVRdKn");
 }
 
 /// 🎯️ The declared outcome holds: `change-v-rd-kn` at 925.0 is applied, not rejected, and carries no

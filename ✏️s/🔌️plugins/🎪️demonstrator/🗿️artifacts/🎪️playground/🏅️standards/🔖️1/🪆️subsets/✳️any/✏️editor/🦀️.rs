@@ -311,6 +311,44 @@ impl ArtifactEditor for PlaygroundEditor {
         Some(std::sync::Arc::new(PlaygroundStorePreparationFactory))
     }
 
+    /// ♻️ The exact store owners and disposers every lane of this editor retires through. The app
+    /// declared none, so `changeSchema` — its ONE mutation — reached the typed operation and died
+    /// there with `dispatch-failed … returned snapshot read requires its exact owned-snapshot
+    /// retirement factory` (measured headless on :6107, `🗑️generated/b3a-demonstrator/report.json`),
+    /// which then poisoned the shell into `data-semio-os-error="demonstrator"`. Same defect and same
+    /// cure as 📖️playbook's.
+    fn build_document_store_owners() -> Option<store::DocumentStoreOwners<Self::Snapshot, Self::Mutation>> {
+        Some(semio_framework_plugin::bounded_document_store_owners::<Self::Snapshot, Self::Mutation>())
+    }
+
+    fn build_document_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
+        Some(semio_framework_plugin::bounded_document_store_disposer::<Self::Snapshot, Self::Mutation>())
+    }
+
+    fn build_config_store_owners() -> Option<store::DocumentStoreOwners<Self::Config, Self::ConfigMutation>> {
+        Some(semio_framework_plugin::no_config_store_owners())
+    }
+
+    fn build_config_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::Config, Self::ConfigMutation>>>> {
+        Some(semio_framework_plugin::no_config_store_disposer())
+    }
+
+    fn build_draft_store_owners() -> Option<store::DocumentStoreOwners<Self::Draft, Self::DraftMutation>> {
+        Some(semio_framework_plugin::no_draft_store_owners())
+    }
+
+    fn build_draft_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::DraftStore<Self::Draft, Self::DraftMutation>>>> {
+        Some(semio_framework_plugin::no_draft_store_disposer())
+    }
+
+    fn build_presence_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::PresenceStore<Self::Presence, Self::PresenceMutation>>>> {
+        Some(semio_framework_plugin::no_presence_store_disposer())
+    }
+
+    fn build_transient_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::TransientStore<Self::Transient, Self::TransientMutation>>>> {
+        Some(semio_framework_plugin::no_transient_store_disposer())
+    }
+
     semio_framework_plugin::bounded_first_step_tool_proofs! {
         owner: EditorApp<PlaygroundEditor>,
         owner_file: "✏️s/🔌️plugins/🎪️demonstrator/🗿️artifacts/🎪️playground/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",

@@ -67,6 +67,13 @@ function identity(value: unknown): string | null {
   return typeof value === "string" && value.length <= 256 && /^[A-Za-z0-9][A-Za-z0-9._:/-]*$/u.test(value) ? value : null;
 }
 
+/** 🃏️ A dialect subset is an identity **or** the single wildcard `*` that a dialect coordinate
+ * writes for a standard's whole subset space (`"s.gis.gismap@1/*"`). Every shipped trusted-catalog
+ * open target declares `"*"`, so an identity-only predicate refuses the real catalog. */
+function subsetIdentity(value: unknown): string | null {
+  return value === "*" ? "*" : identity(value);
+}
+
 function requestId(value: unknown): string | null {
   return typeof value === "string" && /^(?!0{32}$)[0-9a-f]{32}$/u.test(value) ? value : null;
 }
@@ -89,8 +96,8 @@ function ready(value: unknown): SpaceArtifactCreationReadyV1 | null {
     artifactSchema = identity(row.artifactSchema),
     artifactKind = identity(dialect.artifactKind),
     standard = identity(dialect.standard),
-    subset = identity(dialect.subset);
-  return artifactId !== null && kindId !== null && artifactSchema !== null && artifactKind === kindId && standard !== null && subset !== null
+    subset = subsetIdentity(dialect.subset);
+  return artifactId !== null && kindId !== null && artifactSchema !== null && artifactKind !== null && standard !== null && subset !== null
     ? { artifactId, kindId, artifactSchema, parentDialect: { artifactKind, standard, subset } }
     : null;
 }
@@ -105,10 +112,10 @@ function creationKind(value: unknown): SpaceArtifactCreationKindV1 | null {
     schema = identity(row.schema),
     artifactKind = identity(dialect.artifactKind),
     standard = identity(dialect.standard),
-    subset = identity(dialect.subset),
+    subset = subsetIdentity(dialect.subset),
     en = name(labels.en),
     de = name(labels.de);
-  return kindId !== null && schema !== null && artifactKind === kindId && standard !== null && subset !== null && en !== null && de !== null
+  return kindId !== null && schema !== null && artifactKind !== null && standard !== null && subset !== null && en !== null && de !== null
     ? { kindId, schema, dialect: { artifactKind, standard, subset }, label: { en, de } }
     : null;
 }

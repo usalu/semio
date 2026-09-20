@@ -202,7 +202,9 @@ impl ImperativeHost {
         let Some(step) = path.steps.iter_mut().find(|step| step.id == id) else {
             return Err(ImperativeCoreError::UnknownStep(id.into()));
         };
-        step.params = params;
+        // 🧊️ Retire the DISPLACED dictionary rather than dropping it in place — see `Step`'s own
+        // cold-boundary note in `imperative_engine`.
+        neural_engine::ColdRetire::retire_cold(std::mem::replace(&mut step.params, params));
         self.sync_document();
         Ok(())
     }

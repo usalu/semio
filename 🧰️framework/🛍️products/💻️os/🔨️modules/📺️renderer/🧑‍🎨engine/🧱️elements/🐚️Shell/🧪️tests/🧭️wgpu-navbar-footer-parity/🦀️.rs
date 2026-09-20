@@ -18,8 +18,9 @@ fn repo_root() -> std::path::PathBuf {
     engine_root().join("../../../../../..").canonicalize().expect("repo root")
 }
 
-fn pane_fixture() -> Value {
-    serde_json::from_str(include_str!("../../🧫️fixtures/🪟️window-pane-chrome/🔣️.json")).expect("window pane chrome fixture")
+fn chrome_geometry_fixture() -> Value {
+    let path = repo_root().join("🧰️framework/🔨️modules/🖱️ui/🧫️fixtures/🔝️navbar-centered-band/🔣️.json");
+    serde_json::from_str(&std::fs::read_to_string(&path).unwrap_or_else(|error| panic!("read {}: {error}", path.display()))).expect("navbar centered-band fixture")
 }
 
 /// 🌍️ A pane that hosts a world surface, so the Projection chip mounts at all.
@@ -260,7 +261,13 @@ fn the_navbar_title_is_the_apps_breadcrumb_not_its_dialect_id() {
 fn the_navbar_cluster_walks_to_completion_and_keeps_its_bands() {
     let theme = Theme::light();
     let mut shell = world_pane_shell();
+    shell.screen_w = 1440.0;
     shell.sync_dock_tabs();
+    let resumed_label = "Resumed Geometry Tab";
+    shell.dock_tabs.tabs_mut(PanelAnchor::TopLeft).push(DockTabNode::leaf("fixture.leading.first", "First", "box", 0));
+    shell.dock_tabs.tabs_mut(PanelAnchor::TopLeft).push(DockTabNode::leaf("fixture.leading.second", "Second", "box", 0));
+    shell.dock_tabs.tabs_mut(PanelAnchor::TopLeft).push(DockTabNode::leaf("fixture.leading.resumed", resumed_label, "box", 0));
+    shell.dock_tabs.tabs_mut(PanelAnchor::TopMiddle).push(DockTabNode::leaf("fixture.center", "Center", "box", 0));
     let mut draw = DrawList::default();
     let mut atlas = FontAtlas::builtin();
     let icons = IconAtlas::default();
@@ -281,9 +288,34 @@ fn the_navbar_cluster_walks_to_completion_and_keeps_its_bands() {
     eprintln!("[DEBUG] navbar x-order {:?}", hits.iter().map(|(id, rect)| (id, rect.x.round())).collect::<Vec<_>>());
     let fullscreen = hits.iter().position(|(id, _)| id == "ui.fullscreen.toggle").expect("🧭️ the navbar carries the fullscreen chip");
     let leading: Vec<usize> = hits.iter().enumerate().filter(|(_, (id, _))| shell.panel_tab_anchor(id) == Some(PanelAnchor::TopLeft)).map(|(index, _)| index).collect();
-    assert!(!leading.is_empty(), "🧭️ top-left's tabs open the navbar: {ids:?}");
+    assert!(leading.len() >= 3, "🧭️ three top-left tabs exercise the retained advancing cursor: {ids:?}");
     assert!(leading.iter().all(|index| *index < fullscreen), "🧭️ and stay left of the trailing band: {ids:?}");
     assert!((hits[leading[0]].1.x - theme.padding_standard).abs() < 0.01, "🧭️ the leading band still opens at the navbar's own padding, with the logo cluster after it");
+    for pair in leading.windows(2) {
+        let prior = hits[pair[0]].1;
+        let next = hits[pair[1]].1;
+        assert!((next.x - prior.x - prior.w).abs() < 0.01, "🧭️ an advancing cursor never replays a preceding tab width: {prior:?} → {next:?}");
+    }
+    let resumed = hits.iter().find(|(id, _)| id == "fixture.leading.resumed").expect("🧭️ resumed fixture tab");
+    let resumed_item = ChromeGroupItem { control_id: "", icon_id: Some("box"), label: Some(resumed_label), active: false, disabled: false, kind: HitKind::Toggle };
+    assert!((resumed.1.w - retained_panel_chrome_item_width(&mut atlas, &theme, &resumed_item).expect("measured panel tab")).abs() < 0.01, "🧭️ the physical chip includes React's trailing grip extent");
+    let dock_fixture: Value = serde_json::from_str(&std::fs::read_to_string(repo_root().join("🧰️framework/🔨️modules/🖱️ui/🧫️fixtures/📐️dock-axis-geometry/🔣️.json")).expect("shared physical React dock oracle")).expect("dock geometry fixture");
+    let leading_icon = dock_fixture["panelChrome"]["leadingIconPixels"].as_f64().expect("leading icon pixels") as f32;
+    let grip = dock_fixture["panelChrome"]["dragHandlePixels"].as_f64().expect("drag handle pixels") as f32;
+    let measured_width = theme.padding_standard * 2.0 + leading_icon + atlas.measure_text(resumed_label, theme.font_size_small).0 + theme.gap_standard * 2.0 + grip;
+    assert!((resumed.1.w - measured_width).abs() < 0.01, "🧭️ the rendered hit width uses React's independently measured leading icon and drag handle sizes");
+    assert!(walked > resumed_label.chars().count(), "🧭️ the multi-glyph fixture required retained cursor resumptions");
+    let layout = shell.navbar_chrome_layout(&mut atlas, &theme, 1440.0);
+    let middle = hits.iter().filter(|(id, _)| shell.panel_tab_anchor(id) == Some(PanelAnchor::TopMiddle)).collect::<Vec<_>>();
+    assert!(!middle.is_empty(), "🧭️ TopMiddle belongs to the centered cluster");
+    assert!(middle.iter().all(|(_, rect)| rect.x >= layout.center.centered.left - 0.01 && rect.x + rect.w <= layout.center.centered.right + 0.01), "🧭️ TopMiddle stays inside the centered occupied band: {middle:?} vs {:?}", layout.center.centered);
+    let centered_hits = hits.iter().filter(|(id, rect)| shell.panel_tab_anchor(id) == Some(PanelAnchor::TopMiddle) || id.starts_with("playground.navbar.")).map(|(_, rect)| *rect).collect::<Vec<_>>();
+    let edge_hits = hits.iter().filter(|(id, _)| shell.panel_tab_anchor(id).is_some_and(|anchor| matches!(anchor, PanelAnchor::TopLeft | PanelAnchor::TopRight)) || id == "ui.fullscreen.toggle").map(|(_, rect)| *rect).collect::<Vec<_>>();
+    for center in centered_hits {
+        for edge in &edge_hits {
+            assert!(center.x + center.w <= edge.x + 0.01 || edge.x + edge.w <= center.x + 0.01, "🧭️ centered and edge physical hit boxes never overlap: {center:?} / {edge:?}");
+        }
+    }
 }
 
 /// 👁️✏️ **The role-badge law.** The title is followed by React's read-only role chip, in both
@@ -326,56 +358,77 @@ fn the_navbar_role_chips_carry_their_inline_hotkey_badge() {
 /// pills were painted AHEAD of the bands off one running cursor, and `#s-checkin` is a row of React's
 /// History PANEL, never footer chrome (`📓️audit-visual-parity-puzzle3d.md` §7 item 5).
 #[test]
-fn the_footer_pills_band_with_reacts_own_order() {
-    let fixture = pane_fixture();
+fn the_footer_statuses_and_tabs_follow_reacts_collision_free_sequence() {
+    let fixture = chrome_geometry_fixture();
     let theme = Theme::light();
     let mut shell = world_pane_shell();
-    shell.sync_backbone_uri = Some("folder:///tmp/fixture".into());
+    shell.screen_w = 1440.0;
     shell.sync_dock_tabs();
-    let mut draw = DrawList::default();
     let mut atlas = FontAtlas::builtin();
+    let (width, height) = (1440.0_f32, 900.0_f32);
+    let btn_y = height - theme.footer_height + (theme.footer_height - theme.control_height) * 0.5;
+    let layout = shell.footer_chrome_layout(&mut atlas, &theme, width, btn_y, theme.control_height);
+    let presence = layout.presence.expect("desktop footer keeps presence");
+    assert!(presence.x + presence.w + theme.gap_standard <= layout.hub.x + 0.01);
+    assert!(layout.hub.x + layout.hub.w + theme.gap_standard <= layout.bottom_right_left + 0.01);
+    assert!(layout.center.centered.left >= layout.center.free.left && layout.center.centered.right <= layout.center.free.right + 0.01);
+
+    let mut draw = DrawList::default();
     let icons = IconAtlas::default();
     let mut input = InputState::<ActionDescriptor>::default();
     let mut cursor = ShellChromeChildCursor::default();
-    let (width, height) = (1440.0_f32, 900.0_f32);
     for _ in 0..8192 {
         if shell.render_footer_step(&mut cursor, &mut draw, &mut atlas, &icons, &mut input, &theme, width, height) {
             break;
         }
     }
-    let mut hits: Vec<(String, Rect)> = input.staged_hits().iter().filter_map(|hit| hit.control_id.clone().map(|id| (id, hit.rect))).collect();
-    hits.sort_by(|left, right| left.1.x.total_cmp(&right.1.x));
-    let ids: Vec<&str> = hits.iter().map(|(id, _)| id.as_str()).collect();
-    eprintln!("[DEBUG] footer x-order {:?}", hits.iter().map(|(id, rect)| (id.as_str(), rect.x.round())).collect::<Vec<_>>());
-
-    let sync = hits.iter().position(|(id, _)| id == "s-sync-status").expect("🔚️ the footer carries the sync pill");
-    let presence = hits.iter().position(|(id, _)| id == "s-presence-peers").expect("🔚️ the footer carries the presence pill");
-    assert!(sync < presence, "🔚️ the sync pill leads the presence pill: {ids:?}");
-    assert!(!ids.contains(&"s-checkin"), "🔚️ React paints no footer check-in chip: {ids:?}");
-
-    // 🚦️ `s-sync-status` names TWO things here: React's bottom-left sync TAB, whose own folded chrome
-    // button IS the pill (`🏛️ShellHost/🟦️.tsx:9086`), and this renderer's separate footer pill, which
-    // W4a added because the tab alone painted nothing. Now that W7a publishes React's BARE tab ids
-    // both answer to the same id, so the band sets exclude it and the pill positions below pin it
-    // instead. The duplicate itself is a footer-lane hand-off (`📓️w7a-…` §5).
-    let band_tab = |shell: &ShellState, id: &String, anchor: PanelAnchor| id != "s-sync-status" && shell.panel_tab_anchor(id) == Some(anchor);
-    let leading: Vec<usize> = hits.iter().enumerate().filter(|(_, (id, _))| band_tab(&shell, id, PanelAnchor::BottomLeft)).map(|(index, _)| index).collect();
-    let trailing: Vec<usize> = hits.iter().enumerate().filter(|(_, (id, _))| band_tab(&shell, id, PanelAnchor::BottomRight)).map(|(index, _)| index).collect();
-    assert!(!leading.is_empty() && !trailing.is_empty(), "🔚️ both outer bands carry tabs: {ids:?}");
-    assert!(leading.iter().all(|index| *index < sync), "🔚️ every bottom-left tab leads the sync pill, as React's `Display` leads `#s-sync-status`: {ids:?}");
-    assert!(trailing.iter().all(|index| *index > presence), "🔚️ the presence pill leads every bottom-right tab, as React's `footerItems` places it: {ids:?}");
-    for band in [&leading, &trailing] {
-        for pair in band.windows(2) {
-            assert!(hits[pair[0]].1.x + hits[pair[0]].1.w <= hits[pair[1]].1.x + 0.01, "🔚️ a band's own chips never overlap");
+    let hits = input.staged_hits();
+    assert_eq!(hits.iter().filter(|hit| hit.control_id.as_deref() == Some("s-sync-status")).count(), 1, "the sync item is React's bottom-left tab, never a duplicate status pill");
+    assert!(!hits.iter().any(|hit| hit.control_id.as_deref() == Some("s-presence-peers") || hit.control_id.as_deref() == Some("s-hub-connection")), "ambient status children do not invent button actions");
+    assert_eq!(hits.iter().filter(|hit| hit.control_id.as_deref() == Some("framework.hub.signIn")).count(), 1, "a signed-out hub is the footer's separate targetable workspace opener");
+    for hit in hits {
+        if shell.panel_tab_anchor(hit.control_id.as_deref().unwrap_or_default()) == Some(PanelAnchor::BottomMiddle) {
+            assert!(hit.rect.x >= layout.center.centered.left - 0.01 && hit.rect.x + hit.rect.w <= layout.center.centered.right + 0.01);
         }
     }
-    assert!(hits[sync].1.x + hits[sync].1.w <= hits[presence].1.x + 0.01, "🔚️ the two pills never overlap");
-    assert!(hits[presence].1.x + hits[presence].1.w <= hits[trailing[0]].1.x + 0.01, "🔚️ the presence pill clears the trailing band");
 
-    let declared: Vec<&str> = fixture["footerComposition"]["order"].as_array().expect("fixture footer order").iter().map(|value| value.as_str().expect("footer order entry")).collect();
-    assert_eq!(declared.first(), Some(&"Display"), "🔚️ the fixture's own order still opens on Display");
-    assert!(declared.iter().position(|label| *label == "Remote: detached") < declared.iter().position(|label| *label == "No one else is here"), "🔚️ and keeps the two pills in the order this law pins");
+    let order = fixture["contract"]["footerTrailingOrder"].as_array().expect("footer order").iter().map(|value| value.as_str().expect("footer order entry")).collect::<Vec<_>>();
+    assert_eq!(order, vec!["presence", "hubConnection", "bottomRight"]);
+
+    shell.screen_w = crate::dock::MODE_DOCK_MOBILE_MAX_WIDTH_PX;
+    let mobile = shell.footer_chrome_layout(&mut atlas, &theme, shell.screen_w, btn_y, theme.control_height);
+    assert!(mobile.presence.is_none(), "mobile omits presence");
+    assert!(mobile.hub.w > 0.0 && mobile.hub.x + mobile.hub.w <= shell.screen_w - theme.padding_standard + 0.01, "mobile retains the hub badge inside the physical band");
 }
+
+#[test]
+fn the_shared_band_fixture_and_custom_cap_metrics_hold_in_rust() {
+    let fixture = chrome_geometry_fixture();
+    for row in fixture["bands"].as_array().expect("bands") {
+        let width = row["width"].as_f64().expect("width") as f32;
+        let spans = row["occupied"].as_array().expect("occupied").iter().map(|span| ShellChromeBandSpan { left: span["left"].as_f64().expect("left") as f32, right: span["right"].as_f64().expect("right") as f32 }).collect::<Vec<_>>();
+        let actual = shell_chrome_free_band(width, &spans);
+        assert_eq!([actual.left, actual.right], [row["band"]["left"].as_f64().expect("expected left") as f32, row["band"]["right"].as_f64().expect("expected right") as f32]);
+    }
+    for row in fixture["placements"].as_array().expect("placements") {
+        let width = row["width"].as_f64().expect("width") as f32;
+        let band = ShellChromeBandSpan { left: row["band"]["left"].as_f64().expect("left") as f32, right: row["band"]["right"].as_f64().expect("right") as f32 };
+        let actual = shell_chrome_centered_band(width, &[ShellChromeBandSpan { left: 0.0, right: band.left }, ShellChromeBandSpan { left: band.right, right: width }], row["contentWidth"].as_f64().expect("content width") as f32);
+        assert_eq!(actual.centered.left, row["left"].as_f64().expect("expected left") as f32);
+    }
+    for row in fixture["dockCapMetrics"].as_array().expect("dock cap metrics") {
+        let spacing = row["spacing"].as_f64().expect("spacing") as f32;
+        let control = spacing * row["controlHeightUiSpacing"].as_f64().expect("control factor") as f32;
+        let padding = spacing * row["paddingUiSpacing"].as_f64().expect("padding factor") as f32;
+        let navbar = spacing * row["navbarHeightUiSpacing"].as_f64().expect("navbar factor") as f32;
+        let cap = control + padding * 2.0;
+        assert!((cap - row["capDepth"].as_f64().expect("cap depth") as f32).abs() < 0.001);
+        if row["name"].as_str().is_some_and(|name| name.contains("custom navbar")) {
+            assert!((cap - navbar).abs() > 0.001, "custom navbar height cannot define dock cap depth");
+        }
+    }
+}
+
 //#endregion 🔚️FooterOrder
 
 //#region 🎓️Introduction

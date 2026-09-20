@@ -1,0 +1,286 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "id": "canvas-fullscreen",
+      "target": "canvas",
+      "key": "f",
+      "modifiers": {
+        "ctrl": true,
+        "meta": true
+      },
+      "prevented": false,
+      "forwarded": 2
+    },
+    {
+      "id": "focused-tree-fullscreen",
+      "target": "mirror-tree",
+      "key": "f",
+      "modifiers": {
+        "ctrl": true,
+        "meta": true
+      },
+      "prevented": false,
+      "forwarded": 2
+    },
+    {
+      "id": "tree-arrow-navigation",
+      "target": "mirror-tree",
+      "key": "ArrowDown",
+      "modifiers": {},
+      "prevented": false,
+      "forwarded": 2
+    },
+    {
+      "id": "tree-native-tab-focus",
+      "target": "mirror-tree",
+      "key": "Tab",
+      "modifiers": {},
+      "prevented": false,
+      "forwarded": 0
+    },
+    {
+      "id": "button-native-enter-activation",
+      "target": "mirror-button",
+      "key": "Enter",
+      "modifiers": {},
+      "prevented": false,
+      "forwarded": 0
+    },
+    {
+      "id": "button-native-space-activation",
+      "target": "mirror-button",
+      "key": " ",
+      "modifiers": {},
+      "prevented": false,
+      "forwarded": 0
+    },
+    {
+      "id": "button-shell-shortcut",
+      "target": "mirror-button",
+      "key": "p",
+      "modifiers": {
+        "meta": true
+      },
+      "prevented": false,
+      "forwarded": 2
+    },
+    {
+      "id": "input-native-typing",
+      "target": "mirror-input",
+      "key": "a",
+      "modifiers": {},
+      "prevented": false,
+      "forwarded": 0
+    },
+    {
+      "id": "input-native-undo",
+      "target": "mirror-input",
+      "key": "z",
+      "modifiers": {
+        "meta": true
+      },
+      "prevented": false,
+      "forwarded": 0
+    },
+    {
+      "id": "input-editing-blocks-shell-shortcut",
+      "target": "mirror-input",
+      "key": "f",
+      "modifiers": {
+        "ctrl": true,
+        "meta": true
+      },
+      "prevented": false,
+      "forwarded": 0
+    },
+    {
+      "id": "input-modifier-release",
+      "target": "mirror-input",
+      "key": "Meta",
+      "modifiers": {},
+      "prevented": false,
+      "forwarded": 2
+    },
+    {
+      "id": "combobox-retained-selection",
+      "target": "mirror-combobox",
+      "key": "ArrowDown",
+      "modifiers": {},
+      "prevented": false,
+      "forwarded": 2
+    },
+    {
+      "id": "combobox-retained-commit",
+      "target": "mirror-combobox",
+      "key": "Enter",
+      "modifiers": {},
+      "prevented": false,
+      "forwarded": 2
+    },
+    {
+      "id": "combobox-retained-space",
+      "target": "mirror-combobox",
+      "key": " ",
+      "modifiers": {},
+      "prevented": false,
+      "forwarded": 2
+    },
+    {
+      "id": "combobox-retained-typeahead",
+      "target": "mirror-combobox",
+      "key": "d",
+      "modifiers": {},
+      "prevented": false,
+      "forwarded": 2
+    },
+    {
+      "id": "combobox-native-tab-focus",
+      "target": "mirror-combobox",
+      "key": "Tab",
+      "modifiers": {},
+      "prevented": false,
+      "forwarded": 0
+    },
+    {
+      "id": "editable-combobox-native-text",
+      "target": "mirror-editable-combobox",
+      "key": "ä",
+      "modifiers": {},
+      "prevented": false,
+      "forwarded": 0
+    },
+    {
+      "id": "editable-combobox-retained-down",
+      "target": "mirror-editable-combobox",
+      "key": "ArrowDown",
+      "modifiers": {},
+      "prevented": false,
+      "forwarded": 2
+    },
+    {
+      "id": "editable-combobox-retained-up",
+      "target": "mirror-editable-combobox",
+      "key": "ArrowUp",
+      "modifiers": {},
+      "prevented": false,
+      "forwarded": 2
+    },
+    {
+      "id": "editable-combobox-retained-enter",
+      "target": "mirror-editable-combobox",
+      "key": "Enter",
+      "modifiers": {},
+      "prevented": false,
+      "forwarded": 2
+    },
+    {
+      "id": "editable-combobox-retained-escape",
+      "target": "mirror-editable-combobox",
+      "key": "Escape",
+      "modifiers": {},
+      "prevented": false,
+      "forwarded": 2
+    },
+    {
+      "id": "editable-combobox-native-tab",
+      "target": "mirror-editable-combobox",
+      "key": "Tab",
+      "modifiers": {},
+      "prevented": false,
+      "forwarded": 0
+    },
+    {
+      "id": "outside-shell",
+      "target": "outside",
+      "key": "f",
+      "modifiers": {
+        "ctrl": true,
+        "meta": true
+      },
+      "prevented": false,
+      "forwarded": 0
+    },
+    {
+      "id": "consumed-mirror-shortcut",
+      "target": "mirror-tree",
+      "key": "f",
+      "modifiers": {
+        "ctrl": true,
+        "meta": true
+      },
+      "prevented": true,
+      "forwarded": 0
+    }
+  ],
+  "focusLossCases": [
+    {
+      "id": "reset-modifiers-on-outside-focus",
+      "loss": "outside-focus",
+      "releasedKeys": [
+        "Control",
+        "Meta",
+        "Alt",
+        "Shift"
+      ],
+      "expectedModifiers": {
+        "ctrl": false,
+        "meta": false,
+        "alt": false,
+        "shift": false
+      }
+    },
+    {
+      "id": "reset-modifiers-on-window-blur",
+      "loss": "window-blur",
+      "releasedKeys": [
+        "Control",
+        "Meta",
+        "Alt",
+        "Shift"
+      ],
+      "expectedModifiers": {
+        "ctrl": false,
+        "meta": false,
+        "alt": false,
+        "shift": false
+      }
+    },
+    {
+      "id": "reset-modifiers-on-hidden-page",
+      "loss": "hidden-page",
+      "releasedKeys": [
+        "Control",
+        "Meta",
+        "Alt",
+        "Shift"
+      ],
+      "expectedModifiers": {
+        "ctrl": false,
+        "meta": false,
+        "alt": false,
+        "shift": false
+      }
+    }
+  ],
+  "fullscreenCases": [
+    {
+      "id": "fullscreen-from-canvas",
+      "focus": "canvas",
+      "expectedOwner": "root",
+      "expectedFocus": "canvas"
+    },
+    {
+      "id": "fullscreen-from-accessible-tree",
+      "focus": "mirror-tree",
+      "expectedOwner": "root",
+      "expectedFocus": "mirror-tree"
+    },
+    {
+      "id": "fullscreen-from-accessible-select",
+      "focus": "mirror-combobox",
+      "expectedOwner": "root",
+      "expectedFocus": "mirror-combobox"
+    }
+  ]
+}

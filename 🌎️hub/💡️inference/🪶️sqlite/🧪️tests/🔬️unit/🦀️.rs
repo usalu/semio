@@ -280,12 +280,15 @@ async fn gis_inference_sqlite_prepared_approval_survives_restart_and_reconciles_
     assert!(ledger.pending_approvals(None, &super::super::InferenceOperationControlV1::new(1000, 5).unwrap()).unwrap().rows.is_empty());
     drop(ledger);
     let reopened = InferenceJobLedgerV1::open(&path).unwrap();
-    let control = super::super::InferenceOperationControlV1::new(1000, 5).unwrap();
-    assert!(reopened.pending_approvals(None, &control).unwrap().rows.is_empty(), "an abandoned request survives restart without blocking the document");
+    // ⏱️ One operation control bounds ONE query: its 1 000 ms lifetime is an `Instant` deadline, so
+    // sharing a single control across the restart, the WAL witness build and the reconciliation
+    // measures fleet wall clock instead of bounding a read, and answers `Expired` on load alone.
+    let control = || super::super::InferenceOperationControlV1::new(1000, 5).unwrap();
+    assert!(reopened.pending_approvals(None, &control()).unwrap().rows.is_empty(), "an abandoned request survives restart without blocking the document");
     let revived = reopened.prepare_approval(&receipt.job_id, &selected, &hash, &command, 1006).unwrap();
     assert_eq!((revived.mutation_id.as_str(), revived.command_hash.as_str(), revived.proposal_hash.as_str()), (prepared.mutation_id.as_str(), prepared.command_hash.as_str(), prepared.proposal_hash.as_str()));
     assert_eq!(revived.prepared_at_ms, 1006);
-    let pending = reopened.pending_approvals(None, &control).unwrap();
+    let pending = reopened.pending_approvals(None, &control()).unwrap();
     assert_eq!(pending.rows.len() as u64, outbox["preparedCount"].as_u64().unwrap());
     assert_eq!(pending.rows[0].mutation_id, prepared.mutation_id);
     assert_eq!(pending.rows[0].command.as_slice(), command.as_slice());
@@ -306,7 +309,9 @@ async fn gis_inference_sqlite_prepared_approval_survives_restart_and_reconciles_
         let descriptor_digest = selected.descriptor_digest.clone();
         let after_base_digest = "11".repeat(32);
         assert_eq!(reopened.reconcile_committed_approval(&receipt.job_id, &witness, 18, &frontier, &descriptor_digest, &after_base_digest, receipt.expires_at_ms).map(|value| value.applied), Err(InferenceErrorV1::Conflict));
-        let reconciled = reopened.reconcile_committed_approval(&receipt.job_id, &witness, 17, &frontier, &descriptor_digest, &after_base_digest, receipt.expires_at_ms).unwrap();
+        let reconciled = reopened
+            .reconcile_committed_approval(&receipt.job_id, &witness, 17, &frontier, &descriptor_digest, &after_base_digest, receipt.expires_at_ms)
+            .unwrap_or_else(|error| panic!("the reopened ledger reconciles its own prepared approval exactly once, got {error:?} refused as {:?} / {:?}", last_approval_reconciliation_conflict(), super::super::wal::last_committed_witness_mismatch()));
         assert!(reconciled.applied);
         let recovered = reopened.reconcile_request(&selected.request.request_id, &reader(&selected), receipt.expires_at_ms).unwrap().unwrap();
         assert!(recovered.page.expired);
@@ -338,7 +343,7 @@ async fn gis_inference_sqlite_prepared_approval_survives_restart_and_reconciles_
         );
         fence.invalidate();
         assert_eq!(reopened.reconcile_committed_approval(&receipt.job_id, &witness, 17, &frontier, &descriptor_digest, &after_base_digest, receipt.expires_at_ms).map(|value| value.applied), Err(InferenceErrorV1::Conflict));
-        assert!(reopened.pending_approvals(None, &control).unwrap().rows.is_empty());
+        assert!(reopened.pending_approvals(None, &control()).unwrap().rows.is_empty());
         assert_eq!(
             reopened.abandon_prepared_approval(&reader(&selected), &receipt.job_id, &prepared.mutation_id, &prepared.command_hash, &prepared.proposal_hash),
             Err(InferenceErrorV1::Conflict),

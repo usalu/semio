@@ -46,6 +46,7 @@ pub(super) async fn fixture_app(id: &str, dialect: semio_framework::ArtifactDial
         }),
         panel_tabs: Vec::new(),
         keybindings: Vec::new(),
+        actions: Vec::new(),
         utilities: Vec::new(),
         tools: Vec::new(),
         commands: Vec::new(),

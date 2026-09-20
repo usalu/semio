@@ -80,7 +80,7 @@ fn paint_overlay(surface: &str, document: &UiDocumentLease, rect: Rect) -> Paint
     for _ in 0..SHELL_WINDOW_PAINT_OPPORTUNITIES.min(1 << 20) {
         let mut ctx = framework_widget_context(&mut draw, None, &mut atlas, Some(&icons), &mut input, &theme, &mut scroll, &mut collapsed, &mut selects, None, 0.0);
         let mut hosts = crate::scenes::SceneEngineHosts { world3d_states: &mut world3d_states, world_resources: &mut world_resources, window_id: surface };
-        if render_ui_document_step(&mut cursor, document, rect, &mut ctx, surface, "puzzle3d", &mut hosts) {
+        if render_ui_document_step(&mut cursor, document, rect, &mut ctx, surface, "puzzle3d", ui_wgpu::wgpu::UiDriverDrag::Handle, &mut hosts) {
             complete = true;
             break;
         }

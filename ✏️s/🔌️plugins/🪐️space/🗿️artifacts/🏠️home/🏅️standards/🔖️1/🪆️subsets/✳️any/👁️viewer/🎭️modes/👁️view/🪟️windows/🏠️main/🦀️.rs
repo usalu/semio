@@ -72,8 +72,13 @@ pub fn render(directory: &store::os_directory::DirectoryReadModel, view_state: &
     let labels = semio_framework_plugin::resolve_labels::<HomeTableLabels>(view_state);
     // 🌉️ `crate::home_space_rows` is a plugin-root async fn (outside this lease); `render` must
     // stay sync (called synchronously by `HomeViewer::render`) — bridged via `resolve_ready`.
-    let identity = crate::home_session_identity(view_state).ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("s.home.session-identity-required", "current host session identity is required"))?;
-    let rows = semio_framework_plugin::resolve_ready(crate::home_space_rows(directory, &identity.user_id));
+    // 🪪️ Signed out is a state, not a fault — the editor's twin of this window carries the full
+    // reasoning. A signed-out human owns no spaces, so this publishes the same table empty instead of
+    // declining to render the product's landing window.
+    let rows = match crate::home_session_identity(view_state) {
+        Some(identity) => semio_framework_plugin::resolve_ready(crate::home_space_rows(directory, &identity.user_id)),
+        None => Vec::new(),
+    };
     render_rows(&rows, labels)
 }
 //#endregion 🔖️Render

@@ -38,7 +38,13 @@
       "gumballActive": false,
       "gumballTarget": null,
       "transformMode": null,
-      "activeUtility": "brush"
+      "activeUtility": "brush",
+      "showEdges": null,
+      "selectionMode": "mesh",
+      "componentIds": [],
+      "targets": null,
+      "hoveredComponent": null,
+      "gumballConfig": null
     },
     "guestPublished": {
       "why": "data-guest-selection-json is the guest's OWN unmerged lane. On this exact fixture the pane PAINTS seed-left-001 while the guest sent nothing, and before wave B23 no attribute anywhere separated those two readings — which is why six waves could not tell 'the guest lost the pick' from 'the host is painting it for the guest'.",

@@ -5,6 +5,6 @@ use crate::standards::v1::subsets::image::schema::mutations::set_icc;
 
 /// ▶️ Applies a set-icc mutation (`icc: None` clears the embedded profile).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn apply(snapshot: &mut SemioImageSnapshot, icc: Option<Vec<u8>>) -> SemioImageDiff {
+pub fn apply(snapshot: &mut SemioImageSnapshot, icc: Option<Vec<u8>>) -> protocol::MutationOutcome<SemioImageDiff> {
     apply_semio_image_mutation(snapshot, &SemioImageMutation::SetIcc(set_icc::SetIcc { icc }))
 }

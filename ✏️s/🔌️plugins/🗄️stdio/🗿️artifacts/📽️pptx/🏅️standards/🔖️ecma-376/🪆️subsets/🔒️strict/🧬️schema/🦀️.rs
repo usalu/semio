@@ -126,11 +126,6 @@ pub mod derived_analysis {
     }
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn part_text<'a>(opc: &'a OpcPackage, path: &str) -> Option<&'a str> {
-        opc.part_bytes(path).and_then(|b| std::str::from_utf8(b).ok())
-    }
-
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn hard(code: &'static str, message: String) -> Diagnostic {
         Diagnostic { code: FaultCode::new(code), severity: Severity::Error, span: TextSpan::at(1, 1), message, expected: None, scope: FaultScope::default() }
     }
@@ -150,7 +145,7 @@ pub mod derived_analysis {
         let mut out = Vec::new();
 
         match main_part_path(opc) {
-            Some(path) => match part_text(opc, &path) {
+            Some(path) => match snapshot.part_text(&path) {
                 Some(text) => {
                     if !text.contains(STRICT_MAIN_NS) {
                         out.push(hard(CODE_MAIN_NS, format!("root officeDocument part {path} does not declare the Strict PresentationML main namespace ({STRICT_MAIN_NS})")));
@@ -164,16 +159,15 @@ pub mod derived_analysis {
             None => out.push(hard(CODE_MAIN_NS, "package has no resolvable officeDocument relationship -- cannot verify the Strict PresentationML main namespace".into())),
         }
 
-        for part in &opc.parts {
-            let Some(text) = std::str::from_utf8(&part.bytes).ok() else { continue };
+        for (path, text) in snapshot.part_texts() {
             if text.contains(TRANSITIONAL_MAIN_NS) || text.contains(TRANSITIONAL_DRAWING_NS) {
-                out.push(hard(CODE_TRANSITIONAL_NS_PRESENT, format!("part {} declares a Transitional OOXML main namespace -- ISO/IEC 29500-1 Strict forbids it", part.path)));
+                out.push(hard(CODE_TRANSITIONAL_NS_PRESENT, format!("part {path} declares a Transitional OOXML main namespace -- ISO/IEC 29500-1 Strict forbids it")));
             }
             if text.contains(VML_NS) {
-                out.push(hard(CODE_VML_PRESENT, format!("part {} contains VML markup ({VML_NS}) -- ISO/IEC 29500-1 Strict forbids VML", part.path)));
+                out.push(hard(CODE_VML_PRESENT, format!("part {path} contains VML markup ({VML_NS}) -- ISO/IEC 29500-1 Strict forbids VML")));
             }
             if text.contains("mc:AlternateContent") {
-                out.push(soft(CODE_ALTERNATE_CONTENT, format!("part {} contains mc:AlternateContent markup-compatibility escape hatch", part.path)));
+                out.push(soft(CODE_ALTERNATE_CONTENT, format!("part {path} contains mc:AlternateContent markup-compatibility escape hatch")));
             }
         }
 

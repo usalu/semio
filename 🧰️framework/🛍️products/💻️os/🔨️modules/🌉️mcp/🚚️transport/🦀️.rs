@@ -147,9 +147,34 @@ pub struct StdioTransport<L: Write> {
     elicitation: Option<ElicitationSlot>,
 }
 
+/// 📤️ The stdio connection's server→client notification lane — the SAME [`StdioLines`] owner the
+/// serve loop and an in-flight `elicitation/create` write through, so a `notifications/progress`
+/// emitted from inside a tool call reaches the client's stdin mid-call rather than after it
+/// (`📓️m4-mcp-bridge-approval-binding.md` §5.3 built that single-owner channel; this rides it).
+struct StdioNotificationSink {
+    lines: Arc<StdioLines>,
+}
+
+impl crate::notify::NotificationSink for StdioNotificationSink {
+    fn publish(&self, notification: JsonRpcNotification) {
+        if let Ok(line) = serde_json::to_string(&notification) {
+            let _ = self.lines.write_line(&line);
+        }
+    }
+}
+
 impl<L: Write> StdioTransport<L> {
     pub fn new(input: impl BufRead + Send + 'static, output: impl Write + Send + 'static, log: L) -> Self {
         Self { lines: Arc::new(StdioLines::new(Box::new(input), Box::new(output))), log, elicitation: None }
+    }
+
+    /// 📤️ Fills `slot` with this connection's notification sink, so an [`McpServer`] built with
+    /// `publishing_notifications_into(slot)` pushes `resources/updated`, `resources/list_changed`
+    /// and `progress` down the very descriptors this transport owns.
+    #[must_use]
+    pub fn publishing_notifications_into(self, slot: crate::notify::NotificationSlot) -> Self {
+        let _ = slot.set(Arc::new(StdioNotificationSink { lines: self.lines.clone() }));
+        self
     }
 
     /// 🙋 Publishes this connection's server→client request channel into `slot`, so the approval
@@ -482,6 +507,15 @@ impl HttpEventPublisher {
     }
 }
 
+/// 📤️ The HTTP connection's server→client notification lane: the very [`EventLog`] the resumable
+/// `GET` stream replays from, so `resources/updated`/`progress` reach an HTTP client through the one
+/// mechanism this transport already had for server-initiated frames.
+impl crate::notify::NotificationSink for HttpEventPublisher {
+    fn publish(&self, notification: JsonRpcNotification) {
+        self.push(notification);
+    }
+}
+
 #[derive(Clone)]
 struct HttpState {
     /// 🕳️ `None` on a bridge-only listener: that socket serves `/bridge` and answers 404 for `/mcp`.
@@ -502,11 +536,22 @@ struct HttpState {
 pub struct HttpTransport {
     options: HttpTransportOptions,
     bridge_slot: Option<crate::ui::BridgeSlot>,
+    notification_slot: Option<crate::notify::NotificationSlot>,
 }
 
 impl HttpTransport {
     pub fn new(options: HttpTransportOptions) -> Self {
-        Self { options, bridge_slot: None }
+        Self { options, bridge_slot: None, notification_slot: None }
+    }
+
+    /// 📤️ Publishes this transport's event log as the server→client notification sink, so an
+    /// [`McpServer`] built with `publishing_notifications_into(slot)` reaches HTTP clients through
+    /// the same resumable stream the `GET` handler replays. Filled on `start`, because the log the
+    /// running transport uses does not exist until then.
+    #[must_use]
+    pub fn publishing_notifications_into(mut self, slot: crate::notify::NotificationSlot) -> Self {
+        self.notification_slot = Some(slot);
+        self
     }
 
     /// 🔌️ Publishes the `/bridge` handle this transport mints on `start` into `slot`, so the tool
@@ -557,6 +602,9 @@ impl HttpTransport {
         let cores = std::thread::available_parallelism().map_or(1, std::num::NonZeroUsize::get);
         let pool = semio_framework_async::process_worker_pool(WorkerPoolConfig::new(ProcessKind::InteractiveNative, cores));
         let events = Arc::new(Mutex::new(EventLog::default()));
+        if let Some(slot) = self.notification_slot.as_ref() {
+            let _ = slot.set(Arc::new(HttpEventPublisher { events: events.clone() }));
+        }
         let bridge = crate::bridge::BridgeHandle::with_pool(pool.clone());
         if let Some(slot) = self.bridge_slot.as_ref() {
             let _ = slot.set(Arc::new(bridge.clone()));
@@ -1367,7 +1415,7 @@ impl HttpTransportState {
                         if opening && kind != crate::bridge::ShellFrameKind::Hello {
                             return ConnectionTurn::Terminal(HttpTerminalReason::Malformed);
                         }
-                        if !opening && matches!(kind, crate::bridge::ShellFrameKind::Hello | crate::bridge::ShellFrameKind::AppFrames) {
+                        if !opening && kind == crate::bridge::ShellFrameKind::Hello {
                             return ConnectionTurn::Terminal(HttpTerminalReason::Unsupported);
                         }
                         inbound.phase = BridgeInboundPhase::Materialize(crate::bridge::ShellToGatewayMaterializeCursor::new(frame));
@@ -1388,9 +1436,10 @@ impl HttpTransportState {
         };
         let consumed = connection.bridge.inbound.as_ref().expect("bridge inbound cursor disappeared").frame.consumed;
         match message {
-            crate::bridge::ShellToGateway::Hello { .. } if connection.bridge.opening => {
+            crate::bridge::ShellToGateway::Hello { flags, .. } if connection.bridge.opening => {
                 self.consume_websocket_ingress(connection, consumed);
                 let (id, outbox) = self.bridge.register();
+                self.bridge.record_hello(id, flags);
                 connection.bridge.id = Some(id);
                 connection.bridge.outbox = Some(outbox);
                 connection.bridge.opening = false;
@@ -1415,13 +1464,18 @@ impl HttpTransportState {
             | crate::bridge::ShellToGateway::AgentMessage { .. }
             // 🛑️ A cancel for a running tool call — `BridgeHandle::record` routes it to the one
             // process-wide job registry rather than to this connection's own state.
-            | crate::bridge::ShellToGateway::AgentCancel { .. }) => {
+            | crate::bridge::ShellToGateway::AgentCancel { .. }
+            // 🗿️ The shell's reply to a `GatewayToShell::AppCommand` — the artifact route's own
+            // response frame. It used to terminate the connection as `Unsupported` (nothing on the
+            // gateway had ever sent an `AppCommand`, so nothing could answer one); `🐚️channel`'s
+            // `ShellArtifactChannel` is the consumer that makes it a real reply.
+            | crate::bridge::ShellToGateway::AppFrames { .. }) => {
                 let Some(id) = connection.bridge.id else { return ConnectionTurn::Terminal(HttpTerminalReason::Malformed) };
                 self.consume_websocket_ingress(connection, consumed);
                 self.bridge.record(id, message);
                 ConnectionTurn::Keep(HttpConnectionPhase::DrainBridgeOutbox)
             }
-            crate::bridge::ShellToGateway::Hello { .. } | crate::bridge::ShellToGateway::AppFrames { .. } => ConnectionTurn::Terminal(HttpTerminalReason::Unsupported),
+            crate::bridge::ShellToGateway::Hello { .. } => ConnectionTurn::Terminal(HttpTerminalReason::Unsupported),
         }
     }
 

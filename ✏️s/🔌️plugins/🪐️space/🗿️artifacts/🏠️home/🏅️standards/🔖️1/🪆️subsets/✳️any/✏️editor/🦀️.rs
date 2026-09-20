@@ -60,15 +60,31 @@ app_commands! {
 
 //#region 🧵️RetainedCommands
 const HOME_RETAINED_TOOL_IDS: &[&str] = &[
-    "openSpace", "navigateVirtualFileSystemNode", "goHome", "createSpace", "deleteSpace", "shareSpace", "manageSpace", "copyInviteLink", "presenceHeartbeat",
+    "applyDirectoryEventPage", "createStudio", "openSpace", "navigateVirtualFileSystemNode", "goHome", "createSpace", "deleteSpace", "shareSpace", "manageSpace", "copyInviteLink", "presenceHeartbeat",
 ];
 const HOME_RETAINED_PAYLOAD_SCHEMA: &str = "space.home.tool-command.v1";
 const HOME_RETAINED_RAW_BYTES: usize = 128 * 1024;
 const HOME_RETAINED_SCALAR_BYTES: usize = semio_framework::PUBLIC_INVOCATION_STRING_BYTES;
 const HOME_RETAINED_WORK_ITEMS: usize = 1;
-const HOME_CONFIG_BASE_BYTES: usize = 4 * 1024 * 1024;
-const HOME_CONFIG_STEP_BYTES: usize = 16 * 1024 * 1024;
+/// 📏️ Home's config lane is a ONE-ITEM retained lane, and `ArtifactStoreOneItemFootprint::is_admissible`
+/// refuses any item declaring more than [`store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES`] (1 MiB). These
+/// two constants were 4 MiB and 16 MiB, so `HomeConfigPreparationFactory::preflight`'s footprint could
+/// never be admitted and every retained config gesture died with "one-item preparation footprint exceeds
+/// its fixed item or byte capacity" — invisible while `applyDirectoryEventPage` and `foldDirectoryEvents`
+/// were `BatchOnlyPendingRewrite` and therefore never reached this lane at all (ticket 26/09/18 S4).
+/// The directory projection they carry is a few KiB for an ordinary hub, and the hub pages it, so the
+/// store's own ceiling is the honest budget rather than an aspirational one.
+const HOME_CONFIG_BASE_BYTES: usize = store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES;
+const HOME_CONFIG_STEP_BYTES: usize = store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES;
 const HOME_RETAINED_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] = &[
+    // 🛣️ These two are the only Home routes that WRITE: the typed-operation terminal refuses any emit
+    // whose store lane is absent from this contract ("typed-operation emitted a store lane absent from
+    // its exact factory publication contract"), so `HostOnly` — which declares no store lane at all and
+    // is right for the nine pure-`Effect` relays below — is wrong for them.
+    // `applyDirectoryEventPage` replaces the directory projection in the CONFIG store;
+    // `createStudio` bumps the catalog generation in the ARTIFACT store.
+    ArtifactToolPublicationContract { tool_id: "applyDirectoryEventPage", lanes: &[ArtifactToolPublicationLane::Config] },
+    ArtifactToolPublicationContract { tool_id: "createStudio", lanes: &[ArtifactToolPublicationLane::Artifact] },
     ArtifactToolPublicationContract { tool_id: "openSpace", lanes: &[ArtifactToolPublicationLane::HostOnly] },
     ArtifactToolPublicationContract { tool_id: "navigateVirtualFileSystemNode", lanes: &[ArtifactToolPublicationLane::HostOnly] },
     ArtifactToolPublicationContract { tool_id: "goHome", lanes: &[ArtifactToolPublicationLane::HostOnly] },
@@ -84,25 +100,30 @@ fn home_retained_contract() -> ToolExecutionContract {
     ToolExecutionContract::resumable(HOME_RETAINED_RAW_BYTES, 256, 1, HOME_CONFIG_STEP_BYTES, 7_500, 1, 1)
 }
 
+/// 📏️ Each retained route's admitted extent AND the ceiling it is judged against. Two ceilings, not
+/// one: a public invocation's scalars are capped at [`HOME_RETAINED_SCALAR_BYTES`], but one sealed
+/// directory page is a `HostOnly` machine payload whose only real bound is the retained wire budget
+/// [`HOME_RETAINED_RAW_BYTES`] — the hub pages it with `hasMore`, so a page is bounded by
+/// construction and capping it at 4 KiB would refuse ordinary pages of a dozen spaces.
 fn home_retained_extent(command: &HomeCommand, _snapshot: &SHomeSnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
-    let admitted = match command {
-        HomeCommand::OpenSpace(payload) => payload.space_id.len(),
-        HomeCommand::NavigateVirtualFileSystemNode(payload) => payload.node_id.len(),
-        HomeCommand::GoHome(_) | HomeCommand::PresenceHeartbeat(_) => 0,
-        HomeCommand::CreateSpace(payload) => payload.name.len().saturating_add(payload.kind.len()).saturating_add(payload.visibility.len()),
-        HomeCommand::DeleteSpace(payload) => payload.space_id.len(),
-        HomeCommand::ShareSpace(payload) => payload.space_id.len().saturating_add(payload.email.len()).saturating_add(payload.role.len()),
-        HomeCommand::ManageSpace(payload) => payload.space_id.len(),
-        HomeCommand::CopyInviteLink(payload) => payload.space_id.len().saturating_add(payload.role.len()),
-        HomeCommand::ApplyDirectoryEventPage(_)
-        | HomeCommand::CreateStudio(_)
-        | HomeCommand::BindSpaceFile(_)
+    let (admitted, ceiling) = match command {
+        HomeCommand::OpenSpace(payload) => (payload.space_id.len(), HOME_RETAINED_SCALAR_BYTES),
+        HomeCommand::NavigateVirtualFileSystemNode(payload) => (payload.node_id.len(), HOME_RETAINED_SCALAR_BYTES),
+        HomeCommand::GoHome(_) | HomeCommand::PresenceHeartbeat(_) => (0, HOME_RETAINED_SCALAR_BYTES),
+        HomeCommand::CreateSpace(payload) => (payload.name.len().saturating_add(payload.kind.len()).saturating_add(payload.visibility.len()), HOME_RETAINED_SCALAR_BYTES),
+        HomeCommand::DeleteSpace(payload) => (payload.space_id.len(), HOME_RETAINED_SCALAR_BYTES),
+        HomeCommand::ShareSpace(payload) => (payload.space_id.len().saturating_add(payload.email.len()).saturating_add(payload.role.len()), HOME_RETAINED_SCALAR_BYTES),
+        HomeCommand::ManageSpace(payload) => (payload.space_id.len(), HOME_RETAINED_SCALAR_BYTES),
+        HomeCommand::CopyInviteLink(payload) => (payload.space_id.len().saturating_add(payload.role.len()), HOME_RETAINED_SCALAR_BYTES),
+        HomeCommand::CreateStudio(payload) => (payload.name.len().saturating_add(payload.kind.len()).saturating_add(payload.folder_path.as_ref().map_or(0, String::len)), HOME_RETAINED_SCALAR_BYTES),
+        HomeCommand::ApplyDirectoryEventPage(payload) => (payload.page_json.len(), HOME_RETAINED_RAW_BYTES),
+        HomeCommand::BindSpaceFile(_)
         | HomeCommand::ImportSpace(_)
         | HomeCommand::DeleteVirtualFileSystemNode(_)
         | HomeCommand::RenameSpace(_)
         | HomeCommand::FoldDirectoryEvents(_) => return None,
     };
-    (admitted <= HOME_RETAINED_SCALAR_BYTES).then_some(HOME_RETAINED_WORK_ITEMS)
+    (admitted <= ceiling).then_some(HOME_RETAINED_WORK_ITEMS)
 }
 
 #[expect(clippy::too_many_arguments, reason = "ArtifactCommandReducer requires the eight operation, document, configuration, history, and interaction inputs.")]
@@ -116,11 +137,19 @@ fn home_retained_reduce(
     context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<HomeApp>>>,
     operation: &AppOperationContext,
 ) -> Result<Emit<crate::standards::v1::subsets::any::schema::mutations::text::SHomeMutation, HomeConfigMutation, NoDraftMutation>, Fault> {
-    require_session_identity(context.and_then(|context| context.view_state.as_ref()))?;
+    let identity = require_session_identity(context.and_then(|context| context.view_state.as_ref()))?;
     if home_retained_extent(command, snapshot, _interaction).is_none() {
         return Err(Fault::from("space-home-retained-route-mismatch"));
     }
-    command.dispatch(&ArtifactView::with_operation(snapshot, history, operation.clone()), &ConfigView { snapshot: config, window: None })
+    let doc = ArtifactView::with_operation(snapshot, history, operation.clone());
+    let cfg = ConfigView { snapshot: config, window: None };
+    // 🪪️ `createStudio` is the one retained route whose handler needs the signed-in human (it names
+    // the studio's owner), exactly as the direct `ArtifactEditor::handle` lane routes it — the
+    // identity-less `create_studio::handle` answers `s.home.session-identity-required` by design.
+    match command {
+        HomeCommand::CreateStudio(payload) => create_studio::handle_with_identity(payload, &doc, &cfg, identity),
+        _ => command.dispatch(&doc, &cfg),
+    }
 }
 
 pub struct HomeRetainedCommandJobFactory { keys: Vec<ToolFactoryKey> }
@@ -378,7 +407,7 @@ impl ArtifactEditor for HomeApp {
         factory: "HomeRetainedCommandJobFactory",
         factory_type: HomeRetainedCommandJobFactory,
         contract: home_retained_contract(),
-        tools: ["openSpace", "navigateVirtualFileSystemNode", "goHome", "createSpace", "deleteSpace", "shareSpace", "manageSpace", "copyInviteLink", "presenceHeartbeat"]
+        tools: ["applyDirectoryEventPage", "createStudio", "openSpace", "navigateVirtualFileSystemNode", "goHome", "createSpace", "deleteSpace", "shareSpace", "manageSpace", "copyInviteLink", "presenceHeartbeat"]
     }
 
     fn build_document_store_owners() -> Option<store::DocumentStoreOwners<Self::Snapshot, Self::Mutation>> {
@@ -387,6 +416,29 @@ impl ArtifactEditor for HomeApp {
 
     fn build_document_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
         Some(semio_framework_plugin::bounded_document_store_disposer::<Self::Snapshot, Self::Mutation>())
+    }
+
+    /// ♻️ Home OWNS a config store — `HomeConfigPreparationFactory` above, and every directory
+    /// projection lands in it — so closing an instance needs that lane's owners AND its disposer, one
+    /// declaration in two halves. Unlike the viewer wrapper, `EditorApp` installs no default
+    /// (`🔌️plugin/🦀️.rs:32854` forwards `E`'s answer unchanged), so an editor that omits either half
+    /// answers `interactive-job.close-owned-disposer-missing` and then `artifact store has no
+    /// owner-supplied bounded disposer` on every close. Found by ticket 26/09/18 S4 the moment a
+    /// `createStudio` dispatch got far enough to reach the close ladder.
+    fn build_config_store_owners() -> Option<store::DocumentStoreOwners<Self::Config, Self::ConfigMutation>> {
+        Some(semio_framework_plugin::bounded_config_store_owners::<Self::Config, Self::ConfigMutation>())
+    }
+
+    fn build_config_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::Config, Self::ConfigMutation>>>> {
+        Some(semio_framework_plugin::bounded_config_store_disposer::<Self::Config, Self::ConfigMutation>())
+    }
+
+    fn build_draft_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::DraftStore<Self::Draft, Self::DraftMutation>>>> {
+        Some(semio_framework_plugin::no_draft_store_disposer())
+    }
+
+    fn build_transient_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::TransientStore<Self::Transient, Self::TransientMutation>>>> {
+        Some(semio_framework_plugin::no_transient_store_disposer())
     }
 
     fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
@@ -516,8 +568,12 @@ impl ArtifactEditor for HomeApp {
         }
     }
 
+    /// 🪪️ RENDERING is never gated on the signed-in human; only MUTATING is (see `handle` above, which
+    /// keeps `require_session_identity` — a signed-out human genuinely cannot create a studio). This
+    /// gate made the product's landing window refuse to publish for every signed-out visitor, which is
+    /// the ordinary first paint of a hub-configured shell; the window's own render now answers an empty
+    /// space table instead (ticket 26/09/18, S2 §3.4).
     fn render(body_key: &str, _doc: &ArtifactView<'_, SHomeSnapshot>, cfg: &ConfigView<'_, HomeConfig>, view_state: &semio_framework_plugin::ViewModel) -> UiAssemblyResult<ComponentTree> {
-        crate::home_session_identity(view_state).ok_or_else(|| PluginAssemblyError::new("s.home.session-identity-required", "current host session identity is required"))?;
         let root = match body_key {
             crate::editor::home::modes::explore::windows::main::S_HOME_BODY => crate::editor::home::modes::explore::windows::main::render(cfg.snapshot, view_state)?,
             _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}")))
@@ -547,6 +603,7 @@ pub async fn create_home_app() -> semio_framework_plugin::AppDefinition {
         .action_with(semio_framework_plugin::ActionDefinition::new("openSpace", LocalizedLabel::native("Open Studio", "Studio öffnen"), semio_framework_plugin::ActionKind::Shell, "folder-open"))
         .action_with(semio_framework_plugin::ActionDefinition::new("navigateVirtualFileSystemNode", LocalizedLabel::native("Navigate File System Node", "Dateisystemknoten navigieren"), semio_framework_plugin::ActionKind::Shell, "folder"))
         .mutation("deleteVirtualFileSystemNode", LocalizedLabel::native("Delete File System Node", "Dateisystemknoten löschen"))
+        .action_destructive("deleteVirtualFileSystemNode")
         .action_with(semio_framework_plugin::ActionDefinition::new("goHome", LocalizedLabel::native("Go Home", "Zur Startseite"), semio_framework_plugin::ActionKind::Shell, "home"))
         // 🐙️ Ticket 26/08/16/HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-STUDIOS: the overview table's
         // row-scoped actions. Every one of these is a pure `Effect` relay (contract §C6) — never a
@@ -605,7 +662,7 @@ pub async fn create_home_app() -> semio_framework_plugin::AppDefinition {
         .view_action("applyDirectoryEventPage", LocalizedLabel::native("Apply Directory Event Page", "Verzeichnis-Ereignisseite anwenden"))
         .view_action("foldDirectoryEvents", LocalizedLabel::native("Fold Directory Events", "Verzeichnisereignisse einspielen"))
         .view_action("presenceHeartbeat", LocalizedLabel::native("Presence Heartbeat", "Präsenz-Heartbeat"))
-        .action_interactive_job("createStudio", InteractiveJobClassification::BatchOnlyPendingRewrite)
+        .action_interactive_job("createStudio", InteractiveJobClassification::Migrated)
         .action_interactive_job("bindSpaceFile", InteractiveJobClassification::BatchOnlyPendingRewrite)
         .action_interactive_job("importSpace", InteractiveJobClassification::BatchOnlyPendingRewrite)
         .action_interactive_job("openSpace", InteractiveJobClassification::Migrated)
@@ -618,7 +675,7 @@ pub async fn create_home_app() -> semio_framework_plugin::AppDefinition {
         .action_interactive_job("shareSpace", InteractiveJobClassification::Migrated)
         .action_interactive_job("manageSpace", InteractiveJobClassification::Migrated)
         .action_interactive_job("copyInviteLink", InteractiveJobClassification::Migrated)
-        .action_interactive_job("applyDirectoryEventPage", InteractiveJobClassification::BatchOnlyPendingRewrite)
+        .action_interactive_job("applyDirectoryEventPage", InteractiveJobClassification::Migrated)
         .action_interactive_job("foldDirectoryEvents", InteractiveJobClassification::BatchOnlyPendingRewrite)
         .action_interactive_job("presenceHeartbeat", InteractiveJobClassification::Migrated)
         .window_kind_action_refs(crate::editor::home::modes::explore::windows::main::S_HOME_WINDOW, vec![

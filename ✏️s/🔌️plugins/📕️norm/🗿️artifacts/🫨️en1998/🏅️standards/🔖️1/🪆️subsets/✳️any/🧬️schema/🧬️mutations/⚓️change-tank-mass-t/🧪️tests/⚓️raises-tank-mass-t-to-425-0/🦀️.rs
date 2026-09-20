@@ -67,7 +67,7 @@ async fn change_tank_mass_t_committed_json_is_canonical() {
     }
     let reencoded = serde_json::to_value(mutation()).expect("change-tank-mass-t mutation encodes");
     let original: serde_json::Value = serde_json::from_str(MUTATION).expect("change-tank-mass-t mutation reparses");
-    assert_eq!(reencoded, original, "change-tank-mass-t/raises-tank-mass-t-to-425-0: committed mutation JSON is not the canonical externally-tagged ChangeTankMassT form carrying newTankMassT");
+    assert_eq!(reencoded, original, "change-tank-mass-t/raises-tank-mass-t-to-425-0: committed mutation JSON is not the canonical internally-tagged ChangeTankMassT form carrying mutation and newTankMassT");
 }
 
 /// 🎯️ The declared outcome holds: `change-tank-mass-t` at 425.0 is applied, not rejected, and carries no

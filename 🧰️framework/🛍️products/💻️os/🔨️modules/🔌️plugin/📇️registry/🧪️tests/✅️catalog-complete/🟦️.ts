@@ -519,17 +519,17 @@ describe("strict plugin catalog completion", () => {
     expect(coverage, coverage.join("\n")).toEqual([]);
   });
 
-  it("every manifest example row carries artifactJson so setActiveExample can load a document", () => {
+  it("every manifest example row carries a body — inline artifactJson, or a declared example-body asset once the body is over the inline ceiling — so setActiveExample can load a document", () => {
     const pluginsRoot = join(getWorkspaceRoot(), "✏️s/🔌️plugins");
     const payload: string[] = [];
     for (const entry of readdirSync(pluginsRoot, { withFileTypes: true })) {
       if (!entry.isDirectory()) continue;
       const descriptorPath = join(pluginsRoot, entry.name, "🔣️.json");
       if (!existsSync(descriptorPath)) continue;
-      const descriptor = JSON.parse(readFileSync(descriptorPath, "utf8")) as { manifest?: PluginManifest };
+      const descriptor = JSON.parse(readFileSync(descriptorPath, "utf8")) as { manifest?: PluginManifest; assets?: { name?: string }[] };
       const manifest = descriptor.manifest;
       if (!manifest?.pluginId) continue;
-      payload.push(...auditNavbarExampleArtifactPayload(manifest));
+      payload.push(...auditNavbarExampleArtifactPayload(manifest, descriptor.assets ?? []));
     }
     expect(payload, payload.join("\n")).toEqual([]);
   });

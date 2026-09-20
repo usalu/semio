@@ -1,0 +1,241 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/ui/dock-axis-geometry-v1.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "separatorToken",
+    "canvasInsetToken",
+    "windowBodyInlineInsetToken",
+    "viewport",
+    "layout",
+    "oracleSample",
+    "resizeOracle",
+    "windowBodyBlockInset",
+    "panelChrome"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "separatorToken": {
+      "const": "--spacing-single"
+    },
+    "canvasInsetToken": {
+      "const": "--spacing-single"
+    },
+    "viewport": {
+      "$ref": "#/$defs/Extent"
+    },
+    "layout": {
+      "$ref": "#/$defs/Node"
+    },
+    "oracleSample": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "tokenPixels",
+        "stacks"
+      ],
+      "properties": {
+        "tokenPixels": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "stacks": {
+          "type": "object",
+          "minProperties": 1,
+          "additionalProperties": {
+            "$ref": "#/$defs/Rect"
+          }
+        }
+      }
+    },
+    "resizeOracle": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "axisExtentPixels",
+        "deltaPixels",
+        "separatorIndex",
+        "minimumPercent",
+        "beforeWeights",
+        "afterWeights",
+        "expectedSeparatorDeltaPixels"
+      ],
+      "properties": {
+        "axisExtentPixels": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "deltaPixels": {
+          "type": "number"
+        },
+        "separatorIndex": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "minimumPercent": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "exclusiveMaximum": 50
+        },
+        "beforeWeights": {
+          "$ref": "#/$defs/Weights"
+        },
+        "afterWeights": {
+          "$ref": "#/$defs/Weights"
+        },
+        "expectedSeparatorDeltaPixels": {
+          "type": "number"
+        }
+      }
+    },
+    "windowBodyInlineInsetToken": {
+      "const": "--spacing-single"
+    },
+    "windowBodyBlockInset": {
+      "const": "silhouette-clearance"
+    },
+    "panelChrome": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "leadingIconPixels",
+        "dragHandlePixels"
+      ],
+      "properties": {
+        "leadingIconPixels": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "dragHandlePixels": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        }
+      }
+    }
+  },
+  "$defs": {
+    "Extent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "width",
+        "height"
+      ],
+      "properties": {
+        "width": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "height": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        }
+      }
+    },
+    "Rect": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "x",
+        "y",
+        "width",
+        "height"
+      ],
+      "properties": {
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        },
+        "width": {
+          "type": "number",
+          "minimum": 0
+        },
+        "height": {
+          "type": "number",
+          "minimum": 0
+        }
+      }
+    },
+    "WeightedNode": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "weight",
+        "node"
+      ],
+      "properties": {
+        "weight": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "node": {
+          "$ref": "#/$defs/Node"
+        }
+      }
+    },
+    "Weights": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "number",
+        "exclusiveMinimum": 0
+      }
+    },
+    "Stack": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "id"
+      ],
+      "properties": {
+        "kind": {
+          "const": "stack"
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "Axis": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "children"
+      ],
+      "properties": {
+        "kind": {
+          "enum": [
+            "row",
+            "column"
+          ]
+        },
+        "children": {
+          "type": "array",
+          "minItems": 2,
+          "items": {
+            "$ref": "#/$defs/WeightedNode"
+          }
+        }
+      }
+    },
+    "Node": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/Stack"
+        },
+        {
+          "$ref": "#/$defs/Axis"
+        }
+      ]
+    }
+  }
+}

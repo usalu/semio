@@ -167,7 +167,7 @@ async fn command_ids_are_unique_and_match_the_declared_manifest_actions() {
     // calls.
     let definition = create_fem2d_app();
     for id in ids {
-        assert!(definition.window_kinds.iter().flat_map(|window| window.actions.iter()).any(|action| action.id == id), "command_id {id} must be a declared action");
+        assert!(definition.window_kinds.iter().flat_map(|window| semio_framework::window_kind_actions(&definition, window)).any(|action| action.id == id), "command_id {id} must be a declared action");
     }
 }
 
@@ -241,7 +241,7 @@ async fn retained_routes_cover_every_command_exactly_once() {
     for tool_id in FEM2D_RETAINED_TOOL_IDS {
         let contract = Fem2dRetainedCommandJobFactory::PUBLICATION_CONTRACTS.iter().find(|contract| contract.tool_id == *tool_id).unwrap_or_else(|| panic!("publication contract for {tool_id}"));
         assert!(!contract.lanes.is_empty(), "{tool_id} publishes into at least one lane");
-        let action = definition.window_kinds.iter().flat_map(|window| window.actions.iter()).find(|action| action.id == *tool_id).unwrap_or_else(|| panic!("action {tool_id} declared"));
+        let action = definition.window_kinds.iter().flat_map(|window| semio_framework::window_kind_actions(&definition, window)).find(|action| action.id == *tool_id).unwrap_or_else(|| panic!("action {tool_id} declared"));
         assert_eq!(action.semantics.execution.interactive_job, InteractiveJobClassification::Migrated, "{tool_id} must be Migrated to dispatch interactively");
     }
 }

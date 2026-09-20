@@ -19,7 +19,7 @@ use std::sync::atomic::{AtomicIsize, Ordering};
 pub const GUEST_LINEAR_MEMORY_MAXIMUM_BYTES: usize = 536_870_912;
 
 /// 📏️ Shadow stack reserved inside that memory — `stackBytes`, linked in as `wasm-ld -zstack-size`
-/// by the dev plugin build (`🧑‍💻dev/📦️packages/🟦️typescript/📜️script.ts`'s `PLUGIN_WASM_STACK_BYTES`).
+/// by `.cargo/config.toml`'s `[target.wasm32-wasip2]` rustflags.
 pub const GUEST_LINEAR_MEMORY_STACK_BYTES: usize = 8_388_608;
 
 /// 📏️ Share of [`GUEST_LINEAR_MEMORY_MAXIMUM_BYTES`], in percent, the boot + contributions-install +
@@ -84,16 +84,59 @@ static PEAK_BYTES: AtomicIsize = AtomicIsize::new(0);
 /// cost, and the guest this measures reads its own footprint for free with [`guest_linear_memory_bytes`].
 pub struct HeapWitness;
 
+/// 🧵️ The same signed reading, attributed to the thread that made the allocation — the measurement
+/// scope a growth law needs when it shares a test process with hundreds of unrelated laws running on
+/// libtest's other threads. `Cell<isize>` has no destructor and the slot is `const`-initialised, so
+/// reading it inside the allocator neither allocates nor runs lazy initialisation.
+thread_local! {
+    static THREAD_RETAINED_BYTES: std::cell::Cell<isize> = const { std::cell::Cell::new(0) };
+    static THREAD_PEAK_BYTES: std::cell::Cell<isize> = const { std::cell::Cell::new(0) };
+}
+
 fn record(delta: isize) {
     let retained = RETAINED_BYTES.fetch_add(delta, Ordering::Relaxed).saturating_add(delta);
     if delta > 0 {
         PEAK_BYTES.fetch_max(retained, Ordering::Relaxed);
     }
+    let _ = THREAD_RETAINED_BYTES.try_with(|thread_retained| {
+        let retained = thread_retained.get().saturating_add(delta);
+        thread_retained.set(retained);
+        if delta > 0 {
+            let _ = THREAD_PEAK_BYTES.try_with(|peak| peak.set(peak.get().max(retained)));
+        }
+    });
 }
 
 /// 🧮️ Retained bytes right now — the reading a growth law differences.
 pub fn retained_heap_bytes() -> isize {
     RETAINED_BYTES.load(Ordering::Relaxed)
+}
+
+/// 🧵️ Retained bytes attributed to the CALLING thread — the reading a growth law differences when it
+/// must weigh its own work and nothing else.
+///
+/// ⚖️ Use this, not [`retained_heap_bytes`], for a law that runs under `cargo test`: libtest runs the
+/// whole file in one process on many threads, so a process-wide difference measures every concurrent
+/// law's allocations as if they were the measured turn's (the reactor turn-retention law reads −144 B
+/// alone and tens of kilobytes in a full suite for exactly that reason).
+///
+/// 🚫️ Do NOT use it for a path that allocates on one thread and frees on another — a mounted worker
+/// session does, and a per-thread counter then reads a real leak as a negative number. That case is
+/// what [`retained_heap_bytes`] is process-wide for.
+pub fn retained_heap_bytes_on_this_thread() -> isize {
+    THREAD_RETAINED_BYTES.try_with(std::cell::Cell::get).unwrap_or(0)
+}
+
+/// 🏔️🧵️ Peak of [`retained_heap_bytes_on_this_thread`] since the last [`reset_heap_peak_on_this_thread`]
+/// — the reading a ceiling law compares when it must weigh one block its own thread asked for.
+pub fn peak_heap_bytes_on_this_thread() -> isize {
+    THREAD_PEAK_BYTES.try_with(std::cell::Cell::get).unwrap_or(0)
+}
+
+/// 🔄️🧵️ Arms this thread's peak at its current retained reading.
+pub fn reset_heap_peak_on_this_thread() {
+    let retained = retained_heap_bytes_on_this_thread();
+    let _ = THREAD_PEAK_BYTES.try_with(|peak| peak.set(retained));
 }
 
 /// 🏔️ Peak retained bytes since the last [`reset_heap_peak`] — the reading a ceiling law compares.

@@ -36,11 +36,31 @@ pub struct Path {
     pub steps: Vec<Step>,
 }
 
-/// 🧊️ A step owns its params dictionary and every body path — all fail-closed roots.
+/// 🧊️ A step IS the cold boundary of the `params` dictionary it owns — the same statement
+/// `neural_engine::ColdOwner` makes, made by the document type itself.
+///
+/// `neural_engine::Dictionary` drops fail-closed: the FINAL owner of a non-empty pair root must be
+/// retired explicitly or the drop panics (`final Dictionary ownership must be explicitly retired or
+/// owned by a cold boundary`). A `Step` is cloned, moved into and out of `Path`s, parked inside a
+/// composed child's local owner, carried through mutation payloads and edit history, and dropped by
+/// the framework wherever a snapshot dies — there is no single call site that could own that
+/// retirement, and in the wasm guest a missed one is an abort, not a test failure. Declaring the
+/// boundary here retires `params` exactly once, on the last owner, and recurses through `bodies`
+/// (each nested `Path`'s `Step`s retire their own) without any caller ceremony.
+///
+/// Because `Step` now has a `Drop`, its fields can no longer be moved out individually — assign
+/// (`step.params = …`) or `std::mem::take` them instead.
+impl Drop for Step {
+    fn drop(&mut self) {
+        neural_engine::ColdRetire::retire_cold(std::mem::take(&mut self.params));
+    }
+}
+
+/// 🧊️ Kept so `Path`/`Vec<Step>`/`BTreeMap<_, Step>` still satisfy `ColdRetire`; the work itself is
+/// [`Step`]'s own `Drop` boundary above, so consuming the step IS the retirement.
 impl neural_engine::ColdRetire for Step {
     fn retire_cold(self) {
-        self.params.retire_cold();
-        self.bodies.retire_cold();
+        drop(self);
     }
 }
 
@@ -69,7 +89,10 @@ impl protocol::Identified<String> for Step {
 /// full-replace semantics as `vcs::Patchable`'s impl above.
 impl protocol::Patchable<Dictionary> for Step {
     fn apply_patch(&mut self, patch: &Dictionary) {
-        self.params = patch.clone();
+        // 🧊️ The DISPLACED dictionary is retired, never dropped: a bare `self.params = …` drops the
+        // previous root in place, which panics as soon as this step was its last owner
+        // (`final Dictionary ownership must be explicitly retired or owned by a cold boundary`).
+        ColdRetire::retire_cold(std::mem::replace(&mut self.params, patch.clone()));
     }
 
     fn diff_patch(&self, other: &Self) -> Option<Dictionary> {

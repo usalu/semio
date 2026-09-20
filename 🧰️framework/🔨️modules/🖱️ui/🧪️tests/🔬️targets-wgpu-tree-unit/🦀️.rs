@@ -1,7 +1,6 @@
-
 use super::*;
-use crate::wgpu::Label;
 use crate::wgpu::component::ui::{UiNode, UiPresence, UiTextNode};
+use crate::wgpu::Label;
 use ui_contract::{Component, SeparatorProps};
 
 fn text(value: &str) -> UiNode {

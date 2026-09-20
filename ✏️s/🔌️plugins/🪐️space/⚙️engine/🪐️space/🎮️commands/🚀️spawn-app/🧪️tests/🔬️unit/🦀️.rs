@@ -97,9 +97,12 @@ async fn spawns_puzzle5d_and_shooting_with_multi_port_registrations() {
 
 #[semio_framework_async_macros::async_test]
 async fn undo_redo_round_trip_on_spawn() {
-    use semio_framework_plugin::{VcsArtifactApp, artifact_app_laws};
+    use semio_framework_plugin::artifact_app_laws;
     seed_draw_plugin().await;
-    let mut app = VcsArtifactApp::<crate::engine::space::SpaceApp>::new(crate::engine::space::SpaceApp::default()).await;
+    // 🧬️ Registry-backed: `SpaceApp` publishes a `bounded_first_step_tool_proofs!` roster, and an
+    // empty `AppActionRegistry` declares none of them as `Migrated`, so the registry-LESS
+    // `VcsArtifactApp::new` fails construction with `interactive-job.catalog-authority`.
+    let mut app = crate::engine::space::unit_tests::context::app_with_registry().await;
     let before = app.snapshot().expect("projection").graph.nodes.len();
     artifact_app_laws::assert_undo_redo_round_trip(
         &mut app,

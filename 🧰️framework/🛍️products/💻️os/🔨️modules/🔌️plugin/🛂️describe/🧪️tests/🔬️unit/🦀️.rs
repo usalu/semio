@@ -12,7 +12,7 @@ async fn package_descriptor_advertises_metadata_only_cold_inference_routes() {
         algorithm_version: 1,
         policy_version: 1,
     };
-    let plugin = crate::app::Plugin::<crate::app::NoPluginApp>::builder(metadata.owner).label("Describe Routed Inference").version("0.1.0").routed_inference(metadata).try_build().expect("routed plugin assembles");
+    let plugin = crate::app::Plugin::<crate::app::NoPluginApp>::builder(metadata.owner).label("Describe Routed Inference").version("0.1.0").package_id("semio:describe-routed-inference").routed_inference(metadata).try_build().expect("routed plugin assembles");
     let runtime = crate::plugin_runtime::PluginRuntime::new();
     crate::plugin_runtime::install_plugin_bundle(&runtime, plugin);
     let value = store::pack_rt::decode_wire_value(&describe_plugin(&runtime).await).expect("descriptor wire decodes");

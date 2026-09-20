@@ -67,7 +67,7 @@ async fn change_ground_type_committed_json_is_canonical() {
     }
     let reencoded = serde_json::to_value(mutation()).expect("change-ground-type mutation encodes");
     let original: serde_json::Value = serde_json::from_str(MUTATION).expect("change-ground-type mutation reparses");
-    assert_eq!(reencoded, original, "change-ground-type/switches-ground-type-to-c: committed mutation JSON is not the canonical externally-tagged ChangeGroundType form carrying newGroundType");
+    assert_eq!(reencoded, original, "change-ground-type/switches-ground-type-to-c: committed mutation JSON is not the canonical internally-tagged ChangeGroundType form carrying mutation and newGroundType");
 }
 
 /// 🎯️ The declared outcome holds: `change-ground-type` at c is applied, not rejected, and carries no

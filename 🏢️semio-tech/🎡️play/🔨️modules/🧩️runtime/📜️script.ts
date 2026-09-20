@@ -56,7 +56,7 @@ class PrepareTestScript extends BundleScript {
   }
 }
 
-/** @emoji 🧪️ Owns the isolated E2E listener and announces its prepared generation over HTTP. */
+/** @emoji 🧪️ Owns the isolated E2E listener and announces its prepared generation over HTTP; frozen (no file watching) so concurrent edits never restart it mid-suite. */
 class ServeTestScript extends BundleScript {
   async run(args: string[]): Promise<void> {
     if (args.length) throw new Error("Play E2E serving accepts no arguments");
@@ -66,6 +66,7 @@ class ServeTestScript extends BundleScript {
     process.once("SIGINT", interrupt); process.once("SIGTERM", terminate);
     try {
       readPlayActivation(this.repoRoot);
+      process.env.SEMIO_TECH_PLAY_FROZEN = "true";
       await serveVite({ root, config: join(root, "🏗️builder/🌐️vite/🟦️.ts"), host: "127.0.0.1", port: 0, signal: controller.signal, session, ready: async url => { await publishServiceReady(sessionRoot, session, url, controller.signal); console.log(`Play E2E ready: ${url}`); } });
     } finally { process.removeListener("SIGINT", interrupt); process.removeListener("SIGTERM", terminate); await closeServiceSession(sessionRoot, session); }
   }

@@ -3,7 +3,8 @@ use crate::{default_snapshot, SequenceStep, SlotRef, StepParams};
 
 #[semio_framework_async_macros::async_test]
 async fn dsl_round_trips_default_snapshot() {
-    store::os_store::test_support::assert_dsl_round_trip(&default_snapshot());
+    let fixture = neural_engine::ColdOwner::new(default_snapshot());
+    store::os_store::test_support::assert_dsl_round_trip(&*fixture);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -15,7 +16,8 @@ async fn default_sequence_example_dsl_round_trips() {
 #[semio_framework_async_macros::async_test]
 async fn dsl_round_trips_snapshot_with_slots_and_nested_params() {
     use neural_engine::{Atom, Dictionary, Value};
-    let mut fixture = default_snapshot().to_host_snapshot();
+    let seed = neural_engine::ColdOwner::new(default_snapshot());
+    let mut fixture = seed.to_host_snapshot();
     fixture.steps.push(SequenceStep { id: "step-3".into(), kind: "control.if".into(), params: StepParams::new().insert("flag", Value::Atom(Atom::Boolean(true))), x: 560.0, y: 0.0, slot: None, collapsed: true });
     fixture.steps.push(SequenceStep {
         id: "step-4".into(),
@@ -28,6 +30,6 @@ async fn dsl_round_trips_snapshot_with_slots_and_nested_params() {
         slot: Some(SlotRef { owner: "step-3".into(), name: "then".into() }),
         collapsed: false,
     });
-    let snapshot = SequenceSnapshot::from_host_snapshot(fixture);
-    store::os_store::test_support::assert_dsl_round_trip(&snapshot);
+    let snapshot = neural_engine::ColdOwner::new(SequenceSnapshot::from_host_snapshot(fixture));
+    store::os_store::test_support::assert_dsl_round_trip(&*snapshot);
 }

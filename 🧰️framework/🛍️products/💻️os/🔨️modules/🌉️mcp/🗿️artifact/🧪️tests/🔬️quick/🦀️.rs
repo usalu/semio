@@ -1,6 +1,6 @@
 
 use super::*;
-use crate::catalog::{Catalog, CatalogSource, compile};
+use crate::catalog::{CapabilityAudience, Catalog, CatalogSource, compile};
 use crate::protocol::ToolRegistry;
 
 const ARTIFACT_TOOL_NAMES: [&str; 5] = ["artifact_open", "artifact_create", "artifact_validate", "artifact_snapshot", "artifact_export"];
@@ -17,8 +17,9 @@ fn single_plugin_catalog(plugin_id: &str) -> Arc<Catalog> {
     let probe_capability = CapabilityDefinition {
         id: CapabilityRef("test.probe".to_string()),
         version: 1,
-        owner: CapabilityOwner::Plugin { plugin_id: plugin_id.to_string(), app_id: None, window_kind_id: None, mode_id: None },
+        owner: CapabilityOwner::Plugin { plugin_id: plugin_id.to_string(), label: None, app_id: None, window_kind_id: None, mode_id: None },
         kind: CapabilityKind::Query,
+        audience: CapabilityAudience::Agent,
         title: "Test Probe".to_string(),
         description: "test-only capability so this workspace resolves exactly one plugin".to_string(),
         artifact_kind: None,

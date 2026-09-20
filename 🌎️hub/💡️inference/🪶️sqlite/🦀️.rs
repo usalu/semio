@@ -158,6 +158,41 @@ pub(crate) struct InferenceApprovalReconciliationV1 {
     pub undo: GisMapApprovalUndoHandleV1,
 }
 
+/// 🔎️ Which guard of one approval reconciliation answered `Conflict`. Five distinct refusals share
+/// the one taxonomy value the caller sees, so a law that reads the error cannot name the guard. The
+/// returned error is identical in production; only a test build records which guard produced it.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(crate) enum ApprovalReconciliationConflictV1 {
+    WitnessDiffers,
+    FrontierDocumentDiffers,
+    FrontierHeadEditIdDiffers,
+    FrontierHeadOrdinalDiffers,
+    FrontierCommitSeqDiffers,
+    CommittedUndoRowMissing,
+    OutboxPhaseNotPrepared,
+    JobOrProposalPhaseDiffers,
+    OutboxCommandDiffers,
+}
+
+#[cfg(test)]
+static LAST_APPROVAL_RECONCILIATION_CONFLICT: Mutex<Option<ApprovalReconciliationConflictV1>> = Mutex::new(None);
+
+/// 🧾️ Answers the unchanged `Conflict` after recording which guard produced it.
+pub(crate) fn approval_reconciliation_conflict(guard: ApprovalReconciliationConflictV1) -> InferenceErrorV1 {
+    #[cfg(test)]
+    {
+        *LAST_APPROVAL_RECONCILIATION_CONFLICT.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(guard);
+    }
+    let _ = guard;
+    InferenceErrorV1::Conflict
+}
+
+/// 🔬️ The last recorded reconciliation guard of this process, for laws that only see the taxonomy.
+#[cfg(test)]
+pub(crate) fn last_approval_reconciliation_conflict() -> Option<ApprovalReconciliationConflictV1> {
+    *LAST_APPROVAL_RECONCILIATION_CONFLICT.lock().unwrap_or_else(std::sync::PoisonError::into_inner)
+}
+
 /// 🎫️ Durable undo idempotency admission or exact terminal replay.
 pub(crate) enum GisMapApprovalUndoAdmissionV1 {
     Prepared,
@@ -920,13 +955,20 @@ impl InferenceJobLedgerV1 {
         let (accepted_mutation, accepted_command, accepted_proposal, command, phase) = existing.ok_or(InferenceErrorV1::Denied)?;
         let accepted = identity(&tx, job_id)?;
         let scope = directory::os_directory::DocumentScope::new(accepted.space_id, accepted.document_id);
-        if !witness.matches(&scope, document_generation, job_id, &accepted_proposal, &accepted_mutation, &accepted_command)
-            || after_frontier.document_id != scope.document_id
-            || after_frontier.head_edit_id != accepted_mutation
-            || after_frontier.head_edit_ordinal != accepted.head_ordinal.checked_add(1).ok_or(InferenceErrorV1::Bounds)?
-            || after_frontier.last_commit_seq != accepted.last_commit_seq.checked_add(1).ok_or(InferenceErrorV1::Bounds)?
-        {
-            return Err(InferenceErrorV1::Conflict);
+        if !witness.matches(&scope, document_generation, job_id, &accepted_proposal, &accepted_mutation, &accepted_command) {
+            return Err(approval_reconciliation_conflict(ApprovalReconciliationConflictV1::WitnessDiffers));
+        }
+        if after_frontier.document_id != scope.document_id {
+            return Err(approval_reconciliation_conflict(ApprovalReconciliationConflictV1::FrontierDocumentDiffers));
+        }
+        if after_frontier.head_edit_id != accepted_mutation {
+            return Err(approval_reconciliation_conflict(ApprovalReconciliationConflictV1::FrontierHeadEditIdDiffers));
+        }
+        if after_frontier.head_edit_ordinal != accepted.head_ordinal.checked_add(1).ok_or(InferenceErrorV1::Bounds)? {
+            return Err(approval_reconciliation_conflict(ApprovalReconciliationConflictV1::FrontierHeadOrdinalDiffers));
+        }
+        if after_frontier.last_commit_seq != accepted.last_commit_seq.checked_add(1).ok_or(InferenceErrorV1::Bounds)? {
+            return Err(approval_reconciliation_conflict(ApprovalReconciliationConflictV1::FrontierCommitSeqDiffers));
         }
         let witness_digest = witness.approval_undo_witness_digest();
         let target_id = sha256(format!("semio.hub.gis-map-approval-undo-target/v1\0{witness_digest}").as_bytes())[..32].to_owned();
@@ -940,20 +982,20 @@ impl InferenceJobLedgerV1 {
                 )
                 .map_err(storage)?;
             if !retained {
-                return Err(InferenceErrorV1::Conflict);
+                return Err(approval_reconciliation_conflict(ApprovalReconciliationConflictV1::CommittedUndoRowMissing));
             }
             tx.commit().map_err(storage)?;
             return Ok(InferenceApprovalReconciliationV1 { applied: false, undo });
         }
         if phase != "prepared" {
-            return Err(InferenceErrorV1::Conflict);
+            return Err(approval_reconciliation_conflict(ApprovalReconciliationConflictV1::OutboxPhaseNotPrepared));
         }
         let (job_phase, proposal_phase, _) = state(&tx, job_id)?;
         if job_phase != "succeeded" || proposal_phase != "offered" {
-            return Err(InferenceErrorV1::Conflict);
+            return Err(approval_reconciliation_conflict(ApprovalReconciliationConflictV1::JobOrProposalPhaseDiffers));
         }
         if command.is_empty() || command.len() > 8192 || sha256(&command) != accepted_command {
-            return Err(InferenceErrorV1::Conflict);
+            return Err(approval_reconciliation_conflict(ApprovalReconciliationConflictV1::OutboxCommandDiffers));
         }
         tx.execute(
             "INSERT INTO inference_approval_undo_v1(target_id,job_id,original_mutation_id,original_command_hash,committed_witness_digest,user_id,session_id,authorization_generation,space_id,document_id,after_head_ordinal,after_head_edit_id,after_commit_seq,after_chain_sha256,descriptor_digest,after_base_digest,original_command,phase) VALUES (?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,?11,?12,?13,?14,?15,?16,?17,'available')",

@@ -1,0 +1,15 @@
+{
+  "extends": "../../../../../../../🧰️framework/🛍️products/💻️os/tsconfig.json",
+  "compilerOptions": {
+    "incremental": false,
+    "noEmit": true
+  },
+  "files": [
+    "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🌿️ambient/🟦️.d.ts",
+    "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🌿️environment/🟦️.d.ts",
+    "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🟦️.tsx",
+    "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🪟️spawned-program/🟦️.ts",
+    "🌿️t3b-ambient.d.ts"
+  ],
+  "include": []
+}

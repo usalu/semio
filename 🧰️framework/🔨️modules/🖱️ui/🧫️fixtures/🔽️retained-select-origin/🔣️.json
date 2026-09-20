@@ -1,0 +1,33 @@
+{
+  "schemaVersion": 1,
+  "viewport": {
+    "origin": [960, 170],
+    "size": [320, 260]
+  },
+  "sideOffset": 4,
+  "collisionPadding": 8,
+  "row": {
+    "lineHeight": 19.2,
+    "padding": 3.2,
+    "itemCount": 3,
+    "menuHeight": 83.2
+  },
+  "cases": [
+    {
+      "id": "room-below",
+      "triggerLocal": [20, 30, 180, 22.4],
+      "side": "bottom",
+      "menuLocal": [20, 56.4, 180, 83.2],
+      "menuGlobal": [980, 226.4, 180, 83.2],
+      "firstOptionGlobal": [983.2, 229.6, 173.6, 25.6]
+    },
+    {
+      "id": "flip-above",
+      "triggerLocal": [20, 210, 180, 22.4],
+      "side": "top",
+      "menuLocal": [20, 122.8, 180, 83.2],
+      "menuGlobal": [980, 292.8, 180, 83.2],
+      "firstOptionGlobal": [983.2, 296, 173.6, 25.6]
+    }
+  ]
+}
