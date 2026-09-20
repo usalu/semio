@@ -30,7 +30,7 @@ if _VO_TIMING.is_file():
     load_vo_timing(_VO_TIMING)
 
 # 🏔️ Persistent module title — written once on Beat1, self.add()'ed on later beats.
-TITLE_DE = "Kühllast mit Sonnenschutz"
+TITLE_DE = "Solare Einstrahlung"
 
 # Mid-screen anchor for facade / charts / sections.
 CONTENT_CENTER = UP * 0.25
@@ -878,8 +878,8 @@ class Beat5_SolarCoolingLoad(Scene):
          "By multiplying the raw solar irradiance by our building's gross area, and then applying our three dimensionless reduction filters, the frame factor, the shading factor, and the glass transmittance, we arrive at our answer.",
          "Bestrahlungsstärke mal Fläche, gefiltert durch F_F, F_V und g_tot."),
         ("result",
-         "This is Q dot S t r, the final transmission cooling load.",
-         "Das ist Q-Punkt-S,tr — die solare Transmissionskühllast."),
+         "This is Q-dot S,tr — the solar cooling load through the glazing.",
+         "Das ist Q-Punkt-S,tr — die solare Kühllast durch die Verglasung."),
         ("meaning",
          "It is the precise thermal wattage our mechanical system must actively remove to prevent the room from overheating.",
          "Genau diese Leistung muss die Anlage aktiv abführen."),

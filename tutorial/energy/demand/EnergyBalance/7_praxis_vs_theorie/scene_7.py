@@ -294,8 +294,7 @@ class Beat2_HydraulischerAbgleich(Scene):
         streams = VGroup(*[drops for drops, _rate in main_streams + riser_streams])
         main_rates = [rate for _drops, rate in main_streams]
         riser_rates = [rate for _drops, rate in riser_streams]
-        spin = ValueTracker(PUMP_SPIN)
-        impeller.add_updater(lambda m, dt: m.rotate(-dt * spin.get_value(), about_point=pump_center))
+        impeller.add_updater(lambda m, dt: m.rotate(-dt * PUMP_SPIN, about_point=pump_center))
         self.play(
             FadeIn(streams),
             *[room[1].animate.set_fill(WARM_RED, opacity=0.85 * f / max(FLOW_UNBALANCED))
@@ -383,8 +382,8 @@ class Beat3_SerienAbschluss(Scene):
          "This video closed the balance, walked it out to the meter, out to the source, and onto the certificate.",
          "Dieses Video schloss die Bilanz, führte sie zum Zähler, zur Quelle und auf den Ausweis."),
         ("zahlen",
-         "A hundred kilowatt-hours of useful heat became a hundred and forty at the meter, a hundred and fifty-four at the source — and one letter.",
-         "Aus hundert Kilowattstunden Nutzwärme wurden hundertvierzig am Zähler, hundertvierundfünfzig an der Quelle — und ein Buchstabe."),
+         "A hundred kilowatt-hours of useful heat became, on the gas path, a hundred and forty at the meter, a hundred and fifty-four at the source — and one letter. The heat pump writes a different letter.",
+         "Aus hundert Kilowattstunden Nutzwärme wurden auf dem Gasweg hundertvierzig am Zähler, hundertvierundfünfzig an der Quelle — und ein Buchstabe. Die Wärmepumpe schreibt einen anderen."),
         ("outro",
          "That is the complete path from a cold wall in January to the number a landlord shows a new tenant.",
          "Das ist der vollständige Weg von einer kalten Wand im Januar bis zur Zahl, die ein Vermieter einem neuen Mieter zeigt."),

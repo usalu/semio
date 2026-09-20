@@ -30,7 +30,7 @@ if _VO_TIMING.is_file():
     load_vo_timing(_VO_TIMING)
 
 # 🏔️ Persistent module title — written once on Beat1, self.add()'ed on later beats.
-TITLE_DE = "Heizlast vs. Kühllast"
+TITLE_DE = "Heizwärmebedarf vs. Kühllast"
 
 # Shared layout anchors — one house height + thermometer slot for every beat so
 # winter / summer / cooling stay visually continuous when the scaffold moves.
@@ -209,8 +209,8 @@ def _create_thermometer(pos):
 class Beat1_WinterGains(Scene):
     NARRATION = [
         ("intro",
-         "In winter, free heat gains are welcome — they reduce the heating load we must supply.",
-         "Im Winter sind kostenlose Wärmegewinne willkommen — sie senken die Heizlast."),
+         "In winter, free heat gains are welcome — they cut the annual heating demand we must cover.",
+         "Im Winter sind kostenlose Wärmegewinne willkommen — sie senken den Heizwärmebedarf."),
         ("solar",
          "Solar gains enter through the windows and warm the rooms for free.",
          "Solare Gewinne treten durch die Fenster ein und heizen die Räume kostenlos."),
@@ -218,8 +218,8 @@ class Beat1_WinterGains(Scene):
          "People, devices and lights add internal gains — roughly a laptop and a person as everyday watt anchors.",
          "Personen, Geräte und Licht erzeugen interne Gewinne — greifbar wie Laptop und Person."),
         ("outro",
-         "Together, solar and internal gains help cover part of the winter heating demand.",
-         "Zusammen decken solare und interne Gewinne einen Teil der Heizlast."),
+         "Together they cover part of the winter heating demand in DIN V 18599. A design heating load after DIN EN 12831 usually ignores them.",
+         "Zusammen decken sie einen Teil des Heizwärmebedarfs nach DIN V 18599. Eine Auslegungsheizlast nach DIN EN 12831 lässt sie meist weg."),
     ]
 
     def construct(self):
@@ -304,7 +304,7 @@ class Beat2_SummerOverheat(Scene):
 
         title = scene_title(TITLE_DE)
         self.add(title)
-        subtitle = beat_subtitle("Im Sommer: Überhitzung (Treibhauseffekt)", title)
+        subtitle = beat_subtitle("Im Sommer: Überhitzung hinter Glas", title)
         din = _din_ref("DIN 4108-2")
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
@@ -391,8 +391,8 @@ class Beat2_SummerOverheat(Scene):
 class Beat3_CoolingSystem(Scene):
     NARRATION = [
         ("intro",
-         "Cooling design means actively removing heat so the room returns to comfort.",
-         "Kühllast bedeutet: Wärme aktiv abführen, damit der Raum wieder komfortabel wird."),
+         "The cooling load is the heat-removal rate we must provide so the room returns to comfort.",
+         "Die Kühllast ist die Wärmeleistung, die wir aktiv abführen müssen, damit der Raum wieder komfortabel wird."),
         ("vent",
          "Mechanical ventilation and cooling exhaust the trapped heat through supply and extract streams.",
          "Mechanische Lüftung und Kühlung führen die gestaute Wärme über Zu- und Abluft ab."),
@@ -409,7 +409,7 @@ class Beat3_CoolingSystem(Scene):
 
         title = scene_title(TITLE_DE)
         self.add(title)
-        subtitle = beat_subtitle("Wärme aktiv abführen (Mechanische Lüftung)", title)
+        subtitle = beat_subtitle("Die Kühllast als abzuführende Leistung", title)
         din = _din_ref("VDI 2078")
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 

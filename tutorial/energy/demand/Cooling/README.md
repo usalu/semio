@@ -1,13 +1,14 @@
-# Cooling Demand — Full Video
+# Cooling Load — Full Video
 
-Plays the **Cooling demand series** in curriculum order, prepended with the
-series intro card ``Demo_Intro_Kuehllast`` from ``tutorial/intro/intro_scene.py``:
+Plays the **Cooling load series** (Kühllast, VDI 2078 design power — not annual
+Kühlenergiebedarf) in curriculum order, prepended with the series intro card
+``Demo_Intro_Kuehllast`` from ``tutorial/intro/intro_scene.py``:
 
 0. Intro — Kühllast
-1. Teil 1 — Heizen vs. Kühlen
+1. Teil 1 — Heizwärmebedarf vs. Kühllast
 2. Teil 2 — Interne Wärmegewinne
 3. Teil 3 — Transmission & Feuchte
-4. Teil 4 — Solarstrahlung
+4. Teil 4 — Solare Einstrahlung
 5. Teil 5 — Systemauslegung
 6. Teil 6 — Lüftungssysteme
 

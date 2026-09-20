@@ -272,26 +272,26 @@ class NGSIntro(Scene):
 
 # region Demo Scenes
 class Demo_Intro_Kuehllast(NGSIntro):
-    """❄️ Example intro for the Cooling demand series."""
+    """❄️ Series intro for Cooling demand — design cooling load, not annual energy."""
 
     topic_de = "Kühllast"
-    topic_explain_de = "Wärmequellen, Feuchte und Systemauslegung im Sommer."
+    topic_explain_de = "Welche Leistung im Sommer abgeführt werden muss — Last, nicht Jahresbedarf."
     series_de = "Gebäudeenergie · Kühllast"
 
 
 class Demo_Intro_Heizlast(NGSIntro):
-    """🔥 Example intro for the Heating demand series."""
+    """🔥 Series intro for Heating demand — losses, gains, annual balance."""
 
-    topic_de = "Heizlast"
-    topic_explain_de = "Transmission, Lüftung und Gewinne im Winterbetrieb."
-    series_de = "Gebäudeenergie · Heizlast"
+    topic_de = "Heizwärmebedarf"
+    topic_explain_de = "Verluste, freie Gewinne und die Jahresbilanz im Winterbetrieb."
+    series_de = "Gebäudeenergie · Heizwärmebedarf"
 
 
 class Demo_Intro_PhysikalischeGrundlagen(NGSIntro):
     """⚛️ Series intro for Physical Fundamentals — force, power, energy."""
 
     topic_de = "Physikalische Grundlagen"
-    topic_explain_de = "Kraft, Leistung und Energie — die Sprache der Gebäudeenergie."
+    topic_explain_de = "Kraft, Leistung und Energie."
     series_de = "Gebäudeenergie · Grundlagen"
 
 
@@ -299,22 +299,22 @@ class Demo_Intro_Energiebilanz(NGSIntro):
     """📜 Series intro for EnergyBalance — regulation, losses, and the Energieausweis."""
 
     topic_de = "Energiebilanz"
-    topic_explain_de = "Vom Bedarf über GEG und Verluste bis zum Energieausweis."
+    topic_explain_de = "Vom Heizwärmebedarf über Last, Anlagen und GEG zum Energieausweis."
     series_de = "Gebäudeenergie · Energiebilanz"
 
 
 class Intro_HeatingVsCooling(NGSIntro):
-    """⚖️ Intro for Cooling part 1 — Heizlast vs. Kühllast."""
+    """⚖️ Intro for Cooling part 1 — Heizwärmebedarf vs. Kühllast."""
 
-    topic_de = "Heizlast vs. Kühllast"
-    topic_explain_de = "Warum dieselben Gewinne im Sommer zur Kühllast werden."
+    topic_de = "Heizwärmebedarf vs. Kühllast"
+    topic_explain_de = "Gewinne senken im Winter den Bedarf — im Sommer werden sie zur Kühllast."
     series_de = "Kühllast · Teil 1"
 
 
 class Intro_InternalGains(NGSIntro):
-    """💡 Intro for Cooling part 2 — Interne Lasten."""
+    """💡 Intro for Cooling part 2 — Interne Wärmegewinne."""
 
-    topic_de = "Interne Lasten"
+    topic_de = "Interne Wärmegewinne"
     topic_explain_de = "Personen, Geräte und Beleuchtung als innere Wärmequellen."
     series_de = "Kühllast · Teil 2"
 
@@ -347,6 +347,6 @@ class Intro_Lueftungssysteme(NGSIntro):
     """🌀 Intro for Cooling part 6 — Lüftungssysteme."""
 
     topic_de = "Lüftungssysteme"
-    topic_explain_de = "Freie und mechanische Lüftung, Rückgewinnung und Luftführung."
+    topic_explain_de = "Last senken, frei lüften wenn die Außenluft kühler ist, RLT als Reserve."
     series_de = "Kühllast · Teil 6"
 # endregion

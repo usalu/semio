@@ -1,4 +1,4 @@
-"""🎬 Full Cooling demand series — Parts 1–6 in curriculum order.
+"""🎬 Full Cooling load series — Parts 1–6 in curriculum order.
 
 Recommended: run this file as a script (section renders + ffmpeg concat).
 A single Manim mega-scene can fail when combining hundreds of partials
@@ -61,7 +61,7 @@ _p6 = _load_module("cooling_full_p6", _COOLING_ROOT / "6_lueftungssysteme" / "sc
 #region Playlist
 COOLING_PLAYLIST: list[tuple[str, list[type[Scene]]]] = [
     (
-        "Teil 1 · Heizen vs. Kühlen",
+        "Teil 1 · Heizwärmebedarf vs. Kühllast",
         [
             _p1.Beat1_WinterGains,
             _p1.Beat2_SummerOverheat,
@@ -88,7 +88,7 @@ COOLING_PLAYLIST: list[tuple[str, list[type[Scene]]]] = [
         ],
     ),
     (
-        "Teil 4 · Solarstrahlung",
+        "Teil 4 · Solare Einstrahlung",
         [
             _p4.Beat1_SolarIrradiance,
             _p4.Beat2_FrameFactor,
@@ -167,7 +167,7 @@ class _CoolingSection(Scene):
 
 
 class Cooling_01_HeatingVsCooling(_CoolingSection):
-    """1️⃣ Teil 1 — Heizen vs. Kühlen."""
+    """1️⃣ Teil 1 — Heizwärmebedarf vs. Kühllast."""
 
     section_beats = COOLING_PLAYLIST[0][1]
 
@@ -185,7 +185,7 @@ class Cooling_03_TransmissionHumidity(_CoolingSection):
 
 
 class Cooling_04_SolarRadiation(_CoolingSection):
-    """4️⃣ Teil 4 — Solarstrahlung."""
+    """4️⃣ Teil 4 — Solare Einstrahlung."""
 
     section_beats = COOLING_PLAYLIST[3][1]
 

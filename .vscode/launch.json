@@ -954,7 +954,7 @@
       "name": "🛠️dev🎬manim physical fundamentals full",
       "type": "node-terminal",
       "request": "launch",
-      "command": "\"${workspaceFolder}/.venv/bin/python\" tutorial/energy/demand/1_physical_fundamentals/full_physical_fundamentals_video.py -q l",
+      "command": "\"${workspaceFolder}/.venv/bin/python\" tutorial/energy/demand/1_physical_fundamentals/full_physical_fundamentals_video.py -q h --no-play --force",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -981,6 +981,17 @@
       "presentation": {
         "group": "3_dev",
         "order": 212
+      }
+    },
+    {
+      "name": "🛠️dev🎬manim heating introduction convection",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "\"${workspaceFolder}/.venv/bin/manim\" -pql scene_1.py Beat3_Konvektion",
+      "cwd": "${workspaceFolder}/tutorial/energy/demand/Heating/1_introduction",
+      "presentation": {
+        "group": "3_dev",
+        "order": 213
       }
     },
     {

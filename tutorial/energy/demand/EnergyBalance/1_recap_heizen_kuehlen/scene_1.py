@@ -146,14 +146,14 @@ class Beat1_Bilanzgrenze(Scene):
          "In three videos we calculated single heat flows. Now we assemble them into one balance.",
          "In drei Videos haben wir einzelne Wärmeströme berechnet. Jetzt fügen wir sie zu einer Bilanz zusammen."),
         ("huelle",
-         "A balance needs a boundary: the thermal envelope. Everything that crosses it is a heat flow.",
-         "Eine Bilanz braucht eine Grenze: die thermische Hülle. Alles, was sie kreuzt, ist ein Wärmestrom."),
+         "A balance needs a boundary: the thermal envelope. Everything that crosses it over the year is an energy flow we can add up.",
+         "Eine Bilanz braucht eine Grenze: die thermische Hülle. Alles, was sie übers Jahr kreuzt, ist ein Energiefluss, den wir aufsummieren."),
         ("erhaltung",
          "From the fundamentals we know energy is conserved — so at a constant indoor temperature, everything leaving must be replaced.",
          "Aus den Grundlagen wissen wir: Energie bleibt erhalten. Bei konstanter Innentemperatur muss alles Abfließende ersetzt werden."),
         ("bedarf",
-         "What the free gains don't cover, the heating has to deliver. That remainder is the useful heat demand.",
-         "Was die freien Gewinne nicht decken, muss die Heizung liefern. Dieser Rest ist der Nutzwärmebedarf."),
+         "What the free gains don't cover, the heating has to deliver. That remainder is the useful heating demand — Heizwärmebedarf.",
+         "Was die freien Gewinne nicht decken, muss die Heizung liefern. Dieser Rest ist der Heizwärmebedarf."),
     ]
 
     def construct(self):
@@ -177,7 +177,7 @@ class Beat1_Bilanzgrenze(Scene):
         # —— The envelope ——
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "huelle"))
         envelope = _boundary(house)
-        env_note = note_line("Alles, was diese Grenze kreuzt, ist ein Wärmestrom.", color=P_WHITE)
+        env_note = note_line("Alles, was diese Grenze übers Jahr kreuzt, ist Energie.", color=P_WHITE)
         self.play(Create(envelope), FadeIn(env_note), run_time=1.3)
         hold_for(self, self.NARRATION, "huelle", used=1.3 + 0.35)
 
@@ -224,7 +224,7 @@ class Beat1_Bilanzgrenze(Scene):
             [house["center"][0], envelope.get_bottom()[1], 0],
             DEMAND_RED, width=6.0,
         )
-        supply_label = body_text("Heizwärme Q_h", font_size=BODY_FONT_SIZE, color=DEMAND_RED)
+        supply_label = body_text("Heizwärmebedarf Q_h", font_size=BODY_FONT_SIZE, color=DEMAND_RED)
         supply_label.next_to(supply, LEFT, buff=0.30)
 
         row, items = equation_row([
@@ -260,11 +260,11 @@ class Beat2_Verlustseite(Scene):
          "The loss side first — and it is exactly the two mechanisms the Heating video derived.",
          "Zuerst die Verlustseite — genau die beiden Mechanismen aus dem Heizen-Video."),
         ("transmission",
-         "Transmission through every envelope surface: U times area times temperature difference, summed over the hours of the month.",
-         "Transmission durch jede Hüllfläche: U mal Fläche mal Temperaturdifferenz, über die Stunden des Monats summiert."),
+         "Transmission through every envelope surface: U times area times the mean temperature difference, summed over the hours of the month — a schematic form of H times degree-hours.",
+         "Transmission durch jede Hüllfläche: U mal Fläche mal mittlere Temperaturdifferenz, über die Stunden des Monats — schematisch wie H mal Gradstunden."),
         ("bruecken",
-         "Thermal bridges are added on top as a surcharge on the U-values — typically five hundredths of a watt per square metre kelvin.",
-         "Wärmebrücken kommen als Zuschlag auf die U-Werte dazu — typisch fünf Hundertstel Watt je Quadratmeter und Kelvin."),
+         "Thermal bridges are added as a lump surcharge on the U-values — 0.05 watts per square metre kelvin when a thermal-bridge check is available, more without one.",
+         "Wärmebrücken kommen als Pauschalzuschlag auf die U-Werte — 0,05 W/(m²·K) mit Wärmebrückennachweis, sonst höher."),
         ("lueftung",
          "Ventilation carries the second stream out: the air change rate replaces warm indoor air with cold outdoor air.",
          "Die Lüftung trägt den zweiten Strom hinaus: Der Luftwechsel ersetzt warme Innenluft durch kalte Außenluft."),
@@ -404,17 +404,17 @@ class Beat3_Gewinnseite(Scene):
          "Now the other pan of the scale: the heat the building gets for free.",
          "Jetzt die andere Waagschale: die Wärme, die das Gebäude kostenlos bekommt."),
         ("solar",
-         "Solar gains through the glazing — window area times the g-value times the irradiance on that facade.",
+         "Solar gains through the glazing — window area times the g-value times the irradiation on that facade.",
          "Solare Gewinne durch die Verglasung — Fensterfläche mal g-Wert mal Einstrahlung auf diese Fassade."),
         ("intern",
-         "Internal gains from people, appliances and lighting: the standard assumes a flat watt per square metre.",
-         "Interne Gewinne von Personen, Geräten und Licht: Die Norm rechnet mit einem pauschalen Wert je Quadratmeter."),
+         "Internal gains from people, appliances and lighting: DIN V 18599-10 tables them by use, here as a watt per square metre.",
+         "Interne Gewinne von Personen, Geräten und Licht: DIN V 18599-10 tabelliert sie nutzungsabhängig, hier als Wert je Quadratmeter."),
         ("eta",
-         "But not every free kilowatt-hour helps. Gains that arrive when no heat is needed only overheat the room.",
-         "Doch nicht jede freie Kilowattstunde hilft. Gewinne ohne gleichzeitigen Wärmebedarf überhitzen nur den Raum."),
+         "But not every free kilowatt-hour helps. The utilization factor eta_h depends on the gain-to-loss ratio — here a schematic 0.8. Gains that arrive when no heat is needed only overheat the room.",
+         "Doch nicht jede freie Kilowattstunde hilft. Der Ausnutzungsgrad η_h hängt vom Gewinn-Verlust-Verhältnis ab — hier schematisch 0,8. Gewinne ohne Wärmebedarf überhitzen nur den Raum."),
         ("bilanz",
-         "So the losses are covered by the usable gains plus whatever the heating adds. That remainder is the demand.",
-         "Die Verluste werden also von den nutzbaren Gewinnen plus der Heizung gedeckt. Dieser Rest ist der Bedarf."),
+         "So the losses are covered by the usable gains plus whatever the heating adds. That remainder is the heating demand Q_h.",
+         "Die Verluste werden also von den nutzbaren Gewinnen plus der Heizung gedeckt. Dieser Rest ist der Heizwärmebedarf Q_h."),
     ]
 
     def construct(self):
@@ -514,7 +514,7 @@ class Beat3_Gewinnseite(Scene):
         )
         eta_row, eta_items = equation_row([
             ("eta", "η_h", ETA_GREEN), (None, "· Q_Quelle = nutzbarer Anteil", P_WHITE),
-            (None, "   η_h ≈ 0,8", P_TEAL),
+            (None, "   η_h schematisch ≈ 0,8", P_TEAL),
         ], font_size=BODY_FONT_SIZE)
         eta_row, eta_box = formula_panel(eta_row)
         self.play(Create(eta_box), FadeIn(eta_row), run_time=0.9)
@@ -534,7 +534,7 @@ class Beat3_Gewinnseite(Scene):
         )
         mix_labels, mix_leaders = side_labels(
             [(usable.get_right(), "η_h · Q_Quelle — freie Wärme", ETA_GREEN),
-             (demand.get_center(), "Q_h — was die Heizung liefert", DEMAND_RED)],
+             (demand.get_center(), "Q_h — Heizwärmebedarf", DEMAND_RED)],
             x=x_mix + 0.85, align="left",
         )
         self.play(GrowFromEdge(demand, DOWN), Create(level), run_time=1.3)
@@ -574,11 +574,11 @@ class Beat4_WinterUndSommer(Scene):
          "In January losses dominate: the gain pan is small, and the gap is heating demand.",
          "Im Januar dominieren die Verluste: Die Gewinnschale ist klein, und die Lücke ist Heizwärmebedarf."),
         ("sommer",
-         "In July it flips. Sun and internal loads exceed the losses, and the surplus has to be removed instead of supplied.",
-         "Im Juli kippt es. Sonne und interne Lasten übersteigen die Verluste — der Überschuss muss abgeführt statt zugeführt werden."),
+         "In July it flips. Sun and internal loads exceed the losses, and the surplus is cooling energy demand that has to be removed.",
+         "Im Juli kippt es. Sonne und interne Lasten übersteigen die Verluste — der Überschuss ist Kühlenergiebedarf, den wir abführen müssen."),
         ("beide",
-         "Same building, same physics, opposite sign — that is why the Heating and the Cooling video are two halves of one calculation.",
-         "Gleiches Gebäude, gleiche Physik, umgekehrtes Vorzeichen — deshalb sind Heizen und Kühlen zwei Hälften einer Rechnung."),
+         "Same building, same physics, opposite sign. Heating counted the annual demand, cooling the design load — two quantities, one envelope.",
+         "Gleiches Gebäude, gleiche Physik, umgekehrtes Vorzeichen. Heizen zählte den Jahresbedarf, Kühlen die Auslegungslast — zwei Größen, eine Hülle."),
     ]
 
     def construct(self):

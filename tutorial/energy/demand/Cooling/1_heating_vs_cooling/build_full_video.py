@@ -1,4 +1,4 @@
-"""🎬 Render, mux and concat Cooling Part 1 (Heizlast vs. Kühllast) into one 1080p60 video.
+"""🎬 Render, mux and concat Cooling Part 1 (Heizwärmebedarf vs. Kühllast) into one 1080p60 video.
 
 Self-contained: only manim + ffmpeg + this repo's ``tts_pipeline`` (no external paths).
 Run ``generate_audio.py`` (synth → --trace → --align) first so ``beat_N_audio.mp3``

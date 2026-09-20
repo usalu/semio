@@ -521,8 +521,8 @@ class Beat3_GWert(Scene):
          "Radiation reflects, absorbs, and transmits.",
          "Strahlung reflektiert, absorbiert und transmittiert."),
         ("gval",
-         "The g-value is the transmitted heat fraction into the room — dimensionless, times power still in watts.",
-         "Der g-Wert ist der transmittierte Wärmeanteil — dimensionslos, Leistung bleibt in Watt."),
+         "The g-value is the total solar energy transmittance into the room: directly transmitted plus secondary heat from absorbed radiation. Dimensionless; power stays in watts.",
+         "Der g-Wert ist der Gesamtenergiedurchlassgrad: direkt transmittiert plus sekundäre Wärme aus Absorption. Dimensionslos — die Leistung bleibt in Watt."),
     ]
 
     def construct(self):
@@ -1367,8 +1367,8 @@ class Beat7_SpeichermasseFormel(Scene):
          "Stored heat Q is mass times specific heat capacity times temperature rise — unit joule.",
          "Gespeicherte Wärme Q ist Masse mal Wärmekapazität mal Delta-T — Einheit Joule."),
         ("why",
-         "Thermal mass softens peaks, banks solar gains, and cuts the heating load.",
-         "Thermische Masse dämpft Spitzen, speichert Solargewinne und senkt die Heizlast."),
+         "Thermal mass softens peaks, delays solar gains, and can cut the heating demand.",
+         "Thermische Masse dämpft Spitzen, verzögert Solargewinne und kann den Heizwärmebedarf senken."),
     ]
 
     def construct(self):
@@ -1461,8 +1461,8 @@ class Beat8_Hauptgleichung(Scene):
          "Ring F_sh — shading decides how much sun actually counts.",
          "Markiere F_sh — Verschattung entscheidet, wie viel Sonne zählt."),
         ("store",
-         "That solar power is not lost — the building's thermal mass banks it as stored heat.",
-         "Diese solare Leistung geht nicht verloren — die thermische Masse speichert sie als Wärme."),
+         "Mass only delays that power. Surplus solar heat overheats the room and then leaves unused — the utilization factor eta h comes in the finale.",
+         "Masse verzögert diese Leistung nur. Überschüssige Sonnenwärme überhitzt den Raum und entweicht ungenutzt — der Ausnutzungsgrad Eta-h kommt im Finale."),
         ("mass",
          "Stored heat Q is mass m times specific heat capacity c times temperature rise delta T — in joule.",
          "Die gespeicherte Wärme Q ist Masse m mal spezifische Wärmekapazität c mal Temperaturanstieg Delta-T — in Joule."),

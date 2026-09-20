@@ -237,8 +237,8 @@ class Beat2_Monatsbilanz(Scene):
          "And these are the usable gains. Where green covers blue, sun and internal loads already pay the bill.",
          "Und das sind die nutzbaren Gewinne. Wo Grün das Blau deckt, zahlen Sonne und interne Lasten die Rechnung."),
         ("rest",
-         "Only the red remainder has to be heated. In summer there is no remainder — the surplus is simply lost.",
-         "Nur der rote Rest muss beheizt werden. Im Sommer bleibt kein Rest — der Überschuss verfällt einfach."),
+         "Only the red remainder has to be heated. In summer there is no heating remainder — those unused gains sit in the cooling balance instead of paying January.",
+         "Nur der rote Rest muss beheizt werden. Im Sommer bleibt kein Heizrest — ungenutzte Gewinne gehören in die Kühlbilanz, nicht in den Januar."),
         ("jahr",
          "An annual average would credit that summer surplus against January, and make the demand look far too small.",
          "Ein Jahresmittel würde diesen Sommerüberschuss dem Januar gutschreiben — der Bedarf erschiene viel zu klein."),
@@ -322,7 +322,7 @@ class Beat2_Monatsbilanz(Scene):
 
         # —— Why the annual average fails ——
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "jahr"))
-        warn = note_line("Sommerüberschuss ist nicht übertragbar — er verfällt.", color=P_RED)
+        warn = note_line("Sommerüberschuss zählt nicht für die Heizbilanz.", color=P_RED)
         self.play(
             FadeIn(warn),
             *[c.animate.set_fill(opacity=0.85) for c in surplus_marks],

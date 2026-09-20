@@ -239,8 +239,8 @@ class Beat2_DieSkala(Scene):
          "The identical building with a heat pump needs thirty-one, and moves up to class A.",
          "Dasselbe Gebäude mit Wärmepumpe braucht einunddreißig — und rückt auf Klasse A."),
         ("lesen",
-         "Same walls, same windows, same useful-heat demand. The plant moves the letter too, not the envelope alone.",
-         "Gleiche Wände, gleiche Fenster, gleicher Nutzwärmebedarf. Den Buchstaben bestimmt die Anlage mit, nicht die Hülle allein."),
+         "Same walls, same windows, same useful heating demand. The plant moves the letter too, not the envelope alone.",
+         "Gleiche Wände, gleiche Fenster, gleicher Heizwärmebedarf. Den Buchstaben bestimmt die Anlage mit, nicht die Hülle allein."),
     ]
 
     def construct(self):

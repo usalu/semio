@@ -467,7 +467,7 @@ Von der Kühllast zum erforderlichen **Luftvolumenstrom** und **Kanalquerschnitt
 
 ### Lernziel
 
-Strategie: Last senken → natürliche Lüftung nutzen → mechanisch nur den Rest. Passivhaus-Prinzipien.
+Strategie: Last senken → frei lüften, solange die Außenluft kühler ist → RLT als Reserve. Das ist sommerlicher Wärmeschutz (DIN 4108-2), kein Passivhaus-Kriterium — ein Passivhaus braucht Zu-/Abluft mit WRG als Hygiene-Luftwechsel.
 
 ### Kernbegriffe
 
@@ -477,7 +477,7 @@ Strategie: Last senken → natürliche Lüftung nutzen → mechanisch nur den Re
 | **Auftriebslüftung** | Δp = h · g · (ρ_a − ρ_i) — Höhendifferenz erzeugt Druck |
 | **Nachtlüftung** | Speichermasse nachts abkühlen |
 | **WRG / KRG** | Wärme- bzw. Kälterückgewinnung im Sommer |
-| **Φ (WRG)** | (θ_ZUL − θ_AUL) / (θ_ABL − θ_AUL) — Temperaturwirkungsgrad |
+| **η (WRG)** | (θ_ZUL − θ_AUL) / (θ_ABL − θ_AUL) — Temperaturänderungsgrad |
 
 ### Formeln
 
@@ -485,13 +485,13 @@ Strategie: Last senken → natürliche Lüftung nutzen → mechanisch nur den Re
 |--------|-----------|
 | **1/A_eff² = 1/A_1² + 1/A_2²** | Serienschaltung zweier Öffnungen |
 | **Δp = h · g · (ρ_a − ρ_i)** | Auftriebsdruck |
-| **Φ = (θ_ZUL − θ_AUL) / (θ_ABL − θ_AUL)** | Rückgewinnungsgrad (Beispiel: 5 K / 6 K ≈ 0,8) |
+| **η = (θ_ZUL − θ_AUL) / (θ_ABL − θ_AUL)** | Temperaturänderungsgrad (Beispiel: 5 K / 6 K ≈ 0,8) |
 
 ### Strategie (3 Stufen)
 
 1. **Hülle + Sonnenschutz** — Last senken (~45 %)
 2. **Natürliche Lüftung** — kostenlos nutzen (~35 %)
-3. **Mechanische Lüftung** — nur für den Rest (~20 %)
+3. **RLT als Reserve** — nur für den Rest der Kühllast (~20 %)
 
 ---
 

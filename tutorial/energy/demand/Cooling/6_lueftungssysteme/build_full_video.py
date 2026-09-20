@@ -1,4 +1,4 @@
-"""Render, mux, and compose Scene 6 (Natürliche Lüftung im Passivhaus)."""
+"""Render, mux, and compose Scene 6 (Lüftungssysteme)."""
 
 import sys
 import subprocess

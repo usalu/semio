@@ -1,4 +1,4 @@
-"""🔊 Subtitle voiceover for Cooling Part 4 (Solarstrahlung) — synth, align, verify.
+"""🔊 Subtitle voiceover for Cooling Part 4 (Solare Einstrahlung) — synth, align, verify.
 
     synth   → one audio file per clause + vo_timing.json (measured lengths)
     trace   → VO_TRACE=1 manim run records when each subtitle appears

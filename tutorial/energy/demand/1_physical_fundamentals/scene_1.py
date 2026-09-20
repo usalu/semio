@@ -33,7 +33,7 @@ if _VO_TIMING.is_file():
     load_vo_timing(_VO_TIMING)
 
 # 🏔️ Persistent module title — animated once on Beat1, self.add()'ed on every later beat.
-TITLE_DE = "Physikalische Zusammenhänge: Kraft, Leistung & Energie"
+TITLE_DE = "Physikalische Grundlagen: Kraft, Leistung und Energie"
 
 # Mid-screen anchor for diagram content — clear of the title block above and of the
 # fixed formula_panel + caption_bar zones below.
@@ -394,11 +394,11 @@ class Beat1_UnsichtbareDimension(Scene):
          "The same house has to answer two very different questions. How much heat does it lose on a cold January night in Hannover? And how badly does it overheat under the July sun?",
          "Dasselbe Haus muss zwei Fragen beantworten: Wie viel Wärme verliert es im Winter? Wie stark überhitzt es im Sommer?"),
         ("language",
-         "Before we can calculate a heating load or an annual demand, we have to speak the language those calculations are written in — and that language is built from just four physical quantities.",
-         "Bevor wir Heizlast oder Jahresbedarf berechnen, müssen wir ihre Sprache sprechen — aufgebaut aus vier Größen."),
+         "Before we can calculate a heating load or an annual demand, we have to speak the language those calculations are written in — three physical quantities, plus one everyday energy unit.",
+         "Bevor wir Heizlast oder Jahresbedarf berechnen, müssen wir ihre Sprache sprechen — drei Größen und eine Alltags-Energieeinheit."),
         ("quantities",
-         "Force, measured in newtons. Work and energy, measured in joules. Power, measured in watts. And, for everyday building numbers, the kilowatt-hour. Four words — we will earn each one.",
-         "Kraft in Newton. Arbeit und Energie in Joule. Leistung in Watt. Und im Alltag die Kilowattstunde."),
+         "Force, measured in newtons. Work and energy, measured in joules. Power, measured in watts. And for everyday building numbers we package energy as the kilowatt-hour.",
+         "Kraft in Newton. Arbeit und Energie in Joule. Leistung in Watt. Und im Alltag packen wir Energie in die Kilowattstunde."),
         ("confusion",
          "In practice these get mixed up constantly. A boiler is quoted in kilowatt-hours instead of kilowatts. An annual bill is written in kilowatts per year instead of kilowatt-hours. Both look almost right and are completely wrong.",
          "In der Praxis werden sie verwechselt: Kessel in kWh statt kW, Jahresverbrauch in kW/a statt kWh/a."),
@@ -503,17 +503,17 @@ class Beat1_UnsichtbareDimension(Scene):
 class Beat2_KraftUndArbeit(Scene):
     NARRATION = [
         ("start",
-         "We start at the very bottom of the ladder, with force. Force is any push or pull. Its unit is the newton, and it is defined through gravity.",
-         "Wir beginnen ganz unten: bei der Kraft. Ihre Einheit ist das Newton — definiert über die Schwerkraft."),
+         "We start at the very bottom of the ladder, with force. Force is any push or pull. Its SI unit is the newton: one kilogram metre per second squared.",
+         "Wir beginnen ganz unten: bei der Kraft. Ihre SI-Einheit ist das Newton — ein Kilogramm mal Meter durch Sekunde zum Quadrat."),
         ("newton",
-         "Hold an apple — about one hundred grams — in your open hand. The downward pull of the Earth on it is very close to one newton. That is the reference you can feel.",
-         "Ein Apfel, rund 100 Gramm: Die Erde zieht mit etwa einem Newton daran. Das ist das spürbare Maß."),
+         "Hold an apple — about one hundred grams — in your open hand. The downward pull of the Earth on it is very close to one newton. That is a reference you can feel, not the definition of the unit.",
+         "Ein Apfel, rund 100 Gramm: Die Erde zieht mit etwa einem Newton daran. Das ist das spürbare Maß — nicht die Definition der Einheit."),
         ("gravity",
          "The pull comes from the gravitational acceleration g, about nine point eight one metres per second squared. Mass times g gives the weight force — one hundred grams times g is roughly one newton.",
          "Die Erdbeschleunigung g beträgt etwa 9,81 m/s². Masse mal g ergibt die Gewichtskraft — 100 g ergeben rund 1 N."),
         ("work",
-         "Now move that force through a distance. Lifting the apple against gravity is work. Work W equals force F times the distance s along which the force acts.",
-         "Bewegt man die Kraft über eine Strecke, verrichtet man Arbeit: W gleich Kraft F mal Weg s."),
+         "Now move that force through a distance. Lifting the apple against gravity is work. For a constant force along the path, work W equals force F times the distance s.",
+         "Bewegt man die Kraft über eine Strecke, verrichtet man Arbeit. Für konstante Kraft längs des Weges: W gleich F mal s."),
         ("area",
          "You can read the work straight off a picture: the force is the width, the lifting height is the height, and the work is the area of that rectangle. A bigger lift sweeps out more area.",
          "Die Arbeit ist die Fläche: Kraft als Breite, Höhe als Höhe. Mehr Hub — mehr Fläche."),
@@ -524,8 +524,8 @@ class Beat2_KraftUndArbeit(Scene):
          "A joule is tiny. Lifting that apple a single metre costs about one joule. One human heartbeat releases roughly one joule. Keep that smallness in mind — it is why buildings need a bigger unit.",
          "Ein Joule ist winzig: den Apfel einen Meter hoch, ein Herzschlag — je etwa ein Joule."),
         ("stored",
-         "And the work does not vanish. The lifted apple now holds that joule as stored energy. Let it fall and the energy comes back out, doing work again on whatever it hits.",
-         "Die Arbeit ist nicht weg: Der angehobene Apfel speichert sie. Fällt er, wird sie wieder zu Arbeit."),
+         "And the work does not vanish. The lifted apple now holds that joule as gravitational potential energy. Let it fall and that stored energy is released again.",
+         "Die Arbeit ist nicht weg: Der angehobene Apfel speichert sie als Lageenergie. Fällt er, wird sie wieder frei."),
     ]
 
     def construct(self):
@@ -706,14 +706,14 @@ class Beat3_ArbeitZuLeistung(Scene):
          "The right crate takes ten seconds for the very same lift. Same joules, spread thin over a long time — a low rate.",
          "Die rechte Last braucht zehn Sekunden — dieselben Joule, dünn verteilt, geringe Leistung."),
         ("formula",
-         "That rate is power. Power P equals the work W divided by the time t it took. Halve the time and you double the power.",
-         "Diese Rate ist die Leistung: P gleich Arbeit W geteilt durch Zeit t. Halbe Zeit, doppelte Leistung."),
+         "The ratio of work over time is the average power for that lift. Power P equals work W divided by the duration t. Halve the time and you double the average power.",
+         "Arbeit durch Zeit ist die mittlere Leistung des Hubs: P gleich W geteilt durch t. Halbe Zeit, doppelte mittlere Leistung."),
         ("watt",
          "One joule delivered in exactly one second is one watt. A kilowatt is one thousand joules every second — a steady, continuous flow of energy.",
          "Ein Joule in einer Sekunde ist ein Watt. Ein Kilowatt sind 1 000 Joule pro Sekunde."),
         ("rate",
-         "Power is always an instantaneous value — a snapshot. It is the speedometer of energy: it tells you the rate right now, not how far you have travelled.",
-         "Leistung ist ein Momentanwert — der Tacho der Energie. Sie zeigt die Rate jetzt, nicht die zurückgelegte Strecke."),
+         "The watt itself is the instantaneous rate — the speedometer of energy. P equals W over t is only the average over the interval, not a snapshot of every instant.",
+         "Das Watt selbst ist die Momentanrate — der Tacho der Energie. P gleich W durch t ist nur der Mittelwert über das Intervall."),
         ("meter",
          "The distance travelled — the joules that actually added up over time — is a separate quantity. That is energy, and it is what the next beat is about.",
          "Die zurückgelegte Strecke — die aufsummierten Joule — ist eine eigene Größe: die Energie. Darum geht es als Nächstes."),
@@ -824,7 +824,7 @@ class Beat3_ArbeitZuLeistung(Scene):
             run_time=0.7,
         )
         spd = _speedometer(np.array([0.0, 0.55, 0.0]), radius=0.9)
-        now_lbl = Text("Momentanwert — kW jetzt", font_size=LABEL_FONT_SIZE, color=P_CYAN)
+        now_lbl = Text("Momentanrate — Watt jetzt", font_size=LABEL_FONT_SIZE, color=P_CYAN)
         now_lbl.next_to(spd["face"], DOWN, buff=0.35)
         self.play(Create(spd["face"]), Create(spd["ticks"]), FadeIn(spd["needle"]), FadeIn(spd["hub"]), run_time=1.0)
         self.play(FadeIn(now_lbl), run_time=0.4)
@@ -853,8 +853,8 @@ class Beat4_Kilowattstunde(Scene):
          "Because the joule is hopelessly small for a building. Filling a year of heating energy one joule at a time is like filling a reservoir with a pipette — the numbers run to twelve or thirteen digits.",
          "Weil das Joule für ein Gebäude viel zu klein ist — ein Jahresbedarf hätte zwölf, dreizehn Stellen."),
         ("formula",
-         "Energy is simply power multiplied by the time it runs. E equals P times t. Hold a power for a while and you have accumulated energy.",
-         "Energie ist Leistung mal Zeit: E gleich P mal t. Eine Leistung über eine Dauer ergibt Energie."),
+         "Energy is power multiplied by the time it runs, with matching units. E equals P times t. Hold a kilowatt for an hour and you have accumulated one kilowatt-hour.",
+         "Energie ist Leistung mal Zeit, mit passenden Einheiten: E gleich P mal t. Ein Kilowatt über eine Stunde ergibt eine Kilowattstunde."),
         ("convert",
          "Take one kilowatt and let it run for one hour. That is one thousand watts times three thousand six hundred seconds — three point six million joules.",
          "Ein Kilowatt eine Stunde lang: 1 000 W mal 3 600 s — 3,6 Millionen Joule."),
@@ -896,7 +896,7 @@ class Beat4_Kilowattstunde(Scene):
         eq, items = equation_row([
             ("e", "E", P_WHITE), (None, "=", P_WHITE),
             ("p", "P", P_CYAN), (None, "·", P_WHITE), ("t", "t", P_ORANGE),
-            (None, "  [kWh]", P_TEAL),
+            (None, "  [kW·h]", P_TEAL),
         ])
         eq, box = formula_panel(eq)
 
@@ -1041,26 +1041,26 @@ class Beat5_Groessenordnungen(Scene):
          "One hundred watts — an old incandescent bulb, and almost exactly the heat a resting adult body gives off. You are a hundred-watt heater.",
          "100 W — eine Glühbirne, und fast genau die Wärme eines ruhenden Menschen. Sie sind ein 100-Watt-Heizkörper."),
         ("fridge",
-         "One hundred watts again — a fridge, averaged over its on-off cycling. Same order of magnitude, running quietly in every kitchen.",
-         "Wieder 100 W — ein Kühlschrank im Mittel seiner Taktung. Dieselbe Größenordnung, in jeder Küche."),
+         "One hundred watts again — a fridge averaged over its on-off cycling, as an order of magnitude. Same ballpark, sitting quietly in every kitchen.",
+         "Wieder 100 W — ein Kühlschrank im Mittel seiner Taktung, als Größenordnung. Dieselbe Liga, in jeder Küche."),
         ("workstation",
          "Around one hundred and fifty watts — a workstation with two monitors. Fill an office floor with these and the cooling engineer starts paying attention.",
          "Rund 150 W — ein Arbeitsplatz mit zwei Monitoren. Ein ganzes Bürogeschoss davon fällt auf."),
         ("kettle",
-         "Two kilowatts — an electric kettle. This is the ceiling of a normal wall socket, and twenty times a resting person.",
-         "2 kW — ein Wasserkocher. Das Limit einer normalen Steckdose — das Zwanzigfache eines Menschen."),
+         "Two kilowatts — an electric kettle. Typical for a kitchen and well within a household socket — about twenty times a resting person.",
+         "2 kW — ein Wasserkocher. Typisch für die Küche, weit unter der Steckdosengrenze — etwa das Zwanzigfache eines Menschen."),
         ("heating",
-         "Around nine kilowatts — the design heating load of a well-insulated detached house in Hannover on the coldest night, near minus twelve degrees.",
-         "Rund 9 kW — die Heizlast eines gut gedämmten Einfamilienhauses in Hannover bei etwa −12 °C."),
+         "Around nine kilowatts — the design heating load of a typical insulated detached house in Hannover on the coldest night, near minus twelve degrees.",
+         "Rund 9 kW — die Heizlast eines typischen gedämmten Einfamilienhauses in Hannover bei etwa −12 °C."),
         ("hall",
-         "Roughly eight kilowatts — one hundred students sitting in a lecture hall. Their bodies alone are a serious summer cooling load before a single lamp is switched on.",
-         "Rund 8 kW — 100 Studierende im Hörsaal. Allein ihre Körper sind eine ernste sommerliche Kühllast."),
+         "Roughly eight kilowatts — one hundred students sitting in a lecture hall, about eighty watts each. Their bodies alone are a serious summer cooling load before a single lamp is switched on.",
+         "Rund 8 kW — 100 Studierende im Hörsaal, etwa achtzig Watt je Person. Allein ihre Körper sind eine ernste sommerliche Kühllast."),
         ("city",
          "At the top, thirty megawatts — the urban scale. Enercity's large heat pump at Herrenhausen delivers about that, enough for roughly three thousand homes.",
          "Ganz oben: 30 MW — städtischer Maßstab. Die Großwärmepumpe Herrenhausen versorgt rund 3 000 Häuser."),
         ("close",
-         "From a candle to a power station is a factor of more than a million. Keep this ladder in your head — every load in the coming videos lands somewhere on it.",
-         "Von der Kerze zum Kraftwerk: Faktor über eine Million. Jede Last der nächsten Videos liegt auf dieser Leiter."),
+         "From a candle to that large heat pump is a factor of more than a million. Keep this ladder in your head — every load in the coming videos lands somewhere on it.",
+         "Von der Kerze zur Großwärmepumpe: Faktor über eine Million. Jede Last der nächsten Videos liegt auf dieser Leiter."),
     ]
 
     def construct(self):
@@ -1147,8 +1147,8 @@ class Beat5_Groessenordnungen(Scene):
 class Beat6_Energieerhaltung(Scene):
     NARRATION = [
         ("law",
-         "Every heating and cooling calculation rests on one law. Energy is never created and never destroyed. It only changes form. The sum of all energy in a closed system stays constant.",
-         "Jede Heiz- und Kühlrechnung ruht auf einem Satz: Energie entsteht nicht und vergeht nicht — sie wandelt nur ihre Form. Die Summe bleibt konstant."),
+         "Every heating and cooling calculation rests on one law. Energy is never created and never destroyed. It only changes form. In any balance, what goes in must come out or stay stored.",
+         "Jede Heiz- und Kühlrechnung ruht auf einem Satz: Energie entsteht nicht und vergeht nicht — sie wandelt nur ihre Form. Was hineingeht, kommt heraus oder bleibt gespeichert."),
         ("input",
          "Feed one hundred watts of electricity into a lamp. One hundred percent goes in as electrical power. The law says one hundred percent must come out again, in some form.",
          "100 W Strom in eine Lampe: 100 % gehen hinein — 100 % müssen wieder heraus, in irgendeiner Form."),
@@ -1159,17 +1159,17 @@ class Beat6_Energieerhaltung(Scene):
          "Follow the flow. The input bar forks: a thin lane of light, a wide lane of heat. Nothing is lost at the fork — the two lanes still add back to one hundred watts.",
          "Der Eingangsbalken teilt sich: eine schmale Spur Licht, eine breite Spur Wärme. Zusammen wieder 100 W."),
         ("walls",
-         "And the light does not escape either. It travels a few metres, strikes the walls, the floor, the furniture — and is absorbed. At each surface it becomes heat as well.",
-         "Auch das Licht entkommt nicht: Es trifft Wände, Boden, Möbel — wird absorbiert und ebenfalls zu Wärme."),
+         "And most of that light does not leave the room. It travels a few metres, strikes the walls, the floor, the furniture — and is absorbed. At each surface it becomes heat as well.",
+         "Und das meiste Licht bleibt im Raum: Es trifft Wände, Boden, Möbel — wird absorbiert und ebenfalls zu Wärme."),
         ("merge",
          "So the two lanes rejoin. A short time later, essentially all one hundred watts of electricity have become heat inside the room. Light was just a brief detour.",
          "Die Spuren vereinen sich wieder: Kurz darauf sind praktisch alle 100 W Strom zu Raumwärme geworden."),
         ("building",
-         "This is the rule an architect carries everywhere. Almost every watt of electricity used inside a building — lights, computers, appliances, people — ends up as a thermal load on that building.",
-         "Die Regel für Architekten: Fast jedes Watt Strom im Gebäude — Licht, Rechner, Geräte, Menschen — endet als thermische Last."),
+         "This is the rule an architect carries everywhere. Almost every watt of electricity used inside — lights, computers, appliances — ends up as heat. Occupants add metabolic heat on top of that.",
+         "Die Regel für Architekten: Fast jedes Watt Strom im Gebäude — Licht, Rechner, Geräte — endet als Wärme. Personen kommen als Stoffwechselwärme dazu."),
         ("seasons",
          "In January that internal heat is a welcome gift that lowers the heating demand. In July it is an unwelcome load the cooling system has to fight. Same watts, opposite sign.",
-         "Im Januar ist diese innere Wärme ein Gewinn, im Juli eine Last. Dieselben Watt, umgekehrtes Vorzeichen."),
+         "Im Januar senkt diese innere Wärme den Heizwärmebedarf, im Juli ist sie eine Kühllast. Dieselben Watt, umgekehrtes Vorzeichen."),
     ]
 
     def construct(self):
@@ -1283,7 +1283,7 @@ class Beat6_Energieerhaltung(Scene):
             )
             for dy in (-0.5, 0.0, 0.5)
         ])
-        gift_lbl = Text("Gewinn — spart Heizung", font_size=LABEL_FONT_SIZE, color=P_GREEN)
+        gift_lbl = Text("senkt Heizwärmebedarf", font_size=LABEL_FONT_SIZE, color=P_GREEN)
         gift_lbl.move_to(np.array([h_left_x - 2.3, hc[1] - 1.0, 0.0]))
         self.play(
             FadeIn(winter_chip),
@@ -1340,8 +1340,8 @@ class Beat7_Waermepumpe(Scene):
          "The trick is that a heat pump does not create heat. It moves heat that already exists in the cold outdoor air into the warm building, and it spends some electricity to do the moving.",
          "Der Trick: Eine Wärmepumpe erzeugt keine Wärme. Sie verschiebt vorhandene Wärme aus der kalten Außenluft ins Haus — mit etwas Stromaufwand."),
         ("inputs",
-         "One kilowatt-hour of electricity drives the compressor. That work pulls roughly three kilowatt-hours of ambient heat out of the outside air, even at a few degrees Celsius.",
-         "1 kWh Strom treibt den Verdichter. Diese Arbeit holt rund 3 kWh Umgebungswärme aus der Außenluft."),
+         "One kilowatt-hour of electricity drives the compressor. In this schematic operating point that work pulls roughly three kilowatt-hours of ambient heat out of the outdoor air.",
+         "1 kWh Strom treibt den Verdichter. In diesem schematischen Betriebspunkt holt die Arbeit rund 3 kWh Umgebungswärme aus der Außenluft."),
         ("output",
          "Add them: one kilowatt-hour of electricity plus three kilowatt-hours of ambient heat leave the machine as four kilowatt-hours of useful heat delivered to the rooms.",
          "Zusammen: 1 kWh Strom plus 3 kWh Umweltwärme ergeben 4 kWh nutzbare Heizwärme im Gebäude."),
@@ -1349,11 +1349,11 @@ class Beat7_Waermepumpe(Scene):
          "The books balance perfectly. One plus three equals four. No energy was invented — the electricity only paid for the transport of heat that was already out there.",
          "Die Bilanz stimmt: 1 plus 3 gleich 4. Nichts wurde erfunden — der Strom bezahlt nur den Transport."),
         ("cop",
-         "The ratio of what you get to what you pay is the coefficient of performance, the COP. It is the useful heat output divided by the electrical input.",
-         "Das Verhältnis von Nutzen zu Aufwand ist der COP: nutzbare Heizwärme geteilt durch Stromaufwand."),
+         "The ratio of useful heat to electrical work at that operating point is the coefficient of performance, the COP.",
+         "Das Verhältnis von nutzbarer Heizwärme zu elektrischer Arbeit an diesem Punkt ist der COP."),
         ("value",
-         "Four kilowatt-hours out for one kilowatt-hour of electricity in is a COP of four. Every unit of electricity is multiplied fourfold — the best translation of power into heat we have.",
-         "4 kWh Nutzen je 1 kWh Strom ist ein COP von 4 — jede Einheit Strom vervierfacht sich."),
+         "Four kilowatt-hours of heat per kilowatt-hour of electricity is a COP of four. Three of those four came from the outdoor air — nothing was created from nothing.",
+         "4 kWh Wärme je 1 kWh Strom ist ein COP von 4. Drei der vier stammen aus der Außenluft — nichts entstand aus dem Nichts."),
         ("subs",
          "This is why heat-pump data sheets are full of little subscripts. kW with a small e-l is the electrical drive power you pay for at the meter. kW with a small t-h is the thermal heating power that actually warms the house. A data sheet might list two point five kilowatts electrical and ten kilowatts thermal — the same factor of four.",
          "kW_el = elektrische Antriebsleistung (bezahlt), kW_th = thermische Heizleistung fürs Haus."),
@@ -1361,8 +1361,8 @@ class Beat7_Waermepumpe(Scene):
          "Compare a plain resistance heater: one kilowatt-hour of electricity gives exactly one kilowatt-hour of heat. Its COP is one. The heat pump does the same job with a quarter of the electricity.",
          "Zum Vergleich der Heizstab: 1 kWh Strom ergibt genau 1 kWh Wärme — COP gleich 1. Die Wärmepumpe braucht ein Viertel."),
         ("jaz",
-         "Averaged over a whole Hannover heating season, with cold spells and defrost cycles, a real air-source unit lands nearer a COP of three — reported as the seasonal performance factor, the JAZ.",
-         "Übers Jahr gemittelt — mit Kälteperioden und Abtauen — liegt eine Luft-Wärmepumpe eher bei COP 3: die Jahresarbeitszahl JAZ."),
+         "Averaged over a whole Hannover heating season, with cold spells and defrost cycles, a real air-source unit is reported as the seasonal performance factor JAZ — often nearer three, not the COP of a single mild hour.",
+         "Übers Jahr gemittelt — mit Kälteperioden und Abtauen — gibt man die Jahresarbeitszahl JAZ an: oft eher 3, nicht der COP einer milden Stunde."),
         ("primary",
          "One last distinction to keep in your pocket. The kilowatt-hour you pull from the socket is called final energy. How much coal, gas or wind the power station had to spend to deliver it is the primary energy — but that belongs in the next video.",
          "Strom aus der Steckdose = Endenergie. Der Aufwand im Kraftwerk = Primärenergie — mehr im nächsten Video."),
@@ -1395,8 +1395,8 @@ class Beat7_Waermepumpe(Scene):
 
         eq, items = equation_row([
             (None, "COP", P_TEAL), (None, "=", P_WHITE),
-            ("q", "Q_ab", P_RED), (None, "/", P_WHITE),
-            ("w", "W_zu", P_CYAN),
+            ("q", "Q_H", P_RED), (None, "/", P_WHITE),
+            ("w", "W_el", P_CYAN),
             (None, "  = 4,0", P_YELLOW),
         ])
         eq, eq_box = formula_panel(eq, color=P_TEAL)
@@ -1522,17 +1522,17 @@ class Beat8_Ausblick(Scene):
          "One picture holds the whole module together. The kilowatt is the pipe — the rate energy flows at a given instant. The kilowatt-hour is the bucket — the amount that has collected over time.",
          "Ein Bild trägt das Modul: Das Kilowatt ist das Rohr — die Rate. Die Kilowattstunde ist der Eimer — die Menge."),
         ("cheat",
-         "And the four units line up. Newtons for force. Joules for work and energy. Watts, which are joules per second, for power. Kilowatt-hours for the energy amounts a building actually deals in.",
-         "Die vier Einheiten: Newton für Kraft, Joule für Energie, Watt gleich Joule pro Sekunde für Leistung, Kilowattstunde für den Alltag."),
+         "And the four units line up. Newtons for force. Joules for work and energy. Watts, which are joules per second, for power. Kilowatt-hours for the energy amounts a building actually deals in — still energy, just a larger package.",
+         "Die vier Einheiten: Newton für Kraft, Joule für Energie, Watt gleich Joule pro Sekunde für Leistung, Kilowattstunde für den Alltag — weiterhin Energie, nur größer gepackt."),
         ("left",
          "The heating videos first size the pipe. The heating load, in kilowatts, is the worst-case rate the system must deliver on the coldest hour — computed after DIN EN 12831.",
          "Die Heiz-Videos dimensionieren zuerst das Rohr: die Heizlast in kW für die kälteste Stunde — nach DIN EN 12831."),
         ("right",
-         "Then they size the bucket. The annual heating demand, in kilowatt-hours per square metre and year, is the total energy the building consumes across a whole heating season — after DIN V 18599.",
-         "Dann den Eimer: den Jahres-Heizwärmebedarf in kWh/m²a über die ganze Heizperiode — nach DIN V 18599."),
+         "Then they size the bucket. The annual heating demand, in kilowatt-hours per square metre and year, is the useful heat the zone needs over a heating season — after DIN V 18599, not the meter reading.",
+         "Dann den Eimer: den Jahres-Heizwärmebedarf in kWh/m²a — die Nutzenergie der Zone über die Heizperiode nach DIN V 18599, nicht den Zählerstand."),
         ("perarea",
-         "And why divide the whole thing by the square metres of floor area at the end? So that any two buildings can be compared. Only per square metre can we tell whether a small villa or a large apartment block is the more efficient one.",
-         "Warum am Ende durch die Quadratmeter? So lassen sich Gebäude vergleichen — kleine Villa oder großer Wohnblock."),
+         "And why divide by the square metres of floor area at the end? So the specific demand can be compared. A villa and a block can share the same kilowatt-hours per square metre even if their totals differ.",
+         "Warum am Ende durch die Quadratmeter? Damit der spezifische Bedarf vergleichbar wird — Villa und Block können denselben Wert haben, obwohl die Summen verschieden sind."),
         ("both",
          "Pipe and bucket, rate and amount, power and energy — you will need both numbers for every project, and now you know exactly what each one means.",
          "Rohr und Eimer, Rate und Menge, Leistung und Energie — beide Zahlen braucht jedes Projekt, und ihr wisst jetzt, was sie bedeuten."),

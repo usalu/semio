@@ -1,4 +1,4 @@
-"""🎬 Full Physical Fundamentals video — all seven beats in curriculum order.
+"""🎬 Full Physical Fundamentals video — all eight beats in curriculum order.
 
 Recommended: run this file as a script (beat renders + ffmpeg concat).
 """
@@ -98,21 +98,27 @@ def _quality_folder(quality_flag: str) -> str:
 
 def _find_section_mp4(media_dir: Path, scene_name: str, quality_flag: str) -> Path:
     folder = _quality_folder(quality_flag)
-    direct = media_dir / "videos" / "full_physical_fundamentals_video" / folder / f"{scene_name}.mp4"
-    if direct.is_file() and direct.stat().st_size > 1000:
-        return direct
+    preferred = [
+        media_dir / "videos" / "full_physical_fundamentals_video" / folder / f"{scene_name}.mp4",
+        media_dir / "videos" / "intro_scene" / folder / f"{scene_name}.mp4",
+        media_dir / "videos" / "scene_1" / folder / f"{scene_name}.mp4",
+    ]
+    for path in preferred:
+        if path.is_file() and path.stat().st_size > 1000:
+            return path
     matches = sorted(
         (media_dir / "videos").rglob(f"{scene_name}.mp4"),
         key=lambda p: p.stat().st_mtime,
         reverse=True,
     )
     for match in matches:
-        if match.stat().st_size > 1000:
+        if folder in match.parts and match.stat().st_size > 1000:
             return match
     raise FileNotFoundError(f"Rendered mp4 not found for {scene_name} under {media_dir}")
 
 
-def _ffmpeg_concat(clips: list[Path], output: Path, list_path: Path) -> None:
+def _ffmpeg_concat_silent(clips: list[Path], output: Path, list_path: Path) -> None:
+    """🎞️ Concatenate clips and drop any audio stream."""
     lines = []
     for clip in clips:
         escaped = str(clip.resolve()).replace("'", r"'\''")
@@ -121,7 +127,13 @@ def _ffmpeg_concat(clips: list[Path], output: Path, list_path: Path) -> None:
     list_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
     output.parent.mkdir(parents=True, exist_ok=True)
     subprocess.run(
-        ["ffmpeg", "-y", "-f", "concat", "-safe", "0", "-i", str(list_path), "-c", "copy", str(output)],
+        [
+            "ffmpeg", "-y",
+            "-f", "concat", "-safe", "0",
+            "-i", str(list_path),
+            "-c:v", "copy", "-an",
+            str(output),
+        ],
         check=True,
     )
 
@@ -133,11 +145,12 @@ def compose_full_physical_fundamentals_video(
     media_dir: Path | None = None,
     force: bool = False,
 ) -> Path:
-    """🎬 Render series intro + all beats, ffmpeg-concat, copy silent full to ``rendered/``."""
+    """🎬 Render intro + each beat, silent ffmpeg-concat, copy to ``rendered/``."""
     media_dir = media_dir or (_PF_ROOT / "media")
     manim = _manim_bin()
     clips: list[Path] = []
     folder = _quality_folder(quality_flag)
+    beat_script = _PF_ROOT / "scene_1.py"
 
     def _maybe_existing(scene_name: str) -> Path | None:
         if force:
@@ -147,46 +160,34 @@ def compose_full_physical_fundamentals_video(
         except FileNotFoundError:
             return None
 
-    intro_existing = _maybe_existing(INTRO_CLASS_NAME)
-    if intro_existing is not None:
-        print(f"\n=== Skipping intro {INTRO_CLASS_NAME} (already rendered) ===")
-        clips.append(intro_existing)
-    else:
-        print(f"\n=== Rendering {INTRO_CLASS_NAME} ===")
+    def _render(script: Path, scene_name: str) -> Path:
+        existing = _maybe_existing(scene_name)
+        if existing is not None:
+            print(f"\n=== Skipping {scene_name} (already rendered) ===")
+            return existing
+        print(f"\n=== Rendering {scene_name} ===")
         subprocess.run(
             [
                 str(manim),
                 quality_flag,
-                "--media_dir",
-                str(media_dir),
-                str(_INTRO_SCENE),
-                INTRO_CLASS_NAME,
+                "--media_dir", str(media_dir),
+                str(script),
+                scene_name,
             ],
             check=True,
             cwd=str(_SEMIO_ROOT),
         )
-        clips.append(_find_section_mp4(media_dir, INTRO_CLASS_NAME, quality_flag))
+        return _find_section_mp4(media_dir, scene_name, quality_flag)
 
-    scene_cls = PhysicalFundamentals_FullSection
-    name = scene_cls.__name__
-    body_existing = _maybe_existing(name)
-    if body_existing is not None:
-        print(f"\n=== Skipping {name} (already rendered) ===")
-        clips.append(body_existing)
-    else:
-        print(f"\n=== Rendering {name} ===")
-        subprocess.run(
-            [str(manim), quality_flag, "--media_dir", str(media_dir), str(Path(__file__).resolve()), name],
-            check=True,
-            cwd=str(_SEMIO_ROOT),
-        )
-        clips.append(_find_section_mp4(media_dir, name, quality_flag))
+    clips.append(_render(_INTRO_SCENE, INTRO_CLASS_NAME))
+    for beat_cls in PHYSICAL_FUNDAMENTALS_PLAYLIST[0][1]:
+        clips.append(_render(beat_script, beat_cls.__name__))
 
     out_dir = media_dir / "videos" / "full_physical_fundamentals_video" / folder
     output = out_dir / "FullPhysicalFundamentalsVideo.mp4"
     out_dir.mkdir(parents=True, exist_ok=True)
-    print(f"\n=== Concatenating intro + body → {output.name} ===")
-    _ffmpeg_concat(clips, output, out_dir / "concat_list.txt")
+    print(f"\n=== Merging {len(clips)} silent clips (intro + beats) → {output.name} ===")
+    _ffmpeg_concat_silent(clips, output, out_dir / "concat_list.txt")
 
     rendered_dir = _PF_ROOT / "rendered"
     rendered_dir.mkdir(parents=True, exist_ok=True)
@@ -213,7 +214,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--force",
         action="store_true",
-        help="Re-render intro and body even if mp4s already exist",
+        help="Re-render intro and every beat even if mp4s already exist",
     )
     args = parser.parse_args(argv)
     quality_flag = {"l": "-ql", "m": "-qm", "h": "-qh"}[args.q]

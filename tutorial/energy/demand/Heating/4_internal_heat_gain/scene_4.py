@@ -119,8 +119,8 @@ class Beat1_WinterInterneGewinne(Scene):
          "Inside, people, devices, and lights already make free heat.",
          "Drinnen erzeugen Personen, Geräte und Licht schon freie Wärme."),
         ("din",
-         "Those internal gains cut the heating demand — the idea behind DIN V 18599.",
-         "Diese internen Gewinne senken den Heizbedarf — so meint es DIN V 18599."),
+         "Those internal gains cut the annual heating demand in DIN V 18599. A design heating load after DIN EN 12831 usually ignores them.",
+         "Diese internen Gewinne senken den Jahres-Heizwärmebedarf nach DIN V 18599. Eine Auslegungsheizlast nach DIN EN 12831 lässt sie meist weg."),
     ]
 
     def construct(self):

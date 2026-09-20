@@ -1,4 +1,4 @@
-"""🔊 Subtitle voiceover for Cooling Part 1 (Heizlast vs. Kühllast) — synth, align, verify.
+"""🔊 Subtitle voiceover for Cooling Part 1 (Heizwärmebedarf vs. Kühllast) — synth, align, verify.
 
 The spoken text is the German subtitle already on screen, so audio and captions
 come from one source (``scene_1.py`` NARRATION). Workflow:

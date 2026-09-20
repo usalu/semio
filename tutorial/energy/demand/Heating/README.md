@@ -1,15 +1,16 @@
 # Heating Demand — Full Video
 
 Plays the **Heating demand series** in curriculum order, prepended with the
-series intro card ``Demo_Intro_Heizlast`` from ``tutorial/intro/intro_scene.py``:
+series intro card ``Demo_Intro_Heizlast`` from ``tutorial/intro/intro_scene.py``
+(on-screen topic: Heizwärmebedarf):
 
-0. Intro — Heizlast
-1. Modul 1 — Einführung
-2. Modul 2 — Transmission / Leitung
-3. Modul 3 — Konvektion / Lüftung
+0. Intro — Heizwärmebedarf
+1. Modul 1 — Grundlagen der Bauphysik
+2. Modul 2 — Transmission
+3. Modul 3 — Lüftung
 4. Modul 4 — Interne Wärmegewinne
 5. Modul 5 — Solarer Wärmegewinn
-6. Final calculation
+6. Final calculation — Heizwärmebedarf
 
 Entry file: [`full_heating_video.py`](./full_heating_video.py)
 

@@ -31,7 +31,7 @@ if _VO_TIMING.is_file():
     load_vo_timing(_VO_TIMING)
 
 # 🏔️ Persistent module title — written once on Beat1, self.add()'ed on later beats.
-TITLE_DE = "Mechanische Wohnungslüftung: Auslegung"
+TITLE_DE = "Systemauslegung"
 
 # Mid-screen anchor for rooms / ducts (clear of title + formula/caption).
 CONTENT_CENTER = UP * 0.1
@@ -189,8 +189,8 @@ class Beat1_MechanicalVentilation(Scene):
          "The room is already saturated with heat. To actively remove that cooling load, we rely on a mechanical supply and exhaust system—a Zu-Abluftsystem.",
          "Der Raum ist wärmegesättigt — ein mechanisches Zu- und Abluftsystem muss die Last abführen."),
         ("flow",
-         "Cool outdoor air is pushed in through a supply grille, while warm indoor air is drawn out through an exhaust grille at the same time.",
-         "Kühle Zuluft strömt herein, warme Abluft wird gleichzeitig abgeführt."),
+         "Cooled, treated supply air from the air-handling unit is pushed in through a supply grille, while warm indoor air is drawn out at the same time.",
+         "Gekühlte, aufbereitete Zuluft aus der RLT-Anlage strömt herein, warme Abluft wird gleichzeitig abgeführt."),
         ("question",
          "Watch the airflow cool the room. The engineering question that follows is precise: what volumetric flow rate do we need to neutralize this heat load?",
          "Welchen Volumenstrom braucht es, um diese Wärmelast auszugleichen?"),
@@ -303,14 +303,14 @@ class Beat2_VolumeFlowEquation(Scene):
          "Q-dot V equals air density times specific heat capacity times the temperature difference between cool supply air and the warm room, times q v R—the required room airflow volume.",
          "Q Punkt V ist gleich Rho a mal c p a mal Delta Theta mal q v R."),
         ("rho",
-         "Density is a material property of air — about 1.29 kilograms per cubic metre.",
-         "Rho a ist die Luftdichte — etwa eins Komma zwei neun Kilogramm pro Kubikmeter."),
+         "Density is a material property of air — about 1.2 kilograms per cubic metre at room temperature.",
+         "Rho a ist die Luftdichte — etwa eins Komma zwei Kilogramm pro Kubikmeter bei Raumtemperatur."),
         ("cp",
          "Specific heat capacity is likewise a material property — about 1.0 kilojoule per kilogram-kelvin.",
          "c p a ist die spezifische Wärmekapazität — etwa eins Komma null Kilojoule pro Kilogramm und Kelvin."),
         ("dth",
-         "Delta theta is the designed temperature lift we allow — here 25 minus 18 equals 7 kelvin.",
-         "Delta Theta ist der Temperaturhub — hier fünfundzwanzig minus achtzehn, also sieben Kelvin."),
+         "Delta theta is the designed temperature lift between room air and cooled supply air — here 25 minus 18 equals 7 kelvin.",
+         "Delta Theta ist der Temperaturhub zwischen Raumluft und gekühlter Zuluft — hier fünfundzwanzig minus achtzehn, also sieben Kelvin."),
         ("qvr",
          "And q v R is the free design variable: how much air we must move every second to carry the heat away.",
          "q v R ist die Entwurfsgröße — wie viel Luft pro Sekunde bewegt werden muss."),
@@ -388,7 +388,7 @@ class Beat2_VolumeFlowEquation(Scene):
         card_bodies = [
             VGroup(
                 Text("Luftdichte", font_size=LABEL_FONT_SIZE, color=P_TEAL),
-                Text("ρ_a = 1,29 kg/m³", font_size=BODY_FONT_SIZE, color=P_GREEN),
+                Text("ρ_a = 1,2 kg/m³", font_size=BODY_FONT_SIZE, color=P_GREEN),
             ).arrange(DOWN, buff=0.06),
             VGroup(
                 Text("spez. Wärmekapazität", font_size=LABEL_FONT_SIZE, color=P_TEAL),
@@ -465,8 +465,8 @@ class Beat2_VolumeFlowEquation(Scene):
 class Beat3_IsolateAirflow(Scene):
     NARRATION = [
         ("intro",
-         "Thermal equilibrium demands that cooling capacity equals the solar transmission load we calculated earlier.",
-         "Im Gleichgewicht muss die Kühlleistung der solaren Kühllast entsprechen."),
+         "We size the supply airflow so its cooling capacity matches the solar cooling load through the glazing from the last part.",
+         "Wir legen den Zuluftstrom so aus, dass seine Kühlleistung der solaren Kühllast durch die Verglasung entspricht."),
         ("substitute",
          "Because Q-dot V equals Q-dot S,tr, we replace the left side and rearrange: q v R moves alone to the left, and the load sits over density, heat capacity and Delta theta.",
          "Weil Q Punkt V gleich Q Punkt S t r ist, stellen wir um: q v R nach links, die Last geteilt durch Rho a mal c p a mal Delta Theta."),
@@ -748,8 +748,8 @@ class Beat5_CalculateRadius(Scene):
          "First, volume flow q v R equals the solar cooling load Q-dot S,tr divided by density, heat capacity and Delta theta.",
          "q v R ist gleich Q Punkt S t r geteilt durch Rho a mal c p a mal Delta Theta."),
         ("qstr",
-         "Q-dot S,tr is the heat we must remove — it sits in the numerator.",
-         "Q Punkt S t r ist die abzuführende Wärme — sie steht im Zähler."),
+         "Q-dot S,tr is the cooling load we must remove — it sits in the numerator.",
+         "Q Punkt S t r ist die abzuführende Kühllast — sie steht im Zähler."),
         ("qvr",
          "That fixes q v R — the airflow the duct must carry every second.",
          "Daraus folgt q v R — der Luftstrom, den der Kanal tragen muss."),

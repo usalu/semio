@@ -1,4 +1,4 @@
-"""🔥 Heating Module 2 — Wärmeleitung (Conduction).
+"""🔥 Heating Module 2 — Transmission (opaque envelope).
 
 Migrated from ``merged_scenes_german.py`` onto the generate-manim-tutorial
 template: fixed type scale, ``formula_panel`` with units, German ``caption_bar``
@@ -35,7 +35,7 @@ from manim_visuals import (
 set_vo_language("de")
 
 # 🏔️ Persistent topic title — Write once on Beat1, self.add() on later beats.
-TITLE_DE = "Modul 2: Wärmeleitung"
+TITLE_DE = "Modul 2: Transmission"
 
 
 #region Beat helpers
@@ -73,8 +73,8 @@ class Beat1_MakroUndMikro(Scene):
          "An insulation layer full of air pockets breaks that chain — conduction nearly stops.",
          "Eine Dämmschicht mit Lufteinschlüssen unterbricht die Kette — die Leitung stoppt fast."),
         ("blocked",
-         "Air pockets stop conduction, exactly as DIN 4108 intends for building envelopes.",
-         "Lufteinschlüsse stoppen die Wärmeleitung — genau so meint es DIN 4108 für die Gebäudehülle."),
+         "Small trapped air pockets slow conduction. Large cavities can convect; DIN 4108 still requires a minimum envelope resistance.",
+         "Kleine eingeschlossene Luftporen bremsen die Leitung. Große Hohlräume können konvektieren — DIN 4108 verlangt trotzdem einen Mindestwärmeschutz."),
     ]
 
     def construct(self):
@@ -281,7 +281,7 @@ class Beat2_RWert(Scene):
         r_var = ValueTracker(2.0)
         brace = Brace(rect, DOWN, buff=0.12, color=P_WHITE)
         d_label = Text("d [m]", font_size=BODY_FONT_SIZE, color=P_ORANGE).next_to(brace, DOWN, buff=0.08)
-        r_label = Text("R = 2.0 m²·K/W", font_size=BODY_FONT_SIZE, color=P_YELLOW).next_to(rect, UP, buff=0.18)
+        r_label = Text("R = 2,0 m²·K/W", font_size=BODY_FONT_SIZE, color=P_YELLOW).next_to(rect, UP, buff=0.18)
 
         ring_d = highlight_param(items, "d", color=P_ORANGE)
         self.play(GrowFromCenter(brace), FadeIn(d_label), FadeIn(r_label), Create(ring_d), run_time=1.0)
@@ -299,8 +299,10 @@ class Beat2_RWert(Scene):
         d_label.add_updater(lambda t: t.next_to(brace, DOWN, buff=0.08))
         r_label.add_updater(
             lambda t: t.become(
-                Text(f"R = {r_var.get_value():.1f} m²·K/W", font_size=BODY_FONT_SIZE, color=P_YELLOW)
-                .next_to(rect, UP, buff=0.18)
+                Text(
+                    f"R = {r_var.get_value():.1f} m²·K/W".replace(".", ","),
+                    font_size=BODY_FONT_SIZE, color=P_YELLOW,
+                ).next_to(rect, UP, buff=0.18)
             )
         )
         rect_label.add_updater(lambda t: t.move_to(rect.get_center()))
@@ -457,14 +459,14 @@ class Beat4_Gebaeudehuelle(Scene):
          "For the whole building, add every envelope piece: roof, windows, walls, doors, floor.",
          "Für das ganze Gebäude addieren wir jedes Hüllteil: Dach, Fenster, Wände, Türen, Boden."),
         ("formula",
-         "Transmission heat loss is the sum of U_i times A_i times delta theta_i — in watts, per DIN EN ISO 13789.",
-         "Der Transmissionswärmeverlust ist die Summe aus U_i mal A_i mal Delta-Theta_i — in Watt, nach DIN EN ISO 13789."),
+         "Transmission heat loss is the sum of U_i times A_i times delta theta — in watts. DIN EN 12831-1 sizes the heating load this way; DIN EN ISO 13789 writes the same idea as H_T.",
+         "Der Transmissionswärmeverlust ist die Summe aus U_i mal A_i mal Delta-Theta — in Watt. DIN EN 12831-1 legt so die Heizlast aus; DIN EN ISO 13789 schreibt dieselbe Idee als H-T."),
         ("paths",
          "Each pathway leaks on its own — the total is simply their sum.",
          "Jeder Pfad leckt für sich — die Summe ergibt den Gesamtverlust."),
         ("outro",
-         "That sum is the conduction story of the thermal envelope.",
-         "Diese Summe ist die Wärmeleitungs-Geschichte der thermischen Gebäudehülle."),
+         "That sum is the transmission heat loss of the thermal envelope. Heat bridges add extra terms in DIN EN 12831-1.",
+         "Diese Summe ist der Transmissionswärmeverlust der thermischen Hülle. Wärmebrücken kommen in DIN EN 12831-1 noch dazu."),
     ]
 
     def construct(self):

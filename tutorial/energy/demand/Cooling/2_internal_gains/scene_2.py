@@ -118,7 +118,7 @@ class Beat1_OfficeRoom(Scene):
         title = scene_title(TITLE_DE)
         play_scene_title(self, title)
         subtitle = beat_subtitle("Die umschlossene Umgebung", title)
-        din = _din_ref("DIN V 18599-10")
+        din = _din_ref("VDI 2078")
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(self.NARRATION, "intro"))
@@ -217,7 +217,7 @@ class Beat2_HumanFactor(Scene):
         title = scene_title(TITLE_DE)
         self.add(title)
         subtitle = beat_subtitle("Menschliche Stoffwechselwärme", title)
-        din = _din_ref("DIN V 18599-10")
+        din = _din_ref("VDI 2078")
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(self.NARRATION, "intro"))
@@ -424,7 +424,7 @@ class Beat3_DevicesLighting(Scene):
         title = scene_title(TITLE_DE)
         self.add(title)
         subtitle = beat_subtitle("Geräte, Steckerlasten und Beleuchtung", title)
-        din = _din_ref("DIN V 18599-10")
+        din = _din_ref("VDI 2078")
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(self.NARRATION, "intro"))
@@ -884,8 +884,8 @@ if False:
              "Insulation throws them back — and each bounce leaves them hotter.",
              "Dämmung wirft sie zurück — und sie werden heißer."),
             ("trapped",
-             "The room fills with trapped heat, so the cooling demand rises.",
-             "Der Raum füllt sich mit eingeschlossener Wärme — der Kühlbedarf steigt."),
+             "The room fills with trapped heat, so the cooling load rises.",
+             "Der Raum füllt sich mit eingeschlossener Wärme — die Kühllast steigt."),
         ]
 
         def construct(self):
@@ -1126,8 +1126,8 @@ if False:
              "Supply air displaces that load with cool conditioned air.",
              "Zuluft verdrängt die Last mit kühler aufbereiteter Luft."),
             ("outro",
-             "That active displacement is the HVAC cooling demand driven by internal gains.",
-             "Diese aktive Verdrängung ist der HLK-Kühlbedarf durch interne Gewinne."),
+             "That active displacement is the HVAC cooling load driven by internal gains.",
+             "Diese aktive Verdrängung ist die HLK-Kühllast durch interne Gewinne."),
         ]
 
         def construct(self):
@@ -1135,7 +1135,7 @@ if False:
 
             title = scene_title(TITLE_DE)
             self.add(title)
-            subtitle = beat_subtitle("HLK-Kühlbedarf", title)
+            subtitle = beat_subtitle("HLK-Kühllast", title)
             self.play(FadeIn(subtitle), run_time=BEAT_SUBTITLE_FADE)
 
             caption = caption_bar(subtitle_text(self.NARRATION, "intro"))
@@ -1404,8 +1404,8 @@ class Beat8_Mitigation(Scene):
          "Controls dim lights to thirty percent and plug loads to forty percent.",
          "Steuerung dimmt Licht auf dreißig und Steckerlasten auf vierzig Prozent."),
         ("outro",
-         "Less internal heat gain means less cooling demand.",
-         "Weniger interne Wärmegewinne bedeuten weniger Kühlbedarf."),
+         "Less internal heat gain means a smaller cooling load.",
+         "Weniger interne Wärmegewinne bedeuten eine kleinere Kühllast."),
     ]
 
     def construct(self):

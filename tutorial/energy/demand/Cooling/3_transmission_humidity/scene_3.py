@@ -147,23 +147,23 @@ def _build_sun(sun_pos):
 class Beat1_TransmissionOpaque(Scene):
     NARRATION = [
         ("intro",
-         "Next, we look outside. Just like in winter, heat travels through solid walls and roofs.",
-         "Als Nächstes schauen wir nach draußen. Wie im Winter wandert Wärme durch Wände und Dächer."),
+         "Next we look at the opaque envelope. In summer the heat flow reverses: hot surfaces drive heat inward.",
+         "Als Nächstes die opake Hülle. Im Sommer kehrt sich der Wärmestrom um: heiße Oberflächen treiben Wärme nach innen."),
         ("sun",
-         "In summer a dark roof baking under the midday sun absorbs massive energy.",
-         "Im Sommer speichert ein dunkles Dach unter der Mittagssonne enorme Energie."),
+         "A dark roof under midday sun absorbs solar radiation and heats the outer surface.",
+         "Ein dunkles Dach absorbiert unter der Mittagssonne Strahlung und heizt die Außenfläche auf."),
         ("formula",
-         "We calculate this transmission load Q-dot T as U times A times Delta-T equivalent, in watts.",
-         "Die Transmissionslast Q-Punkt-T ist U mal A mal Delta-T-äquivalent — in Watt."),
+         "The opaque transmission load Q-dot T is U times A times the equivalent temperature difference Delta-theta eq, in watts.",
+         "Die opake Transmissionslast Q-Punkt-T ist U mal A mal Delta-Theta-äquivalent — in Watt."),
         ("u",
-         "U is the wall's thermal transmittance in watts per square metre kelvin — lower is better.",
-         "U ist der Wärmedurchgangskoeffizient in W/(m²·K) — niedriger ist besser."),
+         "U is the thermal transmittance in watts per square metre kelvin. On the design day a lower U cuts the inward heat flow.",
+         "U ist der Wärmedurchgangskoeffizient in W/(m²·K). Am Auslegungstag senkt ein niedrigeres U den Wärmestrom nach innen."),
         ("a",
          "A is the opaque surface area in square metres.",
          "A ist die opake Bauteilfläche in Quadratmetern."),
         ("dt",
-         "Delta-T equivalent accounts for that extreme solar heating on the surface, in kelvin.",
-         "Delta-T-äquivalent erfasst die extreme solare Aufheizung der Oberfläche — in Kelvin."),
+         "Delta-theta eq is the sol-air equivalent temperature difference — surface heating from radiation, not indoor-to-outdoor air Delta-theta.",
+         "Delta-Theta-eq ist die äquivalente Temperaturdifferenz nach Sol-Air — solare Oberflächenerwärmung, nicht das Luft-Delta-Theta."),
     ]
 
     def construct(self):
@@ -172,7 +172,7 @@ class Beat1_TransmissionOpaque(Scene):
         title = scene_title(TITLE_OPAQUE_DE)
         play_scene_title(self, title)
         subtitle = beat_subtitle("Opake Bauteile unter Sommerstrahlung", title)
-        din = _din_ref("DIN EN ISO 6946")
+        din = _din_ref("VDI 2078")
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(self.NARRATION, "intro"))
@@ -221,7 +221,7 @@ class Beat1_TransmissionOpaque(Scene):
             ("qt", "Q̇_T", P_WHITE), (None, "=", P_WHITE),
             ("u", "U", P_ORANGE), (None, "·", P_WHITE),
             ("a", "A", P_CYAN), (None, "·", P_WHITE),
-            ("dt", "ΔT_eq", P_BLUE),
+            ("dt", "Δθ_eq", P_BLUE),
             (None, "  [W]", P_WHITE),
         ])
         row, box = formula_panel(row)
@@ -293,7 +293,7 @@ class Beat2_TimeLag(Scene):
          "They soak it up during the day and slowly release it into the room hours later.",
          "Tagsüber nehmen sie Wärme auf und geben sie erst Stunden später an den Raum ab."),
         ("peak",
-         "So your equivalent temperature difference and peak cooling demand may hit in the late evening, long after sunset.",
+         "So the equivalent temperature difference and the peak cooling load may hit in the late evening, long after sunset.",
          "Deshalb kann die Spitzenkühllast erst am späten Abend auftreten — lange nach Sonnenuntergang."),
     ]
 
@@ -319,7 +319,7 @@ class Beat2_TimeLag(Scene):
             ("qt", "Q̇_T", P_WHITE), (None, "=", P_WHITE),
             ("u", "U", P_ORANGE), (None, "·", P_WHITE),
             ("a", "A", P_CYAN), (None, "·", P_WHITE),
-            ("dt", "ΔT_eq", P_BLUE),
+            ("dt", "Δθ_eq", P_BLUE),
             (None, "  [W]", P_WHITE),
         ])
         row, box = formula_panel(row)
@@ -423,7 +423,7 @@ class Beat3_VentilationHeat(Scene):
          "Q-Punkt-sens ist die fühlbare Wärme — sie ändert die Lufttemperatur."),
         ("lat",
          "Q-dot lat is the latent humidity load — removing moisture costs phase-change energy.",
-         "Q-Punkt-lat ist die latente Feuchtelasten — Feuchte entfernen kostet Phasenwechselenergie."),
+         "Q-Punkt-lat ist die latente Feuchtelast — Feuchte entfernen kostet Phasenwechselenergie."),
     ]
 
     def construct(self):

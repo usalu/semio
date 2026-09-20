@@ -1,4 +1,4 @@
-"""🔥 Heating Module 3 — Konvektion (Convection).
+"""🔥 Heating Module 3 — Lüftung (ventilation heat loss).
 
 Migrated from ``merged_scenes_german.py`` onto the generate-manim-tutorial
 template: fixed type scale, ``formula_panel`` with units, German ``caption_bar``
@@ -35,7 +35,7 @@ from manim_visuals import (
 set_vo_language("de")
 
 # 🏔️ Persistent topic title — Write once on Beat1, self.add() on later beats.
-TITLE_DE = "Modul 3: Konvektion"
+TITLE_DE = "Modul 3: Lüftung"
 
 
 #region Beat helpers
@@ -61,8 +61,8 @@ class Beat1_GebaeudeKonvektion(Scene):
          "Warm indoor air rises and escapes through gaps — cold outdoor air slips in to replace it.",
          "Warme Innenluft steigt und entweicht durch Fugen — kalte Außenluft strömt nach."),
         ("zones",
-         "Inside stays warm; outside stays cold. The exchange through the openings is convection.",
-         "Innen bleibt warm, außen bleibt kalt. Der Austausch durch die Öffnungen ist Konvektion."),
+         "Inside stays warm; outside stays cold. Air exchanging through the openings is ventilation, not the U-value.",
+         "Innen bleibt warm, außen bleibt kalt. Der Austausch durch die Öffnungen ist Lüftung — nicht der U-Wert."),
         ("flow",
          "Watch the particles: heat leaves with the orange stream while the blue stream cools the room.",
          "Beobachten Sie die Partikel: Wärme geht mit dem orangen Strom, der blaue Strom kühlt den Raum."),
@@ -73,7 +73,7 @@ class Beat1_GebaeudeKonvektion(Scene):
 
         title = scene_title(TITLE_DE)
         play_scene_title(self, title)
-        subtitle = beat_subtitle("Das Gebäude & Konvektion", title)
+        subtitle = beat_subtitle("Das Gebäude & Lüftung", title)
         din = _din_ref("DIN EN 12831-1")
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
@@ -420,8 +420,8 @@ class Beat4_SpezWaermekapazitaet(Scene):
          "Heat waves rise into the cube until the air turns warm.",
          "Wärmewellen steigen in den Würfel, bis die Luft warm wird."),
         ("c_luft",
-         "The energy needed per cubic meter and kelvin is c_Luft — about 0.34 watt-hours.",
-         "Die Energie pro Kubikmeter und Kelvin ist c_Luft — etwa 0,34 Wattstunden."),
+         "The energy per cubic metre and kelvin is the volumetric heat capacity of air, written c Luft — about 0.34 watt-hours.",
+         "Die Energie pro Kubikmeter und Kelvin ist die volumenbezogene Wärmekapazität der Luft, geschrieben c-Luft — etwa 0,34 Wattstunden."),
         ("product",
          "So the product grows: V times n times c_Luft.",
          "Das Produkt wächst: V mal n mal c_Luft."),
@@ -432,7 +432,7 @@ class Beat4_SpezWaermekapazitaet(Scene):
 
         title = scene_title(TITLE_DE)
         self.add(title)
-        subtitle = beat_subtitle("Spezifische Wärmekapazität c_Luft", title)
+        subtitle = beat_subtitle("Volumenbezogene Wärmekapazität c_Luft", title)
         din = _din_ref("DIN EN 12831-1")
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
@@ -519,7 +519,7 @@ class Beat4_SpezWaermekapazitaet(Scene):
         hold_for(self, self.NARRATION, "heat", used=2.5 + 0.35)
 
         c_air_tag = Text("c_Luft", color=P_GREEN, font_size=BODY_FONT_SIZE)
-        c_air_desc1 = Text("Spez. Wärmekapazität", color=P_GREEN, font_size=LABEL_FONT_SIZE)
+        c_air_desc1 = Text("Volumenbezogene Wärmekapazität (ρ·c)", color=P_GREEN, font_size=LABEL_FONT_SIZE)
         c_air_desc2 = Text("(0,34 Wh/(m³·K))", color=P_GREEN, font_size=LABEL_FONT_SIZE)
         c_air_group = VGroup(c_air_tag, c_air_desc1, c_air_desc2).arrange(DOWN, buff=0.08)
         c_air_group.next_to(cube, RIGHT, buff=0.45).shift(DOWN * 0.1)
@@ -562,14 +562,14 @@ class Beat5_Lueftungsverlust(Scene):
          "Phi_V equals V times n times c_Luft times delta theta — in watts, per DIN EN 12831-1.",
          "Phi_V ist V mal n mal c_Luft mal Delta-Theta — in Watt, nach DIN EN 12831-1."),
         ("v",
-         "V is the building volume in cubic meters.",
-         "V ist das Gebäudevolumen in Kubikmetern."),
+         "V is the net heated volume in cubic metres.",
+         "V ist das nettotemperierte Volumen in Kubikmetern."),
         ("n",
          "n is the air change rate in one per hour.",
          "n ist die Luftwechselrate in Eins pro Stunde."),
         ("c",
-         "c_Luft is the specific heat capacity of air — 0.34 watt-hours per cubic meter and kelvin.",
-         "c_Luft ist die spez. Wärmekapazität der Luft — 0,34 Wh pro Kubikmeter und Kelvin."),
+         "c Luft is the volumetric heat capacity of air — 0.34 watt-hours per cubic metre and kelvin.",
+         "c-Luft ist die volumenbezogene Wärmekapazität der Luft — 0,34 Wh pro Kubikmeter und Kelvin."),
         ("dt",
          "And delta theta is the temperature difference in kelvin.",
          "Und Delta-Theta ist die Temperaturdifferenz in Kelvin."),

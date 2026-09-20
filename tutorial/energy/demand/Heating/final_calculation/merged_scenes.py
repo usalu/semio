@@ -23,11 +23,11 @@ set_vo_language("de")
 class ReviewingHeatLosses(Scene):
     NARRATION = [
         ("trans",
-         "Remember the envelope story: heat still leaks through walls as Phi trans — U times A times Delta T.",
-         "Erinnern Sie die Hüllen-Geschichte: Wärme leckt noch durch Wände als Phi-trans — U mal A mal Delta-T."),
+         "Remember the envelope story: heat still leaks through walls as Phi trans — U times A times Delta theta.",
+         "Erinnern Sie die Hüllen-Geschichte: Wärme leckt noch durch Wände als Phi-trans — U mal A mal Delta-Theta."),
         ("vent",
-         "And the convection story returns: air change carries heat out as Phi vent — V times n times c_Luft times Delta T.",
-         "Und die Konvektions-Geschichte kehrt zurück: Luftwechsel trägt Wärme als Phi-vent hinaus — V mal n mal c_Luft mal Delta-T."),
+         "And the ventilation story returns: air change carries heat out as Phi vent — V times n times c Luft times Delta theta.",
+         "Und die Lüftungs-Geschichte kehrt zurück: Luftwechsel trägt Wärme als Phi-vent hinaus — V mal n mal c-Luft mal Delta-Theta."),
         ("total",
          "Add both journeys and you get the total heat-loss power Phi Verlust — after DIN V 18599-2.",
          "Beide Wege addieren ergibt die Gesamtwärmeverlustleistung Phi-Verlust — nach DIN V 18599-2."),
@@ -51,7 +51,7 @@ class ReviewingHeatLosses(Scene):
         DEEP_BLUE = "#1D4ED8"
 
         # --- TRANSMISSION SECTION (Icy Blue: #38BDF8) ---
-        trans_formula = Text("Φ_trans = U  ·  A  ·  ΔT", font_size=28, color=ICY_BLUE, font=BODY_FONT, disable_ligatures=True)
+        trans_formula = Text("Φ_trans = U  ·  A  ·  Δθ", font_size=28, color=ICY_BLUE, font=BODY_FONT, disable_ligatures=True)
 
         wall = Rectangle(
             height=0.8, width=0.2, color=ICY_BLUE, fill_opacity=0.2, stroke_width=2
@@ -82,7 +82,7 @@ class ReviewingHeatLosses(Scene):
 
         # --- LÜFTUNGSSECTION (Deep Blue: #1D4ED8) ---
         vent_formula = Text(
-            "Φ_vent = V  ·  n  ·  c_Luft  ·  ΔT", font_size=28, color=DEEP_BLUE
+            "Φ_vent = V  ·  n  ·  c_Luft  ·  Δθ", font_size=28, color=DEEP_BLUE
         , font=BODY_FONT, disable_ligatures=True)
 
         win_frame = Square(side_length=0.8, color=DEEP_BLUE, stroke_width=2)
@@ -168,14 +168,14 @@ class ReviewingHeatLosses(Scene):
 class Scene2(Scene):
     NARRATION = [
         ("phi",
-         "So the loss power we just built is simply Phi Verlust equals Phi trans plus Phi vent.",
-         "Die Verlustleistung, die wir gerade gebaut haben, ist Phi-Verlust gleich Phi-trans plus Phi-vent."),
+         "So the loss power we just built is simply Phi Verlust equals Phi trans plus Phi vent — watts at one temperature difference.",
+         "Die Verlustleistung, die wir gerade gebaut haben, ist Phi-Verlust gleich Phi-trans plus Phi-vent — Watt bei einer Temperaturdifferenz."),
         ("climate",
-         "A whole year of weather turns that power into energy — multiply by the climate factor F Klima from degree-day hours.",
-         "Ein ganzes Wetterjahr macht aus der Leistung Energie — mal Klimafaktor F-Klima aus den Gradtagstunden."),
+         "A design-day wattage is not a yearly kilowatt-hour. Annual losses use the heat-transfer coefficients H times the degree-day total G t, not the coldest Delta theta.",
+         "Eine Auslegungs-Wattzahl ist keine Jahres-Kilowattstunde. Jahresverluste nutzen die Wärmetransferkoeffizienten H mal die Gradtagzahl G-t — nicht das kälteste Delta-Theta."),
         ("annual",
-         "That product is the annual heat-loss energy Q Verlust in kilowatt-hours per year.",
-         "Dieses Produkt ist der Jahres-Wärmeverlust Q-Verlust in Kilowattstunden pro Jahr."),
+         "Q Verlust equals H T plus H V, times G t — in kilowatt-hours per year, after DIN 4108-6 and DIN V 18599-2.",
+         "Q-Verlust ist H-T plus H-V, mal G-t — in Kilowattstunden pro Jahr, nach DIN 4108-6 und DIN V 18599-2."),
     ]
 
     def construct(self):
@@ -183,6 +183,13 @@ class Scene2(Scene):
 
         caption = caption_bar(subtitle_text(self.NARRATION, "phi"))
         self.play(FadeIn(caption), run_time=0.3)
+
+        title = Text(
+            "Vom Wärmestrom zur Jahresenergie", font_size=34, color=WHITE,
+            font=BODY_FONT, disable_ligatures=True,
+        )
+        title.to_edge(UP, buff=0.55)
+        self.play(Write(title), run_time=0.8)
 
         ICY_BLUE = "#38BDF8"
         DEEP_BLUE = "#0284C7"
@@ -198,7 +205,7 @@ class Scene2(Scene):
         initial_eq = VGroup(phi_loss, eq_1, phi_trans, plus_1, phi_vent).arrange(
             RIGHT, buff=0.12
         )
-        initial_eq.move_to(UP * 1.8)
+        initial_eq.move_to(UP * 1.35)
 
         # Transmission & Lüftung icons — same hatched-wall and crossed-window
         # glyphs used in ``ReviewingHeatLosses``, only re-labelled and parked in
@@ -253,18 +260,18 @@ class Scene2(Scene):
         window_icon = VGroup(win_glyph, window_label).move_to(RIGHT * 2.5 + DOWN * 0.8)
 
         self.play(FadeIn(initial_eq), Create(wall_icon), Create(window_icon), run_time=2)
-        hold_for(self, self.NARRATION, "phi", used=0.3 + 2)
+        hold_for(self, self.NARRATION, "phi", used=0.3 + 0.8 + 2)
 
-        # Step 2: Climate Factor (Gradtagzahlen Gt nach DIN V 18599-10)
+        # Step 2: H and G_t — annual energy is not design-load Φ times hours
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "climate"))
-        times_symbol = Text("×", font_size=38, color=PURPLE, font=BODY_FONT, disable_ligatures=True)
-        f_climate = Text("F_Klima", font_size=38, color=PURPLE, font=BODY_FONT, disable_ligatures=True)
-        multiplier_group = VGroup(times_symbol, f_climate).arrange(RIGHT, buff=0.18)
+        times_symbol = Text("→", font_size=38, color=PURPLE, font=BODY_FONT, disable_ligatures=True)
+        h_sum = Text("H_T + H_V", font_size=38, color=PURPLE, font=BODY_FONT, disable_ligatures=True)
+        multiplier_group = VGroup(times_symbol, h_sum).arrange(RIGHT, buff=0.18)
 
         step2_full_eq = (
             VGroup(initial_eq.copy(), multiplier_group.copy())
             .arrange(RIGHT, buff=0.2)
-            .move_to(UP * 1.8)
+            .move_to(UP * 1.35)
         )
         target_initial_pos = step2_full_eq[0].get_center()
         target_multiplier_pos = step2_full_eq[1].get_center()
@@ -272,8 +279,8 @@ class Scene2(Scene):
         multiplier_group.move_to(target_multiplier_pos)
 
         climate_label = Text(
-            "Klimafaktor (Gradtagstunden nach DIN V 18599-10)",
-            font_size=18,
+            "H = Φ / Δθ  [W/K]  —  Jahresenergie nutzt H · G_t, nicht Φ_Auslegung",
+            font_size=16,
             color=PURPLE,
             font=BODY_FONT, disable_ligatures=True)
         climate_label.next_to(multiplier_group, UP, buff=0.45)
@@ -286,29 +293,29 @@ class Scene2(Scene):
         )
         hold_for(self, self.NARRATION, "climate", used=0.35 + 1.8)
 
-        # Step 3: Transformation into Q_Verlust consolidated equation
+        # Step 3: Q_Verlust = (H_T + H_V) · G_t
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "annual"))
         q_loss = Text("Q_Verlust", font_size=40, color=WHITE, font=BODY_FONT, disable_ligatures=True)
         eq_2 = Text(" = ", font_size=40, color=WHITE, font=BODY_FONT, disable_ligatures=True)
-        l_paren = Text("(", font_size=40, color=WHITE, font=BODY_FONT, disable_ligatures=True)
-        phi_trans_c = Text("Φ_trans", font_size=40, color=ICY_BLUE, font=BODY_FONT, disable_ligatures=True)
+        l_paren = Text("(", font_size=40, color=PURPLE, font=BODY_FONT, disable_ligatures=True)
+        h_t = Text("H_T", font_size=40, color=ICY_BLUE, font=BODY_FONT, disable_ligatures=True)
         plus_c = Text(" + ", font_size=40, color=WHITE, font=BODY_FONT, disable_ligatures=True)
-        phi_vent_c = Text("Φ_vent", font_size=40, color=DEEP_BLUE, font=BODY_FONT, disable_ligatures=True)
-        r_paren = Text(")", font_size=40, color=WHITE, font=BODY_FONT, disable_ligatures=True)
-        times_c = Text("×", font_size=40, color=PURPLE, font=BODY_FONT, disable_ligatures=True)
-        f_climate_c = Text("F_Klima", font_size=40, color=PURPLE, font=BODY_FONT, disable_ligatures=True)
+        h_v = Text("H_V", font_size=40, color=DEEP_BLUE, font=BODY_FONT, disable_ligatures=True)
+        r_paren = Text(")", font_size=40, color=PURPLE, font=BODY_FONT, disable_ligatures=True)
+        times_c = Text("·", font_size=40, color=PURPLE, font=BODY_FONT, disable_ligatures=True)
+        g_t = Text("G_t", font_size=40, color=PURPLE, font=BODY_FONT, disable_ligatures=True)
 
         consolidated_eq = (
             VGroup(
                 q_loss,
                 eq_2,
                 l_paren,
-                phi_trans_c,
+                h_t,
                 plus_c,
-                phi_vent_c,
+                h_v,
                 r_paren,
                 times_c,
-                f_climate_c,
+                g_t,
             )
             .arrange(RIGHT, buff=0.12)
             .move_to(ORIGIN)
@@ -341,12 +348,10 @@ class Scene2(Scene):
         )
 
         unit_text = Text(
-            "Jahres-Wärmeverlust [kWh/a] (DIN V 18599-2)", font_size=18, color=GREY_A
-        , font=BODY_FONT, disable_ligatures=True)
+            "Jahres-Wärmeverlust [kWh/a]  —  G_t Gradtagzahl (DIN 4108-6 / DIN V 18599-2)",
+            font_size=16, color=GREY_A,
+            font=BODY_FONT, disable_ligatures=True)
 
-        # Nudge the finished equation up a touch and drop the unit line centred
-        # beneath it — the old slide into the top-left corner left the formula
-        # stranded away from everything else.
         self.play(
             final_eq_group.animate.move_to(UP * 0.5), run_time=1.5
         )
@@ -364,11 +369,11 @@ class ReviewingHeatGains(Scene):
          "Losses are only half the story — free heat also arrives inside the building.",
          "Verluste sind nur die halbe Geschichte — freie Wärme kommt auch ins Gebäude hinein."),
         ("solar",
-         "From the solar chapter: winter sun through the windows becomes Q sol.",
-         "Aus dem Solar-Kapitel: Wintersonne durch die Fenster wird zu Q-sol."),
+         "From the solar chapter: winter sun through the windows is Phi sol, and over the season that power integrates to Q sol.",
+         "Aus dem Solar-Kapitel: Wintersonne durch die Fenster ist Phi-sol — über die Saison integriert wird daraus Q-sol."),
         ("internal",
-         "From the internal-gains chapter: people, devices, and lights become Q int.",
-         "Aus dem Kapitel interne Gewinne: Personen, Geräte und Licht werden zu Q-int."),
+         "From the internal-gains chapter: people, devices, and lights are Phi int; over the year they become Q int.",
+         "Aus dem Kapitel interne Gewinne: Personen, Geräte und Licht sind Phi-int — über das Jahr werden sie zu Q-int."),
         ("total",
          "Together they form the gross heat gain Q Gewinn — free energy we can still use.",
          "Zusammen bilden sie den Brutto-Wärmegewinn Q-Gewinn — freie Energie, die wir noch nutzen können."),
@@ -414,7 +419,7 @@ class ReviewingHeatGains(Scene):
         sun_icon = VGroup(sun_center, rays)
 
         solar_text = Text(
-            "Q_sol = G · A · F_f · g · F_sh", font_size=24, color=SOLAR_YELLOW
+            "Φ_sol = G · A · F_f · g · F_sh", font_size=24, color=SOLAR_YELLOW
         , font=BODY_FONT, disable_ligatures=True)
         solar_label = Text(
             "Solarer Wärmegewinn (DIN V 18599-2)", font_size=15, color=SOLAR_YELLOW
@@ -440,7 +445,7 @@ class ReviewingHeatGains(Scene):
         person_icon = VGroup(head, torso)
 
         int_text = Text(
-            "Q_int = Φ_p + Φ_e + Φ_l", font_size=24, color=INT_ORANGE
+            "Φ_int = Φ_p + Φ_e + Φ_l", font_size=24, color=INT_ORANGE
         , font=BODY_FONT, disable_ligatures=True)
         int_label = Text(
             "Interner Wärmegewinn (DIN V 18599-10)", font_size=15, color=INT_ORANGE
@@ -510,8 +515,8 @@ class Scene4(Scene):
          "So we keep only the useful share: Q nutz equals eta h times solar plus internal gains.",
          "Deshalb behalten wir nur den nutzbaren Anteil: Q-nutz ist Eta-h mal solare plus interne Gewinne."),
         ("eta",
-         "Eta h is the utilization factor — how much of those free gains actually cuts the heating load.",
-         "Eta-h ist der Ausnutzungsgrad — wie viel dieser freien Gewinne die Heizlast wirklich senkt."),
+         "Eta h is the utilization factor — how much of those free gains actually cuts the heating demand.",
+         "Eta-h ist der Ausnutzungsgrad — wie viel dieser freien Gewinne den Heizwärmebedarf wirklich senkt."),
     ]
 
     def construct(self):
@@ -693,8 +698,8 @@ class UltimateEnergyBalance(Scene):
          "Heating demand Q h equals the losses we built minus eta h times the gains we gathered.",
          "Heizwärmebedarf Q-h ist die Verluste, die wir gebaut haben, minus Eta-h mal die Gewinne, die wir gesammelt haben."),
         ("expand",
-         "Expanded, every prior chapter returns: transmission plus ventilation, minus eta h times solar plus internal.",
-         "Ausgeschrieben kehrt jedes Kapitel zurück: Transmission plus Lüftung, minus Eta-h mal Solar plus intern."),
+         "Expanded: transmission energy plus ventilation energy, minus eta h times solar plus internal energy.",
+         "Ausgeschrieben: Transmissionsenergie plus Lüftungsenergie, minus Eta-h mal Solar plus intern."),
     ]
 
     def construct(self):
@@ -809,26 +814,20 @@ class UltimateEnergyBalance(Scene):
         q_heat_exp = Text("Q_h", color="#EF4444", font_size=28, weight=BOLD, font=BODY_FONT, disable_ligatures=True)
         eq_exp = Text(" = ", color=WHITE, font_size=28, font=BODY_FONT, disable_ligatures=True)
         loss_exp = Text("(Q_trans + Q_vent)", color="#3B82F6", font_size=28, font=BODY_FONT, disable_ligatures=True)
-        # The climate factor that Scene 2 applied to Q_Verlust — it has to reappear
-        # once the loss term is expanded back into (Q_trans + Q_vent).
-        clim_dot_exp = Text(" · ", color=WHITE, font_size=28, font=BODY_FONT, disable_ligatures=True)
-        clim_exp = Text("F_Klima", color="#C084FC", font_size=28, font=BODY_FONT, disable_ligatures=True)
         minus_exp = Text(" - ", color=WHITE, font_size=28, font=BODY_FONT, disable_ligatures=True)
         eta_exp = Text("η_h", color="#22C55E", font_size=28, font=BODY_FONT, disable_ligatures=True)
         dot_exp = Text(" · ", color=WHITE, font_size=28, font=BODY_FONT, disable_ligatures=True)
         gain_exp = Text("(Q_sol + Q_int)", color="#EAB308", font_size=28, font=BODY_FONT, disable_ligatures=True)
 
         expanded_eq = VGroup(
-            q_heat_exp, eq_exp, loss_exp, clim_dot_exp, clim_exp,
+            q_heat_exp, eq_exp, loss_exp,
             minus_exp, eta_exp, dot_exp, gain_exp,
         ).arrange(RIGHT, buff=0.1)
-        # Slightly tighter now that the F_Klima term widened the line — keeps a
-        # comfortable margin on both frame edges.
-        expanded_eq.scale(0.9).move_to(DOWN * 1.0)
+        expanded_eq.scale(0.95).move_to(DOWN * 1.0)
 
         self.play(FadeIn(VGroup(q_heat_exp, eq_exp), shift=UP * 0.3), run_time=0.8)
         self.wait(0.3)
-        self.play(FadeIn(VGroup(loss_exp, clim_dot_exp, clim_exp), shift=UP * 0.3), run_time=0.8)
+        self.play(FadeIn(loss_exp, shift=UP * 0.3), run_time=0.8)
         self.wait(0.3)
         self.play(
             FadeIn(VGroup(minus_exp, eta_exp, dot_exp), shift=UP * 0.3), run_time=0.8

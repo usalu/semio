@@ -34,7 +34,7 @@ if _VO_TIMING.is_file():
     load_vo_timing(_VO_TIMING)
 
 # 🏔️ Persistent module title — written once on Beat1, self.add()'ed on later beats.
-TITLE_DE = "Natürliche Lüftung im Passivhaus"
+TITLE_DE = "Lüftungssysteme"
 
 
 #region DIN citation
@@ -119,18 +119,18 @@ def _park(node, buff=0.28):
 #endregion
 
 
-#region Beat1 – Comfort first: shrink the load before moving any air
+#region Beat1 – Load first: shrink cooling before moving air
 class Beat1_PassivhausIdee(Scene):
     NARRATION = [
         ("intro",
-         "In a passive house comfort is the goal, and the first tool is neither a fan nor a chiller.",
-         "Im Passivhaus zählt der Komfort — und das erste Werkzeug\nist weder Ventilator noch Kältemaschine."),
+         "Summer comfort starts before any fan runs. The first tool is neither a ventilator nor a chiller.",
+         "Sommerkomfort beginnt, bevor ein Ventilator läuft —\ndas erste Werkzeug ist weder Lüfter noch Kältemaschine."),
         ("envelope",
          "Start from the cooling load. A heavily insulated, airtight envelope with external shading removes the largest share before any air is moved at all.",
          "Start bei der Kühllast: eine gedämmte, dichte Hülle mit\naußenliegendem Sonnenschutz nimmt den größten Anteil weg."),
         ("natural",
-         "Adjustable natural ventilation then carries away most of what is left, using nothing but outdoor air.",
-         "Einstellbare natürliche Lüftung trägt den Großteil\ndes Rests ab — nur mit Außenluft."),
+         "Adjustable natural ventilation then carries away much of what is left — but only while the outdoor air is cooler than the room.",
+         "Einstellbare natürliche Lüftung trägt viel vom Rest ab —\nsolange die Außenluft kühler ist als der Raum."),
         ("reserve",
          "Only the small remainder is a job for mechanical ventilation or cooling. That order is what this chapter follows.",
          "Nur der kleine Rest ist Aufgabe der Mechanik —\ndieser Reihenfolge folgt dieses Kapitel."),
@@ -193,7 +193,7 @@ class Beat1_PassivhausIdee(Scene):
         steps = VGroup(
             _step("1", "Hülle + Sonnenschutz", "− 45 %", P_TEAL),
             _step("2", "Natürliche Lüftung", "− 35 %", P_CYAN),
-            _step("3", "Mechanik: nur der Rest", "20 %", P_ORANGE),
+            _step("3", "RLT als Reserve", "20 %", P_ORANGE),
         ).arrange(DOWN, aligned_edge=LEFT, buff=0.34)
         steps.move_to(np.array([2.55, -0.30, 0.0]))
 
@@ -459,8 +459,8 @@ class Beat3_Querlueftung(Scene):
          "Because the two act in series, the smaller one dominates. Shrink the outlet and the whole cross flow collapses, no matter how wide the inlet stays.",
          "Weil beide in Reihe wirken, bestimmt die kleinere Öffnung:\nverkleinert man den Auslass, bricht der Durchzug ein."),
         ("passive",
-         "So size both sides together. In summer this flush replaces mechanical cooling on most days.",
-         "Also beide Seiten gemeinsam dimensionieren — im Sommer\nersetzt diese Spülung meist die Kältemaschine."),
+         "So size both sides together. In summer this flush can dump a lot of heat on windy days — it does not replace a design cooling plant by itself.",
+         "Also beide Seiten gemeinsam dimensionieren — im Sommer kann diese Spülung an windigen Tagen viel Last abführen, ersetzt aber keine Auslegungskälteanlage."),
     ]
 
     def construct(self):
@@ -824,8 +824,8 @@ class Beat4_Auftrieb(Scene):
 class Beat5_Nachtlueftung(Scene):
     NARRATION = [
         ("intro",
-         "Summer comfort in a passive house lives on night ventilation. Here are two summer days, with the outdoor temperature in yellow.",
-         "Sommerkomfort im Passivhaus lebt von der Nachtlüftung —\nhier zwei Sommertage, die Außentemperatur in Gelb."),
+         "Summer comfort lives on night ventilation once the envelope is shaded. Here are two summer days, with the outdoor temperature in yellow.",
+         "Sommerkomfort lebt von der Nachtlüftung, sobald die Hülle\nverschattet ist — hier zwei Sommertage, Außentemperatur in Gelb."),
         ("day",
          "By day the outdoor air is hotter than the room, so the windows stay shut and the structure soaks up the heat it cannot reject.",
          "Tagsüber ist es draußen heißer als drinnen — die Fenster\nbleiben zu, und die Bauteile nehmen die Wärme auf."),
@@ -1365,8 +1365,8 @@ class Beat8_Waermerueckgewinnung(Scene):
          "Heat crosses the plates from the hot stream into the cool one. In winter that preheats the supply air; in summer it works in reverse and precools it, so this is cold recovery.",
          "Wärme wandert vom heißen in den kühlen Strom — im Winter\nwärmt das die Zuluft vor, im Sommer kühlt es sie vor."),
         ("formula",
-         "The recovery efficiency phi is the temperature change the supply air actually gained, divided by the full difference that was available.",
-         "Der Rückgewinngrad Φ ist die erreichte Temperaturänderung\nder Zuluft, geteilt durch die verfügbare Differenz."),
+         "The temperature recovery efficiency eta is the temperature change the supply air actually gained, divided by the full difference that was available.",
+         "Der Temperaturänderungsgrad η ist die erreichte Temperaturänderung\nder Zuluft, geteilt durch die verfügbare Differenz."),
         ("value",
          "Five kelvin gained out of six available: about eighty percent of the free cooling, taken before the chiller is asked for anything.",
          "Fünf von sechs möglichen Kelvin — rund achtzig Prozent,\nbevor die Kältemaschine überhaupt gefragt wird."),
@@ -1431,7 +1431,7 @@ class Beat8_Waermerueckgewinnung(Scene):
         fit_band(scaffold, bottom=SAFE_BOTTOM_FORMULA)
 
         eq, items = equation_row([
-            ("phi", "Φ", P_YELLOW), (None, "=", P_WHITE),
+            ("phi", "η", P_YELLOW), (None, "=", P_WHITE),
             ("num", "(θ_ZUL − θ_AUL)", P_CYAN), (None, "/", P_WHITE),
             ("den", "(θ_ABL − θ_AUL)", P_TEAL), (None, "=", P_WHITE),
             ("val", "5 K / 6 K ≈ 0,8", P_YELLOW),
@@ -1511,7 +1511,7 @@ class Beat9_KomfortStrategie(Scene):
 
         title = scene_title(TITLE_DE)
         self.add(title)
-        subtitle = beat_subtitle("Strategie: natürlich zuerst", title)
+        subtitle = beat_subtitle("Strategie: freie Kühlung zuerst", title)
         din = _din_ref("DIN EN 16798-1")
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 

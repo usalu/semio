@@ -96,6 +96,34 @@ def _section(*, cy=SECTION_C[1], warm_opacity=0.24, cold_opacity=0.22):
     }
 
 
+def _buoyancy_cell(wall_x, far_x, y_bot, y_top, *, rise_on_wall: bool):
+    """🌡️ Smooth convection roll next to a vertical wall.
+
+    A real buoyancy loop is an elongated oval, not a rectangle with barely
+    clipped corners — the previous ``set_points_as_corners`` racetrack read as
+    a boxy, mechanical outline instead of rising, buoyant air. Travelling a
+    closed ellipse counter-clockwise always rises on the ellipse's own right
+    flank and sinks on its left (a property of CCW motion, not of which side
+    the wall is on), so the wall side picks CCW vs. CW once, and the curve
+    itself — via ``set_points_smoothly`` on many samples — stays organic
+    through the corner where it used to be angular.
+    """
+    cx, cy = (wall_x + far_x) / 2.0, (y_top + y_bot) / 2.0
+    rx, ry = abs(far_x - wall_x) / 2.0, abs(y_top - y_bot) / 2.0
+    wall_on_east = wall_x > far_x
+    ccw = wall_on_east == rise_on_wall
+    n = 56
+    sweep = TAU if ccw else -TAU
+    thetas = np.linspace(-PI / 2, -PI / 2 + sweep, n + 1)
+    pts = [
+        np.array([cx + rx * np.cos(t), cy + ry * np.sin(t), 0.0])
+        for t in thetas
+    ]
+    path = TipableVMobject()
+    path.set_points_smoothly(pts)
+    return path
+
+
 def _route_strip(active: int | None = None):
     """🧭 Leitung · Konvektion · Strahlung — which of the three a beat is on."""
     names = ("Leitung", "Konvektion", "Strahlung")
@@ -212,8 +240,8 @@ class Beat1_DreiWegeDerWaerme(Scene):
          "Energy always crosses from warm toward cold, and the gap closes a little as it does.",
          "Energie wandert immer von warm nach kalt — und der Unterschied wird dabei ein Stück kleiner."),
         ("never",
-         "Never the other way. That is the second law, and it is the reason a building has to be heated at all.",
-         "Nie umgekehrt. Das ist der zweite Hauptsatz — und der Grund, warum ein Gebäude überhaupt beheizt werden muss."),
+         "Spontaneously, never the other way. That is the second law, and it is why a building has to be heated at all.",
+         "Von allein nie umgekehrt. Das ist der zweite Hauptsatz — und der Grund, warum ein Gebäude überhaupt beheizt werden muss."),
         ("three",
          "Heat makes that crossing in exactly three ways, and the whole module is built on them.",
          "Wärme macht diesen Übergang auf genau drei Wegen — auf ihnen baut das ganze Modul auf."),
@@ -225,7 +253,7 @@ class Beat1_DreiWegeDerWaerme(Scene):
         title = scene_title(TITLE_DE)
         play_scene_title(self, title)
         subtitle = beat_subtitle("Abschnitt 1.1 — Wie Wärme sich bewegt", title)
-        din = _din_ref("DIN EN ISO 6946")
+        din = _din_ref("2. Hauptsatz")
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(self.NARRATION, "intro"))
@@ -412,24 +440,24 @@ class Beat2_Waermeleitung(Scene):
 #endregion
 
 
-#region Beat3 – Convection: this time the carrier itself leaves
+#region Beat3 – Convection: air films at the surfaces, air stays indoors
 class Beat3_Konvektion(Scene):
     NARRATION = [
         ("label",
-         "The second way is convection, and here something else happens: the carrier itself leaves.",
-         "Der zweite Weg ist die Konvektion — und hier passiert etwas anderes: der Träger selbst verschwindet."),
+         "The second way is convection: air next to the wall carries heat, without the wall itself moving.",
+         "Der zweite Weg ist die Konvektion: Luft an der Wand trägt die Wärme — die Wand selbst bewegt sich nicht."),
         ("gap",
-         "Give the wall a gap — an open window, a leaky joint — and the air can move through it.",
-         "Gibt man der Wand eine Öffnung — ein offenes Fenster, eine undichte Fuge — kann Luft hindurch."),
+         "A thin air film sits on each face. Indoor air rises along the warm side; outdoor air moves along the cold side.",
+         "An jeder Fläche sitzt ein dünner Luftfilm. Innen steigt Luft an der warmen Seite, außen streicht sie an der kalten."),
         ("loop",
-         "Warm indoor air is lighter, so it rises, slips out through the top of the gap, and cold outdoor air sinks in below to replace it.",
-         "Warme Raumluft ist leichter, steigt auf und entweicht oben durch die Öffnung — kalte Außenluft sinkt unten nach."),
+         "Those films are the surface resistances R si and R se in DIN EN ISO 6946.",
+         "Diese Filme sind die Wärmeübergangswiderstände R-si und R-se nach DIN EN ISO 6946."),
         ("carrier",
-         "Follow one parcel of air: unlike the molecules in the wall, this one physically leaves the building, and it takes its energy with it.",
-         "Verfolgen Sie ein Luftpaket: anders als die Moleküle in der Wand verlässt es das Gebäude wirklich — und nimmt seine Energie mit."),
+         "Follow one parcel: it stays in the room. Heat crosses the surface; the air does not have to leave the building.",
+         "Ein Luftpaket bleibt im Raum. Die Wärme geht über die Oberfläche — die Luft muss das Gebäude nicht verlassen."),
         ("symbol",
-         "That heat flow carried by moving air is Q dot c.",
-         "Diesen von bewegter Luft getragenen Wärmestrom nennen wir Q-Punkt-c."),
+         "Surface convection is Q dot c — part of the U-value, not the air-change loss.",
+         "Die Oberflächenkonvektion ist Q-Punkt-c — Teil des U-Werts, nicht des Luftwechselverlusts."),
     ]
 
     def construct(self):
@@ -437,79 +465,52 @@ class Beat3_Konvektion(Scene):
 
         title = scene_title(TITLE_DE)
         self.add(title)
-        subtitle = beat_subtitle("Konvektion — die Luft nimmt die Wärme mit", title)
-        din = _din_ref("DIN EN 12831-1")
+        subtitle = beat_subtitle("Konvektion — Luftfilm an der Oberfläche", title)
+        din = _din_ref("DIN EN ISO 6946")
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(self.NARRATION, "label"))
         self.play(FadeIn(caption), run_time=0.3)
 
-        # This beat draws its buoyancy lanes *outside* the box on both sides, so
-        # the whole scaffold drops: the exit plume then clears the beat subtitle
-        # above, and the indoor/outdoor lanes clear the temperature labels below.
-        cy = SECTION_C[1] - 0.40
-        sec = _section(cy=cy)
+        sec = _section()
         routes = _route_strip(active=1)
+        fit_band(VGroup(sec["group"]))
 
-        # Tall enough to have an upper and a lower half: with one opening, warm air
-        # leaves through the top and cold air enters through the bottom of that same
-        # gap. That two-way split is the whole point of the beat.
-        gap_lo, gap_hi = cy - 0.35, cy + 0.85
-        wall_upper = Rectangle(
-            width=WALL_W, height=sec["top"] - gap_hi, color=P_WHITE, stroke_width=3.0,
-            fill_color=P_WHITE, fill_opacity=0.11,
-        ).move_to(np.array([0.0, (sec["top"] + gap_hi) / 2, 0.0]))
-        wall_lower = Rectangle(
-            width=WALL_W, height=gap_lo - sec["bottom"], color=P_WHITE, stroke_width=3.0,
-            fill_color=P_WHITE, fill_opacity=0.11,
-        ).move_to(np.array([0.0, (gap_lo + sec["bottom"]) / 2, 0.0]))
-        gap_tag = Text("Öffnung", font_size=LABEL_FONT_SIZE, color=P_CYAN)
-        gap_tag.move_to(np.array([0.0, sec["top"] + 0.28, 0.0]))
+        wall_l = float(sec["wall"].get_left()[0])
+        wall_r = float(sec["wall"].get_right()[0])
+        warm_l = float(sec["warm"].get_left()[0])
+        cold_r = float(sec["cold"].get_right()[0])
+        y_top = float(sec["warm"].get_top()[1]) - 0.22
+        y_bot = float(sec["warm"].get_bottom()[1]) + 0.22
+        cy = float(sec["wall"].get_center()[1])
 
-        # Buoyancy exchange through the one opening, drawn as clean laminar
-        # streaklines: each lane keeps a single monotonic vertical trend — a
-        # steady rise for warm-out, a steady fall for cold-in — so the curves
-        # read as smooth flow rather than a wavy ribbon. The three-lane bundle
-        # fans out where the air is free and pinches back together to thread the
-        # gap. Both streams cross the wall squarely inside [gap_lo, gap_hi]:
-        # warm-out through the upper part of the opening, cold-in through the
-        # lower part, the two bands close but never touching.
-        LANE = 0.115
-
-        def _stream(spine):
-            return VGroup(*[
-                smooth_path([
-                    np.array([x, cy + yc + k * LANE * taper, 0.0])
-                    for x, yc, taper in spine
-                ])
-                for k in (-1.0, 0.0, 1.0)
-            ])
-
-        warm_out = _stream([
-            (-4.15, -0.72, 1.30), (-3.05, -0.22, 1.15), (-1.85, 0.22, 1.00),
-            (-0.80, 0.50, 0.85), (0.00, 0.60, 0.80), (0.80, 0.62, 0.85),
-            (1.95, 0.86, 1.05), (3.05, 1.06, 1.20), (4.15, 1.16, 1.30),
+        inner_far = max(warm_l + 0.28, wall_l - 1.22)
+        outer_far = min(cold_r - 0.28, wall_r + 1.22)
+        inner = VGroup(*[
+            _buoyancy_cell(wall_l - 0.20, inner_far, y_bot, y_top, rise_on_wall=True),
+            _buoyancy_cell(wall_l - 0.42, 0.5 * (wall_l - 0.20 + inner_far), y_bot + 0.14, y_top - 0.14, rise_on_wall=True),
         ])
-        cold_in = _stream([
-            (4.15, 0.52, 1.30), (3.05, 0.20, 1.20), (1.85, -0.06, 1.05),
-            (0.80, -0.16, 0.85), (0.00, -0.20, 0.80), (-0.80, -0.22, 0.85),
-            (-1.85, -0.46, 1.05), (-3.05, -0.66, 1.20), (-4.15, -0.78, 1.30),
+        outer = VGroup(*[
+            _buoyancy_cell(wall_r + 0.20, outer_far, y_bot, y_top, rise_on_wall=False),
+            _buoyancy_cell(wall_r + 0.42, 0.5 * (wall_r + 0.20 + outer_far), y_bot + 0.14, y_top - 0.14, rise_on_wall=False),
         ])
 
-        # Lane tags land in genuinely empty bands: "raus" above the section top
-        # (freed now the box sits lower), "rein" low on the outside, both clear
-        # of every lane and of the temperature labels.
-        out_tag = Text("warme Luft raus", font_size=LABEL_FONT_SIZE, color=P_ORANGE)
-        out_tag.move_to(np.array([3.15, sec["top"] + 0.46, 0.0]))
-        in_tag = Text("kalte Luft rein", font_size=LABEL_FONT_SIZE, color=P_BLUE)
-        in_tag.move_to(np.array([3.65, cy - 1.00, 0.0]))
+        rsi = Text("R_si", font_size=LABEL_FONT_SIZE, color=P_ORANGE)
+        rsi.move_to(np.array([wall_l - 0.72, y_top + 0.30, 0.0]))
+        rse = Text("R_se", font_size=LABEL_FONT_SIZE, color=P_BLUE)
+        rse.move_to(np.array([wall_r + 0.72, y_top + 0.30, 0.0]))
+        in_tag = Text("Luftfilm innen", font_size=LABEL_FONT_SIZE, color=P_ORANGE)
+        in_tag.next_to(sec["ti"], DOWN, buff=0.08)
+        out_tag = Text("Luftfilm außen", font_size=LABEL_FONT_SIZE, color=P_BLUE)
+        out_tag.next_to(sec["te"], DOWN, buff=0.08)
 
+        parcel_path = inner[0]
         parcel = Dot(radius=0.14, color=P_ORANGE, fill_opacity=1.0)
         parcel_glow = Circle(radius=0.22, color=P_YELLOW, stroke_width=2.0, fill_opacity=0.0)
-        parcel_path = warm_out[1]
-        parcel.move_to(parcel_path.get_start())
+        parcel.move_to(parcel_path.point_from_proportion(0.0))
         parcel_glow.move_to(parcel.get_center())
-        parcel_tag = Text("ein Luftpaket", font_size=LABEL_FONT_SIZE, color=P_ORANGE)
+        parcel_tag = Text("bleibt im Raum", font_size=LABEL_FONT_SIZE, color=P_ORANGE)
+        parcel_tag.move_to(np.array([sec["warm"].get_center()[0], cy + 0.08, 0.0]))
 
         hold_for(self, self.NARRATION, "label", used=BEAT_SUBTITLE_FADE + 0.3)
 
@@ -517,39 +518,30 @@ class Beat3_Konvektion(Scene):
         self.play(FadeIn(sec["ti"]), FadeIn(sec["te"]), FadeIn(routes), run_time=0.8)
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "gap"))
-        self.play(
-            ReplacementTransform(sec["wall"], VGroup(wall_upper, wall_lower)),
-            FadeIn(gap_tag),
-            run_time=1.2,
-        )
-        hold_for(self, self.NARRATION, "gap", used=1.2 + 0.35)
-
-        caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "loop"))
         guides = VGroup(
-            flow_guides(warm_out, P_ORANGE, opacity=0.42, width=2.4),
-            flow_guides(cold_in, P_BLUE, opacity=0.42, width=2.4),
+            flow_guides(inner, P_ORANGE, opacity=0.40, width=2.2, tips=False),
+            flow_guides(outer, P_BLUE, opacity=0.40, width=2.2, tips=False),
         )
-        self.play(Create(guides), FadeIn(out_tag), FadeIn(in_tag), run_time=1.2)
-        # Both directions at once, looping: a real gap exchanges air as a continuous
-        # buoyancy circuit — sequential one-way crossings looked like a single bead.
+        self.play(Create(guides), FadeIn(in_tag), FadeIn(out_tag), run_time=1.2)
         animate_flows(
             self,
             [
-                (warm_out, P_ORANGE, P_YELLOW),
-                (cold_in, P_BLUE, P_CYAN),
+                (inner, P_ORANGE, P_YELLOW),
+                (outer, P_CYAN, P_BLUE),
             ],
             run_time=3.6,
-            waves=7,
-            cycles=3.2,
-            radius=0.048,
+            waves=10,
+            cycles=2.6,
+            radius=0.062,
+            closed=True,
         )
-        hold_for(self, self.NARRATION, "loop", used=1.2 + 3.6 + 0.35)
+        hold_for(self, self.NARRATION, "gap", used=1.2 + 3.6 + 0.35)
+
+        caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "loop"))
+        self.play(FadeIn(rsi), FadeIn(rse), run_time=0.8)
+        hold_for(self, self.NARRATION, "loop", used=0.8 + 0.35)
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "carrier"))
-        # A fixed callout spot, not next_to(parcel): the parcel spawns low at
-        # the room's left wall with the warm_out curve threading past, so the
-        # tag sits high in the room's open interior, clear of every lane.
-        parcel_tag.move_to(np.array([-3.15, cy + 0.78, 0.0]))
         self.play(
             FadeIn(parcel, scale=0.5),
             FadeIn(parcel_glow),
@@ -557,36 +549,31 @@ class Beat3_Konvektion(Scene):
             run_time=0.6,
         )
         self.play(FadeOut(parcel_tag), run_time=0.3)
-        # Highlighted parcel rides the warm route once while the exchange keeps
-        # circulating behind it — "this one actually leaves" stays legible.
         animate_flows(
             self,
             [
-                (warm_out, P_ORANGE, P_YELLOW),
-                (cold_in, P_BLUE, P_CYAN),
+                (inner, P_ORANGE, P_YELLOW),
+                (outer, P_CYAN, P_BLUE),
             ],
-            run_time=3.2,
-            waves=7,
-            cycles=3.0,
-            radius=0.045,
+            run_time=3.4,
+            waves=10,
+            cycles=2.4,
+            radius=0.060,
+            closed=True,
             extra=[
                 MoveAlongPath(parcel, parcel_path, rate_func=linear),
                 MoveAlongPath(parcel_glow, parcel_path, rate_func=linear),
             ],
         )
-        self.play(
-            parcel.animate.shift(RIGHT * 1.15).set_opacity(0.0),
-            parcel_glow.animate.shift(RIGHT * 1.15).set_opacity(0.0),
-            run_time=0.8,
-        )
-        hold_for(self, self.NARRATION, "carrier", used=0.6 + 0.3 + 3.2 + 0.8 + 0.35)
+        hold_for(self, self.NARRATION, "carrier", used=0.6 + 0.3 + 3.4 + 0.35)
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "symbol"))
         token = symbol_token("Q̇_c", color=P_CYAN, font_size=FORMULA_FONT_SIZE)
-        token.move_to(np.array([0.0, cy + 0.30, 0.0]))
+        token.move_to(np.array([0.0, cy + 0.15, 0.0]))
         self.play(
             ReplacementTransform(guides, token),
-            FadeOut(gap_tag), FadeOut(out_tag), FadeOut(in_tag),
+            FadeOut(in_tag), FadeOut(out_tag), FadeOut(rsi), FadeOut(rse),
+            FadeOut(parcel), FadeOut(parcel_glow),
             run_time=1.2,
         )
         hold_for(self, self.NARRATION, "symbol", used=1.2 + 0.35)
@@ -606,11 +593,11 @@ class Beat4_Strahlung(Scene):
          "Every warm surface sends out infrared waves. The warm side of the wall radiates straight across to whatever is colder.",
          "Jede warme Oberfläche sendet Infrarotwellen aus. Die warme Wandseite strahlt direkt zu allem, was kälter ist."),
         ("vacuum",
-         "Now take the air away completely. Conduction stops, convection stops — there is nothing left to carry anything.",
-         "Nehmen wir die Luft ganz weg: Leitung hört auf, Konvektion hört auf — es ist nichts mehr da, das etwas tragen könnte."),
+         "Take the air away from the faces. The films vanish, so surface convection stops. Conduction inside the solid wall continues.",
+         "Nehmen wir die Luft von den Flächen: die Filme verschwinden, die Oberflächenkonvektion hört auf. Die Leitung in der festen Wand läuft weiter."),
         ("still",
-         "And the radiation carries on regardless. It needs no medium at all, which is exactly how the sun reaches us across empty space.",
-         "Und die Strahlung läuft weiter. Sie braucht kein Medium — genau so erreicht uns die Sonne durch den leeren Raum."),
+         "Radiation between the warm surface and the cold surroundings continues. It needs no medium — that is why it is the odd one out.",
+         "Die Strahlung zwischen warmer Fläche und kalter Umgebung läuft weiter. Sie braucht kein Medium — deshalb fällt sie aus der Reihe."),
         ("symbol",
          "This heat flow is Q dot r.",
          "Diesen Wärmestrom nennen wir Q-Punkt-r."),
@@ -659,7 +646,7 @@ class Beat4_Strahlung(Scene):
 
         stopped = VGroup(
             cross_mark(P_RED, size=0.16),
-            Text("Leitung · Konvektion", font_size=LABEL_FONT_SIZE, color=P_RED),
+            Text("Konvektion ohne Luftfilm", font_size=LABEL_FONT_SIZE, color=P_RED),
         ).arrange(RIGHT, buff=0.18)
         stopped.move_to(np.array([0.0, SECTION_C[1] - 1.72, 0.0]))
 
@@ -716,11 +703,11 @@ class Beat5_Zusammenfassung(Scene):
          "In a real wall all three run at once, so the total heat flow is simply their sum.",
          "In einer echten Wand laufen alle drei gleichzeitig — der gesamte Wärmestrom ist also einfach ihre Summe."),
         ("k", "Q dot k through the solid material.", "Q-Punkt-k durch das feste Material."),
-        ("c", "Q dot c carried by moving air.", "Q-Punkt-c getragen von bewegter Luft."),
-        ("r", "Q dot r radiated across the gap.", "Q-Punkt-r gestrahlt über den Zwischenraum."),
+        ("c", "Q dot c in the air films at the surfaces.", "Q-Punkt-c in den Luftfilmen an den Oberflächen."),
+        ("r", "Q dot r between the surfaces, with no need for air.", "Q-Punkt-r zwischen den Flächen, ohne dass Luft nötig ist."),
         ("standard",
-         "Splitting them apart every time would be unusable in practice, which is why DIN EN ISO 6946 bundles them into a single number per building element.",
-         "Sie jedes Mal zu trennen wäre unbrauchbar — deshalb fasst die DIN EN ISO 6946 sie zu einer einzigen Kennzahl je Bauteil zusammen."),
+         "DIN EN ISO 6946 does not keep them split: the films become R si and R se, the layers become Sigma d over lambda, and that sum is the U-value. Air leaving through a gap is ventilation — the next module.",
+         "Die DIN EN ISO 6946 trennt sie nicht: die Filme werden R-si und R-se, die Schichten Sigma d durch Lambda — daraus der U-Wert. Luft durch eine Fuge ist Lüftung, das nächste Modul."),
     ]
 
     def construct(self):
@@ -745,9 +732,9 @@ class Beat5_Zusammenfassung(Scene):
             cols=4, rows=3, radius=0.055,
         )
         stream = convection_stream(
-            np.array([-2.6, SECTION_C[1] - 0.85, 0.0]),
-            np.array([2.9, SECTION_C[1] + 0.45, 0.0]),
-            color=P_CYAN, bend=0.6, n_ribbons=2, spread=0.16,
+            np.array([sec["wall_l"] - 0.55, SECTION_C[1] - 0.85, 0.0]),
+            np.array([sec["wall_l"] - 0.55, SECTION_C[1] + 0.85, 0.0]),
+            color=P_CYAN, bend=0.08, n_ribbons=2, spread=0.14,
         )
         rays = VGroup(*[
             radiation_waves(
@@ -907,8 +894,8 @@ class Beat7_Waermedurchlasswiderstand(Scene):
          "Step one: how strongly does a single layer resist the heat flow? Watch the temperature fall across it.",
          "Schritt eins: wie stark bremst eine einzelne Schicht den Wärmestrom? Sehen wir, wie die Temperatur über sie abfällt."),
         ("gradient",
-         "A poor layer drops the temperature steeply over a short distance, and a lot of heat gets through.",
-         "Eine schlechte Schicht lässt die Temperatur steil über eine kurze Strecke fallen — und viel Wärme kommt durch."),
+         "For a single layer the drop from twenty to zero is always the same distance. A poorly insulating material lets more heat through that same drop.",
+         "Bei einer einzelnen Schicht fällt die Temperatur von zwanzig auf null über dieselbe Strecke. Ein schlecht dämmendes Material lässt durch diesen Abfall mehr Wärme."),
         ("formula",
          "That resisting power is the thermal resistance R: the thickness d divided by the conductivity lambda.",
          "Diese Bremswirkung ist der Wärmedurchlasswiderstand R: die Dicke d geteilt durch die Leitfähigkeit Lambda."),
@@ -1251,8 +1238,8 @@ class Beat9_WaermestromFormel(Scene):
          "Delta theta is the driver from the very first beat. Double the temperature difference and the loss doubles again.",
          "Δθ ist der Antrieb aus dem ersten Beat. Doppelte Temperaturdifferenz, wieder doppelter Verlust."),
         ("power",
-         "Only U is a design decision. That is why insulation is the lever: it is the one factor an engineer actually chooses.",
-         "Nur U ist eine Entwurfsentscheidung. Deshalb ist Dämmung der Hebel — der einzige Faktor, den man wirklich wählt."),
+         "U is the main construction lever. Compactness and the indoor setpoint also matter — but insulation is the factor you choose in the wall itself.",
+         "U ist der Haupt-Hebel am Aufbau. Kompaktheit und Innentemperatur zählen auch — aber Dämmung ist der Faktor, den man in der Wand selbst wählt."),
         ("outro",
          "For this wall the answer is about two thousand watts, the same as a full-power electric heater running non-stop.",
          "Für diese Wand sind das rund zweitausend Watt — so viel wie ein Heizlüfter auf voller Stufe im Dauerbetrieb."),
@@ -1365,7 +1352,7 @@ class Beat9_WaermestromFormel(Scene):
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "power"))
         # Under the facade, not under the gauge — the gauge's watt readout lives there.
-        lever = chip("nur U ist wählbar → dämmen", P_GREEN, font_size=LABEL_FONT_SIZE)
+        lever = chip("Hebel in der Wand: U dämmen", P_GREEN, font_size=LABEL_FONT_SIZE)
         lever.move_to(np.array([facade_c[0], -1.18, 0.0]))
         self.play(
             Indicate(items["u"], color=P_GREEN, scale_factor=1.25),

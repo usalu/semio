@@ -63,7 +63,7 @@ _final = _load_module(
 # region Playlist
 HEATING_PLAYLIST: list[tuple[str, list[type[Scene]]]] = [
     (
-        "Modul 1 · Einführung",
+        "Modul 1 · Grundlagen der Bauphysik",
         [
             _m1.Beat1_DreiWegeDerWaerme,
             _m1.Beat2_Waermeleitung,
@@ -77,7 +77,7 @@ HEATING_PLAYLIST: list[tuple[str, list[type[Scene]]]] = [
         ],
     ),
     (
-        "Modul 2 · Transmission / Leitung",
+        "Modul 2 · Transmission",
         [
             _m2.Beat1_MakroUndMikro,
             _m2.Beat2_RWert,
@@ -86,7 +86,7 @@ HEATING_PLAYLIST: list[tuple[str, list[type[Scene]]]] = [
         ],
     ),
     (
-        "Modul 3 · Konvektion / Lüftung",
+        "Modul 3 · Lüftung",
         [
             _m3.Beat1_GebaeudeKonvektion,
             _m3.Beat2_Innenvolumen,
@@ -171,19 +171,19 @@ class _HeatingSection(Scene):
 
 
 class Heating_01_Introduction(_HeatingSection):
-    """1️⃣ Modul 1 — Einführung."""
+    """1️⃣ Modul 1 — Grundlagen der Bauphysik."""
 
     section_beats = HEATING_PLAYLIST[0][1]
 
 
 class Heating_02_Conduction(_HeatingSection):
-    """2️⃣ Modul 2 — Transmission / Leitung."""
+    """2️⃣ Modul 2 — Transmission."""
 
     section_beats = HEATING_PLAYLIST[1][1]
 
 
 class Heating_03_Convection(_HeatingSection):
-    """3️⃣ Modul 3 — Konvektion / Lüftung."""
+    """3️⃣ Modul 3 — Lüftung."""
 
     section_beats = HEATING_PLAYLIST[2][1]
 
@@ -267,7 +267,7 @@ def _find_named_mp4(media_dir: Path, scene_name: str, quality_flag: str) -> Path
         reverse=True,
     )
     for match in matches:
-        if match.stat().st_size > 1000:
+        if folder in match.parts and match.stat().st_size > 1000:
             return match
     raise FileNotFoundError(f"Rendered mp4 not found for {scene_name} under {media_dir}")
 
@@ -290,7 +290,7 @@ def _ffmpeg_concat(clips: list[Path], output: Path, list_path: Path) -> None:
         "ffmpeg", "-y",
         "-f", "concat", "-safe", "0",
         "-i", str(list_path),
-        "-c", "copy",
+        "-c:v", "copy", "-an",
         str(output),
     ]
     subprocess.run(cmd, check=True)
@@ -382,12 +382,15 @@ def compose_full_heating_video(
     output = out_dir / "FullHeatingDemandVideo.mp4"
     list_path = out_dir / "section_concat_list.txt"
     rendered_copy = _HEATING_ROOT / "rendered" / f"Full_Heating_Demand_{folder}.mp4"
-    print(f"\n=== Concatenating {len(clips)} clips (intro + sections) → {output} ===")
+    noaudio_copy = _HEATING_ROOT / "rendered" / f"Full_Heating_Demand_NoAudio_{folder}.mp4"
+    print(f"\n=== Merging {len(clips)} silent clips (intro + sections) → {output.name} ===")
     _ffmpeg_concat(clips, output, list_path)
     rendered_copy.parent.mkdir(parents=True, exist_ok=True)
     shutil.copy2(output, rendered_copy)
+    shutil.copy2(output, noaudio_copy)
     print(f"\n✅ Ready: {output}")
     print(f"✅ Copy:  {rendered_copy}")
+    print(f"✅ Copy:  {noaudio_copy}")
 
     if play:
         opener = {"darwin": "open", "win32": "start"}.get(sys.platform, "xdg-open")

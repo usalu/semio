@@ -323,8 +323,8 @@ class Beat3_Jahresdauerlinie(Scene):
          "Its starting height is the design heat load — the few hours the plant must still be able to cover.",
          "Ihre Anfangshöhe ist die Norm-Heizlast — die wenigen Stunden, die die Anlage noch abdecken muss."),
         ("flaeche",
-         "Its area is the annual heating demand, the kilowatt-hours the building actually consumes.",
-         "Ihre Fläche ist der Jahresheizwärmebedarf — die Kilowattstunden, die das Gebäude wirklich verbraucht."),
+         "Its area is the annual heating demand — useful energy, not the billed consumption.",
+         "Ihre Fläche ist der Jahres-Heizwärmebedarf — Nutzenergie, nicht der abgerechnete Verbrauch."),
         ("volllast",
          "Area divided by peak gives the full-load hours: a building runs at full load only a fraction of the year.",
          "Fläche geteilt durch Spitze ergibt die Vollbenutzungsstunden: Volllast läuft ein Gebäude nur einen Bruchteil des Jahres."),
@@ -429,8 +429,8 @@ class Beat4_RichtigAuslegen(Scene):
          "The design heat load gives the central sizing point — the actual plant also depends on the heat generator, controls and storage.",
          "Die Norm-Heizlast liefert den zentralen Auslegungspunkt — die reale Anlage hängt zusätzlich von Erzeuger, Regelung und Speicher ab."),
         ("brueck",
-         "The area under the curve is the useful heat demand — the heating system turns that into end energy, and only that into cost.",
-         "Die Fläche darunter ist der Nutzwärmebedarf — das Heizsystem macht daraus den Endenergiebedarf, und erst daraus die Kosten."),
+         "The area under the curve is the useful heating demand — the plant turns that into final energy, and only that into cost.",
+         "Die Fläche darunter ist der Heizwärmebedarf — das Heizsystem macht daraus den Endenergiebedarf, und erst daraus die Kosten."),
     ]
 
     def construct(self):

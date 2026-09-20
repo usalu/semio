@@ -318,7 +318,7 @@ def flow_guides(paths, color, *, opacity: float = 0.25, width: float = 2.0, tips
 
 def animate_flow(
     scene, paths, color, *, run_time: float = 3.2, waves: int = 3, radius: float = 0.075,
-    cycles: float = 2.0, color_end=None, extra=None, streak: bool = True,
+    cycles: float = 2.0, color_end=None, extra=None, streak: bool = True, closed: bool = False,
 ):
     """💨 Continuous particle stream along ``paths`` — particles fade in and out at the ends.
 
@@ -326,6 +326,7 @@ def animate_flow(
     times, so the stream reads as continuous rather than as one object crossing.
     With ``streak=True`` each particle is a short ellipse aimed along the path —
     that reads as moving air, not as bouncing dots.
+    ``closed`` keeps opacity on a loop so the seam does not blink.
     """
     animate_flows(
         scene,
@@ -336,6 +337,7 @@ def animate_flow(
         cycles=cycles,
         extra=extra,
         streak=streak,
+        closed=closed,
     )
 
 
@@ -349,6 +351,7 @@ def animate_flows(
     cycles: float = 2.4,
     extra=None,
     streak: bool = True,
+    closed: bool = False,
 ):
     """💨 Several coloured streams at once — e.g. warm exhaust + cold intake exchanging.
 
@@ -383,20 +386,23 @@ def animate_flows(
                     particle.set_fill(color, opacity=0.0)
                 particle.move_to(path.point_from_proportion(0.0))
                 dots.add(particle)
-                meta.append((path, w / waves, start_c, end_c, streak))
+                meta.append((path, w / waves, start_c, end_c, streak, closed))
 
     def update(group, alpha):
-        for particle, (path, offset, start_c, end_c, is_streak) in zip(group, meta):
+        for particle, (path, offset, start_c, end_c, is_streak, is_closed) in zip(group, meta):
             t = (alpha * cycles + offset) % 1.0
             pos = path.point_from_proportion(t)
             particle.move_to(pos)
-            # Soft head/tail fade so the stream never pops on or off the frame.
-            fade = min(1.0, t / 0.08, (1.0 - t) / 0.10)
+            fade = 1.0 if is_closed else min(1.0, t / 0.08, (1.0 - t) / 0.10)
             fill = interpolate_color(start_c, end_c, t)
             if is_streak:
                 eps = 0.02
-                t0 = max(0.0, t - eps)
-                t1 = min(1.0, t + eps)
+                if is_closed:
+                    t0 = (t - eps) % 1.0
+                    t1 = (t + eps) % 1.0
+                else:
+                    t0 = max(0.0, t - eps)
+                    t1 = min(1.0, t + eps)
                 tangent = path.point_from_proportion(t1) - path.point_from_proportion(t0)
                 angle = float(np.arctan2(tangent[1], tangent[0]))
                 particle.set_fill(fill, opacity=max(0.0, fade * 0.92))
